@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/style">
+        <file>AppBusyIndicator.qml</file>
+        <file>AppButton.qml</file>
+        <file>AppCancelButton.qml</file>
+        <file>AppCheckBox.qml</file>
+        <file>AppColorPicker.qml</file>
+        <file>AppLabel.qml</file>
+        <file>AppPopupDialog.qml</file>
+        <file>AppRectangle.qml</file>
+        <file>AppSlider.qml</file>
+        <file>AppStyle.qml</file>
+        <file>AppSwitch.qml</file>
+        <file>AppTabBarre.qml</file>
+        <file>AppTextField.qml</file>
+        <file>AppToolButton.qml</file>
+        <file>AppToolSeparator.qml</file>
+        <file>AppValidButton.qml</file>
+        <file>HueSlider.qml</file>
+        <file>qmldir</file>
+        <file>SBPicker.qml</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,30 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/style/AppBusyIndicator.qml</file>
+        <file>qml/style/AppButton.qml</file>
+        <file>qml/style/AppCancelButton.qml</file>
+        <file>qml/style/AppCheckBox.qml</file>
+        <file>qml/style/AppCircleProgressBar.qml</file>
+        <file>qml/style/AppColorPicker.qml</file>
+        <file>qml/style/AppComboBox.qml</file>
+        <file>qml/style/AppLabel.qml</file>
+        <file>qml/style/AppPopupDialog.qml</file>
+        <file>qml/style/AppProgressBar.qml</file>
+        <file>qml/style/AppRectangle.qml</file>
+        <file>qml/style/AppSlider.qml</file>
+        <file>qml/style/AppStyle.qml</file>
+        <file>qml/style/AppSwitch.qml</file>
+        <file>qml/style/AppTabBarre.qml</file>
+        <file>qml/style/AppTextField.qml</file>
+        <file>qml/style/AppToolButton.qml</file>
+        <file>qml/style/AppToolSeparator.qml</file>
+        <file>qml/style/AppValidButton.qml</file>
+        <file>qml/style/CustomStyle.qrc</file>
+        <file>qml/style/HueSlider.qml</file>
+        <file>qml/style/SBPicker.qml</file>
+        <file>qml/style/qmldir</file>
+        <file>qml/textTools.js</file>
+        <file>qml/main.qml</file>
+        <file>qml/titleScreen/TitleScreen.qml</file>
+    </qresource>
+</RCC>

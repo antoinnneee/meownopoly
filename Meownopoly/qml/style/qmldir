@@ -1,0 +1,15 @@
+singleton AppStyle AppStyle.qml
+AppButton 1.0 AppButton.qml
+AppCancelButton 1.0 AppCancelButton.qml
+AppValidButton 1.0 AppValidButton.qml
+AppCheckBox 1.0 AppCheckBox.qml
+AppLabel 1.0 AppLabel.qml
+AppPopupDialog 1.0 AppPopupDialog.qml
+AppRectangle 1.0 AppRectangle.qml
+AppSlider 1.0 AppSlider.qml
+AppSwitch 1.0 AppSwitch.qml
+AppTabBarre 1.0 AppTabBarre.qml
+AppTextField 1.0 AppTextField.qml
+AppToolButton 1.0 AppToolButton.qml
+AppToolSeparator 1.0 AppToolSeparator.qml
+AppBusyIndicator 1.0 AppBusyIndicator.qml

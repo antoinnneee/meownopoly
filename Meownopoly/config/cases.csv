@@ -1,0 +1,5 @@
+"Type","Name","Famille","price1","price2","price3","price4","price5","price6","homePrice","HotelPrice"
+0,"KibbleDispenser",,,,,,,,,
+1,"RestArea1",1,10,50,150,450,1125,1350,150,750
+1,"RestArea2",1,15,75,225,675,1687.5,2025,150,750
+1,"RestArea3",2,25,125,375,1125,2812.5,3375,2000,10000
