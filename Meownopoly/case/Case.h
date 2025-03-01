@@ -2,6 +2,10 @@
 #define CASE_H
 
 #include <QObject>
+#include <QString>
+
+// Forward declaration instead of including player.h
+class Player;
 
 enum CaseType{
     CT_KibbleDispenser, // depart
@@ -11,7 +15,7 @@ enum CaseType{
     CT_Jail,            // prison
     CT_ToJail,          // go to jail
     CT_CatDoor,         // gare
-    CT_FreeNap,         // parking gratuit
+    CT_FreeNap,         // free parking
     CT_WaterFountain,   // service des eaux
     CT_LaserPointer,    // service electricite
     CT_GoldenCollar,    // Taxe de luxe
@@ -25,6 +29,7 @@ class Case : public QObject
     Q_OBJECT
 public:
     explicit Case(QObject *parent = nullptr);
+    Case(const QString &name, int position, QObject *parent = nullptr);
 
     int position() const;
     void setPosition(int newPosition);
@@ -32,9 +37,15 @@ public:
     CaseType getType() const;
     void setType(CaseType newType);
 
+    QString name() const;
+    void setName(const QString &newName);
+
+    virtual void onLand(Player* player);
+
 signals:
 
 private:
+    QString m_name = "Unknown";
     int m_position = -1;
     enum CaseType type = CT_Unknow;
 

@@ -36,3 +36,20 @@ void Game::debugButton()
     qDebug()<<"HelloWorld";
 
 }
+
+void Game::createPlayer(const QString &name) {
+    Player* newPlayer = new Player(name, this);
+    m_players.append(newPlayer);
+    qDebug() << "Player created: " << name;
+}
+
+int Game::boardSize() const {
+    return m_board.size();
+}
+
+Case* Game::getCaseAt(int position) {
+    if (position >= 0 && position < m_board.size()) {
+        return m_board.at(position);
+    }
+    return nullptr;
+}

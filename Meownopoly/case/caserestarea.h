@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include "Case.h"
-#include "../player.h"
+
 
 enum RestQuality{
     RQ_NONE,
@@ -15,33 +15,57 @@ enum RestQuality{
     RQ_COUNT
 };
 
+enum FamilyType {
+    FT_NONE,
+    FT_BROWN,
+    FT_LIGHTBLUE,
+    FT_PINK,
+    FT_ORANGE,
+    FT_RED,
+    FT_YELLOW,
+    FT_GREEN,
+    FT_DARKBLUE,
+    FT_COUNT
+};
+
+class Player;
+
 class CaseRestArea : public Case
 {
     Q_OBJECT
 public:
     explicit CaseRestArea(QObject *parent = nullptr);
-    CaseRestArea(QString name,  QVector<int> price, QObject *parent = nullptr);
+    CaseRestArea(const QString &name, QVector<int> price, FamilyType family = FT_NONE, int position = -1, QObject *parent = nullptr);
 
     RestQuality restQuality() const;
     void setRestQuality(RestQuality newRestQuality);
 
+    FamilyType family() const;
+    void setFamily(FamilyType newFamily);
+
     Player *owner() const;
     void setOwner(Player *newOwner);
 
-    QVector<int> price() const;
-    void setPrice(const QVector<int> &newPrice);
-
-    QString name() const;
-    void setName(const QString &newName);
+    int get_price() const;
+    QVector<int> prices() const;
+    void setPrices(const QVector<int> &newPrice);
 
     void print_state();
 
+    void upgrade();
+    int upgradeLevel() const;
+    bool canUpgrade() const;
+    int getUpgradeCost() const;
+
+    void onLand(Player* player) override;
+
 private:
     enum CaseType type = CT_RestArea;
-    QString m_name = "UNKNOW";
-    enum RestQuality m_restQuality = RQ_NONE;
+    enum RestQuality m_restQuality = RQ_NONE;   // Land level
+    enum FamilyType m_family = FT_NONE;
     Player *m_owner = nullptr;
-    QVector<int> m_price;
+    QVector<int> m_prices;
+    const int m_upgradeCost = 50; // Base cost to upgrade
 
 };
 

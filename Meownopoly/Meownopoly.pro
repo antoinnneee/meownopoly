@@ -22,11 +22,20 @@ CONFIG += c++20
 
 SOURCES += \
     case/Case.cpp \
+    case/CaseCatDoor.cpp \
+    case/CaseCatNip.cpp \
+    case/CaseCardBoardBox.cpp \
+    case/CaseFreeNap.cpp \
+    case/CaseJail.cpp \
+    case/CaseKibbleDispenser.cpp \
+    case/CaseToJail.cpp \
     case/caserestarea.cpp \
     case/casestart.cpp \
     game.cpp \
     game_loader.cpp \
+    json_ai_lang.cpp \
     main.cpp \
+    ollamatranslator.cpp \
     player.cpp \
     qmlapp.cpp \
     tools/crashReportTool.cpp \
@@ -36,9 +45,18 @@ SOURCES += \
 
 HEADERS += \
     case/Case.h \
+    case/CaseCatDoor.h \
+    case/CaseCatNip.h \
+    case/CaseCardBoardBox.h \
+    case/CaseFreeNap.h \
+    case/CaseJail.h \
+    case/CaseKibbleDispenser.h \
+    case/CaseToJail.h \
     case/caserestarea.h \
     case/casestart.h \
     game.h \
+    json_ai_lang.h \
+    ollamatranslator.h \
     player.h \
     qmlapp.h \
     tools/debug_Info.h	\
