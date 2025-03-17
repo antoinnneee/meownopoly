@@ -22,12 +22,13 @@ QmlApp::QmlApp(QWindow *parent)
 {
     QQuickStyle::setStyle("Material");
     Game::registerQml();
-    OllamaTranslator::registerQml();
+//    OllamaTranslator::registerQml();
 
 
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
-    ollama = OllamaTranslator::instance();
+    /*
+//    ollama = OllamaTranslator::instance();
 
 
     QObject::connect(ollama, &OllamaTranslator::errorOccurred,
@@ -53,7 +54,7 @@ QmlApp::QmlApp(QWindow *parent)
     arr.append(QJsonObject{{"id", "story"},   {"text", "NE CROISEZ PAS LES EFFLUVENTS"}});
     ollama->sendTranslationRequest(arr, "verlen  "
                                         "");  // Traduire en anglais
-
+    */
     game->init();
 }
 

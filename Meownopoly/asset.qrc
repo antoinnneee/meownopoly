@@ -2,5 +2,17 @@
     <qresource prefix="/">
         <file>asset/title.webp</file>
         <file>asset/title.jpg</file>
+        <file>asset/dice.png</file>
+        <file>asset/kibble.png</file>
+        <file>asset/bed.png</file>
+        <file>asset/cardboard.png</file>
+        <file>asset/catnip.png</file>
+        <file>asset/jail.png</file>
+        <file>asset/tojail.png</file>
+        <file>asset/catdoor.png</file>
+        <file>asset/nap.png</file>
+        <file>asset/fountain.png</file>
+        <file>asset/laser.png</file>
+        <file>asset/tax.png</file>
     </qresource>
 </RCC>

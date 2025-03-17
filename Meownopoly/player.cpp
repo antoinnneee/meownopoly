@@ -3,27 +3,50 @@
 #include <QRandomGenerator>
 #include <QDebug>
 
-Player::Player(const QString &name, QObject *parent)
-    : QObject(parent), m_name(name) {}
-
-QString Player::name() const {
-    return m_name;
+Player::Player(QObject *parent)
+    : QObject(parent)
+    , m_name("")
+    , m_color(QColor("#7f8c8d"))
+    , m_kibble(0)
+    , m_position(0)
+    , m_inJail(false)
+    , m_consecutiveDoubles(0)
+{
 }
 
-int Player::position() const {
-    return m_position;
+Player::Player(const QString &name, const QColor &color, QObject *parent)
+    : QObject(parent), m_name(name), m_color(color) {}
+
+void Player::setName(const QString &name)
+{
+    if (m_name != name) {
+        m_name = name;
+        emit nameChanged();
+    }
 }
 
-void Player::setPosition(int newPosition) {
-    m_position = newPosition;
+void Player::setColor(const QColor &color)
+{
+    if (m_color != color) {
+        m_color = color;
+        emit colorChanged();
+    }
 }
 
-int Player::kibble() const {
-    return m_kibble;
+void Player::setKibble(int kibble)
+{
+    if (m_kibble != kibble) {
+        m_kibble = kibble;
+        emit kibbleChanged();
+    }
 }
 
-void Player::setKibble(int newKibble) {
-    m_kibble = newKibble;
+void Player::setPosition(int position)
+{
+    if (m_position != position) {
+        m_position = position;
+        emit positionChanged();
+    }
 }
 
 bool Player::canAfford(int amount) const {
@@ -153,10 +176,7 @@ void Player::buyProperty(CaseRestArea* property) {
     }
 }
 
-bool Player::isInJail() const {
-    return m_inJail;
-}
-
 void Player::setInJail(bool inJail) {
     m_inJail = inJail;
+    emit inJailChanged();
 }

@@ -28,11 +28,20 @@ enum FamilyType {
     FT_COUNT
 };
 
+
 class Player;
+Q_DECLARE_OPAQUE_POINTER(Player*)
 
 class CaseRestArea : public Case
 {
     Q_OBJECT
+    Q_PROPERTY(int restQuality READ restQuality NOTIFY restQualityChanged)
+    Q_PROPERTY(int family READ family CONSTANT)
+    Q_PROPERTY(Player* owner READ owner NOTIFY ownerChanged)
+    Q_PROPERTY(int price READ get_price CONSTANT)
+    Q_PROPERTY(QVector<int> prices READ prices CONSTANT)
+    Q_PROPERTY(int upgradeLevel READ upgradeLevel NOTIFY upgradeLevelChanged)
+    
 public:
     explicit CaseRestArea(QObject *parent = nullptr);
     CaseRestArea(const QString &name, QVector<int> price, FamilyType family = FT_NONE, int position = -1, QObject *parent = nullptr);
@@ -58,10 +67,15 @@ public:
     int getUpgradeCost() const;
 
     void onLand(Player* player) override;
+    
+signals:
+    void restQualityChanged();
+    void ownerChanged();
+    void upgradeLevelChanged();
 
 private:
     enum CaseType type = CT_RestArea;
-    enum RestQuality m_restQuality = RQ_NONE;   // Land level
+    enum RestQuality m_restQuality = RQ_2STAR;//RQ_NONE;   // Land level
     enum FamilyType m_family = FT_NONE;
     Player *m_owner = nullptr;
     QVector<int> m_prices;

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <RCC>
     <qresource prefix="/">
         <file>qml/style/AppBusyIndicator.qml</file>
@@ -26,5 +27,20 @@
         <file>qml/textTools.js</file>
         <file>qml/main.qml</file>
         <file>qml/titleScreen/TitleScreen.qml</file>
+        <file>qml/GameBoard.qml</file>
+        <file>qml/PlayerSetup.qml</file>
+        <file>qml/PlayerPanel.qml</file>
+        <file>qml/ControlPanel.qml</file>
+        <file>qml/BoardGrid.qml</file>
+        <file>qml/boardTile/BoardTile.qml</file>
+        <file>qml/boardTile/TileContent.qml</file>
+        <file>qml/boardTile/StarRating.qml</file>
+        <file>qml/boardTile/TileDetailsPopup.qml</file>
+        <file>qml/boardTile/details/RestAreaDetails.qml</file>
+        <file>qml/boardTile/details/KibbleDispenserDetails.qml</file>
+        <file>qml/boardTile/details/JailDetails.qml</file>
+        <file>qml/boardTile/PlayerToken.qml</file>
+        <file>qml/boardTile/PlayerTokenContainer.qml</file>
     </qresource>
 </RCC>
+

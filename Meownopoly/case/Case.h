@@ -27,14 +27,18 @@ enum CaseType{
 class Case : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QString name READ name CONSTANT)
+    Q_PROPERTY(int position READ position CONSTANT)
+    Q_PROPERTY(int type READ getType CONSTANT)
+    
 public:
     explicit Case(QObject *parent = nullptr);
-    Case(const QString &name, int position, QObject *parent = nullptr);
+    Case(const QString &name, int position = -1, QObject *parent = nullptr);
 
     int position() const;
     void setPosition(int newPosition);
 
-    CaseType getType() const;
+    enum CaseType getType() const;
     void setType(CaseType newType);
 
     QString name() const;

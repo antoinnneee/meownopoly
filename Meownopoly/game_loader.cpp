@@ -15,6 +15,9 @@
 #include <QFile>
 #include <QString>
 
+// Debug flags
+#define DEBUG_CASE_LOADING 1
+
 #define CASE_TYPE_COLUMN 0
 #define CASE_NAME_COLUMN 1
 #define CASE_FAMILY_COLUMN 2
@@ -33,7 +36,9 @@ void Game::init_caseFile()
     }
 
     QList<QByteArray> caseInfo = caseFile.readAll().split('\n');
-    qDebug() << "Loading " << caseInfo.count() << " cases from file";
+    if (DEBUG_CASE_LOADING) {
+        qDebug() << "Loading " << caseInfo.count() << " cases from file";
+    }
     
     int line = 1;   // skip first line (header)
     int position = 0; // track position on board
@@ -53,7 +58,12 @@ void Game::init_caseFile()
         
         QString typeStr = caseInfoLine[CASE_TYPE_COLUMN];
         int type = typeStr.toInt();
+        
+        // Handle quoted names
         QString name = caseInfoLine[CASE_NAME_COLUMN];
+        if (name.startsWith('"') && name.endsWith('"')) {
+            name = name.mid(1, name.length() - 2);  // Remove surrounding quotes
+        }
         
         Case* boardCase = nullptr;
         
@@ -61,10 +71,12 @@ void Game::init_caseFile()
         {
             case CT_KibbleDispenser: // Start
             {
-                int reward = 200; // Default reward for passing start
+                int reward = 200;
                 CaseKibbleDispenser* kibbleCase = new CaseKibbleDispenser(name, position, reward, this);
                 boardCase = kibbleCase;
-                qDebug() << "Created Kibble Dispenser at position" << position;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Kibble Dispenser" << name << "at position" << position;
+                }
                 break;
             }
             case CT_RestArea: // Properties
@@ -85,21 +97,28 @@ void Game::init_caseFile()
                 
                 CaseRestArea* restCase = new CaseRestArea(name, prices, family, position, this);
                 boardCase = restCase;
-                qDebug() << "Created Rest Area at position" << position << "with family" << family;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Rest Area" << name << "at position" << position << "with family" << family;
+                    qDebug() << "    Prices:" << prices;
+                }
                 break;
             }
             case CT_CardBoardBox: // Community Chest
             {
                 CaseCardBoardBox* cardBoardCase = new CaseCardBoardBox(name, position);
                 boardCase = cardBoardCase;
-                qDebug() << "Created Card Board Box at position" << position;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Card Board Box" << name << "at position" << position;
+                }
                 break;
             }
             case CT_CatNip: // Chance
             {
                 CaseCatNip* catNipCase = new CaseCatNip(name, position);
                 boardCase = catNipCase;
-                qDebug() << "Created Cat Nip at position" << position;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Cat Nip" << name << "at position" << position;
+                }
                 break;
             }
             case CT_Jail: // Jail
@@ -108,14 +127,18 @@ void Game::init_caseFile()
                 CaseJail* jailCaseNew = new CaseJail(name, position, jailFine);
                 jailCase = jailCaseNew; // Save reference to jail case
                 boardCase = jailCaseNew;
-                qDebug() << "Created Jail at position" << position;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Jail" << name << "at position" << position;
+                }
                 break;
             }
             case CT_ToJail: // Go to Jail
             {
                 CaseToJail* toJailCase = new CaseToJail(name, position, this);
                 boardCase = toJailCase;
-                qDebug() << "Created Go To Jail at position" << position;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Go To Jail" << name << "at position" << position;
+                }
                 break;
             }
             case CT_CatDoor: // Railroad
@@ -127,14 +150,18 @@ void Game::init_caseFile()
                 
                 CaseCatDoor* catDoorCase = new CaseCatDoor(name, position, baseRent);
                 boardCase = catDoorCase;
-                qDebug() << "Created Cat Door at position" << position << "with rent" << baseRent;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Cat Door" << name << "at position" << position << "with rent" << baseRent;
+                }
                 break;
             }
             case CT_FreeNap: // Free Parking
             {
                 CaseFreeNap* freeNapCase = new CaseFreeNap(name, position, this);
                 boardCase = freeNapCase;
-                qDebug() << "Created Free Nap at position" << position;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Free Nap" << name << "at position" << position;
+                }
                 break;
             }
             case CT_WaterFountain: // Utility 1
@@ -148,7 +175,9 @@ void Game::init_caseFile()
                 
                 CaseCatDoor* utilityCase = new CaseCatDoor(name, position, baseRent);
                 boardCase = utilityCase;
-                qDebug() << "Created Utility at position" << position << "with rent" << baseRent;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Utility" << name << "at position" << position << "with rent" << baseRent;
+                }
                 break;
             }
             case CT_GoldenCollar: // Luxury Tax
@@ -162,7 +191,9 @@ void Game::init_caseFile()
                 // For now, treat taxes as kibble dispensers with negative rewards
                 CaseKibbleDispenser* taxCase = new CaseKibbleDispenser(name, position, -taxAmount, this);
                 boardCase = taxCase;
-                qDebug() << "Created Tax at position" << position << "with amount" << taxAmount;
+                if (DEBUG_CASE_LOADING) {
+                    qDebug() << "Created Tax" << name << "at position" << position << "with amount" << taxAmount;
+                }
                 break;
             }
             default:
@@ -183,15 +214,23 @@ void Game::init_caseFile()
                 CaseToJail* toJailCase = qobject_cast<CaseToJail*>(boardCase);
                 if (toJailCase) {
                     toJailCase->setJailCase(jailCase);
+                    if (DEBUG_CASE_LOADING) {
+                        qDebug() << "Connected Go To Jail case to Jail case";
+                    }
                 }
             }
         }
     }
     
-    qDebug() << "Loaded" << m_board.size() << "cases";
+    if (DEBUG_CASE_LOADING) {
+        qDebug() << "Successfully loaded" << m_board.size() << "cases";
+    }
 }
 
 void Game::init()
 {
+    if (DEBUG_CASE_LOADING) {
+        qDebug() << "Initializing game...";
+    }
     init_caseFile();
 }

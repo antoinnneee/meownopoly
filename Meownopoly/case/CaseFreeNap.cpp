@@ -14,21 +14,26 @@ CaseFreeNap::CaseFreeNap(const QString &name, int position, QObject *parent)
     setType(CT_FreeNap);
 }
 
+int CaseFreeNap::poolMoney() const
+{
+    return m_poolMoney;
+}
+
+void CaseFreeNap::setPoolMoney(int amount)
+{
+    m_poolMoney = amount;
+}
+
+void CaseFreeNap::addToPool(int amount)
+{
+    m_poolMoney += amount;
+}
+
 void CaseFreeNap::onLand(Player* player)
 {
-    qDebug() << "Player" << player->name() << "landed on Free Nap space at position" << position();
-    // Free nap space - player can rest here without paying
-    qDebug() << "Player is taking a free nap!";
+    qDebug() << "Player landed on Free Nap, collecting" << m_poolMoney << "kibble";
+    if (m_poolMoney > 0) {
+        player->earnKibble(m_poolMoney);
+        m_poolMoney = 0;  // Reset pool after collection
+    }
 }
-
-int CaseFreeNap::pot() const {
-    return m_pot;
-}
-
-void CaseFreeNap::setPot(int newPot) {
-    m_pot = newPot;
-}
-
-void CaseFreeNap::addToPot(int amount) {
-    m_pot += amount;
-} 

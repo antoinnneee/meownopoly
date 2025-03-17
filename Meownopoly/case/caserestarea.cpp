@@ -6,7 +6,6 @@ CaseRestArea::CaseRestArea(QObject *parent)
     : Case("Unknown Rest Area", -1, parent)
 {
     setType(CT_RestArea);
-    int i = 0;
     while (m_prices.count() < RQ_COUNT)
     {
         m_prices.append(0);
@@ -14,7 +13,7 @@ CaseRestArea::CaseRestArea(QObject *parent)
 }
 
 CaseRestArea::CaseRestArea(const QString &name, QVector<int> prices, FamilyType family, int position, QObject *parent)
-    : Case(name, position, parent), m_prices(prices), m_family(family)
+    : Case(name, position, parent), m_family(family), m_prices(prices)
 {
     setType(CT_RestArea);
     while (m_prices.count() < RQ_COUNT)
