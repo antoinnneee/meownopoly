@@ -18,7 +18,7 @@ Rectangle {
     
     color: playerColor
     border {
-        width: isCurrentPlayer ? 2 : 1
+        width: isCurrentPlayer ? 3 : 1
         color: isCurrentPlayer ? "white" : "black"
     }
     

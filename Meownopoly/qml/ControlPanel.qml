@@ -12,6 +12,45 @@ Rectangle {
     property int diceValue2: 1
     property bool rolling: false
 
+    // Fixed timers
+    DiceRollTimer {
+        id: diceTimer
+        controlPanel: root
+        
+        onRollComplete: function(dice1, dice2) {
+            let steps = dice1 + dice2;
+            
+            // Signal that dice are rolled
+            root.diceRolled(dice1, dice2);
+            
+            // Move the player
+            Game.movePlayer(Game.currentPlayerIndex, steps);
+            
+            // Check if doubles
+            if (dice1 === dice2) {
+                console.log("Rolled doubles! Player gets another turn.");
+            } else {
+                // Start timer to end turn after animation
+                endTurnTimer.start();
+            }
+            
+            // Reset rolling state after a delay for animation
+            resetStateTimer.start();
+        }
+    }
+    
+    EndTurnTimer {
+        id: endTurnTimer
+    }
+    
+    ResetDiceStateTimer {
+        id: resetStateTimer
+        controlPanel: root
+    }
+    
+    // Signal when dice are rolled
+    signal diceRolled(int dice1, int dice2)
+
     RowLayout {
         anchors {
             fill: parent
@@ -131,60 +170,9 @@ Rectangle {
     
     // Function to simulate rolling dice
     function rollDice() {
-        rolling = true
+        if (rolling) return;
         
-        // Animation for rolling
-        let rollCount = 0
-        let maxRolls = 10
-        
-        let rollTimer = rollTimerComponent.createObject(root)
-        rollTimer.start()
-    }
-    
-    // Timer component for dice rolling animation
-    Component {
-        id: rollTimerComponent
-        
-        Timer {
-            interval: 100
-            repeat: true
-            property int rollCount: 0
-            property int maxRolls: 10
-            
-            onTriggered: {
-                // Generate random dice values
-                root.diceValue1 = Math.floor(Math.random() * 6) + 1
-                root.diceValue2 = Math.floor(Math.random() * 6) + 1
-                
-                rollCount++
-                
-                if (rollCount >= maxRolls) {
-                    stop()
-                    finishRoll()
-                    destroy()
-                }
-            }
-            
-            function finishRoll() {
-                let steps = root.diceValue1 + root.diceValue2
-                Game.movePlayer(Game.currentPlayerIndex, steps)
-                
-                // Check if the dice values are the same (doubles)
-                if (root.diceValue1 === root.diceValue2) {
-                    console.log("Rolled doubles! Player gets another turn.")
-                    // Player gets another turn
-                } else {
-                    // End turn if not doubles
-                    /*
-                      that not work qrc:/qml/ControlPanel.qml:178: ReferenceError: setTimeout is not defined
-                    setTimeout(function() {
-                        Game.nextPlayer()
-                    }, 2000)
-                    */
-                }
-                
-                root.rolling = false
-            }
-        }
+        rolling = true;
+        diceTimer.startRoll();
     }
 } 

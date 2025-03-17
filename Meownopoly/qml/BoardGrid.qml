@@ -40,7 +40,7 @@ Item {
         }
     }
 
-    // Top row (20-29)
+    // Top row (18-27)
     RowLayout {
         id: topRow
         anchors {
@@ -54,7 +54,7 @@ Item {
         Repeater {
             model: 10
             BoardTile {
-                tileIndex: 20 + index
+                tileIndex: 18 + index
                 onIsHoveredChanged: parent.z = (isHovered) ? 1: 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -65,7 +65,7 @@ Item {
         }
     }
 
-
+    // 10 - 17
     ColumnLayout {
         id: leftColumn
         anchors {
@@ -82,7 +82,7 @@ Item {
         Repeater {
             model: 8
             BoardTile {
-                tileIndex: 19 - index
+                tileIndex: 17 - index
                 onIsHoveredChanged: parent.z = (isHovered) ? 1: 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -93,7 +93,7 @@ Item {
         }
     }
 
-    // Right column (30-39)
+    // Right column (28-35)
     ColumnLayout {
         id: rightColumn
         anchors {
@@ -110,7 +110,7 @@ Item {
         Repeater {
             model: 8
             BoardTile {
-                tileIndex: 39 - index
+                tileIndex: 28 + index
                 onIsHoveredChanged: parent.z = (isHovered) ? 1: 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true

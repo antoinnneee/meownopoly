@@ -107,7 +107,7 @@ void Game::movePlayer(int playerIndex, int steps)
     if (playerIndex >= 0 && playerIndex < m_players.size()) {
         Player* player = m_players[playerIndex];
         int newPosition = (player->position() + steps) % m_board.size();
-        player->setPosition(newPosition);
+        player->setPosition(newPosition, steps);
         
         qDebug() << "Player" << player->name() << "moved to position" << newPosition;
         

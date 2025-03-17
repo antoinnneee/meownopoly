@@ -41,11 +41,15 @@ void Player::setKibble(int kibble)
     }
 }
 
-void Player::setPosition(int position)
+void Player::setPosition(int position, int step)
 {
     if (m_position != position) {
+        int oldPosition = m_position;
         m_position = position;
         emit positionChanged();
+        
+        // Emit signal for animation
+        emit playerMoved(oldPosition, position, step); // Default 1 step for direct position changes
     }
 }
 
@@ -119,13 +123,13 @@ void Player::rollDice() {
                 for (int i = 0; i < Game::instance()->boardSize(); i++) {
                     Case* currentCase = Game::instance()->getCaseAt(i);
                     if (currentCase && currentCase->getType() == CT_Jail) {
-                        setPosition(i);
+                        int oldPosition = m_position;
+                        m_position = i;
+                        emit positionChanged();
+                        emit playerMoved(oldPosition, m_position, 0); // Special case for jail
                         break;
                     }
                 }
-                
-                // Emit signal for UI to update
-                emit playerMoved(m_position, m_position, 0);
             } else {
                 // Move the player according to the dice roll
                 move(total);
@@ -146,9 +150,13 @@ void Player::rollDice() {
 void Player::move(int steps) {
     int oldPosition = m_position;
     m_position = (m_position + steps) % Game::instance()->boardSize();
+    emit positionChanged();
+    
+    // Emit signal for animation
+    emit playerMoved(oldPosition, m_position, steps);
     
     // Check if player passed the start
-    if (m_position < oldPosition) {
+    if (m_position < oldPosition && steps > 0) {
         emit passedStart();
     }
     
@@ -158,9 +166,6 @@ void Player::move(int steps) {
         currentCase->onLand(this);
         emit landedOnSpecialTile();
     }
-    
-    // Emit signal for UI to update
-    emit playerMoved(oldPosition, m_position, steps);
     
     qDebug() << "Player moved from position " << oldPosition << " to position " << m_position;
 }

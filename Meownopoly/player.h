@@ -31,7 +31,7 @@ public:
     void setKibble(int kibble);
 
     int position() const { return m_position; }
-    void setPosition(int position);
+    void setPosition(int position, int step = 1);
 
     bool isInJail() const { return m_inJail; }
     void setInJail(bool inJail);

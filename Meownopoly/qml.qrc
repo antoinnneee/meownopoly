@@ -32,6 +32,10 @@
         <file>qml/PlayerPanel.qml</file>
         <file>qml/ControlPanel.qml</file>
         <file>qml/BoardGrid.qml</file>
+        <file>qml/AnimationManager.qml</file>
+        <file>qml/DiceRollTimer.qml</file>
+        <file>qml/EndTurnTimer.qml</file>
+        <file>qml/ResetDiceStateTimer.qml</file>
         <file>qml/boardTile/BoardTile.qml</file>
         <file>qml/boardTile/TileContent.qml</file>
         <file>qml/boardTile/StarRating.qml</file>
@@ -41,6 +45,7 @@
         <file>qml/boardTile/details/JailDetails.qml</file>
         <file>qml/boardTile/PlayerToken.qml</file>
         <file>qml/boardTile/PlayerTokenContainer.qml</file>
+        <file>qml/boardTile/AnimatedPlayerToken.qml</file>
     </qresource>
 </RCC>
 
