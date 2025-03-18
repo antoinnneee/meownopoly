@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QVector>
+#include <QList>
+#include <QVariant>
 #include "case/Case.h"
 #include "player.h"
 
@@ -36,12 +38,15 @@ public:
     int boardSize() const { return 40; }  // Standard Monopoly board size
     int currentPlayerIndex() const;
 
+    Q_INVOKABLE bool buyProperty(int playerIndex, int position);
+
 public slots:
 
 signals:
     void gameStarted();
     void playersChanged();
     void currentPlayerIndexChanged();
+    void propertyPurchased(int position, Player* newOwner);
 
 private slots:
 

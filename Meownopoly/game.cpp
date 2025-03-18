@@ -133,3 +133,70 @@ void Game::nextPlayer()
     emit currentPlayerIndexChanged();
 }
 
+bool Game::buyProperty(int playerIndex, int position)
+{
+    // Check if player index is valid
+    if (playerIndex < 0 || playerIndex >= m_players.size())
+        return false;
+        
+    // Get the player
+    Player* player = m_players[playerIndex];
+    
+    // Check if position is valid
+    if (position < 0 || position >= m_board.size())
+        return false;
+        
+    // Get the case at the position
+    Case* boardCase = m_board[position];
+    
+    // Check if the case is a buyable property type
+    bool isBuyableProperty = (boardCase->getType() == 1 || boardCase->getType() == 2);
+    if (!isBuyableProperty) {
+        qDebug() << "Not a buyable property type:" << boardCase->getType();
+        return false;
+    }
+    
+    // Check if it's already owned
+    if (((CaseRestArea*)boardCase)->owner()) {
+        qDebug() << "Property already owned";
+        return false;
+    }
+    
+    // Get property price
+    int price = 0;
+    if (boardCase->getType() == 1) {
+        // RestArea
+        CaseRestArea* restArea = qobject_cast<CaseRestArea*>(boardCase);
+        if (!restArea) return false;
+        price = restArea->get_price();
+    } else if (boardCase->getType() == 2) {
+        // CardBoardBox
+        price =( (CaseRestArea*)boardCase)->get_price();
+    }
+    
+    // Check if player has enough money
+    if (player->kibble() < price) {
+        qDebug() << "Player doesn't have enough money";
+        return false;
+    }
+    
+    // Deduct money from player
+    player->setKibble(player->kibble() - price);
+    
+    // Set the owner of the property
+    ((CaseRestArea*)boardCase)->setOwner(player);
+    
+    // If it's a RestArea, add it to the player's properties
+    if (boardCase->getType() == 1) {
+        CaseRestArea* restArea = qobject_cast<CaseRestArea*>(boardCase);
+        player->addProperty(restArea);
+    }
+    
+    // Emit signals to update UI
+    emit playersChanged();
+    emit propertyPurchased(position, player);
+    
+    qDebug() << "Property purchased successfully:" << boardCase->name() << "by" << player->name();
+    return true;
+}
+

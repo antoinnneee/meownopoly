@@ -41,15 +41,23 @@ void Player::setKibble(int kibble)
     }
 }
 
-void Player::setPosition(int position, int step)
+void Player::setPosition(int position, int steps)
 {
+    // Only emit the signal if position actually changes
     if (m_position != position) {
         int oldPosition = m_position;
         m_position = position;
-        emit positionChanged();
+
+        // If steps is provided, emit the playerMoved signal
+        if (steps > 0) {
+            emit playerMoved(oldPosition, position, steps);
+        }
         
-        // Emit signal for animation
-        emit playerMoved(oldPosition, position, step); // Default 1 step for direct position changes
+        // Always emit the positionChanged signal
+        emit positionChanged();
+    } else {
+        // Position didn't change, log this unusual situation
+        qDebug() << "Warning: setPosition called with same position" << position << "for player" << m_name;
     }
 }
 
@@ -74,11 +82,13 @@ QList<CaseRestArea*> Player::ownedProperties() const {
 void Player::addProperty(CaseRestArea* property) {
     if (!m_ownedProperties.contains(property)) {
         m_ownedProperties.append(property);
+        emit propertyCountChanged();
     }
 }
 
 void Player::removeProperty(CaseRestArea* property) {
     m_ownedProperties.removeAll(property);
+    emit propertyCountChanged();
 }
 
 void Player::rollDice() {

@@ -2,14 +2,17 @@ import QtQuick
 
 Timer {
     id: resetDiceStateTimer
-    interval: 500
+    interval: 500 // Half second delay
     repeat: false
     
-    property Item controlPanel: null
+    property var controlPanel: null
     
     onTriggered: {
         if (controlPanel) {
-            controlPanel.rolling = false;
+            console.log("ResetDiceStateTimer: Resetting isDiceRolling to false");
+            controlPanel.isDiceRolling = false;
+        } else {
+            console.error("ResetDiceStateTimer: No control panel reference provided");
         }
     }
 } 

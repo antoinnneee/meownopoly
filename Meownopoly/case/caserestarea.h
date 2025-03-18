@@ -75,7 +75,7 @@ signals:
 
 private:
     enum CaseType type = CT_RestArea;
-    enum RestQuality m_restQuality = RQ_2STAR;//RQ_NONE;   // Land level
+    enum RestQuality m_restQuality = RQ_NONE;   // Land level
     enum FamilyType m_family = FT_NONE;
     Player *m_owner = nullptr;
     QVector<int> m_prices;

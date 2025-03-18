@@ -34,88 +34,67 @@ Item {
         return null;
     }
     
-    // Animate a player token
-    function animatePlayerMovement(player, oldPosition, newPosition, steps) {
-        console.log("Animating player:", player.name);
-        console.log("  - Moving from", oldPosition, "to", newPosition, "in", steps, "steps");
+    // Animate player movement
+    function animatePlayerMovement(player, fromPosition, toPosition, steps) {
+        console.log("Animating player: " + player.name);
+        console.log("  - Moving from " + fromPosition + " to " + toPosition + " in " + steps + " steps");
         
-        // Check if player is already moving
+        // Check if we already have an active animation for this player
         if (movingPlayers[player.name]) {
             console.log("  - Player is already moving, ignoring new movement");
             return;
         }
         
-        // Calculate global coordinates for animation parent
-        var startTile = getTilePosition(oldPosition);
-        var endTile = getTilePosition(newPosition);
-        
-        if (!startTile || !endTile) {
-            console.error("Cannot animate - missing tile position information");
-            console.log("  - Start tile position:", startTile ? "Available" : "Missing");
-            console.log("  - End tile position:", endTile ? "Available" : "Missing");
+        // Verify we have position data for both tiles
+        if (!tilePositions[fromPosition] || !tilePositions[toPosition]) {
+            console.error("  - Missing tile position data for animation");
             return;
         }
         
-        // Get the player's index to properly show the correct token
-        var playerIndex = -1;
-        for (var i = 0; i < Game.players.length; i++) {
-            if (Game.players[i].name === player.name) {
-                playerIndex = i;
-                break;
-            }
-        }
-        
-        if (playerIndex === -1) {
-            console.error("Cannot find player index for animation:", player.name);
-            return;
-        }
-        
-        // Create the animated token
-        var tokenComponent = Qt.createComponent("boardTile/AnimatedPlayerToken.qml");
-        if (tokenComponent.status === Component.Ready) {
+        try {
+            // Create animated token
+            var tokenComponent = Qt.createComponent("boardTile/AnimatedPlayerToken.qml");
             var token = tokenComponent.createObject(root, {
                 playerName: player.name,
                 playerColor: player.color,
-                playerIndex: playerIndex,
-                isCurrentPlayer: Game.currentPlayerIndex === playerIndex,
-                currentPosition: oldPosition,
-                targetPosition: newPosition,
+                isCurrentPlayer: (player === Game.players[Game.currentPlayerIndex]),
+                currentPosition: fromPosition,
+                targetPosition: toPosition,
                 tilePositions: tilePositions,
-                x: startTile.x - 10, // center token (token width = 20)
-                y: startTile.y - 10  // center token (token height = 20)
+                playerIndex: Game.players.indexOf(player)
             });
             
-            console.log("  - Created animation token for player:", player.name);
-            
-            // Start animation
-            token.moveToken(newPosition, steps);
-            
-            // Track this animation
-            movingPlayers[player.name] = token;
-            
-            // Clean up when animation is done
-            token.movementComplete.connect(function() {
-                console.log("  - Animation complete for player:", player.name);
+            if (token) {
+                console.log("  - Created animation token for player: " + player.name);
                 
-                // Remove from tracking
-                delete movingPlayers[player.name];
+                // Track this player as moving
+                movingPlayers[player.name] = token;
+                activeAnimations.push(token);
                 
-                // Create timer to ensure token is displayed on final position before destruction
-                var destroyTimer = Qt.createQmlObject(
-                    'import QtQuick; Timer {interval: 100; repeat: false;}',
-                    token
-                );
-                
-                function destroyToken() {
-                    console.log("  - Cleaning up animation token for player:", player.name);
+                // Connect to the completion signal
+                token.movementComplete.connect(function() {
+                    console.log("  - Animation complete for player: " + player.name);
+                    
+                    // Remove from tracking arrays
+                    var index = activeAnimations.indexOf(token);
+                    if (index >= 0) {
+                        activeAnimations.splice(index, 1);
+                    }
+                    
+                    // Clear from moving players map
+                    delete movingPlayers[player.name];
+                    
+                    console.log("  - Cleaning up animation token for player: " + player.name);
                     token.destroy();
-                }
+                });
                 
-                destroyTimer.triggered.connect(destroyToken);
-                destroyTimer.start();
-            });
-        } else {
-            console.error("Error creating animated token:", tokenComponent.errorString());
+                // Start the animation
+                token.moveToken(toPosition, steps);
+            } else {
+                console.error("  - Failed to create animation token");
+            }
+        } catch (e) {
+            console.error("Error creating animated token: " + e);
         }
     }
 } 

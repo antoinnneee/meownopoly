@@ -135,7 +135,7 @@ Item {
         visible: true
         z: -1
         BoardTile {
-            tileIndex: 32
+            tileIndex: 35
             width: 200
             height: 200
             anchors.centerIn: parent

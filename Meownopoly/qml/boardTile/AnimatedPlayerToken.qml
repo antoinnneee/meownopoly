@@ -257,52 +257,54 @@ Item {
     function setupPathPauses() {
         // Create a NumberAnimation to track progress
         var progressAnimation = Qt.createQmlObject(
-            'import QtQuick; NumberAnimation { property: "progress"; from: 0; to: 1; duration: ' + 
+            'import QtQuick; NumberAnimation { property real progress: 0; from: 0; to: 1; duration: ' + 
             pathAnimation.duration + '; running: true }',
             pauseTimer
         );
         
         // Connect to the progress animation
-        progressAnimation.runningChanged.connect(function() {
-            if (!progressAnimation.running) {
-                progressAnimation.destroy();
-            }
-        });
-        
-        // Monitor progress for pause points
-        progressAnimation.onProgressChanged.connect(function() {
-            // Check if we should pause at any point
-            var segmentSize = 1.0 / (pathPoints.length - 1);
-            var currentSegment = Math.floor(progressAnimation.progress / segmentSize);
-            
-            // If we've reached a pause point and we're not already paused
-            if (currentSegment < currentSegmentPauses.length && 
-                currentSegmentPauses[currentSegment] && 
-                pathAnimation.running && 
-                !pauseTimer.running) {
-                
-                // Pause the animation
-                pathAnimation.pause();
-                
-                // Set up the timer to resume
-                pauseTimer.currentPauseSegment = currentSegment;
-                pauseTimer.interval = pauseDuration + (Math.random() * 150);
-                pauseTimer.start();
-                
-                // Mark this pause as used so we don't pause here again
-                currentSegmentPauses[currentSegment] = false;
-            }
-        });
-        
-        // Clean up the connection when done
-        pathAnimation.runningChanged.connect(function() {
-            if (!pathAnimation.running) {
-                progressAnimation.stop();
-                if (progressAnimation) {
+        if (progressAnimation) {
+            progressAnimation.runningChanged.connect(function() {
+                if (!progressAnimation.running) {
                     progressAnimation.destroy();
                 }
-            }
-        });
+            });
+            
+            // Monitor progress for pause points
+            progressAnimation.onProgressChanged = function() {
+                // Check if we should pause at any point
+                var segmentSize = 1.0 / (pathPoints.length - 1);
+                var currentSegment = Math.floor(progressAnimation.progress / segmentSize);
+                
+                // If we've reached a pause point and we're not already paused
+                if (currentSegment < currentSegmentPauses.length && 
+                    currentSegmentPauses[currentSegment] && 
+                    pathAnimation.running && 
+                    !pauseTimer.running) {
+                    
+                    // Pause the animation
+                    pathAnimation.pause();
+                    
+                    // Set up the timer to resume
+                    pauseTimer.currentPauseSegment = currentSegment;
+                    pauseTimer.interval = pauseDuration + (Math.random() * 150);
+                    pauseTimer.start();
+                    
+                    // Mark this pause as used so we don't pause here again
+                    currentSegmentPauses[currentSegment] = false;
+                }
+            };
+        }
+        
+        // Clean up the connection when done
+        if (pathAnimation) {
+            pathAnimation.runningChanged.connect(function() {
+                if (!pathAnimation.running && progressAnimation) {
+                    progressAnimation.stop();
+                    progressAnimation.destroy();
+                }
+            });
+        }
     }
     
     // Calculate the appropriate movement duration based on distance

@@ -68,9 +68,9 @@ Rectangle {
         target: Game
         
         function onPlayersChanged() {
-            // Player data may have changed (including positions)
-            // Disconnect old signal connections and create new ones
-            connectPlayerSignals();
+            console.log("Players changed - reconnecting signals after delay");
+            // Use a timer to ensure the players list is stable before connecting
+            reconnectTimer.start();
         }
     }
 
@@ -136,6 +136,7 @@ Rectangle {
     // Connect to player signals for movement
     function connectPlayerSignals() {
         // First, clear any previous connections
+        console.log("Clearing previous player connections");
         for (var player in playerConnections) {
             if (playerConnections[player]) {
                 playerConnections[player].disconnect();
@@ -143,12 +144,18 @@ Rectangle {
             }
         }
         
-        playerConnections = {}; // Reset connections
+        playerConnections = {}; // Reset connections array
         
         // Then create new connections with proper indexing
         for (var i = 0; i < Game.players.length; i++) {
             var player = Game.players[i];
             var playerName = player.name;
+            
+            // Check if player already has a connection to avoid duplicates
+            if (playerConnections[playerName]) {
+                console.log("Player " + playerName + " already has a connection, skipping");
+                continue;
+            }
             
             // Use an immediately invoked function expression to capture the current player
             (function(currentPlayer, playerIndex) {
@@ -157,17 +164,64 @@ Rectangle {
                 // Store the connection handler for later disconnection
                 playerConnections[currentPlayer.name] = currentPlayer.playerMoved.connect(
                     function(oldPos, newPos, steps) {
+                        // Debug info to track multiple calls
                         console.log("Player moved signal received for: " + currentPlayer.name);
                         console.log("Old position: " + oldPos + ", New position: " + newPos + ", Steps: " + steps);
-                        animationManager.animatePlayerMovement(currentPlayer, oldPos, newPos, steps);
+                        
+                        // Add a brief debounce to avoid multiple animations
+                        if (!currentPlayer._isMovementProcessing) {
+                            currentPlayer._isMovementProcessing = true;
+                            
+                            // Use a timer to prevent signal collision
+                            Qt.callLater(function() {
+                                animationManager.animatePlayerMovement(currentPlayer, oldPos, newPos, steps);
+                                // Reset after a short delay
+                                moveDebounceTimer.start();
+                            });
+                        } else {
+                            console.log("Ignoring duplicate movement for: " + currentPlayer.name);
+                        }
                     }
                 );
             })(player, i);
         }
     }
     
+    // Timer to debounce movement processing
+    Timer {
+        id: moveDebounceTimer
+        interval: 300
+        repeat: false
+        onTriggered: {
+            for (var i = 0; i < Game.players.length; i++) {
+                Game.players[i]._isMovementProcessing = false;
+            }
+        }
+    }
+    
     // Keep track of player connections to properly disconnect them
     property var playerConnections: ({})
+    
+    Timer {
+        id: reconnectTimer
+        interval: 50 // Short delay to ensure players are fully updated
+        repeat: false
+        onTriggered: {
+            // Disconnect all first, then reconnect
+            for (var player in playerConnections) {
+                if (playerConnections[player]) {
+                    console.log("Disconnecting: " + player);
+                    playerConnections[player].disconnect();
+                    playerConnections[player] = null;
+                }
+            }
+            playerConnections = {};
+            
+            // Now reconnect all players
+            registerTilePositions();
+            connectPlayerSignals();
+        }
+    }
 
     // Helper functions to get board tile information from the Game
     function getBoardTileType(index) {
