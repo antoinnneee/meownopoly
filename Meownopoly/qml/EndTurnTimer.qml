@@ -1,15 +1,12 @@
 import QtQuick
 import Game
 
-Timer {
+// Instead of reinventing this timer, use the TurnManager
+TurnManager {
     id: endTurnTimer
-    interval: 2000 // 2 seconds delay before ending turn
-    repeat: false
     
-    signal turnEnded()
-    
-    onTriggered: {
-        Game.nextPlayer();
-        turnEnded();
+    Component.onCompleted: {
+        // For backward compatibility, start the delayed end turn timer
+        endTurnWithDelay();
     }
 } 

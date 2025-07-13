@@ -7,7 +7,12 @@ import Game
 
 Rectangle {
     id: root
+    objectName: "gameBoard"
     color: "#2c3e50"  // Dark blue-gray background
+
+    // Track the state of ongoing operations to prevent race conditions
+    property bool isHandlingPlayerMovement: false
+    property bool isCheckingProperties: false
 
     property int boardSideSize: Math.floor(Math.sqrt(Game.boardSize))  // Calculate side size from total board size
     property int tileSize: Math.min(width, height) / (boardSideSize + 1)  // Add 1 to account for corner tiles
@@ -15,13 +20,12 @@ Rectangle {
     // Game board container
     Rectangle {
         id: boardContainer
-        width: Math.min(parent.width * 0.8, parent.height * 0.8)
+        width: Math.min(parent.width * 0.8, parent.height * 0.95)
         height: width
         color: "#34495e"  // Slightly lighter blue-gray
         radius: 15
         anchors.centerIn: parent
         anchors.horizontalCenterOffset: -playerPanel.width/2
-        anchors.verticalCenterOffset: -controlPanel.height/2
         border.color: "#95a5a6"
         border.width: 2
 
@@ -45,15 +49,37 @@ Rectangle {
         }
     }
 
-    // Game controls
-    ControlPanel {
-        id: controlPanel
-        height: 60
+
+    // New Compact Dice Control
+    CompactDiceControl {
+        id: diceControl
         anchors {
-            left: parent.left
             right: playerPanel.left
-            bottom: parent.bottom
+            bottom: boardContainer.bottom
+            leftMargin: parent.width*0.2
+            bottomMargin: parent.height*0.02
         }
+        
+        onDiceRolled: function(dice1, dice2) {
+            try {
+                // Only check for buyable property if we're not already handling a check
+                if (!isCheckingProperties) {
+                    // Delay property check to allow animations to complete
+                    propertyCheckTimer.restart();
+                }
+            } catch (e) {
+                console.error("Error handling dice rolled event:", e);
+            }
+        }
+    }
+
+    // Game action dialog
+    GameActionDialog {
+        id: gameActionDialog
+        visible: true
+        
+        // Provide a reference to the board grid for updates
+        property var boardGridReference: boardGrid
     }
 
     // Animation manager for player tokens
@@ -68,16 +94,202 @@ Rectangle {
         target: Game
         
         function onPlayersChanged() {
-            console.log("Players changed - reconnecting signals after delay");
-            // Use a timer to ensure the players list is stable before connecting
-            reconnectTimer.start();
+            // Update player positions on the board when players change
+            updatePlayerPositions();
+        }
+        
+        function onCurrentPlayerIndexChanged() {
+            // Reset dice control when player changes
+            diceControl.resetDiceState();
         }
     }
 
-    // Register tile positions for animation paths when tiles are created
+    // Check if the player landed on a buyable property and show the purchase dialog
+    function checkLandedOnBuyableProperty() {
+        // Set flag to indicate we're checking properties
+        isCheckingProperties = true;
+        
+        // Safety timer to reset flag if something goes wrong
+        propertyCheckResetTimer.restart();
+        
+        try {
+            console.log("Checking if player landed on buyable property");
+            
+            if (Game.players.length === 0) {
+                isCheckingProperties = false;
+                return;
+            }
+            
+            if (Game.currentPlayerIndex < 0 || Game.currentPlayerIndex >= Game.players.length) {
+                console.error("Invalid current player index:", Game.currentPlayerIndex);
+                isCheckingProperties = false;
+                return;
+            }
+            
+            var currentPlayer = Game.players[Game.currentPlayerIndex];
+            if (!currentPlayer) {
+                console.error("Current player is null");
+                isCheckingProperties = false;
+                return;
+            }
+            
+            var position = currentPlayer.position;
+            var boardCase = Game.getCaseAt(position);
+            
+            if (!boardCase) {
+                console.error("No board case at position:", position);
+                isCheckingProperties = false;
+                return;
+            }
+            
+            console.log("Current tile type: " + boardCase.type + ", name: " + boardCase.name);
+            
+            // Check if the property is buyable - allow different property types
+            // Type 1: RestArea (properties)
+            // Type 2: CardBoardBox (utilities)
+            var isBuyablePropertyType = (boardCase.type === 1 || boardCase.type === 2);
+            
+            if (isBuyablePropertyType) {
+                // Check if it's unowned and has a price
+                if (!boardCase.owner && boardCase.price > 0) {
+                    console.log("Property is buyable, showing dialog");
+                    
+                    // Pass the board grid reference to the dialog
+                    gameActionDialog.boardGridReference = boardGrid;
+                    
+                    // Show purchase dialog with error handling
+                    try {
+                        gameActionDialog.showBuyProperty();
+                    } catch (e) {
+                        console.error("Error showing buy property dialog:", e);
+                    }
+                }
+            }
+            
+            // Clear the property checking flag
+            isCheckingProperties = false;
+        } catch (e) {
+            console.error("Error checking for buyable property:", e);
+            isCheckingProperties = false;
+        }
+    }
+    
+    // Timer to delay property check after movement
+    Timer {
+        id: propertyCheckTimer
+        interval: 500 // Increased delay to ensure animations complete
+        repeat: false
+        onTriggered: {
+            if (!isCheckingProperties) {
+                checkLandedOnBuyableProperty();
+            } else {
+                console.log("Property check already in progress, skipping");
+            }
+        }
+    }
+    
+    // Safety timer to reset property checking flag if stuck
+    Timer {
+        id: propertyCheckResetTimer
+        interval: 3000 // 3 seconds
+        repeat: false
+        onTriggered: {
+            if (isCheckingProperties) {
+                console.warn("Property checking flag stuck, forcing reset");
+                isCheckingProperties = false;
+            }
+        }
+    }
+    
+    // Listen for player movement and check for buyable property
+    Connections {
+        target: Game
+        
+        function onPlayerMoved(oldPosition, newPosition, steps) {
+            try {
+                console.log("Player moved from " + oldPosition + " to " + newPosition);
+                
+                // Set handling flag
+                isHandlingPlayerMovement = true;
+                
+                // Force update the board to refresh all tiles
+                if (boardGrid) {
+                    try {
+                        boardGrid.updateAllTiles();
+                    } catch (e) {
+                        console.error("Error updating board tiles:", e);
+                    }
+                }
+                
+                // Schedule check for buyable property after a short delay
+                // This ensures the game state is fully updated
+                propertyCheckTimer.restart();
+                
+                // Clear the handling flag after a delay
+                movementHandlingTimer.restart();
+            } catch (e) {
+                console.error("Error handling player movement:", e);
+                isHandlingPlayerMovement = false;
+            }
+        }
+    }
+    
+    // Timer to reset movement handling flag
+    Timer {
+        id: movementHandlingTimer
+        interval: 1000 // 1 second
+        repeat: false
+        onTriggered: {
+            isHandlingPlayerMovement = false;
+        }
+    }
+
+    // Function to update positions of all player tokens with error handling
+    function updatePlayerPositions() {
+        try {
+            if (!animationManager) {
+                console.error("Animation manager is null");
+                return;
+            }
+            
+            const players = Game.players;
+            for (let i = 0; i < players.length; i++) {
+                const player = players[i];
+                if (player && player.name) {
+                    // Check if animation token exists and update its position
+                    try {
+                        animationManager.positionTokenAtTile(player.name, player.position);
+                    } catch (e) {
+                        console.error("Error positioning token for player:", player.name, e);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Error updating player positions:", e);
+        }
+    }
+
+    // Connect to individual player movement signals
+    function connectPlayerSignals() {
+        const players = Game.players;
+        for (let i = 0; i < players.length; i++) {
+            const player = players[i];
+            player.playerMoved.connect(function(oldPosition, newPosition, steps) {
+                console.log("Player moved signal received for: " + player.name);
+                console.log("Old position: " + oldPosition + ", New position: " + newPosition + ", Steps: " + steps);
+                
+                // Animate the player movement
+                animationManager.animatePlayerMovement(player.name, player.color, oldPosition, newPosition, steps);
+            });
+        }
+    }
+
+    // Object to track last movement of each player to prevent duplicate animations
+    property var playerMovementTracker: ({})
+
     Component.onCompleted: {
-        // Wait for layout to be complete
-        registerTilesTimer.start();
+        registerTilesTimer.start()
+        // Connect to game started signal to initialize player tokens
     }
 
     Timer {
@@ -85,13 +297,23 @@ Rectangle {
         interval: 100
         repeat: false
         onTriggered: {
-            registerTilePositions();
+            console.log("game started")
+            // Clear existing tokens when starting a new game
+            animationManager.clearAllTokens();
+            playerMovementTracker = {};
+
+            // Connect all player signals
             connectPlayerSignals();
+
+            // Initialize player positions
+            updatePlayerPositions();
+            registerTilePositions();
         }
     }
 
     // Register all tile positions for animation paths
     function registerTilePositions() {
+        console.log("register tiles")
         var allTiles = findAllTiles(boardGrid);
         
         for (var i = 0; i < allTiles.length; i++) {
@@ -131,96 +353,6 @@ Rectangle {
         }
         
         return tiles;
-    }
-
-    // Connect to player signals for movement
-    function connectPlayerSignals() {
-        // First, clear any previous connections
-        console.log("Clearing previous player connections");
-        for (var player in playerConnections) {
-            if (playerConnections[player]) {
-                playerConnections[player].disconnect();
-                playerConnections[player] = null;
-            }
-        }
-        
-        playerConnections = {}; // Reset connections array
-        
-        // Then create new connections with proper indexing
-        for (var i = 0; i < Game.players.length; i++) {
-            var player = Game.players[i];
-            var playerName = player.name;
-            
-            // Check if player already has a connection to avoid duplicates
-            if (playerConnections[playerName]) {
-                console.log("Player " + playerName + " already has a connection, skipping");
-                continue;
-            }
-            
-            // Use an immediately invoked function expression to capture the current player
-            (function(currentPlayer, playerIndex) {
-                console.log("Connecting player signals for: " + currentPlayer.name + " (index: " + playerIndex + ")");
-                
-                // Store the connection handler for later disconnection
-                playerConnections[currentPlayer.name] = currentPlayer.playerMoved.connect(
-                    function(oldPos, newPos, steps) {
-                        // Debug info to track multiple calls
-                        console.log("Player moved signal received for: " + currentPlayer.name);
-                        console.log("Old position: " + oldPos + ", New position: " + newPos + ", Steps: " + steps);
-                        
-                        // Add a brief debounce to avoid multiple animations
-                        if (!currentPlayer._isMovementProcessing) {
-                            currentPlayer._isMovementProcessing = true;
-                            
-                            // Use a timer to prevent signal collision
-                            Qt.callLater(function() {
-                                animationManager.animatePlayerMovement(currentPlayer, oldPos, newPos, steps);
-                                // Reset after a short delay
-                                moveDebounceTimer.start();
-                            });
-                        } else {
-                            console.log("Ignoring duplicate movement for: " + currentPlayer.name);
-                        }
-                    }
-                );
-            })(player, i);
-        }
-    }
-    
-    // Timer to debounce movement processing
-    Timer {
-        id: moveDebounceTimer
-        interval: 300
-        repeat: false
-        onTriggered: {
-            for (var i = 0; i < Game.players.length; i++) {
-                Game.players[i]._isMovementProcessing = false;
-            }
-        }
-    }
-    
-    // Keep track of player connections to properly disconnect them
-    property var playerConnections: ({})
-    
-    Timer {
-        id: reconnectTimer
-        interval: 50 // Short delay to ensure players are fully updated
-        repeat: false
-        onTriggered: {
-            // Disconnect all first, then reconnect
-            for (var player in playerConnections) {
-                if (playerConnections[player]) {
-                    console.log("Disconnecting: " + player);
-                    playerConnections[player].disconnect();
-                    playerConnections[player] = null;
-                }
-            }
-            playerConnections = {};
-            
-            // Now reconnect all players
-            registerTilePositions();
-            connectPlayerSignals();
-        }
     }
 
     // Helper functions to get board tile information from the Game

@@ -31,11 +31,20 @@
         <file>qml/PlayerSetup.qml</file>
         <file>qml/PlayerPanel.qml</file>
         <file>qml/ControlPanel.qml</file>
+        <file>qml/DicePanel.qml</file>
+        <file>qml/PlayerTurnPanel.qml</file>
+        <file>qml/PropertyPurchasePanel.qml</file>
         <file>qml/BoardGrid.qml</file>
         <file>qml/AnimationManager.qml</file>
         <file>qml/DiceRollTimer.qml</file>
         <file>qml/EndTurnTimer.qml</file>
         <file>qml/ResetDiceStateTimer.qml</file>
+        <file>qml/CompactDiceControl.qml</file>
+        <file>qml/DiceBase.qml</file>
+        <file>qml/TurnManager.qml</file>
+        <file>qml/PropertyController.qml</file>
+        <file>qml/GameActionButton.qml</file>
+        <file>qml/GameActionDialog.qml</file>
         <file>qml/boardTile/BoardTile.qml</file>
         <file>qml/boardTile/TileContent.qml</file>
         <file>qml/boardTile/StarRating.qml</file>

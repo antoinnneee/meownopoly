@@ -1,48 +1,45 @@
 import QtQuick
-import Game
 
 Timer {
-    id: diceRollTimer
-    interval: 100
+    id: root
+    interval: 50
     repeat: true
+    running: false
     
+    property var controlPanel
     property int rollCount: 0
-    property int maxRolls: 10
-    property Item controlPanel: null
+    property int maxRolls: 20
+    property int dice1: 1
+    property int dice2: 1
     
     signal rollComplete(int dice1, int dice2)
     
     onTriggered: {
-        if (!controlPanel) {
-            console.error("ControlPanel reference is missing");
-            stop();
-            return;
-        }
+        // Generate random dice values during animation
+        dice1 = Math.floor(Math.random() * 6) + 1;
+        dice2 = Math.floor(Math.random() * 6) + 1;
         
-        // Generate random dice values
-        controlPanel.diceValue1 = Math.floor(Math.random() * 6) + 1;
-        controlPanel.diceValue2 = Math.floor(Math.random() * 6) + 1;
+        // Update the control panel's dice values
+        if (controlPanel) {
+            controlPanel.diceValue1 = dice1;
+            controlPanel.diceValue2 = dice2;
+        }
         
         rollCount++;
         
+        // Stop after a certain number of rolls
         if (rollCount >= maxRolls) {
             stop();
             
-            // Signal roll is complete
-            rollComplete(controlPanel.diceValue1, controlPanel.diceValue2);
-            
-            // Reset for next use
-            rollCount = 0;
+            // Emit the rollComplete signal with final values
+            rollComplete(dice1, dice2);
         }
     }
     
     function startRoll() {
-        if (!controlPanel) {
-            console.error("Cannot start roll - ControlPanel reference is missing");
-            return;
-        }
-        
         rollCount = 0;
+        
+        // Start the animation
         start();
     }
 } 

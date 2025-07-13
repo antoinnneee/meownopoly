@@ -106,17 +106,7 @@ void Game::movePlayer(int playerIndex, int steps)
 {
     if (playerIndex >= 0 && playerIndex < m_players.size()) {
         Player* player = m_players[playerIndex];
-        int newPosition = (player->position() + steps) % m_board.size();
-        player->setPosition(newPosition, steps);
-        
-        qDebug() << "Player" << player->name() << "moved to position" << newPosition;
-        
-        // Check if player passed GO
-        if (player->position() < steps) {
-            // Player passed GO, give them money
-            player->setKibble(player->kibble() + 200);
-            qDebug() << "Player" << player->name() << "passed GO, received 200K";
-        }
+        player->move(steps);
         
         emit playersChanged();
     }

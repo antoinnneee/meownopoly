@@ -48,13 +48,11 @@ void Player::setPosition(int position, int steps)
         int oldPosition = m_position;
         m_position = position;
 
-        // If steps is provided, emit the playerMoved signal
-        if (steps > 0) {
-            emit playerMoved(oldPosition, position, steps);
-        }
-        
-        // Always emit the positionChanged signal
+        // We'll only emit position changed here, playerMoved signal is handled in move() method
         emit positionChanged();
+        
+        // Log position change
+        qDebug() << "Player" << m_name << "position set from" << oldPosition << "to" << position;
     } else {
         // Position didn't change, log this unusual situation
         qDebug() << "Warning: setPosition called with same position" << position << "for player" << m_name;
@@ -134,6 +132,7 @@ void Player::rollDice() {
                     Case* currentCase = Game::instance()->getCaseAt(i);
                     if (currentCase && currentCase->getType() == CT_Jail) {
                         int oldPosition = m_position;
+                        // Set position directly without going through the move function
                         m_position = i;
                         emit positionChanged();
                         emit playerMoved(oldPosition, m_position, 0); // Special case for jail
@@ -158,26 +157,40 @@ void Player::rollDice() {
 }
 
 void Player::move(int steps) {
+    if (steps <= 0) {
+        qDebug() << "Ignoring move with zero or negative steps";
+        return;
+    }
+
     int oldPosition = m_position;
-    m_position = (m_position + steps) % Game::instance()->boardSize();
+    int newPosition = (m_position + steps) % Game::instance()->boardSize();
+    
+    // Update position without emitting playerMoved (we'll do it here)
+    int tempPosition = m_position;
+    m_position = newPosition;
     emit positionChanged();
     
-    // Emit signal for animation
-    emit playerMoved(oldPosition, m_position, steps);
+    // Emit playerMoved signal exactly once per move
+    emit playerMoved(oldPosition, newPosition, steps);
     
     // Check if player passed the start
-    if (m_position < oldPosition && steps > 0) {
+    if (newPosition < oldPosition && steps > 0) {
+        // Player passed GO, emit signal
         emit passedStart();
+        
+        // Give player reward for passing GO
+        earnKibble(200);
+        qDebug() << "Player" << m_name << "passed GO, received 200K";
     }
     
     // Land on the new position
-    Case* currentCase = Game::instance()->getCaseAt(m_position);
+    Case* currentCase = Game::instance()->getCaseAt(newPosition);
     if (currentCase) {
         currentCase->onLand(this);
         emit landedOnSpecialTile();
     }
     
-    qDebug() << "Player moved from position " << oldPosition << " to position " << m_position;
+    qDebug() << "Player moved from position " << oldPosition << " to position " << newPosition;
 }
 
 void Player::buyProperty(CaseRestArea* property) {
