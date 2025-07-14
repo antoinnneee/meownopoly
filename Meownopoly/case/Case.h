@@ -20,7 +20,7 @@ enum CaseType{
     CT_LaserPointer,    // service electricite
     CT_Taxe,    // Taxe de luxe   // Taxe sur le revenu
     CT_Unknow,
-    CT_Count
+    CT_Count,
 };
 
 class Case : public QObject

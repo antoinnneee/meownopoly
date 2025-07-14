@@ -5,7 +5,9 @@
 #include <QString>
 #include <QColor>
 #include <QList>
-#include "case/CaseRestarea.h"
+#include "case/caserestarea.h"
+#include "case/CaseCatDevice.h"
+#include "case/CaseCatDoor.h"
 
 class Player : public QObject
 {
@@ -45,8 +47,6 @@ public:
     void removeProperty(CaseRestArea* property);
     int propertyCount() const { return m_ownedProperties.size(); }
 
-    Q_INVOKABLE void rollDice();
-    Q_INVOKABLE void move(int steps);
 
 signals:
     void nameChanged();
@@ -55,7 +55,6 @@ signals:
     void propertyCountChanged();
     void positionChanged();
     void inJailChanged();
-    void playerMoved(int oldPosition, int newPosition, int steps);
     void passedStart();
     void landedOnSpecialTile();
 
@@ -65,8 +64,11 @@ private:
     int m_kibble = 1500;  // Starting money
     int m_position = 0;
     QList<CaseRestArea*> m_ownedProperties;
+    QList<CaseCatDevice*> m_ownedCatDevice;
+    QList<CaseCatDoor*> m_ownedCatDoors;
+
     bool m_inJail = false;
-    int m_consecutiveDoubles = 0; // Track consecutive doubles
+
 };
 
 #endif // PLAYER_H
