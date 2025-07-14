@@ -90,6 +90,25 @@ void Player::removeProperty(CaseRestArea* property) {
     emit propertyCountChanged();
 }
 
+void Player::addCatDevice(CaseCatDevice *catDevice)
+{
+    if (!m_ownedCatDevice.contains(catDevice)) {
+        m_ownedCatDevice.append(catDevice);
+        emit propertyCountChanged();
+    }
+}
+
+void Player::removeCatDevice(CaseCatDevice *catDevice)
+{
+    m_ownedCatDevice.removeAll(catDevice);
+    emit catDeviceCountChanged();
+}
+
+QList<CaseRestArea *> Player::ownedCatDevices() const
+{
+    return m_ownedCatDevice;
+}
+
 void Player::setInJail(bool inJail) {
     m_inJail = inJail;
     emit inJailChanged();
