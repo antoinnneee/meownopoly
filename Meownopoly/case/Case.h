@@ -21,7 +21,7 @@ enum CaseType{
     CT_GoldenCollar,    // Taxe de luxe
     CT_FurTax,          // Taxe sur le revenu
     CT_Unknow,
-    CT_Count
+    CT_Count,
 };
 
 class Case : public QObject

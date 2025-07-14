@@ -102,16 +102,6 @@ void Game::startGame()
     emit gameStarted();
 }
 
-void Game::movePlayer(int playerIndex, int steps)
-{
-    if (playerIndex >= 0 && playerIndex < m_players.size()) {
-        Player* player = m_players[playerIndex];
-        player->move(steps);
-        
-        emit playersChanged();
-    }
-}
-
 int Game::currentPlayerIndex() const
 {
     return m_currentPlayerIndex;

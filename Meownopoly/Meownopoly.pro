@@ -22,9 +22,11 @@ CONFIG += c++20
 
 SOURCES += \
     case/Case.cpp \
+    case/CaseCatDevice.cpp \
     case/CaseCatDoor.cpp \
     case/CaseCatNip.cpp \
     case/CaseCardBoardBox.cpp \
+    case/CaseCatPerks.cpp \
     case/CaseFreeNap.cpp \
     case/CaseJail.cpp \
     case/CaseKibbleDispenser.cpp \
@@ -40,9 +42,11 @@ SOURCES += \
 
 HEADERS += \
     case/Case.h \
+    case/CaseCatDevice.h \
     case/CaseCatDoor.h \
     case/CaseCatNip.h \
     case/CaseCardBoardBox.h \
+    case/CaseCatPerks.h \
     case/CaseFreeNap.h \
     case/CaseJail.h \
     case/CaseKibbleDispenser.h \
