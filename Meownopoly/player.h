@@ -47,7 +47,6 @@ public:
 
     Q_INVOKABLE void rollDice();
     Q_INVOKABLE void move(int steps);
-    Q_INVOKABLE void buyProperty(CaseRestArea* property);
 
 signals:
     void nameChanged();

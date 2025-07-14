@@ -6,20 +6,12 @@ CaseRestArea::CaseRestArea(QObject *parent)
     : Case("Unknown Rest Area", -1, parent)
 {
     setType(CT_RestArea);
-    while (m_prices.count() < RQ_COUNT)
-    {
-        m_prices.append(0);
-    }
 }
 
-CaseRestArea::CaseRestArea(const QString &name, QVector<int> prices, FamilyType family, int position, QObject *parent)
-    : Case(name, position, parent), m_family(family), m_prices(prices)
+CaseRestArea::CaseRestArea(const QString &name, FamilyType family, int position, QObject *parent)
+    : Case(name, position, parent), m_family(family)
 {
     setType(CT_RestArea);
-    while (m_prices.count() < RQ_COUNT)
-    {
-        m_prices.append(0);
-    }
 }
 
 RestQuality CaseRestArea::restQuality() const
@@ -42,15 +34,6 @@ void CaseRestArea::setFamily(FamilyType newFamily)
     m_family = newFamily;
 }
 
-Player *CaseRestArea::owner() const
-{
-    return m_owner;
-}
-
-void CaseRestArea::setOwner(Player *newOwner)
-{
-    m_owner = newOwner;
-}
 
 
 // void CaseRestArea::print_state()
@@ -58,46 +41,7 @@ void CaseRestArea::setOwner(Player *newOwner)
 //     qDebug() << "Quality[" << m_restQuality << "] name[" << name() << "] price[" << m_prices <<"] family[" << m_family << "]";
 // }
 
-void CaseRestArea::upgrade()
-{
-    if (canUpgrade() && m_owner && m_owner->canAfford(getUpgradeCost())) {
-        m_owner->spendKibble(getUpgradeCost());
-        
-        // Increment the rest quality
-        if (m_restQuality < RQ_HOTEL) {
-            m_restQuality = static_cast<RestQuality>(static_cast<int>(m_restQuality) + 1);
-            qDebug() << "Property upgraded to quality level " << m_restQuality;
-        }
-    }
-}
-bool CaseRestArea::canUpgrade() const
-{
-    // Check if the property can be upgraded further
-    return m_restQuality < RQ_HOTEL;
-}
-
-int CaseRestArea::getUpgradeCost() const
-{
-    if (m_restQuality >= RQ_HOTEL)
-            return 1;
-    else
-    {
-        return m_upgradeCost * (m_restQuality + 1);
-    }
-}
 
 void CaseRestArea::onLand(Player* player) {
-    if (m_owner && m_owner != player) {
-        int rentAmount = get_price();
-        if (player->canAfford(rentAmount)) {
-            player->spendKibble(rentAmount);
-            m_owner->earnKibble(rentAmount);
-            qDebug() << "Player paid rent of " << rentAmount;
-        } else {
-            qDebug() << "Player cannot afford rent.";
-        }
-    } else if (!m_owner) {
-        // Logic to buy the rest area
-        qDebug() << "Rest area is available for purchase.";
-    }
+
 }

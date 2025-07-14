@@ -40,7 +40,7 @@ class CaseRestArea : public Case
     
 public:
     explicit CaseRestArea(QObject *parent = nullptr);
-    CaseRestArea(const QString &name, QVector<int> price, FamilyType family = FT_NONE, int position = -1, QObject *parent = nullptr);
+    CaseRestArea(const QString &name, FamilyType family = FT_NONE, int position = -1, QObject *parent = nullptr);
 
     RestQuality restQuality() const;
     void setRestQuality(RestQuality newRestQuality);

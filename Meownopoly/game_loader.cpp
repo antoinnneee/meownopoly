@@ -28,6 +28,7 @@
 
 void Game::init_caseFile()
 {
+    /*
     QFile caseFile(CASE_FILE_PATH);
 
     if (!caseFile.open(QIODevice::ReadOnly)) {
@@ -225,6 +226,7 @@ void Game::init_caseFile()
     if (DEBUG_CASE_LOADING) {
         qDebug() << "Successfully loaded" << m_board.size() << "cases";
     }
+    */
 }
 
 void Game::init()

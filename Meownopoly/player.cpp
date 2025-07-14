@@ -193,16 +193,6 @@ void Player::move(int steps) {
     qDebug() << "Player moved from position " << oldPosition << " to position " << newPosition;
 }
 
-void Player::buyProperty(CaseRestArea* property) {
-    if (canAfford(property->get_price())) {
-        spendKibble(property->get_price());
-        property->setOwner(this);
-        m_ownedProperties.append(property);
-        qDebug() << "Player" << m_name << "bought property" << property->name() << "for" << property->get_price() << "kibble";
-    } else {
-        qDebug() << "Player" << m_name << "cannot afford property" << property->name();
-    }
-}
 
 void Player::setInJail(bool inJail) {
     m_inJail = inJail;
