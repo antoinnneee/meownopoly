@@ -2,8 +2,9 @@
 #define CASERESTAREA_H
 
 #include <QObject>
-#include "Case.h"
+#include "CaseCatPerks.h"
 
+class Player;
 
 enum RestQuality{
     RQ_NONE,
@@ -29,10 +30,9 @@ enum FamilyType {
 };
 
 
-class Player;
 Q_DECLARE_OPAQUE_POINTER(Player*)
 
-class CaseRestArea : public Case
+class CaseRestArea : public CaseCatPerks
 {
     Q_OBJECT
     Q_PROPERTY(int restQuality READ restQuality NOTIFY restQualityChanged)
@@ -56,15 +56,19 @@ public:
     void onLand(Player* player) override;
     bool canUpgrade() const;
 
+    Q_INVOKABLE bool buyCase(Player *buyer);
+    Q_INVOKABLE bool sellCase(Player *buyer);
+
+
 signals:
     void restQualityChanged();
     void ownerChanged();
+
 
 private:
     enum CaseType type = CT_RestArea;
     enum RestQuality m_restQuality = RQ_NONE;   // Land level
     enum FamilyType m_family = FT_NONE;
-
 };
 
 #endif // CASERESTAREA_H

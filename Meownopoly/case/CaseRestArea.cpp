@@ -2,14 +2,15 @@
 #include <QDebug>
 #include "../player.h"
 
+
 CaseRestArea::CaseRestArea(QObject *parent)
-    : Case("Unknown Rest Area", -1, parent)
+    : CaseCatPerks("Unknown Rest Area", -1, parent)
 {
     setType(CT_RestArea);
 }
 
 CaseRestArea::CaseRestArea(const QString &name, FamilyType family, int position, QObject *parent)
-    : Case(name, position, parent), m_family(family)
+    : CaseCatPerks(name, position, parent), m_family(family)
 {
     setType(CT_RestArea);
 }
@@ -44,4 +45,19 @@ void CaseRestArea::setFamily(FamilyType newFamily)
 
 void CaseRestArea::onLand(Player* player) {
 
+}
+
+bool CaseRestArea::buyCase(Player *buyer) {
+    if (CaseCatPerks::buyCase(buyer)){
+        buyer->addProperty(this);
+        return true;
+    }
+    return false;
+}
+
+bool CaseRestArea::sellCase(Player *buyer)
+{
+    CaseCatPerks::sellCase(buyer);
+    buyer->removeProperty(this);
+    return true;
 }

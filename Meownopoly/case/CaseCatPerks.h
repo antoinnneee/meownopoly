@@ -12,15 +12,14 @@ class CaseCatPerks : public Case
     Q_PROPERTY(int price READ price WRITE setPrice NOTIFY priceChanged FINAL)
     Q_PROPERTY(int sellPrice READ sellPrice WRITE setsellPrice NOTIFY sellPriceChanged FINAL)
 
+
 public:
 
-    CaseCatPerks();
-
-    Q_INVOKABLE bool checkKibble();
+    CaseCatPerks(const QString &name, int position = -1, QObject *parent = nullptr);
 
 
-    virtual bool buyCase(Player *buyer);
-    virtual bool sellCase(Player *buyer, int price);
+    bool buyCase(Player *buyer);
+    void sellCase(Player *buyer);
 
 
     int price() const;

@@ -47,7 +47,7 @@ public:
 
 signals:
 
-private:
+protected:
     QString m_name = "Unknown";
     int m_position = -1;
     enum CaseType type = CT_Unknow;

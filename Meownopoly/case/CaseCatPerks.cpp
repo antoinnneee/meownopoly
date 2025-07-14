@@ -1,15 +1,19 @@
 #include "CaseCatPerks.h"
+#include "../player.h"
 
-CaseCatPerks::CaseCatPerks() {}
 
-bool CaseCatPerks::buyCase(Player *buyer)
-{
+CaseCatPerks::CaseCatPerks(const QString &name, int position, QObject *parent) :  Case::Case(name, position, parent){
 
 }
 
-bool CaseCatPerks::sellCase(Player *buyer, int price)
+bool CaseCatPerks::buyCase(Player *buyer)
 {
+    return buyer->spendKibble(price());
+}
 
+void CaseCatPerks::sellCase(Player *buyer)
+{
+    return buyer->earnKibble(sellPrice());
 }
 
 
@@ -39,7 +43,3 @@ void CaseCatPerks::setsellPrice(int newSellPrice)
     emit sellPriceChanged();
 }
 
-bool CaseCatPerks::checkKibble(Player *player)
-{
-    return (price < player->kibble());
-}
