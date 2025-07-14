@@ -5,7 +5,6 @@
 #include <QQmlApplicationEngine>
 #include <QtQuick/QQuickView>
 #include "game.h"
-#include <ollamatranslator.h>
 
 
 class QmlApp : public QQmlApplicationEngine
@@ -25,7 +24,6 @@ private slots:
 
 private:
     Game *game = nullptr;
-    OllamaTranslator *ollama = nullptr;
 };
 
 #endif // __QMLAPP_H

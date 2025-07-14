@@ -3,13 +3,13 @@
 
 #include <QDebug>
 
-#define DBG_CLR_RED "033[31m"
-#define DBG_CLR_GREEN "033[32m"
-#define DBG_CLR_YELLOW "033[33m"
-#define DBG_CLR_BLUE "033[34m"
-#define DBG_CLR_MAGENTA "033[35m"
-#define DBG_CLR_CYAN "033[36m"
-#define DBG_CLR_RESET "033[0m"
+#define DBG_CLR_RED "\033[31m"
+#define DBG_CLR_GREEN "\033[32m"
+#define DBG_CLR_YELLOW "\033[33m"
+#define DBG_CLR_BLUE "\033[34m"
+#define DBG_CLR_MAGENTA "\033[35m"
+#define DBG_CLR_CYAN "\033[36m"
+#define DBG_CLR_RESET "\033[0m"
 
 #define QDBG_RED() qDebug() << DBG_CLR_RED
 #define QDBG_GREEN() qDebug() << DBG_CLR_GREEN

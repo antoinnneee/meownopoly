@@ -33,15 +33,10 @@ SOURCES += \
     case/casestart.cpp \
     game.cpp \
     game_loader.cpp \
-    json_ai_lang.cpp \
     main.cpp \
-    ollamatranslator.cpp \
     player.cpp \
     qmlapp.cpp \
-    tools/crashReportTool.cpp \
     tools/appinfo.cpp \
-    test/suite.cpp \
-    testMain.cpp \
 
 HEADERS += \
     case/Case.h \
@@ -55,14 +50,10 @@ HEADERS += \
     case/caserestarea.h \
     case/casestart.h \
     game.h \
-    json_ai_lang.h \
-    ollamatranslator.h \
     player.h \
     qmlapp.h \
     tools/debug_Info.h	\
-    tools/crashReportTool.h \
     tools/appinfo.h \
-    test/suite.hpp \
 
 RESOURCES += qml.qrc \
     asset.qrc \
