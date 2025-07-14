@@ -4,8 +4,8 @@
 
 int main(int argc, char *argv[])
 {
+    qInstallMessageHandler(0);
     QGuiApplication app(argc, argv);
-//    qInstallMessageHandler(0);
 
     QmlApp a;
 
