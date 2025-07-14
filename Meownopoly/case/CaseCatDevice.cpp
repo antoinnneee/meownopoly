@@ -4,5 +4,6 @@ CaseCatDevice::CaseCatDevice() {}
 
 void CaseCatDevice::buy(Player *player) {
 
+    player->spentKibble();
 }
 

@@ -10,7 +10,7 @@ class CaseCatDevice : public Case
 public:
     CaseCatDevice();
 
-    virtual void buy(Player *player);
+    void buy(Player *player);
 
 private :
 

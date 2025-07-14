@@ -9,18 +9,37 @@ class Player;
 class CaseCatPerks : public Case
 {
     Q_OBJECT
+    Q_PROPERTY(int price READ price WRITE setPrice NOTIFY priceChanged FINAL)
+    Q_PROPERTY(int sellPrice READ sellPrice WRITE setsellPrice NOTIFY sellPriceChanged FINAL)
+
 public:
+
     CaseCatPerks();
+
+    Q_INVOKABLE bool checkKibble();
+
 
     virtual bool buyCase(Player *buyer);
     virtual bool sellCase(Player *buyer, int price);
 
 
+    int price() const;
+    void setPrice(int newPrice);
+
+    int sellPrice() const;
+    void setsellPrice(int newSellPrice);
+
+
+signals:
+    void priceChanged();
+
+    void sellPriceChanged();
+
 protected:
 
-    int m_price = 0;
-    int m_sell = 0;
     Player *owner;
+    int m_price;
+    int m_sellPrice;
 };
 
 #endif // CASECATPERKS_H

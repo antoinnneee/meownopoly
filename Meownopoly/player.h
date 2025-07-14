@@ -8,7 +8,7 @@
 #include "case/CaseRestArea.h"
 #include "case/CaseCatDevice.h"
 #include "case/CaseCatDoor.h"
-#include "case/CaseRestarea.h"
+#include "case/CaseRestArea.h"
 
 class Player : public QObject
 {

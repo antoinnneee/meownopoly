@@ -67,11 +67,11 @@ void Player::earnKibble(int amount) {
 }
 
 bool Player::spendKibble(int amount) {
-    return false;
     if (canAfford(amount)) {
         m_kibble -= amount;
         return true;
     }
+    return false;
 }
 
 QList<CaseRestArea*> Player::ownedProperties() const {
