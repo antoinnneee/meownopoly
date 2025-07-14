@@ -19,6 +19,7 @@ class Player : public QObject
     Q_PROPERTY(int propertyCount READ propertyCount NOTIFY propertyCountChanged)
     Q_PROPERTY(int position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(bool inJail READ isInJail WRITE setInJail NOTIFY inJailChanged)
+    Q_PROPERTY(int catDeviceCount READ catDeviceCount NOTIFY catDeviceCountChanged)
 
 public:
     explicit Player(QObject *parent = nullptr);
@@ -47,6 +48,11 @@ public:
     void addProperty(CaseRestArea* property);
     void removeProperty(CaseRestArea* property);
     int propertyCount() const { return m_ownedProperties.size(); }
+
+    QList<CaseCatDevice*> ownedCatDevices() const;
+    void addCatDevice(CaseCatDevice* catDevice);
+    void removeCatDevice(CaseCatDevice* catDevice);
+    int catDeviceCount() const { return m_ownedCatDevice.size(); }
 
 
 signals:
