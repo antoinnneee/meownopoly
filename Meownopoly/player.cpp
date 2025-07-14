@@ -92,21 +92,41 @@ void Player::removeProperty(CaseRestArea* property) {
 
 void Player::addCatDevice(CaseCatDevice *catDevice)
 {
-    if (!m_ownedCatDevice.contains(catDevice)) {
-        m_ownedCatDevice.append(catDevice);
-        emit propertyCountChanged();
+    if (!m_ownedCatDevices.contains(catDevice)) {
+        m_ownedCatDevices.append(catDevice);
+        emit catDeviceCountChanged();
     }
 }
 
 void Player::removeCatDevice(CaseCatDevice *catDevice)
 {
-    m_ownedCatDevice.removeAll(catDevice);
+    m_ownedCatDevices.removeAll(catDevice);
     emit catDeviceCountChanged();
 }
 
-QList<CaseRestArea *> Player::ownedCatDevices() const
+QList<CaseCatDoor *> Player::ownedCatDoors() const
 {
-    return m_ownedCatDevice;
+    return m_ownedCatDoors;
+}
+
+void Player::addCatDoor(CaseCatDoor *catDoor)
+{
+    if (!m_ownedCatDoors.contains(catDoor)) {
+        m_ownedCatDoors.append(catDoor);
+        emit catDoorCountChanged();
+    }
+}
+
+void Player::removeCatDoor(CaseCatDoor *catDoor)
+{
+    m_ownedCatDoors.removeAll(catDoor);
+    emit catDoorCountChanged();
+
+}
+
+QList<CaseCatDevice *> Player::ownedCatDevices() const
+{
+    return m_ownedCatDevices;
 }
 
 void Player::setInJail(bool inJail) {
