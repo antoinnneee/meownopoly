@@ -3,8 +3,6 @@
 
 #include "Case.h"
 
-
-
 class CaseCatDoor : public Case {
     Q_OBJECT
 public:

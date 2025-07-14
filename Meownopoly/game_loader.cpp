@@ -1,7 +1,7 @@
 #include "game.h"
 #include <QDebug>
 
-#include "case/CaseRestarea.h"
+#include "case/CaseRestArea.h"
 #include "case/CaseKibbleDispenser.h"
 #include "case/CaseCardBoardBox.h"
 #include "case/CaseCatNip.h"

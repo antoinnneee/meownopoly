@@ -1,4 +1,4 @@
-#include "CaseRestarea.h"
+#include "CaseRestArea.h"
 #include <QDebug>
 #include "../player.h"
 
