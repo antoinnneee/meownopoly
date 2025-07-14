@@ -14,6 +14,7 @@ void Game::registerQml()
 {
     qmlRegisterSingletonType<Game>("Game", 1, 0, "Game", &Game::qmlInstance);
     qmlRegisterType<Player>("Player", 1, 0, "Player");  // Register Player class
+    qmlRegisterType<CaseRestArea>("CaseRestArea", 1, 0, "CaseRestArea");  // Register Player class
 }
 
 Game *Game::instance()

@@ -36,7 +36,7 @@ class CaseRestArea : public Case
 {
     Q_OBJECT
     Q_PROPERTY(int restQuality READ restQuality NOTIFY restQualityChanged)
-    Q_PROPERTY(int family READ family CONSTANT)
+    Q_PROPERTY(enum FamilyType family READ family WRITE setFamily  NOTIFY  familyChanged )
     
 public:
     explicit CaseRestArea(QObject *parent = nullptr);
@@ -54,11 +54,11 @@ public:
     // void print_state();
 
     void onLand(Player* player) override;
-    bool canUpgrade() const;
 
 signals:
     void restQualityChanged();
     void ownerChanged();
+    void  familyChanged();
 
 private:
     enum CaseType type = CT_RestArea;

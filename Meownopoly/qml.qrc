@@ -55,5 +55,6 @@
         <file>qml/boardTile/PlayerTokenContainer.qml</file>
         <file>qml/boardTile/AnimatedPlayerToken.qml</file>
         <file>qml/test/TEST_VIEW_0.qml</file>
+        <file>qml/test/TEST_VIEW_1.qml</file>
     </qresource>
 </RCC>
