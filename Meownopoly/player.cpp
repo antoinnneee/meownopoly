@@ -66,9 +66,11 @@ void Player::earnKibble(int amount) {
     m_kibble += amount;
 }
 
-void Player::spendKibble(int amount) {
+bool Player::spendKibble(int amount) {
+    return false;
     if (canAfford(amount)) {
         m_kibble -= amount;
+        return true;
     }
 }
 
