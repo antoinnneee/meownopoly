@@ -140,7 +140,7 @@ bool Game::buyProperty(int playerIndex, int position)
     Case* boardCase = m_board[position];
     
     // Check if the case is a buyable property type
-    bool isBuyableProperty = (boardCase->getType() == 1 || boardCase->getType() == 2);
+    bool isBuyableProperty = (boardCase->getType() == CT_RestArea);
     if (!isBuyableProperty) {
         qDebug() << "Not a buyable property type:" << boardCase->getType();
         return false;
@@ -154,14 +154,11 @@ bool Game::buyProperty(int playerIndex, int position)
     
     // Get property price
     int price = 0;
-    if (boardCase->getType() == 1) {
+    if (boardCase->getType() == CT_RestArea) {
         // RestArea
         CaseRestArea* restArea = qobject_cast<CaseRestArea*>(boardCase);
         if (!restArea) return false;
         price = restArea->get_price();
-    } else if (boardCase->getType() == 2) {
-        // CardBoardBox
-        price =( (CaseRestArea*)boardCase)->get_price();
     }
     
     // Check if player has enough money
@@ -177,7 +174,7 @@ bool Game::buyProperty(int playerIndex, int position)
     ((CaseRestArea*)boardCase)->setOwner(player);
     
     // If it's a RestArea, add it to the player's properties
-    if (boardCase->getType() == 1) {
+    if (boardCase->getType() == CT_RestArea) {
         CaseRestArea* restArea = qobject_cast<CaseRestArea*>(boardCase);
         player->addProperty(restArea);
     }

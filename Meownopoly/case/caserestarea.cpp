@@ -1,4 +1,4 @@
-#include "caserestarea.h"
+#include "CaseRestarea.h"
 #include <QDebug>
 #include "../player.h"
 
@@ -52,25 +52,11 @@ void CaseRestArea::setOwner(Player *newOwner)
     m_owner = newOwner;
 }
 
-int CaseRestArea::get_price() const
-{
-    return m_prices.at(m_restQuality);
-}
 
-QVector<int> CaseRestArea::prices() const
-{
-    return m_prices;
-}
-
-void CaseRestArea::setPrices(const QVector<int> &newPrice)
-{
-    m_prices = newPrice;
-}
-
-void CaseRestArea::print_state()
-{
-    qDebug() << "Quality[" << m_restQuality << "] name[" << name() << "] price[" << m_prices <<"] family[" << m_family << "]";
-}
+// void CaseRestArea::print_state()
+// {
+//     qDebug() << "Quality[" << m_restQuality << "] name[" << name() << "] price[" << m_prices <<"] family[" << m_family << "]";
+// }
 
 void CaseRestArea::upgrade()
 {
