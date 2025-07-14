@@ -41,7 +41,7 @@ public:
 
     bool canAfford(int amount) const;
     void earnKibble(int amount);
-    void spendKibble(int amount);
+    bool spendKibble(int amount);
 
     QList<CaseRestArea*> ownedProperties() const;
     void addProperty(CaseRestArea* property);

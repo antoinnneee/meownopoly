@@ -54,6 +54,9 @@ private:
     static Game *m_pThis;
     QList<Case*> m_board;
     QList<Player*> m_players;
+    QList<CaseRestArea*>    m_family[FT_COUNT];
+//    QList<card_chance*> commu;
+//    QList<card_chance*>chance;
     int m_currentPlayerIndex = 0;
 
     void init_caseFile();
