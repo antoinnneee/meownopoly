@@ -1,4 +1,4 @@
-#include "casestart.h"
+#include "CaseStart.h"
 #include <QDebug>
 
 CaseStart::CaseStart(QObject *parent)

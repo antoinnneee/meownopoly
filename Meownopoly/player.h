@@ -5,7 +5,7 @@
 #include <QString>
 #include <QColor>
 #include <QList>
-#include "case/caserestarea.h"
+#include "case/CaseRestarea.h"
 
 class Player : public QObject
 {

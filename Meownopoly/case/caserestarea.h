@@ -37,10 +37,6 @@ class CaseRestArea : public Case
     Q_OBJECT
     Q_PROPERTY(int restQuality READ restQuality NOTIFY restQualityChanged)
     Q_PROPERTY(int family READ family CONSTANT)
-    Q_PROPERTY(Player* owner READ owner NOTIFY ownerChanged)
-    Q_PROPERTY(int price READ get_price CONSTANT)
-    Q_PROPERTY(QVector<int> prices READ prices CONSTANT)
-    Q_PROPERTY(int upgradeLevel READ upgradeLevel NOTIFY upgradeLevelChanged)
     
 public:
     explicit CaseRestArea(QObject *parent = nullptr);
@@ -55,31 +51,18 @@ public:
     Player *owner() const;
     void setOwner(Player *newOwner);
 
-    int get_price() const;
-    QVector<int> prices() const;
-    void setPrices(const QVector<int> &newPrice);
-
-    void print_state();
-
-    void upgrade();
-    int upgradeLevel() const;
-    bool canUpgrade() const;
-    int getUpgradeCost() const;
+    // void print_state();
 
     void onLand(Player* player) override;
     
 signals:
     void restQualityChanged();
     void ownerChanged();
-    void upgradeLevelChanged();
 
 private:
     enum CaseType type = CT_RestArea;
     enum RestQuality m_restQuality = RQ_NONE;   // Land level
     enum FamilyType m_family = FT_NONE;
-    Player *m_owner = nullptr;
-    QVector<int> m_prices;
-    const int m_upgradeCost = 50; // Base cost to upgrade
 
 };
 
