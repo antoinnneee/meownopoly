@@ -20,6 +20,7 @@ class Player : public QObject
     Q_PROPERTY(int position READ position WRITE setPosition NOTIFY positionChanged)
     Q_PROPERTY(bool inJail READ isInJail WRITE setInJail NOTIFY inJailChanged)
     Q_PROPERTY(int catDeviceCount READ catDeviceCount NOTIFY catDeviceCountChanged)
+    Q_PROPERTY(int catDoorCount READ catDoorCount NOTIFY catDoorCountChanged)
 
 public:
     explicit Player(QObject *parent = nullptr);
@@ -52,7 +53,12 @@ public:
     QList<CaseCatDevice*> ownedCatDevices() const;
     void addCatDevice(CaseCatDevice* catDevice);
     void removeCatDevice(CaseCatDevice* catDevice);
-    int catDeviceCount() const { return m_ownedCatDevice.size(); }
+    int catDeviceCount() const { return m_ownedCatDevices.size(); }
+
+    QList<CaseCatDoor*> ownedCatDoors() const;
+    void addCatDoor(CaseCatDoor* catDoor);
+    void removeCatDoor(CaseCatDoor* catDoor);
+    int catDoorCount() const { return m_ownedCatDoors.size(); }
 
 
 signals:
@@ -60,10 +66,10 @@ signals:
     void colorChanged();
     void kibbleChanged();
     void propertyCountChanged();
+    void catDeviceCountChanged();
+    void catDoorCountChanged();
     void positionChanged();
     void inJailChanged();
-    void passedStart();
-    void landedOnSpecialTile();
 
 private:
     QString m_name;
@@ -71,7 +77,7 @@ private:
     int m_kibble = 1500;  // Starting money
     int m_position = 0;
     QList<CaseRestArea*> m_ownedProperties;
-    QList<CaseCatDevice*> m_ownedCatDevice;
+    QList<CaseCatDevice*> m_ownedCatDevices;
     QList<CaseCatDoor*> m_ownedCatDoors;
 
     bool m_inJail = false;
