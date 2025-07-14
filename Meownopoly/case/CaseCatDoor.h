@@ -2,7 +2,8 @@
 #define CASECATDOOR_H
 
 #include "Case.h"
-#include "player.h"
+
+
 
 class CaseCatDoor : public Case {
     Q_OBJECT

@@ -5,7 +5,7 @@
 
 class Player;
 
-class CaseCatPerks
+class CaseCatPerks : public QObject
 {
     Q_OBJECT
 public:
