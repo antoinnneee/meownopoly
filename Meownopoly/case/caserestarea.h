@@ -40,7 +40,6 @@ class CaseRestArea : public Case
     Q_PROPERTY(Player* owner READ owner NOTIFY ownerChanged)
     Q_PROPERTY(int price READ get_price CONSTANT)
     Q_PROPERTY(QVector<int> prices READ prices CONSTANT)
-    Q_PROPERTY(int upgradeLevel READ upgradeLevel NOTIFY upgradeLevelChanged)
     
 public:
     explicit CaseRestArea(QObject *parent = nullptr);
@@ -62,16 +61,14 @@ public:
     void print_state();
 
     void upgrade();
-    int upgradeLevel() const;
-    bool canUpgrade() const;
     int getUpgradeCost() const;
 
     void onLand(Player* player) override;
-    
+    bool canUpgrade() const;
+
 signals:
     void restQualityChanged();
     void ownerChanged();
-    void upgradeLevelChanged();
 
 private:
     enum CaseType type = CT_RestArea;

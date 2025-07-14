@@ -84,12 +84,6 @@ void CaseRestArea::upgrade()
         }
     }
 }
-
-int CaseRestArea::upgradeLevel() const
-{
-    return static_cast<int>(m_restQuality);
-}
-
 bool CaseRestArea::canUpgrade() const
 {
     // Check if the property can be upgraded further
@@ -98,8 +92,12 @@ bool CaseRestArea::canUpgrade() const
 
 int CaseRestArea::getUpgradeCost() const
 {
-    // Calculate upgrade cost based on the current level
-    return m_upgradeCost * (upgradeLevel() + 1);
+    if (m_restQuality >= RQ_HOTEL)
+            return 1;
+    else
+    {
+        return m_upgradeCost * (m_restQuality + 1);
+    }
 }
 
 void CaseRestArea::onLand(Player* player) {
