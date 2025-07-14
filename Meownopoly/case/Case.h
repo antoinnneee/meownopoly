@@ -18,8 +18,7 @@ enum CaseType{
     CT_FreeNap,         // free parking
     CT_WaterFountain,   // service des eaux
     CT_LaserPointer,    // service electricite
-    CT_GoldenCollar,    // Taxe de luxe
-    CT_FurTax,          // Taxe sur le revenu
+    CT_Taxe,    // Taxe de luxe   // Taxe sur le revenu
     CT_Unknow,
     CT_Count,
 };
@@ -44,7 +43,7 @@ public:
     QString name() const;
     void setName(const QString &newName);
 
-    virtual void onLand(Player* player);
+    virtual void onLand(Player* player) ;
 
 signals:
 

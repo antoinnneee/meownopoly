@@ -38,7 +38,6 @@ public:
     int boardSize() const { return 40; }  // Standard Monopoly board size
     int currentPlayerIndex() const;
 
-    Q_INVOKABLE bool buyProperty(int playerIndex, int position);
 
 public slots:
 

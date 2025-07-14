@@ -30,9 +30,9 @@ SOURCES += \
     case/CaseFreeNap.cpp \
     case/CaseJail.cpp \
     case/CaseKibbleDispenser.cpp \
+    case/CaseRestarea.cpp \
+    case/CaseStart.cpp \
     case/CaseToJail.cpp \
-    case/caserestarea.cpp \
-    case/casestart.cpp \
     game.cpp \
     game_loader.cpp \
     main.cpp \
@@ -50,9 +50,9 @@ HEADERS += \
     case/CaseFreeNap.h \
     case/CaseJail.h \
     case/CaseKibbleDispenser.h \
+    case/CaseRestarea.h \
+    case/CaseStart.h \
     case/CaseToJail.h \
-    case/caserestarea.h \
-    case/casestart.h \
     game.h \
     player.h \
     qmlapp.h \
