@@ -5,7 +5,7 @@
 #include <QString>
 #include <QColor>
 #include <QList>
-#include "case/caserestarea.h"
+#include "case/CaseRestArea.h"
 #include "case/CaseCatDevice.h"
 #include "case/CaseCatDoor.h"
 

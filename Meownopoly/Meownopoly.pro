@@ -20,6 +20,7 @@ CONFIG += c++20
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+
 SOURCES += \
     case/Case.cpp \
     case/CaseCatDevice.cpp \
@@ -30,7 +31,7 @@ SOURCES += \
     case/CaseFreeNap.cpp \
     case/CaseJail.cpp \
     case/CaseKibbleDispenser.cpp \
-    case/CaseRestarea.cpp \
+    case/CaseRestArea.cpp \
     case/CaseStart.cpp \
     case/CaseToJail.cpp \
     game.cpp \
@@ -38,7 +39,7 @@ SOURCES += \
     main.cpp \
     player.cpp \
     qmlapp.cpp \
-    tools/appinfo.cpp \
+    tools/appinfo.cpp
 
 HEADERS += \
     case/Case.h \
@@ -50,7 +51,7 @@ HEADERS += \
     case/CaseFreeNap.h \
     case/CaseJail.h \
     case/CaseKibbleDispenser.h \
-    case/CaseRestarea.h \
+    case/CaseRestArea.h \
     case/CaseStart.h \
     case/CaseToJail.h \
     game.h \
