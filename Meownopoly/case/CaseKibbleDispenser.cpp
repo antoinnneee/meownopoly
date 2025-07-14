@@ -6,6 +6,7 @@ CaseKibbleDispenser::CaseKibbleDispenser(QObject *parent)
     : Case("Kibble Dispenser", -1, parent)
 {
     setType(CT_KibbleDispenser);
+
 }
 
 CaseKibbleDispenser::CaseKibbleDispenser(const QString &name, int position, int reward, QObject *parent)

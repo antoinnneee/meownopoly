@@ -32,7 +32,6 @@ public:
     QList<Player*> players() const { return m_players; }
 
     Q_INVOKABLE void startGame();
-    Q_INVOKABLE void movePlayer(int playerIndex, int steps);
     Q_INVOKABLE void nextPlayer();
     
     int boardSize() const { return 40; }  // Standard Monopoly board size

@@ -1,4 +1,4 @@
-#ifndef CASE_H
+    #ifndef CASE_H
 #define CASE_H
 
 #include <QObject>
