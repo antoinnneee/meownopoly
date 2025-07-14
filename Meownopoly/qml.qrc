@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <RCC>
     <qresource prefix="/">
         <file>qml/style/AppBusyIndicator.qml</file>
@@ -55,6 +54,6 @@
         <file>qml/boardTile/PlayerToken.qml</file>
         <file>qml/boardTile/PlayerTokenContainer.qml</file>
         <file>qml/boardTile/AnimatedPlayerToken.qml</file>
+        <file>qml/test/TEST_VIEW_0.qml</file>
     </qresource>
 </RCC>
-

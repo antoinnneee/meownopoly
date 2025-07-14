@@ -1,9 +1,10 @@
 #include "CaseCatDevice.h"
+#include "../player.h"
 
 CaseCatDevice::CaseCatDevice() {}
 
 void CaseCatDevice::buy(Player *player) {
 
-    player->spentKibble();
+    player->spendKibble(100);
 }
 

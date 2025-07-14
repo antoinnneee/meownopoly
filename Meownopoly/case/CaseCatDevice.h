@@ -4,6 +4,8 @@
 #include <QObject>
 #include "case/Case.h"
 
+class Player;
+
 class CaseCatDevice : public Case
 {
     Q_OBJECT

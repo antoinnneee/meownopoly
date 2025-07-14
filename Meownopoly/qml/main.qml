@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "titleScreen/"
+import "test/"
 import QtQuick.Window
 import Game
 
@@ -24,12 +25,24 @@ ApplicationWindow {
         id: titleScreen
         TitleScreen {
             onStartGameRequested: playerSetup.open()
+            onTestViewRequested: {
+                test_view.open();
+            }
         }
     }
 
     Component {
         id: gameBoard
         GameBoard {}
+    }
+
+    TEST_VIEW_0{
+        id: test_view
+        anchors.centerIn: parent
+        width:parent.width
+        height:parent.height
+
+
     }
 
     PlayerSetup {

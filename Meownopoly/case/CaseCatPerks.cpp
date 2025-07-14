@@ -38,8 +38,3 @@ void CaseCatPerks::setsellPrice(int newSellPrice)
     m_sellPrice = newSellPrice;
     emit sellPriceChanged();
 }
-
-bool CaseCatPerks::checkKibble(Player *player)
-{
-    return (price < player->kibble());
-}

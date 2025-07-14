@@ -36,14 +36,14 @@ public:
     void setKibble(int kibble);
 
     int position() const { return m_position; }
-    void setPosition(int position, int step = 1);
+    void setPosition(int position);
 
     bool isInJail() const { return m_inJail; }
     void setInJail(bool inJail);
 
-    bool canAfford(int amount) const;
-    void earnKibble(int amount);
-    bool spendKibble(int amount);
+    Q_INVOKABLE bool canAfford(int amount) const;
+    Q_INVOKABLE void earnKibble(int amount);
+    Q_INVOKABLE  bool spendKibble(int amount);
 
     QList<CaseRestArea*> ownedProperties() const;
     void addProperty(CaseRestArea* property);

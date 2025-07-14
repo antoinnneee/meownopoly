@@ -16,8 +16,6 @@ public:
 
     CaseCatPerks();
 
-    Q_INVOKABLE bool checkKibble();
-
 
     virtual bool buyCase(Player *buyer);
     virtual bool sellCase(Player *buyer, int price);
