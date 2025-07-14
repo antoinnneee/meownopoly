@@ -5,9 +5,9 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-//    qInstallMessageHandler(0);
 
     QmlApp a;
+    qInstallMessageHandler(0);
 
     return app.exec();
 }
