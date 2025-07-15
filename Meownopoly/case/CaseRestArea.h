@@ -36,7 +36,7 @@ class CaseRestArea : public CaseCatPerks
 {
     Q_OBJECT
     Q_PROPERTY(int restQuality READ restQuality NOTIFY restQualityChanged)
-    Q_PROPERTY(int family READ family CONSTANT)
+    Q_PROPERTY(enum FamilyType family READ family WRITE setFamily  NOTIFY  familyChanged )
     
     Q_PROPERTY(int housePrice READ housePrice WRITE setHousePrice NOTIFY housePriceChanged FINAL)
     Q_PROPERTY(int hotelPrice READ hotelPrice WRITE setHotelPrice NOTIFY hotelPriceChanged FINAL)
@@ -76,6 +76,7 @@ public:
 signals:
     void restQualityChanged();
     void ownerChanged();
+    void  familyChanged();
 
 
     void housePriceChanged();
