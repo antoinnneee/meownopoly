@@ -10,8 +10,7 @@ class CaseCatDoor : public CaseCatPerks {
     Q_PROPERTY(int travelPrice READ travelPrice WRITE setTravelPrice NOTIFY travelPriceChanged FINAL)
 
 public:
-    explicit CaseCatDoor(QObject *parent = nullptr);
-    CaseCatDoor(const QString &name, int position, int travelPrice = -1, int indexCatDoor = -1 , QObject *parent = nullptr);
+    CaseCatDoor(const QString &name, int position, int price= -1, int sellPrice = -1, int morgagePrice = -1, int travelPrice = -1, int indexCatDoor = -1 , QObject *parent = nullptr);
     ~CaseCatDoor() override = default;
 
     Q_INVOKABLE bool buyCase(Player *buyer);

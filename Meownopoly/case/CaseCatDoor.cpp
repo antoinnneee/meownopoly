@@ -2,14 +2,9 @@
 #include <QDebug>
 #include "../player.h"
 
-CaseCatDoor::CaseCatDoor(QObject *parent)
-    : CaseCatPerks("Cat Door", -1, parent)
-{
-    setType(CT_CatDoor);
-}
 
-CaseCatDoor::CaseCatDoor(const QString &name, int position, int travelPrice, int indexCatDoor, QObject *parent)
-    : CaseCatPerks(name, position, parent), m_travelPrice(travelPrice), m_indexCatDoor(indexCatDoor)
+CaseCatDoor::CaseCatDoor(const QString &name, int position, int price, int sellPrice, int morgagePrice, int travelPrice, int indexCatDoor, QObject *parent)
+    : CaseCatPerks(name, position, price, sellPrice, morgagePrice, parent), m_travelPrice(travelPrice), m_indexCatDoor(indexCatDoor)
 {
     setType(CT_CatDoor);
 }
