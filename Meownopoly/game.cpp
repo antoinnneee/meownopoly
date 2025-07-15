@@ -48,7 +48,7 @@ Case *Game::getCaseAt(int position) {
 }
 
 
-void Game::setupPlayers(const QVariantList &playerData) {
+void Game::setupPlayers(Player *player, const QVariantList &playerData) {
 
     for (const QVariant &data : playerData) {
         QVariantMap playerInfo = data.toMap();

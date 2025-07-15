@@ -38,7 +38,7 @@ public:
     void initCards();
 
     Q_INVOKABLE void createPlayer(const QString &name, QColor color);
-    Q_INVOKABLE void setupPlayers(const QVariantList &playerData);
+    Q_INVOKABLE void setupPlayers(const QVariantList &playerData, Player *player);
 
     Q_INVOKABLE void nextPlayer();
     Q_INVOKABLE Case* getCaseAt(int position);
