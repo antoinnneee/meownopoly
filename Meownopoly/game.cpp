@@ -50,9 +50,8 @@ Case *Game::getCaseAt(int position) {
 
 void Game::setupPlayers(const QVariantList &playerData) {
 
-
+    for (const QVariant &data : playerData) {
         QVariantMap playerInfo = data.toMap();
-
         QString name = playerInfo["name"].toString();
         QColor color = QColor(playerInfo["color"].toString());
 
@@ -61,8 +60,9 @@ void Game::setupPlayers(const QVariantList &playerData) {
         player->setKibble(1500); // Starting money
         player->setPosition(0);  // Start at position 0 (GO)
         if (m_listPlayers.contains(player))
-                m_listPlayers.append(player);
-    emit playersChanged();
+            m_listPlayers.append(player);
+        emit playersChanged();
+    }
 }
 
 void Game::startGame() {
