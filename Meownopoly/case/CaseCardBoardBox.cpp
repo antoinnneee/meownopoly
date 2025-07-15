@@ -13,10 +13,3 @@ CaseCardBoardBox::CaseCardBoardBox(const QString &name, int position, QObject *p
 {
     setType(CT_CardBoardBox);
 }
-
-void CaseCardBoardBox::onLand(Player* player)
-{
-    Q_UNUSED(player);
-    qDebug() << "Player landed on Card Board Box";
-    // TODO: Implement community chest card logic
-} 

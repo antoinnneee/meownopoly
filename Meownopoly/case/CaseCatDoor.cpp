@@ -8,8 +8,8 @@ CaseCatDoor::CaseCatDoor(QObject *parent)
     setType(CT_CatDoor);
 }
 
-CaseCatDoor::CaseCatDoor(const QString &name, int position, QObject *parent)
-    : CaseCatPerks(name, position, parent)
+CaseCatDoor::CaseCatDoor(const QString &name, int position, int travelPrice, int indexCatDoor, QObject *parent)
+    : CaseCatPerks(name, position, parent), m_travelPrice(travelPrice), m_indexCatDoor(indexCatDoor)
 {
     setType(CT_CatDoor);
 }
@@ -38,3 +38,29 @@ void CaseCatDoor::onLand(Player* player)
 }
 
 
+
+int CaseCatDoor::indexCatDoor() const
+{
+    return m_indexCatDoor;
+}
+
+void CaseCatDoor::setIndexCatDoor(int newIndexCatDoor)
+{
+    if (m_indexCatDoor == newIndexCatDoor)
+        return;
+    m_indexCatDoor = newIndexCatDoor;
+    emit indexCatDoorChanged();
+}
+
+int CaseCatDoor::travelPrice() const
+{
+    return m_travelPrice;
+}
+
+void CaseCatDoor::setTravelPrice(int newTravelPrice)
+{
+    if (m_travelPrice == newTravelPrice)
+        return;
+    m_travelPrice = newTravelPrice;
+    emit travelPriceChanged();
+}

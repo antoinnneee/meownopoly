@@ -4,11 +4,14 @@
 #include "CaseCatPerks.h"
 
 class CaseCatDoor : public CaseCatPerks {
+
     Q_OBJECT
+    Q_PROPERTY(int indexCatDoor READ indexCatDoor WRITE setIndexCatDoor NOTIFY indexCatDoorChanged FINAL)
+    Q_PROPERTY(int travelPrice READ travelPrice WRITE setTravelPrice NOTIFY travelPriceChanged FINAL)
 
 public:
     explicit CaseCatDoor(QObject *parent = nullptr);
-    CaseCatDoor(const QString &name, int position, QObject *parent = nullptr);
+    CaseCatDoor(const QString &name, int position, int travelPrice = -1, int indexCatDoor = -1 , QObject *parent = nullptr);
     ~CaseCatDoor() override = default;
 
     Q_INVOKABLE bool buyCase(Player *buyer);
@@ -18,7 +21,22 @@ public:
     void onLand(Player* player) override;
 
 
+    int indexCatDoor() const;
+    void setIndexCatDoor(int newIndexCatDoor);
+
+    int travelPrice() const;
+    void setTravelPrice(int newTravelPrice);
+
+signals:
+    void indexCatDoorChanged();
+
+    void travelPriceChanged();
+
 private:
+
+
+    int m_indexCatDoor;
+    int m_travelPrice;
 };
 
 #endif // CASECATDOOR_H

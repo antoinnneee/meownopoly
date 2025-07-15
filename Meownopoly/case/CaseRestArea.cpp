@@ -9,11 +9,12 @@ CaseRestArea::CaseRestArea(QObject *parent)
     setType(CT_RestArea);
 }
 
-CaseRestArea::CaseRestArea(const QString &name, FamilyType family, int position, QObject *parent)
-    : CaseCatPerks(name, position, parent), m_family(family)
+CaseRestArea::CaseRestArea(const QString &name, FamilyType family, int position, int housePrice, int hotelPrice, QList<int> rentPrice, QObject *parent) :
+    CaseCatPerks(name, position, parent) , m_family(family), m_housePrice(housePrice), m_hotelPrice(hotelPrice), m_rentPrice(rentPrice)
 {
     setType(CT_RestArea);
 }
+
 
 RestQuality CaseRestArea::restQuality() const
 {
@@ -59,15 +60,41 @@ bool CaseRestArea::sellCase(Player *buyer)
     return true;
 }
 
-int CaseRestArea::name() const
+int CaseRestArea::housePrice() const
 {
-    return m_rank;
+    return m_housePrice;
 }
 
-void CaseRestArea::setName(int newRank)
+void CaseRestArea::setHousePrice(int newHousePrice)
 {
-    if (m_rank == newRank)
+    if (m_housePrice == newHousePrice)
         return;
-    m_rank = newRank;
-    emit nameChanged();
+    m_housePrice = newHousePrice;
+    emit housePriceChanged();
+}
+
+int CaseRestArea::hotelPrice() const
+{
+    return m_hotelPrice;
+}
+
+void CaseRestArea::setHotelPrice(int newHotelPrice)
+{
+    if (m_hotelPrice == newHotelPrice)
+        return;
+    m_hotelPrice = newHotelPrice;
+    emit hotelPriceChanged();
+}
+
+QList<int> CaseRestArea::rentPrice() const
+{
+    return m_rentPrice;
+}
+
+void CaseRestArea::setRentPrice(const QList<int> &newRentPrice)
+{
+    if (m_rentPrice == newRentPrice)
+        return;
+    m_rentPrice = newRentPrice;
+    emit rentPriceChanged();
 }

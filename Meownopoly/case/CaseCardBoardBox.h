@@ -12,8 +12,6 @@ public:
     CaseCardBoardBox(const QString &name, int position, QObject *parent = nullptr);
     ~CaseCardBoardBox() override = default;
 
-    void onLand(Player* player) override;
-
 signals:
     void cardDrawn();
 
