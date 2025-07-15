@@ -1,5 +1,4 @@
 #include "player.h"
-#include "game.h"
 #include <QRandomGenerator>
 #include <QDebug>
 
@@ -11,6 +10,7 @@ Player::Player(QObject *parent)
     , m_position(0)
     , m_inJail(false)
 {
+    qDebug() << "init player";
 }
 
 Player::Player(const QString &name, const QColor &color, QObject *parent)
@@ -40,7 +40,7 @@ void Player::setKibble(int kibble)
     }
 }
 
-void Player::setPosition(int position, int steps)
+void Player::setPosition(int position)
 {
     // Only emit the signal if position actually changes
     if (m_position != position) {
@@ -63,12 +63,12 @@ bool Player::canAfford(int amount) const {
 }
 
 void Player::earnKibble(int amount) {
-    m_kibble += amount;
+    setKibble(m_kibble + amount);
 }
 
 bool Player::spendKibble(int amount) {
     if (canAfford(amount)) {
-        m_kibble -= amount;
+        setKibble(m_kibble - amount);
         return true;
     }
     return false;

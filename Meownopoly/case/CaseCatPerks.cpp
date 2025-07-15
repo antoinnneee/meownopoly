@@ -42,4 +42,3 @@ void CaseCatPerks::setsellPrice(int newSellPrice)
     m_sellPrice = newSellPrice;
     emit sellPriceChanged();
 }
-

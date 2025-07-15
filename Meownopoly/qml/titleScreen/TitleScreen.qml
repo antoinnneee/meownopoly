@@ -9,6 +9,7 @@ Rectangle {
     color: "#1a1a1a"  // Dark background for modern look
 
     signal startGameRequested()  // Add this signal
+    signal testViewRequested()  // Add this signal
 
     // Title text
     Text {
@@ -73,12 +74,12 @@ Rectangle {
             text: "Create Server"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
-            
+
             background: Rectangle {
                 color: createServerButton.pressed ? "#1565c0" : "#2196f3"
                 radius: 8
             }
-            
+
             contentItem: Text {
                 text: createServerButton.text
                 color: "white"
@@ -90,6 +91,33 @@ Rectangle {
             onClicked: {
                 // TODO: Implement server creation functionality
                 console.log("Create server clicked")
+            }
+        }
+
+        // Create Server Button
+        Button {
+            id: testUIButton
+            text: "TEST UI"
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 50
+
+            background: Rectangle {
+                color: testUIButton.pressed ? "#1565c0" : "#2196f3"
+                radius: 8
+            }
+
+            contentItem: Text {
+                text: testUIButton.text
+                color: "white"
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            onClicked: {
+                // TODO: Implement server creation functionality
+                testViewRequested()
+                console.log("testUIButton")
             }
         }
     }

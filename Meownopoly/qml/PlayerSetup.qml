@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import "./style"
 import Game
 
+
 Dialog {
     id: root
     title: "Player Setup"
