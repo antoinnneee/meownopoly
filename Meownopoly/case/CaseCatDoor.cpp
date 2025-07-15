@@ -3,10 +3,10 @@
 #include "../player.h"
 
 
-CaseCatDoor::CaseCatDoor(const QString &name, int position, int price, int sellPrice, int morgagePrice, int travelPrice, int indexCatDoor, QObject *parent)
-    : CaseCatPerks(name, position, price, sellPrice, morgagePrice, parent), m_travelPrice(travelPrice), m_indexCatDoor(indexCatDoor)
+CaseCatDoor::CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER_NOP)
+    : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER
 {
-    setType(CT_CatDoor);
+    setType(CS_CatDoor);
 }
 
 bool CaseCatDoor::buyCase(Player *buyer)

@@ -11,6 +11,8 @@ Dialog {
     height: 600
     modal: true
 
+    property alias player : testPlayer
+
     Player {
         id: testPlayer
         name: "Test Player"
@@ -18,7 +20,25 @@ Dialog {
         kibble: 1500
         position: 0
         inJail: false
+
+        Component.onCompleted: {
+            console.log(position())
+            this.position(2)
+            console.log(position())
+        }
     }
+
+    Button {
+
+        width: 100
+        height: 100
+        onClicked: {
+            console.log(player.position())
+            player.position(3)
+            console.log(player.position())
+        }
+    }
+
 
     ScrollView {
         anchors.fill: parent

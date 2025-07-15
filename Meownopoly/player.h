@@ -10,6 +10,7 @@
 #include "case/CaseCatDoor.h"
 #include "case/CaseRestArea.h"
 
+
 class Player : public QObject
 {
     Q_OBJECT
@@ -77,6 +78,7 @@ signals:
     void caseHover();
 
 private:
+
     QString m_name;
     QColor m_color;
     int m_kibble = 1500;  // Starting money

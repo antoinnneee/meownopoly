@@ -16,7 +16,7 @@ public:
 
 private:
     CaseJail* m_jailCase = nullptr;
-    enum CaseType type = CT_ToJail;
+    enum CaseType type = CS_ToJail;
 };
 
 #endif // CASETOJAIL_H 

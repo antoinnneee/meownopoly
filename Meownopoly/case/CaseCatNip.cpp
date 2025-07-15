@@ -5,13 +5,13 @@
 CaseCatNip::CaseCatNip(QObject *parent)
     : Case("Cat Nip", -1, parent)
 {
-    setType(CT_CatNip);
+    setType(CS_CatNip);
 }
 
 CaseCatNip::CaseCatNip(const QString &name, int position, QObject *parent)
     : Case(name, position, parent)
 {
-    setType(CT_CatNip);
+    setType(CS_CatNip);
 }
 
 void CaseCatNip::onLand(Player* player)

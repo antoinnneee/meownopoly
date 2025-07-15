@@ -87,7 +87,7 @@ signals:
     void rentPriceChanged();
 
 private:
-    enum CaseType type = CT_RestArea;
+    enum CaseType type = CS_RestArea;
     enum RestQuality m_restQuality = RQ_NONE;   // Land level
     enum FamilyType m_family = FT_NONE;
     int m_housePrice;

@@ -8,18 +8,18 @@
 class Player;
 
 enum CaseType{
-    CT_KibbleDispenser, // depart
-    CT_RestArea,        // terrain
-    CT_CardBoardBox,    // caisse communauté
-    CT_CatNip,          // chance
-    CT_Jail,            // prison
-    CT_ToJail,          // go to jail
-    CT_CatDoor,         // gare
-    CT_FreeNap,         // free parking
-    CT_Device,    // service electricite
-    CT_Taxe,    // Taxe de luxe   // Taxe sur le revenu
-    CT_Unknow,
-    CT_Count,
+    CS_KibbleDispenser, // depart
+    CS_RestArea,        // terrain
+    CS_CardBoardBox,    // caisse communauté
+    CS_CatNip,          // chance
+    CS_Jail,            // prison
+    CS_ToJail,          // go to jail
+    CS_CatDoor,         // gare
+    CS_FreeNap,         // free parking
+    CS_Device,    // service electricite
+    CS_Taxe,    // Taxe de luxe   // Taxe sur le revenu
+    CS_Unknow,
+    CS_Count,
 };
 
 class Case : public QObject
@@ -51,7 +51,7 @@ signals:
 protected:
     QString m_name = "Unknown";
     int m_position = -1;
-    enum CaseType type = CT_Unknow;
+    enum CaseType type = CS_Unknow;
 
 };
 

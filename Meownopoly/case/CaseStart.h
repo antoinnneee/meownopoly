@@ -11,7 +11,7 @@ public:
     explicit CaseStart(QObject *parent = nullptr);
 
 private:
-    enum CaseType type = CT_KibbleDispenser;
+    enum CaseType type = CS_KibbleDispenser;
 
 };
 

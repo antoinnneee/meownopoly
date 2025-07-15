@@ -23,7 +23,7 @@ signals:
     void kibbleAmountChanged();
 
 private:
-    enum CaseType type = CT_FreeNap;
+    enum CaseType type = CS_FreeNap;
     int m_kibbleAmount = 0;
 };
 

@@ -22,6 +22,7 @@ CONFIG += c++20
 
 
 SOURCES += \
+    card.cpp \
     case/Case.cpp \
     case/CaseCatDevice.cpp \
     case/CaseCatDoor.cpp \
@@ -42,6 +43,7 @@ SOURCES += \
     tools/appinfo.cpp
 
 HEADERS += \
+    card.h \
     case/Case.h \
     case/CaseCatDevice.h \
     case/CaseCatDoor.h \

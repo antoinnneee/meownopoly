@@ -5,13 +5,13 @@
 CaseFreeNap::CaseFreeNap(QObject *parent)
     : Case("Free Nap", -1, parent)
 {
-    setType(CT_FreeNap);
+    setType(CS_FreeNap);
 }
 
 CaseFreeNap::CaseFreeNap(const QString &name, int position, QObject *parent)
     : Case(name, position, parent)
 {
-    setType(CT_FreeNap);
+    setType(CS_FreeNap);
 }
 
 void CaseFreeNap::addToPool(int amount)
