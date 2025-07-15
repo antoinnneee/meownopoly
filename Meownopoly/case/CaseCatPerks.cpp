@@ -43,3 +43,16 @@ void CaseCatPerks::setsellPrice(int newSellPrice)
     emit sellPriceChanged();
 }
 
+
+int CaseCatPerks::moragePrice() const
+{
+    return m_moragePrice;
+}
+
+void CaseCatPerks::setMoragePrice(int newMoragePrice)
+{
+    if (m_moragePrice == newMoragePrice)
+        return;
+    m_moragePrice = newMoragePrice;
+    emit moragePriceChanged();
+}
