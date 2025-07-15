@@ -43,9 +43,6 @@ void CaseRestArea::setFamily(FamilyType newFamily)
 // }
 
 
-void CaseRestArea::onLand(Player* player) {
-
-}
 
 bool CaseRestArea::buyCase(Player *buyer) {
     if (CaseCatPerks::buyCase(buyer)){
@@ -60,4 +57,17 @@ bool CaseRestArea::sellCase(Player *buyer)
     CaseCatPerks::sellCase(buyer);
     buyer->removeProperty(this);
     return true;
+}
+
+int CaseRestArea::name() const
+{
+    return m_rank;
+}
+
+void CaseRestArea::setName(int newRank)
+{
+    if (m_rank == newRank)
+        return;
+    m_rank = newRank;
+    emit nameChanged();
 }

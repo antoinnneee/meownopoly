@@ -42,3 +42,15 @@ void Case::onLand(Player* player)
     // Default implementation - can be overridden by derived classes
     Q_UNUSED(player);
 }
+
+void Case::onLeave(Player* player)
+{
+    // Default implementation - can be overridden by derived classes
+    Q_UNUSED(player);
+}
+
+void Case::onHover(Player* player)
+{
+    // Default implementation - can be overridden by derived classes
+    Q_UNUSED(player);
+}

@@ -60,6 +60,8 @@ public:
     void removeCatDoor(CaseCatDoor* catDoor);
     int catDoorCount() const { return m_ownedCatDoors.size(); }
 
+    void movePLayer();
+
 
 signals:
     void nameChanged();
@@ -70,6 +72,9 @@ signals:
     void catDoorCountChanged();
     void positionChanged();
     void inJailChanged();
+    void caseLand();
+    void caseLeave();
+    void caseHover();
 
 private:
     QString m_name;

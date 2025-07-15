@@ -16,8 +16,7 @@ enum CaseType{
     CT_ToJail,          // go to jail
     CT_CatDoor,         // gare
     CT_FreeNap,         // free parking
-    CT_WaterFountain,   // service des eaux
-    CT_LaserPointer,    // service electricite
+    CT_Device,    // service electricite
     CT_Taxe,    // Taxe de luxe   // Taxe sur le revenu
     CT_Unknow,
     CT_Count,
@@ -43,7 +42,9 @@ public:
     QString name() const;
     void setName(const QString &newName);
 
-    virtual void onLand(Player* player) ;
+    virtual void onLand(Player* player);
+    virtual void onLeave(Player* player);
+    virtual void onHover(Player* player);
 
 signals:
 

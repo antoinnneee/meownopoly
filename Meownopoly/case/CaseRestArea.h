@@ -53,7 +53,6 @@ public:
 
     // void print_state();
 
-    void onLand(Player* player) override;
     bool canUpgrade() const;
 
     Q_INVOKABLE bool buyCase(Player *buyer);
