@@ -44,34 +44,21 @@ Case *Game::getCaseAt(int position) {
     return nullptr;
 }
 
-void Game::createPlayer(const QString name, QColor color) {
-    Player *newPlayer = new Player(name, color, this); // Create with parent first
-    newPlayer->setName(name);
-    newPlayer->setColor(color); // Default gray color
-    newPlayer->setKibble(1500);             // Starting money
-    m_listPlayers.append(newPlayer);
-    emit playersChanged();
+Player* Game::createPlayer(const QString name, QColor color, int indexLogo, int kibbles) {
+    Player *newPlayer = new Player(name, color, indexLogo, kibbles, this); // Create with parent first
     qDebug() << "Player created: " << name;
+    emit playersChanged();
+    return newPlayer;
 }
 
 
 void Game::setupPlayers(const QVariantList &playerData)
 {
-
     m_listPlayers.clear();
-
-    // Create new players from the setup data
     for (const QVariant &data : playerData) {
         QVariantMap playerInfo = data.toMap();
-        Player *player = new Player(playerInfo["name"].toString(), playerInfo["color"].toString(), this);
-        // QString name = playerInfo["name"].toString();
-        // QColor color = QColor(playerInfo["color"].toString());
-        // Player* player = new Player(this);
-        // player->setName(name);
-        // player->setColor(color);
-        // player->setKibble(1500);  // Starting money
-        // player->setPosition(0);   // Start at position 0 (GO)
-        // m_players.append(player);
+        Player *player(createPlayer(playerInfo["name"].toString(), playerInfo["color"].toString(), playerInfo["indexLogo"].toInt(), playerInfo["kibbles"].toInt()));
+        m_listPlayers.append(player);
     }
 }
 

@@ -13,8 +13,11 @@ Player::Player(QObject *parent)
     qDebug() << "init player";
 }
 
-Player::Player(QString name, QColor color, QObject *parent)
-    : QObject(parent), m_name(name), m_color(color) {}
+Player::Player(QString name, QColor color, int indexLogo, int kibbles, QObject *parent)
+    : QObject(parent), m_name(name), m_color(color), m_kibble(kibbles), m_indexLogo(indexLogo) {
+
+    qDebug() << "Player created: " << name;
+}
 
 void Player::setName(const QString &name)
 {
@@ -132,4 +135,17 @@ QList<CaseCatDevice *> Player::ownedCatDevices() const
 void Player::setInJail(bool inJail) {
     m_inJail = inJail;
     emit inJailChanged();
+}
+
+int Player::indexLogo() const
+{
+    return m_indexLogo;
+}
+
+void Player::setIndexLogo(int newIndexLogo)
+{
+    if (m_indexLogo == newIndexLogo)
+        return;
+    m_indexLogo = newIndexLogo;
+    emit indexLogoChanged();
 }

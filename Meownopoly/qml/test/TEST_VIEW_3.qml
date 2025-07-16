@@ -19,8 +19,7 @@ Dialog {
             append({
                 "name": "",
                 "color": "#ff6b6b",
-                "iconIndex": 0,
-                "playerId": 0
+                "iconIndex": 0
             })
         }
     }
@@ -382,7 +381,6 @@ Dialog {
                             "name": "",
                             "color": newColor,
                             "iconIndex": newIconIndex,
-                            "playerId": playersModel.count
                         })
                         
                         console.log("Nouveau joueur ajouté, total:", playersModel.count)
@@ -411,12 +409,28 @@ Dialog {
                     }
                     
                     onClicked: {
-                        // Logique de validation - afficher les joueurs créés
-                        console.log("Validation des joueurs:")
+                        // Créer la liste des joueurs pour la fonction C++
+                        var playerData = []
+                        
                         for (var i = 0; i < playersModel.count; i++) {
                             var player = playersModel.get(i)
-                            console.log("Joueur " + (i + 1) + ":", player.name, player.color, "Avatar index:", player.iconIndex)
+                            
+                            // Créer un objet avec les propriétés attendues par setupPlayers
+                            var playerInfo = {
+                                "name": player.name || ("Joueur " + (i + 1)), // Nom par défaut si vide
+                                "color": player.color,
+                                "indexLogo": player.iconIndex,
+                                "kibbles": 1500 // Valeur par défaut de croquettes
+                            }
+                            
+                            playerData.push(playerInfo)
+                            console.log("Joueur " + (i + 1) + ":", playerInfo.name, playerInfo.color, "Avatar index:", playerInfo.indexLogo)
                         }
+                        
+                        // Appeler la fonction C++ pour configurer les joueurs
+                        Game.setupPlayers(playerData)
+                        
+                        console.log("Joueurs configurés dans le Game C++")
                         testDialog.close()
                     }
                 }
