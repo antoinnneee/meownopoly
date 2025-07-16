@@ -30,16 +30,6 @@ QObject *Game::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine) {
     return Game::instance();
 }
 
-void Game::createPlayer(const QString &name, QColor color) {
-    Player *newPlayer = new Player(name, color, this); // Create with parent first
-    newPlayer->setName(name);
-    newPlayer->setColor(QColor("#7f8c8d")); // Default gray color
-    newPlayer->setKibble(1500);             // Starting money
-    m_listPlayers.append(newPlayer);
-    emit playersChanged();
-    qDebug() << "Player created: " << name;
-}
-
 Case *Game::getCaseAt(int position) {
     if (position >= 0 && position < m_board.size()) {
         return m_board.at(position);
@@ -47,21 +37,35 @@ Case *Game::getCaseAt(int position) {
     return nullptr;
 }
 
+void Game::createPlayer(const QString name, QColor color) {
+    Player *newPlayer = new Player(name, color, this); // Create with parent first
+    newPlayer->setName(name);
+    newPlayer->setColor(color); // Default gray color
+    newPlayer->setKibble(1500);             // Starting money
+    m_listPlayers.append(newPlayer);
+    emit playersChanged();
+    qDebug() << "Player created: " << name;
+}
 
-void Game::setupPlayers(Player *player, const QVariantList &playerData) {
 
+void Game::setupPlayers(const QVariantList &playerData)
+{
+
+    m_listPlayers.clear();
+
+
+    // Create new players from the setup data
     for (const QVariant &data : playerData) {
         QVariantMap playerInfo = data.toMap();
-        QString name = playerInfo["name"].toString();
-        QColor color = QColor(playerInfo["color"].toString());
-
-        player->setName(name);
-        player->setColor(color);
-        player->setKibble(1500); // Starting money
-        player->setPosition(0);  // Start at position 0 (GO)
-        if (m_listPlayers.contains(player))
-            m_listPlayers.append(player);
-        emit playersChanged();
+        Player *player = new Player(playerInfo["name"].toString(), playerInfo["color"].toString(), this);
+        // QString name = playerInfo["name"].toString();
+        // QColor color = QColor(playerInfo["color"].toString());
+        // Player* player = new Player(this);
+        // player->setName(name);
+        // player->setColor(color);
+        // player->setKibble(1500);  // Starting money
+        // player->setPosition(0);   // Start at position 0 (GO)
+        // m_players.append(player);
     }
 }
 
@@ -71,7 +75,7 @@ void Game::startGame() {
     init_caseFile();
 
     // Set all players at the starting position
-    for (Player *player : m_players) {
+    for (Player *player : m_listPlayers) {
         player->setPosition(0); // Start at position 0 (GO)
     }
 
@@ -85,7 +89,7 @@ int Game::currentPlayerIndex() const { return m_currentPlayerIndex; }
 
 void Game::nextPlayer() {
 
-    m_currentPlayerIndex = (m_currentPlayerIndex + 1) % m - m_listPlayers.size();
+    m_currentPlayerIndex = (m_currentPlayerIndex + 1) % m_listPlayers.size();
     emit currentPlayerIndexChanged();
 }
 

@@ -25,7 +25,7 @@ class Player : public QObject
 
 public:
     explicit Player(QObject *parent = nullptr);
-    explicit Player(const QString &name, const QColor &color, QObject *parent = nullptr);
+    explicit Player(QString name, QColor color, QObject *parent = nullptr);
 
     QString name() const { return m_name; }
     void setName(const QString &name);

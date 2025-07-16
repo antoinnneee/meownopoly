@@ -13,7 +13,7 @@ Player::Player(QObject *parent)
     qDebug() << "init player";
 }
 
-Player::Player(const QString &name, const QColor &color, QObject *parent)
+Player::Player(QString name, QColor color, QObject *parent)
     : QObject(parent), m_name(name), m_color(color) {}
 
 void Player::setName(const QString &name)
