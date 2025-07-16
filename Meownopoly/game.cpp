@@ -30,6 +30,13 @@ QObject *Game::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine) {
     return Game::instance();
 }
 
+void Game::initPlayers(int nbr) {}
+
+void Game::initCases() {}
+
+void Game::initCards() {}
+
+
 Case *Game::getCaseAt(int position) {
     if (position >= 0 && position < m_board.size()) {
         return m_board.at(position);
@@ -52,7 +59,6 @@ void Game::setupPlayers(const QVariantList &playerData)
 {
 
     m_listPlayers.clear();
-
 
     // Create new players from the setup data
     for (const QVariant &data : playerData) {
@@ -92,9 +98,3 @@ void Game::nextPlayer() {
     m_currentPlayerIndex = (m_currentPlayerIndex + 1) % m_listPlayers.size();
     emit currentPlayerIndexChanged();
 }
-
-void Game::initPlayers(int nbr) {}
-
-void Game::initCases() {}
-
-void Game::initCards() {}
