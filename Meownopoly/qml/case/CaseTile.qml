@@ -12,9 +12,6 @@ Rectangle {
     border.width: 1
     radius: 4
 
-    // Flag to prevent concurrent updates
-    property bool isUpdatingOwnership: false
-
     required property Case caseData
 
     // Properties
@@ -48,7 +45,7 @@ Rectangle {
             bottom: parent.bottom
             margins: tileType === 1 ? 0 : 4
         }
-        tileData: root.caseData
+        caseData: root.caseData
     }
 
     MouseArea {
@@ -66,7 +63,7 @@ Rectangle {
         id: tileDetailsPopup
         tileType: root.tileType
         tileName: root.tileName
-        tileData: root.caseData
+        caseData: root.caseData
         familyColors: root.familyColors
     }
 

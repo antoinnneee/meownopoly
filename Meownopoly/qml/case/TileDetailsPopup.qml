@@ -12,9 +12,10 @@ Popup {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     anchors.centerIn: Overlay.overlay
 
-    property int tileType: -1
+    required property Case caseData
+
+    property int tileType: caseData.type
     property string tileName: ""
-    property var tileData: null
     property var familyColors: []
 
     contentItem: Rectangle {
@@ -34,8 +35,8 @@ Popup {
             Rectangle {
                 Layout.fillWidth: true
                 height: 40
-                color: root.tileType === 1 && root.tileData && root.tileData.family ? 
-                       root.familyColors[root.tileData.family] : "#34495e"
+                color: root.tileType === 1 && root.caseData && root.caseData.family ?
+                       root.familyColors[root.caseData.family] : "#34495e"
                 radius: 4
 
                 Text {
@@ -116,7 +117,7 @@ Popup {
     Component {
         id: restAreaDetails
         RestAreaDetails {
-            tileData: root.tileData
+            caseData: root.caseData
             familyColors: root.familyColors
         }
     }

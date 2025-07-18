@@ -13,7 +13,7 @@ CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP, FamilyType family
     : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER, m_family(family), m_housePrice(housePrice), m_hotelPrice(hotelPrice), m_rentPrice(rentPrice)
 
 {
-
+    setType(Case::CS_RestArea);
 }
 
 

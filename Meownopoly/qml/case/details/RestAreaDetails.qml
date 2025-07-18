@@ -1,13 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import CaseRestArea
 import ".."
 
 ColumnLayout {
     id: root
     spacing: 5
 
-    property var tileData
+    required property CaseRestArea caseData
     property var familyColors: []
 
     Text {
@@ -17,7 +18,7 @@ ColumnLayout {
     }
 
     Text {
-        text: "Owner: " + (root.tileData && root.tileData.owner ? root.tileData.owner : "None")
+        text: "Owner: " + (root.caseData && root.caseData.owner ? root.caseData.owner : "None")
         font.pixelSize: 14
         color: "#2c3e50"
     }
@@ -39,7 +40,7 @@ ColumnLayout {
             StarRating {
                 anchors.fill: parent
                 anchors.margins: 2
-                restQuality: root.tileData && root.tileData.restQuality ? root.tileData.restQuality : 0
+                restQuality: root.caseData && root.caseData.restQuality ? root.caseData.restQuality : 0
             }
         }
     }
@@ -48,10 +49,10 @@ ColumnLayout {
     ColumnLayout {
         Layout.fillWidth: true
         spacing: 5
-        visible: root.tileData && root.tileData.prices
+        visible: root.caseData && root.caseData.rentPrice
 
         Text {
-            text: "Purchase: " + (root.tileData && root.tileData.prices ? root.tileData.prices[0] + "K" : "N/A")
+            text: "Purchase: " + (root.caseData && root.caseData.rentPrice ? root.caseData.rentPrice[0] + "K" : "N/A")
             font.pixelSize: 14
             color: "#2c3e50"
             font.bold: true
@@ -79,8 +80,8 @@ ColumnLayout {
                 Text {
                     width: (parent.width - parent.spacing * 3) / 4
                     horizontalAlignment: Text.AlignHCenter
-                    text: root.tileData && root.tileData.prices ? 
-                          root.tileData.prices[index + 1] + "K" : "N/A"
+                    text: root.caseData && root.caseData.rentPrice ?
+                          root.caseData.rentPrice[index + 1] + "K" : "N/A"
                     font.pixelSize: 12
                     color: "#2c3e50"
                     font.bold: true
@@ -90,7 +91,7 @@ ColumnLayout {
 
         // Hotel price
         Text {
-            text: "Hotel: " + (root.tileData && root.tileData.prices ? root.tileData.prices[5] + "K" : "N/A")
+            text: "Hotel: " + (root.caseData && root.caseData.prices ? root.caseData.prices[5] + "K" : "N/A")
             font.pixelSize: 14
             color: "#2c3e50"
             font.bold: true
@@ -103,7 +104,7 @@ ColumnLayout {
             "None", "Brown", "Light Blue", "Pink", "Orange", 
             "Red", "Yellow", "Green", "Dark Blue"
         ];
-        return root.tileData && root.tileData.family >= 0 && root.tileData.family < families.length ? 
-            families[root.tileData.family] : "None";
+        return root.caseData && root.caseData.family >= 0 && root.caseData.family < families.length ?
+            families[root.caseData.family] : "None";
     }
 } 
