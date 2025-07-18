@@ -2,11 +2,11 @@
 #include "../player.h"
 #include <QDebug>
 
-Case::Case(QObject *parent)
-    : QObject(parent), m_name("Unknown"), m_position(-1), type(CS_Unknow) {}
+    Case::Case(QObject *parent)
+    : QObject(parent), m_name("Unknown"), m_position(-1), type(Case::CS_Unknow) {}
 
-Case::Case(const QString &name, int position, QObject *parent)
-    : QObject(parent), m_name(name), m_position(position), type(CS_Unknow) {}
+    Case::Case(const QString &name, int position, QObject *parent)
+    : QObject(parent), m_name(name), m_position(position), type(Case::CS_Unknow) {}
 
 int Case::position() const {
     return m_position;
@@ -15,9 +15,10 @@ int Case::position() const {
 void Case::setPosition(int newPosition)
 {
     m_position = newPosition;
+    emit positionChanged();
 }
 
-CaseType Case::getType() const
+Case::CaseType Case::getType() const
 {
     return type;
 }
@@ -25,6 +26,7 @@ CaseType Case::getType() const
 void Case::setType(CaseType newType)
 {
     type = newType;
+    emit typeChanged();
 }
 
 QString Case::name() const
@@ -34,7 +36,9 @@ QString Case::name() const
 
 void Case::setName(const QString &newName)
 {
+    qDebug()<< "name changed in CPP " << newName;
     m_name = newName;
+    emit nameChanged();
 }
 
 void Case::onLand(Player* player)

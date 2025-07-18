@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Game
+import Case
 import "."
 
 Rectangle {
@@ -10,19 +11,19 @@ Rectangle {
     border.color: "#bdc3c7"
     border.width: 1
     radius: 4
-    
+
     // Flag to prevent concurrent updates
     property bool isUpdatingOwnership: false
 
     // Properties
     property int tileIndex: 0
-    property int tileType: -1  // 0: Kibble, 1: RestArea, 2: CardBoard, etc.
+    property int tileType: Case.CS_RestArea  // 0: Kibble, 1: RestArea, 2: CardBoard, etc.
     property string tileName: ""
     property string tileColor: "#ecf0f1"
     property string tileIcon: ""
     property var tileData: null  // Additional data for the tile
     property bool isHovered: false
-    
+
     // Force update when tileData changes
     onTileDataChanged: {
         // Use a timer to avoid concurrent updates
@@ -30,7 +31,7 @@ Rectangle {
             ownershipUpdateTimer.restart();
         }
     }
-    
+
     // Timer to handle ownership updates
     Timer {
         id: ownershipUpdateTimer
@@ -40,7 +41,7 @@ Rectangle {
             updateOwnershipStatus();
         }
     }
-    
+
     // Timer to clear update flag
     Timer {
         id: ownershipFlagClearTimer
@@ -50,35 +51,35 @@ Rectangle {
             isUpdatingOwnership = false;
         }
     }
-    
+
     // Update ownership properties with error handling
     function updateOwnershipStatus() {
         if (isUpdatingOwnership) {
             console.log("Ownership update already in progress for tile " + tileIndex);
             return;
         }
-        
+
         isUpdatingOwnership = true;
-        
+
         try {
             var hasOwner = false;
             var ownerName = "";
-            
+
             // Safe access to tileData with proper type checking
             if (tileType === 1 && tileData && typeof tileData === 'object' && tileData.owner) {
                 hasOwner = true;
                 ownerName = tileData.owner;
             }
-            
+
             // Only update UI if the element exists
             if (ownershipIndicator) {
                 ownershipIndicator.visible = hasOwner;
-                
+
                 if (hasOwner) {
                     try {
                         ownershipIndicator.color = getOwnerColor(ownerName);
                         ownershipIndicator.border.color = Qt.darker(ownershipIndicator.color, 1.2);
-                        
+
                         // Safe access to nested objects
                         if (ownershipGlow) {
                             ownershipGlow.border.color = Qt.lighter(ownershipIndicator.color, 1.3);
@@ -90,8 +91,8 @@ Rectangle {
                     }
                 }
             }
-            
-            console.log("Tile " + tileIndex + " ownership updated: " + 
+
+            console.log("Tile " + tileIndex + " ownership updated: " +
                         (hasOwner ? "Owner: " + ownerName : "No owner"));
         } catch (e) {
             console.error("Error updating ownership status for tile " + tileIndex + ":", e);
@@ -144,7 +145,7 @@ Rectangle {
         color: "black"
         opacity: root.isHovered ? 0.3 : 0
         z: -1
-        
+
         Behavior on opacity {
             NumberAnimation {
                 duration: 200
@@ -195,7 +196,7 @@ Rectangle {
         // Add a border to make it more visible against any background
         border.width: 1
         border.color: Qt.darker(color, 1.2)
-        
+
         // Add small glow effect to make it stand out
         Rectangle {
             id: ownershipGlow
@@ -236,7 +237,7 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         z: 100
-        
+
         onEntered: root.isHovered = true
         onExited: root.isHovered = false
         onClicked: tileDetailsPopup.open()
@@ -259,7 +260,7 @@ Rectangle {
             z: 10
         }
     }
-    
+
     Component.onCompleted: {
         try {
             // Initialize ownership status when component is fully loaded
@@ -271,13 +272,13 @@ Rectangle {
             console.error("Error in BoardTile onCompleted:", e);
         }
     }
-    
+
     // Helper function to get the color from the owner name with error handling
     function getOwnerColor(ownerName) {
         try {
             // If no owner name provided, return default
             if (!ownerName) return "#7f8c8d";
-            
+
             // Find the player with matching name and get their color
             for (let i = 0; i < Game.players.length; i++) {
                 let player = Game.players[i];
@@ -288,8 +289,8 @@ Rectangle {
         } catch (e) {
             console.error("Error getting owner color:", e);
         }
-        
+
         // Default color if owner not found or error occurred
         return "#7f8c8d";
     }
-} 
+}

@@ -6,7 +6,7 @@
 CaseCatDoor::CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER_NOP)
     : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER
 {
-    setType(CS_CatDoor);
+    setType(Case::CS_CatDoor);
 }
 
 bool CaseCatDoor::buyCase(Player *buyer)

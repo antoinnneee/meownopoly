@@ -52,8 +52,14 @@ QList<Player *> Game::listPlayers() const
 void Game::registerQml() {
     qmlRegisterSingletonType<Game>("Game", 1, 0, "Game", &Game::qmlInstance);
     qmlRegisterType<Player>("Player", 1, 0, "Player"); // Register Player class
+    
+    // Register the complete inheritance hierarchy for proper QML inheritance
+    qmlRegisterUncreatableType<Case>("Case", 1, 0, "Case", 
+                                     "Case is an abstract base class"); // Register Case class with enum
+    qmlRegisterUncreatableType<CaseCatPerks>("CaseCatPerks", 1, 0, "CaseCatPerks", 
+                                            "CaseCatPerks is an intermediate base class"); // Register intermediate class
     qmlRegisterType<CaseRestArea>("CaseRestArea", 1, 0,
-                                  "CaseRestArea"); // Register Player class
+                                  "CaseRestArea"); // Register CaseRestArea class
 }
 
 Game *Game::instance() {
