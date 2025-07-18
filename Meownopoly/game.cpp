@@ -78,6 +78,8 @@ QObject *Game::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine) {
 }
 
 Case *Game::getCase(const QStringList &currentCaseJson) {
+    qDebug() << "getCase called with data:" << currentCaseJson;
+    
     if (currentCaseJson.size() < 3) {
         qDebug() << "Invalid case data - not enough fields";
         return nullptr;
@@ -86,6 +88,8 @@ Case *Game::getCase(const QStringList &currentCaseJson) {
     int type = currentCaseJson[0].toInt();
     QString name = currentCaseJson[1];
     int position = currentCaseJson[2].toInt();
+    
+    qDebug() << "Creating case - Type:" << type << "Name:" << name << "Position:" << position;
 
     Case* newCase = nullptr;
 
@@ -159,7 +163,14 @@ Case *Game::getCase(const QStringList &currentCaseJson) {
         break;
     }
     default:
+        qDebug() << "Unknown case type:" << type << "- returning nullptr";
         return nullptr;
+    }
+    
+    if (newCase) {
+        qDebug() << "getCase created:" << newCase->name() << "Type:" << newCase->getType() << "Position:" << newCase->position();
+    } else {
+        qDebug() << "getCase failed to create case";
     }
 
     return newCase;
@@ -192,11 +203,17 @@ void Game::initCases() {
         return;
     }
     QJsonArray casesArray = doc.array();
+    qDebug() << "Processing" << casesArray.size() << "cases from JSON";
 
     // Process each case in the JSON array
+    int caseIndex = 0;
     for (const QJsonValue &value : casesArray) {
         if (value.isObject()) {
             QJsonObject caseObj = value.toObject();
+            
+            qDebug() << "Processing case" << caseIndex << ":" << caseObj["name"].toString() 
+                     << "Type:" << caseObj["type"].toInt() 
+                     << "Position:" << caseObj["position"].toInt();
             
             // Convert JSON object to QStringList for getCase function
             QStringList caseData;
@@ -216,12 +233,20 @@ void Game::initCases() {
             caseData << (caseObj["hotelPrice"].isNull() ? "" : QString::number(caseObj["hotelPrice"].toInt()));
             caseData << (caseObj["taxe"].isNull() ? "" : QString::number(caseObj["taxe"].toInt()));
             
+            qDebug() << "CaseData for case" << caseIndex << ":" << caseData;
+            
             // Create case and add to list
             Case* newCase = getCase(caseData);
             if (newCase) {
                 m_listCases.append(newCase);
+                qDebug() << "Successfully created case" << caseIndex << ":" << newCase->name() 
+                         << "Type:" << newCase->getType() 
+                         << "Position:" << newCase->position();
+            } else {
+                qDebug() << "Failed to create case" << caseIndex;
             }
         }
+        caseIndex++;
     }
     
     qDebug() << "Successfully loaded" << m_listCases.size() << "cases from JSON";

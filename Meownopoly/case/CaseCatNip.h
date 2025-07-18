@@ -9,7 +9,7 @@ class CaseCatNip : public Case {
 
 public:
     explicit CaseCatNip(QObject *parent = nullptr);
-    CaseCatNip(const QString &name, int position, QObject *parent = nullptr);
+    CaseCatNip(const QString &name, int position = -1, QObject *parent = nullptr);
     ~CaseCatNip() override = default;
 
     void onLand(Player* player) override;
