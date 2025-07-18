@@ -46,7 +46,7 @@ Dialog {
             TextField {
                 id: nameField
                 Layout.fillWidth: true
-                text: caseInfo.name
+                text: (caseInfo) ? caseInfo.name : ""
                 placeholderText: "Enter case name"
                 onTextChanged: {
                     caseInfo.name = text
