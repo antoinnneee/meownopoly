@@ -48,6 +48,9 @@ public:
     virtual void onLeave(Player* player);
     virtual void onHover(Player* player);
 
+    // Static conversion function from int to CaseType enum
+    static CaseType intToCaseType(int type);
+
 signals:
 
     void nameChanged();

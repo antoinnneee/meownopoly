@@ -9,9 +9,9 @@ Dialog {
     title: "TEST_VIEW_3 - Menu de création de joueurs"
     width: 750
     height: 500
-    modal: true
-    
-    // Modèle de données pour les joueurs
+        modal: true
+        
+        // Modèle de données pour les joueurs
     ListModel {
         id: playersModel
         
@@ -24,9 +24,11 @@ Dialog {
             })
         }
     }
-    property Player monPlayer: Game.getPlayer();
-
+    property Player player: Game.getPlayer();
     
+    
+    
+
     // Couleurs disponibles pour les joueurs
     property var availableColors: [
         "#ff6b6b", "#4ecdc4", "#45b7d1", "#f9ca24", 

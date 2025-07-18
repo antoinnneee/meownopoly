@@ -12,14 +12,18 @@
 #include "card.h"
 #include "player.h"
 
-#define CASE_FILE_PATH ":/config/cases.csv"
+#define CASE_FILE_PATH ":/config/cases.json"
 
 class Game : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QList<Player*> players READ players NOTIFY playersChanged)
     Q_PROPERTY(int boardSize READ boardSize CONSTANT)
     Q_PROPERTY(int currentPlayerIndex READ currentPlayerIndex NOTIFY currentPlayerIndexChanged)
+
+    Q_PROPERTY(QList<Player*> players READ players NOTIFY playersChanged)
+    Q_PROPERTY(QList<Player *> listPlayers READ listPlayers CONSTANT FINAL)
+    Q_PROPERTY(QList<Case *> listCases READ listCases CONSTANT FINAL)
+    Q_PROPERTY(QList<Card *> listCards READ listCards CONSTANT FINAL)
 
 public:
 
@@ -35,14 +39,15 @@ public:
 
     Q_INVOKABLE void init();    // create a new game, load caseFile
     Q_INVOKABLE void startGame();
-    void initPlayers(int nbr);
     void initCases();
+    Case *getCase(const QStringList&);
     void initCards();
 
     Q_INVOKABLE Player *createPlayer(const QString name, QColor color, int indexLogo, int kibbles);
     Q_INVOKABLE void setupPlayers(const QVariantList &playerData);
 
     Q_INVOKABLE void nextPlayer();
+    Q_INVOKABLE Player *getPlayer();
     Q_INVOKABLE Case* getCaseAt(int position);
 
 
@@ -52,6 +57,12 @@ public:
 
     Q_INVOKABLE Case* getNewCaseType(Case::CaseType type);
 
+
+    QList<Player *> listPlayers() const;
+
+    QList<Case *> listCases() const;
+
+    QList<Card *> listCards() const;
 
 public slots:
 
@@ -70,6 +81,7 @@ private:
     static Game *m_pThis;
     QList<Case*> m_board;
     QList<Player*> m_listPlayers;
+    Player* m_players;
     QList<Case*> m_listCases;
     QList<Card*>  m_listCards;
     QList<CaseRestArea*>    m_family[FT_COUNT];

@@ -85,8 +85,8 @@ signals:
 
 private:
 
-    QString m_name;
-    QColor m_color;
+    QString m_name = "";
+    QColor m_color = "";
     int m_kibble = 1500;  // Starting money
     int m_position = 0;
     QList<CaseRestArea*> m_ownedProperties;
