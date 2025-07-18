@@ -6,7 +6,7 @@
 CaseRestArea::CaseRestArea(QObject *parent)
     : CaseCatPerks("Unknown Rest Area")
 {
-    setType(CS_RestArea);
+    setType(Case::CS_RestArea);
 }
 
 CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP, FamilyType family, int housePrice, int hotelPrice, QList<int> rentPrice)

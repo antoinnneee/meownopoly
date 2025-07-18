@@ -59,5 +59,15 @@
         <file>qml/test/TEST_VIEW_2.qml</file>
         <file>qml/test/TEST_CASE.qml</file>
         <file>qml/test/TEST_VIEW_3.qml</file>
+        <file>qml/case/AnimatedPlayerToken.qml</file>
+        <file>qml/case/CaseTile.qml</file>
+        <file>qml/case/PlayerToken.qml</file>
+        <file>qml/case/PlayerTokenContainer.qml</file>
+        <file>qml/case/StarRating.qml</file>
+        <file>qml/case/TileContent.qml</file>
+        <file>qml/case/TileDetailsPopup.qml</file>
+        <file>qml/case/details/JailDetails.qml</file>
+        <file>qml/case/details/KibbleDispenserDetails.qml</file>
+        <file>qml/case/details/RestAreaDetails.qml</file>
     </qresource>
 </RCC>
