@@ -117,15 +117,18 @@ Popup {
     Component {
         id: restAreaDetails
         RestAreaDetails {
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_RestArea) ? root.caseData : null
             familyColors: root.familyColors
         }
     }
 
     Component {
         id: kibbleDispenserDetails
-        KibbleDispenserDetails {}
+        KibbleDispenserDetails {
+            caseData: (root.caseData.type === Case.CS_KibbleDispenser) ? root.caseData : null
+        }
     }
+
 
     Component {
         id: jailDetails

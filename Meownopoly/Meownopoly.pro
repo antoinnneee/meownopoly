@@ -33,7 +33,6 @@ SOURCES += \
     case/CaseJail.cpp \
     case/CaseKibbleDispenser.cpp \
     case/CaseRestArea.cpp \
-    case/CaseStart.cpp \
     case/CaseToJail.cpp \
     game.cpp \
     game_loader.cpp \
@@ -54,7 +53,6 @@ HEADERS += \
     case/CaseJail.h \
     case/CaseKibbleDispenser.h \
     case/CaseRestArea.h \
-    case/CaseStart.h \
     case/CaseToJail.h \
     game.h \
     player.h \

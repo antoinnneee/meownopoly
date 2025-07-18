@@ -1,12 +1,15 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Case
+import CaseKibbleDispenser
 
 ColumnLayout {
     spacing: 5
 
+    required property CaseKibbleDispenser caseData
     Text {
-        text: "Collect 200K when passing"
+        text: "Collect " + caseData.reward + "K when passing"
         font.pixelSize: 14
         color: "#2c3e50"
         font.bold: true
