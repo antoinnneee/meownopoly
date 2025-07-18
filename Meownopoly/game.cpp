@@ -280,6 +280,17 @@ void Game::startGame() {
 
 int Game::currentPlayerIndex() const { return m_currentPlayerIndex; }
 
+Case *Game::getNewCaseType(Case::CaseType type)
+{
+    qDebug() << "get case type : " << type;
+    switch (type) {
+    case Case::CS_RestArea:
+        return new CaseRestArea("test restArea");
+    default:
+        return NULL;
+    }
+}
+
 void Game::nextPlayer() {
 
     m_currentPlayerIndex = (m_currentPlayerIndex + 1) % m_listPlayers.size();

@@ -3,4 +3,6 @@
 
 CaseStart::CaseStart(QObject *parent)
     : Case{parent}
-{}
+{
+    setType(Case::CS_KibbleDispenser);
+}
