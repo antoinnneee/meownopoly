@@ -9,7 +9,7 @@ ColumnLayout {
 
     required property CaseKibbleDispenser caseData
     Text {
-        text: "Collect " + caseData.reward + "K when passing"
+        text: "Collect " + ((caseData)?caseData.reward  : "" )+ "K when passing"
         font.pixelSize: 14
         color: "#2c3e50"
         font.bold: true
