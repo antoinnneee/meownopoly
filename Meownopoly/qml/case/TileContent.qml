@@ -51,6 +51,7 @@ Item {
             console.log("loading type : ", root.caseData.type)
             switch(root.caseData.type) {
                 case Case.CS_RestArea: return restAreaContent
+                case Case:CS_KibbleDispenser: return kibbleDispenserContent
                 default: return null
             }
         }
@@ -61,6 +62,19 @@ Item {
         RestAreaContent {
             caseData: root.caseData
         }
+    }
+
+    Component {
+        id: kibbleDispenserContent
+        Rectangle{
+        color:"red"
+        }
+
+        /*
+        KibbleDispenserContent {
+            caseData: root.caseData
+        }
+        */
     }
 
 

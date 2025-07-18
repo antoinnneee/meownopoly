@@ -10,7 +10,6 @@
 #include <QDebug>
 
 // Include all case types
-#include "case/CaseStart.h"
 #include "case/CaseRestArea.h"
 #include "case/CaseCardBoardBox.h"
 #include "case/CaseCatNip.h"
@@ -60,6 +59,8 @@ void Game::registerQml() {
                                             "CaseCatPerks is an intermediate base class"); // Register intermediate class
     qmlRegisterType<CaseRestArea>("CaseRestArea", 1, 0,
                                   "CaseRestArea"); // Register CaseRestArea class
+    qmlRegisterType<CaseKibbleDispenser>("CaseKibbleDispenser", 1, 0,
+                                  "CaseKibbleDispenser"); // Register CaseKibbleDispenser class
 }
 
 Game *Game::instance() {
@@ -368,6 +369,18 @@ Case *Game::getNewCaseType(Case::CaseType type)
             qDebug() << "  - Position:" << newCase->position();
         } else {
             qDebug() << "Failed to create CaseRestArea";
+        }
+        break;
+        case Case::CS_KibbleDispenser:
+        qDebug() << "Creating CaseKibbleDispenser with name: test KibbleDispenser";
+        newCase = new CaseKibbleDispenser("test KibbleDispenser", 0, 200);
+        if (newCase) {
+            qDebug() << "Successfully created CaseKibbleDispenser:";
+            qDebug() << "  - Name:" << newCase->name();
+            qDebug() << "  - Type:" << newCase->getType();
+            qDebug() << "  - Position:" << newCase->position();
+        } else {
+            qDebug() << "Failed to create CaseKibbleDispenser";
         }
         break;
     default:

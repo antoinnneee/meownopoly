@@ -21,6 +21,7 @@ int CaseKibbleDispenser::reward() const {
 
 void CaseKibbleDispenser::setReward(int newReward) {
     m_reward = newReward;
+    emit rewardChanged();
 }
 
 void CaseKibbleDispenser::onLand(Player* player)
