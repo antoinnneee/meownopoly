@@ -92,7 +92,10 @@ Case *Game::getNewCaseType(Case::CaseType type)
     qDebug() << "get case type : " << type;
     switch (type) {
     case Case::CS_RestArea:
-        return new CaseRestArea("test restArea");
+    {
+        CaseRestArea *caseReq = new CaseRestArea("test restArea");
+        return caseReq;
+    }
     default:
         return NULL;
     }

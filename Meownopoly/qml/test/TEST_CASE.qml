@@ -90,6 +90,7 @@ Dialog {
                     if (currentValue !== undefined) {
                         console.log(currentValue);
                        caseInfo = Game.getNewCaseType(currentValue);
+                        console.log("price : ", caseInfo.price)
                     }
                 }
                 

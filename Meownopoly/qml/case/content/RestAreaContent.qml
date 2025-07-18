@@ -104,7 +104,7 @@ Item {
             bottom: parent.bottom
             bottomMargin: parent.height * 0.02
         }
-        visible: root.caseData.type === 1 && root.caseData && root.caseData.price
+        visible: root.caseData.type === Case.CS_RestArea && root.caseData
         text: visible ? root.caseData.price + "K" : ""
         color: "#2c3e50"
         font.pixelSize: parent.width * 0.12

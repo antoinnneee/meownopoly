@@ -36,7 +36,6 @@ QString Case::name() const
 
 void Case::setName(const QString &newName)
 {
-    qDebug()<< "name changed in CPP " << newName;
     m_name = newName;
     emit nameChanged();
 }

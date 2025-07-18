@@ -52,13 +52,13 @@ ColumnLayout {
         visible: root.caseData && root.caseData.rentPrice
 
         Text {
-            text: "Purchase: " + (root.caseData && root.caseData.rentPrice ? root.caseData.rentPrice[0] + "K" : "N/A")
+            text: "Purchase: " + (root.caseData && root.caseData.price ? root.caseData.price + "K" : "N/A")
             font.pixelSize: 14
             color: "#2c3e50"
             font.bold: true
         }
 
-        // Star prices in a grid
+        // Star rentPrice in a grid
         Grid {
             Layout.fillWidth: true
             columns: 4
@@ -91,7 +91,7 @@ ColumnLayout {
 
         // Hotel price
         Text {
-            text: "Hotel: " + (root.caseData && root.caseData.prices ? root.caseData.prices[5] + "K" : "N/A")
+            text: "Hotel: " + (root.caseData && root.caseData.rentPrice ? root.caseData.rentPrice[5] + "K" : "N/A")
             font.pixelSize: 14
             color: "#2c3e50"
             font.bold: true
