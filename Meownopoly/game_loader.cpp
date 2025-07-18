@@ -233,10 +233,3 @@ void Game::init_caseFile() {
   }
   */
 }
-
-void Game::init() {
-  if (DEBUG_CASE_LOADING) {
-    qDebug() << "Initializing game...";
-  }
-  init_caseFile();
-}
