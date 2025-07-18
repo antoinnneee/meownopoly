@@ -14,5 +14,11 @@
         <file>asset/fountain.png</file>
         <file>asset/laser.png</file>
         <file>asset/tax.png</file>
+        <file>asset/avatar/avatar1.png</file>
+        <file>asset/avatar/avatar2.png</file>
+        <file>asset/avatar/avatar3.png</file>
+        <file>asset/avatar/avatar4.png</file>
+        <file>asset/avatar/avatar5.png</file>
+        <file>asset/avatar/avatar6.png</file>
     </qresource>
 </RCC>

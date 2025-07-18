@@ -4,15 +4,16 @@
 
 
 CaseRestArea::CaseRestArea(QObject *parent)
-    : CaseCatPerks("Unknown Rest Area", -1, parent)
+    : CaseCatPerks("Unknown Rest Area")
 {
-    setType(CT_RestArea);
+    setType(CS_RestArea);
 }
 
-CaseRestArea::CaseRestArea(const QString &name, FamilyType family, int position, int housePrice, int hotelPrice, QList<int> rentPrice, QObject *parent) :
-    CaseCatPerks(name, position, parent) , m_family(family), m_housePrice(housePrice), m_hotelPrice(hotelPrice), m_rentPrice(rentPrice)
+CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP, FamilyType family, int housePrice, int hotelPrice, QList<int> rentPrice)
+    : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER, m_family(family), m_housePrice(housePrice), m_hotelPrice(hotelPrice), m_rentPrice(rentPrice)
+
 {
-    setType(CT_RestArea);
+
 }
 
 

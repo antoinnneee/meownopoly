@@ -2,7 +2,12 @@
 #include "../player.h"
 
 
-CaseCatPerks::CaseCatPerks(const QString &name, int position, QObject *parent) :  Case::Case(name, position, parent){
+// CaseCatPerks::CaseCatPerks(const QString &name, int position, int price, int sellPrice, int morgagePrice, QObject *parent) :  Case::Case(name, position, parent), m_morgagePrice(morgagePrice){
+
+// }
+
+CaseCatPerks::CaseCatPerks(const QString &name, int position, int morgagePrice, int price, int sellPrice, QObject *parent)
+{
 
 }
 
@@ -43,16 +48,15 @@ void CaseCatPerks::setsellPrice(int newSellPrice)
     emit sellPriceChanged();
 }
 
-
-int CaseCatPerks::moragePrice() const
+int CaseCatPerks::morgagePrice() const
 {
-    return m_moragePrice;
+    return m_morgagePrice;
 }
 
-void CaseCatPerks::setMoragePrice(int newMoragePrice)
+void CaseCatPerks::setmorgagePrice(int newMorgagePrice)
 {
-    if (m_moragePrice == newMoragePrice)
+    if (m_morgagePrice == newMorgagePrice)
         return;
-    m_moragePrice = newMoragePrice;
-    emit moragePriceChanged();
+    m_morgagePrice = newMorgagePrice;
+    emit morgagePriceChanged();
 }

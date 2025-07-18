@@ -10,11 +10,13 @@
 #include "case/CaseCatDoor.h"
 #include "case/CaseRestArea.h"
 
+
 class Player : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(int indexLogo READ indexLogo WRITE setIndexLogo NOTIFY indexLogoChanged FINAL)
     Q_PROPERTY(int kibble READ kibble WRITE setKibble NOTIFY kibbleChanged)
     Q_PROPERTY(int propertyCount READ propertyCount NOTIFY propertyCountChanged)
     Q_PROPERTY(int position READ position WRITE setPosition NOTIFY positionChanged)
@@ -24,7 +26,7 @@ class Player : public QObject
 
 public:
     explicit Player(QObject *parent = nullptr);
-    explicit Player(const QString &name, const QColor &color, QObject *parent = nullptr);
+    explicit Player(QString name, QColor color, int indexLogo, int kibbles, QObject *parent = nullptr);
 
     QString name() const { return m_name; }
     void setName(const QString &name);
@@ -63,6 +65,9 @@ public:
     void movePLayer();
 
 
+    int indexLogo() const;
+    void setIndexLogo(int newIndexLogo);
+
 signals:
     void nameChanged();
     void colorChanged();
@@ -76,7 +81,10 @@ signals:
     void caseLeave();
     void caseHover();
 
+    void indexLogoChanged();
+
 private:
+
     QString m_name;
     QColor m_color;
     int m_kibble = 1500;  // Starting money
@@ -87,6 +95,7 @@ private:
 
     bool m_inJail = false;
 
+    int m_indexLogo;
 };
 
 #endif // PLAYER_H

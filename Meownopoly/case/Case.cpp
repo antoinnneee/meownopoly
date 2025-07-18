@@ -3,10 +3,10 @@
 #include <QDebug>
 
 Case::Case(QObject *parent)
-    : QObject(parent), m_name("Unknown"), m_position(-1), type(CT_Unknow) {}
+    : QObject(parent), m_name("Unknown"), m_position(-1), type(CS_Unknow) {}
 
 Case::Case(const QString &name, int position, QObject *parent)
-    : QObject(parent), m_name(name), m_position(position), type(CT_Unknow) {}
+    : QObject(parent), m_name(name), m_position(position), type(CS_Unknow) {}
 
 int Case::position() const {
     return m_position;

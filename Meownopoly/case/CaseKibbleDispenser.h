@@ -16,7 +16,7 @@ public:
     void onLand(Player* player) override;
 
 private:
-    enum CaseType type = CT_KibbleDispenser;
+    enum CaseType type = CS_KibbleDispenser;
     int m_reward = 200;
 };
 

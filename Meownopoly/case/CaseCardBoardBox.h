@@ -16,7 +16,7 @@ signals:
     void cardDrawn();
 
 private:
-    enum CaseType type = CT_CardBoardBox;
+    enum CaseType type = CS_CardBoardBox;
     // Add any private members needed for community chest card functionality
 };
 

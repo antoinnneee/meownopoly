@@ -1,16 +1,16 @@
 #include "CaseCatDevice.h"
 #include "../player.h"
 
-CaseCatDevice::CaseCatDevice(QObject *parent)
-    : CaseCatPerks("Unknown Rest Area", -1, parent)
-{
-    setType(CT_Device);
-}
+// CaseCatDevice::CaseCatDevice(QObject *parent)
+//     : CaseCatPerks("Unknown Cat Device", -1, morgagePrice, parent)
+// {
+//     setType(CS_Device);
+// }
 
-CaseCatDevice::CaseCatDevice(const QString &name, int position, QObject *parent)
-    : CaseCatPerks(name, position, parent)
+CaseCatDevice::CaseCatDevice(CASECATPERKS_DEFAULT_PARAMETER_NOP, int taxe)
+    : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER, m_taxe(taxe)
 {
-    setType(CT_Device);
+    setType(CS_Device);
 }
 bool CaseCatDevice::buyCase(Player *buyer) {
     if (CaseCatPerks::buyCase(buyer)){
@@ -28,3 +28,16 @@ bool CaseCatDevice::sellCase(Player *buyer)
 }
 
 
+
+int CaseCatDevice::taxe() const
+{
+    return m_taxe;
+}
+
+void CaseCatDevice::setTaxe(int newTaxe)
+{
+    if (m_taxe == newTaxe)
+        return;
+    m_taxe = newTaxe;
+    emit taxeChanged();
+}

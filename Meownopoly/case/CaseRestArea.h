@@ -45,7 +45,8 @@ class CaseRestArea : public CaseCatPerks
 
 public:
     explicit CaseRestArea(QObject *parent = nullptr);
-    CaseRestArea(const QString &name, FamilyType family = FT_NONE, int position = -1, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>(), QObject *parent = nullptr);
+//    CaseRestArea(const QString &name, int price= -1, int sellPrice = -1,int position = -1,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>(), QObject *parent = nullptr);
+    CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>());
 
     RestQuality restQuality() const;
     void setRestQuality(RestQuality newRestQuality);
@@ -86,7 +87,7 @@ signals:
     void rentPriceChanged();
 
 private:
-    enum CaseType type = CT_RestArea;
+    enum CaseType type = CS_RestArea;
     enum RestQuality m_restQuality = RQ_NONE;   // Land level
     enum FamilyType m_family = FT_NONE;
     int m_housePrice;

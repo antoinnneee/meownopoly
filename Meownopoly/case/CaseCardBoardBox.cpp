@@ -5,11 +5,11 @@
 CaseCardBoardBox::CaseCardBoardBox(QObject *parent)
     : Case("Card Board Box", -1, parent)
 {
-    setType(CT_CardBoardBox);
+    setType(CS_CardBoardBox);
 }
 
 CaseCardBoardBox::CaseCardBoardBox(const QString &name, int position, QObject *parent)
     : Case(name, position, parent)
 {
-    setType(CT_CardBoardBox);
+    setType(CS_CardBoardBox);
 }

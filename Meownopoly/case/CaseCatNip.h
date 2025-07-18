@@ -18,7 +18,7 @@ signals:
     void cardDrawn();
 
 private:
-    enum CaseType type = CT_CatNip;
+    enum CaseType type = CS_CatNip;
 };
 
 #endif // CASECATNIP_H 
