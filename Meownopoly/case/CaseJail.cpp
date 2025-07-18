@@ -2,7 +2,10 @@
 #include <QDebug>
 
 CaseJail::CaseJail(const QString &name, int position, int jailFine)
-    : Case(name, position), m_jailFine(jailFine) {}
+    : Case(name, position), m_jailFine(jailFine) {
+
+    setType(Case::CS_Jail);
+}
 
 void CaseJail::onLand(Player* player) {
     if (!player->isInJail()) {

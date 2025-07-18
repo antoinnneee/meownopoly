@@ -55,6 +55,8 @@ public:
     int boardSize() const { return 40; }  // Standard Monopoly board size
     int currentPlayerIndex() const;
 
+    Q_INVOKABLE Case* getNewCaseType(Case::CaseType type);
+
 
     QList<Player *> listPlayers() const;
 

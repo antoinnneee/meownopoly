@@ -8,7 +8,6 @@
 
 CaseCatPerks::CaseCatPerks(const QString &name, int position, int morgagePrice, int price, int sellPrice, QObject *parent)
 {
-
 }
 
 bool CaseCatPerks::buyCase(Player *buyer)
