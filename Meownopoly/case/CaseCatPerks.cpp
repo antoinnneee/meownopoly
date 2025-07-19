@@ -60,3 +60,16 @@ void CaseCatPerks::setmorgagePrice(int newMorgagePrice)
     m_morgagePrice = newMorgagePrice;
     emit morgagePriceChanged();
 }
+
+Player *CaseCatPerks::owner() const
+{
+    return m_owner;
+}
+
+void CaseCatPerks::setOwner(Player *newOwner)
+{
+    if (m_owner == newOwner)
+        return;
+    m_owner = newOwner;
+    emit ownerChanged();
+}

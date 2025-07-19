@@ -5,10 +5,10 @@
 #include <QString>
 #include <QColor>
 #include <QList>
-#include "case/CaseRestArea.h"
-#include "case/CaseCatDevice.h"
-#include "case/CaseCatDoor.h"
-#include "case/CaseRestArea.h"
+
+class CaseRestArea;
+class CaseCatDevice;
+class CaseCatDoor;
 
 
 class Player : public QObject

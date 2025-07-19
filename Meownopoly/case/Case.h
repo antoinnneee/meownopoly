@@ -3,9 +3,8 @@
 
 #include <QObject>
 #include <QString>
-
+#include "player.h"
 // Forward declaration instead of including player.h
-class Player;
 
 class Case : public QObject
 {
