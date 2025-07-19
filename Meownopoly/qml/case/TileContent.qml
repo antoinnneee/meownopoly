@@ -51,7 +51,7 @@ Item {
             console.log("loading type : ", root.caseData.type)
             console.log("root.caseData.type" + root.caseData.type)
             switch(root.caseData.type) {
-            case Case:CS_KibbleDispenser: return kibbleDispenserContent
+            case Case.CS_KibbleDispenser: return kibbleDispenserContent
                 case Case.CS_RestArea: return restAreaContent
                 default: return null
             }
