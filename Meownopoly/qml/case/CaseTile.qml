@@ -18,8 +18,6 @@ Rectangle {
     property int tileIndex: caseData.position
     property int tileType: caseData.type
     property string tileName: caseData.name
-    property string tileColor: "#ecf0f1"
-    property string tileIcon: ""
     property bool isHovered: false
 
     // Colors for different family types
@@ -41,9 +39,8 @@ Rectangle {
         anchors {
             left: parent.left
             right: parent.right
-            top: parent.top//            top: tileType === 1 ? colorBar.bottom : parent.top
+            top: parent.top
             bottom: parent.bottom
-            margins: tileType === 1 ? 0 : 4
         }
         caseData: root.caseData
     }
