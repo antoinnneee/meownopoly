@@ -49,9 +49,10 @@ Item {
         anchors.fill: parent
         sourceComponent: {
             console.log("loading type : ", root.caseData.type)
+
             switch(root.caseData.type) {
+            case Case:CS_KibbleDispenser: return kibbleDispenserContent
                 case Case.CS_RestArea: return restAreaContent
-                case Case:CS_KibbleDispenser: return kibbleDispenserContent
                 default: return null
             }
         }
@@ -66,8 +67,8 @@ Item {
 
     Component {
         id: kibbleDispenserContent
-        Rectangle{
-        color:"red"
+        KibbleDispenserContent{
+            caseData: root.caseData
         }
 
         /*
