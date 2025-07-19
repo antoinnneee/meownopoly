@@ -7,7 +7,7 @@
 
 class CaseJail : public Case {
 public:
-    CaseJail(const QString &name, int position, int jailFine);
+    CaseJail(const QString &name, int position, int jailFine = -1);
 
     void onLand(Player* player) override;
     void sendToJail(Player* player);
