@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import Game
 import Case
+import "../case/"
 
 Rectangle {
     id: root
@@ -14,7 +15,7 @@ Rectangle {
     
     // Card dimensions
     property real cardWidth: Screen.pixelDensity * 25  // 2.5cm
-    property real cardHeight: Screen.pixelDensity * 5   // Alternative height
+    property real cardHeight: Screen.pixelDensity * 50   // Alternative height
     
     // Initialize game on component creation
     Component.onCompleted: {
@@ -107,245 +108,252 @@ Rectangle {
         
         // Create 10 cards
         Repeater {
-            model: Math.min(10, Game.listCases.length)
-            
-            delegate: Rectangle {
-                id: caseCard
-                
-                property var caseData: index < Game.listCases.length ? Game.listCases[index] : null
-                
+            model: Game.listCases.length
+            delegate : CaseTile {
                 width: cardWidth
                 height: cardHeight
-                
-                color: getFamilyColor(caseData)
-                border.color: "#7f8c8d"
-                border.width: 2
-                radius: 8
-                
-                // Family color bar for properties
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 15
-                    color: getFamilyColor(caseData)
-                    visible: caseData && caseData.type === Case.CS_RestArea
-                    border.color: "#7f8c8d"
-                    border.width: 1
-                    radius: 6
-                }
-                
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 4
-                    
-                    // Case name
-                    Text {
-                        width: parent.width
-                        text: caseData ? caseData.name : "Unknown"
-                        color: "#2c3e50"
-                        font.pixelSize: 10
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
-                        maximumLineCount: 2
-                        elide: Text.ElideRight
-                    }
-                    
-                    // Type icon
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: caseData ? getTypeIcon(caseData.type) : "❓"
-                        font.pixelSize: 24
-                    }
-                    
-                    // Position number
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: caseData ? "Position: " + caseData.position : "Position: -"
-                        color: "#7f8c8d"
-                        font.pixelSize: 8
-                        font.bold: true
-                    }
-                    
-                    // Debug info
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "Index: " + index
-                        color: "#95a5a6"
-                        font.pixelSize: 6
-                        visible: !caseData || caseData.type === 10 || caseData.position === -1
-                    }
-                    
-                    // Specific properties based on case type
-                    Column {
-                        width: parent.width
-                        spacing: 2
-                        
-                        // For RestArea (Properties)
-                        Text {
-                            width: parent.width
-                            visible: caseData && caseData.type === Case.CS_RestArea
-                            text: caseData && caseData.price ? "Price: " + caseData.price + "K" : ""
-                            color: "#2c3e50"
-                            font.pixelSize: 9
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        
-                        // For CatPerks (Properties with mortgage)
-                        Text {
-                            width: parent.width
-                            visible: caseData && caseData.type === Case.CS_RestArea && caseData.morgagePrice
-                            text: caseData && caseData.morgagePrice ? "Mortgage: " + caseData.morgagePrice + "K" : ""
-                            color: "#7f8c8d"
-                            font.pixelSize: 8
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        
-                        // For CatDoor (Railroads)
-                        Text {
-                            width: parent.width
-                            visible: caseData && caseData.type === Case.CS_CatDoor
-                            text: caseData && caseData.price ? "Price: " + caseData.price + "K" : ""
-                            color: "#2c3e50"
-                            font.pixelSize: 9
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        
-                        // For Device (Utilities)
-                        Text {
-                            width: parent.width
-                            visible: caseData && caseData.type === Case.CS_Device
-                            text: caseData && caseData.price ? "Price: " + caseData.price + "K" : ""
-                            color: "#2c3e50"
-                            font.pixelSize: 9
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        
-                        // For Kibble Dispenser (Start/Tax)
-                        Text {
-                            width: parent.width
-                            visible: caseData && caseData.type === Case.CS_KibbleDispenser
-                            text: caseData && caseData.reward ? (caseData.reward > 0 ? "Reward: +" + caseData.reward + "K" : "Tax: " + caseData.reward + "K") : ""
-                            color: caseData && caseData.reward > 0 ? "#27ae60" : "#e74c3c"
-                            font.pixelSize: 9
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        
-                        // For Free Nap
-                        Text {
-                            width: parent.width
-                            visible: caseData && caseData.type === Case.CS_FreeNap
-                            text: caseData && caseData.kibbleAmount ? "Pool: " + caseData.kibbleAmount + "K" : "FREE PARKING"
-                            color: "#27ae60"
-                            font.pixelSize: 9
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        
-                        // Family name for properties
-                        Text {
-                            width: parent.width
-                            visible: caseData && caseData.type === Case.CS_RestArea && caseData.family !== undefined
-                            text: {
-                                if (caseData && caseData.family !== undefined) {
-                                    var families = ["None", "Brown", "Light Blue", "Pink", "Orange", "Red", "Yellow", "Green", "Dark Blue"]
-                                    return families[caseData.family] || "None"
-                                }
-                                return ""
-                            }
-                            color: "#7f8c8d"
-                            font.pixelSize: 8
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                    }
-                }
-                
-                // Hover effect
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                    border.color: "#f39c12"
-                    border.width: 3
-                    visible: mouseArea.containsMouse
-                    radius: 8
-                }
-                
-                MouseArea {
-                    id: mouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    
-                                    onClicked: {
-                    if (caseData) {
-                        console.log("Clicked case:", caseData.name, 
-                                   "Type:", caseData.type, 
-                                   "Position:", caseData.position)
-                        
-                        // Show detailed info in console
-                        if (caseData.type === Case.CS_RestArea) {
-                            console.log("  - Family:", caseData.family)
-                            console.log("  - Price:", caseData.price)
-                            console.log("  - Mortgage:", caseData.morgagePrice)
-                            console.log("  - House Price:", caseData.housePrice)
-                            console.log("  - Hotel Price:", caseData.hotelPrice)
-                            console.log("  - Rent Prices:", caseData.rentPrice)
-                        }
-                    } else {
-                        console.log("Clicked card", index, "but caseData is null")
-                    }
-                }
-                }
-                
-                // Card index indicator with status
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.right: parent.right
-                    anchors.margins: 5
-                    width: 20
-                    height: 20
-                    radius: 10
-                    color: {
-                        if (!caseData) return "#e74c3c"  // Red: No data
-                        if (caseData.type === 10) return "#f39c12"  // Orange: Unknown type
-                        if (caseData.position === -1) return "#e67e22"  // Dark orange: Invalid position
-                        return "#27ae60"  // Green: Valid
-                    }
-                    
-                    Text {
-                        anchors.centerIn: parent
-                        text: index + 1
-                        color: "white"
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
-                }
-                
-                // Error indicator for invalid cases
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.margins: 5
-                    width: 15
-                    height: 15
-                    radius: 7
-                    color: "#e74c3c"
-                    visible: !caseData || caseData.type === 10 || caseData.position === -1
-                    
-                    Text {
-                        anchors.centerIn: parent
-                        text: "!"
-                        color: "white"
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
+                caseData: model[index]
+                Component.onCompleted: {
+                console.log("model[index] " + index)
                 }
             }
+            // delegate: Rectangle {
+            //     id: caseCard
+
+            //     property var caseData: index < Game.listCases.length ? Game.listCases[index] : null
+
+            //     width: cardWidth
+            //     height: cardHeight
+
+            //     color: getFamilyColor(caseData)
+            //     border.color: "#7f8c8d"
+            //     border.width: 2
+            //     radius: 8
+
+            //     // Family color bar for properties
+            //     Rectangle {
+            //         anchors.top: parent.top
+            //         anchors.left: parent.left
+            //         anchors.right: parent.right
+            //         height: 15
+            //         color: getFamilyColor(caseData)
+            //         visible: caseData && caseData.type === Case.CS_RestArea
+            //         border.color: "#7f8c8d"
+            //         border.width: 1
+            //         radius: 6
+            //     }
+
+            //     Column {
+            //         anchors.fill: parent
+            //         anchors.margins: 8
+            //         spacing: 4
+
+            //         // Case name
+            //         Text {
+            //             width: parent.width
+            //             text: caseData ? caseData.name : "Unknown"
+            //             color: "#2c3e50"
+            //             font.pixelSize: 10
+            //             font.bold: true
+            //             horizontalAlignment: Text.AlignHCenter
+            //             wrapMode: Text.WordWrap
+            //             maximumLineCount: 2
+            //             elide: Text.ElideRight
+            //         }
+
+            //         // Type icon
+            //         Text {
+            //             anchors.horizontalCenter: parent.horizontalCenter
+            //             text: caseData ? getTypeIcon(caseData.type) : "❓"
+            //             font.pixelSize: 24
+            //         }
+
+            //         // Position number
+            //         Text {
+            //             anchors.horizontalCenter: parent.horizontalCenter
+            //             text: caseData ? "Position: " + caseData.position : "Position: -"
+            //             color: "#7f8c8d"
+            //             font.pixelSize: 8
+            //             font.bold: true
+            //         }
+
+            //         // Debug info
+            //         Text {
+            //             anchors.horizontalCenter: parent.horizontalCenter
+            //             text: "Index: " + index
+            //             color: "#95a5a6"
+            //             font.pixelSize: 6
+            //             visible: !caseData || caseData.type === 10 || caseData.position === -1
+            //         }
+
+            //         // Specific properties based on case type
+            //         Column {
+            //             width: parent.width
+            //             spacing: 2
+
+            //             // For RestArea (Properties)
+            //             Text {
+            //                 width: parent.width
+            //                 visible: caseData && caseData.type === Case.CS_RestArea
+            //                 text: caseData && caseData.price ? "Price: " + caseData.price + "K" : ""
+            //                 color: "#2c3e50"
+            //                 font.pixelSize: 9
+            //                 font.bold: true
+            //                 horizontalAlignment: Text.AlignHCenter
+            //             }
+
+            //             // For CatPerks (Properties with mortgage)
+            //             Text {
+            //                 width: parent.width
+            //                 visible: caseData && caseData.type === Case.CS_RestArea && caseData.morgagePrice
+            //                 text: caseData && caseData.morgagePrice ? "Mortgage: " + caseData.morgagePrice + "K" : ""
+            //                 color: "#7f8c8d"
+            //                 font.pixelSize: 8
+            //                 horizontalAlignment: Text.AlignHCenter
+            //             }
+
+            //             // For CatDoor (Railroads)
+            //             Text {
+            //                 width: parent.width
+            //                 visible: caseData && caseData.type === Case.CS_CatDoor
+            //                 text: caseData && caseData.price ? "Price: " + caseData.price + "K" : ""
+            //                 color: "#2c3e50"
+            //                 font.pixelSize: 9
+            //                 font.bold: true
+            //                 horizontalAlignment: Text.AlignHCenter
+            //             }
+
+            //             // For Device (Utilities)
+            //             Text {
+            //                 width: parent.width
+            //                 visible: caseData && caseData.type === Case.CS_Device
+            //                 text: caseData && caseData.price ? "Price: " + caseData.price + "K" : ""
+            //                 color: "#2c3e50"
+            //                 font.pixelSize: 9
+            //                 font.bold: true
+            //                 horizontalAlignment: Text.AlignHCenter
+            //             }
+
+            //             // For Kibble Dispenser (Start/Tax)
+            //             Text {
+            //                 width: parent.width
+            //                 visible: caseData && caseData.type === Case.CS_KibbleDispenser
+            //                 text: caseData && caseData.reward ? (caseData.reward > 0 ? "Reward: +" + caseData.reward + "K" : "Tax: " + caseData.reward + "K") : ""
+            //                 color: caseData && caseData.reward > 0 ? "#27ae60" : "#e74c3c"
+            //                 font.pixelSize: 9
+            //                 font.bold: true
+            //                 horizontalAlignment: Text.AlignHCenter
+            //             }
+
+            //             // For Free Nap
+            //             Text {
+            //                 width: parent.width
+            //                 visible: caseData && caseData.type === Case.CS_FreeNap
+            //                 text: caseData && caseData.kibbleAmount ? "Pool: " + caseData.kibbleAmount + "K" : "FREE PARKING"
+            //                 color: "#27ae60"
+            //                 font.pixelSize: 9
+            //                 font.bold: true
+            //                 horizontalAlignment: Text.AlignHCenter
+            //             }
+
+            //             // Family name for properties
+            //             Text {
+            //                 width: parent.width
+            //                 visible: caseData && caseData.type === Case.CS_RestArea && caseData.family !== undefined
+            //                 text: {
+            //                     if (caseData && caseData.family !== undefined) {
+            //                         var families = ["None", "Brown", "Light Blue", "Pink", "Orange", "Red", "Yellow", "Green", "Dark Blue"]
+            //                         return families[caseData.family] || "None"
+            //                     }
+            //                     return ""
+            //                 }
+            //                 color: "#7f8c8d"
+            //                 font.pixelSize: 8
+            //                 horizontalAlignment: Text.AlignHCenter
+            //             }
+            //         }
+            //     }
+
+            //     // Hover effect
+            //     Rectangle {
+            //         anchors.fill: parent
+            //         color: "transparent"
+            //         border.color: "#f39c12"
+            //         border.width: 3
+            //         visible: mouseArea.containsMouse
+            //         radius: 8
+            //     }
+
+            //     MouseArea {
+            //         id: mouseArea
+            //         anchors.fill: parent
+            //         hoverEnabled: true
+
+            //                         onClicked: {
+            //         if (caseData) {
+            //             console.log("Clicked case:", caseData.name,
+            //                        "Type:", caseData.type,
+            //                        "Position:", caseData.position)
+
+            //             // Show detailed info in console
+            //             if (caseData.type === Case.CS_RestArea) {
+            //                 console.log("  - Family:", caseData.family)
+            //                 console.log("  - Price:", caseData.price)
+            //                 console.log("  - Mortgage:", caseData.morgagePrice)
+            //                 console.log("  - House Price:", caseData.housePrice)
+            //                 console.log("  - Hotel Price:", caseData.hotelPrice)
+            //                 console.log("  - Rent Prices:", caseData.rentPrice)
+            //             }
+            //         } else {
+            //             console.log("Clicked card", index, "but caseData is null")
+            //         }
+            //     }
+            //     }
+
+            //     // Card index indicator with status
+            //     Rectangle {
+            //         anchors.top: parent.top
+            //         anchors.right: parent.right
+            //         anchors.margins: 5
+            //         width: 20
+            //         height: 20
+            //         radius: 10
+            //         color: {
+            //             if (!caseData) return "#e74c3c"  // Red: No data
+            //             if (caseData.type === 10) return "#f39c12"  // Orange: Unknown type
+            //             if (caseData.position === -1) return "#e67e22"  // Dark orange: Invalid position
+            //             return "#27ae60"  // Green: Valid
+            //         }
+
+            //         Text {
+            //             anchors.centerIn: parent
+            //             text: index + 1
+            //             color: "white"
+            //             font.pixelSize: 10
+            //             font.bold: true
+            //         }
+            //     }
+
+            //     // Error indicator for invalid cases
+            //     Rectangle {
+            //         anchors.top: parent.top
+            //         anchors.left: parent.left
+            //         anchors.margins: 5
+            //         width: 15
+            //         height: 15
+            //         radius: 7
+            //         color: "#e74c3c"
+            //         visible: !caseData || caseData.type === 10 || caseData.position === -1
+
+            //         Text {
+            //             anchors.centerIn: parent
+            //             text: "!"
+            //             color: "white"
+            //             font.pixelSize: 10
+            //             font.bold: true
+            //         }
+            //     }
+            // }
         }
     }
     
