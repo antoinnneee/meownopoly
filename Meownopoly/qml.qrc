@@ -72,5 +72,18 @@
         <file>qml/case/content/RestAreaContent.qml</file>
         <file>qml/test/TEST_BOARD.qml</file>
         <file>qml/case/content/KibbleDispenserContent.qml</file>
+        <file>qml/case/content/CardBoardBoxContent.qml</file>
+        <file>qml/case/content/CatNipContent.qml</file>
+        <file>qml/case/content/JailContent.qml</file>
+        <file>qml/case/content/ToJailContent.qml</file>
+        <file>qml/case/content/CatDoorContent.qml</file>
+        <file>qml/case/content/FreeNapContent.qml</file>
+        <file>qml/case/content/CatDeviceContent.qml</file>
+        <file>qml/case/details/CardBoardBoxDetails.qml</file>
+        <file>qml/case/details/CatNipDetails.qml</file>
+        <file>qml/case/details/ToJailDetails.qml</file>
+        <file>qml/case/details/CatDoorDetails.qml</file>
+        <file>qml/case/details/FreeNapDetails.qml</file>
+        <file>qml/case/details/CatDeviceDetails.qml</file>
     </qresource>
 </RCC>

@@ -86,7 +86,13 @@ Popup {
                     switch(root.tileType) {
                         case Case.CS_RestArea: return restAreaDetails
                         case Case.CS_KibbleDispenser: return kibbleDispenserDetails
+                        case Case.CS_CardBoardBox: return cardBoardBoxDetails
+                        case Case.CS_CatNip: return catNipDetails
                         case Case.CS_Jail: return jailDetails
+                        case Case.CS_ToJail: return toJailDetails
+                        case Case.CS_CatDoor: return catDoorDetails
+                        case Case.CS_FreeNap: return freeNapDetails
+                        case Case.CS_Device: return catDeviceDetails
                         default: return null
                     }
                 }
@@ -129,10 +135,51 @@ Popup {
         }
     }
 
+    Component {
+        id: cardBoardBoxDetails
+        CardBoardBoxDetails {
+            caseData: (root.caseData.type === Case.CS_CardBoardBox) ? root.caseData : null
+        }
+    }
+
+    Component {
+        id: catNipDetails
+        CatNipDetails {
+            caseData: (root.caseData.type === Case.CS_CatNip) ? root.caseData : null
+        }
+    }
 
     Component {
         id: jailDetails
         JailDetails {}
+    }
+
+    Component {
+        id: toJailDetails
+        ToJailDetails {
+            caseData: (root.caseData.type === Case.CS_ToJail) ? root.caseData : null
+        }
+    }
+
+    Component {
+        id: catDoorDetails
+        CatDoorDetails {
+            caseData: (root.caseData.type === Case.CS_CatDoor) ? root.caseData : null
+        }
+    }
+
+    Component {
+        id: freeNapDetails
+        FreeNapDetails {
+            caseData: (root.caseData.type === Case.CS_FreeNap) ? root.caseData : null
+        }
+    }
+
+    Component {
+        id: catDeviceDetails
+        CatDeviceDetails {
+            caseData: (root.caseData.type === Case.CS_Device) ? root.caseData : null
+        }
     }
 
     function getTileTypeName() {

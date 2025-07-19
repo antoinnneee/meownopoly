@@ -2,20 +2,19 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Case
-import CaseKibbleDispenser
+import CaseFreeNap
 import "../"
 
 Item {
     id: root
     anchors.fill:parent
     clip: true
-    required property CaseKibbleDispenser caseData
+    required property CaseFreeNap caseData
 
     // Icons for different tile types
-    property var tileIcons:  "qrc:/asset/kibble.png"         // 1: Rest Area
+    property var tileIcons: "qrc:/asset/nap.png"
 
-    property var fallbackIcons: "🐱💰"          // 1: Rest Area
-
+    property var fallbackIcons: "😴"
 
     Text {
         id: nameText
@@ -38,18 +37,18 @@ Item {
         anchors {
             horizontalCenter: parent.horizontalCenter
             verticalCenter: parent.verticalCenter
-            verticalCenterOffset:  parent.height * 0.1
+            verticalCenterOffset: parent.height * 0.1
         }
         width: parent.width * 0.8
         height: width
-        source:  root.tileIcons
+        source: root.tileIcons
         sourceSize {
-            width: width * 2  // Request a larger source image for better scaling
+            width: width * 2
             height: height * 2
         }
         fillMode: Image.PreserveAspectFit
         smooth: true
-        mipmap: true  // Enable mipmapping for better quality when scaling down
+        mipmap: true
         antialiasing: true
         visible: status === Image.Ready
         asynchronous: true
@@ -70,7 +69,7 @@ Item {
         }
         width: parent.width * 0.4
         height: width
-        text:root.fallbackIcons
+        text: root.fallbackIcons
         font.pixelSize: parent.width * 0.25
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -84,11 +83,13 @@ Item {
             bottomMargin: parent.height * 0.02
         }
         visible: true
-        text: visible ? root.caseData.reward + "K" : ""
-        color: "#2c3e50"
-        font.pixelSize: parent.width * 0.12
+        text: "Free Nap"
+        color: "#27ae60"
+        font.pixelSize: parent.width * 0.10
+        font.bold: true
     }
+
     Component.onCompleted: {
-        console.log("KibbleDispenserContent loaded");
+        console.log("FreeNapContent loaded");
     }
-}
+} 

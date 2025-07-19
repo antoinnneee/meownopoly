@@ -10,7 +10,7 @@ class CaseCatDoor : public CaseCatPerks {
     Q_PROPERTY(int travelPrice READ travelPrice WRITE setTravelPrice NOTIFY travelPriceChanged FINAL)
 
 public:
-    CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER_NOP);
+    CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER);
     ~CaseCatDoor() override = default;
 
     Q_INVOKABLE bool buyCase(Player *buyer);

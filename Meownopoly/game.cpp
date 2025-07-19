@@ -60,7 +60,21 @@ void Game::registerQml() {
     qmlRegisterType<CaseRestArea>("CaseRestArea", 1, 0,
                                   "CaseRestArea"); // Register CaseRestArea class
     qmlRegisterType<CaseKibbleDispenser>("CaseKibbleDispenser", 1, 0,
-                                  "CaseKibbleDispenser"); // Register CaseKibbleDispenser class
+        "CaseKibbleDispenser"); // Register CaseKibbleDispenser class
+    qmlRegisterType<CaseCardBoardBox>("CaseCardBoardBox", 1, 0,
+                        "CaseCardBoardBox"); // Register CaseCardBoardBox class
+    qmlRegisterType<CaseCatNip>("CaseCatNip", 1, 0,
+                        "CaseCatNip"); // Register CaseCatNip class
+    qmlRegisterType<CaseJail>("CaseJail", 1, 0,
+                        "CaseJail"); // Register CaseJail class
+    qmlRegisterType<CaseToJail>("CaseToJail", 1, 0,
+                        "CaseToJail"); // Register CaseToJail class
+    qmlRegisterType<CaseCatDoor>("CaseCatDoor", 1, 0,
+                        "CaseCatDoor"); // Register CaseCatDoor class
+    qmlRegisterType<CaseFreeNap>("CaseFreeNap", 1, 0,
+                        "CaseFreeNap"); // Register CaseFreeNap class
+    qmlRegisterType<CaseCatDevice>("CaseCatDevice", 1, 0,
+                        "CaseCatDevice"); // Register CaseCatDevice class
 }
 
 Game *Game::instance() {
@@ -79,8 +93,6 @@ QObject *Game::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine) {
 }
 
 Case *Game::getCase(const QStringList &currentCaseJson) {
-    qDebug() << "getCase called with data:" << currentCaseJson;
-    
     if (currentCaseJson.size() < 3) {
         qDebug() << "Invalid case data - not enough fields";
         return nullptr;
@@ -89,18 +101,12 @@ Case *Game::getCase(const QStringList &currentCaseJson) {
     int type = currentCaseJson[0].toInt();
     QString name = currentCaseJson[1];
     int position = currentCaseJson[2].toInt();
-    
-    qDebug() << "Creating case - Type:" << type << "Name:" << name << "Position:" << position;
 
     Case* newCase = nullptr;
 
     switch (type) {
     case 0: // Start (Départ)
     {
-        qDebug() << "Creating KibbleDispenser with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
-        qDebug() << "  - reward: 200";
         newCase = new CaseKibbleDispenser(name, position, 200, this);
         break;
     }
@@ -112,21 +118,11 @@ Case *Game::getCase(const QStringList &currentCaseJson) {
         int housePrice = currentCaseJson[11].isEmpty() ? 0 : currentCaseJson[11].toInt();
         int hotelPrice = currentCaseJson[12].isEmpty() ? 0 : currentCaseJson[12].toInt();
 
-        qDebug() << "Creating RestArea with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
-        qDebug() << "  - price:" << price;
-        qDebug() << "  - mortgagePrice:" << mortgagePrice;
-        qDebug() << "  - family:" << family;
-        qDebug() << "  - housePrice:" << housePrice;
-        qDebug() << "  - hotelPrice:" << hotelPrice;
-
         // Build rent prices list
         QList<int> rentPrices;
         for (int i = 6; i <= 10; i++) {
             int rent = currentCaseJson[i].isEmpty() ? 0 : currentCaseJson[i].toInt();
             rentPrices << rent;
-            qDebug() << "  - rent[" << (i-6) << "]:" << rent;
         }
 
         newCase = new CaseRestArea(name, position, mortgagePrice, price, price, this,
@@ -135,34 +131,21 @@ Case *Game::getCase(const QStringList &currentCaseJson) {
     }
     case 2: // Community Chest (Caisse de Communauté)
     {
-        qDebug() << "Creating CardBoardBox with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
         newCase = new CaseCardBoardBox(name, position, this);
         break;
     }
     case 3: // Chance
     {
-        qDebug() << "Creating CatNip with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
         newCase = new CaseCatNip(name, position, this);
         break;
     }
     case 4: // Jail (Prison)
     {
-        qDebug() << "Creating Jail with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
-        qDebug() << "  - fine: 50";
         newCase = new CaseJail(name, position, 50); // Default fine of 50
         break;
     }
     case 5: // Go to Jail (Allez en Prison)
     {
-        qDebug() << "Creating ToJail with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
         newCase = new CaseToJail(name, position, this);
         break;
     }
@@ -170,19 +153,11 @@ Case *Game::getCase(const QStringList &currentCaseJson) {
     {
         int price = currentCaseJson[3].isEmpty() ? 0 : currentCaseJson[3].toInt();
         int mortgagePrice = currentCaseJson[4].isEmpty() ? 0 : currentCaseJson[4].toInt();
-        qDebug() << "Creating CatDoor with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
-        qDebug() << "  - price:" << price;
-        qDebug() << "  - mortgagePrice:" << mortgagePrice;
         newCase = new CaseCatDoor(name, position, mortgagePrice, price, price, this);
         break;
     }
     case 7: // Free Parking (Parc Gratuit)
     {
-        qDebug() << "Creating FreeNap with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
         newCase = new CaseFreeNap(name, position, this);
         break;
     }
@@ -190,33 +165,18 @@ Case *Game::getCase(const QStringList &currentCaseJson) {
     {
         int price = currentCaseJson[3].isEmpty() ? 0 : currentCaseJson[3].toInt();
         int mortgagePrice = currentCaseJson[4].isEmpty() ? 0 : currentCaseJson[4].toInt();
-        qDebug() << "Creating CatDevice with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
-        qDebug() << "  - price:" << price;
-        qDebug() << "  - mortgagePrice:" << mortgagePrice;
         newCase = new CaseCatDevice(name, position, mortgagePrice, price, price, this, 0);
         break;
     }
     case 9: // Tax (Taxe)
     {
         int taxAmount = currentCaseJson[13].isEmpty() ? 0 : currentCaseJson[13].toInt();
-        qDebug() << "Creating Tax KibbleDispenser with variables:";
-        qDebug() << "  - name:" << name;
-        qDebug() << "  - position:" << position;
-        qDebug() << "  - taxAmount:" << taxAmount;
         newCase = new CaseKibbleDispenser(name, position, -taxAmount, this);
         break;
     }
     default:
         qDebug() << "Unknown case type:" << type << "- returning nullptr";
         return nullptr;
-    }
-    
-    if (newCase) {
-        qDebug() << "getCase created:" << newCase->name() << "Type:" << newCase->getType() << "Position:" << newCase->position();
-    } else {
-        qDebug() << "getCase failed to create case";
     }
 
     return newCase;
@@ -235,8 +195,6 @@ void Game::initCases() {
     
     QByteArray data = file.readAll();
 
-    qDebug() << "Last bytes:" << data.right(10).toHex();
-
     QJsonParseError parseError;
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if (parseError.error != QJsonParseError::NoError) {
@@ -249,17 +207,11 @@ void Game::initCases() {
         return;
     }
     QJsonArray casesArray = doc.array();
-    qDebug() << "Processing" << casesArray.size() << "cases from JSON";
 
     // Process each case in the JSON array
-    int caseIndex = 0;
     for (const QJsonValue &value : casesArray) {
         if (value.isObject()) {
             QJsonObject caseObj = value.toObject();
-            
-            qDebug() << "Processing case" << caseIndex << ":" << caseObj["name"].toString() 
-                     << "Type:" << caseObj["type"].toInt() 
-                     << "Position:" << caseObj["position"].toInt();
             
             // Convert JSON object to QStringList for getCase function
             QStringList caseData;
@@ -268,7 +220,6 @@ void Game::initCases() {
             caseData << QString::number(caseObj["position"].toInt());
             caseData << (caseObj["price"].isNull() ? "" : QString::number(caseObj["price"].toInt()));
             caseData << (caseObj["mortgagePrice"].isNull() ? "" : QString::number(caseObj["mortgagePrice"].toInt()));
-
             caseData << (caseObj["familly"].isNull() ? "" : QString::number(caseObj["familly"].toInt()));
             caseData << (caseObj["rent_0"].isNull() ? "" : QString::number(caseObj["rent_0"].toInt()));
             caseData << (caseObj["rent_1"].isNull() ? "" : QString::number(caseObj["rent_1"].toInt()));
@@ -279,28 +230,17 @@ void Game::initCases() {
             caseData << (caseObj["hotelPrice"].isNull() ? "" : QString::number(caseObj["hotelPrice"].toInt()));
             caseData << (caseObj["taxe"].isNull() ? "" : QString::number(caseObj["taxe"].toInt()));
             
-            qDebug() << "CaseData for case" << caseIndex << ":" << caseData;
-            
             // Create case and add to list
             Case* newCase = getCase(caseData);
             if (newCase) {
                 m_listCases.append(newCase);
-                qDebug() << "Successfully created case" << caseIndex << ":" << newCase->name() 
-                         << "Type:" << newCase->getType() 
-                         << "Position:" << newCase->position();
-            } else {
-                qDebug() << "Failed to create case" << caseIndex;
             }
         }
-        caseIndex++;
     }
-    
-    qDebug() << "Successfully loaded" << m_listCases.size() << "cases from JSON";
 }
 
 
 void Game::init() {
-    qDebug() << "Initializing game...";
     initCases();
 }
 
@@ -334,8 +274,6 @@ void Game::setupPlayers(const QVariantList &playerData)
 }
 
 void Game::startGame() {
-    qDebug() << "Starting game...";
-
     initCases();
 
     // Set all players at the starting position
@@ -353,43 +291,41 @@ int Game::currentPlayerIndex() const { return m_currentPlayerIndex; }
 
 Case *Game::getNewCaseType(Case::CaseType type)
 {
-    qDebug() << "getNewCaseType called with type:" << type;
-    qDebug() << "Type enum value:" << static_cast<int>(type);
-    
     Case* newCase = nullptr;
     
     switch (type) {
     case Case::CS_RestArea:
-        qDebug() << "Creating CaseRestArea with name: test restArea";
         newCase = new CaseRestArea("test restArea");
-        if (newCase) {
-            qDebug() << "Successfully created CaseRestArea:";
-            qDebug() << "  - Name:" << newCase->name();
-            qDebug() << "  - Type:" << newCase->getType();
-            qDebug() << "  - Position:" << newCase->position();
-        } else {
-            qDebug() << "Failed to create CaseRestArea";
-        }
         break;
-        case Case::CS_KibbleDispenser:
-        qDebug() << "Creating CaseKibbleDispenser with name: test KibbleDispenser";
+    case Case::CS_KibbleDispenser:
         newCase = new CaseKibbleDispenser("test KibbleDispenser", 0, 200);
-        if (newCase) {
-            qDebug() << "Successfully created CaseKibbleDispenser:";
-            qDebug() << "  - Name:" << newCase->name();
-            qDebug() << "  - Type:" << newCase->getType();
-            qDebug() << "  - Position:" << newCase->position();
-        } else {
-            qDebug() << "Failed to create CaseKibbleDispenser";
-        }
+        break;
+    case Case::CS_CardBoardBox:
+        newCase = new CaseCardBoardBox("test CardBoardBox", 0);
+        break;
+    case Case::CS_CatNip:
+        newCase = new CaseCatNip("test CatNip", 0);
+        break;
+    case Case::CS_Jail:
+        newCase = new CaseJail("test Jail", 0);
+        break;
+    case Case::CS_ToJail:
+        newCase = new CaseToJail("test ToJail", 0);
+        break;
+    case Case::CS_CatDoor:
+        newCase = new CaseCatDoor("test CatDoor", 0);
+        break;
+    case Case::CS_FreeNap:
+        newCase = new CaseFreeNap("test FreeNap", 0);
+        break;
+    case Case::CS_Device:
+        newCase = new CaseCatDevice("test CatDevice", 0);
         break;
     default:
         qDebug() << "Unknown case type:" << type << "returning NULL";
-        newCase = nullptr;
         break;
     }
     
-    qDebug() << "getNewCaseType returning:" << (newCase ? "valid case" : "NULL");
     return newCase;
 }
 

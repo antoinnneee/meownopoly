@@ -51,8 +51,15 @@ Item {
             console.log("loading type : ", root.caseData.type)
             console.log("root.caseData.type" + root.caseData.type)
             switch(root.caseData.type) {
-            case Case.CS_KibbleDispenser: return kibbleDispenserContent
+                case Case.CS_KibbleDispenser: return kibbleDispenserContent
                 case Case.CS_RestArea: return restAreaContent
+                case Case.CS_CardBoardBox: return cardBoardBoxContent
+                case Case.CS_CatNip: return catNipContent
+                case Case.CS_Jail: return jailContent
+                case Case.CS_ToJail: return toJailContent
+                case Case.CS_CatDoor: return catDoorContent
+                case Case.CS_FreeNap: return freeNapContent
+                case Case.CS_Device: return catDeviceContent
                 default: return null
             }
         }
@@ -74,6 +81,55 @@ Item {
         // KibbleDispenserContent {
         //     caseData: root.caseData
         // }
+    }
+
+    Component {
+        id: cardBoardBoxContent
+        CardBoardBoxContent {
+            caseData: root.caseData
+        }
+    }
+
+    Component {
+        id: catNipContent
+        CatNipContent {
+            caseData: root.caseData
+        }
+    }
+
+    Component {
+        id: jailContent
+        JailContent {
+            caseData: root.caseData
+        }
+    }
+
+    Component {
+        id: toJailContent
+        ToJailContent {
+            caseData: root.caseData
+        }
+    }
+
+    Component {
+        id: catDoorContent
+        CatDoorContent {
+            caseData: root.caseData
+        }
+    }
+
+    Component {
+        id: freeNapContent
+        FreeNapContent {
+            caseData: root.caseData
+        }
+    }
+
+    Component {
+        id: catDeviceContent
+        CatDeviceContent {
+            caseData: root.caseData
+        }
     }
 
 
