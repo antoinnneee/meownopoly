@@ -8,7 +8,7 @@ import "../"
 Item {
     id: root
     anchors.fill:parent
-
+    z:5
     clip: true
     required property CaseKibbleDispenser caseData
 
@@ -71,7 +71,7 @@ Item {
         }
         width: parent.width * 0.4
         height: width
-        text:fallbackIcons
+        text:root.fallbackIcons
         font.pixelSize: parent.width * 0.25
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -85,7 +85,7 @@ Item {
             bottomMargin: parent.height * 0.02
         }
         visible: true
-        text: visible ? root.caseData.price + "K" : ""
+        text: visible ? root.caseData.reward + "K" : ""
         color: "#2c3e50"
         font.pixelSize: parent.width * 0.12
     }
