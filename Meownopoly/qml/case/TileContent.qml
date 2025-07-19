@@ -71,11 +71,9 @@ Item {
             caseData: root.caseData
         }
 
-        /*
-        KibbleDispenserContent {
-            caseData: root.caseData
-        }
-        */
+        // KibbleDispenserContent {
+        //     caseData: root.caseData
+        // }
     }
 
 
