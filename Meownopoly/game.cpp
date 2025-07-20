@@ -295,8 +295,18 @@ Case *Game::getNewCaseType(Case::CaseType type)
     
     switch (type) {
     case Case::CS_RestArea:
+    {
         newCase = new CaseRestArea("test restArea");
+        QList<int> rentList;
+        rentList.append(50);
+        rentList.append(100);
+        rentList.append(200);
+        rentList.append(300);
+        rentList.append(400);
+        rentList.append(5000);
+        ((CaseRestArea*)newCase)->setRentPrice(rentList);
         break;
+    }
     case Case::CS_KibbleDispenser:
         newCase = new CaseKibbleDispenser("test KibbleDispenser", 0, 200);
         break;

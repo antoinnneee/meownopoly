@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import CaseRestArea
+import Player
 import ".."
 
 ColumnLayout {
@@ -18,7 +19,7 @@ ColumnLayout {
     }
 
     Text {
-        text: "Owner: " + (root.caseData && root.caseData.owner ? root.caseData.owner.name : "None")
+        text: "Owner: " +  ((root.caseData && root.caseData.owner != undefined))? root.caseData.owner.name : "None"
         font.pixelSize: 14
         color: "#2c3e50"
     }
@@ -40,7 +41,7 @@ ColumnLayout {
             StarRating {
                 anchors.fill: parent
                 anchors.margins: 2
-                restQuality: root.caseData && root.caseData.restQuality ? root.caseData.restQuality : 0
+                restQuality: (root.caseData) ? root.caseData.restQuality : CaseRestArea.RQ_NONE
             }
         }
     }
@@ -49,7 +50,7 @@ ColumnLayout {
     ColumnLayout {
         Layout.fillWidth: true
         spacing: 5
-        visible: root.caseData && root.caseData.rentPrice
+        visible: root.caseData
 
         Text {
             text: "Purchase: " + (root.caseData && root.caseData.price ? root.caseData.price + "K" : "N/A")
@@ -91,7 +92,7 @@ ColumnLayout {
 
         // Hotel price
         Text {
-            text: "Hotel: " + (root.caseData && root.caseData.rentPrice ? root.caseData.rentPrice[5] + "K" : "N/A")
+            text: "Hotel: " + ((root.caseData && (root.caseData.rentPrice.lenght >= 6)) ? root.caseData.rentPrice[5] + "K" : "N/A")
             font.pixelSize: 14
             color: "#2c3e50"
             font.bold: true
