@@ -17,12 +17,12 @@ CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP, FamilyType family
 }
 
 
-RestQuality CaseRestArea::restQuality() const
+CaseRestArea::RestQuality CaseRestArea::restQuality() const
 {
     return m_restQuality;
 }
 
-void CaseRestArea::setRestQuality(RestQuality newRestQuality)
+void CaseRestArea::setRestQuality(CaseRestArea::RestQuality newRestQuality)
 {
     m_restQuality = newRestQuality;
 }

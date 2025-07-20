@@ -6,15 +6,6 @@
 
 class Player;
 
-enum RestQuality{
-    RQ_NONE,
-    RQ_1STAR,
-    RQ_2STAR,
-    RQ_3STAR,
-    RQ_4STAR,
-    RQ_HOTEL,
-    RQ_COUNT
-};
 
 enum FamilyType {
     FT_NONE,
@@ -44,11 +35,22 @@ class CaseRestArea : public CaseCatPerks
 
 public:
     explicit CaseRestArea(QObject *parent = nullptr);
+
+    enum RestQuality{
+        RQ_NONE,
+        RQ_1STAR,
+        RQ_2STAR,
+        RQ_3STAR,
+        RQ_4STAR,
+        RQ_HOTEL,
+        RQ_COUNT
+    };
+    Q_ENUM(RestQuality)
 //    CaseRestArea(const QString &name, int price= -1, int sellPrice = -1,int position = -1,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>(), QObject *parent = nullptr);
     CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>());
 
-    RestQuality restQuality() const;
-    void setRestQuality(RestQuality newRestQuality);
+    CaseRestArea::RestQuality restQuality() const;
+    void setRestQuality(CaseRestArea::RestQuality newRestQuality);
 
     FamilyType family() const;
     void setFamily(FamilyType newFamily);

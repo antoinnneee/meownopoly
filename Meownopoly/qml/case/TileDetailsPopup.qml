@@ -72,7 +72,7 @@ Popup {
 
             // Tile type
             Text {
-                text: "Type: " + getTileTypeName()
+                text: "Type: " + root.getTileTypeName()
                 font.pixelSize: 14
                 color: "#2c3e50"
                 Layout.bottomMargin: 10
