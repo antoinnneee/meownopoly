@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 import Game
 import Case
 import "../case/"
@@ -110,6 +109,7 @@ Rectangle {
         Repeater {
             model: Game.listCases.length
             delegate : CaseTile {
+                required property int index
                 width: cardWidth
                 height: cardHeight
                 caseData: model[index]
