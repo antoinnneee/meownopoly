@@ -35,7 +35,7 @@ ApplicationWindow {
         id: gameBoard
         GameBoard {}
     }
-    TEST_CASE{
+    TEST_BOARD_2{
         id: test_view
         anchors.centerIn: parent
         width:parent.width
