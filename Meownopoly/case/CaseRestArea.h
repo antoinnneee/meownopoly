@@ -30,7 +30,6 @@ enum FamilyType {
 };
 
 
-Q_DECLARE_OPAQUE_POINTER(Player*)
 
 class CaseRestArea : public CaseCatPerks
 {
@@ -54,8 +53,6 @@ public:
     FamilyType family() const;
     void setFamily(FamilyType newFamily);
 
-    Player *owner() const;
-    void setOwner(Player *newOwner);
 
     // void print_state();
 
@@ -76,7 +73,6 @@ public:
 
 signals:
     void restQualityChanged();
-    void ownerChanged();
     void  familyChanged();
 
 

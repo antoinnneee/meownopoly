@@ -18,7 +18,7 @@ ColumnLayout {
     }
 
     Text {
-        text: "Owner: " + (root.caseData && root.caseData.owner ? root.caseData.owner : "None")
+        text: "Owner: " + (root.caseData && root.caseData.owner ? root.caseData.owner.name : "None")
         font.pixelSize: 14
         color: "#2c3e50"
     }

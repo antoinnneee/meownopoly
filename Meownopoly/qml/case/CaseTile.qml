@@ -32,7 +32,59 @@ Rectangle {
         "#66BB6A",  // Green
         "#006064"   // Dark Blue
     ]
+/*
+    // Function to update ownership indicator
+    function updateOwnershipStatus() {
+        try {
+            var hasOwner = false;
+            var ownerName = "";
 
+            // Check if this case has an owner (mainly for RestArea type)
+            if (caseData && caseData.owner) {
+                hasOwner = true;
+                ownerName = caseData.owner.name || caseData.owner;
+            }
+
+            // Update ownership indicator visibility and color
+            if (ownershipIndicator) {
+                ownershipIndicator.visible = hasOwner;
+                
+                if (hasOwner) {
+                    ownershipIndicator.setOwnerColor(getOwnerColor(ownerName));
+                }
+            }
+        } catch (e) {
+            console.error("Error updating ownership status in CaseTile:", e);
+        }
+    }
+*/
+    // Helper function to get owner color
+    function getOwnerColor(ownerName) {
+        try {
+            if (!ownerName) return "#7f8c8d";
+
+            // Find the player with matching name and get their color
+            for (let i = 0; i < Game.players.length; i++) {
+                let player = Game.players[i];
+                if (player && player.name === ownerName) {
+                    return player.color || "#7f8c8d";
+                }
+            }
+        } catch (e) {
+            console.error("Error getting owner color:", e);
+        }
+        return "#7f8c8d";
+    }
+/*
+    // Monitor caseData changes to update ownership
+    onCaseDataChanged: {
+        Qt.callLater(updateOwnershipStatus);
+    }
+
+    Component.onCompleted: {
+        Qt.callLater(updateOwnershipStatus);
+    }
+    */
 
     TileContent {
         id: tileContent
@@ -62,6 +114,14 @@ Rectangle {
         tileName: root.tileName
         caseData: root.caseData
         familyColors: root.familyColors
+    }
+
+    // Ownership indicator - ribbon at bottom left
+    OwnershipIndicator {
+        id: ownershipIndicator
+        visible: (root.caseData.owner != undefined) ? true: false
+        ribbonColor: (root.caseData.owner != undefined) ?root.caseData.owner.color : "#7f8c8d"
+
     }
 
 }

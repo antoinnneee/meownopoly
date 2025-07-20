@@ -77,17 +77,11 @@ Rectangle {
 
                 if (hasOwner) {
                     try {
-                        ownershipIndicator.color = getOwnerColor(ownerName);
-                        ownershipIndicator.border.color = Qt.darker(ownershipIndicator.color, 1.2);
-
-                        // Safe access to nested objects
-                        if (ownershipGlow) {
-                            ownershipGlow.border.color = Qt.lighter(ownershipIndicator.color, 1.3);
-                        }
+                        ownershipIndicator.setOwnerColor(getOwnerColor(ownerName));
                     } catch (e) {
                         console.error("Error setting ownership indicator properties:", e);
                         // Set a default color in case of error
-                        ownershipIndicator.color = "#7f8c8d";
+                        ownershipIndicator.setOwnerColor("#7f8c8d");
                     }
                 }
             }
@@ -170,42 +164,6 @@ Rectangle {
             height: parent.radius
             color: parent.color
             anchors.bottom: parent.bottom
-        }
-    }
-
-    // Ownership indicator - diagonal line at bottom left
-    Rectangle {
-        id: ownershipIndicator
-        visible: false // Initially invisible, updated by updateOwnershipStatus
-        width: parent.width * 0.4
-        height: 6 // Slightly thicker for better visibility
-        color: "#7f8c8d" // Default color, will be updated
-        radius: 2
-        z: 2 // Ensure it's above other elements
-        anchors {
-            bottom: parent.bottom
-            left: parent.left
-            bottomMargin: 4
-            leftMargin: 4
-        }
-        transform: Rotation {
-            origin.x: 0
-            origin.y: ownershipIndicator.height / 2
-            angle: 45
-        }
-        // Add a border to make it more visible against any background
-        border.width: 1
-        border.color: Qt.darker(color, 1.2)
-
-        // Add small glow effect to make it stand out
-        Rectangle {
-            id: ownershipGlow
-            anchors.fill: parent
-            radius: parent.radius
-            color: "transparent"
-            border.width: 2
-            border.color: Qt.lighter(parent.color, 1.3)
-            opacity: 0.7
         }
     }
 

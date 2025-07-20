@@ -9,16 +9,13 @@
 #define CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER CaseCatPerks(name, position, price, sellPrice, morgagePrice, parent)
 
 
-class Player;
-
 class CaseCatPerks : public Case
 {
     Q_OBJECT
     Q_PROPERTY(int price READ price WRITE setPrice NOTIFY priceChanged FINAL)
     Q_PROPERTY(int sellPrice READ sellPrice WRITE setsellPrice NOTIFY sellPriceChanged FINAL)
     Q_PROPERTY(int morgagePrice READ morgagePrice WRITE setmorgagePrice NOTIFY morgagePriceChanged FINAL)
-
-
+    Q_PROPERTY(Player* owner READ owner NOTIFY ownerChanged);
 public:
 
     CaseCatPerks(CASECATPERKS_DEFAULT_PARAMETER);
@@ -38,6 +35,9 @@ public:
     int morgagePrice() const;
     void setmorgagePrice(int newMorgagePrice);
 
+    Player *owner() const;
+    Q_INVOKABLE void setOwner(Player *newOwner);
+
 signals:
     void priceChanged();
 
@@ -45,12 +45,14 @@ signals:
 
     void morgagePriceChanged();
 
+    void ownerChanged();
+
 protected:
 
-    Player *owner;
+    Player *m_owner = nullptr;
+    int m_morgagePrice;
     int m_price;
     int m_sellPrice;
-    int m_morgagePrice;
 };
 
 #endif // CASECATPERKS_H
