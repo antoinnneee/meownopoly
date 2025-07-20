@@ -92,7 +92,7 @@ QObject *Game::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine) {
     return Game::instance();
 }
 
-Case *Game::getCase(const QStringList &currentCaseJson) {
+Case *Game::getNewCase(const QStringList &currentCaseJson) {
     if (currentCaseJson.size() < 3) {
         qDebug() << "Invalid case data - not enough fields";
         return nullptr;
@@ -213,7 +213,7 @@ void Game::initCases() {
         if (value.isObject()) {
             QJsonObject caseObj = value.toObject();
             
-            // Convert JSON object to QStringList for getCase function
+            // Convert JSON object to QStringList for getNewCase function
             QStringList caseData;
             caseData << QString::number(caseObj["type"].toInt());
             caseData << caseObj["name"].toString();
@@ -231,7 +231,7 @@ void Game::initCases() {
             caseData << (caseObj["taxe"].isNull() ? "" : QString::number(caseObj["taxe"].toInt()));
             
             // Create case and add to list
-            Case* newCase = getCase(caseData);
+            Case* newCase = getNewCase(caseData);
             if (newCase) {
                 m_listCases.append(newCase);
             }

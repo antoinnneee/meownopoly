@@ -13,50 +13,8 @@ Rectangle {
     color: "#2c3e50"
 
     // Card dimensions
-    property real cardWidth: Screen.pixelDensity * 25  // 2.5cm
-    property real cardHeight: Screen.pixelDensity * 50   // Alternative height
-
-    // Initialize game on component creation
-    Component.onCompleted: {
-        console.log("Initializing game...")
-        Game.init()
-        console.log("Game initialized. Total cases:", Game.listCases.length)
-
-        // Debug: Print detailed info for first 10 cases
-        for (var i = 0; i < Math.min(10, Game.listCases.length); i++) {
-            var caseData = Game.listCases[i]
-            console.log("QML Case", i, ":")
-            console.log("  - Name:", caseData.name)
-            console.log("  - Type:", caseData.type)
-            console.log("  - Position:", caseData.position)
-            console.log("  - Valid:", caseData ? "true" : "false")
-
-            // Check if it's a property with additional details
-            if (caseData.type === 1) {
-                console.log("  - Property details:")
-                console.log("    - Price:", caseData.price || "N/A")
-                console.log("    - Mortgage:", caseData.morgagePrice || "N/A")
-                console.log("    - Family:", caseData.family || "N/A")
-            }
-        }
-    }
-
-    Button {
-        property alias rp : repeater
-
-        width : 50
-        height: width
-            CaseTile {
-                visible:false
-                id: tile
-                caseData: Game.getNewCaseType(Case.CS_CatDoor)
-                width: 100
-                height: 50
-            }
-            onClicked:{
-            rp.push(tile)
-        }
-    }
+    property real cardWidth: Screen.pixelDensity * 20  // 2.5cm
+    property real cardHeight: Screen.pixelDensity * 35   // Alternative height
 
     // Title
     Text {
@@ -71,66 +29,23 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
     }
 
-    // Colors mapping for family types
-    property var familyColors: [
-        "#ecf0f1",  // 0: FT_NONE
-        "#795548",  // 1: FT_BROWN
-        "#81D4FA",  // 2: FT_LIGHTBLUE
-        "#F48FB1",  // 3: FT_PINK
-        "#FF9800",  // 4: FT_ORANGE
-        "#e74c3c",  // 5: FT_RED
-        "#F9E155",  // 6: FT_YELLOW
-        "#66BB6A",  // 7: FT_GREEN
-        "#006064"   // 8: FT_DARKBLUE
-    ]
-
-    // Type icons for cases
-    property var typeIcons: [
-        "🏁",  // 0: CS_KibbleDispenser (Start)
-        "🏠",  // 1: CS_RestArea (Property)
-        "📦",  // 2: CS_CardBoardBox (Community Chest)
-        "🎲",  // 3: CS_CatNip (Chance)
-        "🔒",  // 4: CS_Jail
-        "👮",  // 5: CS_ToJail (Go to Jail)
-        "🚪",  // 6: CS_CatDoor (Railroad)
-        "😴",  // 7: CS_FreeNap (Free Parking)
-        "⚡",  // 8: CS_Device (Utility)
-        "💰",  // 9: CS_Taxe (Tax)
-        "❓"   // 10: CS_Unknow
-    ]
-
-
-
-    // Function to get family color
-    function getFamilyColor(caseData) {
-        if (caseData && caseData.type === Case.CS_RestArea && caseData.family !== undefined) {
-            return familyColors[caseData.family] || "#ecf0f1"
-        }
-        return "#ecf0f1"
-    }
-
-    // Function to get type icon
-    function getTypeIcon(caseType) {
-        return typeIcons[caseType] || "❓"
-    }
-
     // Card display area
-    Grid {
+    RowLayout {
         id: cardContainer
         anchors.centerIn: parent
         anchors.verticalCenterOffset: 50
-        columns: 5
         spacing: 10
 
         Repeater {
             id : repeater
-            model: Game.listCases
+            model: 10
             delegate : CaseTile {
-                required property Case modelData
+                required property int index
+                // required property Case modelData : Game.listCases[index]
 
                 width: cardWidth
                 height: cardHeight
-                caseData: modelData
+                caseData: Game.listCases[index]
             }
         }
     }

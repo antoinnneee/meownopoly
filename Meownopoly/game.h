@@ -40,7 +40,7 @@ public:
     Q_INVOKABLE void init();    // create a new game, load caseFile
     Q_INVOKABLE void startGame();
     void initCases();
-    Case *getCase(const QStringList&);
+    Case *getNewCase(const QStringList&);
     void initCards();
 
     Q_INVOKABLE Player *createPlayer(const QString name, QColor color, int indexLogo, int kibbles);

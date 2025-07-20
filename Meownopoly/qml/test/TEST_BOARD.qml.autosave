@@ -1,0 +1,65 @@
+import QtQuick 2.15
+import QtQuick.Controls
+import QtQuick.Layouts
+import Game
+import Case
+import "../case/"
+import "../boardTile"
+Rectangle {
+    id: root
+    width: 800
+    height: 800
+    
+    color: "#2c3e50"
+    
+    // Card dimensions
+    property real cardWidth: Screen.pixelDensity * 20  // 2.5cm
+    property real cardHeight: Screen.pixelDensity * 35   // Alternative height
+    
+    // Title
+    Text {
+        id: titleText
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.margins: 10
+        text: "MEOWNOPOLY - Test 10 Cards"
+        color: "#ecf0f1"
+        font.pixelSize: 16
+        font.bold: true
+        horizontalAlignment: Text.AlignHCenter
+    }
+    
+    Button {
+        width: 30
+        height:width
+        onClicked: {
+            
+        }
+    }
+    
+    Player_Test{
+        id : playerTest
+        playerData : Game.createPlayer("tom","blue",1,"1200")
+    }
+    
+    // Card display area
+    RowLayout {
+        id: cardContainer
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: 50
+        spacing: 10
+        
+        Repeater {
+            id : repeater
+            model: 10
+            delegate : CaseTile {
+                required property int index
+                // required property Case modelData : Game.listCases[index]
+                
+                width: cardWidth
+                height: cardHeight
+                caseData: Game.listCases[index]
+            }
+        }
+    }
+}
