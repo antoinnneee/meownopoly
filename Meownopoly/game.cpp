@@ -28,8 +28,6 @@
 Game *Game::m_pThis = nullptr;
 
 Game::Game(QObject *parent) : QObject(parent) {
-
-    m_players = new Player();
     init();
 }
 

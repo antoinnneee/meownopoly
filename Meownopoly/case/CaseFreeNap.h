@@ -14,7 +14,7 @@ public:
 
     Q_INVOKABLE void addToPool(int amount);
 
-    void onLand(Player* player) override;
+    // void onLand(Player* player) override;
 
     int kibbleAmount() const;
     void setKibbleAmount(int newKibbleAmount);

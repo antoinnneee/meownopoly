@@ -62,9 +62,6 @@ public:
     void removeCatDoor(CaseCatDoor* catDoor);
     int catDoorCount() const { return m_ownedCatDoors.size(); }
 
-    void movePLayer();
-
-
     int indexLogo() const;
     void setIndexLogo(int newIndexLogo);
 

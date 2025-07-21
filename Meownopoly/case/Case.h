@@ -43,12 +43,17 @@ public:
     QString name() const;
     void setName(const QString &newName);
 
-    virtual void onLand(Player* player);
-    virtual void onLeave(Player* player);
-    virtual void onHover(Player* player);
-
     // Static conversion function from int to CaseType enum
     static CaseType intToCaseType(int type);
+
+    Q_INVOKABLE void removePlayer(Player *player);
+    Q_INVOKABLE void addPlayer(Player *player);
+
+    
+    // Overloaded versions with player parameter for direct calls
+    Q_INVOKABLE virtual void onLand(Player* player);
+    Q_INVOKABLE virtual void onLeave(Player* player); 
+    Q_INVOKABLE virtual void onHover(Player* player);
 
 signals:
 
@@ -58,10 +63,16 @@ signals:
 
     void typeChanged();
 
+
+
+
 protected:
+    QList<Player*> listPlayer;
+
     QString m_name = "Unknown";
     int m_position = -1;
     CaseType type = CS_Unknow;
+
 
 };
 

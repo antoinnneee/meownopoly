@@ -11,7 +11,7 @@ public:
     explicit CaseToJail(QObject *parent = nullptr);
     CaseToJail(const QString &name, int position, QObject *parent = nullptr);
 
-    void onLand(Player* player) override;
+    // void onLand(Player* player) override;
     void setJailCase(CaseJail* jailCase);
 
 private:

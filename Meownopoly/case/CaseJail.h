@@ -9,7 +9,7 @@ class CaseJail : public Case {
 public:
     CaseJail(const QString &name, int position, int jailFine = -1);
 
-    void onLand(Player* player) override;
+    // void onLand(Player* player) override;
     void sendToJail(Player* player);
     bool isPlayerInJail(Player* player) const;
     void releasePlayer(Player* player);

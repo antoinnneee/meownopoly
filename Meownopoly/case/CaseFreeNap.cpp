@@ -20,17 +20,10 @@ void CaseFreeNap::addToPool(int amount)
 
 }
 
-void CaseFreeNap::onLand(Player* player)
-{
-    qDebug() << "Player" << player->name()<<" landed on Free Nap, collecting" << m_kibbleAmount << "kibble (todo)";
-    /*
-    qDebug() << "Player landed on Free Nap, collecting" << m_poolMoney << "kibble";
-    if (m_poolMoney > 0) {
-        player->earnKibble(m_poolMoney);
-        m_poolMoney = 0;  // Reset pool after collection
-    }
-*/
-}
+// void CaseFreeNap::onLand(Player* player)
+// {
+//     qDebug() << "Player" << player->name()<<" landed on Free Nap, collecting" << m_kibbleAmount << "kibble (todo)";
+// }
 
 int CaseFreeNap::kibbleAmount() const
 {

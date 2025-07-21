@@ -14,7 +14,7 @@ public:
     int reward() const;
     void setReward(int newReward);
 
-    void onLand(Player* player) override;
+    // void onLand(Player* player) override;
 
 signals:
     void rewardChanged();

@@ -14,15 +14,15 @@ CaseToJail::CaseToJail(const QString &name, int position, QObject *parent)
     setType(Case::CS_ToJail);
 }
 
-void CaseToJail::onLand(Player* player) {
-    if (m_jailCase) {
-        m_jailCase->sendToJail(player);
-        qDebug() << "Player sent directly to Jail.";
-    } else {
-        qDebug() << "Warning: Jail case not set, cannot send player to jail.";
-        player->setInJail(true);
-    }
-}
+// void CaseToJail::onLand(Player* player) {
+//     if (m_jailCase) {
+//         m_jailCase->sendToJail(player);
+//         qDebug() << "Player sent directly to Jail.";
+//     } else {
+//         qDebug() << "Warning: Jail case not set, cannot send player to jail.";
+//         player->setInJail(true);
+//     }
+// }
 
 void CaseToJail::setJailCase(CaseJail* jailCase) {
     m_jailCase = jailCase;

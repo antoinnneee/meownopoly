@@ -24,8 +24,8 @@ void CaseKibbleDispenser::setReward(int newReward) {
     emit rewardChanged();
 }
 
-void CaseKibbleDispenser::onLand(Player* player)
-{
-    qDebug() << "Player landed on Kibble Dispenser and received" << m_reward << "kibble";
-    player->earnKibble(m_reward);
-} 
+// void CaseKibbleDispenser::onLand(Player* player)
+// {
+//     qDebug() << "Player landed on Kibble Dispenser and received" << m_reward << "kibble";
+//     player->earnKibble(m_reward);
+// }

@@ -17,7 +17,7 @@ public:
     Q_INVOKABLE bool sellCase(Player *buyer);
 
 
-    void onLand(Player* player) override;
+    // void onLand(Player* player) override;
 
 
     int indexCatDoor() const;

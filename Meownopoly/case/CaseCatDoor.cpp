@@ -28,9 +28,9 @@ bool CaseCatDoor::sellCase(Player *buyer)
 
 }
 
-void CaseCatDoor::onLand(Player* player)
-{
-}
+// void CaseCatDoor::onLand(Player* player)
+// {
+// }
 
 
 

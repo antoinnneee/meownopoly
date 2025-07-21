@@ -7,21 +7,21 @@ CaseJail::CaseJail(const QString &name, int position, int jailFine)
     setType(Case::CS_Jail);
 }
 
-void CaseJail::onLand(Player* player) {
-    if (!player->isInJail()) {
-        sendToJail(player);
-        qDebug() << "Player sent to Jail.";
-    } else {
-        int turns = m_playersInJail[player];
-        if (turns >= m_maxJailTurns || player->canAfford(m_jailFine)) {
-            releasePlayer(player);
-            qDebug() << "Player released from Jail.";
-        } else {
-            m_playersInJail[player]++;
-            qDebug() << "Player remains in Jail for turn " << turns + 1;
-        }
-    }
-}
+// void CaseJail::onLand(Player* player) {
+    // if (!player->isInJail()) {
+    //     sendToJail(player);
+    //     qDebug() << "Player sent to Jail.";
+    // } else {
+    //     int turns = m_playersInJail[player];
+    //     if (turns >= m_maxJailTurns || player->canAfford(m_jailFine)) {
+    //         releasePlayer(player);
+    //         qDebug() << "Player released from Jail.";
+    //     } else {
+    //         m_playersInJail[player]++;
+    //         qDebug() << "Player remains in Jail for turn " << turns + 1;
+    //     }
+    // }
+// }
 
 void CaseJail::sendToJail(Player* player) {
     player->setPosition(position());

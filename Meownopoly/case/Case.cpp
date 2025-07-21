@@ -42,21 +42,44 @@ void Case::setName(const QString &newName)
 
 void Case::onLand(Player* player)
 {
-    // Default implementation - can be overridden by derived classes
-    Q_UNUSED(player);
+    if (player) {
+        addPlayer(player);
+        qDebug() << "Player" << player->name() << "landed on " << name();
+        // Add any default landing behavior here
+    }
 }
 
 void Case::onLeave(Player* player)
 {
-    // Default implementation - can be overridden by derived classes
-    Q_UNUSED(player);
+    if (player) {
+        removePlayer(player);
+        qDebug() << "Player" << player->name() << "left " << name();
+    }
 }
 
 void Case::onHover(Player* player)
 {
-    // Default implementation - can be overridden by derived classes
-    Q_UNUSED(player);
+    if (player) {
+        qDebug() << "Player" << player->name() << "hovered over " << name();
+    }
 }
+
+void Case::addPlayer(Player *player)
+{
+    if (!listPlayer.contains(player)){
+        listPlayer.append(player);
+    }
+    return;
+}
+
+void Case::removePlayer(Player *player)
+{
+    if (listPlayer.contains(player)){
+        listPlayer.remove(listPlayer.indexOf(player), 1);
+    }
+    return;
+}
+
 
 Case::CaseType Case::intToCaseType(int type)
 {

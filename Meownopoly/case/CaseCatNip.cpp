@@ -14,9 +14,9 @@ CaseCatNip::CaseCatNip(const QString &name, int position, QObject *parent)
     setType(Case::CS_CatNip);
 }
 
-void CaseCatNip::onLand(Player* player)
-{
-    Q_UNUSED(player);
-    qDebug() << "Player landed on Cat Nip";
-    // TODO: Implement chance card logic
-} 
+// void CaseCatNip::onLand(Player* player)
+// {
+//     Q_UNUSED(player);
+//     qDebug() << "Player landed on Cat Nip";
+//     // TODO: Implement chance card logic
+// }

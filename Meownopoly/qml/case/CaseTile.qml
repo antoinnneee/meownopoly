@@ -1,6 +1,8 @@
 import QtQuick
 import Game
 import Case
+import Player
+
 import "."
 
 Rectangle {
@@ -17,6 +19,10 @@ Rectangle {
     property int tileType: caseData.type
     property string tileName: caseData.name
     property bool isHovered: false
+
+    property list<Player> playerList
+    property int maxPlayer : 4
+
 
     // Colors for different family types
     property var familyColors: [
@@ -66,6 +72,9 @@ Rectangle {
         id: ownershipIndicator
         visible: (root.caseData.owner != undefined) ? true: false
         ribbonColor: (root.caseData.owner != undefined) ?root.caseData.owner.color : "#7f8c8d"
+
+    }
+    function getAvailablePlayerSlot(){
 
     }
 

@@ -6,17 +6,14 @@ Player::Player(QObject *parent)
     : QObject(parent)
     , m_name("")
     , m_color(QColor("#7f8c8d"))
-    , m_kibble(0)
+    , m_kibble(12000)
     , m_position(0)
     , m_inJail(false)
 {
-    qDebug() << "init player";
 }
 
 Player::Player(QString name, QColor color, int indexLogo, int kibbles, QObject *parent)
     : QObject(parent), m_name(name), m_color(color), m_kibble(kibbles), m_indexLogo(indexLogo) {
-
-    qDebug() << "Player created: " << name;
 }
 
 void Player::setName(const QString &name)
