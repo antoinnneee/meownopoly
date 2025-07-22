@@ -33,7 +33,10 @@ ApplicationWindow {
 
     Component {
         id: gameBoard
-        GameBoard {}
+        // GameBoard {}
+        Item{
+
+        }
     }
     TEST_BOARD{
         id: test_view
@@ -41,7 +44,7 @@ ApplicationWindow {
         width:parent.width
         height:parent.height
     }
-
+/*
     PlayerSetup {
         id: playerSetup
         anchors.centerIn: parent
@@ -50,12 +53,12 @@ ApplicationWindow {
             stackView.push(gameBoard)
         }
     }
-
-    // Connect to Game signals
-    Connections {
-        target: Game
-        function onGameStarted() {
-            stackView.push(gameBoard)
-        }
-    }
+*/
+    // // Connect to Game signals
+    // Connections {
+    //     target: Game
+    //     function onGameStarted() {
+    //         stackView.push(gameBoard)
+    //     }
+    // }
 }

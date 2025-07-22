@@ -26,24 +26,6 @@
         <file>qml/textTools.js</file>
         <file>qml/main.qml</file>
         <file>qml/titleScreen/TitleScreen.qml</file>
-        <file>qml/GameBoard.qml</file>
-        <file>qml/PlayerSetup.qml</file>
-        <file>qml/PlayerPanel.qml</file>
-        <file>qml/ControlPanel.qml</file>
-        <file>qml/DicePanel.qml</file>
-        <file>qml/PlayerTurnPanel.qml</file>
-        <file>qml/PropertyPurchasePanel.qml</file>
-        <file>qml/BoardGrid.qml</file>
-        <file>qml/AnimationManager.qml</file>
-        <file>qml/DiceRollTimer.qml</file>
-        <file>qml/EndTurnTimer.qml</file>
-        <file>qml/ResetDiceStateTimer.qml</file>
-        <file>qml/CompactDiceControl.qml</file>
-        <file>qml/DiceBase.qml</file>
-        <file>qml/TurnManager.qml</file>
-        <file>qml/PropertyController.qml</file>
-        <file>qml/GameActionButton.qml</file>
-        <file>qml/GameActionDialog.qml</file>
         <file>qml/boardTile/BoardTile.qml</file>
         <file>qml/boardTile/TileContent.qml</file>
         <file>qml/boardTile/StarRating.qml</file>
@@ -84,5 +66,24 @@
         <file>qml/case/details/CatDeviceDetails.qml</file>
         <file>qml/case/OwnershipIndicator.qml</file>
         <file>qml/boardTile/Player_Test.qml</file>
+        <file>qml/old/AnimationManager.qml</file>
+        <file>qml/old/BoardGrid.qml</file>
+        <file>qml/old/BoardTile.qml</file>
+        <file>qml/old/CompactDiceControl.qml</file>
+        <file>qml/old/ControlPanel.qml</file>
+        <file>qml/old/DiceBase.qml</file>
+        <file>qml/old/DicePanel.qml</file>
+        <file>qml/old/DiceRollTimer.qml</file>
+        <file>qml/old/EndTurnTimer.qml</file>
+        <file>qml/old/GameActionButton.qml</file>
+        <file>qml/old/GameActionDialog.qml</file>
+        <file>qml/old/GameBoard.qml</file>
+        <file>qml/old/PlayerPanel.qml</file>
+        <file>qml/old/PlayerSetup.qml</file>
+        <file>qml/old/PlayerTurnPanel.qml</file>
+        <file>qml/old/PropertyController.qml</file>
+        <file>qml/old/PropertyPurchasePanel.qml</file>
+        <file>qml/old/ResetDiceStateTimer.qml</file>
+        <file>qml/old/TurnManager.qml</file>
     </qresource>
 </RCC>
