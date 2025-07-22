@@ -10,6 +10,7 @@ Rectangle {
 
     signal startGameRequested()  // Add this signal
     signal testViewRequested()  // Add this signal
+    signal editorRequested();
 
     // Title text
     Text {
@@ -118,6 +119,32 @@ Rectangle {
                 // TODO: Implement server creation functionality
                 testViewRequested()
                 console.log("testUIButton")
+            }
+        }
+        // Create Server Button
+        Button {
+            id: editorButton
+            text: "EDITOR"
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 50
+
+            background: Rectangle {
+                color: editorButton.pressed ? "#1565c0" : "#2196f3"
+                radius: 8
+            }
+
+            contentItem: Text {
+                text: editorButton.text
+                color: "white"
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            onClicked: {
+                // TODO: Implement server creation functionality
+                editorRequested()
+                console.log("show editor")
             }
         }
     }
