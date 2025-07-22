@@ -1,8 +1,10 @@
+pragma ComponentBehavior:Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "titleScreen/"
 import "test/"
+import "editor/"
 import QtQuick.Window
 import Game
 
@@ -24,20 +26,23 @@ ApplicationWindow {
     Component {
         id: titleScreen
         TitleScreen {
-            onStartGameRequested: playerSetup.open()
+            onEditorRequested:{
+                editor.visible = true
+            }
+
             onTestViewRequested: {
-                test_view.open();
+                test_view.open()
             }
         }
     }
 
-    Component {
-        id: gameBoard
-        // GameBoard {}
-        Item{
-
+        Editor{
+        id: editor
+        anchors.centerIn: parent
+        width:parent.width
+        height:parent.height
+        visible: false
         }
-    }
     TEST_CASE{
         id: test_view
         anchors.centerIn: parent

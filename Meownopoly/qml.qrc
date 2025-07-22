@@ -84,5 +84,10 @@
         <file>qml/old/PropertyPurchasePanel.qml</file>
         <file>qml/old/ResetDiceStateTimer.qml</file>
         <file>qml/old/TurnManager.qml</file>
+        <file>qml/editor/Editor.qml</file>
+        <file>qml/editor/tools/GridManager.qml</file>
+        <file>qml/editor/tools/GridControlPanel.qml</file>
+        <file>qml/editor/tools/SnapableElement.qml</file>
+        <file>qml/editor/tools/MapTileElement.qml</file>
     </qresource>
 </RCC>
