@@ -12,6 +12,7 @@ Item {
     
     clip: true
     required property Case caseData
+    property var familyColors: []
 
     // Icons for different tile types
     property var tileIcons: [
@@ -71,14 +72,15 @@ Item {
     Component {
         id: restAreaContent
         RestAreaContent {
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_RestArea) ? root.caseData : null
+            familyColors: root.familyColors
         }
     }
 
     Component {
         id: kibbleDispenserContent
         KibbleDispenserContent{
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_KibbleDispenser) ? root.caseData : null
         }
 
         // KibbleDispenserContent {
@@ -89,14 +91,14 @@ Item {
     Component {
         id: cardBoardBoxContent
         CardBoardBoxContent {
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_CardBoardBox) ? root.caseData : null
         }
     }
 
     Component {
         id: catNipContent
         CatNipContent {
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_CatNip) ? root.caseData : null
         }
     }
 
@@ -110,28 +112,28 @@ Item {
     Component {
         id: toJailContent
         ToJailContent {
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_ToJail) ? root.caseData : null
         }
     }
 
     Component {
         id: catDoorContent
         CatDoorContent {
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_CatDoor) ? root.caseData : null
         }
     }
 
     Component {
         id: freeNapContent
         FreeNapContent {
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_FreeNap) ? root.caseData : null
         }
     }
 
     Component {
         id: catDeviceContent
         CatDeviceContent {
-            caseData: root.caseData
+            caseData: (root.caseData.type === Case.CS_Device) ? root.caseData : null
         }
     }
 

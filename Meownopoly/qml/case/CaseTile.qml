@@ -40,6 +40,7 @@ Rectangle {
             bottom: parent.bottom
         }
         caseData: root.caseData
+        familyColors: root.familyColors
     }
 
     MouseArea {

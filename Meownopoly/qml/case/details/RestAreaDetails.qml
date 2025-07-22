@@ -13,13 +13,15 @@ ColumnLayout {
     property var familyColors: []
 
     Text {
-        text: "Family: " + getFamilyName()
+        text: "Family: " + root.getFamilyName()
         font.pixelSize: 14
         color: "#2c3e50"
     }
 
     Text {
-        text: "Owner: " +  ((root.caseData && root.caseData.owner != undefined))? root.caseData.owner.name : "None"
+        text: (root.caseData === null) ? "null" :
+                                                     root.caseData.owner != undefined ? root.caseData.owner.name
+                                                                                      : "no owner"
         font.pixelSize: 14
         color: "#2c3e50"
     }
@@ -92,7 +94,7 @@ ColumnLayout {
 
         // Hotel price
         Text {
-            text: "Hotel: " + ((root.caseData && (root.caseData.rentPrice.lenght >= 6)) ? root.caseData.rentPrice[5] + "K" : "N/A")
+            text: (root.caseData) ?"Hotel :" +  root.caseData.rentPrice[5] : "N/A"
             font.pixelSize: 14
             color: "#2c3e50"
             font.bold: true

@@ -25,16 +25,18 @@ CaseRestArea::RestQuality CaseRestArea::restQuality() const
 void CaseRestArea::setRestQuality(CaseRestArea::RestQuality newRestQuality)
 {
     m_restQuality = newRestQuality;
+    emit restQualityChanged();
 }
 
-FamilyType CaseRestArea::family() const
+CaseRestArea::FamilyType CaseRestArea::family() const
 {
     return m_family;
 }
 
-void CaseRestArea::setFamily(FamilyType newFamily)
+void CaseRestArea::setFamily(CaseRestArea::FamilyType newFamily)
 {
     m_family = newFamily;
+    emit familyChanged();
 }
 
 

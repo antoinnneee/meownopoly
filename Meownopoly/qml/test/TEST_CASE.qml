@@ -101,9 +101,9 @@ Dialog {
                         if (caseInfo.type == Case.CS_RestArea)
                         {
                             caseInfo.setOwner(player);
+                            caseInfo.family = CaseRestArea.FT_BROWN
+                            caseInfo.restQuality = 3
                         }
-
-                        //console.log("price : ", caseInfo.price)
                     }
                 }
                 

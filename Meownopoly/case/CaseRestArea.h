@@ -7,25 +7,13 @@
 class Player;
 
 
-enum FamilyType {
-    FT_NONE,
-    FT_BROWN,
-    FT_LIGHTBLUE,
-    FT_PINK,
-    FT_ORANGE,
-    FT_RED,
-    FT_YELLOW,
-    FT_GREEN,
-    FT_DARKBLUE,
-    FT_COUNT
-};
 
 
 
 class CaseRestArea : public CaseCatPerks
 {
     Q_OBJECT
-    Q_PROPERTY(int restQuality READ restQuality NOTIFY restQualityChanged)
+    Q_PROPERTY(RestQuality restQuality READ restQuality WRITE setRestQuality NOTIFY restQualityChanged)
     Q_PROPERTY(enum FamilyType family READ family WRITE setFamily  NOTIFY  familyChanged )
     
     Q_PROPERTY(int housePrice READ housePrice WRITE setHousePrice NOTIFY housePriceChanged FINAL)
@@ -46,6 +34,20 @@ public:
         RQ_COUNT
     };
     Q_ENUM(RestQuality)
+
+    enum FamilyType {
+        FT_NONE,
+        FT_BROWN,
+        FT_LIGHTBLUE,
+        FT_PINK,
+        FT_ORANGE,
+        FT_RED,
+        FT_YELLOW,
+        FT_GREEN,
+        FT_DARKBLUE,
+        FT_COUNT
+    };
+    Q_ENUM(FamilyType)
 //    CaseRestArea(const QString &name, int price= -1, int sellPrice = -1,int position = -1,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>(), QObject *parent = nullptr);
     CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>());
 
@@ -53,7 +55,7 @@ public:
     void setRestQuality(CaseRestArea::RestQuality newRestQuality);
 
     FamilyType family() const;
-    void setFamily(FamilyType newFamily);
+    void setFamily(CaseRestArea::FamilyType newFamily);
 
 
     // void print_state();
