@@ -124,7 +124,7 @@ Case *Game::getNewCase(const QStringList &currentCaseJson) {
         }
 
         newCase = new CaseRestArea(name, position, mortgagePrice, price, price, this,
-                                   static_cast<FamilyType>(family), housePrice, hotelPrice, rentPrices);
+                                   static_cast<CaseRestArea::FamilyType>(family), housePrice, hotelPrice, rentPrices);
         break;
     }
     case 2: // Community Chest (Caisse de Communauté)

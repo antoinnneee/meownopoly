@@ -84,7 +84,7 @@ private:
     Player* m_players;
     QList<Case*> m_listCases;
     QList<Card*>  m_listCards;
-    QList<CaseRestArea*>    m_family[FT_COUNT];
+    QList<CaseRestArea*>    m_family[CaseRestArea::FT_COUNT];
     //    QList<card_chance*> commu;
     //    QList<card_chance*>chance;
     int m_currentPlayerIndex = 0;

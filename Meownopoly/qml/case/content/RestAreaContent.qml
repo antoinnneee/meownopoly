@@ -11,12 +11,45 @@ Item {
 
     clip: true
     required property CaseRestArea caseData
+    property var familyColors: []
+    onFamilyColorsChanged:{
+        console.log(" fam color change :", familyColors)
+    }
+    Timer{
+        interval: 2000
+        running:true
+        repeat: true
+        onTriggered : {
+            console.log(" fam value :", caseData.family, familyColors[caseData.family])
+
+        }
+    }
+
 
     // Icons for different tile types
     property var tileIcons: "qrc:/asset/bed.png"          // 1: Rest Area
 
     property var fallbackIcons: "🛌"          // 1: Rest Area
 
+    Rectangle {
+        id: colorBar
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+        }
+        height: Math.min(Screen.pixelDensity * 10, parent.height *0.15)
+        color: root.familyColors[caseData.family]
+        radius: 4
+        bottomLeftRadius: Screen.pixelDensity * 3
+        bottomRightRadius: Screen.pixelDensity * 3
+        // Rectangle {
+        //     width: parent.width
+        //     height: parent.radius
+        //     color: parent.color
+        //     anchors.bottom: parent.bottom
+        // }
+    }
 
     Text {
         id: nameText
@@ -49,24 +82,21 @@ Item {
         }
 
         height: parent.height * 0.2 + nameText.height
-        visible: root.caseData.type === 1
-        restQuality: root.caseData && root.caseData.restQuality ? root.caseData.restQuality : 0
+        visible: true
+        restQuality:  root.caseData.restQuality
         z: 2
     }
 
     Image {
         id: icon
+
+        width: Math.min(parent.width * 0.88, parent.height - colorBar.height - Screen.pixelDensity * 2)
+        height: width
+
         anchors {
             horizontalCenter: parent.horizontalCenter
             verticalCenter: parent.verticalCenter
-            verticalCenterOffset: root.caseData.type === 1 ? parent.height * 0.1 : parent.height * 0.1
-        }
-        width: parent.width * (root.caseData.type === 1 ? 0.8 : 0.8)
-        height: width
-        source: root.caseData.type >= 0 && root.caseData.type < tileIcons.length ? tileIcons : ""
-        sourceSize {
-            width: width * 2  // Request a larger source image for better scaling
-            height: height * 2
+            verticalCenterOffset: colorBar.height/2
         }
         fillMode: Image.PreserveAspectFit
         smooth: true
@@ -74,6 +104,12 @@ Item {
         antialiasing: true
         visible: status === Image.Ready
         asynchronous: true
+        source: root.caseData.type >= 0 && root.caseData.type < tileIcons.length ? tileIcons : ""
+
+        sourceSize {
+            width: width * 2  // Request a larger source image for better scaling
+            height: height * 2
+        }
 
         onStatusChanged: {
             if (status === Image.Error) {
