@@ -89,5 +89,6 @@
         <file>qml/editor/tools/GridControlPanel.qml</file>
         <file>qml/editor/tools/SnapableElement.qml</file>
         <file>qml/editor/tools/MapTileElement.qml</file>
+        <file>qml/editor/tools/SnapableCaseTile.qml</file>
     </qresource>
 </RCC>

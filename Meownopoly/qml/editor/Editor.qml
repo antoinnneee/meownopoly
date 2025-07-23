@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import Game
 import Case
+import CaseRestArea
 import "tools"
 
 Rectangle {
@@ -12,12 +13,12 @@ Rectangle {
     color: "lightblue"
     anchors.fill: parent
     border.width: 0
-
+    
     // Grille de l'éditeur
     GridManager {
         id: editorGrid
         anchors.fill: parent
-        gridSize: 20
+        mmSize: 20
         gridColor: "#80000000"
         gridOpacity: 0.3
         showGrid: true
@@ -28,126 +29,211 @@ Rectangle {
     Item {
         id: workArea
         anchors.fill: parent
-        
-        // Exemple d'éléments utilisant SnapableElement
-        SnapableElement {
-            id: testElement1
-            width: 40
-            height: 40
-            x: 60
-            y: 60
-            elementColor: "red"
-            borderColor: "darkred"
-            gridManager: editorGrid
-            
-            onElementClicked: {
-                console.log("Element 1 cliqué")
-            }
-            
-            Text {
-                anchors.centerIn: parent
-                text: "Test 1"
-                color: "white"
-                font.pixelSize: 8
-            }
-        }
-        
-        SnapableElement {
-            id: testElement2
-            width: 60
-            height: 30
-            x: 140
+
+        SnapableCaseTile{
+            id: caseTile1
+            x: 100
             y: 100
-            elementColor: "blue"
-            borderColor: "darkblue"
+            width: 100
+            height: 100
+            
+            // Configuration explicite du gridManager
             gridManager: editorGrid
             
-            onElementClicked: {
-                console.log("Element 2 cliqué")
+            // Sélectionner cet élément par défaut pour voir les poignées
+            Component.onCompleted: {
+                isSelected = true
+                console.log("CaseTile1 - isSelected:", isSelected, "isResizable:", isResizable)
+                console.log("CaseTile1 - gridManager:", gridManager)
             }
             
-            Text {
-                anchors.centerIn: parent
-                text: "Test 2"
-                color: "white"
-                font.pixelSize: 9
+            caseData: CaseRestArea{
+                type: Case.CS_RestArea
+                name: "Le coin du lit"
+                position: 1
+                family: CaseRestArea.FT_ORANGE
+            }
+            
+            // Gestion de sélection exclusive
+            onElementClicked: function(element) {
+                console.log("CaseTile1 cliqué, sélection:", element.isSelected)
+                // Désélectionner les autres
+                caseTile2.deselect()
+                caseTile3.deselect()
             }
         }
         
-        // Élément avec apparence différente
-        SnapableElement {
-            id: testElement3
-            width: 50
-            height: 50
-            x: 220
+        SnapableCaseTile{
+            id: caseTile2
+            x: 250
+            y: 150
+            width: 80
+            height: 120
+            gridManager: editorGrid
+            caseData: CaseRestArea{
+                type: Case.CS_RestArea
+                name: "Zone de repos 2"
+                position: 2
+                family: CaseRestArea.FT_BLUE
+            }
+            
+            onElementClicked: function(element) {
+                console.log("CaseTile2 cliqué, sélection:", element.isSelected)
+                caseTile1.deselect()
+                caseTile3.deselect()
+            }
+        }
+        
+        SnapableCaseTile{
+            id: caseTile3
+            x: 400
             y: 80
-            elementColor: "green"
-            borderColor: "darkgreen"
-            borderWidth: 2
+            width: 120
+            height: 80
+            
+            // Configuration explicite du gridManager
             gridManager: editorGrid
             
-            onSnapCompleted: {
-                console.log("Element 3 snappé à la position:", x, y)
+            caseData: CaseRestArea{
+                type: Case.CS_RestArea
+                name: "Petit coin"
+                position: 3
+                family: CaseRestArea.FT_GREEN
+            }
+            
+            onElementClicked: function(element) {
+                console.log("CaseTile3 cliqué, sélection:", element.isSelected)
+                caseTile1.deselect()
+                caseTile2.deselect()
+            }
+        }
+    }
+    
+    // Panneau d'information sur l'élément sélectionné
+    Rectangle {
+        id: infoPanel
+        width: 320
+        height: 240
+        color: "#f0f0f0"
+        border.color: "#cccccc"
+        border.width: 1
+        radius: 5
+        
+        anchors {
+            top: parent.top
+            left: parent.left
+            margins: 10
+        }
+        
+        Column {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 5
+            
+            Text {
+                text: "Éditeur de Cases - Redimensionnable"
+                font.bold: true
+                font.pixelSize: 14
             }
             
             Text {
-                anchors.centerIn: parent
-                text: "Test 3"
-                color: "white"
-                font.pixelSize: 8
+                text: "Instructions:"
                 font.bold: true
+                font.pixelSize: 12
             }
-        }
-        
-        // --- Exemples de MapTileElement ---
-        
-        MapTileElement {
-            id: wallTile
-            x: 80
-            y: 200
-            tileType: "wall"
-            tileId: 1
-            gridManager: editorGrid
             
-            onTileTypeChanged: {
-                console.log("Tuile", tileId, "changée en:", newType)
+            Text {
+                text: "• Cliquez pour sélectionner une case"
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
+                width: parent.width
             }
-        }
-        
-        MapTileElement {
-            id: doorTile
-            x: 140
-            y: 200
-            tileType: "door"
-            tileId: 2
-            gridManager: editorGrid
-        }
-        
-        MapTileElement {
-            id: spawnTile
-            x: 200
-            y: 200
-            tileType: "spawn"
-            tileId: 3
-            gridManager: editorGrid
-        }
-        
-        MapTileElement {
-            id: floorTile
-            x: 260
-            y: 200
-            tileType: "floor"
-            tileId: 4
-            gridManager: editorGrid
-        }
-        
-        MapTileElement {
-            id: itemTile
-            x: 320
-            y: 200
-            tileType: "item"
-            tileId: 5
-            gridManager: editorGrid
+            
+            Text {
+                text: "• Glissez les poignées bleues pour redimensionner"
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
+                width: parent.width
+            }
+            
+            Text {
+                text: "• Le redimensionnement s'aligne sur la grille (" + editorGrid.gridSize + "px)"
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
+                width: parent.width
+            }
+            
+            Text {
+                text: "• Glissez la case pour la déplacer"
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
+                width: parent.width
+            }
+            
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: "#cccccc"
+            }
+            
+            Text {
+                text: "État de l'élément sélectionné:"
+                font.bold: true
+                font.pixelSize: 11
+                color: "#666666"
+            }
+            
+            Text {
+                text: "Case 1 - Sélectionnée: " + (caseTile1.isSelected ? "OUI" : "NON")
+                font.pixelSize: 9
+                color: caseTile1.isSelected ? "#2196F3" : "#666666"
+            }
+            
+            Text {
+                text: "Dimensions: " + Math.round(caseTile1.width) + "×" + Math.round(caseTile1.height) + "px"
+                font.pixelSize: 9
+                color: caseTile1.isSelected ? "#2196F3" : "#666666"
+                visible: caseTile1.isSelected
+            }
+            
+            Text {  
+                text: "Position: (" + Math.round(caseTile1.x) + ", " + Math.round(caseTile1.y) + ")"
+                font.pixelSize: 9
+                color: caseTile1.isSelected ? "#2196F3" : "#666666"
+                visible: caseTile1.isSelected
+            }
+            
+            Text {
+                text: "Grille: " + Math.round(caseTile1.width / editorGrid.gridSize) + "×" + Math.round(caseTile1.height / editorGrid.gridSize) + " cellules"
+                font.pixelSize: 9
+                color: caseTile1.isSelected ? "#2196F3" : "#666666"
+                visible: caseTile1.isSelected
+            }
+            
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: "#cccccc"
+            }
+            
+            Text {
+                text: "Paramètres de grille:"
+                font.bold: true
+                font.pixelSize: 11
+                color: "#666666"
+            }
+            
+            Text {
+                text: "Taille: " + editorGrid.gridSize + "px | Snap: " + (editorGrid.snapToGrid ? "ACTIVÉ" : "DÉSACTIVÉ")
+                font.pixelSize: 9
+                color: "#666666"
+            }
+            
+            Text {
+                text: "Mode redimensionnement: " + (editorGrid.resizeMode ? "ACTIF" : "INACTIF")
+                font.pixelSize: 9
+                color: editorGrid.resizeMode ? "#FF6B35" : "#666666"
+            }
         }
     }
     

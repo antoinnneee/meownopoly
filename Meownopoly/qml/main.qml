@@ -48,6 +48,7 @@ ApplicationWindow {
         anchors.centerIn: parent
         width:parent.width
         height:parent.height
+        enabled: false
     }
 /*
     PlayerSetup {
