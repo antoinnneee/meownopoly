@@ -97,3 +97,69 @@ Case::CaseType Case::intToCaseType(int type)
         default: return CS_Unknow;          // Unknown type
     }
 }
+
+
+// ---- CHAINED LIST MANIPULATION ----
+
+Case *Case::getNext(int userSelectNext)
+{
+    if (!next.isEmpty() && next.at(userSelectNext))
+        if (userSelectNext < next.size())
+            return next.value(userSelectNext);
+    return nullptr;
+}
+
+void Case::addNext(Case *newNext)
+{
+    next.append(newNext);
+}
+
+bool Case::removeNext(Case *caseToRemove)
+{
+    int index = next.indexOf(caseToRemove);
+    if (index != -1) {
+        next.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+bool Case::removeNextAt(int index)
+{
+    if (index >= 0 && index < next.size()) {
+        next.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+Case *Case::getPrev(int userSelectPrev)
+{
+    if (prev.size() >= userSelectPrev)
+        return prev.value(userSelectPrev);
+    return nullptr;
+}
+
+void Case::addPrev(Case *newPrev)
+{
+    prev.append(newPrev);
+}
+
+bool Case::removePrev(Case *caseToRemove)
+{
+    int index = prev.indexOf(caseToRemove);
+    if (index != -1) {
+        prev.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+bool Case::removePrevAt(int index)
+{
+    if (index >= 0 && index < prev.size()) {
+        prev.removeAt(index);
+        return true;
+    }
+    return false;
+}

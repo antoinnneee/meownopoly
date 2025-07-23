@@ -48,7 +48,6 @@ public:
 
     Q_INVOKABLE void nextPlayer();
     Q_INVOKABLE Player *getPlayer();
-    Q_INVOKABLE Case* getCaseAt(int position);
 
 
     QList<Player*> players() const { return m_listPlayers; }
@@ -60,9 +59,26 @@ public:
 
     QList<Player *> listPlayers() const;
 
-    QList<Case *> listCases() const;
+    Case **listCases() const;
 
     QList<Card *> listCards() const;
+
+
+// ---- CASES : CHAINED LIST MANIPULATION ----
+    bool appendCase(Case *newCase);
+    bool clearListCases();
+    bool removeLastCase();
+
+    Case *getLastCase();
+
+    Case *getCaseAt(int index);
+
+    bool insertCaseAt(int index, Case *caseToInsert);
+    bool removeCaseAt(int index);
+
+    int getListCaseSize();
+    void displayListCase();
+
 
 public slots:
 
@@ -82,11 +98,14 @@ private:
     QList<Case*> m_board;
     QList<Player*> m_listPlayers;
     Player* m_players;
-    QList<Case*> m_listCases;
+    Case **m_listCases = nullptr;
+    // QList<Case*> m_listCases;
     QList<Card*>  m_listCards;
     QList<CaseRestArea*>    m_family[CaseRestArea::FT_COUNT];
-    //    QList<card_chance*> commu;
-    //    QList<card_chance*>chance;
+
+    int userSelectNext = 0;
+    int userSelectPrev = 0;
+
     int m_currentPlayerIndex = 0;
 
     void init_caseFile();

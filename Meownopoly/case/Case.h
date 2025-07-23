@@ -55,6 +55,31 @@ public:
     Q_INVOKABLE virtual void onLeave(Player* player); 
     Q_INVOKABLE virtual void onHover(Player* player);
 
+
+
+// ---- CHAINED LIST MANIPULATION ----
+
+    bool addNode();
+    bool removeNode();
+
+
+    bool isNextEmpty(){return next.isEmpty();}
+    bool isPrevEmpty(){return prev.isEmpty();}
+
+    Case *getNext(int userSelectNext);
+    void addNext(Case *newNext);
+    bool removeNext(Case *caseToRemove); // Nouvelle fonction
+    bool removeNextAt(int index); // Nouvelle fonction
+
+    Case *getPrev(int userSelectPrev);
+    void addPrev(Case *newPrev);
+    bool removePrev(Case *caseToRemove); // Nouvelle fonction
+    bool removePrevAt(int index); // Nouvelle fonction
+
+    QList<Case*> next = QList<Case*>();
+    QList<Case*> prev = QList<Case*>();
+
+
 signals:
 
     void nameChanged();

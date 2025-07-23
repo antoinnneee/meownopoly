@@ -36,7 +36,7 @@ QList<Card *> Game::listCards() const
     return m_listCards;
 }
 
-QList<Case *> Game::listCases() const
+Case **Game::listCases() const
 {
     return m_listCases;
 }
@@ -53,26 +53,26 @@ void Game::registerQml() {
     // Register the complete inheritance hierarchy for proper QML inheritance
     qmlRegisterUncreatableType<Case>("Case", 1, 0, "Case", 
                                      "Case is an abstract base class"); // Register Case class with enum
-    qmlRegisterUncreatableType<CaseCatPerks>("CaseCatPerks", 1, 0, "CaseCatPerks", 
-                                            "CaseCatPerks is an intermediate base class"); // Register intermediate class
+    qmlRegisterUncreatableType<CaseCatPerks>("CaseCatPerks", 1, 0, "CaseCatPerks",
+                                             "CaseCatPerks is an intermediate base class"); // Register intermediate class
     qmlRegisterType<CaseRestArea>("CaseRestArea", 1, 0,
                                   "CaseRestArea"); // Register CaseRestArea class
     qmlRegisterType<CaseKibbleDispenser>("CaseKibbleDispenser", 1, 0,
-        "CaseKibbleDispenser"); // Register CaseKibbleDispenser class
+                                         "CaseKibbleDispenser"); // Register CaseKibbleDispenser class
     qmlRegisterType<CaseCardBoardBox>("CaseCardBoardBox", 1, 0,
-                        "CaseCardBoardBox"); // Register CaseCardBoardBox class
+                                      "CaseCardBoardBox"); // Register CaseCardBoardBox class
     qmlRegisterType<CaseCatNip>("CaseCatNip", 1, 0,
-                        "CaseCatNip"); // Register CaseCatNip class
+                                "CaseCatNip"); // Register CaseCatNip class
     qmlRegisterType<CaseJail>("CaseJail", 1, 0,
-                        "CaseJail"); // Register CaseJail class
+                              "CaseJail"); // Register CaseJail class
     qmlRegisterType<CaseToJail>("CaseToJail", 1, 0,
-                        "CaseToJail"); // Register CaseToJail class
+                                "CaseToJail"); // Register CaseToJail class
     qmlRegisterType<CaseCatDoor>("CaseCatDoor", 1, 0,
-                        "CaseCatDoor"); // Register CaseCatDoor class
+                                 "CaseCatDoor"); // Register CaseCatDoor class
     qmlRegisterType<CaseFreeNap>("CaseFreeNap", 1, 0,
-                        "CaseFreeNap"); // Register CaseFreeNap class
+                                 "CaseFreeNap"); // Register CaseFreeNap class
     qmlRegisterType<CaseCatDevice>("CaseCatDevice", 1, 0,
-                        "CaseCatDevice"); // Register CaseCatDevice class
+                                   "CaseCatDevice"); // Register CaseCatDevice class
 }
 
 Game *Game::instance() {
@@ -182,15 +182,14 @@ Case *Game::getNewCase(const QStringList &currentCaseJson) {
 
 void Game::initCases() {
     // Clear existing cases
-    m_listCases.clear();
-    
+    clearListCases();
     // Load JSON file
     QFile file(CASE_FILE_PATH);
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << "Failed to open cases.json file";
         return;
     }
-    
+
     QByteArray data = file.readAll();
 
     QJsonParseError parseError;
@@ -204,6 +203,10 @@ void Game::initCases() {
                  << (doc.isObject() ? "object" : "unknown");
         return;
     }
+    m_listCases = new Case*; // Correction : allouer un pointeur vers Case*
+    Case *currentCase = new Case();
+    *m_listCases = currentCase;
+
     QJsonArray casesArray = doc.array();
 
     // Process each case in the JSON array
@@ -231,9 +234,21 @@ void Game::initCases() {
             // Create case and add to list
             Case* newCase = getNewCase(caseData);
             if (newCase) {
-                m_listCases.append(newCase);
+                newCase->addPrev(currentCase);
+                currentCase->addNext(newCase);
+                currentCase = newCase;
             }
         }
+
+
+        for (int index = 0; index < 10; ++index) {
+            Case *newCase = new Case();
+            newCase->setName("case " + QString::number(index));
+            newCase->addPrev(currentCase);
+            currentCase->addNext(newCase);
+            currentCase = newCase;
+        }
+
     }
 }
 
@@ -245,13 +260,6 @@ void Game::init() {
 void Game::initCards() {
 }
 
-
-Case *Game::getCaseAt(int position) {
-    if (position >= 0 && position < m_listCases.size()) {
-        return m_listCases.at(position);
-    }
-    return nullptr;
-}
 
 Player* Game::createPlayer(const QString name, QColor color, int indexLogo, int kibbles) {
     Player *newPlayer = new Player(name, color, indexLogo, kibbles, this); // Create with parent first
@@ -347,3 +355,215 @@ Player *Game::getPlayer()
 {
     return m_players;
 }
+
+
+
+// ---- CHAINED LIST MANIPULATION ----
+
+bool Game::appendCase(Case *newCase)
+{
+    if (!newCase){
+        qDebug() << "append(Case *newCase) : newCase invalid";
+        return false;
+    }
+
+    Case *currentCase = getLastCase();
+    if (currentCase) {
+        currentCase->addNext(newCase);
+        newCase->addPrev(currentCase);
+    }
+
+    return true;
+}
+
+bool Game::clearListCases(){
+    while (removeLastCase());
+    return true;
+}
+
+bool Game::removeLastCase()
+{
+    Case *caseToRemove = getLastCase();
+    if (!caseToRemove) {
+        return false;
+    }
+
+    // Mettre à jour les liens avant de supprimer
+    if (!caseToRemove->isPrevEmpty()) {
+        Case *prevCase = caseToRemove->getPrev(0);
+        if (prevCase) {
+            prevCase->removeNext(caseToRemove);
+        }
+    }
+
+    delete caseToRemove;
+    return true;
+}
+
+Case *Game::getLastCase()
+{
+    if (!m_listCases || !*m_listCases) {
+        return nullptr;
+    }
+
+    Case *currentCase = *m_listCases;
+    if (currentCase && !currentCase->isNextEmpty()){
+        while (currentCase->getNext(0) != nullptr){
+            currentCase = currentCase->getNext(0);
+        }
+    }
+    return currentCase;
+}
+
+bool Game::insertCaseAt(int index, Case *caseToInsert)
+{
+    if (index > getListCaseSize()){
+        qDebug() << "insertAt(int index) : Index out of range";
+        return false;
+    }
+
+    Case *caseAtIndex = getCaseAt(index);
+    if (!caseAtIndex) {
+        return false;
+    }
+
+    // Insérer la nouvelle case
+    if (!caseAtIndex->isPrevEmpty()) {
+        Case *prevCase = caseAtIndex->getPrev(0);
+        prevCase->removeNext(caseAtIndex);
+        prevCase->addNext(caseToInsert);
+        caseToInsert->addPrev(prevCase);
+    }
+
+    caseToInsert->addNext(caseAtIndex);
+    caseAtIndex->removePrevAt(0); // Supprimer l'ancienne référence
+    caseAtIndex->addPrev(caseToInsert);
+
+    return true;
+}
+
+bool Game::removeCaseAt(int index)
+{
+    if (index >= getListCaseSize()){
+        qDebug() << "removeAt(int index) : Index out of range";
+        return false;
+    }
+
+    Case *caseToRemove = getCaseAt(index);
+    if (!caseToRemove) {
+        return false;
+    }
+
+    // Mettre à jour les liens avant suppression
+    if (!caseToRemove->isPrevEmpty() && !caseToRemove->isNextEmpty()) {
+        Case *prevCase = caseToRemove->getPrev(0);
+        Case *nextCase = caseToRemove->getNext(0);
+
+        if (prevCase && nextCase) {
+            prevCase->removeNext(caseToRemove);
+            prevCase->addNext(nextCase);
+            nextCase->removePrev(caseToRemove);
+            nextCase->addPrev(prevCase);
+        }
+    } else if (!caseToRemove->isPrevEmpty()) {
+        Case *prevCase = caseToRemove->getPrev(0);
+        if (prevCase) {
+            prevCase->removeNext(caseToRemove);
+        }
+    } else if (!caseToRemove->isNextEmpty()) {
+        Case *nextCase = caseToRemove->getNext(0);
+        if (nextCase) {
+            nextCase->removePrev(caseToRemove);
+        }
+    }
+
+    // Si c'est le premier élément, mettre à jour m_listCases
+    if (caseToRemove == *m_listCases) {
+        if (!caseToRemove->isNextEmpty()) {
+            *m_listCases = caseToRemove->getNext(0);
+        } else {
+            *m_listCases = nullptr;
+        }
+    }
+
+    delete caseToRemove;
+    return true;
+}
+
+int Game::getListCaseSize()
+{
+    if (!m_listCases || !*m_listCases) {
+        return 0;
+    }
+
+    Case *currentCase = *m_listCases; // Pas besoin de copie
+    int size = 1;
+    if (!currentCase->isNextEmpty()){
+        while( currentCase->getNext(0) != nullptr){
+            currentCase = currentCase->getNext(0);
+            size++;
+        }
+    }
+    return size;
+}
+
+void Game::displayListCase()
+{
+    if (!m_listCases || !*m_listCases) {
+        qDebug() << "Liste vide";
+        return;
+    }
+
+    int index = 0;
+    Case *currentCase = *m_listCases;
+    for (int nbrCases = 0; nbrCases < getListCaseSize(); ++nbrCases) {
+        if (currentCase) {
+            qDebug().nospace() << "index " << index << " " << currentCase;
+            if (!currentCase->isPrevEmpty()){
+                for (int i = 0; i < currentCase->prev.size(); ++i) {
+                    qDebug().nospace() << " prev " << currentCase->getPrev(i);
+                }
+            }
+            if (!currentCase->isNextEmpty()){
+                for (int i = 0; i < currentCase->next.size(); ++i) {
+                    qDebug().nospace() << "   next " << currentCase->getNext(i);
+                }
+            }
+            currentCase = currentCase->getNext(0);
+            index++;
+        }
+    }
+    qDebug() << "Taille: " << getListCaseSize();
+}
+
+Case *Game::getCaseAt(int indexCase)
+{
+    if (indexCase >= getListCaseSize() || !m_listCases || !*m_listCases){
+        qDebug() << "getCaseAt(int index) : Index out of range";
+        return nullptr;
+    }
+
+    Case *currentCase = *m_listCases; // Pas besoin de copie
+    int indexCourant = 0;
+    while (indexCourant != indexCase){
+        if (currentCase && currentCase->getNext(0)) {
+            currentCase = currentCase->getNext(0);
+        } else {
+            break;
+        }
+        indexCourant++;
+    }
+    return currentCase;
+}
+
+
+
+
+
+
+
+
+
+
+
+
