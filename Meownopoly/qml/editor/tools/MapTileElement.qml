@@ -37,7 +37,6 @@ SnapableElement {
     // Mise à jour de la couleur quand le type change
     onTileTypeChanged: {
         elementColor = getTileColor()
-        tileTypeChanged(tileType)
     }
     
     // Contenu visuel de la tuile
