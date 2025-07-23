@@ -33,6 +33,10 @@ ApplicationWindow {
             onTestViewRequested: {
                 test_view.open()
             }
+
+            onCaseCreatorRequested: {
+                caseCreator.show()
+            }
         }
     }
 
@@ -43,11 +47,15 @@ ApplicationWindow {
         height:parent.height
         visible: false
         }
-    TEST_BOARD{
-        id: test_view
-        anchors.centerIn: parent
-        width:parent.width
-        height:parent.height
+    // TEST_BOARD{
+    //     id: test_view
+    //     anchors.centerIn: parent
+    //     width:parent.width
+    //     height:parent.height
+    // }
+
+    TEST_JSON {
+        id: caseCreator
     }
 /*
     PlayerSetup {

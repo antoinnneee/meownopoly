@@ -11,6 +11,7 @@ Rectangle {
     signal startGameRequested()  // Add this signal
     signal testViewRequested()  // Add this signal
     signal editorRequested();
+    signal caseCreatorRequested(); // Add signal for case creator
 
     // Title text
     Text {
@@ -145,6 +146,32 @@ Rectangle {
                 // TODO: Implement server creation functionality
                 editorRequested()
                 console.log("show editor")
+            }
+        }
+
+        // Case Creator Button
+        Button {
+            id: caseCreatorButton
+            text: "Case Creator"
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 50
+
+            background: Rectangle {
+                color: caseCreatorButton.pressed ? "#6a1b9a" : "#9c27b0"
+                radius: 8
+            }
+
+            contentItem: Text {
+                text: caseCreatorButton.text
+                color: "white"
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            onClicked: {
+                caseCreatorRequested()
+                console.log("Case Creator requested")
             }
         }
     }

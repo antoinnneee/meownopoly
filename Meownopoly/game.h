@@ -22,7 +22,7 @@ class Game : public QObject
 
     Q_PROPERTY(QList<Player*> players READ players NOTIFY playersChanged)
     Q_PROPERTY(QList<Player *> listPlayers READ listPlayers CONSTANT FINAL)
-    Q_PROPERTY(QList<Case *> listCases READ listCases CONSTANT FINAL)
+    Q_PROPERTY(Case **listCases READ listCases CONSTANT FINAL)
     Q_PROPERTY(QList<Card *> listCards READ listCards CONSTANT FINAL)
 
 public:
@@ -63,6 +63,9 @@ public:
 
     QList<Card *> listCards() const;
 
+    // JSON Case Management
+    Q_INVOKABLE bool saveCaseToJson(const QVariantMap &caseData);
+    Q_INVOKABLE bool saveMultipleCasesToJson(const QVariantList &casesData);
 
 // ---- CASES : CHAINED LIST MANIPULATION ----
     bool appendCase(Case *newCase);
@@ -79,6 +82,7 @@ public:
     int getListCaseSize();
     void displayListCase();
 
+    ~Game();
 
 public slots:
 
@@ -93,12 +97,11 @@ private slots:
 
 private:
     explicit Game(QObject *parent = nullptr);
-    ~Game(){};
     static Game *m_pThis;
+    Case **m_listCases = nullptr;
     QList<Case*> m_board;
     QList<Player*> m_listPlayers;
     Player* m_players;
-    Case **m_listCases = nullptr;
     // QList<Case*> m_listCases;
     QList<Card*>  m_listCards;
     QList<CaseRestArea*>    m_family[CaseRestArea::FT_COUNT];

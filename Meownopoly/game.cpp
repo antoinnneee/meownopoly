@@ -1,5 +1,3 @@
-#include "game.h"
-
 #include <QColor>
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
@@ -25,10 +23,27 @@
 #include <QJsonObject>
 #include <QDebug>
 
+#include "game.h"
+
 Game *Game::m_pThis = nullptr;
 
 Game::Game(QObject *parent) : QObject(parent) {
     init();
+}
+
+Game::~Game()
+{
+    // Supprimer toutes les cases de la liste chaînée
+    if (m_listCases && *m_listCases) {
+        Case *current = *m_listCases;
+        while (current != nullptr) {
+            Case *next = current->getNext(0);
+            delete current;
+            current = next;
+        }
+        delete m_listCases;
+        m_listCases = nullptr;
+    }
 }
 
 QList<Card *> Game::listCards() const
@@ -554,6 +569,137 @@ Case *Game::getCaseAt(int indexCase)
         indexCourant++;
     }
     return currentCase;
+}
+
+bool Game::saveCaseToJson(const QVariantMap &caseData) {
+    const QString TEST_CASES_FILE_PATH = "config/test_cases.json";
+    
+    // Read existing JSON file
+    QFile file(TEST_CASES_FILE_PATH);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed to open test_cases.json file for reading";
+        return false;
+    }
+    
+    QByteArray data = file.readAll();
+    file.close();
+    
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        qDebug() << "JSON parse error:" << parseError.errorString();
+        return false;
+    }
+    
+    if (!doc.isArray()) {
+        qDebug() << "Invalid JSON format – expected array";
+        return false;
+    }
+    
+    // Get the array and add new case
+    QJsonArray casesArray = doc.array();
+    
+    // Convert QVariantMap to QJsonObject
+    QJsonObject newCase;
+    for (auto it = caseData.begin(); it != caseData.end(); ++it) {
+        if (it.value().isNull()) {
+            newCase[it.key()] = QJsonValue();
+        } else {
+            newCase[it.key()] = QJsonValue::fromVariant(it.value());
+        }
+    }
+    
+    // Add the new case to the array
+    casesArray.append(newCase);
+    
+    // Create new document with updated array
+    QJsonDocument newDoc(casesArray);
+    
+    // Write back to file
+    if (!file.open(QIODevice::WriteOnly)) {
+        qDebug() << "Failed to open test_cases.json file for writing";
+        return false;
+    }
+    
+    QByteArray jsonData = newDoc.toJson(QJsonDocument::Indented);
+    qint64 bytesWritten = file.write(jsonData);
+    file.close();
+    
+    if (bytesWritten == -1) {
+        qDebug() << "Failed to write to test_cases.json file";
+        return false;
+    }
+    
+    qDebug() << "Successfully saved new case to test_cases.json";
+    return true;
+}
+
+bool Game::saveMultipleCasesToJson(const QVariantList &casesData) {
+    const QString TEST_CASES_FILE_PATH = "config/test_cases.json";
+    
+    // Read existing JSON file
+    QFile file(TEST_CASES_FILE_PATH);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed to open test_cases.json file for reading";
+        return false;
+    }
+    
+    QByteArray data = file.readAll();
+    file.close();
+    
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        qDebug() << "JSON parse error:" << parseError.errorString();
+        return false;
+    }
+    
+    if (!doc.isArray()) {
+        qDebug() << "Invalid JSON format – expected array";
+        return false;
+    }
+    
+    // Get the array and add new cases
+    QJsonArray casesArray = doc.array();
+    
+    // Convert each QVariantMap to QJsonObject and add to array
+    for (const QVariant &caseVariant : casesData) {
+        if (caseVariant.canConvert<QVariantMap>()) {
+            QVariantMap caseMap = caseVariant.toMap();
+            QJsonObject newCase;
+            
+            for (auto it = caseMap.begin(); it != caseMap.end(); ++it) {
+                if (it.value().isNull()) {
+                    newCase[it.key()] = QJsonValue();
+                } else {
+                    newCase[it.key()] = QJsonValue::fromVariant(it.value());
+                }
+            }
+            
+            casesArray.append(newCase);
+        }
+    }
+    
+    // Create new document with updated array
+    QJsonDocument newDoc(casesArray);
+    
+    // Write back to file
+    if (!file.open(QIODevice::WriteOnly)) {
+        qDebug() << "Failed to open test_cases.json file for writing";
+        return false;
+    }
+    
+    QByteArray jsonData = newDoc.toJson(QJsonDocument::Indented);
+    qint64 bytesWritten = file.write(jsonData);
+    file.close();
+    
+    if (bytesWritten == -1) {
+        qDebug() << "Failed to write to test_cases.json file";
+        return false;
+    }
+    
+    qDebug() << "Successfully saved" << casesData.size() << "cases to test_cases.json";
+    return true;
 }
 
 

@@ -90,5 +90,6 @@
         <file>qml/editor/tools/GridControlPanel.qml</file>
         <file>qml/editor/tools/SnapableElement.qml</file>
         <file>qml/editor/tools/MapTileElement.qml</file>
+        <file>qml/test/TEST_JSON.qml</file>
     </qresource>
 </RCC>

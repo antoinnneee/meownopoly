@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>config/cases.csv</file>
         <file>config/cases.json</file>
+        <file>config/test_cases.json</file>
     </qresource>
 </RCC>
