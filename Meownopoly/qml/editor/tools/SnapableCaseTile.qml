@@ -12,29 +12,9 @@ SnapableElement {
     // Configuration du redimensionnement
     isResizable: true
     autoSnap: true
-    
-    // Connexion au GridManager du parent (Editor)
-    gridManager: {
-        var current = parent
-        while (current && !current.hasOwnProperty('editorGrid')) {
-            current = current.parent
-        }
-        return current ? current.editorGrid : null
-    }
-    
-    // Dimensions minimales alignées sur la grille (restaurées)
-    minWidth: gridManager ? Math.max(60, Math.ceil(60 / gridManager.gridSize) * gridManager.gridSize) : 60
-    minHeight: gridManager ? Math.max(60, Math.ceil(60 / gridManager.gridSize) * gridManager.gridSize) : 60
-    
-    // S'assurer que les dimensions initiales sont alignées sur la grille
-    Component.onCompleted: {
-        if (gridManager && gridManager.snapToGrid) {
-            var gridSize = gridManager.gridSize
-            width = Math.max(minWidth, Math.round(width / gridSize) * gridSize)
-            height = Math.max(minHeight, Math.round(height / gridSize) * gridSize)
-        }
-    }
-    
+
+
+
     CaseTile {
         id: caseTile
         anchors.fill: parent

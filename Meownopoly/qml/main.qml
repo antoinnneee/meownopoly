@@ -27,28 +27,34 @@ ApplicationWindow {
         id: titleScreen
         TitleScreen {
             onEditorRequested:{
-                editor.visible = true
+                stackView.pop()
+                stackView.push(editor)
             }
 
             onTestViewRequested: {
-                test_view.open()
+                stackView.pop()
+                stackView.push(test_view)
             }
         }
     }
 
-        Editor{
+    Component {
         id: editor
+        Editor{
         anchors.centerIn: parent
         width:parent.width
         height:parent.height
         visible: false
         }
-    TEST_CASE{
+    }
+    Component{
         id: test_view
-        anchors.centerIn: parent
-        width:parent.width
-        height:parent.height
-        enabled: false
+        TEST_CASE{
+            anchors.centerIn: parent
+            width:parent.width
+            height:parent.height
+            enabled: false
+        }
     }
 /*
     PlayerSetup {

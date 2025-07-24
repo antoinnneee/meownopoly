@@ -32,20 +32,15 @@ Rectangle {
 
         SnapableCaseTile{
             id: caseTile1
-            x: 100
-            y: 100
-            width: 100
-            height: 100
+            x: 400
+            y: 400
+
+            unitSizeHeight: 4
+            unitSizeWidth: 4
             
             // Configuration explicite du gridManager
             gridManager: editorGrid
-            
-            // Sélectionner cet élément par défaut pour voir les poignées
-            Component.onCompleted: {
-                isSelected = true
-                console.log("CaseTile1 - isSelected:", isSelected, "isResizable:", isResizable)
-                console.log("CaseTile1 - gridManager:", gridManager)
-            }
+
             
             caseData: CaseRestArea{
                 type: Case.CS_RestArea
@@ -53,60 +48,9 @@ Rectangle {
                 position: 1
                 family: CaseRestArea.FT_ORANGE
             }
-            
-            // Gestion de sélection exclusive
-            onElementClicked: function(element) {
-                console.log("CaseTile1 cliqué, sélection:", element.isSelected)
-                // Désélectionner les autres
-                caseTile2.deselect()
-                caseTile3.deselect()
-            }
+
         }
-        
-        SnapableCaseTile{
-            id: caseTile2
-            x: 250
-            y: 150
-            width: 80
-            height: 120
-            gridManager: editorGrid
-            caseData: CaseRestArea{
-                type: Case.CS_RestArea
-                name: "Zone de repos 2"
-                position: 2
-                family: CaseRestArea.FT_BLUE
-            }
-            
-            onElementClicked: function(element) {
-                console.log("CaseTile2 cliqué, sélection:", element.isSelected)
-                caseTile1.deselect()
-                caseTile3.deselect()
-            }
-        }
-        
-        SnapableCaseTile{
-            id: caseTile3
-            x: 400
-            y: 80
-            width: 120
-            height: 80
-            
-            // Configuration explicite du gridManager
-            gridManager: editorGrid
-            
-            caseData: CaseRestArea{
-                type: Case.CS_RestArea
-                name: "Petit coin"
-                position: 3
-                family: CaseRestArea.FT_GREEN
-            }
-            
-            onElementClicked: function(element) {
-                console.log("CaseTile3 cliqué, sélection:", element.isSelected)
-                caseTile1.deselect()
-                caseTile2.deselect()
-            }
-        }
+
     }
     
     // Panneau d'information sur l'élément sélectionné
