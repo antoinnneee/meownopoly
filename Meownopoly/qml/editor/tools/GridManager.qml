@@ -13,6 +13,9 @@ Item {
     property bool snapToGrid: true
     property int lineWidth: 1
     
+    // Propriété pour intensifier la grille pendant le redimensionnement
+    property bool resizeMode: false
+    
     // Propriétés en lecture seule pour accès externe
     readonly property int snapSize: gridSize
     
@@ -66,12 +69,21 @@ Item {
         )
     }
     
+    // Fonctions pour activer/désactiver le mode redimensionnement
+    function enterResizeMode() {
+        resizeMode = true
+    }
+    
+    function exitResizeMode() {
+        resizeMode = false
+    }
+    
     // Canvas pour dessiner la grille
     Canvas {
         id: gridCanvas
         anchors.fill: parent
         visible: showGrid
-        opacity: gridOpacity
+        opacity: resizeMode ? Math.min(1.0, gridOpacity + 0.3) : gridOpacity
         
         onPaint: {
             if (!showGrid) return
@@ -79,8 +91,9 @@ Item {
             var ctx = getContext("2d")
             ctx.clearRect(0, 0, width, height)
             
-            ctx.strokeStyle = gridColor
-            ctx.lineWidth = lineWidth
+            // Couleur plus intense en mode redimensionnement
+            ctx.strokeStyle = resizeMode ? Qt.lighter(gridColor, 1.2) : gridColor
+            ctx.lineWidth = resizeMode ? lineWidth + 1 : lineWidth
             
             // Dessiner les lignes verticales
             for (var x = 0; x <= width; x += gridSize) {
@@ -109,6 +122,7 @@ Item {
             function onGridColorChanged() { gridCanvas.requestPaint() }
             function onShowGridChanged() { gridCanvas.requestPaint() }
             function onLineWidthChanged() { gridCanvas.requestPaint() }
+            function onResizeModeChanged() { gridCanvas.requestPaint() }
         }
     }
     
@@ -144,7 +158,7 @@ Item {
                 Text { text: "Taille:" }
                 SpinBox {
                     from: 5
-                    to: 100
+                    to: 200
                     stepSize: 5
                     value: gridManager.mmSize
                     onValueChanged: mmSize = value

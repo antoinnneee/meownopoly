@@ -27,21 +27,25 @@ ApplicationWindow {
         id: titleScreen
         TitleScreen {
             onEditorRequested:{
-                editor.visible = true
+                stackView.pop()
+                stackView.push(editor)
             }
 
             onTestViewRequested: {
-                test_view.open()
+                stackView.pop()
+                stackView.push(test_view)
             }
 
             onCaseCreatorRequested: {
-                caseCreator.show()
+                stackView.pop()
+                stackView.push(caseCreator)
             }
         }
     }
 
-        Editor{
+    Component {
         id: editor
+        Editor{
         anchors.centerIn: parent
         width:parent.width
         height:parent.height
@@ -54,8 +58,19 @@ ApplicationWindow {
     //     height:parent.height
     // }
 
-    TEST_JSON {
+    Component{
         id: caseCreator
+    TEST_JSON {
+    }
+    }
+    Component{
+        id: test_view
+        TEST_CASE{
+            anchors.centerIn: parent
+            width:parent.width
+            height:parent.height
+            enabled: false
+        }
     }
 /*
     PlayerSetup {

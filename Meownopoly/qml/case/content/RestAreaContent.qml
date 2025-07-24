@@ -15,15 +15,6 @@ Item {
     onFamilyColorsChanged:{
         console.log(" fam color change :", familyColors)
     }
-    Timer{
-        interval: 2000
-        running:true
-        repeat: true
-        onTriggered : {
-            console.log(" fam value :", caseData.family, familyColors[caseData.family])
-
-        }
-    }
 
 
     // Icons for different tile types
