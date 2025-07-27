@@ -93,13 +93,15 @@ Item {
         smooth: true
         mipmap: true  // Enable mipmapping for better quality when scaling down
         antialiasing: true
-        visible: status === Image.Ready
+        visible:status === Image.Ready
         asynchronous: true
+        cache: true  // Cache the image to prevent reloading
         source: root.caseData.type >= 0 && root.caseData.type < tileIcons.length ? tileIcons : ""
 
+        // Use fixed sourceSize to prevent reloading on resize
         sourceSize {
-            width: width * 2  // Request a larger source image for better scaling
-            height: height * 2
+            width: 512  // Fixed size for better performance
+            height: 512
         }
 
         onStatusChanged: {

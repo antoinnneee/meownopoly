@@ -27,7 +27,7 @@ ApplicationWindow {
         id: titleScreen
         TitleScreen {
             onEditorRequested:{
-                stackView.pop()
+                //stackView.pop()
                 stackView.push(editor)
             }
 
@@ -41,7 +41,6 @@ ApplicationWindow {
     Component {
         id: editor
         Editor{
-        anchors.centerIn: parent
         width:parent.width
         height:parent.height
         visible: false
@@ -50,11 +49,11 @@ ApplicationWindow {
     Component{
         id: test_view
         TEST_CASE{
-            anchors.centerIn: parent
             width:parent.width
             height:parent.height
             enabled: false
         }
+    }
     }
 /*
     PlayerSetup {
@@ -73,4 +72,3 @@ ApplicationWindow {
     //         stackView.push(gameBoard)
     //     }
     // }
-}

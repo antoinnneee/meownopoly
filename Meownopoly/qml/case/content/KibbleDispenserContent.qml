@@ -43,9 +43,10 @@ Item {
         width: parent.width * 0.8
         height: width
         source:  root.tileIcons
+        // Use fixed sourceSize to prevent reloading on resize
         sourceSize {
-            width: width * 2  // Request a larger source image for better scaling
-            height: height * 2
+            width: 512  // Fixed size for better performance
+            height: 512
         }
         fillMode: Image.PreserveAspectFit
         smooth: true

@@ -46,8 +46,8 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 SpinBox {
-                    from: 10
-                    to: 50
+                    from: 1
+                    to: 1000
                     stepSize: 5
                     value: gridManager ? gridManager.gridSize : 20
                     onValueChanged: {

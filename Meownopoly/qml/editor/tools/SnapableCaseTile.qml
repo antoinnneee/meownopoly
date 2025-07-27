@@ -24,10 +24,8 @@ SnapableElement {
     
     // Gestion simplifiée des signaux de redimensionnement
     onElementResized: function(element, newWidth, newHeight) {
-        console.log("Case redimensionnée:", newWidth, "x", newHeight, "- Grille:", gridManager ? gridManager.gridSize : "N/A")
     }
     
     onSnapCompleted: function(element) {
-        console.log("Snap terminé à la position:", element.x, element.y)
     }
 }

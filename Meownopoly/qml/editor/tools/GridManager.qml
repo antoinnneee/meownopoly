@@ -1,12 +1,30 @@
 import QtQuick 2.15
 import QtQuick.Controls
 
+/**
+ * GridManager simple et réactif pour l'éditeur
+ */
 Item {
     id: gridManager
     
     // Propriétés configurables
     property int mmSize: 20
+    onMmSizeChanged: {
+        console.log("mmSize changed:", mmSize)
+        gridSize = Screen.pixelDensity * mmSize
+    }
+    
+    function updateSize(mm) {
+        mmSize = mm
+    }
+
     property int gridSize: Screen.pixelDensity * mmSize
+    onGridSizeChanged: {
+        console.log("gridSize changed:", gridSize)
+        gridCanvas.requestPaint()
+    }
+
+    property int boardSize:  Screen.pixelDensity * 700
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5
     property bool showGrid: true
@@ -21,6 +39,9 @@ Item {
     
     // Signal émis quand les paramètres changent
     signal gridSettingsChanged()
+
+    width: boardSize
+    height: boardSize
     
     // Fonction pour snapper une coordonnée à la grille
     function snapToGridCoord(value) {
@@ -51,6 +72,18 @@ Item {
             snappedCenterY - elementHeight / 2
         )
     }
+    // Fonction alternative qui snap directement un élément (plus pratique)
+    function snapElement2(element) {
+        if (!snapToGrid) return
+        var posGridX = element.gridRelativePositionX * gridSize
+        var posGridY = element.gridRelativePositionY * gridSize
+        var elementWidth = element.unitSizeWidth * gridSize 
+        var elementHeight = element.unitSizeHeight * gridSize
+        //var snappedPoint = snapPointCentered(posGridX, posGridY, elementWidth, elementHeight)
+        element.x = posGridX
+        element.y =posGridY
+    }
+
     
     // Fonction alternative qui snap directement un élément (plus pratique)
     function snapElement(element) {
@@ -78,13 +111,15 @@ Item {
         resizeMode = false
     }
     
+
+    
     // Canvas pour dessiner la grille
     Canvas {
         id: gridCanvas
         anchors.fill: parent
         visible: showGrid
         opacity: resizeMode ? Math.min(1.0, gridOpacity + 0.3) : gridOpacity
-        
+        renderStrategy: Canvas.Threaded
         onPaint: {
             if (!showGrid) return
             
@@ -118,86 +153,16 @@ Item {
         
         Connections {
             target: gridManager
-            function onGridSizeChanged() { gridCanvas.requestPaint() }
             function onGridColorChanged() { gridCanvas.requestPaint() }
             function onShowGridChanged() { gridCanvas.requestPaint() }
             function onLineWidthChanged() { gridCanvas.requestPaint() }
             function onResizeModeChanged() { gridCanvas.requestPaint() }
         }
     }
-    
-    // Panneau de contrôle de la grille (optionnel, peut être masqué)
-    Rectangle {
-        id: gridControlPanel
-        width: 200
-        height: 150
-        color: "#f0f0f0"
-        border.color: "#cccccc"
-        border.width: 1
-        radius: 5
-        visible: false
-        
-        anchors {
-            top: parent.top
-            right: parent.right
-            margins: 10
-        }
-        
-        Column {
-            anchors.fill: parent
-            anchors.margins: 10
-            spacing: 10
-            
-            Text {
-                text: "Paramètres de grille"
-                font.bold: true
-            }
-            
-            Row {
-                spacing: 10
-                Text { text: "Taille:" }
-                SpinBox {
-                    from: 5
-                    to: 200
-                    stepSize: 5
-                    value: gridManager.mmSize
-                    onValueChanged: mmSize = value
-                }
-            }
-            
-            Row {
-                spacing: 10
-                Text { text: "Afficher grille:" }
-                CheckBox {
-                    checked: gridManager.showGrid
-                    onCheckedChanged: showGrid = checked
-                }
-            }
-            
-            Row {
-                spacing: 10
-                Text { text: "Snap à la grille:" }
-                CheckBox {
-                    checked: gridManager.snapToGrid
-                    onCheckedChanged: snapToGrid = checked
-                }
-            }
-            
-            Row {
-                spacing: 10
-                Text { text: "Opacité:" }
-                Slider {
-                    from: 0.1
-                    to: 1.0
-                    value: gridManager.gridOpacity
-                    onValueChanged: gridOpacity = value
-                }
-            }
-        }
+    MouseArea{
+        anchors.fill: parent
+        drag.target: gridManager
+
     }
-    
-    // Fonction pour afficher/masquer le panneau de contrôle
-    function toggleControlPanel() {
-        gridControlPanel.visible = !gridControlPanel.visible
-    }
+
 } 

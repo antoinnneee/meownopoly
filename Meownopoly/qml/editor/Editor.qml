@@ -5,6 +5,14 @@ import QtQuick.Window
 import Game
 import Case
 import CaseRestArea
+import CaseKibbleDispenser
+import CaseCatNip
+import CaseCardBoardBox
+import CaseJail
+import CaseToJail
+import CaseCatDoor
+import CaseFreeNap
+import CaseCatDevice
 import "tools"
 
 Rectangle {
@@ -14,54 +22,108 @@ Rectangle {
     anchors.fill: parent
     border.width: 0
     
+    // Liste pour stocker tous les SnapableCaseTile créés
+    property list<SnapableElement> snapableTilesList
+
+
+    property int nextTileId: 0
+    property var currentSelectedElement: null
+    
     // Grille de l'éditeur
     GridManager {
         id: editorGrid
-        anchors.fill: parent
+
         mmSize: 20
         gridColor: "#80000000"
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
+        
+        // Test de l'animation au démarrage
+        Component.onCompleted: {
+        }
+    }
+
+    WheelHandler {
+        onWheel: (wheel)=> {
+            if (wheel.modifiers & Qt.ControlModifier) {
+                //console.log(wheel.angleDelta)
+                if (wheel.angleDelta.y > 0)
+                    editorGrid.updateSize(editorGrid.mmSize + 1)
+                else if (editorGrid.mmSize > 1)
+                    editorGrid.updateSize(editorGrid.mmSize - 1)
+                 for (var i = 0; i < snapableTilesList.length; i++) {
+                     if (snapableTilesList[i]) {
+                         snapableTilesList[i].isSelected = false
+                         snapableTilesList[i].snapToGridFromGrid()
+                     }
+                 }
+            }
+        }
     }
     
     // Zone de travail de l'éditeur (par-dessus la grille)
     Item {
         id: workArea
-        anchors.fill: parent
+        anchors.fill: editorGrid
 
-        SnapableCaseTile{
-            id: caseTile1
-            x: 400
-            y: 400
-
-            unitSizeHeight: 4
-            unitSizeWidth: 4
-            
-            // Configuration explicite du gridManager
-            gridManager: editorGrid
-
-            
-            caseData: CaseRestArea{
-                type: Case.CS_RestArea
-                name: "Le coin du lit"
-                position: 1
-                family: CaseRestArea.FT_ORANGE
+        // Composant dynamique pour créer des SnapableCaseTile
+        Component {
+            id: snapableCaseTileComponent
+            SnapableCaseTile {
+                gridManager: editorGrid
+                
+                // Gestion de la sélection
+                onElementClicked: function(element) {
+                    // Désélectionner tous les autres éléments
+                    deselectAllTiles()
+                    // Sélectionner l'élément cliqué
+                    element.isSelected = true
+                    currentSelectedElement = element
+                }
             }
-
         }
-
     }
     
-    // Panneau d'information sur l'élément sélectionné
-    Rectangle {
+    // Fonction pour désélectionner tous les tiles
+    function deselectAllTiles() {
+        // Désélectionner tous les tiles dans la liste
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            if (snapableTilesList[i]) {
+                snapableTilesList[i].isSelected = false
+            }
+        }
+        currentSelectedElement = null
+    }
+    
+    // Fonction pour créer un nouveau SnapableCaseTile
+    function createNewTile(caseType) {
+        var newTile = snapableCaseTileComponent.createObject(workArea, {
+            "gridRelativePositionX": 5 + (nextTileId % 32) * 4,
+            "gridRelativePositionY": 5 + Math.floor(nextTileId / 32) * 4,
+            "unitSizeWidth": 3,
+            "unitSizeHeight": 3,
+            "caseData": Game.getNewCaseType(caseType)
+        })
+        
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            nextTileId++
+            console.log("Nouveau tile créé:", newTile.caseData.name, "Type:", caseType)
+            
+            // Désélectionner tout et sélectionner le nouveau tile
+            deselectAllTiles()
+            newTile.isSelected = true
+            currentSelectedElement = newTile
+            
+            // Déclencher l'animation de feedback sur le panneau de création
+            creationPanel.triggerCreateFeedback()
+        }
+    }
+    
+    // Panneau d'information sur l'élément sélectionné (nouveau composant)
+    InfoPanel {
         id: infoPanel
-        width: 320
-        height: 240
-        color: "#f0f0f0"
-        border.color: "#cccccc"
-        border.width: 1
-        radius: 5
         
         anchors {
             top: parent.top
@@ -69,124 +131,37 @@ Rectangle {
             margins: 10
         }
         
-        Column {
-            anchors.fill: parent
-            anchors.margins: 10
-            spacing: 5
-            
-            Text {
-                text: "Éditeur de Cases - Redimensionnable"
-                font.bold: true
-                font.pixelSize: 14
-            }
-            
-            Text {
-                text: "Instructions:"
-                font.bold: true
-                font.pixelSize: 12
-            }
-            
-            Text {
-                text: "• Cliquez pour sélectionner une case"
-                font.pixelSize: 10
-                wrapMode: Text.WordWrap
-                width: parent.width
-            }
-            
-            Text {
-                text: "• Glissez les poignées bleues pour redimensionner"
-                font.pixelSize: 10
-                wrapMode: Text.WordWrap
-                width: parent.width
-            }
-            
-            Text {
-                text: "• Le redimensionnement s'aligne sur la grille (" + editorGrid.gridSize + "px)"
-                font.pixelSize: 10
-                wrapMode: Text.WordWrap
-                width: parent.width
-            }
-            
-            Text {
-                text: "• Glissez la case pour la déplacer"
-                font.pixelSize: 10
-                wrapMode: Text.WordWrap
-                width: parent.width
-            }
-            
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: "#cccccc"
-            }
-            
-            Text {
-                text: "État de l'élément sélectionné:"
-                font.bold: true
-                font.pixelSize: 11
-                color: "#666666"
-            }
-            
-            Text {
-                text: "Case 1 - Sélectionnée: " + (caseTile1.isSelected ? "OUI" : "NON")
-                font.pixelSize: 9
-                color: caseTile1.isSelected ? "#2196F3" : "#666666"
-            }
-            
-            Text {
-                text: "Dimensions: " + Math.round(caseTile1.width) + "×" + Math.round(caseTile1.height) + "px"
-                font.pixelSize: 9
-                color: caseTile1.isSelected ? "#2196F3" : "#666666"
-                visible: caseTile1.isSelected
-            }
-            
-            Text {  
-                text: "Position: (" + Math.round(caseTile1.x) + ", " + Math.round(caseTile1.y) + ")"
-                font.pixelSize: 9
-                color: caseTile1.isSelected ? "#2196F3" : "#666666"
-                visible: caseTile1.isSelected
-            }
-            
-            Text {
-                text: "Grille: " + Math.round(caseTile1.width / editorGrid.gridSize) + "×" + Math.round(caseTile1.height / editorGrid.gridSize) + " cellules"
-                font.pixelSize: 9
-                color: caseTile1.isSelected ? "#2196F3" : "#666666"
-                visible: caseTile1.isSelected
-            }
-            
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: "#cccccc"
-            }
-            
-            Text {
-                text: "Paramètres de grille:"
-                font.bold: true
-                font.pixelSize: 11
-                color: "#666666"
-            }
-            
-            Text {
-                text: "Taille: " + editorGrid.gridSize + "px | Snap: " + (editorGrid.snapToGrid ? "ACTIVÉ" : "DÉSACTIVÉ")
-                font.pixelSize: 9
-                color: "#666666"
-            }
-            
-            Text {
-                text: "Mode redimensionnement: " + (editorGrid.resizeMode ? "ACTIF" : "INACTIF")
-                font.pixelSize: 9
-                color: editorGrid.resizeMode ? "#FF6B35" : "#666666"
-            }
+        selectedElement: currentSelectedElement
+        gridManager: editorGrid
+        totalTilesCount: snapableTilesList.length
+    }
+    
+    // Panneau de création de nouveaux tiles (nouveau composant)
+    CreationPanel {
+        id: creationPanel
+        
+        anchors {
+            top: parent.top
+            right: parent.right
+            margins: 10
+        }
+        
+        snapableTilesList: root.snapableTilesList
+        
+        onCreateTileRequested: function(caseType) {
+            createNewTile(caseType)
+
         }
     }
     
     // Panneau de contrôle de la grille (composant séparé)
+
     GridControlPanel {
         id: gridControls
         anchors.fill: parent
         gridManager: editorGrid
-        showControlPanel: true
+        showControlPanel: false
         showInfoPanel: true
     }
+
 }

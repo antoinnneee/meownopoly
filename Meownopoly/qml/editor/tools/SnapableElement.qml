@@ -16,6 +16,7 @@ Rectangle {
     property real elementOpacity: 1.0
     property int minWidth: 40
     property int minHeight: 40
+
     
     // NOUVEAUTÉ: Propriétés pour l'optimisation anti-scintillement
     property bool smoothResize: true
@@ -38,9 +39,21 @@ Rectangle {
     }
 
     property int unitSizeHeight: 3
+
+
+    property int gridRelativePositionX: 3
+    property int gridRelativePositionY: 3
+    
+    // Positions calculées à partir des coordonnées relatives
+    x: gridRelativePositionX * gridManager.gridSize
+    y: gridRelativePositionY * gridManager.gridSize
+
     width:  gridManager.gridSize * unitSizeWidth
     height:  gridManager.gridSize * unitSizeHeight
     
+    // Mettre à jour les positions relatives quand les positions absolues changent (drag)
+    property bool updatingFromRelative: false
+
     // Signaux
     signal elementClicked(var element)
     signal elementPressed(var element)
@@ -67,7 +80,7 @@ Rectangle {
         NumberAnimation { duration: smoothResize ? 80 : 0 }
     }
 
-
+Component.onCompleted: snapToGrid()
     
     // Zone de drag & drop
     MouseArea {
@@ -81,7 +94,6 @@ Rectangle {
         z: 50  // Au-dessus du contenu mais sous les poignées
         
         onPressed: {
-            console.log("is pressed")
 
             isDragging = true
             isSelected = true
@@ -89,8 +101,10 @@ Rectangle {
         }
         
         onReleased: {
-            console.log("is release")
             isDragging = false
+            
+            // Mettre à jour les positions relatives après le drag
+            updateRelativePosition()
             
             // Auto-snap si activé et gridManager disponible
             if (autoSnap && gridManager && gridManager.snapToGrid) {
@@ -102,7 +116,6 @@ Rectangle {
         }
         
         onClicked: {
-            console.log("is clicked")
             isSelected = true
             elementClicked(snapableElement)
         }
@@ -208,11 +221,44 @@ Rectangle {
     }
     
     // Fonctions utilitaires améliorées
+    function updateRelativePosition() {
+        if (!gridManager || gridManager.gridSize === 0) return
+        
+        updatingFromRelative = true
+        
+        // Calculer les nouvelles positions relatives basées sur les positions absolues
+        gridRelativePositionX = Math.round(x / gridManager.gridSize)
+        gridRelativePositionY = Math.round(y / gridManager.gridSize)
+
+        
+        updatingFromRelative = false
+    }
+
     function snapToGrid() {
-        if (gridManager && gridManager.snapToGrid) {
-            gridManager.snapElement(snapableElement)
-            snapCompleted(snapableElement)
-        }
+        if (!gridManager || !gridManager.snapToGrid) return
+
+        updatingFromRelative = true
+
+        // Calculer les positions snappées en unités de grille
+        var snappedGridX = Math.round(x / gridManager.gridSize)
+        var snappedGridY = Math.round(y / gridManager.gridSize)
+
+        // Mettre à jour les positions relatives (qui vont automatiquement mettre à jour x et y)
+        gridRelativePositionX = snappedGridX
+        gridRelativePositionY = snappedGridY
+
+
+        updatingFromRelative = false
+        gridManager.snapElement2(snapableElement)
+        snapCompleted(snapableElement)
+    }
+
+    function snapToGridFromGrid() {
+        if (!gridManager || !gridManager.snapToGrid) return
+
+        updatingFromRelative = false
+        gridManager.snapElement2(snapableElement)
+        snapCompleted(snapableElement)
     }
 
     function select() {
@@ -295,11 +341,13 @@ Rectangle {
             onReleased: {
                 targetElement.isResizing = false
                 
+                // Mettre à jour les positions relatives après redimensionnement
+                targetElement.updateRelativePosition()
+                
                 // Désactiver le mode visual de la grille
                 if (gridManager && gridManager.exitResizeMode) {
                     gridManager.exitResizeMode()
                 }
-
             }
             
             onPositionChanged: {
@@ -315,7 +363,6 @@ Rectangle {
                     var deltaUnitsX = Math.round(globalDeltaX / snapableElement.gridManager.gridSize)
                     var deltaUnitsY = Math.round(globalDeltaY / snapableElement.gridManager.gridSize)
                     
-                    console.log("globalDeltaX: " + globalDeltaX + " deltaUnitsX: " + deltaUnitsX)
                     switch (direction) {
                         case "e":
                         {
@@ -344,7 +391,6 @@ Rectangle {
                             // 2. Calculer la nouvelle largeur basée sur le déplacement depuis le début
                             var newUnitWidth = startUnitWidth - deltaUnitsX
                             
-                            console.log("w resize - startUnitWidth:", startUnitWidth, "deltaUnitsX:", deltaUnitsX, "newUnitWidth:", newUnitWidth)
                             
                             // S'assurer qu'on a au minimum 1 unité de largeur
                             if (newUnitWidth >= 1) {
@@ -371,7 +417,6 @@ Rectangle {
                             var newUnitWidth = startUnitWidth - deltaUnitsX
                             var newUnitHeight = startUnitHeight - deltaUnitsY
                             
-                            console.log("nw resize - deltaUnitsX:", deltaUnitsX, "deltaUnitsY:", deltaUnitsY)
                             
                             if (newUnitWidth >= 1 && newUnitHeight >= 1) {
                                 // Déplacer en x et y, changer largeur et hauteur
