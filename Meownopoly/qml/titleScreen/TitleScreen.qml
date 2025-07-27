@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Game
-import "../style"
 
 Rectangle {
     id: root

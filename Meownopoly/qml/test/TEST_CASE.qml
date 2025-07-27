@@ -8,8 +8,8 @@ import Case
 import "../case"
 import Player
 
-Dialog {
-    title: "Test Case"
+Rectangle {
+//    title: "Test Case"
     width: 600
     height: 400
 

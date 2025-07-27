@@ -4,14 +4,13 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtQuick.Window
 import Game
-import "../style"
 
-Window {
+Rectangle {
     id: caseCreatorWindow
-    title: "Créateur de Cases - Meownopoly"
+//    title: "Créateur de Cases - Meownopoly"
     width: 1200
     height: 800
-    modality: Qt.ApplicationModal
+//    modality: Qt.ApplicationModal
     color: "#f0f0f0"  // Fond gris clair fixe pour assurer la visibilité
 
     property var caseTypes: [

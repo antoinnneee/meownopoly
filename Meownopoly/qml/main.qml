@@ -46,34 +46,25 @@ ApplicationWindow {
     Component {
         id: editor
         Editor{
-        width:parent.width
-        height:parent.height
+        width:root.width
+        height:root.height
         visible: false
         }
     }
     Component{
         id: test_view
         TEST_CASE{
+            width:root.width
+            height:root.height
+            visible: false
+        }
+    }
+    Component {
+        id: caseCreator
+        TEST_JSON{
             width:parent.width
             height:parent.height
             visible: false
         }
     }
-    }
-/*
-    PlayerSetup {
-        id: playerSetup
-        anchors.centerIn: parent
-        width: Math.max(parent.width * 0.4, Screen.pixelDensity * 150)
-        onAccepted: {
-            stackView.push(gameBoard)
-        }
-    }
-*/
-    // // Connect to Game signals
-    // Connections {
-    //     target: Game
-    //     function onGameStarted() {
-    //         stackView.push(gameBoard)
-    //     }
-    // }
+}

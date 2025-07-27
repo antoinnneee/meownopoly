@@ -1,41 +1,8 @@
 <RCC>
     <qresource prefix="/">
-        <file>qml/style/AppBusyIndicator.qml</file>
-        <file>qml/style/AppButton.qml</file>
-        <file>qml/style/AppCancelButton.qml</file>
-        <file>qml/style/AppCheckBox.qml</file>
-        <file>qml/style/AppCircleProgressBar.qml</file>
-        <file>qml/style/AppColorPicker.qml</file>
-        <file>qml/style/AppComboBox.qml</file>
-        <file>qml/style/AppLabel.qml</file>
-        <file>qml/style/AppPopupDialog.qml</file>
-        <file>qml/style/AppProgressBar.qml</file>
-        <file>qml/style/AppRectangle.qml</file>
-        <file>qml/style/AppSlider.qml</file>
-        <file>qml/style/AppStyle.qml</file>
-        <file>qml/style/AppSwitch.qml</file>
-        <file>qml/style/AppTabBarre.qml</file>
-        <file>qml/style/AppTextField.qml</file>
-        <file>qml/style/AppToolButton.qml</file>
-        <file>qml/style/AppToolSeparator.qml</file>
-        <file>qml/style/AppValidButton.qml</file>
-        <file>qml/style/CustomStyle.qrc</file>
-        <file>qml/style/HueSlider.qml</file>
-        <file>qml/style/SBPicker.qml</file>
-        <file>qml/style/qmldir</file>
         <file>qml/textTools.js</file>
         <file>qml/main.qml</file>
         <file>qml/titleScreen/TitleScreen.qml</file>
-        <file>qml/boardTile/BoardTile.qml</file>
-        <file>qml/boardTile/TileContent.qml</file>
-        <file>qml/boardTile/StarRating.qml</file>
-        <file>qml/boardTile/TileDetailsPopup.qml</file>
-        <file>qml/boardTile/details/RestAreaDetails.qml</file>
-        <file>qml/boardTile/details/KibbleDispenserDetails.qml</file>
-        <file>qml/boardTile/details/JailDetails.qml</file>
-        <file>qml/boardTile/PlayerToken.qml</file>
-        <file>qml/boardTile/PlayerTokenContainer.qml</file>
-        <file>qml/boardTile/AnimatedPlayerToken.qml</file>
         <file>qml/test/TEST_VIEW_0.qml</file>
         <file>qml/test/TEST_VIEW_1.qml</file>
         <file>qml/test/TEST_VIEW_2.qml</file>
@@ -65,26 +32,6 @@
         <file>qml/case/details/FreeNapDetails.qml</file>
         <file>qml/case/details/CatDeviceDetails.qml</file>
         <file>qml/case/OwnershipIndicator.qml</file>
-        <file>qml/boardTile/Player_Test.qml</file>
-        <file>qml/old/AnimationManager.qml</file>
-        <file>qml/old/BoardGrid.qml</file>
-        <file>qml/old/BoardTile.qml</file>
-        <file>qml/old/CompactDiceControl.qml</file>
-        <file>qml/old/ControlPanel.qml</file>
-        <file>qml/old/DiceBase.qml</file>
-        <file>qml/old/DicePanel.qml</file>
-        <file>qml/old/DiceRollTimer.qml</file>
-        <file>qml/old/EndTurnTimer.qml</file>
-        <file>qml/old/GameActionButton.qml</file>
-        <file>qml/old/GameActionDialog.qml</file>
-        <file>qml/old/GameBoard.qml</file>
-        <file>qml/old/PlayerPanel.qml</file>
-        <file>qml/old/PlayerSetup.qml</file>
-        <file>qml/old/PlayerTurnPanel.qml</file>
-        <file>qml/old/PropertyController.qml</file>
-        <file>qml/old/PropertyPurchasePanel.qml</file>
-        <file>qml/old/ResetDiceStateTimer.qml</file>
-        <file>qml/old/TurnManager.qml</file>
         <file>qml/editor/Editor.qml</file>
         <file>qml/editor/tools/GridManager.qml</file>
         <file>qml/editor/tools/GridControlPanel.qml</file>
