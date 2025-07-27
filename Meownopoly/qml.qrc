@@ -92,5 +92,8 @@
         <file>qml/editor/tools/MapTileElement.qml</file>
         <file>qml/test/TEST_JSON.qml</file>
         <file>qml/editor/tools/SnapableCaseTile.qml</file>
+        <file>qml/editor/CreationPanel.qml</file>
+        <file>qml/editor/InfoPanel.qml</file>
+        <file>qml/editor/tools/MyGridControlPanel.qml</file>
     </qresource>
 </RCC>

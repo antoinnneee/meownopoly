@@ -27,7 +27,7 @@ ApplicationWindow {
         id: titleScreen
         TitleScreen {
             onEditorRequested:{
-                stackView.pop()
+                //stackView.pop()
                 stackView.push(editor)
             }
 
@@ -46,35 +46,21 @@ ApplicationWindow {
     Component {
         id: editor
         Editor{
-            anchors.centerIn: parent
+        width:parent.width
+        height:parent.height
+        visible: false
+        }
+    }
+    Component{
+        id: test_view
+        TEST_CASE{
             width:parent.width
             height:parent.height
             visible: false
         }
     }
-        // TEST_BOARD{
-        //     id: test_view
-        //     anchors.centerIn: parent
-        //     width:parent.width
-        //     height:parent.height
-        // }
-
-        Component{
-            id: caseCreator
-            TEST_JSON {
-            }
-        }
-
-        Component{
-            id: test_view
-            TEST_CASE{
-                anchors.centerIn: parent
-                width:parent.width
-                height:parent.height
-                enabled: false
-            }
-        }
-        /*
+    }
+/*
     PlayerSetup {
         id: playerSetup
         anchors.centerIn: parent
@@ -84,12 +70,10 @@ ApplicationWindow {
         }
     }
 */
-        // // Connect to Game signals
-        // Connections {
-        //     target: Game
-        //     function onGameStarted() {
-        //         stackView.push(gameBoard)
-        //     }
-        // }
-    }
-}
+    // // Connect to Game signals
+    // Connections {
+    //     target: Game
+    //     function onGameStarted() {
+    //         stackView.push(gameBoard)
+    //     }
+    // }
