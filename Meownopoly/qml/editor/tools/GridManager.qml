@@ -40,6 +40,7 @@ Item {
     // Signal émis quand les paramètres changent
     signal gridSettingsChanged()
     signal gridPressed(var position)
+    signal gridClicked(var position)
 
     width: boardSize
     height: boardSize
@@ -55,24 +56,6 @@ Item {
         return Qt.point(snapToGridCoord(x), snapToGridCoord(y))
     }
     
-    // Fonction pour snapper un point en centrant l'élément sur la grille
-    function snapPointCentered(x, y, elementWidth, elementHeight) {
-        if (!snapToGrid) return Qt.point(x, y)
-        
-        // Calculer la position du centre de l'élément
-        var centerX = x + elementWidth / 2
-        var centerY = y + elementHeight / 2
-        
-        // Snapper le centre à la grille
-        var snappedCenterX = snapToGridCoord(centerX)
-        var snappedCenterY = snapToGridCoord(centerY)
-        
-        // Retourner la position de l'élément pour que son centre soit sur la grille
-        return Qt.point(
-            snappedCenterX - elementWidth / 2,
-            snappedCenterY - elementHeight / 2
-        )
-    }
     // Fonction alternative qui snap directement un élément (plus pratique)
     function snapElement2(element) {
         if (!snapToGrid) return
@@ -80,7 +63,6 @@ Item {
         var posGridY = element.gridRelativePositionY * gridSize
         var elementWidth = element.unitSizeWidth * gridSize 
         var elementHeight = element.unitSizeHeight * gridSize
-        //var snappedPoint = snapPointCentered(posGridX, posGridY, elementWidth, elementHeight)
         element.x = posGridX
         element.y =posGridY
     }
@@ -100,6 +82,56 @@ Item {
     
     function exitResizeMode() {
         resizeMode = false
+    }
+
+    // Fonction pour centrer la vue sur un élément donné
+    function centeredOnElement(element) {
+        if (!element) return
+
+        // Calculer la position centrale de l'élément
+        var elementCenterX = element.x + element.width / 2
+        var elementCenterY = element.y + element.height / 2
+
+        // Calculer la position du GridManager pour centrer l'élément dans la vue
+        // Supposer que la vue parent a une taille connue (peut être ajustée selon le contexte)
+        var parentCenterX = parent ? parent.width / 2 : width / 2
+        var parentCenterY = parent ? parent.height / 2 : height / 2
+
+        // Calculer le décalage nécessaire pour centrer l'élément
+        var offsetX = parentCenterX - elementCenterX
+        var offsetY = parentCenterY - elementCenterY
+
+        // Appliquer le décalage au GridManager
+        gridManager.x = offsetX
+        gridManager.y = offsetY
+
+        console.log("Centered on element at:", elementCenterX, elementCenterY)
+        console.log("GridManager moved to:", gridManager.x, gridManager.y)
+    }
+
+    // Fonction pour centrer la vue sur un élément donné
+    function moveToConfigElement(element) {
+        if (!element) return
+
+        // Calculer la position centrale de l'élément
+        var elementCenterX = element.x + element.width / 2
+        var elementCenterY = element.y + element.height / 2
+
+        // Calculer la position du GridManager pour centrer l'élément dans la vue
+        // Supposer que la vue parent a une taille connue (peut être ajustée selon le contexte)
+        var parentCenterX = parent ? parent.width * 0.75 : width / 2
+        var parentCenterY = parent ? parent.height / 2 : height / 2
+
+        // Calculer le décalage nécessaire pour centrer l'élément
+        var offsetX = parentCenterX - elementCenterX
+        var offsetY = parentCenterY - elementCenterY
+
+        // Appliquer le décalage au GridManager
+        gridManager.x = offsetX
+        gridManager.y = offsetY
+
+        console.log("Centered on element at:", elementCenterX, elementCenterY)
+        console.log("GridManager moved to:", gridManager.x, gridManager.y)
     }
     
 
@@ -153,9 +185,11 @@ Item {
     MouseArea{
         anchors.fill: parent
         drag.target: gridManager
+        pressAndHoldInterval: 250
         onClicked: {
             console.log("click location : ", mouseX, mouseY)
             console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
+            gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
         }
 
         onPressAndHold: {

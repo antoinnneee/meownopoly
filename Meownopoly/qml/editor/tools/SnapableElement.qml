@@ -68,6 +68,8 @@ Rectangle {
     signal elementMoved(var element, real newX, real newY)
     signal elementResized(var element, real newWidth, real newHeight)
     signal snapCompleted(var element)
+    signal elementDeleted(var element)
+    signal elementConfigurationRequested(var element)
     
     // Apparence par défaut avec optimisation anti-scintillement
     color: elementColor
@@ -136,88 +138,22 @@ Component.onCompleted: snapToGrid()
         }
     }
     
-    // Indicateur de plan et bouton de contrôle
-    Item {
-        id: layerControls
-        visible: isSelected
-        z: 200  // Au-dessus de tout
+    // Contrôles de l'élément (boutons de plan et suppression)
+    SnapableElementControl {
+        id: elementControls
+        targetElement: snapableElement
+        isVisible: isSelected
         
-        // Positionner en haut à droite de l'élément
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.topMargin: -30
-        anchors.rightMargin: -5
-        
-        // Indicateur visuel du plan actuel
-        Rectangle {
-            id: layerIndicator
-            width: 80
-            height: 25
-            color: zLayers.colors[zLayer]
-            border.color: "white"
-            border.width: 2
-            radius: 4
-            
-            Text {
-                anchors.centerIn: parent
-                text: zLayers.names[zLayer] + "\nZ:" + zLayerBase
-                color: "white"
-                font.bold: true
-                font.pixelSize: 8
-                horizontalAlignment: Text.AlignHCenter
-            }
+        onLayerChanged: function(newLayer) {
+            zLayer = newLayer
         }
         
-        // Bouton pour changer de plan
-        Rectangle {
-            id: layerButton
-            width: 20
-            height: 20
-            color: "#4CAF50"
-            border.color: "white"
-            border.width: 1
-            radius: 10
-            
-            anchors.left: layerIndicator.right
-            anchors.leftMargin: 5
-            anchors.verticalCenter: layerIndicator.verticalCenter
-            
-            Text {
-                anchors.centerIn: parent
-                text: "↕"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 12
-            }
-            
-            MouseArea {
-                id: buttonMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    // Changer au plan suivant (cycle entre 0, 1, 2)
-                    zLayer = (zLayer + 1) % 3
-                    console.log("Plan changé vers:", zLayers.names[zLayer], "Z:", zLayerBase)
-                }
-            }
-            
-            // Effet de survol
-            states: State {
-                name: "hovered"
-                when: buttonMouseArea.containsMouse
-                PropertyChanges { 
-                    target: layerButton
-                    scale: 1.1
-                    color: "#66BB6A"
-                }
-            }
-            
-            transitions: Transition {
-                NumberAnimation { 
-                    properties: "scale,color"
-                    duration: 100
-                }
-            }
+        onDeleteRequested: {
+            elementDeleted(snapableElement)
+        }
+        
+        onConfigurationRequested: {
+            elementConfigurationRequested(snapableElement)
         }
     }
 

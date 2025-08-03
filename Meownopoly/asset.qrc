@@ -24,5 +24,7 @@
         <file>asset/element/tree_lowpoly_0.png</file>
         <file>asset/element/tree_lowpoly_1.png</file>
         <file>asset/element/tree_lowpoly_2.png</file>
+        <file>asset/element/tree_lowpoly_3.png</file>
+        <file>asset/element/lake_0.png</file>
     </qresource>
 </RCC>

@@ -47,6 +47,14 @@ Rectangle {
             contextMenu.clickGridCoord = position
             contextMenu.popup()
         }
+        onGridClicked:  function(position) {
+            // print redRect location in grid coord
+            var redRectLocation = editorGrid.mapFromGlobal(redRect.x, redRect.y)
+            console.log("redRect location in grid coord: " , redRectLocation, editorGrid.getGridPosition(redRectLocation.x, redRectLocation.y))
+            // print redRect location in global coord
+            var redRectLocationGlobal = redRect.mapToItem(editorGrid, 0,0)
+            console.log("redRect.mapToItem(editorGrid, 0,0) :  " , redRectLocationGlobal, editorGrid.getGridPosition(redRectLocationGlobal.x, redRectLocationGlobal.y))
+        }
     }
 
     WheelHandler {
@@ -123,9 +131,24 @@ Rectangle {
                     element.isSelected = true
                     currentSelectedElement = element
                 }
+                
+                // Gestion de la suppression
+                onElementDeleted: function(element) {
+                    deleteElement(element)
+                }
+                
+                // Gestion de la configuration
+                onElementConfigurationRequested: function(element) {
+                    console.log("Configuration demandée pour:", element)
+                    if (element.caseData) {
+                        caseConfigPanel.openConfiguration(element.caseData)
+                        editorGrid.moveToConfigElement(element)
+
+                    }
+                }
             }
         }
-        // Composant dynamique pour créer des SnapableCaseTile
+        // Composant dynamique pour créer des SnapableDecoration
         Component {
             id: snapableDecoration
             SnapableDecoration {
@@ -138,6 +161,19 @@ Rectangle {
                     // Sélectionner l'élément cliqué
                     element.isSelected = true
                     currentSelectedElement = element
+                }
+                
+                // Gestion de la suppression
+                onElementDeleted: function(element) {
+                    deleteElement(element)
+                }
+                
+                // Gestion de la configuration
+                onElementConfigurationRequested: function(element) {
+                    console.log("Configuration demandée pour:", element)
+                    if (element.caseData) {
+                        caseConfigPanel.openConfiguration(element.caseData)
+                    }
                 }
             }
         }
@@ -153,14 +189,14 @@ Rectangle {
             text: "Créer une Case"
             onTriggered: {
                 console.log(contextMenu.clickGridCoord)
-                createNewTileAtPosition("RestArea", contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y)
+                createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, 0)
             }
         }
         
         MenuItem {
             text: "Créer un élément"
             onTriggered: {
-                createNewDecorationAtPosition(contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y)
+                createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, 1)
             }
         }
     }
@@ -176,67 +212,60 @@ Rectangle {
         currentSelectedElement = null
     }
     
-    // Fonction pour créer un nouveau SnapableCaseTile
-    function createNewTile(caseType) {
-        var newTile = snapableCaseTileComponent.createObject(workArea, {
-            "gridRelativePositionX": 5 + (nextTileId % 32) * 4,
-            "gridRelativePositionY": 5 + Math.floor(nextTileId / 32) * 4,
-            "unitSizeWidth": 3,
-            "unitSizeHeight": 3,
-            "caseData": Game.getNewCaseType(caseType)
-        })
+    // Fonction pour supprimer un élément
+    function deleteElement(element) {
+        console.log("Suppression de l'élément:", element)
         
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            nextTileId++
-            console.log("Nouveau tile créé:", newTile.caseData.name, "Type:", caseType)
+        // Trouver l'index de l'élément dans la liste
+        var index = -1
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            if (snapableTilesList[i] === element) {
+                index = i
+                break
+            }
+        }
+        
+        if (index !== -1) {
+            // Supprimer l'élément de la liste
+            snapableTilesList.splice(index, 1)
+            console.log("Élément supprimé de la liste à l'index:", index)
             
-            // Désélectionner tout et sélectionner le nouveau tile
-            deselectAllTiles()
-            newTile.isSelected = true
-            currentSelectedElement = newTile
+            // Si c'était l'élément sélectionné, le désélectionner
+            if (currentSelectedElement === element) {
+                currentSelectedElement = null
+            }
             
-            // Déclencher l'animation de feedback sur le panneau de création
-            creationPanel.triggerCreateFeedback()
+            // Détruire l'objet QML
+            element.destroy()
+            console.log("Objet QML détruit")
+        } else {
+            console.log("Erreur: Élément non trouvé dans la liste")
         }
     }
 
     // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
-    function createNewTileAtPosition(caseType, gridX, gridY) {
+    function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         console.log("create tile at", gridX, gridY )
-        var newTile = snapableCaseTileComponent.createObject(workArea, {
-            "gridRelativePositionX": gridX,
-            "gridRelativePositionY": gridY,
-            "unitSizeWidth": 6,
-            "unitSizeHeight": 6,
-            "caseData": Game.getNewCaseType(caseType)
-        })
-
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            nextTileId++
-            console.log("Nouveau tile créé à la position:", gridX, gridY, "Nom:", newTile.caseData.name, "Type:", caseType)
-
-            // Désélectionner tout et sélectionner le nouveau tile
-            deselectAllTiles()
-            newTile.isSelected = true
-            currentSelectedElement = newTile
-            newTile.snapToGridFromGrid()
+        var newTile
+        if (isDecoration) {
+            newTile = snapableDecoration.createObject(workArea, {
+                "gridRelativePositionX": gridX,
+                "gridRelativePositionY": gridY,
+            })
         }
-    }
-    // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
-    function createNewDecorationAtPosition(gridX, gridY) {
-        console.log("create tile at", gridX, gridY )
-        var newTile = snapableDecoration.createObject(workArea, {
-            "gridRelativePositionX": gridX,
-            "gridRelativePositionY": gridY,
-        })
+        else {
+            newTile = snapableCaseTileComponent.createObject(workArea, {
+                "gridRelativePositionX": gridX,
+                "gridRelativePositionY": gridY,
+                "unitSizeWidth": 6,
+                "unitSizeHeight": 6,
+                "caseData": Game.getNewCaseType(caseType)
+            })
+        }
 
         if (newTile) {
             snapableTilesList.push(newTile)
             nextTileId++
-            console.log("Nouveau tile créé à la position:", gridX, gridY)
-
             // Désélectionner tout et sélectionner le nouveau tile
             deselectAllTiles()
             newTile.isSelected = true
@@ -259,33 +288,50 @@ Rectangle {
         gridManager: editorGrid
         totalTilesCount: snapableTilesList.length
     }
-    
-    // Panneau de création de nouveaux tiles (nouveau composant)
-    CreationPanel {
-        id: creationPanel
-        
-        anchors {
-            top: parent.top
-            right: parent.right
-            margins: 10
-        }
-        
-        snapableTilesList: root.snapableTilesList
-        
-        onCreateTileRequested: function(caseType) {
-            createNewTile(caseType)
 
-        }
-    }
-    
     // Panneau de contrôle de la grille (composant séparé)
-
     GridControlPanel {
         id: gridControls
         anchors.fill: parent
         gridManager: editorGrid
         showControlPanel: false
         showInfoPanel: true
+    }
+    
+    Rectangle{
+        id: redRect
+        color: "red"
+        width: 10
+        height: 10
+        x:960
+        y:360
+    }
+
+    // Panneau de configuration des cases
+    CaseConfigurationPanel {
+        id: caseConfigPanel
+        height: parent.height
+        width: parent.width/2
+
+        onIsVisibleChanged: {
+            console.log("=============")
+            console.log(root.width, root.height)
+            console.log("raw : ", parent.width * 0.75, parent.height/2)
+            console.log("from global : ", editorGrid.mapFromGlobal(parent.width * 0.75, parent.height/2))
+            console.log("to global: ", editorGrid.mapToGlobal(parent.width * 0.75, parent.height/2))
+            console.log("from item workArea : ", editorGrid.mapFromItem(workArea, parent.width * 0.75, parent.height/2))
+            console.log("to item workArea : ", editorGrid.mapToItem(workArea, parent.width * 0.75, parent.height/2))
+            console.log("=============")
+        }
+        
+        onConfigurationClosed: {
+            console.log("Panneau de configuration fermé")
+        }
+        
+        onConfigurationApplied: function(caseData) {
+            console.log("Configuration appliquée pour la case:", caseData.name)
+            // La case est déjà mise à jour via les bindings
+        }
     }
 
 }
