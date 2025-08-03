@@ -66,6 +66,18 @@ Rectangle {
             InstructionText {
                 text: "• Ctrl + molette pour zoomer la grille"
             }
+            
+            InstructionText {
+                text: "• Bouton ↕ pour changer de plan (Background/Middle/Foreground)"
+            }
+            
+            InstructionText {
+                text: "• Touches 1/2/3 : plans Background/Middle/Foreground"
+            }
+            
+            InstructionText {
+                text: "• PageUp/PageDown : monter/descendre d'un plan"
+            }
         }
         
         Rectangle {
@@ -159,6 +171,17 @@ Rectangle {
                       ""
                 font.pixelSize: 9
                 color: "#1abc9c"
+                visible: selectedElement !== null
+            }
+            
+            // Affichage du plan (Z-layer)
+            Text {
+                text: selectedElement && selectedElement.zLayers ? 
+                      ("Plan: " + selectedElement.zLayers.names[selectedElement.zLayer] + " (Z:" + selectedElement.zLayerBase + ")") : 
+                      ""
+                font.pixelSize: 9
+                color: selectedElement && selectedElement.zLayers ? selectedElement.zLayers.colors[selectedElement.zLayer] : "#000000"
+                font.bold: true
                 visible: selectedElement !== null
             }
         }

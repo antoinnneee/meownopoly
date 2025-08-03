@@ -39,6 +39,7 @@ Item {
     
     // Signal émis quand les paramètres changent
     signal gridSettingsChanged()
+    signal gridPressed(var position)
 
     width: boardSize
     height: boardSize
@@ -84,16 +85,6 @@ Item {
         element.y =posGridY
     }
 
-    
-    // Fonction alternative qui snap directement un élément (plus pratique)
-    function snapElement(element) {
-        if (!snapToGrid) return
-        
-        var snappedPoint = snapPointCentered(element.x, element.y, element.width, element.height)
-        element.x = snappedPoint.x
-        element.y = snappedPoint.y
-    }
-    
     // Fonction pour obtenir la position de grille la plus proche
     function getGridPosition(x, y) {
         return Qt.point(
@@ -162,6 +153,16 @@ Item {
     MouseArea{
         anchors.fill: parent
         drag.target: gridManager
+        onClicked: {
+            console.log("click location : ", mouseX, mouseY)
+            console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
+        }
+
+        onPressAndHold: {
+            console.log("click location : ", mouseX, mouseY)
+            console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
+            gridManager.gridPressed(gridManager.getGridPosition(mouseX, mouseY))
+        }
 
     }
 

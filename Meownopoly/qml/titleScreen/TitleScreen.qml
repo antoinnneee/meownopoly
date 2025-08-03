@@ -11,6 +11,7 @@ Rectangle {
     signal testViewRequested()  // Add this signal
     signal editorRequested();
     signal caseCreatorRequested(); // Add signal for case creator
+    signal test3DRequested(); // Add signal for 3D test
 
     // Title text
     Text {
@@ -171,6 +172,32 @@ Rectangle {
             onClicked: {
                 caseCreatorRequested()
                 console.log("Case Creator requested")
+            }
+        }
+
+        // Test 3D Button
+        Button {
+            id: test3DButton
+            text: "🐱 Test 3D"
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 50
+
+            background: Rectangle {
+                color: test3DButton.pressed ? "#d84315" : "#ff5722"
+                radius: 8
+            }
+
+            contentItem: Text {
+                text: test3DButton.text
+                color: "white"
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            onClicked: {
+                test3DRequested()
+                console.log("Test 3D requested")
             }
         }
     }

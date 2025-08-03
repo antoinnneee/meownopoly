@@ -1,4 +1,4 @@
-QT += quick core qml widgets core-private quickcontrols2
+QT += quick core qml widgets core-private quickcontrols2 quick3d
 
 android:{
     QT += core-private

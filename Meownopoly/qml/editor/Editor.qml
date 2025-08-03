@@ -33,7 +33,7 @@ Rectangle {
     GridManager {
         id: editorGrid
 
-        mmSize: 20
+        mmSize: 15
         gridColor: "#80000000"
         gridOpacity: 0.3
         showGrid: true
@@ -41,6 +41,11 @@ Rectangle {
         
         // Test de l'animation au démarrage
         Component.onCompleted: {
+        }
+        onGridPressed : function(position) {
+            // Stocker la position du clic pour créer l'élément au bon endroit
+            contextMenu.clickGridCoord = position
+            contextMenu.popup()
         }
     }
 
@@ -62,6 +67,43 @@ Rectangle {
         }
     }
     
+    // Gestionnaire de raccourcis clavier
+    Keys.onPressed: function(event) {
+        if (currentSelectedElement) {
+            switch(event.key) {
+                case Qt.Key_1:
+                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.background)
+                    event.accepted = true
+                    break
+                case Qt.Key_2:
+                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.middle)
+                    event.accepted = true
+                    break
+                case Qt.Key_3:
+                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.foreground)
+                    event.accepted = true
+                    break
+                case Qt.Key_PageUp:
+                    // Monter d'un plan
+                    if (currentSelectedElement.zLayer < 2) {
+                        currentSelectedElement.changeToLayer(currentSelectedElement.zLayer + 1)
+                    }
+                    event.accepted = true
+                    break
+                case Qt.Key_PageDown:
+                    // Descendre d'un plan
+                    if (currentSelectedElement.zLayer > 0) {
+                        currentSelectedElement.changeToLayer(currentSelectedElement.zLayer - 1)
+                    }
+                    event.accepted = true
+                    break
+            }
+        }
+    }
+    
+    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
+    focus: true
+    
     // Zone de travail de l'éditeur (par-dessus la grille)
     Item {
         id: workArea
@@ -72,7 +114,7 @@ Rectangle {
             id: snapableCaseTileComponent
             SnapableCaseTile {
                 gridManager: editorGrid
-                
+
                 // Gestion de la sélection
                 onElementClicked: function(element) {
                     // Désélectionner tous les autres éléments
@@ -81,6 +123,44 @@ Rectangle {
                     element.isSelected = true
                     currentSelectedElement = element
                 }
+            }
+        }
+        // Composant dynamique pour créer des SnapableCaseTile
+        Component {
+            id: snapableDecoration
+            SnapableDecoration {
+                gridManager: editorGrid
+
+                // Gestion de la sélection
+                onElementClicked: function(element) {
+                    // Désélectionner tous les autres éléments
+                    deselectAllTiles()
+                    // Sélectionner l'élément cliqué
+                    element.isSelected = true
+                    currentSelectedElement = element
+                }
+            }
+        }
+    }
+    
+    // Menu contextuel pour la création d'éléments
+    Menu {
+        id: contextMenu
+
+        property var clickGridCoord: Qt.point(0, 0)
+        
+        MenuItem {
+            text: "Créer une Case"
+            onTriggered: {
+                console.log(contextMenu.clickGridCoord)
+                createNewTileAtPosition("RestArea", contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y)
+            }
+        }
+        
+        MenuItem {
+            text: "Créer un élément"
+            onTriggered: {
+                createNewDecorationAtPosition(contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y)
             }
         }
     }
@@ -118,6 +198,50 @@ Rectangle {
             
             // Déclencher l'animation de feedback sur le panneau de création
             creationPanel.triggerCreateFeedback()
+        }
+    }
+
+    // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
+    function createNewTileAtPosition(caseType, gridX, gridY) {
+        console.log("create tile at", gridX, gridY )
+        var newTile = snapableCaseTileComponent.createObject(workArea, {
+            "gridRelativePositionX": gridX,
+            "gridRelativePositionY": gridY,
+            "unitSizeWidth": 6,
+            "unitSizeHeight": 6,
+            "caseData": Game.getNewCaseType(caseType)
+        })
+
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            nextTileId++
+            console.log("Nouveau tile créé à la position:", gridX, gridY, "Nom:", newTile.caseData.name, "Type:", caseType)
+
+            // Désélectionner tout et sélectionner le nouveau tile
+            deselectAllTiles()
+            newTile.isSelected = true
+            currentSelectedElement = newTile
+            newTile.snapToGridFromGrid()
+        }
+    }
+    // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
+    function createNewDecorationAtPosition(gridX, gridY) {
+        console.log("create tile at", gridX, gridY )
+        var newTile = snapableDecoration.createObject(workArea, {
+            "gridRelativePositionX": gridX,
+            "gridRelativePositionY": gridY,
+        })
+
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            nextTileId++
+            console.log("Nouveau tile créé à la position:", gridX, gridY)
+
+            // Désélectionner tout et sélectionner le nouveau tile
+            deselectAllTiles()
+            newTile.isSelected = true
+            currentSelectedElement = newTile
+            newTile.snapToGridFromGrid()
         }
     }
     

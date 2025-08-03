@@ -40,6 +40,11 @@ ApplicationWindow {
                 stackView.pop()
                 stackView.push(caseCreator)
             }
+
+            onTest3DRequested: {
+                stackView.pop()
+                stackView.push(test3D)
+            }
         }
     }
 
@@ -65,6 +70,21 @@ ApplicationWindow {
             width:parent.width
             height:parent.height
             visible: false
+        }
+    }
+    
+    Component {
+        id: test3D
+        TEST_3D {
+            width: parent.width
+            height: parent.height
+            visible: false
+            
+            // Fonction pour revenir à l'écran titre
+            function goBack() {
+                stackView.pop()
+                stackView.push(titleScreen)
+            }
         }
     }
 }

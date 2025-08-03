@@ -10,28 +10,34 @@ Rectangle {
     property bool isDraggable: true
     property bool isResizable: true
     property bool autoSnap: true
-    property color elementColor: "lightgray"
+    property color elementColor: "transparent"
     property color borderColor: "gray"
     property int borderWidth: 1
     property real elementOpacity: 1.0
     property int minWidth: 40
     property int minHeight: 40
-
     
     // NOUVEAUTÉ: Propriétés pour l'optimisation anti-scintillement
     property bool smoothResize: true
-    property int updateThrottleMs: 16  // ~60fps max pour éviter la surcharge
-    property bool useVisualFeedback: true
-    property int snapTolerance: 3  // pixels de tolérance avant snap
     
     // Propriétés d'état
     property bool isDragging: false
     property bool isResizing: false
     property bool isSelected: false
+
+    // Système de plans (Z-layers)
+    property int zLayer: zLayers.middle
+    property int zLayerBase: zLayer * 1000  // Multiplier par 1000 pour espacer les plans
     
-    // NOUVEAUTÉ: Propriétés pour le feedback visuel pendant redimensionnement
-    property bool showResizePreview: false
-    property rect previewRect: Qt.rect(0, 0, 0, 0)
+    // Constantes pour les plans
+    readonly property QtObject zLayers: QtObject {
+        readonly property int background: 0
+        readonly property int middle: 1
+        readonly property int foreground: 2
+        
+        readonly property var names: ["Background", "Middle", "Foreground"]
+        readonly property var colors: ["#FF6B6B", "#4ECDC4", "#45B7D1"]
+    }
 
     property int unitSizeWidth: 3
     onUnitSizeWidthChanged: {
@@ -43,6 +49,7 @@ Rectangle {
 
     property int gridRelativePositionX: 3
     property int gridRelativePositionY: 3
+
     
     // Positions calculées à partir des coordonnées relatives
     x: gridRelativePositionX * gridManager.gridSize
@@ -67,6 +74,9 @@ Rectangle {
     border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
     border.width: isSelected ? borderWidth + 1 : borderWidth
     opacity: elementOpacity
+    
+    // Z-order basé sur le plan
+    z: zLayerBase + 1
     
     // Effet de survol avec transition optimisée
     scale: isDragging ? 1.05 : 1.0
@@ -126,6 +136,91 @@ Component.onCompleted: snapToGrid()
         }
     }
     
+    // Indicateur de plan et bouton de contrôle
+    Item {
+        id: layerControls
+        visible: isSelected
+        z: 200  // Au-dessus de tout
+        
+        // Positionner en haut à droite de l'élément
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: -30
+        anchors.rightMargin: -5
+        
+        // Indicateur visuel du plan actuel
+        Rectangle {
+            id: layerIndicator
+            width: 80
+            height: 25
+            color: zLayers.colors[zLayer]
+            border.color: "white"
+            border.width: 2
+            radius: 4
+            
+            Text {
+                anchors.centerIn: parent
+                text: zLayers.names[zLayer] + "\nZ:" + zLayerBase
+                color: "white"
+                font.bold: true
+                font.pixelSize: 8
+                horizontalAlignment: Text.AlignHCenter
+            }
+        }
+        
+        // Bouton pour changer de plan
+        Rectangle {
+            id: layerButton
+            width: 20
+            height: 20
+            color: "#4CAF50"
+            border.color: "white"
+            border.width: 1
+            radius: 10
+            
+            anchors.left: layerIndicator.right
+            anchors.leftMargin: 5
+            anchors.verticalCenter: layerIndicator.verticalCenter
+            
+            Text {
+                anchors.centerIn: parent
+                text: "↕"
+                color: "white"
+                font.bold: true
+                font.pixelSize: 12
+            }
+            
+            MouseArea {
+                id: buttonMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: {
+                    // Changer au plan suivant (cycle entre 0, 1, 2)
+                    zLayer = (zLayer + 1) % 3
+                    console.log("Plan changé vers:", zLayers.names[zLayer], "Z:", zLayerBase)
+                }
+            }
+            
+            // Effet de survol
+            states: State {
+                name: "hovered"
+                when: buttonMouseArea.containsMouse
+                PropertyChanges { 
+                    target: layerButton
+                    scale: 1.1
+                    color: "#66BB6A"
+                }
+            }
+            
+            transitions: Transition {
+                NumberAnimation { 
+                    properties: "scale,color"
+                    duration: 100
+                }
+            }
+        }
+    }
+
     // Poignées de redimensionnement
     Item {
         id: resizeHandles
@@ -271,6 +366,26 @@ Component.onCompleted: snapToGrid()
     
     function toggleSelection() {
         isSelected = !isSelected
+    }
+    
+    // Fonctions pour gérer les plans
+    function changeToLayer(layer) {
+        if (layer >= zLayers.BACKGROUND && layer <= zLayers.FOREGROUND) {
+            zLayer = layer
+            console.log("Plan changé vers:", zLayers.names[zLayer], "Z:", zLayerBase)
+        }
+    }
+    
+    function moveToForeground() {
+        changeToLayer(zLayers.FOREGROUND)
+    }
+    
+    function moveToMiddle() {
+        changeToLayer(zLayers.MIDDLE)
+    }
+    
+    function moveToBackground() {
+        changeToLayer(zLayers.BACKGROUND)
     }
 
     
