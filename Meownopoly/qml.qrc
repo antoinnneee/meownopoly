@@ -57,5 +57,7 @@
         <file>qml/editor/panel/CaseRestAreaFamilyConfig.qml</file>
         <file>qml/editor/panel/CaseRestAreaSpecificConfig.qml</file>
         <file>qml/editor/panel/CaseConfigurationHeader.qml</file>
+        <file>qml/editor/panel/CaseKibbleDispenserSpecificConfig.qml</file>
+        <file>qml/editor/panel/CaseTypeSelector.qml</file>
     </qresource>
 </RCC>

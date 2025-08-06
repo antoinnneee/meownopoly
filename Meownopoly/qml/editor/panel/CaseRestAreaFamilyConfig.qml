@@ -23,12 +23,9 @@ ConfigPanelElement {
     // Mise à jour quand targetCase change
     Connections {
         target: targetCase
+        ignoreUnknownSignals: true
         function onFamilyChanged() {
-            if (!updatingValues) {
-                updatingValues = true
-                familyComboBox.currentIndex = findFamilyIndex(targetCase.family)
-                updatingValues = false
-            }
+            updateControls()
         }
     }
     ColumnLayout {

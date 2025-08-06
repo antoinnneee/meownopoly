@@ -28,26 +28,15 @@ ConfigPanelElement {
     // Mise à jour quand targetCase change
     Connections {
         target: targetCase
+        ignoreUnknownSignals: true
         function onPriceChanged() {
-            if (!updatingValues) {
-                updatingValues = true
-                priceSpinBox.value = targetCase.price
-                updatingValues = false
-            }
+            updateControls()
         }
         function onSellPriceChanged() {
-            if (!updatingValues) {
-                updatingValues = true
-                sellPriceSpinBox.value = targetCase.sellPrice
-                updatingValues = false
-            }
+            updateControls()
         }
         function onMorgagePriceChanged() {
-            if (!updatingValues) {
-                updatingValues = true
-                morgagePriceSpinBox.value = targetCase.morgagePrice
-                updatingValues = false
-            }
+            updateControls()
         }
     }
     

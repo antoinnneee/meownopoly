@@ -11,6 +11,7 @@ Rectangle {
     id: root
     
     // Propriétés
+    property var targetSnapableCase: null
     property var targetCase: null
     property bool isVisible: false
     
@@ -20,6 +21,7 @@ Rectangle {
     // Signaux
     signal configurationClosed()
     signal configurationApplied(var caseData)
+    signal requestChangeType(var newType)
     
     visible: isVisible
     color: "#f8f9fa"
@@ -51,19 +53,33 @@ Rectangle {
                 }
             }
             
-            // Type de case (lecture seule pour l'instant)
+            // Sélecteur de type de case
             GroupBox {
                 title: "Type de Case"
                 Layout.fillWidth: true
                 
                 ColumnLayout {
                     anchors.fill: parent
-                    spacing: 5
+                    spacing: 10
                     
                     Text {
-                        text: targetCase ? getCaseTypeName(targetCase.type) : "Aucune case sélectionnée"
-                        font.pixelSize: 14
-                        color: "#495057"
+                        text: "Sélectionnez le type de case :"
+                        font.pixelSize: 12
+                        color: "#6c757d"
+                        font.italic: true
+                    }
+                    
+                    CaseTypeSelector {
+                        id: caseTypeSelector
+                        Layout.fillWidth: true
+                        currentType: targetCase ? targetCase.type : Case.CS_Unknow
+                        updatingValues: root.updatingValues
+                        
+                        onTypeChanged: function(newType) {
+                            if (!root.updatingValues && targetCase) {
+                                requestChangeType(newType);
+                            }
+                        }
                     }
                 }
             }
@@ -78,6 +94,13 @@ Rectangle {
             // Configuration spécifique RestArea
             CaseRestAreaSpecificConfig {
                 id: caseRestAreaSpecificConfig
+                targetCase: root.targetCase
+                Layout.fillWidth: true
+            }
+            
+            // Configuration spécifique KibbleDispenser
+            CaseKibbleDispenserSpecificConfig {
+                id: caseKibbleDispenserSpecificConfig
                 targetCase: root.targetCase
                 Layout.fillWidth: true
             }
@@ -145,8 +168,9 @@ Rectangle {
     }
     
     // Fonction pour ouvrir le panneau avec une case
-    function openConfiguration(caseData) {
-        targetCase = caseData
+    function openConfiguration(snapableCase) {
+        targetCase = snapableCase.caseData
+        targetSnapableCase= snapableCase
         isVisible = true
         updateControls()
     }
@@ -157,15 +181,31 @@ Rectangle {
         
         updatingValues = true
         
+        // Mise à jour du sélecteur de type
+        caseTypeSelector.setCurrentType(targetCase.type)
+        
         // Mise à jour des contrôles généraux
         caseGeneralConfig.updateControls()
 
+        
+        // Mise à jour des contrôles spécifiques
+        updateSpecificPanels()
+        
+        updatingValues = false
+    }
+    
+    // Fonction pour mettre à jour les panneaux spécifiques selon le type
+    function updateSpecificPanels() {
+        if (!targetCase) return
         
         // Mise à jour des contrôles RestArea
         if (targetCase.type === Case.CS_RestArea) {
             caseRestAreaSpecificConfig.updateControls()
         }
         
-        updatingValues = false
+        // Mise à jour des contrôles KibbleDispenser
+        if (targetCase.type === Case.CS_KibbleDispenser) {
+            caseKibbleDispenserSpecificConfig.updateControls()
+        }
     }
 }

@@ -1,6 +1,7 @@
 #include "Case.h"
 #include "../player.h"
 #include <QDebug>
+#include "game.h"
 
     Case::Case(QObject *parent)
     : QObject(parent), m_name("Unknown"), m_position(-1), type(Case::CS_Unknow) {}
@@ -62,6 +63,13 @@ void Case::onHover(Player* player)
     if (player) {
         qDebug() << "Player" << player->name() << "hovered over " << name();
     }
+}
+
+Case *Case::changeType(CaseType type)
+{
+    Case* newCase = Game::instance()->getNewCaseType(type);
+    this->deleteLater();
+    return newCase;
 }
 
 void Case::addPlayer(Player *player)

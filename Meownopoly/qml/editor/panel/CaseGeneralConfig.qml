@@ -22,19 +22,12 @@ ConfigPanelElement {
     // Mise à jour quand targetCase change
     Connections {
         target: targetCase
+        ignoreUnknownSignals: true
         function onNameChanged() {
-            if (!updatingValues) {
-                updatingValues = true
-                nameField.text = targetCase.name
-                updatingValues = false
-            }
+            updateControls()
         }
         function onPositionChanged() {
-            if (!updatingValues) {
-                updatingValues = true
-                positionSpinBox.value = targetCase.position
-                updatingValues = false
-            }
+            updateControls()
         }
     }
 

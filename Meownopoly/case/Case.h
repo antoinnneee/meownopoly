@@ -54,6 +54,8 @@ public:
     Q_INVOKABLE virtual void onLeave(Player* player); 
     Q_INVOKABLE virtual void onHover(Player* player);
 
+    Q_INVOKABLE Case *changeType(CaseType type);
+
 
 
 // ---- CHAINED LIST MANIPULATION ----

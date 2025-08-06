@@ -140,8 +140,8 @@ Rectangle {
                 // Gestion de la configuration
                 onElementConfigurationRequested: function(element) {
                     console.log("Configuration demandée pour:", element)
-                    if (element.caseData) {
-                        caseConfigPanel.openConfiguration(element.caseData)
+                    if (element) {
+                        caseConfigPanel.openConfiguration(element)
                         editorGrid.moveToConfigElement(element)
 
                     }
@@ -172,7 +172,7 @@ Rectangle {
                 onElementConfigurationRequested: function(element) {
                     console.log("Configuration demandée pour:", element)
                     if (element.caseData) {
-                        caseConfigPanel.openConfiguration(element.caseData)
+                        caseConfigPanel.openConfiguration(element)
                     }
                 }
             }
@@ -189,7 +189,7 @@ Rectangle {
             text: "Créer une Case"
             onTriggered: {
                 console.log(contextMenu.clickGridCoord)
-                createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, 0)
+                createNewTileAtPosition(Case.CS_KibbleDispenser, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, 0)
             }
         }
         
@@ -272,6 +272,7 @@ Rectangle {
             currentSelectedElement = newTile
             newTile.snapToGridFromGrid()
         }
+        return newTile
     }
     
     // Panneau d'information sur l'élément sélectionné (nouveau composant)
@@ -314,14 +315,6 @@ Rectangle {
         width: parent.width/2
 
         onIsVisibleChanged: {
-            console.log("=============")
-            console.log(root.width, root.height)
-            console.log("raw : ", parent.width * 0.75, parent.height/2)
-            console.log("from global : ", editorGrid.mapFromGlobal(parent.width * 0.75, parent.height/2))
-            console.log("to global: ", editorGrid.mapToGlobal(parent.width * 0.75, parent.height/2))
-            console.log("from item workArea : ", editorGrid.mapFromItem(workArea, parent.width * 0.75, parent.height/2))
-            console.log("to item workArea : ", editorGrid.mapToItem(workArea, parent.width * 0.75, parent.height/2))
-            console.log("=============")
         }
         
         onConfigurationClosed: {
@@ -331,6 +324,13 @@ Rectangle {
         onConfigurationApplied: function(caseData) {
             console.log("Configuration appliquée pour la case:", caseData.name)
             // La case est déjà mise à jour via les bindings
+        }
+        onRequestChangeType: function(newType)  {
+            var newTile = createNewTileAtPosition(newType, caseConfigPanel.targetSnapableCase.gridRelativePositionX, caseConfigPanel.targetSnapableCase.gridRelativePositionY, 0)
+            caseConfigPanel.targetSnapableCase.elementDeleted(caseConfigPanel.targetSnapableCase)
+            newTile.isSelected = true
+            newTile.elementConfigurationRequested(newTile)
+
         }
     }
 
