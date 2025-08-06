@@ -75,8 +75,4 @@ Rectangle {
         ribbonColor: (root.caseData.owner != undefined) ?root.caseData.owner.color : "#7f8c8d"
 
     }
-    function getAvailablePlayerSlot(){
-
-    }
-
 }

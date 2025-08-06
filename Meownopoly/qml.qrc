@@ -50,5 +50,12 @@
         <file>qml/editor/tools/SnapableDecoration.qml</file>
         <file>qml/editor/tools/SnapableElementControl.qml</file>
         <file>qml/editor/CaseConfigurationPanel.qml</file>
+        <file>qml/editor/panel/CaseCatPerksConfig.qml</file>
+        <file>qml/editor/panel/ConfigPanelElement.qml</file>
+        <file>qml/editor/panel/CaseGeneralConfig.qml</file>
+        <file>qml/editor/panel/CaseRentConfig.qml</file>
+        <file>qml/editor/panel/CaseRestAreaFamilyConfig.qml</file>
+        <file>qml/editor/panel/CaseRestAreaSpecificConfig.qml</file>
+        <file>qml/editor/panel/CaseConfigurationHeader.qml</file>
     </qresource>
 </RCC>
