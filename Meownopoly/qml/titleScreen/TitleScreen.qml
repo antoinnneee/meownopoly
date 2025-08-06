@@ -1,11 +1,56 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Particles
 import Game
 
 Rectangle {
     id: root
     color: "#1a1a1a"  // Dark background for modern look
+
+    // Fireworks system
+    ParticleSystem {
+        id: particleSystem
+        anchors.fill: parent
+
+        // Emitter for the initial burst
+        Emitter {
+            id: burstEmitter
+            enabled: true
+            anchors.fill: parent
+            lifeSpan: 2000
+            size: 10
+            emitRate: 3
+            velocity: AngleDirection {
+                angle: 270
+                angleVariation: 15
+                magnitude: 200
+                magnitudeVariation: 50
+            }
+        }
+
+        // Particle image for the initial burst
+        ImageParticle {
+            id: firework
+            source: "qrc:///particleresources/glowdot.png"
+
+            color: Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
+            colorVariation: 0.5
+            alpha: 0.75
+            rotationVariation: 360
+        }
+
+    }
+
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: {
+            burstEmitter.burst(1);
+            firework.color = Qt.rgba(Math.random(), Math.random(), Math.random(), 1);
+        }
+    }
 
     signal startGameRequested()  // Add this signal
     signal testViewRequested()  // Add this signal
@@ -23,7 +68,7 @@ Rectangle {
         anchors {
             horizontalCenter: parent.horizontalCenter
             top: parent.top
-            topMargin: parent.height * 0.2
+            topMargin: parent.height * 0.1
         }
     }
 
@@ -204,7 +249,7 @@ Rectangle {
 
     // Version text
     Text {
-        text: "v1.0.0"
+        text: "v0.2.0 editor edition"
         color: "#808080"
         font.pixelSize: 14
         anchors {
