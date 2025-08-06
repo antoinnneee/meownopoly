@@ -59,5 +59,7 @@
         <file>qml/editor/panel/CaseConfigurationHeader.qml</file>
         <file>qml/editor/panel/CaseKibbleDispenserSpecificConfig.qml</file>
         <file>qml/editor/panel/CaseTypeSelector.qml</file>
+        <file>qml/editor/panel/CaseCardBoardBoxSpecificConfig.qml</file>
+        <file>qml/editor/panel/CaseCatDeviceSpecificConfig.qml</file>
     </qresource>
 </RCC>

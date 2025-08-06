@@ -352,6 +352,9 @@ Case *Game::getNewCaseType(Case::CaseType type)
     case Case::CS_Device:
         newCase = new CaseCatDevice("test CatDevice", 0);
         break;
+    case Case::CS_Taxe:
+        newCase = new CaseKibbleDispenser("TAXE NOT IMPLEMENTED", 0);
+        break;
     default:
         qDebug() << "Unknown case type:" << type << "returning NULL";
         break;

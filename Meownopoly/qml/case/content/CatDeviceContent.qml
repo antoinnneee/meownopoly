@@ -16,22 +16,6 @@ Item {
 
     property var fallbackIcons: "💧"
 
-    Text {
-        id: nameText
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            top: parent.top
-        }
-        text: root.caseData.name
-        color: "#2c3e50"
-        font.pixelSize: Math.min(parent.width * 0.13, 11)
-        font.bold: true
-        horizontalAlignment: Text.AlignHCenter
-        elide: Text.ElideRight
-        width: parent.width
-        z: 1
-    }
-
     Image {
         id: icon
         anchors {
@@ -65,7 +49,6 @@ Item {
         id: fallbackText
         anchors {
             horizontalCenter: parent.horizontalCenter
-            top: nameText.bottom
             topMargin: 2
         }
         width: parent.width * 0.4
@@ -84,7 +67,7 @@ Item {
             bottomMargin: parent.height * 0.02
         }
         visible: true
-        text: "Water Fountain"
+        text: root.caseData.name
         color: "#2980b9"
         font.pixelSize: parent.width * 0.10
         font.bold: true

@@ -105,6 +105,20 @@ Rectangle {
                 Layout.fillWidth: true
             }
             
+            // Configuration spécifique CardBoardBox
+            CaseCardBoardBoxSpecificConfig {
+                id: caseCardBoardBoxSpecificConfig
+                targetCase: root.targetCase
+                Layout.fillWidth: true
+            }
+            
+            // Configuration spécifique CatDevice
+            CaseCatDeviceSpecificConfig {
+                id: caseCatDeviceSpecificConfig
+                targetCase: root.targetCase
+                Layout.fillWidth: true
+            }
+            
             // Boutons d'action
             RowLayout {
                 Layout.fillWidth: true
@@ -206,6 +220,16 @@ Rectangle {
         // Mise à jour des contrôles KibbleDispenser
         if (targetCase.type === Case.CS_KibbleDispenser) {
             caseKibbleDispenserSpecificConfig.updateControls()
+        }
+        
+        // Mise à jour des contrôles CardBoardBox
+        if (targetCase.type === Case.CS_CardBoardBox) {
+            caseCardBoardBoxSpecificConfig.updateControls()
+        }
+        
+        // Mise à jour des contrôles CatDevice
+        if (targetCase.type === Case.CS_Device) {
+            caseCatDeviceSpecificConfig.updateControls()
         }
     }
 }

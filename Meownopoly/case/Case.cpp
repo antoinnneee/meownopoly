@@ -65,13 +65,6 @@ void Case::onHover(Player* player)
     }
 }
 
-Case *Case::changeType(CaseType type)
-{
-    Case* newCase = Game::instance()->getNewCaseType(type);
-    this->deleteLater();
-    return newCase;
-}
-
 void Case::addPlayer(Player *player)
 {
     if (!listPlayer.contains(player)){
