@@ -4,12 +4,21 @@ import QtQuick.Layouts
 import Case
 import CaseRestArea
 import Player
+import MeowStyle
 
 ConfigPanelElement {
     title: "Configuration Famille"
     property alias familyIndex: familyComboBox.currentIndex
 
     visible: targetCase && targetCase.type === Case.CS_RestArea
+
+    // Fonction pour mettre à jour tous les contrôles
+    function updateControls() {
+        if (!targetCase) return
+        updatingValues = true
+        familyComboBox.currentIndex = findFamilyIndex(targetCase.family)
+        updatingValues = false
+    }
 
     // Mise à jour quand targetCase change
     Connections {
@@ -52,15 +61,15 @@ ConfigPanelElement {
                 Layout.fillWidth: true
                 
                 model: [
-                    { value: CaseRestArea.FT_NONE, textValue: "Aucune", color: "#ecf0f1" },
-                    { value: CaseRestArea.FT_BROWN, textValue: "Marron", color: "#795548" },
-                    { value: CaseRestArea.FT_LIGHTBLUE, textValue: "Bleu Clair", color: "#81D4FA" },
-                    { value: CaseRestArea.FT_PINK, textValue: "Rose", color: "#F48FB1" },
-                    { value: CaseRestArea.FT_ORANGE, textValue: "Orange", color: "#FF9800" },
-                    { value: CaseRestArea.FT_RED, textValue: "Rouge", color: "#e74c3c" },
-                    { value: CaseRestArea.FT_YELLOW, textValue: "Jaune", color: "#F9E155" },
-                    { value: CaseRestArea.FT_GREEN, textValue: "Vert", color: "#66BB6A" },
-                    { value: CaseRestArea.FT_DARKBLUE, textValue: "Bleu Foncé", color: "#006064" }
+                    { value: CaseRestArea.FT_NONE, textValue: "Aucune", color:  MeowStyle.familyColors[CaseRestArea.FT_NONE]},
+                    { value: CaseRestArea.FT_BROWN, textValue: "Marron", color:  MeowStyle.familyColors[CaseRestArea.FT_BROWN]},
+                    { value: CaseRestArea.FT_LIGHTBLUE, textValue: "Bleu Clair", color:  MeowStyle.familyColors[CaseRestArea.FT_LIGHTBLUE]},
+                    { value: CaseRestArea.FT_PINK, textValue: "Rose", color:  MeowStyle.familyColors[CaseRestArea.FT_PINK]},
+                    { value: CaseRestArea.FT_ORANGE, textValue: "Orange", color:  MeowStyle.familyColors[CaseRestArea.FT_ORANGE]},
+                    { value: CaseRestArea.FT_RED, textValue: "Rouge", color:  MeowStyle.familyColors[CaseRestArea.FT_RED]},
+                    { value: CaseRestArea.FT_YELLOW, textValue: "Jaune", color:  MeowStyle.familyColors[CaseRestArea.FT_YELLOW]},
+                    { value: CaseRestArea.FT_GREEN, textValue: "Vert", color:  MeowStyle.familyColors[CaseRestArea.FT_GREEN]},
+                    { value: CaseRestArea.FT_DARKBLUE, textValue: "Bleu Foncé", color:  MeowStyle.familyColors[CaseRestArea.FT_DARKBLUE]}
                 ]
                 
                 textRole: "textValue"

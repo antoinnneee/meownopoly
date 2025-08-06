@@ -2,6 +2,7 @@ import QtQuick
 import Game
 import Case
 import Player
+import MeowStyle
 
 import "."
 
@@ -24,18 +25,8 @@ Rectangle {
     property int maxPlayer : 4
 
 
-    // Colors for different family types
-    property var familyColors: [
-        "#ecf0f1",  // None
-        "#795548",  // Brown
-        "#81D4FA",  // Light Blue
-        "#F48FB1",  // Pink
-        "#FF9800",  // Orange
-        "#e74c3c",  // Red
-        "#F9E155",  // Yellow
-        "#66BB6A",  // Green
-        "#006064"   // Dark Blue
-    ]
+    // Colors for different family types - utilise le singleton MeowStyle
+    property var familyColors: MeowStyle.familyColors
 
     TileContent {
         id: tileContent

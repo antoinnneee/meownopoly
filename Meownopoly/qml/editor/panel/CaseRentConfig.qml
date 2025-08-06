@@ -10,6 +10,31 @@ ConfigPanelElement {
     
     visible: targetCase && targetCase.type === Case.CS_RestArea
 
+    // Fonction pour mettre à jour tous les contrôles
+    function updateControls() {
+        if (!targetCase || !targetCase.rentPrice) return
+        updatingValues = true
+        // Mettre à jour tous les SpinBox de location
+        var spinBoxes = []
+        // Récupérer tous les SpinBox dans le Repeater et le SpinBox de l'hôtel
+        for (var i = 0; i < repeater.count; i++) {
+            var item = repeater.itemAt(i)
+            if (item && item.children) {
+                for (var j = 0; j < item.children.length; j++) {
+                    var child = item.children[j]
+                    if (child.rentIndex !== undefined && targetCase.rentPrice.length > child.rentIndex) {
+                        child.value = targetCase.rentPrice[child.rentIndex]
+                    }
+                }
+            }
+        }
+        // Mettre à jour le SpinBox de l'hôtel
+        if (hotelSpinBox && targetCase.rentPrice.length > 5) {
+            hotelSpinBox.value = targetCase.rentPrice[5]
+        }
+        updatingValues = false
+    }
+
     ColumnLayout{
         anchors.fill: parent
         spacing: 8
@@ -26,6 +51,7 @@ ConfigPanelElement {
 
         // Prix terrain nu à 4 étoiles
         Repeater {
+            id: repeater
             model: [
                 { index: 0, label: "🏞️ Terrain nu:", step: 5, color: "#495057", bold: true },
                 { index: 1, label: "⭐ 1 étoile:", step: 5, color: "#495057", bold: true },
@@ -96,6 +122,7 @@ ConfigPanelElement {
             }
 
             SpinBox {
+                id: hotelSpinBox
                 Layout.fillWidth: true
                 from: 0
                 to: 10000

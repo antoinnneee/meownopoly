@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Case
 import CaseRestArea
 import Player
+import MeowStyle
 import "panel"
 
 Rectangle {
@@ -130,20 +131,8 @@ Rectangle {
     
     // Fonctions utilitaires
     function getCaseTypeName(type) {
-        const typeNames = {
-            [Case.CS_KibbleDispenser]: "Kibble Dispenser (Départ)",
-            [Case.CS_RestArea]: "Rest Area (Terrain)",
-            [Case.CS_CardBoardBox]: "Cardboard Box (Caisse communauté)",
-            [Case.CS_CatNip]: "Cat Nip (Chance)",
-            [Case.CS_Jail]: "Jail (Prison)",
-            [Case.CS_ToJail]: "To Jail (Aller en prison)",
-            [Case.CS_CatDoor]: "Cat Door (Gare)",
-            [Case.CS_FreeNap]: "Free Nap (Parking gratuit)",
-            [Case.CS_Device]: "Device (Service électricité)",
-            [Case.CS_Taxe]: "Taxe (Taxe de luxe)",
-            [Case.CS_Unknow]: "Unknown (Inconnu)"
-        }
-        return typeNames[type] || "Type inconnu"
+        // Utilise la méthode helper du singleton MeowStyle
+        return MeowStyle.getCaseTypeName(type)
     }
     
     function findFamilyIndex(familyValue) {
@@ -169,17 +158,12 @@ Rectangle {
         updatingValues = true
         
         // Mise à jour des contrôles généraux
-        caseGeneralConfig.name = targetCase.name
-        caseGeneralConfig.position = targetCase.position
-        
-        // Mise à jour des contrôles CaseCatPerks (prix)
-        caseRestAreaSpecificConfig.caseCatPerksConfig.buyPrice= targetCase.price || 0
-        caseRestAreaSpecificConfig.caseCatPerksConfig.sellPrice = targetCase.sellPrice || 0
-        caseRestAreaSpecificConfig.caseCatPerksConfig.morgagePrice = targetCase.morgagePrice || 0
+        caseGeneralConfig.updateControls()
+
         
         // Mise à jour des contrôles RestArea
         if (targetCase.type === Case.CS_RestArea) {
-            caseRestAreaSpecificConfig.caseRestAreaFamilyConfig.familyIndex = findFamilyIndex(targetCase.family)
+            caseRestAreaSpecificConfig.updateControls()
         }
         
         updatingValues = false

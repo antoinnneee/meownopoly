@@ -13,6 +13,13 @@ ConfigPanelElement {
     property alias caseCatPerksConfig: caseCatPerksConfig
     property alias caseRentConfig: caseRentConfig
 
+    // Fonction pour mettre à jour tous les contrôles
+    function updateControls() {
+        if (!targetCase) return
+        caseCatPerksConfig.updateControls()
+        caseRestAreaFamilyConfig.updateControls()
+        caseRentConfig.updateControls()
+    }
     ColumnLayout {
         anchors.fill: parent
         spacing: 10

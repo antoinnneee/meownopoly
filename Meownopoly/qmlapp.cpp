@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QStandardPaths>
 #include "game.h"
+#include "meowstyle.h"
 
 #include <QJsonArray>
 #include <QJsonObject>
@@ -21,7 +22,7 @@ QmlApp::QmlApp(QWindow *parent)
 {
     QQuickStyle::setStyle("Material");
     Game::registerQml();
-
+    MeowStyle::registerQml();
 
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();

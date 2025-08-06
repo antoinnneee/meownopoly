@@ -10,6 +10,15 @@ ConfigPanelElement {
     property alias name: nameField.text
     property alias position: positionSpinBox.value
 
+    // Fonction pour mettre à jour tous les contrôles
+    function updateControls() {
+        if (!targetCase) return
+        updatingValues = true
+        nameField.text = targetCase.name || ""
+        positionSpinBox.value = targetCase.position || 0
+        updatingValues = false
+    }
+
     // Mise à jour quand targetCase change
     Connections {
         target: targetCase

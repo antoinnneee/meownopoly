@@ -37,6 +37,7 @@ SOURCES += \
     game.cpp \
     game_loader.cpp \
     main.cpp \
+    meowstyle.cpp \
     player.cpp \
     qmlapp.cpp \
     tools/appinfo.cpp
@@ -55,6 +56,7 @@ HEADERS += \
     case/CaseRestArea.h \
     case/CaseToJail.h \
     game.h \
+    meowstyle.h \
     player.h \
     qmlapp.h \
     tools/debug_Info.h	\

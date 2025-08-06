@@ -15,7 +15,15 @@ ConfigPanelElement {
                             targetCase.type === Case.CS_CatDoor || 
                             targetCase.type === Case.CS_Device)
 
-
+    // Fonction pour mettre à jour tous les contrôles
+    function updateControls() {
+        if (!targetCase) return
+        updatingValues = true
+        priceSpinBox.value = targetCase.price || 0
+        sellPriceSpinBox.value = targetCase.sellPrice || 0
+        morgagePriceSpinBox.value = targetCase.morgagePrice || 0
+        updatingValues = false
+    }
 
     // Mise à jour quand targetCase change
     Connections {
