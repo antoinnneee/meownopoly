@@ -40,10 +40,6 @@ Rectangle {
     }
 
     property int unitSizeWidth: 3
-    onUnitSizeWidthChanged: {
-        console.log("================unit size width updated " + unitSizeWidth + " ================" )
-    }
-
     property int unitSizeHeight: 3
 
 

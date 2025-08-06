@@ -92,6 +92,5 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log("CardBoardBoxContent loaded");
     }
 } 

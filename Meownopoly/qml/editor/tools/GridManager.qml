@@ -105,7 +105,6 @@ Item {
         gridManager.x = offsetX
         gridManager.y = offsetY
 
-        console.log("Centered on element at:", elementCenterX, elementCenterY)
         console.log("GridManager moved to:", gridManager.x, gridManager.y)
     }
 
@@ -130,7 +129,6 @@ Item {
         gridManager.x = offsetX
         gridManager.y = offsetY
 
-        console.log("Centered on element at:", elementCenterX, elementCenterY)
         console.log("GridManager moved to:", gridManager.x, gridManager.y)
     }
     

@@ -90,6 +90,5 @@ Item {
         font.pixelSize: parent.width * 0.12
     }
     Component.onCompleted: {
-        console.log("KibbleDispenserContent loaded");
     }
 }

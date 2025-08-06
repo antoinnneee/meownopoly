@@ -74,6 +74,5 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log("CatDeviceContent loaded");
     }
 } 

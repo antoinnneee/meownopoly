@@ -73,6 +73,5 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log("FreeNapContent loaded");
     }
 } 

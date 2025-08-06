@@ -191,10 +191,8 @@ Rectangle {
             enabled: currentIndex < availableTypes.length - 1
             
             onClicked: {
-                console.log("let newIndex = currentIndex + 1", currentIndex)
                 if (currentIndex < availableTypes.length - 1) {
                     let newIndex = currentIndex + 1
-                    console.log("let newIndex = currentIndex + 1", newIndex)
                     let newType = availableTypes[newIndex]
                     if (!updatingValues) {
                         root.currentType = newType

@@ -91,6 +91,5 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log("ToJailContent loaded");
     }
 } 

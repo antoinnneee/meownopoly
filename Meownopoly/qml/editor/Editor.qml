@@ -228,7 +228,6 @@ Rectangle {
         if (index !== -1) {
             // Supprimer l'élément de la liste
             snapableTilesList.splice(index, 1)
-            console.log("Élément supprimé de la liste à l'index:", index)
             
             // Si c'était l'élément sélectionné, le désélectionner
             if (currentSelectedElement === element) {
@@ -237,7 +236,6 @@ Rectangle {
             
             // Détruire l'objet QML
             element.destroy()
-            console.log("Objet QML détruit")
         } else {
             console.log("Erreur: Élément non trouvé dans la liste")
         }
