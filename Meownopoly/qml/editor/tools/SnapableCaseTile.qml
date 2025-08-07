@@ -3,6 +3,9 @@ import QtQuick.Controls
 import Game
 import Case
 import Player
+
+import ItemSnapable
+
 import "../../case"
 
 SnapableElement {

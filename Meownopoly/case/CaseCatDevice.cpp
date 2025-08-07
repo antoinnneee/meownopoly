@@ -28,7 +28,6 @@ bool CaseCatDevice::sellCase(Player *buyer)
 }
 
 
-
 int CaseCatDevice::taxe() const
 {
     return m_taxe;

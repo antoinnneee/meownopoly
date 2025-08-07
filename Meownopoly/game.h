@@ -9,6 +9,7 @@
 #include "case/Case.h"
 #include "case/CaseCatPerks.h"
 #include "case/CaseRestArea.h"
+
 #include "card.h"
 #include "player.h"
 

@@ -1,4 +1,4 @@
-QT += quick core qml widgets core-private quickcontrols2 quick3d
+    QT += quick core qml widgets core-private quickcontrols2 quick3d
 
 android:{
     QT += core-private
@@ -36,6 +36,9 @@ SOURCES += \
     case/CaseToJail.cpp \
     game.cpp \
     game_loader.cpp \
+    item_snapable/ItemSnapable.cpp \
+    item_snapable/SnapableCase.cpp \
+    item_snapable/SnapableDeco.cpp \
     main.cpp \
     meowstyle.cpp \
     player.cpp \
@@ -56,6 +59,9 @@ HEADERS += \
     case/CaseRestArea.h \
     case/CaseToJail.h \
     game.h \
+    item_snapable/ItemSnapable.h \
+    item_snapable/SnapableCase.h \
+    item_snapable/SnapableDeco.h \
     meowstyle.h \
     player.h \
     qmlapp.h \

@@ -6,7 +6,6 @@
 #include <QtQuick/QQuickView>
 #include "game.h"
 
-
 class QmlApp : public QQmlApplicationEngine
 {
     Q_OBJECT

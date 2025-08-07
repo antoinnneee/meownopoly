@@ -10,6 +10,7 @@
 #include <QStandardPaths>
 #include "game.h"
 #include "meowstyle.h"
+#include "item_snapable/ItemSnapable.h"
 
 #include <QJsonArray>
 #include <QJsonObject>
@@ -23,6 +24,7 @@ QmlApp::QmlApp(QWindow *parent)
     QQuickStyle::setStyle("Material");
     Game::registerQml();
     MeowStyle::registerQml();
+    ItemSnapable::registerQml();
 
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();

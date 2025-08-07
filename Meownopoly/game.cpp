@@ -64,7 +64,8 @@ QList<Player *> Game::listPlayers() const
 void Game::registerQml() {
     qmlRegisterSingletonType<Game>("Game", 1, 0, "Game", &Game::qmlInstance);
     qmlRegisterType<Player>("Player", 1, 0, "Player"); // Register Player class
-    
+
+
     // Register the complete inheritance hierarchy for proper QML inheritance
     qmlRegisterUncreatableType<Case>("Case", 1, 0, "Case", 
                                      "Case is an abstract base class"); // Register Case class with enum
