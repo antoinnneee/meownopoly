@@ -14,37 +14,6 @@ Item {
     required property Case caseData
     property var familyColors: []
 
-    // Icons for different tile types
-    property var tileIcons: [
-        "qrc:/asset/kibble.png",       // 0: Kibble Dispenser
-        "qrc:/asset/bed.png",          // 1: Rest Area
-        "qrc:/asset/cardboard.png",    // 2: Card Board Box
-        "qrc:/asset/catnip.png",       // 3: Cat Nip
-        "qrc:/asset/jail.png",         // 4: Jail
-        "qrc:/asset/tojail.png",       // 5: To Jail
-        "qrc:/asset/catdoor.png",      // 6: Cat Door
-        "qrc:/asset/nap.png",          // 7: Free Nap
-        "qrc:/asset/fountain.png",     // 8: Water Fountain
-        "qrc:/asset/laser.png",        // 9: Laser Pointer
-        "qrc:/asset/tax.png",          // 10: Golden Collar
-        "qrc:/asset/tax.png"           // 11: Fur Tax
-    ]
-
-    property var fallbackIcons: [
-        "🐱💰",       // 0: Kibble Dispenser
-        "🛌",          // 1: Rest Area
-        "📦❓",       // 2: Card Board Box
-        "🌿",          // 3: Cat Nip
-        "🔒",          // 4: Jail
-        "➡️🔒",       // 5: To Jail
-        "🚪",          // 6: Cat Door
-        "😴",          // 7: Free Nap
-        "💧",          // 8: Water Fountain
-        "🔴",          // 9: Laser Pointer
-        "👑",          // 10: Golden Collar
-        "💸",          // 11: Fur Tax
-    ]
-
 
     // Specific tile details
     Loader {
@@ -80,10 +49,6 @@ Item {
         KibbleDispenserContent{
             caseData: (root.caseData.type === Case.CS_KibbleDispenser) ? root.caseData : null
         }
-
-        // KibbleDispenserContent {
-        //     caseData: root.caseData
-        // }
     }
 
     Component {
@@ -134,7 +99,4 @@ Item {
             caseData: (root.caseData.type === Case.CS_Device) ? root.caseData : null
         }
     }
-
-
-
 } 

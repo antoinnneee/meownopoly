@@ -75,7 +75,37 @@ Rectangle {
     signal elementDeleted(var element)
     signal elementConfigurationRequested(var element)
     
-    // Apparence par défaut avec optimisation anti-scintillement
+    SequentialAnimation {
+        id: deleteAnimation
+        running: false
+        onFinished: {
+            elementDeleted(snapableElement)
+        }
+        NumberAnimation {
+            target: snapableElement
+            property: "scale"
+            easing.bezierCurve: [0.612,0.0516,0.544,0.917,1,1]
+            to: 0.1
+            duration: 1000
+            easing.type: Easing.InOutQuad
+        }
+    }
+    SequentialAnimation {
+        id: createAnimation
+        running: false
+        onFinished: {
+        }
+        NumberAnimation {
+            target: snapableElement
+            property: "scale"
+            easing.bezierCurve: [0.612,0.0516,0.544,0.917,1,1]
+            from: 0.0
+            to: 1.0
+            duration: 450
+            easing.type: Easing.InOutQuad
+        }
+    }
+
     color: elementColor
     border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
     border.width: isSelected ? borderWidth + 1 : borderWidth
@@ -89,8 +119,10 @@ Rectangle {
     
     Behavior on border.width { NumberAnimation { duration: smoothResize ? 80 : 0 } }
 
-Component.onCompleted: snapToGrid()
-    
+    Component.onCompleted: {
+        snapToGrid()
+        createAnimation.start()
+    }
     // Zone de drag & drop
     MouseArea {
         id: dragArea
@@ -145,7 +177,8 @@ Component.onCompleted: snapToGrid()
         }
         
         onDeleteRequested: {
-            elementDeleted(snapableElement)
+//            elementDeleted(snapableElement)
+            deleteAnimation.start()
         }
         
         onConfigurationRequested: {

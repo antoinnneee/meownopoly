@@ -12,7 +12,7 @@ Item {
     required property CaseJail caseData
 
     // Icons for different tile types
-    property var tileIcons: "qrc:/asset/jail.png"
+    property var tileIcons: "qrc:/asset/icon/jail.png"
 
     property var fallbackIcons: "🔒"
 
