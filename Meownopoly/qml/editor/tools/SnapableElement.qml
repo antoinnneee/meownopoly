@@ -14,12 +14,6 @@ Rectangle {
     property color elementColor: "transparent"
     property color borderColor: "gray"
     property int borderWidth: 1
-    property real elementOpacity: 1.0
-    property int minWidth: 40
-    property int minHeight: 40
-    
-    // NOUVEAUTÉ: Propriétés pour l'optimisation anti-scintillement
-    property bool smoothResize: true
     
     // Propriétés d'état
     property bool isDragging: false
@@ -54,7 +48,7 @@ Rectangle {
 
     width:  gridManager.gridSize * unitSizeWidth
     height:  gridManager.gridSize * unitSizeHeight
-    
+
     // Mettre à jour les positions relatives quand les positions absolues changent (drag)
     property bool updatingFromRelative: false
 
@@ -109,7 +103,6 @@ Rectangle {
     color: elementColor
     border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
     border.width: isSelected ? borderWidth + 1 : borderWidth
-    opacity: elementOpacity
     
     // Z-order basé sur le plan
     z: zLayerBase + 1
@@ -117,7 +110,7 @@ Rectangle {
     // Effet de survol avec transition optimisée
     scale: isDragging ? 1.05 : 1.0
     
-    Behavior on border.width { NumberAnimation { duration: smoothResize ? 80 : 0 } }
+    Behavior on border.width { NumberAnimation { duration: 80  } }
 
     Component.onCompleted: {
         snapToGrid()
@@ -161,8 +154,6 @@ Rectangle {
         }
         
         onPositionChanged: {
-            if (drag.active && smoothResize) {
-            }
         }
     }
     
