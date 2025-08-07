@@ -19,13 +19,10 @@ Rectangle {
     id: root
 
     color: "lightblue"
-    anchors.fill: parent
     border.width: 0
     
     // Liste pour stocker tous les SnapableCaseTile créés
     property list<SnapableElement> snapableTilesList
-
-
     property int nextTileId: 0
     property var currentSelectedElement: null
     
@@ -48,12 +45,6 @@ Rectangle {
             contextMenu.popup()
         }
         onGridClicked:  function(position) {
-            // print redRect location in grid coord
-            var redRectLocation = editorGrid.mapFromGlobal(redRect.x, redRect.y)
-            console.log("redRect location in grid coord: " , redRectLocation, editorGrid.getGridPosition(redRectLocation.x, redRectLocation.y))
-            // print redRect location in global coord
-            var redRectLocationGlobal = redRect.mapToItem(editorGrid, 0,0)
-            console.log("redRect.mapToItem(editorGrid, 0,0) :  " , redRectLocationGlobal, editorGrid.getGridPosition(redRectLocationGlobal.x, redRectLocationGlobal.y))
         }
     }
 
@@ -296,15 +287,7 @@ Rectangle {
         showControlPanel: false
         showInfoPanel: true
     }
-    
-    Rectangle{
-        id: redRect
-        color: "red"
-        width: 10
-        height: 10
-        x:960
-        y:360
-    }
+
 
     // Panneau de configuration des cases
     CaseConfigurationPanel {

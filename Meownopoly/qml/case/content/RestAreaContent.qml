@@ -18,7 +18,7 @@ Item {
 
 
     // Icons for different tile types
-    property var tileIcons: "qrc:/asset/bed.png"          // 1: Rest Area
+    property var tileIcons: "qrc:/asset/icon/bed.png"          // 1: Rest Area
 
     property var fallbackIcons: "🛌"          // 1: Rest Area
 

@@ -3,17 +3,6 @@
         <file>asset/title.webp</file>
         <file>asset/title.jpg</file>
         <file>asset/dice.png</file>
-        <file>asset/kibble.png</file>
-        <file>asset/bed.png</file>
-        <file>asset/cardboard.png</file>
-        <file>asset/catnip.png</file>
-        <file>asset/jail.png</file>
-        <file>asset/tojail.png</file>
-        <file>asset/catdoor.png</file>
-        <file>asset/nap.png</file>
-        <file>asset/fountain.png</file>
-        <file>asset/laser.png</file>
-        <file>asset/tax.png</file>
         <file>asset/avatar/avatar1.png</file>
         <file>asset/avatar/avatar2.png</file>
         <file>asset/avatar/avatar3.png</file>
@@ -26,5 +15,18 @@
         <file>asset/element/tree_lowpoly_2.png</file>
         <file>asset/element/tree_lowpoly_3.png</file>
         <file>asset/element/lake_0.png</file>
+        <file>asset/icon/bed.png</file>
+        <file>asset/icon/cardboard.png</file>
+        <file>asset/icon/catdoor.png</file>
+        <file>asset/icon/catnip.png</file>
+        <file>asset/icon/fountain.png</file>
+        <file>asset/icon/jail.png</file>
+        <file>asset/icon/kibble.png</file>
+        <file>asset/icon/laser.png</file>
+        <file>asset/icon/nap.png</file>
+        <file>asset/icon/nap2.png</file>
+        <file>asset/icon/restarea.png</file>
+        <file>asset/icon/tax.png</file>
+        <file>asset/icon/tojail.png</file>
     </qresource>
 </RCC>

@@ -12,7 +12,7 @@ Item {
     required property CaseCatNip caseData
 
     // Icons for different tile types
-    property var tileIcons: "qrc:/asset/catnip.png"
+    property var tileIcons: "qrc:/asset/icon/catnip.png"
 
     property var fallbackIcons: "🌿"
 
