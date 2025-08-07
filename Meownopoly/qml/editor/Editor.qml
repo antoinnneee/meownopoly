@@ -19,7 +19,6 @@ Rectangle {
     id: root
 
     color: "lightblue"
-    anchors.fill: parent
     border.width: 0
     
     // Liste pour stocker tous les SnapableCaseTile créés

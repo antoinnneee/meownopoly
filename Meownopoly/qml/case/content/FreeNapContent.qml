@@ -27,8 +27,8 @@ Item {
         width: parent.width * 0.8
         height: width
         sourceSize {
-            width: width * 2
-            height: height * 2
+            width: 512  // Fixed size for better performance
+            height: 512
         }
         fillMode: Image.PreserveAspectFit
         smooth: true

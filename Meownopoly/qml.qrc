@@ -61,5 +61,8 @@
         <file>qml/editor/panel/CaseTypeSelector.qml</file>
         <file>qml/editor/panel/CaseCardBoardBoxSpecificConfig.qml</file>
         <file>qml/editor/panel/CaseCatDeviceSpecificConfig.qml</file>
+        <file>qml/editor/tools/SnapableElementConnections.qml</file>
+        <file>qml/editor/tools/ResizeHandle.qml</file>
+        <file>qml/editor/tools/SnapableElementResizeHandles.qml</file>
     </qresource>
 </RCC>
