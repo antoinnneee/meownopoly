@@ -52,11 +52,11 @@ Rectangle {
     // Mettre à jour les positions relatives quand les positions absolues changent (drag)
     property bool updatingFromRelative: false
 
-    property alias connections: connectionManager
+    property alias connectionManager: connectionManager
     
     SnapableElementConnections {
         id: connectionManager
-        targetElement: snapableElement
+        parentElement: snapableElement
     }
     
     // Signaux
@@ -68,6 +68,7 @@ Rectangle {
     signal snapCompleted(var element)
     signal elementDeleted(var element)
     signal elementConfigurationRequested(var element)
+    signal elementConnectionsConfigurationRequested(var element)
     
     SequentialAnimation {
         id: deleteAnimation
@@ -174,6 +175,10 @@ Rectangle {
         
         onConfigurationRequested: {
             elementConfigurationRequested(snapableElement)
+        }
+
+        onConnectionsConfigurationRequested: {
+            elementConnectionsConfigurationRequested(snapableElement)
         }
     }
 

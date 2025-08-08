@@ -137,6 +137,14 @@ Rectangle {
 
                     }
                 }
+
+                onElementConnectionsConfigurationRequested: function(element) {
+                    if (element) {
+                        connectionsPanel.targetElement = element
+                        connectionsPanel.isVisible = true
+                        editorGrid.moveToConfigElement(element)
+                    }
+                }
             }
         }
         // Composant dynamique pour créer des SnapableDecoration
@@ -164,6 +172,14 @@ Rectangle {
                     console.log("Configuration demandée pour:", element)
                     if (element.caseData) {
                         caseConfigPanel.openConfiguration(element)
+                    }
+                }
+
+                onElementConnectionsConfigurationRequested: function(element) {
+                    if (element) {
+                        connectionsPanel.targetElement = element
+                        connectionsPanel.isVisible = true
+                        editorGrid.moveToConfigElement(element)
                     }
                 }
             }
@@ -312,6 +328,25 @@ Rectangle {
             newTile.isSelected = true
             newTile.elementConfigurationRequested(newTile)
 
+        }
+    }
+
+    // Panneau de configuration des connexions
+    ConnectionsConfigurationPanel {
+        id: connectionsPanel
+        height: parent.height
+        width: parent.width/2
+
+        function selectElementToConnect(kind) {
+            // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
+            if (!currentSelectedElement || !connectionsPanel.targetElement) return
+            if (currentSelectedElement === connectionsPanel.targetElement) return
+
+            if (kind === "previous") {
+                connectionsPanel.targetElement.connectionManager.addPreviousElement(currentSelectedElement)
+            } else if (kind === "next") {
+                connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
+            }
         }
     }
 
