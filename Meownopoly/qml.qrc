@@ -66,5 +66,6 @@
         <file>qml/editor/tools/SnapableElementResizeHandles.qml</file>
         <file>qml/editor/tools/ConnectionsConfigurationPanel.qml</file>
         <file>qml/editor/tools/ConnectionOverlay.qml</file>
+        <file>qml/editor/tools/ConnectionOverlay2.qml</file>
     </qresource>
 </RCC>

@@ -197,7 +197,7 @@ Rectangle {
         Repeater {
             id: connectionRepeater
             model: connectionSegments
-            delegate: ConnectionOverlay{
+            delegate: ConnectionOverlay2{
                 anchors.fill: parent
             }
 
