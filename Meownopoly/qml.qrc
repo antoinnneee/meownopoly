@@ -35,8 +35,6 @@
         <file>qml/editor/Editor.qml</file>
         <file>qml/editor/tools/GridManager.qml</file>
         <file>qml/editor/tools/GridControlPanel.qml</file>
-        <file>qml/editor/tools/SnapableElement.qml</file>
-        <file>qml/editor/tools/MapTileElement.qml</file>
         <file>qml/test/TEST_JSON.qml</file>
         <file>qml/test/TEST_3D.qml</file>
         <file>qml/editor/tools/SnapableCaseTile.qml</file>
@@ -48,7 +46,6 @@
         <file>asset/3D/lopoly_tree/meshes/icosphere_001_mesh.mesh</file>
         <file>asset/3D/lopoly_tree/Tree2.qml</file>
         <file>qml/editor/tools/SnapableDecoration.qml</file>
-        <file>qml/editor/tools/SnapableElementControl.qml</file>
         <file>qml/editor/CaseConfigurationPanel.qml</file>
         <file>qml/editor/panel/CaseCatPerksConfig.qml</file>
         <file>qml/editor/panel/ConfigPanelElement.qml</file>
@@ -61,8 +58,13 @@
         <file>qml/editor/panel/CaseTypeSelector.qml</file>
         <file>qml/editor/panel/CaseCardBoardBoxSpecificConfig.qml</file>
         <file>qml/editor/panel/CaseCatDeviceSpecificConfig.qml</file>
-        <file>qml/editor/tools/SnapableElementConnections.qml</file>
-        <file>qml/editor/tools/ResizeHandle.qml</file>
-        <file>qml/editor/tools/SnapableElementResizeHandles.qml</file>
+        <file>qml/editor/tools/ConnectionsConfigurationPanel.qml</file>
+        <file>qml/editor/tools/ConnectionOverlay.qml</file>
+        <file>qml/editor/tools/ConnectionOverlay2.qml</file>
+        <file>qml/editor/tools/snapable/ResizeHandle.qml</file>
+        <file>qml/editor/tools/snapable/SnapableElement.qml</file>
+        <file>qml/editor/tools/snapable/SnapableElementConnections.qml</file>
+        <file>qml/editor/tools/snapable/SnapableElementControl.qml</file>
+        <file>qml/editor/tools/snapable/SnapableElementResizeHandles.qml</file>
     </qresource>
 </RCC>

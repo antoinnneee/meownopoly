@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import "."
+import "../"
 
 Rectangle {
     id: snapableElement
@@ -14,12 +15,6 @@ Rectangle {
     property color elementColor: "transparent"
     property color borderColor: "gray"
     property int borderWidth: 1
-    property real elementOpacity: 1.0
-    property int minWidth: 40
-    property int minHeight: 40
-    
-    // NOUVEAUTÉ: Propriétés pour l'optimisation anti-scintillement
-    property bool smoothResize: true
     
     // Propriétés d'état
     property bool isDragging: false
@@ -54,15 +49,26 @@ Rectangle {
 
     width:  gridManager.gridSize * unitSizeWidth
     height:  gridManager.gridSize * unitSizeHeight
-    
+
+    readonly property int globalCenterX: snapableElement.x + snapableElement.width / 2
+    readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
+
+
     // Mettre à jour les positions relatives quand les positions absolues changent (drag)
     property bool updatingFromRelative: false
 
-    property alias connections: connectionManager
+    property alias connectionManager: connectionManager
+    // Expose le point central en coordonnées locales et scène
+    readonly property point centerLocal: Qt.point(width / 2, height / 2)
+    function centerInScene() {
+        var p = mapToItem(null, width / 2, height / 2)
+        return Qt.point(p.x, p.y)
+    }
     
     SnapableElementConnections {
         id: connectionManager
-        targetElement: snapableElement
+        parentElement: snapableElement
+        anchors.fill: parent
     }
     
     // Signaux
@@ -74,6 +80,8 @@ Rectangle {
     signal snapCompleted(var element)
     signal elementDeleted(var element)
     signal elementConfigurationRequested(var element)
+    signal elementConnectionsConfigurationRequested(var element)
+    signal elementDraged(var element);
     
     SequentialAnimation {
         id: deleteAnimation
@@ -109,7 +117,6 @@ Rectangle {
     color: elementColor
     border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
     border.width: isSelected ? borderWidth + 1 : borderWidth
-    opacity: elementOpacity
     
     // Z-order basé sur le plan
     z: zLayerBase + 1
@@ -117,7 +124,7 @@ Rectangle {
     // Effet de survol avec transition optimisée
     scale: isDragging ? 1.05 : 1.0
     
-    Behavior on border.width { NumberAnimation { duration: smoothResize ? 80 : 0 } }
+    Behavior on border.width { NumberAnimation { duration: 80  } }
 
     Component.onCompleted: {
         snapToGrid()
@@ -161,7 +168,9 @@ Rectangle {
         }
         
         onPositionChanged: {
-            if (drag.active && smoothResize) {
+            if (isDragging) {
+                // Mettre à jour les connexions pendant le drag
+                elementDraged(snapableElement)
             }
         }
     }
@@ -183,6 +192,10 @@ Rectangle {
         
         onConfigurationRequested: {
             elementConfigurationRequested(snapableElement)
+        }
+
+        onConnectionsConfigurationRequested: {
+            elementConnectionsConfigurationRequested(snapableElement)
         }
     }
 

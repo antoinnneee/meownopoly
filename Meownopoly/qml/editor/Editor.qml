@@ -2,6 +2,8 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
+import QtQuick.Shapes
+import QtQml
 import Game
 import Case
 import CaseRestArea
@@ -14,6 +16,7 @@ import CaseCatDoor
 import CaseFreeNap
 import CaseCatDevice
 import "tools"
+import "tools/snapable"
 
 Rectangle {
     id: root
@@ -45,6 +48,7 @@ Rectangle {
             contextMenu.popup()
         }
         onGridClicked:  function(position) {
+            deselectAllTiles()
         }
     }
 
@@ -62,6 +66,7 @@ Rectangle {
                          snapableTilesList[i].snapToGridFromGrid()
                      }
                  }
+                 // les chemins sont liés aux Items; pas besoin de rebuild ici
             }
         }
     }
@@ -121,11 +126,13 @@ Rectangle {
                     // Sélectionner l'élément cliqué
                     element.isSelected = true
                     currentSelectedElement = element
+
                 }
-                
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
+                    deleteElementsConnections(element)
                     deleteElement(element)
+                    rebuildConnectionSegments()
                 }
                 
                 // Gestion de la configuration
@@ -136,6 +143,22 @@ Rectangle {
                         editorGrid.moveToConfigElement(element)
 
                     }
+                }
+
+                onElementConnectionsConfigurationRequested: function(element) {
+                    if (element) {
+                        connectionsPanel.targetElement = element
+                        connectionsPanel.isVisible = true
+                        editorGrid.moveToConfigElement(element)
+                    }
+                }
+                onElementDraged: {
+                }
+                onElementPressed: function(element) {
+                    deselectAllTiles()
+                    element.isSelected = true
+                    currentSelectedElement = element
+
                 }
             }
         }
@@ -156,7 +179,9 @@ Rectangle {
                 
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
+                    deleteElementsConnections(element)
                     deleteElement(element)
+                    rebuildConnectionSegments()
                 }
                 
                 // Gestion de la configuration
@@ -166,10 +191,110 @@ Rectangle {
                         caseConfigPanel.openConfiguration(element)
                     }
                 }
+
+                onElementConnectionsConfigurationRequested: function(element) {
+                    if (element) {
+                        connectionsPanel.targetElement = element
+                        connectionsPanel.isVisible = true
+                        editorGrid.moveToConfigElement(element)
+                    }
+                }
+                onElementPressed: {
+                    deselectAllTiles()
+                    element.isSelected = true
+                    currentSelectedElement = element
+
+                }
+
+                onElementDraged: {
+                }
             }
         }
+
+        Repeater {
+            id: connectionRepeater
+            model: connectionSegments
+            delegate: ConnectionOverlay2{
+                anchors.fill: parent
+            }
+
+        }
     }
-    
+
+    // Segments de connexion (fromItem -> toItem)
+        ListModel {
+            id: connectionSegments
+
+            onCountChanged: {
+                console.log("connectionSegments.count", count)
+                console.log("connectionSegments", connectionSegments)
+                for (var i = 0; i < count; i++) {
+                    console.log("connectionSegments.get(i)", connectionSegments.get(i))
+                }
+            }
+    }
+
+    function deleteElementsConnections(element) {
+        var nexts = element.connectionManager.nextElements || []
+            // itere sur les segments de connexion element->next
+        for (var j = 0; j < nexts.length; j++) {
+            var nextEl = nexts[j]
+            // itere sur les segments de connexion nextEl->element
+            var prevs = nextEl.connectionManager.previousElements || []
+            for (var k = 0; k < prevs.length; k++) {
+                var prevEl = prevs[k]
+                if (prevEl === element) {
+                    nextEl.connectionManager.removePreviousElement(element)
+                }
+            }
+        }
+        // itere sur les segments de connexion element->prev
+        var prevs = element.connectionManager.previousElements || []
+        for (var j = 0; j < prevs.length; j++) {
+            var prevEl = prevs[j]
+            // itere sur les segments de connexion prevEl->element
+            var nexts = prevEl.connectionManager.nextElements || []
+            for (var k = 0; k < nexts.length; k++) {
+                var nextEl = nexts[k]
+                if (nextEl === element) {
+                    prevEl.connectionManager.removeNextElement(element)
+                }
+            }
+        }
+
+    }
+
+    // Calcule tous les segments à partir des éléments présents
+    function rebuildConnectionSegments() {
+        // Vider la liste des segments existants
+        connectionSegments.clear()
+        
+        // Parcourir tous les éléments pour créer les segments
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var el = snapableTilesList[i]
+            if (el && el.connectionManager) {
+                var nexts = el.connectionManager.nextElements || []
+                for (var j = 0; j < nexts.length; j++) {
+                    var nextEl = nexts[j]
+                    if (nextEl) {
+
+                        // Créer un objet segment avec les coordonnées
+                        connectionSegments.append( {
+                            "fromElement": el,
+                            "toElement": nextEl,
+                        })
+
+                    }
+                }
+            }
+        }
+        
+        // Forcer la mise à jour du Repeater
+        connectionRepeater.model = 0
+        connectionRepeater.model = connectionSegments
+    }
+
+
     // Menu contextuel pour la création d'éléments
     Menu {
         id: contextMenu
@@ -260,6 +385,7 @@ Rectangle {
             newTile.isSelected = true
             currentSelectedElement = newTile
             newTile.snapToGridFromGrid()
+            rebuildConnectionSegments()
         }
         return newTile
     }
@@ -312,6 +438,26 @@ Rectangle {
             newTile.isSelected = true
             newTile.elementConfigurationRequested(newTile)
 
+        }
+    }
+
+    // Panneau de configuration des connexions
+    ConnectionsConfigurationPanel {
+        id: connectionsPanel
+        height: parent.height
+        width: parent.width/2
+
+        function selectElementToConnect(kind) {
+            // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
+            if (!currentSelectedElement || !connectionsPanel.targetElement) return
+            if (currentSelectedElement === connectionsPanel.targetElement) return
+
+            if (kind === "previous") {
+                connectionsPanel.targetElement.connectionManager.addPreviousElement(currentSelectedElement)
+            } else if (kind === "next") {
+                connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
+            }
+            rebuildConnectionSegments()
         }
     }
 
