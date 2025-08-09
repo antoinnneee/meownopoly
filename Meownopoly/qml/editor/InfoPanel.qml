@@ -10,11 +10,12 @@ Rectangle {
     property int totalTilesCount: 0
     
     width: 320
-    height: 340
+    height: 540
     color: "#f0f0f0"
     border.color: "#cccccc"
     border.width: 1
     radius: 5
+    opacity: 0.8
     
     Column {
         anchors.fill: parent
@@ -22,7 +23,7 @@ Rectangle {
         spacing: 5
         
         Text {
-            text: "Éditeur de Cases - Redimensionnable"
+            text: "Éditeur de Cases"
             font.bold: true
             font.pixelSize: 14
             color: "#2c3e50"
@@ -266,15 +267,15 @@ Rectangle {
         PropertyAnimation {
             target: infoPanel
             property: "opacity"
-            from: 1.0
-            to: 0.7
+            from: 0.8
+            to: 0.6
             duration: 100
         }
         PropertyAnimation {
             target: infoPanel
             property: "opacity"
-            from: 0.7
-            to: 1.0
+            from: 0.6
+            to: 0.8
             duration: 100
         }
     }

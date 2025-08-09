@@ -152,8 +152,6 @@ Rectangle {
                         editorGrid.moveToConfigElement(element)
                     }
                 }
-                onElementDraged: {
-                }
                 onElementPressed: function(element) {
                     deselectAllTiles()
                     element.isSelected = true
@@ -206,8 +204,6 @@ Rectangle {
 
                 }
 
-                onElementDraged: {
-                }
             }
         }
 

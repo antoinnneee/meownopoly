@@ -75,43 +75,20 @@ Rectangle {
     signal elementClicked(var element)
     signal elementPressed(var element)
     signal elementReleased(var element)
-    signal elementMoved(var element, real newX, real newY)
     signal elementResized(var element, real newWidth, real newHeight)
     signal snapCompleted(var element)
     signal elementDeleted(var element)
     signal elementConfigurationRequested(var element)
     signal elementConnectionsConfigurationRequested(var element)
-    signal elementDraged(var element);
     
-    SequentialAnimation {
+    SnapableElementDeleteAnimation {
         id: deleteAnimation
-        running: false
         onFinished: {
             elementDeleted(snapableElement)
         }
-        NumberAnimation {
-            target: snapableElement
-            property: "scale"
-            easing.bezierCurve: [0.612,0.0516,0.544,0.917,1,1]
-            to: 0.1
-            duration: 1000
-            easing.type: Easing.InOutQuad
-        }
     }
-    SequentialAnimation {
+    SnapableElementCreateAnimation {
         id: createAnimation
-        running: false
-        onFinished: {
-        }
-        NumberAnimation {
-            target: snapableElement
-            property: "scale"
-            easing.bezierCurve: [0.612,0.0516,0.544,0.917,1,1]
-            from: 0.0
-            to: 1.0
-            duration: 450
-            easing.type: Easing.InOutQuad
-        }
     }
 
     color: elementColor
@@ -159,7 +136,6 @@ Rectangle {
             }
             
             elementReleased(snapableElement)
-            elementMoved(snapableElement, snapableElement.x, snapableElement.y)
         }
         
         onClicked: {
@@ -169,8 +145,6 @@ Rectangle {
         
         onPositionChanged: {
             if (isDragging) {
-                // Mettre à jour les connexions pendant le drag
-                elementDraged(snapableElement)
             }
         }
     }
