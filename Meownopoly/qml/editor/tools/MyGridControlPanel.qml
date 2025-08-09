@@ -16,7 +16,7 @@ import QtQuick.Controls
 Rectangle {
     id: gridControlPanel
     width: 200
-    height: 150
+    height: 250
     color: "#f0f0f0"
     border.color: "#cccccc"
     border.width: 1

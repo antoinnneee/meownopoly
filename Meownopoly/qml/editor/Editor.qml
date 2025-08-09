@@ -430,6 +430,9 @@ Rectangle {
         }
         onRequestChangeType: function(newType)  {
             var newTile = createNewTileAtPosition(newType, caseConfigPanel.targetSnapableCase.gridRelativePositionX, caseConfigPanel.targetSnapableCase.gridRelativePositionY, 0)
+            newTile.unitSizeWidth = caseConfigPanel.targetSnapableCase.unitSizeWidth
+            newTile.unitSizeHeight = caseConfigPanel.targetSnapableCase.unitSizeHeight
+
             caseConfigPanel.targetSnapableCase.elementDeleted(caseConfigPanel.targetSnapableCase)
             newTile.isSelected = true
             newTile.elementConfigurationRequested(newTile)
