@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
+import "snapable"
 
 SnapableElement {
     // Configuration du redimensionnement

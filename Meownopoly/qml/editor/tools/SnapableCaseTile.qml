@@ -4,6 +4,7 @@ import Game
 import Case
 import Player
 import "../../case"
+import "snapable"
 
 SnapableElement {
     id: root

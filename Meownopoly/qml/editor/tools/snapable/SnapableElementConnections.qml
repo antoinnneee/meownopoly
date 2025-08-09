@@ -53,22 +53,14 @@ Item {
     function removePreviousElement(element) {
         var index = previousElements.indexOf(element)
         if (index !== -1) {
-            // Réaffecter pour notifier QML
-            previousElements = previousElements.filter(function(e) { return e !== element })
-            if (element.connectionManager) {
-                element.connectionManager.nextElements = element.connectionManager.nextElements.filter(function(e) { return e !== parentElement })
-            }
+            previousElements.splice(index, 1)
         }
     }
 
     function removeNextElement(element) {
         var index = nextElements.indexOf(element)
         if (index !== -1) {
-            // Réaffecter pour notifier QML
-            nextElements = nextElements.filter(function(e) { return e !== element })
-            if (element.connectionManager) {
-                element.connectionManager.previousElements = element.connectionManager.previousElements.filter(function(e) { return e !== parentElement })
-            }
+            nextElements.splice(index, 1)
         }
     }
 
