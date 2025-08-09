@@ -2,6 +2,8 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
+import QtQuick.Shapes
+import QtQml
 import Game
 import Case
 import CaseRestArea
@@ -62,6 +64,7 @@ Rectangle {
                          snapableTilesList[i].snapToGridFromGrid()
                      }
                  }
+                 // les chemins sont liés aux Items; pas besoin de rebuild ici
             }
         }
     }
@@ -121,11 +124,12 @@ Rectangle {
                     // Sélectionner l'élément cliqué
                     element.isSelected = true
                     currentSelectedElement = element
+
                 }
-                
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
                     deleteElement(element)
+                    rebuildConnectionSegments()
                 }
                 
                 // Gestion de la configuration
@@ -144,6 +148,8 @@ Rectangle {
                         connectionsPanel.isVisible = true
                         editorGrid.moveToConfigElement(element)
                     }
+                }
+                onElementDraged: {
                 }
             }
         }
@@ -165,6 +171,7 @@ Rectangle {
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
                     deleteElement(element)
+                    rebuildConnectionSegments()
                 }
                 
                 // Gestion de la configuration
@@ -182,10 +189,65 @@ Rectangle {
                         editorGrid.moveToConfigElement(element)
                     }
                 }
+                onElementDraged: {
+                }
             }
         }
+
+        Repeater {
+            id: connectionRepeater
+            model: connectionSegments
+            delegate: ConnectionOverlay{
+                anchors.fill: parent
+            }
+
+        }
     }
-    
+
+    // Segments de connexion (fromItem -> toItem)
+        ListModel {
+            id: connectionSegments
+
+            onCountChanged: {
+                console.log("connectionSegments.count", count)
+                console.log("connectionSegments", connectionSegments)
+                for (var i = 0; i < count; i++) {
+                    console.log("connectionSegments.get(i)", connectionSegments.get(i))
+                }
+            }
+    }
+
+    // Calcule tous les segments à partir des éléments présents
+    function rebuildConnectionSegments() {
+        // Vider la liste des segments existants
+        connectionSegments.clear()
+        
+        // Parcourir tous les éléments pour créer les segments
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var el = snapableTilesList[i]
+            if (el && el.connectionManager) {
+                var nexts = el.connectionManager.nextElements || []
+                for (var j = 0; j < nexts.length; j++) {
+                    var nextEl = nexts[j]
+                    if (nextEl) {
+
+                        // Créer un objet segment avec les coordonnées
+                        connectionSegments.append( {
+                            "fromElement": el,
+                            "toElement": nextEl,
+                        })
+
+                    }
+                }
+            }
+        }
+        
+        // Forcer la mise à jour du Repeater
+        connectionRepeater.model = 0
+        connectionRepeater.model = connectionSegments
+    }
+
+
     // Menu contextuel pour la création d'éléments
     Menu {
         id: contextMenu
@@ -276,6 +338,7 @@ Rectangle {
             newTile.isSelected = true
             currentSelectedElement = newTile
             newTile.snapToGridFromGrid()
+            rebuildConnectionSegments()
         }
         return newTile
     }
@@ -347,6 +410,7 @@ Rectangle {
             } else if (kind === "next") {
                 connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
             }
+            rebuildConnectionSegments()
         }
     }
 

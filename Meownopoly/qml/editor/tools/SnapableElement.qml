@@ -49,14 +49,25 @@ Rectangle {
     width:  gridManager.gridSize * unitSizeWidth
     height:  gridManager.gridSize * unitSizeHeight
 
+    readonly property int globalCenterX: snapableElement.x + snapableElement.width / 2
+    readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
+
+
     // Mettre à jour les positions relatives quand les positions absolues changent (drag)
     property bool updatingFromRelative: false
 
     property alias connectionManager: connectionManager
+    // Expose le point central en coordonnées locales et scène
+    readonly property point centerLocal: Qt.point(width / 2, height / 2)
+    function centerInScene() {
+        var p = mapToItem(null, width / 2, height / 2)
+        return Qt.point(p.x, p.y)
+    }
     
     SnapableElementConnections {
         id: connectionManager
         parentElement: snapableElement
+        anchors.fill: parent
     }
     
     // Signaux
@@ -69,6 +80,7 @@ Rectangle {
     signal elementDeleted(var element)
     signal elementConfigurationRequested(var element)
     signal elementConnectionsConfigurationRequested(var element)
+    signal elementDraged(var element);
     
     SequentialAnimation {
         id: deleteAnimation
@@ -155,6 +167,10 @@ Rectangle {
         }
         
         onPositionChanged: {
+            if (isDragging) {
+                // Mettre à jour les connexions pendant le drag
+                elementDraged(snapableElement)
+            }
         }
     }
     

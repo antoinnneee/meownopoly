@@ -1,12 +1,35 @@
 import QtQuick 2.15
 
-QtObject {
+Item {
     id: connectionManager
     
     property var parentElement
     property var previousElements: []
     property var nextElements: []
-    
+
+
+    // Point central de l'élément parent
+    function getParentCenterLocal() {
+        if (!parentElement) return Qt.point(0, 0)
+        return Qt.point(parentElement.width / 2,parentElement.height / 2)
+    }
+
+    function getParentCenterScene() {
+        if (!parentElement) return Qt.point(0, 0)
+        return Qt.point(parentElement.x + parentElement.width / 2,parentElement.y +  parentElement.height / 2)
+    }
+
+    // Segments (from->to) depuis l'élément courant vers chaque "suivant"
+    function computeNextPaths() {
+        var paths = []
+        var from = getParentCenterScene()
+        for (var i = 0; i < nextElements.length; ++i) {
+            var to = getElementCenterScene(nextElements[i])
+            paths.push({ from: from, to: to })
+        }
+        return paths
+    }
+
     function addPreviousElement(element) {
         if (element && !previousElements.includes(element)) {
             // Réaffecter pour notifier QML
