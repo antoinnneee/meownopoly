@@ -7,26 +7,30 @@ Item {
     property var previousElements: []
     property var nextElements: []
 
+    onNextElementsChanged: {
+        nextElementsSegments.updateModel()
+    }
     // Segments de connexion (fromItem -> toItem)
     ListModel {
         id: nextElementsSegments
-    }
-    onNextElementsChanged: {
-        nextElementsSegments.clear()
+        function updateModel()
+        {
+            nextElementsSegments.clear()
 
-        var nexts = nextElements || []
-        for (var j = 0; j < nexts.length; j++) {
-            var nextEl = nexts[j]
-            if (nextEl) {
-                // Créer un objet segment avec les coordonnées
-                nextElementsSegments.append( {
-                    "fromElement": parentElement,
-                    "toElement": nextEl,
-                })
+            var nexts = nextElements || []
+            for (var j = 0; j < nexts.length; j++) {
+                var nextEl = nexts[j]
+                if (nextEl) {
+                    // Créer un objet segment avec les coordonnées
+                    nextElementsSegments.append( {
+                        "fromElement": parentElement,
+                        "toElement": nextEl,
+                    })
 
+                }
             }
-        }
 
+        }
     }
 
     Repeater {
@@ -91,6 +95,7 @@ Item {
         var index = nextElements.indexOf(element)
         if (index !== -1) {
             nextElements.splice(index, 1)
+            nextElementsSegments.updateModel()
         }
     }
 
@@ -107,12 +112,12 @@ Item {
     {
         for (var i = 0; i < previousElements.length; i++) {
             if (previousElements[i]) {
-                previousElements[i].removeNextElement(parentElement)
+                previousElements[i].connectionManager.removeNextElement(parentElement)
             }
         }
         for (var i = 0; i < nextElements.length; i++) {
             if (nextElements[i]) {
-                nextElements[i].removePreviousElement(parentElement)
+                nextElements[i].connectionManager.removePreviousElement(parentElement)
             }
         }
         previousElements = []

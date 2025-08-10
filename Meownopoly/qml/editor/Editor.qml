@@ -381,11 +381,28 @@ Rectangle {
             var newTile = createNewTileAtPosition(newType, caseConfigPanel.targetSnapableCase.gridRelativePositionX, caseConfigPanel.targetSnapableCase.gridRelativePositionY, 0)
             newTile.unitSizeWidth = caseConfigPanel.targetSnapableCase.unitSizeWidth
             newTile.unitSizeHeight = caseConfigPanel.targetSnapableCase.unitSizeHeight
-            newTile.connectionManager.previousElements = caseConfigPanel.targetSnapableCase.connectionManager.previousElements
-            newTile.connectionManager.nextElements = caseConfigPanel.targetSnapableCase.connectionManager.nextElements
+            
+            
+            for (var i = 0; i < caseConfigPanel.targetSnapableCase.connectionManager.previousElements.length; i++) {
+                var prevEl = caseConfigPanel.targetSnapableCase.connectionManager.previousElements[i]
+                if (prevEl) {
+                    prevEl.connectionManager.addNextElement(newTile)
+                }
+            }
+            for (var i = 0; i < caseConfigPanel.targetSnapableCase.connectionManager.nextElements.length; i++) {
+                var nextEl = caseConfigPanel.targetSnapableCase.connectionManager.nextElements[i]
+                if (nextEl) {
+                    nextEl.connectionManager.addPreviousElement(newTile)
+                }
+            }
+            
+
             newTile.caseData.name = caseConfigPanel.targetSnapableCase.caseData.name
 
+
             caseConfigPanel.targetSnapableCase.elementDeleted(caseConfigPanel.targetSnapableCase)
+            caseConfigPanel.targetSnapableCase.connectionManager.deleteLinkedConnection()
+
             newTile.isSelected = true
             newTile.elementConfigurationRequested(newTile)
 

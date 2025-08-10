@@ -283,6 +283,7 @@ Item {
                                 spacing: 4
 
                                 delegate: Rectangle {
+                                    required property int index
                                     width: ListView.view.width
                                     height: 48
                                     color: prevMouseArea.containsMouse ? "#f1f3f4" : "#ffffff"
