@@ -1,5 +1,5 @@
 import QtQuick 2.15
-
+import ".."
 Item {
     id: connectionManager
     
@@ -7,6 +7,45 @@ Item {
     property var previousElements: []
     property var nextElements: []
 
+    // Segments de connexion (fromItem -> toItem)
+    ListModel {
+        id: nextElementsSegments
+    }
+    onNextElementsChanged: {
+        nextElementsSegments.clear()
+
+        var nexts = nextElements || []
+        for (var j = 0; j < nexts.length; j++) {
+            var nextEl = nexts[j]
+            if (nextEl) {
+                // Créer un objet segment avec les coordonnées
+                nextElementsSegments.append( {
+                    "fromElement": parentElement,
+                    "toElement": nextEl,
+                })
+
+            }
+        }
+
+    }
+
+    Timer{
+        interval: 100
+        repeat: true
+        running: true
+        onTriggered: {
+            console.log("item position", parentElement.x, parentElement.y)
+        }
+    }
+
+    Repeater {
+        id: connectionRepeater
+        model: nextElementsSegments
+        delegate: ConnectionOverlay2{
+            x: -parentElement.x
+            y: -parentElement.y
+        }
+    }
 
     // Point central de l'élément parent
     function getParentCenterLocal() {

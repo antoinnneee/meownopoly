@@ -132,7 +132,6 @@ Rectangle {
                 onElementDeleted: function(element) {
                     deleteElementsConnections(element)
                     deleteElement(element)
-                    rebuildConnectionSegments()
                 }
                 
                 // Gestion de la configuration
@@ -213,22 +212,9 @@ Rectangle {
             delegate: ConnectionOverlay2{
                 anchors.fill: parent
             }
-
         }
     }
 
-    // Segments de connexion (fromItem -> toItem)
-        ListModel {
-            id: connectionSegments
-
-            onCountChanged: {
-                console.log("connectionSegments.count", count)
-                console.log("connectionSegments", connectionSegments)
-                for (var i = 0; i < count; i++) {
-                    console.log("connectionSegments.get(i)", connectionSegments.get(i))
-                }
-            }
-    }
 
     function deleteElementsConnections(element) {
         var nexts = element.connectionManager.nextElements || []
@@ -257,38 +243,8 @@ Rectangle {
                 }
             }
         }
-
     }
 
-    // Calcule tous les segments à partir des éléments présents
-    function rebuildConnectionSegments() {
-        // Vider la liste des segments existants
-        connectionSegments.clear()
-        
-        // Parcourir tous les éléments pour créer les segments
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            var el = snapableTilesList[i]
-            if (el && el.connectionManager) {
-                var nexts = el.connectionManager.nextElements || []
-                for (var j = 0; j < nexts.length; j++) {
-                    var nextEl = nexts[j]
-                    if (nextEl) {
-
-                        // Créer un objet segment avec les coordonnées
-                        connectionSegments.append( {
-                            "fromElement": el,
-                            "toElement": nextEl,
-                        })
-
-                    }
-                }
-            }
-        }
-        
-        // Forcer la mise à jour du Repeater
-        connectionRepeater.model = 0
-        connectionRepeater.model = connectionSegments
-    }
 
 
     // Menu contextuel pour la création d'éléments
@@ -432,6 +388,9 @@ Rectangle {
             var newTile = createNewTileAtPosition(newType, caseConfigPanel.targetSnapableCase.gridRelativePositionX, caseConfigPanel.targetSnapableCase.gridRelativePositionY, 0)
             newTile.unitSizeWidth = caseConfigPanel.targetSnapableCase.unitSizeWidth
             newTile.unitSizeHeight = caseConfigPanel.targetSnapableCase.unitSizeHeight
+            newTile.connectionManager.previousElements = caseConfigPanel.targetSnapableCase.connectionManager.previousElements
+            newTile.connectionManager.nextElements = caseConfigPanel.targetSnapableCase.connectionManager.nextElements
+            newTile.caseData.name = caseConfigPanel.targetSnapableCase.caseData.name
 
             caseConfigPanel.targetSnapableCase.elementDeleted(caseConfigPanel.targetSnapableCase)
             newTile.isSelected = true
@@ -456,7 +415,6 @@ Rectangle {
             } else if (kind === "next") {
                 connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
             }
-            rebuildConnectionSegments()
         }
     }
 

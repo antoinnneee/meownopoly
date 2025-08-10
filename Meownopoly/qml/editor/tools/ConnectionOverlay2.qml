@@ -3,7 +3,11 @@ import QtQuick.Shapes
 
 Shape {
     id: connectionOverlay
-    
+    Rectangle{
+        anchors.fill: parent
+        color: "red"
+    }
+
     // Propriétés requises
     required property var fromElement
     required property var toElement
@@ -30,8 +34,7 @@ Shape {
     
     // Demi-largeur pour les calculs
     property real halfWidth: lineWidth / 2
-    
-    anchors.fill: parent
+
     z: 2000
     
     ShapePath {
