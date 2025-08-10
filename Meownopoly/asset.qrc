@@ -28,5 +28,6 @@
         <file>asset/icon/restarea.png</file>
         <file>asset/icon/tax.png</file>
         <file>asset/icon/tojail.png</file>
+        <file>asset/icon/collar.png</file>
     </qresource>
 </RCC>
