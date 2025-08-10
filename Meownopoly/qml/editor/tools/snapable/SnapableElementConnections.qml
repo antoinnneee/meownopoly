@@ -29,15 +29,6 @@ Item {
 
     }
 
-    Timer{
-        interval: 100
-        repeat: true
-        running: true
-        onTriggered: {
-            console.log("item position", parentElement.x, parentElement.y)
-        }
-    }
-
     Repeater {
         id: connectionRepeater
         model: nextElementsSegments
@@ -110,4 +101,23 @@ Item {
     function getAllConnectedElements() {
         return previousElements.concat(nextElements)
     }
+
+    /*remove all connections to the element and remove the element from the previousElements and nextElements*/
+    function deleteLinkedConnection()
+    {
+        for (var i = 0; i < previousElements.length; i++) {
+            if (previousElements[i]) {
+                previousElements[i].removeNextElement(parentElement)
+            }
+        }
+        for (var i = 0; i < nextElements.length; i++) {
+            if (nextElements[i]) {
+                nextElements[i].removePreviousElement(parentElement)
+            }
+        }
+        previousElements = []
+        nextElements = []
+        nextElementsSegments.clear()
+    }
+
 }

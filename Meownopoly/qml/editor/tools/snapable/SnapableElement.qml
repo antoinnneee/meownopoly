@@ -69,6 +69,7 @@ Rectangle {
         id: connectionManager
         parentElement: snapableElement
         anchors.fill: parent
+        z: 40
     }
     
     // Signaux
@@ -89,6 +90,7 @@ Rectangle {
     }
     SnapableElementCreateAnimation {
         id: createAnimation
+
     }
 
     color: elementColor

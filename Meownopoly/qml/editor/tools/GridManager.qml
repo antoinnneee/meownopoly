@@ -183,7 +183,7 @@ Item {
     MouseArea{
         anchors.fill: parent
         drag.target: gridManager
-        pressAndHoldInterval: 250
+        pressAndHoldInterval: 150
         onClicked: {
             console.log("click location : ", mouseX, mouseY)
             console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))

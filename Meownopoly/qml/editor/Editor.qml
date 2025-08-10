@@ -177,6 +177,7 @@ Rectangle {
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
                     deleteElementsConnections(element)
+                    element.connectionManager.deleteLinkedConnection()
                     deleteElement(element)
                     rebuildConnectionSegments()
                 }
@@ -203,14 +204,6 @@ Rectangle {
 
                 }
 
-            }
-        }
-
-        Repeater {
-            id: connectionRepeater
-            model: connectionSegments
-            delegate: ConnectionOverlay2{
-                anchors.fill: parent
             }
         }
     }
@@ -337,7 +330,7 @@ Rectangle {
             newTile.isSelected = true
             currentSelectedElement = newTile
             newTile.snapToGridFromGrid()
-            rebuildConnectionSegments()
+            //rebuildConnectionSegments()
         }
         return newTile
     }
