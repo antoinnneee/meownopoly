@@ -98,7 +98,7 @@ Rectangle {
     border.width: isSelected ? borderWidth + 1 : borderWidth
     
     // Z-order basé sur le plan
-    z: zLayerBase + 1
+    z: zLayerBase + isSelected
     
     // Effet de survol avec transition optimisée
     scale: isDragging ? 1.05 : 1.0
