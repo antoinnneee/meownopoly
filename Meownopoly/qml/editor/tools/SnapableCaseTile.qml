@@ -7,6 +7,7 @@ import Player
 import ItemSnapable
 
 import "../../case"
+import "snapable"
 
 SnapableElement {
     id: root

@@ -13,6 +13,7 @@ Item {
     signal layerChanged(int newLayer)
     signal deleteRequested()
     signal configurationRequested()
+    signal connectionsConfigurationRequested()
     
     // Propriétés pour accéder aux données du target
     readonly property var zLayers: targetElement ? targetElement.zLayers : null
@@ -133,6 +134,53 @@ Item {
             
             transitions: Transition {
                 NumberAnimation { 
+                    properties: "scale"
+                    duration: 100
+                }
+            }
+        }
+
+        // Bouton de configuration des connexions (en dessous du bouton d'attributs)
+        Rectangle {
+            id: connectionsButton
+            width: parent.width
+            height: width
+            color: "#6f42c1" // violet
+            border.color: "white"
+            border.width: 1
+            radius: 4
+
+            Text {
+                anchors.centerIn: parent
+                text: "🔗"
+                color: "white"
+                font.bold: true
+                font.pixelSize: 20
+            }
+
+            MouseArea {
+                id: connectionsButtonMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: {
+                    console.log("Configuration des connexions demandée")
+                    connectionsConfigurationRequested()
+                }
+
+                onEntered: connectionsButton.state = "hovered"
+                onExited: connectionsButton.state = ""
+            }
+
+            states: State {
+                name: "hovered"
+                PropertyChanges {
+                    target: connectionsButton
+                    scale: 1.05
+                }
+            }
+
+            transitions: Transition {
+                NumberAnimation {
                     properties: "scale"
                     duration: 100
                 }

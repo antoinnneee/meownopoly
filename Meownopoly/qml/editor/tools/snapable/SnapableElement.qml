@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import "."
+import "../"
 
 Rectangle {
     id: snapableElement
@@ -14,12 +15,6 @@ Rectangle {
     property color elementColor: "transparent"
     property color borderColor: "gray"
     property int borderWidth: 1
-    property real elementOpacity: 1.0
-    property int minWidth: 40
-    property int minHeight: 40
-    
-    // NOUVEAUTÉ: Propriétés pour l'optimisation anti-scintillement
-    property bool smoothResize: true
     
     // Propriétés d'état
     property bool isDragging: false
@@ -54,70 +49,61 @@ Rectangle {
 
     width:  gridManager.gridSize * unitSizeWidth
     height:  gridManager.gridSize * unitSizeHeight
-    
+
+    readonly property int globalCenterX: snapableElement.x + snapableElement.width / 2
+    readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
+
+
     // Mettre à jour les positions relatives quand les positions absolues changent (drag)
     property bool updatingFromRelative: false
 
-    property alias connections: connectionManager
+    property alias connectionManager: connectionManager
+    // Expose le point central en coordonnées locales et scène
+    readonly property point centerLocal: Qt.point(width / 2, height / 2)
+    function centerInScene() {
+        var p = mapToItem(null, width / 2, height / 2)
+        return Qt.point(p.x, p.y)
+    }
     
     SnapableElementConnections {
         id: connectionManager
-        targetElement: snapableElement
+        parentElement: snapableElement
+        anchors.fill: parent
+        z: 40
     }
     
     // Signaux
     signal elementClicked(var element)
     signal elementPressed(var element)
     signal elementReleased(var element)
-    signal elementMoved(var element, real newX, real newY)
     signal elementResized(var element, real newWidth, real newHeight)
     signal snapCompleted(var element)
     signal elementDeleted(var element)
     signal elementConfigurationRequested(var element)
+    signal elementConnectionsConfigurationRequested(var element)
     
-    SequentialAnimation {
+    SnapableElementDeleteAnimation {
         id: deleteAnimation
-        running: false
         onFinished: {
             elementDeleted(snapableElement)
         }
-        NumberAnimation {
-            target: snapableElement
-            property: "scale"
-            easing.bezierCurve: [0.612,0.0516,0.544,0.917,1,1]
-            to: 0.1
-            duration: 1000
-            easing.type: Easing.InOutQuad
-        }
     }
-    SequentialAnimation {
+    SnapableElementCreateAnimation {
         id: createAnimation
-        running: false
-        onFinished: {
-        }
-        NumberAnimation {
-            target: snapableElement
-            property: "scale"
-            easing.bezierCurve: [0.612,0.0516,0.544,0.917,1,1]
-            from: 0.0
-            to: 1.0
-            duration: 450
-            easing.type: Easing.InOutQuad
-        }
+
     }
 
     color: elementColor
     border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
     border.width: isSelected ? borderWidth + 1 : borderWidth
-    opacity: elementOpacity
     
     // Z-order basé sur le plan
-    z: zLayerBase + 1
+    z: zLayerBase + isSelected
     
     // Effet de survol avec transition optimisée
     scale: isDragging ? 1.05 : 1.0
     
-    Behavior on border.width { NumberAnimation { duration: smoothResize ? 80 : 0 } }
+    Behavior on border.width { NumberAnimation { duration: 80  } }
 
     Component.onCompleted: {
         snapToGrid()
@@ -152,7 +138,6 @@ Rectangle {
             }
             
             elementReleased(snapableElement)
-            elementMoved(snapableElement, snapableElement.x, snapableElement.y)
         }
         
         onClicked: {
@@ -161,7 +146,7 @@ Rectangle {
         }
         
         onPositionChanged: {
-            if (drag.active && smoothResize) {
+            if (isDragging) {
             }
         }
     }
@@ -183,6 +168,10 @@ Rectangle {
         
         onConfigurationRequested: {
             elementConfigurationRequested(snapableElement)
+        }
+
+        onConnectionsConfigurationRequested: {
+            elementConnectionsConfigurationRequested(snapableElement)
         }
     }
 

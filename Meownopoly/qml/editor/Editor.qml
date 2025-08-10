@@ -2,6 +2,8 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
+import QtQuick.Shapes
+import QtQml
 import Game
 import Case
 import CaseRestArea
@@ -14,6 +16,7 @@ import CaseCatDoor
 import CaseFreeNap
 import CaseCatDevice
 import "tools"
+import "tools/snapable"
 
 Rectangle {
     id: root
@@ -45,6 +48,7 @@ Rectangle {
             contextMenu.popup()
         }
         onGridClicked:  function(position) {
+            deselectAllTiles()
         }
     }
 
@@ -62,6 +66,7 @@ Rectangle {
                          snapableTilesList[i].snapToGridFromGrid()
                      }
                  }
+                 // les chemins sont liés aux Items; pas besoin de rebuild ici
             }
         }
     }
@@ -121,10 +126,11 @@ Rectangle {
                     // Sélectionner l'élément cliqué
                     element.isSelected = true
                     currentSelectedElement = element
+
                 }
-                
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
+                    deleteElementsConnections(element)
                     deleteElement(element)
                 }
                 
@@ -136,6 +142,20 @@ Rectangle {
                         editorGrid.moveToConfigElement(element)
 
                     }
+                }
+
+                onElementConnectionsConfigurationRequested: function(element) {
+                    if (element) {
+                        connectionsPanel.targetElement = element
+                        connectionsPanel.isVisible = true
+                        editorGrid.moveToConfigElement(element)
+                    }
+                }
+                onElementPressed: function(element) {
+                    deselectAllTiles()
+                    element.isSelected = true
+                    currentSelectedElement = element
+
                 }
             }
         }
@@ -156,7 +176,10 @@ Rectangle {
                 
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
+                    deleteElementsConnections(element)
+                    element.connectionManager.deleteLinkedConnection()
                     deleteElement(element)
+                    rebuildConnectionSegments()
                 }
                 
                 // Gestion de la configuration
@@ -166,10 +189,57 @@ Rectangle {
                         caseConfigPanel.openConfiguration(element)
                     }
                 }
+
+                onElementConnectionsConfigurationRequested: function(element) {
+                    if (element) {
+                        connectionsPanel.targetElement = element
+                        connectionsPanel.isVisible = true
+                        editorGrid.moveToConfigElement(element)
+                    }
+                }
+                onElementPressed: {
+                    deselectAllTiles()
+                    element.isSelected = true
+                    currentSelectedElement = element
+
+                }
+
             }
         }
     }
-    
+
+
+    function deleteElementsConnections(element) {
+        var nexts = element.connectionManager.nextElements || []
+            // itere sur les segments de connexion element->next
+        for (var j = 0; j < nexts.length; j++) {
+            var nextEl = nexts[j]
+            // itere sur les segments de connexion nextEl->element
+            var prevs = nextEl.connectionManager.previousElements || []
+            for (var k = 0; k < prevs.length; k++) {
+                var prevEl = prevs[k]
+                if (prevEl === element) {
+                    nextEl.connectionManager.removePreviousElement(element)
+                }
+            }
+        }
+        // itere sur les segments de connexion element->prev
+        var prevs = element.connectionManager.previousElements || []
+        for (var j = 0; j < prevs.length; j++) {
+            var prevEl = prevs[j]
+            // itere sur les segments de connexion prevEl->element
+            var nexts = prevEl.connectionManager.nextElements || []
+            for (var k = 0; k < nexts.length; k++) {
+                var nextEl = nexts[k]
+                if (nextEl === element) {
+                    prevEl.connectionManager.removeNextElement(element)
+                }
+            }
+        }
+    }
+
+
+
     // Menu contextuel pour la création d'éléments
     Menu {
         id: contextMenu
@@ -260,6 +330,7 @@ Rectangle {
             newTile.isSelected = true
             currentSelectedElement = newTile
             newTile.snapToGridFromGrid()
+            //rebuildConnectionSegments()
         }
         return newTile
     }
@@ -308,10 +379,52 @@ Rectangle {
         }
         onRequestChangeType: function(newType)  {
             var newTile = createNewTileAtPosition(newType, caseConfigPanel.targetSnapableCase.gridRelativePositionX, caseConfigPanel.targetSnapableCase.gridRelativePositionY, 0)
+            newTile.unitSizeWidth = caseConfigPanel.targetSnapableCase.unitSizeWidth
+            newTile.unitSizeHeight = caseConfigPanel.targetSnapableCase.unitSizeHeight
+            
+            
+            for (var i = 0; i < caseConfigPanel.targetSnapableCase.connectionManager.previousElements.length; i++) {
+                var prevEl = caseConfigPanel.targetSnapableCase.connectionManager.previousElements[i]
+                if (prevEl) {
+                    prevEl.connectionManager.addNextElement(newTile)
+                }
+            }
+            for (var i = 0; i < caseConfigPanel.targetSnapableCase.connectionManager.nextElements.length; i++) {
+                var nextEl = caseConfigPanel.targetSnapableCase.connectionManager.nextElements[i]
+                if (nextEl) {
+                    nextEl.connectionManager.addPreviousElement(newTile)
+                }
+            }
+            
+
+            newTile.caseData.name = caseConfigPanel.targetSnapableCase.caseData.name
+
+
             caseConfigPanel.targetSnapableCase.elementDeleted(caseConfigPanel.targetSnapableCase)
+            caseConfigPanel.targetSnapableCase.connectionManager.deleteLinkedConnection()
+
             newTile.isSelected = true
             newTile.elementConfigurationRequested(newTile)
 
+        }
+    }
+
+    // Panneau de configuration des connexions
+    ConnectionsConfigurationPanel {
+        id: connectionsPanel
+        height: parent.height
+        width: parent.width/2
+
+        function selectElementToConnect(kind) {
+            // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
+            if (!currentSelectedElement || !connectionsPanel.targetElement) return
+            if (currentSelectedElement === connectionsPanel.targetElement) return
+
+            if (kind === "previous") {
+                connectionsPanel.targetElement.connectionManager.addPreviousElement(currentSelectedElement)
+            } else if (kind === "next") {
+                connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
+            }
         }
     }
 

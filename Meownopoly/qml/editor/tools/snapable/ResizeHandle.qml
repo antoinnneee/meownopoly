@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls
+import ".."
 
 Rectangle {
     id: handle
@@ -216,7 +217,7 @@ Rectangle {
     transitions: Transition {
         NumberAnimation { 
             properties: "scale,color"
-            duration: targetElement.smoothResize ? 120 : 0
+            duration: 120
             easing.type: Easing.OutQuad
         }
     }

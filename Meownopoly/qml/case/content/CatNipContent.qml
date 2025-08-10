@@ -37,7 +37,6 @@ Item {
         anchors {
             horizontalCenter: parent.horizontalCenter
             verticalCenter: parent.verticalCenter
-            verticalCenterOffset: parent.height * 0.1
         }
         width: parent.width * 0.8
         height: width

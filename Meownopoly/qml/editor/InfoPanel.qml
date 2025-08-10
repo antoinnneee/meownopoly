@@ -10,11 +10,12 @@ Rectangle {
     property int totalTilesCount: 0
     
     width: 320
-    height: 340
+    height: 540
     color: "#f0f0f0"
     border.color: "#cccccc"
     border.width: 1
     radius: 5
+    opacity: 0.8
     
     Column {
         anchors.fill: parent
@@ -22,7 +23,7 @@ Rectangle {
         spacing: 5
         
         Text {
-            text: "Éditeur de Cases - Redimensionnable"
+            text: "Éditeur de Cases"
             font.bold: true
             font.pixelSize: 14
             color: "#2c3e50"
@@ -87,24 +88,6 @@ Rectangle {
         }
         
         // Statistiques générales
-        Text {
-            text: "Statistiques:"
-            font.bold: true
-            font.pixelSize: 11
-            color: "#2c3e50"
-        }
-        
-        Text {
-            text: "Tiles créés: " + totalTilesCount
-            font.pixelSize: 10
-            color: "#7f8c8d"
-        }
-        
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: "#cccccc"
-        }
         
         // Informations sur l'élément sélectionné
         Text {
@@ -194,44 +177,6 @@ Rectangle {
         }
         
         // Paramètres de grille
-        Text {
-            text: "Paramètres de grille:"
-            font.bold: true
-            font.pixelSize: 11 
-            color: "#2c3e50"
-        }
-        
-        Column {
-            width: parent.width
-            spacing: 2
-            
-            Text {
-                text: gridManager ? 
-                      ("Taille: " + gridManager.gridSize + "px | Snap: " + 
-                       (gridManager.snapToGrid ? "ACTIVÉ" : "DÉSACTIVÉ")) : 
-                      "GridManager non disponible"
-                font.pixelSize: 9
-                color: "#7f8c8d"
-            }
-            
-            Text {
-                text: gridManager ? 
-                      ("Mode redimensionnement: " + (gridManager.resizeMode ? "ACTIF" : "INACTIF")) : 
-                      ""
-                font.pixelSize: 9
-                color: gridManager && gridManager.resizeMode ? "#e67e22" : "#7f8c8d"
-                visible: gridManager !== null
-            }
-            
-            Text {
-                text: gridManager ? 
-                      ("Opacité grille: " + Math.round(gridManager.gridOpacity * 100) + "%") : 
-                      ""
-                font.pixelSize: 9
-                color: "#95a5a6"
-                visible: gridManager !== null
-            }
-        }
     }
     
     // Composant réutilisable pour les textes d'instruction
@@ -266,15 +211,15 @@ Rectangle {
         PropertyAnimation {
             target: infoPanel
             property: "opacity"
-            from: 1.0
-            to: 0.7
+            from: 0.8
+            to: 0.6
             duration: 100
         }
         PropertyAnimation {
             target: infoPanel
             property: "opacity"
-            from: 0.7
-            to: 1.0
+            from: 0.6
+            to: 0.8
             duration: 100
         }
     }
