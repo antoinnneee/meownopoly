@@ -56,6 +56,7 @@ public:
     int currentPlayerIndex() const;
 
     Q_INVOKABLE Case* getNewCaseType(Case::CaseType type);
+    Q_INVOKABLE Player* getNewPlayer();
 
 
     QList<Player *> listPlayers() const;

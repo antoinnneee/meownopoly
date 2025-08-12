@@ -13,6 +13,7 @@ SnapableElement {
     id: root
     required property Case caseData
 
+
     // Configuration du redimensionnement
     isResizable: true
     autoSnap: true

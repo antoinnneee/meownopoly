@@ -29,6 +29,12 @@ Rectangle {
     property int nextTileId: 0
     property var currentSelectedElement: null
     
+    enum TileType {
+        Case,
+        Personnage,
+        Decoration
+    }
+
     // Grille de l'éditeur
     GridManager {
         id: editorGrid
@@ -54,53 +60,53 @@ Rectangle {
 
     WheelHandler {
         onWheel: (wheel)=> {
-            if (wheel.modifiers & Qt.ControlModifier) {
-                //console.log(wheel.angleDelta)
-                if (wheel.angleDelta.y > 0)
-                    editorGrid.updateSize(editorGrid.mmSize + 1)
-                else if (editorGrid.mmSize > 1)
-                    editorGrid.updateSize(editorGrid.mmSize - 1)
-                 for (var i = 0; i < snapableTilesList.length; i++) {
-                     if (snapableTilesList[i]) {
-                         snapableTilesList[i].isSelected = false
-                         snapableTilesList[i].snapToGridFromGrid()
+                     if (wheel.modifiers & Qt.ControlModifier) {
+                         //console.log(wheel.angleDelta)
+                         if (wheel.angleDelta.y > 0)
+                         editorGrid.updateSize(editorGrid.mmSize + 1)
+                         else if (editorGrid.mmSize > 1)
+                         editorGrid.updateSize(editorGrid.mmSize - 1)
+                         for (var i = 0; i < snapableTilesList.length; i++) {
+                             if (snapableTilesList[i]) {
+                                 snapableTilesList[i].isSelected = false
+                                 snapableTilesList[i].snapToGridFromGrid()
+                             }
+                         }
+                         // les chemins sont liés aux Items; pas besoin de rebuild ici
                      }
                  }
-                 // les chemins sont liés aux Items; pas besoin de rebuild ici
-            }
-        }
     }
     
     // Gestionnaire de raccourcis clavier
     Keys.onPressed: function(event) {
         if (currentSelectedElement) {
             switch(event.key) {
-                case Qt.Key_1:
-                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.background)
-                    event.accepted = true
-                    break
-                case Qt.Key_2:
-                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.middle)
-                    event.accepted = true
-                    break
-                case Qt.Key_3:
-                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.foreground)
-                    event.accepted = true
-                    break
-                case Qt.Key_PageUp:
-                    // Monter d'un plan
-                    if (currentSelectedElement.zLayer < 2) {
-                        currentSelectedElement.changeToLayer(currentSelectedElement.zLayer + 1)
-                    }
-                    event.accepted = true
-                    break
-                case Qt.Key_PageDown:
-                    // Descendre d'un plan
-                    if (currentSelectedElement.zLayer > 0) {
-                        currentSelectedElement.changeToLayer(currentSelectedElement.zLayer - 1)
-                    }
-                    event.accepted = true
-                    break
+            case Qt.Key_1:
+                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.background)
+                event.accepted = true
+                break
+            case Qt.Key_2:
+                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.middle)
+                event.accepted = true
+                break
+            case Qt.Key_3:
+                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.foreground)
+                event.accepted = true
+                break
+            case Qt.Key_PageUp:
+                // Monter d'un plan
+                if (currentSelectedElement.zLayer < 2) {
+                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayer + 1)
+                }
+                event.accepted = true
+                break
+            case Qt.Key_PageDown:
+                // Descendre d'un plan
+                if (currentSelectedElement.zLayer > 0) {
+                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayer - 1)
+                }
+                event.accepted = true
+                break
             }
         }
     }
@@ -208,10 +214,9 @@ Rectangle {
         }
     }
 
-
     function deleteElementsConnections(element) {
         var nexts = element.connectionManager.nextElements || []
-            // itere sur les segments de connexion element->next
+        // itere sur les segments de connexion element->next
         for (var j = 0; j < nexts.length; j++) {
             var nextEl = nexts[j]
             // itere sur les segments de connexion nextEl->element
@@ -253,7 +258,7 @@ Rectangle {
                 createNewTileAtPosition(Case.CS_KibbleDispenser, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, 0)
             }
         }
-        
+
         MenuItem {
             text: "Créer un élément"
             onTriggered: {
@@ -308,18 +313,18 @@ Rectangle {
         var newTile
         if (isDecoration) {
             newTile = snapableDecoration.createObject(workArea, {
-                "gridRelativePositionX": gridX,
-                "gridRelativePositionY": gridY,
-            })
+                                                          "gridRelativePositionX": gridX,
+                                                          "gridRelativePositionY": gridY,
+                                                      })
         }
         else {
             newTile = snapableCaseTileComponent.createObject(workArea, {
-                "gridRelativePositionX": gridX,
-                "gridRelativePositionY": gridY,
-                "unitSizeWidth": 6,
-                "unitSizeHeight": 6,
-                "caseData": Game.getNewCaseType(caseType)
-            })
+                                                                 "gridRelativePositionX": gridX,
+                                                                 "gridRelativePositionY": gridY,
+                                                                 "unitSizeWidth": 6,
+                                                                 "unitSizeHeight": 6,
+                                                                 "caseData": Game.getNewCaseType(caseType)
+                                                             })
         }
 
         if (newTile) {
@@ -334,17 +339,18 @@ Rectangle {
         }
         return newTile
     }
-    
+
+
     // Panneau d'information sur l'élément sélectionné (nouveau composant)
     InfoPanel {
         id: infoPanel
-        
+
         anchors {
             top: parent.top
             left: parent.left
             margins: 10
         }
-        
+
         selectedElement: currentSelectedElement
         gridManager: editorGrid
         totalTilesCount: snapableTilesList.length
@@ -368,11 +374,11 @@ Rectangle {
 
         onIsVisibleChanged: {
         }
-        
+
         onConfigurationClosed: {
             console.log("Panneau de configuration fermé")
         }
-        
+
         onConfigurationApplied: function(caseData) {
             console.log("Configuration appliquée pour la case:", caseData.name)
             // La case est déjà mise à jour via les bindings
@@ -381,8 +387,8 @@ Rectangle {
             var newTile = createNewTileAtPosition(newType, caseConfigPanel.targetSnapableCase.gridRelativePositionX, caseConfigPanel.targetSnapableCase.gridRelativePositionY, 0)
             newTile.unitSizeWidth = caseConfigPanel.targetSnapableCase.unitSizeWidth
             newTile.unitSizeHeight = caseConfigPanel.targetSnapableCase.unitSizeHeight
-            
-            
+
+
             for (var i = 0; i < caseConfigPanel.targetSnapableCase.connectionManager.previousElements.length; i++) {
                 var prevEl = caseConfigPanel.targetSnapableCase.connectionManager.previousElements[i]
                 if (prevEl) {
@@ -395,7 +401,7 @@ Rectangle {
                     nextEl.connectionManager.addPreviousElement(newTile)
                 }
             }
-            
+
 
             newTile.caseData.name = caseConfigPanel.targetSnapableCase.caseData.name
 

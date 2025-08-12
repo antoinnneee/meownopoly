@@ -64,6 +64,5 @@ Rectangle {
         id: ownershipIndicator
         visible: (root.caseData.owner != undefined) ? true: false
         ribbonColor: (root.caseData.owner != undefined) ?root.caseData.owner.color : "#7f8c8d"
-
     }
 }

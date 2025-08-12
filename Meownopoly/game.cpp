@@ -364,6 +364,30 @@ Case *Game::getNewCaseType(Case::CaseType type)
     return newCase;
 }
 
+Player *Game::getNewPlayer()
+{
+    // Créer un joueur avec des valeurs par défaut
+    static int playerCount = 0;
+    QString playerName = "Joueur " + QString::number(++playerCount);
+    
+    // Générer une couleur semi-aléatoire basée sur le playerCount
+    QColor playerColor;
+    switch (playerCount % 6) {
+        case 0: playerColor = QColor("#e74c3c"); break; // Rouge
+        case 1: playerColor = QColor("#3498db"); break; // Bleu
+        case 2: playerColor = QColor("#2ecc71"); break; // Vert
+        case 3: playerColor = QColor("#f39c12"); break; // Orange
+        case 4: playerColor = QColor("#9b59b6"); break; // Violet
+        case 5: playerColor = QColor("#1abc9c"); break; // Turquoise
+    }
+    
+    int indexLogo = (playerCount - 1) % 6;  // Les avatars vont de 1 à 6
+    int startingKibbles = 1500;
+    
+    Player* newPlayer = new Player(playerName, playerColor, indexLogo, startingKibbles);
+    return newPlayer;
+}
+
 void Game::nextPlayer() {
 
     m_currentPlayerIndex = (m_currentPlayerIndex + 1) % m_listPlayers.size();

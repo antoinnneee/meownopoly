@@ -58,6 +58,7 @@
         <file>qml/editor/panel/CaseTypeSelector.qml</file>
         <file>qml/editor/panel/CaseCardBoardBoxSpecificConfig.qml</file>
         <file>qml/editor/panel/CaseCatDeviceSpecificConfig.qml</file>
+        <file>qml/editor/panel/PlayerSelector.qml</file>
         <file>qml/editor/tools/ConnectionsConfigurationPanel.qml</file>
         <file>qml/editor/tools/ConnectionOverlay.qml</file>
         <file>qml/editor/tools/ConnectionOverlay2.qml</file>
@@ -68,5 +69,8 @@
         <file>qml/editor/tools/snapable/SnapableElementResizeHandles.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementDeleteAnimation.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementCreateAnimation.qml</file>
+        <file>qml/editor/GameBoard.qml</file>
+        <file>qml/editor/tools/SnapablePlayerTile.qml</file>
+        <file>qml/case/PlayerTile.qml</file>
     </qresource>
 </RCC>
