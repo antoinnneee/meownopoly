@@ -56,47 +56,6 @@ Rectangle {
                 }
             }
 
-            // // Sélection du type de configuration
-            // GroupBox {
-            //     title: "Type d'élément"
-            //     Layout.fillWidth: true
-
-            //     ColumnLayout {
-            //         anchors.fill: parent
-            //         spacing: 10
-
-            //         // Switch pour choisir entre joueur et case
-            //         RowLayout {
-            //             Layout.fillWidth: true
-            //             spacing: 20
-
-            //             RadioButton {
-            //                 id: caseRadio
-            //                 text: "Case"
-            //                 checked: !isPlayerConfiguration
-            //                 onCheckedChanged: {
-            //                     if (checked) {
-            //                         root.isPlayerConfiguration = false
-            //                         updateControls()
-            //                     }
-            //                 }
-            //             }
-
-            //             RadioButton {
-            //                 id: playerRadio
-            //                 text: "Joueur"
-            //                 checked: isPlayerConfiguration
-            //                 onCheckedChanged: {
-            //                     if (checked) {
-            //                         root.isPlayerConfiguration = true
-            //                         updateControls()
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
-
             // Sélecteur de type de case (visible uniquement si c'est une case)
             GroupBox {
                 title: "Type de Case"

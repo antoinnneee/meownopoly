@@ -277,6 +277,7 @@ debug/qrc_qml.cpp: qml.qrc \
 		qml/editor/tools/SnapableCaseTile.qml \
 		qml/editor/tools/ConnectionOverlay.qml \
 		qml/editor/tools/ConnectionsConfigurationPanel.qml \
+		qml/editor/tools/SnapableCharacter.qml \
 		qml/editor/tools/snapable/ResizeHandle.qml \
 		qml/editor/tools/snapable/SnapableElement.qml \
 		qml/editor/tools/snapable/SnapableElementControl.qml \

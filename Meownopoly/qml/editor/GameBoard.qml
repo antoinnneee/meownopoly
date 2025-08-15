@@ -119,54 +119,8 @@ Rectangle {
         id: workArea
         anchors.fill: editorGrid
 
-        // Composant dynamique pour créer des SnapableCaseTile
         Component {
-            id: snapablePlayerTileComponent
-            SnapablePlayerTile{
-                gridManager: editorGrid
-
-                // Gestion de la sélection
-                onElementClicked: function(element) {
-                    // Désélectionner tous les autres éléments
-                    deselectAllTiles()
-                    // Sélectionner l'élément cliqué
-                    element.isSelected = true
-                    currentSelectedElement = element
-
-                }
-                // Gestion de la suppression
-                onElementDeleted: function(element) {
-                    deleteElementsConnections(element)
-                    deleteElement(element)
-                }
-
-                // Gestion de la configuration
-                onElementConfigurationRequested: function(element) {
-                    console.log("Configuration demandée pour:", element)
-                    if (element) {
-                        caseConfigPanel.openConfiguration(element)
-                        editorGrid.moveToConfigElement(element)
-
-                    }
-                }
-
-                onElementConnectionsConfigurationRequested: function(element) {
-                    if (element) {
-                        connectionsPanel.targetElement = element
-                        connectionsPanel.isVisible = true
-                        editorGrid.moveToConfigElement(element)
-                    }
-                }
-                onElementPressed: function(element) {
-                    deselectAllTiles()
-                    element.isSelected = true
-                    currentSelectedElement = element
-
-                }
-            }
-        }
-        Component {
-            id: snapableCaseTileComponent
+            id: snapableCaseTile
             SnapableCaseTile {
                 gridManager: editorGrid
 
@@ -206,11 +160,56 @@ Rectangle {
                     deselectAllTiles()
                     element.isSelected = true
                     currentSelectedElement = element
-
                 }
             }
         }
-        // Composant dynamique pour créer des SnapableDecoration
+        // Composant dynamique pour créer des SnapableCharacter
+        Component {
+            id: snapableCharacter
+            SnapableCharacter {
+                gridManager: editorGrid
+
+                // Gestion de la sélection
+                onElementClicked: function(element) {
+                    // Désélectionner tous les autres éléments
+                    deselectAllTiles()
+                    // Sélectionner l'élément cliqué
+                    element.isSelected = true
+                    currentSelectedElement = element
+                }
+
+                // Gestion de la suppression
+                onElementDeleted: function(element) {
+                    deleteElementsConnections(element)
+                    element.connectionManager.deleteLinkedConnection()
+                    deleteElement(element)
+                    rebuildConnectionSegments()
+                }
+
+                // Gestion de la configuration
+                onElementConfigurationRequested: function(element) {
+                    console.log("Configuration demandée pour:", element)
+                    if (element.caseData) {
+                        caseConfigPanel.openConfiguration(element)
+                    }
+                }
+
+                onElementConnectionsConfigurationRequested: function(element) {
+                    if (element) {
+                        connectionsPanel.targetElement = element
+                        connectionsPanel.isVisible = true
+                        editorGrid.moveToConfigElement(element)
+                    }
+                }
+                onElementPressed: {
+                    deselectAllTiles()
+                    element.isSelected = true
+                    currentSelectedElement = element
+
+                }
+
+            }
+        }
         Component {
             id: snapableDecoration
             SnapableDecoration {
@@ -373,14 +372,14 @@ Rectangle {
 
             break
         case GameBoard.TileType.Personnage:
-            newTile = snapablePlayerTileComponent.createObject(workArea, {
+            newTile = snapableCharacter.createObject(workArea, {
                                                                    "gridRelativePositionX": gridX,
                                                                    "gridRelativePositionY": gridY,
                                                                    "playerData": Game.getNewPlayer()
                                                                })
             break
         case GameBoard.TileType.Case:
-            newTile = snapableCaseTileComponent.createObject(workArea, {
+            newTile = snapableCaseTile.createObject(workArea, {
                                                                  "gridRelativePositionX": gridX,
                                                                  "gridRelativePositionY": gridY,
                                                                  "unitSizeWidth": 6,
