@@ -270,6 +270,7 @@ release/qrc_qml.cpp: qml.qrc \
 		qml/editor/panel/CaseKibbleDispenserSpecificConfig.qml \
 		qml/editor/tools/GridManager.qml \
 		qml/editor/tools/ConnectionOverlay2.qml \
+		qml/editor/tools/GridControlPopupAsset.qml \
 		qml/editor/tools/SnapableDecoration.qml \
 		qml/editor/tools/GridControlPanel.qml \
 		qml/editor/tools/SnapablePlayerTile.qml \
@@ -305,6 +306,7 @@ release/qrc_asset.cpp: asset.qrc \
 		asset/dice.png \
 		asset/title.webp \
 		asset/element/lake_0.png \
+		asset/element/0_3.png \
 		asset/element/tree_lowpoly_3.png \
 		asset/element/tree_lowpoly_0.png \
 		asset/element/tree_lowpoly.png \
@@ -1893,6 +1895,13 @@ release/moc_game.cpp: game.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QList \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVariant \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qiodevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
 		case/Case.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QString \
 		player.h \
@@ -2968,6 +2977,12 @@ release/moc_qmlapp.cpp: qmlapp.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVector \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVariant \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
 		case/Case.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QString \
 		player.h \
@@ -3447,6 +3462,13 @@ release/Case.o: case/Case.cpp case/Case.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVector \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVariant \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qiodevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
 		case/CaseCatPerks.h \
 		case/CaseRestArea.h \
 		card.h
@@ -4998,6 +5020,10 @@ release/game.o: game.cpp ../../../Qt/6.9.1/mingw_64/include/QtGui/QColor \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVector \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVariant \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
 		card.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\game.o game.cpp
 
@@ -5164,6 +5190,13 @@ release/game_loader.o: game_loader.cpp game.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QList \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVariant \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qiodevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
 		case/Case.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QString \
 		player.h \
@@ -5188,10 +5221,7 @@ release/game_loader.o: game_loader.cpp game.h \
 		case/CaseToJail.h \
 		../../../Qt/6.9.1/mingw_64/include/QtQml/QQmlApplicationEngine \
 		../../../Qt/6.9.1/mingw_64/include/QtQml/qqmlapplicationengine.h \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/QFile \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/qiodevice.h
+		../../../Qt/6.9.1/mingw_64/include/QtCore/QFile
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\game_loader.o game_loader.cpp
 
 release/ItemSnapable.o: item_snapable/ItemSnapable.cpp item_snapable/ItemSnapable.h \
@@ -5959,6 +5989,12 @@ release/main.o: main.cpp ../../../Qt/6.9.1/mingw_64/include/QtGui/QGuiApplicatio
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVector \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVariant \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
 		case/Case.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QString \
 		player.h \
@@ -6529,6 +6565,12 @@ release/qmlapp.o: qmlapp.cpp ../../../Qt/6.9.1/mingw_64/include/QtCore/QDebug \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVector \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QVariant \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../../Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
 		case/Case.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QString \
 		player.h \
@@ -6536,12 +6578,6 @@ release/qmlapp.o: qmlapp.cpp ../../../Qt/6.9.1/mingw_64/include/QtCore/QDebug \
 		case/CaseCatPerks.h \
 		case/CaseRestArea.h \
 		card.h \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/QDir \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
-		../../../Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/QStandardPaths \
 		../../../Qt/6.9.1/mingw_64/include/QtCore/qstandardpaths.h \
 		meowstyle.h \

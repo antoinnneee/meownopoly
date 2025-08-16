@@ -20,8 +20,6 @@ import "tools/snapable"
 
 Rectangle {
     id: root
-
-    color: "lightblue"
     border.width: 0
 
     // Liste pour stocker tous les SnapableCaseTile créés
@@ -29,6 +27,9 @@ Rectangle {
     property int nextTileId: 0
     property var currentSelectedElement: null
 
+    property bool isEditing : false
+    color: isEditing ? "#B3B3D0D8" : "lightblue"
+    onIsEditingChanged: console.log("Édition:", isEditing)
     enum TileType {
         Case,
         Personnage,
@@ -58,58 +59,6 @@ Rectangle {
         }
     }
 
-    WheelHandler {
-        onWheel: (wheel)=> {
-                     if (wheel.modifiers & Qt.ControlModifier) {
-                         //console.log(wheel.angleDelta)
-                         if (wheel.angleDelta.y > 0)
-                         editorGrid.updateSize(editorGrid.mmSize + 1)
-                         else if (editorGrid.mmSize > 1)
-                         editorGrid.updateSize(editorGrid.mmSize - 1)
-                         for (var i = 0; i < snapableTilesList.length; i++) {
-                             if (snapableTilesList[i]) {
-                                 snapableTilesList[i].isSelected = false
-                                 snapableTilesList[i].snapToGridFromGrid()
-                             }
-                         }
-                         // les chemins sont liés aux Items; pas besoin de rebuild ici
-                     }
-                 }
-    }
-
-    // Gestionnaire de raccourcis clavier
-    Keys.onPressed: function(event) {
-        if (currentSelectedElement) {
-            switch(event.key) {
-            case Qt.Key_1:
-                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.background)
-                event.accepted = true
-                break
-            case Qt.Key_2:
-                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.middle)
-                event.accepted = true
-                break
-            case Qt.Key_3:
-                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.foreground)
-                event.accepted = true
-                break
-            case Qt.Key_PageUp:
-                // Monter d'un plan
-                if (currentSelectedElement.zLayer < 2) {
-                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayer + 1)
-                }
-                event.accepted = true
-                break
-            case Qt.Key_PageDown:
-                // Descendre d'un plan
-                if (currentSelectedElement.zLayer > 0) {
-                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayer - 1)
-                }
-                event.accepted = true
-                break
-            }
-        }
-    }
 
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
@@ -258,38 +207,6 @@ Rectangle {
         }
     }
 
-
-    function deleteElementsConnections(element) {
-        var nexts = element.connectionManager.nextElements || []
-        // itere sur les segments de connexion element->next
-        for (var j = 0; j < nexts.length; j++) {
-            var nextEl = nexts[j]
-            // itere sur les segments de connexion nextEl->element
-            var prevs = nextEl.connectionManager.previousElements || []
-            for (var k = 0; k < prevs.length; k++) {
-                var prevEl = prevs[k]
-                if (prevEl === element) {
-                    nextEl.connectionManager.removePreviousElement(element)
-                }
-            }
-        }
-        // itere sur les segments de connexion element->prev
-        var prevs = element.connectionManager.previousElements || []
-        for (var j = 0; j < prevs.length; j++) {
-            var prevEl = prevs[j]
-            // itere sur les segments de connexion prevEl->element
-            var nexts = prevEl.connectionManager.nextElements || []
-            for (var k = 0; k < nexts.length; k++) {
-                var nextEl = nexts[k]
-                if (nextEl === element) {
-                    prevEl.connectionManager.removeNextElement(element)
-                }
-            }
-        }
-    }
-
-
-
     // Menu contextuel pour la création d'éléments
     Menu {
         id: contextMenu
@@ -319,91 +236,6 @@ Rectangle {
         }
     }
 
-    // Fonction pour désélectionner tous les tiles
-    function deselectAllTiles() {
-        // Désélectionner tous les tiles dans la liste
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i]) {
-                snapableTilesList[i].isSelected = false
-            }
-        }
-        currentSelectedElement = null
-    }
-
-    // Fonction pour supprimer un élément
-    function deleteElement(element) {
-        console.log("Suppression de l'élément:", element)
-
-        // Trouver l'index de l'élément dans la liste
-        var index = -1
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i] === element) {
-                index = i
-                break
-            }
-        }
-
-        if (index !== -1) {
-            // Supprimer l'élément de la liste
-            snapableTilesList.splice(index, 1)
-
-            // Si c'était l'élément sélectionné, le désélectionner
-            if (currentSelectedElement === element) {
-                currentSelectedElement = null
-            }
-
-            // Détruire l'objet QML
-            element.destroy()
-        } else {
-            console.log("Erreur: Élément non trouvé dans la liste")
-        }
-    }
-
-    // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
-    function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
-        console.log("create tile at", gridX, gridY )
-        var newTile
-        switch (isDecoration){
-        case GameBoard.TileType.Decoration:
-            newTile = snapableDecoration.createObject(workArea, {
-                                                          "gridRelativePositionX": gridX,
-                                                          "gridRelativePositionY": gridY,
-                                                      })
-
-            break
-        case GameBoard.TileType.Personnage:
-            newTile = snapableCharacter.createObject(workArea, {
-                                                                   "gridRelativePositionX": gridX,
-                                                                   "gridRelativePositionY": gridY,
-                                                                   "playerData": Game.getNewPlayer()
-                                                               })
-            break
-        case GameBoard.TileType.Case:
-            newTile = snapableCaseTile.createObject(workArea, {
-                                                                 "gridRelativePositionX": gridX,
-                                                                 "gridRelativePositionY": gridY,
-                                                                 "unitSizeWidth": 6,
-                                                                 "unitSizeHeight": 6,
-                                                                 "caseData": Game.getNewCaseType(caseType)
-                                                             })
-            break
-
-        default:
-            break
-        }
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            nextTileId++
-            // Désélectionner tout et sélectionner le nouveau tile
-            deselectAllTiles()
-            newTile.isSelected = true
-            currentSelectedElement = newTile
-            newTile.snapToGridFromGrid()
-            //rebuildConnectionSegments()
-        }
-        return newTile
-    }
-
     // Panneau d'information sur l'élément sélectionné (nouveau composant)
     InfoPanel {
         id: infoPanel
@@ -426,6 +258,7 @@ Rectangle {
         gridManager: editorGrid
         showControlPanel: false
         showInfoPanel: true
+        property alias isEdit : root.isEditing
     }
 
 
@@ -495,6 +328,173 @@ Rectangle {
                 connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
             }
         }
+    }
+
+    WheelHandler {
+        onWheel: (wheel)=> {
+                     if (wheel.modifiers & Qt.ControlModifier) {
+                         //console.log(wheel.angleDelta)
+                         if (wheel.angleDelta.y > 0)
+                         editorGrid.updateSize(editorGrid.mmSize + 1)
+                         else if (editorGrid.mmSize > 1)
+                         editorGrid.updateSize(editorGrid.mmSize - 1)
+                         for (var i = 0; i < snapableTilesList.length; i++) {
+                             if (snapableTilesList[i]) {
+                                 snapableTilesList[i].isSelected = false
+                                 snapableTilesList[i].snapToGridFromGrid()
+                             }
+                         }
+                         // les chemins sont liés aux Items; pas besoin de rebuild ici
+                     }
+                 }
+    }
+
+    // Gestionnaire de raccourcis clavier
+    Keys.onPressed: function(event) {
+        if (currentSelectedElement) {
+            switch(event.key) {
+            case Qt.Key_1:
+                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.background)
+                event.accepted = true
+                break
+            case Qt.Key_2:
+                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.middle)
+                event.accepted = true
+                break
+            case Qt.Key_3:
+                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.foreground)
+                event.accepted = true
+                break
+            case Qt.Key_PageUp:
+                // Monter d'un plan
+                if (currentSelectedElement.zLayer < 2) {
+                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayer + 1)
+                }
+                event.accepted = true
+                break
+            case Qt.Key_PageDown:
+                // Descendre d'un plan
+                if (currentSelectedElement.zLayer > 0) {
+                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayer - 1)
+                }
+                event.accepted = true
+                break
+            }
+        }
+    }
+
+    function deleteElementsConnections(element) {
+        var nexts = element.connectionManager.nextElements || []
+        // itere sur les segments de connexion element->next
+        for (var j = 0; j < nexts.length; j++) {
+            var nextEl = nexts[j]
+            // itere sur les segments de connexion nextEl->element
+            var prevs = nextEl.connectionManager.previousElements || []
+            for (var k = 0; k < prevs.length; k++) {
+                var prevEl = prevs[k]
+                if (prevEl === element) {
+                    nextEl.connectionManager.removePreviousElement(element)
+                }
+            }
+        }
+        // itere sur les segments de connexion element->prev
+        var prevs = element.connectionManager.previousElements || []
+        for (var j = 0; j < prevs.length; j++) {
+            var prevEl = prevs[j]
+            // itere sur les segments de connexion prevEl->element
+            var nexts = prevEl.connectionManager.nextElements || []
+            for (var k = 0; k < nexts.length; k++) {
+                var nextEl = nexts[k]
+                if (nextEl === element) {
+                    prevEl.connectionManager.removeNextElement(element)
+                }
+            }
+        }
+    }
+
+    // Fonction pour désélectionner tous les tiles
+    function deselectAllTiles() {
+        // Désélectionner tous les tiles dans la liste
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            if (snapableTilesList[i]) {
+                snapableTilesList[i].isSelected = false
+            }
+        }
+        currentSelectedElement = null
+    }
+
+    // Fonction pour supprimer un élément
+    function deleteElement(element) {
+        console.log("Suppression de l'élément:", element)
+
+        // Trouver l'index de l'élément dans la liste
+        var index = -1
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            if (snapableTilesList[i] === element) {
+                index = i
+                break
+            }
+        }
+
+        if (index !== -1) {
+            // Supprimer l'élément de la liste
+            snapableTilesList.splice(index, 1)
+
+            // Si c'était l'élément sélectionné, le désélectionner
+            if (currentSelectedElement === element) {
+                currentSelectedElement = null
+            }
+
+            // Détruire l'objet QML
+            element.destroy()
+        } else {
+            console.log("Erreur: Élément non trouvé dans la liste")
+        }
+    }
+
+    // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
+    function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
+        console.log("create tile at", gridX, gridY )
+        var newTile
+        switch (isDecoration){
+        case GameBoard.TileType.Decoration:
+            newTile = snapableDecoration.createObject(workArea, {
+                                                          "gridRelativePositionX": gridX,
+                                                          "gridRelativePositionY": gridY,
+                                                      })
+
+            break
+        case GameBoard.TileType.Personnage:
+            newTile = snapableCharacter.createObject(workArea, {
+                                                         "gridRelativePositionX": gridX,
+                                                         "gridRelativePositionY": gridY,
+                                                         "playerData": Game.getNewPlayer()
+                                                     })
+            break
+        case GameBoard.TileType.Case:
+            newTile = snapableCaseTile.createObject(workArea, {
+                                                        "gridRelativePositionX": gridX,
+                                                        "gridRelativePositionY": gridY,
+                                                        "unitSizeWidth": 6,
+                                                        "unitSizeHeight": 6,
+                                                        "caseData": Game.getNewCaseType(caseType)
+                                                    })
+            break
+
+        default:
+            break
+        }
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            nextTileId++
+            // Désélectionner tout et sélectionner le nouveau tile
+            deselectAllTiles()
+            newTile.isSelected = true
+            currentSelectedElement = newTile
+            newTile.snapToGridFromGrid()
+            //rebuildConnectionSegments()
+        }
+        return newTile
     }
 
 }

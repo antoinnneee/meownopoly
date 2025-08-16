@@ -29,5 +29,6 @@
         <file>asset/icon/tax.png</file>
         <file>asset/icon/tojail.png</file>
         <file>asset/icon/collar.png</file>
+        <file>asset/element/0_3.png</file>
     </qresource>
 </RCC>

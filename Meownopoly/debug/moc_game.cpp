@@ -48,6 +48,8 @@ template <> constexpr inline auto Game::qt_create_metaobjectdata<qt_meta_tag_ZN4
         "position",
         "Player*",
         "newOwner",
+        "assetNumberChanged",
+        "assetPathChanged",
         "init",
         "startGame",
         "createPlayer",
@@ -70,6 +72,10 @@ template <> constexpr inline auto Game::qt_create_metaobjectdata<qt_meta_tag_ZN4
         "caseData",
         "saveMultipleCasesToJson",
         "casesData",
+        "checkDecorationAssets",
+        "getAssetPath",
+        "QVariant",
+        "index",
         "boardSize",
         "currentPlayerIndex",
         "players",
@@ -78,7 +84,9 @@ template <> constexpr inline auto Game::qt_create_metaobjectdata<qt_meta_tag_ZN4
         "listCases",
         "Case**",
         "listCards",
-        "QList<Card*>"
+        "QList<Card*>",
+        "assetNumber",
+        "assetPath"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -92,50 +100,64 @@ template <> constexpr inline auto Game::qt_create_metaobjectdata<qt_meta_tag_ZN4
         QtMocHelpers::SignalData<void(int, Player *)>(5, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::Int, 6 }, { 0x80000000 | 7, 8 },
         }}),
+        // Signal 'assetNumberChanged'
+        QtMocHelpers::SignalData<void()>(9, 2, QMC::AccessPublic, QMetaType::Void),
+        // Signal 'assetPathChanged'
+        QtMocHelpers::SignalData<void()>(10, 2, QMC::AccessPublic, QMetaType::Void),
         // Method 'init'
-        QtMocHelpers::MethodData<void()>(9, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::MethodData<void()>(11, 2, QMC::AccessPublic, QMetaType::Void),
         // Method 'startGame'
-        QtMocHelpers::MethodData<void()>(10, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::MethodData<void()>(12, 2, QMC::AccessPublic, QMetaType::Void),
         // Method 'createPlayer'
-        QtMocHelpers::MethodData<Player *(const QString, QColor, int, int)>(11, 2, QMC::AccessPublic, 0x80000000 | 7, {{
-            { QMetaType::QString, 12 }, { QMetaType::QColor, 13 }, { QMetaType::Int, 14 }, { QMetaType::Int, 15 },
+        QtMocHelpers::MethodData<Player *(const QString, QColor, int, int)>(13, 2, QMC::AccessPublic, 0x80000000 | 7, {{
+            { QMetaType::QString, 14 }, { QMetaType::QColor, 15 }, { QMetaType::Int, 16 }, { QMetaType::Int, 17 },
         }}),
         // Method 'setupPlayers'
-        QtMocHelpers::MethodData<void(const QVariantList &)>(16, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 17, 18 },
+        QtMocHelpers::MethodData<void(const QVariantList &)>(18, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 19, 20 },
         }}),
         // Method 'nextPlayer'
-        QtMocHelpers::MethodData<void()>(19, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::MethodData<void()>(21, 2, QMC::AccessPublic, QMetaType::Void),
         // Method 'getPlayer'
-        QtMocHelpers::MethodData<Player *()>(20, 2, QMC::AccessPublic, 0x80000000 | 7),
+        QtMocHelpers::MethodData<Player *()>(22, 2, QMC::AccessPublic, 0x80000000 | 7),
         // Method 'getNewCaseType'
-        QtMocHelpers::MethodData<Case *(Case::CaseType)>(21, 2, QMC::AccessPublic, 0x80000000 | 22, {{
-            { 0x80000000 | 23, 24 },
+        QtMocHelpers::MethodData<Case *(Case::CaseType)>(23, 2, QMC::AccessPublic, 0x80000000 | 24, {{
+            { 0x80000000 | 25, 26 },
         }}),
         // Method 'getNewPlayer'
-        QtMocHelpers::MethodData<Player *()>(25, 2, QMC::AccessPublic, 0x80000000 | 7),
+        QtMocHelpers::MethodData<Player *()>(27, 2, QMC::AccessPublic, 0x80000000 | 7),
         // Method 'saveCaseToJson'
-        QtMocHelpers::MethodData<bool(const QVariantMap &)>(26, 2, QMC::AccessPublic, QMetaType::Bool, {{
-            { 0x80000000 | 27, 28 },
+        QtMocHelpers::MethodData<bool(const QVariantMap &)>(28, 2, QMC::AccessPublic, QMetaType::Bool, {{
+            { 0x80000000 | 29, 30 },
         }}),
         // Method 'saveMultipleCasesToJson'
-        QtMocHelpers::MethodData<bool(const QVariantList &)>(29, 2, QMC::AccessPublic, QMetaType::Bool, {{
-            { 0x80000000 | 17, 30 },
+        QtMocHelpers::MethodData<bool(const QVariantList &)>(31, 2, QMC::AccessPublic, QMetaType::Bool, {{
+            { 0x80000000 | 19, 32 },
+        }}),
+        // Method 'checkDecorationAssets'
+        QtMocHelpers::MethodData<bool()>(33, 2, QMC::AccessPublic, QMetaType::Bool),
+        // Method 'getAssetPath'
+        QtMocHelpers::MethodData<QVariant(int) const>(34, 2, QMC::AccessPublic, 0x80000000 | 35, {{
+            { QMetaType::Int, 36 },
         }}),
     };
     QtMocHelpers::UintData qt_properties {
         // property 'boardSize'
-        QtMocHelpers::PropertyData<int>(31, QMetaType::Int, QMC::DefaultPropertyFlags | QMC::Constant),
+        QtMocHelpers::PropertyData<int>(37, QMetaType::Int, QMC::DefaultPropertyFlags | QMC::Constant),
         // property 'currentPlayerIndex'
-        QtMocHelpers::PropertyData<int>(32, QMetaType::Int, QMC::DefaultPropertyFlags, 2),
+        QtMocHelpers::PropertyData<int>(38, QMetaType::Int, QMC::DefaultPropertyFlags, 2),
         // property 'players'
-        QtMocHelpers::PropertyData<QList<Player*>>(33, 0x80000000 | 34, QMC::DefaultPropertyFlags | QMC::EnumOrFlag, 1),
+        QtMocHelpers::PropertyData<QList<Player*>>(39, 0x80000000 | 40, QMC::DefaultPropertyFlags | QMC::EnumOrFlag, 1),
         // property 'listPlayers'
-        QtMocHelpers::PropertyData<QList<Player*>>(35, 0x80000000 | 34, QMC::DefaultPropertyFlags | QMC::EnumOrFlag | QMC::Constant | QMC::Final),
+        QtMocHelpers::PropertyData<QList<Player*>>(41, 0x80000000 | 40, QMC::DefaultPropertyFlags | QMC::EnumOrFlag | QMC::Constant | QMC::Final),
         // property 'listCases'
-        QtMocHelpers::PropertyData<Case**>(36, 0x80000000 | 37, QMC::DefaultPropertyFlags | QMC::EnumOrFlag | QMC::Constant | QMC::Final),
+        QtMocHelpers::PropertyData<Case**>(42, 0x80000000 | 43, QMC::DefaultPropertyFlags | QMC::EnumOrFlag | QMC::Constant | QMC::Final),
         // property 'listCards'
-        QtMocHelpers::PropertyData<QList<Card*>>(38, 0x80000000 | 39, QMC::DefaultPropertyFlags | QMC::EnumOrFlag | QMC::Constant | QMC::Final),
+        QtMocHelpers::PropertyData<QList<Card*>>(44, 0x80000000 | 45, QMC::DefaultPropertyFlags | QMC::EnumOrFlag | QMC::Constant | QMC::Final),
+        // property 'assetNumber'
+        QtMocHelpers::PropertyData<int>(46, QMetaType::Int, QMC::DefaultPropertyFlags | QMC::Writable | QMC::StdCppSet | QMC::Final, 4),
+        // property 'assetPath'
+        QtMocHelpers::PropertyData<QVariantList>(47, 0x80000000 | 19, QMC::DefaultPropertyFlags | QMC::Writable | QMC::EnumOrFlag | QMC::StdCppSet | QMC::Final, 5),
     };
     QtMocHelpers::UintData qt_enums {
     };
@@ -161,22 +183,28 @@ void Game::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void *
         case 1: _t->playersChanged(); break;
         case 2: _t->currentPlayerIndexChanged(); break;
         case 3: _t->propertyPurchased((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<Player*>>(_a[2]))); break;
-        case 4: _t->init(); break;
-        case 5: _t->startGame(); break;
-        case 6: { Player* _r = _t->createPlayer((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QColor>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[4])));
+        case 4: _t->assetNumberChanged(); break;
+        case 5: _t->assetPathChanged(); break;
+        case 6: _t->init(); break;
+        case 7: _t->startGame(); break;
+        case 8: { Player* _r = _t->createPlayer((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QColor>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast< std::add_pointer_t<int>>(_a[4])));
             if (_a[0]) *reinterpret_cast< Player**>(_a[0]) = std::move(_r); }  break;
-        case 7: _t->setupPlayers((*reinterpret_cast< std::add_pointer_t<QVariantList>>(_a[1]))); break;
-        case 8: _t->nextPlayer(); break;
-        case 9: { Player* _r = _t->getPlayer();
+        case 9: _t->setupPlayers((*reinterpret_cast< std::add_pointer_t<QVariantList>>(_a[1]))); break;
+        case 10: _t->nextPlayer(); break;
+        case 11: { Player* _r = _t->getPlayer();
             if (_a[0]) *reinterpret_cast< Player**>(_a[0]) = std::move(_r); }  break;
-        case 10: { Case* _r = _t->getNewCaseType((*reinterpret_cast< std::add_pointer_t<Case::CaseType>>(_a[1])));
+        case 12: { Case* _r = _t->getNewCaseType((*reinterpret_cast< std::add_pointer_t<Case::CaseType>>(_a[1])));
             if (_a[0]) *reinterpret_cast< Case**>(_a[0]) = std::move(_r); }  break;
-        case 11: { Player* _r = _t->getNewPlayer();
+        case 13: { Player* _r = _t->getNewPlayer();
             if (_a[0]) *reinterpret_cast< Player**>(_a[0]) = std::move(_r); }  break;
-        case 12: { bool _r = _t->saveCaseToJson((*reinterpret_cast< std::add_pointer_t<QVariantMap>>(_a[1])));
+        case 14: { bool _r = _t->saveCaseToJson((*reinterpret_cast< std::add_pointer_t<QVariantMap>>(_a[1])));
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
-        case 13: { bool _r = _t->saveMultipleCasesToJson((*reinterpret_cast< std::add_pointer_t<QVariantList>>(_a[1])));
+        case 15: { bool _r = _t->saveMultipleCasesToJson((*reinterpret_cast< std::add_pointer_t<QVariantList>>(_a[1])));
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
+        case 16: { bool _r = _t->checkDecorationAssets();
+            if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
+        case 17: { QVariant _r = _t->getAssetPath((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])));
+            if (_a[0]) *reinterpret_cast< QVariant*>(_a[0]) = std::move(_r); }  break;
         default: ;
         }
     }
@@ -201,6 +229,10 @@ void Game::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void *
             return;
         if (QtMocHelpers::indexOfMethod<void (Game::*)(int , Player * )>(_a, &Game::propertyPurchased, 3))
             return;
+        if (QtMocHelpers::indexOfMethod<void (Game::*)()>(_a, &Game::assetNumberChanged, 4))
+            return;
+        if (QtMocHelpers::indexOfMethod<void (Game::*)()>(_a, &Game::assetPathChanged, 5))
+            return;
     }
     if (_c == QMetaObject::RegisterPropertyMetaType) {
         switch (_id) {
@@ -221,6 +253,16 @@ void Game::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void *
         case 3: *reinterpret_cast<QList<Player*>*>(_v) = _t->listPlayers(); break;
         case 4: *reinterpret_cast<Case***>(_v) = _t->listCases(); break;
         case 5: *reinterpret_cast<QList<Card*>*>(_v) = _t->listCards(); break;
+        case 6: *reinterpret_cast<int*>(_v) = _t->assetNumber(); break;
+        case 7: *reinterpret_cast<QVariantList*>(_v) = _t->assetPath(); break;
+        default: break;
+        }
+    }
+    if (_c == QMetaObject::WriteProperty) {
+        void *_v = _a[0];
+        switch (_id) {
+        case 6: _t->setAssetNumber(*reinterpret_cast<int*>(_v)); break;
+        case 7: _t->setAssetPath(*reinterpret_cast<QVariantList*>(_v)); break;
         default: break;
         }
     }
@@ -245,20 +287,20 @@ int Game::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 14)
+        if (_id < 18)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 14;
+        _id -= 18;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 14)
+        if (_id < 18)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 14;
+        _id -= 18;
     }
     if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
             || _c == QMetaObject::ResetProperty || _c == QMetaObject::BindableProperty
             || _c == QMetaObject::RegisterPropertyMetaType) {
         qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 8;
     }
     return _id;
 }
@@ -285,5 +327,17 @@ void Game::currentPlayerIndexChanged()
 void Game::propertyPurchased(int _t1, Player * _t2)
 {
     QMetaObject::activate<void>(this, &staticMetaObject, 3, nullptr, _t1, _t2);
+}
+
+// SIGNAL 4
+void Game::assetNumberChanged()
+{
+    QMetaObject::activate(this, &staticMetaObject, 4, nullptr);
+}
+
+// SIGNAL 5
+void Game::assetPathChanged()
+{
+    QMetaObject::activate(this, &staticMetaObject, 5, nullptr);
 }
 QT_WARNING_POP
