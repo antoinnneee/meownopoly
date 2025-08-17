@@ -128,7 +128,7 @@ Rectangle {
                 
                 Image {
                     anchors.centerIn: parent
-                    source: "qrc:/asset/avatar/avatar" + (currentAvatarIndex + 1) + ".png"
+                    source: appInstance.getAssetPath("avatar/avatar" + (currentAvatarIndex + 1) + ".png")
                     width: 50
                     height: 50
                     fillMode: Image.PreserveAspectFit

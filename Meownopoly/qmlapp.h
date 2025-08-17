@@ -12,7 +12,7 @@
 #include "game.h"
 #include "QtFolderCompressor/FolderCompressor.h"
 
-#define FORCE_DOWNLOAD 1
+#define FORCE_DOWNLOAD 0
 #define ASSET_URL "https://drive.google.com/file/d/1UMldDp99unwsFFOYCNF0M3b3eXkVlAJu/view?usp=sharing"
 
 class QmlApp : public QQmlApplicationEngine
