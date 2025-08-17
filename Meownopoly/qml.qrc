@@ -41,10 +41,6 @@
         <file>qml/editor/CreationPanel.qml</file>
         <file>qml/editor/InfoPanel.qml</file>
         <file>qml/editor/tools/MyGridControlPanel.qml</file>
-        <file>asset/3D/lopoly_tree/Tree.qml</file>
-        <file>asset/3D/lopoly_tree/meshes/cylinder_000_mesh.mesh</file>
-        <file>asset/3D/lopoly_tree/meshes/icosphere_001_mesh.mesh</file>
-        <file>asset/3D/lopoly_tree/Tree2.qml</file>
         <file>qml/editor/tools/SnapableDecoration.qml</file>
         <file>qml/editor/CaseConfigurationPanel.qml</file>
         <file>qml/editor/panel/CaseCatPerksConfig.qml</file>

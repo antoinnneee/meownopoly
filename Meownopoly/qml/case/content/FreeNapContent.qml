@@ -14,7 +14,7 @@ Item {
     required property CaseFreeNap caseData
 
     // Icons for different tile types
-    property string tileIcons: "../../../asset/icon/nap2.png"
+    property string tileIcons: appInstance.getAssetPath("icon/nap2.png")
 
     property string fallbackIcons: "😴"
 

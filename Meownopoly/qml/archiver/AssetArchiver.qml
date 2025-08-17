@@ -10,6 +10,16 @@ Rectangle {
     
     signal backRequested()
     
+    // Update source folder when assets path changes
+    Connections {
+        target: typeof appInstance !== "undefined" ? appInstance : null
+        function onAssetsPathChanged() {
+            if (sourceFolderField.text === "" || sourceFolderField.text === sourceFolderField.placeholderText) {
+                sourceFolderField.text = appInstance.assetsPath
+            }
+        }
+    }
+    
     // Title
     Text {
         id: title
@@ -82,6 +92,7 @@ Rectangle {
                         TextField {
                             id: sourceFolderField
                             placeholderText: "Sélectionnez le dossier à compresser..."
+                            text: typeof appInstance !== "undefined" ? appInstance.assetsPath : ""
                             Layout.fillWidth: true
                             color: "#ffffff"
                             
@@ -342,6 +353,66 @@ Rectangle {
                                     statusText.color = "#f44336"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            
+            // Assets path info section
+            GroupBox {
+                id: infoGroup
+                title: "Informations sur les Assets"
+                Layout.fillWidth: true
+                
+                background: Rectangle {
+                    color: "#3a3a3a"
+                    radius: 8
+                    border.color: "#4a4a4a"
+                    border.width: 1
+                }
+                
+                label: Text {
+                    text: infoGroup.title
+                    color: "#ffffff"
+                    font.pixelSize: 16
+                    font.bold: true
+                }
+                
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+                    
+                    Text {
+                        text: "Chemin actuel des assets: " + (typeof appInstance !== "undefined" ? appInstance.assetsPath : "Non disponible")
+                        color: "#cccccc"
+                        font.pixelSize: 12
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                    }
+                    
+                    Text {
+                        text: "Exemple d'utilisation en QML:"
+                        color: "#ffffff"
+                        font.pixelSize: 12
+                        font.bold: true
+                    }
+                    
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 60
+                        color: "#2a2a2a"
+                        radius: 4
+                        border.color: "#555555"
+                        border.width: 1
+                        
+                        Text {
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            text: 'Image {\n    source: appInstance.getAssetPath("avatar/avatar1.png")\n}'
+                            color: "#90ee90"
+                            font.pixelSize: 11
+                            font.family: "monospace"
+                            wrapMode: Text.WordWrap
                         }
                     }
                 }

@@ -18,8 +18,7 @@ SnapableElement {
     Image {
         id: caseTile
         anchors.fill: parent
-       source: "qrc:/asset/element/grass/" + randomImageIndex + ".png"
-        // source: "qrc:/asset/element/lake_" + 0 + ".png"
+       source: appInstance.getAssetPath("element/grass/" + randomImageIndex + ".png")
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true
         cache: true  // Cache the image to prevent reloading

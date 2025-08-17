@@ -1,4 +1,4 @@
-    QT += quick core qml widgets core-private quickcontrols2 quick3d
+    QT += quick core qml widgets core-private quickcontrols2 quick3d network
 
 android:{
     QT += core-private
@@ -71,7 +71,6 @@ HEADERS += \
     tools/appinfo.h \
 
 RESOURCES += qml.qrc \
-    asset.qrc \
     config.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model

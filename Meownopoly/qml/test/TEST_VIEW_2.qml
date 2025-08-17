@@ -49,18 +49,18 @@ Dialog {
 
     // Icons for different tile types
     property var tileIcons: [
-        "qrc:/asset/kibble.png",       // 0: Kibble Dispenser
-        "qrc:/asset/bed.png",          // 1: Rest Area
-        "qrc:/asset/cardboard.png",    // 2: Card Board Box
-        "qrc:/asset/catnip.png",       // 3: Cat Nip
-        "qrc:/asset/jail.png",         // 4: Jail
-        "qrc:/asset/tojail.png",       // 5: To Jail
-        "qrc:/asset/catdoor.png",      // 6: Cat Door
-        "qrc:/asset/nap.png",          // 7: Free Nap
-        "qrc:/asset/fountain.png",     // 8: Water Fountain
-        "qrc:/asset/laser.png",        // 9: Laser Pointer
-        "qrc:/asset/tax.png",          // 10: Golden Collar
-        "qrc:/asset/tax.png"           // 11: Fur Tax
+        appInstance.getAssetPath("kibble.png"),       // 0: Kibble Dispenser
+        appInstance.getAssetPath("bed.png"),          // 1: Rest Area
+        appInstance.getAssetPath("cardboard.png"),    // 2: Card Board Box
+        appInstance.getAssetPath("catnip.png"),       // 3: Cat Nip
+        appInstance.getAssetPath("jail.png"),         // 4: Jail
+        appInstance.getAssetPath("tojail.png"),       // 5: To Jail
+        appInstance.getAssetPath("catdoor.png"),      // 6: Cat Door
+        appInstance.getAssetPath("nap.png"),          // 7: Free Nap
+        appInstance.getAssetPath("fountain.png"),     // 8: Water Fountain
+        appInstance.getAssetPath("laser.png"),        // 9: Laser Pointer
+        appInstance.getAssetPath("tax.png"),          // 10: Golden Collar
+        appInstance.getAssetPath("tax.png")           // 11: Fur Tax
     ]
 
     ColumnLayout {
