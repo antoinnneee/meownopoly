@@ -9,11 +9,6 @@
         <file>asset/avatar/avatar4.png</file>
         <file>asset/avatar/avatar5.png</file>
         <file>asset/avatar/avatar6.png</file>
-        <file>asset/element/tree_lowpoly.png</file>
-        <file>asset/element/tree_lowpoly_0.png</file>
-        <file>asset/element/tree_lowpoly_1.png</file>
-        <file>asset/element/tree_lowpoly_2.png</file>
-        <file>asset/element/tree_lowpoly_3.png</file>
         <file>asset/element/lake_0.png</file>
         <file>asset/icon/bed.png</file>
         <file>asset/icon/cardboard.png</file>
@@ -29,5 +24,26 @@
         <file>asset/icon/tax.png</file>
         <file>asset/icon/tojail.png</file>
         <file>asset/icon/collar.png</file>
+        <file>asset/element/grass/0.png</file>
+        <file>asset/element/grass/1.png</file>
+        <file>asset/element/grass/10.png</file>
+        <file>asset/element/grass/11.png</file>
+        <file>asset/element/grass/12.png</file>
+        <file>asset/element/grass/2.png</file>
+        <file>asset/element/grass/3.png</file>
+        <file>asset/element/grass/4.png</file>
+        <file>asset/element/grass/5.png</file>
+        <file>asset/element/grass/6.png</file>
+        <file>asset/element/grass/7.png</file>
+        <file>asset/element/grass/8.png</file>
+        <file>asset/element/grass/9.png</file>
+        <file>asset/element/other/4.png</file>
+        <file>asset/element/tree/0.png</file>
+        <file>asset/element/tree/1.png</file>
+        <file>asset/element/tree/2.png</file>
+        <file>asset/element/tree/3.png</file>
+        <file>asset/element/tree/4.png</file>
+        <file>asset/element/tree/5.png</file>
+        <file>asset/element/tree/6.png</file>
     </qresource>
 </RCC>

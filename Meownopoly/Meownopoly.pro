@@ -22,6 +22,7 @@ CONFIG += c++20
 
 
 SOURCES += \
+    QtFolderCompressor/FolderCompressor.cpp \
     card.cpp \
     case/Case.cpp \
     case/CaseCatDevice.cpp \
@@ -46,6 +47,7 @@ SOURCES += \
     tools/appinfo.cpp
 
 HEADERS += \
+    QtFolderCompressor/FolderCompressor.h \
     card.h \
     case/Case.h \
     case/CaseCatDevice.h \

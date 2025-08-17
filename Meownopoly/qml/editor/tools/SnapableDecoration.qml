@@ -13,12 +13,12 @@ SnapableElement {
     unitSizeWidth:4
 
 
-    property int randomImageIndex: Math.floor(Math.random() * 4)  // Random number between 0 and 3
+    property int randomImageIndex: Math.floor(Math.random() * 12)  // Random number between 0 and 3
 
     Image {
         id: caseTile
         anchors.fill: parent
-       source: "qrc:/asset/element/tree_lowpoly_" + randomImageIndex + ".png"
+       source: "qrc:/asset/element/grass/" + randomImageIndex + ".png"
         // source: "qrc:/asset/element/lake_" + 0 + ".png"
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true

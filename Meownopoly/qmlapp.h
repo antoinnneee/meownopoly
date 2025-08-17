@@ -5,6 +5,7 @@
 #include <QQmlApplicationEngine>
 #include <QtQuick/QQuickView>
 #include "game.h"
+#include "QtFolderCompressor/FolderCompressor.h"
 
 class QmlApp : public QQmlApplicationEngine
 {
@@ -23,6 +24,9 @@ private slots:
 
 private:
     Game *game = nullptr;
+    FolderCompressor *folderCompressor = nullptr;
+    
+    void autoExtractAssets();
 };
 
 #endif // __QMLAPP_H

@@ -14,7 +14,7 @@ Rectangle {
     property bool autoSnap: true
     property color elementColor: "transparent"
     property color borderColor: "gray"
-    property int borderWidth: 1
+    property int borderWidth: 0
     
     // Propriétés d'état
     property bool isDragging: false
@@ -95,7 +95,7 @@ Rectangle {
 
     color: elementColor
     border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
-    border.width: isSelected ? borderWidth + 1 : borderWidth
+    border.width: isSelected ? borderWidth + 2 : borderWidth
     
     // Z-order basé sur le plan
     z: zLayerBase + isSelected

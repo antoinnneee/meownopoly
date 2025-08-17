@@ -68,5 +68,6 @@
         <file>qml/editor/tools/snapable/SnapableElementResizeHandles.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementDeleteAnimation.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementCreateAnimation.qml</file>
+        <file>qml/archiver/AssetArchiver.qml</file>
     </qresource>
 </RCC>
