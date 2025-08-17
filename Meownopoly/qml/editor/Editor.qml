@@ -203,7 +203,7 @@ Rectangle {
                         editorGrid.moveToConfigElement(element)
                     }
                 }
-                onElementPressed: {
+                onElementPressed: function(element) {
                     deselectAllTiles()
                     element.isSelected = true
                     currentSelectedElement = element

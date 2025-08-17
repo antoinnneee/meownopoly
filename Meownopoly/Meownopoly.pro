@@ -1,4 +1,4 @@
-    QT += quick core qml widgets core-private quickcontrols2 quick3d
+    QT += quick core qml widgets core-private quickcontrols2 quick3d network
 
 android:{
     QT += core-private
@@ -22,6 +22,7 @@ CONFIG += c++20
 
 
 SOURCES += \
+    QtFolderCompressor/FolderCompressor.cpp \
     card.cpp \
     case/Case.cpp \
     case/CaseCatDevice.cpp \
@@ -46,6 +47,7 @@ SOURCES += \
     tools/appinfo.cpp
 
 HEADERS += \
+    QtFolderCompressor/FolderCompressor.h \
     card.h \
     case/Case.h \
     case/CaseCatDevice.h \
@@ -69,7 +71,6 @@ HEADERS += \
     tools/appinfo.h \
 
 RESOURCES += qml.qrc \
-    asset.qrc \
     config.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model

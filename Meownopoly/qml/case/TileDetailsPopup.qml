@@ -57,7 +57,7 @@ Popup {
                 
                 Image {
                     anchors.fill: parent
-                    source: root.tileType >= 0 ? "qrc:/asset/icon/" + getTileIconName() : ""
+                    source: root.tileType >= 0 ? appInstance.getAssetPath("icon/" + getTileIconName())  : ""
                     sourceSize {
                         width: width * 2
                         height: height * 2

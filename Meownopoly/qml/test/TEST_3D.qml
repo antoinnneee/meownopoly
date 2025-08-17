@@ -4,7 +4,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
 import QtQuick3D.Helpers
-import "../../asset/3D/lopoly_tree"
 import "../case"
 import Case
 import CaseRestArea
@@ -39,9 +38,9 @@ Rectangle {
                     eulerRotation.x: -25
                 }
 
-                Tree2{
-                    scale: Qt.vector3d(0.1, 0.1, 0.1)
-                }
+                // Tree2{
+                //     scale: Qt.vector3d(0.1, 0.1, 0.1)
+                // }
                 Model {
                     x: 0
                     y: -10.43

@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import "titleScreen/"
 import "test/"
 import "editor/"
+import "archiver/"
 import QtQuick.Window
 import Game
 
@@ -45,6 +46,11 @@ ApplicationWindow {
                 stackView.pop()
                 stackView.push(test3D)
             }
+
+            onArchiverRequested: {
+                stackView.pop()
+                stackView.push(assetArchiver)
+            }
         }
     }
 
@@ -82,6 +88,20 @@ ApplicationWindow {
             
             // Fonction pour revenir à l'écran titre
             function goBack() {
+                stackView.pop()
+                stackView.push(titleScreen)
+            }
+        }
+    }
+    
+    Component {
+        id: assetArchiver
+        AssetArchiver {
+            width: parent.width
+            height: parent.height
+            visible: false
+            
+            onBackRequested: {
                 stackView.pop()
                 stackView.push(titleScreen)
             }
