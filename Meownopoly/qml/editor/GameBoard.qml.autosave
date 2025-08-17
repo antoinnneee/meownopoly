@@ -28,7 +28,6 @@ Rectangle {
     property var currentSelectedElement: null
 
     property bool isEditing : false
-    
     color: isEditing ? "#B3B3D0D8" : "lightblue"
     onIsEditingChanged: console.log("Édition:", isEditing)
     enum TileType {
@@ -40,15 +39,16 @@ Rectangle {
     // Grille de l'éditeur
     GridManager {
         id: editorGrid
-    
+
         mmSize: 15
         gridColor: "#80000000"
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
 
-        property alias isEdit : root.isEditing
-        
+        // Test de l'animation au démarrage
+        Component.onCompleted: {
+        }
         onGridPressed : function(position) {
             // Stocker la position du clic pour créer l'élément au bon endroit
             contextMenu.clickGridCoord = position
@@ -383,6 +383,43 @@ Rectangle {
         }
     }
 
+    // Fonction pour vérifier si un nouvel élément à une position spécifique se superposerait avec un élément existant
+    function isPositionOccupied(gridX, gridY, newElement) {
+        // Récupérer les dimensions du nouvel élément
+        // Assurons-nous d'utiliser les bonnes dimensions pour le type d'élément
+        var newElementWidth = newElement.unitSizeWidth;
+        var newElementHeight = newElement.unitSizeHeight;
+    
+        // Calcul des limites du nouvel élément
+        var newElementEndX = gridX + newElementWidth - 1;
+        var newElementEndY = gridY + newElementHeight - 1;
+    
+        // Parcourir tous les éléments placés sur la grille
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var element = snapableTilesList[i];
+            if (!element) continue;
+    
+            // Limites de l'élément existant
+            var existingStartX = element.gridRelativePositionX;
+            var existingStartY = element.gridRelativePositionY;
+            var existingEndX = existingStartX + element.unitSizeWidth - 1;
+            var existingEndY = existingStartY + element.unitSizeHeight - 1;
+    
+            // Vérification de superposition entre les deux rectangles
+            // Il y a superposition si les rectangles ne sont PAS complètement séparés
+            if (!(newElementEndX < existingStartX || gridX > existingEndX ||
+                  newElementEndY < existingStartY || gridY > existingEndY)) {
+                console.log("Collision détectée avec élément:", element);
+                console.log("Nouvel élément: (" + gridX + "," + gridY + ") à (" + newElementEndX + "," + newElementEndY + ")");
+                console.log("Élément existant: (" + existingStartX + "," + existingStartY + ") à (" + existingEndX + "," + existingEndY + ")");
+                return element; // Retourne l'élément qui cause la superposition
+            }
+        }
+    
+        // Aucun élément ne se superpose avec la position et taille données
+        return null;
+    }
+    
     function deleteElementsConnections(element) {
         var nexts = element.connectionManager.nextElements || []
         // itere sur les segments de connexion element->next
