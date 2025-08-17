@@ -56,7 +56,7 @@ ApplicationWindow {
 
     Component {
         id: editor
-        GameBoard{
+        Editor{
         width:root.width
         height:root.height
         visible: false

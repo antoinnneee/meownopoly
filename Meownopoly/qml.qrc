@@ -56,7 +56,6 @@
         <file>qml/editor/panel/CaseCatDeviceSpecificConfig.qml</file>
         <file>qml/editor/panel/PlayerSelector.qml</file>
         <file>qml/editor/tools/ConnectionsConfigurationPanel.qml</file>
-        <file>qml/editor/tools/ConnectionOverlay.qml</file>
         <file>qml/editor/tools/ConnectionOverlay2.qml</file>
         <file>qml/editor/tools/snapable/ResizeHandle.qml</file>
         <file>qml/editor/tools/snapable/SnapableElement.qml</file>
