@@ -43,7 +43,7 @@ QmlApp::QmlApp(QWindow *parent)
     networkManager = new QNetworkAccessManager(this);
     
     // Initialize assets path and expose this instance to QML
-    m_assetsPath = "asset/"; // Default fallback path
+    m_assetsPath = "asset_extracted/"; // Default fallback path
     rootContext()->setContextProperty("appInstance", this);
 
     load(QUrl("qrc:/qml/main.qml"));

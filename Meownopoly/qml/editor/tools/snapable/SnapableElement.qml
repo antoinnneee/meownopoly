@@ -103,8 +103,6 @@ Rectangle {
     // Effet de survol avec transition optimisée
     scale: isDragging ? 1.05 : 1.0
     
-    Behavior on border.width { NumberAnimation { duration: 80  } }
-
     Component.onCompleted: {
         snapToGrid()
         createAnimation.start()
