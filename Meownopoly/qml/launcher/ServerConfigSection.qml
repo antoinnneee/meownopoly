@@ -14,7 +14,10 @@ Rectangle {
     property alias serverUrl: serverUrlField.text
     property bool connectionValid: false
     property string connectionMessage: ""
-    
+
+    property alias statusAnimation: statusAnimation
+    property alias statusIcon: statusIcon
+
     signal testConnectionRequested()
     
     // Animation pour l'icône de statut
@@ -108,6 +111,10 @@ Rectangle {
                             currentIcon: "✅"
                             currentColor: "#4CAF50"
                         }
+                        PropertyChanges {
+                            target: iconText
+                            rotation: 0
+                        }
                     },
                     State {
                         name: "invalid"
@@ -115,6 +122,10 @@ Rectangle {
                             target: statusIcon
                             currentIcon: "❌"
                             currentColor: "#f44336"
+                        }
+                        PropertyChanges {
+                            target: iconText
+                            rotation: 0
                         }
                     },
                     State {
@@ -128,6 +139,7 @@ Rectangle {
                 ]
                 
                 Text {
+                    id: iconText
                     anchors.centerIn: parent
                     text: parent.currentIcon
                     font.pixelSize: 16

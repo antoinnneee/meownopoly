@@ -53,10 +53,12 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import LauncherManager 1.0
 
 Rectangle {
     id: root
     color: "#1e1e1e"
+
     
     signal launchGame()
     signal backRequested()
@@ -114,15 +116,15 @@ Rectangle {
                 onServerUrlChanged: logic.updateServerUrl(serverUrl)
                 onTestConnectionRequested: logic.testConnection()
                 
-                // Connexion avec le LauncherManager pour le statut de connexion
+                // Connexion avec le LauncherManager pour le statut de connexion devrais etre dans LauncherLogic
                 Connections {
                     target: LauncherManager
                     
                     function onConnectionTestResult(success, message) {
                         serverConfigSection.connectionValid = success
                         serverConfigSection.connectionMessage = message
-                        statusAnimation.start()
-                        statusIcon.state = success ? "valid" : "invalid"
+                        serverConfigSection.statusAnimation.start()
+                        serverConfigSection.statusIcon.state = success ? "valid" : "invalid"
                     }
                 }
             }
