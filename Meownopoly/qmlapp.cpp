@@ -11,9 +11,11 @@
 #include "game.h"
 #include "meowstyle.h"
 #include "item_snapable/ItemSnapable.h"
+#include "launcher_manager.h"
 
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -21,6 +23,8 @@
 #include <QUrl>
 #include <QRegularExpression>
 #include <QFileInfo>
+#include <QTimer>
+#include <QDateTime>
 #ifdef Q_OS_ANDROID
 #include <QJniObject.h>
 #endif
@@ -34,6 +38,7 @@ QmlApp::QmlApp(QWindow *parent)
     MeowStyle::registerQml();
     ItemSnapable::registerQml();
     FolderCompressor::registerQml();
+    LauncherManager::registerQml();
 
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);
@@ -239,3 +244,6 @@ QString QmlApp::getAssetPath(const QString &relativePath) const {
     qDebug() << "Asset path requested:" << relativePath << "-> Full path:" << fullPath;
     return fullPath;
 }
+
+
+

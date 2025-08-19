@@ -40,6 +40,7 @@ SOURCES += \
     item_snapable/ItemSnapable.cpp \
     item_snapable/SnapableCase.cpp \
     item_snapable/SnapableDeco.cpp \
+    launcher_manager.cpp \
     main.cpp \
     meowstyle.cpp \
     player.cpp \
@@ -64,6 +65,7 @@ HEADERS += \
     item_snapable/ItemSnapable.h \
     item_snapable/SnapableCase.h \
     item_snapable/SnapableDeco.h \
+    launcher_manager.h \
     meowstyle.h \
     player.h \
     qmlapp.h \

@@ -6,3 +6,5 @@ Meownopoly/Meownopoly.pro.user.*
 *.user
 Meownopoly/Meownopoly.pro.user
 Meownopoly/.qtc_clangd/
+/asset_server/node_modules
+/asset_server/assets

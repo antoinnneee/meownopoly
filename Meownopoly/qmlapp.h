@@ -7,8 +7,13 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QHttpMultiPart>
 #include <QUrl>
 #include <QFile>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QTimer>
+#include <QStandardPaths>
 #include "game.h"
 #include "QtFolderCompressor/FolderCompressor.h"
 
@@ -30,6 +35,8 @@ public:
     
     // Utility method to build asset paths from QML
     Q_INVOKABLE QString getAssetPath(const QString &relativePath) const;
+    
+
 
 signals:
     void assetsPathChanged();

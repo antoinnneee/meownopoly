@@ -58,6 +58,7 @@ Rectangle {
     signal caseCreatorRequested(); // Add signal for case creator
     signal test3DRequested(); // Add signal for 3D test
     signal archiverRequested(); // Add signal for asset archiver
+    signal launcherRequested(); // Add signal for launcher
     // Title text
     Text {
         id: gameTitle
@@ -268,6 +269,32 @@ Rectangle {
             onClicked: {
                 root.archiverRequested()
                 console.log("Asset Archiver requested")
+            }
+        }
+        
+        // Resource Launcher Button
+        Button {
+            id: launcherButton
+            text: "🚀 Resource Launcher"
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 50
+
+            background: Rectangle {
+                color: launcherButton.pressed ? "#388e3c" : "#4caf50"
+                radius: 8
+            }
+
+            contentItem: Text {
+                text: launcherButton.text
+                color: "white"
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            onClicked: {
+                root.launcherRequested()
+                console.log("Resource Launcher requested")
             }
         }
     }

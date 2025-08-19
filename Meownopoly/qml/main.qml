@@ -6,6 +6,7 @@ import "titleScreen/"
 import "test/"
 import "editor/"
 import "archiver/"
+import "launcher/"
 import QtQuick.Window
 import Game
 
@@ -50,6 +51,11 @@ ApplicationWindow {
             onArchiverRequested: {
                 stackView.pop()
                 stackView.push(assetArchiver)
+            }
+            
+            onLauncherRequested: {
+                stackView.pop()
+                stackView.push(launcher)
             }
         }
     }
@@ -102,6 +108,26 @@ ApplicationWindow {
             visible: false
             
             onBackRequested: {
+                stackView.pop()
+                stackView.push(titleScreen)
+            }
+        }
+    }
+    
+    Component {
+        id: launcher
+        Launcher {
+            width: parent.width
+            height: parent.height
+            visible: false
+            
+            onBackRequested: {
+                stackView.pop()
+                stackView.push(titleScreen)
+            }
+            
+            onLaunchGame: {
+                // Ici on peut ajouter la logique pour lancer le jeu principal
                 stackView.pop()
                 stackView.push(titleScreen)
             }
