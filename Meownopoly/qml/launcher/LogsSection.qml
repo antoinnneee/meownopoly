@@ -119,6 +119,7 @@ Rectangle {
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            clip: true
             
             TextArea {
                 id: logArea
@@ -128,12 +129,14 @@ Rectangle {
                 color: "#ffffff"
                 font.family: "Consolas, Monaco, monospace"
                 font.pixelSize: 11
+                topPadding: 10
                 
                 background: Rectangle {
                     color: "#1e1e1e"
                     border.color: "#555555"
                     border.width: 1
                     radius: 6
+                    clip: true
                 }
             }
         }

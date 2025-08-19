@@ -5,7 +5,6 @@ import QtQuick.Layouts
 import "titleScreen/"
 import "test/"
 import "editor/"
-import "archiver/"
 import "launcher/"
 import QtQuick.Window
 import Game
@@ -22,7 +21,7 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: titleScreen
+        initialItem: launcher
     }
 
     Component {
@@ -46,11 +45,6 @@ ApplicationWindow {
             onTest3DRequested: {
                 stackView.pop()
                 stackView.push(test3D)
-            }
-
-            onArchiverRequested: {
-                stackView.pop()
-                stackView.push(assetArchiver)
             }
             
             onLauncherRequested: {
@@ -99,20 +93,7 @@ ApplicationWindow {
             }
         }
     }
-    
-    Component {
-        id: assetArchiver
-        AssetArchiver {
-            width: parent.width
-            height: parent.height
-            visible: false
-            
-            onBackRequested: {
-                stackView.pop()
-                stackView.push(titleScreen)
-            }
-        }
-    }
+
     
     Component {
         id: launcher

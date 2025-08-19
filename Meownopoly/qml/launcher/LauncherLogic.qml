@@ -36,7 +36,6 @@ QtObject {
     
     // Properties from Settings
     property string serverUrl: settings.serverUrl
-    property bool autoUpdate: settings.autoUpdate
     
     // Properties from LauncherManager singleton
     property string currentVersion: LauncherManager.currentVersion

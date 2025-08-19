@@ -148,6 +148,7 @@ Rectangle {
             text: "TEST UI"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
+            visible: false
 
             background: Rectangle {
                 color: testUIButton.pressed ? "#1565c0" : "#2196f3"
@@ -201,6 +202,7 @@ Rectangle {
             text: "Case Creator"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
+            visible: false
 
             background: Rectangle {
                 color: caseCreatorButton.pressed ? "#6a1b9a" : "#9c27b0"
@@ -244,31 +246,6 @@ Rectangle {
             onClicked: {
                 root.test3DRequested()
                 console.log("Test 3D requested")
-            }
-        }
-        // Asset Archiver Button
-        Button {
-            id: archiverButton
-            text: "📦 Asset Archiver"
-            Layout.preferredWidth: 200
-            Layout.preferredHeight: 50
-
-            background: Rectangle {
-                color: archiverButton.pressed ? "#d84315" : "#ff5722"
-                radius: 8
-            }
-
-            contentItem: Text {
-                text: archiverButton.text
-                color: "white"
-                font.pixelSize: 18
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            onClicked: {
-                root.archiverRequested()
-                console.log("Asset Archiver requested")
             }
         }
         

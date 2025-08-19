@@ -113,6 +113,18 @@ Rectangle {
                 
                 onServerUrlChanged: logic.updateServerUrl(serverUrl)
                 onTestConnectionRequested: logic.testConnection()
+                
+                // Connexion avec le LauncherManager pour le statut de connexion
+                Connections {
+                    target: LauncherManager
+                    
+                    function onConnectionTestResult(success, message) {
+                        serverConfigSection.connectionValid = success
+                        serverConfigSection.connectionMessage = message
+                        statusAnimation.start()
+                        statusIcon.state = success ? "valid" : "invalid"
+                    }
+                }
             }
             
             // Section 2: Informations de version

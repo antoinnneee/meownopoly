@@ -12,9 +12,29 @@ Rectangle {
     border.width: 1
     
     property alias serverUrl: serverUrlField.text
-    property alias autoUpdate: autoUpdateCheckBox.checked
+    property bool connectionValid: false
+    property string connectionMessage: ""
     
     signal testConnectionRequested()
+    
+    // Animation pour l'icône de statut
+    SequentialAnimation {
+        id: statusAnimation
+        running: false
+        
+        PropertyAnimation {
+            target: statusIcon
+            property: "scale"
+            to: 1.2
+            duration: 100
+        }
+        PropertyAnimation {
+            target: statusIcon
+            property: "scale"
+            to: 1.0
+            duration: 100
+        }
+    }
     
     ColumnLayout {
         anchors.fill: parent
@@ -53,7 +73,10 @@ Rectangle {
             
             Button {
                 text: "Tester"
-                onClicked: root.testConnectionRequested()
+                onClicked: {
+                    root.testConnectionRequested()
+                    statusIcon.state = "testing"
+                }
                 
                 background: Rectangle {
                     color: parent.pressed ? "#1976d2" : "#2196f3"
@@ -67,17 +90,82 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
+            
+            // Indicateur de statut
+            Item {
+                id: statusIcon
+                width: 24
+                height: 24
+                
+                property string currentIcon: "❓"
+                property color currentColor: "#888888"
+                
+                states: [
+                    State {
+                        name: "valid"
+                        PropertyChanges {
+                            target: statusIcon
+                            currentIcon: "✅"
+                            currentColor: "#4CAF50"
+                        }
+                    },
+                    State {
+                        name: "invalid"
+                        PropertyChanges {
+                            target: statusIcon
+                            currentIcon: "❌"
+                            currentColor: "#f44336"
+                        }
+                    },
+                    State {
+                        name: "testing"
+                        PropertyChanges {
+                            target: statusIcon
+                            currentIcon: "🔄"
+                            currentColor: "#2196f3"
+                        }
+                    }
+                ]
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: parent.currentIcon
+                    font.pixelSize: 16
+                    color: parent.currentColor
+                    
+                    RotationAnimation on rotation {
+                        running: statusIcon.state === "testing"
+                        from: 0
+                        to: 360
+                        duration: 1000
+                        loops: Animation.Infinite
+                    }
+                }
+                
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    
+                    ToolTip {
+                        visible: parent.containsMouse && root.connectionMessage !== ""
+                        text: root.connectionMessage
+                        delay: 200
+                    }
+                }
+            }
         }
         
-        CheckBox {
-            id: autoUpdateCheckBox
-            text: "Mise à jour automatique"
-            
-            contentItem: Text {
-                text: parent.text
-                color: "#cccccc"
-                leftPadding: parent.indicator.width + parent.spacing
-            }
+        // Message de statut
+        Text {
+            id: statusText
+            text: root.connectionMessage
+            color: statusIcon.currentColor
+            font.pixelSize: 12
+            visible: text !== ""
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideRight
+            opacity: 0.8
         }
     }
 }
