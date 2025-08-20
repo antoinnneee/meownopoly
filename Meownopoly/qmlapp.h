@@ -16,6 +16,7 @@
 #include <QStandardPaths>
 #include "game.h"
 #include "QtFolderCompressor/FolderCompressor.h"
+#include "asset_manager.h"
 
 #define FORCE_DOWNLOAD 0
 #define ASSET_URL "https://drive.google.com/file/d/1UMldDp99unwsFFOYCNF0M3b3eXkVlAJu/view?usp=sharing"
@@ -44,12 +45,13 @@ signals:
 public slots:
 
 private slots:
-    void onDownloadFinished();
-    void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+    // void onDownloadFinished();
+    // void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 
 private:
     Game *game = nullptr;
     FolderCompressor *folderCompressor = nullptr;
+    AssetManager *assetManager = nullptr;
     QNetworkAccessManager *networkManager = nullptr;
     QNetworkReply *currentDownload = nullptr;
     QFile *downloadFile = nullptr;

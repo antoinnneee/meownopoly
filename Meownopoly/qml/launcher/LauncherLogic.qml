@@ -85,11 +85,7 @@ QtObject {
     function downloadResources() {
         LauncherManager.downloadResources(root.serverUrl, root.latestVersion)
     }
-    
-    function forceDownload() {
-        LauncherManager.forceDownloadResources(root.serverUrl)
-    }
-    
+
     function createResourcePackage(folderPath, version) {
         LauncherManager.createResourcePackage(folderPath, version)
     }

@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "1",
+      "filename": "1.png",
+      "ratio": 1.0,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "id": "2", 
+      "filename": "2.png",
+      "ratio": 1.0,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "id": "3",
+      "filename": "3.png", 
+      "ratio": 1.0,
+      "width": 64,
+      "height": 64
+    }
+  ]
+}

@@ -17,7 +17,6 @@ Rectangle {
     
     signal checkForUpdatesRequested()
     signal downloadResourcesRequested()
-    signal forceDownloadRequested()
     signal launchGameRequested()
     
     ColumnLayout {
@@ -75,27 +74,7 @@ Rectangle {
                     font.pixelSize: 12
                 }
             }
-            
-            Button {
-                text: "Forcer"
-                enabled: !root.isDownloading
-                onClicked: root.forceDownloadRequested()
-                Layout.preferredWidth: 100
-                
-                background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#f57c00" : "#ff9800") : "#666666"
-                    radius: 6
-                }
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
-                }
-            }
-            
+
             Item { Layout.fillWidth: true }
             
             Button {

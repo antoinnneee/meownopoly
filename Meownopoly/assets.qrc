@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/assets">
+        <file>assets/decoration/grass/metadata.json</file>
+        <file>assets/decoration/tree/metadata.json</file>
+        <file>assets/player_icons/metadata.json</file>
+    </qresource>
+</RCC>

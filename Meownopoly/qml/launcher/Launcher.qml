@@ -148,7 +148,6 @@ Rectangle {
                 
                 onCheckForUpdatesRequested: logic.checkForUpdates()
                 onDownloadResourcesRequested: logic.downloadResources()
-                onForceDownloadRequested: logic.forceDownload()
                 onLaunchGameRequested: root.launchGame()
             }
             

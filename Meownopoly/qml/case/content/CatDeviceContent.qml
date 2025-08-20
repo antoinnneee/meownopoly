@@ -12,7 +12,7 @@ Item {
     required property CaseCatDevice caseData
 
     // Icons for different tile types
-    property var tileIcons: appInstance.getAssetPath("icon/laser.png")
+    property var tileIcons: appInstance.getAssetPath("case/laser.png")
 
     property var fallbackIcons: "💧"
 

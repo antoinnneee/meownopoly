@@ -18,7 +18,7 @@ Item {
 
 
     // Icons for different tile types
-    property var tileIcons: appInstance.getAssetPath("icon/bed.png")          // 1: Rest Area
+    property var tileIcons: appInstance.getAssetPath("case/bed.png")          // 1: Rest Area
 
     property var fallbackIcons: "🛌"          // 1: Rest Area
 

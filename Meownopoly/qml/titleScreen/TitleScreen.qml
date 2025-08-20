@@ -59,6 +59,7 @@ Rectangle {
     signal test3DRequested(); // Add signal for 3D test
     signal archiverRequested(); // Add signal for asset archiver
     signal launcherRequested(); // Add signal for launcher
+    signal assetManagerTestRequested(); // Add signal for asset manager test
     // Title text
     Text {
         id: gameTitle
@@ -272,6 +273,32 @@ Rectangle {
             onClicked: {
                 root.launcherRequested()
                 console.log("Resource Launcher requested")
+            }
+        }
+        
+        // Asset Manager Test Button
+        Button {
+            id: assetManagerTestButton
+            text: "🎨 Asset Manager Test"
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 50
+
+            background: Rectangle {
+                color: assetManagerTestButton.pressed ? "#7b1fa2" : "#9c27b0"
+                radius: 8
+            }
+
+            contentItem: Text {
+                text: assetManagerTestButton.text
+                color: "white"
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            onClicked: {
+                root.assetManagerTestRequested()
+                console.log("Asset Manager Test requested")
             }
         }
     }
