@@ -7,10 +7,16 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QHttpMultiPart>
 #include <QUrl>
 #include <QFile>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QTimer>
+#include <QStandardPaths>
 #include "game.h"
 #include "QtFolderCompressor/FolderCompressor.h"
+#include "asset_manager.h"
 
 #define FORCE_DOWNLOAD 0
 #define ASSET_URL "https://drive.google.com/file/d/1UMldDp99unwsFFOYCNF0M3b3eXkVlAJu/view?usp=sharing"
@@ -30,6 +36,8 @@ public:
     
     // Utility method to build asset paths from QML
     Q_INVOKABLE QString getAssetPath(const QString &relativePath) const;
+    
+
 
 signals:
     void assetsPathChanged();
@@ -37,12 +45,13 @@ signals:
 public slots:
 
 private slots:
-    void onDownloadFinished();
-    void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+    // void onDownloadFinished();
+    // void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 
 private:
     Game *game = nullptr;
     FolderCompressor *folderCompressor = nullptr;
+    AssetManager *assetManager = nullptr;
     QNetworkAccessManager *networkManager = nullptr;
     QNetworkReply *currentDownload = nullptr;
     QFile *downloadFile = nullptr;

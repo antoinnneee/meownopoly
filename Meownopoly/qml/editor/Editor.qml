@@ -185,7 +185,6 @@ Rectangle {
                     deleteElementsConnections(element)
                     element.connectionManager.deleteLinkedConnection()
                     deleteElement(element)
-                    rebuildConnectionSegments()
                 }
                 
                 // Gestion de la configuration
@@ -335,7 +334,6 @@ Rectangle {
             newTile.isSelected = true
             currentSelectedElement = newTile
             newTile.snapToGridFromGrid()
-            //rebuildConnectionSegments()
         }
         return newTile
     }
@@ -387,6 +385,8 @@ Rectangle {
             var newTile = createNewTileAtPosition(newType, caseConfigPanel.targetSnapableCase.gridRelativePositionX, caseConfigPanel.targetSnapableCase.gridRelativePositionY, 0)
             newTile.unitSizeWidth = caseConfigPanel.targetSnapableCase.unitSizeWidth
             newTile.unitSizeHeight = caseConfigPanel.targetSnapableCase.unitSizeHeight
+
+            newTile.zLayer = caseConfigPanel.targetSnapableCase.zLayer
 
 
             for (var i = 0; i < caseConfigPanel.targetSnapableCase.connectionManager.previousElements.length; i++) {

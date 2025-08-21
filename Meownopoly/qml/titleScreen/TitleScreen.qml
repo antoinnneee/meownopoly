@@ -58,6 +58,8 @@ Rectangle {
     signal caseCreatorRequested(); // Add signal for case creator
     signal test3DRequested(); // Add signal for 3D test
     signal archiverRequested(); // Add signal for asset archiver
+    signal launcherRequested(); // Add signal for launcher
+    signal assetManagerTestRequested(); // Add signal for asset manager test
     // Title text
     Text {
         id: gameTitle
@@ -147,6 +149,7 @@ Rectangle {
             text: "TEST UI"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
+            visible: false
 
             background: Rectangle {
                 color: testUIButton.pressed ? "#1565c0" : "#2196f3"
@@ -200,6 +203,7 @@ Rectangle {
             text: "Case Creator"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
+            visible: false
 
             background: Rectangle {
                 color: caseCreatorButton.pressed ? "#6a1b9a" : "#9c27b0"
@@ -245,20 +249,21 @@ Rectangle {
                 console.log("Test 3D requested")
             }
         }
-        // Asset Archiver Button
+        
+        // Resource Launcher Button
         Button {
-            id: archiverButton
-            text: "📦 Asset Archiver"
+            id: launcherButton
+            text: "🚀 Resource Launcher"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
 
             background: Rectangle {
-                color: archiverButton.pressed ? "#d84315" : "#ff5722"
+                color: launcherButton.pressed ? "#388e3c" : "#4caf50"
                 radius: 8
             }
 
             contentItem: Text {
-                text: archiverButton.text
+                text: launcherButton.text
                 color: "white"
                 font.pixelSize: 18
                 horizontalAlignment: Text.AlignHCenter
@@ -266,8 +271,34 @@ Rectangle {
             }
 
             onClicked: {
-                root.archiverRequested()
-                console.log("Asset Archiver requested")
+                root.launcherRequested()
+                console.log("Resource Launcher requested")
+            }
+        }
+        
+        // Asset Manager Test Button
+        Button {
+            id: assetManagerTestButton
+            text: "🎨 Asset Manager Test"
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 50
+
+            background: Rectangle {
+                color: assetManagerTestButton.pressed ? "#7b1fa2" : "#9c27b0"
+                radius: 8
+            }
+
+            contentItem: Text {
+                text: assetManagerTestButton.text
+                color: "white"
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            onClicked: {
+                root.assetManagerTestRequested()
+                console.log("Asset Manager Test requested")
             }
         }
     }

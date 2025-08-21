@@ -14,7 +14,7 @@ Shape {
     property real endX: toElement ? toElement.globalCenterX : 0
     property real startY: fromElement ? fromElement.globalCenterY : 0
     property real endY: toElement ? toElement.globalCenterY : 0
-    property int lineWidth: 20
+    property int lineWidth: 10
     
     // Calcul de la direction et des vecteurs perpendiculaires
     property real deltaX: endX - startX
@@ -34,7 +34,7 @@ Shape {
 
     property int dotLength: lineLength/50
     onDotLengthChanged: {
-        console.log("dotLength changed ", dotLength)
+//        console.log("dotLength changed ", dotLength)
         dotLine.pathElements = []
     }
 
@@ -42,7 +42,7 @@ Shape {
     
     ShapePath {
         strokeColor: "#96e78383"
-        strokeWidth: 4
+        strokeWidth: 1
         capStyle: ShapePath.RoundCap
         fillGradient: LinearGradient {
             x1: connectionOverlay.startX
@@ -138,8 +138,7 @@ Shape {
         }
     }
     Instantiator{
-        onObjectAdded: {
-            console.log("object added ",index,  object)
+        onObjectAdded: function(index, object) {
             if (object)dotLine.pathElements.push(object)
             
             // create a dynamic NumberAnimation for the radius
@@ -147,8 +146,7 @@ Shape {
             animation.targetObj = object
             animation.circleIndex = index
         }
-        onObjectRemoved: {
-            console.log("object removed ",index,  object)
+        onObjectRemoved: function(index, object) {
         }
 
         model: dotLength

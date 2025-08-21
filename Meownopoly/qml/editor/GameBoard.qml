@@ -230,7 +230,6 @@ Rectangle {
                     deleteElementsConnections(element)
                     element.connectionManager.deleteLinkedConnection()
                     deleteElement(element)
-                    rebuildConnectionSegments()
                 }
 
                 // Gestion de la configuration
