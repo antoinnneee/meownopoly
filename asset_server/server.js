@@ -39,7 +39,14 @@ const upload = multer({
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:8080', // Pour le développement local
+        'https://pattounecorp.ovh', // Remplacez par votre domaine
+        'https://www.pattounecorp.ovh' // Avec www si nécessaire
+    ],
+    credentials: true
+}));
 
 // Logger middleware
 app.use((req, res, next) => {
