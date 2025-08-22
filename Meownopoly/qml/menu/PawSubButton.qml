@@ -9,6 +9,7 @@ Rectangle {
     
     // Propriétés configurables
     property var action: null
+    onActionChanged: console.log(action.icon)
     property int padSize: 60
     property color padColor: "#FFB6C1"
     property color hoverColor: Qt.lighter(padColor, 1.2)

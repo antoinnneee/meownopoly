@@ -34,33 +34,33 @@ Rectangle {
             
             actions: [
                 {
-                    icon: "",
+                    icon: AssetManager.getDecorationPath("grass", 0),
                     label: "Déplacer",
-                    action: function() { 
+                    action: function() {
                         logText.text += "Action: Déplacer\n"
                     },
                     enabled: true
                 },
                 {
-                    icon: "",
+                    icon: AssetManager.getDecorationPath("grass", 1),
                     label: "Attaquer",
-                    action: function() { 
+                    action: function() {
                         logText.text += "Action: Attaquer\n"
                     },
                     enabled: true
                 },
                 {
-                    icon: "",
+                    icon: AssetManager.getDecorationPath("grass", 2),
                     label: "Défendre",
-                    action: function() { 
+                    action: function() {
                         logText.text += "Action: Défendre\n"
                     },
                     enabled: true
                 },
                 {
-                    icon: "",
+                    icon: AssetManager.getDecorationPath("grass", 3),
                     label: "Dormir",
-                    action: function() { 
+                    action: function() {
                         logText.text += "Action: Dormir\n"
                     },
                     enabled: false

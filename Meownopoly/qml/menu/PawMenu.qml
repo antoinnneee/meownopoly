@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
+import AssetManager
 
 Item {
     id: root
@@ -15,7 +16,6 @@ Item {
     // Propriétés de configuration
     property int mainPadSize: width * 0.6
     property int subPadSize: mainPadSize*0.4
-    property int spacing: Screen.pixelDensity*6
     
     // Propriétés de couleur
     property color mainColor: "#FFA7B6"
@@ -29,7 +29,7 @@ Item {
     // Actions disponibles
     property var actions: [
         {
-            icon: "",
+            icon: AssetManager.getDecorationPath("grass", 0),
             label: "Déplacer",
             action: function() {
                 logText.text += "Action: Déplacer\n"
@@ -37,7 +37,7 @@ Item {
             enabled: true
         },
         {
-            icon: "",
+            icon: AssetManager.getDecorationPath("grass", 1),
             label: "Attaquer",
             action: function() {
                 logText.text += "Action: Attaquer\n"
@@ -45,7 +45,7 @@ Item {
             enabled: true
         },
         {
-            icon: "",
+            icon: AssetManager.getDecorationPath("grass", 2),
             label: "Défendre",
             action: function() {
                 logText.text += "Action: Défendre\n"
@@ -53,7 +53,7 @@ Item {
             enabled: true
         },
         {
-            icon: "",
+            icon: AssetManager.getDecorationPath("grass", 3),
             label: "Dormir",
             action: function() {
                 logText.text += "Action: Dormir\n"
@@ -133,7 +133,6 @@ Item {
     Item {
         id: subPadsContainer
         anchors.bottom: mainPad.top
-        anchors.bottomMargin: spacing
         anchors.horizontalCenter: parent.horizontalCenter
         height: mainPad.height
         width: parent.width
@@ -150,13 +149,13 @@ Item {
                 // Position calculée pour former une courbe de patte
                 x: {
                     const centerX = subPadsContainer.width / 2 - width / 2
-                    const positions = [-80, -32, 32, 80] // Positions relatives au centre
+                    const positions = [-subButton.width*1.4, -(subButton.width+2)/2, (subButton.width+2)/2, subButton.width*1.4] // Positions relatives au centre
                     return centerX + (positions[index] || 0)
                 }
                 
                 y: {
-                    const baseY = subPadsContainer.height - height - 20
-                    const heights = [0, 40, 40, 0] // Hauteurs différentes pour former une courbe
+                    const baseY = subPadsContainer.height - height
+                    const heights = [0, subButton.height/2, subButton.height/2, -2] // Hauteurs différentes pour former une courbe
                     return baseY - (heights[index] || 0)
                 }
                 
@@ -215,8 +214,8 @@ Item {
         enabled: root.isOpen
         z: -1
         onClicked: {
-            root.isOpen = false
-            root.menuToggled(false)
+            //root.isOpen = false
+            //root.menuToggled(false)
         }
     }
 }
