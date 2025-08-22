@@ -22,44 +22,34 @@ Item {
     property color hoverColor: "#FF8A9B"
     property color pressedColor: "#FF6B82"
     property color subPadColor: "#FFB6C1"
-    
+
+    property alias mainPad: mainPad
+
     // État du menu
     property bool isOpen: false
+    onIsOpenChanged: {
+        console.log("isOpen pawMenu : ", isOpen)
+
+    }
     
     // Actions disponibles
     property var actions: [
-        {
-            icon: AssetManager.getDecorationPath("grass", 0),
-            label: "Déplacer",
-            action: function() {
-                logText.text += "Action: Déplacer\n"
-            },
-            enabled: true
-        },
-        {
-            icon: AssetManager.getDecorationPath("grass", 1),
-            label: "Attaquer",
-            action: function() {
-                logText.text += "Action: Attaquer\n"
-            },
-            enabled: true
-        },
-        {
-            icon: AssetManager.getDecorationPath("grass", 2),
-            label: "Défendre",
-            action: function() {
-                logText.text += "Action: Défendre\n"
-            },
-            enabled: true
-        },
-        {
-            icon: AssetManager.getDecorationPath("grass", 3),
-            label: "Dormir",
-            action: function() {
-                logText.text += "Action: Dormir\n"
-            },
-            enabled: false
-        }
+    PawTools.createActionButtonModel(AssetManager.getDecorationPath("tree", 0),
+                                "info",
+                                true,
+                                function() {logText.text += "Action: Déplacer\n"}),
+    PawTools.createActionButtonModel(AssetManager.getDecorationPath("tree", 1),
+                                "explorer",
+                                true,
+                                function() {logText.text += "Action: Explorer\n"}),
+    PawTools.createActionButtonModel(AssetManager.getDecorationPath("tree", 2),
+                                "go home",
+                                true,
+                                function() {logText.text += "Action: goHome\n";mainPad.menuToggled(false)}),
+    PawTools.createActionButtonModel(AssetManager.getDecorationPath("grass", 3),
+                                "settings",
+                                true,
+                                function() {logText.text += "Action: Paramètres\n"})
     ]
     property int maxActions: 4
     
@@ -203,7 +193,7 @@ Item {
         hoverColor: root.hoverColor
         mainColor: root.mainColor
         mainPadSize: root.mainPadSize
-        isOpen: root.isOpen
+        isOpen:  root.isOpen
         onMenuToggled: function(toogle){ root.menuToggled(toogle); root.isOpen = toogle}
 
     }

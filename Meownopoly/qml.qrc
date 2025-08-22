@@ -83,5 +83,6 @@
         <file>qml/menu/PawSubButton.qml</file>
         <file>qml/test/TEST_PAW_MENU.qml</file>
         <file>qml/menu/PawMainPad.qml</file>
+        <file>qml/menu/pawTools.js</file>
     </qresource>
 </RCC>

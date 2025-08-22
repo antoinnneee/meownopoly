@@ -14,12 +14,20 @@ Rectangle {
 
     // État du menu
     property bool isOpen: false
+    onIsOpenChanged: {
+        console.log("isOpen pawMainPad : ", isOpen)
+    }
+
+
     property int mainPadSize: 120
 
-    property string menuName: mainPad.isOpen ? "✕" : "🐾"
+    property string menuName: isOpen ? "✕" : "🐾"
 
     signal menuToggled(var toogle)
-
+    onMenuToggled : function(toogle) {
+        isOpen = toogle
+        console.log("Menu toggled to: ", isOpen)
+    }
     width: mainPadSize
     height: mainPadSize
     radius: width / 2
@@ -66,8 +74,7 @@ Rectangle {
         hoverEnabled: true
         
         onClicked: {
-            mainPad.isOpen = !mainPad.isOpen
-            menuToggled(mainPad.isOpen)
+            menuToggled(!mainPad.isOpen)
         }
     }
     
