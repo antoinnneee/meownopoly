@@ -159,58 +159,6 @@ Rectangle {
                 }
             }
 
-            // Test player icons
-            GroupBox {
-                title: "Player Icons"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 150
-                label: Label{
-                    text: parent.title
-                    color: "white"
-                }
-
-
-                ListView {
-                    anchors.fill: parent
-                    model: AssetManager.playerIconModel
-                    delegate: Rectangle {
-                        width: parent.width
-                        height: 40
-                        border.color: "blue"
-                        border.width: 1
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 5
-
-                            Image {
-                                source: model.path
-                                Layout.preferredWidth: 30
-                                Layout.preferredHeight: 30
-                                fillMode: Image.PreserveAspectFit
-                                
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: "lightblue"
-                                    visible: parent.status !== Image.Ready
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "👤"
-                                        font.pixelSize: 16
-                                    }
-                                }
-                            }
-
-                            Text {
-                                text: "Player " + model.id + " (" + model.filename + ")"
-                                Layout.fillWidth: true
-                                color: "white"
-                            }
-                        }
-                    }
-                }
-            }
 
             // Test direct path access
             GroupBox {
