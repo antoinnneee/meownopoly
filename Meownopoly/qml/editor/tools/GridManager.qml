@@ -8,7 +8,8 @@ Item {
     id: gridManager
     
     // Propriétés configurables
-    property int mmSize: 20
+    required property var logic
+    property int mmSize: logic.mmSize
     onMmSizeChanged: {
         console.log("mmSize changed:", mmSize)
         gridSize = Screen.pixelDensity * mmSize

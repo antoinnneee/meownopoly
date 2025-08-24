@@ -22,6 +22,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QDebug>
+#include <QVariant>
 
 #include "game.h"
 
@@ -49,6 +50,19 @@ Game::~Game()
 QList<Card *> Game::listCards() const
 {
     return m_listCards;
+}
+
+bool Game::saveMap(const QVariantMap &mapInfo, QList<Case*> caseInfo, const QVariantMap &decoInfo)
+{
+    bool flag = false;
+    for (int i = 0; i < caseInfo.size(); ++i) {
+        // QVariantMap caseData = caseInfo[i].toMap();
+        // Case *currentCase = caseInfo[i].data();
+        qDebug() << caseInfo[i]->toJSON();
+
+    }
+
+    return false;
 }
 
 Case **Game::listCases() const
@@ -729,7 +743,6 @@ bool Game::saveMultipleCasesToJson(const QVariantList &casesData) {
                     newCase[it.key()] = QJsonValue::fromVariant(it.value());
                 }
             }
-            
             casesArray.append(newCase);
         }
     }

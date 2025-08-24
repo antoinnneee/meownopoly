@@ -18,7 +18,9 @@ SnapableElement {
     isResizable: true
     autoSnap: true
 
-
+    Component.onCompleted: {
+        type = 0
+    }
 
     CaseTile {
         id: caseTile

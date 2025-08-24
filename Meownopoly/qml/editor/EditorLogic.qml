@@ -17,7 +17,6 @@ QtObject {
     property int currentPlanDisplayed : 5
 
 
-
     // Propriétés pour la sélection par rectangle
     property bool isSelectionActive: false
     property point selectionStart: Qt.point(0, 0)
@@ -29,7 +28,8 @@ QtObject {
     property int currentElementWidth: 6
     property int currentElementHeight: 6
     
-
+    property string mapName
+    property int mmSize : 20
 
     onIsEditingChanged:{
         console.log("Édition:", isEditing)
@@ -60,6 +60,31 @@ QtObject {
             }
         }
     }
+
+    function saveMap(){
+        var infoMap = [];
+        var caseList = [];
+        var decoList = [];
+
+        infoMap.push({mapName});
+
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var tile = snapableTilesList[i]
+            if (tile) {
+                if (tile.type === 0){
+                    var caseData = tile.caseData;
+                    if (caseData){
+                        caseList.push(caseData)
+                    }
+                }
+                // else if (tile.type === 1){
+                //     decoList.push({tile})
+                // }
+            }
+        }
+        Game.saveMap(infoMap, caseList, decoList)
+    }
+
     // Fonction pour désélectionner tous les tiles
     function deselectAllTiles() {
         // Désélectionner tous les tiles dans la liste
@@ -135,28 +160,28 @@ QtObject {
         switch (isDecoration){
         case GameBoard.TileType.Decoration:
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
-                                                          "gridRelativePositionX": gridX,
-                                                          "gridRelativePositionY": gridY,
-                                                          "z": currentPlanDisplayed
-                                                      })
+                                                                                          "gridRelativePositionX": gridX,
+                                                                                          "gridRelativePositionY": gridY,
+                                                                                          "z": currentPlanDisplayed
+                                                                                      })
             break
         case GameBoard.TileType.Personnage:
             newTile = editorDynamicComponent.snapableCharacterComponent.createObject(workArea, {
-                                                         "gridRelativePositionX": gridX,
-                                                         "gridRelativePositionY": gridY,
-                                                         "playerData": Game.getNewPlayer(),
-                                                         "z": currentPlanDisplayed
-                                                     })
+                                                                                         "gridRelativePositionX": gridX,
+                                                                                         "gridRelativePositionY": gridY,
+                                                                                         "playerData": Game.getNewPlayer(),
+                                                                                         "z": currentPlanDisplayed
+                                                                                     })
             break
         case GameBoard.TileType.Case:
             newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                                                        "gridRelativePositionX": gridX,
-                                                        "gridRelativePositionY": gridY,
-                                                        "unitSizeWidth": currentElementWidth,
-                                                        "unitSizeHeight": currentElementHeight,
-                                                        "caseData": Game.getNewCaseType(caseType),
-                                                        "z": currentPlanDisplayed
-                                                    })
+                                                                                        "gridRelativePositionX": gridX,
+                                                                                        "gridRelativePositionY": gridY,
+                                                                                        "unitSizeWidth": currentElementWidth,
+                                                                                        "unitSizeHeight": currentElementHeight,
+                                                                                        "caseData": Game.getNewCaseType(caseType),
+                                                                                        "z": currentPlanDisplayed
+                                                                                    })
             break
 
         default:
@@ -175,36 +200,36 @@ QtObject {
     }
 
     function changeCaseType(snapableCase, newType)  {
-                var newTile = logic.createNewTileAtPosition(newType, snapableCase.gridRelativePositionX, snapableCase.gridRelativePositionY, 0)
-                newTile.unitSizeWidth = snapableCase.unitSizeWidth
-                newTile.unitSizeHeight = snapableCase.unitSizeHeight
+        var newTile = logic.createNewTileAtPosition(newType, snapableCase.gridRelativePositionX, snapableCase.gridRelativePositionY, 0)
+        newTile.unitSizeWidth = snapableCase.unitSizeWidth
+        newTile.unitSizeHeight = snapableCase.unitSizeHeight
 
 
 
-                for (var i = 0; i < snapableCase.connectionManager.previousElements.length; i++) {
-                    var prevEl = snapableCase.connectionManager.previousElements[i]
-                    if (prevEl) {
-                        prevEl.connectionManager.addNextElement(newTile)
-                    }
-                }
-                for (var i = 0; i < snapableCase.connectionManager.nextElements.length; i++) {
-                    var nextEl = snapableCase.connectionManager.nextElements[i]
-                    if (nextEl) {
-                        nextEl.connectionManager.addPreviousElement(newTile)
-                    }
-                }
-
-
-                newTile.caseData.name = snapableCase.caseData.name
-
-
-               snapableCase.elementDeleted(snapableCase)
-                snapableCase.connectionManager.deleteLinkedConnection()
-
-                newTile.isSelected = true
-                newTile.elementConfigurationRequested(newTile)
-
+        for (var i = 0; i < snapableCase.connectionManager.previousElements.length; i++) {
+            var prevEl = snapableCase.connectionManager.previousElements[i]
+            if (prevEl) {
+                prevEl.connectionManager.addNextElement(newTile)
             }
+        }
+        for (var i = 0; i < snapableCase.connectionManager.nextElements.length; i++) {
+            var nextEl = snapableCase.connectionManager.nextElements[i]
+            if (nextEl) {
+                nextEl.connectionManager.addPreviousElement(newTile)
+            }
+        }
+
+
+        newTile.caseData.name = snapableCase.caseData.name
+
+
+        snapableCase.elementDeleted(snapableCase)
+        snapableCase.connectionManager.deleteLinkedConnection()
+
+        newTile.isSelected = true
+        newTile.elementConfigurationRequested(newTile)
+
+    }
 
     // Fonction pour mettre à jour l'apparence du rectangle de sélection
     function updateSelectionRect() {
@@ -265,13 +290,13 @@ QtObject {
         console.log("Création d'une case à partir de la sélection:", gridX, gridY, unitWidth, unitHeight)
 
         var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-            "gridRelativePositionX": gridX,
-            "gridRelativePositionY": gridY,
-            "unitSizeWidth": unitWidth,
-            "unitSizeHeight": unitHeight,
-            "caseData": Game.getNewCaseType(defaultCaseType),
-            "z": currentPlanDisplayed
-        })
+                                                                                        "gridRelativePositionX": gridX,
+                                                                                        "gridRelativePositionY": gridY,
+                                                                                        "unitSizeWidth": unitWidth,
+                                                                                        "unitSizeHeight": unitHeight,
+                                                                                        "caseData": Game.getNewCaseType(defaultCaseType),
+                                                                                        "z": currentPlanDisplayed
+                                                                                    })
 
         if (newTile) {
             snapableTilesList.push(newTile)
@@ -366,7 +391,7 @@ QtObject {
                     var element = snapableTilesList[i]
                     var mousePos = mapToItem(element, mouse.x, mouse.y)
                     if (mousePos.x >= 0 && mousePos.x <= element.width &&
-                        mousePos.y >= 0 && mousePos.y <= element.height) {
+                            mousePos.y >= 0 && mousePos.y <= element.height) {
                         clickedOnElement = true
                         break
                     }
@@ -394,7 +419,7 @@ QtObject {
     function updateSelection(mouseX, mouseY)
     {
         if (isSelectingArea) {
-//                    console.log("Mise à jour de la sélection")
+            //                    console.log("Mise à jour de la sélection")
             // Mettre à jour la position courante
             var gridPos = editorGrid.getGridPosition(mouseX, mouseY)
             selectionCurrent = gridPos

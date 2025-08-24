@@ -79,8 +79,6 @@ Shape {
             GradientStop { id: stop0; position: 0.0; color: "blue" }
             GradientStop { id: stop1; position: 0.0; color: "red" }
             GradientStop { id: stop2;position: 1.0; color: "blue" }
-
-
         }
 
         fillRule: ShapePath.WindingFill
