@@ -55,11 +55,12 @@ Rectangle {
     }
     
     SnapableElementConnections {
-        id: connectionManager
-        parentElement: snapableElement
-        anchors.fill: parent
-        z: 40
-    }
+            id: connectionManager
+            parentElement: snapableElement
+            anchors.fill: snapableElement
+            z: 40
+            parent: snapableElement.parent
+        }
     
     // Signaux
     signal elementClicked(var element)

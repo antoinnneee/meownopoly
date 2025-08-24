@@ -20,8 +20,6 @@ Item {
     signal selectionModeChanged(bool isActive)
     signal cancelSelectionRequested()
 
-    signal currentPlanChanged(int value)
-
 
     // Panneau de contrôle principal
     Rectangle {
