@@ -9,6 +9,7 @@ Item {
     // Propriétés requises du parent
     required property var targetElement
     required property bool isVisible
+    required property int zLayer
     
     // Signaux
     signal layerChanged(int newLayer)
@@ -43,8 +44,10 @@ Item {
             LayerVisualizer {
                 id: layerOption
                 width: parent.width
+                selectedLayer: zLayer -1
                 onLayerClicked: function(index){
                     console.log("layer " + index + "clicked")
+                    layerChanged(index +1)
                 }
 
                 Behavior on scale {

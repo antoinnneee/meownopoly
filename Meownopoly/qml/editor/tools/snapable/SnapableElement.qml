@@ -151,6 +151,8 @@ Rectangle {
         id: elementControls
         targetElement: snapableElement
         isVisible: isSelected
+        zLayer: originalZ
+        onLayerChanged: originalZ = newLayer
                 
         onDeleteRequested: {
 //            elementDeleted(snapableElement)

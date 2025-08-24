@@ -22,7 +22,6 @@ void CaseCatPerks::sellCase(Player *buyer)
     return buyer->earnKibble(sellPrice());
 }
 
-
 int CaseCatPerks::price() const
 {
     return m_price;
