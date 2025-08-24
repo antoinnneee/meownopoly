@@ -9,7 +9,7 @@ QtObject {
     required property var editorDynamicComponent
     required property var workArea
     required property var editorGrid
-    required property Rectangle selectionRect
+    required property var selectionRect
     property int nextTileId: 0
 
 
@@ -276,6 +276,7 @@ QtObject {
         // Balayer de haut en bas, de gauche à droite
         for (var y = startY; y <= startY + height - currentElementHeight; y++) {
             for (var x = startX; x <= startX + width - currentElementWidth; x++) {
+                console.log(x, y)
                 // Vérifier si la position est libre
                 var positionOccupied = false
 
@@ -322,6 +323,52 @@ QtObject {
             deselectAllTiles()
             lastTile.isSelected = true
             currentSelectedElement = lastTile
+        }
+    }
+
+    function startSelection(mouse)
+    {
+        if (isEditing && isSelectionActive) {
+            // Vérifier si le clic est sur un élément existant
+            var clickedOnElement = false
+            for (var i = 0; i < snapableTilesList.length; i++) {
+                if (snapableTilesList[i]) {
+                    var element = snapableTilesList[i]
+                    var mousePos = mapToItem(element, mouse.x, mouse.y)
+                    if (mousePos.x >= 0 && mousePos.x <= element.width &&
+                        mousePos.y >= 0 && mousePos.y <= element.height) {
+                        clickedOnElement = true
+                        break
+                    }
+                }
+            }
+
+            if (!clickedOnElement) {
+                // Si le clic n'est pas sur un élément, commencer la sélection par rectangle
+                console.log("Début de la sélection par rectangle")
+                isSelectingArea = true
+                var gridPos = editorGrid.getGridPosition(mouse.x, mouse.y)
+                selectionStart = gridPos
+                selectionCurrent = gridPos
+                selectionRect.visible = true
+                logic.updateSelectionRect()
+                mouse.accepted = true // Important pour éviter la propagation
+            } else {
+                // Si le clic est sur un élément, propager l'événement
+                console.log("Clic sur un élément existant, propagation de l'événement")
+                mouse.accepted = false
+            }
+        }
+    }
+
+    function updateSelection(mouseX, mouseY)
+    {
+        if (isSelectingArea) {
+//                    console.log("Mise à jour de la sélection")
+            // Mettre à jour la position courante
+            var gridPos = editorGrid.getGridPosition(mouseX, mouseY)
+            selectionCurrent = gridPos
+            logic.updateSelectionRect()
         }
     }
 

@@ -36,6 +36,10 @@ Item {
     
     // Propriétés en lecture seule pour accès externe
     readonly property int snapSize: gridSize
+
+    property bool isEdit: false
+    property int currentPlan: 5
+    property bool isSelectionActive: false
     
     // Signal émis quand les paramètres changent
     signal gridSettingsChanged()

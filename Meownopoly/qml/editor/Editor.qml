@@ -12,17 +12,67 @@ import "tools/snapable"
 Rectangle {
     id: root
 
-    color: "lightblue"
+    color: logic.isEditing ? "#B3B3D0D8" : "lightblue"
     border.width: 0
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
     property alias currentSelectedElement: logic.currentSelectedElement
+    property alias currentPlanDisplayed: logic.currentPlanDisplayed
+    property alias isEditing: logic.isEditing
+
+    property alias isSelectionActive: logic.isSelectionActive
+    property alias selectionStart: logic.selectionStart
+    property alias selectionCurrent: logic.selectionCurrent
+    property alias isSelectingArea: logic.isSelectingArea
+    property alias defaultCaseType: logic.defaultCaseType
+
+    property alias currentElementWidth: logic.currentElementWidth
+    property alias currentElementHeight: logic.currentElementHeight
+
+
+    enum TileType {
+        Case,
+        Personnage,
+        Decoration
+    }
+
+    onIsEditingChanged:{
+        console.log("Édition:", isEditing)
+        if (!isEditing)
+            for (var i = 0; i < snapableTilesList.length; i++) {
+                if (snapableTilesList[i]) {
+                    snapableTilesList[i].enabled = true
+                    snapableTilesList[i].visible = true
+                }
+            }
+    }
+
+    onCurrentPlanDisplayedChanged: {
+        if (isEditing){
+            console.log("Changement de plan affiché:", currentPlanDisplayed)
+            for (var i = 0; i < snapableTilesList.length; i++) {
+                if (snapableTilesList[i]) {
+                    var currentTile = snapableTilesList[i]
+                    if (currentTile.z < currentPlanDisplayed) {
+                        currentTile.enabled = false
+                        currentTile.visible = false
+                    }
+                    else {
+                        currentTile.enabled = true
+                        currentTile.visible = true
+                    }
+                }
+            }
+        }
+    }
 
     EditorLogic {
         id: logic
         workArea: workArea
+        editorGrid: editorGrid
         editorDynamicComponent: editorDynamicComponent
+        selectionRect:  selectionRect
     }
     EditorDynamicComponent {
         id: editorDynamicComponent
@@ -60,8 +110,49 @@ Rectangle {
     Item {
         id: workArea
         anchors.fill: editorGrid
+
+        // MouseArea pour gérer la sélection par rectangle
+        MouseArea {
+            id: selectionMouseArea
+            anchors.fill: parent
+            enabled: isEditing && isSelectionActive
+            hoverEnabled: true
+            z: 99 // Juste en-dessous du rectangle de sélection
+            preventStealing: true // Empêche le vol d'événements par d'autres MouseArea
+
+            onPressed:function(mouse) {
+                logic.startSelection(mouse)
+            }
+
+            onPositionChanged:function(mouse) {
+                logic.updateSelection(mouse.x, mouse.y)
+                mouse.accepted = true
+            }
+
+            onReleased: function(mouse){
+                    console.log("Finalisation de la sélection")
+                    logic.finishSelection()
+                    mouse.accepted = true
+            }
+
+            onCanceled: {
+                console.log("Annulation de la sélection")
+                logic.cancelSelection()
+            }
+        }
     }
-    
+
+    // Rectangle de sélection
+    Rectangle {
+        id: selectionRect
+        parent: workArea
+        visible: false
+        color: "#C7E8FF" // Bleu semi-transparent
+        border.width: 2
+        border.color: "#3498db"
+        opacity: 0.7
+        z: 100 // S'assurer qu'il est au-dessus des autres éléments
+    }
     
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
@@ -89,6 +180,13 @@ Rectangle {
                 logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, 1)
             }
         }
+
+        MenuItem {
+            text: "Créer un Personnage"
+            onTriggered: {
+                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Personnage)
+            }
+        }
     }
 
 
@@ -114,6 +212,13 @@ Rectangle {
         gridManager: editorGrid
         showControlPanel: false
         showInfoPanel: true
+        property alias isEdit : root.isEditing
+        property alias currentWidth: root.currentElementWidth
+        property alias currentHeight: root.currentElementHeight
+
+        onCancelSelectionRequested: {
+            logic.cancelSelection()
+        }
     }
 
 

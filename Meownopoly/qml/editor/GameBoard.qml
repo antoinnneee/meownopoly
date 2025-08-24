@@ -89,12 +89,24 @@ Rectangle {
         caseConfigPanel: caseConfigPanel
         connectionsPanel: connectionsPanel
     }
+
+    // Rectangle de sélection
+    Rectangle {
+        id: selectionRect
+        parent: workArea
+        visible: false
+        color: "#C7E8FF" // Bleu semi-transparent
+        border.width: 2
+        border.color: "#3498db"
+        opacity: 0.7
+        z: 100 // S'assurer qu'il est au-dessus des autres éléments
+    }
     // Grille de l'éditeur
     GridManager {
         id: editorGrid
-        property alias isEdit : root.isEditing
-        property alias currentPlan : root.currentPlanDisplayed
-        property alias isSelectionActive : root.isSelectionActive
+        isEdit : root.isEditing
+        currentPlan : root.currentPlanDisplayed
+        isSelectionActive : root.isSelectionActive
 
 
         mmSize: 15
@@ -114,22 +126,8 @@ Rectangle {
                 contextMenu.clickGridCoord = position
                 contextMenu.popup()
             }
-            // Sinon, la sélection est gérée par selectionMouseArea
         }
     }
-    
-    // Rectangle de sélection
-    Rectangle {
-        id: selectionRect
-        parent: workArea
-        visible: false
-        color: "#C7E8FF" // Bleu semi-transparent
-        border.width: 2
-        border.color: "#3498db"
-        opacity: 0.7
-        z: 100 // S'assurer qu'il est au-dessus des autres éléments
-    }
-
 
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
@@ -148,57 +146,19 @@ Rectangle {
             z: 99 // Juste en-dessous du rectangle de sélection
             preventStealing: true // Empêche le vol d'événements par d'autres MouseArea
             
-            onPressed: {
-                if (isEditing && isSelectionActive) {
-                    // Vérifier si le clic est sur un élément existant
-                    var clickedOnElement = false
-                    for (var i = 0; i < snapableTilesList.length; i++) {
-                        if (snapableTilesList[i]) {
-                            var element = snapableTilesList[i]
-                            var mousePos = mapToItem(element, mouse.x, mouse.y)
-                            if (mousePos.x >= 0 && mousePos.x <= element.width && 
-                                mousePos.y >= 0 && mousePos.y <= element.height) {
-                                clickedOnElement = true
-                                break
-                            }
-                        }
-                    }
-                    
-                    if (!clickedOnElement) {
-                        // Si le clic n'est pas sur un élément, commencer la sélection par rectangle
-                        console.log("Début de la sélection par rectangle")
-                        isSelectingArea = true
-                        var gridPos = editorGrid.getGridPosition(mouse.x, mouse.y)
-                        selectionStart = gridPos
-                        selectionCurrent = gridPos
-                        selectionRect.visible = true
-                        logic.updateSelectionRect()
-                        mouse.accepted = true // Important pour éviter la propagation
-                    } else {
-                        // Si le clic est sur un élément, propager l'événement
-                        console.log("Clic sur un élément existant, propagation de l'événement")
-                        mouse.accepted = false
-                    }
-                }
+            onPressed:function(mouse) {
+                logic.startSelection(mouse)
             }
             
             onPositionChanged: {
-                if (isSelectingArea) {
-//                    console.log("Mise à jour de la sélection")
-                    // Mettre à jour la position courante
-                    var gridPos = editorGrid.getGridPosition(mouse.x, mouse.y)
-                    selectionCurrent = gridPos
-                    logic.updateSelectionRect()
-                    mouse.accepted = true
-                }
+                logic.updateSelection(mouse.x, mouse.y)
+                mouse.accepted = true
             }
             
             onReleased: function(mouse){
-                if (isSelectingArea) {
                     console.log("Finalisation de la sélection")
                     logic.finishSelection()
                     mouse.accepted = true
-                }
             }
             
             onCanceled: {
@@ -206,7 +166,6 @@ Rectangle {
                 logic.cancelSelection()
             }
         }
-
 
     }
 
@@ -275,7 +234,6 @@ Rectangle {
             logic.cancelSelection()
         }
 
-
     }
 
 
@@ -284,9 +242,6 @@ Rectangle {
         id: caseConfigPanel
         height: parent.height
         width: parent.width/2
-
-        onIsVisibleChanged: {
-        }
 
         onConfigurationClosed: {
             console.log("Panneau de configuration fermé")
