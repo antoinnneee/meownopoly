@@ -36,6 +36,10 @@ Rectangle {
     property point selectionCurrent: Qt.point(0, 0)
     property bool isSelectingArea: false
     property int defaultCaseType: Case.CS_KibbleDispenser
+    
+    // Propriétés pour la taille des éléments créés
+    property int currentElementWidth: 6
+    property int currentElementHeight: 6
 
     color: isEditing ? "#B3B3D0D8" : "lightblue"
     enum TileType {
@@ -329,37 +333,7 @@ Rectangle {
         }
     }
 
-    // Bouton de sélection pour activer/désactiver le mode sélection
-    Button {
-        id: selectionButton
-        text: isSelectionActive ? "✓ Mode Sélection" : "Mode Sélection"
-        anchors {
-            bottom: parent.bottom
-            right: parent.right
-            margins: 10
-        }
-        visible: isEditing
-        checkable: true
-        checked: isSelectionActive
-        onClicked: {
-            console.log("Mode sélection: " + checked)
-            isSelectionActive = checked
-            if (!isSelectionActive) {
-                cancelSelection()
-            }
-        }
-        // Style visuel amélioré
-        background: Rectangle {
-            color: selectionButton.checked ? "#3498db" : "#95a5a6"
-            radius: 5
-        }
-        contentItem: Text {
-            text: selectionButton.text
-            color: "white"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-    }
+    // Le bouton de sélection est maintenant dans GridControlPanel
 
     // Menu contextuel pour la création d'éléments
     Menu {
@@ -413,6 +387,15 @@ Rectangle {
         showControlPanel: false
         showInfoPanel: true
         property alias isEdit : root.isEditing
+        isSelectionActive: root.isSelectionActive
+        
+        onSelectionModeChanged: {
+            root.isSelectionActive = isActive
+        }
+        
+        onCancelSelectionRequested: {
+            cancelSelection()
+        }
     }
 
 

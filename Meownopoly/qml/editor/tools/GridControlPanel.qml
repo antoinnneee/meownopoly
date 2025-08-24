@@ -13,6 +13,16 @@ Item {
     // Propriétés pour contrôler la visibilité
     property bool showControlPanel: true
     property bool showInfoPanel: true
+    
+    // Propriété pour le mode de sélection
+    property bool isSelectionActive: false
+    signal selectionModeChanged(bool isActive)
+    signal cancelSelectionRequested()
+    
+    // Propriétés pour la taille des éléments
+    property int elementWidth: 6
+    property int elementHeight: 6
+    signal elementSizeChanged(int width, int height)
 
 
     // Panneau de contrôle principal
@@ -42,6 +52,27 @@ Item {
                 text: "Contrôles de grille"
                 font.bold: true
                 font.pixelSize: 12
+            }
+            
+            Button {
+                id: editMod
+                text: isEdit ? "Mode Édition" : "Mode Lecture"
+                font.bold: true
+                width: parent.width
+                height: 35
+                onClicked: isEdit = !isEdit
+            }
+            
+            Button {
+                text: "Choisir éléments"
+                font.bold: true
+                width: parent.width
+                height: 35
+                enabled: isEdit
+                visible : enabled
+                onClicked: {
+                    selectDecorationPopup.open()
+                }
             }
 
             Row {
@@ -97,24 +128,35 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
-
+            
             Button {
-                id: editMod
-                text: isEdit ? "Mode Édition" : "Mode Lecture"
-                font.bold: true
-                width: parent.width
-                height: 35
-                onClicked: isEdit = !isEdit
-            }
-            Button {
-                text: "Choisir éléments"
+                id: selectionButton
+                text: isSelectionActive ? "✓ Mode Sélection" : "Mode Sélection"
                 font.bold: true
                 width: parent.width
                 height: 35
                 enabled: isEdit
-                visible : enabled
+                visible: enabled
+                checkable: true
+                checked: isSelectionActive
                 onClicked: {
-                    selectDecorationPopup.open()
+                    isSelectionActive = checked
+                    console.log("Mode sélection: " + checked)
+                    selectionModeChanged(checked)
+                    if (!checked) {
+                        cancelSelectionRequested()
+                    }
+                }
+                // Style visuel amélioré
+                background: Rectangle {
+                    color: selectionButton.checked ? "#3498db" : "#95a5a6"
+                    radius: 5
+                }
+                contentItem: Text {
+                    text: selectionButton.text
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
 
@@ -139,6 +181,67 @@ Item {
                         if (gridManager) {
                             gridManager.currentPlan = value
                         }
+                    }
+                }
+            }
+            
+            // Sélecteurs de taille d'élément
+            Text {
+                text: "Dimensions des éléments"
+                font.bold: true
+                font.pixelSize: 12
+                visible: isEdit
+                enabled: visible
+            }
+            
+            // Sélecteur de largeur
+            Row {
+                spacing: 8
+                visible: isEdit
+                enabled: visible
+                
+                Text {
+                    text: "L:"
+                    width: 15
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                SpinBox {
+                    id: widthSpinBox
+                    from: 1
+                    to: 20
+                    stepSize: 1
+                    value: elementWidth
+                    width: 70
+                    height: 30
+                    onValueChanged: {
+                        elementWidth = value
+                        elementSizeChanged(elementWidth, elementHeight)
+                    }
+                }
+            }
+            
+            // Sélecteur de hauteur
+            Row {
+                spacing: 8
+                visible: isEdit
+                enabled: visible
+                
+                Text {
+                    text: "H:"
+                    width: 15
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                SpinBox {
+                    id: heightSpinBox
+                    from: 1
+                    to: 20
+                    stepSize: 1
+                    value: elementHeight
+                    width: 70
+                    height: 30
+                    onValueChanged: {
+                        elementHeight = value
+                        elementSizeChanged(elementWidth, elementHeight)
                     }
                 }
             }
