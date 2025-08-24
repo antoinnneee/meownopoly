@@ -85,6 +85,7 @@ Rectangle {
         property alias currentPlan : root.currentPlanDisplayed
         property alias isSelectionActive : root.isSelectionActive
 
+
         mmSize: 15
         gridColor: "#80000000"
         gridOpacity: 0.3
@@ -387,9 +388,12 @@ Rectangle {
         id: gridControls
         anchors.fill: parent
         gridManager: editorGrid
-        showControlPanel: false
+        showControlPanel: true
         showInfoPanel: true
         property alias isEdit : root.isEditing
+        property alias currentWidth: root.currentElementWidth
+        property alias currentHeight: root.currentElementHeight
+
     }
 
 
@@ -625,13 +629,14 @@ Rectangle {
         var width = Math.abs(selectionCurrent.x - selectionStart.x)
         var height = Math.abs(selectionCurrent.y - selectionStart.y)
         
-        // Créer une case aux dimensions calculées
+        // Créer les cases aux dimensions calculées
         if (width >= 1 && height >= 1) {
             // Ajouter +1 car la sélection est inclusive (le point de fin est inclus)
             width = Math.max(1, width)
             height = Math.max(1, height)
             
-            createTileFromSelection(startX, startY, width, height)
+            // Utiliser la nouvelle fonction pour remplir avec plusieurs éléments
+            fillSelectionWithTiles(startX, startY, width, height)
         }
         
         // Réinitialiser l'état de sélection
@@ -695,8 +700,8 @@ Rectangle {
             newTile = snapableCaseTile.createObject(workArea, {
                                                         "gridRelativePositionX": gridX,
                                                         "gridRelativePositionY": gridY,
-                                                        "unitSizeWidth": 6,
-                                                        "unitSizeHeight": 6,
+                                                        "unitSizeWidth": currentElementWidth,
+                                                        "unitSizeHeight": currentElementHeight,
                                                         "caseData": Game.getNewCaseType(caseType),
                                                         "z": currentPlanDisplayed
                                                     })
@@ -717,5 +722,71 @@ Rectangle {
         }
         return newTile
     }
-
+    
+    // Fonction pour remplir une zone sélectionnée avec plusieurs éléments
+    function fillSelectionWithTiles(startX, startY, width, height) {
+        console.log("Remplissage de la zone sélectionnée:", startX, startY, width, height)
+        console.log("Dimensions des éléments:", currentElementWidth, currentElementHeight)
+        
+        // Vérifier si les dimensions sont valides
+        if (currentElementWidth <= 0 || currentElementHeight <= 0) {
+            console.error("Dimensions d'élément invalides")
+            return
+        }
+        
+        // Calculer combien d'éléments peuvent tenir horizontalement et verticalement
+        var tilesPlaced = 0
+        var lastTile = null
+        
+        // Balayer de haut en bas, de gauche à droite
+        for (var y = startY; y <= startY + height - currentElementHeight; y++) {
+            for (var x = startX; x <= startX + width - currentElementWidth; x++) {
+                // Vérifier si la position est libre
+                var positionOccupied = false
+                
+                // Vérifier si cette position chevauche un élément existant
+                for (var i = 0; i < snapableTilesList.length; i++) {
+                    var tile = snapableTilesList[i]
+                    if (!tile) continue
+                    
+                    // Calculer les limites de l'élément existant
+                    var tileLeft = tile.gridRelativePositionX
+                    var tileRight = tileLeft + tile.unitSizeWidth
+                    var tileTop = tile.gridRelativePositionY
+                    var tileBottom = tileTop + tile.unitSizeHeight
+                    
+                    // Calculer les limites du nouvel élément
+                    var newTileLeft = x
+                    var newTileRight = x + currentElementWidth
+                    var newTileTop = y
+                    var newTileBottom = y + currentElementHeight
+                    
+                    // Vérifier s'il y a chevauchement
+                    if (!(newTileRight <= tileLeft || newTileLeft >= tileRight ||
+                          newTileBottom <= tileTop || newTileTop >= tileBottom)) {
+                        positionOccupied = true
+                        break
+                    }
+                }
+                
+                // Si la position est libre, créer un élément
+                if (!positionOccupied) {
+                    lastTile = createNewTileAtPosition(defaultCaseType, x, y, GameBoard.TileType.Case)
+                    tilesPlaced++;
+                    
+                    // Avancer horizontalement de la taille de l'élément
+                    x += currentElementWidth - 1; // -1 car la boucle incrémente x
+                }
+            }
+        }
+        
+        console.log("Éléments placés:", tilesPlaced)
+        
+        // Si au moins un élément a été placé, le dernier reste sélectionné
+        if (tilesPlaced > 0 && lastTile) {
+            deselectAllTiles()
+            lastTile.isSelected = true
+            currentSelectedElement = lastTile
+        }
+    }
 }

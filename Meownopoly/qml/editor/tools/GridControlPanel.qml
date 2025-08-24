@@ -18,17 +18,10 @@ Item {
     signal selectionModeChanged(bool isActive)
     signal cancelSelectionRequested()
 
-    // Propriétés pour la taille des éléments
-    property int elementWidth: 6
-    property int elementHeight: 6
-    signal elementSizeChanged(int width, int height)
-
 
     onCancelSelectionRequested: {
         cancelSelection()
     }
-
-
 
     // Panneau de contrôle principal
     Rectangle {
@@ -215,12 +208,11 @@ Item {
                     from: 1
                     to: 20
                     stepSize: 1
-                    value: elementWidth
+                    value: 1
                     width: 70
                     height: 30
                     onValueChanged: {
-                        elementWidth = value
-                        elementSizeChanged(elementWidth, elementHeight)
+                        gridControlPanel.currentWidth = value
                     }
                 }
             }
@@ -241,12 +233,11 @@ Item {
                     from: 1
                     to: 20
                     stepSize: 1
-                    value: elementHeight
+                    value: 1
                     width: 70
                     height: 30
                     onValueChanged: {
-                        elementHeight = value
-                        elementSizeChanged(elementWidth, elementHeight)
+                        gridControlPanel.currentHeight = value
                     }
                 }
             }
