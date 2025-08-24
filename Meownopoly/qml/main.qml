@@ -44,7 +44,7 @@ ApplicationWindow {
 
             onTest3DRequested: {
                 stackView.pop()
-                stackView.push(test3D)
+                stackView.push(testPaw)
             }
             
             onLauncherRequested: {
@@ -82,7 +82,15 @@ ApplicationWindow {
             visible: false
         }
     }
-    
+    Component {
+        id: testPaw
+        TEST_PAW_MENU{
+            width:root.width
+            height:root.height
+            visible: false
+        }
+    }
+
     Component {
         id: test3D
         TEST_3D {

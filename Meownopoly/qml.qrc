@@ -79,5 +79,10 @@
         <file>qml/launcher/PackagingSection.qml</file>
         <file>qml/launcher/LogsSection.qml</file>
         <file>qml/launcher/LauncherLogic.qml</file>
+        <file>qml/menu/PawMenu.qml</file>
+        <file>qml/menu/PawSubButton.qml</file>
+        <file>qml/test/TEST_PAW_MENU.qml</file>
+        <file>qml/menu/PawMainPad.qml</file>
+        <file>qml/menu/pawTools.js</file>
     </qresource>
 </RCC>
