@@ -66,9 +66,6 @@
         <file>qml/editor/tools/snapable/SnapableElementDeleteAnimation.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementCreateAnimation.qml</file>
         <file>qml/editor/GameBoard.qml</file>
-        <file>qml/editor/AssetSelector.qml</file>
-        <file>qml/editor/MetadataGenerator.qml</file>
-        <file>qml/editor/AssetManagerPanel.qml</file>
         <file>qml/editor/tools/SnapablePlayerTile.qml</file>
         <file>qml/case/PlayerTile.qml</file>
         <file>qml/launcher/Launcher.qml</file>
@@ -86,5 +83,8 @@
         <file>qml/menu/pawTools.js</file>
         <file>qml/editor/EditorLogic.qml</file>
         <file>qml/editor/EditorDynamicComponent.qml</file>
+        <file>qml/asset_tools/AssetManagerPanel.qml</file>
+        <file>qml/asset_tools/AssetSelector.qml</file>
+        <file>qml/asset_tools/MetadataGenerator.qml</file>
     </qresource>
 </RCC>

@@ -99,7 +99,6 @@ Item{
                     logic.deselectAllTiles()
                     element.isSelected = true
                     currentSelectedElement = element
-
                 }
 
             }
