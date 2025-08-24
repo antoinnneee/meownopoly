@@ -83,15 +83,14 @@ Rectangle {
         id: editorGrid
         property alias isEdit : root.isEditing
         property alias currentPlan : root.currentPlanDisplayed
+        property alias isSelectionActive : root.isSelectionActive
+
         mmSize: 15
         gridColor: "#80000000"
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
 
-        // Test de l'animation au démarrage
-        Component.onCompleted: {
-        }
         onGridClicked:  function(position) {
             if (!isSelectionActive) {
                 deselectAllTiles()
@@ -379,6 +378,10 @@ Rectangle {
         totalTilesCount: snapableTilesList.length
     }
 
+
+
+
+
     // Panneau de contrôle de la grille (composant séparé)
     GridControlPanel {
         id: gridControls
@@ -387,15 +390,6 @@ Rectangle {
         showControlPanel: false
         showInfoPanel: true
         property alias isEdit : root.isEditing
-        isSelectionActive: root.isSelectionActive
-        
-        onSelectionModeChanged: {
-            root.isSelectionActive = isActive
-        }
-        
-        onCancelSelectionRequested: {
-            cancelSelection()
-        }
     }
 
 

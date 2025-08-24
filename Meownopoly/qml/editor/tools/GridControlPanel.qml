@@ -13,16 +13,21 @@ Item {
     // Propriétés pour contrôler la visibilité
     property bool showControlPanel: true
     property bool showInfoPanel: true
-    
+
     // Propriété pour le mode de sélection
-    property bool isSelectionActive: false
     signal selectionModeChanged(bool isActive)
     signal cancelSelectionRequested()
-    
+
     // Propriétés pour la taille des éléments
     property int elementWidth: 6
     property int elementHeight: 6
     signal elementSizeChanged(int width, int height)
+
+
+    onCancelSelectionRequested: {
+        cancelSelection()
+    }
+
 
 
     // Panneau de contrôle principal
@@ -53,7 +58,7 @@ Item {
                 font.bold: true
                 font.pixelSize: 12
             }
-            
+
             Button {
                 id: editMod
                 text: isEdit ? "Mode Édition" : "Mode Lecture"
@@ -62,7 +67,7 @@ Item {
                 height: 35
                 onClicked: isEdit = !isEdit
             }
-            
+
             Button {
                 text: "Choisir éléments"
                 font.bold: true
@@ -128,7 +133,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
-            
+
             Button {
                 id: selectionButton
                 text: isSelectionActive ? "✓ Mode Sélection" : "Mode Sélection"
@@ -184,7 +189,7 @@ Item {
                     }
                 }
             }
-            
+
             // Sélecteurs de taille d'élément
             Text {
                 text: "Dimensions des éléments"
@@ -193,13 +198,13 @@ Item {
                 visible: isEdit
                 enabled: visible
             }
-            
+
             // Sélecteur de largeur
             Row {
                 spacing: 8
                 visible: isEdit
                 enabled: visible
-                
+
                 Text {
                     text: "L:"
                     width: 15
@@ -219,13 +224,13 @@ Item {
                     }
                 }
             }
-            
+
             // Sélecteur de hauteur
             Row {
                 spacing: 8
                 visible: isEdit
                 enabled: visible
-                
+
                 Text {
                     text: "H:"
                     width: 15
