@@ -2,7 +2,7 @@ pragma ComponentBehavior:Bound
 
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+//import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: root
@@ -31,16 +31,16 @@ Rectangle {
     border.color: Qt.darker(color, 1.3)
     border.width: 1
     
-    // Effet d'ombre
-    layer.enabled: true
-    layer.effect: DropShadow {
-        horizontalOffset: 2
-        verticalOffset: 2
-        radius: 4.0
-        samples: 9
-        color: "#30000000"
-        transparentBorder: true
-    }
+    // // Effet d'ombre
+    // layer.enabled: true
+    // layer.effect: DropShadow {
+    //     horizontalOffset: 2
+    //     verticalOffset: 2
+    //     radius: 4.0
+    //     samples: 9
+    //     color: "#30000000"
+    //     transparentBorder: true
+    // }
     
     // Contenu du bouton
     Item {

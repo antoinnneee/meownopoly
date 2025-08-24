@@ -3,7 +3,7 @@ pragma ComponentBehavior:Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+//import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: mainPad
@@ -40,15 +40,15 @@ Rectangle {
     border.color: Qt.darker(color, 1.2)
     border.width: 2
     
-    // Effet d'ombre
-    layer.effect: DropShadow {
-        horizontalOffset: 3
-        verticalOffset: 3
-        radius: 8.0
-        samples: 17
-        color: "#40000000"
-        transparentBorder: true
-    }
+    // // Effet d'ombre
+    // layer.effect: DropShadow {
+    //     horizontalOffset: 3
+    //     verticalOffset: 3
+    //     radius: 8.0
+    //     samples: 17
+    //     color: "#40000000"
+    //     transparentBorder: true
+    // }
     
     // Icône ou texte au centre
     Text {
