@@ -14,12 +14,12 @@ Item {
     signal deleteRequested()
     signal configurationRequested()
     signal connectionsConfigurationRequested()
-    
+
     // Propriétés pour accéder aux données du target
     readonly property var zLayers: targetElement ? targetElement.zLayers : null
     readonly property int currentZLayer: targetElement ? targetElement.zLayer : 0
     readonly property int zLayerBase: targetElement ? targetElement.zLayerBase : 0
-    
+
     visible: isVisible
     z: 200  // Au-dessus de tout
     
@@ -52,12 +52,12 @@ Item {
                     
                     property bool isSelected: index === currentZLayer
                     property color baseColor: zLayers ? zLayers.colors[index] : "gray"
-                    
+
                     color: isSelected ? baseColor : Qt.darker(baseColor, 1.5)
                     border.color: "white"
                     border.width: isSelected ? 2 : 1
                     scale: isSelected ? 1.1 : 1.0
-                    
+
                     Behavior on scale {
                         NumberAnimation { duration: 100 }
                     }

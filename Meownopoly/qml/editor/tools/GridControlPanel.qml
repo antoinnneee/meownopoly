@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     id: gridControlPanel
@@ -29,7 +30,8 @@ Item {
             margins: 10
         }
 
-        Column {
+        Column{
+            id: controlColumn
             anchors.fill: parent
             anchors.margins: 8
             spacing: 8
@@ -111,6 +113,31 @@ Item {
                 visible : enabled
                 onClicked: {
                     selectDecorationPopup.open()
+                }
+            }
+
+            Row{
+                spacing: 8
+                visible: isEdit
+                enabled: visible
+                Text {
+                    id: planText
+                    text: "Plan: " + planSlider.value
+                    width: 25
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Slider {
+                    id: planSlider
+                    from: 1
+                    to: 10
+                    stepSize: 1
+                    value: 5
+                    width : controlColumn.width*0.75
+                    onValueChanged: {
+                        if (gridManager) {
+                            gridManager.currentPlan = value
+                        }
+                    }
                 }
             }
         }

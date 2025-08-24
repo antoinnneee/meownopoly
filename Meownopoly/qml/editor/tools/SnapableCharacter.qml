@@ -13,7 +13,7 @@ SnapableElement {
     unitSizeWidth:4
 
 
-    property int randomImageIndex: Math.floor(Math.random() * 7)  // Random number between 0 and 3
+    property int randomImageIndex: Math.floor(Math.random() * 6)  // Random number between 0 and 3
 
     Image {
         id: caseTile

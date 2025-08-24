@@ -22,15 +22,14 @@ Rectangle {
     property bool isSelected: false
 
     // Système de plans (Z-layers)
-    property int zLayer: zLayers.middle
+    property int zLayer/*: zLayers.middle*/
     property int zLayerBase: zLayer * 1000  // Multiplier par 1000 pour espacer les plans
-    
     // Constantes pour les plans
     readonly property QtObject zLayers: QtObject {
         readonly property int background: 0
         readonly property int middle: 1
         readonly property int foreground: 2
-        
+
         readonly property var names: ["Background", "Middle", "Foreground"]
         readonly property var colors: ["#FF6B6B", "#4ECDC4", "#45B7D1"]
     }

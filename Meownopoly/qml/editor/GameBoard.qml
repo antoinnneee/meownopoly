@@ -28,10 +28,24 @@ Rectangle {
     property var currentSelectedElement: null
 
     property bool isEditing : false
-    property var selectionStartPoint: null
-    property var selectionRect: null
-    property bool isSelecting: false
-    
+    property int currentPlanDisplayed : 1
+
+    onCurrentPlanDisplayedChanged: {
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            if (snapableTilesList[i]) {
+                var currentTile = snapableTilesList[i]
+                if (currentTile.zLayer < currentPlanDisplayed) {
+                    currentTile.enabled = false
+                    currentTile.visible = false
+                }
+                else {
+                    currentTile.enabled = true
+                    currentTile.visible = true
+                }
+            }
+        }
+    }
+
     color: isEditing ? "#B3B3D0D8" : "lightblue"
     onIsEditingChanged: console.log("Édition:", isEditing)
     enum TileType {
@@ -44,6 +58,7 @@ Rectangle {
     GridManager {
         id: editorGrid
         property alias isEdit : root.isEditing
+        property alias currentPlan : root.currentPlanDisplayed
         mmSize: 15
         gridColor: "#80000000"
         gridOpacity: 0.3
@@ -53,90 +68,13 @@ Rectangle {
         // Test de l'animation au démarrage
         Component.onCompleted: {
         }
-        // Remplacer onGridPressed par un MouseArea directement sur editorGrid
-        MouseArea {
-            id: gridMouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            
-            onPressed: function(mouse) {
-                if (isEditing) {
-                    // Supprimer tout rectangle de sélection précédent
-                    if (selectionRect) {
-                        selectionRect.destroy();
-                        selectionRect = null;
-                    }
-                    
-                    // Convertir la position du clic en position de grille
-                    var gridPos = editorGrid.getGridPosition(mouse.x, mouse.y);
-                    
-                    // Enregistrer la position initiale de la sélection
-                    selectionStartPoint = Qt.point(mouse.x, mouse.y);
-                    
-                    // Créer un nouveau rectangle de sélection
-                    selectionRect = selectionRectComponent.createObject(workArea, {
-                        x: selectionStartPoint.x,
-                        y: selectionStartPoint.y,
-                        width: 0,
-                        height: 0
-                    });
-                    
-                    // Activer le suivi de la souris pour ajuster la taille du rectangle
-                    isSelecting = true;
-                } else {
-                    // Convertir la position du clic en position de grille
-                    var gridPos = editorGrid.getGridPosition(mouse.x, mouse.y);
-                    
-                    // Stocker la position du clic pour créer l'élément au bon endroit
-                    contextMenu.clickGridCoord = gridPos;
-                    contextMenu.popup();
-                }
-            }
-            
-            onPositionChanged: function(mouse) {
-                if (isSelecting && selectionRect) {
-                    var currentX = mouse.x;
-                    var currentY = mouse.y;
-                    
-                    // Calculer les dimensions du rectangle de sélection
-                    var width = currentX - selectionStartPoint.x;
-                    var height = currentY - selectionStartPoint.y;
-                    
-                    // Gérer les sélections dans toutes les directions
-                    if (width < 0) {
-                        selectionRect.x = selectionStartPoint.x + width;
-                        selectionRect.width = -width;
-                    } else {
-                        selectionRect.width = width;
-                    }
-                    
-                    if (height < 0) {
-                        selectionRect.y = selectionStartPoint.y + height;
-                        selectionRect.height = -height;
-                    } else {
-                        selectionRect.height = height;
-                    }
-                }
-            }
-            
-            onReleased: function(mouse) {
-                if (isSelecting && selectionRect) {
-                    // Sélectionner tous les éléments qui se trouvent dans le rectangle
-                    selectElementsInRectangle(selectionRect);
-                    isSelecting = false;
-                } else if (!isSelecting) {
-                    // Si c'était un simple clic (pas de sélection), désélectionner tout
-                    deselectAllTiles();
-                }
-            }
-            
-            // Autoriser la propagation des évènements au GridManager en-dessous
-            propagateComposedEvents: true
-        }
         onGridClicked:  function(position) {
-            if (!isSelecting) {
-                deselectAllTiles();
-            }
+            deselectAllTiles()
+        }
+        onGridPressed : function(position) {
+            // Stocker la position du clic pour créer l'élément au bon endroit
+            contextMenu.clickGridCoord = position
+            contextMenu.popup()
         }
     }
 
@@ -144,24 +82,10 @@ Rectangle {
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
 
-    // Composant pour le rectangle de sélection
-    Component {
-        id: selectionRectComponent
-        Rectangle {
-            color: "#3089CFFA"
-            border.color: "#0070BA"
-            border.width: 1
-            opacity: 0.5
-            z: 1000 // S'assurer qu'il est au-dessus des autres éléments
-        }
-    }
-
     // Zone de travail de l'éditeur (par-dessus la grille)
     Item {
         id: workArea
         anchors.fill: editorGrid
-        
-        // Note: Le MouseArea de sélection est désormais géré directement par le GridManager
 
         Component {
             id: snapableCaseTile
@@ -175,7 +99,6 @@ Rectangle {
                     // Sélectionner l'élément cliqué
                     element.isSelected = true
                     currentSelectedElement = element
-
                 }
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
@@ -517,45 +440,6 @@ Rectangle {
         }
         currentSelectedElement = null
     }
-    
-    // Fonction pour sélectionner les éléments dans un rectangle
-    function selectElementsInRectangle(rect) {
-        // Désélectionner d'abord tous les éléments
-        deselectAllTiles();
-        
-        // Pour chaque élément dans la liste
-        var selectedElements = [];
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            var element = snapableTilesList[i];
-            if (!element) continue;
-            
-            // Vérifier si l'élément est à l'intérieur du rectangle de sélection
-            var elementLeft = element.x;
-            var elementRight = element.x + element.width;
-            var elementTop = element.y;
-            var elementBottom = element.y + element.height;
-            
-            if (elementRight >= rect.x && elementLeft <= rect.x + rect.width &&
-                elementBottom >= rect.y && elementTop <= rect.y + rect.height) {
-                // L'élément est dans la sélection
-                element.isSelected = true;
-                selectedElements.push(element);
-            }
-        }
-        
-        // Si un seul élément est sélectionné, le définir comme élément courant
-        if (selectedElements.length === 1) {
-            currentSelectedElement = selectedElements[0];
-        }
-        
-        // Supprimer le rectangle de sélection
-        if (rect) {
-            rect.destroy();
-            selectionRect = null;
-        }
-        
-        console.log("Éléments sélectionnés:", selectedElements.length);
-    }
 
     // Fonction pour supprimer un élément
     function deleteElement(element) {
@@ -595,14 +479,15 @@ Rectangle {
             newTile = snapableDecoration.createObject(workArea, {
                                                           "gridRelativePositionX": gridX,
                                                           "gridRelativePositionY": gridY,
+                                                          "zLayer": currentPlanDisplayed
                                                       })
-
             break
         case GameBoard.TileType.Personnage:
             newTile = snapableCharacter.createObject(workArea, {
                                                          "gridRelativePositionX": gridX,
                                                          "gridRelativePositionY": gridY,
-                                                         "playerData": Game.getNewPlayer()
+                                                         "playerData": Game.getNewPlayer(),
+                                                         "zLayer": currentPlanDisplayed
                                                      })
             break
         case GameBoard.TileType.Case:
@@ -611,7 +496,8 @@ Rectangle {
                                                         "gridRelativePositionY": gridY,
                                                         "unitSizeWidth": 6,
                                                         "unitSizeHeight": 6,
-                                                        "caseData": Game.getNewCaseType(caseType)
+                                                        "caseData": Game.getNewCaseType(caseType),
+                                                        "zLayer": currentPlanDisplayed
                                                     })
             break
 
