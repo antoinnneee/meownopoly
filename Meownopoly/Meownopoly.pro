@@ -95,6 +95,5 @@ DISTFILES += \
     assets/decoration/grass/metadata.json \
     assets/decoration/tree/1.png \
     assets/decoration/tree/metadata.json \
-    assets/player_icons/metadata.json \
-    qml/editor/tools/GridControlPopupAsset.qml
+    assets/player_icons/metadata.json
 

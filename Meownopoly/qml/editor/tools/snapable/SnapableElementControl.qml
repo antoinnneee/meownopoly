@@ -15,10 +15,8 @@ Item {
     signal configurationRequested()
     signal connectionsConfigurationRequested()
 
-    // Propriétés pour accéder aux données du target
-    readonly property var zLayers: targetElement ? targetElement.zLayers : null
-    readonly property int currentZLayer: targetElement ? targetElement.zLayer : 0
-    readonly property int zLayerBase: targetElement ? targetElement.zLayerBase : 0
+    // Propriété pour accéder à la valeur z du target
+    readonly property int currentZ: targetElement ? targetElement.z : 0
 
     visible: isVisible
     z: 200  // Au-dessus de tout
@@ -40,18 +38,18 @@ Item {
             id: layerSelector
             spacing: 2
             width: 40
-            
+
             Repeater {
                 model: 3
-                
+
                 Rectangle {
                     id: layerOption
                     width: parent.width
                     height: 20
                     radius: 4
-                    
-                    property bool isSelected: index === currentZLayer
-                    property color baseColor: zLayers ? zLayers.colors[index] : "gray"
+
+                    property bool isSelected: index + 1 === currentZ
+                    property color baseColor: "#4ECDC4"  // Couleur unique pour tous les plans
 
                     color: isSelected ? baseColor : Qt.darker(baseColor, 1.5)
                     border.color: "white"
@@ -61,23 +59,23 @@ Item {
                     Behavior on scale {
                         NumberAnimation { duration: 100 }
                     }
-                    
+
                     Text {
                         anchors.centerIn: parent
-                        text: zLayers ? zLayers.names[index][0] : "?"  // Première lettre uniquement
+                        text: (index + 1).toString()
                         color: "white"
                         font.bold: true
                         font.pixelSize: 12
                     }
-                    
+
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        
+
                         onClicked: {
-                            layerChanged(index)
+                            layerChanged(index + 1)
                         }
-                        
+
                         onEntered: parent.scale = 1.1
                         onExited: parent.scale = parent.isSelected ? 1.1 : 1.0
                     }

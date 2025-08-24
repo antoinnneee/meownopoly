@@ -39,12 +39,13 @@ Rectangle {
 
     onIsEditingChanged:{
         console.log("Édition:", isEditing)
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i]) {
-                snapableTilesList[i].enabled = true
-                snapableTilesList[i].visible = true
+        if (!isEditing)
+            for (var i = 0; i < snapableTilesList.length; i++) {
+                if (snapableTilesList[i]) {
+                    snapableTilesList[i].enabled = true
+                    snapableTilesList[i].visible = true
+                }
             }
-        }
     }
 
     onCurrentPlanDisplayedChanged: {
@@ -53,7 +54,7 @@ Rectangle {
             for (var i = 0; i < snapableTilesList.length; i++) {
                 if (snapableTilesList[i]) {
                     var currentTile = snapableTilesList[i]
-                    if (currentTile.zLayer < currentPlanDisplayed) {
+                    if (currentTile.z < currentPlanDisplayed) {
                         currentTile.enabled = false
                         currentTile.visible = false
                     }
@@ -383,28 +384,36 @@ Rectangle {
         if (currentSelectedElement) {
             switch(event.key) {
             case Qt.Key_1:
-                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.background)
+                currentSelectedElement.changeToLayer(1)
                 event.accepted = true
                 break
             case Qt.Key_2:
-                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.middle)
+                currentSelectedElement.changeToLayer(2)
                 event.accepted = true
                 break
             case Qt.Key_3:
-                currentSelectedElement.changeToLayer(currentSelectedElement.zLayers.foreground)
+                currentSelectedElement.changeToLayer(3)
+                event.accepted = true
+                break
+            case Qt.Key_4:
+                currentSelectedElement.changeToLayer(4)
+                event.accepted = true
+                break
+            case Qt.Key_5:
+                currentSelectedElement.changeToLayer(5)
                 event.accepted = true
                 break
             case Qt.Key_PageUp:
                 // Monter d'un plan
-                if (currentSelectedElement.zLayer < 2) {
-                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayer + 1)
+                if (currentSelectedElement.z < 10) {
+                    currentSelectedElement.changeToLayer(currentSelectedElement.z + 1)
                 }
                 event.accepted = true
                 break
             case Qt.Key_PageDown:
                 // Descendre d'un plan
-                if (currentSelectedElement.zLayer > 0) {
-                    currentSelectedElement.changeToLayer(currentSelectedElement.zLayer - 1)
+                if (currentSelectedElement.z > 1) {
+                    currentSelectedElement.changeToLayer(currentSelectedElement.z - 1)
                 }
                 event.accepted = true
                 break
@@ -490,7 +499,7 @@ Rectangle {
             newTile = snapableDecoration.createObject(workArea, {
                                                           "gridRelativePositionX": gridX,
                                                           "gridRelativePositionY": gridY,
-                                                          "zLayer": currentPlanDisplayed
+                                                          "z": currentPlanDisplayed
                                                       })
             break
         case GameBoard.TileType.Personnage:
@@ -498,7 +507,7 @@ Rectangle {
                                                          "gridRelativePositionX": gridX,
                                                          "gridRelativePositionY": gridY,
                                                          "playerData": Game.getNewPlayer(),
-                                                         "zLayer": currentPlanDisplayed
+                                                         "z": currentPlanDisplayed
                                                      })
             break
         case GameBoard.TileType.Case:
@@ -508,7 +517,7 @@ Rectangle {
                                                         "unitSizeWidth": 6,
                                                         "unitSizeHeight": 6,
                                                         "caseData": Game.getNewCaseType(caseType),
-                                                        "zLayer": currentPlanDisplayed
+                                                        "z": currentPlanDisplayed
                                                     })
             break
 

@@ -21,18 +21,8 @@ Rectangle {
     property bool isResizing: false
     property bool isSelected: false
 
-    // Système de plans (Z-layers)
-    property int zLayer/*: zLayers.middle*/
-    property int zLayerBase: zLayer * 1000  // Multiplier par 1000 pour espacer les plans
-    // Constantes pour les plans
-    readonly property QtObject zLayers: QtObject {
-        readonly property int background: 0
-        readonly property int middle: 1
-        readonly property int foreground: 2
-
-        readonly property var names: ["Background", "Middle", "Foreground"]
-        readonly property var colors: ["#FF6B6B", "#4ECDC4", "#45B7D1"]
-    }
+    // Propriété pour stocker la valeur z originale
+    property int originalZ: z
 
     property int unitSizeWidth: 3
     property int unitSizeHeight: 3
@@ -96,8 +86,15 @@ Rectangle {
     border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
     border.width: isSelected ? borderWidth + 2 : borderWidth
     
-    // Z-order basé sur le plan
-    z: zLayerBase + isSelected
+    // Z-order: valeur élevée si sélectionné
+    onIsSelectedChanged: {
+        if (isSelected) {
+            originalZ = z
+            z = 11
+        } else {
+            z = originalZ
+        }
+    }
     
     // Effet de survol avec transition optimisée
     scale: isDragging ? 1.05 : 1.0
@@ -153,11 +150,7 @@ Rectangle {
         id: elementControls
         targetElement: snapableElement
         isVisible: isSelected
-        
-        onLayerChanged: function(newLayer) {
-            zLayer = newLayer
-        }
-        
+                
         onDeleteRequested: {
 //            elementDeleted(snapableElement)
             deleteAnimation.start()
@@ -224,17 +217,12 @@ Rectangle {
     function deselect() { isSelected = false }
     function toggleSelection() { isSelected = !isSelected }
     
-    // Fonctions pour gérer les plans
-    function changeToLayer(layer) {
-        if (layer >= zLayers.BACKGROUND && layer <= zLayers.FOREGROUND) {
-            zLayer = layer
-            console.log("Plan changé vers:", zLayers.names[zLayer], "Z:", zLayerBase)
-        }
+    // Fonction pour changer le plan (z)
+    function changeToLayer(newZ) {
+        z = newZ
+        originalZ = newZ
+        console.log("Plan changé vers:", newZ)
     }
-    
-    function moveToForeground() { changeToLayer(zLayers.FOREGROUND) }
-    function moveToMiddle() { changeToLayer(zLayers.MIDDLE)}
-    function moveToBackground() { changeToLayer(zLayers.BACKGROUND) }
 
     
 
