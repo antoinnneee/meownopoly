@@ -82,11 +82,9 @@ Item {
                     to: 1000
                     stepSize: 5
                     height : 35
-                    value: gridManager ? gridManager.gridSize : 20
+                    value: logic.mmSize
                     onValueChanged: {
-                        if (gridManager) {
-                            gridManager.gridSize = value
-                        }
+                        logic.mmSize = value
                     }
                 }
             }
@@ -310,70 +308,88 @@ Item {
     Rectangle {
         id: mapNameField
         width: 250
-        height: 40
+        height: 80
         color: "#f0f0f0"
         border.color: "#cccccc"
         border.width: 1
         radius: 5
-        
+
         anchors {
             top: parent.top
             horizontalCenter: parent.horizontalCenter
             margins: 10
         }
-        
-        TextInput {
+
+        TextArea {
             id: mapNameInput
             anchors.fill: parent
             anchors.margins: 8
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
+            placeholderText: "Nom de la carte"
             text: logic.mapName || ""
             font.pixelSize: 14
             font.bold: true
             color: "#333333"
             readOnly: !logic.isEditing
+        }
+    }
+
+
+    // Bouton de sauvegarde de la carte
+    Rectangle {
+        id: saveButtonContainer
+        width: 180
+        height: 45
+        color: "#e0e0e0"
+        border.color: "#999999"
+        border.width: 1
+        radius: 5
+        visible: logic.isEditing
+        
+        anchors {
+            bottom: parent.bottom
+            horizontalCenter: parent.horizontalCenter
+            margins: 10
+        }
+        
+        Button {
+            id: saveButton
+            anchors.fill: parent
+            anchors.margins: 3
+            text: "Sauvegarder carte"
+            font.bold: true
+            font.pixelSize: 13
             
-            // Placeholder text (visible when empty)
-            Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                visible: parent.text.length === 0
+            onClicked: {
+                logic.saveMap()
                 
-                Text {
-                    anchors.centerIn: parent
-                    text: "Nom de la carte"
-                    color: "#999999"
-                    font.pixelSize: 14
-                    font.italic: true
+                // Effet de confirmation
+                saveAnimation.restart()
+            }
+            
+            // Style visuel amélioré
+            background: Rectangle {
+                id: saveButtonBg
+                color: saveButton.pressed ? "#27ae60" : "#2ecc71"
+                radius: 4
+                
+                // Animation lors du clic
+                PropertyAnimation {
+                    id: saveAnimation
+                    target: saveButtonBg
+                    property: "color"
+                    from: "#27ae60"
+                    to: "#2ecc71"
+                    duration: 300
                 }
             }
             
-            // Bordure spéciale en mode édition
-            Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                border.color: parent.activeFocus ? "#3498db" : "transparent"
-                border.width: 2
-                radius: 3
-                visible: logic.isEditing
-            }
-            
-            onTextChanged: {
-                if (logic.isEditing) {
-                    logic.mapName = text
-                }
-            }
-            
-            // Animation subtile lors de la modification
-            PropertyAnimation {
-                id: glowAnimation
-                target: mapNameField
-                property: "border.color"
-                from: "#3498db"
-                to: "#cccccc"
-                duration: 500
-                running: mapNameInput.activeFocus
+            contentItem: Text {
+                text: saveButton.text
+                color: "white"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
         }
     }

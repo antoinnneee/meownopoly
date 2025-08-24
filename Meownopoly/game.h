@@ -11,7 +11,6 @@
 #include "case/CaseCatPerks.h"
 #include "case/CaseRestArea.h"
 
-
 #include "card.h"
 #include "player.h"
 
@@ -72,6 +71,9 @@ public:
     QList<Card *> listCards() const;
 
     // JSON Case Management
+
+    Q_INVOKABLE bool saveMap(const QVariantMap &mapInfo, QList<Case *> caseInfo, const QVariantMap &decoInfo);
+
     Q_INVOKABLE bool saveCaseToJson(const QVariantMap &caseData);
     Q_INVOKABLE bool saveMultipleCasesToJson(const QVariantList &casesData);
 

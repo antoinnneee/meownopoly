@@ -30,10 +30,10 @@ void CaseKibbleDispenser::setReward(int newReward) {
 //     player->earnKibble(m_reward);
 // }
 
-QString CaseKibbleDispenser::getJSON()
+QString CaseKibbleDispenser::toJSON()
 {
     QString json;
-    json = Case::getJSON();
+    json = Case::toJSON();
     json.removeLast();
     json += "    \"reward\": " + QString::number(m_reward) + "\n";
     json += "}";

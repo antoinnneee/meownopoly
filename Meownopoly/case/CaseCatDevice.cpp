@@ -41,10 +41,10 @@ void CaseCatDevice::setTaxe(int newTaxe)
     emit taxeChanged();
 }
 
-QString CaseCatDevice::getJSON()
+QString CaseCatDevice::toJSON()
 {
     QString json;
-    json = CaseCatPerks::getJSON();
+    json = CaseCatPerks::toJSON();
     json.removeLast();
     json += "    \"taxe\": " + QString::number(m_taxe) + "\n";
     json += "}";

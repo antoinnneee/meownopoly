@@ -102,10 +102,10 @@ void CaseRestArea::setRentPrice(const QList<int> &newRentPrice)
     emit rentPriceChanged();
 }
 
-QString CaseRestArea::getJSON()
+QString CaseRestArea::toJSON()
 {
     QString json;
-    json = CaseCatPerks::getJSON();
+    json = CaseCatPerks::toJSON();
     json.removeLast();
     json += "    \"restQuality\": " + QString::number(m_restQuality) + ",\n";
     json += "    \"family\": " + QString::number(m_family) + ",\n";

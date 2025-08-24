@@ -13,7 +13,7 @@ public:
 
     // void onLand(Player* player) override;
     void setJailCase(CaseJail* jailCase);
-    Q_INVOKABLE virtual QString getJSON();
+    Q_INVOKABLE virtual QString toJSON();
 
 private:
     CaseJail* m_jailCase = nullptr;

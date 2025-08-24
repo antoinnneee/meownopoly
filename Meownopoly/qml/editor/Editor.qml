@@ -57,8 +57,7 @@ Rectangle {
     // Grille de l'éditeur
     GridManager {
         id: editorGrid
-
-        mmSize: 15
+        logic: logic
         gridColor: "#80000000"
         gridOpacity: 0.3
         showGrid: true
@@ -200,7 +199,7 @@ Rectangle {
 
         onConfigurationClosed: {
             console.log("Panneau de configuration fermé")
-            console.log(caseConfigPanel.targetSnapableCase.caseData.getJSON());
+            console.log(caseConfigPanel.targetSnapableCase.caseData.toJSON());
 
         }
 

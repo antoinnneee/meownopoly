@@ -19,7 +19,7 @@ public:
     int kibbleAmount() const;
     void setKibbleAmount(int newKibbleAmount);
 
-    Q_INVOKABLE virtual QString getJSON() override;
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
     void kibbleAmountChanged();

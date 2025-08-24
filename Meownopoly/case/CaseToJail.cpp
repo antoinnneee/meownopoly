@@ -28,10 +28,10 @@ void CaseToJail::setJailCase(CaseJail* jailCase) {
     m_jailCase = jailCase;
 }
 
-QString CaseToJail::getJSON()
+QString CaseToJail::toJSON()
 {
     QString json;
-    json = Case::getJSON();
+    json = Case::toJSON();
     json.removeLast();
     json += "    \"jailCase\": " + QString::number(m_jailCase->uniqueId()) + "\n";
     json += "}";

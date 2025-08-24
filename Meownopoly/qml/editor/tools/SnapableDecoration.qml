@@ -16,6 +16,10 @@ SnapableElement {
     property string decorationType: "grass"  // Can be "grass" or "tree"
     property string decorationId: "1"  // Asset ID to use
 
+    Component.onCompleted: {
+        type = 1
+    }
+
     Image {
         id: tileImage
         anchors.fill: parent
@@ -35,5 +39,4 @@ SnapableElement {
             }
         }
     }
-
 }

@@ -31,6 +31,8 @@ Rectangle {
     property int gridRelativePositionX: 3
     property int gridRelativePositionY: 3
 
+
+    property int type: 0 // 0: case, 1: personnage, 2: decoration
     
     // Positions calculées à partir des coordonnées relatives
     x: gridRelativePositionX * gridManager.gridSize

@@ -35,10 +35,10 @@ void CaseJail::releasePlayer(Player* player) {
     // Logic to move player out of jail, e.g., to the next position
 }
 
-QString CaseJail::getJSON()
+QString CaseJail::toJSON()
 {
     QString json;
-    json = Case::getJSON();
+    json = Case::toJSON();
     json.removeLast();
     json += "    \"jailFine\": " + QString::number(m_jailFine) + ",\n";
     json += "}";

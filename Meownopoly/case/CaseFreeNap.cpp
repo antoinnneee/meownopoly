@@ -38,10 +38,10 @@ void CaseFreeNap::setKibbleAmount(int newKibbleAmount)
     emit kibbleAmountChanged();
 }
 
-QString CaseFreeNap::getJSON()
+QString CaseFreeNap::toJSON()
 {
     QString json;
-    json = Case::getJSON();
+    json = Case::toJSON();
     json.removeLast();
     json += "    \"kibbleAmount\": " + QString::number(m_kibbleAmount) + "\n";
     json += "}";

@@ -54,7 +54,7 @@ public:
     Q_INVOKABLE virtual void onLeave(Player* player); 
     Q_INVOKABLE virtual void onHover(Player* player);
 
-    Q_INVOKABLE virtual QString getJSON();
+    Q_INVOKABLE virtual QString toJSON();
 
 
 

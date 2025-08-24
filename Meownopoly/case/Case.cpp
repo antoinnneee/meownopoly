@@ -67,7 +67,7 @@ void Case::onHover(Player* player)
     }
 }
 
-QString Case::getJSON()
+QString Case::toJSON()
 {
     QString json;
     json += "{\n";

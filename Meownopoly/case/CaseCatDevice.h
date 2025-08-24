@@ -21,7 +21,7 @@ public:
     int taxe() const;
     void setTaxe(int newTaxe);
 
-    Q_INVOKABLE virtual QString getJSON() override;
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
     void taxeChanged();

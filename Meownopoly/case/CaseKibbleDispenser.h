@@ -16,7 +16,7 @@ public:
 
     // void onLand(Player* player) override;
 
-    Q_INVOKABLE virtual QString getJSON() override;
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
     void rewardChanged();
