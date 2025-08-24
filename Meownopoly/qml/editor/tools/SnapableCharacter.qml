@@ -18,7 +18,8 @@ SnapableElement {
     Image {
         id: caseTile
         anchors.fill: parent
-       source: "qrc:/asset/avatar/avatar" + randomImageIndex + ".png"
+            // property var tileIcons: appInstance.getAssetPath("case/cardboard.png")
+       source: "qrc:/assets/avatar/avatar" + randomImageIndex + ".png"
         // source: "qrc:/asset/element/lake_" + 0 + ".png"
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true
@@ -26,7 +27,5 @@ SnapableElement {
         fillMode: Image.PreserveAspectFit
         smooth: true
         mipmap: true  // Enable mipmapping for better quality when scaling down
-
     }
-
 }

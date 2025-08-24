@@ -30,28 +30,40 @@ Rectangle {
     property bool isEditing : false
     property int currentPlanDisplayed : 1
 
-    onCurrentPlanDisplayedChanged: {
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i]) {
-                var currentTile = snapableTilesList[i]
-                if (currentTile.zLayer < currentPlanDisplayed) {
-                    currentTile.enabled = false
-                    currentTile.visible = false
-                }
-                else {
-                    currentTile.enabled = true
-                    currentTile.visible = true
-                }
-            }
-        }
-    }
-
     color: isEditing ? "#B3B3D0D8" : "lightblue"
-    onIsEditingChanged: console.log("Édition:", isEditing)
     enum TileType {
         Case,
         Personnage,
         Decoration
+    }
+
+    onIsEditingChanged:{
+        console.log("Édition:", isEditing)
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            if (snapableTilesList[i]) {
+                snapableTilesList[i].enabled = true
+                snapableTilesList[i].visible = true
+            }
+        }
+    }
+
+    onCurrentPlanDisplayedChanged: {
+        if (isEditing){
+            console.log("Changement de plan affiché:", currentPlanDisplayed)
+            for (var i = 0; i < snapableTilesList.length; i++) {
+                if (snapableTilesList[i]) {
+                    var currentTile = snapableTilesList[i]
+                    if (currentTile.zLayer < currentPlanDisplayed) {
+                        currentTile.enabled = false
+                        currentTile.visible = false
+                    }
+                    else {
+                        currentTile.enabled = true
+                        currentTile.visible = true
+                    }
+                }
+            }
+        }
     }
 
     // Grille de l'éditeur

@@ -79,5 +79,7 @@
         <file>qml/launcher/PackagingSection.qml</file>
         <file>qml/launcher/LogsSection.qml</file>
         <file>qml/launcher/LauncherLogic.qml</file>
+        <file>qml/editor/tools/SnapableCharacter.qml</file>
+        <file>qml/editor/tools/GridControlPopupAsset.qml</file>
     </qresource>
 </RCC>
