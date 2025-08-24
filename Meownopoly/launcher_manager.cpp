@@ -5,7 +5,7 @@
 #include <QStandardPaths>
 #include <QRegularExpression>
 #include <QUrl>
-
+#include <QString>
 LauncherManager *LauncherManager::m_instance = nullptr;
 
 LauncherManager::LauncherManager(QObject *parent)
@@ -43,6 +43,15 @@ QObject *LauncherManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngin
     return LauncherManager::instance();
 }
 
+QString reformat_server_url(const QString &serverUrl)
+{
+    if (!serverUrl.startsWith("http://"))
+    {
+        return QString("http://") + serverUrl;
+    }
+    return serverUrl;
+}
+
 void LauncherManager::testServerConnection(const QString &serverUrl)
 {
     if (m_connectionTestReply) {
@@ -53,7 +62,8 @@ void LauncherManager::testServerConnection(const QString &serverUrl)
     emit logMessage("Test de connexion vers: " + serverUrl);
     
     QNetworkRequest request;
-    request.setUrl(QUrl(serverUrl + "/api/ping"));
+    QString formattedServerUrl = reformat_server_url(serverUrl);
+    request.setUrl(QUrl(formattedServerUrl + "/api/ping"));
     request.setRawHeader("User-Agent", "Meownopoly-Launcher/1.0");
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     
@@ -79,7 +89,8 @@ void LauncherManager::checkForUpdates(const QString &serverUrl)
     setDownloadStatus("Vérification...");
     
     QNetworkRequest request;
-    request.setUrl(QUrl(serverUrl + "/api/version"));
+    QString formattedServerUrl = reformat_server_url(serverUrl);
+    request.setUrl(QUrl(formattedServerUrl + "/api/version"));
     request.setRawHeader("User-Agent", "Meownopoly-Launcher/1.0");
     
     m_versionCheckReply = m_networkManager->get(request);
@@ -98,7 +109,8 @@ void LauncherManager::downloadResources(const QString &serverUrl, const QString 
     setDownloadProgress(0.0);
     setDownloadStatus("Téléchargement...");
     
-    QString downloadUrl = serverUrl + "/api/download/" + version;
+    QString formattedServerUrl = reformat_server_url(serverUrl);
+    QString downloadUrl = formattedServerUrl + "/api/download/" + version;
     QString fileName = QString("assets_v%1.meow").arg(version);
     
     m_downloadFile = new QFile(fileName, this);
@@ -253,7 +265,8 @@ void LauncherManager::uploadPackageToServer(const QString &serverUrl)
     
     // Configurer et envoyer la requête
     QNetworkRequest request;
-    request.setUrl(QUrl(serverUrl + "/api/upload"));
+    QString formattedServerUrl = reformat_server_url(serverUrl);
+    request.setUrl(QUrl(formattedServerUrl + "/api/upload"));
     request.setRawHeader("User-Agent", "Meownopoly-Launcher/1.0");
     
     QNetworkReply *uploadReply = m_networkManager->post(request, multiPart);
