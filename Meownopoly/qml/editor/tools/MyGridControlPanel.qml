@@ -5,7 +5,6 @@ import QtQuick.Controls
  * GridManager avec animation fluide de zoom
  * 
  * Features:
- * - Zoom instantané pour la réactivité (gridSize)
  * - Animation fluide après stabilisation (animatedGridSize) 
  * - Délai configurable avant animation (150ms par défaut)
  * - Snap basé sur la grille logique, pas l'animation

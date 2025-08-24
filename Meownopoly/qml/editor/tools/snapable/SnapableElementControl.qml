@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import "../../../item_icon"
 
 Item {
     id: controlsRoot
@@ -40,48 +41,18 @@ Item {
             id: layerSelector
             spacing: 2
             width: 40
-            
-            Repeater {
-                model: 3
-                
-                Rectangle {
-                    id: layerOption
-                    width: parent.width
-                    height: 20
-                    radius: 4
-                    
-                    property bool isSelected: index === currentZLayer
-                    property color baseColor: zLayers ? zLayers.colors[index] : "gray"
-                    
-                    color: isSelected ? baseColor : Qt.darker(baseColor, 1.5)
-                    border.color: "white"
-                    border.width: isSelected ? 2 : 1
-                    scale: isSelected ? 1.1 : 1.0
-                    
-                    Behavior on scale {
-                        NumberAnimation { duration: 100 }
-                    }
-                    
-                    Text {
-                        anchors.centerIn: parent
-                        text: zLayers ? zLayers.names[index][0] : "?"  // Première lettre uniquement
-                        color: "white"
-                        font.bold: true
-                        font.pixelSize: 12
-                    }
-                    
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        
-                        onClicked: {
-                            layerChanged(index)
-                        }
-                        
-                        onEntered: parent.scale = 1.1
-                        onExited: parent.scale = parent.isSelected ? 1.1 : 1.0
-                    }
+
+            LayerVisualizer {
+                id: layerOption
+                width: parent.width
+                onLayerClicked: function(index){
+                    console.log("layer " + index + "clicked")
                 }
+
+                Behavior on scale {
+                    NumberAnimation { duration: 100 }
+                }
+
             }
         }
         
