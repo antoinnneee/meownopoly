@@ -6,15 +6,6 @@ import QtQuick.Shapes
 import QtQml
 import Game
 import Case
-import CaseRestArea
-import CaseKibbleDispenser
-import CaseCatNip
-import CaseCardBoardBox
-import CaseJail
-import CaseToJail
-import CaseCatDoor
-import CaseFreeNap
-import CaseCatDevice
 import "tools"
 import "tools/snapable"
 
