@@ -19,10 +19,6 @@ Item {
     signal cancelSelectionRequested()
 
 
-    onCancelSelectionRequested: {
-        cancelSelection()
-    }
-
     // Panneau de contrôle principal
     Rectangle {
         id: controlPanel
