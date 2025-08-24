@@ -183,16 +183,13 @@ Rectangle {
         gridManager: editorGrid
         showControlPanel: false
         showInfoPanel: true
+        logic: logic
         property alias isEdit : root.isEditing
         property alias currentWidth: root.currentElementWidth
         property alias currentHeight: root.currentElementHeight
 
         onCancelSelectionRequested: {
             logic.cancelSelection()
-        }
-        onCurrentPlanChanged: function(value) {
-            logic.currentPlanDisplayed = value
-            console.log(value)
         }
     }
 

@@ -14,7 +14,7 @@ QtObject {
 
 
     property bool isEditing : false
-    property int currentPlanDisplayed : 1
+    property int currentPlanDisplayed : 5
 
 
 
@@ -43,7 +43,6 @@ QtObject {
     }
 
     onCurrentPlanDisplayedChanged: {
-        console.log("Changement de plan affiché:")
         if (isEditing){
             console.log("Changement de plan affiché:", currentPlanDisplayed)
             for (var i = 0; i < snapableTilesList.length; i++) {

@@ -7,6 +7,8 @@ import Game
 Item {
     id: gridControlPanel
 
+    required property var logic
+
     // Référence vers le GridManager
     property var gridManager: null
 
@@ -52,7 +54,7 @@ Item {
 
             Button {
                 id: editMod
-                text: isEdit ? "Mode Édition" : "Mode Lecture"
+                text: logic.isEditing ? "Mode Édition" : "Mode Lecture"
                 font.bold: true
                 width: parent.width
                 height: 35
@@ -64,7 +66,7 @@ Item {
                 font.bold: true
                 width: parent.width
                 height: 35
-                enabled: isEdit
+                enabled: logic.isEditing
                 visible : enabled
                 onClicked: {
                     selectDecorationPopup.open()
@@ -131,7 +133,7 @@ Item {
                 font.bold: true
                 width: parent.width
                 height: 35
-                enabled: isEdit
+                enabled: logic.isEditing
                 visible: enabled
                 checkable: true
                 checked: isSelectionActive
@@ -158,7 +160,7 @@ Item {
 
             Row{
                 spacing: 8
-                visible: isEdit
+                visible: logic.isEditing
                 enabled: visible
                 Text {
                     id: planText
@@ -171,10 +173,10 @@ Item {
                     from: 1
                     to: 10
                     stepSize: 1
-                    value: 5
+                    value: logic.currentPlanDisplayed
                     width : controlColumn.width*0.75
                     onValueChanged: {
-                        currentPlanChanged(value);
+                        logic.currentPlanDisplayed = value
                     }
                 }
             }
@@ -184,59 +186,54 @@ Item {
                 text: "Dimensions des éléments"
                 font.bold: true
                 font.pixelSize: 12
-                visible: isEdit
+                visible: logic.isEditing
                 enabled: visible
             }
 
             // Sélecteur de largeur
-            Row {
+            RowLayout {
                 spacing: 8
-                visible: isEdit
+                visible: logic.isEditing
                 enabled: visible
 
                 Text {
                     text: "L:"
                     width: 15
-                    anchors.verticalCenter: parent.verticalCenter
                 }
                 SpinBox {
                     id: widthSpinBox
                     from: 1
                     to: 20
                     stepSize: 1
-                    value: 1
-                    width: 70
+                    value: logic.currentElementWidth
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    onValueChanged: logic.currentElementWidth = value
                     height: 30
-                    onValueChanged: {
-                        gridControlPanel.currentWidth = value
-                    }
-                    Component.onCompleted: gridControlPanel.currentWidth = value
+                    Layout.fillWidth: true
                 }
             }
 
             // Sélecteur de hauteur
-            Row {
+            RowLayout {
                 spacing: 8
-                visible: isEdit
+                visible: logic.isEditing
                 enabled: visible
 
                 Text {
                     text: "H:"
                     width: 15
-                    anchors.verticalCenter: parent.verticalCenter
+
                 }
                 SpinBox {
                     id: heightSpinBox
                     from: 1
                     to: 20
                     stepSize: 1
-                    value: 1
-                    width: 70
                     height: 30
-                    onValueChanged: {
-                        gridControlPanel.currentHeight = value
-                    }
-                    Component.onCompleted: gridControlPanel.currentHeight = value
+                    value: logic.currentElementHeight
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    onValueChanged: logic.currentElementHeight = value
+                    Layout.fillWidth: true
                 }
             }
         }
