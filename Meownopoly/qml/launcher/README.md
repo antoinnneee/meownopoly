@@ -56,7 +56,6 @@ Launcher.qml (orchestrateur)
 - `createResourcePackage(folder, version)` - Création de paquet
 - `uploadPackage()` - Upload vers serveur
 - `updateServerUrl(url)` - Mise à jour URL serveur
-- `updateAutoUpdate(enabled)` - Mise à jour auto-update
 
 ## Avantages de cette architecture
 

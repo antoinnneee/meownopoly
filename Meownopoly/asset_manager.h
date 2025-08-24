@@ -22,7 +22,8 @@ public:
         PathRole = Qt::UserRole + 1,
         TypeRole,
         CategoryRole,
-        RatioRole,
+        RatioWidthRole,
+        RatioHeightRole,
         WidthRole,
         HeightRole,
         IdRole,
@@ -38,7 +39,7 @@ public:
 
     // Asset management
     void addAsset(const QString &path, const QString &type, const QString &category, 
-                  double ratio, int width, int height, const QString &id, const QString &filename);
+                  int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename);
     void clear();
     
     // Filtering
@@ -49,7 +50,8 @@ private:
         QString path;
         QString type;
         QString category;
-        double ratio;
+        int ratioWidth;
+        int ratioHeight;
         int width;
         int height;
         QString id;

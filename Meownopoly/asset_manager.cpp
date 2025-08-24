@@ -35,8 +35,10 @@ QVariant AssetModel::data(const QModelIndex &index, int role) const
         return asset.type;
     case CategoryRole:
         return asset.category;
-    case RatioRole:
-        return asset.ratio;
+    case RatioWidthRole:
+        return asset.ratioWidth;
+    case RatioHeightRole:
+        return asset.ratioHeight;
     case WidthRole:
         return asset.width;
     case HeightRole:
@@ -56,7 +58,8 @@ QHash<int, QByteArray> AssetModel::roleNames() const
     roles[PathRole] = "path";
     roles[TypeRole] = "type";
     roles[CategoryRole] = "category";
-    roles[RatioRole] = "ratio";
+    roles[RatioWidthRole] = "ratioWidth";
+    roles[RatioHeightRole] = "ratioHeight";
     roles[WidthRole] = "width";
     roles[HeightRole] = "height";
     roles[IdRole] = "id";
@@ -65,14 +68,15 @@ QHash<int, QByteArray> AssetModel::roleNames() const
 }
 
 void AssetModel::addAsset(const QString &path, const QString &type, const QString &category,
-                         double ratio, int width, int height, const QString &id, const QString &filename)
+                         int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename)
 {
     beginInsertRows(QModelIndex(), m_assets.size(), m_assets.size());
     Asset asset;
     asset.path = path;
     asset.type = type;
     asset.category = category;
-    asset.ratio = ratio;
+    asset.ratioWidth = ratioWidth;
+    asset.ratioHeight = ratioHeight;
     asset.width = width;
     asset.height = height;
     asset.id = id;
@@ -95,7 +99,7 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
     for (const Asset &asset : m_assets) {
         if (asset.type == type) {
             filteredModel->addAsset(asset.path, asset.type, asset.category,
-                                  asset.ratio, asset.width, asset.height,
+                                  asset.ratioWidth, asset.ratioHeight, asset.width, asset.height,
                                   asset.id, asset.filename);
         }
     }
@@ -255,7 +259,8 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         
         QString id = assetObj["id"].toString();
         QString filename = assetObj["filename"].toString();
-        double ratio = assetObj["ratio"].toDouble();
+        int ratioWidth = assetObj["ratioWidth"].toInt();
+        int ratioHeight = assetObj["ratioHeight"].toInt();
         int width = assetObj["width"].toInt();
         int height = assetObj["height"].toInt();
         
@@ -270,7 +275,7 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         }
         
         if (targetModel) {
-            targetModel->addAsset(fullPath, typeName, categoryName, ratio, width, height, id, filename);
+            targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename);
         }
     }
 }
@@ -345,14 +350,27 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
         QFileInfo fileInfo(filename);
         QString id = fileInfo.baseName();
         
-        // Calculate ratio
-        double ratio = static_cast<double>(imageSize.width()) / imageSize.height();
+        // Calculate ratio as integers
+        int w = imageSize.width();
+        int h = imageSize.height();
+        // Find GCD to simplify the ratio
+        int a = w;
+        int b = h;
+        while (b != 0) {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        int gcd = a;
+        int ratioWidth = w / gcd;
+        int ratioHeight = h / gcd;
         
         // Create asset object
         QJsonObject assetObj;
         assetObj["id"] = id;
         assetObj["filename"] = filename;
-        assetObj["ratio"] = ratio;
+        assetObj["ratioWidth"] = ratioWidth;
+        assetObj["ratioHeight"] = ratioHeight;
         assetObj["width"] = imageSize.width();
         assetObj["height"] = imageSize.height();
         

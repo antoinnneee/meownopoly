@@ -10,7 +10,7 @@ Rectangle {
     property int totalTilesCount: 0
     
     width: 320
-    height: 540
+    height: 450
     color: "#f0f0f0"
     border.color: "#cccccc"
     border.width: 1
@@ -66,18 +66,6 @@ Rectangle {
             
             InstructionText {
                 text: "• Ctrl + molette pour zoomer la grille"
-            }
-            
-            InstructionText {
-                text: "• Bouton ↕ pour changer de plan (Background/Middle/Foreground)"
-            }
-            
-            InstructionText {
-                text: "• Touches 1/2/3 : plans Background/Middle/Foreground"
-            }
-            
-            InstructionText {
-                text: "• PageUp/PageDown : monter/descendre d'un plan"
             }
         }
         
