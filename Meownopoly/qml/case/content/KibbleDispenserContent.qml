@@ -12,9 +12,9 @@ Item {
     required property CaseKibbleDispenser caseData
 
     // Icons for different tile types
-    property var tileIcons:  "qrc:/asset/icon/kibble.png"         // 1: Rest Area
+    property var tileIcons:  appInstance.getAssetPath("case/kibble.png")
 
-    property var fallbackIcons: "🐱💰"          // 1: Rest Area
+    property var fallbackIcons: "🐱💰"
 
 
     Text {

@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import "titleScreen/"
 import "test/"
 import "editor/"
+import "launcher/"
 import QtQuick.Window
 import Game
 
@@ -20,7 +21,7 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: titleScreen
+        initialItem: launcher
     }
 
     Component {
@@ -45,12 +46,21 @@ ApplicationWindow {
                 stackView.pop()
                 stackView.push(test3D)
             }
+            
+            onLauncherRequested: {
+                stackView.pop()
+                stackView.push(launcher)
+            }
+            
+            onAssetManagerTestRequested: {
+                stackView.push(assetManagerTest)
+            }
         }
     }
 
     Component {
         id: editor
-        GameBoard{
+        Editor{
         width:root.width
         height:root.height
         visible: false
@@ -67,8 +77,8 @@ ApplicationWindow {
     Component {
         id: caseCreator
         TEST_JSON{
-            width:parent.width
-            height:parent.height
+            width:root.width
+            height:root.height
             visible: false
         }
     }
@@ -76,12 +86,47 @@ ApplicationWindow {
     Component {
         id: test3D
         TEST_3D {
-            width: parent.width
-            height: parent.height
+            width: root.width
+            height: root.height
             visible: false
             
             // Fonction pour revenir à l'écran titre
             function goBack() {
+                stackView.pop()
+                stackView.push(titleScreen)
+            }
+        }
+    }
+
+    
+    Component {
+        id: launcher
+        Launcher {
+            width: root.width
+            height: root.height
+            visible: false
+            
+            onBackRequested: {
+                stackView.pop()
+                stackView.push(titleScreen)
+            }
+            
+            onLaunchGame: {
+                // Ici on peut ajouter la logique pour lancer le jeu principal
+                stackView.pop()
+                stackView.push(titleScreen)
+            }
+        }
+    }
+    
+    Component {
+        id: assetManagerTest
+        TEST_ASSET_MANAGER {
+            width: root.width
+            height: root.height
+            visible: false
+            
+            onBackRequested: {
                 stackView.pop()
                 stackView.push(titleScreen)
             }

@@ -8,6 +8,9 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(0);
     QGuiApplication app(argc, argv);
 
+    app.setOrganizationName("Pattoune Corp");
+    app.setOrganizationDomain("pattounecorp.ovh");
+    app.setApplicationName("Meownopoly");
     // Configure surface format to reduce flickering during resize
     QSurfaceFormat format;
     format.setSwapInterval(0);  // Disable VSync to prevent resize flickering

@@ -196,7 +196,6 @@ Rectangle {
                     deleteElementsConnections(element)
                     element.connectionManager.deleteLinkedConnection()
                     deleteElement(element)
-                    rebuildConnectionSegments()
                 }
 
                 // Gestion de la configuration
@@ -214,7 +213,7 @@ Rectangle {
                         editorGrid.moveToConfigElement(element)
                     }
                 }
-                onElementPressed: {
+                onElementPressed:  function(element) {
                     deselectAllTiles()
                     element.isSelected = true
                     currentSelectedElement = element

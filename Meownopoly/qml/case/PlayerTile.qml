@@ -38,8 +38,8 @@ Rectangle {
                 width: Math.min(parent.width, parent.height) * 0.8
                 height: width
                 source: playerData && playerData.indexLogo >= 0 ? 
-                    "qrc:/asset/avatar/avatar" + (playerData.indexLogo + 1) + ".png" : 
-                    "qrc:/asset/avatar/avatar1.png"
+                   appInstance.getAssetPath("avatar/avatar" + (playerData.indexLogo + 1) + ".png") :
+                    appInstance.getAssetPath("avatar/avatar1.png")
                 fillMode: Image.PreserveAspectFit
             }
         }
