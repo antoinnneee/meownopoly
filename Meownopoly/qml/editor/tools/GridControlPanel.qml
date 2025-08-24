@@ -214,6 +214,7 @@ Item {
                     onValueChanged: {
                         gridControlPanel.currentWidth = value
                     }
+                    Component.onCompleted: gridControlPanel.currentWidth = value
                 }
             }
 
@@ -239,6 +240,7 @@ Item {
                     onValueChanged: {
                         gridControlPanel.currentHeight = value
                     }
+                    Component.onCompleted: gridControlPanel.currentHeight = value
                 }
             }
         }
