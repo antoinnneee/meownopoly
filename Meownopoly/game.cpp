@@ -579,6 +579,32 @@ void Game::displayListCase()
     qDebug() << "Taille: " << getListCaseSize();
 }
 
+bool Game::checkDecorationAssets()
+{
+    bool flag = false;
+    QDir dirAsset("asset/element");
+    if (!dirAsset.exists()){
+        qDebug() << "Le repertoire " + dirAsset.path() + " de ressources n'existe pas";
+        return flag;
+    }
+    QFileInfoList fileInfoList = dirAsset.entryInfoList();
+    flag = true;
+    int index = 0;
+    for (int var = 0; var < fileInfoList.size(); ++var) {
+        if (fileInfoList.at(var).isDir() || fileInfoList.at(var).fileName().startsWith(".")) {
+            continue;
+        }
+        QFileInfo fileInfo = fileInfoList.at(var);
+        if (fileInfo.isFile() && fileInfo.suffix() == "png") {
+            qDebug() << fileInfo.absoluteFilePath();
+                m_assetPath.append(fileInfo.absoluteFilePath());
+        }
+        index++;
+    }
+        setAssetNumber(index);
+        return flag;
+}
+
 Case *Game::getCaseAt(int indexCase)
 {
     if (indexCase >= getListCaseSize() || !m_listCases || !*m_listCases){
@@ -730,14 +756,40 @@ bool Game::saveMultipleCasesToJson(const QVariantList &casesData) {
     return true;
 }
 
+int Game::assetNumber() const
+{
+    return m_assetNumber;
+}
+
+void Game::setAssetNumber(int newAssetNumber)
+{
+    if (m_assetNumber == newAssetNumber)
+        return;
+    m_assetNumber = newAssetNumber;
+    emit assetNumberChanged();
+}
+
+QVariantList Game::assetPath() const
+{
+    return m_assetPath;
+}
+
+QVariant Game::getAssetPath(int index) const
+{
+    QString path = m_assetPath.value(index).toString();
+
+    if (index <= m_assetPath.size() && !path.isEmpty()) {
+        return QUrl::fromLocalFile(path).toString();
+    }
+    else
+        return "";
+}
 
 
-
-
-
-
-
-
-
-
-
+void Game::setAssetPath(const QVariantList &newAssetPath)
+{
+    if (m_assetPath == newAssetPath)
+        return;
+    m_assetPath = newAssetPath;
+    emit assetPathChanged();
+}

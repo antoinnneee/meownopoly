@@ -182,7 +182,7 @@ Item {
     }
     MouseArea{
         anchors.fill: parent
-        drag.target: gridManager
+        drag.target: isEdit ? null : gridManager
         pressAndHoldInterval: 150
         onClicked: {
             console.log("click location : ", mouseX, mouseY)
@@ -195,7 +195,6 @@ Item {
             console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
             gridManager.gridPressed(gridManager.getGridPosition(mouseX, mouseY))
         }
-
     }
 
 } 

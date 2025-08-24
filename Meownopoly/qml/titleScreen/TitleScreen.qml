@@ -91,8 +91,11 @@ Rectangle {
     ColumnLayout {
         anchors.centerIn: parent
         spacing: 20
-
         // Start Game Button
+        Item {
+            height: 20
+        }
+
         Button {
             id: startGameButton
             text: "Start Game"

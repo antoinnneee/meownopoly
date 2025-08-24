@@ -62,9 +62,6 @@ Rectangle {
         anchors.fill: editorGrid
     }
     
-    // Gestionnaire de raccourcis clavier
-    Keys.onPressed: function(event) {
-    }
     
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true

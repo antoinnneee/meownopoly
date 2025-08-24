@@ -15,12 +15,10 @@ Item {
     signal deleteRequested()
     signal configurationRequested()
     signal connectionsConfigurationRequested()
-    
-    // Propriétés pour accéder aux données du target
-    readonly property var zLayers: targetElement ? targetElement.zLayers : null
-    readonly property int currentZLayer: targetElement ? targetElement.zLayer : 0
-    readonly property int zLayerBase: targetElement ? targetElement.zLayerBase : 0
-    
+
+    // Propriété pour accéder à la valeur z du target
+    readonly property int currentZ: targetElement ? targetElement.z : 0
+
     visible: isVisible
     z: 200  // Au-dessus de tout
     

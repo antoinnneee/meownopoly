@@ -87,5 +87,7 @@
         <file>qml/asset_tools/AssetSelector.qml</file>
         <file>qml/asset_tools/MetadataGenerator.qml</file>
         <file>qml/item_icon/LayerVisualizer.qml</file>
+        <file>qml/editor/tools/SnapableCharacter.qml</file>
+        <file>qml/editor/tools/GridControlPopupAsset.qml</file>
     </qresource>
 </RCC>

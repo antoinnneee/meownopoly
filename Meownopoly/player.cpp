@@ -4,7 +4,7 @@
 
 Player::Player(QObject *parent)
     : QObject(parent)
-    , m_name("")
+    , m_name("unname")
     , m_color(QColor("#7f8c8d"))
     , m_kibble(12000)
     , m_position(0)

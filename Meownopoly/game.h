@@ -6,9 +6,11 @@
 #include <QVector>
 #include <QList>
 #include <QVariant>
+#include <QDir>
 #include "case/Case.h"
 #include "case/CaseCatPerks.h"
 #include "case/CaseRestArea.h"
+
 
 #include "card.h"
 #include "player.h"
@@ -25,6 +27,9 @@ class Game : public QObject
     Q_PROPERTY(QList<Player *> listPlayers READ listPlayers CONSTANT FINAL)
     Q_PROPERTY(Case **listCases READ listCases CONSTANT FINAL)
     Q_PROPERTY(QList<Card *> listCards READ listCards CONSTANT FINAL)
+
+    Q_PROPERTY(int assetNumber READ assetNumber WRITE setAssetNumber NOTIFY assetNumberChanged FINAL)
+    Q_PROPERTY(QVariantList assetPath READ assetPath WRITE setAssetPath NOTIFY assetPathChanged FINAL)
 
 public:
 
@@ -43,6 +48,7 @@ public:
     void initCases();
     Case *getNewCase(const QStringList&);
     void initCards();
+    void init_caseFile();
 
     Q_INVOKABLE Player *createPlayer(const QString name, QColor color, int indexLogo, int kibbles);
     Q_INVOKABLE void setupPlayers(const QVariantList &playerData);
@@ -69,6 +75,7 @@ public:
     Q_INVOKABLE bool saveCaseToJson(const QVariantMap &caseData);
     Q_INVOKABLE bool saveMultipleCasesToJson(const QVariantList &casesData);
 
+
 // ---- CASES : CHAINED LIST MANIPULATION ----
     bool appendCase(Case *newCase);
     bool clearListCases();
@@ -84,7 +91,22 @@ public:
     int getListCaseSize();
     void displayListCase();
 
+    // ---- ASSETS ----
+
+    Q_INVOKABLE bool checkDecorationAssets();
+
+    // ---- ----
+
+
     ~Game();
+
+    int assetNumber() const;
+    void setAssetNumber(int newAssetNumber);
+
+    QVariantList assetPath() const;
+    Q_INVOKABLE QVariant getAssetPath(int index) const;
+
+    void setAssetPath(const QVariantList &newAssetPath);
 
 public slots:
 
@@ -94,6 +116,9 @@ signals:
     void playersChanged();
     void currentPlayerIndexChanged();
     void propertyPurchased(int position, Player* newOwner);
+
+    void assetNumberChanged();
+    void assetPathChanged();
 
 private slots:
 
@@ -113,7 +138,9 @@ private:
 
     int m_currentPlayerIndex = 0;
 
-    void init_caseFile();
+    int m_assetNumber = 0;
+
+    QVariantList m_assetPath;
 };
 
 #endif // GAME_H

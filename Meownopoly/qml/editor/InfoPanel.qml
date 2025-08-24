@@ -145,13 +145,13 @@ Rectangle {
                 visible: selectedElement !== null
             }
             
-            // Affichage du plan (Z-layer)
+            // Affichage du plan (Z)
             Text {
-                text: selectedElement && selectedElement.zLayers ? 
-                      ("Plan: " + selectedElement.zLayers.names[selectedElement.zLayer] + " (Z:" + selectedElement.zLayerBase + ")") : 
+                text: selectedElement ? 
+                      ("Plan: " + selectedElement.z) : 
                       ""
                 font.pixelSize: 9
-                color: selectedElement && selectedElement.zLayers ? selectedElement.zLayers.colors[selectedElement.zLayer] : "#000000"
+                color: "#4ECDC4"
                 font.bold: true
                 visible: selectedElement !== null
             }
