@@ -29,6 +29,13 @@ Rectangle {
 
     property bool isEditing : false
     property int currentPlanDisplayed : 1
+    
+    // Propriétés pour la sélection par rectangle
+    property bool isSelectionActive: false
+    property point selectionStart: Qt.point(0, 0)
+    property point selectionCurrent: Qt.point(0, 0)
+    property bool isSelectingArea: false
+    property int defaultCaseType: Case.CS_KibbleDispenser
 
     color: isEditing ? "#B3B3D0D8" : "lightblue"
     enum TileType {
@@ -82,13 +89,30 @@ Rectangle {
         Component.onCompleted: {
         }
         onGridClicked:  function(position) {
-            deselectAllTiles()
+            if (!isSelectionActive) {
+                deselectAllTiles()
+            }
         }
         onGridPressed : function(position) {
-            // Stocker la position du clic pour créer l'élément au bon endroit
-            contextMenu.clickGridCoord = position
-            contextMenu.popup()
+            if (!isEditing || !isSelectionActive) {
+                // Comportement original: menu contextuel uniquement si pas en mode sélection
+                contextMenu.clickGridCoord = position
+                contextMenu.popup()
+            }
+            // Sinon, la sélection est gérée par selectionMouseArea
         }
+    }
+    
+    // Rectangle de sélection
+    Rectangle {
+        id: selectionRect
+        parent: workArea
+        visible: false
+        color: "#C7E8FF" // Bleu semi-transparent
+        border.width: 2
+        border.color: "#3498db"
+        opacity: 0.7
+        z: 100 // S'assurer qu'il est au-dessus des autres éléments
     }
 
 
@@ -99,6 +123,74 @@ Rectangle {
     Item {
         id: workArea
         anchors.fill: editorGrid
+        
+        // MouseArea pour gérer la sélection par rectangle
+        MouseArea {
+            id: selectionMouseArea
+            anchors.fill: parent
+            enabled: isEditing && isSelectionActive
+            hoverEnabled: true
+            z: 99 // Juste en-dessous du rectangle de sélection
+            preventStealing: true // Empêche le vol d'événements par d'autres MouseArea
+            
+            onPressed: {
+                if (isEditing && isSelectionActive) {
+                    // Vérifier si le clic est sur un élément existant
+                    var clickedOnElement = false
+                    for (var i = 0; i < snapableTilesList.length; i++) {
+                        if (snapableTilesList[i]) {
+                            var element = snapableTilesList[i]
+                            var mousePos = mapToItem(element, mouse.x, mouse.y)
+                            if (mousePos.x >= 0 && mousePos.x <= element.width && 
+                                mousePos.y >= 0 && mousePos.y <= element.height) {
+                                clickedOnElement = true
+                                break
+                            }
+                        }
+                    }
+                    
+                    if (!clickedOnElement) {
+                        // Si le clic n'est pas sur un élément, commencer la sélection par rectangle
+                        console.log("Début de la sélection par rectangle")
+                        isSelectingArea = true
+                        var gridPos = editorGrid.getGridPosition(mouse.x, mouse.y)
+                        selectionStart = gridPos
+                        selectionCurrent = gridPos
+                        selectionRect.visible = true
+                        updateSelectionRect()
+                        mouse.accepted = true // Important pour éviter la propagation
+                    } else {
+                        // Si le clic est sur un élément, propager l'événement
+                        console.log("Clic sur un élément existant, propagation de l'événement")
+                        mouse.accepted = false
+                    }
+                }
+            }
+            
+            onPositionChanged: {
+                if (isSelectingArea) {
+                    console.log("Mise à jour de la sélection")
+                    // Mettre à jour la position courante
+                    var gridPos = editorGrid.getGridPosition(mouse.x, mouse.y)
+                    selectionCurrent = gridPos
+                    updateSelectionRect()
+                    mouse.accepted = true
+                }
+            }
+            
+            onReleased: {
+                if (isSelectingArea) {
+                    console.log("Finalisation de la sélection")
+                    finishSelection()
+                    mouse.accepted = true
+                }
+            }
+            
+            onCanceled: {
+                console.log("Annulation de la sélection")
+                cancelSelection()
+            }
+        }
 
         Component {
             id: snapableCaseTile
@@ -234,6 +326,38 @@ Rectangle {
                 }
 
             }
+        }
+    }
+
+    // Bouton de sélection pour activer/désactiver le mode sélection
+    Button {
+        id: selectionButton
+        text: isSelectionActive ? "✓ Mode Sélection" : "Mode Sélection"
+        anchors {
+            bottom: parent.bottom
+            right: parent.right
+            margins: 10
+        }
+        visible: isEditing
+        checkable: true
+        checked: isSelectionActive
+        onClicked: {
+            console.log("Mode sélection: " + checked)
+            isSelectionActive = checked
+            if (!isSelectionActive) {
+                cancelSelection()
+            }
+        }
+        // Style visuel amélioré
+        background: Rectangle {
+            color: selectionButton.checked ? "#3498db" : "#95a5a6"
+            radius: 5
+        }
+        contentItem: Text {
+            text: selectionButton.text
+            color: "white"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
         }
     }
 
@@ -491,6 +615,86 @@ Rectangle {
     }
 
     // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
+    // Fonction pour mettre à jour l'apparence du rectangle de sélection
+    function updateSelectionRect() {
+        if (!isSelectingArea) return
+        
+        // Calculer les coordonnées et dimensions en pixels
+        var startX = selectionStart.x * editorGrid.gridSize
+        var startY = selectionStart.y * editorGrid.gridSize
+        var currentX = selectionCurrent.x * editorGrid.gridSize
+        var currentY = selectionCurrent.y * editorGrid.gridSize
+        
+        // Assurer que le rectangle est correctement positionné peu importe la direction du drag
+        var x = Math.min(startX, currentX)
+        var y = Math.min(startY, currentY)
+        var width = Math.abs(currentX - startX)
+        var height = Math.abs(currentY - startY)
+        
+        // Mise à jour du rectangle de sélection
+        selectionRect.x = x
+        selectionRect.y = y
+        selectionRect.width = width
+        selectionRect.height = height
+    }
+    
+    // Fonction pour finaliser la sélection et créer une case
+    function finishSelection() {
+        if (!isSelectingArea) return
+        
+        // Normaliser les coordonnées pour avoir le coin supérieur gauche
+        var startX = Math.min(selectionStart.x, selectionCurrent.x)
+        var startY = Math.min(selectionStart.y, selectionCurrent.y)
+        var width = Math.abs(selectionCurrent.x - selectionStart.x)
+        var height = Math.abs(selectionCurrent.y - selectionStart.y)
+        
+        // Créer une case aux dimensions calculées
+        if (width >= 1 && height >= 1) {
+            // Ajouter +1 car la sélection est inclusive (le point de fin est inclus)
+            width = Math.max(1, width)
+            height = Math.max(1, height)
+            
+            createTileFromSelection(startX, startY, width, height)
+        }
+        
+        // Réinitialiser l'état de sélection
+        isSelectingArea = false
+        selectionRect.visible = false
+    }
+    
+    // Fonction pour annuler la sélection en cours
+    function cancelSelection() {
+        isSelectingArea = false
+        selectionRect.visible = false
+    }
+    
+    // Fonction pour créer une case à partir d'une sélection
+    function createTileFromSelection(gridX, gridY, unitWidth, unitHeight) {
+        console.log("Création d'une case à partir de la sélection:", gridX, gridY, unitWidth, unitHeight)
+        
+        var newTile = snapableCaseTile.createObject(workArea, {
+            "gridRelativePositionX": gridX,
+            "gridRelativePositionY": gridY,
+            "unitSizeWidth": unitWidth,
+            "unitSizeHeight": unitHeight,
+            "caseData": Game.getNewCaseType(defaultCaseType),
+            "z": currentPlanDisplayed
+        })
+        
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            nextTileId++
+            
+            // Désélectionner tout et sélectionner le nouveau tile
+            deselectAllTiles()
+            newTile.isSelected = true
+            currentSelectedElement = newTile
+            newTile.snapToGridFromGrid()
+        }
+        
+        return newTile
+    }
+    
     function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         console.log("create tile at", gridX, gridY )
         var newTile
