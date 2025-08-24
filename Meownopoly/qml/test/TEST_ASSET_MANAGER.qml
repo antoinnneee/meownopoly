@@ -72,7 +72,7 @@ Rectangle {
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.margins: 10
+                            anchors.margins: 2
 
                             Image {
                                 source: model.path
@@ -95,10 +95,11 @@ Rectangle {
 
                             Column {
                                 Layout.fillWidth: true
+                                Layout.fillHeight: true
                                 Text { text: "Type: " + model.type; color: "black" }
                                 Text { text: "ID: " + model.id; color: "black" }
                                 Text { text: "Size: " + model.width + "x" + model.height; color: "black" }
-                                Text { text: "Ratio: " + model.ratio.toFixed(2); color: "black" }
+                                Text { text: "Ratio: " + model.ratioWidth + ":" + model.ratioHeight ; color: "black" }
                             }
                         }
                     }

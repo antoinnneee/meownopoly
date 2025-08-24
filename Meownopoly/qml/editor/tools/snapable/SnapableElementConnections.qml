@@ -36,7 +36,7 @@ Item {
     Repeater {
         id: connectionRepeater
         model: nextElementsSegments
-        delegate: ConnectionOverlay2{
+        delegate: ConnectionOverlay{
             x: -parentElement.x
             y: -parentElement.y
         }

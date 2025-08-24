@@ -57,7 +57,7 @@
         <file>qml/editor/panel/CaseCatDeviceSpecificConfig.qml</file>
         <file>qml/editor/panel/PlayerSelector.qml</file>
         <file>qml/editor/tools/ConnectionsConfigurationPanel.qml</file>
-        <file>qml/editor/tools/ConnectionOverlay2.qml</file>
+        <file>qml/editor/tools/ConnectionOverlay.qml</file>
         <file>qml/editor/tools/snapable/ResizeHandle.qml</file>
         <file>qml/editor/tools/snapable/SnapableElement.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementConnections.qml</file>
@@ -84,5 +84,7 @@
         <file>qml/test/TEST_PAW_MENU.qml</file>
         <file>qml/menu/PawMainPad.qml</file>
         <file>qml/menu/pawTools.js</file>
+        <file>qml/editor/EditorLogic.qml</file>
+        <file>qml/editor/EditorDynamicComponent.qml</file>
     </qresource>
 </RCC>

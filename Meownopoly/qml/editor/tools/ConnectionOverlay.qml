@@ -39,20 +39,50 @@ Shape {
     }
 
     z: 20000
-    
+
+    // ColorAnimation {
+    //     from: "red"
+    //     to: "blue"
+    //     duration: 1000
+    //     running: true
+    //     target: shapePath.stop1
+    //     property: "color"
+    //     onFinished: start()
+    // }
+    SequentialAnimation{
+        id: seqA
+        PropertyAnimation {
+            to: 1.
+            from: 0.01
+            duration: 4600
+            target: shapePath.stop1
+            property: "position"
+        }
+        onFinished: start()
+        running: true
+    }
     ShapePath {
+        id: shapePath
         strokeColor: "#96e78383"
         strokeWidth: 1
         capStyle: ShapePath.RoundCap
+        property alias stop1Color: stop1.color
+        property alias stop2Color: stop2.color
+        property alias stop1: stop1
+        property alias stop2: stop2
         fillGradient: LinearGradient {
+            id: linearGrad
             x1: connectionOverlay.startX
             y1: connectionOverlay.startY
             x2: connectionOverlay.endX
             y2: connectionOverlay.endY
-            GradientStop { position: 0.0; color: "red" }
-            GradientStop { position: 1.0; color: "blue" }
+            GradientStop { id: stop0; position: 0.0; color: "blue" }
+            GradientStop { id: stop1; position: 0.0; color: "red" }
+            GradientStop { id: stop2;position: 1.0; color: "blue" }
+
 
         }
+
         fillRule: ShapePath.WindingFill
         PathPolyline{
             path: [
