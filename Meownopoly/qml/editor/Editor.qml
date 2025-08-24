@@ -37,35 +37,6 @@ Rectangle {
         Decoration
     }
 
-    onIsEditingChanged:{
-        console.log("Édition:", isEditing)
-        if (!isEditing)
-            for (var i = 0; i < snapableTilesList.length; i++) {
-                if (snapableTilesList[i]) {
-                    snapableTilesList[i].enabled = true
-                    snapableTilesList[i].visible = true
-                }
-            }
-    }
-
-    onCurrentPlanDisplayedChanged: {
-        if (isEditing){
-            console.log("Changement de plan affiché:", currentPlanDisplayed)
-            for (var i = 0; i < snapableTilesList.length; i++) {
-                if (snapableTilesList[i]) {
-                    var currentTile = snapableTilesList[i]
-                    if (currentTile.z < currentPlanDisplayed) {
-                        currentTile.enabled = false
-                        currentTile.visible = false
-                    }
-                    else {
-                        currentTile.enabled = true
-                        currentTile.visible = true
-                    }
-                }
-            }
-        }
-    }
 
     EditorLogic {
         id: logic
@@ -218,6 +189,10 @@ Rectangle {
 
         onCancelSelectionRequested: {
             logic.cancelSelection()
+        }
+        onCurrentPlanChanged: function(value) {
+            logic.currentPlanDisplayed = value
+            console.log(value)
         }
     }
 

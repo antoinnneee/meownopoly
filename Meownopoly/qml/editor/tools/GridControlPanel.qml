@@ -18,6 +18,8 @@ Item {
     signal selectionModeChanged(bool isActive)
     signal cancelSelectionRequested()
 
+    signal currentPlanChanged(int value)
+
 
     // Panneau de contrôle principal
     Rectangle {
@@ -172,9 +174,7 @@ Item {
                     value: 5
                     width : controlColumn.width*0.75
                     onValueChanged: {
-                        if (gridManager) {
-                            gridManager.currentPlan = value
-                        }
+                        currentPlanChanged(value);
                     }
                 }
             }

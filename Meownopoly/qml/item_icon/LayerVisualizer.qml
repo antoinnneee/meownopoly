@@ -6,8 +6,8 @@ Item {
     id: control
     property int maxLayer: 10
     property int selectedLayer: 0
-    property int spacing: Screen.pixelDensity * 6
-    property int layerHeight :  Screen.pixelDensity * 8
+    property int spacing: Screen.pixelDensity * 2
+    property int layerHeight :  Screen.pixelDensity * 4
 
     height: 10
 
@@ -19,7 +19,7 @@ Item {
             id: rectangle
             required property int index
             x: (selectedLayer == index)?width/4 : 0
-            y: 10*index
+            y: spacing*index
             width: control.width * 0.75
             height: layerHeight
             color: "#cd7a81ab"

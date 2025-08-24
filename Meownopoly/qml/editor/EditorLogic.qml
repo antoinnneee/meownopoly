@@ -29,6 +29,38 @@ QtObject {
     property int currentElementWidth: 6
     property int currentElementHeight: 6
     
+
+
+    onIsEditingChanged:{
+        console.log("Édition:", isEditing)
+        if (!isEditing)
+            for (var i = 0; i < snapableTilesList.length; i++) {
+                if (snapableTilesList[i]) {
+                    snapableTilesList[i].enabled = true
+                    snapableTilesList[i].visible = true
+                }
+            }
+    }
+
+    onCurrentPlanDisplayedChanged: {
+        console.log("Changement de plan affiché:")
+        if (isEditing){
+            console.log("Changement de plan affiché:", currentPlanDisplayed)
+            for (var i = 0; i < snapableTilesList.length; i++) {
+                if (snapableTilesList[i]) {
+                    var currentTile = snapableTilesList[i]
+                    if (currentTile.z < currentPlanDisplayed) {
+                        currentTile.enabled = false
+                        currentTile.visible = false
+                    }
+                    else {
+                        currentTile.enabled = true
+                        currentTile.visible = true
+                    }
+                }
+            }
+        }
+    }
     // Fonction pour désélectionner tous les tiles
     function deselectAllTiles() {
         // Désélectionner tous les tiles dans la liste
