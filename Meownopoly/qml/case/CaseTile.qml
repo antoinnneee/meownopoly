@@ -16,7 +16,7 @@ Rectangle {
     required property Case caseData
 
     // Properties
-    property int tileIndex: caseData.position
+    property int tileIndex: caseData.uniqueId
     property int tileType: caseData.type
     property string tileName: caseData.name
     property bool isHovered: false

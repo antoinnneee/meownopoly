@@ -101,3 +101,21 @@ void CaseRestArea::setRentPrice(const QList<int> &newRentPrice)
     m_rentPrice = newRentPrice;
     emit rentPriceChanged();
 }
+
+QString CaseRestArea::getJSON()
+{
+    QString json;
+    json = CaseCatPerks::getJSON();
+    json.removeLast();
+    json += "    \"restQuality\": " + QString::number(m_restQuality) + ",\n";
+    json += "    \"family\": " + QString::number(m_family) + ",\n";
+    json += "    \"housePrice\": " + QString::number(m_housePrice) + ",\n";
+    json += "    \"hotelPrice\": " + QString::number(m_hotelPrice) + ",\n";
+    json += "    \"rentPrice\": [";
+    for (int i = 0; i < m_rentPrice.size(); i++) {
+        json += QString::number(m_rentPrice.at(i)) + (i < m_rentPrice.size() - 1 ? ", " : "");
+    }
+    json += "]\n";
+    json += "}";
+    return json;
+}

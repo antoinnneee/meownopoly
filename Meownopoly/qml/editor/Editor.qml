@@ -127,8 +127,6 @@ Rectangle {
     
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
-    
-
 
 
     // Menu contextuel pour la création d'éléments
@@ -141,14 +139,14 @@ Rectangle {
             text: "Créer une Case"
             onTriggered: {
                 console.log(contextMenu.clickGridCoord)
-                logic.createNewTileAtPosition(Case.CS_KibbleDispenser, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, 0)
+                logic.createNewTileAtPosition(Case.CS_KibbleDispenser, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Case)
             }
         }
 
         MenuItem {
             text: "Créer un élément"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, 1)
+                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Personnage)
             }
         }
 
@@ -202,6 +200,8 @@ Rectangle {
 
         onConfigurationClosed: {
             console.log("Panneau de configuration fermé")
+            console.log(caseConfigPanel.targetSnapableCase.caseData.getJSON());
+
         }
 
         onRequestChangeType: function(newType)  {

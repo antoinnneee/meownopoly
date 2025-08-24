@@ -4,19 +4,21 @@
 #include "game.h"
 
     Case::Case(QObject *parent)
-    : QObject(parent), m_name("Unknown"), m_position(-1), type(Case::CS_Unknow) {}
+    : QObject(parent), m_name("Unknown"),m_uniqueId(-42), type(Case::CS_Unknow) {}
 
-    Case::Case(const QString &name, int position, QObject *parent)
-    : QObject(parent), m_name(name), m_position(position), type(Case::CS_Unknow) {}
+    Case::Case(const QString &name, int uniqueId, QObject *parent)
+        : QObject(parent), m_name(name),m_uniqueId(uniqueId), type(Case::CS_Unknow) {
+        
+    }
 
-int Case::position() const {
-    return m_position;
+int Case::uniqueId() const {
+    return m_uniqueId;
 }
 
-void Case::setPosition(int newPosition)
+void Case::setUniqueId(int newUniqueId)
 {
-    m_position = newPosition;
-    emit positionChanged();
+    m_uniqueId = newUniqueId;
+    emit uniqueIdChanged();
 }
 
 Case::CaseType Case::getType() const
@@ -63,6 +65,27 @@ void Case::onHover(Player* player)
     if (player) {
         qDebug() << "Player" << player->name() << "hovered over " << name();
     }
+}
+
+QString Case::getJSON()
+{
+    QString json;
+    json += "{\n";
+    json += "    \"name\": \"" + name() + "\",\n";
+    json += "    \"uniqueId\": " + QString::number(uniqueId()) + ",\n";
+    json += "    \"type\": " + QString::number(type) + ",\n";
+    json += "    \"next\": [ ";
+    for (int i = 0; i < next.size(); i++) {
+        json += QString::number(next.at(i)->uniqueId()) + (i < next.size() - 1 ? ", " : "");
+    }
+    json += "],\n";
+    json += "    \"prev\": [ ";
+    for (int i = 0; i < prev.size(); i++) {
+        json += QString::number(prev.at(i)->uniqueId()) + (i < prev.size() - 1 ? ", " : "");
+    }
+    json += "]\n";
+    json += "}";
+    return json;
 }
 
 void Case::addPlayer(Player *player)

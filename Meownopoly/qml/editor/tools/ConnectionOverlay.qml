@@ -179,7 +179,7 @@ Shape {
         onObjectRemoved: function(index, object) {
         }
 
-        model: dotLength
+        model: 0//dotLength
         PathAngleArc {
             id: circle
             // position régulière le long de la ligne de start->end

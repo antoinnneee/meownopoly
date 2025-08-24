@@ -14,6 +14,16 @@ CaseCatNip::CaseCatNip(const QString &name, int position, QObject *parent)
     setType(Case::CS_CatNip);
 }
 
+QString CaseCatNip::getJSON()
+{
+    QString json;
+    json = Case::getJSON();
+    json.removeLast();
+    json += "}";
+    return json;
+}
+
+
 // void CaseCatNip::onLand(Player* player)
 // {
 //     Q_UNUSED(player);

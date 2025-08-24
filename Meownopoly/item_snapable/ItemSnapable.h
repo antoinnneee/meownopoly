@@ -23,8 +23,6 @@ private :
     int gridRelativePositionY;
     int zLayer;
     QUrl assetUrl;
-    ItemSnapable *next;
-    ItemSnapable *prev;
 };
 
 #endif // ITEMSNAPABLE_H

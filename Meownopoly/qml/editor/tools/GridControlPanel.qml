@@ -20,8 +20,6 @@ Item {
     signal selectionModeChanged(bool isActive)
     signal cancelSelectionRequested()
 
-    signal currentPlanChanged(int value)
-
 
     // Panneau de contrôle principal
     Rectangle {
@@ -142,7 +140,7 @@ Item {
                     console.log("Mode sélection: " + checked)
                     selectionModeChanged(checked)
                     if (!checked) {
-                        cancelSelectionRequested()
+                        logic.cancelSelection()
                     }
                 }
                 // Style visuel amélioré

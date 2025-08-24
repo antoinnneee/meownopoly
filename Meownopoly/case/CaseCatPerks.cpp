@@ -1,5 +1,6 @@
 #include "CaseCatPerks.h"
 #include "../player.h"
+#include <QString>
 
 
 // CaseCatPerks::CaseCatPerks(const QString &name, int position, int price, int sellPrice, int morgagePrice, QObject *parent) :  Case::Case(name, position, parent), m_morgagePrice(morgagePrice){
@@ -72,4 +73,17 @@ void CaseCatPerks::setOwner(Player *newOwner)
         return;
     m_owner = newOwner;
     emit ownerChanged();
+}
+
+
+QString CaseCatPerks::getJSON()
+{
+    QString json;
+    json = Case::getJSON();
+    json.removeLast();
+    json += "    \"price\": " + QString::number(price()) + ",\n";
+    json += "    \"sellPrice\": " + QString::number(sellPrice()) + ",\n";
+    json += "    \"morgagePrice\": " + QString::number(morgagePrice()) + ",\n";
+    json += "}";
+    return json;
 }

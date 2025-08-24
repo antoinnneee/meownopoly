@@ -1,8 +1,8 @@
 #include "CaseJail.h"
 #include <QDebug>
 
-CaseJail::CaseJail(const QString &name, int position, int jailFine)
-    : Case(name, position), m_jailFine(jailFine) {
+CaseJail::CaseJail(const QString &name, int uniqueId, int jailFine)
+    : Case(name, uniqueId), m_jailFine(jailFine) {
 
     setType(Case::CS_Jail);
 }
@@ -24,7 +24,7 @@ CaseJail::CaseJail(const QString &name, int position, int jailFine)
 // }
 
 void CaseJail::sendToJail(Player* player) {
-    player->setPosition(position());
+    player->setPosition(uniqueId());
     player->setInJail(true);
     m_playersInJail[player] = 0;
 }
@@ -33,4 +33,14 @@ void CaseJail::releasePlayer(Player* player) {
     player->setInJail(false);
     m_playersInJail.remove(player);
     // Logic to move player out of jail, e.g., to the next position
+}
+
+QString CaseJail::getJSON()
+{
+    QString json;
+    json = Case::getJSON();
+    json.removeLast();
+    json += "    \"jailFine\": " + QString::number(m_jailFine) + ",\n";
+    json += "}";
+    return json;
 } 

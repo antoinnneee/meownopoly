@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include "ItemSnapable.h"
+#include "case/Case.h"
+
 
 class SnapableCase : public ItemSnapable
 {
@@ -12,7 +14,7 @@ public:
 
 private:
 
-    Case *caseCurrent;
+    Case *caseData;
 };
 
 #endif // SNAPABLECASE_H

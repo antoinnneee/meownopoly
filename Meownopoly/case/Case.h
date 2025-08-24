@@ -27,14 +27,14 @@ public:
     Q_ENUM(CaseType)
 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
-    Q_PROPERTY(int position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(int uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(CaseType type READ getType WRITE setType NOTIFY typeChanged FINAL)
     
     explicit Case(QObject *parent = nullptr);
-    Case(const QString &name, int position = -1, QObject *parent = nullptr);
+    Case(const QString &name, int uniqueId, QObject *parent = nullptr);
 
-    int position() const;
-    void setPosition(int newPosition);
+    int uniqueId() const;
+    void setUniqueId(int newUniqueId);
 
     CaseType getType() const;
     void setType(CaseType newType);
@@ -53,6 +53,8 @@ public:
     Q_INVOKABLE virtual void onLand(Player* player);
     Q_INVOKABLE virtual void onLeave(Player* player); 
     Q_INVOKABLE virtual void onHover(Player* player);
+
+    Q_INVOKABLE virtual QString getJSON();
 
 
 
@@ -84,7 +86,7 @@ signals:
 
     void nameChanged();
 
-    void positionChanged();
+    void uniqueIdChanged();
 
     void typeChanged();
 
@@ -95,7 +97,7 @@ protected:
     QList<Player*> listPlayer;
 
     QString m_name = "Unknown";
-    int m_position = -1;
+    int m_uniqueId = -1;
     CaseType type = CS_Unknow;
 
 

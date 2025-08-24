@@ -8,8 +8,8 @@ CaseToJail::CaseToJail(QObject *parent)
     setType(Case::CS_ToJail);
 }
 
-CaseToJail::CaseToJail(const QString &name, int position, QObject *parent)
-    : Case(name, position, parent)
+CaseToJail::CaseToJail(const QString &name, int uniqueId, QObject *parent)
+    : Case(name, uniqueId, parent)
 {
     setType(Case::CS_ToJail);
 }
@@ -26,4 +26,14 @@ CaseToJail::CaseToJail(const QString &name, int position, QObject *parent)
 
 void CaseToJail::setJailCase(CaseJail* jailCase) {
     m_jailCase = jailCase;
-} 
+}
+
+QString CaseToJail::getJSON()
+{
+    QString json;
+    json = Case::getJSON();
+    json.removeLast();
+    json += "    \"jailCase\": " + QString::number(m_jailCase->uniqueId()) + "\n";
+    json += "}";
+    return json;
+}

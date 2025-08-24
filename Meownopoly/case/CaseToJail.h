@@ -9,10 +9,11 @@ class CaseToJail : public Case {
     Q_OBJECT
 public:
     explicit CaseToJail(QObject *parent = nullptr);
-    CaseToJail(const QString &name, int position, QObject *parent = nullptr);
+    CaseToJail(const QString &name, int uniqueId, QObject *parent = nullptr);
 
     // void onLand(Player* player) override;
     void setJailCase(CaseJail* jailCase);
+    Q_INVOKABLE virtual QString getJSON();
 
 private:
     CaseJail* m_jailCase = nullptr;
