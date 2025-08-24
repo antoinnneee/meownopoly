@@ -306,6 +306,78 @@ Item {
         }
     }
 
+    // Champ de texte pour le nom de la carte
+    Rectangle {
+        id: mapNameField
+        width: 250
+        height: 40
+        color: "#f0f0f0"
+        border.color: "#cccccc"
+        border.width: 1
+        radius: 5
+        
+        anchors {
+            top: parent.top
+            horizontalCenter: parent.horizontalCenter
+            margins: 10
+        }
+        
+        TextInput {
+            id: mapNameInput
+            anchors.fill: parent
+            anchors.margins: 8
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+            text: logic.mapName || ""
+            font.pixelSize: 14
+            font.bold: true
+            color: "#333333"
+            readOnly: !logic.isEditing
+            
+            // Placeholder text (visible when empty)
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                visible: parent.text.length === 0
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: "Nom de la carte"
+                    color: "#999999"
+                    font.pixelSize: 14
+                    font.italic: true
+                }
+            }
+            
+            // Bordure spéciale en mode édition
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                border.color: parent.activeFocus ? "#3498db" : "transparent"
+                border.width: 2
+                radius: 3
+                visible: logic.isEditing
+            }
+            
+            onTextChanged: {
+                if (logic.isEditing) {
+                    logic.mapName = text
+                }
+            }
+            
+            // Animation subtile lors de la modification
+            PropertyAnimation {
+                id: glowAnimation
+                target: mapNameField
+                property: "border.color"
+                from: "#3498db"
+                to: "#cccccc"
+                duration: 500
+                running: mapNameInput.activeFocus
+            }
+        }
+    }
+
     // Fonctions utiles
     function toggleControlPanel() {
         showControlPanel = !showControlPanel

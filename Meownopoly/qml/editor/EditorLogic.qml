@@ -29,6 +29,7 @@ QtObject {
     property int currentElementWidth: 6
     property int currentElementHeight: 6
     
+    property string mapName
 
 
     onIsEditingChanged:{
