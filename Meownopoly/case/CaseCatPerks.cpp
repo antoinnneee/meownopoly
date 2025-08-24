@@ -76,10 +76,10 @@ void CaseCatPerks::setOwner(Player *newOwner)
 }
 
 
-QString CaseCatPerks::getJSON()
+QString CaseCatPerks::toJSON()
 {
     QString json;
-    json = Case::getJSON();
+    json = Case::toJSON();
     json.removeLast();
     json += "    \"price\": " + QString::number(price()) + ",\n";
     json += "    \"sellPrice\": " + QString::number(sellPrice()) + ",\n";

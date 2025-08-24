@@ -11,6 +11,17 @@
         
     }
 
+    Case::Case(const QString &json, QObject *parent)
+        : QObject(parent)
+    {
+        QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+        QJsonObject obj = doc.object();
+        m_name = obj["name"].toString();
+        m_uniqueId = obj["uniqueId"].toInt();
+        type = intToCaseType(obj["type"].toInt());
+
+    }
+
 int Case::uniqueId() const {
     return m_uniqueId;
 }
@@ -67,7 +78,7 @@ void Case::onHover(Player* player)
     }
 }
 
-QString Case::getJSON()
+QString Case::toJSON()
 {
     QString json;
     json += "{\n";

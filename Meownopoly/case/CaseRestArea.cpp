@@ -2,18 +2,37 @@
 #include <QDebug>
 #include "../player.h"
 
+#include <QJsonDocument>
+#include <QJsonArray>
 
-CaseRestArea::CaseRestArea(QObject *parent)
-    : CaseCatPerks("Unknown Rest Area")
-{
-    setType(Case::CS_RestArea);
-}
+
+// CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP)
+//     : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER
+// {
+//     setType(Case::CS_RestArea);
+// }
 
 CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP, FamilyType family, int housePrice, int hotelPrice, QList<int> rentPrice)
     : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER, m_family(family), m_housePrice(housePrice), m_hotelPrice(hotelPrice), m_rentPrice(rentPrice)
 
 {
     setType(Case::CS_RestArea);
+}
+
+CaseRestArea::CaseRestArea(const QString &json, QObject *parent)
+    : CaseCatPerks(json, parent)
+{
+    setType(Case::CS_RestArea);
+    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    QJsonObject obj = doc.object();
+    m_restQuality = (enum RestQuality) obj["restQuality"].toInt();
+    m_family = (enum FamilyType) obj["family"].toInt();
+    m_housePrice = obj["housePrice"].toInt();
+    m_hotelPrice = obj["hotelPrice"].toInt();
+    QJsonArray rentPriceArray = obj["rentPrice"].toArray();
+    for (const QJsonValue &value : rentPriceArray) {
+        m_rentPrice.append(value.toInt());
+    }
 }
 
 
@@ -102,10 +121,10 @@ void CaseRestArea::setRentPrice(const QList<int> &newRentPrice)
     emit rentPriceChanged();
 }
 
-QString CaseRestArea::getJSON()
+QString CaseRestArea::toJSON()
 {
     QString json;
-    json = CaseCatPerks::getJSON();
+    json = CaseCatPerks::toJSON();
     json.removeLast();
     json += "    \"restQuality\": " + QString::number(m_restQuality) + ",\n";
     json += "    \"family\": " + QString::number(m_family) + ",\n";

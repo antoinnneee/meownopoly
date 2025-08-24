@@ -14,10 +14,16 @@ CaseCardBoardBox::CaseCardBoardBox(const QString &name, int uniqueId, QObject *p
     setType(Case::CS_CardBoardBox);
 }
 
-QString CaseCardBoardBox::getJSON()
+CaseCardBoardBox::CaseCardBoardBox(const QString &json, QObject *parent)
+    : Case(json, parent)
+{
+    setType(Case::CS_CardBoardBox);
+}
+
+QString CaseCardBoardBox::toJSON()
 {
     QString json;
-    json = Case::getJSON();
+    json = Case::toJSON();
     json.removeLast();
     json += "}";
     return json;

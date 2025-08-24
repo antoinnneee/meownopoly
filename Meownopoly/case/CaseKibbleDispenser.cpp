@@ -15,6 +15,15 @@ CaseKibbleDispenser::CaseKibbleDispenser(const QString &name, int position, int 
     setType(Case::CS_KibbleDispenser);
 }
 
+CaseKibbleDispenser::CaseKibbleDispenser(const QString &json, QObject *parent)
+    : Case(json, parent)
+{
+    setType(Case::CS_KibbleDispenser);
+    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    QJsonObject obj = doc.object();
+    m_reward = obj["reward"].toInt();
+}
+
 int CaseKibbleDispenser::reward() const {
     return m_reward;
 }
@@ -30,10 +39,10 @@ void CaseKibbleDispenser::setReward(int newReward) {
 //     player->earnKibble(m_reward);
 // }
 
-QString CaseKibbleDispenser::getJSON()
+QString CaseKibbleDispenser::toJSON()
 {
     QString json;
-    json = Case::getJSON();
+    json = Case::toJSON();
     json.removeLast();
     json += "    \"reward\": " + QString::number(m_reward) + "\n";
     json += "}";

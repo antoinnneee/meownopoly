@@ -19,6 +19,7 @@ class CaseCatPerks : public Case
 public:
 
     CaseCatPerks(CASECATPERKS_DEFAULT_PARAMETER);
+    CaseCatPerks(const QString &json, QObject *parent = nullptr);
 
 
     bool buyCase(Player *buyer);
@@ -37,7 +38,7 @@ public:
 
     Player *owner() const;
     Q_INVOKABLE void setOwner(Player *newOwner);
-    Q_INVOKABLE virtual QString getJSON();
+    Q_INVOKABLE virtual QString toJSON();
 
 
 signals:

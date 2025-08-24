@@ -4,6 +4,9 @@
 #include <QObject>
 #include <QString>
 #include "player.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+
 
 class Case : public QObject
 {
@@ -32,6 +35,9 @@ public:
     
     explicit Case(QObject *parent = nullptr);
     Case(const QString &name, int uniqueId, QObject *parent = nullptr);
+    Case(const QString &json, QObject *parent = nullptr);
+
+
 
     int uniqueId() const;
     void setUniqueId(int newUniqueId);
@@ -54,7 +60,7 @@ public:
     Q_INVOKABLE virtual void onLeave(Player* player); 
     Q_INVOKABLE virtual void onHover(Player* player);
 
-    Q_INVOKABLE virtual QString getJSON();
+    Q_INVOKABLE virtual QString toJSON();
 
 
 

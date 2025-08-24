@@ -11,6 +11,7 @@ class CaseFreeNap : public Case {
 public:
     explicit CaseFreeNap(QObject *parent = nullptr);
     CaseFreeNap(const QString &name, int uniqueId, QObject *parent = nullptr);
+    CaseFreeNap(const QString &json, QObject *parent = nullptr);
 
     Q_INVOKABLE void addToPool(int amount);
 
@@ -19,7 +20,7 @@ public:
     int kibbleAmount() const;
     void setKibbleAmount(int newKibbleAmount);
 
-    Q_INVOKABLE virtual QString getJSON() override;
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
     void kibbleAmountChanged();

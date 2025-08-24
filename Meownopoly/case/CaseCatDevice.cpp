@@ -12,6 +12,16 @@ CaseCatDevice::CaseCatDevice(CASECATPERKS_DEFAULT_PARAMETER_NOP, int taxe)
 {
     setType(Case::CS_Device);
 }
+
+CaseCatDevice::CaseCatDevice(const QString &json, QObject *parent)
+    : CaseCatPerks(json, parent)
+{
+    setType(Case::CS_Device);
+    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    QJsonObject obj = doc.object();
+    m_taxe = obj["taxe"].toInt();
+}
+
 bool CaseCatDevice::buyCase(Player *buyer) {
     if (CaseCatPerks::buyCase(buyer)){
         buyer->addCatDevice(this);
@@ -41,10 +51,10 @@ void CaseCatDevice::setTaxe(int newTaxe)
     emit taxeChanged();
 }
 
-QString CaseCatDevice::getJSON()
+QString CaseCatDevice::toJSON()
 {
     QString json;
-    json = CaseCatPerks::getJSON();
+    json = CaseCatPerks::toJSON();
     json.removeLast();
     json += "    \"taxe\": " + QString::number(m_taxe) + "\n";
     json += "}";

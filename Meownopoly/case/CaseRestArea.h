@@ -48,9 +48,11 @@ public:
         FT_COUNT
     };
     Q_ENUM(FamilyType)
-//    CaseRestArea(const QString &name, int price= -1, int sellPrice = -1,int position = -1,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>(), QObject *parent = nullptr);
+    // CaseRestArea(const QString &name, int price= -1, int sellPrice = -1,int position = -1,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>(), QObject *parent = nullptr);
     CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>());
+    CaseRestArea(const QString &json, QObject *parent = nullptr);
 
+    
     CaseRestArea::RestQuality restQuality() const;
     void setRestQuality(CaseRestArea::RestQuality newRestQuality);
 
@@ -75,7 +77,7 @@ public:
     QList<int> rentPrice() const;
     void setRentPrice(const QList<int> &newRentPrice);
 
-    Q_INVOKABLE virtual QString getJSON() override;
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
     void restQualityChanged();

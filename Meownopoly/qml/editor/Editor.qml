@@ -200,7 +200,7 @@ Rectangle {
 
         onConfigurationClosed: {
             console.log("Panneau de configuration fermé")
-            console.log(caseConfigPanel.targetSnapableCase.caseData.getJSON());
+            console.log(caseConfigPanel.targetSnapableCase.caseData.toJSON());
 
         }
 

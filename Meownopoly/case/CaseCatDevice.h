@@ -13,7 +13,7 @@ class CaseCatDevice : public CaseCatPerks
 
 public:
     CaseCatDevice(CASECATPERKS_DEFAULT_PARAMETER, int taxe = -1);
-
+    CaseCatDevice(const QString &json, QObject *parent = nullptr);
     Q_INVOKABLE bool buyCase(Player *buyer);
     Q_INVOKABLE bool sellCase(Player *buyer);
 
@@ -21,7 +21,7 @@ public:
     int taxe() const;
     void setTaxe(int newTaxe);
 
-    Q_INVOKABLE virtual QString getJSON() override;
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
     void taxeChanged();

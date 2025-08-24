@@ -10,13 +10,13 @@ class CaseKibbleDispenser : public Case {
 public:
     explicit CaseKibbleDispenser(QObject *parent = nullptr);
     CaseKibbleDispenser(const QString &name, int uniqueId = -1, int reward = 200, QObject *parent = nullptr);
-
+    CaseKibbleDispenser(const QString &json, QObject *parent = nullptr);
     int reward() const;
     void setReward(int newReward);
 
     // void onLand(Player* player) override;
 
-    Q_INVOKABLE virtual QString getJSON() override;
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
     void rewardChanged();

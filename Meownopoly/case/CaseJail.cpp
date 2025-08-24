@@ -7,6 +7,12 @@ CaseJail::CaseJail(const QString &name, int uniqueId, int jailFine)
     setType(Case::CS_Jail);
 }
 
+CaseJail::CaseJail(const QString &json, QObject *parent)
+    : Case(json, parent)
+{
+    setType(Case::CS_Jail);
+}
+
 // void CaseJail::onLand(Player* player) {
     // if (!player->isInJail()) {
     //     sendToJail(player);
@@ -35,10 +41,10 @@ void CaseJail::releasePlayer(Player* player) {
     // Logic to move player out of jail, e.g., to the next position
 }
 
-QString CaseJail::getJSON()
+QString CaseJail::toJSON()
 {
     QString json;
-    json = Case::getJSON();
+    json = Case::toJSON();
     json.removeLast();
     json += "    \"jailFine\": " + QString::number(m_jailFine) + ",\n";
     json += "}";

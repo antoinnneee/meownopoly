@@ -11,6 +11,7 @@ class CaseCatDoor : public CaseCatPerks {
 
 public:
     CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER);
+    CaseCatDoor(const QString &json, QObject *parent = nullptr);
     ~CaseCatDoor() override = default;
 
     Q_INVOKABLE bool buyCase(Player *buyer);
@@ -26,7 +27,7 @@ public:
     int travelPrice() const;
     void setTravelPrice(int newTravelPrice);
 
-    Q_INVOKABLE virtual QString getJSON() override;
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
     void indexCatDoorChanged();
