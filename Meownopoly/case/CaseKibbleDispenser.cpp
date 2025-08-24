@@ -15,12 +15,12 @@ CaseKibbleDispenser::CaseKibbleDispenser(const QString &name, int position, int 
     setType(Case::CS_KibbleDispenser);
 }
 
-CaseKibbleDispenser::CaseKibbleDispenser(const QString &json, QObject *parent)
+CaseKibbleDispenser::CaseKibbleDispenser(const QJsonDocument &json, QObject *parent)
     : Case(json, parent)
 {
     setType(Case::CS_KibbleDispenser);
-    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
-    QJsonObject obj = doc.object();
+    
+    QJsonObject obj = json.object();
     m_reward = obj["reward"].toInt();
 }
 

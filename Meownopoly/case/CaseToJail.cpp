@@ -15,7 +15,7 @@ CaseToJail::CaseToJail(const QString &name, int uniqueId, QObject *parent)
     setType(Case::CS_ToJail);
 }
 
-CaseToJail::CaseToJail(const QString &json, QObject *parent)
+CaseToJail::CaseToJail(const QJsonDocument &json, QObject *parent)
     : Case(json, parent)
 {
     setType(Case::CS_ToJail);

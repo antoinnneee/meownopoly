@@ -14,7 +14,7 @@ CaseCardBoardBox::CaseCardBoardBox(const QString &name, int uniqueId, QObject *p
     setType(Case::CS_CardBoardBox);
 }
 
-CaseCardBoardBox::CaseCardBoardBox(const QString &json, QObject *parent)
+CaseCardBoardBox::CaseCardBoardBox(const QJsonDocument &json, QObject *parent)
     : Case(json, parent)
 {
     setType(Case::CS_CardBoardBox);

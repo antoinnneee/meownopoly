@@ -35,7 +35,7 @@ public:
     
     explicit Case(QObject *parent = nullptr);
     Case(const QString &name, int uniqueId, QObject *parent = nullptr);
-    Case(const QString &json, QObject *parent = nullptr);
+    Case(const QJsonDocument &json, QObject *parent = nullptr);
 
 
 

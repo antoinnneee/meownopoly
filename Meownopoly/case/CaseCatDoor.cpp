@@ -9,12 +9,12 @@ CaseCatDoor::CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER_NOP)
     setType(Case::CS_CatDoor);
 }
 
-CaseCatDoor::CaseCatDoor(const QString &json, QObject *parent)
+CaseCatDoor::CaseCatDoor(const QJsonDocument &json, QObject *parent)
     : CaseCatPerks(json, parent)
 {
     setType(Case::CS_CatDoor);
-    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
-    QJsonObject obj = doc.object();
+    
+    QJsonObject obj = json.object();
     m_name = obj["name"].toString();
     m_uniqueId = obj["uniqueId"].toInt();
     type = intToCaseType(obj["type"].toInt());

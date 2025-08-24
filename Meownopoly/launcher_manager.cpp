@@ -284,7 +284,7 @@ void LauncherManager::uploadPackageToServer(const QString &serverUrl)
             QByteArray response = uploadReply->readAll();
             QJsonDocument doc = QJsonDocument::fromJson(response);
             QJsonObject obj = doc.object();
-            
+
             if (obj["success"].toBool()) {
                 emit logMessage("✅ Paquet validé par le serveur");
             } else {

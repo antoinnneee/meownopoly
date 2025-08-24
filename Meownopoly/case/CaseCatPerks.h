@@ -19,7 +19,7 @@ class CaseCatPerks : public Case
 public:
 
     CaseCatPerks(CASECATPERKS_DEFAULT_PARAMETER);
-    CaseCatPerks(const QString &json, QObject *parent = nullptr);
+    CaseCatPerks(const QJsonDocument &json, QObject *parent = nullptr);
 
 
     bool buyCase(Player *buyer);

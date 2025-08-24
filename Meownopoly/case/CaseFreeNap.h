@@ -11,7 +11,7 @@ class CaseFreeNap : public Case {
 public:
     explicit CaseFreeNap(QObject *parent = nullptr);
     CaseFreeNap(const QString &name, int uniqueId, QObject *parent = nullptr);
-    CaseFreeNap(const QString &json, QObject *parent = nullptr);
+    CaseFreeNap(const QJsonDocument &json, QObject *parent = nullptr);
 
     Q_INVOKABLE void addToPool(int amount);
 

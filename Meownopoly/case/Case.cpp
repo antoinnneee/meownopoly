@@ -11,11 +11,11 @@
         
     }
 
-    Case::Case(const QString &json, QObject *parent)
+    Case::Case(const QJsonDocument &json, QObject *parent)
         : QObject(parent)
     {
-        QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
-        QJsonObject obj = doc.object();
+        
+        QJsonObject obj = json.object();
         m_name = obj["name"].toString();
         m_uniqueId = obj["uniqueId"].toInt();
         type = intToCaseType(obj["type"].toInt());

@@ -12,6 +12,13 @@
 //     setType(Case::CS_RestArea);
 // }
 
+
+CaseRestArea::CaseRestArea(QObject *parent)
+    : CaseCatPerks("Unknown Rest Area")
+{
+    setType(Case::CS_RestArea);
+}
+
 CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP, FamilyType family, int housePrice, int hotelPrice, QList<int> rentPrice)
     : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER, m_family(family), m_housePrice(housePrice), m_hotelPrice(hotelPrice), m_rentPrice(rentPrice)
 
@@ -19,12 +26,12 @@ CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP, FamilyType family
     setType(Case::CS_RestArea);
 }
 
-CaseRestArea::CaseRestArea(const QString &json, QObject *parent)
+CaseRestArea::CaseRestArea(const QJsonDocument &json, QObject *parent)
     : CaseCatPerks(json, parent)
 {
     setType(Case::CS_RestArea);
-    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
-    QJsonObject obj = doc.object();
+
+    QJsonObject obj = json.object();
     m_restQuality = (enum RestQuality) obj["restQuality"].toInt();
     m_family = (enum FamilyType) obj["family"].toInt();
     m_housePrice = obj["housePrice"].toInt();

@@ -50,7 +50,7 @@ public:
     Q_ENUM(FamilyType)
     // CaseRestArea(const QString &name, int price= -1, int sellPrice = -1,int position = -1,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>(), QObject *parent = nullptr);
     CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER,  FamilyType family = FT_NONE, int housePrice = -1, int hotelPrice = -1, QList<int> rentPrice = QList<int>());
-    CaseRestArea(const QString &json, QObject *parent = nullptr);
+    CaseRestArea(const QJsonDocument &json, QObject *parent = nullptr);
 
     
     CaseRestArea::RestQuality restQuality() const;
