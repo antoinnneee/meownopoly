@@ -59,3 +59,14 @@ void CaseCatDoor::setTravelPrice(int newTravelPrice)
     m_travelPrice = newTravelPrice;
     emit travelPriceChanged();
 }
+
+QString CaseCatDoor::getJSON()
+{
+    QString json;
+    json = CaseCatPerks::getJSON();
+    json.removeLast();
+    json += "    \"indexCatDoor\": " + QString::number(m_indexCatDoor) + ",\n";
+    json += "    \"travelPrice\": " + QString::number(m_travelPrice) + "\n";
+    json += "}";
+    return json;
+}

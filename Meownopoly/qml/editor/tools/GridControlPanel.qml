@@ -140,7 +140,7 @@ Item {
                     console.log("Mode sélection: " + checked)
                     selectionModeChanged(checked)
                     if (!checked) {
-                        cancelSelectionRequested()
+                        logic.cancelSelection()
                     }
                 }
                 // Style visuel amélioré

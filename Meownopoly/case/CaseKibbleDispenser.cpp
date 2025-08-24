@@ -29,3 +29,13 @@ void CaseKibbleDispenser::setReward(int newReward) {
 //     qDebug() << "Player landed on Kibble Dispenser and received" << m_reward << "kibble";
 //     player->earnKibble(m_reward);
 // }
+
+QString CaseKibbleDispenser::getJSON()
+{
+    QString json;
+    json = Case::getJSON();
+    json.removeLast();
+    json += "    \"reward\": " + QString::number(m_reward) + "\n";
+    json += "}";
+    return json;
+}

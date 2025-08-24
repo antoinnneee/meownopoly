@@ -13,6 +13,7 @@ public:
     ~CaseCatNip() override = default;
 
     // void onLand(Player* player) override;
+    Q_INVOKABLE virtual QString getJSON();
 
 signals:
     void cardDrawn();

@@ -55,12 +55,12 @@ Rectangle {
     }
     
     SnapableElementConnections {
-            id: connectionManager
-            parentElement: snapableElement
-            anchors.fill: snapableElement
-            z: 40
-            parent: snapableElement.parent
-        }
+        id: connectionManager
+        parentElement: snapableElement
+        anchors.fill: snapableElement
+        z: 40
+        parent: snapableElement.parent
+    }
     
     // Signaux
     signal elementClicked(var element)
@@ -223,8 +223,6 @@ Rectangle {
         z = newZ
         originalZ = newZ
         console.log("Plan changé vers:", newZ)
-    }
-
-    
+    }    
 
 } 

@@ -9,8 +9,10 @@ class CaseCardBoardBox : public Case {
 
 public:
     explicit CaseCardBoardBox(QObject *parent = nullptr);
-    CaseCardBoardBox(const QString &name, int position, QObject *parent = nullptr);
+    CaseCardBoardBox(const QString &name, int uniqueId, QObject *parent = nullptr);
     ~CaseCardBoardBox() override = default;
+
+    Q_INVOKABLE virtual QString getJSON();
 
 signals:
     void cardDrawn();

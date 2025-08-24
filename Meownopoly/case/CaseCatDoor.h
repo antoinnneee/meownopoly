@@ -26,6 +26,8 @@ public:
     int travelPrice() const;
     void setTravelPrice(int newTravelPrice);
 
+    Q_INVOKABLE virtual QString getJSON() override;
+
 signals:
     void indexCatDoorChanged();
 

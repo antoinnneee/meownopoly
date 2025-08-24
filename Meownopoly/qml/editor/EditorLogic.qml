@@ -180,7 +180,6 @@ QtObject {
                 newTile.unitSizeWidth = snapableCase.unitSizeWidth
                 newTile.unitSizeHeight = snapableCase.unitSizeHeight
 
-                newTile.zLayer = snapableCase.zLayer
 
 
                 for (var i = 0; i < snapableCase.connectionManager.previousElements.length; i++) {

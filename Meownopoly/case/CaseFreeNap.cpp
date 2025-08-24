@@ -8,8 +8,8 @@ CaseFreeNap::CaseFreeNap(QObject *parent)
     setType(Case::CS_FreeNap);
 }
 
-CaseFreeNap::CaseFreeNap(const QString &name, int position, QObject *parent)
-    : Case(name, position, parent)
+CaseFreeNap::CaseFreeNap(const QString &name, int uniqueId, QObject *parent)
+    : Case(name, uniqueId, parent)
 {
     setType(Case::CS_FreeNap);
 }
@@ -36,4 +36,14 @@ void CaseFreeNap::setKibbleAmount(int newKibbleAmount)
         return;
     m_kibbleAmount = newKibbleAmount;
     emit kibbleAmountChanged();
+}
+
+QString CaseFreeNap::getJSON()
+{
+    QString json;
+    json = Case::getJSON();
+    json.removeLast();
+    json += "    \"kibbleAmount\": " + QString::number(m_kibbleAmount) + "\n";
+    json += "}";
+    return json;
 }

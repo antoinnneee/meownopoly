@@ -4,9 +4,9 @@
 #include <QObject>
 #include "case/Case.h"
 
-#define CASECATPERKS_DEFAULT_PARAMETER const QString &name, int position = -1, int morgagePrice = -1, int price = -1, int sellPrice = -1, QObject *parent = nullptr
-#define CASECATPERKS_DEFAULT_PARAMETER_NOP const QString &name, int position, int morgagePrice, int price, int sellPrice, QObject *parent
-#define CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER CaseCatPerks(name, position, price, sellPrice, morgagePrice, parent)
+#define CASECATPERKS_DEFAULT_PARAMETER const QString &name, int uniqueId = -1, int morgagePrice = -1, int price = -1, int sellPrice = -1, QObject *parent = nullptr
+#define CASECATPERKS_DEFAULT_PARAMETER_NOP const QString &name, int uniqueId, int morgagePrice, int price, int sellPrice, QObject *parent
+#define CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER CaseCatPerks(name, uniqueId, price, sellPrice, morgagePrice, parent)
 
 
 class CaseCatPerks : public Case
@@ -37,6 +37,8 @@ public:
 
     Player *owner() const;
     Q_INVOKABLE void setOwner(Player *newOwner);
+    Q_INVOKABLE virtual QString getJSON();
+
 
 signals:
     void priceChanged();

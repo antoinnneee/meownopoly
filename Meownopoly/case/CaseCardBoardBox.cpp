@@ -8,8 +8,17 @@ CaseCardBoardBox::CaseCardBoardBox(QObject *parent)
     setType(Case::CS_CardBoardBox);
 }
 
-CaseCardBoardBox::CaseCardBoardBox(const QString &name, int position, QObject *parent)
-    : Case(name, position, parent)
+CaseCardBoardBox::CaseCardBoardBox(const QString &name, int uniqueId, QObject *parent)
+    : Case(name, uniqueId, parent)
 {
     setType(Case::CS_CardBoardBox);
+}
+
+QString CaseCardBoardBox::getJSON()
+{
+    QString json;
+    json = Case::getJSON();
+    json.removeLast();
+    json += "}";
+    return json;
 }
