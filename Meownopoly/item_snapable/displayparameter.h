@@ -38,7 +38,6 @@ public:
     int zLayer() const {return m_zLayer;}
     void setZLayer(int zLayer) {m_zLayer = zLayer; emit zLayerChanged();}
 
-
 signals:
     void unitSizeWidthChanged();
     void unitSizeHeightChanged();
