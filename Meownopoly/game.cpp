@@ -55,6 +55,7 @@ QList<Card *> Game::listCards() const
 
 bool Game::saveMap(const QMap<QString,QVariant> &mapInfo, QList<Case*> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo)
 {
+
     // Construire l'objet JSON avec une structure propre
     QJsonObject jsonObject;
     
