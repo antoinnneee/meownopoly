@@ -178,7 +178,7 @@ Rectangle {
         id: gridControls
         anchors.fill: parent
         gridManager: editorGrid
-        showControlPanel: false
+        showControlPanel: true
         showInfoPanel: true
         logic: logic
         property alias isEdit : root.isEditing

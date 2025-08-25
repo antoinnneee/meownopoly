@@ -73,13 +73,15 @@ QtObject {
             if (tile) {
                 if (tile.type === 0){
                     var caseData = tile.caseData;
+                    console.log("Info position tile " + i + " : ", tile.gridRelativePositionX, tile.gridRelativePositionY, tile.unitSizeWidth, tile.unitSizeHeight)
                     if (caseData){
                         caseList.push(caseData)
                     }
                 }
-                // else if (tile.type === 1){
-                //     decoList.push({tile})
-                // }
+                else if (tile.type === 1){
+                    var imagePath = tile.imagePath
+                    decoList.push({imagePath})
+                }
             }
         }
         Game.saveMap(infoMap, caseList, decoList)

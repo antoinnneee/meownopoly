@@ -13,6 +13,7 @@ public:
     ItemSnapable();
 
     static void registerQml();
+    Q_INVOKABLE virtual QString toJSON();
 
 private :
 

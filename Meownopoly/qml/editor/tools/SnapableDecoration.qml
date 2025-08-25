@@ -16,7 +16,7 @@ SnapableElement {
     property string decorationType: "grass"  // Can be "grass" or "tree"
     property string decorationId: "1"  // Asset ID to use
     property int randomImageIndex: Math.floor(Math.random() * 6)  // Random number between 0 and 3
-
+    property string imagePath: appInstance.getAssetPath("decoration/grass/" + randomImageIndex + ".png")
     Component.onCompleted: {
         type = 1
     }
@@ -24,7 +24,7 @@ SnapableElement {
     Image {
         id: tileImage
         anchors.fill: parent
-        source: appInstance.getAssetPath("decoration/grass/" + randomImageIndex + ".png")
+        source: imagePath
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true
         cache: true  // Cache the image to prevent reloading

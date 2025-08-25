@@ -1,6 +1,8 @@
 #include "ItemSnapable.h"
 
-ItemSnapable::ItemSnapable() {}
+ItemSnapable::ItemSnapable() {
+    qDebug() << "New ItemSnapable created";
+}
 
 void ItemSnapable::registerQml()
 {
