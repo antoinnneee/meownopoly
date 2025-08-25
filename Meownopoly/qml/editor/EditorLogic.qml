@@ -75,15 +75,17 @@ QtObject {
             if (tile) {
                 if (tile.type === 0){
                     var caseData = tile.caseData;
+                    console.log("Info position tile " + i + " : ", tile.gridRelativePositionX, tile.gridRelativePositionY, tile.unitSizeWidth, tile.unitSizeHeight)
                     var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.originalZ}
                     if (caseData){
                         caseList.push(caseData)
                         caseDisplayInfo.push(displayInfo)
                     }
                 }
-                // else if (tile.type === 1){
-                //     decoList.push({tile})
-                // }
+                else if (tile.type === 1){
+                    var imagePath = tile.imagePath
+                    decoList.push({imagePath})
+                }
             }
         }
         Game.saveMap(infoMap, caseList, caseDisplayInfo, decoList)

@@ -2,7 +2,9 @@
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 
-ItemSnapable::ItemSnapable() {}
+ItemSnapable::ItemSnapable() {
+    qDebug() << "New ItemSnapable created";
+}
 
 void ItemSnapable::registerQml()
 {
@@ -17,27 +19,6 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
     m_displayParameter = displayParameter;
 }
 
-DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, QObject *parent)
-: QObject(parent)
-{
-    m_unitSizeWidth = unitSizeWidth;
-    m_unitSizeHeight = unitSizeHeight;
-    m_gridRelativePositionX = gridRelativePositionX;
-    m_gridRelativePositionY = gridRelativePositionY;
-    m_zLayer = zLayer;
-}
-
-DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QObject(parent)
-{
-    m_unitSizeWidth = json["unitSizeWidth"].toInt();
-    m_unitSizeHeight = json["unitSizeHeight"].toInt();
-    m_gridRelativePositionX = json["gridRelativePositionX"].toInt();
-    m_gridRelativePositionY = json["gridRelativePositionY"].toInt();
-    m_zLayer = json["zLayer"].toInt();
-}
-
-
-
 ItemSnapable::ItemSnapable(const QJsonDocument &json, QObject *parent)
 : QObject(parent)
 {
@@ -46,6 +27,22 @@ ItemSnapable::ItemSnapable(const QJsonDocument &json, QObject *parent)
     m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
     emit caseDataChanged();
     emit displayParameterChanged();
+}
+
+Case *ItemSnapable::caseData() const {
+    return m_caseData;
+}
+
+void ItemSnapable::setCaseData(Case * caseData){
+    m_caseData = caseData; emit caseDataChanged();
+}
+
+DisplayParameter *ItemSnapable::displayParameter() const {
+    return m_displayParameter;
+}
+
+void ItemSnapable::setDisplayParameter(DisplayParameter * displayParameter) {
+    m_displayParameter = displayParameter; emit displayParameterChanged();
 }
 
 QString ItemSnapable::toJSON()
@@ -58,16 +55,5 @@ QString ItemSnapable::toJSON()
     return json;
 }
 
-QString DisplayParameter::toJSON()
-{
-    QString json;
-    json += "{\n";
-    json += "    \"unitSizeWidth\": " + QString::number(m_unitSizeWidth) + ",\n";
-    json += "    \"unitSizeHeight\": " + QString::number(m_unitSizeHeight) + ",\n";
-    json += "    \"gridRelativePositionX\": " + QString::number(m_gridRelativePositionX) + ",\n";
-    json += "    \"gridRelativePositionY\": " + QString::number(m_gridRelativePositionY) + ",\n";
-    json += "    \"zLayer\": " + QString::number(m_zLayer) + "\n";
-    json += "}";
-    return json;
-}
+
 

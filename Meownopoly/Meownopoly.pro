@@ -39,6 +39,7 @@ SOURCES += \
     case/CaseToJail.cpp \
     game.cpp \
     game_loader.cpp \
+    item_snapable/Displayparameter.cpp \
     item_snapable/ItemSnapable.cpp \
     item_snapable/SnapableCase.cpp \
     item_snapable/SnapableDeco.cpp \
@@ -66,6 +67,7 @@ HEADERS += \
     case/CaseRestArea.h \
     case/CaseToJail.h \
     game.h \
+    item_snapable/Displayparameter.h \
     item_snapable/ItemSnapable.h \
     item_snapable/SnapableCase.h \
     item_snapable/SnapableDeco.h \
