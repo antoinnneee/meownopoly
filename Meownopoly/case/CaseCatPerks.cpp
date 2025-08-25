@@ -86,11 +86,10 @@ QString CaseCatPerks::toJSON()
     return json;
 }
 
-CaseCatPerks::CaseCatPerks(const QJsonDocument &json, QObject *parent)
+CaseCatPerks::CaseCatPerks(const QJsonObject &json, QObject *parent)
     : Case(json, parent)
 {
-    QJsonObject obj = json.object();
-    m_price = obj["price"].toInt();
-    m_sellPrice = obj["sellPrice"].toInt();
-    m_morgagePrice = obj["morgagePrice"].toInt();
+    m_price = json["price"].toInt();
+    m_sellPrice = json["sellPrice"].toInt();
+    m_morgagePrice = json["morgagePrice"].toInt();
 }

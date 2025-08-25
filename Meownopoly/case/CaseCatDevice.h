@@ -13,7 +13,7 @@ class CaseCatDevice : public CaseCatPerks
 
 public:
     CaseCatDevice(CASECATPERKS_DEFAULT_PARAMETER, int taxe = -1);
-    CaseCatDevice(const QJsonDocument &json, QObject *parent = nullptr);
+    CaseCatDevice(const QJsonObject &json, QObject *parent = nullptr);
     Q_INVOKABLE bool buyCase(Player *buyer);
     Q_INVOKABLE bool sellCase(Player *buyer);
 

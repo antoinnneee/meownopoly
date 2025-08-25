@@ -1,11 +1,13 @@
 #include "ItemSnapable.h"
+#include <QQmlApplicationEngine>
+#include <QQmlEngine>
 
 ItemSnapable::ItemSnapable() {}
 
 void ItemSnapable::registerQml()
 {
     qmlRegisterType<ItemSnapable>("ItemSnapable", 1, 0, "ItemSnapable"); // Register ItemSnapable class
-
+    qmlRegisterType<DisplayParameter>("DisplayParameter", 1, 0, "DisplayParameter"); // Register DisplayParameter class
 }
 
 ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent)
@@ -15,33 +17,33 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
     m_displayParameter = displayParameter;
 }
 
-DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePosition, int gridRelativePositionY, int zLayer, QObject *parent)
+DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, QObject *parent)
 : QObject(parent)
 {
     m_unitSizeWidth = unitSizeWidth;
     m_unitSizeHeight = unitSizeHeight;
-    m_gridRelativePosition = gridRelativePosition;
+    m_gridRelativePositionX = gridRelativePositionX;
     m_gridRelativePositionY = gridRelativePositionY;
     m_zLayer = zLayer;
 }
 
-DisplayParameter::DisplayParameter(const QJsonDocument &json, QObject *parent): QObject(parent)
+DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QObject(parent)
 {
-    m_json = json;
-    m_unitSizeWidth = m_json["unitSizeWidth"].toInt();
-    m_unitSizeHeight = m_json["unitSizeHeight"].toInt();
-    m_gridRelativePosition = m_json["gridRelativePosition"].toInt();
-    m_gridRelativePositionY = m_json["gridRelativePositionY"].toInt();
-    m_zLayer = m_json["zLayer"].toInt();
+    m_unitSizeWidth = json["unitSizeWidth"].toInt();
+    m_unitSizeHeight = json["unitSizeHeight"].toInt();
+    m_gridRelativePositionX = json["gridRelativePositionX"].toInt();
+    m_gridRelativePositionY = json["gridRelativePositionY"].toInt();
+    m_zLayer = json["zLayer"].toInt();
 }
 
 
 
-ItemSnapable::ItemSnapable(const QJsonDocument &json)
+ItemSnapable::ItemSnapable(const QJsonDocument &json, QObject *parent)
+: QObject(parent)
 {
-    m_json = json;
-    m_caseData = new Case(m_json["caseData"]);
-    m_displayParameter = new DisplayParameter(m_json["displayParameter"], this);
+    m_json = json.object();
+    m_caseData = new Case(m_json["caseData"].toObject(), this);
+    m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
     emit caseDataChanged();
     emit displayParameterChanged();
 }
@@ -62,7 +64,7 @@ QString DisplayParameter::toJSON()
     json += "{\n";
     json += "    \"unitSizeWidth\": " + QString::number(m_unitSizeWidth) + ",\n";
     json += "    \"unitSizeHeight\": " + QString::number(m_unitSizeHeight) + ",\n";
-    json += "    \"gridRelativePosition\": " + QString::number(m_gridRelativePosition) + ",\n";
+    json += "    \"gridRelativePositionX\": " + QString::number(m_gridRelativePositionX) + ",\n";
     json += "    \"gridRelativePositionY\": " + QString::number(m_gridRelativePositionY) + ",\n";
     json += "    \"zLayer\": " + QString::number(m_zLayer) + "\n";
     json += "}";

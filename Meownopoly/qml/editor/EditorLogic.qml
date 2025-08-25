@@ -64,17 +64,20 @@ QtObject {
     function saveMap(){
         var infoMap = [];
         var caseList = [];
+        var caseDisplayInfo = [];
         var decoList = [];
 
-        infoMap.push({mapName});
+        infoMap.push({"name":mapName});
 
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
             if (tile) {
                 if (tile.type === 0){
                     var caseData = tile.caseData;
+                    var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.z}
                     if (caseData){
                         caseList.push(caseData)
+                        caseDisplayInfo.push(displayInfo)
                     }
                 }
                 // else if (tile.type === 1){
@@ -82,7 +85,7 @@ QtObject {
                 // }
             }
         }
-        Game.saveMap(infoMap, caseList, decoList)
+        Game.saveMap(infoMap, caseList, caseDisplayInfo, decoList)
     }
 
     // Fonction pour désélectionner tous les tiles

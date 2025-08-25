@@ -7,7 +7,7 @@ CaseJail::CaseJail(const QString &name, QUuid uniqueId, int jailFine)
     setType(Case::CS_Jail);
 }
 
-CaseJail::CaseJail(const QJsonDocument &json, QObject *parent)
+CaseJail::CaseJail(const QJsonObject &json, QObject *parent)
     : Case(json, parent)
 {
     setType(Case::CS_Jail);

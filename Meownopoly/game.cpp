@@ -24,6 +24,7 @@
 #include <QDebug>
 #include <QVariant>
 
+#include "item_snapable/ItemSnapable.h"
 #include "game.h"
 
 Game *Game::m_pThis = nullptr;
@@ -52,12 +53,32 @@ QList<Card *> Game::listCards() const
     return m_listCards;
 }
 
-bool Game::saveMap(const QVariantMap &mapInfo, QList<Case*> caseInfo, const QVariantMap &decoInfo)
+bool Game::saveMap(const QVariantMap &mapInfo, QList<Case*> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo)
 {
     bool flag = false;
+    QString jsonMapData;
+
+    jsonMapData += "{\n";
+    jsonMapData += "\"name\": \"" + mapInfo["name"].toString() + "\",\n";
+    jsonMapData += "\"snapableTiles\": [\n";
+
     for (int i = 0; i < caseInfo.size(); ++i) {
-        qDebug() << caseInfo[i]->toJSON();
+        DisplayParameter dp;
+        dp.setUnitSizeWidth(caseDisplayInfo[i]["unitSizeWidth"].toInt());
+        dp.setUnitSizeHeight(caseDisplayInfo[i]["unitSizeHeight"].toInt());
+        dp.setGridRelativePositionX(caseDisplayInfo[i]["gridRelativePositionX"].toInt());
+        dp.setGridRelativePositionY(caseDisplayInfo[i]["gridRelativePositionY"].toInt());
+        dp.setZLayer(caseDisplayInfo[i]["zLayer"].toInt());
+
+        ItemSnapable is(caseInfo[i], &dp);
+
+        jsonMapData += is.toJSON() + ",\n";
     }
+    jsonMapData += "],\n";
+
+    jsonMapData += "}\n";
+
+    qDebug().noquote() << jsonMapData;
 
     return false;
 }

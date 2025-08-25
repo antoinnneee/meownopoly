@@ -15,13 +15,12 @@ CaseKibbleDispenser::CaseKibbleDispenser(const QString &name, QUuid id, int rewa
     setType(Case::CS_KibbleDispenser);
 }
 
-CaseKibbleDispenser::CaseKibbleDispenser(const QJsonDocument &json, QObject *parent)
+CaseKibbleDispenser::CaseKibbleDispenser(const QJsonObject &json, QObject *parent)
     : Case(json, parent)
 {
     setType(Case::CS_KibbleDispenser);
     
-    QJsonObject obj = json.object();
-    m_reward = obj["reward"].toInt();
+    m_reward = json["reward"].toInt();
 }
 
 int CaseKibbleDispenser::reward() const {

@@ -11,14 +11,13 @@ Case::Case(const QString &name, QUuid uniqueId, QObject *parent)
 
 }
 
-Case::Case(const QJsonDocument &json, QObject *parent)
+Case::Case(const QJsonObject &json, QObject *parent)
     : QObject(parent)
 {
 
-    QJsonObject obj = json.object();
-    m_name = obj["name"].toString();
-    m_uniqueId = QUuid::fromString(obj["uniqueId"].toString());
-    type = intToCaseType(obj["type"].toInt());
+    m_name = json["name"].toString();
+    m_uniqueId = QUuid::fromString(json["uniqueId"].toString());
+    type = intToCaseType(json["type"].toInt());
 
 }
 
