@@ -29,7 +29,21 @@ ItemSnapable::ItemSnapable(const QJsonDocument &json, QObject *parent)
     emit displayParameterChanged();
 }
 
-Case *ItemSnapable::caseData() const {return m_caseData;}
+Case *ItemSnapable::caseData() const {
+    return m_caseData;
+}
+
+void ItemSnapable::setCaseData(Case * caseData){
+    m_caseData = caseData; emit caseDataChanged();
+}
+
+DisplayParameter *ItemSnapable::displayParameter() const {
+    return m_displayParameter;
+}
+
+void ItemSnapable::setDisplayParameter(DisplayParameter * displayParameter) {
+    m_displayParameter = displayParameter; emit displayParameterChanged();
+}
 
 QString ItemSnapable::toJSON()
 {

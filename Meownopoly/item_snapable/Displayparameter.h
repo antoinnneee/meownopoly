@@ -27,16 +27,16 @@ public:
     DisplayParameter(const QJsonObject &json, QObject *parent = nullptr);
     QString toJSON();
 
-    int unitSizeWidth() const {return m_unitSizeWidth;}
-    void setUnitSizeWidth(int unitSizeWidth) {m_unitSizeWidth = unitSizeWidth; emit unitSizeWidthChanged();}
-    int unitSizeHeight() const {return m_unitSizeHeight;}
-    void setUnitSizeHeight(int unitSizeHeight) {m_unitSizeHeight = unitSizeHeight; emit unitSizeHeightChanged();}
-    int gridRelativePositionX() const {return m_gridRelativePositionX;}
-    void setGridRelativePositionX(int gridRelativePositionX) {m_gridRelativePositionX = gridRelativePositionX; emit gridRelativePositionXChanged();}
-    int gridRelativePositionY() const {return m_gridRelativePositionY;}
-    void setGridRelativePositionY(int gridRelativePositionY) {m_gridRelativePositionY = gridRelativePositionY; emit gridRelativePositionYChanged();}
-    int zLayer() const {return m_zLayer;}
-    void setZLayer(int zLayer) {m_zLayer = zLayer; emit zLayerChanged();}
+    int unitSizeWidth() const;
+    void setUnitSizeWidth(int unitSizeWidth);
+    int unitSizeHeight() const;
+    void setUnitSizeHeight(int unitSizeHeight);
+    int gridRelativePositionX() const;
+    void setGridRelativePositionX(int gridRelativePositionX);
+    int gridRelativePositionY() const;
+    void setGridRelativePositionY(int gridRelativePositionY);
+    int zLayer() const;
+    void setZLayer(int zLayer);
 
 signals:
     void unitSizeWidthChanged();

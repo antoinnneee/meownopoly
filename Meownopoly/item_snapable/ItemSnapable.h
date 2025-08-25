@@ -11,7 +11,7 @@
 #include <QJsonValue>
 #include <QJsonValueRef>
 
-#include "displayparameter.h"
+#include "Displayparameter.h"
 
 class ItemSnapable : public QObject
 {
@@ -26,10 +26,10 @@ public:
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(const QJsonDocument &json, QObject *parent = nullptr);
 
-    Case * caseData() const {return m_caseData;}
-    void setCaseData(Case * caseData) {m_caseData = caseData; emit caseDataChanged();}
-    DisplayParameter * displayParameter() const {return m_displayParameter;}
-    void setDisplayParameter(DisplayParameter * displayParameter) {m_displayParameter = displayParameter; emit displayParameterChanged();}
+    Case * caseData() const;
+    void setCaseData(Case * caseData);
+    DisplayParameter * displayParameter() const;
+    void setDisplayParameter(DisplayParameter * displayParameter);
 
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();

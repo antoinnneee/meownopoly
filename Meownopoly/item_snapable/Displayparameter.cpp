@@ -1,4 +1,4 @@
-#include "displayparameter.h"
+#include "Displayparameter.h"
 
 
 DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, QObject *parent)
@@ -31,5 +31,60 @@ QString DisplayParameter::toJSON()
     json += "    \"zLayer\": " + QString::number(m_zLayer) + "\n";
     json += "}";
     return json;
+}
+
+int DisplayParameter::unitSizeWidth() const
+{
+    return m_unitSizeWidth;
+}
+
+void DisplayParameter::setUnitSizeWidth(int unitSizeWidth)
+{
+    m_unitSizeWidth = unitSizeWidth;
+    emit unitSizeWidthChanged();
+}
+
+int DisplayParameter::unitSizeHeight() const
+{
+    return m_unitSizeHeight;
+}
+
+void DisplayParameter::setUnitSizeHeight(int unitSizeHeight)
+{
+    m_unitSizeHeight = unitSizeHeight;
+    emit unitSizeHeightChanged();
+}
+
+int DisplayParameter::gridRelativePositionX() const
+{
+    return m_gridRelativePositionX;
+}
+
+void DisplayParameter::setGridRelativePositionX(int gridRelativePositionX)
+{
+    m_gridRelativePositionX = gridRelativePositionX;
+    emit gridRelativePositionXChanged();
+}
+
+int DisplayParameter::gridRelativePositionY() const
+{
+    return m_gridRelativePositionY;
+}
+
+void DisplayParameter::setGridRelativePositionY(int gridRelativePositionY)
+{
+    m_gridRelativePositionY = gridRelativePositionY;
+    emit gridRelativePositionYChanged();
+}
+
+int DisplayParameter::zLayer() const
+{
+    return m_zLayer;
+}
+
+void DisplayParameter::setZLayer(int zLayer)
+{
+    m_zLayer = zLayer;
+    emit zLayerChanged();
 }
 
