@@ -8,6 +8,8 @@ import Game
 import Case
 import "tools"
 import "tools/snapable"
+import "panel"
+import "panel/assetSelectionPanel"
 
 Rectangle {
     id: root
@@ -18,7 +20,6 @@ Rectangle {
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
     property alias currentSelectedElement: logic.currentSelectedElement
-    property alias currentPlanDisplayed: logic.currentPlanDisplayed
     property alias isEditing: logic.isEditing
 
     property alias isSelectionActive: logic.isSelectionActive
@@ -29,6 +30,16 @@ Rectangle {
 
     property alias currentElementWidth: logic.currentElementWidth
     property alias currentElementHeight: logic.currentElementHeight
+    
+    // Plan range properties
+    property alias minPlanDisplayed: logic.minPlanDisplayed
+    property alias maxPlanDisplayed: logic.maxPlanDisplayed
+    
+    // Asset selection properties
+    property string selectedAssetCategory: ""
+    property string selectedAssetType: ""
+    property string selectedAssetId: ""
+    property bool isAssetSelected: selectedAssetCategory !== "" && selectedAssetType !== "" && selectedAssetId !== ""
 
 
     enum TileType {
@@ -67,12 +78,22 @@ Rectangle {
         Component.onCompleted: {
         }
         onGridPressed : function(position) {
-            // Stocker la position du clic pour créer l'élément au bon endroit
-            contextMenu.clickGridCoord = position
-            contextMenu.popup()
+            // Si un asset est sélectionné, le placer directement
+            if (root.isAssetSelected) {
+            } else {
+                // Sinon, afficher le menu contextuel
+                contextMenu.clickGridCoord = position
+                contextMenu.popup()
+            }
         }
         onGridClicked:  function(position) {
-            logic.deselectAllTiles()
+            if (root.isAssetSelected) {
+                console.log("Placing selected asset at:", position)
+                placeSelectedAsset(position.x, position.y)
+            }
+            if (!root.isAssetSelected) {
+                logic.deselectAllTiles()
+            }
         }
     }
 
@@ -110,6 +131,32 @@ Rectangle {
                 logic.cancelSelection()
             }
         }
+        
+        // MouseArea to track cursor position for asset preview
+        MouseArea {
+            id: cursorTracker
+            anchors.fill: parent
+            hoverEnabled: true
+            enabled: root.isAssetSelected && !isSelectionActive
+            acceptedButtons: Qt.NoButton // Don't interfere with clicks
+            propagateComposedEvents: true
+            preventStealing: true
+            z: 50
+            
+            onPositionChanged: function(mouse) {
+                assetPreview.mouseX = mouse.x
+                assetPreview.mouseY = mouse.y
+            }
+        }
+        
+        // Asset preview cursor
+        AssetPreviewCursor {
+            id: assetPreview
+            parent: workArea
+            assetCategory: root.selectedAssetCategory
+            assetType: root.selectedAssetType
+            assetId: root.selectedAssetId
+        }
     }
 
     // Rectangle de sélection
@@ -126,6 +173,16 @@ Rectangle {
     
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
+    
+    // Keyboard shortcuts
+    Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_Escape) {
+            if (root.isAssetSelected) {
+                clearAssetSelection()
+                event.accepted = true
+            }
+        }
+    }
 
 
     // Menu contextuel pour la création d'éléments
@@ -227,6 +284,76 @@ Rectangle {
         }
     }
 
+
+    // Function to place the selected asset
+    function placeSelectedAsset(gridX, gridY) {
+        if (!root.isAssetSelected) return
+        
+        console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
+        
+        // Create appropriate element based on category
+        if (root.selectedAssetCategory === "decoration") {
+            var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, GameBoard.TileType.Decoration)
+            // Set decoration properties if needed
+            if (newTile && newTile.decorationType !== undefined) {
+                newTile.decorationType = root.selectedAssetType
+                newTile.decorationId = root.selectedAssetId
+            }
+        } else if (root.selectedAssetCategory === "avatar") {
+            logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, GameBoard.TileType.Personnage)
+        }
+        
+        // Clear selection after placing (optional - you might want to keep it selected)
+        // clearAssetSelection()
+    }
+    
+    // Function to clear asset selection
+    function clearAssetSelection() {
+        console.log("Clearing asset selection")
+        root.selectedAssetCategory = ""
+        root.selectedAssetType = ""
+        root.selectedAssetId = ""
+    }
+
+    // Asset Selection Panel
+    AssetSelectionPanel {
+        id: assetPanel
+        
+        // Pass current selection state to panel
+        currentSelectedCategory: root.selectedAssetCategory
+        currentSelectedType: root.selectedAssetType  
+        currentSelectedId: root.selectedAssetId
+        
+        onAssetSelected: function(category, type, id) {
+            if (root.isAssetSelected && root.selectedAssetCategory === category && root.selectedAssetType === type && root.selectedAssetId === id) {
+                clearAssetSelection();
+                return
+            }
+            console.log("Asset selected for placement:", category, type, id)
+            root.selectedAssetCategory = category
+            root.selectedAssetType = type
+            root.selectedAssetId = id
+        }
+        
+        // onAssetDropped: function(category, type, id, x, y) {
+        //     console.log("Asset dropped:", category, type, id, "at", x, y)
+            
+        //     // Convert coordinates to grid coordinates
+        //     var gridPos = editorGrid.getGridPosition(x, y)
+            
+        //     // Create appropriate element based on category
+        //     if (category === "decoration") {
+        //         var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridPos.x, gridPos.y, GameBoard.TileType.Decoration)
+        //         // Set decoration properties if needed
+        //         if (newTile && newTile.decorationType !== undefined) {
+        //             newTile.decorationType = type
+        //             newTile.decorationId = id
+        //         }
+        //     } else if (category === "avatar") {
+        //         logic.createNewTileAtPosition(Case.CS_Unknow, gridPos.x, gridPos.y, GameBoard.TileType.Personnage)
+        //     }
+        // }
+    }
 
     WheelHandler {
         onWheel: (wheel)=> {

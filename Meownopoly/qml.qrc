@@ -89,5 +89,10 @@
         <file>qml/editor/tools/SnapableCharacter.qml</file>
         <file>qml/editor/tools/GridControlPopupAsset.qml</file>
         <file>qml/editor/panel/CaseHouseHotelPriceConfig.qml</file>
+        <file>qml/editor/tools/AssetPreviewCursor.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/AssetCategoryGrid.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/AssetGrid.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/AssetItem.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/AssetSelectionPanel.qml</file>
     </qresource>
 </RCC>

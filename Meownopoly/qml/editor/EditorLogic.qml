@@ -14,7 +14,12 @@ QtObject {
 
 
     property bool isEditing : false
-    property int currentPlanDisplayed : 5
+    
+    // New range-based plan visibility
+    property int minPlanDisplayed: 1
+    property int maxPlanDisplayed: 10
+
+
 
 
     // Propriétés pour la sélection par rectangle
@@ -41,20 +46,30 @@ QtObject {
                 }
             }
     }
-
-    onCurrentPlanDisplayedChanged: {
-        if (isEditing){
-            console.log("Changement de plan affiché:", currentPlanDisplayed)
+    
+    onMinPlanDisplayedChanged: {
+        updatePlanVisibility()
+    }
+    
+    onMaxPlanDisplayedChanged: {
+        updatePlanVisibility()
+    }
+    
+    // Function to update visibility based on plan range
+    function updatePlanVisibility() {
+        if (isEditing) {
+            console.log("Changement de plage de plans affichés:", minPlanDisplayed, "-", maxPlanDisplayed)
             for (var i = 0; i < snapableTilesList.length; i++) {
                 if (snapableTilesList[i]) {
                     var currentTile = snapableTilesList[i]
-                    if (currentTile.z < currentPlanDisplayed) {
-                        currentTile.enabled = false
-                        currentTile.visible = false
-                    }
-                    else {
+                    var tileZ = currentTile.z || currentTile.originalZ || 1
+                    
+                    if ((tileZ >= minPlanDisplayed && tileZ <= maxPlanDisplayed) || tileZ === 11 ) {
                         currentTile.enabled = true
-                        currentTile.visible = true
+                        currentTile.opacity = 1
+                    } else {
+                        currentTile.enabled = false
+                        currentTile.opacity = 0.2
                     }
                 }
             }
@@ -172,7 +187,7 @@ QtObject {
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                           "gridRelativePositionX": gridX,
                                                                                           "gridRelativePositionY": gridY,
-                                                                                          "z": currentPlanDisplayed
+                                                                                          "z": 5
                                                                                       })
             break
         case GameBoard.TileType.Personnage:
@@ -180,7 +195,7 @@ QtObject {
                                                                                          "gridRelativePositionX": gridX,
                                                                                          "gridRelativePositionY": gridY,
                                                                                          "playerData": Game.getNewPlayer(),
-                                                                                         "z": currentPlanDisplayed
+                                                                                         "z": 5
                                                                                      })
             break
         case GameBoard.TileType.Case:
@@ -190,7 +205,7 @@ QtObject {
                                                                                         "unitSizeWidth": currentElementWidth,
                                                                                         "unitSizeHeight": currentElementHeight,
                                                                                         "caseData": Game.getNewCaseType(caseType),
-                                                                                        "z": currentPlanDisplayed
+                                                                                        "z": 5
                                                                                     })
             break
 
@@ -305,7 +320,7 @@ QtObject {
                                                                                         "unitSizeWidth": unitWidth,
                                                                                         "unitSizeHeight": unitHeight,
                                                                                         "caseData": Game.getNewCaseType(defaultCaseType),
-                                                                                        "z": currentPlanDisplayed
+                                                                                        "z": maxPlanDisplayed
                                                                                     })
 
         if (newTile) {

@@ -92,6 +92,7 @@ ApplicationWindow {
         }
     }
 
+
     Component {
         id: test3D
         TEST_3D {

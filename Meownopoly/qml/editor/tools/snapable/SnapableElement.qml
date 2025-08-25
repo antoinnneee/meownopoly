@@ -9,7 +9,7 @@ Rectangle {
     // Propriétés configurables
     // Connexion au GridManager du parent (Editor)
     required property GridManager gridManager
-    property bool isDraggable: true
+    property bool isDraggable: !isAssetSelected
     property bool isResizable: true
     property bool autoSnap: true
     property color elementColor: "transparent"
@@ -114,6 +114,9 @@ Rectangle {
         drag.target: isDraggable ? parent : null
         drag.axis: Drag.XAndYAxis
 
+        propagateComposedEvents: true
+        preventStealing: true
+
         z: 50  // Au-dessus du contenu mais sous les poignées
         
         onPressed: {
@@ -142,8 +145,12 @@ Rectangle {
         }
         
         onPositionChanged: {
+//           assetPreview.mouseX = drag.target.x + mouse.x
+//            assetPreview.mouseY = drag.target.y + mouse.y
             if (isDragging) {
             }
+//            mouse.accepted = false
+
         }
     }
     

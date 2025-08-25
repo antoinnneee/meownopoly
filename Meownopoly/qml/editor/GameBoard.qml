@@ -25,7 +25,6 @@ Rectangle {
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
     property alias currentSelectedElement: logic.currentSelectedElement
-    property alias currentPlanDisplayed: logic.currentPlanDisplayed
     property alias isEditing: logic.isEditing
 
     property alias isSelectionActive: logic.isSelectionActive
@@ -55,24 +54,6 @@ Rectangle {
             }
     }
 
-    onCurrentPlanDisplayedChanged: {
-        if (isEditing){
-            console.log("Changement de plan affiché:", currentPlanDisplayed)
-            for (var i = 0; i < snapableTilesList.length; i++) {
-                if (snapableTilesList[i]) {
-                    var currentTile = snapableTilesList[i]
-                    if (currentTile.z < currentPlanDisplayed) {
-                        currentTile.enabled = false
-                        currentTile.visible = false
-                    }
-                    else {
-                        currentTile.enabled = true
-                        currentTile.visible = true
-                    }
-                }
-            }
-        }
-    }
     EditorLogic {
         id: logic
         workArea: workArea
@@ -105,7 +86,6 @@ Rectangle {
     GridManager {
         id: editorGrid
         isEdit : root.isEditing
-        currentPlan : root.currentPlanDisplayed
         isSelectionActive : root.isSelectionActive
 
 

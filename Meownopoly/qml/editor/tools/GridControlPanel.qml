@@ -154,25 +154,175 @@ Item {
                 }
             }
 
-            Row{
-                spacing: 8
+            Column {
+                spacing: 4
                 visible: logic.isEditing
                 enabled: visible
+                width: parent.width
+                
                 Text {
                     id: planText
-                    text: "Plan: " + planSlider.value
-                    width: 25
-                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Plans: " + Math.round(planRangeSlider.first.value) + " - " + Math.round(planRangeSlider.second.value)
+                    font.bold: true
+                    font.pixelSize: 12
+                    width: parent.width
                 }
-                Slider {
-                    id: planSlider
+                
+                RangeSlider {
+                    id: planRangeSlider
                     from: 1
                     to: 10
                     stepSize: 1
-                    value: logic.currentPlanDisplayed
-                    width : controlColumn.width*0.75
-                    onValueChanged: {
-                        logic.currentPlanDisplayed = value
+                    width: parent.width
+                    
+                    first.value: logic.minPlanDisplayed
+                    second.value: logic.maxPlanDisplayed
+                    
+                    first.onValueChanged: {
+                        logic.minPlanDisplayed = Math.round(first.value)
+                    }
+                    
+                    second.onValueChanged: {
+                        logic.maxPlanDisplayed = Math.round(second.value)
+                    }
+                    
+                    // Custom styling for better visibility
+                    background: Rectangle {
+                        x: planRangeSlider.leftPadding
+                        y: planRangeSlider.topPadding + planRangeSlider.availableHeight / 2 - height / 2
+                        width: planRangeSlider.availableWidth
+                        height: 4
+                        radius: 2
+                        color: "#bdbebf"
+                        
+                        Rectangle {
+                            x: planRangeSlider.first.visualPosition * parent.width
+                            width: planRangeSlider.second.visualPosition * parent.width - x
+                            height: parent.height
+                            color: "#3498db"
+                            radius: 2
+                        }
+                    }
+                    
+                    first.handle: Rectangle {
+                        x: planRangeSlider.leftPadding + planRangeSlider.first.visualPosition * (planRangeSlider.availableWidth - width)
+                        y: planRangeSlider.topPadding + planRangeSlider.availableHeight / 2 - height / 2
+                        width: 20
+                        height: 20
+                        radius: 10
+                        color: planRangeSlider.first.pressed ? "#2980b9" : "#3498db"
+                        border.color: "#2c3e50"
+                        border.width: 1
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            text: Math.round(planRangeSlider.first.value)
+                            color: "white"
+                            font.pixelSize: 8
+                            font.bold: true
+                        }
+                    }
+                    
+                    second.handle: Rectangle {
+                        x: planRangeSlider.leftPadding + planRangeSlider.second.visualPosition * (planRangeSlider.availableWidth - width)
+                        y: planRangeSlider.topPadding + planRangeSlider.availableHeight / 2 - height / 2
+                        width: 20
+                        height: 20
+                        radius: 10
+                        color: planRangeSlider.second.pressed ? "#27ae60" : "#2ecc71"
+                        border.color: "#2c3e50"
+                        border.width: 1
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            text: Math.round(planRangeSlider.second.value)
+                            color: "white"
+                            font.pixelSize: 8
+                            font.bold: true
+                        }
+                    }
+                }
+                
+                // Helper text
+                Text {
+                    text: "Min ← → Max"
+                    color: "#7f8c8d"
+                    font.pixelSize: 9
+                    font.italic: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                
+                // Quick preset buttons
+                Row {
+                    spacing: 4
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    
+                    Button {
+                        text: "Tout"
+                        font.pixelSize: 8
+                        width: 35
+                        height: 20
+                        onClicked: {
+                            logic.minPlanDisplayed = 1
+                            logic.maxPlanDisplayed = 10
+                        }
+                        background: Rectangle {
+                            color: parent.pressed ? "#95a5a6" : "#bdc3c7"
+                            radius: 3
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#2c3e50"
+                            font.pixelSize: 8
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                    
+                    Button {
+                        text: "Seul"
+                        font.pixelSize: 8
+                        width: 35
+                        height: 20
+                        onClicked: {
+                            var currentMax = logic.maxPlanDisplayed
+                            logic.minPlanDisplayed = currentMax
+                            logic.maxPlanDisplayed = currentMax
+                        }
+                        background: Rectangle {
+                            color: parent.pressed ? "#95a5a6" : "#bdc3c7"
+                            radius: 3
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#2c3e50"
+                            font.pixelSize: 8
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                    
+                    Button {
+                        text: "↑3"
+                        font.pixelSize: 8
+                        width: 25
+                        height: 20
+                        onClicked: {
+                            var currentMax = logic.maxPlanDisplayed
+                            logic.minPlanDisplayed = Math.max(1, currentMax - 2)
+                            logic.maxPlanDisplayed = currentMax
+                        }
+                        background: Rectangle {
+                            color: parent.pressed ? "#95a5a6" : "#bdc3c7"
+                            radius: 3
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#2c3e50"
+                            font.pixelSize: 8
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
                     }
                 }
             }
