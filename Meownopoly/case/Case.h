@@ -96,9 +96,6 @@ signals:
 
     void typeChanged();
 
-
-
-
 protected:
     QList<Player*> listPlayer;
 

@@ -143,9 +143,9 @@ Rectangle {
         }
 
         MenuItem {
-            text: "Créer un élément"
+            text: "Créer une Décoration"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Personnage)
+                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Decoration)
             }
         }
 
