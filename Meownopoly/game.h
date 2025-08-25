@@ -13,6 +13,7 @@
 
 #include "card.h"
 #include "player.h"
+#include "item_snapable/ItemSnapable.h"
 
 #define CASE_FILE_PATH ":/config/cases.json"
 
@@ -72,7 +73,13 @@ public:
 
     // JSON Case Management
 
-    Q_INVOKABLE bool saveMap(const QMap<QString,QVariant> &mapInfo, QList<Case *> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo);
+    DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
+    QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
+    bool addTileToJson(QJsonObject jsonObject, QString mapName);
+    Q_INVOKABLE bool registerMap(QVariantList mapInfo, QVariantList  caseList, QVariantList  decorationList);
+    // Q_INVOKABLE bool saveMap(const QMap<QString,QVariant> &mapInfo, QList<Case *> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo);
+
+
 
     Q_INVOKABLE bool saveCaseToJson(const QVariantMap &caseData);
     Q_INVOKABLE bool saveMultipleCasesToJson(const QVariantList &casesData);

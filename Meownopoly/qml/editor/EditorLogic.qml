@@ -64,31 +64,29 @@ QtObject {
     function saveMap(){
         var infoMap;
         var caseList = [];
-        var caseDisplayInfo = [];
         var decoList = [];
 
         infoMap = {"name":mapName};
-        console.log("map : ", mapName)
 
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
             if (tile) {
+                var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.originalZ}
                 if (tile.type === 0){
                     var caseData = tile.caseData;
-                    console.log("Info position tile " + i + " : ", tile.gridRelativePositionX, tile.gridRelativePositionY, tile.unitSizeWidth, tile.unitSizeHeight)
-                    var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.originalZ}
                     if (caseData){
-                        caseList.push(caseData)
-                        caseDisplayInfo.push(displayInfo)
+                        var caseInfo = [caseData, displayInfo]
+                        caseList.push(caseInfo)
                     }
                 }
                 else if (tile.type === 1){
                     var imagePath = tile.imagePath
-                    decoList.push({imagePath})
+                    var decorationInfo = [decorationInfo, displayInfo]
+                    decoList.push(decorationInfo)
                 }
             }
         }
-        Game.saveMap(infoMap, caseList, caseDisplayInfo, decoList)
+        Game.registerMap(infoMap, caseList, decoList)
     }
 
     // Fonction pour désélectionner tous les tiles
