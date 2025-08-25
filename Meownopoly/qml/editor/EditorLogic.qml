@@ -62,19 +62,20 @@ QtObject {
     }
 
     function saveMap(){
-        var infoMap = [];
+        var infoMap;
         var caseList = [];
         var caseDisplayInfo = [];
         var decoList = [];
 
-        infoMap.push({"name":mapName});
+        infoMap = {"name":mapName};
+        console.log("map : ", mapName)
 
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
             if (tile) {
                 if (tile.type === 0){
                     var caseData = tile.caseData;
-                    var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.z}
+                    var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.originalZ}
                     if (caseData){
                         caseList.push(caseData)
                         caseDisplayInfo.push(displayInfo)

@@ -79,9 +79,11 @@ QString CaseCatPerks::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"price\": " + QString::number(price()) + ",\n";
     json += "    \"sellPrice\": " + QString::number(sellPrice()) + ",\n";
-    json += "    \"morgagePrice\": " + QString::number(morgagePrice()) + ",\n";
+    json += "    \"morgagePrice\": " + QString::number(morgagePrice()) + "\n";
     json += "}";
     return json;
 }

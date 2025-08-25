@@ -40,6 +40,8 @@ QString CaseToJail::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"jailCase\":" + m_jailCase->uniqueId().toString()  + "\n";
     json += "}";
     return json;

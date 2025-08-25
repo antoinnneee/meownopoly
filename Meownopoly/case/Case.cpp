@@ -82,7 +82,7 @@ QString Case::toJSON()
     QString json;
     json += "{\n";
     json += "    \"name\": \"" + name() + "\",\n";
-    json += "    \"uniqueId\": " + uniqueId().toString() + ",\n";
+    json += "    \"uniqueId\": \"" + uniqueId().toString() + "\",\n";
     json += "    \"type\": " + QString::number(type) + ",\n";
     json += "    \"next\": [ ";
     for (int i = 0; i < next.size(); i++) {

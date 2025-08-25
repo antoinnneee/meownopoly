@@ -132,6 +132,8 @@ QString CaseRestArea::toJSON()
     QString json;
     json = CaseCatPerks::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"restQuality\": " + QString::number(m_restQuality) + ",\n";
     json += "    \"family\": " + QString::number(m_family) + ",\n";
     json += "    \"housePrice\": " + QString::number(m_housePrice) + ",\n";

@@ -45,6 +45,8 @@ QString CaseJail::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"jailFine\": " + QString::number(m_jailFine) + ",\n";
     json += "}";
     return json;

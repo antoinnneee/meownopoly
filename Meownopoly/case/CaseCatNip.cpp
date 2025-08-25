@@ -25,7 +25,8 @@ QString CaseCatNip::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
-    json += "}";
+    json.removeLast();
+    json += "\n}";
     return json;
 }
 

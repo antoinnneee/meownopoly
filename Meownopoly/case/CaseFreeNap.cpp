@@ -49,6 +49,8 @@ QString CaseFreeNap::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"kibbleAmount\": " + QString::number(m_kibbleAmount) + "\n";
     json += "}";
     return json;

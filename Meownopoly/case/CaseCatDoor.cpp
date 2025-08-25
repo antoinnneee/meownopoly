@@ -74,7 +74,8 @@ QString CaseCatDoor::toJSON()
     QString json;
     json = CaseCatPerks::toJSON();
     json.removeLast();
-    json += "    \"indexCatDoor\": " + QString::number(m_indexCatDoor) + ",\n";
+    json.removeLast();
+    json += ",\n    \"indexCatDoor\": " + QString::number(m_indexCatDoor) + ",\n";
     json += "    \"travelPrice\": " + QString::number(m_travelPrice) + "\n";
     json += "}";
     return json;

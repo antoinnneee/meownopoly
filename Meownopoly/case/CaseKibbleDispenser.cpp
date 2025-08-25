@@ -43,6 +43,8 @@ QString CaseKibbleDispenser::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"reward\": " + QString::number(m_reward) + "\n";
     json += "}";
     return json;

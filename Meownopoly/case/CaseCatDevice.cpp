@@ -55,7 +55,8 @@ QString CaseCatDevice::toJSON()
     QString json;
     json = CaseCatPerks::toJSON();
     json.removeLast();
-    json += "    \"taxe\": " + QString::number(m_taxe) + "\n";
+    json.removeLast();
+    json += ",\n    \"taxe\": " + QString::number(m_taxe) + "\n";
     json += "}";
     return json;
 }
