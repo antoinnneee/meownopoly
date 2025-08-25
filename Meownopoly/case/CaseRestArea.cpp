@@ -26,17 +26,16 @@ CaseRestArea::CaseRestArea(CASECATPERKS_DEFAULT_PARAMETER_NOP, FamilyType family
     setType(Case::CS_RestArea);
 }
 
-CaseRestArea::CaseRestArea(const QJsonDocument &json, QObject *parent)
+CaseRestArea::CaseRestArea(const QJsonObject &json, QObject *parent)
     : CaseCatPerks(json, parent)
 {
     setType(Case::CS_RestArea);
 
-    QJsonObject obj = json.object();
-    m_restQuality = (enum RestQuality) obj["restQuality"].toInt();
-    m_family = (enum FamilyType) obj["family"].toInt();
-    m_housePrice = obj["housePrice"].toInt();
-    m_hotelPrice = obj["hotelPrice"].toInt();
-    QJsonArray rentPriceArray = obj["rentPrice"].toArray();
+    m_restQuality = (enum RestQuality) json["restQuality"].toInt();
+    m_family = (enum FamilyType) json["family"].toInt();
+    m_housePrice = json["housePrice"].toInt();
+    m_hotelPrice = json["hotelPrice"].toInt();
+    QJsonArray rentPriceArray = json["rentPrice"].toArray();
     for (const QJsonValue &value : rentPriceArray) {
         m_rentPrice.append(value.toInt());
     }
@@ -133,6 +132,8 @@ QString CaseRestArea::toJSON()
     QString json;
     json = CaseCatPerks::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"restQuality\": " + QString::number(m_restQuality) + ",\n";
     json += "    \"family\": " + QString::number(m_family) + ",\n";
     json += "    \"housePrice\": " + QString::number(m_housePrice) + ",\n";

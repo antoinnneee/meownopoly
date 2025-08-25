@@ -79,18 +79,19 @@ QString CaseCatPerks::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"price\": " + QString::number(price()) + ",\n";
     json += "    \"sellPrice\": " + QString::number(sellPrice()) + ",\n";
-    json += "    \"morgagePrice\": " + QString::number(morgagePrice()) + ",\n";
+    json += "    \"morgagePrice\": " + QString::number(morgagePrice()) + "\n";
     json += "}";
     return json;
 }
 
-CaseCatPerks::CaseCatPerks(const QJsonDocument &json, QObject *parent)
+CaseCatPerks::CaseCatPerks(const QJsonObject &json, QObject *parent)
     : Case(json, parent)
 {
-    QJsonObject obj = json.object();
-    m_price = obj["price"].toInt();
-    m_sellPrice = obj["sellPrice"].toInt();
-    m_morgagePrice = obj["morgagePrice"].toInt();
+    m_price = json["price"].toInt();
+    m_sellPrice = json["sellPrice"].toInt();
+    m_morgagePrice = json["morgagePrice"].toInt();
 }

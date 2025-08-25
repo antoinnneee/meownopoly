@@ -7,7 +7,7 @@ CaseJail::CaseJail(const QString &name, QUuid uniqueId, int jailFine)
     setType(Case::CS_Jail);
 }
 
-CaseJail::CaseJail(const QJsonDocument &json, QObject *parent)
+CaseJail::CaseJail(const QJsonObject &json, QObject *parent)
     : Case(json, parent)
 {
     setType(Case::CS_Jail);
@@ -45,6 +45,8 @@ QString CaseJail::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"jailFine\": " + QString::number(m_jailFine) + ",\n";
     json += "}";
     return json;

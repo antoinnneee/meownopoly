@@ -10,7 +10,7 @@ class CaseCatNip : public Case {
 public:
     explicit CaseCatNip(QObject *parent = nullptr);
     CaseCatNip(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
-    CaseCatNip(const QJsonDocument &json, QObject *parent = nullptr);
+    CaseCatNip(const QJsonObject &json, QObject *parent = nullptr);
     ~CaseCatNip() override = default;
 
     // void onLand(Player* player) override;

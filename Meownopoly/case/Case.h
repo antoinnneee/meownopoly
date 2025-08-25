@@ -2,6 +2,7 @@
 #define CASE_H
 
 #include <QObject>
+#include <QQmlEngine>
 #include <QString>
 #include "player.h"
 #include <QJsonDocument>
@@ -35,7 +36,7 @@ public:
     
     explicit Case(QObject *parent = nullptr);
     Case(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
-    Case(const QJsonDocument &json, QObject *parent = nullptr);
+    Case(const QJsonObject &json, QObject *parent = nullptr);
 
 
 
@@ -105,5 +106,6 @@ protected:
 
 
 };
+Q_DECLARE_METATYPE(Case)
 
 #endif // CASE_H

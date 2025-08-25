@@ -14,7 +14,7 @@ CaseCatNip::CaseCatNip(const QString &name, QUuid uniqueId, QObject *parent)
     setType(Case::CS_CatNip);
 }
 
-CaseCatNip::CaseCatNip(const QJsonDocument &json, QObject *parent)
+CaseCatNip::CaseCatNip(const QJsonObject &json, QObject *parent)
     : Case(json, parent)
 {
     setType(Case::CS_CatNip);
@@ -25,7 +25,8 @@ QString CaseCatNip::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
-    json += "}";
+    json.removeLast();
+    json += "\n}";
     return json;
 }
 

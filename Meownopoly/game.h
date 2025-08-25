@@ -72,7 +72,7 @@ public:
 
     // JSON Case Management
 
-    Q_INVOKABLE bool saveMap(const QVariantMap &mapInfo, QList<Case *> caseInfo, const QVariantMap &decoInfo);
+    Q_INVOKABLE bool saveMap(const QMap<QString,QVariant> &mapInfo, QList<Case *> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo);
 
     Q_INVOKABLE bool saveCaseToJson(const QVariantMap &caseData);
     Q_INVOKABLE bool saveMultipleCasesToJson(const QVariantList &casesData);

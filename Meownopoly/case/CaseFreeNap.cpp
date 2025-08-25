@@ -14,7 +14,7 @@ CaseFreeNap::CaseFreeNap(const QString &name, QUuid uniqueId, QObject *parent)
     setType(Case::CS_FreeNap);
 }
 
-CaseFreeNap::CaseFreeNap(const QJsonDocument &json, QObject *parent)
+CaseFreeNap::CaseFreeNap(const QJsonObject &json, QObject *parent)
     : Case(json, parent)
 {
     setType(Case::CS_FreeNap);
@@ -49,6 +49,8 @@ QString CaseFreeNap::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
+    json.removeLast();
+    json+= ",\n";
     json += "    \"kibbleAmount\": " + QString::number(m_kibbleAmount) + "\n";
     json += "}";
     return json;

@@ -11,7 +11,7 @@ class CaseCatDoor : public CaseCatPerks {
 
 public:
     CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER);
-    CaseCatDoor(const QJsonDocument &json, QObject *parent = nullptr);
+    CaseCatDoor(const QJsonObject &json, QObject *parent = nullptr);
     ~CaseCatDoor() override = default;
 
     Q_INVOKABLE bool buyCase(Player *buyer);

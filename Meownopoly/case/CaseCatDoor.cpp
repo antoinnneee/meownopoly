@@ -9,17 +9,13 @@ CaseCatDoor::CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER_NOP)
     setType(Case::CS_CatDoor);
 }
 
-CaseCatDoor::CaseCatDoor(const QJsonDocument &json, QObject *parent)
+CaseCatDoor::CaseCatDoor(const QJsonObject &json, QObject *parent)
     : CaseCatPerks(json, parent)
 {
     setType(Case::CS_CatDoor);
     
-    QJsonObject obj = json.object();
-    m_name = obj["name"].toString();
-    m_uniqueId = QUuid::fromString(obj["uniqueId"].toString());
-    type = intToCaseType(obj["type"].toInt());
-    m_indexCatDoor = obj["indexCatDoor"].toInt();
-    m_travelPrice = obj["travelPrice"].toInt();
+    m_indexCatDoor = json["indexCatDoor"].toInt();
+    m_travelPrice = json["travelPrice"].toInt();
 }
 
 bool CaseCatDoor::buyCase(Player *buyer)
@@ -78,7 +74,8 @@ QString CaseCatDoor::toJSON()
     QString json;
     json = CaseCatPerks::toJSON();
     json.removeLast();
-    json += "    \"indexCatDoor\": " + QString::number(m_indexCatDoor) + ",\n";
+    json.removeLast();
+    json += ",\n    \"indexCatDoor\": " + QString::number(m_indexCatDoor) + ",\n";
     json += "    \"travelPrice\": " + QString::number(m_travelPrice) + "\n";
     json += "}";
     return json;

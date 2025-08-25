@@ -24,6 +24,7 @@
 #include <QDebug>
 #include <QVariant>
 
+#include "item_snapable/ItemSnapable.h"
 #include "game.h"
 
 Game *Game::m_pThis = nullptr;
@@ -52,14 +53,81 @@ QList<Card *> Game::listCards() const
     return m_listCards;
 }
 
-bool Game::saveMap(const QVariantMap &mapInfo, QList<Case*> caseInfo, const QVariantMap &decoInfo)
+bool Game::saveMap(const QMap<QString,QVariant> &mapInfo, QList<Case*> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo)
 {
-    bool flag = false;
-    for (int i = 0; i < caseInfo.size(); ++i) {
-        qDebug() << caseInfo[i]->toJSON();
+    // Construire l'objet JSON avec une structure propre
+    QJsonObject jsonObject;
+    
+    // Ajouter les informations de la map
+    QString mapName = mapInfo.value("name").toString();
+    jsonObject["name"] = mapName;
+    if (mapInfo.contains("version")) {
+        jsonObject["version"] = mapInfo.value("version").toString();
     }
+    if (mapInfo.contains("description")) {
+        jsonObject["description"] = mapInfo.value("description").toString();
+    }
+    
+    // Créer le tableau des snapableTiles
+    QJsonArray snapableTilesArray;
+    
+    for (int i = 0; i < caseInfo.size(); ++i) {
+        DisplayParameter dp;
+        dp.setUnitSizeWidth(caseDisplayInfo[i]["unitSizeWidth"].toInt());
+        dp.setUnitSizeHeight(caseDisplayInfo[i]["unitSizeHeight"].toInt());
+        dp.setGridRelativePositionX(caseDisplayInfo[i]["gridRelativePositionX"].toInt());
+        dp.setGridRelativePositionY(caseDisplayInfo[i]["gridRelativePositionY"].toInt());
+        dp.setZLayer(caseDisplayInfo[i]["zLayer"].toInt());
 
-    return false;
+        ItemSnapable is(caseInfo[i], &dp);
+        
+        // Parser le JSON de l'ItemSnapable et l'ajouter au tableau
+        QJsonParseError parseError;
+        QString ISjsonDoc = is.toJSON();
+        QJsonDocument tileDoc = QJsonDocument::fromJson(ISjsonDoc.toUtf8(), &parseError);
+        if (parseError.error == QJsonParseError::NoError && tileDoc.isObject()) {
+            snapableTilesArray.append(tileDoc.object());
+        } else {
+            qDebug().noquote() << "Error parsing ItemSnapable JSON:" << parseError.errorString()<< "\n" << ISjsonDoc;
+        }
+    }
+    
+    jsonObject["snapableTiles"] = snapableTilesArray;
+    
+    // Ajouter les informations de décoration si présentes
+    if (!decoInfo.isEmpty()) {
+        QJsonObject decoObject;
+        for (auto it = decoInfo.begin(); it != decoInfo.end(); ++it) {
+            decoObject[it.key()] = QJsonValue::fromVariant(it.value());
+        }
+        jsonObject["decoration"] = decoObject;
+    }
+    
+    // Créer le document JSON avec indentation
+    QJsonDocument jsonDoc(jsonObject);
+    QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Indented);
+    
+    // Sauvegarder le fichier JSON
+    QString fileName = mapName.toLower().replace(" ", "_") + "_map.json";
+    QFile file(fileName);
+    
+    if (!file.open(QIODevice::WriteOnly)) {
+        qDebug() << "Failed to open file for writing:" << fileName;
+        return false;
+    }
+    
+    qint64 bytesWritten = file.write(jsonData);
+    file.close();
+    
+    if (bytesWritten == -1) {
+        qDebug() << "Failed to write to file:" << fileName;
+        return false;
+    }
+    
+    qDebug() << "Map saved successfully to:" << fileName;
+    qDebug().noquote() << QString::fromUtf8(jsonData);
+
+    return true;
 }
 
 Case **Game::listCases() const

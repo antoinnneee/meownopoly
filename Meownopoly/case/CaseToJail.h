@@ -10,7 +10,7 @@ class CaseToJail : public Case {
 public:
     explicit CaseToJail(QObject *parent = nullptr);
     CaseToJail(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
-    CaseToJail(const QJsonDocument &json, QObject *parent = nullptr);
+    CaseToJail(const QJsonObject &json, QObject *parent = nullptr);
 
     // void onLand(Player* player) override;
     void setJailCase(CaseJail* jailCase);
