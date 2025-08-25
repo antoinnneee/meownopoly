@@ -138,7 +138,7 @@ Rectangle {
             text: "Créer une Case"
             onTriggered: {
                 console.log(contextMenu.clickGridCoord)
-                logic.createNewTileAtPosition(Case.CS_KibbleDispenser, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Case)
+                logic.createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Case)
             }
         }
 

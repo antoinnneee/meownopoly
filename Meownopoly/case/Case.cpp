@@ -86,12 +86,12 @@ QString Case::toJSON()
     json += "    \"type\": " + QString::number(type) + ",\n";
     json += "    \"next\": [ ";
     for (int i = 0; i < next.size(); i++) {
-        json += next.at(i)->uniqueId().toString() + (i < next.size() - 1 ? ", " : "");
+        json += "\"" + next.at(i)->uniqueId().toString() + "\"" + (i < next.size() - 1 ? ", " : "");
     }
     json += "],\n";
     json += "    \"prev\": [ ";
     for (int i = 0; i < prev.size(); i++) {
-        json += prev.at(i)->uniqueId().toString() + (i < prev.size() - 1 ? ", " : "");
+        json += "\"" + prev.at(i)->uniqueId().toString() + "\"" + (i < prev.size() - 1 ? ", " : "");
     }
     json += "]\n";
     json += "}";

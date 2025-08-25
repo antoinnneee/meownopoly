@@ -7,8 +7,16 @@ Item {
     property var previousElements: []
     property var nextElements: []
 
+    signal nextElementAdded(var element)
+    signal previousElementAdded(var element)
+    signal nextElementRemoved(var element)
+    signal previousElementRemoved(var element)
+
     onNextElementsChanged: {
         nextElementsSegments.updateModel()
+
+    }
+    onPreviousElementsChanged: {
     }
     // Segments de connexion (fromItem -> toItem)
     ListModel {
@@ -65,21 +73,27 @@ Item {
     }
 
     function addPreviousElement(element) {
+        console.log(" function addPreviousElement(element)")
         if (element && !previousElements.includes(element)) {
             // Réaffecter pour notifier QML
             previousElements = previousElements.concat([element])
+            previousElementAdded(element)
             if (element.connectionManager && !element.connectionManager.nextElements.includes(parentElement)) {
                 element.connectionManager.nextElements = element.connectionManager.nextElements.concat([parentElement])
+                element.connectionManager.nextElementAdded(parentElement)
             }
         }
     }
 
     function addNextElement(element) {
+        console.log(" function addNextElement(element)")
         if (element && !nextElements.includes(element)) {
             // Réaffecter pour notifier QML
             nextElements = nextElements.concat([element])
+            nextElementAdded(element)
             if (element.connectionManager && !element.connectionManager.previousElements.includes(parentElement)) {
                 element.connectionManager.previousElements = element.connectionManager.previousElements.concat([parentElement])
+                element.connectionManager.previousElementAdded(parentElement)
             }
         }
     }
@@ -88,7 +102,13 @@ Item {
         var index = previousElements.indexOf(element)
         if (index !== -1) {
             previousElements.splice(index, 1)
+            previousElementRemoved(element)
+            if (element.connectionManager && element.connectionManager.nextElements.includes(parentElement)) {
+                element.connectionManager.nextElements.splice(element.connectionManager.nextElements.indexOf(parentElement), 1)
+                element.connectionManager.nextElementRemoved(parentElement)
+            }
         }
+
     }
 
     function removeNextElement(element) {
@@ -96,6 +116,11 @@ Item {
         if (index !== -1) {
             nextElements.splice(index, 1)
             nextElementsSegments.updateModel()
+            nextElementRemoved(element)
+            if (element.connectionManager && element.connectionManager.previousElements.includes(parentElement)) {
+                element.connectionManager.previousElements.splice(element.connectionManager.previousElements.indexOf(parentElement), 1)
+                element.connectionManager.previousElementRemoved(parentElement)
+            }
         }
     }
 

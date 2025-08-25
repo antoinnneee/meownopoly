@@ -12,6 +12,7 @@ ConfigPanelElement {
     property alias caseRestAreaFamilyConfig: caseRestAreaFamilyConfig
     property alias caseCatPerksConfig: caseCatPerksConfig
     property alias caseRentConfig: caseRentConfig
+    property alias caseHouseHotelPriceConfig: caseHouseHotelPriceConfig
 
     // Fonction pour mettre à jour tous les contrôles
     function updateControls() {
@@ -19,6 +20,7 @@ ConfigPanelElement {
         caseCatPerksConfig.updateControls()
         caseRestAreaFamilyConfig.updateControls()
         caseRentConfig.updateControls()
+        caseHouseHotelPriceConfig.updateControls()
     }
     ColumnLayout {
         anchors.fill: parent
@@ -45,6 +47,13 @@ ConfigPanelElement {
         // Configuration des prix CaseCatPerks
         CaseCatPerksConfig {
             id: caseCatPerksConfig
+            targetCase: root.targetCase
+            Layout.fillWidth: true
+        }
+
+        // Prix d'achat des améliorations (maisons/hôtels)
+        CaseHouseHotelPriceConfig {
+            id: caseHouseHotelPriceConfig
             targetCase: root.targetCase
             Layout.fillWidth: true
         }

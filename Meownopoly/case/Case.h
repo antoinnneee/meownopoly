@@ -73,15 +73,15 @@ public:
     bool isNextEmpty(){return next.isEmpty();}
     bool isPrevEmpty(){return prev.isEmpty();}
 
-    Case *getNext(int userSelectNext);
-    void addNext(Case *newNext);
-    bool removeNext(Case *caseToRemove); // Nouvelle fonction
-    bool removeNextAt(int index); // Nouvelle fonction
+    Q_INVOKABLE Case *getNext(int userSelectNext);
+    Q_INVOKABLE void addNext(Case *newNext);
+    Q_INVOKABLE bool removeNext(Case *caseToRemove); // Nouvelle fonction
+    Q_INVOKABLE  bool removeNextAt(int index); // Nouvelle fonction
 
-    Case *getPrev(int userSelectPrev);
-    void addPrev(Case *newPrev);
-    bool removePrev(Case *caseToRemove); // Nouvelle fonction
-    bool removePrevAt(int index); // Nouvelle fonction
+    Q_INVOKABLE Case *getPrev(int userSelectPrev);
+    Q_INVOKABLE void addPrev(Case *newPrev);
+    Q_INVOKABLE bool removePrev(Case *caseToRemove); // Nouvelle fonction
+    Q_INVOKABLE bool removePrevAt(int index); // Nouvelle fonction
 
     QList<Case*> next = QList<Case*>();
     QList<Case*> prev = QList<Case*>();

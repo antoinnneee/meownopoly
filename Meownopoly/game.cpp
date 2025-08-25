@@ -104,13 +104,20 @@ DisplayParameter *Game::getDisplayerParameter(const QVariantMap &displayInfoMap)
     return dp;
 }
 
-bool Game::registerMap(QVariantList mapInfo, QVariantList caseList, QVariantList decorationList)
+bool Game::registerMap(QVariantMap mapInfo, QVariantList caseList, QVariantList decorationList)
 {
     QJsonArray snapableTilesArray;
 
     // Ajouter les informations de la map
     QJsonObject jsonObject;
-    jsonObject["name"] = "mapName";
+    
+    // Extraire le nom de la map du QVariantMap
+    QString mapName = "mapName"; // valeur par défaut
+    if (mapInfo.contains("name")) {
+        mapName = mapInfo["name"].toString();
+    }
+
+    jsonObject["name"] = mapName;
     jsonObject["version"] = "version X";
     jsonObject["description"] = "description X";
 
@@ -132,7 +139,7 @@ bool Game::registerMap(QVariantList mapInfo, QVariantList caseList, QVariantList
     }
     
     jsonObject["snapableTiles"] = snapableTilesArray;
-    addTileToJson(jsonObject, "mapName");
+    addTileToJson(jsonObject, mapName);
     return true;
 }
 

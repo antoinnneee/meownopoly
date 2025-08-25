@@ -41,7 +41,6 @@
         <file>qml/editor/tools/SnapableCaseTile.qml</file>
         <file>qml/editor/CreationPanel.qml</file>
         <file>qml/editor/InfoPanel.qml</file>
-        <file>qml/editor/tools/MyGridControlPanel.qml</file>
         <file>qml/editor/tools/SnapableDecoration.qml</file>
         <file>qml/editor/CaseConfigurationPanel.qml</file>
         <file>qml/editor/panel/CaseCatPerksConfig.qml</file>
@@ -89,5 +88,6 @@
         <file>qml/item_icon/LayerVisualizer.qml</file>
         <file>qml/editor/tools/SnapableCharacter.qml</file>
         <file>qml/editor/tools/GridControlPopupAsset.qml</file>
+        <file>qml/editor/panel/CaseHouseHotelPriceConfig.qml</file>
     </qresource>
 </RCC>

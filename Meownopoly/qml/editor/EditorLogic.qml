@@ -25,8 +25,8 @@ QtObject {
     property int defaultCaseType: Case.CS_KibbleDispenser
 
     // Propriétés pour la taille des éléments créés
-    property int currentElementWidth: 6
-    property int currentElementHeight: 6
+    property int currentElementWidth: 3
+    property int currentElementHeight: 4
     
     property string mapName
     property int mmSize : 20
@@ -100,6 +100,12 @@ QtObject {
         currentSelectedElement = null
     }
 
+
+/*
+============================
+= Gestion des connections =
+============================
+*/
     function deleteElementsConnections(element) {
         var nexts = element.connectionManager.nextElements || []
         // itere sur les segments de connexion element->next
