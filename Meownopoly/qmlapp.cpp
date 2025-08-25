@@ -54,10 +54,8 @@ QmlApp::QmlApp(QWindow *parent)
     rootContext()->setContextProperty("appInstance", this);
     
     // Create and expose AssetManager instance to QML
-    assetManager = new AssetManager(this);
-    rootContext()->setContextProperty("AssetManager", assetManager);
+    assetManager = AssetManager::instance();
     assetManager->setAssetsBasePath(m_assetsPath);
-    assetManager->loadAssets();
 
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();

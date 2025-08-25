@@ -7,7 +7,7 @@
 #include <QImageReader>
 #include <algorithm>
 
-AssetManager* AssetManager::s_instance = nullptr;
+AssetManager* AssetManager::m_pThis = nullptr;
 
 // AssetModel Implementation
 AssetModel::AssetModel(QObject *parent)
@@ -114,21 +114,31 @@ AssetManager::AssetManager(QObject *parent)
     , m_playerIconModel(new AssetModel(this))
     , m_assetsBasePath("asset_extracted/")
 {
-    s_instance = this;
+    m_pThis = this;
+    loadAssets();
 }
 
 void AssetManager::registerQml()
 {
-    qmlRegisterType<AssetManager>("AssetManager", 1, 0, "AssetManager");
+    qmlRegisterSingletonType<AssetManager>("AssetManager", 1, 0, "AssetManager", &AssetManager::qmlInstance);
     qmlRegisterUncreatableType<AssetModel>("AssetManager", 1, 0, "AssetModel", "AssetModel cannot be created from QML");
 }
 
 AssetManager* AssetManager::instance()
 {
-    if (!s_instance) {
-        s_instance = new AssetManager();
+    if (m_pThis == nullptr) // avoid creation of new instances
+    {
+        m_pThis = new AssetManager();
     }
-    return s_instance;
+    return m_pThis;
+}
+
+QObject* AssetManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+    // C++ and QML instance they are the same instance
+    return AssetManager::instance();
 }
 
 AssetModel* AssetManager::getTypeModel(const QString &category, const QString &type)

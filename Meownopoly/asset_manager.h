@@ -72,6 +72,7 @@ public:
     explicit AssetManager(QObject *parent = nullptr);
     static void registerQml();
     static AssetManager* instance();
+    static QObject* qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
     // Property getters
     AssetModel* decorationModel() const { return m_decorationModel; }
@@ -105,7 +106,7 @@ private:
     AssetModel *m_decorationModel;
     AssetModel *m_playerIconModel;
     QString m_assetsBasePath;
-    static AssetManager *s_instance;
+    static AssetManager *m_pThis;
     
     // Cache for filtered models
     mutable QHash<QString, AssetModel*> m_filteredModels;

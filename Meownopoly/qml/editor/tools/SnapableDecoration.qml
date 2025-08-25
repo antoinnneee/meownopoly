@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import "snapable"
+import AssetManager
 
 SnapableElement {
     // Configuration du redimensionnement
@@ -14,10 +15,13 @@ SnapableElement {
 
 
     property string decorationType: "grass"  // Can be "grass" or "tree"
-    property string decorationId: "1"  // Asset ID to use
-    property int randomImageIndex: Math.floor(Math.random() * 6)  // Random number between 0 and 3
-    property string imagePath: appInstance.getAssetPath("decoration/grass/" + randomImageIndex + ".png")
+    property var decorationModel : AssetManager.getTypeModel("decoration", decorationType)
+    property string decorationId: Math.floor(Math.random() * decorationModel.rowCount())
+    property string imagePath: AssetManager.getDecorationPath(decorationType, decorationId)
+
     Component.onCompleted: {
+        console.log("Decoration created with model:", decorationModel)
+        console.log("model length:", decorationModel.rowCount())
         type = 1
     }
 
@@ -32,11 +36,9 @@ SnapableElement {
         smooth: true
         mipmap: true  // Enable mipmapping for better quality when scaling down
 
-        // Fallback to old system if AssetManager path fails
         onStatusChanged: {
             if (status === Image.Error) {
                 console.log("AssetManager path failed, falling back to legacy system")
-                source = appInstance.getAssetPath("element/" + decorationType + "/" + decorationId + ".png")
             }
         }
     }
