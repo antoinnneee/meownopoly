@@ -3,13 +3,13 @@
 #include "../player.h"
 
 CaseCatNip::CaseCatNip(QObject *parent)
-    : Case("Cat Nip", -1, parent)
+    : Case("Cat Nip", QUuid::createUuid(), parent)
 {
     setType(Case::CS_CatNip);
 }
 
-CaseCatNip::CaseCatNip(const QString &name, int position, QObject *parent)
-    : Case(name, position, parent)
+CaseCatNip::CaseCatNip(const QString &name, QUuid uniqueId, QObject *parent)
+    : Case(name, uniqueId, parent)
 {
     setType(Case::CS_CatNip);
 }

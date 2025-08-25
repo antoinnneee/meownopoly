@@ -56,10 +56,7 @@ bool Game::saveMap(const QVariantMap &mapInfo, QList<Case*> caseInfo, const QVar
 {
     bool flag = false;
     for (int i = 0; i < caseInfo.size(); ++i) {
-        // QVariantMap caseData = caseInfo[i].toMap();
-        // Case *currentCase = caseInfo[i].data();
         qDebug() << caseInfo[i]->toJSON();
-
     }
 
     return false;
@@ -131,11 +128,11 @@ Case *Game::getNewCase(const QStringList &currentCaseJson) {
     int position = currentCaseJson[2].toInt();
 
     Case* newCase = nullptr;
-
+    QUuid uniqueId = QUuid::createUuid();
     switch (type) {
     case 0: // Start (Départ)
     {
-        newCase = new CaseKibbleDispenser(name, position, 200, this);
+        newCase = new CaseKibbleDispenser(name, uniqueId , 200, this);
         break;
     }
     case 1: // Property (RestArea)
@@ -153,53 +150,53 @@ Case *Game::getNewCase(const QStringList &currentCaseJson) {
             rentPrices << rent;
         }
 
-        newCase = new CaseRestArea(name, position, mortgagePrice, price, price, this,
+        newCase = new CaseRestArea(name, uniqueId, mortgagePrice, price, price, this,
                                    static_cast<CaseRestArea::FamilyType>(family), housePrice, hotelPrice, rentPrices);
         break;
     }
     case 2: // Community Chest (Caisse de Communauté)
     {
-        newCase = new CaseCardBoardBox(name, position, this);
+        newCase = new CaseCardBoardBox(name, uniqueId, this);
         break;
     }
     case 3: // Chance
     {
-        newCase = new CaseCatNip(name, position, this);
+        newCase = new CaseCatNip(name, uniqueId, this);
         break;
     }
     case 4: // Jail (Prison)
     {
-        newCase = new CaseJail(name, position, 50); // Default fine of 50
+        newCase = new CaseJail(name, uniqueId, 50); // Default fine of 50
         break;
     }
     case 5: // Go to Jail (Allez en Prison)
     {
-        newCase = new CaseToJail(name, position, this);
+        newCase = new CaseToJail(name, uniqueId, this);
         break;
     }
     case 6: // Railroad (Gare)
     {
         int price = currentCaseJson[3].isEmpty() ? 0 : currentCaseJson[3].toInt();
         int mortgagePrice = currentCaseJson[4].isEmpty() ? 0 : currentCaseJson[4].toInt();
-        newCase = new CaseCatDoor(name, position, mortgagePrice, price, price, this);
+        newCase = new CaseCatDoor(name, uniqueId, mortgagePrice, price, price, this);
         break;
     }
     case 7: // Free Parking (Parc Gratuit)
     {
-        newCase = new CaseFreeNap(name, position, this);
+        newCase = new CaseFreeNap(name, uniqueId, this);
         break;
     }
     case 8: // Utility (Compagnie)
     {
         int price = currentCaseJson[3].isEmpty() ? 0 : currentCaseJson[3].toInt();
         int mortgagePrice = currentCaseJson[4].isEmpty() ? 0 : currentCaseJson[4].toInt();
-        newCase = new CaseCatDevice(name, position, mortgagePrice, price, price, this, 0);
+        newCase = new CaseCatDevice(name, uniqueId, mortgagePrice, price, price, this, 0);
         break;
     }
     case 9: // Tax (Taxe)
     {
         int taxAmount = currentCaseJson[13].isEmpty() ? 0 : currentCaseJson[13].toInt();
-        newCase = new CaseKibbleDispenser(name, position, -taxAmount, this);
+        newCase = new CaseKibbleDispenser(name, uniqueId, -taxAmount, this);
         break;
     }
     default:
@@ -344,31 +341,31 @@ Case *Game::getNewCaseType(Case::CaseType type)
         break;
     }
     case Case::CS_KibbleDispenser:
-        newCase = new CaseKibbleDispenser("test KibbleDispenser", 0, 200);
+        newCase = new CaseKibbleDispenser("test KibbleDispenser", QUuid::createUuid(), 200);
         break;
     case Case::CS_CardBoardBox:
-        newCase = new CaseCardBoardBox("test CardBoardBox", 0);
+        newCase = new CaseCardBoardBox("test CardBoardBox", QUuid::createUuid());
         break;
     case Case::CS_CatNip:
-        newCase = new CaseCatNip("test CatNip", 0);
+        newCase = new CaseCatNip("test CatNip", QUuid::createUuid());
         break;
     case Case::CS_Jail:
-        newCase = new CaseJail("test Jail", 0);
+        newCase = new CaseJail("test Jail", QUuid::createUuid());
         break;
     case Case::CS_ToJail:
-        newCase = new CaseToJail("test ToJail", 0);
+        newCase = new CaseToJail("test ToJail", QUuid::createUuid());
         break;
     case Case::CS_CatDoor:
-        newCase = new CaseCatDoor("test CatDoor", 0);
+        newCase = new CaseCatDoor("test CatDoor", QUuid::createUuid());
         break;
     case Case::CS_FreeNap:
-        newCase = new CaseFreeNap("test FreeNap", 0);
+        newCase = new CaseFreeNap("test FreeNap", QUuid::createUuid());
         break;
     case Case::CS_Device:
-        newCase = new CaseCatDevice("test CatDevice", 0);
+        newCase = new CaseCatDevice("test CatDevice", QUuid::createUuid());
         break;
     case Case::CS_Taxe:
-        newCase = new CaseKibbleDispenser("TAXE NOT IMPLEMENTED", 0);
+        newCase = new CaseKibbleDispenser("TAXE NOT IMPLEMENTED", QUuid::createUuid());
         break;
     default:
         qDebug() << "Unknown case type:" << type << "returning NULL";

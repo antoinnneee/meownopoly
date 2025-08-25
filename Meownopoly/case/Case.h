@@ -1,4 +1,4 @@
-    #ifndef CASE_H
+#ifndef CASE_H
 #define CASE_H
 
 #include <QObject>
@@ -6,7 +6,7 @@
 #include "player.h"
 #include <QJsonDocument>
 #include <QJsonObject>
-
+#include <QUuid>
 
 class Case : public QObject
 {
@@ -30,17 +30,17 @@ public:
     Q_ENUM(CaseType)
 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
-    Q_PROPERTY(int uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
+    Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(CaseType type READ getType WRITE setType NOTIFY typeChanged FINAL)
     
     explicit Case(QObject *parent = nullptr);
-    Case(const QString &name, int uniqueId, QObject *parent = nullptr);
+    Case(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
     Case(const QJsonDocument &json, QObject *parent = nullptr);
 
 
 
-    int uniqueId() const;
-    void setUniqueId(int newUniqueId);
+    QUuid uniqueId() const;
+    void setUniqueId(QUuid newUniqueId);
 
     CaseType getType() const;
     void setType(CaseType newType);
@@ -103,7 +103,7 @@ protected:
     QList<Player*> listPlayer;
 
     QString m_name = "Unknown";
-    int m_uniqueId = -1;
+    QUuid m_uniqueId = QUuid::createUuid();
     CaseType type = CS_Unknow;
 
 

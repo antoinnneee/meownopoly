@@ -9,7 +9,7 @@ class CaseCatNip : public Case {
 
 public:
     explicit CaseCatNip(QObject *parent = nullptr);
-    CaseCatNip(const QString &name, int position = -1, QObject *parent = nullptr);
+    CaseCatNip(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
     CaseCatNip(const QJsonDocument &json, QObject *parent = nullptr);
     ~CaseCatNip() override = default;
 

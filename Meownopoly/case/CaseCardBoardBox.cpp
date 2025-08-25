@@ -3,12 +3,12 @@
 #include "../player.h"
 
 CaseCardBoardBox::CaseCardBoardBox(QObject *parent)
-    : Case("Card Board Box", -1, parent)
+    : Case("Card Board Box", QUuid::createUuid(), parent)
 {
     setType(Case::CS_CardBoardBox);
 }
 
-CaseCardBoardBox::CaseCardBoardBox(const QString &name, int uniqueId, QObject *parent)
+CaseCardBoardBox::CaseCardBoardBox(const QString &name, QUuid uniqueId, QObject *parent)
     : Case(name, uniqueId, parent)
 {
     setType(Case::CS_CardBoardBox);

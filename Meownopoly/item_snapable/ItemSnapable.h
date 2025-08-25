@@ -16,7 +16,6 @@ public:
 
 private :
 
-
     int unitSizeWidth;
     int unitSizeHeight;
     int gridRelativePosition;

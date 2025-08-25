@@ -7,9 +7,8 @@
 
 // }
 
-CaseCatPerks::CaseCatPerks(const QString &name, int position, int morgagePrice, int price, int sellPrice, QObject *parent) :
-    Case(name, position), m_morgagePrice(morgagePrice), m_price(price) ,m_sellPrice(sellPrice) {
-
+CaseCatPerks::CaseCatPerks(const QString &name, QUuid id, int morgagePrice, int price, int sellPrice, QObject *parent) :
+    Case(name, id), m_morgagePrice(morgagePrice), m_price(price) ,m_sellPrice(sellPrice) {
 }
 
 bool CaseCatPerks::buyCase(Player *buyer)

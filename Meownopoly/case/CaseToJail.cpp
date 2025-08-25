@@ -4,12 +4,12 @@
 #include <QJsonObject>
 
 CaseToJail::CaseToJail(QObject *parent)
-    : Case("Go To Jail", -1, parent)
+    : Case("Go To Jail", QUuid::createUuid(), parent)
 {
     setType(Case::CS_ToJail);
 }
 
-CaseToJail::CaseToJail(const QString &name, int uniqueId, QObject *parent)
+CaseToJail::CaseToJail(const QString &name, QUuid uniqueId, QObject *parent)
     : Case(name, uniqueId, parent)
 {
     setType(Case::CS_ToJail);
@@ -40,7 +40,7 @@ QString CaseToJail::toJSON()
     QString json;
     json = Case::toJSON();
     json.removeLast();
-    json += "    \"jailCase\": " + QString::number(m_jailCase->uniqueId()) + "\n";
+    json += "    \"jailCase\":" + m_jailCase->uniqueId().toString()  + "\n";
     json += "}";
     return json;
 }

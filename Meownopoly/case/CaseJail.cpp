@@ -1,7 +1,7 @@
 #include "CaseJail.h"
 #include <QDebug>
 
-CaseJail::CaseJail(const QString &name, int uniqueId, int jailFine)
+CaseJail::CaseJail(const QString &name, QUuid uniqueId, int jailFine)
     : Case(name, uniqueId), m_jailFine(jailFine) {
 
     setType(Case::CS_Jail);
@@ -30,7 +30,6 @@ CaseJail::CaseJail(const QJsonDocument &json, QObject *parent)
 // }
 
 void CaseJail::sendToJail(Player* player) {
-    player->setPosition(uniqueId());
     player->setInJail(true);
     m_playersInJail[player] = 0;
 }

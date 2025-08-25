@@ -2,11 +2,12 @@
 #define CASECATPERKS_H
 
 #include <QObject>
+#include <QUuid>
 #include "case/Case.h"
 
-#define CASECATPERKS_DEFAULT_PARAMETER const QString &name, int uniqueId = -1, int morgagePrice = -1, int price = -1, int sellPrice = -1, QObject *parent = nullptr
-#define CASECATPERKS_DEFAULT_PARAMETER_NOP const QString &name, int uniqueId, int morgagePrice, int price, int sellPrice, QObject *parent
-#define CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER CaseCatPerks(name, uniqueId, price, sellPrice, morgagePrice, parent)
+#define CASECATPERKS_DEFAULT_PARAMETER const QString &name, QUuid id = QUuid::createUuid(), int morgagePrice = -1, int price = -1, int sellPrice = -1, QObject *parent = nullptr
+#define CASECATPERKS_DEFAULT_PARAMETER_NOP const QString &name, QUuid id, int morgagePrice, int price, int sellPrice, QObject *parent
+#define CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER CaseCatPerks(name, id, price, sellPrice, morgagePrice, parent)
 
 
 class CaseCatPerks : public Case

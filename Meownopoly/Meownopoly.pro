@@ -22,6 +22,7 @@ CONFIG += c++20
 
 
 SOURCES += \
+    Decoration.cpp \
     QtFolderCompressor/FolderCompressor.cpp \
     asset_manager.cpp \
     card.cpp \
@@ -49,6 +50,7 @@ SOURCES += \
     tools/appinfo.cpp
 
 HEADERS += \
+    Decoration.h \
     QtFolderCompressor/FolderCompressor.h \
     asset_manager.h \
     card.h \

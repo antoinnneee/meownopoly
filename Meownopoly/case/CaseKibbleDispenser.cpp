@@ -3,14 +3,14 @@
 #include "../player.h"
 
 CaseKibbleDispenser::CaseKibbleDispenser(QObject *parent)
-    : Case("Kibble Dispenser", -1, parent)
+    : Case("Kibble Dispenser", QUuid::createUuid(), parent)
 {
     setType(Case::CS_KibbleDispenser);
 
 }
 
-CaseKibbleDispenser::CaseKibbleDispenser(const QString &name, int position, int reward, QObject *parent)
-    : Case(name, position, parent), m_reward(reward)
+CaseKibbleDispenser::CaseKibbleDispenser(const QString &name, QUuid id, int reward, QObject *parent)
+    : Case(name, id, parent), m_reward(reward)
 {
     setType(Case::CS_KibbleDispenser);
 }

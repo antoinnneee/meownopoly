@@ -16,7 +16,7 @@ CaseCatDoor::CaseCatDoor(const QJsonDocument &json, QObject *parent)
     
     QJsonObject obj = json.object();
     m_name = obj["name"].toString();
-    m_uniqueId = obj["uniqueId"].toInt();
+    m_uniqueId = QUuid::fromString(obj["uniqueId"].toString());
     type = intToCaseType(obj["type"].toInt());
     m_indexCatDoor = obj["indexCatDoor"].toInt();
     m_travelPrice = obj["travelPrice"].toInt();

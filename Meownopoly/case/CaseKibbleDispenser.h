@@ -9,7 +9,7 @@ class CaseKibbleDispenser : public Case {
     Q_PROPERTY(int reward READ reward WRITE setReward NOTIFY rewardChanged FINAL)
 public:
     explicit CaseKibbleDispenser(QObject *parent = nullptr);
-    CaseKibbleDispenser(const QString &name, int uniqueId = -1, int reward = 200, QObject *parent = nullptr);
+    CaseKibbleDispenser(const QString &name, QUuid uniqueId = QUuid::createUuid(), int reward = 200, QObject *parent = nullptr);
     CaseKibbleDispenser(const QJsonDocument &json, QObject *parent = nullptr);
     int reward() const;
     void setReward(int newReward);

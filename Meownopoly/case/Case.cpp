@@ -3,30 +3,30 @@
 #include <QDebug>
 #include "game.h"
 
-    Case::Case(QObject *parent)
-    : QObject(parent), m_name("Unknown"),m_uniqueId(-42), type(Case::CS_Unknow) {}
+Case::Case(QObject *parent)
+    : QObject(parent), m_name("Unknown"),m_uniqueId(QUuid::createUuid()), type(Case::CS_Unknow) {}
 
-    Case::Case(const QString &name, int uniqueId, QObject *parent)
-        : QObject(parent), m_name(name),m_uniqueId(uniqueId), type(Case::CS_Unknow) {
-        
-    }
+Case::Case(const QString &name, QUuid uniqueId, QObject *parent)
+    : QObject(parent), m_name(name),m_uniqueId(uniqueId), type(Case::CS_Unknow) {
 
-    Case::Case(const QJsonDocument &json, QObject *parent)
-        : QObject(parent)
-    {
-        
-        QJsonObject obj = json.object();
-        m_name = obj["name"].toString();
-        m_uniqueId = obj["uniqueId"].toInt();
-        type = intToCaseType(obj["type"].toInt());
+}
 
-    }
+Case::Case(const QJsonDocument &json, QObject *parent)
+    : QObject(parent)
+{
 
-int Case::uniqueId() const {
+    QJsonObject obj = json.object();
+    m_name = obj["name"].toString();
+    m_uniqueId = QUuid::fromString(obj["uniqueId"].toString());
+    type = intToCaseType(obj["type"].toInt());
+
+}
+
+QUuid Case::uniqueId() const {
     return m_uniqueId;
 }
 
-void Case::setUniqueId(int newUniqueId)
+void Case::setUniqueId(QUuid newUniqueId)
 {
     m_uniqueId = newUniqueId;
     emit uniqueIdChanged();
@@ -83,16 +83,16 @@ QString Case::toJSON()
     QString json;
     json += "{\n";
     json += "    \"name\": \"" + name() + "\",\n";
-    json += "    \"uniqueId\": " + QString::number(uniqueId()) + ",\n";
+    json += "    \"uniqueId\": " + uniqueId().toString() + ",\n";
     json += "    \"type\": " + QString::number(type) + ",\n";
     json += "    \"next\": [ ";
     for (int i = 0; i < next.size(); i++) {
-        json += QString::number(next.at(i)->uniqueId()) + (i < next.size() - 1 ? ", " : "");
+        json += next.at(i)->uniqueId().toString() + (i < next.size() - 1 ? ", " : "");
     }
     json += "],\n";
     json += "    \"prev\": [ ";
     for (int i = 0; i < prev.size(); i++) {
-        json += QString::number(prev.at(i)->uniqueId()) + (i < prev.size() - 1 ? ", " : "");
+        json += prev.at(i)->uniqueId().toString() + (i < prev.size() - 1 ? ", " : "");
     }
     json += "]\n";
     json += "}";
@@ -119,17 +119,17 @@ void Case::removePlayer(Player *player)
 Case::CaseType Case::intToCaseType(int type)
 {
     switch (type) {
-        case 0: return CS_KibbleDispenser;  // Start (Départ)
-        case 1: return CS_RestArea;         // Property (Terrain)
-        case 2: return CS_CardBoardBox;     // Community Chest (Caisse de Communauté)
-        case 3: return CS_CatNip;           // Chance
-        case 4: return CS_Jail;             // Jail (Prison)
-        case 5: return CS_ToJail;           // Go to Jail (Allez en Prison)
-        case 6: return CS_CatDoor;          // Railroad (Gare)
-        case 7: return CS_FreeNap;          // Free Parking (Parc Gratuit)
-        case 8: return CS_Device;           // Utility (Service/Compagnie)
-        case 9: return CS_Taxe;             // Tax (Taxe)
-        default: return CS_Unknow;          // Unknown type
+    case 0: return CS_KibbleDispenser;  // Start (Départ)
+    case 1: return CS_RestArea;         // Property (Terrain)
+    case 2: return CS_CardBoardBox;     // Community Chest (Caisse de Communauté)
+    case 3: return CS_CatNip;           // Chance
+    case 4: return CS_Jail;             // Jail (Prison)
+    case 5: return CS_ToJail;           // Go to Jail (Allez en Prison)
+    case 6: return CS_CatDoor;          // Railroad (Gare)
+    case 7: return CS_FreeNap;          // Free Parking (Parc Gratuit)
+    case 8: return CS_Device;           // Utility (Service/Compagnie)
+    case 9: return CS_Taxe;             // Tax (Taxe)
+    default: return CS_Unknow;          // Unknown type
     }
 }
 
