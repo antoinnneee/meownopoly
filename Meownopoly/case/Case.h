@@ -64,8 +64,6 @@ public:
     Q_INVOKABLE virtual QString toJSON();
 
 
-
-
 // ---- CHAINED LIST MANIPULATION ----
 
     bool addNode();

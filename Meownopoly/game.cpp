@@ -53,80 +53,86 @@ QList<Card *> Game::listCards() const
     return m_listCards;
 }
 
-bool Game::saveMap(const QMap<QString,QVariant> &mapInfo, QList<Case*> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo)
+QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray)
 {
-    // Construire l'objet JSON avec une structure propre
-    QJsonObject jsonObject;
-    
-    // Ajouter les informations de la map
-    QString mapName = mapInfo.value("name").toString();
-    jsonObject["name"] = mapName;
-    if (mapInfo.contains("version")) {
-        jsonObject["version"] = mapInfo.value("version").toString();
+    QJsonParseError parseError;
+    QString ISjsonDoc = is.toJSON();
+    QJsonDocument tileDoc = QJsonDocument::fromJson(ISjsonDoc.toUtf8(), &parseError);
+    if (parseError.error == QJsonParseError::NoError && tileDoc.isObject()) {
+        snapableTilesArray.append(tileDoc.object());
+    } else {
+        qDebug().noquote() << "Error parsing ItemSnapable JSON:" << parseError.errorString()<< "\n" << ISjsonDoc;
     }
-    if (mapInfo.contains("description")) {
-        jsonObject["description"] = mapInfo.value("description").toString();
-    }
-    
-    // Créer le tableau des snapableTiles
-    QJsonArray snapableTilesArray;
-    
-    for (int i = 0; i < caseInfo.size(); ++i) {
-        DisplayParameter dp;
-        dp.setUnitSizeWidth(caseDisplayInfo[i]["unitSizeWidth"].toInt());
-        dp.setUnitSizeHeight(caseDisplayInfo[i]["unitSizeHeight"].toInt());
-        dp.setGridRelativePositionX(caseDisplayInfo[i]["gridRelativePositionX"].toInt());
-        dp.setGridRelativePositionY(caseDisplayInfo[i]["gridRelativePositionY"].toInt());
-        dp.setZLayer(caseDisplayInfo[i]["zLayer"].toInt());
+    return snapableTilesArray;
+}
 
-        ItemSnapable is(caseInfo[i], &dp);
-        
-        // Parser le JSON de l'ItemSnapable et l'ajouter au tableau
-        QJsonParseError parseError;
-        QString ISjsonDoc = is.toJSON();
-        QJsonDocument tileDoc = QJsonDocument::fromJson(ISjsonDoc.toUtf8(), &parseError);
-        if (parseError.error == QJsonParseError::NoError && tileDoc.isObject()) {
-            snapableTilesArray.append(tileDoc.object());
-        } else {
-            qDebug().noquote() << "Error parsing ItemSnapable JSON:" << parseError.errorString()<< "\n" << ISjsonDoc;
-        }
-    }
-    
-    jsonObject["snapableTiles"] = snapableTilesArray;
-    
-    // Ajouter les informations de décoration si présentes
-    if (!decoInfo.isEmpty()) {
-        QJsonObject decoObject;
-        for (auto it = decoInfo.begin(); it != decoInfo.end(); ++it) {
-            decoObject[it.key()] = QJsonValue::fromVariant(it.value());
-        }
-        jsonObject["decoration"] = decoObject;
-    }
-    
-    // Créer le document JSON avec indentation
+bool Game::addTileToJson(QJsonObject jsonObject, QString mapName)
+{
+
     QJsonDocument jsonDoc(jsonObject);
     QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Indented);
-    
+
     // Sauvegarder le fichier JSON
     QString fileName = mapName.toLower().replace(" ", "_") + "_map.json";
     QFile file(fileName);
-    
+
     if (!file.open(QIODevice::WriteOnly)) {
         qDebug() << "Failed to open file for writing:" << fileName;
         return false;
     }
-    
+
     qint64 bytesWritten = file.write(jsonData);
     file.close();
-    
+
     if (bytesWritten == -1) {
         qDebug() << "Failed to write to file:" << fileName;
         return false;
     }
-    
+
     qDebug() << "Map saved successfully to:" << fileName;
     qDebug().noquote() << QString::fromUtf8(jsonData);
+    return true;
+}
 
+DisplayParameter *Game::getDisplayerParameter(const QVariantMap &displayInfoMap) {
+    int unit_s_w = displayInfoMap["unitSizeWidth"].toInt();
+    int unit_s_h = displayInfoMap["unitSizeHeight"].toInt();
+    int gr_p_x = displayInfoMap["gridRelativePositionX"].toInt();
+    int gr_p_y = displayInfoMap["gridRelativePositionY"].toInt();
+    int zLayer = displayInfoMap["zLayer"].toInt();
+    DisplayParameter *dp = new DisplayParameter(unit_s_w, unit_s_h, gr_p_x, gr_p_y, zLayer);
+    return dp;
+}
+
+bool Game::registerMap(QVariantList mapInfo, QVariantList caseList, QVariantList decorationList)
+{
+    QJsonArray snapableTilesArray;
+
+    // Ajouter les informations de la map
+    QJsonObject jsonObject;
+    jsonObject["name"] = "mapName";
+    jsonObject["version"] = "version X";
+    jsonObject["description"] = "description X";
+
+
+    for (int i = 0; i < caseList.size(); ++i) {
+        QVariantList caseInfo = caseList.at(i).toList();
+        if (caseInfo.size() >= 2) {
+            // Extraction de caseData
+            QVariant caseData = caseInfo.at(0);
+            Case* currentCase = qvariant_cast<Case*>(caseData);
+
+            // Extraction de displayInfo
+            QVariantMap displayInfoMap = caseInfo.at(1).toMap();
+            DisplayParameter* dp = getDisplayerParameter(displayInfoMap);
+
+            ItemSnapable is(currentCase, dp);
+            snapableTilesArray = formatTileDataToJson(is, snapableTilesArray);
+        }
+    }
+    
+    jsonObject["snapableTiles"] = snapableTilesArray;
+    addTileToJson(jsonObject, "mapName");
     return true;
 }
 
@@ -146,7 +152,7 @@ void Game::registerQml() {
 
 
     // Register the complete inheritance hierarchy for proper QML inheritance
-    qmlRegisterUncreatableType<Case>("Case", 1, 0, "Case", 
+    qmlRegisterUncreatableType<Case>("Case", 1, 0, "Case",
                                      "Case is an abstract base class"); // Register Case class with enum
     qmlRegisterUncreatableType<CaseCatPerks>("CaseCatPerks", 1, 0, "CaseCatPerks",
                                              "CaseCatPerks is an intermediate base class"); // Register intermediate class
@@ -308,7 +314,7 @@ void Game::initCases() {
     for (const QJsonValue &value : casesArray) {
         if (value.isObject()) {
             QJsonObject caseObj = value.toObject();
-            
+
             // Convert JSON object to QStringList for getNewCase function
             QStringList caseData;
             caseData << QString::number(caseObj["type"].toInt());
@@ -325,7 +331,7 @@ void Game::initCases() {
             caseData << (caseObj["housePrice"].isNull() ? "" : QString::number(caseObj["housePrice"].toInt()));
             caseData << (caseObj["hotelPrice"].isNull() ? "" : QString::number(caseObj["hotelPrice"].toInt()));
             caseData << (caseObj["taxe"].isNull() ? "" : QString::number(caseObj["taxe"].toInt()));
-            
+
             // Create case and add to list
             Case* newCase = getNewCase(caseData);
             if (newCase) {
@@ -393,7 +399,7 @@ int Game::currentPlayerIndex() const { return m_currentPlayerIndex; }
 Case *Game::getNewCaseType(Case::CaseType type)
 {
     Case* newCase = nullptr;
-    
+
     switch (type) {
     case Case::CS_RestArea:
     {
@@ -439,7 +445,7 @@ Case *Game::getNewCaseType(Case::CaseType type)
         qDebug() << "Unknown case type:" << type << "returning NULL";
         break;
     }
-    
+
     return newCase;
 }
 
@@ -448,7 +454,7 @@ Player *Game::getNewPlayer()
     // Créer un joueur avec des valeurs par défaut
     static int playerCount = 0;
     QString playerName = "Joueur " + QString::number(++playerCount);
-    
+
     // Générer une couleur semi-aléatoire basée sur le playerCount
     QColor playerColor;
     switch (playerCount % 6) {
@@ -459,10 +465,10 @@ Player *Game::getNewPlayer()
         case 4: playerColor = QColor("#9b59b6"); break; // Violet
         case 5: playerColor = QColor("#1abc9c"); break; // Turquoise
     }
-    
+
     int indexLogo = (playerCount - 1) % 6;  // Les avatars vont de 1 à 6
     int startingKibbles = 1500;
-    
+
     Player* newPlayer = new Player(playerName, playerColor, indexLogo, startingKibbles);
     return newPlayer;
 }
@@ -706,32 +712,32 @@ Case *Game::getCaseAt(int indexCase)
 
 bool Game::saveCaseToJson(const QVariantMap &caseData) {
     const QString TEST_CASES_FILE_PATH = "config/test_cases.json";
-    
+
     // Read existing JSON file
     QFile file(TEST_CASES_FILE_PATH);
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << "Failed to open test_cases.json file for reading";
         return false;
     }
-    
+
     QByteArray data = file.readAll();
     file.close();
-    
+
     QJsonParseError parseError;
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if (parseError.error != QJsonParseError::NoError) {
         qDebug() << "JSON parse error:" << parseError.errorString();
         return false;
     }
-    
+
     if (!doc.isArray()) {
         qDebug() << "Invalid JSON format – expected array";
         return false;
     }
-    
+
     // Get the array and add new case
     QJsonArray casesArray = doc.array();
-    
+
     // Convert QVariantMap to QJsonObject
     QJsonObject newCase;
     for (auto it = caseData.begin(); it != caseData.end(); ++it) {
@@ -741,66 +747,66 @@ bool Game::saveCaseToJson(const QVariantMap &caseData) {
             newCase[it.key()] = QJsonValue::fromVariant(it.value());
         }
     }
-    
+
     // Add the new case to the array
     casesArray.append(newCase);
-    
+
     // Create new document with updated array
     QJsonDocument newDoc(casesArray);
-    
+
     // Write back to file
     if (!file.open(QIODevice::WriteOnly)) {
         qDebug() << "Failed to open test_cases.json file for writing";
         return false;
     }
-    
+
     QByteArray jsonData = newDoc.toJson(QJsonDocument::Indented);
     qint64 bytesWritten = file.write(jsonData);
     file.close();
-    
+
     if (bytesWritten == -1) {
         qDebug() << "Failed to write to test_cases.json file";
         return false;
     }
-    
+
     qDebug() << "Successfully saved new case to test_cases.json";
     return true;
 }
 
 bool Game::saveMultipleCasesToJson(const QVariantList &casesData) {
     const QString TEST_CASES_FILE_PATH = "config/test_cases.json";
-    
+
     // Read existing JSON file
     QFile file(TEST_CASES_FILE_PATH);
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << "Failed to open test_cases.json file for reading";
         return false;
     }
-    
+
     QByteArray data = file.readAll();
     file.close();
-    
+
     QJsonParseError parseError;
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if (parseError.error != QJsonParseError::NoError) {
         qDebug() << "JSON parse error:" << parseError.errorString();
         return false;
     }
-    
+
     if (!doc.isArray()) {
         qDebug() << "Invalid JSON format – expected array";
         return false;
     }
-    
+
     // Get the array and add new cases
     QJsonArray casesArray = doc.array();
-    
+
     // Convert each QVariantMap to QJsonObject and add to array
     for (const QVariant &caseVariant : casesData) {
         if (caseVariant.canConvert<QVariantMap>()) {
             QVariantMap caseMap = caseVariant.toMap();
             QJsonObject newCase;
-            
+
             for (auto it = caseMap.begin(); it != caseMap.end(); ++it) {
                 if (it.value().isNull()) {
                     newCase[it.key()] = QJsonValue();
@@ -811,25 +817,25 @@ bool Game::saveMultipleCasesToJson(const QVariantList &casesData) {
             casesArray.append(newCase);
         }
     }
-    
+
     // Create new document with updated array
     QJsonDocument newDoc(casesArray);
-    
+
     // Write back to file
     if (!file.open(QIODevice::WriteOnly)) {
         qDebug() << "Failed to open test_cases.json file for writing";
         return false;
     }
-    
+
     QByteArray jsonData = newDoc.toJson(QJsonDocument::Indented);
     qint64 bytesWritten = file.write(jsonData);
     file.close();
-    
+
     if (bytesWritten == -1) {
         qDebug() << "Failed to write to test_cases.json file";
         return false;
     }
-    
+
     qDebug() << "Successfully saved" << casesData.size() << "cases to test_cases.json";
     return true;
 }
