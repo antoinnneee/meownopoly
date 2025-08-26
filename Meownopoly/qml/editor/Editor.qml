@@ -206,13 +206,6 @@ Rectangle {
                 logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.DecorationTile)
             }
         }
-
-        MenuItem {
-            text: "Créer un Personnage"
-            onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
-            }
-        }
     }
 
 
