@@ -76,9 +76,9 @@ Item {
     // Fonction pour obtenir la position de grille la plus proche
     function getGridPosition(x, y) {
         return Qt.point(
-                    Math.floor(x / gridSize),
-                    Math.floor(y / gridSize)
-                    )
+            Math.floor(x / gridSize),
+            Math.floor(y / gridSize)
+        )
     }
     
     // Fonctions pour activer/désactiver le mode redimensionnement
@@ -192,12 +192,12 @@ Item {
         pressAndHoldInterval: 200
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: {
-            if (mouse.button == Qt.LeftButton){
+            if (mouse.button === Qt.LeftButton){
                 console.log("click location : ", mouseX, mouseY)
                 console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
                 gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
             }
-            if (mouse.button == Qt.RightButton){
+            if (mouse.button === Qt.RightButton){
                 gridManager.gridRightClicked(gridManager.getGridPosition(mouseX, mouseY))
             }
         }
@@ -207,7 +207,6 @@ Item {
             console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
             gridManager.gridPressed(gridManager.getGridPosition(mouseX, mouseY))
         }
-
     }
 
 }

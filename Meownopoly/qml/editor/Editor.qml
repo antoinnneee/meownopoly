@@ -6,6 +6,7 @@ import QtQuick.Shapes
 import QtQml
 import Game
 import Case
+import ItemSnapable
 import "tools"
 import "tools/snapable"
 import "panel"
@@ -42,6 +43,8 @@ Rectangle {
     property alias selectedAssetId: assetPanel.currentSelectedId
     property alias isAssetSelected: assetPanel.isAssetSelected
 
+
+
     EditorLogic {
         id: logic
         workArea: workArea
@@ -70,6 +73,7 @@ Rectangle {
         // Test de l'animation au démarrage
         Component.onCompleted: {
         }
+
 
         onGridPressed : function(position) {
             // Si un asset est sélectionné, le placer directement
@@ -118,9 +122,9 @@ Rectangle {
             }
 
             onReleased: function(mouse){
-                console.log("Finalisation de la sélection")
-                logic.finishSelection()
-                mouse.accepted = true
+                    console.log("Finalisation de la sélection")
+                    logic.finishSelection()
+                    mouse.accepted = true
             }
 
             onCanceled: {
@@ -192,21 +196,21 @@ Rectangle {
             text: "Créer une Case"
             onTriggered: {
                 console.log(contextMenu.clickGridCoord)
-                logic.createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, EditorLogic.TileType.Case)
+                logic.createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
             }
         }
 
         MenuItem {
             text: "Créer une Décoration"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, EditorLogic.TileType.Decoration)
+                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.DecorationTile)
             }
         }
 
         MenuItem {
             text: "Créer un Personnage"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, EditorLogic.TileType.Personnage)
+                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
             }
         }
     }
@@ -291,14 +295,14 @@ Rectangle {
         gridY = gridY - logic.currentElementHeight/2
         // Create appropriate element based on category
         if (root.selectedAssetCategory === "decoration") {
-            var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, EditorLogic.TileType.Decoration)
+            var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
             // Set decoration properties if needed
             if (newTile && newTile.decorationType !== undefined) {
                 newTile.decorationType = root.selectedAssetType
                 newTile.decorationId = root.selectedAssetId
             }
         } else if (root.selectedAssetCategory === "avatar") {
-            logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, EditorLogic.TileType.Personnage)
+            logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.CaseTile)
         }
         
         // Clear selection after placing (optional - you might want to keep it selected)
@@ -314,20 +318,20 @@ Rectangle {
 
     WheelHandler {
         onWheel: (wheel)=> {
-                     if (wheel.modifiers & Qt.ControlModifier) {
-                         console.log(wheel.angleDelta)
-                         if (wheel.angleDelta.y > 0)
-                         editorGrid.updateSize(editorGrid.mmSize + 1)
-                         else if (editorGrid.mmSize > 1)
-                         editorGrid.updateSize(editorGrid.mmSize - 1)
-                         for (var i = 0; i < root.snapableTilesList.length; i++) {
-                             if (root.snapableTilesList[i]) {
-                                 root.snapableTilesList[i].isSelected = false
-                                 root.snapableTilesList[i].snapToGridFromGrid()
-                             }
-                         }
+             if (wheel.modifiers & Qt.ControlModifier) {
+                 console.log(wheel.angleDelta)
+                 if (wheel.angleDelta.y > 0)
+                    editorGrid.updateSize(editorGrid.mmSize + 1)
+                 else if (editorGrid.mmSize > 1)
+                     editorGrid.updateSize(editorGrid.mmSize - 1)
+                 for (var i = 0; i < root.snapableTilesList.length; i++) {
+                     if (root.snapableTilesList[i]) {
+                         root.snapableTilesList[i].isSelected = false
+                         root.snapableTilesList[i].snapToGridFromGrid()
                      }
                  }
+             }
+         }
     }
 
 }

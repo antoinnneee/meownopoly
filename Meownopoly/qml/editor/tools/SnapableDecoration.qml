@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import "snapable"
 import AssetManager
+import ItemSnapable
 
 SnapableElement {
     // Configuration du redimensionnement
@@ -13,6 +14,7 @@ SnapableElement {
     unitSizeHeight: 6
     unitSizeWidth:4
 
+    type : ItemSnapable.DecorationTile
 
     property string decorationType: "grass"  // Can be "grass" or "tree"
     property var decorationModel : AssetManager.getTypeModel("decoration", decorationType)
@@ -22,7 +24,6 @@ SnapableElement {
     Component.onCompleted: {
         console.log("Decoration created with model:", decorationModel)
         console.log("model length:", decorationModel.rowCount())
-        type = 1
     }
 
     Image {
