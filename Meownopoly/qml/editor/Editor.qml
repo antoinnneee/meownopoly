@@ -70,6 +70,7 @@ Rectangle {
         // Test de l'animation au démarrage
         Component.onCompleted: {
         }
+
         onGridPressed : function(position) {
             // Si un asset est sélectionné, le placer directement
             if (root.isAssetSelected) {
@@ -79,22 +80,17 @@ Rectangle {
                 contextMenu.popup()
             }
         }
-        onGridClicked:  function(position, button) {
-            if (button === Qt.RightButton) {
-                if (root.isAssetSelected) {
-                    root.assetSelected("", "", "")
-
-                }
+        onGridClicked:  function(position) {
+            if (root.isAssetSelected) {
+                console.log("Placing selected asset at:", position)
+                placeSelectedAsset(position.x, position.y)
             }
-            if (button === Qt.LeftButton) {
-                if (root.isAssetSelected) {
-                    console.log("Placing selected asset at:", position)
-                    clear.assetSelection()
-                }
-                if (!root.isAssetSelected) {
-                    logic.deselectAllTiles()
-                }
+            if (!root.isAssetSelected) {
+                logic.deselectAllTiles()
             }
+        }
+        onGridRightClicked: {
+            assetPanel.clearAssetSelection()
         }
     }
 
@@ -308,53 +304,12 @@ Rectangle {
         // Clear selection after placing (optional - you might want to keep it selected)
         // clearAssetSelection()
     }
-    
-    // Function to clear asset selection
-    function clearAssetSelection() {
-        console.log("Clearing asset selection")
-        root.selectedAssetCategory = ""
-        root.selectedAssetType = ""
-        root.selectedAssetId = ""
-    }
+
 
     // Asset Selection Panel
     AssetSelectionPanel {
         id: assetPanel
-        
-        // Pass current selection state to panel
-        currentSelectedCategory: root.selectedAssetCategory
-        currentSelectedType: root.selectedAssetType
-        currentSelectedId: root.selectedAssetId
-        
-        onAssetSelected: function(category, type, id) {
-            if (root.isAssetSelected && root.selectedAssetCategory === category && root.selectedAssetType === type && root.selectedAssetId === id) {
-                clearAssetSelection();
-                return
-            }
-            console.log("Asset selected for placement:", category, type, id)
-            root.selectedAssetCategory = category
-            root.selectedAssetType = type
-            root.selectedAssetId = id
-        }
-        
-        // onAssetDropped: function(category, type, id, x, y) {
-        //     console.log("Asset dropped:", category, type, id, "at", x, y)
 
-        //     // Convert coordinates to grid coordinates
-        //     var gridPos = editorGrid.getGridPosition(x, y)
-
-        //     // Create appropriate element based on category
-        //     if (category === "decoration") {
-        //         var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridPos.x, gridPos.y, GameBoard.TileType.Decoration)
-        //         // Set decoration properties if needed
-        //         if (newTile && newTile.decorationType !== undefined) {
-        //             newTile.decorationType = type
-        //             newTile.decorationId = id
-        //         }
-        //     } else if (category === "avatar") {
-        //         logic.createNewTileAtPosition(Case.CS_Unknow, gridPos.x, gridPos.y, GameBoard.TileType.Personnage)
-        //     }
-        // }
     }
 
     WheelHandler {

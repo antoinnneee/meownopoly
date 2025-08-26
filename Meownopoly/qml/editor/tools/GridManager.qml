@@ -44,7 +44,8 @@ Item {
     // Signal émis quand les paramètres changent
     signal gridSettingsChanged()
     signal gridPressed(var position)
-    signal gridClicked(var position, Qt.MouseButton button)
+    signal gridClicked(var position)
+    signal gridRightClicked(var position)
 
 
     width: boardSize
@@ -188,7 +189,8 @@ Item {
     MouseArea{
         anchors.fill: parent
         drag.target: isEdit ? null : gridManager
-        pressAndHoldInterval: 150
+        pressAndHoldInterval: 200
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: {
             if (mouse.button == Qt.LeftButton){
                 console.log("click location : ", mouseX, mouseY)
@@ -196,6 +198,7 @@ Item {
                 gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
             }
             if (mouse.button == Qt.RightButton){
+                gridManager.gridRightClicked(gridManager.getGridPosition(mouseX, mouseY))
             }
         }
 
