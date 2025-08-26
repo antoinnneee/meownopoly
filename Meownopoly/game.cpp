@@ -288,84 +288,8 @@ Case *Game::getNewCase(const QStringList &currentCaseJson) {
     return newCase;
 }
 
-void Game::initCases() {
-    // Clear existing cases
-    clearListCases();
-    // Load JSON file
-    QFile file(CASE_FILE_PATH);
-    if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "Failed to open cases.json file";
-        return;
-    }
-
-    QByteArray data = file.readAll();
-
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-    if (parseError.error != QJsonParseError::NoError) {
-        qDebug() << "JSON parse error:" << parseError.errorString();
-        return;
-    }
-    if (!doc.isArray()) {
-        qDebug() << "Invalid JSON format – expected array, got"
-                 << (doc.isObject() ? "object" : "unknown");
-        return;
-    }
-    m_listCases = new Case*; // Correction : allouer un pointeur vers Case*
-    Case *currentCase = new Case();
-    *m_listCases = currentCase;
-
-    QJsonArray casesArray = doc.array();
-
-    // Process each case in the JSON array
-    for (const QJsonValue &value : casesArray) {
-        if (value.isObject()) {
-            QJsonObject caseObj = value.toObject();
-
-            // Convert JSON object to QStringList for getNewCase function
-            QStringList caseData;
-            caseData << QString::number(caseObj["type"].toInt());
-            caseData << caseObj["name"].toString();
-            caseData << QString::number(caseObj["position"].toInt());
-            caseData << (caseObj["price"].isNull() ? "" : QString::number(caseObj["price"].toInt()));
-            caseData << (caseObj["mortgagePrice"].isNull() ? "" : QString::number(caseObj["mortgagePrice"].toInt()));
-            caseData << (caseObj["familly"].isNull() ? "" : QString::number(caseObj["familly"].toInt()));
-            caseData << (caseObj["rent_0"].isNull() ? "" : QString::number(caseObj["rent_0"].toInt()));
-            caseData << (caseObj["rent_1"].isNull() ? "" : QString::number(caseObj["rent_1"].toInt()));
-            caseData << (caseObj["rent_2"].isNull() ? "" : QString::number(caseObj["rent_2"].toInt()));
-            caseData << (caseObj["rent_3"].isNull() ? "" : QString::number(caseObj["rent_3"].toInt()));
-            caseData << (caseObj["rent_4"].isNull() ? "" : QString::number(caseObj["rent_4"].toInt()));
-            caseData << (caseObj["housePrice"].isNull() ? "" : QString::number(caseObj["housePrice"].toInt()));
-            caseData << (caseObj["hotelPrice"].isNull() ? "" : QString::number(caseObj["hotelPrice"].toInt()));
-            caseData << (caseObj["taxe"].isNull() ? "" : QString::number(caseObj["taxe"].toInt()));
-
-            // Create case and add to list
-            Case* newCase = getNewCase(caseData);
-            if (newCase) {
-                newCase->addPrev(currentCase);
-                currentCase->addNext(newCase);
-                currentCase = newCase;
-            }
-        }
-
-
-        for (int index = 0; index < 10; ++index) {
-            Case *newCase = new Case();
-            newCase->setName("case " + QString::number(index));
-            newCase->addPrev(currentCase);
-            currentCase->addNext(newCase);
-            currentCase = newCase;
-        }
-
-    }
-}
-
 
 void Game::init() {
-    initCases();
-}
-
-void Game::initCards() {
 }
 
 
@@ -388,7 +312,6 @@ void Game::setupPlayers(const QVariantList &playerData)
 }
 
 void Game::startGame() {
-    initCases();
 
     // Set all players at the starting position
     for (Player *player : m_listPlayers) {
