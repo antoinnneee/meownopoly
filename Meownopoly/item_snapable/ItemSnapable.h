@@ -20,11 +20,19 @@ class ItemSnapable : public QObject
     Q_PROPERTY(Case * caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     
+    enum TileType {
+        CaseTile,
+        DecorationTile,
+    };
+
+    Q_ENUM(TileType)
 
 public:
     ItemSnapable();
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(const QJsonDocument &json, QObject *parent = nullptr);
+
+
 
     Case * caseData() const;
     void setCaseData(Case * caseData);
@@ -35,14 +43,14 @@ public:
     Q_INVOKABLE virtual QString toJSON();
 
 signals:
-        void caseDataChanged();
-        void displayParameterChanged();
+    void caseDataChanged();
+    void displayParameterChanged();
 
 
 private :
-        Case * m_caseData;
-        DisplayParameter * m_displayParameter;
-        QJsonObject m_json;
+    Case * m_caseData;
+    DisplayParameter * m_displayParameter;
+    QJsonObject m_json;
 };
 
 #endif // ITEMSNAPABLE_H

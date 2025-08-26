@@ -12,6 +12,7 @@ import "snapable"
 SnapableElement {
     id: root
     required property Case caseData
+    type : ItemSnapable.CaseTile
 
 
     // Configuration du redimensionnement
@@ -51,7 +52,6 @@ SnapableElement {
     }
 
     Component.onCompleted: {
-        type = 0
         // Synchroniser les connexions existantes depuis les données C++ vers l'interface
         syncConnectionsFromCaseData()
     }
