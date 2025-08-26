@@ -40,7 +40,6 @@ ApplicationWindow {
 
             onCaseCreatorRequested: {
                 stackView.pop()
-                stackView.push(caseCreator)
             }
 
             onTest3DRequested: {
@@ -70,14 +69,6 @@ ApplicationWindow {
     Component{
         id: test_view
         TEST_CASE{
-            width:root.width
-            height:root.height
-            visible: false
-        }
-    }
-    Component {
-        id: caseCreator
-        TEST_JSON{
             width:root.width
             height:root.height
             visible: false

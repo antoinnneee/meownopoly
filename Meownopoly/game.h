@@ -27,7 +27,6 @@ class Game : public QObject
     Q_PROPERTY(QList<Player *> listPlayers READ listPlayers CONSTANT FINAL)
     Q_PROPERTY(QList<Card *> listCards READ listCards CONSTANT FINAL)
 
-    Q_PROPERTY(int assetNumber READ assetNumber WRITE setAssetNumber NOTIFY assetNumberChanged FINAL)
     Q_PROPERTY(QVariantList assetPath READ assetPath WRITE setAssetPath NOTIFY assetPathChanged FINAL)
 
 public:
@@ -72,20 +71,8 @@ public:
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
     bool addTileToJson(QJsonObject jsonObject, QString mapName);
     Q_INVOKABLE bool registerMap(QVariantMap mapInfo, QVariantList  caseList, QVariantList  decorationList);
-    // Q_INVOKABLE bool saveMap(const QMap<QString,QVariant> &mapInfo, QList<Case *> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo);
-
-
-
-    Q_INVOKABLE bool saveCaseToJson(const QVariantMap &caseData);
-    Q_INVOKABLE bool saveMultipleCasesToJson(const QVariantList &casesData);
-
-
-
 
     ~Game();
-
-    int assetNumber() const;
-    void setAssetNumber(int newAssetNumber);
 
     QVariantList assetPath() const;
     Q_INVOKABLE QVariant getAssetPath(int index) const;
@@ -121,7 +108,6 @@ private:
 
     int m_currentPlayerIndex = 0;
 
-    int m_assetNumber = 0;
 
     QVariantList m_assetPath;
 };

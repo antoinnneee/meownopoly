@@ -36,7 +36,6 @@
         <file>qml/editor/Editor.qml</file>
         <file>qml/editor/tools/GridManager.qml</file>
         <file>qml/editor/tools/GridControlPanel.qml</file>
-        <file>qml/test/TEST_JSON.qml</file>
         <file>qml/test/TEST_3D.qml</file>
         <file>qml/editor/tools/SnapableCaseTile.qml</file>
         <file>qml/editor/CreationPanel.qml</file>
