@@ -43,6 +43,8 @@ Rectangle {
     property bool isAssetSelected: selectedAssetCategory !== "" && selectedAssetType !== "" && selectedAssetId !== ""
 
 
+
+
     EditorLogic {
         id: logic
         workArea: workArea
@@ -80,21 +82,13 @@ Rectangle {
                 contextMenu.popup()
             }
         }
-        onGridClicked:  function(position, button) {
-            if (button === Qt.RightButton) {
-                if (root.isAssetSelected) {
-                    root.assetSelected("", "", "")
-
-                }
+        onGridClicked:  function(position) {
+            if (root.isAssetSelected) {
+                console.log("Placing selected asset at:", position)
+                placeSelectedAsset(position.x, position.y)
             }
-            if (button === Qt.LeftButton) {
-                if (root.isAssetSelected) {
-                    console.log("Placing selected asset at:", position)
-                    clear.assetSelection()
-                }
-                if (!root.isAssetSelected) {
-                    logic.deselectAllTiles()
-                }
+            if (!root.isAssetSelected) {
+                logic.deselectAllTiles()
             }
         }
     }
@@ -123,9 +117,9 @@ Rectangle {
             }
 
             onReleased: function(mouse){
-                console.log("Finalisation de la sélection")
-                logic.finishSelection()
-                mouse.accepted = true
+                    console.log("Finalisation de la sélection")
+                    logic.finishSelection()
+                    mouse.accepted = true
             }
 
             onCanceled: {
@@ -360,20 +354,20 @@ Rectangle {
 
     WheelHandler {
         onWheel: (wheel)=> {
-                     if (wheel.modifiers & Qt.ControlModifier) {
-                         console.log(wheel.angleDelta)
-                         if (wheel.angleDelta.y > 0)
-                         editorGrid.updateSize(editorGrid.mmSize + 1)
-                         else if (editorGrid.mmSize > 1)
-                         editorGrid.updateSize(editorGrid.mmSize - 1)
-                         for (var i = 0; i < root.snapableTilesList.length; i++) {
-                             if (root.snapableTilesList[i]) {
-                                 root.snapableTilesList[i].isSelected = false
-                                 root.snapableTilesList[i].snapToGridFromGrid()
-                             }
-                         }
+             if (wheel.modifiers & Qt.ControlModifier) {
+                 console.log(wheel.angleDelta)
+                 if (wheel.angleDelta.y > 0)
+                    editorGrid.updateSize(editorGrid.mmSize + 1)
+                 else if (editorGrid.mmSize > 1)
+                     editorGrid.updateSize(editorGrid.mmSize - 1)
+                 for (var i = 0; i < root.snapableTilesList.length; i++) {
+                     if (root.snapableTilesList[i]) {
+                         root.snapableTilesList[i].isSelected = false
+                         root.snapableTilesList[i].snapToGridFromGrid()
                      }
                  }
+             }
+         }
     }
 
 }
