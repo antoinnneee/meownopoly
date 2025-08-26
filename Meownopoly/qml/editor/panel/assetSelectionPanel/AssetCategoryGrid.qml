@@ -35,7 +35,7 @@ ScrollView {
             "tree": { name: "Trees", icon: "🌳", description: "Tree decorations" },
             "toy": { name: "Toys", icon: "🎁", description: "Toys decorations" },
             "other": { name: "Other Decorations", icon: "🎨", description: "Miscellaneous decorations" },
-            "lake": { name: "Lakes", icon: "💧", description: "Water decorations" },
+            "water": { name: "Water", icon: "💧", description: "Water decorations" },
             "avatar": { name: "Player Icons", icon: "👤", description: "Character avatars" },
             "player_icons": { name: "Player Icons", icon: "👤", description: "Character avatars" }
         }

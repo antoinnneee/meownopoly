@@ -8,7 +8,7 @@ Rectangle {
     id: root
     
     // Properties
-    property bool isExpanded: false
+    property bool isExpanded: true
     property string currentView: "categories" // "categories" or "assets"
     property string selectedCategory: ""
     property string selectedType: ""
@@ -25,7 +25,7 @@ Rectangle {
     
     // Dimensions
     readonly property int collapsedHeight: 40
-    readonly property int expandedHeight: 250
+    readonly property int expandedHeight: 220
     readonly property int animationDuration: 200
     
     // State management
@@ -66,10 +66,12 @@ Rectangle {
         RowLayout {
             anchors.fill: parent
             anchors.margins: 10
+            anchors.rightMargin: 6
             spacing: 15
             
             // Title with selection indicator
-            Column {
+            ColumnLayout {
+                Layout.fillHeight: true
                 Layout.alignment: Qt.AlignVCenter
                 spacing: 2
                 
@@ -78,6 +80,7 @@ Rectangle {
                     color: "white"
                     font.pixelSize: 16
                     font.bold: true
+                    Layout.fillHeight: true
                 }
                 
                 Text {
@@ -88,6 +91,7 @@ Rectangle {
                     font.pixelSize: 10
                     font.italic: true
                     visible: root.isExpanded
+                    Layout.fillHeight: true
                 }
             }
             
@@ -205,8 +209,10 @@ Rectangle {
             Button {
                 id: expandButton
                 width: 30
-                height: 30
-                
+                Layout.fillHeight: true
+                Layout.topMargin: -6
+                Layout.bottomMargin:  -6
+
                 background: Rectangle {
                     color: parent.pressed ? "#555555" : "#444444"
                     border.color: "#666666"
@@ -220,6 +226,7 @@ Rectangle {
                     font.pixelSize: 12
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
+                    anchors.fill:expandButton
                 }
                 
                 onClicked: root.isExpanded = !root.isExpanded
@@ -249,6 +256,7 @@ Rectangle {
         AssetCategoryGrid {
             id: categoryGrid
             anchors.fill: parent
+            anchors.topMargin: 6
             visible: root.currentView === "categories"
             activeFilter: root.activeFilter
             searchText: root.searchText
@@ -264,6 +272,7 @@ Rectangle {
         AssetGrid {
             id: assetGrid
             anchors.fill: parent
+            anchors.topMargin: 6
             visible: root.currentView === "assets"
             category: root.selectedCategory
             type: root.selectedType

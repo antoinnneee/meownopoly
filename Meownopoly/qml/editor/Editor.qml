@@ -286,17 +286,18 @@ Rectangle {
         if (!root.isAssetSelected) return
         
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
-        
+        gridX = gridX - logic.currentElementWidth/2
+        gridY = gridY - logic.currentElementHeight/2
         // Create appropriate element based on category
         if (root.selectedAssetCategory === "decoration") {
-            var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, Editor.TileType.Decoration)
+            var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, EditorLogic.TileType.Decoration)
             // Set decoration properties if needed
             if (newTile && newTile.decorationType !== undefined) {
                 newTile.decorationType = root.selectedAssetType
                 newTile.decorationId = root.selectedAssetId
             }
         } else if (root.selectedAssetCategory === "avatar") {
-            logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, Editor.TileType.Personnage)
+            logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, EditorLogic.TileType.Personnage)
         }
         
         // Clear selection after placing (optional - you might want to keep it selected)

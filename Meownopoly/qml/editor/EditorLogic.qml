@@ -34,7 +34,7 @@ QtObject {
     property int currentElementHeight: 4
     
     property string mapName
-    property int mmSize : 20
+    property int mmSize : 10
 
 
     enum TileType {
