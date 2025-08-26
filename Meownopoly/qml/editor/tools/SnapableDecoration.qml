@@ -12,6 +12,7 @@ SnapableElement {
 
     unitSizeHeight: 6
     unitSizeWidth:4
+    type: 1
 
 
     property string decorationType: "grass"  // Can be "grass" or "tree"
@@ -20,9 +21,6 @@ SnapableElement {
     property string imagePath: AssetManager.getDecorationPath(decorationType, decorationId)
 
     Component.onCompleted: {
-        console.log("Decoration created with model:", decorationModel)
-        console.log("model length:", decorationModel.rowCount())
-        type = 1
     }
 
     Image {

@@ -13,6 +13,7 @@ SnapableElement {
     id: root
     required property Case caseData
 
+    type: 0
 
     // Configuration du redimensionnement
     isResizable: true
@@ -51,7 +52,6 @@ SnapableElement {
     }
 
     Component.onCompleted: {
-        type = 0
         // Synchroniser les connexions existantes depuis les données C++ vers l'interface
         syncConnectionsFromCaseData()
     }
