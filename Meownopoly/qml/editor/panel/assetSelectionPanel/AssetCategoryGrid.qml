@@ -41,6 +41,13 @@ ScrollView {
                 description: "Tree decorations"
             },
             {
+                name: "Toys",
+                category: "decoration",
+                type: "toy",
+                icon: "🎁",
+                description: "Toys decorations"
+            },
+            {
                 name: "Other Decorations",
                 category: "decoration",
                 type: "other", 
