@@ -33,7 +33,7 @@ Rectangle {
     property int gridRelativePositionX: 3
     property int gridRelativePositionY: 3
 
-    property ItemSnapable.TileType type
+    property int type
     // : 0 // 0: case, 1: personnage, 2: decoration
     
     // Positions calculées à partir des coordonnées relatives

@@ -13,9 +13,8 @@ SnapableElement {
 
     unitSizeHeight: 6
     unitSizeWidth:4
-    type: 1
 
-    type : ItemSnapable.TileType.DecorationTile
+    type : ItemSnapable.DecorationTile
 
     property string decorationType: "grass"  // Can be "grass" or "tree"
     property var decorationModel : AssetManager.getTypeModel("decoration", decorationType)

@@ -14,7 +14,6 @@ SnapableElement {
     required property Case caseData
     type : ItemSnapable.CaseTile
 
-    type: 0
 
     // Configuration du redimensionnement
     isResizable: true
