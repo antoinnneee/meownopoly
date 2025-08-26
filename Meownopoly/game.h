@@ -25,7 +25,6 @@ class Game : public QObject
 
     Q_PROPERTY(QList<Player*> players READ players NOTIFY playersChanged)
     Q_PROPERTY(QList<Player *> listPlayers READ listPlayers CONSTANT FINAL)
-    Q_PROPERTY(Case **listCases READ listCases CONSTANT FINAL)
     Q_PROPERTY(QList<Card *> listCards READ listCards CONSTANT FINAL)
 
     Q_PROPERTY(int assetNumber READ assetNumber WRITE setAssetNumber NOTIFY assetNumberChanged FINAL)
@@ -45,7 +44,6 @@ public:
 
     Q_INVOKABLE void init();    // create a new game, load caseFile
     Q_INVOKABLE void startGame();
-    Case *getNewCase(const QStringList&);
 
     Q_INVOKABLE Player *createPlayer(const QString name, QColor color, int indexLogo, int kibbles);
     Q_INVOKABLE void setupPlayers(const QVariantList &playerData);
@@ -82,26 +80,6 @@ public:
     Q_INVOKABLE bool saveMultipleCasesToJson(const QVariantList &casesData);
 
 
-// ---- CASES : CHAINED LIST MANIPULATION ----
-    bool appendCase(Case *newCase);
-    bool clearListCases();
-    bool removeLastCase();
-
-    Case *getLastCase();
-
-    Case *getCaseAt(int index);
-
-    bool insertCaseAt(int index, Case *caseToInsert);
-    bool removeCaseAt(int index);
-
-    int getListCaseSize();
-    void displayListCase();
-
-    // ---- ASSETS ----
-
-    Q_INVOKABLE bool checkDecorationAssets();
-
-    // ---- ----
 
 
     ~Game();
@@ -131,7 +109,6 @@ private slots:
 private:
     explicit Game(QObject *parent = nullptr);
     static Game *m_pThis;
-    Case **m_listCases = nullptr;
     QList<Case*> m_board;
     QList<Player*> m_listPlayers;
     Player* m_players;
