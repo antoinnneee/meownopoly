@@ -4,6 +4,7 @@ import "."
 import "../"
 
 import ItemSnapable
+import TileType
 
 Rectangle {
     id: snapableElement
@@ -33,7 +34,7 @@ Rectangle {
     property int gridRelativePositionX: 3
     property int gridRelativePositionY: 3
 
-    property int type
+    property TileType type
     // : 0 // 0: case, 1: personnage, 2: decoration
     
     // Positions calculées à partir des coordonnées relatives
