@@ -43,8 +43,6 @@ Rectangle {
     property bool isAssetSelected: selectedAssetCategory !== "" && selectedAssetType !== "" && selectedAssetId !== ""
 
 
-
-
     EditorLogic {
         id: logic
         workArea: workArea
@@ -82,13 +80,21 @@ Rectangle {
                 contextMenu.popup()
             }
         }
-        onGridClicked:  function(position) {
-            if (root.isAssetSelected) {
-                console.log("Placing selected asset at:", position)
-                placeSelectedAsset(position.x, position.y)
+        onGridClicked:  function(position, button) {
+            if (button === Qt.RightButton) {
+                if (root.isAssetSelected) {
+                    root.assetSelected("", "", "")
+
+                }
             }
-            if (!root.isAssetSelected) {
-                logic.deselectAllTiles()
+            if (button === Qt.LeftButton) {
+                if (root.isAssetSelected) {
+                    console.log("Placing selected asset at:", position)
+                    clear.assetSelection()
+                }
+                if (!root.isAssetSelected) {
+                    logic.deselectAllTiles()
+                }
             }
         }
     }
@@ -117,9 +123,9 @@ Rectangle {
             }
 
             onReleased: function(mouse){
-                    console.log("Finalisation de la sélection")
-                    logic.finishSelection()
-                    mouse.accepted = true
+                console.log("Finalisation de la sélection")
+                logic.finishSelection()
+                mouse.accepted = true
             }
 
             onCanceled: {
@@ -318,7 +324,7 @@ Rectangle {
         
         // Pass current selection state to panel
         currentSelectedCategory: root.selectedAssetCategory
-        currentSelectedType: root.selectedAssetType  
+        currentSelectedType: root.selectedAssetType
         currentSelectedId: root.selectedAssetId
         
         onAssetSelected: function(category, type, id) {
@@ -334,10 +340,10 @@ Rectangle {
         
         // onAssetDropped: function(category, type, id, x, y) {
         //     console.log("Asset dropped:", category, type, id, "at", x, y)
-            
+
         //     // Convert coordinates to grid coordinates
         //     var gridPos = editorGrid.getGridPosition(x, y)
-            
+
         //     // Create appropriate element based on category
         //     if (category === "decoration") {
         //         var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridPos.x, gridPos.y, GameBoard.TileType.Decoration)
@@ -354,20 +360,20 @@ Rectangle {
 
     WheelHandler {
         onWheel: (wheel)=> {
-             if (wheel.modifiers & Qt.ControlModifier) {
-                 console.log(wheel.angleDelta)
-                 if (wheel.angleDelta.y > 0)
-                    editorGrid.updateSize(editorGrid.mmSize + 1)
-                 else if (editorGrid.mmSize > 1)
-                     editorGrid.updateSize(editorGrid.mmSize - 1)
-                 for (var i = 0; i < root.snapableTilesList.length; i++) {
-                     if (root.snapableTilesList[i]) {
-                         root.snapableTilesList[i].isSelected = false
-                         root.snapableTilesList[i].snapToGridFromGrid()
+                     if (wheel.modifiers & Qt.ControlModifier) {
+                         console.log(wheel.angleDelta)
+                         if (wheel.angleDelta.y > 0)
+                         editorGrid.updateSize(editorGrid.mmSize + 1)
+                         else if (editorGrid.mmSize > 1)
+                         editorGrid.updateSize(editorGrid.mmSize - 1)
+                         for (var i = 0; i < root.snapableTilesList.length; i++) {
+                             if (root.snapableTilesList[i]) {
+                                 root.snapableTilesList[i].isSelected = false
+                                 root.snapableTilesList[i].snapToGridFromGrid()
+                             }
+                         }
                      }
                  }
-             }
-         }
     }
 
 }
