@@ -37,11 +37,10 @@ Rectangle {
     property alias maxPlanDisplayed: logic.maxPlanDisplayed
     
     // Asset selection properties
-    property string selectedAssetCategory: ""
-    property string selectedAssetType: ""
-    property string selectedAssetId: ""
-    property bool isAssetSelected: selectedAssetCategory !== "" && selectedAssetType !== "" && selectedAssetId !== ""
-
+    property alias selectedAssetCategory: assetPanel.currentSelectedCategory
+    property alias selectedAssetType: assetPanel.currentSelectedType
+    property alias selectedAssetId: assetPanel.currentSelectedId
+    property alias isAssetSelected: assetPanel.isAssetSelected
 
 
 
@@ -315,41 +314,7 @@ Rectangle {
     // Asset Selection Panel
     AssetSelectionPanel {
         id: assetPanel
-        
-        // Pass current selection state to panel
-        currentSelectedCategory: root.selectedAssetCategory
-        currentSelectedType: root.selectedAssetType  
-        currentSelectedId: root.selectedAssetId
-        
-        onAssetSelected: function(category, type, id) {
-            if (root.isAssetSelected && root.selectedAssetCategory === category && root.selectedAssetType === type && root.selectedAssetId === id) {
-                clearAssetSelection();
-                return
-            }
-            console.log("Asset selected for placement:", category, type, id)
-            root.selectedAssetCategory = category
-            root.selectedAssetType = type
-            root.selectedAssetId = id
-        }
-        
-        // onAssetDropped: function(category, type, id, x, y) {
-        //     console.log("Asset dropped:", category, type, id, "at", x, y)
-            
-        //     // Convert coordinates to grid coordinates
-        //     var gridPos = editorGrid.getGridPosition(x, y)
-            
-        //     // Create appropriate element based on category
-        //     if (category === "decoration") {
-        //         var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridPos.x, gridPos.y, GameBoard.TileType.Decoration)
-        //         // Set decoration properties if needed
-        //         if (newTile && newTile.decorationType !== undefined) {
-        //             newTile.decorationType = type
-        //             newTile.decorationId = id
-        //         }
-        //     } else if (category === "avatar") {
-        //         logic.createNewTileAtPosition(Case.CS_Unknow, gridPos.x, gridPos.y, GameBoard.TileType.Personnage)
-        //     }
-        // }
+
     }
 
     WheelHandler {

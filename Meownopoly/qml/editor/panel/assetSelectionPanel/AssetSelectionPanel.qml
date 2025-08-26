@@ -19,9 +19,32 @@ Rectangle {
     property string currentSelectedCategory: ""
     property string currentSelectedType: ""
     property string currentSelectedId: ""
+    property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
+
     
     // Signals
     signal assetSelected(string category, string type, string id)
+
+
+    onAssetSelected: function(category, type, id) {
+        if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
+            clearAssetSelection();
+            return
+        }
+        console.log("Asset selected for placement:", category, type, id)
+        root.currentSelectedCategory = category
+        root.currentSelectedType = type
+        root.currentSelectedId = id
+    }
+
+    // Function to clear asset selection
+    function clearAssetSelection() {
+        console.log("Clearing asset selection")
+        root.currentSelectedCategory = ""
+        root.currentSelectedType = ""
+        root.currentSelectedId = ""
+    }
+
     
     // Dimensions
     readonly property int collapsedHeight: 40
