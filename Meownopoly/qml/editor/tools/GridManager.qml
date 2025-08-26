@@ -44,7 +44,8 @@ Item {
     // Signal émis quand les paramètres changent
     signal gridSettingsChanged()
     signal gridPressed(var position)
-    signal gridClicked(var position)
+    signal gridClicked(var position, Qt.MouseButton button)
+
 
     width: boardSize
     height: boardSize
@@ -65,7 +66,7 @@ Item {
         if (!snapToGrid) return
         var posGridX = element.gridRelativePositionX * gridSize
         var posGridY = element.gridRelativePositionY * gridSize
-        var elementWidth = element.unitSizeWidth * gridSize 
+        var elementWidth = element.unitSizeWidth * gridSize
         var elementHeight = element.unitSizeHeight * gridSize
         element.x = posGridX
         element.y =posGridY
@@ -74,9 +75,9 @@ Item {
     // Fonction pour obtenir la position de grille la plus proche
     function getGridPosition(x, y) {
         return Qt.point(
-            Math.floor(x / gridSize),
-            Math.floor(y / gridSize)
-        )
+                    Math.floor(x / gridSize),
+                    Math.floor(y / gridSize)
+                    )
     }
     
     // Fonctions pour activer/désactiver le mode redimensionnement
@@ -189,9 +190,13 @@ Item {
         drag.target: isEdit ? null : gridManager
         pressAndHoldInterval: 150
         onClicked: {
-            console.log("click location : ", mouseX, mouseY)
-            console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
-            gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
+            if (mouse.button == Qt.LeftButton){
+                console.log("click location : ", mouseX, mouseY)
+                console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
+                gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
+            }
+            if (mouse.button == Qt.RightButton){
+            }
         }
 
         onPressAndHold: {
@@ -199,6 +204,7 @@ Item {
             console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
             gridManager.gridPressed(gridManager.getGridPosition(mouseX, mouseY))
         }
+
     }
 
-} 
+}

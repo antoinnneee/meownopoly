@@ -394,7 +394,7 @@ QtObject {
 
                 // Si la position est libre, créer un élément
                 if (!positionOccupied) {
-                    lastTile = createNewTileAtPosition(defaultCaseType, x, y, GameBoard.TileType.Case)
+                    lastTile = createNewTileAtPosition(defaultCaseType, x, y, EditorLogic.TileType.Case)
                     tilesPlaced++;
 
                     // Avancer horizontalement de la taille de l'élément
