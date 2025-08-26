@@ -501,3 +501,100 @@ QStringList AssetManager::scanAvailableAssets() const
     
     return result;
 }
+
+QStringList AssetManager::getAvailableTypes(const QString &category) const
+{
+    QStringList types;
+    QDir assetsDir(m_assetsBasePath);
+    
+    if (!assetsDir.exists()) {
+        return types;
+    }
+    
+    QString categoryPath = assetsDir.absoluteFilePath(category);
+    QDir categoryDir(categoryPath);
+    
+    if (!categoryDir.exists()) {
+        return types;
+    }
+    
+    if (category == "player_icons" || category == "avatar") {
+        // For categories without subdirectories, return the category itself as a type
+        QStringList filters;
+        filters << "*.png" << "*.jpg" << "*.jpeg";
+        QStringList imageFiles = categoryDir.entryList(filters, QDir::Files);
+        
+        if (!imageFiles.isEmpty()) {
+            types << category;
+        }
+    } else {
+        // For categories with subdirectories (like decoration), return the subdirectory names
+        QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+        
+        for (const QString &typeName : typeDirectories) {
+            QString typePath = categoryDir.absoluteFilePath(typeName);
+            QDir typeDir(typePath);
+            
+            QStringList filters;
+            filters << "*.png" << "*.jpg" << "*.jpeg";
+            QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
+            
+            if (!imageFiles.isEmpty()) {
+                types << typeName;
+            }
+        }
+    }
+    
+    return types;
+}
+
+QStringList AssetManager::getAvailableCategories() const
+{
+    QStringList categories;
+    QDir assetsDir(m_assetsBasePath);
+    
+    if (!assetsDir.exists()) {
+        return categories;
+    }
+    
+    QStringList categoryDirectories = assetsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    
+    for (const QString &categoryName : categoryDirectories) {
+        QString categoryPath = assetsDir.absoluteFilePath(categoryName);
+        QDir categoryDir(categoryPath);
+        
+        // Check if the category has any image files or subdirectories with image files
+        bool hasAssets = false;
+        
+        if (categoryName == "player_icons" || categoryName == "avatar") {
+            // Check for direct image files
+            QStringList filters;
+            filters << "*.png" << "*.jpg" << "*.jpeg";
+            QStringList imageFiles = categoryDir.entryList(filters, QDir::Files);
+            hasAssets = !imageFiles.isEmpty();
+        } else {
+            // Check for subdirectories with image files
+            QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+            
+            for (const QString &typeName : typeDirectories) {
+                QString typePath = categoryDir.absoluteFilePath(typeName);
+                QDir typeDir(typePath);
+                
+                QStringList filters;
+                filters << "*.png" << "*.jpg" << "*.jpeg";
+                QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
+                
+                if (!imageFiles.isEmpty()) {
+                    hasAssets = true;
+                    break;
+                }
+            }
+        }
+        
+        if (hasAssets) {
+            categories << categoryName;
+        }
+    }
+    
+    return categories;
+}

@@ -36,6 +36,13 @@ QtObject {
     property string mapName
     property int mmSize : 20
 
+
+    enum TileType {
+        Case,
+        Personnage,
+        Decoration
+    }
+
     onIsEditingChanged:{
         console.log("Édition:", isEditing)
         if (!isEditing)
@@ -183,14 +190,14 @@ QtObject {
     function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         var newTile
         switch (isDecoration){
-        case GameBoard.TileType.Decoration:
+        case EditorLogic.TileType.Decoration:
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                           "gridRelativePositionX": gridX,
                                                                                           "gridRelativePositionY": gridY,
                                                                                           "z": 5
                                                                                       })
             break
-        case GameBoard.TileType.Personnage:
+        case EditorLogic.TileType.Personnage:
             newTile = editorDynamicComponent.snapableCharacterComponent.createObject(workArea, {
                                                                                          "gridRelativePositionX": gridX,
                                                                                          "gridRelativePositionY": gridY,
@@ -198,7 +205,7 @@ QtObject {
                                                                                          "z": 5
                                                                                      })
             break
-        case GameBoard.TileType.Case:
+        case EditorLogic.TileType.Case:
             newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
                                                                                         "gridRelativePositionX": gridX,
                                                                                         "gridRelativePositionY": gridY,

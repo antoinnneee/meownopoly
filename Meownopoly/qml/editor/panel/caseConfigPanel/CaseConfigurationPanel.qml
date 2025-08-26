@@ -5,7 +5,6 @@ import Case
 import CaseRestArea
 import MeowStyle
 import Player
-import "panel"
 
 Rectangle {
     id: root
@@ -93,7 +92,7 @@ Rectangle {
                 title: "Configuration Joueur"
                 Layout.fillWidth: true
                 visible: isPlayerConfiguration
-
+/*
                 PlayerSelector {
                     id: playerSelector
                     Layout.fillWidth: true
@@ -112,6 +111,7 @@ Rectangle {
                         }
                     }
                 }
+                */
             }
 
             // Configuration générale pour les cases

@@ -85,6 +85,8 @@ public:
     Q_INVOKABLE QString getPlayerIconPath(const QString &id) const;
     Q_INVOKABLE void loadAssets();
     Q_INVOKABLE void setAssetsBasePath(const QString &basePath);
+    Q_INVOKABLE QStringList getAvailableTypes(const QString &category) const;
+    Q_INVOKABLE QStringList getAvailableCategories() const;
     
     // Metadata generation
     Q_INVOKABLE bool generateMetadataForDirectory(const QString &directoryPath);

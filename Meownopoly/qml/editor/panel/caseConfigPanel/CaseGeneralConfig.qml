@@ -8,14 +8,12 @@ import Player
 ConfigPanelElement {
     title: "Configuration Générale"
     property alias name: nameField.text
-    property alias position: positionSpinBox.value
 
     // Fonction pour mettre à jour tous les contrôles
     function updateControls() {
         if (!targetCase) return
         updatingValues = true
         nameField.text = targetCase.name || ""
-        positionSpinBox.value = targetCase.position || 0
         updatingValues = false
     }
 
@@ -59,29 +57,6 @@ ConfigPanelElement {
                 }
             }
         }
-        
-        Label {
-            text: "Position:"
-            font.bold: true
-        }
-        
-        SpinBox {
-            id: positionSpinBox
-            Layout.fillWidth: true
-            from: 0
-            to: 39
-            
-            Component.onCompleted: {
-                if (targetCase) {
-                    value = targetCase.position
-                }
-            }
-            
-            onValueChanged: {
-                if (!updatingValues && targetCase) {
-                    targetCase.position = value
-                }
-            }
-        }
+
     }
 }

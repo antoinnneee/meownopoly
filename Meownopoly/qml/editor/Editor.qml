@@ -9,6 +9,7 @@ import Case
 import "tools"
 import "tools/snapable"
 import "panel"
+import "panel/caseConfigPanel"
 import "panel/assetSelectionPanel"
 
 Rectangle {
@@ -42,11 +43,6 @@ Rectangle {
     property bool isAssetSelected: selectedAssetCategory !== "" && selectedAssetType !== "" && selectedAssetId !== ""
 
 
-    enum TileType {
-        Case,
-        Personnage,
-        Decoration
-    }
 
 
     EditorLogic {
@@ -195,21 +191,21 @@ Rectangle {
             text: "Créer une Case"
             onTriggered: {
                 console.log(contextMenu.clickGridCoord)
-                logic.createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Case)
+                logic.createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, EditorLogic.TileType.Case)
             }
         }
 
         MenuItem {
             text: "Créer une Décoration"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Decoration)
+                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, EditorLogic.TileType.Decoration)
             }
         }
 
         MenuItem {
             text: "Créer un Personnage"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Personnage)
+                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, EditorLogic.TileType.Personnage)
             }
         }
     }
@@ -293,14 +289,14 @@ Rectangle {
         
         // Create appropriate element based on category
         if (root.selectedAssetCategory === "decoration") {
-            var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, GameBoard.TileType.Decoration)
+            var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, Editor.TileType.Decoration)
             // Set decoration properties if needed
             if (newTile && newTile.decorationType !== undefined) {
                 newTile.decorationType = root.selectedAssetType
                 newTile.decorationId = root.selectedAssetId
             }
         } else if (root.selectedAssetCategory === "avatar") {
-            logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, GameBoard.TileType.Personnage)
+            logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, Editor.TileType.Personnage)
         }
         
         // Clear selection after placing (optional - you might want to keep it selected)

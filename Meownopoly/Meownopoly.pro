@@ -92,12 +92,5 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-DISTFILES += \
-    assets/decoration/grass/1.png \
-    assets/decoration/grass/2.png \
-    assets/decoration/grass/3.png \
-    assets/decoration/grass/metadata.json \
-    assets/decoration/tree/1.png \
-    assets/decoration/tree/metadata.json \
-    assets/player_icons/metadata.json
+DISTFILES +=
 

@@ -13,6 +13,11 @@ ScrollView {
     // Signals
     signal categorySelected(string category, string type)
     
+    // Public functions
+    function refreshCategories() {
+        generateCategories()
+    }
+    
     // Content
     contentWidth: gridLayout.implicitWidth
     contentHeight: gridLayout.implicitHeight
@@ -24,44 +29,70 @@ ScrollView {
         columnSpacing: 10
         rowSpacing: 10
         
-        // Define available categories based on AssetManager structure
-        property var categories: [
-            {
-                name: "Grass",
-                category: "decoration",
-                type: "grass",
-                icon: "🌱",
-                description: "Various grass textures"
-            },
-            {
-                name: "Trees",
-                category: "decoration", 
-                type: "tree",
-                icon: "🌳",
-                description: "Tree decorations"
-            },
-            {
-                name: "Toys",
-                category: "decoration",
-                type: "toy",
-                icon: "🎁",
-                description: "Toys decorations"
-            },
-            {
-                name: "Other Decorations",
-                category: "decoration",
-                type: "other", 
-                icon: "🎨",
-                description: "Miscellaneous decorations"
-            },
-            {
-                name: "Player Icons",
-                category: "avatar",
-                type: "avatar",
-                icon: "👤",
-                description: "Character avatars"
+        // Define category metadata with icons and descriptions
+        property var categoryMetadata: {
+            "grass": { name: "Grass", icon: "🌱", description: "Various grass textures" },
+            "tree": { name: "Trees", icon: "🌳", description: "Tree decorations" },
+            "toy": { name: "Toys", icon: "🎁", description: "Toys decorations" },
+            "other": { name: "Other Decorations", icon: "🎨", description: "Miscellaneous decorations" },
+            "lake": { name: "Lakes", icon: "💧", description: "Water decorations" },
+            "avatar": { name: "Player Icons", icon: "👤", description: "Character avatars" },
+            "player_icons": { name: "Player Icons", icon: "👤", description: "Character avatars" }
+        }
+        
+        // Dynamically generate categories from AssetManager
+        property var categories: []
+        
+        Component.onCompleted: {
+            generateCategories()
+        }
+        
+        // Refresh categories when assets are reloaded
+        Connections {
+            target: AssetManager
+            function onDecorationModelChanged() {
+                generateCategories()
             }
-        ]
+            function onPlayerIconModelChanged() {
+                generateCategories()
+            }
+        }
+        
+        function generateCategories() {
+            var newCategories = []
+            var availableCategories = AssetManager.getAvailableCategories()
+            
+            for (var i = 0; i < availableCategories.length; i++) {
+                var categoryName = availableCategories[i]
+                var types = AssetManager.getAvailableTypes(categoryName)
+                
+                for (var j = 0; j < types.length; j++) {
+                    var typeName = types[j]
+                    var metadata = categoryMetadata[typeName] || categoryMetadata[categoryName]
+                    
+                    if (metadata) {
+                        newCategories.push({
+                            name: metadata.name,
+                            category: categoryName,
+                            type: typeName,
+                            icon: metadata.icon,
+                            description: metadata.description
+                        })
+                    } else {
+                        // Fallback for unknown types
+                        newCategories.push({
+                            name: typeName.charAt(0).toUpperCase() + typeName.slice(1),
+                            category: categoryName,
+                            type: typeName,
+                            icon: "📁",
+                            description: typeName + " assets"
+                        })
+                    }
+                }
+            }
+            
+            categories = newCategories
+        }
         
         Repeater {
             model: {

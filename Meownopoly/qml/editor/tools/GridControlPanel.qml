@@ -59,18 +59,6 @@ Item {
                 onClicked: isEdit = !isEdit
             }
 
-            Button {
-                text: "Choisir éléments"
-                font.bold: true
-                width: parent.width
-                height: 35
-                enabled: logic.isEditing
-                visible : enabled
-                onClicked: {
-                    selectDecorationPopup.open()
-                }
-            }
-
             Row {
                 spacing: 8
                 Text {
@@ -383,15 +371,6 @@ Item {
                 }
             }
         }
-    }
-
-    GridControlPopupAsset {
-        id: selectDecorationPopup
-        anchors.centerIn: parent
-        focus: true
-        height: 300
-        width: 400
-        modal: true
     }
 
     // Panneau d'informations en bas à gauche
