@@ -64,6 +64,7 @@
         <file>qml/menu/PawMenu.qml</file>
         <file>qml/menu/PawSubButton.qml</file>
         <file>qml/test/TEST_PAW_MENU.qml</file>
+        <file>qml/test/TEST_VISUAL_EFFECTS.qml</file>
         <file>qml/menu/PawMainPad.qml</file>
         <file>qml/menu/pawTools.js</file>
         <file>qml/editor/EditorLogic.qml</file>
@@ -78,6 +79,7 @@
         <file>qml/editor/panel/assetSelectionPanel/AssetGrid.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/AssetItem.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/AssetSelectionPanel.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/VisualEffectsPanel.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CaseCardBoardBoxSpecificConfig.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CaseCatDeviceSpecificConfig.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CaseCatPerksConfig.qml</file>

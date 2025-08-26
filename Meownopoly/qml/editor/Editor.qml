@@ -313,7 +313,14 @@ Rectangle {
     // Asset Selection Panel
     AssetSelectionPanel {
         id: assetPanel
-
+        
+        // Connect the selected decoration element for effects
+        selectedDecoration: {
+            if (currentSelectedElement && currentSelectedElement.type === ItemSnapable.DecorationTile) {
+                return currentSelectedElement
+            }
+            return null
+        }
     }
 
     WheelHandler {

@@ -21,6 +21,9 @@ Rectangle {
     property string currentSelectedId: ""
     property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
 
+    // Selected decoration element for effects
+    property var selectedDecoration: null
+    property bool showEffectsPanel: true//selectedDecoration !== null && selectedDecoration.type === 2 // DecorationTile
     
     // Signals
     signal assetSelected(string category, string type, string id)
@@ -48,7 +51,7 @@ Rectangle {
     
     // Dimensions
     readonly property int collapsedHeight: 40
-    readonly property int expandedHeight: 220
+    readonly property int expandedHeight: 500
     readonly property int animationDuration: 200
     
     // State management
@@ -275,41 +278,80 @@ Rectangle {
             }
         }
         
-        // Category grid
-        AssetCategoryGrid {
-            id: categoryGrid
+        // Split view when effects panel is shown
+        Item {
             anchors.fill: parent
-            anchors.topMargin: 6
-            visible: root.currentView === "categories"
-            activeFilter: root.activeFilter
-            searchText: root.searchText
             
-            onCategorySelected: function(category, type) {
-                root.selectedCategory = category
-                root.selectedType = type
-                root.currentView = "assets"
+            // Main content (categories/assets)
+            Item {
+                id: mainContent
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: root.showEffectsPanel ? parent.horizontalCenter : parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: root.showEffectsPanel ? 5 : 0
+                
+                // Category grid
+                AssetCategoryGrid {
+                    id: categoryGrid
+                    anchors.fill: parent
+                    anchors.topMargin: 6
+                    visible: root.currentView === "categories"
+                    activeFilter: root.activeFilter
+                    searchText: root.searchText
+                    
+                    onCategorySelected: function(category, type) {
+                        root.selectedCategory = category
+                        root.selectedType = type
+                        root.currentView = "assets"
+                    }
+                }
+                
+                // Asset grid
+                AssetGrid {
+                    id: assetGrid
+                    anchors.fill: parent
+                    anchors.topMargin: 6
+                    visible: root.currentView === "assets"
+                    category: root.selectedCategory
+                    type: root.selectedType
+                    searchText: root.searchText
+                    
+                    // Pass selection state
+                    currentSelectedCategory: root.currentSelectedCategory
+                    currentSelectedType: root.currentSelectedType
+                    currentSelectedId: root.currentSelectedId
+                    
+                    onAssetSelected: function(id) {
+                        root.assetSelected(root.selectedCategory, root.selectedType, id)
+                    }
+                }
             }
-        }
-        
-        // Asset grid
-        AssetGrid {
-            id: assetGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: root.currentView === "assets"
-            category: root.selectedCategory
-            type: root.selectedType
-            searchText: root.searchText
             
-            // Pass selection state
-            currentSelectedCategory: root.currentSelectedCategory
-            currentSelectedType: root.currentSelectedType
-            currentSelectedId: root.currentSelectedId
-            
-            onAssetSelected: function(id) {
-                root.assetSelected(root.selectedCategory, root.selectedType, id)
+            // Visual Effects Panel
+            VisualEffectsPanel {
+                id: effectsPanel
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.left: parent.horizontalCenter
+                anchors.leftMargin: 5
+                
+                visible: root.showEffectsPanel
+                targetDecoration: root.selectedDecoration
+                
+                Behavior on visible {
+                    NumberAnimation {
+                        duration: 200
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                
+                onEffectChanged: {
+                    // Optional: emit signal when effects change
+                    console.log("Visual effect changed")
+                }
             }
-
         }
     }
     
