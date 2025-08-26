@@ -9,7 +9,7 @@ ItemSnapable::ItemSnapable() {
 void ItemSnapable::registerQml()
 {
     qmlRegisterType<ItemSnapable>("ItemSnapable", 1, 0, "ItemSnapable"); // Register ItemSnapable class
-    qmlRegisterType<TileType>("TileType", 1, 0, "TileType"); // Register ItemSnapable class
+    qmlRegisterType<TileType>("TileType", 1, 0, "TileType");
     qmlRegisterType<DisplayParameter>("DisplayParameter", 1, 0, "DisplayParameter"); // Register DisplayParameter class
 }
 

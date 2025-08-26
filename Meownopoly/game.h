@@ -25,10 +25,8 @@ class Game : public QObject
 
     Q_PROPERTY(QList<Player*> players READ players NOTIFY playersChanged)
     Q_PROPERTY(QList<Player *> listPlayers READ listPlayers CONSTANT FINAL)
-    Q_PROPERTY(Case **listCases READ listCases CONSTANT FINAL)
     Q_PROPERTY(QList<Card *> listCards READ listCards CONSTANT FINAL)
 
-    Q_PROPERTY(int assetNumber READ assetNumber WRITE setAssetNumber NOTIFY assetNumberChanged FINAL)
     Q_PROPERTY(QVariantList assetPath READ assetPath WRITE setAssetPath NOTIFY assetPathChanged FINAL)
 
 public:
@@ -45,10 +43,6 @@ public:
 
     Q_INVOKABLE void init();    // create a new game, load caseFile
     Q_INVOKABLE void startGame();
-    void initCases();
-    Case *getNewCase(const QStringList&);
-    void initCards();
-    void init_caseFile();
 
     Q_INVOKABLE Player *createPlayer(const QString name, QColor color, int indexLogo, int kibbles);
     Q_INVOKABLE void setupPlayers(const QVariantList &playerData);
@@ -77,40 +71,8 @@ public:
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
     bool addTileToJson(QJsonObject jsonObject, QString mapName);
     Q_INVOKABLE bool registerMap(QVariantMap mapInfo, QVariantList  caseList, QVariantList  decorationList);
-    // Q_INVOKABLE bool saveMap(const QMap<QString,QVariant> &mapInfo, QList<Case *> caseInfo, QList<QVariantMap> caseDisplayInfo, const QVariantMap &decoInfo);
-
-
-
-    Q_INVOKABLE bool saveCaseToJson(const QVariantMap &caseData);
-    Q_INVOKABLE bool saveMultipleCasesToJson(const QVariantList &casesData);
-
-
-// ---- CASES : CHAINED LIST MANIPULATION ----
-    bool appendCase(Case *newCase);
-    bool clearListCases();
-    bool removeLastCase();
-
-    Case *getLastCase();
-
-    Case *getCaseAt(int index);
-
-    bool insertCaseAt(int index, Case *caseToInsert);
-    bool removeCaseAt(int index);
-
-    int getListCaseSize();
-    void displayListCase();
-
-    // ---- ASSETS ----
-
-    Q_INVOKABLE bool checkDecorationAssets();
-
-    // ---- ----
-
 
     ~Game();
-
-    int assetNumber() const;
-    void setAssetNumber(int newAssetNumber);
 
     QVariantList assetPath() const;
     Q_INVOKABLE QVariant getAssetPath(int index) const;
@@ -134,7 +96,6 @@ private slots:
 private:
     explicit Game(QObject *parent = nullptr);
     static Game *m_pThis;
-    Case **m_listCases = nullptr;
     QList<Case*> m_board;
     QList<Player*> m_listPlayers;
     Player* m_players;
@@ -147,7 +108,6 @@ private:
 
     int m_currentPlayerIndex = 0;
 
-    int m_assetNumber = 0;
 
     QVariantList m_assetPath;
 };
