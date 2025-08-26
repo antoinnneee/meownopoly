@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import Game
 import Case
+import ItemSnapable
 import "tools/snapable"
 
 QtObject {
@@ -35,13 +36,6 @@ QtObject {
     
     property string mapName
     property int mmSize : 10
-
-
-    enum TileType {
-        Case,
-        Personnage,
-        Decoration
-    }
 
     onIsEditingChanged:{
         console.log("Édition:", isEditing)
@@ -94,14 +88,15 @@ QtObject {
             var tile = snapableTilesList[i]
             if (tile) {
                 var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.originalZ}
-                if (tile.type === 0){
+                if (type === ItemSnapable.CaseTile){
                     var caseData = tile.caseData;
                     if (caseData){
                         var caseInfo = [caseData, displayInfo]
                         caseList.push(caseInfo)
                     }
                 }
-                else if (tile.type === 1){
+                else if (type === ItemSnapable.DecorationTile){
+
                     var imagePath = tile.imagePath
                     var decorationInfo = [decorationInfo, displayInfo]
                     decoList.push(decorationInfo)
@@ -123,7 +118,7 @@ QtObject {
     }
 
 
-/*
+    /*
 ============================
 = Gestion des connections =
 ============================
@@ -190,14 +185,14 @@ QtObject {
     function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         var newTile
         switch (isDecoration){
-        case EditorLogic.TileType.Decoration:
+        case ItemSnapable.DecorationTile:
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                           "gridRelativePositionX": gridX,
                                                                                           "gridRelativePositionY": gridY,
                                                                                           "z": 5
                                                                                       })
             break
-        case EditorLogic.TileType.Personnage:
+        case ItemSnapable.CaseTile:
             newTile = editorDynamicComponent.snapableCharacterComponent.createObject(workArea, {
                                                                                          "gridRelativePositionX": gridX,
                                                                                          "gridRelativePositionY": gridY,
@@ -205,7 +200,7 @@ QtObject {
                                                                                          "z": 5
                                                                                      })
             break
-        case EditorLogic.TileType.Case:
+        case ItemSnapable.CaseTile:
             newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
                                                                                         "gridRelativePositionX": gridX,
                                                                                         "gridRelativePositionY": gridY,
@@ -232,7 +227,7 @@ QtObject {
     }
 
     function changeCaseType(snapableCase, newType)  {
-        var newTile = logic.createNewTileAtPosition(newType, snapableCase.gridRelativePositionX, snapableCase.gridRelativePositionY, 0)
+        var newTile = logic.createNewTileAtPosition(newType, snapableCase.gridRelativePositionX, snapableCase.gridRelativePositionY, ItemSnapable.CaseTile)
         newTile.unitSizeWidth = snapableCase.unitSizeWidth
         newTile.unitSizeHeight = snapableCase.unitSizeHeight
 
@@ -394,7 +389,7 @@ QtObject {
 
                 // Si la position est libre, créer un élément
                 if (!positionOccupied) {
-                    lastTile = createNewTileAtPosition(defaultCaseType, x, y, EditorLogic.TileType.Case)
+                    lastTile = createNewTileAtPosition(defaultCaseType, x, y, ItemSnapable.CaseTile)
                     tilesPlaced++;
 
                     // Avancer horizontalement de la taille de l'élément

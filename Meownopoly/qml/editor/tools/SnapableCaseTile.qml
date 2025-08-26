@@ -12,6 +12,7 @@ import "snapable"
 SnapableElement {
     id: root
     required property Case caseData
+    type : ItemSnapable.CaseTile
 
     type: 0
 
