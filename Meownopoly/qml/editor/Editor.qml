@@ -74,7 +74,6 @@ Rectangle {
         Component.onCompleted: {
         }
 
-
         onGridPressed : function(position) {
             // Si un asset est sélectionné, le placer directement
             if (root.isAssetSelected) {
