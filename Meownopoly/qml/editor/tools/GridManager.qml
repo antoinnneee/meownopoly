@@ -192,12 +192,12 @@ Item {
         pressAndHoldInterval: 200
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: {
-            if (mouse.button == Qt.LeftButton){
+            if (mouse.button === Qt.LeftButton){
                 console.log("click location : ", mouseX, mouseY)
                 console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
                 gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
             }
-            if (mouse.button == Qt.RightButton){
+            if (mouse.button === Qt.RightButton){
                 gridManager.gridRightClicked(gridManager.getGridPosition(mouseX, mouseY))
             }
         }
