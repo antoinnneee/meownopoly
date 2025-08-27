@@ -59,6 +59,7 @@ Rectangle {
     id: root
     color: "#1e1e1e"
 
+    property bool autoUpdate : true
     
     signal launchGame()
     signal backRequested()
@@ -66,6 +67,13 @@ Rectangle {
     // Logic component
     LauncherLogic {
         id: logic
+
+        onUpdateAvailable: {
+            if (autoUpdate)
+            {
+                logic.downloadResources()
+            }
+        }
         
         onLogMessage: function(message) {
             logsSection.addLog(message)

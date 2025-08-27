@@ -71,6 +71,7 @@ Rectangle {
             Layout.fillWidth: true
             visible: root.isDownloading
             value: root.downloadProgress
+            height: 25
             
             background: Rectangle {
                 color: "#2a2a2a"
