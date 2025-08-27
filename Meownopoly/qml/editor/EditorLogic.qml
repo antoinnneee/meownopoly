@@ -89,6 +89,7 @@ QtObject {
             var tile = snapableTilesList[i]
             if (tile) {
                 var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.originalZ}
+
                 if (tile.type === ItemSnapable.CaseTile){
                     var caseData = tile.caseData;
                     if (caseData){
@@ -106,6 +107,7 @@ QtObject {
         }
         Game.registerMap(infoMap, caseList, decoList)
     }
+
 
     // Fonction pour désélectionner tous les tiles
     function deselectAllTiles() {
@@ -190,6 +192,8 @@ QtObject {
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                           "gridRelativePositionX": gridX,
                                                                                           "gridRelativePositionY": gridY,
+                                                                                          "unitSizeWidth": currentElementWidth,
+                                                                                          "unitSizeHeight": currentElementHeight,
                                                                                           "z": 5
                                                                                       })
             break
@@ -403,7 +407,7 @@ QtObject {
 
     function startSelection(mouse)
     {
-        if (isEditing && isSelectionActive) {
+        if (isSelectionActive) {
             // Vérifier si le clic est sur un élément existant
             var clickedOnElement = false
             for (var i = 0; i < snapableTilesList.length; i++) {

@@ -305,7 +305,7 @@ Rectangle {
     // Asset Selection Panel
     AssetSelectionPanel {
         id: assetPanel
-
+        logic: logic
     }
 
     WheelHandler {
