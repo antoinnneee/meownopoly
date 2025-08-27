@@ -89,6 +89,7 @@ QtObject {
             var tile = snapableTilesList[i]
             if (tile) {
                 var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.originalZ}
+
                 if (tile.type === ItemSnapable.CaseTile){
                     var caseData = tile.caseData;
                     if (caseData){
