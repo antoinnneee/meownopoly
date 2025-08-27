@@ -12,6 +12,7 @@ import "tools/snapable"
 import "panel"
 import "panel/caseConfigPanel"
 import "panel/assetSelectionPanel"
+import MapLoader
 
 Rectangle {
     id: root
@@ -43,7 +44,22 @@ Rectangle {
     property alias selectedAssetId: assetPanel.currentSelectedId
     property alias isAssetSelected: assetPanel.isAssetSelected
 
+    Connections{
+        target: MapLoader
+        function onFoundCaseTile(dp, caseData){
+            console.log("Found case tile:", dp, caseData)
+            logic.createCaseTile(dp, caseData);
+        }
+    }
 
+    Button{
+        text: "try load"
+        onClicked: {
+            console.log("load")
+            MapLoader.loadMap("test")
+        }
+        z:1000
+    }
 
     EditorLogic {
         id: logic

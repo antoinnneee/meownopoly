@@ -30,7 +30,7 @@ class ItemSnapable : public QObject
 public:
     ItemSnapable();
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
-    ItemSnapable(const QJsonDocument &json, QObject *parent = nullptr);
+    ItemSnapable(const QJsonObject &json, QObject *parent = nullptr);
 
 
 
@@ -44,6 +44,10 @@ public:
     
     // Helper function to create the correct Case type from JSON
     static Case* getNewCaseFromJSON(const QJsonObject &caseJson, QObject *parent = nullptr);
+
+    void print();
+
+    QJsonObject getOriginalJson() const { return m_json; }
 
 signals:
     void caseDataChanged();

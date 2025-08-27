@@ -31,6 +31,8 @@
 #include "QtFolderCompressor/FolderCompressor.h"
 #include "asset_manager.h"
 
+#include <map.h>
+#include <maploader.h>
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
 {
@@ -41,6 +43,7 @@ QmlApp::QmlApp(QWindow *parent)
     FolderCompressor::registerQml();
     LauncherManager::registerQml();
     AssetManager::registerQml();
+    MapLoader::registerQml();
 
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);
@@ -59,6 +62,8 @@ QmlApp::QmlApp(QWindow *parent)
 
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
+
+//    Map map(Game::instance()->loadMapFile("test"));
     
     // Auto-extract assets at startup if compressed file exists
 //    autoExtractAssets();

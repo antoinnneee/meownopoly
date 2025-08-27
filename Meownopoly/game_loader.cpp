@@ -67,8 +67,8 @@ bool Game::registerMap(QVariantMap mapInfo, QVariantList caseList, QVariantList 
     QJsonObject jsonObject;
 
     // Extraire le nom de la map du QVariantMap
-    QString mapName = "mapName"; // valeur par défaut
-    if (mapInfo.contains("name")) {
+    QString mapName = "NONAME"; // valeur par défaut
+    if (mapInfo.contains("name") && !mapInfo["name"].toString().isEmpty()) {
         mapName = mapInfo["name"].toString();
     }
 
@@ -96,5 +96,31 @@ bool Game::registerMap(QVariantMap mapInfo, QVariantList caseList, QVariantList 
     jsonObject["snapableTiles"] = snapableTilesArray;
     addTileToJson(jsonObject, mapName);
     return true;
+}
+
+QJsonObject Game::loadMapFile(QString mapName)
+{
+    QString fileName = mapName.toLower().replace(" ", "_") + "_map.json";
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed to open file for reading:" << fileName;
+        return QJsonObject();
+    }
+    QByteArray fileData = file.readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(fileData);
+    QJsonObject jsonObject = doc.object();
+    return jsonObject;
+}
+
+QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
+{
+    QList<ItemSnapable*> listItems;
+    QJsonArray snapableTilesArray = jsonObject["snapableTiles"].toArray();
+    for (const QJsonValueRef value : snapableTilesArray) {
+        QJsonObject tileObject = value.toObject();
+        ItemSnapable *is = new ItemSnapable(tileObject);
+        listItems.append(is);
+    }
+    return listItems;
 }
 

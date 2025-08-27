@@ -12,7 +12,6 @@ QtObject {
     required property var workArea
     required property var editorGrid
     required property var selectionRect
-    property int nextTileId: 0
 
 
     property bool isEditing : false
@@ -184,6 +183,24 @@ QtObject {
         }
     }
 
+    // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
+    function createCaseTile(dispSettings, caseData) {
+        var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
+                                                                                        "gridRelativePositionX": dispSettings.gridRelativePositionX,
+                                                                                        "gridRelativePositionY": dispSettings.gridRelativePositionY,
+                                                                                        "unitSizeWidth": dispSettings.unitSizeWidth,
+                                                                                        "unitSizeHeight": dispSettings.unitSizeHeight,
+                                                                                        "caseData": caseData,
+                                                                                        "z": dispSettings.zLayer
+                                                                                    })
+
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            newTile.snapToGridFromGrid()
+        }
+        return newTile
+    }
+
     // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
     function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         var newTile
@@ -213,7 +230,6 @@ QtObject {
         }
         if (newTile) {
             snapableTilesList.push(newTile)
-            nextTileId++
             // Désélectionner tout et sélectionner le nouveau tile
             deselectAllTiles()
             newTile.isSelected = true
@@ -324,7 +340,6 @@ QtObject {
 
         if (newTile) {
             snapableTilesList.push(newTile)
-            nextTileId++
 
             // Désélectionner tout et sélectionner le nouveau tile
             deselectAllTiles()

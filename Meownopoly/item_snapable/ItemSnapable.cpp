@@ -31,14 +31,12 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
     m_displayParameter = displayParameter;
 }
 
-ItemSnapable::ItemSnapable(const QJsonDocument &json, QObject *parent)
+ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
 : QObject(parent)
 {
-    m_json = json.object();
+    m_json = json;
     m_caseData = getNewCaseFromJSON(m_json["caseData"].toObject(), this);
     m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
-    emit caseDataChanged();
-    emit displayParameterChanged();
 }
 
 Case *ItemSnapable::caseData() const {
@@ -115,3 +113,7 @@ QString ItemSnapable::toJSON()
 
 
 
+void ItemSnapable::print()
+{
+    qDebug() << "ItemSnapable: " << m_caseData->toJSON() << " " << m_displayParameter->toJSON();
+}
