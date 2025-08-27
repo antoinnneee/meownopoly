@@ -393,6 +393,7 @@ GroupBox {
         
         width: 300
         height: 350
+        y: -200
         
         background: Rectangle {
             color: "#333333"
