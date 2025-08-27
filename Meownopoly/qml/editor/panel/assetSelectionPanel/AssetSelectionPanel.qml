@@ -21,10 +21,13 @@ Rectangle {
     property string currentSelectedId: ""
     property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
 
+    // Selected decoration element for effects
+    property var selectedDecoration: null
+    property bool showEffectsPanel: true//selectedDecoration !== null && selectedDecoration.type === 2 // DecorationTile
     
     // Signals
     signal assetSelected(string category, string type, string id)
-
+    width: 450
 
     onAssetSelected: function(category, type, id) {
         if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
@@ -47,14 +50,11 @@ Rectangle {
 
     
     // Dimensions
-    readonly property int collapsedHeight: 40
-    readonly property int expandedHeight: 220
+    readonly property int collapsedHeight: Screen.pixelDensity * 12
+    readonly property int expandedHeight: 400
     readonly property int animationDuration: 200
     
     // State management
-    anchors.bottom: parent.bottom
-    anchors.left: parent.left
-    anchors.right: parent.right
     height: isExpanded ? expandedHeight : collapsedHeight
     
     color: "#E6000000" // Semi-transparent black
@@ -234,7 +234,7 @@ Rectangle {
                 width: 30
                 Layout.fillHeight: true
                 Layout.topMargin: -6
-                Layout.bottomMargin:  -6
+                Layout.bottomMargin:  0
 
                 background: Rectangle {
                     color: parent.pressed ? "#555555" : "#444444"
@@ -275,41 +275,90 @@ Rectangle {
             }
         }
         
-        // Category grid
-        AssetCategoryGrid {
-            id: categoryGrid
+        // Split view when effects panel is shown
+        Item {
+            id: item1
             anchors.fill: parent
-            anchors.topMargin: 6
-            visible: root.currentView === "categories"
-            activeFilter: root.activeFilter
-            searchText: root.searchText
             
-            onCategorySelected: function(category, type) {
-                root.selectedCategory = category
-                root.selectedType = type
-                root.currentView = "assets"
+            // Main content (categories/assets)
+            Item {
+                id: mainContent
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: root.showEffectsPanel ? effectsScrollView.left : parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: root.showEffectsPanel ? 5 : 0
+                
+                // Category grid
+                AssetCategoryGrid {
+                    id: categoryGrid
+                    anchors.fill: parent
+                    anchors.topMargin: 6
+                    visible: root.currentView === "categories"
+                    activeFilter: root.activeFilter
+                    searchText: root.searchText
+                    
+                    onCategorySelected: function(category, type) {
+                        root.selectedCategory = category
+                        root.selectedType = type
+                        root.currentView = "assets"
+                    }
+                }
+                
+                // Asset grid
+                AssetGrid {
+                    id: assetGrid
+                    anchors.fill: parent
+                    anchors.topMargin: 6
+                    visible: root.currentView === "assets"
+                    category: root.selectedCategory
+                    type: root.selectedType
+                    searchText: root.searchText
+                    
+                    // Pass selection state
+                    currentSelectedCategory: root.currentSelectedCategory
+                    currentSelectedType: root.currentSelectedType
+                    currentSelectedId: root.currentSelectedId
+                    
+                    onAssetSelected: function(id) {
+                        root.assetSelected(root.selectedCategory, root.selectedType, id)
+                    }
+                }
             }
-        }
-        
-        // Asset grid
-        AssetGrid {
-            id: assetGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: root.currentView === "assets"
-            category: root.selectedCategory
-            type: root.selectedType
-            searchText: root.searchText
             
-            // Pass selection state
-            currentSelectedCategory: root.currentSelectedCategory
-            currentSelectedType: root.currentSelectedType
-            currentSelectedId: root.currentSelectedId
-            
-            onAssetSelected: function(id) {
-                root.assetSelected(root.selectedCategory, root.selectedType, id)
-            }
+            // Visual Effects Panel in ScrollView
+            ScrollView {
+                id: effectsScrollView
+                anchors.top: parent.top
+                anchors.right: parent.right
+                contentHeight: effectsPanel.height
+                width: parent.width *0.42
+                anchors.bottom: parent.bottom
+                
+                visible: root.showEffectsPanel
 
+                
+                Behavior on visible {
+                    NumberAnimation {
+                        duration: 200
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+                
+                VisualEffectsPanel {
+                    id: effectsPanel
+                    width: effectsScrollView.width - 20 // Account for scrollbar
+                    targetDecoration: root.selectedDecoration
+                    
+                    onEffectChanged: {
+                        // Optional: emit signal when effects change
+                        console.log("Visual effect changed")
+                    }
+                }
+            }
         }
     }
     

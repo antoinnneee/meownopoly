@@ -72,7 +72,7 @@ Item{
                     logic.deselectAllTiles()
                     // Sélectionner l'élément cliqué
                     element.isSelected = true
-                    currentSelectedElement = element
+                    logic.currentSelectedElement = element
                 }
                 
                 // Gestion de la suppression
@@ -100,7 +100,7 @@ Item{
                 onElementPressed: function(element) {
                     logic.deselectAllTiles()
                     element.isSelected = true
-                    currentSelectedElement = element
+                    logic.currentSelectedElement = element
                 }
 
             }
