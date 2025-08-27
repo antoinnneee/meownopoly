@@ -53,7 +53,6 @@ Rectangle {
         root.currentSelectedId = ""
     }
 
-    
     // Dimensions
     readonly property int collapsedHeight: Screen.pixelDensity * 12
     readonly property int expandedHeight: 400
@@ -443,6 +442,20 @@ Rectangle {
             }
         }
 
+        // Split view when effects panel is shown
+        Item {
+            id: item1
+            anchors.fill: parent
+            
+            // Main content (categories/assets)
+            Item {
+                id: mainContent
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: root.showEffectsPanel ? effectsScrollView.left : parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: root.showEffectsPanel ? 5 : 0
+                
         // Category grid
         AssetCategoryGrid {
             id: categoryGrid
@@ -477,6 +490,19 @@ Rectangle {
             onAssetSelected: function(id) {
                 root.assetSelected(root.selectedCategory, root.selectedType, id)
             }
+                }
+            }
+            
+            // Visual Effects Panel in ScrollView
+            ScrollView {
+                id: effectsScrollView
+                anchors.top: parent.top
+                anchors.right: parent.right
+                contentHeight: effectsPanel.height
+                width: parent.width *0.42
+                anchors.bottom: parent.bottom
+                
+                visible: root.showEffectsPanel
 
                 
                 Behavior on visible {
