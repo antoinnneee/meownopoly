@@ -186,12 +186,8 @@ QtObject {
     // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
     function createCaseTile(dispSettings, caseData) {
         var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                                                                                        "gridRelativePositionX": dispSettings.gridRelativePositionX,
-                                                                                        "gridRelativePositionY": dispSettings.gridRelativePositionY,
-                                                                                        "unitSizeWidth": dispSettings.unitSizeWidth,
-                                                                                        "unitSizeHeight": dispSettings.unitSizeHeight,
-                                                                                        "caseData": caseData,
-                                                                                        "z": dispSettings.zLayer
+                                                                                        "displaySettings": dispSettings,
+                                                                                        "caseData": caseData
                                                                                     })
 
         if (newTile) {

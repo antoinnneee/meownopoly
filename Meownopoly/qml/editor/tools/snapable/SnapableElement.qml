@@ -5,6 +5,7 @@ import "../"
 
 import ItemSnapable
 import TileType
+import DisplayParameter
 
 Rectangle {
     id: snapableElement
@@ -26,13 +27,18 @@ Rectangle {
 
     // Propriété pour stocker la valeur z originale
     property int originalZ: z
+    property DisplayParameter displaySettings
 
-    property int unitSizeWidth: 3
-    property int unitSizeHeight: 3
+    // DisplayParameter {
+    //     id: displaySettings
+    // }
+    z: displaySettings.zLayer
 
+    property int unitSizeWidth: displaySettings.unitSizeWidth
+    property int unitSizeHeight: displaySettings.unitSizeHeight
 
-    property int gridRelativePositionX: 3
-    property int gridRelativePositionY: 3
+    property int gridRelativePositionX: displaySettings.gridRelativePositionX
+    property int gridRelativePositionY: displaySettings.gridRelativePositionY
 
     property TileType type
     // : 0 // 0: case, 1: personnage, 2: decoration
