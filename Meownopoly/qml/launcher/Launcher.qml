@@ -92,6 +92,11 @@ Rectangle {
         onPackageCreationCompleted: function(success) {
             packagingSection.packageCreated = success
         }
+        Component.onCompleted: {
+            console.log("LauncherLogic completed")
+            logic.testConnection()
+            logic.checkForUpdates()
+        }
     }
     
     ScrollView {

@@ -15,15 +15,23 @@ Rectangle {
     property string searchText: ""
     property string activeFilter: "All" // "All", "Decoration", "Characters"
     
+    required property var logic
+
+
     // Current selection state (from parent)
     property string currentSelectedCategory: ""
     property string currentSelectedType: ""
     property string currentSelectedId: ""
     property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
 
+    // Selected decoration element for effects
+    property var selectedDecoration: null
+    property bool showEffectsPanel: true//selectedDecoration !== null && selectedDecoration.type === 2 // DecorationTile
     
     // Signals
     signal assetSelected(string category, string type, string id)
+    width: 450
+    signal selectionModeChanged(bool isActive)
 
 
     onAssetSelected: function(category, type, id) {
@@ -45,16 +53,12 @@ Rectangle {
         root.currentSelectedId = ""
     }
 
-    
     // Dimensions
-    readonly property int collapsedHeight: 40
-    readonly property int expandedHeight: 220
+    readonly property int collapsedHeight: Screen.pixelDensity * 12
+    readonly property int expandedHeight: 400
     readonly property int animationDuration: 200
     
     // State management
-    anchors.bottom: parent.bottom
-    anchors.left: parent.left
-    anchors.right: parent.right
     height: isExpanded ? expandedHeight : collapsedHeight
     
     color: "#E6000000" // Semi-transparent black
@@ -107,9 +111,9 @@ Rectangle {
                 }
                 
                 Text {
-                    text: root.currentSelectedId !== "" ? 
-                          "Selected: " + root.currentSelectedType + " #" + root.currentSelectedId : 
-                          "Click to select an asset"
+                    text: root.currentSelectedId !== "" ?
+                              "Selected: " + root.currentSelectedType + " #" + root.currentSelectedId :
+                              "Click to select an asset"
                     color: root.currentSelectedId !== "" ? "#4CAF50" : "#999999"
                     font.pixelSize: 10
                     font.italic: true
@@ -175,45 +179,208 @@ Rectangle {
                 onTextChanged: root.searchText = text
             }
             
+            // Size selectors
+            Column {
+                visible: root.isExpanded
+                spacing: 2
+                Layout.alignment: Qt.AlignVCenter
+                width: 100
+                height: 38
+
+                // Width selector
+                Row {
+                    spacing: 4
+                    width: parent.width
+                    height: 18
+
+                    Text {
+                        text: "W:"
+                        color: "white"
+                        font.pixelSize: 11
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 18
+                    }
+
+                    SpinBox {
+                        id: widthSpinBox
+                        width: 68
+                        height: 18
+                        from: 1
+                        to: 100
+                        value: logic.currentElementWidth
+                        stepSize: 1
+                        editable: true
+
+                        contentItem: TextInput {
+                            text: widthSpinBox.textFromValue(widthSpinBox.value, widthSpinBox.locale)
+                            font.pixelSize: 9
+                            color: "white"
+                            selectionColor: "#4A90E2"
+                            horizontalAlignment: Qt.AlignHCenter
+                            verticalAlignment: Qt.AlignVCenter
+                            width: parent.width - (widthSpinBox.up.indicator ? widthSpinBox.up.indicator.width : 0)
+                                   - (widthSpinBox.down.indicator ? widthSpinBox.down.indicator.width : 0) - 6
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            readOnly: !widthSpinBox.editable
+                            validator: widthSpinBox.validator
+                            inputMethodHints: Qt.ImhFormattedNumbersOnly
+                        }
+
+                        background: Rectangle {
+                            color: "#444444"
+                            border.color: "#666666"
+                            border.width: 1
+                            radius: 2
+                        }
+
+                        onValueChanged: {
+                            logic.currentElementWidth = value
+                            console.log("Width:", value)
+                        }
+                    }
+                }
+
+                // Height selector
+                Row {
+                    spacing: 4
+                    width: parent.width
+                    height: 18
+
+                    Text {
+                        text: "H:"
+                        color: "white"
+                        font.pixelSize: 11
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 18
+                    }
+
+                    SpinBox {
+                        id: heightSpinBox
+                        width: 68
+                        height: 18
+                        from: 1
+                        to: 100
+                        value: logic.currentElementHeight
+                        stepSize: 1
+                        editable: true
+
+                        contentItem: TextInput {
+                            text: heightSpinBox.textFromValue(heightSpinBox.value, heightSpinBox.locale)
+                            font.pixelSize: 9
+                            color: "white"
+                            selectionColor: "#4A90E2"
+                            horizontalAlignment: Qt.AlignHCenter
+                            verticalAlignment: Qt.AlignVCenter
+                            width: parent.width - (heightSpinBox.up.indicator ? heightSpinBox.up.indicator.width : 0)
+                                   - (heightSpinBox.down.indicator ? heightSpinBox.down.indicator.width : 0) - 6
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            readOnly: !heightSpinBox.editable
+                            validator: heightSpinBox.validator
+                            inputMethodHints: Qt.ImhFormattedNumbersOnly
+                        }
+
+                        background: Rectangle {
+                            color: "#444444"
+                            border.color: "#666666"
+                            border.width: 1
+                            radius: 2
+                        }
+
+                        onValueChanged: {
+                            logic.currentElementHeight = value
+                            console.log("Height:", value)
+                        }
+                    }
+                }
+            }
+
+            // Mouse cursor button
+            Rectangle {
+                id: cursorButton
+                property bool checked: false
+
+                visible: root.isExpanded
+                width: 30
+                height: 30
+                radius: 4
+                color: checked ? "#4A90E2" : (cursorMouseArea.pressed ? "#5AA0F0" : "#444444")
+                border.color: "#666666"
+                border.width: 1
+                Layout.alignment: Qt.AlignVCenter
+
+                Text {
+                    text: "🖱️"
+                    color: "white"
+                    font.pixelSize: 14
+                    anchors.centerIn: parent
+                }
+
+                MouseArea {
+                    id: cursorMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+
+                    onClicked: {
+                        cursorButton.checked = !cursorButton.checked
+                        isSelectionActive = cursorButton.checked
+                        console.log("Mode sélection: " + cursorButton.checked)
+                        selectionModeChanged(cursorButton.checked)
+                        if (!cursorButton.checked) {
+                            logic.cancelSelection()
+                        }
+                    }
+                }
+
+                ToolTip {
+                    visible: cursorMouseArea.containsMouse
+                    text: "Select cursor tool"
+                    delay: 500
+                }
+            }
+
             // Spacer
             Item { Layout.fillWidth: true }
-            
+
             // Back button (visible when in assets view)
             Button {
                 visible: root.isExpanded && root.currentView === "assets"
                 text: "← Back"
                 flat: true
-                
+
                 background: Rectangle {
                     color: parent.pressed ? "#555555" : "transparent"
                     border.color: "#666666"
                     border.width: 1
                     radius: 4
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
                     color: "white"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-                
+
                 onClicked: root.currentView = "categories"
             }
-            
+
             // Clear selection button (visible when asset is selected)
             Button {
                 visible: root.isExpanded && root.currentSelectedId !== ""
                 text: "✕ Clear"
                 flat: true
-                
+
                 background: Rectangle {
                     color: parent.pressed ? "#AA4444" : "transparent"
                     border.color: "#FF6666"
                     border.width: 1
                     radius: 4
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
                     color: "#FF6666"
@@ -221,20 +388,20 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 11
                 }
-                
+
                 onClicked: {
                     // Signal to parent to clear selection
                     root.assetSelected("", "", "")
                 }
             }
-            
+
             // Expand/collapse button
             Button {
                 id: expandButton
                 width: 30
                 Layout.fillHeight: true
                 Layout.topMargin: -6
-                Layout.bottomMargin:  -6
+                Layout.bottomMargin:  0
 
                 background: Rectangle {
                     color: parent.pressed ? "#555555" : "#444444"
@@ -242,7 +409,7 @@ Rectangle {
                     border.width: 1
                     radius: 4
                 }
-                
+
                 contentItem: Text {
                     text: root.isExpanded ? "▼" : "▲"
                     color: "white"
@@ -251,12 +418,12 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     anchors.fill:expandButton
                 }
-                
+
                 onClicked: root.isExpanded = !root.isExpanded
             }
         }
     }
-    
+
     // Content area (visible only when expanded)
     Item {
         id: contentArea
@@ -267,14 +434,28 @@ Rectangle {
         anchors.margins: 10
         visible: root.isExpanded
         opacity: root.isExpanded ? 1.0 : 0.0
-        
+
         Behavior on opacity {
             NumberAnimation {
                 duration: animationDuration
                 easing.type: Easing.OutCubic
             }
         }
-        
+
+        // Split view when effects panel is shown
+        Item {
+            id: item1
+            anchors.fill: parent
+            
+            // Main content (categories/assets)
+            Item {
+                id: mainContent
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: root.showEffectsPanel ? effectsScrollView.left : parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: root.showEffectsPanel ? 5 : 0
+                
         // Category grid
         AssetCategoryGrid {
             id: categoryGrid
@@ -283,14 +464,14 @@ Rectangle {
             visible: root.currentView === "categories"
             activeFilter: root.activeFilter
             searchText: root.searchText
-            
+
             onCategorySelected: function(category, type) {
                 root.selectedCategory = category
                 root.selectedType = type
                 root.currentView = "assets"
             }
         }
-        
+
         // Asset grid
         AssetGrid {
             id: assetGrid
@@ -300,19 +481,54 @@ Rectangle {
             category: root.selectedCategory
             type: root.selectedType
             searchText: root.searchText
-            
+
             // Pass selection state
             currentSelectedCategory: root.currentSelectedCategory
             currentSelectedType: root.currentSelectedType
             currentSelectedId: root.currentSelectedId
-            
+
             onAssetSelected: function(id) {
                 root.assetSelected(root.selectedCategory, root.selectedType, id)
             }
+                }
+            }
+            
+            // Visual Effects Panel in ScrollView
+            ScrollView {
+                id: effectsScrollView
+                anchors.top: parent.top
+                anchors.right: parent.right
+                contentHeight: effectsPanel.height
+                width: parent.width *0.42
+                anchors.bottom: parent.bottom
+                
+                visible: root.showEffectsPanel
 
+                
+                Behavior on visible {
+                    NumberAnimation {
+                        duration: 200
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+                
+                VisualEffectsPanel {
+                    id: effectsPanel
+                    width: effectsScrollView.width - 20 // Account for scrollbar
+                    targetDecoration: root.selectedDecoration
+                    
+                    onEffectChanged: {
+                        // Optional: emit signal when effects change
+                        console.log("Visual effect changed")
+                    }
+                }
+            }
         }
     }
-    
+
     // Status indicator
     Rectangle {
         anchors.bottom: parent.bottom
@@ -323,7 +539,7 @@ Rectangle {
         color: "#444444"
         radius: 10
         visible: root.isExpanded
-        
+
         Text {
             id: statusText
             anchors.centerIn: parent

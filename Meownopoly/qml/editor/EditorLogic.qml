@@ -107,6 +107,7 @@ QtObject {
         Game.registerMap(infoMap, caseList, decoList)
     }
 
+
     // Fonction pour désélectionner tous les tiles
     function deselectAllTiles() {
         // Désélectionner tous les tiles dans la liste
@@ -190,6 +191,8 @@ QtObject {
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                           "gridRelativePositionX": gridX,
                                                                                           "gridRelativePositionY": gridY,
+                                                                                          "unitSizeWidth": currentElementWidth,
+                                                                                          "unitSizeHeight": currentElementHeight,
                                                                                           "z": 5
                                                                                       })
             break
@@ -403,7 +406,7 @@ QtObject {
 
     function startSelection(mouse)
     {
-        if (isEditing && isSelectionActive) {
+        if (isSelectionActive) {
             // Vérifier si le clic est sur un élément existant
             var clickedOnElement = false
             for (var i = 0; i < snapableTilesList.length; i++) {
