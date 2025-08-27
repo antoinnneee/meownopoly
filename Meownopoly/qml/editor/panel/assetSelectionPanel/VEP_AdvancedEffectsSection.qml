@@ -17,6 +17,9 @@ GroupBox {
     property alias shadowBlurSlider: shadowBlurSlider
     property alias shadowEnabledCheck: shadowEnabledCheck
 
+    property bool isCollapsed: false
+    height: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
+
     signal effectChanged()
 
     padding:4
@@ -28,13 +31,43 @@ GroupBox {
         border.color: "#555555"
         border.width: 1
     }
-    
-    label: Text {
-        color: "#cccccc"
+    label: RowLayout {
         x: control.leftPadding
         width: control.availableWidth
-        text: control.title
-        elide: Text.ElideRight
+        spacing: 8
+        
+        Text {
+            color: "#cccccc"
+            text: control.title
+            elide: Text.ElideRight
+            Layout.fillWidth: true
+        }
+        
+        Button {
+            id: collapseButton
+            Layout.preferredWidth: Screen.pixelDensity * 8
+            Layout.preferredHeight: Screen.pixelDensity * 8
+            flat: true
+            
+            background: Rectangle {
+                color: "transparent"
+                border.color: "#666666"
+                border.width: 1
+                radius: 2
+            }
+            
+            contentItem: Text {
+                text: control.isCollapsed ? "▼" : "▲"
+                color: "#cccccc"
+                font.pixelSize: 10
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            
+            onClicked: {
+                control.isCollapsed = !control.isCollapsed
+            }
+        }
     }
     
     ColumnLayout {
@@ -42,6 +75,7 @@ GroupBox {
         anchors.fill: parent
         anchors.topMargin: -4
         spacing: 1
+        visible: !control.isCollapsed
         
         // Blur effect
         RowLayout {

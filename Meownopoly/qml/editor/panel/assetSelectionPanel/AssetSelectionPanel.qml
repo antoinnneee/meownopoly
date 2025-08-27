@@ -27,7 +27,7 @@ Rectangle {
     
     // Signals
     signal assetSelected(string category, string type, string id)
-
+    width: 450
 
     onAssetSelected: function(category, type, id) {
         if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
@@ -50,14 +50,11 @@ Rectangle {
 
     
     // Dimensions
-    readonly property int collapsedHeight: 40
-    readonly property int expandedHeight: 500
+    readonly property int collapsedHeight: Screen.pixelDensity * 12
+    readonly property int expandedHeight: 400
     readonly property int animationDuration: 200
     
     // State management
-    anchors.bottom: parent.bottom
-    anchors.left: parent.left
-    anchors.right: parent.right
     height: isExpanded ? expandedHeight : collapsedHeight
     
     color: "#E6000000" // Semi-transparent black
@@ -237,7 +234,7 @@ Rectangle {
                 width: 30
                 Layout.fillHeight: true
                 Layout.topMargin: -6
-                Layout.bottomMargin:  -6
+                Layout.bottomMargin:  0
 
                 background: Rectangle {
                     color: parent.pressed ? "#555555" : "#444444"
@@ -280,6 +277,7 @@ Rectangle {
         
         // Split view when effects panel is shown
         Item {
+            id: item1
             anchors.fill: parent
             
             // Main content (categories/assets)
@@ -287,7 +285,7 @@ Rectangle {
                 id: mainContent
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.right: root.showEffectsPanel ? parent.horizontalCenter : parent.right
+                anchors.right: root.showEffectsPanel ? effectsScrollView.left : parent.right
                 anchors.bottom: parent.bottom
                 anchors.rightMargin: root.showEffectsPanel ? 5 : 0
                 
@@ -328,17 +326,17 @@ Rectangle {
                 }
             }
             
-            // Visual Effects Panel
-            VisualEffectsPanel {
-                id: effectsPanel
+            // Visual Effects Panel in ScrollView
+            ScrollView {
+                id: effectsScrollView
                 anchors.top: parent.top
                 anchors.right: parent.right
+                contentHeight: effectsPanel.height
+                width: parent.width *0.42
                 anchors.bottom: parent.bottom
-                anchors.left: parent.horizontalCenter
-                anchors.leftMargin: 5
                 
                 visible: root.showEffectsPanel
-                targetDecoration: root.selectedDecoration
+
                 
                 Behavior on visible {
                     NumberAnimation {
@@ -347,9 +345,18 @@ Rectangle {
                     }
                 }
                 
-                onEffectChanged: {
-                    // Optional: emit signal when effects change
-                    console.log("Visual effect changed")
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+                
+                VisualEffectsPanel {
+                    id: effectsPanel
+                    width: effectsScrollView.width - 20 // Account for scrollbar
+                    targetDecoration: root.selectedDecoration
+                    
+                    onEffectChanged: {
+                        // Optional: emit signal when effects change
+                        console.log("Visual effect changed")
+                    }
                 }
             }
         }

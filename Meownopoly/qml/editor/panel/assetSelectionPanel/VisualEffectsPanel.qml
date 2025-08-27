@@ -18,31 +18,36 @@ Rectangle {
     border.width: 1
     
     // Dimensions
-    implicitHeight: mainLayout.implicitHeight + 20
+    height: mainLayout.implicitHeight + 12
+    width: mainLayout.implicitWidth
     
     // Signals
     signal effectChanged()
     
     // Main layout
-    ColumnLayout {
+    Column {
         id: mainLayout
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
         anchors.margins: 10
         spacing: 10
         
         // Title
         Text {
+            id: title
             text: "Visual Effects"
             color: "#ffffff"
             font.pixelSize: 16
             font.bold: true
-            Layout.fillWidth: true
+            anchors.left: parent.left
+            anchors.right: parent.right
         }
         
         VEP_ColorEffectsSection {
             id: colorEffectsSection
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+            anchors.left: parent.left
+            anchors.right: parent.right
             targetDecoration: root.targetDecoration
 
             onEffectChanged: {
@@ -53,8 +58,8 @@ Rectangle {
         // Advanced Effects Section
         VEP_AdvancedEffectsSection {
             id: advancedEffectsSection
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+            anchors.left: parent.left
+            anchors.right: parent.right
             targetDecoration: root.targetDecoration
 
             onEffectChanged: {
@@ -62,60 +67,16 @@ Rectangle {
             }
         }
         
-        // Reset all button
-        RowLayout {
-            Layout.fillWidth: true
+        // Reset buttons panel
+        VEP_ResetButtonsPanel {
+            id: resetButtonsPanel
+            anchors.left: parent.left
+            anchors.right: parent.right
+            targetDecoration: root.targetDecoration
             
-            Button {
-                text: "Reset Color Effects"
-                Layout.fillWidth: true
-                
-                onClicked: {
-                    if (targetDecoration) {
-                        targetDecoration.resetColorEffects()
-                        updateFromTarget()
-                        effectChanged()
-                    }
-                }
-                
-                background: Rectangle {
-                    color: parent.pressed ? "#666666" : "#555555"
-                    radius: 4
-                }
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: "#cccccc"
-                    font.pixelSize: 11
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            
-            Button {
-                text: "Reset All Effects"
-                Layout.fillWidth: true
-                
-                onClicked: {
-                    if (targetDecoration) {
-                        targetDecoration.resetAllEffects()
-                        updateFromTarget()
-                        effectChanged()
-                    }
-                }
-                
-                background: Rectangle {
-                    color: parent.pressed ? "#ff6666" : "#ff4444"
-                    radius: 4
-                }
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: "#ffffff"
-                    font.pixelSize: 11
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+            onEffectChanged: {
+                updateFromTarget()
+                root.effectChanged()
             }
         }
 

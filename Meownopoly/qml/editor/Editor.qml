@@ -313,7 +313,10 @@ Rectangle {
     // Asset Selection Panel
     AssetSelectionPanel {
         id: assetPanel
-        
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
         // Connect the selected decoration element for effects
         selectedDecoration: {
             if (currentSelectedElement && currentSelectedElement.type === ItemSnapable.DecorationTile) {
