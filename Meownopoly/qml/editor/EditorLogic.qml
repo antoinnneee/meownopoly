@@ -222,18 +222,7 @@ QtObject {
             }
         }
     }
-/*
 
-    newTile.blockConnections = true
-    // build the connections from the caseData
-    var nextList = caseData.getNextList()
-    for (var i = 0; i < nextList.length; i++) {
-        var nextEl = nextList[i]
-        newTile.connectionManager.addNextElement(nextEl)
-        nextEl.connectionManager.addPreviousElement(newTile)
-
-    }
-*/
     // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
     function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         var newTile

@@ -58,12 +58,32 @@ Rectangle {
     }
 
     Button{
-        text: "try load"
+        id: loadMapButton
+        text: "Load Map"
         onClicked: {
-            console.log("load")
-            MapLoader.loadMap("test")
+            console.log("Opening map selection panel")
+            mapSelectionPanel.isVisible = true
         }
         z:1000
+        
+        // Style moderne pour le bouton
+        background: Rectangle {
+            radius: 8
+            color: loadMapButton.hovered ? "#74b9ff" : "#6c5ce7"
+            border.color: "#5f3dc4"
+            border.width: 1
+            
+            Behavior on color { ColorAnimation { duration: 150 } }
+        }
+        
+        contentItem: Text {
+            text: loadMapButton.text
+            color: "#ffffff"
+            font.pixelSize: 12
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     EditorLogic {
@@ -354,6 +374,21 @@ Rectangle {
                  }
              }
          }
+    }
+
+    // Panneau de sélection des maps
+    MapSelectionPanel {
+        id: mapSelectionPanel
+        anchors.fill: parent
+        
+        onConfigurationClosed: {
+            console.log("Map selection panel closed")
+        }
+        
+        onMapSelected: function(mapName) {
+            console.log("Map selected:", mapName)
+            // Le chargement est déjà fait dans le panel via MapLoader.loadMap(mapName)
+        }
     }
 
 }

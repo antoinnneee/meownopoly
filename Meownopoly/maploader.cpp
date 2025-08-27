@@ -5,6 +5,8 @@
 
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
+#include <QDir>
+#include <QFileInfo>
 
 MapLoader *MapLoader::m_pThis = nullptr;
 
@@ -43,6 +45,43 @@ Map *MapLoader::loadMap(QString mapName)
     }
     emit mapLoaded(map);
     return map;
+}
+
+QStringList MapLoader::getAvailableMaps()
+{
+    QStringList mapList;
+    QDir mapDir("map");
+    
+    // Vérifier si le dossier map existe
+    if (!mapDir.exists()) {
+        qDebug() << "Map directory does not exist: map/";
+        return mapList;
+    }
+    
+    // Filtrer les fichiers JSON qui se terminent par "_map.json"
+    QStringList filters;
+    filters << "*_map.json";
+    QStringList jsonFiles = mapDir.entryList(filters, QDir::Files);
+    
+    // Extraire le nom de la map de chaque fichier
+    for (const QString &fileName : jsonFiles) {
+        QFileInfo fileInfo(fileName);
+        QString baseName = fileInfo.baseName(); // Nom sans extension
+        
+        // Retirer le suffixe "_map" pour obtenir le nom de la map
+        if (baseName.endsWith("_map")) {
+            QString mapName = baseName.left(baseName.length() - 4); // Enlever "_map"
+            if (!mapName.isEmpty()) {
+                mapList.append(mapName);
+            }
+        }
+    }
+    
+    // Trier la liste par ordre alphabétique
+    mapList.sort();
+    
+    qDebug() << "Found" << mapList.size() << "maps:" << mapList;
+    return mapList;
 }
 
 QJsonObject MapLoader::readMapFile(QString mapName)

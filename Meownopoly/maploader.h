@@ -14,6 +14,7 @@ public:
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
     Q_INVOKABLE Map *loadMap(QString mapName);
+    Q_INVOKABLE QStringList getAvailableMaps();
     static QJsonObject readMapFile(QString mapName);
 
 public slots:
