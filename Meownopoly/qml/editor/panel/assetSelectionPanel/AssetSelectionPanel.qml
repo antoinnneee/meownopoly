@@ -53,7 +53,6 @@ Rectangle {
         root.currentSelectedId = ""
     }
 
-    
     // Dimensions
     readonly property int collapsedHeight: Screen.pixelDensity * 12
     readonly property int expandedHeight: 400
