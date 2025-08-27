@@ -94,5 +94,8 @@
         <file>qml/editor/panel/caseConfigPanel/CaseTypeSelector.qml</file>
         <file>qml/editor/panel/caseConfigPanel/ConfigPanelElement.qml</file>
         <file>qml/editor/panel/ConnectionsConfigurationPanel.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/VEP_ColorEffectsSection.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/VEP_Slider.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/VEP_AdvancedEffectsSection.qml</file>
     </qresource>
 </RCC>
