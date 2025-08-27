@@ -74,7 +74,6 @@ Rectangle {
         Component.onCompleted: {
         }
 
-
         onGridPressed : function(position) {
             // Si un asset est sélectionné, le placer directement
             if (root.isAssetSelected) {
@@ -206,13 +205,6 @@ Rectangle {
                 logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.DecorationTile)
             }
         }
-
-        MenuItem {
-            text: "Créer un Personnage"
-            onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
-            }
-        }
     }
 
 
@@ -324,6 +316,7 @@ Rectangle {
             }
             return null
         }
+        logic: logic
     }
 
     WheelHandler {
