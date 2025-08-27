@@ -62,12 +62,6 @@ QmlApp::QmlApp(QWindow *parent)
 
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
-
-//    Map map(Game::instance()->loadMapFile("test"));
-    
-    // Auto-extract assets at startup if compressed file exists
-//    autoExtractAssets();
- //   downloadAssetsFile();
 }
 
 /*

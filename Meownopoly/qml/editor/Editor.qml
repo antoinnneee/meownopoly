@@ -50,6 +50,11 @@ Rectangle {
             console.log("Found case tile:", dp, caseData)
             logic.createCaseTile(dp, caseData);
         }
+        function onMapLoaded(map)
+        {
+            console.log("Map loaded")
+            logic.builtConnections();
+        }
     }
 
     Button{
@@ -264,8 +269,6 @@ Rectangle {
         width: parent.width/2
 
         onConfigurationClosed: {
-            console.log("Panneau de configuration fermé")
-            console.log(caseConfigPanel.targetSnapableCase.caseData.toJSON());
 
         }
 

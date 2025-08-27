@@ -71,7 +71,6 @@ public:
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
     bool addTileToJson(QJsonObject jsonObject, QString mapName);
     Q_INVOKABLE bool registerMap(QVariantMap mapInfo, QVariantList  caseList, QVariantList  decorationList);
-    Q_INVOKABLE QJsonObject loadMapFile(QString mapName);
 
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
 

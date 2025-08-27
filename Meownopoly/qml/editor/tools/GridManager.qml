@@ -65,10 +65,10 @@ Item {
     // Fonction alternative qui snap directement un élément (plus pratique)
     function snapElement2(element) {
         if (!snapToGrid) return
-        var posGridX = element.gridRelativePositionX * gridSize
-        var posGridY = element.gridRelativePositionY * gridSize
-        var elementWidth = element.unitSizeWidth * gridSize
-        var elementHeight = element.unitSizeHeight * gridSize
+        var posGridX = element.displaySettings.gridRelativePositionX * gridSize
+        var posGridY = element.displaySettings.gridRelativePositionY * gridSize
+        var elementWidth = element.displaySettings.unitSizeWidth * gridSize
+        var elementHeight = element.displaySettings.unitSizeHeight * gridSize
         element.x = posGridX
         element.y =posGridY
     }

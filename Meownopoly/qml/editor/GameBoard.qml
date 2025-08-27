@@ -270,46 +270,5 @@ Rectangle {
                  }
     }
 
-    // Gestionnaire de raccourcis clavier
-    Keys.onPressed: function(event) {
-        if (currentSelectedElement) {
-            switch(event.key) {
-            case Qt.Key_1:
-                currentSelectedElement.changeToLayer(1)
-                event.accepted = true
-                break
-            case Qt.Key_2:
-                currentSelectedElement.changeToLayer(2)
-                event.accepted = true
-                break
-            case Qt.Key_3:
-                currentSelectedElement.changeToLayer(3)
-                event.accepted = true
-                break
-            case Qt.Key_4:
-                currentSelectedElement.changeToLayer(4)
-                event.accepted = true
-                break
-            case Qt.Key_5:
-                currentSelectedElement.changeToLayer(5)
-                event.accepted = true
-                break
-            case Qt.Key_PageUp:
-                // Monter d'un plan
-                if (currentSelectedElement.z < 10) {
-                    currentSelectedElement.changeToLayer(currentSelectedElement.z + 1)
-                }
-                event.accepted = true
-                break
-            case Qt.Key_PageDown:
-                // Descendre d'un plan
-                if (currentSelectedElement.z > 1) {
-                    currentSelectedElement.changeToLayer(currentSelectedElement.z - 1)
-                }
-                event.accepted = true
-                break
-            }
-        }
-    }
 
 }

@@ -14,12 +14,12 @@ public:
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
     Q_INVOKABLE Map *loadMap(QString mapName);
-
+    static QJsonObject readMapFile(QString mapName);
 
 public slots:
 
 signals:
-
+    void mapLoaded(Map *map);
     void foundCaseTile(DisplayParameter *dp, Case *caseData);
 
 private slots:

@@ -9,8 +9,8 @@ SnapableElement {
     isResizable: true
     autoSnap: true
 
-    unitSizeHeight: 6
-    unitSizeWidth:4
+    displaySettings.unitSizeHeight: 6
+    displaySettings.unitSizeWidth:4
 
     property int randomImageIndex: Math.floor(Math.random() * 6)  // Random number between 0 and 3
 

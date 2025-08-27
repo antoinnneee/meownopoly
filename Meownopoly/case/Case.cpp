@@ -135,13 +135,6 @@ Case::CaseType Case::intToCaseType(int type)
 
 // ---- CHAINED LIST MANIPULATION ----
 
-Case *Case::getNext(int userSelectNext)
-{
-    if (!next.isEmpty() && next.at(userSelectNext))
-        if (userSelectNext < next.size())
-            return next.value(userSelectNext);
-    return nullptr;
-}
 
 void Case::addNext(Case *newNext)
 {
@@ -165,13 +158,6 @@ bool Case::removeNextAt(int index)
         return true;
     }
     return false;
-}
-
-Case *Case::getPrev(int userSelectPrev)
-{
-    if (prev.size() >= userSelectPrev)
-        return prev.value(userSelectPrev);
-    return nullptr;
 }
 
 void Case::addPrev(Case *newPrev)

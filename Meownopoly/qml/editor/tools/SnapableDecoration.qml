@@ -12,8 +12,8 @@ SnapableElement {
     isResizable: true
     autoSnap: true
 
-    unitSizeHeight: 6
-    unitSizeWidth:4
+    displaySettings.unitSizeHeight: 6
+    displaySettings.unitSizeWidth:4
 
     type : ItemSnapable.DecorationTile
 

@@ -15,6 +15,7 @@ Rectangle {
     required property GridManager gridManager
     property bool isDraggable: !isAssetSelected
     property bool isResizable: true
+    property bool blockConnections: false
     property bool autoSnap: true
     property color elementColor: "transparent"
     property color borderColor: "gray"
@@ -26,29 +27,24 @@ Rectangle {
     property bool isSelected: false
 
     // Propriété pour stocker la valeur z originale
-    property int originalZ: z
-    property DisplayParameter displaySettings
+    property DisplayParameter displaySettings : DisplayParameter {
+
+    }
 
     // DisplayParameter {
     //     id: displaySettings
     // }
     z: displaySettings.zLayer
 
-    property int unitSizeWidth: displaySettings.unitSizeWidth
-    property int unitSizeHeight: displaySettings.unitSizeHeight
-
-    property int gridRelativePositionX: displaySettings.gridRelativePositionX
-    property int gridRelativePositionY: displaySettings.gridRelativePositionY
-
     property TileType type
     // : 0 // 0: case, 1: personnage, 2: decoration
     
     // Positions calculées à partir des coordonnées relatives
-    x: gridRelativePositionX * gridManager.gridSize
-    y: gridRelativePositionY * gridManager.gridSize
+    x: displaySettings.gridRelativePositionX * gridManager.gridSize
+    y: displaySettings.gridRelativePositionY * gridManager.gridSize
 
-    width:  gridManager.gridSize * unitSizeWidth
-    height:  gridManager.gridSize * unitSizeHeight
+    width:  gridManager.gridSize * displaySettings.unitSizeWidth
+    height:  gridManager.gridSize * displaySettings.unitSizeHeight
 
     readonly property int globalCenterX: snapableElement.x + snapableElement.width / 2
     readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
@@ -101,10 +97,10 @@ Rectangle {
     // Z-order: valeur élevée si sélectionné
     onIsSelectedChanged: {
         if (isSelected) {
-            originalZ = z
+            displaySettings.zLayer = z
             z = 11
         } else {
-            z = originalZ
+            z = displaySettings.zLayer
         }
     }
     
@@ -169,8 +165,8 @@ Rectangle {
         id: elementControls
         targetElement: snapableElement
         isVisible: isSelected
-        zLayer: originalZ
-        onLayerChanged: function(newLayer) {originalZ = newLayer}
+        zLayer: displaySettings.zLayer
+        onLayerChanged: function(newLayer) {displaySettings.zLayer = newLayer}
                 
         onDeleteRequested: {
 //            elementDeleted(snapableElement)
@@ -200,8 +196,8 @@ Rectangle {
         updatingFromRelative = true
         
         // Calculer les nouvelles positions relatives basées sur les positions absolues
-        gridRelativePositionX = Math.round(x / gridManager.gridSize)
-        gridRelativePositionY = Math.round(y / gridManager.gridSize)
+        displaySettings.gridRelativePositionX = Math.round(x / gridManager.gridSize)
+        displaySettings.gridRelativePositionY = Math.round(y / gridManager.gridSize)
 
         updatingFromRelative = false
     }
@@ -216,8 +212,8 @@ Rectangle {
         var snappedGridY = Math.round(y / gridManager.gridSize)
 
         // Mettre à jour les positions relatives (qui vont automatiquement mettre à jour x et y)
-        gridRelativePositionX = snappedGridX
-        gridRelativePositionY = snappedGridY
+        displaySettings.gridRelativePositionX = snappedGridX
+        displaySettings.gridRelativePositionY = snappedGridY
 
 
         updatingFromRelative = false
@@ -237,12 +233,6 @@ Rectangle {
     function select() { isSelected = true }
     function deselect() { isSelected = false }
     function toggleSelection() { isSelected = !isSelected }
-    
-    // Fonction pour changer le plan (z)
-    function changeToLayer(newZ) {
-        z = newZ
-        originalZ = newZ
-        console.log("Plan changé vers:", newZ)
-    }    
+
 
 } 

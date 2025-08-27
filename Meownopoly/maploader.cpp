@@ -36,10 +36,25 @@ QObject *MapLoader::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 Map *MapLoader::loadMap(QString mapName)
 {
-    QJsonObject jsonObject = Game::instance()->loadMapFile(mapName);
+    QJsonObject jsonObject = MapLoader::readMapFile(mapName);
     Map *map = new Map(jsonObject);
     for (ItemSnapable *is : map->caseTiles()) {
         emit foundCaseTile(is->displayParameter(), is->caseData());
     }
+    emit mapLoaded(map);
     return map;
+}
+
+QJsonObject MapLoader::readMapFile(QString mapName)
+{
+    QString fileName = "map/" + mapName.toLower().replace(" ", "_") + "_map.json";
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed to open file for reading:" << fileName;
+        return QJsonObject();
+    }
+    QByteArray fileData = file.readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(fileData);
+    QJsonObject jsonObject = doc.object();
+    return jsonObject;
 }
