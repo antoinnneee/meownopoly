@@ -316,6 +316,7 @@ Rectangle {
             }
             return null
         }
+        logic: logic
     }
 
     WheelHandler {

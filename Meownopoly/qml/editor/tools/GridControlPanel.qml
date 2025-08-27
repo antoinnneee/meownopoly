@@ -314,62 +314,6 @@ Item {
                     }
                 }
             }
-
-            // Sélecteurs de taille d'élément
-            Text {
-                text: "Dimensions des éléments"
-                font.bold: true
-                font.pixelSize: 12
-                visible: logic.isEditing
-                enabled: visible
-            }
-
-            // Sélecteur de largeur
-            RowLayout {
-                spacing: 8
-                visible: logic.isEditing
-                enabled: visible
-
-                Text {
-                    text: "L:"
-                    width: 15
-                }
-                SpinBox {
-                    id: widthSpinBox
-                    from: 1
-                    to: 20
-                    stepSize: 1
-                    value: logic.currentElementWidth
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                    onValueChanged: logic.currentElementWidth = value
-                    height: 30
-                    Layout.fillWidth: true
-                }
-            }
-
-            // Sélecteur de hauteur
-            RowLayout {
-                spacing: 8
-                visible: logic.isEditing
-                enabled: visible
-
-                Text {
-                    text: "H:"
-                    width: 15
-
-                }
-                SpinBox {
-                    id: heightSpinBox
-                    from: 1
-                    to: 20
-                    stepSize: 1
-                    height: 30
-                    value: logic.currentElementHeight
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                    onValueChanged: logic.currentElementHeight = value
-                    Layout.fillWidth: true
-                }
-            }
         }
     }
 
