@@ -346,8 +346,15 @@ Rectangle {
                 newTile.decorationSettings.decorationType = root.selectedAssetType
                 newTile.decorationSettings.decorationId = root.selectedAssetId
             }
-        } else if (root.selectedAssetCategory === "avatar") {
-            logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.CaseTile)
+        }
+        else if (root.selectedAssetCategory === "tile") {
+            var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
+            // Set decoration properties if needed
+            if (newTile && newTile.decorationSettings.decorationType !== undefined) {
+                newTile.decorationSettings.decorationCategory = root.selectedAssetCategory
+                newTile.decorationSettings.decorationType = root.selectedAssetType
+                newTile.decorationSettings.decorationId = root.selectedAssetId
+            }
         }
         
         // Clear selection after placing (optional - you might want to keep it selected)

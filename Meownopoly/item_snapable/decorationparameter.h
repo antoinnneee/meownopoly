@@ -11,9 +11,12 @@ public:
     explicit DecorationParameter(const QJsonObject &json, QObject *parent = nullptr);
     QString toJSON();
     
+    Q_PROPERTY(QString decorationCategory READ decorationCategory WRITE setDecorationCategory NOTIFY decorationCategoryChanged)
     Q_PROPERTY(QString decorationType READ decorationType WRITE setDecorationType NOTIFY decorationTypeChanged)
     Q_PROPERTY(QString decorationId READ decorationId WRITE setDecorationId NOTIFY decorationIdChanged)
 
+    QString decorationCategory() const;
+    void setDecorationCategory(const QString &decorationCategory);
     QString decorationType() const;
     void setDecorationType(const QString &decorationType);
     QString decorationId() const;
@@ -22,8 +25,10 @@ public:
 signals:
     void decorationTypeChanged();
     void decorationIdChanged();
+    void decorationCategoryChanged();
 
 private:
+    QString m_decorationCategory;
     QString m_decorationType;
     QString m_decorationId;
 };

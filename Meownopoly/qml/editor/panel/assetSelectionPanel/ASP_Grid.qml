@@ -78,6 +78,7 @@ ScrollView {
                 }
                 
                 onAssetClicked: function(id) {
+                    //console.log(assetPath, assetId, assetFilename)
                     root.assetSelected(id)
                 }
 

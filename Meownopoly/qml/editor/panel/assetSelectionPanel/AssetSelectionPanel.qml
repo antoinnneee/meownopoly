@@ -129,7 +129,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 
                 Repeater {
-                    model: ["All", "Decoration", "Characters"]
+                    model: ["All", "Decoration", "Tile"]
                     
                     Button {
                         text: modelData
@@ -456,40 +456,40 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.rightMargin: root.showEffectsPanel ? 5 : 0
                 
-        // Category grid
-        ASP_CategoryGrid {
-            id: categoryGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: root.currentView === "categories"
-            activeFilter: root.activeFilter
-            searchText: root.searchText
+                // Category grid
+                ASP_CategoryGrid {
+                    id: categoryGrid
+                    anchors.fill: parent
+                    anchors.topMargin: 6
+                    visible: root.currentView === "categories"
+                    activeFilter: root.activeFilter
+                    searchText: root.searchText
 
-            onCategorySelected: function(category, type) {
-                root.selectedCategory = category
-                root.selectedType = type
-                root.currentView = "assets"
-            }
-        }
+                    onCategorySelected: function(category, type) {
+                        root.selectedCategory = category
+                        root.selectedType = type
+                        root.currentView = "assets"
+                    }
+                }
 
-        // Asset grid
-        ASP_Grid {
-            id: assetGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: root.currentView === "assets"
-            category: root.selectedCategory
-            type: root.selectedType
-            searchText: root.searchText
+                // Asset grid
+                ASP_Grid {
+                    id: assetGrid
+                    anchors.fill: parent
+                    anchors.topMargin: 6
+                    visible: root.currentView === "assets"
+                    category: root.selectedCategory
+                    type: root.selectedType
+                    searchText: root.searchText
 
-            // Pass selection state
-            currentSelectedCategory: root.currentSelectedCategory
-            currentSelectedType: root.currentSelectedType
-            currentSelectedId: root.currentSelectedId
+                    // Pass selection state
+                    currentSelectedCategory: root.currentSelectedCategory
+                    currentSelectedType: root.currentSelectedType
+                    currentSelectedId: root.currentSelectedId
 
-            onAssetSelected: function(id) {
-                root.assetSelected(root.selectedCategory, root.selectedType, id)
-            }
+                    onAssetSelected: function(id) {
+                        root.assetSelected(root.selectedCategory, root.selectedType, id)
+                    }
                 }
             }
             
