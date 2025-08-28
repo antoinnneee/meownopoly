@@ -46,6 +46,13 @@ public:
     Q_PROPERTY(double effectShadowOpacity READ effectShadowOpacity WRITE setEffectShadowOpacity NOTIFY effectShadowOpacityChanged)
     Q_PROPERTY(double effectShadowScale READ effectShadowScale WRITE setEffectShadowScale NOTIFY effectShadowScaleChanged)
 
+    // rotation properties
+    Q_PROPERTY(double rotationAngle READ rotationAngle WRITE setRotationAngle NOTIFY rotationAngleChanged)
+    
+    // mirror properties
+    Q_PROPERTY(bool mirrorHorizontal READ mirrorHorizontal WRITE setMirrorHorizontal NOTIFY mirrorHorizontalChanged)
+    Q_PROPERTY(bool mirrorVertical READ mirrorVertical WRITE setMirrorVertical NOTIFY mirrorVerticalChanged)
+
     DisplayParameter(int unitSizeWidth = 0, int unitSizeHeight = 0, int gridRelativePosition = 0, int gridRelativePositionY = 0, int zLayer = 5, QObject *parent = nullptr);
     DisplayParameter(const QJsonObject &json, QObject *parent = nullptr);
     QString toJSON();
@@ -99,6 +106,16 @@ public:
     double effectShadowScale() const;
     void setEffectShadowScale(double effectShadowScale);
 
+    // rotation methods
+    double rotationAngle() const;
+    void setRotationAngle(double rotationAngle);
+    
+    // mirror methods
+    bool mirrorHorizontal() const;
+    void setMirrorHorizontal(bool mirrorHorizontal);
+    bool mirrorVertical() const;
+    void setMirrorVertical(bool mirrorVertical);
+
 signals:
     void unitSizeWidthChanged();
     void unitSizeHeightChanged();
@@ -125,6 +142,10 @@ signals:
     void effectShadowOpacityChanged();
     void effectShadowScaleChanged();
 
+    void rotationAngleChanged();
+    void mirrorHorizontalChanged();
+    void mirrorVerticalChanged();
+
 private :
     int m_unitSizeWidth;
     int m_unitSizeHeight;
@@ -150,6 +171,13 @@ private :
     double m_effectShadowVerticalOffset;
     double m_effectShadowOpacity;
     double m_effectShadowScale;
+
+    // rotation members
+    double m_rotationAngle;
+    
+    // mirror members
+    bool m_mirrorHorizontal;
+    bool m_mirrorVertical;
 
 };
 

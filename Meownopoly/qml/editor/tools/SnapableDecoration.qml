@@ -48,6 +48,13 @@ SnapableElement {
     displaySettings.effectShadowOpacity: 1.0
     displaySettings.effectShadowScale: 1.0
     
+    // Rotation properties
+    displaySettings.rotationAngle: 0.0
+    
+    // Mirror properties
+    displaySettings.mirrorHorizontal: false
+    displaySettings.mirrorVertical: false
+    
     property bool effectMaskEnabled: false
     property var effectMaskSource: null
     property bool effectMaskInverted: false
@@ -65,6 +72,11 @@ SnapableElement {
                                            displaySettings.effectShadowEnabled || 
                                            effectMaskEnabled
                                            
+    // Helper function to check if any transform is active
+    readonly property bool hasActiveTransforms: displaySettings.rotationAngle !== 0.0 ||
+                                              displaySettings.mirrorHorizontal ||
+                                              displaySettings.mirrorVertical
+                                           
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
 
@@ -81,6 +93,22 @@ SnapableElement {
         
         // Hide source image when effects are applied for optimal performance
         visible: !hasActiveEffects
+        
+        // Apply mirror effects using scale
+        transform: [ 
+            Scale{
+                xScale: displaySettings.mirrorHorizontal ? -1 : 1
+                yScale: displaySettings.mirrorVertical ? -1 : 1
+                origin.x: tileImage.width / 2
+                origin.y: tileImage.height / 2
+            },
+            Rotation{
+                angle: displaySettings.rotationAngle
+                origin.x: tileImage.width / 2
+                origin.y: tileImage.height / 2
+            }
+        ]
+        
 
         onStatusChanged: {
             if (status === Image.Error) {
@@ -96,6 +124,22 @@ SnapableElement {
         source: tileImage
         z: 2  // Above the source image but below handles
         visible: shouldCreateEffect
+        
+        // Apply the same transforms as the source image
+        
+        transform: [ 
+            Scale{
+                xScale: displaySettings.mirrorHorizontal ? -1 : 1
+                yScale: displaySettings.mirrorVertical ? -1 : 1
+                origin.x: multiEffect.width / 2
+                origin.y: multiEffect.height / 2
+            },
+            Rotation{
+                angle: displaySettings.rotationAngle
+                origin.x: multiEffect.width / 2
+                origin.y: multiEffect.height / 2
+            }
+        ]
         
         // Color effects (always available)
         brightness: displaySettings.effectBrightness
@@ -173,5 +217,20 @@ SnapableElement {
         resetBlurEffect()
         resetShadowEffect()
         resetMaskEffect()
+    }
+    
+    // Functions to reset transforms
+    function resetRotation() {
+        displaySettings.rotationAngle = 0.0
+    }
+    
+    function resetMirror() {
+        displaySettings.mirrorHorizontal = false
+        displaySettings.mirrorVertical = false
+    }
+    
+    function resetAllTransforms() {
+        resetRotation()
+        resetMirror()
     }
 }

@@ -25,6 +25,13 @@ DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gr
     m_effectShadowVerticalOffset = 0.0;
     m_effectShadowOpacity = 1.0;
     m_effectShadowScale = 1.0;
+    
+    // Initialize rotation properties
+    m_rotationAngle = 0.0;
+        
+    // Initialize mirror properties
+    m_mirrorHorizontal = false;
+    m_mirrorVertical = false;
 }
 
 DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QObject(parent)
@@ -50,6 +57,13 @@ DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QO
     m_effectShadowVerticalOffset = json["effectShadowVerticalOffset"].toDouble();
     m_effectShadowOpacity = json["effectShadowOpacity"].toDouble();
     m_effectShadowScale = json["effectShadowScale"].toDouble();
+    
+    // Load rotation properties
+    m_rotationAngle = json["rotationAngle"].toDouble();
+    
+    // Load mirror properties
+    m_mirrorHorizontal = json["mirrorHorizontal"].toInt();
+    m_mirrorVertical = json["mirrorVertical"].toInt();
 }
 
 QString DisplayParameter::toJSON()
@@ -76,7 +90,10 @@ QString DisplayParameter::toJSON()
     json += "    \"effectShadowHorizontalOffset\": " + QString::number(m_effectShadowHorizontalOffset) + ",\n";
     json += "    \"effectShadowVerticalOffset\": " + QString::number(m_effectShadowVerticalOffset) + ",\n";
     json += "    \"effectShadowOpacity\": " + QString::number(m_effectShadowOpacity) + ",\n";
-    json += "    \"effectShadowScale\": " + QString::number(m_effectShadowScale) + "\n";
+    json += "    \"effectShadowScale\": " + QString::number(m_effectShadowScale) + ",\n";
+    json += "    \"rotationAngle\": " + QString::number(m_rotationAngle) + ",\n";
+    json += "    \"mirrorHorizontal\": " + QString::number(m_mirrorHorizontal) + ",\n";
+    json += "    \"mirrorVertical\": " + QString::number(m_mirrorVertical) + "\n";
     json += "}";
     return json;
 }
@@ -310,4 +327,41 @@ void DisplayParameter::setEffectShadowScale(double effectShadowScale)
 {
     m_effectShadowScale = effectShadowScale;
     emit effectShadowScaleChanged();
+}
+
+// Rotation methods
+double DisplayParameter::rotationAngle() const
+{
+    return m_rotationAngle;
+}
+
+void DisplayParameter::setRotationAngle(double rotationAngle)
+{
+    m_rotationAngle = rotationAngle;
+    emit rotationAngleChanged();
+}
+
+
+
+// Mirror methods
+bool DisplayParameter::mirrorHorizontal() const
+{
+    return m_mirrorHorizontal;
+}
+
+void DisplayParameter::setMirrorHorizontal(bool mirrorHorizontal)
+{
+    m_mirrorHorizontal = mirrorHorizontal;
+    emit mirrorHorizontalChanged();
+}
+
+bool DisplayParameter::mirrorVertical() const
+{
+    return m_mirrorVertical;
+}
+
+void DisplayParameter::setMirrorVertical(bool mirrorVertical)
+{
+    m_mirrorVertical = mirrorVertical;
+    emit mirrorVerticalChanged();
 }

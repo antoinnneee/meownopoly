@@ -67,6 +67,18 @@ Rectangle {
             }
         }
         
+        // Transform Section
+        VEP_TransformSection {
+            id: transformSection
+            anchors.left: parent.left
+            anchors.right: parent.right
+            targetDecoration: root.targetDecoration
+
+            onEffectChanged: {
+                root.effectChanged()
+            }
+        }
+        
         // Reset buttons panel
         VEP_ResetButtonsPanel {
             id: resetButtonsPanel
@@ -99,6 +111,9 @@ Rectangle {
         // Update blur/shadow sliders
         advancedEffectsSection.blurSlider.value = targetDecoration.displaySettings.effectBlur
         advancedEffectsSection.shadowBlurSlider.value = targetDecoration.displaySettings.effectShadowBlur
+        
+        // Update transform section
+        transformSection.updateFromTarget()
     }
     
     onTargetDecorationChanged: {
