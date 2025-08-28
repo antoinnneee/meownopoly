@@ -172,7 +172,7 @@ SnapableElement {
         maskSpreadAtMax: effectMaskSpreadAtMax
         
         // Performance optimization: auto-padding management
-        autoPaddingEnabled: displaySettings.effectBlurEnabled || displaySettings.effectShadowEnabled
+        autoPaddingEnabled: false//displaySettings.effectBlurEnabled || displaySettings.effectShadowEnabled
     }
     
     // Functions to reset effects
