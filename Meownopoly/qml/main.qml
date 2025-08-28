@@ -22,7 +22,7 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: editor
+        initialItem: launcher
     }
 
     Component {
