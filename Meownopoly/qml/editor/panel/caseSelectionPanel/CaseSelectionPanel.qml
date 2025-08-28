@@ -3,6 +3,9 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import AssetManager
+import Game
+import Case
+import CaseRestArea
 import "../assetSelectionPanel"
 
 Rectangle {
@@ -14,7 +17,7 @@ Rectangle {
     property string selectedCategory: ""
     property string selectedType: ""
     property string searchText: ""
-    property string activeFilter: "All" // "All", "Properties", "Events"
+    property string activeFilter: "All" // "All", "Propriétés", "Spéciales"
     
     required property var logic
 
@@ -22,7 +25,7 @@ Rectangle {
     property string currentSelectedCategory: ""
     property string currentSelectedType: ""
     property string currentSelectedId: ""
-    property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
+    property bool isCaseSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
 
     // Selected case element for details
     property var selectedCase: null
@@ -34,7 +37,7 @@ Rectangle {
     signal selectionModeChanged(bool isActive)
 
     onCaseSelected: function(category, type, id) {
-        if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
+        if (root.isCaseSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
             clearCaseSelection();
             return
         }
@@ -42,6 +45,19 @@ Rectangle {
         root.currentSelectedCategory = category
         root.currentSelectedType = type
         root.currentSelectedId = id
+        
+        // Find the case data from Game singleton
+        if (id) {
+            // Retrieve case data using uniqueId
+            var caseData = Game.getCaseById(id);
+            if (caseData) {
+                root.selectedCase = caseData;
+                // Update the config panel
+                if (detailsPanel) {
+                    detailsPanel.updateForCase(caseData);
+                }
+            }
+        }
     }
 
     // Function to clear case selection
@@ -50,6 +66,7 @@ Rectangle {
         root.currentSelectedCategory = ""
         root.currentSelectedType = ""
         root.currentSelectedId = ""
+        root.selectedCase = null
     }
 
     // Dimensions
@@ -131,7 +148,7 @@ Rectangle {
                 
                 Text {
                     text: root.currentSelectedId !== "" ?
-                              "Selected: " + root.currentSelectedType + " #" + root.currentSelectedId :
+                              "Selected: " + root.currentSelectedType + " #" + root.currentSelectedId.substring(0, 8) :
                               "Click to select a case"
                     color: root.currentSelectedId !== "" ? "#4CAF50" : "#999999"
                     font.pixelSize: 10
@@ -148,7 +165,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 
                 Repeater {
-                    model: ["All", "Properties", "Events"]
+                    model: ["All", "Propriétés", "Spéciales"]
                     
                     Button {
                         text: modelData
@@ -172,13 +189,12 @@ Rectangle {
                         
                         onClicked: {
                             root.activeFilter = text
-                            root.currentView = "categories"
                         }
                     }
                 }
             }
             
-            // Search bar (optional, visible when expanded)
+            // Search bar (visible when expanded)
             TextField {
                 visible: root.isExpanded
                 Layout.preferredWidth: 200
@@ -308,175 +324,93 @@ Rectangle {
                 id: mainContent
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.right: root.showDetailsPanel ? detailsScrollView.left : parent.right
+                anchors.right: root.showDetailsPanel ? detailsPanel.left : parent.right
                 anchors.bottom: parent.bottom
-                anchors.rightMargin: root.showDetailsPanel ? 5 : 0
+                anchors.rightMargin: root.showDetailsPanel ? 10 : 0
                 
-                // Placeholder for the Category grid (future implementation)
-                Rectangle {
+                // Category grid view
+                CSP_CategoryGrid {
                     id: categoryGrid
                     anchors.fill: parent
                     anchors.topMargin: 6
                     visible: root.currentView === "categories"
-                    color: "#333333"
-                    opacity: 0.7
-                    radius: 4
+                    searchText: root.searchText
+                    activeFilter: root.activeFilter
                     
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 10
-                        
-                        Text {
-                            text: "Case Categories"
-                            color: "white"
-                            font.pixelSize: 16
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        
-                        Text {
-                            text: "This is a placeholder for future case categories"
-                            color: "#CCCCCC"
-                            font.pixelSize: 12
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                        
-                        Button {
-                            text: "Go to Types View"
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            onClicked: {
-                                root.selectedCategory = "property"
-                                root.selectedType = "all"
-                                root.currentView = "types"
-                            }
-                        }
+                    onCategorySelected: function(category, title) {
+                        console.log("Category selected:", category, title);
+                        root.selectedCategory = category;
+                        root.selectedType = "all";
+                        root.currentView = "types";
                     }
                 }
 
-                // Placeholder for the Type grid (future implementation)
-                Rectangle {
-                    id: typeGrid
+                // Cases grid view
+                Item {
+                    id: typesContainer
                     anchors.fill: parent
                     anchors.topMargin: 6
                     visible: root.currentView === "types"
-                    color: "#333333"
-                    opacity: 0.7
-                    radius: 4
                     
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 10
+                    // Title for the types view
+                    Text {
+                        id: typesTitle
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 30
+                        text: {
+                            if (root.selectedCategory === "achetable")
+                                return "Propriétés achetables";
+                            else
+                                return "Cases temporaires";
+                        }
+                        color: "white"
+                        font.pixelSize: 16
+                        font.bold: true
+                    }
+                    
+                    // Grid of cases
+                    CSP_Grid {
+                        id: casesGrid
+                        anchors.top: typesTitle.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.topMargin: 10
                         
-                        Text {
-                            text: "Case Types for " + root.selectedCategory
-                            color: "white"
-                            font.pixelSize: 16
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
+                        categoryName: root.selectedCategory
+                        typeName: root.selectedType
+                        searchText: root.searchText
+                        
+                        // Get list of cases based on category
+                        caseList: {
+                            if (root.selectedCategory === "proprietes") {
+                                return Game.getPurchasableCases();
+                            } else {
+                                return Game.getTemporaryCases();
+                            }
                         }
                         
-                        Text {
-                            text: "This is a placeholder for future case types"
-                            color: "#CCCCCC"
-                            font.pixelSize: 12
-                            anchors.horizontalCenter: parent.horizontalCenter
+                        onCaseSelected: function(category, type, id) {
+                            root.caseSelected(category, type, id);
                         }
                     }
                 }
             }
             
-            // Details Panel in ScrollView
-            ScrollView {
-                id: detailsScrollView
+            // Details Panel (right side)
+            CSP_CaseConfigPanel {
+                id: detailsPanel
                 anchors.top: parent.top
                 anchors.right: parent.right
-                contentHeight: detailsPanel.height
-                width: parent.width * 0.42
                 anchors.bottom: parent.bottom
-                
+                width: parent.width * 0.42
                 visible: root.showDetailsPanel
                 
-                Behavior on visible {
-                    NumberAnimation {
-                        duration: 200
-                        easing.type: Easing.OutCubic
-                    }
-                }
-                
-                ScrollBar.vertical.policy: ScrollBar.AsNeeded
-                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-                
-                // Placeholder for the Details Panel
-                Rectangle {
-                    id: detailsPanel
-                    width: detailsScrollView.width - 20
-                    height: 500
-                    color: "#333333"
-                    radius: 4
-                    
-                    Column {
-                        anchors.fill: parent
-                        anchors.margins: 15
-                        spacing: 15
-                        
-                        Text {
-                            text: "Case Details"
-                            color: "white"
-                            font.pixelSize: 16
-                            font.bold: true
-                            width: parent.width
-                        }
-                        
-                        Text {
-                            text: "This panel will show details for the selected case"
-                            color: "#CCCCCC"
-                            font.pixelSize: 12
-                            width: parent.width
-                            wrapMode: Text.WordWrap
-                        }
-                        
-                        Rectangle {
-                            width: parent.width
-                            height: 1
-                            color: "#444444"
-                        }
-                        
-                        Text {
-                            text: "Properties"
-                            color: "white"
-                            font.pixelSize: 14
-                            font.bold: true
-                            width: parent.width
-                        }
-                        
-                        // Placeholder properties
-                        Column {
-                            width: parent.width
-                            spacing: 10
-                            
-                            Repeater {
-                                model: ["Name", "Type", "Value", "Position", "Size"]
-                                
-                                Row {
-                                    width: parent.width
-                                    spacing: 10
-                                    
-                                    Text {
-                                        width: 80
-                                        text: modelData + ":"
-                                        color: "#AAAAAA"
-                                        font.pixelSize: 12
-                                    }
-                                    
-                                    Text {
-                                        text: "Sample " + modelData.toLowerCase()
-                                        color: "white"
-                                        font.pixelSize: 12
-                                    }
-                                }
-                            }
-                        }
-                    }
+                onConfigurationApplied: function(caseData) {
+                    console.log("Case configuration applied for:", caseData.name);
+                    // Here we would handle saving the configuration
                 }
             }
         }
@@ -496,15 +430,32 @@ Rectangle {
         Text {
             id: statusText
             anchors.centerIn: parent
-            text: {
-                if (root.currentView === "categories") {
-                    return "Select a category"
-                } else {
-                    return root.selectedCategory + " > " + root.selectedType
-                }
-            }
+                                text: {
+                        if (root.currentView === "categories") {
+                            return "Select a category"
+                        } else {
+                            return root.selectedCategory === "proprietes" ? "Propriétés" : "Spéciales"
+                        }
+                    }
             color: "#CCCCCC"
             font.pixelSize: 10
+        }
+    }
+    
+    // Placeholder function that would be implemented in Game.cpp
+    // to categorize cases based on purchasability
+    Component.onCompleted: {
+        // Make sure Game has the necessary methods
+        if (typeof Game.getPurchasableCases !== "function") {
+            console.warn("Game.getPurchasableCases() is not implemented - would need to be added to C++ code");
+        }
+        
+        if (typeof Game.getTemporaryCases !== "function") {
+            console.warn("Game.getTemporaryCases() is not implemented - would need to be added to C++ code");
+        }
+        
+        if (typeof Game.getCaseById !== "function") {
+            console.warn("Game.getCaseById() is not implemented - would need to be added to C++ code");
         }
     }
 }

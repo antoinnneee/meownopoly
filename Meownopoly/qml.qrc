@@ -101,5 +101,10 @@
         <file>qml/editor/panel/MenuSelector.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CaseSelectionPanel.qml</file>
         <file>qml/editor/panel/SelectionPanel.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_CaseConfigPanel.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_CategoryGrid.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_Grid.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_Item.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/qmldir</file>
     </qresource>
 </RCC>

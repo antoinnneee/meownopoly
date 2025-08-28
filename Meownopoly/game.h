@@ -51,6 +51,11 @@ public:
 
     Q_INVOKABLE void nextPlayer();
     Q_INVOKABLE Player *getPlayer();
+    
+    // Case library functions for UI
+    Q_INVOKABLE QList<Case*> getPurchasableCases() const;
+    Q_INVOKABLE QList<Case*> getTemporaryCases() const;
+    Q_INVOKABLE Case* getCaseById(const QString &uniqueId) const;
 
 
     QList<Player*> players() const { return m_listPlayers; }
