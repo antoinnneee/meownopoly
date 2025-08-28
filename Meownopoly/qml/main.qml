@@ -76,7 +76,7 @@ ApplicationWindow {
     }
     Component {
         id: testPaw
-        TEST_VISUAL_EFFECTS{
+        TEST_PAW_MENU{
             width:root.width
             height:root.height
             visible: false

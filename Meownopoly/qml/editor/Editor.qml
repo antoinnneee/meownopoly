@@ -13,6 +13,7 @@ import "panel"
 import "panel/caseConfigPanel"
 import "panel/assetSelectionPanel"
 import MapLoader
+import MapInfo
 
 Rectangle {
     id: root
@@ -44,16 +45,24 @@ Rectangle {
     property alias selectedAssetId: assetPanel.currentSelectedId
     property alias isAssetSelected: assetPanel.isAssetSelected
 
+    property MapInfo mapInfo: MapInfo{
+        mapName: "no_name"
+        mapDescription: "no_description"
+        mapLastModified: "no_last_modified"
+        version: 0
+    }
+
     Connections{
         target: MapLoader
         function onFoundCaseTile(dp, caseData){
             console.log("Found case tile:", dp, caseData)
             logic.createCaseTile(dp, caseData);
         }
-        function onMapLoaded(map)
+        function onMapLoaded(map, mapInfo)
         {
             console.log("Map loaded")
             logic.builtConnections();
+            root.mapInfo = mapInfo;
         }
     }
 
@@ -92,6 +101,7 @@ Rectangle {
         editorGrid: editorGrid
         editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
+        mapInfo: root.mapInfo
     }
     EditorDynamicComponent {
         id: editorDynamicComponent

@@ -17,6 +17,8 @@
 
 #define CASE_FILE_PATH ":/config/cases.json"
 
+#include "map/mapinfo.h"
+
 class Game : public QObject
 {
     Q_OBJECT
@@ -70,7 +72,7 @@ public:
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
     bool addTileToJson(QJsonObject jsonObject, QString mapName);
-    Q_INVOKABLE bool registerMap(QVariantMap mapInfo, QVariantList  caseList, QVariantList  decorationList);
+    Q_INVOKABLE bool registerMap(MapInfo* mapInfo, QVariantList  caseList, QVariantList  decorationList);
 
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
 

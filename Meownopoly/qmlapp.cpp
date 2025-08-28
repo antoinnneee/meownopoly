@@ -31,8 +31,11 @@
 #include "QtFolderCompressor/FolderCompressor.h"
 #include "asset_manager.h"
 
-#include <map.h>
-#include <maploader.h>
+#include <map/map.h>
+#include <map/maploader.h>
+#include <map/mapinfo.h>
+
+
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
 {
@@ -44,6 +47,7 @@ QmlApp::QmlApp(QWindow *parent)
     LauncherManager::registerQml();
     AssetManager::registerQml();
     MapLoader::registerQml();
+    MapInfo::registerQml();
 
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);

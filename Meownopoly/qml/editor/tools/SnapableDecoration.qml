@@ -23,25 +23,25 @@ SnapableElement {
     property string imagePath: AssetManager.getDecorationPath(decorationType, decorationId)
     
     // MultiEffect properties - Color effects (always enabled)
-    property real effectBrightness: 0.0     // -1.0 to 1.0
-    property real effectContrast: 0.0       // 0.0 to inf
-    property real effectSaturation: 0.0     // -1.0 to inf
-    property real effectColorization: 0.0   // 0.0 to 1.0
-    property color effectColorizationColor: "#ffffff"
-    
+    displaySettings.effectBrightness: 0.0
+    displaySettings.effectContrast: 0.0
+    displaySettings.effectSaturation: 0.0
+    displaySettings.effectColorization: 0.0
+    displaySettings.effectColorizationColor: "#ffffff"
+
     // MultiEffect properties - Optional effects
-    property bool effectBlurEnabled: false
-    property real effectBlur: 0.0           // 0.0 to 1.0
-    property int effectBlurMax: 32
-    property real effectBlurMultiplier: 1.0
+    displaySettings.effectBlurEnabled: false
+    displaySettings.effectBlur: 0.0           // 0.0 to 1.0
+    displaySettings.effectBlurMax: 32
+    displaySettings.effectBlurMultiplier: 1.0
     
-    property bool effectShadowEnabled: false
-    property real effectShadowBlur: 1.0
-    property color effectShadowColor: Qt.rgba(0.0, 0.0, 0.0, 1.0)
-    property real effectShadowHorizontalOffset: 0.0
-    property real effectShadowVerticalOffset: 0.0
-    property real effectShadowOpacity: 1.0
-    property real effectShadowScale: 1.0
+    displaySettings.effectShadowEnabled: false
+    displaySettings.effectShadowBlur: 1.0
+    displaySettings.effectShadowColor: Qt.rgba(0.0, 0.0, 0.0, 1.0)
+    displaySettings.effectShadowHorizontalOffset: 0.0
+    displaySettings.effectShadowVerticalOffset: 0.0
+    displaySettings.effectShadowOpacity: 1.0
+    displaySettings.effectShadowScale: 1.0
     
     property bool effectMaskEnabled: false
     property var effectMaskSource: null
@@ -52,12 +52,12 @@ SnapableElement {
     property real effectMaskSpreadAtMax: 0.0
     
     // Helper function to check if any effect is active
-    readonly property bool hasActiveEffects: effectBrightness !== 0.0 || 
-                                           effectContrast !== 0.0 || 
-                                           effectSaturation !== 0.0 || 
-                                           effectColorization !== 0.0 ||
-                                           effectBlurEnabled || 
-                                           effectShadowEnabled || 
+    readonly property bool hasActiveEffects: displaySettings.effectBrightness !== 0.0 ||
+                                           displaySettings.effectContrast !== 0.0 ||
+                                           displaySettings.effectSaturation !== 0.0 ||
+                                           displaySettings.effectColorization !== 0.0 ||
+                                           displaySettings.effectBlurEnabled || 
+                                           displaySettings.effectShadowEnabled || 
                                            effectMaskEnabled
                                            
     // Performance optimization: only create MultiEffect when needed
@@ -98,28 +98,28 @@ SnapableElement {
         visible: shouldCreateEffect
         
         // Color effects (always available)
-        brightness: effectBrightness
-        contrast: effectContrast
-        saturation: effectSaturation
-        colorization: effectColorization
-        colorizationColor: effectColorizationColor
+        brightness: displaySettings.effectBrightness
+        contrast: displaySettings.effectContrast
+        saturation: displaySettings.effectSaturation
+        colorization: displaySettings.effectColorization
+        colorizationColor: displaySettings.effectColorizationColor
         
         // Blur effect
-        blurEnabled: effectBlurEnabled
-        blur: effectBlur
-        blurMax: effectBlurMax
-        blurMultiplier: effectBlurMultiplier
+        blurEnabled: displaySettings.effectBlurEnabled
+        blur: displaySettings.effectBlur
+        blurMax: displaySettings.effectBlurMax
+        blurMultiplier: displaySettings.effectBlurMultiplier
         
         // Shadow effect
-        shadowEnabled: effectShadowEnabled
-        shadowBlur: effectShadowBlur
-        shadowColor: effectShadowColor
-        shadowHorizontalOffset: effectShadowHorizontalOffset
-        shadowVerticalOffset: effectShadowVerticalOffset
-        shadowOpacity: effectShadowOpacity
-        shadowScale: effectShadowScale
+        shadowEnabled: displaySettings.effectShadowEnabled
+        shadowBlur: displaySettings.effectShadowBlur
+        shadowColor: displaySettings.effectShadowColor
+        shadowHorizontalOffset: displaySettings.effectShadowHorizontalOffset
+        shadowVerticalOffset: displaySettings.effectShadowVerticalOffset
+        shadowOpacity: displaySettings.effectShadowOpacity
+        shadowScale: displaySettings.effectShadowScale
         
-        // Mask effect
+        // Mask effect ??
         maskEnabled: effectMaskEnabled
         maskSource: effectMaskSource
         maskInverted: effectMaskInverted
@@ -129,33 +129,33 @@ SnapableElement {
         maskSpreadAtMax: effectMaskSpreadAtMax
         
         // Performance optimization: auto-padding management
-        autoPaddingEnabled: effectBlurEnabled || effectShadowEnabled
+        autoPaddingEnabled: displaySettings.effectBlurEnabled || displaySettings.effectShadowEnabled
     }
     
     // Functions to reset effects
     function resetColorEffects() {
-        effectBrightness = 0.0
-        effectContrast = 0.0
-        effectSaturation = 0.0
-        effectColorization = 0.0
-        effectColorizationColor = "#ffffff"
+        displaySettings.effectBrightness = 0.0
+        displaySettings.effectContrast = 0.0
+        displaySettings.effectSaturation = 0.0
+        displaySettings.effectColorization = 0.0
+        displaySettings.effectColorizationColor = "#ffffff"
     }
     
     function resetBlurEffect() {
-        effectBlurEnabled = false
-        effectBlur = 0.0
-        effectBlurMax = 32
-        effectBlurMultiplier = 1.0
+        displaySettings.effectBlurEnabled = false
+        displaySettings.effectBlur = 0.0
+        displaySettings.effectBlurMax = 32
+        displaySettings.effectBlurMultiplier = 1.0
     }
     
     function resetShadowEffect() {
-        effectShadowEnabled = false
-        effectShadowBlur = 1.0
-        effectShadowColor = Qt.rgba(0.0, 0.0, 0.0, 1.0)
-        effectShadowHorizontalOffset = 0.0
-        effectShadowVerticalOffset = 0.0
-        effectShadowOpacity = 1.0
-        effectShadowScale = 1.0
+        displaySettings.effectShadowEnabled = false
+        displaySettings.effectShadowBlur = 1.0
+        displaySettings.effectShadowColor = Qt.rgba(0.0, 0.0, 0.0, 1.0)
+        displaySettings.effectShadowHorizontalOffset = 0.0
+        displaySettings.effectShadowVerticalOffset = 0.0
+        displaySettings.effectShadowOpacity = 1.0
+        displaySettings.effectShadowScale = 1.0
     }
     
     function resetMaskEffect() {

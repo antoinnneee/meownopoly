@@ -4,6 +4,7 @@ import Case
 import ItemSnapable
 import TileType
 import "tools/snapable"
+import MapInfo
 
 QtObject {
     property list<SnapableElement> snapableTilesList
@@ -12,7 +13,7 @@ QtObject {
     required property var workArea
     required property var editorGrid
     required property var selectionRect
-
+    required property MapInfo mapInfo
 
     property bool isEditing : false
     
@@ -34,7 +35,6 @@ QtObject {
     property int currentElementWidth: 3
     property int currentElementHeight: 4
     
-    property string mapName
     property int mmSize : 10
 
     onIsEditingChanged:{
@@ -78,11 +78,9 @@ QtObject {
     }
 
     function saveMap(){
-        var infoMap;
         var caseList = [];
         var decoList = [];
 
-        infoMap = {"name":mapName};
 
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
@@ -104,7 +102,7 @@ QtObject {
                 }
             }
         }
-        Game.registerMap(infoMap, caseList, decoList)
+        Game.registerMap(mapInfo, caseList, decoList)
     }
 
 

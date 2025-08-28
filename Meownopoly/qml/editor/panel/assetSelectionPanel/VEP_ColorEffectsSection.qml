@@ -101,7 +101,7 @@ GroupBox {
             sliderText: "Brightness:"
             onEffectChanged: function(value) {
                 if (targetDecoration) {
-                    targetDecoration.effectBrightness = value
+                    targetDecoration.displaySettings.effectBrightness = value
                     control.effectChanged()
                 }
             }
@@ -115,7 +115,7 @@ GroupBox {
             sliderText: "Contrast:"
             onEffectChanged: function(value) {
                 if (targetDecoration) {
-                    targetDecoration.effectContrast = value
+                    targetDecoration.displaySettings.effectContrast = value
                     control.effectChanged()
                 }
             }
@@ -129,7 +129,7 @@ GroupBox {
             sliderText: "Saturation:"
             onEffectChanged: function(value) {
                 if (targetDecoration) {
-                    targetDecoration.effectSaturation = value
+                    targetDecoration.displaySettings.effectSaturation = value
                     control.effectChanged()
                 }
             }
@@ -145,7 +145,7 @@ GroupBox {
             sliderText: "Colorization:"
             onEffectChanged: function(value) {
                 if (targetDecoration) {
-                    targetDecoration.effectColorization = value
+                    targetDecoration.displaySettings.effectColorization = value
                     control.effectChanged()
                 }
             }
@@ -356,7 +356,7 @@ GroupBox {
     
     function applyActivePreset() {
         if (activePresetIndex >= 0 && activePresetIndex < colorPresets.length && targetDecoration) {
-            targetDecoration.effectColorizationColor = colorPresets[activePresetIndex].color
+            targetDecoration.displaySettings.effectColorizationColor = colorPresets[activePresetIndex].color
             control.effectChanged()
         }
     }

@@ -3,7 +3,8 @@
 
 #include <QObject>
 #include <QQmlEngine>
-#include <map.h>
+#include <map/map.h>
+#include <map/mapinfo.h>
 
 class MapLoader : public QObject
 {
@@ -20,7 +21,7 @@ public:
 public slots:
 
 signals:
-    void mapLoaded(Map *map);
+    void mapLoaded(Map *map, MapInfo *mapInfo);
     void foundCaseTile(DisplayParameter *dp, Case *caseData);
 
 private slots:

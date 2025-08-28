@@ -400,8 +400,8 @@ Item {
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             placeholderText: "Nom de la carte"
-            text: logic.mapName || ""
-            onTextChanged: logic.mapName = text
+            text: logic.mapInfo.mapName || ""
+            onTextChanged: logic.mapInfo.mapName = text
             font.pixelSize: 14
             font.bold: true
             color: "#333333"

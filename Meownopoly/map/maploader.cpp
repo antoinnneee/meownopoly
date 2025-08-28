@@ -7,6 +7,7 @@
 #include <QQmlEngine>
 #include <QDir>
 #include <QFileInfo>
+#include <map/mapinfo.h>
 
 MapLoader *MapLoader::m_pThis = nullptr;
 
@@ -39,11 +40,12 @@ QObject *MapLoader::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 Map *MapLoader::loadMap(QString mapName)
 {
     QJsonObject jsonObject = MapLoader::readMapFile(mapName);
+    MapInfo *mapInfo = new MapInfo(jsonObject["mapInfo"].toObject());
     Map *map = new Map(jsonObject);
     for (ItemSnapable *is : map->caseTiles()) {
         emit foundCaseTile(is->displayParameter(), is->caseData());
     }
-    emit mapLoaded(map);
+    emit mapLoaded(map, mapInfo);
     return map;
 }
 

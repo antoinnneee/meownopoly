@@ -1,0 +1,79 @@
+#include "mapinfo.h"
+#include <QQmlEngine>
+
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QJsonValueRef>
+
+MapInfo::MapInfo() {}
+
+MapInfo::MapInfo(const QJsonObject &json)
+{
+    m_mapName = json["name"].toString();
+    m_mapDescription = json["description"].toString();
+    m_mapLastModified = json["lastModified"].toString();
+    m_version = json["version"].toInt();
+}
+
+QString MapInfo::toJSON()
+{
+    QJsonObject json;
+    json["name"] = m_mapName;
+    json["description"] = m_mapDescription;
+    json["lastModified"] = m_mapLastModified;
+    json["version"] = m_version;
+    return QJsonDocument(json).toJson(QJsonDocument::Indented);
+}
+
+
+void MapInfo::registerQml()
+{
+    qmlRegisterType<MapInfo>("MapInfo", 1, 0, "MapInfo");
+}
+
+void MapInfo::setMapName(const QString &mapName)
+{
+    m_mapName = mapName;
+    emit mapNameChanged(mapName);
+}
+
+void MapInfo::setMapDescription(const QString &mapDescription)
+{
+    m_mapDescription = mapDescription;
+    emit mapDescriptionChanged(mapDescription);
+}
+
+void MapInfo::setMapLastModified(const QString &mapLastModified)
+{
+    m_mapLastModified = mapLastModified;
+    emit mapLastModifiedChanged(mapLastModified);
+}
+
+void MapInfo::setVersion(int version)
+{
+    m_version = version;
+    emit versionChanged(version);
+}
+
+QString MapInfo::getMapName() const
+{
+    return m_mapName;
+}
+
+QString MapInfo::getMapDescription() const
+{
+    return m_mapDescription;
+}
+
+QString MapInfo::getMapLastModified() const
+{
+    return m_mapLastModified;
+}
+
+int MapInfo::getVersion() const
+{
+    return m_version;
+}
+

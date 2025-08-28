@@ -48,7 +48,7 @@ ScrollView {
         Repeater {
             model: root.assetModel
             
-            AssetItem {
+            ASP_Item {
                 Layout.preferredWidth: 80
                 Layout.preferredHeight: 80
                 

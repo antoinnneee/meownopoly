@@ -87,18 +87,18 @@ Rectangle {
         if (!targetDecoration) return
         
         // Update sliders from target values
-        colorEffectsSection.brightnessSlider.value = targetDecoration.effectBrightness
-        colorEffectsSection.contrastSlider.value = targetDecoration.effectContrast
-        colorEffectsSection.saturationSlider.value = targetDecoration.effectSaturation
-        colorEffectsSection.colorizationSlider.value = targetDecoration.effectColorization
+        colorEffectsSection.brightnessSlider.value = targetDecoration.displaySettings.effectBrightness
+        colorEffectsSection.contrastSlider.value = targetDecoration.displaySettings.effectContrast
+        colorEffectsSection.saturationSlider.value = targetDecoration.displaySettings.effectSaturation
+        colorEffectsSection.colorizationSlider.value = targetDecoration.displaySettings.effectColorization
         
         // Update checkboxes
-        advancedEffectsSection.blurEnabledCheck.checked = targetDecoration.effectBlurEnabled
-        advancedEffectsSection.shadowEnabledCheck.checked = targetDecoration.effectShadowEnabled
+        advancedEffectsSection.blurEnabledCheck.checked = targetDecoration.displaySettings.effectBlurEnabled
+        advancedEffectsSection.shadowEnabledCheck.checked = targetDecoration.displaySettings.effectShadowEnabled
         
         // Update blur/shadow sliders
-        advancedEffectsSection.blurSlider.value = targetDecoration.effectBlur
-        advancedEffectsSection.shadowBlurSlider.value = targetDecoration.effectShadowBlur
+        advancedEffectsSection.blurSlider.value = targetDecoration.displaySettings.effectBlur
+        advancedEffectsSection.shadowBlurSlider.value = targetDecoration.displaySettings.effectShadowBlur
     }
     
     onTargetDecorationChanged: {
