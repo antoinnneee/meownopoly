@@ -1,17 +1,21 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtQuick.Effects
-import AssetManager
 
 Item {
-    id: topToolbar
+    id: root
+    
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: parent.top
     anchors.topMargin: -35
     height: 35
     z: 10
+    
+    required property var logic
+
+    // Signal √©mis quand un bouton est cliqu√©
+    signal buttonClicked(int index)
     
     // Boutons de menu
     Row {
@@ -42,7 +46,7 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    // Logique ‡ implÈmenter plus tard
+                    root.buttonClicked(0);
                 }
             }
         }
@@ -69,7 +73,7 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    // Logique ‡ implÈmenter plus tard
+                    root.buttonClicked(1);
                 }
             }
         }
@@ -96,13 +100,13 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    // Logique ‡ implÈmenter plus tard
+                    root.buttonClicked(2);
                 }
             }
         }
     }
     
-    // ContrÙles de dimensions et outil curseur
+    // Contr√¥les de dimensions et outil curseur
     Rectangle {
         id: controlsBackground
         anchors.left: menuSelector.right
@@ -120,7 +124,7 @@ Item {
             anchors.centerIn: parent
             spacing: 10
             height: parent.height
-            
+
             // Size selectors
             Column {
                 spacing: 2
@@ -143,28 +147,29 @@ Item {
                     }
                     
                     SpinBox {
-                        id: topWidthSpinBox
+                        id: widthSpinBox
                         width: 68
                         height: 16
                         from: 1
                         to: 100
                         value: logic.currentElementWidth
+                        onValueChanged: logic.currentElementWidth = value;
                         stepSize: 1
                         editable: true
                         
                         contentItem: TextInput {
-                            text: topWidthSpinBox.textFromValue(topWidthSpinBox.value, topWidthSpinBox.locale)
+                            text: widthSpinBox.textFromValue(widthSpinBox.value, widthSpinBox.locale)
                             font.pixelSize: 10
                             color: "white"
                             selectionColor: "#4A90E2"
                             horizontalAlignment: Qt.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            width: parent.width - (topWidthSpinBox.up.indicator ? topWidthSpinBox.up.indicator.width : 0)
-                                   - (topWidthSpinBox.down.indicator ? topWidthSpinBox.down.indicator.width : 0) - 6
+                            width: parent.width - (widthSpinBox.up.indicator ? widthSpinBox.up.indicator.width : 0)
+                                   - (widthSpinBox.down.indicator ? widthSpinBox.down.indicator.width : 0) - 6
                             anchors.centerIn: parent
                             
-                            readOnly: !topWidthSpinBox.editable
-                            validator: topWidthSpinBox.validator
+                            readOnly: !widthSpinBox.editable
+                            validator: widthSpinBox.validator
                             inputMethodHints: Qt.ImhFormattedNumbersOnly
                         }
                         
@@ -173,12 +178,6 @@ Item {
                             border.color: "#666666"
                             border.width: 1
                             radius: 2
-                        }
-                        
-                        onValueChanged: {
-                            logic.currentElementWidth = value
-                            // Mise ‡ jour du spinbox
-                            console.log("Width:", value)
                         }
                     }
                 }
@@ -198,28 +197,29 @@ Item {
                     }
                     
                     SpinBox {
-                        id: topHeightSpinBox
+                        id: heightSpinBox
                         width: 68
                         height: 16
                         from: 1
                         to: 100
                         value: logic.currentElementHeight
+                        onValueChanged: logic.currentElementHeight = value;
                         stepSize: 1
                         editable: true
-                        
+
                         contentItem: TextInput {
-                            text: topHeightSpinBox.textFromValue(topHeightSpinBox.value, topHeightSpinBox.locale)
+                            text: heightSpinBox.textFromValue(heightSpinBox.value, heightSpinBox.locale)
                             font.pixelSize: 10
                             color: "white"
                             selectionColor: "#4A90E2"
                             horizontalAlignment: Qt.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            width: parent.width - (topHeightSpinBox.up.indicator ? topHeightSpinBox.up.indicator.width : 0)
-                                   - (topHeightSpinBox.down.indicator ? topHeightSpinBox.down.indicator.width : 0) - 6
+                            width: parent.width - (heightSpinBox.up.indicator ? heightSpinBox.up.indicator.width : 0)
+                                   - (heightSpinBox.down.indicator ? heightSpinBox.down.indicator.width : 0) - 6
                             anchors.centerIn: parent
                             
-                            readOnly: !topHeightSpinBox.editable
-                            validator: topHeightSpinBox.validator
+                            readOnly: !heightSpinBox.editable
+                            validator: heightSpinBox.validator
                             inputMethodHints: Qt.ImhFormattedNumbersOnly
                         }
                         
@@ -229,19 +229,13 @@ Item {
                             border.width: 1
                             radius: 2
                         }
-                        
-                        onValueChanged: {
-                            logic.currentElementHeight = value
-                            // Mise ‡ jour du spinbox
-                            console.log("Height:", value)
-                        }
                     }
                 }
             }
             
             // Mouse cursor button
             Rectangle {
-                id: topCursorButton
+                id: cursorButton
                 property bool checked: false
                 
                 width: 32
@@ -253,31 +247,20 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 
                 Text {
-                    text: "???"
+                    text: "üñ±Ô∏è"
                     color: "white"
                     font.pixelSize: 14
                     anchors.centerIn: parent
                 }
                 
                 MouseArea {
-                    id: topCursorMouseArea
+                    id: cursorMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    
-                    onClicked: {
-                        topCursorButton.checked = !topCursorButton.checked
-                        // Mise ‡ jour de l'Ètat de sÈlection
-                        isSelectionActive = topCursorButton.checked
-                        console.log("Mode sÈlection: " + topCursorButton.checked)
-                        selectionModeChanged(topCursorButton.checked)
-                        if (!topCursorButton.checked) {
-                            logic.cancelSelection()
-                        }
-                    }
                 }
                 
                 ToolTip {
-                    visible: topCursorMouseArea.containsMouse
+                    visible: cursorMouseArea.containsMouse
                     text: "Select cursor tool"
                     delay: 500
                 }

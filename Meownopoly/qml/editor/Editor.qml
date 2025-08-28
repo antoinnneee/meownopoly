@@ -40,9 +40,9 @@ Rectangle {
     property alias maxPlanDisplayed: logic.maxPlanDisplayed
     
     // Asset selection properties
-    property alias selectedAssetCategory: assetPanel.currentSelectedCategory
-    property alias selectedAssetType: assetPanel.currentSelectedType
-    property alias selectedAssetId: assetPanel.currentSelectedId
+    property alias selectedAssetCategory: assetPanel.currentSelectedAssetCategory
+    property alias selectedAssetType: assetPanel.currentSelectedAssetType
+    property alias selectedAssetId: assetPanel.currentSelectedAssetId
     property alias isAssetSelected: assetPanel.isAssetSelected
 
     property MapInfo mapInfo: MapInfo{
@@ -350,22 +350,27 @@ Rectangle {
         // clearAssetSelection()
     }
 
-
-    // Asset Selection Panel
-    AssetSelectionPanel {
+    SelectionPanel{
         id: assetPanel
 
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        // Connect the selected decoration element for effects
+        height: isExpanded ? 400 : 40 // Hauteur explicite
+        
+        // Connexion à la logique
+        logic: logic
+        
+        // Définir la valeur d'expansion par défaut
+        isExpanded: true
+
+        //Connect the selected decoration element for effects
         selectedDecoration: {
             if (currentSelectedElement && currentSelectedElement.type === ItemSnapable.DecorationTile) {
                 return currentSelectedElement
             }
             return null
         }
-        logic: logic
     }
 
     WheelHandler {

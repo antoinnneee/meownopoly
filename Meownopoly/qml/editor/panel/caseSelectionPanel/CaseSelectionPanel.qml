@@ -3,52 +3,50 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import AssetManager
-
-import "../"
+import "../assetSelectionPanel"
 
 Rectangle {
     id: root
     
     // Properties
     property bool isExpanded: true
-    property string currentView: "categories" // "categories" or "assets"
+    property string currentView: "categories" // "categories" ou "types"
     property string selectedCategory: ""
     property string selectedType: ""
     property string searchText: ""
-    property string activeFilter: "All" // "All", "Decoration", "Characters"
+    property string activeFilter: "All" // "All", "Properties", "Events"
     
     required property var logic
-    
+
     // Current selection state (from parent)
     property string currentSelectedCategory: ""
     property string currentSelectedType: ""
     property string currentSelectedId: ""
     property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
 
-    // Selected decoration element for effects
-    property var selectedDecoration: null
-    property bool showEffectsPanel: true//selectedDecoration !== null && selectedDecoration.type === 2 // DecorationTile
+    // Selected case element for details
+    property var selectedCase: null
+    property bool showDetailsPanel: true
     
     // Signals
-    signal assetSelected(string category, string type, string id)
+    signal caseSelected(string category, string type, string id)
     width: 450
     signal selectionModeChanged(bool isActive)
 
-
-    onAssetSelected: function(category, type, id) {
+    onCaseSelected: function(category, type, id) {
         if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
-            clearAssetSelection();
+            clearCaseSelection();
             return
         }
-        console.log("Asset selected for placement:", category, type, id)
+        console.log("Case selected for placement:", category, type, id)
         root.currentSelectedCategory = category
         root.currentSelectedType = type
         root.currentSelectedId = id
     }
 
-    // Function to clear asset selection
-    function clearAssetSelection() {
-        console.log("Clearing asset selection")
+    // Function to clear case selection
+    function clearCaseSelection() {
+        console.log("Clearing case selection")
         root.currentSelectedCategory = ""
         root.currentSelectedType = ""
         root.currentSelectedId = ""
@@ -74,7 +72,7 @@ Rectangle {
         }
     }
     
-    // Blur effect background with red tint
+    // Blur effect background
     Rectangle {
         anchors.fill: parent
         color: "#CC2C2C2C"
@@ -82,22 +80,22 @@ Rectangle {
         opacity: 0.9
     }
     
-    // Red indicator background
+    // Yellow indicator background
     Rectangle {
         anchors.fill: parent
         anchors.margins: 2
-        color: "#330c0c"  // Dark red with low opacity
+        color: "#33332211"  // Dark yellow with low opacity
         radius: 6
         opacity: 0.4
         z: -1
         
-        // Red indicator strip (top)
+        // Yellow indicator strip (top)
         Rectangle {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
             height: 5
-            color: "#991010"  // More visible red
+            color: "#b3ab48"  // More visible yellow
             radius: 3
         }
     }
@@ -124,7 +122,7 @@ Rectangle {
                 spacing: 2
                 
                 Text {
-                    text: "Asset Library"
+                    text: "Case Library"
                     color: "white"
                     font.pixelSize: 16
                     font.bold: true
@@ -134,7 +132,7 @@ Rectangle {
                 Text {
                     text: root.currentSelectedId !== "" ?
                               "Selected: " + root.currentSelectedType + " #" + root.currentSelectedId :
-                              "Click to select an asset"
+                              "Click to select a case"
                     color: root.currentSelectedId !== "" ? "#4CAF50" : "#999999"
                     font.pixelSize: 10
                     font.italic: true
@@ -150,7 +148,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 
                 Repeater {
-                    model: ["All", "Decoration", "Characters"]
+                    model: ["All", "Properties", "Events"]
                     
                     Button {
                         text: modelData
@@ -185,7 +183,7 @@ Rectangle {
                 visible: root.isExpanded
                 Layout.preferredWidth: 200
                 Layout.alignment: Qt.AlignVCenter
-                placeholderText: "Search assets..."
+                placeholderText: "Search cases..."
                 text: root.searchText
                 
                 background: Rectangle {
@@ -199,13 +197,13 @@ Rectangle {
                 
                 onTextChanged: root.searchText = text
             }
-
+            
             // Spacer
             Item { Layout.fillWidth: true }
 
-            // Back button (visible when in assets view)
+            // Back button (visible when in types view)
             Button {
-                visible: root.isExpanded && root.currentView === "assets"
+                visible: root.isExpanded && root.currentView === "types"
                 text: "← Back"
                 flat: true
 
@@ -226,7 +224,7 @@ Rectangle {
                 onClicked: root.currentView = "categories"
             }
 
-            // Clear selection button (visible when asset is selected)
+            // Clear selection button (visible when case is selected)
             Button {
                 visible: root.isExpanded && root.currentSelectedId !== ""
                 text: "✕ Clear"
@@ -249,7 +247,7 @@ Rectangle {
 
                 onClicked: {
                     // Signal to parent to clear selection
-                    root.assetSelected("", "", "")
+                    root.caseSelected("", "", "")
                 }
             }
 
@@ -259,7 +257,7 @@ Rectangle {
                 width: 30
                 Layout.fillHeight: true
                 Layout.topMargin: -6
-                Layout.bottomMargin:  0
+                Layout.bottomMargin: 0
 
                 background: Rectangle {
                     color: parent.pressed ? "#555555" : "#444444"
@@ -274,7 +272,7 @@ Rectangle {
                     font.pixelSize: 12
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    anchors.fill:expandButton
+                    anchors.fill: expandButton
                 }
 
                 onClicked: root.isExpanded = !root.isExpanded
@@ -300,68 +298,103 @@ Rectangle {
             }
         }
 
-        // Split view when effects panel is shown
+        // Split view when details panel is shown
         Item {
-            id: item1
+            id: mainContainer
             anchors.fill: parent
             
-            // Main content (categories/assets)
+            // Main content (categories/types)
             Item {
                 id: mainContent
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.right: root.showEffectsPanel ? effectsScrollView.left : parent.right
+                anchors.right: root.showDetailsPanel ? detailsScrollView.left : parent.right
                 anchors.bottom: parent.bottom
-                anchors.rightMargin: root.showEffectsPanel ? 5 : 0
+                anchors.rightMargin: root.showDetailsPanel ? 5 : 0
                 
-        // Category grid
-        ASP_CategoryGrid {
-            id: categoryGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: root.currentView === "categories"
-            activeFilter: root.activeFilter
-            searchText: root.searchText
+                // Placeholder for the Category grid (future implementation)
+                Rectangle {
+                    id: categoryGrid
+                    anchors.fill: parent
+                    anchors.topMargin: 6
+                    visible: root.currentView === "categories"
+                    color: "#333333"
+                    opacity: 0.7
+                    radius: 4
+                    
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 10
+                        
+                        Text {
+                            text: "Case Categories"
+                            color: "white"
+                            font.pixelSize: 16
+                            font.bold: true
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                        
+                        Text {
+                            text: "This is a placeholder for future case categories"
+                            color: "#CCCCCC"
+                            font.pixelSize: 12
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                        
+                        Button {
+                            text: "Go to Types View"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            onClicked: {
+                                root.selectedCategory = "property"
+                                root.selectedType = "all"
+                                root.currentView = "types"
+                            }
+                        }
+                    }
+                }
 
-            onCategorySelected: function(category, type) {
-                root.selectedCategory = category
-                root.selectedType = type
-                root.currentView = "assets"
-            }
-        }
-
-        // Asset grid
-        ASP_Grid {
-            id: assetGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: root.currentView === "assets"
-            category: root.selectedCategory
-            type: root.selectedType
-            searchText: root.searchText
-
-            // Pass selection state
-            currentSelectedCategory: root.currentSelectedCategory
-            currentSelectedType: root.currentSelectedType
-            currentSelectedId: root.currentSelectedId
-
-            onAssetSelected: function(id) {
-                root.assetSelected(root.selectedCategory, root.selectedType, id)
-            }
+                // Placeholder for the Type grid (future implementation)
+                Rectangle {
+                    id: typeGrid
+                    anchors.fill: parent
+                    anchors.topMargin: 6
+                    visible: root.currentView === "types"
+                    color: "#333333"
+                    opacity: 0.7
+                    radius: 4
+                    
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 10
+                        
+                        Text {
+                            text: "Case Types for " + root.selectedCategory
+                            color: "white"
+                            font.pixelSize: 16
+                            font.bold: true
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                        
+                        Text {
+                            text: "This is a placeholder for future case types"
+                            color: "#CCCCCC"
+                            font.pixelSize: 12
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
                 }
             }
             
-            // Visual Effects Panel in ScrollView
+            // Details Panel in ScrollView
             ScrollView {
-                id: effectsScrollView
+                id: detailsScrollView
                 anchors.top: parent.top
                 anchors.right: parent.right
-                contentHeight: effectsPanel.height
-                width: parent.width *0.42
+                contentHeight: detailsPanel.height
+                width: parent.width * 0.42
                 anchors.bottom: parent.bottom
                 
-                visible: root.showEffectsPanel
-
+                visible: root.showDetailsPanel
                 
                 Behavior on visible {
                     NumberAnimation {
@@ -373,14 +406,76 @@ Rectangle {
                 ScrollBar.vertical.policy: ScrollBar.AsNeeded
                 ScrollBar.horizontal.policy: ScrollBar.AsNeeded
                 
-                VisualEffectsPanel {
-                    id: effectsPanel
-                    width: effectsScrollView.width - 20 // Account for scrollbar
-                    targetDecoration: root.selectedDecoration
+                // Placeholder for the Details Panel
+                Rectangle {
+                    id: detailsPanel
+                    width: detailsScrollView.width - 20
+                    height: 500
+                    color: "#333333"
+                    radius: 4
                     
-                    onEffectChanged: {
-                        // Optional: emit signal when effects change
-                        console.log("Visual effect changed")
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 15
+                        spacing: 15
+                        
+                        Text {
+                            text: "Case Details"
+                            color: "white"
+                            font.pixelSize: 16
+                            font.bold: true
+                            width: parent.width
+                        }
+                        
+                        Text {
+                            text: "This panel will show details for the selected case"
+                            color: "#CCCCCC"
+                            font.pixelSize: 12
+                            width: parent.width
+                            wrapMode: Text.WordWrap
+                        }
+                        
+                        Rectangle {
+                            width: parent.width
+                            height: 1
+                            color: "#444444"
+                        }
+                        
+                        Text {
+                            text: "Properties"
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                            width: parent.width
+                        }
+                        
+                        // Placeholder properties
+                        Column {
+                            width: parent.width
+                            spacing: 10
+                            
+                            Repeater {
+                                model: ["Name", "Type", "Value", "Position", "Size"]
+                                
+                                Row {
+                                    width: parent.width
+                                    spacing: 10
+                                    
+                                    Text {
+                                        width: 80
+                                        text: modelData + ":"
+                                        color: "#AAAAAA"
+                                        font.pixelSize: 12
+                                    }
+                                    
+                                    Text {
+                                        text: "Sample " + modelData.toLowerCase()
+                                        color: "white"
+                                        font.pixelSize: 12
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

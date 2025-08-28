@@ -97,7 +97,9 @@
         <file>qml/editor/panel/assetSelectionPanel/VEP_Slider.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_AdvancedEffectsSection.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_ResetButtonsPanel.qml</file>
-        <file>qml/editor/panel/assetSelectionPanel/MenuSelector.qml</file>
         <file>qml/editor/panel/MapSelectionPanel.qml</file>
+        <file>qml/editor/panel/MenuSelector.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CaseSelectionPanel.qml</file>
+        <file>qml/editor/panel/SelectionPanel.qml</file>
     </qresource>
 </RCC>
