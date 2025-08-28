@@ -14,7 +14,7 @@ Shape {
     property real endX: toElement ? toElement.globalCenterX : 0
     property real startY: fromElement ? fromElement.globalCenterY : 0
     property real endY: toElement ? toElement.globalCenterY : 0
-    property int lineWidth: 10
+    property int lineWidth: 8
     
     // Calcul de la direction et des vecteurs perpendiculaires
     property real deltaX: endX - startX

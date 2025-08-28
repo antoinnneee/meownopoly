@@ -5,7 +5,7 @@ import Case
 import CaseRestArea
 import Player
 
-ConfigPanelElement {
+CCP_PanelElement {
     title: "Configuration Rest Area"
     visible: targetCase && targetCase.type === Case.CS_RestArea
 
@@ -38,28 +38,28 @@ ConfigPanelElement {
         }
 
         // Configuration de la famille
-        CaseRestAreaFamilyConfig {
+        CCP_RestAreaFamilyConfig {
             id: caseRestAreaFamilyConfig
             targetCase: root.targetCase
             Layout.fillWidth: true
         }
 
         // Configuration des prix CaseCatPerks
-        CaseCatPerksConfig {
+        CCP_CatPerksConfig {
             id: caseCatPerksConfig
             targetCase: root.targetCase
             Layout.fillWidth: true
         }
 
         // Prix d'achat des améliorations (maisons/hôtels)
-        CaseHouseHotelPriceConfig {
+        CCP_HouseHotelPriceConfig {
             id: caseHouseHotelPriceConfig
             targetCase: root.targetCase
             Layout.fillWidth: true
         }
 
         // Prix de location
-        CaseRentConfig {
+        CCP_RentConfig {
             id: caseRentConfig
             targetCase: root.targetCase
             Layout.fillWidth: true

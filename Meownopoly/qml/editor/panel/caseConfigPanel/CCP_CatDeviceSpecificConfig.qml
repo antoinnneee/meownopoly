@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Case
 
-ConfigPanelElement {
+CCP_PanelElement {
     title: "Configuration Cat Device"
     visible: targetCase && targetCase.type === Case.CS_Device
 
@@ -43,7 +43,7 @@ ConfigPanelElement {
         }
 
         // Configuration des prix CaseCatPerks (héritée)
-        CaseCatPerksConfig {
+        CCP_CatPerksConfig {
             id: caseCatPerksConfig
             targetCase: root.targetCase
             Layout.fillWidth: true

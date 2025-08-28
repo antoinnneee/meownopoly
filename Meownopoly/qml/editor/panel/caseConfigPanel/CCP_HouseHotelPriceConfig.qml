@@ -5,7 +5,7 @@ import Case
 import CaseRestArea
 import Player
 
-ConfigPanelElement {
+CCP_PanelElement {
     title: "Prix d'Achat des Améliorations"
     
     visible: targetCase && targetCase.type === Case.CS_RestArea

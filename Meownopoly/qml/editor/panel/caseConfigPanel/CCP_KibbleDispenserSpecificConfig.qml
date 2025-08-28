@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Case
 
-ConfigPanelElement {
+CCP_PanelElement {
     title: "Configuration Kibble Dispenser"
     visible: targetCase && targetCase.type === Case.CS_KibbleDispenser
 

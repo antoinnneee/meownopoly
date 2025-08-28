@@ -5,7 +5,7 @@ import Case
 import CaseRestArea
 import Player
 
-ConfigPanelElement {
+CCP_PanelElement {
     title: "Configuration Générale"
     property alias name: nameField.text
 
