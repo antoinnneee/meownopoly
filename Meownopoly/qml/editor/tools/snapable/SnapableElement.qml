@@ -31,9 +31,6 @@ Rectangle {
 
     }
 
-    // DisplayParameter {
-    //     id: displaySettings
-    // }
     z: displaySettings.zLayer
 
     property TileType type

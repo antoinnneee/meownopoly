@@ -105,7 +105,7 @@ ScrollView {
                     var passesFilter = true
                     if (root.activeFilter === "Decoration" && cat.category !== "decoration") {
                         passesFilter = false
-                    } else if (root.activeFilter === "Characters" && cat.category !== "avatar") {
+                    } else if (root.activeFilter === "Tile" && cat.category !== "tile") {
                         passesFilter = false
                     }
                     
@@ -150,7 +150,7 @@ ScrollView {
                     
                     // Name
                     Text {
-                        text: modelData.name
+                        text: modelData.category + " / " + modelData.name
                         color: "white"
                         font.pixelSize: 12
                         font.bold: true

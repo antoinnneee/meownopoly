@@ -41,6 +41,8 @@ Item {
                 }
                 if (root.assetCategory === "decoration") {
                     return AssetManager.getDecorationPath(root.assetType, root.assetId)
+                } else if (root.assetCategory === "tile") {
+                    return AssetManager.getTilePath(root.assetType, root.assetId)
                 } else if (root.assetCategory === "avatar") {
                     return AssetManager.getPlayerIconPath(root.assetId)
                 }

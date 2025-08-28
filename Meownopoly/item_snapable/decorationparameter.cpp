@@ -4,12 +4,14 @@
 DecorationParameter::DecorationParameter(QObject *parent)
     : QObject{parent}
 {
+    m_decorationCategory = "decoration";
     m_decorationType = "grass";
     m_decorationId = "0";
 }
 
 DecorationParameter::DecorationParameter(const QJsonObject &json, QObject *parent): QObject(parent)
 {
+    m_decorationCategory = json["decorationCategory"].toString();
     m_decorationType = json["decorationType"].toString();
     m_decorationId = json["decorationId"].toString();
 }
@@ -18,10 +20,22 @@ QString DecorationParameter::toJSON()
 {
     QString json;
     json += "{\n";
+    json += "    \"decorationCategory\": \"" + m_decorationCategory + "\",\n";
     json += "    \"decorationType\": \"" + m_decorationType + "\",\n";
     json += "    \"decorationId\": \"" + m_decorationId + "\"\n";
     json += "}";
     return json;
+}
+
+QString DecorationParameter::decorationCategory() const
+{
+    return m_decorationCategory;
+}
+
+void DecorationParameter::setDecorationCategory(const QString &decorationCategory)
+{
+    m_decorationCategory = decorationCategory;
+    emit decorationCategoryChanged();
 }
 
 QString DecorationParameter::decorationType() const
