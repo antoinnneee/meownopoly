@@ -6,6 +6,7 @@ import QtQuick.Effects
 import "snapable"
 import AssetManager
 import ItemSnapable
+import DecorationParameter
 
 SnapableElement {
     // Configuration du redimensionnement
@@ -17,10 +18,14 @@ SnapableElement {
 
     type : ItemSnapable.DecorationTile
 
-    property string decorationType: "grass"  // Can be "grass" or "tree"
-    property var decorationModel : AssetManager.getTypeModel("decoration", decorationType)
-    property string decorationId: Math.floor(Math.random() * decorationModel.rowCount())
-    property string imagePath: AssetManager.getDecorationPath(decorationType, decorationId)
+    property var decorationModel : AssetManager.getTypeModel("decoration", decorationSettings.decorationType)
+
+
+    property DecorationParameter decorationSettings : DecorationParameter {
+        decorationType: "grass"
+        decorationId: Math.floor(Math.random() * decorationModel.rowCount())
+    }
+    property string imagePath: AssetManager.getDecorationPath(decorationSettings.decorationType, decorationSettings.decorationId)
     
     // MultiEffect properties - Color effects (always enabled)
     displaySettings.effectBrightness: 0.0
@@ -62,11 +67,6 @@ SnapableElement {
                                            
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
-
-    Component.onCompleted: {
-        console.log("Decoration created with model:", decorationModel)
-        console.log("model length:", decorationModel.rowCount())
-    }
 
     Image {
         id: tileImage

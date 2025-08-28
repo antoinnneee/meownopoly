@@ -58,6 +58,10 @@ Rectangle {
             console.log("Found case tile:", dp, caseData)
             logic.createCaseTile(dp, caseData);
         }
+        function onFoundDecorationTile(dp, decorationParameter){
+            console.log("Found decoration tile:", dp, decorationParameter)
+            logic.createDecorationTile(dp, decorationParameter);
+        }
         function onMapLoaded(map, mapInfo)
         {
             console.log("Map loaded")
@@ -338,9 +342,9 @@ Rectangle {
         if (root.selectedAssetCategory === "decoration") {
             var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
             // Set decoration properties if needed
-            if (newTile && newTile.decorationType !== undefined) {
-                newTile.decorationType = root.selectedAssetType
-                newTile.decorationId = root.selectedAssetId
+            if (newTile && newTile.decorationSettings.decorationType !== undefined) {
+                newTile.decorationSettings.decorationType = root.selectedAssetType
+                newTile.decorationSettings.decorationId = root.selectedAssetId
             }
         } else if (root.selectedAssetCategory === "avatar") {
             logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.CaseTile)

@@ -74,9 +74,21 @@ bool Game::registerMap(MapInfo* mapInfo, QVariantList caseList, QVariantList dec
             Case* currentCase = qvariant_cast<Case*>(caseData);
 
             // Extraction de displayInfo
-            DisplayParameter* dp = qvariant_cast<DisplayParameter*>(caseInfo.at(1));
+            DisplayParameter* displayParameter = qvariant_cast<DisplayParameter*>(caseInfo.at(1));
 
-            ItemSnapable is(currentCase, dp);
+            ItemSnapable is(currentCase, displayParameter);
+            snapableTilesArray = formatTileDataToJson(is, snapableTilesArray);
+        }
+    }
+
+    for (int i = 0; i < decorationList.size(); ++i) {
+
+        QVariantList decorationInfo = decorationList.at(i).toList();
+        if (decorationInfo.size() >= 2) {
+            DecorationParameter* decorationParameter = qvariant_cast<DecorationParameter*>(decorationInfo.at(0));
+            DisplayParameter* displayParameter = qvariant_cast<DisplayParameter*>(decorationInfo.at(1));
+
+            ItemSnapable is(decorationParameter, displayParameter);
             snapableTilesArray = formatTileDataToJson(is, snapableTilesArray);
         }
     }

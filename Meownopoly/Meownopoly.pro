@@ -43,6 +43,7 @@ SOURCES += \
     item_snapable/ItemSnapable.cpp \
     item_snapable/SnapableCase.cpp \
     item_snapable/SnapableDeco.cpp \
+    item_snapable/decorationparameter.cpp \
     launcher_manager.cpp \
     main.cpp \
     map/map.cpp \
@@ -74,6 +75,7 @@ HEADERS += \
     item_snapable/ItemSnapable.h \
     item_snapable/SnapableCase.h \
     item_snapable/SnapableDeco.h \
+    item_snapable/decorationparameter.h \
     launcher_manager.h \
     map/map.h \
     map/mapinfo.h \

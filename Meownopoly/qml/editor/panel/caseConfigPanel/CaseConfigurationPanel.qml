@@ -72,7 +72,7 @@ Rectangle {
                         font.italic: true
                     }
 
-                    CaseTypeSelector {
+                    CCP_TypeSelector {
                         id: caseTypeSelector
                         Layout.fillWidth: true
                         currentType: targetCase ? targetCase.type : Case.CS_Unknow

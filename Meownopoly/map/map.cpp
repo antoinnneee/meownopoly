@@ -28,8 +28,14 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 
     for (const QJsonValueRef value : snapableTilesArray) {
         const QJsonObject tileObject = value.toObject();
-        ItemSnapable *is = new ItemSnapable(tileObject);
-        m_caseTiles.append(is);
+        if (tileObject.contains("caseData")) {
+            ItemSnapable *is = new ItemSnapable(tileObject);
+            m_caseTiles.append(is);
+        }
+        else if (tileObject.contains("decorationParameter")) {
+            ItemSnapable *is = new ItemSnapable(tileObject);
+            m_decorationTiles.append(is);
+        }
     }
     qDebug() << "Snapable tiles loaded successfully";
     qDebug() << "--------------------------------";
@@ -52,6 +58,7 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
         }
     }
     qDebug() << "Links built successfully";
+
     qDebug() << "--------------------------------";
 
 }

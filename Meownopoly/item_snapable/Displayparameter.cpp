@@ -39,11 +39,11 @@ DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QO
     m_effectSaturation = json["effectSaturation"].toDouble();
     m_effectColorization = json["effectColorization"].toDouble();
     m_effectColorizationColor = QColor(json["effectColorizationColor"].toString());
-    m_effectBlurEnabled = json["effectBlurEnabled"].toBool();
+    m_effectBlurEnabled = json["effectBlurEnabled"].toInt();
     m_effectBlur = json["effectBlur"].toDouble();
     m_effectBlurMax = json["effectBlurMax"].toInt();
     m_effectBlurMultiplier = json["effectBlurMultiplier"].toDouble();
-    m_effectShadowEnabled = json["effectShadowEnabled"].toBool();
+    m_effectShadowEnabled = json["effectShadowEnabled"].toInt();
     m_effectShadowBlur = json["effectShadowBlur"].toDouble();
     m_effectShadowColor = QColor(json["effectShadowColor"].toString());
     m_effectShadowHorizontalOffset = json["effectShadowHorizontalOffset"].toDouble();
