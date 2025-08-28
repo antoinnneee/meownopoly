@@ -4,6 +4,7 @@ import Case
 import ItemSnapable
 import TileType
 import "tools/snapable"
+import MapInfo
 
 QtObject {
     property list<SnapableElement> snapableTilesList
@@ -12,8 +13,7 @@ QtObject {
     required property var workArea
     required property var editorGrid
     required property var selectionRect
-    property int nextTileId: 0
-
+    required property MapInfo mapInfo
 
     property bool isEditing : false
     
@@ -35,7 +35,6 @@ QtObject {
     property int currentElementWidth: 3
     property int currentElementHeight: 4
     
-    property string mapName
     property int mmSize : 10
 
     onIsEditingChanged:{
@@ -64,7 +63,7 @@ QtObject {
             for (var i = 0; i < snapableTilesList.length; i++) {
                 if (snapableTilesList[i]) {
                     var currentTile = snapableTilesList[i]
-                    var tileZ = currentTile.z || currentTile.originalZ || 1
+                    var tileZ = currentTile.z || currentTile.displaySettings.zLayer || 1
                     
                     if ((tileZ >= minPlanDisplayed && tileZ <= maxPlanDisplayed) || tileZ === 11 ) {
                         currentTile.enabled = true
@@ -79,16 +78,14 @@ QtObject {
     }
 
     function saveMap(){
-        var infoMap;
         var caseList = [];
         var decoList = [];
 
-        infoMap = {"name":mapName};
 
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
             if (tile) {
-                var displayInfo = {"unitSizeWidth": tile.unitSizeWidth, "unitSizeHeight": tile.unitSizeHeight, "gridRelativePositionX": tile.gridRelativePositionX, "gridRelativePositionY": tile.gridRelativePositionY, "zLayer": tile.originalZ}
+                var displayInfo = tile.displaySettings
 
                 if (tile.type === ItemSnapable.CaseTile){
                     var caseData = tile.caseData;
@@ -105,7 +102,7 @@ QtObject {
                 }
             }
         }
-        Game.registerMap(infoMap, caseList, decoList)
+        Game.registerMap(mapInfo, caseList, decoList)
     }
 
 
@@ -184,28 +181,70 @@ QtObject {
         }
     }
 
+    // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
+    function createCaseTile(dispSettings, caseData) {
+        var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
+                                                                                        "displaySettings": dispSettings,
+                                                                                        "caseData": caseData
+                                                                                    })
+
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            newTile.snapToGridFromGrid()
+
+        }
+        return newTile
+    }
+
+    function builtConnections()
+    {
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var tile = snapableTilesList[i]
+            if (tile) {
+                tile.blockConnections = true
+                var caseData = tile.caseData
+                var nextList = caseData.getNextList()
+                for (var j = 0; j < nextList.length; j++) {
+                    var nextElCaseData = nextList[j]
+                    var nextEl = snapableTilesList.find(function(tile) {
+                        return tile.caseData === nextElCaseData
+                    })
+                    if (nextEl) {
+                        nextEl.blockConnections = true
+                        tile.connectionManager.addNextElement(nextEl)
+                        nextEl.connectionManager.addPreviousElement(tile)
+                        nextEl.blockConnections = false
+                    }
+                }
+                tile.blockConnections = false
+            }
+        }
+    }
+
     // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
     function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         var newTile
         switch (isDecoration){
         case ItemSnapable.DecorationTile:
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
-                                                                                          "gridRelativePositionX": gridX,
-                                                                                          "gridRelativePositionY": gridY,
-                                                                                          "unitSizeWidth": currentElementWidth,
-                                                                                          "unitSizeHeight": currentElementHeight,
-                                                                                          "z": 5
+                                                                                          "displaySettings.gridRelativePositionX": gridX,
+                                                                                          "displaySettings.gridRelativePositionY": gridY,
+                                                                                          "displaySettings.unitSizeWidth": currentElementWidth,
+                                                                                          "displaySettings.unitSizeHeight": currentElementHeight,
+                                                                                          "displaySettings.zLayer": 5
                                                                                       })
+
+
             break
         case ItemSnapable.CaseTile:
             newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                                                                                        "gridRelativePositionX": gridX,
-                                                                                        "gridRelativePositionY": gridY,
-                                                                                        "unitSizeWidth": currentElementWidth,
-                                                                                        "unitSizeHeight": currentElementHeight,
+                                                                                        "displaySettings.gridRelativePositionX": gridX,
+                                                                                        "displaySettings.gridRelativePositionY": gridY,
+                                                                                        "displaySettings.unitSizeWidth": currentElementWidth,
+                                                                                        "displaySettings.unitSizeHeight": currentElementHeight,
                                                                                         "caseData": Game.getNewCaseType(caseType),
-                                                                                        "z": 5
                                                                                     })
+
             break
 
         default:
@@ -213,7 +252,6 @@ QtObject {
         }
         if (newTile) {
             snapableTilesList.push(newTile)
-            nextTileId++
             // Désélectionner tout et sélectionner le nouveau tile
             deselectAllTiles()
             newTile.isSelected = true
@@ -224,9 +262,9 @@ QtObject {
     }
 
     function changeCaseType(snapableCase, newType)  {
-        var newTile = logic.createNewTileAtPosition(newType, snapableCase.gridRelativePositionX, snapableCase.gridRelativePositionY, ItemSnapable.CaseTile)
-        newTile.unitSizeWidth = snapableCase.unitSizeWidth
-        newTile.unitSizeHeight = snapableCase.unitSizeHeight
+        var newTile = createNewTileAtPosition(newType, snapableCase.displaySettings.gridRelativePositionX, snapableCase.displaySettings.gridRelativePositionY, ItemSnapable.CaseTile)
+        newTile.displaySettings.unitSizeWidth = snapableCase.displaySettings.unitSizeWidth
+        newTile.displaySettings.unitSizeHeight = snapableCase.displaySettings.unitSizeHeight
 
 
 
@@ -324,7 +362,6 @@ QtObject {
 
         if (newTile) {
             snapableTilesList.push(newTile)
-            nextTileId++
 
             // Désélectionner tout et sélectionner le nouveau tile
             deselectAllTiles()
@@ -365,10 +402,10 @@ QtObject {
                     if (!tile) continue
 
                     // Calculer les limites de l'élément existant
-                    var tileLeft = tile.gridRelativePositionX
-                    var tileRight = tileLeft + tile.unitSizeWidth
-                    var tileTop = tile.gridRelativePositionY
-                    var tileBottom = tileTop + tile.unitSizeHeight
+                    var tileLeft = tile.displaySettings.gridRelativePositionX
+                    var tileRight = tileLeft + tile.displaySettings.unitSizeWidth
+                    var tileTop = tile.displaySettings.gridRelativePositionY
+                    var tileBottom = tileTop + tile.displaySettings.unitSizeHeight
 
                     // Calculer les limites du nouvel élément
                     var newTileLeft = x

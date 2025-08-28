@@ -56,6 +56,7 @@ signals:
     void packageCreatedChanged();
     void connectionTestResult(bool success, const QString &message);
     void logMessage(const QString &message);
+    void updateAvailable();
 
 private slots:
     void onDownloadFinished();

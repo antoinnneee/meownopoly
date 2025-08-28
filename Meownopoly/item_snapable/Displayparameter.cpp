@@ -9,6 +9,22 @@ DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gr
     m_gridRelativePositionX = gridRelativePositionX;
     m_gridRelativePositionY = gridRelativePositionY;
     m_zLayer = zLayer;
+    m_effectBrightness = 0.0;
+    m_effectContrast = 0.0;
+    m_effectSaturation = 0.0;
+    m_effectColorization = 0.0;
+    m_effectColorizationColor = QColor(255, 255, 255);
+    m_effectBlurEnabled = false;
+    m_effectBlur = 0.0;
+    m_effectBlurMax = 32;
+    m_effectBlurMultiplier = 1.0;
+    m_effectShadowEnabled = false;
+    m_effectShadowBlur = 1.0;
+    m_effectShadowColor = QColor(0, 0, 0, 1.0);
+    m_effectShadowHorizontalOffset = 0.0;
+    m_effectShadowVerticalOffset = 0.0;
+    m_effectShadowOpacity = 1.0;
+    m_effectShadowScale = 1.0;
 }
 
 DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QObject(parent)
@@ -18,6 +34,22 @@ DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QO
     m_gridRelativePositionX = json["gridRelativePositionX"].toInt();
     m_gridRelativePositionY = json["gridRelativePositionY"].toInt();
     m_zLayer = json["zLayer"].toInt();
+    m_effectBrightness = json["effectBrightness"].toDouble();
+    m_effectContrast = json["effectContrast"].toDouble();
+    m_effectSaturation = json["effectSaturation"].toDouble();
+    m_effectColorization = json["effectColorization"].toDouble();
+    m_effectColorizationColor = QColor(json["effectColorizationColor"].toString());
+    m_effectBlurEnabled = json["effectBlurEnabled"].toBool();
+    m_effectBlur = json["effectBlur"].toDouble();
+    m_effectBlurMax = json["effectBlurMax"].toInt();
+    m_effectBlurMultiplier = json["effectBlurMultiplier"].toDouble();
+    m_effectShadowEnabled = json["effectShadowEnabled"].toBool();
+    m_effectShadowBlur = json["effectShadowBlur"].toDouble();
+    m_effectShadowColor = QColor(json["effectShadowColor"].toString());
+    m_effectShadowHorizontalOffset = json["effectShadowHorizontalOffset"].toDouble();
+    m_effectShadowVerticalOffset = json["effectShadowVerticalOffset"].toDouble();
+    m_effectShadowOpacity = json["effectShadowOpacity"].toDouble();
+    m_effectShadowScale = json["effectShadowScale"].toDouble();
 }
 
 QString DisplayParameter::toJSON()
@@ -28,7 +60,23 @@ QString DisplayParameter::toJSON()
     json += "    \"unitSizeHeight\": " + QString::number(m_unitSizeHeight) + ",\n";
     json += "    \"gridRelativePositionX\": " + QString::number(m_gridRelativePositionX) + ",\n";
     json += "    \"gridRelativePositionY\": " + QString::number(m_gridRelativePositionY) + ",\n";
-    json += "    \"zLayer\": " + QString::number(m_zLayer) + "\n";
+    json += "    \"zLayer\": " + QString::number(m_zLayer) + ",\n";
+    json += "    \"effectBrightness\": " + QString::number(m_effectBrightness) + ",\n";
+    json += "    \"effectContrast\": " + QString::number(m_effectContrast) + ",\n";
+    json += "    \"effectSaturation\": " + QString::number(m_effectSaturation) + ",\n";
+    json += "    \"effectColorization\": " + QString::number(m_effectColorization) + ",\n";
+    json += "    \"effectColorizationColor\": \"" + m_effectColorizationColor.name() + "\",\n";
+    json += "    \"effectBlurEnabled\": " + QString::number(m_effectBlurEnabled) + ",\n";
+    json += "    \"effectBlur\": " + QString::number(m_effectBlur) + ",\n";
+    json += "    \"effectBlurMax\": " + QString::number(m_effectBlurMax) + ",\n";
+    json += "    \"effectBlurMultiplier\": " + QString::number(m_effectBlurMultiplier) + ",\n";
+    json += "    \"effectShadowEnabled\": " + QString::number(m_effectShadowEnabled) + ",\n";
+    json += "    \"effectShadowBlur\": " + QString::number(m_effectShadowBlur) + ",\n";
+    json += "    \"effectShadowColor\": \"" + m_effectShadowColor.name() + "\",\n";
+    json += "    \"effectShadowHorizontalOffset\": " + QString::number(m_effectShadowHorizontalOffset) + ",\n";
+    json += "    \"effectShadowVerticalOffset\": " + QString::number(m_effectShadowVerticalOffset) + ",\n";
+    json += "    \"effectShadowOpacity\": " + QString::number(m_effectShadowOpacity) + ",\n";
+    json += "    \"effectShadowScale\": " + QString::number(m_effectShadowScale) + "\n";
     json += "}";
     return json;
 }
@@ -88,3 +136,178 @@ void DisplayParameter::setZLayer(int zLayer)
     emit zLayerChanged();
 }
 
+double DisplayParameter::effectBrightness() const
+{
+    return m_effectBrightness;
+}
+
+void DisplayParameter::setEffectBrightness(double effectBrightness)
+{
+    m_effectBrightness = effectBrightness;
+    emit effectBrightnessChanged();
+}
+
+double DisplayParameter::effectContrast() const
+{
+    return m_effectContrast;
+}
+
+void DisplayParameter::setEffectContrast(double effectContrast)
+{
+    m_effectContrast = effectContrast;
+    emit effectContrastChanged();
+}
+
+double DisplayParameter::effectSaturation() const
+{
+    return m_effectSaturation;
+}
+
+void DisplayParameter::setEffectSaturation(double effectSaturation)
+{
+    m_effectSaturation = effectSaturation;
+    emit effectSaturationChanged();
+}
+
+double DisplayParameter::effectColorization() const
+{
+    return m_effectColorization;
+}
+
+void DisplayParameter::setEffectColorization(double effectColorization)
+{
+    m_effectColorization = effectColorization;
+    emit effectColorizationChanged();
+}
+
+QColor DisplayParameter::effectColorizationColor() const
+{
+    return m_effectColorizationColor;
+}
+
+void DisplayParameter::setEffectColorizationColor(QColor effectColorizationColor)
+{
+    m_effectColorizationColor = effectColorizationColor;
+    emit effectColorizationColorChanged();
+}
+
+bool DisplayParameter::effectBlurEnabled() const
+{
+    return m_effectBlurEnabled;
+}
+
+void DisplayParameter::setEffectBlurEnabled(bool effectBlurEnabled)
+{
+    m_effectBlurEnabled = effectBlurEnabled;
+    emit effectBlurEnabledChanged();
+}
+
+double DisplayParameter::effectBlur() const
+{
+    return m_effectBlur;    
+}
+
+void DisplayParameter::setEffectBlur(double effectBlur)
+{
+    m_effectBlur = effectBlur;
+    emit effectBlurChanged();
+}
+
+int DisplayParameter::effectBlurMax() const
+{
+    return m_effectBlurMax;
+}
+
+void DisplayParameter::setEffectBlurMax(int effectBlurMax)
+{
+    m_effectBlurMax = effectBlurMax;
+    emit effectBlurMaxChanged();
+}
+
+double DisplayParameter::effectBlurMultiplier() const
+{
+    return m_effectBlurMultiplier;
+}
+
+void DisplayParameter::setEffectBlurMultiplier(double effectBlurMultiplier)
+{
+    m_effectBlurMultiplier = effectBlurMultiplier;
+    emit effectBlurMultiplierChanged();
+}
+
+bool DisplayParameter::effectShadowEnabled() const
+{
+    return m_effectShadowEnabled;
+}
+
+void DisplayParameter::setEffectShadowEnabled(bool effectShadowEnabled)
+{
+    m_effectShadowEnabled = effectShadowEnabled;
+    emit effectShadowEnabledChanged();
+}
+
+double DisplayParameter::effectShadowBlur() const
+{
+    return m_effectShadowBlur;
+}
+
+void DisplayParameter::setEffectShadowBlur(double effectShadowBlur)
+{
+    m_effectShadowBlur = effectShadowBlur;
+    emit effectShadowBlurChanged();
+}
+
+QColor DisplayParameter::effectShadowColor() const
+{
+    return m_effectShadowColor;
+}
+
+void DisplayParameter::setEffectShadowColor(QColor effectShadowColor)
+{
+    m_effectShadowColor = effectShadowColor;
+    emit effectShadowColorChanged();
+}
+
+double DisplayParameter::effectShadowHorizontalOffset() const
+{
+    return m_effectShadowHorizontalOffset;
+}
+
+void DisplayParameter::setEffectShadowHorizontalOffset(double effectShadowHorizontalOffset)
+{
+    m_effectShadowHorizontalOffset = effectShadowHorizontalOffset;
+    emit effectShadowHorizontalOffsetChanged();
+}
+
+double DisplayParameter::effectShadowVerticalOffset() const
+{
+    return m_effectShadowVerticalOffset;
+}
+
+void DisplayParameter::setEffectShadowVerticalOffset(double effectShadowVerticalOffset)
+{
+    m_effectShadowVerticalOffset = effectShadowVerticalOffset;
+    emit effectShadowVerticalOffsetChanged();
+}
+
+double DisplayParameter::effectShadowOpacity() const
+{
+    return m_effectShadowOpacity;
+}
+
+void DisplayParameter::setEffectShadowOpacity(double effectShadowOpacity)
+{
+    m_effectShadowOpacity = effectShadowOpacity;
+    emit effectShadowOpacityChanged();
+}
+
+double DisplayParameter::effectShadowScale() const
+{
+    return m_effectShadowScale;
+}
+
+void DisplayParameter::setEffectShadowScale(double effectShadowScale)
+{
+    m_effectShadowScale = effectShadowScale;
+    emit effectShadowScaleChanged();
+}

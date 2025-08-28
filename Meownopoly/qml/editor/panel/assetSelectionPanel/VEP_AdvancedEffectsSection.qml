@@ -88,7 +88,7 @@ GroupBox {
 
                 onCheckedChanged: {
                     if (control.targetDecoration) {
-                        control.targetDecoration.effectBlurEnabled = checked
+                        control.targetDecoration.displaySettings.effectBlurEnabled = checked
                         control.effectChanged()
                     }
                 }
@@ -124,7 +124,7 @@ GroupBox {
                 to: 1
                 onEffectChanged: function(value) {
                     if (control.targetDecoration) {
-                        control.targetDecoration.effectBlur = value
+                        control.targetDecoration.displaySettings.effectBlur = value
                         control.effectChanged()
                     }
                 }
@@ -165,7 +165,7 @@ GroupBox {
                 
                 onCheckedChanged: {
                     if (targetDecoration) {
-                        targetDecoration.effectShadowEnabled = checked
+                        targetDecoration.displaySettings.effectShadowEnabled = checked
                         effectChanged()
                     }
                 }
@@ -181,7 +181,7 @@ GroupBox {
                 to: 1
                 onEffectChanged: function(value) {
                     if (control.targetDecoration) {
-                        control.targetDecoration.effectShadowBlur = value
+                        control.targetDecoration.displaySettings.effectShadowBlur = value
                         control.effectChanged()
                     }
                 }

@@ -40,7 +40,6 @@ qml/
 ### Effets avancés (activation optionnelle)
 - **Flou** (`effectBlurEnabled`, `effectBlur`) : effet de flou gaussien
 - **Ombre** (`effectShadowEnabled`, `effectShadowBlur`) : ombre portée
-- **Masque** (`effectMaskEnabled`, `effectMaskSource`) : masquage par texture
 
 ## Interface utilisateur
 

@@ -129,16 +129,16 @@ Rectangle {
                         }
                     }
                     
-                    Text {
+                    Label {
                         anchors.bottom: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: model.id
                         color: "white"
                         font.pixelSize: 10
-                        background: Rectangle {
-                            color: "#80000000"
-                            radius: 2
-                        }
+                        // background: Rectangle {
+                        //     color: "#80000000"
+                        //     radius: 2
+                        // }
                     }
                     
                     MouseArea {

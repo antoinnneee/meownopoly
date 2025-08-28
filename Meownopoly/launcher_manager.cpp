@@ -388,6 +388,11 @@ void LauncherManager::onVersionCheckFinished()
         if (parseVersionInfo(obj)) {
             emit logMessage("Version actuelle: " + m_currentVersion + ", Dernière: " + m_latestVersion);
             setDownloadStatus("Vérification terminée");
+            if (m_currentVersion != m_latestVersion)
+            {
+                emit updateAvailable();
+            }
+
         } else {
             emit logMessage("❌ Erreur: Format de version invalide");
             setDownloadStatus("Format invalide");

@@ -17,7 +17,7 @@ class ItemSnapable : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(Case * caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
+    Q_PROPERTY(Case* caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     
     enum TileType {
@@ -30,7 +30,7 @@ class ItemSnapable : public QObject
 public:
     ItemSnapable();
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
-    ItemSnapable(const QJsonDocument &json, QObject *parent = nullptr);
+    ItemSnapable(const QJsonObject &json, QObject *parent = nullptr);
 
 
 
@@ -41,6 +41,13 @@ public:
 
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
+    
+    // Helper function to create the correct Case type from JSON
+    static Case* getNewCaseFromJSON(const QJsonObject &caseJson, QObject *parent = nullptr);
+
+    void print();
+
+    QJsonObject getOriginalJson() const { return m_json; }
 
 signals:
     void caseDataChanged();

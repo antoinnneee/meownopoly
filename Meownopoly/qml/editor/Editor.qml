@@ -12,6 +12,8 @@ import "tools/snapable"
 import "panel"
 import "panel/caseConfigPanel"
 import "panel/assetSelectionPanel"
+import MapLoader
+import MapInfo
 
 Rectangle {
     id: root
@@ -43,7 +45,55 @@ Rectangle {
     property alias selectedAssetId: assetPanel.currentSelectedId
     property alias isAssetSelected: assetPanel.isAssetSelected
 
+    property MapInfo mapInfo: MapInfo{
+        mapName: "no_name"
+        mapDescription: "no_description"
+        mapLastModified: "no_last_modified"
+        version: 0
+    }
 
+    Connections{
+        target: MapLoader
+        function onFoundCaseTile(dp, caseData){
+            console.log("Found case tile:", dp, caseData)
+            logic.createCaseTile(dp, caseData);
+        }
+        function onMapLoaded(map, mapInfo)
+        {
+            console.log("Map loaded")
+            logic.builtConnections();
+            root.mapInfo = mapInfo;
+        }
+    }
+
+    Button{
+        id: loadMapButton
+        text: "Load Map"
+        onClicked: {
+            console.log("Opening map selection panel")
+            mapSelectionPanel.isVisible = true
+        }
+        z:1000
+        
+        // Style moderne pour le bouton
+        background: Rectangle {
+            radius: 8
+            color: loadMapButton.hovered ? "#74b9ff" : "#6c5ce7"
+            border.color: "#5f3dc4"
+            border.width: 1
+            
+            Behavior on color { ColorAnimation { duration: 150 } }
+        }
+        
+        contentItem: Text {
+            text: loadMapButton.text
+            color: "#ffffff"
+            font.pixelSize: 12
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
 
     EditorLogic {
         id: logic
@@ -51,6 +101,7 @@ Rectangle {
         editorGrid: editorGrid
         editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
+        mapInfo: root.mapInfo
     }
     EditorDynamicComponent {
         id: editorDynamicComponent
@@ -248,8 +299,6 @@ Rectangle {
         width: parent.width/2
 
         onConfigurationClosed: {
-            console.log("Panneau de configuration fermé")
-            console.log(caseConfigPanel.targetSnapableCase.caseData.toJSON());
 
         }
 
@@ -335,6 +384,21 @@ Rectangle {
                  }
              }
          }
+    }
+
+    // Panneau de sélection des maps
+    MapSelectionPanel {
+        id: mapSelectionPanel
+        anchors.fill: parent
+        
+        onConfigurationClosed: {
+            console.log("Map selection panel closed")
+        }
+        
+        onMapSelected: function(mapName) {
+            console.log("Map selected:", mapName)
+            // Le chargement est déjà fait dans le panel via MapLoader.loadMap(mapName)
+        }
     }
 
 }

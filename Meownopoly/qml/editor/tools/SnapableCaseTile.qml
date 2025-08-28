@@ -19,6 +19,7 @@ SnapableElement {
     isResizable: true
     autoSnap: true
     connectionManager.onNextElementAdded:function(element) {
+        if (root.blockConnections) return
         console.log("Next element added:", element)
         // Synchroniser avec les données C++ : ajouter la case suivante
         if (element && element.caseData && root.caseData) {
@@ -27,6 +28,7 @@ SnapableElement {
         }
     }
     connectionManager.onPreviousElementAdded:function(element) {
+        if (root.blockConnections) return
         console.log("Previous element added:", element)
         // Synchroniser avec les données C++ : ajouter la case précédente
         if (element && element.caseData && root.caseData) {
@@ -35,6 +37,7 @@ SnapableElement {
         }
     }
     connectionManager.onNextElementRemoved:function(element) {
+        if (root.blockConnections) return
         console.log("Next element removed:", element)
         // Synchroniser avec les données C++ : supprimer la case suivante
         if (element && element.caseData && root.caseData) {
@@ -43,6 +46,7 @@ SnapableElement {
         }
     }
     connectionManager.onPreviousElementRemoved:function(element) {
+        if (root.blockConnections) return
         console.log("Previous element removed:", element)
         // Synchroniser avec les données C++ : supprimer la case précédente
         if (element && element.caseData && root.caseData) {
@@ -65,6 +69,8 @@ SnapableElement {
         console.log("Syncing connections for case:", root.caseData.name)
         console.log("- Next cases count:", root.caseData.next ? root.caseData.next.length : 0)
         console.log("- Previous cases count:", root.caseData.prev ? root.caseData.prev.length : 0)
+
+
     }
 
     CaseTile {

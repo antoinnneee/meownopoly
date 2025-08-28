@@ -461,7 +461,7 @@ Rectangle {
                 anchors.rightMargin: root.showEffectsPanel ? 5 : 0
                 
         // Category grid
-        AssetCategoryGrid {
+        ASP_CategoryGrid {
             id: categoryGrid
             anchors.fill: parent
             anchors.topMargin: 6
@@ -477,7 +477,7 @@ Rectangle {
         }
 
         // Asset grid
-        AssetGrid {
+        ASP_Grid {
             id: assetGrid
             anchors.fill: parent
             anchors.topMargin: 6

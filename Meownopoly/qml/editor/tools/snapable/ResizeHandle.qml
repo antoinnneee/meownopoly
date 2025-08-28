@@ -96,7 +96,7 @@ Rectangle {
                         var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
                         var newUnitWidth = startUnitWidth + deltaUnitsX
                         if (newUnitWidth >= 1) {
-                            targetElement.unitSizeWidth = newUnitWidth
+                            targetElement.displaySettings.unitSizeWidth = newUnitWidth
                         }
                         break
                     }
@@ -105,7 +105,7 @@ Rectangle {
                         var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
                         var newUnitHeight = startUnitHeight + deltaUnitsY
                         if (newUnitHeight >= 1) {
-                            targetElement.unitSizeHeight = newUnitHeight
+                            targetElement.displaySettings.unitSizeHeight = newUnitHeight
                         }
                         break
                     }
@@ -123,7 +123,7 @@ Rectangle {
                         if (newUnitWidth >= 1) {
                             // 3. Déplacer l'élément vers la gauche et ajuster la largeur
                             targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
-                            targetElement.unitSizeWidth = newUnitWidth
+                            targetElement.displaySettings.unitSizeWidth = newUnitWidth
                         }
                         break
                     }
@@ -133,7 +133,7 @@ Rectangle {
                         var newUnitHeight = startUnitHeight - deltaUnitsY
                         if (newUnitHeight >= 1) {
                             targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
-                            targetElement.unitSizeHeight = newUnitHeight
+                            targetElement.displaySettings.unitSizeHeight = newUnitHeight
                         }
                         break;
                     }
@@ -149,8 +149,8 @@ Rectangle {
                             // Déplacer en x et y, changer largeur et hauteur
                             targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
                             targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
-                            targetElement.unitSizeWidth = newUnitWidth
-                            targetElement.unitSizeHeight = newUnitHeight
+                            targetElement.displaySettings.unitSizeWidth = newUnitWidth
+                            targetElement.displaySettings.unitSizeHeight = newUnitHeight
                         }
                         break;
                     }
@@ -164,8 +164,8 @@ Rectangle {
                         if (newUnitWidth >= 1 && newUnitHeight >= 1) {
                             // Déplacer seulement en y, changer largeur et hauteur
                             targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
-                            targetElement.unitSizeWidth = newUnitWidth
-                            targetElement.unitSizeHeight = newUnitHeight
+                            targetElement.displaySettings.unitSizeWidth = newUnitWidth
+                            targetElement.displaySettings.unitSizeHeight = newUnitHeight
                         }
                         break;
                     }
@@ -179,8 +179,8 @@ Rectangle {
                         if (newUnitWidth >= 1 && newUnitHeight >= 1) {
                             // Déplacer seulement en x, changer largeur et hauteur
                             targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
-                            targetElement.unitSizeWidth = newUnitWidth
-                            targetElement.unitSizeHeight = newUnitHeight
+                            targetElement.displaySettings.unitSizeWidth = newUnitWidth
+                            targetElement.displaySettings.unitSizeHeight = newUnitHeight
                         }
                         break;
                     }
@@ -193,8 +193,8 @@ Rectangle {
                         
                         if (newUnitWidth >= 1 && newUnitHeight >= 1) {
                             // Pas de déplacement, juste changer largeur et hauteur
-                            targetElement.unitSizeWidth = newUnitWidth
-                            targetElement.unitSizeHeight = newUnitHeight
+                            targetElement.displaySettings.unitSizeWidth = newUnitWidth
+                            targetElement.displaySettings.unitSizeHeight = newUnitHeight
                         }
                         break;
                     }

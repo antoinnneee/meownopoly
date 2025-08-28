@@ -45,6 +45,9 @@ SOURCES += \
     item_snapable/SnapableDeco.cpp \
     launcher_manager.cpp \
     main.cpp \
+    map/map.cpp \
+    map/mapinfo.cpp \
+    map/maploader.cpp \
     meowstyle.cpp \
     player.cpp \
     qmlapp.cpp \
@@ -72,6 +75,9 @@ HEADERS += \
     item_snapable/SnapableCase.h \
     item_snapable/SnapableDeco.h \
     launcher_manager.h \
+    map/map.h \
+    map/mapinfo.h \
+    map/maploader.h \
     meowstyle.h \
     player.h \
     qmlapp.h \
