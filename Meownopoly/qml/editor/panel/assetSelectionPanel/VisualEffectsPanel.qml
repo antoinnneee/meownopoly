@@ -67,7 +67,7 @@ Rectangle {
             }
         }
         
-        // Transform Section
+        // // Transform Section
         VEP_TransformSection {
             id: transformSection
             anchors.left: parent.left

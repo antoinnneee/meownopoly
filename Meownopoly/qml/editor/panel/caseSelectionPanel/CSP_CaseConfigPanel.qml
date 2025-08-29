@@ -86,7 +86,7 @@ Rectangle {
         
         // Configuration content - reusing existing components from caseConfigPanel
         // General configuration for all case types
-        CaseGeneralConfig {
+        CCP_GeneralConfig {
             id: caseGeneralConfig
             targetCase: root.caseData
             Layout.fillWidth: true
@@ -147,7 +147,7 @@ Rectangle {
     // Components for specific case types
     Component {
         id: restAreaConfigComponent
-        CaseRestAreaSpecificConfig {
+        CCP_RestAreaSpecificConfig {
             targetCase: root.caseData
             width: specificConfigLoader.width
         }
@@ -155,7 +155,7 @@ Rectangle {
     
     Component {
         id: kibbleDispenserConfigComponent
-        CaseKibbleDispenserSpecificConfig {
+        CCP_KibbleDispenserSpecificConfig {
             targetCase: root.caseData
             width: specificConfigLoader.width
         }
@@ -179,7 +179,7 @@ Rectangle {
     
     Component {
         id: catDeviceConfigComponent
-        CaseCatDeviceSpecificConfig {
+        CCP_CatDeviceSpecificConfig {
             targetCase: root.caseData
             width: specificConfigLoader.width
         }
@@ -187,7 +187,7 @@ Rectangle {
     
     Component {
         id: cardBoardBoxConfigComponent
-        CaseCardBoardBoxSpecificConfig {
+        CCP_CardBoardBoxSpecificConfig {
             targetCase: root.caseData
             width: specificConfigLoader.width
         }
