@@ -5,7 +5,7 @@ import Case
 import CaseRestArea
 import Player
 
-ConfigPanelElement {
+CCP_PanelElement {
     title: "Prix et Finances"
     property alias buyPrice: priceSpinBox.value
     property alias sellPrice: sellPriceSpinBox.value

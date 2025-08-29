@@ -79,19 +79,19 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_Item.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/AssetSelectionPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VisualEffectsPanel.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseCardBoardBoxSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseCatDeviceSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseCatPerksConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseConfigurationHeader.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_Header.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CaseConfigurationPanel.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseGeneralConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseHouseHotelPriceConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseKibbleDispenserSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseRentConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseRestAreaFamilyConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseRestAreaSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseTypeSelector.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/ConfigPanelElement.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_GeneralConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_RentConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_TypeSelector.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_PanelElement.qml</file>
         <file>qml/editor/panel/ConnectionsConfigurationPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_ColorEffectsSection.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_Slider.qml</file>

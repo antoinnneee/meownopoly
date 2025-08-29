@@ -12,6 +12,7 @@
 #include <QJsonValueRef>
 
 #include "Displayparameter.h"
+#include "Decorationparameter.h"
 
 class ItemSnapable : public QObject
 {
@@ -19,7 +20,7 @@ class ItemSnapable : public QObject
 
     Q_PROPERTY(Case* caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
-    
+    Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
     enum TileType {
         CaseTile,
         DecorationTile,
@@ -30,7 +31,9 @@ class ItemSnapable : public QObject
 public:
     ItemSnapable();
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
+    ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(const QJsonObject &json, QObject *parent = nullptr);
+    
 
 
 
@@ -38,7 +41,8 @@ public:
     void setCaseData(Case * caseData);
     DisplayParameter * displayParameter() const;
     void setDisplayParameter(DisplayParameter * displayParameter);
-
+    DecorationParameter * decorationParameter() const;
+    void setDecorationParameter(DecorationParameter * decorationParameter);
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
     
@@ -52,11 +56,12 @@ public:
 signals:
     void caseDataChanged();
     void displayParameterChanged();
-
+    void decorationParameterChanged();
 
 private :
-    Case * m_caseData;
-    DisplayParameter * m_displayParameter;
+    Case * m_caseData = nullptr;
+    DisplayParameter * m_displayParameter = nullptr;
+    DecorationParameter * m_decorationParameter = nullptr;
     QJsonObject m_json;
 };
 

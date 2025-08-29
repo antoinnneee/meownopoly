@@ -112,6 +112,7 @@ AssetManager::AssetManager(QObject *parent)
     : QObject(parent)
     , m_decorationModel(new AssetModel(this))
     , m_playerIconModel(new AssetModel(this))
+    , m_tileModel(new AssetModel(this))
     , m_assetsBasePath("asset_extracted/")
 {
     m_pThis = this;
@@ -154,6 +155,8 @@ AssetModel* AssetManager::getTypeModel(const QString &category, const QString &t
         sourceModel = m_decorationModel;
     } else if (category == "player_icons") {
         sourceModel = m_playerIconModel;
+    } else if (category == "tile") {
+        sourceModel = m_tileModel;
     }
     
     if (!sourceModel) {
@@ -178,6 +181,11 @@ QString AssetManager::getPlayerIconPath(const QString &id) const
     return buildAssetPath("player_icons", "", id + ".png");
 }
 
+QString AssetManager::getTilePath(const QString &type, const QString &id) const
+{
+    return buildAssetPath("tile", type, id + ".png");
+}
+
 void AssetManager::loadAssets()
 {
     qDebug() << "Loading assets from:" << m_assetsBasePath;
@@ -185,6 +193,7 @@ void AssetManager::loadAssets()
     // Clear existing models
     m_decorationModel->clear();
     m_playerIconModel->clear();
+    m_tileModel->clear();
     
     // Clear filtered models cache
     qDeleteAll(m_filteredModels);
@@ -208,12 +217,19 @@ void AssetManager::loadAssets()
         loadCategory(playerIconsPath, "player_icons");
     }
     
+    // Load tiles
+    QString tilePath = assetsDir.absoluteFilePath("tile");
+    if (QDir(tilePath).exists()) {
+        loadCategory(tilePath, "tile");
+    }
+    
     emit decorationModelChanged();
     emit playerIconModelChanged();
-    
+    emit tileModelChanged();
     qDebug() << "Assets loaded successfully";
     qDebug() << "Decorations:" << m_decorationModel->rowCount();
     qDebug() << "Player icons:" << m_playerIconModel->rowCount();
+    qDebug() << "Tiles:" << m_tileModel->rowCount();
 }
 
 void AssetManager::setAssetsBasePath(const QString &basePath)
@@ -282,6 +298,8 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
             targetModel = m_decorationModel;
         } else if (categoryName == "player_icons") {
             targetModel = m_playerIconModel;
+        } else if (categoryName == "tile") {
+            targetModel = m_tileModel;
         }
         
         if (targetModel) {
@@ -437,6 +455,22 @@ bool AssetManager::generateAllMetadata()
         }
     }
     
+
+    // Generate for tile directory
+    QString tilePath = assetsDir.absoluteFilePath("tile");
+    QDir tileDir(tilePath);
+    if (tileDir.exists()) {
+        QStringList typeDirectories = tileDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+        for (const QString &typeName : typeDirectories) {
+            QString typePath = tileDir.absoluteFilePath(typeName);
+            if (generateMetadataForDirectory(typePath)) {
+                generatedCount++;
+            } else {
+                success = false;
+            }
+        }
+    }
+
     // Generate for player_icons directory
     QString playerIconsPath = assetsDir.absoluteFilePath("player_icons");
     if (QDir(playerIconsPath).exists()) {
@@ -485,6 +519,25 @@ QStringList AssetManager::scanAvailableAssets() const
             }
         }
     }
+    // Scan tiles
+    QString tilePath = assetsDir.absoluteFilePath("tile");
+    QDir tileDir(tilePath);
+    if (tileDir.exists()) {
+        QStringList typeDirectories = tileDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+        for (const QString &typeName : typeDirectories) {
+            QString typePath = tileDir.absoluteFilePath(typeName);
+            QDir typeDir(typePath);
+            
+            QStringList filters;
+            filters << "*.png" << "*.jpg" << "*.jpeg";
+            QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
+            
+            if (!imageFiles.isEmpty()) {
+                result << QString("tile/%1 (%2 images)").arg(typeName).arg(imageFiles.size());
+            }
+        }
+    }
+    
     
     // Scan player icons
     QString playerIconsPath = assetsDir.absoluteFilePath("player_icons");
@@ -498,7 +551,7 @@ QStringList AssetManager::scanAvailableAssets() const
             result << QString("player_icons (%1 images)").arg(imageFiles.size());
         }
     }
-    
+
     return result;
 }
 

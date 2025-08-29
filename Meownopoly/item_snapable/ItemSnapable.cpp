@@ -22,6 +22,7 @@ void ItemSnapable::registerQml()
     qmlRegisterType<ItemSnapable>("ItemSnapable", 1, 0, "ItemSnapable"); // Register ItemSnapable class
     qmlRegisterType<TileType>("TileType", 1, 0, "TileType");
     qmlRegisterType<DisplayParameter>("DisplayParameter", 1, 0, "DisplayParameter"); // Register DisplayParameter class
+    qmlRegisterType<DecorationParameter>("DecorationParameter", 1, 0, "DecorationParameter"); // Register DecorationParameter class
 }
 
 ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent)
@@ -29,14 +30,30 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
 {
     m_caseData = caseData;
     m_displayParameter = displayParameter;
+    m_decorationParameter = nullptr;
+}
+
+ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent)
+: QObject(parent)
+{
+    m_decorationParameter = decorationParameter;
+    m_displayParameter = displayParameter;
+    m_caseData = nullptr;
 }
 
 ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
 : QObject(parent)
 {
     m_json = json;
-    m_caseData = getNewCaseFromJSON(m_json["caseData"].toObject(), this);
-    m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
+    if (m_json.contains("caseData")) {
+        m_caseData = getNewCaseFromJSON(m_json["caseData"].toObject(), this);
+    }
+    if (m_json.contains("displayParameter")) {
+        m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
+    }
+    if (m_json.contains("decorationParameter")) {
+        m_decorationParameter = new DecorationParameter(m_json["decorationParameter"].toObject(), this);
+    }
 }
 
 Case *ItemSnapable::caseData() const {
@@ -53,6 +70,14 @@ DisplayParameter *ItemSnapable::displayParameter() const {
 
 void ItemSnapable::setDisplayParameter(DisplayParameter * displayParameter) {
     m_displayParameter = displayParameter; emit displayParameterChanged();
+}
+
+DecorationParameter *ItemSnapable::decorationParameter() const {
+    return m_decorationParameter;
+}
+
+void ItemSnapable::setDecorationParameter(DecorationParameter * decorationParameter) {
+    m_decorationParameter = decorationParameter; emit decorationParameterChanged();
 }
 
 Case* ItemSnapable::getNewCaseFromJSON(const QJsonObject &caseJson, QObject *parent)
@@ -105,8 +130,14 @@ QString ItemSnapable::toJSON()
 {
     QString json;
     json += "{\n";
-    json += "    \"caseData\": " + m_caseData->toJSON() + ",\n";
+    if (m_caseData != nullptr) {
+        json += "    \"caseData\": " + m_caseData->toJSON() + ",\n";
+    }
+    if (m_decorationParameter != nullptr) {
+        json += "    \"decorationParameter\": " + m_decorationParameter->toJSON() + ",\n";
+    }
     json += "    \"displayParameter\": " + m_displayParameter->toJSON() + "\n";
+
     json += "}";
     return json;
 }

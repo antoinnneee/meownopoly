@@ -47,7 +47,7 @@ Rectangle {
             spacing: 15
 
             // En-tête
-            CaseConfigurationHeader {
+            CCP_Header {
                 Layout.fillWidth: true
                 onCloseClicked: {
                     root.isVisible = false
@@ -72,7 +72,7 @@ Rectangle {
                         font.italic: true
                     }
 
-                    CaseTypeSelector {
+                    CCP_TypeSelector {
                         id: caseTypeSelector
                         Layout.fillWidth: true
                         currentType: targetCase ? targetCase.type : Case.CS_Unknow
@@ -115,7 +115,7 @@ Rectangle {
             }
 
             // Configuration générale pour les cases
-            CaseGeneralConfig {
+            CCP_GeneralConfig {
                 id: caseGeneralConfig
                 targetCase: root.targetCase
                 Layout.fillWidth: true
@@ -123,7 +123,7 @@ Rectangle {
             }
 
             // Configuration spécifique RestArea
-            CaseRestAreaSpecificConfig {
+            CCP_RestAreaSpecificConfig {
                 id: caseRestAreaSpecificConfig
                 targetCase: root.targetCase
                 Layout.fillWidth: true
@@ -131,7 +131,7 @@ Rectangle {
             }
 
             // Configuration spécifique KibbleDispenser
-            CaseKibbleDispenserSpecificConfig {
+            CCP_KibbleDispenserSpecificConfig {
                 id: caseKibbleDispenserSpecificConfig
                 targetCase: root.targetCase
                 Layout.fillWidth: true
@@ -139,7 +139,7 @@ Rectangle {
             }
 
             // Configuration spécifique CardBoardBox
-            CaseCardBoardBoxSpecificConfig {
+            CCP_CardBoardBoxSpecificConfig {
                 id: caseCardBoardBoxSpecificConfig
                 targetCase: root.targetCase
                 Layout.fillWidth: true
@@ -147,7 +147,7 @@ Rectangle {
             }
 
             // Configuration spécifique CatDevice
-            CaseCatDeviceSpecificConfig {
+            CCP_CatDeviceSpecificConfig {
                 id: caseCatDeviceSpecificConfig
                 targetCase: root.targetCase
                 Layout.fillWidth: true

@@ -23,6 +23,7 @@ public slots:
 signals:
     void mapLoaded(Map *map, MapInfo *mapInfo);
     void foundCaseTile(DisplayParameter *dp, Case *caseData);
+    void foundDecorationTile(DisplayParameter *displayParameter, DecorationParameter *decorationParameter);
 
 private slots:
 

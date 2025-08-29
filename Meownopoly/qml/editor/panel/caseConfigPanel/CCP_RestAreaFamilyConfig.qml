@@ -6,7 +6,7 @@ import CaseRestArea
 import Player
 import MeowStyle
 
-ConfigPanelElement {
+CCP_PanelElement {
     title: "Configuration Famille"
     property alias familyIndex: familyComboBox.currentIndex
 

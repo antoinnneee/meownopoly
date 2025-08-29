@@ -16,7 +16,6 @@ class Map : public QObject
 
 public:
     Map(QObject *parent = nullptr);
-    void extracted(Case *&caseData, QJsonArray &nextIdArray);
     Map(QJsonObject jsonObject, QObject *parent = nullptr);
 
     QString mapName() const { return m_mapName; }

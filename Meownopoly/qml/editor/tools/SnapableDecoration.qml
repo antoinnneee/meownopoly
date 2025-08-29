@@ -6,6 +6,7 @@ import QtQuick.Effects
 import "snapable"
 import AssetManager
 import ItemSnapable
+import DecorationParameter
 
 SnapableElement {
     // Configuration du redimensionnement
@@ -17,10 +18,13 @@ SnapableElement {
 
     type : ItemSnapable.DecorationTile
 
-    property string decorationType: "grass"  // Can be "grass" or "tree"
-    property var decorationModel : AssetManager.getTypeModel("decoration", decorationType)
-    property string decorationId: Math.floor(Math.random() * decorationModel.rowCount())
-    property string imagePath: AssetManager.getDecorationPath(decorationType, decorationId)
+
+    property DecorationParameter decorationSettings : DecorationParameter {
+        decorationCategory: "decoration"
+        decorationType: "grass"
+        decorationId: Math.floor(Math.random() * AssetManager.getTypeModel("decoration", decorationSettings.decorationType).rowCount())
+    }
+    property string imagePath: AssetManager.buildAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
     
     // MultiEffect properties - Color effects (always enabled)
     displaySettings.effectBrightness: 0.0
@@ -43,6 +47,13 @@ SnapableElement {
     displaySettings.effectShadowOpacity: 1.0
     displaySettings.effectShadowScale: 1.0
     
+    // Rotation properties
+    displaySettings.rotationAngle: 0.0
+    
+    // Mirror properties
+    displaySettings.mirrorHorizontal: false
+    displaySettings.mirrorVertical: false
+    
     property bool effectMaskEnabled: false
     property var effectMaskSource: null
     property bool effectMaskInverted: false
@@ -60,13 +71,13 @@ SnapableElement {
                                            displaySettings.effectShadowEnabled || 
                                            effectMaskEnabled
                                            
+    // Helper function to check if any transform is active
+    readonly property bool hasActiveTransforms: displaySettings.rotationAngle !== 0.0 ||
+                                              displaySettings.mirrorHorizontal ||
+                                              displaySettings.mirrorVertical
+                                           
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
-
-    Component.onCompleted: {
-        console.log("Decoration created with model:", decorationModel)
-        console.log("model length:", decorationModel.rowCount())
-    }
 
     Image {
         id: tileImage
@@ -81,6 +92,22 @@ SnapableElement {
         
         // Hide source image when effects are applied for optimal performance
         visible: !hasActiveEffects
+        
+        // Apply mirror effects using scale
+        transform: [ 
+            Scale{
+                xScale: displaySettings.mirrorHorizontal ? -1 : 1
+                yScale: displaySettings.mirrorVertical ? -1 : 1
+                origin.x: tileImage.width / 2
+                origin.y: tileImage.height / 2
+            },
+            Rotation{
+                angle: displaySettings.rotationAngle
+                origin.x: tileImage.width / 2
+                origin.y: tileImage.height / 2
+            }
+        ]
+        
 
         onStatusChanged: {
             if (status === Image.Error) {
@@ -96,6 +123,22 @@ SnapableElement {
         source: tileImage
         z: 2  // Above the source image but below handles
         visible: shouldCreateEffect
+        
+        // Apply the same transforms as the source image
+        
+        transform: [ 
+            Scale{
+                xScale: displaySettings.mirrorHorizontal ? -1 : 1
+                yScale: displaySettings.mirrorVertical ? -1 : 1
+                origin.x: multiEffect.width / 2
+                origin.y: multiEffect.height / 2
+            },
+            Rotation{
+                angle: displaySettings.rotationAngle
+                origin.x: multiEffect.width / 2
+                origin.y: multiEffect.height / 2
+            }
+        ]
         
         // Color effects (always available)
         brightness: displaySettings.effectBrightness
@@ -129,7 +172,7 @@ SnapableElement {
         maskSpreadAtMax: effectMaskSpreadAtMax
         
         // Performance optimization: auto-padding management
-        autoPaddingEnabled: displaySettings.effectBlurEnabled || displaySettings.effectShadowEnabled
+        autoPaddingEnabled: false//displaySettings.effectBlurEnabled || displaySettings.effectShadowEnabled
     }
     
     // Functions to reset effects
@@ -173,5 +216,20 @@ SnapableElement {
         resetBlurEffect()
         resetShadowEffect()
         resetMaskEffect()
+    }
+    
+    // Functions to reset transforms
+    function resetRotation() {
+        displaySettings.rotationAngle = 0.0
+    }
+    
+    function resetMirror() {
+        displaySettings.mirrorHorizontal = false
+        displaySettings.mirrorVertical = false
+    }
+    
+    function resetAllTransforms() {
+        resetRotation()
+        resetMirror()
     }
 }

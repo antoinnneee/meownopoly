@@ -95,9 +95,8 @@ QtObject {
                     }
                 }
                 else if (tile.type === ItemSnapable.DecorationTile){
-
-                    var imagePath = tile.imagePath
-                    var decorationInfo = [decorationInfo, displayInfo]
+                    var decorationInfoData = tile.decorationSettings
+                    var decorationInfo = [decorationInfoData, displayInfo]
                     decoList.push(decorationInfo)
                 }
             }
@@ -191,7 +190,19 @@ QtObject {
         if (newTile) {
             snapableTilesList.push(newTile)
             newTile.snapToGridFromGrid()
+        }
+        return newTile
+    }
 
+    function createDecorationTile(dispSettings, decorationParameter) {
+
+        var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
+                                                                                        "displaySettings": dispSettings,
+                                                                                        "decorationSettings": decorationParameter
+                                                                                    })
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            newTile.snapToGridFromGrid()
         }
         return newTile
     }
@@ -200,7 +211,7 @@ QtObject {
     {
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
-            if (tile) {
+            if (tile && tile.caseData) {
                 tile.blockConnections = true
                 var caseData = tile.caseData
                 var nextList = caseData.getNextList()
