@@ -13,6 +13,8 @@
 #include <QImageReader>
 #include <QJsonDocument>
 
+#define DEFAULT_ASSETS_LOCATION "asset_extracted/"
+
 class AssetModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -64,8 +66,8 @@ private:
 class AssetManager : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QStringList categories READ categories NOTIFY categoriesChanged)
     Q_PROPERTY(AssetModel* decorationModel READ decorationModel NOTIFY decorationModelChanged)
-    Q_PROPERTY(AssetModel* playerIconModel READ playerIconModel NOTIFY playerIconModelChanged)
     Q_PROPERTY(AssetModel* tileModel READ tileModel NOTIFY tileModelChanged)
     Q_PROPERTY(QString assetsBasePath READ assetsBasePath NOTIFY assetsBasePathChanged)
 
@@ -77,15 +79,17 @@ public:
 
     // Property getters
     AssetModel* decorationModel() const { return m_decorationModel; }
-    AssetModel* playerIconModel() const { return m_playerIconModel; }
     AssetModel* tileModel() const { return m_tileModel; }
     QString assetsBasePath() const { return m_assetsBasePath; }
     Q_INVOKABLE QString buildAssetPath(const QString &category, const QString &type, const QString &filename) const;
+    Q_INVOKABLE QString getAssetPath(const QString &category, const QString &type, const QString &id) const;
+
+    Q_INVOKABLE QStringList categories() const { return m_categories; }
+    void setCategories(const QStringList &categories);
 
     // QML accessible methods
     Q_INVOKABLE AssetModel* getTypeModel(const QString &category, const QString &type);
     Q_INVOKABLE QString getDecorationPath(const QString &type, const QString &id) const;
-    Q_INVOKABLE QString getPlayerIconPath(const QString &id) const;
     Q_INVOKABLE QString getTilePath(const QString &type, const QString &id) const;
 
     Q_INVOKABLE void loadAssets();
@@ -96,27 +100,29 @@ public:
     // Metadata generation
     Q_INVOKABLE bool generateMetadataForDirectory(const QString &directoryPath);
     Q_INVOKABLE bool generateAllMetadata();
-    Q_INVOKABLE QStringList scanAvailableAssets() const;
+    Q_INVOKABLE QStringList scanAvailableAssets();
 
 public slots:
 
 signals:
     void decorationModelChanged();
-    void playerIconModelChanged();
     void assetsBasePathChanged();
     void tileModelChanged();
+    void categoriesChanged();
+
 private:
     void loadCategory(const QString &categoryPath, const QString &categoryName);
     void loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName);
 
     AssetModel *m_decorationModel;
-    AssetModel *m_playerIconModel;
     AssetModel *m_tileModel;
     QString m_assetsBasePath;
     static AssetManager *m_pThis;
     
     // Cache for filtered models
     mutable QHash<QString, AssetModel*> m_filteredModels;
+
+    QStringList m_categories;
 };
 
 #endif // ASSET_MANAGER_H

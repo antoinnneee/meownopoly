@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Case
 import CaseCatDoor
 import "../"
+import AssetManager
 
 Item {
     id: root
@@ -12,7 +13,7 @@ Item {
     required property CaseCatDoor caseData
 
     // Icons for different tile types
-    property var tileIcons: appInstance.getAssetPath("case/catdoor.png")
+    property var tileIcons: AssetManager.getAssetPath("ui", "case","catdoor")
 
     property var fallbackIcons: "🚪"
 

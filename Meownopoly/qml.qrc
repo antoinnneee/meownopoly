@@ -5,7 +5,6 @@
         <file>qml/titleScreen/TitleScreen.qml</file>
         <file>qml/test/TEST_VIEW_0.qml</file>
         <file>qml/test/TEST_VIEW_1.qml</file>
-        <file>qml/test/TEST_VIEW_2.qml</file>
         <file>qml/test/TEST_CASE.qml</file>
         <file>qml/test/TEST_VIEW_3.qml</file>
         <file>qml/test/TEST_ASSET_MANAGER.qml</file>
@@ -68,9 +67,6 @@
         <file>qml/menu/pawTools.js</file>
         <file>qml/editor/EditorLogic.qml</file>
         <file>qml/editor/EditorDynamicComponent.qml</file>
-        <file>qml/asset_tools/AssetManagerPanel.qml</file>
-        <file>qml/asset_tools/AssetSelector.qml</file>
-        <file>qml/asset_tools/MetadataGenerator.qml</file>
         <file>qml/item_icon/LayerVisualizer.qml</file>
         <file>qml/editor/tools/SnapableCharacter.qml</file>
         <file>qml/editor/tools/AssetPreviewCursor.qml</file>

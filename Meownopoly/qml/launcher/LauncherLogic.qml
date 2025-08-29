@@ -58,6 +58,7 @@ QtObject {
     signal downloadStatusUpdated()
     signal packageCreationCompleted(bool success)
     signal updateAvailable();
+    signal downloadSucess();
     
     // Helper pour calculer la version suivante
     function getNextVersion(currentVersion) {
@@ -107,6 +108,10 @@ QtObject {
     // Connexions avec le singleton LauncherManager
     property Connections launcherConnections: Connections {
         target: LauncherManager
+
+        function onDownloadSucess() {
+            root.downloadSucess()
+        }
 
         function onUpdateAvailable() {
             root.updateAvailable();

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Case
 import CaseCardBoardBox
+import AssetManager
 import "../"
 
 Item {
@@ -12,7 +13,7 @@ Item {
     required property CaseCardBoardBox caseData
 
     // Icons for different tile types
-    property var tileIcons: appInstance.getAssetPath("case/cardboard.png")
+    property var tileIcons: AssetManager.getAssetPath("ui", "case", "cardboard")
 
     property var fallbackIcons: "📦❓"
 
