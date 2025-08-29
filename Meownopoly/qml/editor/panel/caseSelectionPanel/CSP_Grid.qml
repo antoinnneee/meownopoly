@@ -14,6 +14,7 @@ ScrollView {
     property var caseList: []
     
     // Selection state
+
     property string currentSelectedCategory: ""
     property string currentSelectedType: ""
     property string currentSelectedId: ""
