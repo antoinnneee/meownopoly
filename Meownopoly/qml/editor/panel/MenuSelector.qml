@@ -3,27 +3,46 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 Item {
-    id: root
-    
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.top: parent.top
-    anchors.topMargin: -35
-    height: 35
-    z: 10
-    
+    id: root    
     required property var logic
 
     // Signal émis quand un bouton est cliqué
     signal buttonClicked(int index)
-    
     // Boutons de menu
     Row {
         id: menuSelector
         anchors.left: parent.left
         height: parent.height
         spacing: 0
-        
+
+        Button {
+            id: expandButton
+            width: 30
+            height: parent.height
+            property bool isExpended: false
+            background: Rectangle {
+                anchors.fill: parent
+                color: parent.pressed ? "#555555" : "#444444"
+                border.color: "#666666"
+                border.width: 1
+                radius: 4
+            }
+
+            contentItem: Text {
+                text: root.isExpanded ? "▼" : "▲"
+                color: "white"
+                font.pixelSize: 12
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                anchors.fill:expandButton
+            }
+
+            onClicked: {
+                console.log("Expand button clicked");
+                isExpanded = !isExpanded;
+            }
+        }
+
         Rectangle {
             width: 100
             height: parent.height

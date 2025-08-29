@@ -70,7 +70,7 @@ Rectangle {
     }
 
     // Dimensions
-    readonly property int collapsedHeight: Screen.pixelDensity * 12
+    readonly property int collapsedHeight: 0
     readonly property int expandedHeight: 400
     readonly property int animationDuration: 200
     
@@ -88,34 +88,7 @@ Rectangle {
             easing.type: Easing.OutCubic
         }
     }
-    
-    // Blur effect background
-    Rectangle {
-        anchors.fill: parent
-        color: "#CC2C2C2C"
-        radius: 8
-        opacity: 0.9
-    }
-    
-    // Yellow indicator background
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: 2
-        color: "#33332211"  // Dark yellow with low opacity
-        radius: 6
-        opacity: 0.4
-        z: -1
-        
-        // Yellow indicator strip (top)
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 5
-            color: "#b3ab48"  // More visible yellow
-            radius: 3
-        }
-    }
+
     
     // Title bar
     Rectangle {
@@ -123,7 +96,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: collapsedHeight
+        height: isExpanded ? 40 : 0
         color: "transparent"
         
         RowLayout {

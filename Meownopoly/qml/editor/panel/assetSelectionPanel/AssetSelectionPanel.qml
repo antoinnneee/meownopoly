@@ -55,7 +55,7 @@ Rectangle {
     }
 
     // Dimensions
-    readonly property int collapsedHeight: Screen.pixelDensity * 12
+    readonly property int collapsedHeight: 0
     readonly property int expandedHeight: 400
     readonly property int animationDuration: 200
     
@@ -74,41 +74,14 @@ Rectangle {
         }
     }
     
-    // Blur effect background with red tint
-    Rectangle {
-        anchors.fill: parent
-        color: "#CC2C2C2C"
-        radius: 8
-        opacity: 0.9
-    }
-    
-    // Red indicator background
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: 2
-        color: "#330c0c"  // Dark red with low opacity
-        radius: 6
-        opacity: 0.4
-        z: -1
-        
-        // Red indicator strip (top)
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 5
-            color: "#991010"  // More visible red
-            radius: 3
-        }
-    }
-    
+
     // Title bar
     Rectangle {
         id: titleBar
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: collapsedHeight
+        height: isExpanded ? 40 : 0
         color: "transparent"
         
         RowLayout {
@@ -254,31 +227,31 @@ Rectangle {
             }
 
             // Expand/collapse button
-            Button {
-                id: expandButton
-                width: 30
-                Layout.fillHeight: true
-                Layout.topMargin: -6
-                Layout.bottomMargin:  0
+            // Button {
+            //     id: expandButton
+            //     width: 30
+            //     Layout.fillHeight: true
+            //     Layout.topMargin: -6
+            //     Layout.bottomMargin:  0
 
-                background: Rectangle {
-                    color: parent.pressed ? "#555555" : "#444444"
-                    border.color: "#666666"
-                    border.width: 1
-                    radius: 4
-                }
+            //     background: Rectangle {
+            //         color: parent.pressed ? "#555555" : "#444444"
+            //         border.color: "#666666"
+            //         border.width: 1
+            //         radius: 4
+            //     }
 
-                contentItem: Text {
-                    text: root.isExpanded ? "▼" : "▲"
-                    color: "white"
-                    font.pixelSize: 12
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    anchors.fill:expandButton
-                }
+            //     contentItem: Text {
+            //         text: root.isExpanded ? "▼" : "▲"
+            //         color: "white"
+            //         font.pixelSize: 12
+            //         horizontalAlignment: Text.AlignHCenter
+            //         verticalAlignment: Text.AlignVCenter
+            //         anchors.fill:expandButton
+            //     }
 
-                onClicked: root.isExpanded = !root.isExpanded
-            }
+            //     onClicked: root.isExpanded = !root.isExpanded
+            // }
         }
     }
 

@@ -19,7 +19,7 @@ Rectangle {
     property int currentPanelIndex: 0 // 0 = Asset Selection, 1 = Case Selection
     
     // Dimensions à propager vers les panels enfants
-    readonly property int collapsedHeight: 40
+    readonly property int collapsedHeight: 0
     readonly property int expandedHeight: 400
     
     // Alias pour propager les propriétés de AssetSelectionPanel
@@ -39,6 +39,13 @@ Rectangle {
     MenuSelector {
         id: topToolbar
 
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.top
+        height: 35
+        z: 10
+
+
         logic: root.logic
 
         onButtonClicked: function(index) {
@@ -48,14 +55,14 @@ Rectangle {
             stackView.currentIndex = index;
         }
     }
-    
+
     // Content area with stacked views
     color: "transparent"
-    
+
     // Définition explicite des dimensions
     width: parent.width
     height: parent.height
-    
+
     // Stack layout to switch between panels
     StackLayout {
         id: stackView
@@ -63,63 +70,61 @@ Rectangle {
         anchors.topMargin: 0
         currentIndex: currentPanelIndex
         visible: true // Assurer que le StackLayout est visible
-        
+        height: root.isExpanded ? root.expandedHeight : root.collapsedHeight
+
         // Asset Selection Panel
         AssetSelectionPanel {
             id: assetPanel
             logic: root.logic
             width: parent.width
-            height: root.isExpanded ? root.expandedHeight : root.collapsedHeight
             isExpanded: root.isExpanded
-            
             // Connexion de tous les signaux pour la propagation vers l'Editor
             onSelectionModeChanged: function(isActive) {
                 root.selectionModeChanged(isActive);
             }
-            
+
             onAssetSelected: function(category, type, id) {
                 root.assetSelected(category, type, id);
             }
-            
+
             // Surveiller les changements de propriétés pour propager les signaux
             onCurrentViewChanged: {
                 root.viewChanged(currentView);
             }
-            
+
             onActiveFilterChanged: {
                 root.filterChanged(activeFilter);
             }
-            
+
             onSearchTextChanged: {
                 root.textSearchChanged(searchText);
             }
-            
+
             Component.onCompleted: {
                 // Initialisation
                 console.log("AssetSelectionPanel initialisé et connecté au SelectionPanel");
             }
         }
-        
+
         // Case Selection Panel
         CaseSelectionPanel {
             id: casePanel
             logic: root.logic
             width: parent.width
-            height: root.isExpanded ? root.expandedHeight : root.collapsedHeight
             isExpanded: root.isExpanded
-            
+
             onSelectionModeChanged: function(isActive) {
                 // Propager le signal vers le haut si nécessaire
                 selectionModeChanged(isActive);
             }
-            
+
             onCaseSelected: function(category, type, id) {
                 // Propager le signal vers le haut si nécessaire
                 caseSelected(category, type, id);
             }
         }
     }
-    
+
     // Fonction pour effacer la sélection d'asset
     function clearAssetSelection() {
         if (currentPanelIndex === 0) {
@@ -127,7 +132,7 @@ Rectangle {
             assetPanel.clearAssetSelection();
         }
     }
-    
+
     // Signals to propagate from child panels
     // Signaux pour propager les événements vers l'Editor
     signal assetSelected(string category, string type, string id)
