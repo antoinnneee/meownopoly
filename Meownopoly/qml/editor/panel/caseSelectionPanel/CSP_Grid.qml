@@ -3,15 +3,16 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Case
 import Game
+import AssetManager
 
 ScrollView {
     id: root
     
     // Properties
-    property string categoryName: ""
-    property string typeName: ""
+    property string category: ""
+    property string type: ""
     property string searchText: ""
-    property var caseList: []
+    property var caseModel: null
     
     // Selection state
 
@@ -28,14 +29,11 @@ ScrollView {
     
     // Get filtered cases based on search text
     function getFilteredCases() {
-        if (searchText.trim() === "") {
-            return caseList;
+        if (category && type) {
+            caseModel = AssetManager.getTypeModel(category, type)
+        } else {
+            assetModel = null
         }
-        
-        var searchLower = searchText.toLowerCase();
-        return caseList.filter(function(caseData) {
-            return caseData.name.toLowerCase().includes(searchLower);
-        });
     }
     
     GridLayout {
@@ -47,7 +45,7 @@ ScrollView {
         
         // Populate the grid with filtered cases
         Repeater {
-            model: getFilteredCases()
+            model: root.assetModel
             
             CSP_Item {
                 Layout.preferredWidth: 80
@@ -82,7 +80,7 @@ ScrollView {
         width: 200
         height: 100
         color: "transparent"
-        visible: caseList === null
+        visible: caseModel === null
         
         Column {
             anchors.centerIn: parent
@@ -108,7 +106,7 @@ ScrollView {
         width: 250
         height: 120
         color: "transparent"
-        visible: caseList && caseList.length === 0
+        visible: caseModel && caseModel.length === 0
         
         Column {
             anchors.centerIn: parent
@@ -143,7 +141,7 @@ ScrollView {
         width: 200
         height: 100
         color: "transparent"
-        visible: caseList && caseList.length > 0 && getFilteredCases().length === 0
+        visible: caseModel && caseModel.length > 0 && getFilteredCases().length === 0
         
         Column {
             anchors.centerIn: parent

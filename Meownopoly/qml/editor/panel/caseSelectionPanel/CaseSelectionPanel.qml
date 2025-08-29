@@ -333,7 +333,7 @@ Rectangle {
                         anchors.right: parent.right
                         height: 30
                         text: {
-                            if (root.selectedCategory === "achetable")
+                            if (root.selectedCategory === "buyable")
                                 return "Propriétés achetables";
                             else
                                 return "Cases temporaires";
@@ -352,12 +352,12 @@ Rectangle {
                         anchors.bottom: parent.bottom
                         anchors.topMargin: 10
                         
-                        categoryName: root.selectedCategory
-                        typeName: root.selectedType
+                        category: root.selectedCategory
+                        type: root.selectedType
                         searchText: root.searchText
                         
                         // Get list of cases based on category
-                        caseList: {
+                        caseModel: {
                             if (root.selectedCategory === "proprietes") {
                                 return Game.getPurchasableCases();
                             } else {
@@ -403,13 +403,13 @@ Rectangle {
         Text {
             id: statusText
             anchors.centerIn: parent
-                                text: {
-                        if (root.currentView === "categories") {
-                            return "Select a category"
-                        } else {
-                            return root.selectedCategory === "proprietes" ? "Propriétés" : "Spéciales"
-                        }
-                    }
+            text: {
+                if (root.currentView === "categories") {
+                    return "Select a category"
+                } else {
+                    return root.selectedCategory === "proprietes" ? "Propriétés" : "Spéciales"
+                }
+            }
             color: "#CCCCCC"
             font.pixelSize: 10
         }
