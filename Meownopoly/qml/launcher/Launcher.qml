@@ -55,6 +55,8 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import LauncherManager 1.0
 
+import AssetManager
+
 Rectangle {
     id: root
     color: "#1e1e1e"
@@ -95,11 +97,17 @@ Rectangle {
         
         onDownloadStatusUpdated: {
             versionInfoSection.downloadStatus = logic.downloadStatus
+            console.log("download state changed : ", logic.downloadStatus)
         }
         
         onPackageCreationCompleted: function(success) {
             packagingSection.packageCreated = success
         }
+
+        onDownloadSucess: {
+            AssetManager.loadAssets()
+        }
+
         Component.onCompleted: {
             console.log("LauncherLogic completed")
             logic.testConnection()

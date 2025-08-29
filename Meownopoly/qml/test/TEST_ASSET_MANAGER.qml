@@ -32,7 +32,7 @@ Rectangle {
         font.bold: true
     }
 
-    ScrollView {
+    ColumnLayout {
         anchors {
             left: parent.left
             right: parent.right
@@ -40,121 +40,85 @@ Rectangle {
             bottom: parent.bottom
             margins: 20
         }
+        spacing: 15
 
-        ColumnLayout {
-            width: window.width - 40
-            height: parent.height
-            spacing: 20
+        Text {
+            text: "Generate metadata.json files automatically from image files"
+            color: "white"
+            wrapMode: Text.Wrap
+            Layout.fillWidth: true
+        }
 
+        // Available assets scan
+        Text {
+            text: "Available Assets:"
+            color: "white"
+            font.bold: true
+        }
 
+        ListView {
+            id: availableAssetsList
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumHeight: 200
 
+            model: AssetManager.scanAvailableAssets()
+            delegate: Text {
+                text: "• " + modelData
+                color: "#cccccc"
+                font.pixelSize: 12
+                width: availableAssetsList.width
+            }
 
-            // Metadata Generation Panel
-            GroupBox {
-                title: "Metadata Generation"
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                label: Label{
-                    text: parent.title
-                    color: "white"
-                }
+            ScrollBar.vertical: ScrollBar {
+                active: true
+                policy: ScrollBar.AsNeeded
+            }
+        }
+        // Generation buttons
+        Row {
+            spacing: 10
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: 15
-
-                    Text {
-                        text: "Generate metadata.json files automatically from image files"
-                        color: "white"
-                        wrapMode: Text.Wrap
-                        width: parent.width
-                    }
-
-                    // Available assets scan
-                    Rectangle {
-                        width: parent.width
-                        Layout.fillHeight: true
-                        color: "#333333"
-                        border.color: "#555555"
-                        radius: 4
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            anchors.margins: 10
-
-                            Text {
-                                text: "Available Assets:"
-                                color: "white"
-                                font.bold: true
-                            }
-
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-
-                                ListView {
-                                    id: availableAssetsList
-                                    model: AssetManager.scanAvailableAssets()
-                                    delegate: Text {
-                                        text: "• " + modelData
-                                        color: "#cccccc"
-                                        font.pixelSize: 12
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Generation buttons
-                    Row {
-                        spacing: 10
-
-                        Button {
-                            text: "🔄 Scan Assets"
-                            onClicked: {
-                                availableAssetsList.model = AssetManager.scanAvailableAssets()
-                            }
-                        }
-
-                        Button {
-                            text: "📝 Generate All Metadata"
-                            onClicked: {
-                                var success = AssetManager.generateAllMetadata()
-                                if (success) {
-                                    generationStatus.text = "✅ Metadata generated successfully!"
-                                    generationStatus.color = "#4CAF50"
-                                } else {
-                                    generationStatus.text = "❌ Failed to generate metadata"
-                                    generationStatus.color = "#F44336"
-                                }
-                                statusTimer.start()
-                            }
-                        }
-                    }
-
-                    Text {
-                        id: generationStatus
-                        text: ""
-                        color: "white"
-                        font.bold: true
-                        
-                        Timer {
-                            id: statusTimer
-                            interval: 3000
-                            onTriggered: generationStatus.text = ""
-                        }
-                    }
-
-                    Text {
-                        text: "Note: This will overwrite existing metadata.json files"
-                        color: "#FFC107"
-                        font.pixelSize: 11
-                        font.italic: true
-                    }
+            Button {
+                text: "🔄 Scan Assets"
+                onClicked: {
+                    availableAssetsList.model = AssetManager.scanAvailableAssets()
                 }
             }
+
+            Button {
+                text: "📝 Generate All Metadata"
+                onClicked: {
+                    var success = AssetManager.generateAllMetadata()
+                    if (success) {
+                        generationStatus.text = "✅ Metadata generated successfully!"
+                        generationStatus.color = "#4CAF50"
+                    } else {
+                        generationStatus.text = "❌ Failed to generate metadata"
+                        generationStatus.color = "#F44336"
+                    }
+                    statusTimer.start()
+                }
+            }
+        }
+
+        Text {
+            id: generationStatus
+            text: ""
+            Layout.fillWidth: true
+        }
+
+        Text {
+            text: "Note: This will overwrite existing metadata.json files"
+            color: "#FFC107"
+            font.pixelSize: 11
+            font.italic: true
+        }
+
+        Timer {
+            id: statusTimer
+            interval: 3000
+            onTriggered: generationStatus.text = ""
         }
     }
 }

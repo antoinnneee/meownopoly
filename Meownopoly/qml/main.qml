@@ -6,7 +6,6 @@ import "titleScreen/"
 import "test/"
 import "editor/"
 import "launcher/"
-import "asset_tools/"
 import QtQuick.Window
 import Game
 

@@ -144,7 +144,6 @@ QObject* AssetManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 AssetModel* AssetManager::getTypeModel(const QString &category, const QString &type)
 {
-    qDebug() << "getTypeModel:" << category << type;
     QString key = category + "_" + type;
     
     if (m_filteredModels.contains(key)) {
@@ -186,8 +185,7 @@ QString AssetManager::getTilePath(const QString &type, const QString &id) const
 
 void AssetManager::loadAssets()
 {
-    qDebug() << "Loading assets from:" << m_assetsBasePath;
-    
+
     // Clear existing models
     m_decorationModel->clear();
     m_tileModel->clear();
@@ -206,7 +204,6 @@ void AssetManager::loadAssets()
     setCategories(categories);
     qDebug() << "Categories:" << categories;
     for (const QString &category : categories) {
-        qDebug() << "load category:" << category;
         QString categoryPath = assetsDir.absoluteFilePath(category); // basePath/category
         loadCategory(categoryPath, category);
     }
@@ -244,7 +241,6 @@ void AssetManager::loadCategory(const QString &categoryPath, const QString &cate
     QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     
     for (const QString &typeName : typeDirectories) {
-        qDebug() << "load type:" << typeName;
         QString typePath = categoryDir.absoluteFilePath(typeName);
         loadTypeFromDirectory(typePath, typeName, categoryName);
     }
@@ -288,29 +284,24 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         AssetModel *targetModel = nullptr;
         if (categoryName == "decoration") {
             targetModel = m_decorationModel;
-            qDebug() << "using decoration model";
         } else if (categoryName == "tile") {
             targetModel = m_tileModel;
-            qDebug() << "using tile model";
         }
         else
         {
             QString key = categoryName + "_" + typeName;
             if (m_filteredModels.contains(key)) {
                 targetModel = m_filteredModels[key];
-                qDebug() << "using existing model:" << key;
             }
             else
             {
                 targetModel = new AssetModel();
                 m_filteredModels[key] = targetModel;
-                qDebug() << "created new model:" << key;
             }
         }
         
         if (targetModel) {
             targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename);
-            qDebug() << "added asset:" << categoryName << typeName << id << filename;
         }
     }
 }
