@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 import AssetManager
+
 Rectangle {
     id: window
     color: "#1e1e1e"
@@ -42,179 +43,23 @@ Rectangle {
 
         ColumnLayout {
             width: window.width - 40
+            height: parent.height
             spacing: 20
 
-            Text {
-                text: "Asset Manager Test"
-                font.pixelSize: 24
-                font.bold: true
-                color: "white"
-            }
-
-            // Test decoration model
-            GroupBox {
-                title: "All Decorations"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 200
-                label: Label{
-                    text: parent.title
-                    color: "white"
-                }
-
-                ListView {
-                    id: lv
-                    anchors.fill: parent
-                    model: AssetManager.decorationModel
-                    delegate: Rectangle {
-                        width: lv.width
-                        height: 60
-                        border.color: "gray"
-                        border.width: 1
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 2
-
-                            Image {
-                                source: model.path
-                                Layout.preferredWidth: 40
-                                Layout.preferredHeight: 40
-                                fillMode: Image.PreserveAspectFit
-                                
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: "lightgray"
-                                    visible: parent.status !== Image.Ready
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "IMG"
-                                        color: "gray"
-                                    }
-                                }
-                            }
-
-                            Column {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                Text { text: "Type: " + model.type; color: "black" }
-                                Text { text: "ID: " + model.id; color: "black" }
-                                Text { text: "Size: " + model.width + "x" + model.height; color: "black" }
-                                Text { text: "Ratio: " + model.ratioWidth + ":" + model.ratioHeight ; color: "black" }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Test filtered model for grass
-            GroupBox {
-                title: "Grass Decorations Only"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 150
-                label: Label{
-                    text: parent.title
-                    color: "white"
-                }
 
 
-                ListView {
-                    id: lvGrass
-                    anchors.fill: parent
-                    model: AssetManager.getTypeModel("decoration", "grass")
-                    delegate: Rectangle {
-                        width: lvGrass.width
-                        height: 40
-                        border.color: "green"
-                        border.width: 1
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 5
-
-                            Image {
-                                source: model.path
-                                Layout.preferredWidth: 30
-                                Layout.preferredHeight: 30
-                                fillMode: Image.PreserveAspectFit
-                                
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: "lightgreen"
-                                    visible: parent.status !== Image.Ready
-                                    
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "🌱"
-                                        font.pixelSize: 16
-                                    }
-                                }
-                            }
-
-                            Text {
-                                text: "Grass " + model.id + " (" + model.filename + ")"
-                                Layout.fillWidth: true
-                                color: "black"
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            // Test direct path access
-            GroupBox {
-                title: "Direct Path Access Test"
-                Layout.fillWidth: true
-                label: Label{
-                    text: parent.title
-                    color: "white"
-                }
-
-
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: 10
-
-                    Text {
-                        text: "Grass decoration 1: " + AssetManager.getDecorationPath("grass", "1")
-                        wrapMode: Text.Wrap
-                        width: parent.width
-                        color: "white"
-                    }
-
-                    Text {
-                        text: "Tree decoration 2: " + AssetManager.getDecorationPath("tree", "2")
-                        wrapMode: Text.Wrap
-                        width: parent.width
-                        color: "white"
-                    }
-
-                    Text {
-                        text: "Player icon 3: " + AssetManager.getPlayerIconPath("3")
-                        wrapMode: Text.Wrap
-                        width: parent.width
-                        color: "white"
-                    }
-
-                    Button {
-                        text: "Reload Assets"
-                        onClicked: AssetManager.loadAssets()
-                    }
-                }
-            }
 
             // Metadata Generation Panel
             GroupBox {
                 title: "Metadata Generation"
                 Layout.fillWidth: true
+                Layout.fillHeight: true
                 label: Label{
                     text: parent.title
                     color: "white"
                 }
 
-                Column {
+                ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 10
                     spacing: 15
@@ -229,13 +74,14 @@ Rectangle {
                     // Available assets scan
                     Rectangle {
                         width: parent.width
-                        height: 120
+                        Layout.fillHeight: true
                         color: "#333333"
                         border.color: "#555555"
                         radius: 4
 
-                        Column {
-                            anchors.fill: parent
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
                             anchors.margins: 10
 
                             Text {
@@ -245,8 +91,8 @@ Rectangle {
                             }
 
                             ScrollView {
-                                width: parent.width
-                                height: 80
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
 
                                 ListView {
                                     id: availableAssetsList
