@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Case
 import CaseKibbleDispenser
 import "../"
+import AssetManager
 
 Item {
     id: root
@@ -12,7 +13,7 @@ Item {
     required property CaseKibbleDispenser caseData
 
     // Icons for different tile types
-    property var tileIcons:  appInstance.getAssetPath("case/kibble.png")
+    property var tileIcons: AssetManager.getAssetPath("ui", "case", "kibble")
 
     property var fallbackIcons: "🐱💰"
 

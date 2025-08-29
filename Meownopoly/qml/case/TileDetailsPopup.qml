@@ -5,6 +5,8 @@ import QtQuick.Layouts
 import Case
 import "./details"
 
+import AssetManager
+
 Popup {
     id: root
     width: 300
@@ -57,7 +59,7 @@ Popup {
                 
                 Image {
                     anchors.fill: parent
-                    source: root.tileType >= 0 ? appInstance.getAssetPath("case/" + getTileIconName())  : ""
+                    source: root.tileType >= 0 ? AssetManager.getAssetPath("ui", "case", getTileTypeName())  : ""
                     sourceSize {
                         width: width * 2
                         height: height * 2

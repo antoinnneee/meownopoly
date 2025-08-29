@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import Case
 import CaseCatDevice
 import "../"
-
+import AssetManager
 Item {
     id: root
     anchors.fill:parent
@@ -12,7 +12,7 @@ Item {
     required property CaseCatDevice caseData
 
     // Icons for different tile types
-    property var tileIcons: appInstance.getAssetPath("case/laser.png")
+    property var tileIcons: AssetManager.getAssetPath("ui", "case", "laser")
 
     property var fallbackIcons: "💧"
 

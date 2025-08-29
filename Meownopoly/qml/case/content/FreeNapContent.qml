@@ -5,6 +5,7 @@ import Case
 import CaseFreeNap
 import "../"
 import QtQuick.Effects
+import AssetManager
 
 
 Item {
@@ -14,7 +15,7 @@ Item {
     required property CaseFreeNap caseData
 
     // Icons for different tile types
-    property string tileIcons: appInstance.getAssetPath("case/nap2.png")
+    property string tileIcons:AssetManager.getAssetPath("ui", "case", "nap2")
 
     property string fallbackIcons: "😴"
 

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Case
 import CaseRestArea
 import "../"
+import AssetManager
 
 Item {
     id: root
@@ -18,7 +19,7 @@ Item {
 
 
     // Icons for different tile types
-    property var tileIcons: appInstance.getAssetPath("case/bed.png")          // 1: Rest Area
+    property var tileIcons: AssetManager.getAssetPath("ui", "case", "bed")          // 1: Rest Area
 
     property var fallbackIcons: "🛌"          // 1: Rest Area
 
