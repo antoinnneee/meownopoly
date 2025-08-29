@@ -53,9 +53,6 @@ ScrollView {
             function onDecorationModelChanged() {
                 generateCategories()
             }
-            function onPlayerIconModelChanged() {
-                generateCategories()
-            }
         }
         
         function generateCategories() {
