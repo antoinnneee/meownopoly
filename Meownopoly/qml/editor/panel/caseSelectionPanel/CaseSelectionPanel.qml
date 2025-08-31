@@ -7,25 +7,47 @@ import Game
 import Case
 import CaseRestArea
 import "../assetSelectionPanel"
+import "../"
+import "../editorBottomPanel"
 
-Rectangle {
+EditorBottomPanel {
     id: root
-    
+
+    property alias activeFilter: titleBar.activeFilter
+    onCurrentViewChanged: {
+        titleBar.currentView = currentView
+        contentArea.currentView = currentView
+    }
+
     // Properties
-    property bool isExpanded: true
-    property string currentView: "categories" // "categories" ou "types"
     property string selectedCategory: ""
     property string selectedType: ""
-    property string searchText: ""
-    property string activeFilter: "All" // "All", "Propriétés", "Spéciales"
-    
-    required property var logic
+
+    property alias caseManagerSettings: caseManagerSettings
 
     // Current selection state (from parent)
-    property string currentSelectedCategory: ""
-    property string currentSelectedType: ""
-    property string currentSelectedId: ""
-    property bool isCaseSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
+    QtObject{
+        id: caseManagerSettings
+        property string currentSelectedCategory: ""
+        property string currentSelectedType: ""
+        property string currentSelectedId: ""
+
+        // Function to clear asset selection
+        function clearCaseSelection() {
+            console.log("Clearing asset selection")
+            caseManagerSettings.currentSelectedCategory = ""
+            caseManagerSettings.currentSelectedType = ""
+            caseManagerSettings.currentSelectedId = ""
+            root.selectedCase = null
+        }
+
+    }
+
+    property alias currentSelectedCategory: caseManagerSettings.currentSelectedCategory
+    property alias currentSelectedType: caseManagerSettings.currentSelectedType
+    property alias currentSelectedId: caseManagerSettings.currentSelectedId
+
+    property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
 
     // Selected case element for details
     property var selectedCase: null
@@ -38,7 +60,7 @@ Rectangle {
 
     onCaseSelected: function(category, type, id) {
         if (root.isCaseSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
-            clearCaseSelection();
+            caseManagerSettings.clearCaseSelection();
             return
         }
         console.log("Case selected for placement:", category, type, id)
@@ -60,26 +82,35 @@ Rectangle {
         }
     }
 
-    // Function to clear case selection
-    function clearCaseSelection() {
-        console.log("Clearing case selection")
-        root.currentSelectedCategory = ""
-        root.currentSelectedType = ""
-        root.currentSelectedId = ""
-        root.selectedCase = null
+
+    // Title bar
+     titleBar: CSP_TitleBar {
+        id: titleBar
+        activeFilter: "All"
+        anchors.left: parent.left
+        anchors.right: parent.horizontalCenter
+        anchors.top: parent.top
+        isExpanded: root.isExpanded
+        onCaseSelected: function(category, type, id) {
+            console.log("titleBar select case", category, type, id)
+            root.caseSelected(category, type, id)
+        }
+        onSearchTextChanged: {
+            console.log("EditorBottomPanel - searchText filter changed", searchText)
+            root.searchText = searchText
+            root.searchText = Qt.binding(function(){ return root.searchText})
+        }
+        onCurrentViewChanged: {
+            console.log("TitleBar  - onCurrentViewChanged ", currentView)
+            root.currentView = titleBar.currentView
+        }
+        currentSelectedCategory: root.currentSelectedCategory
+        currentSelectedType: root.currentSelectedType
+        currentSelectedId: root.currentSelectedId
+        searchText: root.searchText
+        currentView: root.currentView
     }
 
-    // Dimensions
-    readonly property int collapsedHeight: 0
-    readonly property int expandedHeight: 400
-    readonly property int animationDuration: 200
-    
-    // State management
-    height: isExpanded ? expandedHeight : collapsedHeight
-    
-    color: "#E6000000" // Semi-transparent black
-    border.color: "#333333"
-    border.width: 1
     
     // Smooth height animation
     Behavior on height {
@@ -89,331 +120,35 @@ Rectangle {
         }
     }
 
-    
-    // Title bar
-    Rectangle {
-        id: titleBar
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: isExpanded ? 40 : 0
-        color: "transparent"
-        
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 10
-            anchors.rightMargin: 6
-            spacing: 15
-            
-            // Title with selection indicator
-            ColumnLayout {
-                Layout.fillHeight: true
-                Layout.alignment: Qt.AlignVCenter
-                spacing: 2
-                
-                Text {
-                    text: "Case Library"
-                    color: "white"
-                    font.pixelSize: 16
-                    font.bold: true
-                    Layout.fillHeight: true
-                }
-                
-                Text {
-                    text: root.currentSelectedId !== "" ?
-                              "Selected: " + root.currentSelectedType + " #" + root.currentSelectedId.substring(0, 8) :
-                              "Click to select a case"
-                    color: root.currentSelectedId !== "" ? "#4CAF50" : "#999999"
-                    font.pixelSize: 10
-                    font.italic: true
-                    visible: root.isExpanded
-                    Layout.fillHeight: true
-                }
-            }
-            
-            // Quick filters (visible only when expanded)
-            Row {
-                visible: root.isExpanded
-                spacing: 10
-                Layout.alignment: Qt.AlignVCenter
-                
-                Repeater {
-                    model: ["All", "Propriétés", "Spéciales"]
-                    
-                    Button {
-                        text: modelData
-                        flat: true
-                        checkable: true
-                        checked: root.activeFilter === modelData
-                        
-                        background: Rectangle {
-                            color: parent.checked ? "#4A90E2" : "transparent"
-                            border.color: "#4A90E2"
-                            border.width: 1
-                            radius: 4
-                        }
-                        
-                        contentItem: Text {
-                            text: parent.text
-                            color: parent.checked ? "white" : "#4A90E2"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        
-                        onClicked: {
-                            root.activeFilter = text
-                        }
-                    }
-                }
-            }
-            
-            // Search bar (visible when expanded)
-            TextField {
-                visible: root.isExpanded
-                Layout.preferredWidth: 200
-                Layout.alignment: Qt.AlignVCenter
-                placeholderText: "Search cases..."
-                text: root.searchText
-                
-                background: Rectangle {
-                    color: "#444444"
-                    border.color: "#666666"
-                    border.width: 1
-                    radius: 4
-                }
-                
-                color: "white"
-                
-                onTextChanged: root.searchText = text
-            }
-            
-            // Spacer
-            Item { Layout.fillWidth: true }
-
-            // Back button (visible when in types view)
-            Button {
-                visible: root.isExpanded && root.currentView === "types"
-                text: "← Back"
-                flat: true
-
-                background: Rectangle {
-                    color: parent.pressed ? "#555555" : "transparent"
-                    border.color: "#666666"
-                    border.width: 1
-                    radius: 4
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: root.currentView = "categories"
-            }
-
-            // Clear selection button (visible when case is selected)
-            Button {
-                visible: root.isExpanded && root.currentSelectedId !== ""
-                text: "✕ Clear"
-                flat: true
-
-                background: Rectangle {
-                    color: parent.pressed ? "#AA4444" : "transparent"
-                    border.color: "#FF6666"
-                    border.width: 1
-                    radius: 4
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "#FF6666"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 11
-                }
-
-                onClicked: {
-                    // Signal to parent to clear selection
-                    root.caseSelected("", "", "")
-                }
-            }
-
-            // Expand/collapse button
-            Button {
-                id: expandButton
-                width: 30
-                Layout.fillHeight: true
-                Layout.topMargin: -6
-                Layout.bottomMargin: 0
-
-                background: Rectangle {
-                    color: parent.pressed ? "#555555" : "#444444"
-                    border.color: "#666666"
-                    border.width: 1
-                    radius: 4
-                }
-
-                contentItem: Text {
-                    text: root.isExpanded ? "▼" : "▲"
-                    color: "white"
-                    font.pixelSize: 12
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    anchors.fill: expandButton
-                }
-
-                onClicked: root.isExpanded = !root.isExpanded
-            }
-        }
-    }
-
-    // Content area (visible only when expanded)
-    Item {
+    // Split view when details panel is shown
+    contentArea: CSP_ContentArea {
         id: contentArea
-        anchors.top: titleBar.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: 10
-        visible: root.isExpanded
-        opacity: root.isExpanded ? 1.0 : 0.0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: animationDuration
-                easing.type: Easing.OutCubic
-            }
+        anchors.fill: parent
+        currentView: root.currentView
+        currentSelectedCategory: root.currentSelectedCategory
+        currentSelectedType: root.currentSelectedType
+        currentSelectedId: root.currentSelectedId
+        showDetailsPanel: root.showDetailsPanel
+        onCurrentViewChanged: {
+            root.currentView = contentArea.currentView
+        }
+        activeFilter: titleBar.activeFilter
+        searchText: root.searchText
+        onCaseSelected: function(category, type, id) {
+            root.caseSelected(category, type, id)
         }
 
-        // Split view when details panel is shown
-        Item {
-            id: mainContainer
-            anchors.fill: parent
-            
-            // Main content (categories/types)
-            Item {
-                id: mainContent
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: root.showDetailsPanel ? detailsPanel.left : parent.right
-                anchors.bottom: parent.bottom
-                anchors.rightMargin: root.showDetailsPanel ? 10 : 0
-                
-                // Category grid view
-                CSP_CategoryGrid {
-                    id: categoryGrid
-                    anchors.fill: parent
-                    anchors.topMargin: 6
-                    visible: root.currentView === "categories"
-                    searchText: root.searchText
-                    activeFilter: root.activeFilter
-                    
-                    onCategorySelected: function(category, title) {
-                        console.log("Category selected:", category, title);
-                        root.selectedCategory = category;
-                        root.selectedType = "all";
-                        root.currentView = "types";
-                    }
-                }
-
-                // Cases grid view
-                Item {
-                    id: typesContainer
-                    anchors.fill: parent
-                    anchors.topMargin: 6
-                    visible: root.currentView === "types"
-                    
-                    // Title for the types view
-                    Text {
-                        id: typesTitle
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 30
-                        text: {
-                            if (root.selectedCategory === "achetable")
-                                return "Propriétés achetables";
-                            else
-                                return "Cases temporaires";
-                        }
-                        color: "white"
-                        font.pixelSize: 16
-                        font.bold: true
-                    }
-                    
-                    // Grid of cases
-                    CSP_Grid {
-                        id: casesGrid
-                        anchors.top: typesTitle.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.topMargin: 10
-                        
-                        categoryName: root.selectedCategory
-                        typeName: root.selectedType
-                        searchText: root.searchText
-                        
-                        // Get list of cases based on category
-                        caseList: {
-                            if (root.selectedCategory === "proprietes") {
-                                return Game.getPurchasableCases();
-                            } else {
-                                return Game.getTemporaryCases();
-                            }
-                        }
-                        
-                        onCaseSelected: function(category, type, id) {
-                            root.caseSelected(category, type, id);
-                        }
-                    }
-                }
-            }
-            
-            // Details Panel (right side)
-            CSP_CaseConfigPanel {
-                id: detailsPanel
-                anchors.top: parent.top
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                width: parent.width * 0.42
-                visible: root.showDetailsPanel
-                
-                onConfigurationApplied: function(caseData) {
-                    console.log("Case configuration applied for:", caseData.name);
-                    // Here we would handle saving the configuration
-                }
-            }
-        }
     }
+
+
 
     // Status indicator
-    Rectangle {
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.margins: 5
-        width: statusText.width + 10
-        height: 20
-        color: "#444444"
-        radius: 10
-        visible: root.isExpanded
-
-        Text {
-            id: statusText
-            anchors.centerIn: parent
-                                text: {
-                        if (root.currentView === "categories") {
-                            return "Select a category"
-                        } else {
-                            return root.selectedCategory === "proprietes" ? "Propriétés" : "Spéciales"
-                        }
-                    }
-            color: "#CCCCCC"
-            font.pixelSize: 10
+        CSP_StatusIndicator {
+            anchors.bottom: parent.bottom
+            anchors.margins: 5
+            anchors.right: parent.right
+            visible: root.isExpanded
         }
-    }
     
     // Placeholder function that would be implemented in Game.cpp
     // to categorize cases based on purchasability

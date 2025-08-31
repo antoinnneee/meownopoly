@@ -74,6 +74,7 @@ EditorBottomPanel {
     // Title bar
      titleBar: ASP_TitleBar {
         id: titleBar
+        activeFilter: "All"
         anchors.left: parent.left
         anchors.right: parent.horizontalCenter
         anchors.top: parent.top
@@ -123,9 +124,6 @@ EditorBottomPanel {
             searchText: root.searchText
             onAssetSelected: function(category, type, id) {
                 root.assetSelected(category, type, id)
-            }
-            Component.onCompleted: {
-                console.log("ASP_ContentArea", width, height)
             }
 
     }
