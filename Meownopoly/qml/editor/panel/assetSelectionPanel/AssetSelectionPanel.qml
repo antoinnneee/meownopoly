@@ -9,14 +9,14 @@ import "../editorBottomPanel"
 
 EditorBottomPanel {
     id: root
-    
-    // Properties
-    property string currentView: "categories" // "categories" or "assets"
+
+    default property alias contentArea: contentArea.children
+
+
+    property alias activeFilter: titleBar.activeFilter
+
     property string selectedCategory: ""
     property string selectedType: ""
-    property string searchText: ""
-    property string activeFilter: "All" // "All", "Decoration", "Tile"
-
     
     // Current selection state (from parent)
     property string currentSelectedCategory: ""
@@ -64,101 +64,50 @@ EditorBottomPanel {
         isExpanded: root.isExpanded
 
         onAssetSelected: function(category, type, id) {
+            console.log("titleBar select asset", category, type, id)
             root.assetSelected(category, type, id)
         }
 
         currentSelectedCategory: root.currentSelectedCategory
         currentSelectedType: root.currentSelectedType
         currentSelectedId: root.currentSelectedId
-        activeFilter: root.activeFilter
         searchText: root.searchText
         currentView: root.currentView
+
+        Timer{
+            interval: 600
+            running: true
+            repeat: true
+            onTriggered: {
+                console.log("EditorBottomPanel activeFilter", titleBar.activeFilter)
+            }
+        }
 
     }
 
     // Content area (visible only when expanded)
+
     Item {
-        id: contentArea
-        anchors.top: titleBar.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        id: contentPlaceHolder
+        anchors.bottom: root.bottom
+        anchors.left: root.left
         anchors.margins: 10
-        visible: root.isExpanded
-        opacity: root.isExpanded ? 1.0 : 0.0
-            
-        // Main content (categories/assets)
-        Item {
-            id: mainContent
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: root.showEffectsPanel ? effectsScrollView.left : parent.right
-            anchors.bottom: parent.bottom
-            anchors.rightMargin: root.showEffectsPanel ? 5 : 0
-
-            // Category grid
-            ASP_CategoryGrid {
-                id: categoryGrid
-                anchors.fill: parent
-                anchors.topMargin: 6
-                visible: root.currentView === "categories"
-                activeFilter: root.activeFilter
-                searchText: root.searchText
-
-                onCategorySelected: function(category, type) {
-                    root.selectedCategory = category
-                    root.selectedType = type
-                    root.currentView = "assets"
-                }
-            }
-
-            // Asset grid
-            ASP_Grid {
-                id: assetGrid
-                anchors.fill: parent
-                anchors.topMargin: 6
-                visible: root.currentView === "assets"
-                category: root.selectedCategory
-                type: root.selectedType
-                searchText: root.searchText
-
-                // Pass selection state
-                currentSelectedCategory: root.currentSelectedCategory
-                currentSelectedType: root.currentSelectedType
-                currentSelectedId: root.currentSelectedId
-
-                onAssetSelected: function(id) {
-                    root.assetSelected(root.selectedCategory, root.selectedType, id)
-                }
+        anchors.right: root.right
+        anchors.top: titleBar.bottom
+        ASP_ContentArea {
+            id: contentArea
+            anchors.fill: parent
+            currentSelectedCategory: root.currentSelectedCategory
+            currentSelectedType: root.currentSelectedType
+            currentSelectedId: root.currentSelectedId
+            showEffectsPanel: root.showEffectsPanel
+            currentView: root.currentView
+            activeFilter: titleBar.activeFilter
+            searchText: root.searchText
+            onAssetSelected: function(category, type, id) {
+                root.assetSelected(category, type, id)
             }
         }
-
-        // Visual Effects Panel in ScrollView
-        ScrollView {
-            id: effectsScrollView
-            anchors.top: parent.top
-            anchors.right: parent.right
-            contentHeight: effectsPanel.height
-            width: parent.width *0.42
-            anchors.bottom: parent.bottom
-
-            visible: root.showEffectsPanel
-
-            ScrollBar.vertical.policy: ScrollBar.AsNeeded
-            ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-
-            VisualEffectsPanel {
-                id: effectsPanel
-                width: effectsScrollView.width - 20 // Account for scrollbar
-                targetDecoration: root.selectedDecoration
-
-                onEffectChanged: {
-                    // Optional: emit signal when effects change
-                    console.log("Visual effect changed")
-                }
-            }
-        }
-
     }
 
     // Status indicator

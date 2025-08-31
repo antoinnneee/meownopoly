@@ -5,6 +5,11 @@ Rectangle {
     property bool isExpanded: true
     required property var logic
 
+
+    // Filter Properties
+    property string currentView: "categories" // "categories" or "assets"
+    property string searchText: ""
+
     // Dimensions
     readonly property int collapsedHeight: 0
     readonly property int expandedHeight: 400

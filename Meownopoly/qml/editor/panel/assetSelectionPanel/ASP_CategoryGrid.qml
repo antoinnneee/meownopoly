@@ -7,7 +7,7 @@ ScrollView {
     id: root
     
     // Properties
-    property string activeFilter: "All"
+    required property string activeFilter
     property string searchText: ""
     
     // Signals

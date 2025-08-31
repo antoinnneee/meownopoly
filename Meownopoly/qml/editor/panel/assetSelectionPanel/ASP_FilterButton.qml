@@ -8,12 +8,9 @@ import "../"
 import "../editorBottomPanel"
 
 EBP_FilterButton {
+    id: filterButton
     visible: true
     spacing: 10
 
     buttonModel : ["All", "Decoration", "Tile"]
-    onButtonClicked: function(text, index) {
-        titleBar.activeFilter = text
-        root.currentView = "categories"
-    }
 }

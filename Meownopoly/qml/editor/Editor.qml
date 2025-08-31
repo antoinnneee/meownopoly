@@ -278,6 +278,7 @@ Rectangle {
         totalTilesCount: snapableTilesList.length
     }
 
+    /*
     // Panneau de contrôle de la grille (composant séparé)
     GridControlPanel {
         id: gridControls
@@ -294,8 +295,6 @@ Rectangle {
             logic.cancelSelection()
         }
     }
-
-
     // Panneau de configuration des cases
     CaseConfigurationPanel {
         id: caseConfigPanel
@@ -310,7 +309,7 @@ Rectangle {
             logic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
         }
     }
-
+    */
     // Panneau de configuration des connexions
     ConnectionsConfigurationPanel {
         id: connectionsPanel

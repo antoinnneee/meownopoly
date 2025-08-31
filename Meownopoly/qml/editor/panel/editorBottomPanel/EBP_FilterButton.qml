@@ -9,21 +9,20 @@ RowLayout {
     visible: true
     spacing: 10
 
-
+    required property string activeFilter
     property var buttonModel : ["Button 1", "Button 2", "Button 3"]
 
     signal buttonClicked(string text, int index)
     Repeater {
-        model: buttonModel
-
-        
+        model: buttonModel        
         Button {
             text: modelData
             flat: true
             checkable: true
-            checked: titleBar.activeFilter === modelData
+            checked: filterButton.activeFilter === modelData
             width: 200
-            property int index: index
+            required property int index
+            required property var modelData
             
             background: Rectangle {
                 color: parent.checked ? "#4A90E2" : "transparent"
