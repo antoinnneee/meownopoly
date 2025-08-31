@@ -3,69 +3,71 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Case
 import Game
-import AssetManager
 
 ScrollView {
     id: root
-    
+
     // Properties
-    property string category: ""
-    property string type: ""
+    property string categoryName: ""
+    property string typeName: ""
     property string searchText: ""
-    property var caseModel: null
-    
+    property var caseList: []
+
     // Selection state
 
     property string currentSelectedCategory: ""
     property string currentSelectedType: ""
     property string currentSelectedId: ""
-    
+
     // Signal for case selection
     signal caseSelected(string category, string type, string id)
-    
+
     // Content
     contentWidth: gridLayout.implicitWidth
     contentHeight: gridLayout.implicitHeight
-    
+
     // Get filtered cases based on search text
     function getFilteredCases() {
-        if (category && type) {
-            caseModel = AssetManager.getTypeModel(category, type)
-        } else {
-            assetModel = null
+        if (searchText.trim() === "") {
+            return caseList;
         }
+
+        var searchLower = searchText.toLowerCase();
+        return caseList.filter(function(caseData) {
+            return caseData.name.toLowerCase().includes(searchLower);
+        });
     }
-    
+
     GridLayout {
         id: gridLayout
         anchors.fill: parent
         columns: Math.max(1, Math.floor(root.width / 90)) // Responsive columns for 80px items + spacing
         columnSpacing: 10
         rowSpacing: 10
-        
+
         // Populate the grid with filtered cases
         Repeater {
-            model: root.assetModel
-            
+            model: getFilteredCases()
+
             CSP_Item {
                 Layout.preferredWidth: 80
                 Layout.preferredHeight: 80
-                
+
                 caseData: modelData
                 categoryName: root.categoryName
                 typeName: root.typeName
-                
+
                 // Selection state
-                isSelected: root.currentSelectedCategory === root.categoryName && 
-                           root.currentSelectedType === root.typeName && 
+                isSelected: root.currentSelectedCategory === root.categoryName &&
+                           root.currentSelectedType === root.typeName &&
                            root.currentSelectedId === (modelData.uniqueId ? modelData.uniqueId.toString() : "")
-                
+
                 onCaseClicked: function(category, type, id) {
                     root.caseSelected(category, type, id)
                 }
             }
         }
-        
+
         // Spacer item to fill remaining space
         Item {
             Layout.fillWidth: true
@@ -73,24 +75,24 @@ ScrollView {
             visible: gridLayout.children.length === 1 // Only spacer visible
         }
     }
-    
+
     // Loading state
     Rectangle {
         anchors.centerIn: parent
         width: 200
         height: 100
         color: "transparent"
-        visible: caseModel === null
-        
+        visible: caseList === null
+
         Column {
             anchors.centerIn: parent
             spacing: 15
-            
+
             BusyIndicator {
                 anchors.horizontalCenter: parent.horizontalCenter
                 running: parent.parent.visible
             }
-            
+
             Text {
                 text: "Chargement des cases..."
                 color: "#CCCCCC"
@@ -99,25 +101,25 @@ ScrollView {
             }
         }
     }
-    
+
     // Empty state when no cases found
     Rectangle {
         anchors.centerIn: parent
         width: 250
         height: 120
         color: "transparent"
-        visible: caseModel && caseModel.length === 0
-        
+        visible: caseList && caseList.length === 0
+
         Column {
             anchors.centerIn: parent
             spacing: 10
-            
+
             Text {
                 text: "📁"
                 font.pixelSize: 32
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "Aucune case trouvée"
                 color: "#CCCCCC"
@@ -125,7 +127,7 @@ ScrollView {
                 font.bold: true
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "Catégorie: " + (root.categoryName === "proprietes" ? "Propriétés" : "Spéciales")
                 color: "#999999"
@@ -134,32 +136,32 @@ ScrollView {
             }
         }
     }
-    
+
     // No search results state
     Rectangle {
         anchors.centerIn: parent
         width: 200
         height: 100
         color: "transparent"
-        visible: caseModel && caseModel.length > 0 && getFilteredCases().length === 0
-        
+        visible: caseList && caseList.length > 0 && getFilteredCases().length === 0
+
         Column {
             anchors.centerIn: parent
             spacing: 10
-            
+
             Text {
                 text: "🔍"
                 font.pixelSize: 32
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "Aucune case correspondante"
                 color: "#CCCCCC"
                 font.pixelSize: 14
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "Essayez d'autres termes de recherche"
                 color: "#999999"
