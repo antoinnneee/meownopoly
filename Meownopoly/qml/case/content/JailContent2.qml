@@ -11,9 +11,10 @@ CaseContent_Base {
     anchors.fill:parent
     clip: true
     required property CaseJail caseData
+    property bool catInJail: true
     tileColor: "darkred"
     // Icons for different tile types
-    tileIcons: AssetManager.getAssetPath("ui", "case", "jail")
+    tileIcons: (catInJail) ?  AssetManager.getAssetPath("ui", "case", "jail") : AssetManager.getAssetPath("ui", "case", "jail_noCat")
 
     fallbackIcons: "🔒"
     nameText.text:  root.caseData.name
