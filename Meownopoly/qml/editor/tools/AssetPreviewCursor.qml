@@ -39,6 +39,8 @@ Item {
                 if (root.assetCategory === "" || root.assetType === "" || root.assetId === "") {
                     return ""
                 }
+                return AssetManager.getAssetPath(root.assetCategory, root.assetType, root.assetId)
+                /*
                 if (root.assetCategory === "decoration") {
                     return AssetManager.getDecorationPath(root.assetType, root.assetId)
                 } else if (root.assetCategory === "tile") {
@@ -46,7 +48,7 @@ Item {
                 } else if (root.assetCategory === "avatar") {
                     return AssetManager.getPlayerIconPath(root.assetId)
                 }
-                return ""
+                */
             }
             fillMode: Image.PreserveAspectFit
             smooth: true

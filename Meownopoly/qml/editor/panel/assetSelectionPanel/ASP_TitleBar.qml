@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtQuick.Effects
 import AssetManager
 
 import "../"
@@ -16,13 +15,9 @@ EBP_TitleBar {
     property string searchText: ""
 
     signal assetSelected(string category, string type, string id)
+    required property string currentView // "categories" or "assets"
 
-    
-    RowLayout {
-        anchors.fill: parent
-        anchors.margins: 10
-        anchors.rightMargin: 6
-        spacing: 15
+
         
         // Title with selection indicator
         ColumnLayout {
@@ -51,59 +46,18 @@ EBP_TitleBar {
         }
         
         // Quick filters (visible only when expanded)
-        Row {
-            visible: titleBar.isExpanded
-            spacing: 10
+        ASP_FilterButton {
             Layout.alignment: Qt.AlignVCenter
-            
-            Repeater {
-                model: ["All", "Decoration", "Tile"]
-                
-                Button {
-                    text: modelData
-                    flat: true
-                    checkable: true
-                    checked: titleBar.activeFilter === modelData
-                    
-                    background: Rectangle {
-                        color: parent.checked ? "#4A90E2" : "transparent"
-                        border.color: "#4A90E2"
-                        border.width: 1
-                        radius: 4
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: parent.checked ? "white" : "#4A90E2"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    
-                    onClicked: {
-                        titleBar.activeFilter = text
-                        root.currentView = "categories"
-                    }
-                }
-            }
+            visible: titleBar.isExpanded
+            width: 300
         }
         
         // Search bar (optional, visible when expanded)
-        TextField {
-            visible: titleBar.isExpanded
-            Layout.preferredWidth: 200
+        ASP_SearchBar {
             Layout.alignment: Qt.AlignVCenter
-            placeholderText: "Search assets..."
+            Layout.preferredWidth: 200
             text: titleBar.searchText
-            
-            background: Rectangle {
-                color: "#444444"
-                border.color: "#666666"
-                border.width: 1
-                radius: 4
-            }
-            
-            color: "white"
-            
+            visible: titleBar.isExpanded
             onTextChanged: titleBar.searchText = text
         }
         
@@ -111,53 +65,16 @@ EBP_TitleBar {
         Item { Layout.fillWidth: true }
         
         // Back button (visible when in assets view)
-        Button {
-            visible: titleBar.isExpanded && root.currentView === "assets"
-            text: "← Back"
-            flat: true
-            
-            background: Rectangle {
-                color: parent.pressed ? "#555555" : "transparent"
-                border.color: "#666666"
-                border.width: 1
-                radius: 4
-            }
-            
-            contentItem: Text {
-                text: parent.text
-                color: "white"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            
-            onClicked: root.currentView = "categories"
+        EBP_BackButton {
+            id: backButton
+            visible: titleBar.isExpanded && titleBar.currentView === "assets"
+            onClicked: titleBar.currentView = "categories"
         }
         
         // Clear selection button (visible when asset is selected)
-        Button {
+        ASP_ClearButton {
+            id: clearButton
             visible: titleBar.isExpanded && titleBar.currentSelectedId !== ""
-            text: "✕ Clear"
-            flat: true
-            
-            background: Rectangle {
-                color: parent.pressed ? "#AA4444" : "transparent"
-                border.color: "#FF6666"
-                border.width: 1
-                radius: 4
-            }
-            
-            contentItem: Text {
-                text: parent.text
-                color: "#FF6666"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 11
-            }
-            
-            onClicked: {
-                // Signal to parent to clear selection
-                titleBar.assetSelected("", "", "")
-            }
         }
         
         // Expand/collapse button
@@ -186,5 +103,4 @@ EBP_TitleBar {
         
         //     onClicked: root.isExpanded = !root.isExpanded
         // }
-    }
 }

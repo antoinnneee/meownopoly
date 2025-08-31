@@ -15,7 +15,7 @@ Rectangle {
     property string selectedCategory: ""
     property string selectedType: ""
     property string searchText: ""
-    property string activeFilter: "All" // "All", "Decoration", "Characters"
+    property string activeFilter: "All" // "All", "Decoration", "Tile"
     
     required property var logic
     
@@ -79,7 +79,7 @@ Rectangle {
     ASP_TitleBar {
         id: titleBar
         anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.right: parent.horizontalCenter
         anchors.top: parent.top
         isExpanded: root.isExpanded
 
@@ -92,6 +92,7 @@ Rectangle {
         currentSelectedId: root.currentSelectedId
         activeFilter: root.activeFilter
         searchText: root.searchText
+        currentView: root.currentView
 
     }
 

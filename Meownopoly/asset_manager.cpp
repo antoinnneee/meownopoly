@@ -95,15 +95,28 @@ void AssetModel::clear()
 
 AssetModel* AssetModel::createFilteredModel(const QString &type) const
 {
-    AssetModel *filteredModel = new AssetModel();
+    if (type.isEmpty()) {
+        qWarning() << "AssetModel::createFilteredModel: Type parameter is empty";
+        return nullptr;
+    }
     
+    AssetModel *filteredModel = new AssetModel();
+    if (!filteredModel) {
+        qWarning() << "AssetModel::createFilteredModel: Failed to create filtered model";
+        return nullptr;
+    }
+    
+    int matchCount = 0;
     for (const Asset &asset : m_assets) {
         if (asset.type == type) {
             filteredModel->addAsset(asset.path, asset.type, asset.category,
                                   asset.ratioWidth, asset.ratioHeight, asset.width, asset.height,
                                   asset.id, asset.filename);
+            matchCount++;
         }
     }
+    
+    qDebug() << "AssetModel::createFilteredModel: Created filtered model for type" << type << "with" << matchCount << "assets";
     
     return filteredModel;
 }
@@ -144,32 +157,82 @@ QObject* AssetManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 AssetModel* AssetManager::getTypeModel(const QString &category, const QString &type)
 {
+    // Vérification des paramètres
+    if (category.isEmpty() || type.isEmpty()) {
+        qWarning() << "AssetManager::getTypeModel: Invalid parameters - category:" << category << "type:" << type;
+        return nullptr;
+    }
+    
     QString key = category + "_" + type;
     
+    // Vérifier si le modèle filtré existe déjà
     if (m_filteredModels.contains(key)) {
-        return m_filteredModels[key];
+        AssetModel* existingModel = m_filteredModels[key];
+        if (existingModel) {
+            return existingModel;
+        } else {
+            // Le modèle existe mais est null, le supprimer du cache
+            m_filteredModels.remove(key);
+        }
     }
+    
+    // Vérifier que les modèles de base sont initialisés
+    if (!m_decorationModel || !m_tileModel) {
+        qWarning() << "AssetManager::getTypeModel: Base models not initialized";
+        return nullptr;
+    }
+    
+    AssetModel *filteredModel = nullptr;
+    
     if (category == "decoration") {
-        AssetModel *filteredModel = m_decorationModel->createFilteredModel(type);
-        m_filteredModels[key] = filteredModel;
-        return filteredModel;
+        filteredModel = m_decorationModel->createFilteredModel(type);
+        if (filteredModel) {
+            filteredModel->setParent(this);
+            m_filteredModels[key] = filteredModel;
+        }
     }
-    if (category == "tile") {
-        AssetModel *filteredModel = m_tileModel->createFilteredModel(type);
-        m_filteredModels[key] = filteredModel;
-        return filteredModel;
+    else if (category == "tile") {
+        filteredModel = m_tileModel->createFilteredModel(type);
+        if (filteredModel) {
+            filteredModel->setParent(this);
+            m_filteredModels[key] = filteredModel;
+        }
     }
-
-    AssetModel *filteredModel = new AssetModel();
-    filteredModel->setParent(this);
-    m_filteredModels[key] = filteredModel;
+    else {
+        // Pour les autres catégories, créer un modèle vide
+        filteredModel = new AssetModel();
+        if (filteredModel) {
+            filteredModel->setParent(this);
+            m_filteredModels[key] = filteredModel;
+        }
+    }
+    
+    if (!filteredModel) {
+        qWarning() << "AssetManager::getTypeModel: Failed to create filtered model for" << category << type;
+    }
     
     return filteredModel;
 }
 
-QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id) const
+QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
 {
-    return buildAssetPath(category, type, id + ".png");
+    if (isAssetValid( category, type, id ))
+    {
+        return buildAssetPath(category, type, id + ".png");
+    }
+    return "";  // todo get default asset path
+}
+
+bool AssetManager::areAssetsLoaded() const
+{
+    return m_decorationModel && m_tileModel && 
+           (m_decorationModel->rowCount() > 0 || m_tileModel->rowCount() > 0);
+}
+
+void AssetManager::reloadAssets()
+{
+    qDebug() << "AssetManager::reloadAssets: Forcing asset reload...";
+    loadAssets();
 }
 
 QString AssetManager::getDecorationPath(const QString &type, const QString &id) const
@@ -185,6 +248,13 @@ QString AssetManager::getTilePath(const QString &type, const QString &id) const
 
 void AssetManager::loadAssets()
 {
+    qDebug() << "AssetManager::loadAssets: Starting asset loading...";
+    
+    // Vérifier que les modèles de base sont initialisés
+    if (!m_decorationModel || !m_tileModel) {
+        qWarning() << "AssetManager::loadAssets: Base models not initialized";
+        return;
+    }
 
     // Clear existing models
     m_decorationModel->clear();
@@ -201,20 +271,23 @@ void AssetManager::loadAssets()
     }
 
     QStringList categories = assetsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    if (categories.isEmpty()) {
+        qWarning() << "AssetManager::loadAssets: No categories found in" << m_assetsBasePath;
+    }
+    
     setCategories(categories);
-    qDebug() << "Categories:" << categories;
+    qDebug() << "AssetManager::loadAssets: Categories found:" << categories;
+    
     for (const QString &category : categories) {
         QString categoryPath = assetsDir.absoluteFilePath(category); // basePath/category
         loadCategory(categoryPath, category);
     }
 
-    
-    
     emit decorationModelChanged();
     emit tileModelChanged();
-    qDebug() << "Assets loaded successfully";
-//    qDebug() << "Decorations:" << m_decorationModel->rowCount();
-//    qDebug() << "Tiles:" << m_tileModel->rowCount();
+    qDebug() << "AssetManager::loadAssets: Assets loaded successfully";
+    qDebug() << "AssetManager::loadAssets: Decorations count:" << m_decorationModel->rowCount();
+    qDebug() << "AssetManager::loadAssets: Tiles count:" << m_tileModel->rowCount();
 }
 
 void AssetManager::setAssetsBasePath(const QString &basePath)
@@ -543,4 +616,22 @@ QStringList AssetManager::getAvailableCategories() const
     
     
     return m_categories;
+}
+
+bool AssetManager::isAssetValid(const QString &category, const QString &type, const QString &id)
+{
+    AssetModel* model = getTypeModel(category, type);
+    if (!model)
+    {
+        return false;
+    }
+    for (int i = 0; i < model->rowCount(); i++)
+    {
+        QModelIndex index = model->index(i, 0);
+        if (model->data(index, AssetModel::IdRole) == id)
+        {
+            return true;
+        }
+    }
+    return false;
 }

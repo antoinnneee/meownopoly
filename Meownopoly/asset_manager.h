@@ -82,7 +82,7 @@ public:
     AssetModel* tileModel() const { return m_tileModel; }
     QString assetsBasePath() const { return m_assetsBasePath; }
     Q_INVOKABLE QString buildAssetPath(const QString &category, const QString &type, const QString &filename) const;
-    Q_INVOKABLE QString getAssetPath(const QString &category, const QString &type, const QString &id) const;
+    Q_INVOKABLE QString getAssetPath(const QString &category, const QString &type, const QString &id);
 
     Q_INVOKABLE QStringList categories() const { return m_categories; }
     void setCategories(const QStringList &categories);
@@ -96,7 +96,10 @@ public:
     Q_INVOKABLE void setAssetsBasePath(const QString &basePath);
     Q_INVOKABLE QStringList getAvailableTypes(const QString &category) const;
     Q_INVOKABLE QStringList getAvailableCategories() const;
-    
+    Q_INVOKABLE bool isAssetValid(const QString &category, const QString &type, const QString &id);
+    Q_INVOKABLE bool areAssetsLoaded() const;
+    Q_INVOKABLE void reloadAssets();
+        
     // Metadata generation
     Q_INVOKABLE bool generateMetadataForDirectory(const QString &directoryPath);
     Q_INVOKABLE bool generateAllMetadata();
@@ -119,8 +122,7 @@ private:
     QString m_assetsBasePath;
     static AssetManager *m_pThis;
     
-    // Cache for filtered models
-    mutable QHash<QString, AssetModel*> m_filteredModels;
+    QHash<QString, AssetModel*> m_filteredModels;
 
     QStringList m_categories;
 };
