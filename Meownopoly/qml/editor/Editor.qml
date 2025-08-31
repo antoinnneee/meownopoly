@@ -125,9 +125,6 @@ Rectangle {
         showGrid: true
         snapToGrid: true
         
-        // Test de l'animation au démarrage
-        Component.onCompleted: {
-        }
 
         onGridPressed : function(position) {
             // Si un asset est sélectionné, le placer directement

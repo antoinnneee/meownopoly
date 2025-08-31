@@ -7,7 +7,20 @@ Item {
     required property var logic
 
     // Signal émis quand un bouton est cliqué
+
+    enum ButtonType {
+        Assets,
+        Cases,
+        Edition
+    }
+    
+    // Constantes accessibles pour les types de boutons
+    readonly property int BTN_ASSETS: 0
+    readonly property int BTN_CASES: 1
+    readonly property int BTN_EDITION: 2
+
     signal buttonClicked(int index)
+
     // Boutons de menu
     Row {
         id: menuSelector
@@ -65,7 +78,7 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    root.buttonClicked(0);
+                    root.buttonClicked(root.BTN_ASSETS)
                 }
             }
         }
@@ -92,7 +105,7 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    root.buttonClicked(1);
+                    root.buttonClicked(root.BTN_CASES)
                 }
             }
         }
@@ -119,7 +132,7 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    root.buttonClicked(2);
+                    root.buttonClicked(root.BTN_EDITION)
                 }
             }
         }
@@ -276,6 +289,11 @@ Item {
                     id: cursorMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
+                    onPressed: {
+                        checked = !checked
+                        if (checked)
+                            root.buttonClicked(root.BTN_EDITION)
+                    }
                 }
                 
                 ToolTip {

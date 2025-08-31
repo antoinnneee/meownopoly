@@ -33,6 +33,18 @@ Rectangle {
     property alias assetSearchText: assetPanel.searchText
     property alias assetView: assetPanel.currentView
 
+    // Signals to propagate from child panels
+    // Signaux pour propager les événements vers l'Editor
+    signal assetSelected(string category, string type, string id)
+    signal caseSelected(string category, string type, string id)
+    signal selectionModeChanged(bool isActive)
+    // Signaux supplémentaires pour les changements de propriétés
+    signal viewChanged(string viewName)
+    signal filterChanged(string filterName)
+    signal textSearchChanged(string searchText)
+    signal visualEffectChanged()
+
+
     required property var logic
 
     // Menu sélection Asset Case Editor
@@ -45,14 +57,25 @@ Rectangle {
         height: 35
         z: 10
 
-
         logic: root.logic
 
+        enum ButtonType {
+            Assets,
+            Cases,
+            Edition
+        }
+
         onButtonClicked: function(index) {
-            console.log("Bouton cliqué avec index : " + index);
-            // Changer le panneau affiché en fonction de l'index du bouton
-            currentPanelIndex = index;
-            stackView.currentIndex = index;
+
+            if (index === ButtonType.Assets || index === ButtonType.Cases){
+                console.log("Bouton cliqué avec index : " + index);
+                // Changer le panneau affiché en fonction de l'index du bouton
+                currentPanelIndex = index;
+                stackView.currentIndex = index;
+            }
+            else if (index === ButtonType.Edition){
+
+            }
         }
     }
 
@@ -133,14 +156,4 @@ Rectangle {
         }
     }
 
-    // Signals to propagate from child panels
-    // Signaux pour propager les événements vers l'Editor
-    signal assetSelected(string category, string type, string id)
-    signal caseSelected(string category, string type, string id)
-    signal selectionModeChanged(bool isActive)
-    // Signaux supplémentaires pour les changements de propriétés
-    signal viewChanged(string viewName)
-    signal filterChanged(string filterName)
-    signal textSearchChanged(string searchText)
-    signal visualEffectChanged()
 }
