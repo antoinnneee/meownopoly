@@ -148,7 +148,7 @@ Rectangle {
             }
         }
         onGridRightClicked: {
-            assetPanel.assetManagerSettings.clearAssetSelection()
+            assetPanel.clearAssetSelection()
         }
     }
 

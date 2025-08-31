@@ -7,6 +7,9 @@ Rectangle {
     required property var logic
 
 
+    property alias contentArea: contentPlaceHolder.children
+
+    property alias titleBar: titlePlaceHolder.children
     // Filter Properties
     property string currentView: "categories" // "categories" or "assets"
     property string searchText: ""
@@ -22,11 +25,23 @@ Rectangle {
     border.color: "#333333"
     border.width: 1
 
-    // Smooth height animation
-    Behavior on height {
-        NumberAnimation {
-            duration: animationDuration
-            easing.type: Easing.OutCubic
+    Item{
+        id: titlePlaceHolder
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: {
+            return (children.length > 0) ? children[0].height + 10 : 0
         }
     }
+
+    Item{
+        id: contentPlaceHolder
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: titlePlaceHolder.bottom
+        anchors.bottom: parent.bottom
+        }
+
+
 }

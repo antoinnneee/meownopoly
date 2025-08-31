@@ -15,48 +15,19 @@ EBP_TitleBar {
     signal assetSelected(string category, string type, string id)
     required property string currentView // "categories" or "assets"
 
-
-
-    // Title with selection indicator
-    ColumnLayout {
-        Layout.fillHeight: true
-        Layout.alignment: Qt.AlignVCenter
-        spacing: 2
-
-        Text {
-            text: "Asset Library"
-            color: "white"
-            font.pixelSize: 16
-            font.bold: true
-            Layout.fillHeight: true
-        }
-
-        Text {
-            text: titleBar.currentSelectedId !== "" ?
+    titleText: "Asset Library"
+    subTitleText: titleBar.currentSelectedId !== "" ?
                       "Selected: " + titleBar.currentSelectedType + " #" + titleBar.currentSelectedId :
                       "Click to select an asset"
-            color: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
-            font.pixelSize: 10
-            font.italic: true
-            visible: titleBar.isExpanded
-            Layout.fillHeight: true
-        }
-    }
+    subTitleColor: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
+    buttonModel: ["All", "Decoration", "Tile"]
 
     // Quick filters (visible only when expanded)
-    ASP_FilterButton {
-        Layout.alignment: Qt.AlignVCenter
-        visible: titleBar.isExpanded
-        activeFilter: titleBar.activeFilter
-        onButtonClicked: function(text, index) {
-            console.log(index, "filter button clicked", text)
-            titleBar.activeFilter = text
-            titleBar.currentView = "categories"
-        }
-
-        width: 300
+    onButtonClicked: function(text, index) {
+        console.log(index, "filter button clicked", text)
+        titleBar.activeFilter = text
+        titleBar.currentView = "categories"
     }
-
     // Search bar (optional, visible when expanded)
     ASP_SearchBar {
         Layout.alignment: Qt.AlignVCenter

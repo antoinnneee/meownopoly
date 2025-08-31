@@ -10,9 +10,8 @@ import "../editorBottomPanel"
 EditorBottomPanel {
     id: root
 
-    default property alias contentArea: contentArea.children
 
-
+    // property string activeFilter
     property alias activeFilter: titleBar.activeFilter
 //    property alias currentView: root.currentView
     // property string currentView: "categories" // "categories" or "assets"
@@ -73,7 +72,7 @@ EditorBottomPanel {
 
 
     // Title bar
-    ASP_TitleBar {
+     titleBar: ASP_TitleBar {
         id: titleBar
         anchors.left: parent.left
         anchors.right: parent.horizontalCenter
@@ -107,14 +106,7 @@ EditorBottomPanel {
     }
 
     // Content area (visible only when expanded)
-    Item {
-        id: contentPlaceHolder
-        anchors.bottom: root.bottom
-        anchors.left: root.left
-        anchors.margins: 10
-        anchors.right: root.right
-        anchors.top: titleBar.bottom
-        ASP_ContentArea {
+     contentArea: ASP_ContentArea {
             id: contentArea
             anchors.fill: parent
             currentSelectedCategory: root.currentSelectedCategory
@@ -132,7 +124,10 @@ EditorBottomPanel {
             onAssetSelected: function(category, type, id) {
                 root.assetSelected(category, type, id)
             }
-        }
+            Component.onCompleted: {
+                console.log("ASP_ContentArea", width, height)
+            }
+
     }
 
     // Status indicator
