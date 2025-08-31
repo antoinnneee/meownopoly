@@ -110,5 +110,7 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_SearchBar.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_BackButton.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_ClearButton.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EditorBottomPanel.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/ASP_StatusIndicator.qml</file>
     </qresource>
 </RCC>
