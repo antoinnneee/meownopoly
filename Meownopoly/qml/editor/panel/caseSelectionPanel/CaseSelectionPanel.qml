@@ -90,7 +90,7 @@ EditorBottomPanel {
         anchors.left: parent.left
         anchors.right: parent.horizontalCenter
         anchors.top: parent.top
-        isExpanded: root.isExpanded
+        isExpanded: true
         onCaseSelected: function(category, type, id) {
             console.log("titleBar select case", category, type, id)
             root.caseSelected(category, type, id)
@@ -111,14 +111,6 @@ EditorBottomPanel {
         currentView: root.currentView
     }
 
-    
-    // Smooth height animation
-    Behavior on height {
-        NumberAnimation {
-            duration: animationDuration
-            easing.type: Easing.OutCubic
-        }
-    }
 
     // Split view when details panel is shown
     contentArea: CSP_ContentArea {
@@ -137,6 +129,7 @@ EditorBottomPanel {
         onCaseSelected: function(category, type, id) {
             root.caseSelected(category, type, id)
         }
+        isExpanded: true
 
     }
 

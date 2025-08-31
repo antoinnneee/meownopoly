@@ -46,14 +46,7 @@ ScrollView {
         Component.onCompleted: {
             generateCategories()
         }
-        
-        // Refresh categories when assets are reloaded
-        Connections {
-            target: AssetManager
-            function onDecorationModelChanged() {
-                generateCategories()
-            }
-        }
+
         
         function generateCategories() {
             var newCategories = []

@@ -15,9 +15,9 @@ Rectangle {
     property string searchText: ""
 
     // Dimensions
-    readonly property int collapsedHeight: 0
-    readonly property int expandedHeight: 400
-    readonly property int animationDuration: 200
+    property int collapsedHeight: 0
+    property int expandedHeight: 400
+
     // State management
     height: isExpanded ? expandedHeight : collapsedHeight
 

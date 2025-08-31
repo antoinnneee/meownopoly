@@ -366,7 +366,6 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: isExpanded ? 400 : 0 // Hauteur explicite
         
         // Connexion à la logique
         logic: logic

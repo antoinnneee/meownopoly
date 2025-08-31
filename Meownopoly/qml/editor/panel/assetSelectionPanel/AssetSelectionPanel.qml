@@ -20,6 +20,7 @@ EditorBottomPanel {
         contentArea.currentView = currentView
     }
 
+
     property string selectedCategory: ""
     property string selectedType: ""
     
@@ -78,7 +79,7 @@ EditorBottomPanel {
         anchors.left: parent.left
         anchors.right: parent.horizontalCenter
         anchors.top: parent.top
-        isExpanded: root.isExpanded
+        isExpanded: true
 
         onAssetSelected: function(category, type, id) {
             console.log("titleBar select asset", category, type, id)
@@ -125,7 +126,7 @@ EditorBottomPanel {
             onAssetSelected: function(category, type, id) {
                 root.assetSelected(category, type, id)
             }
-
+            isExpanded: true
     }
 
     // Status indicator

@@ -21,6 +21,7 @@ Rectangle {
     // Dimensions à propager vers les panels enfants
     readonly property int collapsedHeight: 0
     readonly property int expandedHeight: 400
+    height: isExpanded ? expandedHeight : collapsedHeight // Hauteur explicite
     
     // Alias pour propager les propriétés de AssetSelectionPanel
     property alias assetPanel: assetPanel
@@ -34,6 +35,14 @@ Rectangle {
     property alias assetView: assetPanel.currentView
 
     required property var logic
+
+
+    // Smooth height animation
+    Behavior on height {
+        NumberAnimation {
+            duration: 250
+        }
+    }
 
     // Menu sélection Asset Case Editor
     MenuSelector {
@@ -63,9 +72,6 @@ Rectangle {
     // Content area with stacked views
     color: "transparent"
 
-    // Définition explicite des dimensions
-    width: parent.width
-    height: parent.height
 
     // Stack layout to switch between panels
     StackLayout {
@@ -74,12 +80,17 @@ Rectangle {
         anchors.topMargin: 0
         currentIndex: currentPanelIndex
         visible: true // Assurer que le StackLayout est visible
-        height: root.isExpanded ? root.expandedHeight : root.collapsedHeight
+
 
         // Asset Selection Panel
         AssetSelectionPanel {
             id: assetPanel
             logic: root.logic
+
+            height: root.expandedHeight
+
+            collapsedHeight: root.collapsedHeight
+            expandedHeight: root.expandedHeight
             width: parent.width
             isExpanded: root.isExpanded
             // Connexion de tous les signaux pour la propagation vers l'Editor
@@ -117,6 +128,11 @@ Rectangle {
         CaseSelectionPanel {
             id: casePanel
             logic: root.logic
+
+            height: root.expandedHeight
+
+            collapsedHeight: root.collapsedHeight
+            expandedHeight: root.expandedHeight
             width: parent.width
             isExpanded: root.isExpanded
 
