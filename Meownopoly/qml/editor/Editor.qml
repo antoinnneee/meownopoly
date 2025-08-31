@@ -148,7 +148,7 @@ Rectangle {
             }
         }
         onGridRightClicked: {
-            assetPanel.clearAssetSelection()
+            assetPanel.assetManagerSettings.clearAssetSelection()
         }
     }
 
@@ -233,7 +233,7 @@ Rectangle {
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
             if (root.isAssetSelected) {
-                clearAssetSelection()
+                assetPanel.assetManagerSettings.clearAssetSelection()
                 event.accepted = true
             }
         }
@@ -295,6 +295,7 @@ Rectangle {
             logic.cancelSelection()
         }
     }
+    */
     // Panneau de configuration des cases
     CaseConfigurationPanel {
         id: caseConfigPanel
@@ -309,7 +310,6 @@ Rectangle {
             logic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
         }
     }
-    */
     // Panneau de configuration des connexions
     ConnectionsConfigurationPanel {
         id: connectionsPanel

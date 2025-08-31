@@ -14,14 +14,38 @@ EditorBottomPanel {
 
 
     property alias activeFilter: titleBar.activeFilter
+//    property alias currentView: root.currentView
+    // property string currentView: "categories" // "categories" or "assets"
+    onCurrentViewChanged: {
+        titleBar.currentView = currentView
+        contentArea.currentView = currentView
+    }
 
     property string selectedCategory: ""
     property string selectedType: ""
     
+    property alias assetManagerSettings: assetManagerSettings
     // Current selection state (from parent)
-    property string currentSelectedCategory: ""
-    property string currentSelectedType: ""
-    property string currentSelectedId: ""
+    QtObject{
+        id: assetManagerSettings
+        property string currentSelectedCategory: ""
+        property string currentSelectedType: ""
+        property string currentSelectedId: ""
+
+        // Function to clear asset selection
+        function clearAssetSelection() {
+            console.log("Clearing asset selection")
+            assetManagerSettings.currentSelectedCategory = ""
+            assetManagerSettings.currentSelectedType = ""
+            assetManagerSettings.currentSelectedId = ""
+        }
+
+    }
+
+    property alias currentSelectedCategory: assetManagerSettings.currentSelectedCategory
+    property alias currentSelectedType: assetManagerSettings.currentSelectedType
+    property alias currentSelectedId: assetManagerSettings.currentSelectedId
+
     property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
 
     // Selected decoration element for effects
@@ -34,23 +58,16 @@ EditorBottomPanel {
     signal selectionModeChanged(bool isActive)
 
 
+
     onAssetSelected: function(category, type, id) {
         if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
-            clearAssetSelection();
+            assetManagerSettings.clearAssetSelection();
             return
         }
         console.log("Asset selected for placement:", category, type, id)
         root.currentSelectedCategory = category
         root.currentSelectedType = type
         root.currentSelectedId = id
-    }
-
-    // Function to clear asset selection
-    function clearAssetSelection() {
-        console.log("Clearing asset selection")
-        root.currentSelectedCategory = ""
-        root.currentSelectedType = ""
-        root.currentSelectedId = ""
     }
 
 
@@ -67,26 +84,29 @@ EditorBottomPanel {
             console.log("titleBar select asset", category, type, id)
             root.assetSelected(category, type, id)
         }
+        onSearchTextChanged: {
+            console.log("EditorBottomPanel - searchText filter changed", searchText)
+            root.searchText = searchText
+            root.searchText = Qt.binding(function(){ return root.searchText})
+        }
+
+
+        onCurrentViewChanged:  {
+            root.currentView = titleBar.currentView
+        }
+
 
         currentSelectedCategory: root.currentSelectedCategory
         currentSelectedType: root.currentSelectedType
         currentSelectedId: root.currentSelectedId
+
         searchText: root.searchText
         currentView: root.currentView
 
-        Timer{
-            interval: 600
-            running: true
-            repeat: true
-            onTriggered: {
-                console.log("EditorBottomPanel activeFilter", titleBar.activeFilter)
-            }
-        }
 
     }
 
     // Content area (visible only when expanded)
-
     Item {
         id: contentPlaceHolder
         anchors.bottom: root.bottom
@@ -102,6 +122,11 @@ EditorBottomPanel {
             currentSelectedId: root.currentSelectedId
             showEffectsPanel: root.showEffectsPanel
             currentView: root.currentView
+            onCurrentViewChanged: {
+                console.log("currentView changed in contentArea")
+                // Propager le changement vers le parent
+                root.currentView = contentArea.currentView
+            }
             activeFilter: titleBar.activeFilter
             searchText: root.searchText
             onAssetSelected: function(category, type, id) {

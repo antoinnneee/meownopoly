@@ -1,6 +1,7 @@
 import QtQuick 2.15
 
 Rectangle {
+    id: root
 
     property bool isExpanded: true
     required property var logic

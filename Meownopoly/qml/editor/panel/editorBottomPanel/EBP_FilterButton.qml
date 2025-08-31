@@ -10,12 +10,17 @@ RowLayout {
     spacing: 10
 
     required property string activeFilter
+    onActiveFilterChanged: {
+        console.log("filterButton - active filter change to", activeFilter)
+    }
+
     property var buttonModel : ["Button 1", "Button 2", "Button 3"]
 
     signal buttonClicked(string text, int index)
     Repeater {
         model: buttonModel        
         Button {
+            id: button
             text: modelData
             flat: true
             checkable: true
@@ -40,6 +45,8 @@ RowLayout {
             
             onClicked: {
                 filterButton.buttonClicked(text, index)
+                button.checked = Qt.binding(function() { return filterButton.activeFilter === button.modelData })
+
             }
         }
     }

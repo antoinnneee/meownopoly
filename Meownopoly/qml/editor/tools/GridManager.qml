@@ -191,7 +191,7 @@ Item {
         drag.target: isEdit ? null : gridManager
         pressAndHoldInterval: 200
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: {
+        onClicked: function(mouse) {
             if (mouse.button === Qt.LeftButton){
                 console.log("click location : ", mouseX, mouseY)
                 console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))

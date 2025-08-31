@@ -16,14 +16,6 @@ EBP_Content {
     property bool showEffectsPanel: true
     signal assetSelected(string category, string type, string id)
 
-    Timer{
-        interval: 600
-        running: true
-        repeat: true
-        onTriggered: {
-            console.log("EBP_Content activeFilter", contentArea.activeFilter)
-        }
-    }
 
     // Main content (categories/assets)
     Item {

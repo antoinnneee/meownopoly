@@ -14,20 +14,7 @@ EBP_TitleBar {
 
     signal assetSelected(string category, string type, string id)
     required property string currentView // "categories" or "assets"
-    onCurrentViewChanged: {
-        console.log("current view changed", currentView)
-    }
-    Timer{
-        interval: 600
-        running: false
-        repeat: true
-        property int count: 0
-        onTriggered: {
-            console.log(activeFilter)
-            titleBar.activeFilter = ">" + count
-            count++
-        }
-    }
+
 
 
     // Title with selection indicator
@@ -86,7 +73,9 @@ EBP_TitleBar {
     EBP_BackButton {
         id: backButton
         visible: titleBar.isExpanded && titleBar.currentView === "assets"
-        onClicked: titleBar.currentView = "categories"
+        onClicked: {
+            titleBar.currentView = "categories"
+        }
     }
 
     // Clear selection button (visible when asset is selected)

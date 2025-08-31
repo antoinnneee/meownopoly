@@ -89,7 +89,10 @@ Rectangle {
 
             // Surveiller les changements de propriétés pour propager les signaux
             onCurrentViewChanged: {
+                console.log("AssetSelectionPanel currentView changed to:", currentView)
                 root.viewChanged(currentView);
+                // Propager le changement vers le parent
+                //root.currentView = currentView;
             }
 
             onActiveFilterChanged: {
@@ -129,7 +132,7 @@ Rectangle {
     function clearAssetSelection() {
         if (currentPanelIndex === 0) {
             // Si nous sommes sur le panel d'assets
-            assetPanel.clearAssetSelection();
+            assetPanel.assetManagerSettings.clearAssetSelection()
         }
     }
 

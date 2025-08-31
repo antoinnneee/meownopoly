@@ -2,7 +2,7 @@ import QtQuick 2.15
 
 Item {
     property bool isExpended: false
-    property string currentView: "categories"
+    required property string currentView
 
     property string searchText: ""
     required property string activeFilter

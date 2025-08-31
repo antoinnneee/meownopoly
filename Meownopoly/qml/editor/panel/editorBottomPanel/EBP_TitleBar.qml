@@ -7,9 +7,6 @@ RowLayout {
     property string activeFilter: ""
     property string searchText: ""
     property bool isExpanded : false
-    onActiveFilterChanged: {
-        console.log("active filter changed", activeFilter)
-    }
 
 
     anchors.margins: 10
