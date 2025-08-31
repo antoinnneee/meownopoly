@@ -103,5 +103,7 @@
         <file>qml/editor/panel/caseSelectionPanel/CSP_Item.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/qmldir</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_TransformSection.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/ASP_TitleBar.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EBP_TitleBar.qml</file>
     </qresource>
 </RCC>

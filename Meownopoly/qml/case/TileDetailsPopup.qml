@@ -59,7 +59,7 @@ Popup {
                 
                 Image {
                     anchors.fill: parent
-                    source: root.tileType >= 0 ? AssetManager.getAssetPath("ui", "case", getTileTypeName())  : ""
+                    source: root.tileType >= 0 ? AssetManager.getAssetPath("ui", "case", getTileIconName())  : ""
                     sourceSize {
                         width: width * 2
                         height: height * 2
@@ -196,9 +196,9 @@ Popup {
 
     function getTileIconName() {
         const icons = [
-            "kibble.png", "bed.png", "cardboard.png", "catnip.png",
-            "jail.png", "tojail.png", "catdoor.png", "nap.png",
-            "fountain.png", "laser.png", "tax.png", "tax.png"
+            "kibble", "bed", "cardboard", "catnip",
+            "jail", "tojail", "catdoor", "nap",
+            "fountain", "laser", "tax", "tax"
         ];
         return root.tileType >= 0 && root.tileType < icons.length ? icons[root.tileType] : "";
     }

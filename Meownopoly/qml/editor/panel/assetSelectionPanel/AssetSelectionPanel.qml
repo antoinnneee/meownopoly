@@ -76,183 +76,23 @@ Rectangle {
     
 
     // Title bar
-    Rectangle {
+    ASP_TitleBar {
         id: titleBar
-        anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: isExpanded ? 40 : 0
-        color: "transparent"
-        
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 10
-            anchors.rightMargin: 6
-            spacing: 15
-            
-            // Title with selection indicator
-            ColumnLayout {
-                Layout.fillHeight: true
-                Layout.alignment: Qt.AlignVCenter
-                spacing: 2
-                
-                Text {
-                    text: "Asset Library"
-                    color: "white"
-                    font.pixelSize: 16
-                    font.bold: true
-                    Layout.fillHeight: true
-                }
-                
-                Text {
-                    text: root.currentSelectedId !== "" ?
-                              "Selected: " + root.currentSelectedType + " #" + root.currentSelectedId :
-                              "Click to select an asset"
-                    color: root.currentSelectedId !== "" ? "#4CAF50" : "#999999"
-                    font.pixelSize: 10
-                    font.italic: true
-                    visible: root.isExpanded
-                    Layout.fillHeight: true
-                }
-            }
-            
-            // Quick filters (visible only when expanded)
-            Row {
-                visible: root.isExpanded
-                spacing: 10
-                Layout.alignment: Qt.AlignVCenter
-                
-                Repeater {
-                    model: ["All", "Decoration", "Tile"]
-                    
-                    Button {
-                        text: modelData
-                        flat: true
-                        checkable: true
-                        checked: root.activeFilter === modelData
-                        
-                        background: Rectangle {
-                            color: parent.checked ? "#4A90E2" : "transparent"
-                            border.color: "#4A90E2"
-                            border.width: 1
-                            radius: 4
-                        }
-                        
-                        contentItem: Text {
-                            text: parent.text
-                            color: parent.checked ? "white" : "#4A90E2"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        
-                        onClicked: {
-                            root.activeFilter = text
-                            root.currentView = "categories"
-                        }
-                    }
-                }
-            }
-            
-            // Search bar (optional, visible when expanded)
-            TextField {
-                visible: root.isExpanded
-                Layout.preferredWidth: 200
-                Layout.alignment: Qt.AlignVCenter
-                placeholderText: "Search assets..."
-                text: root.searchText
-                
-                background: Rectangle {
-                    color: "#444444"
-                    border.color: "#666666"
-                    border.width: 1
-                    radius: 4
-                }
-                
-                color: "white"
-                
-                onTextChanged: root.searchText = text
-            }
+        anchors.top: parent.top
+        isExpanded: root.isExpanded
 
-            // Spacer
-            Item { Layout.fillWidth: true }
-
-            // Back button (visible when in assets view)
-            Button {
-                visible: root.isExpanded && root.currentView === "assets"
-                text: "← Back"
-                flat: true
-
-                background: Rectangle {
-                    color: parent.pressed ? "#555555" : "transparent"
-                    border.color: "#666666"
-                    border.width: 1
-                    radius: 4
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: root.currentView = "categories"
-            }
-
-            // Clear selection button (visible when asset is selected)
-            Button {
-                visible: root.isExpanded && root.currentSelectedId !== ""
-                text: "✕ Clear"
-                flat: true
-
-                background: Rectangle {
-                    color: parent.pressed ? "#AA4444" : "transparent"
-                    border.color: "#FF6666"
-                    border.width: 1
-                    radius: 4
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "#FF6666"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 11
-                }
-
-                onClicked: {
-                    // Signal to parent to clear selection
-                    root.assetSelected("", "", "")
-                }
-            }
-
-            // Expand/collapse button
-            // Button {
-            //     id: expandButton
-            //     width: 30
-            //     Layout.fillHeight: true
-            //     Layout.topMargin: -6
-            //     Layout.bottomMargin:  0
-
-            //     background: Rectangle {
-            //         color: parent.pressed ? "#555555" : "#444444"
-            //         border.color: "#666666"
-            //         border.width: 1
-            //         radius: 4
-            //     }
-
-            //     contentItem: Text {
-            //         text: root.isExpanded ? "▼" : "▲"
-            //         color: "white"
-            //         font.pixelSize: 12
-            //         horizontalAlignment: Text.AlignHCenter
-            //         verticalAlignment: Text.AlignVCenter
-            //         anchors.fill:expandButton
-            //     }
-
-            //     onClicked: root.isExpanded = !root.isExpanded
-            // }
+        onAssetSelected: function(category, type, id) {
+            root.assetSelected(category, type, id)
         }
+
+        currentSelectedCategory: root.currentSelectedCategory
+        currentSelectedType: root.currentSelectedType
+        currentSelectedId: root.currentSelectedId
+        activeFilter: root.activeFilter
+        searchText: root.searchText
+
     }
 
     // Content area (visible only when expanded)
