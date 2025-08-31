@@ -6,12 +6,12 @@ import MeowStyle
 
 import "."
 
-Rectangle {
+Item {
     id: root
-    color: "#ecf0f1"
-    border.color: "#bdc3c7"
-    border.width: 1
-    radius: 4
+    // color: "#ecf0f1"
+    // border.color: "#bdc3c7"
+    // border.width: 1
+    // radius: 4
 
     required property Case caseData
 

@@ -116,13 +116,14 @@ signals:
 private:
     void loadCategory(const QString &categoryPath, const QString &categoryName);
     void loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName);
+    void cleanupInvalidModels();
 
     AssetModel *m_decorationModel;
     AssetModel *m_tileModel;
     QString m_assetsBasePath;
     static AssetManager *m_pThis;
     
-    QHash<QString, AssetModel*> m_filteredModels;
+    QList<QPair<QString, AssetModel*>> m_filteredModels;
 
     QStringList m_categories;
 };

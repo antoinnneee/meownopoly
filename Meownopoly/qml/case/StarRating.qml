@@ -23,6 +23,7 @@ Item {
             Text {
                 text: index < root.restQuality ? "★" : "☆"
                 color: root.starColor
+                font.bold: true
                 font.pixelSize: root.starSize
                 y: calculateY(index)  // Calculate Y position for curve effect
                 

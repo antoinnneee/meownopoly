@@ -60,7 +60,7 @@ Rectangle {
                                 sourceItem: CaseTile{
                                     width: 100
                                     height: 100
-                                    color: "white"
+                                    // color: "white"
                                     caseData: CaseRestArea{
 
                                     }
