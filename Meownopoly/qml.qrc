@@ -105,14 +105,13 @@
         <file>qml/editor/panel/assetSelectionPanel/VEP_TransformSection.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_TitleBar.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_TitleBar.qml</file>
-        <file>qml/editor/panel/assetSelectionPanel/ASP_FilterButton.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_FilterButton.qml</file>
-        <file>qml/editor/panel/assetSelectionPanel/ASP_SearchBar.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_BackButton.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_ClearButton.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EditorBottomPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_StatusIndicator.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_ContentArea.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_Content.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EBP_SearchBar.qml</file>
     </qresource>
 </RCC>

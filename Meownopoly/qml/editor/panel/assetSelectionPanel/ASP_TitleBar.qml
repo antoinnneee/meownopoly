@@ -22,32 +22,21 @@ EBP_TitleBar {
     subTitleColor: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
     buttonModel: ["All", "Decoration", "Tile"]
 
-    // Quick filters (visible only when expanded)
     onButtonClicked: function(text, index) {
         console.log(index, "filter button clicked", text)
         titleBar.activeFilter = text
         titleBar.currentView = "categories"
     }
-    // Search bar (optional, visible when expanded)
-    ASP_SearchBar {
-        Layout.alignment: Qt.AlignVCenter
-        Layout.preferredWidth: 200
-        text: titleBar.searchText
-        visible: titleBar.isExpanded
-        onTextChanged: titleBar.searchText = text
-    }
 
     // Spacer
     Item { Layout.fillWidth: true }
 
-    // Back button (visible when in assets view)
-    EBP_BackButton {
-        id: backButton
-        visible: titleBar.isExpanded && titleBar.currentView === "assets"
-        onClicked: {
-            titleBar.currentView = "categories"
-        }
+    backButton.visible: titleBar.isExpanded && titleBar.currentView === "assets"
+    // backButton.Layout.column: 0
+    onBackButtonClicked: {
+        titleBar.currentView = "categories"
     }
+
 
     // Clear selection button (visible when asset is selected)
     ASP_ClearButton {

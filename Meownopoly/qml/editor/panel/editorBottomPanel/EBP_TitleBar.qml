@@ -14,8 +14,10 @@ RowLayout {
 
 
     property alias titleBarArea: titleBarArea
+    property alias backButton: backButton
 
     signal buttonClicked(string text, int index)
+    signal backButtonClicked()
 
 
     anchors.margins: 10
@@ -57,9 +59,25 @@ RowLayout {
             titleBar.buttonClicked(text, index)
         }
 
-        width: 300
+    }
+    // Search bar (optional, visible when expanded)
+    EBP_SearchBar {
+        id: searchbar
+        Layout.alignment: Qt.AlignVCenter
+        Layout.preferredWidth: 200
+        text: titleBar.searchText
+        visible: titleBar.isExpanded
+        onTextChanged: titleBar.searchText = text
     }
 
+    // Back button (visible when in assets view)
+    EBP_BackButton {
+        id: backButton
+        visible: titleBar.isExpanded
+        onClicked: {
+            backButtonClicked()
+        }
+    }
 
 
 }

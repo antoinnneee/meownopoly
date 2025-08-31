@@ -38,6 +38,10 @@ Rectangle {
     // Menu sélection Asset Case Editor
     MenuSelector {
         id: topToolbar
+        isExpanded: root.isExpanded
+        onIsExpandedChanged: {
+            root.isExpanded = isExpanded
+        }
 
         anchors.left: parent.left
         anchors.right: parent.right

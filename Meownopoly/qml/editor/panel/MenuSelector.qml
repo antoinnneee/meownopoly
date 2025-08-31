@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 Item {
     id: root    
     required property var logic
+    property bool isExpanded: false
 
     // Signal émis quand un bouton est cliqué
     signal buttonClicked(int index)
@@ -19,7 +20,6 @@ Item {
             id: expandButton
             width: 30
             height: parent.height
-            property bool isExpended: false
             background: Rectangle {
                 anchors.fill: parent
                 color: parent.pressed ? "#555555" : "#444444"
