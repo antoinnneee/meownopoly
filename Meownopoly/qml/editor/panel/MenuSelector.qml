@@ -15,11 +15,6 @@ Item {
         Edition
     }
     
-    // Constantes accessibles pour les types de boutons
-    readonly property int BTN_ASSETS: 0
-    readonly property int BTN_CASES: 1
-    readonly property int BTN_EDITION: 2
-
     signal buttonClicked(int index)
 
     // Boutons de menu
@@ -78,7 +73,7 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    root.buttonClicked(root.BTN_ASSETS)
+                    root.buttonClicked(0)
                 }
             }
         }
@@ -105,7 +100,7 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    root.buttonClicked(root.BTN_CASES)
+                    root.buttonClicked(1)
                 }
             }
         }
@@ -132,7 +127,7 @@ Item {
                 onEntered: parent.opacity = 0.9
                 onExited: parent.opacity = 1.0
                 onClicked: {
-                    root.buttonClicked(root.BTN_EDITION)
+                    root.buttonClicked(2)
                 }
             }
         }

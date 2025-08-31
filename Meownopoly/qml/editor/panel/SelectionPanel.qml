@@ -56,7 +56,6 @@ Rectangle {
         }
     }
 
-    // Menu sélection Asset Case Editor
     MenuSelector {
         id: topToolbar
         isExpanded: root.isExpanded
@@ -70,27 +69,17 @@ Rectangle {
         height: 35
         z: 10
 
+
         logic: root.logic
 
-        enum ButtonType {
-            Assets,
-            Cases,
-            Edition
-        }
-
         onButtonClicked: function(index) {
-
-            if (index === ButtonType.Assets || index === ButtonType.Cases){
-                console.log("Bouton cliqué avec index : " + index);
-                // Changer le panneau affiché en fonction de l'index du bouton
-                currentPanelIndex = index;
-                stackView.currentIndex = index;
-            }
-            else if (index === ButtonType.Edition){
-
-            }
+            console.log("Bouton cliqué avec index : " + index);
+            // Changer le panneau affiché en fonction de l'index du bouton
+            currentPanelIndex = index;
+            stackView.currentIndex = index;
         }
     }
+
 
     // Content area with stacked views
     color: "transparent"
