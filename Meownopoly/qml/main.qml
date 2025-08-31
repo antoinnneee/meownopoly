@@ -6,7 +6,6 @@ import "titleScreen/"
 import "test/"
 import "editor/"
 import "launcher/"
-import "asset_tools/"
 import QtQuick.Window
 import Game
 
@@ -22,7 +21,7 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: titleScreen
+        initialItem: editor
     }
 
     Component {

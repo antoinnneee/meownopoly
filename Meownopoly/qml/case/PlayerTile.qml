@@ -5,6 +5,7 @@ import Game
 import Case
 import Player
 import MeowStyle
+import AssetManager
 
 Rectangle {
     id: root
@@ -38,8 +39,8 @@ Rectangle {
                 width: Math.min(parent.width, parent.height) * 0.8
                 height: width
                 source: playerData && playerData.indexLogo >= 0 ? 
-                   appInstance.getAssetPath("avatar/avatar" + (playerData.indexLogo + 1) + ".png") :
-                    appInstance.getAssetPath("avatar/avatar1.png")
+                   AssetManager.getAssetPath("ui", "avatar", "avatar" + (playerData.indexLogo + 1)) :
+                    AssetManager.getAssetPath("avatar/noAvatar.png")
                 fillMode: Image.PreserveAspectFit
             }
         }

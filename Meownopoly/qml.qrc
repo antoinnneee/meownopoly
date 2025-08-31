@@ -5,7 +5,6 @@
         <file>qml/titleScreen/TitleScreen.qml</file>
         <file>qml/test/TEST_VIEW_0.qml</file>
         <file>qml/test/TEST_VIEW_1.qml</file>
-        <file>qml/test/TEST_VIEW_2.qml</file>
         <file>qml/test/TEST_CASE.qml</file>
         <file>qml/test/TEST_VIEW_3.qml</file>
         <file>qml/test/TEST_ASSET_MANAGER.qml</file>
@@ -68,9 +67,6 @@
         <file>qml/menu/pawTools.js</file>
         <file>qml/editor/EditorLogic.qml</file>
         <file>qml/editor/EditorDynamicComponent.qml</file>
-        <file>qml/asset_tools/AssetManagerPanel.qml</file>
-        <file>qml/asset_tools/AssetSelector.qml</file>
-        <file>qml/asset_tools/MetadataGenerator.qml</file>
         <file>qml/item_icon/LayerVisualizer.qml</file>
         <file>qml/editor/tools/SnapableCharacter.qml</file>
         <file>qml/editor/tools/AssetPreviewCursor.qml</file>
@@ -107,5 +103,19 @@
         <file>qml/editor/panel/caseSelectionPanel/CSP_Item.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/qmldir</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_TransformSection.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/ASP_TitleBar.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EBP_TitleBar.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EBP_FilterButton.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EBP_BackButton.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/ASP_ClearButton.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EditorBottomPanel.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/ASP_StatusIndicator.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/ASP_ContentArea.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EBP_Content.qml</file>
+        <file>qml/editor/panel/editorBottomPanel/EBP_SearchBar.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_TitleBar.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_ClearButton.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_ContentArea.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_StatusIndicator.qml</file>
     </qresource>
 </RCC>

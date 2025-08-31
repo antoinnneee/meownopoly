@@ -42,7 +42,8 @@ Dialog {
         var avatars = []
         // Parcourir les avatars de 1 à 6 (ou plus si nécessaire)
         for (var i = 1; i <= 6; i++) {
-            avatars.push(appInstance.getAssetPath("avatar/avatar" + i + ".png"))
+            console.log("avatar asset path cahnged")
+            //avatars.push(appInstance.getAssetPath("avatar/avatar" + i + ".png"))
         }
         return avatars
     }

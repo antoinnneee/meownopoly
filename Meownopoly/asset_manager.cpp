@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QImageReader>
 #include <algorithm>
+#include <type_traits>
 
 AssetManager* AssetManager::m_pThis = nullptr;
 
@@ -94,15 +95,28 @@ void AssetModel::clear()
 
 AssetModel* AssetModel::createFilteredModel(const QString &type) const
 {
-    AssetModel *filteredModel = new AssetModel();
+    if (type.isEmpty()) {
+        qWarning() << "AssetModel::createFilteredModel: Type parameter is empty";
+        return nullptr;
+    }
     
+    AssetModel *filteredModel = new AssetModel();
+    if (!filteredModel) {
+        qWarning() << "AssetModel::createFilteredModel: Failed to create filtered model";
+        return nullptr;
+    }
+    
+    int matchCount = 0;
     for (const Asset &asset : m_assets) {
         if (asset.type == type) {
             filteredModel->addAsset(asset.path, asset.type, asset.category,
                                   asset.ratioWidth, asset.ratioHeight, asset.width, asset.height,
                                   asset.id, asset.filename);
+            matchCount++;
         }
     }
+    
+    qDebug() << "AssetModel::createFilteredModel: Created filtered model for type" << type << "with" << matchCount << "assets";
     
     return filteredModel;
 }
@@ -111,9 +125,8 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
 AssetManager::AssetManager(QObject *parent)
     : QObject(parent)
     , m_decorationModel(new AssetModel(this))
-    , m_playerIconModel(new AssetModel(this))
     , m_tileModel(new AssetModel(this))
-    , m_assetsBasePath("asset_extracted/")
+    , m_assetsBasePath(DEFAULT_ASSETS_LOCATION)
 {
     m_pThis = this;
     loadAssets();
@@ -144,31 +157,82 @@ QObject* AssetManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 AssetModel* AssetManager::getTypeModel(const QString &category, const QString &type)
 {
-    QString key = category + "_" + type;
-    
-    if (m_filteredModels.contains(key)) {
-        return m_filteredModels[key];
-    }
-    
-    AssetModel *sourceModel = nullptr;
-    if (category == "decoration") {
-        sourceModel = m_decorationModel;
-    } else if (category == "player_icons") {
-        sourceModel = m_playerIconModel;
-    } else if (category == "tile") {
-        sourceModel = m_tileModel;
-    }
-    
-    if (!sourceModel) {
-        qWarning() << "Unknown category:" << category;
+    // Vérification des paramètres
+    if (category.isEmpty() || type.isEmpty()) {
+        qWarning() << "AssetManager::getTypeModel: Invalid parameters - category:" << category << "type:" << type;
         return nullptr;
     }
     
-    AssetModel *filteredModel = sourceModel->createFilteredModel(type);
-    filteredModel->setParent(this);
-    m_filteredModels[key] = filteredModel;
+    QString key = category + "_" + type;
+    
+    // Vérifier si le modèle filtré existe déjà
+    if (m_filteredModels.contains(key)) {
+        AssetModel* existingModel = m_filteredModels[key];
+        if (existingModel) {
+            return existingModel;
+        } else {
+            // Le modèle existe mais est null, le supprimer du cache
+            m_filteredModels.remove(key);
+        }
+    }
+    
+    // Vérifier que les modèles de base sont initialisés
+    if (!m_decorationModel || !m_tileModel) {
+        qWarning() << "AssetManager::getTypeModel: Base models not initialized";
+        return nullptr;
+    }
+    
+    AssetModel *filteredModel = nullptr;
+    
+    if (category == "decoration") {
+        filteredModel = m_decorationModel->createFilteredModel(type);
+        if (filteredModel) {
+            filteredModel->setParent(this);
+            m_filteredModels[key] = filteredModel;
+        }
+    }
+    else if (category == "tile") {
+        filteredModel = m_tileModel->createFilteredModel(type);
+        if (filteredModel) {
+            filteredModel->setParent(this);
+            m_filteredModels[key] = filteredModel;
+        }
+    }
+    else {
+        // Pour les autres catégories, créer un modèle vide
+        filteredModel = new AssetModel();
+        if (filteredModel) {
+            filteredModel->setParent(this);
+            m_filteredModels[key] = filteredModel;
+        }
+    }
+    
+    if (!filteredModel) {
+        qWarning() << "AssetManager::getTypeModel: Failed to create filtered model for" << category << type;
+    }
     
     return filteredModel;
+}
+
+QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
+{
+    if (isAssetValid( category, type, id ))
+    {
+        return buildAssetPath(category, type, id + ".png");
+    }
+    return "";  // todo get default asset path
+}
+
+bool AssetManager::areAssetsLoaded() const
+{
+    return m_decorationModel && m_tileModel && 
+           (m_decorationModel->rowCount() > 0 || m_tileModel->rowCount() > 0);
+}
+
+void AssetManager::reloadAssets()
+{
+    qDebug() << "AssetManager::reloadAssets: Forcing asset reload...";
+    loadAssets();
 }
 
 QString AssetManager::getDecorationPath(const QString &type, const QString &id) const
@@ -176,23 +240,24 @@ QString AssetManager::getDecorationPath(const QString &type, const QString &id) 
     return buildAssetPath("decoration", type, id + ".png");
 }
 
-QString AssetManager::getPlayerIconPath(const QString &id) const
-{
-    return buildAssetPath("player_icons", "", id + ".png");
-}
-
 QString AssetManager::getTilePath(const QString &type, const QString &id) const
 {
     return buildAssetPath("tile", type, id + ".png");
 }
 
+
 void AssetManager::loadAssets()
 {
-    qDebug() << "Loading assets from:" << m_assetsBasePath;
+    qDebug() << "AssetManager::loadAssets: Starting asset loading...";
     
+    // Vérifier que les modèles de base sont initialisés
+    if (!m_decorationModel || !m_tileModel) {
+        qWarning() << "AssetManager::loadAssets: Base models not initialized";
+        return;
+    }
+
     // Clear existing models
     m_decorationModel->clear();
-    m_playerIconModel->clear();
     m_tileModel->clear();
     
     // Clear filtered models cache
@@ -204,32 +269,25 @@ void AssetManager::loadAssets()
         qWarning() << "Assets directory does not exist:" << m_assetsBasePath;
         return;
     }
-    
-    // Load decorations
-    QString decorationPath = assetsDir.absoluteFilePath("decoration");
-    if (QDir(decorationPath).exists()) {
-        loadCategory(decorationPath, "decoration");
+
+    QStringList categories = assetsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    if (categories.isEmpty()) {
+        qWarning() << "AssetManager::loadAssets: No categories found in" << m_assetsBasePath;
     }
     
-    // Load player icons
-    QString playerIconsPath = assetsDir.absoluteFilePath("player_icons");
-    if (QDir(playerIconsPath).exists()) {
-        loadCategory(playerIconsPath, "player_icons");
-    }
+    setCategories(categories);
+    qDebug() << "AssetManager::loadAssets: Categories found:" << categories;
     
-    // Load tiles
-    QString tilePath = assetsDir.absoluteFilePath("tile");
-    if (QDir(tilePath).exists()) {
-        loadCategory(tilePath, "tile");
+    for (const QString &category : categories) {
+        QString categoryPath = assetsDir.absoluteFilePath(category); // basePath/category
+        loadCategory(categoryPath, category);
     }
-    
+
     emit decorationModelChanged();
-    emit playerIconModelChanged();
     emit tileModelChanged();
-    qDebug() << "Assets loaded successfully";
-    qDebug() << "Decorations:" << m_decorationModel->rowCount();
-    qDebug() << "Player icons:" << m_playerIconModel->rowCount();
-    qDebug() << "Tiles:" << m_tileModel->rowCount();
+    qDebug() << "AssetManager::loadAssets: Assets loaded successfully";
+    qDebug() << "AssetManager::loadAssets: Decorations count:" << m_decorationModel->rowCount();
+    qDebug() << "AssetManager::loadAssets: Tiles count:" << m_tileModel->rowCount();
 }
 
 void AssetManager::setAssetsBasePath(const QString &basePath)
@@ -241,21 +299,23 @@ void AssetManager::setAssetsBasePath(const QString &basePath)
     }
 }
 
+void AssetManager::setCategories(const QStringList &categories)
+{
+    if (m_categories != categories) {
+        m_categories = categories;
+        emit categoriesChanged();
+    }
+}
+
 void AssetManager::loadCategory(const QString &categoryPath, const QString &categoryName)
 {
     QDir categoryDir(categoryPath);
     
-    if (categoryName == "player_icons") {
-        // For player_icons, load directly from the category directory
-        loadTypeFromDirectory(categoryPath, "", categoryName);
-    } else {
-        // For other categories like decoration, load from subdirectories (types)
-        QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        
-        for (const QString &typeName : typeDirectories) {
-            QString typePath = categoryDir.absoluteFilePath(typeName);
-            loadTypeFromDirectory(typePath, typeName, categoryName);
-        }
+    QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    
+    for (const QString &typeName : typeDirectories) {
+        QString typePath = categoryDir.absoluteFilePath(typeName);
+        loadTypeFromDirectory(typePath, typeName, categoryName);
     }
 }
 
@@ -292,14 +352,25 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         
         QString fullPath = buildAssetPath(categoryName, typeName, filename);
         
-        // Add to appropriate model
+        // Add to appropriate model 
+        // todo: select model from variable, list with type and model
         AssetModel *targetModel = nullptr;
         if (categoryName == "decoration") {
             targetModel = m_decorationModel;
-        } else if (categoryName == "player_icons") {
-            targetModel = m_playerIconModel;
         } else if (categoryName == "tile") {
             targetModel = m_tileModel;
+        }
+        else
+        {
+            QString key = categoryName + "_" + typeName;
+            if (m_filteredModels.contains(key)) {
+                targetModel = m_filteredModels[key];
+            }
+            else
+            {
+                targetModel = new AssetModel();
+                m_filteredModels[key] = targetModel;
+            }
         }
         
         if (targetModel) {
@@ -307,6 +378,7 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         }
     }
 }
+
 
 QString AssetManager::buildAssetPath(const QString &category, const QString &type, const QString &filename) const
 {
@@ -331,7 +403,7 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
     
     // Get all PNG files in the directory
     QStringList filters;
-    filters << "*.png" << "*.jpg" << "*.jpeg";
+    filters << "*.png" << "*.jpg" << "*.jpeg";  // maybe not work with other than png
     QStringList imageFiles = dir.entryList(filters, QDir::Files);
     
     if (imageFiles.isEmpty()) {
@@ -439,45 +511,19 @@ bool AssetManager::generateAllMetadata()
     bool success = true;
     int generatedCount = 0;
     
-    // Generate for decoration subdirectories
-    QString decorationPath = assetsDir.absoluteFilePath("decoration");
-    QDir decorationDir(decorationPath);
-    if (decorationDir.exists()) {
-        QStringList typeDirectories = decorationDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        
-        for (const QString &typeName : typeDirectories) {
-            QString typePath = decorationDir.absoluteFilePath(typeName);
-            if (generateMetadataForDirectory(typePath)) {
-                generatedCount++;
-            } else {
-                success = false;
+    for (const QString &category : m_categories) {
+        QString categoryPath = assetsDir.absoluteFilePath(category);
+        QDir categoryDir(categoryPath);
+        if (categoryDir.exists()) {
+            QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+            for (const QString &typeName : typeDirectories) {
+                QString typePath = categoryDir.absoluteFilePath(typeName);
+                if (generateMetadataForDirectory(typePath)) {
+                    generatedCount++;
+                } else {
+                    success = false;
+                }
             }
-        }
-    }
-    
-
-    // Generate for tile directory
-    QString tilePath = assetsDir.absoluteFilePath("tile");
-    QDir tileDir(tilePath);
-    if (tileDir.exists()) {
-        QStringList typeDirectories = tileDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        for (const QString &typeName : typeDirectories) {
-            QString typePath = tileDir.absoluteFilePath(typeName);
-            if (generateMetadataForDirectory(typePath)) {
-                generatedCount++;
-            } else {
-                success = false;
-            }
-        }
-    }
-
-    // Generate for player_icons directory
-    QString playerIconsPath = assetsDir.absoluteFilePath("player_icons");
-    if (QDir(playerIconsPath).exists()) {
-        if (generateMetadataForDirectory(playerIconsPath)) {
-            generatedCount++;
-        } else {
-            success = false;
         }
     }
     
@@ -491,7 +537,7 @@ bool AssetManager::generateAllMetadata()
     return success;
 }
 
-QStringList AssetManager::scanAvailableAssets() const
+QStringList AssetManager::scanAvailableAssets()
 {
     QStringList result;
     QDir assetsDir(m_assetsBasePath);
@@ -500,55 +546,25 @@ QStringList AssetManager::scanAvailableAssets() const
         return result;
     }
     
-    // Scan decoration types
-    QString decorationPath = assetsDir.absoluteFilePath("decoration");
-    QDir decorationDir(decorationPath);
-    if (decorationDir.exists()) {
-        QStringList typeDirectories = decorationDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    loadAssets(); // load assets to get categories
+
+    for (const QString &category : m_categories) {
+        QString categoryPath = assetsDir.absoluteFilePath(category);
+        QDir categoryDir(categoryPath);
+        if (categoryDir.exists()) {
+            QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
         
-        for (const QString &typeName : typeDirectories) {
-            QString typePath = decorationDir.absoluteFilePath(typeName);
-            QDir typeDir(typePath);
-            
-            QStringList filters;
-            filters << "*.png" << "*.jpg" << "*.jpeg";
-            QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
-            
-            if (!imageFiles.isEmpty()) {
-                result << QString("decoration/%1 (%2 images)").arg(typeName).arg(imageFiles.size());
+            for (const QString &typeName : typeDirectories) {
+                QString typePath = categoryDir.absoluteFilePath(typeName);
+                QDir typeDir(typePath);
+                
+                QStringList filters;
+                filters << "*.png" << "*.jpg" << "*.jpeg";
+                QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
+                if (!imageFiles.isEmpty()) {
+                    result << QString("%1/%2 (%3 images)").arg(category).arg(typeName).arg(imageFiles.size());
+                }
             }
-        }
-    }
-    // Scan tiles
-    QString tilePath = assetsDir.absoluteFilePath("tile");
-    QDir tileDir(tilePath);
-    if (tileDir.exists()) {
-        QStringList typeDirectories = tileDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        for (const QString &typeName : typeDirectories) {
-            QString typePath = tileDir.absoluteFilePath(typeName);
-            QDir typeDir(typePath);
-            
-            QStringList filters;
-            filters << "*.png" << "*.jpg" << "*.jpeg";
-            QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
-            
-            if (!imageFiles.isEmpty()) {
-                result << QString("tile/%1 (%2 images)").arg(typeName).arg(imageFiles.size());
-            }
-        }
-    }
-    
-    
-    // Scan player icons
-    QString playerIconsPath = assetsDir.absoluteFilePath("player_icons");
-    QDir playerIconsDir(playerIconsPath);
-    if (playerIconsDir.exists()) {
-        QStringList filters;
-        filters << "*.png" << "*.jpg" << "*.jpeg";
-        QStringList imageFiles = playerIconsDir.entryList(filters, QDir::Files);
-        
-        if (!imageFiles.isEmpty()) {
-            result << QString("player_icons (%1 images)").arg(imageFiles.size());
         }
     }
 
@@ -571,30 +587,19 @@ QStringList AssetManager::getAvailableTypes(const QString &category) const
         return types;
     }
     
-    if (category == "player_icons" || category == "avatar") {
-        // For categories without subdirectories, return the category itself as a type
+    // For categories with subdirectories (like decoration), return the subdirectory names
+    QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    
+    for (const QString &typeName : typeDirectories) {
+        QString typePath = categoryDir.absoluteFilePath(typeName);
+        QDir typeDir(typePath);
+        
         QStringList filters;
         filters << "*.png" << "*.jpg" << "*.jpeg";
-        QStringList imageFiles = categoryDir.entryList(filters, QDir::Files);
+        QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
         
         if (!imageFiles.isEmpty()) {
-            types << category;
-        }
-    } else {
-        // For categories with subdirectories (like decoration), return the subdirectory names
-        QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        
-        for (const QString &typeName : typeDirectories) {
-            QString typePath = categoryDir.absoluteFilePath(typeName);
-            QDir typeDir(typePath);
-            
-            QStringList filters;
-            filters << "*.png" << "*.jpg" << "*.jpeg";
-            QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
-            
-            if (!imageFiles.isEmpty()) {
-                types << typeName;
-            }
+            types << typeName;
         }
     }
     
@@ -603,51 +608,30 @@ QStringList AssetManager::getAvailableTypes(const QString &category) const
 
 QStringList AssetManager::getAvailableCategories() const
 {
-    QStringList categories;
     QDir assetsDir(m_assetsBasePath);
     
     if (!assetsDir.exists()) {
-        return categories;
+        return m_categories;
     }
     
-    QStringList categoryDirectories = assetsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     
-    for (const QString &categoryName : categoryDirectories) {
-        QString categoryPath = assetsDir.absoluteFilePath(categoryName);
-        QDir categoryDir(categoryPath);
-        
-        // Check if the category has any image files or subdirectories with image files
-        bool hasAssets = false;
-        
-        if (categoryName == "player_icons" || categoryName == "avatar") {
-            // Check for direct image files
-            QStringList filters;
-            filters << "*.png" << "*.jpg" << "*.jpeg";
-            QStringList imageFiles = categoryDir.entryList(filters, QDir::Files);
-            hasAssets = !imageFiles.isEmpty();
-        } else {
-            // Check for subdirectories with image files
-            QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-            
-            for (const QString &typeName : typeDirectories) {
-                QString typePath = categoryDir.absoluteFilePath(typeName);
-                QDir typeDir(typePath);
-                
-                QStringList filters;
-                filters << "*.png" << "*.jpg" << "*.jpeg";
-                QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
-                
-                if (!imageFiles.isEmpty()) {
-                    hasAssets = true;
-                    break;
-                }
-            }
-        }
-        
-        if (hasAssets) {
-            categories << categoryName;
+    return m_categories;
+}
+
+bool AssetManager::isAssetValid(const QString &category, const QString &type, const QString &id)
+{
+    AssetModel* model = getTypeModel(category, type);
+    if (!model)
+    {
+        return false;
+    }
+    for (int i = 0; i < model->rowCount(); i++)
+    {
+        QModelIndex index = model->index(i, 0);
+        if (model->data(index, AssetModel::IdRole) == id)
+        {
+            return true;
         }
     }
-    
-    return categories;
+    return false;
 }

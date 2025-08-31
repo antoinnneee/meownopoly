@@ -11,6 +11,7 @@ ScrollView {
     property string type: ""
     property string searchText: ""
     property var assetModel: null
+    property bool isLoading: false
     
     // Selection state
     property string currentSelectedCategory: ""
@@ -24,11 +25,52 @@ ScrollView {
     onCategoryChanged: updateModel()
     onTypeChanged: updateModel()
     
+    // Timer for retrying model loading
+    Timer {
+        id: retryTimer
+        interval: 1000
+        repeat: false
+        onTriggered: {
+            if (category && type) {
+                isLoading = true
+                var retryModel = AssetManager.getTypeModel(category, type)
+                if (retryModel) {
+                    assetModel = retryModel
+                    console.log("Model loaded on retry:", retryModel.rowCount(), "items")
+                } else {
+                    console.warn("Model still null after retry for", category, type)
+                }
+                isLoading = false
+            }
+        }
+    }
+    
     function updateModel() {
         if (category && type) {
-            assetModel = AssetManager.getTypeModel(category, type)
+            console.log("loading model", category, type)
+            isLoading = true
+            
+            var model = AssetManager.getTypeModel(category, type)
+            if (model) {
+                assetModel = model
+                console.log("Model loaded successfully:", model.rowCount(), "items")
+            } else {
+                console.warn("Failed to load model for", category, type)
+                assetModel = null
+                
+                // Optionally try to reload assets if they're not loaded
+                if (!AssetManager.areAssetsLoaded()) {
+                    console.log("Assets not loaded, attempting reload...")
+                    AssetManager.reloadAssets()
+                    // Retry after a short delay
+                    retryTimer.start()
+                }
+            }
+            
+            isLoading = false
         } else {
             assetModel = null
+            isLoading = false
         }
     }
     
@@ -41,7 +83,7 @@ ScrollView {
     GridLayout {
         id: gridLayout
         anchors.fill: parent
-        columns: Math.max(1, Math.floor(root.width / 90)) // Responsive columns for 80px items + spacing
+        columns: Math.max(1, Math.floor(root.width / 90))
         columnSpacing: 10
         rowSpacing: 10
         
@@ -99,7 +141,7 @@ ScrollView {
         width: 200
         height: 100
         color: "transparent"
-        visible: !root.assetModel && root.category && root.type
+        visible: (root.isLoading || (!root.assetModel && root.category && root.type))
         
         Column {
             anchors.centerIn: parent

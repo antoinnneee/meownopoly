@@ -353,7 +353,8 @@ void LauncherManager::onDownloadFinished()
             emit logMessage("✅ Assets extraits avec succès vers: " + extractPath);
             setCurrentVersion(m_latestVersion);
             saveVersionInfo(m_latestVersion);
-            setDownloadStatus("Terminé");
+            setDownloadStatus("Download success");
+            emit downloadSucess();
         } else {
             emit logMessage("❌ Échec de l'extraction des assets");
             setDownloadStatus("Erreur d'extraction");

@@ -21,6 +21,7 @@ Rectangle {
     // Dimensions à propager vers les panels enfants
     readonly property int collapsedHeight: 0
     readonly property int expandedHeight: 400
+    height: isExpanded ? expandedHeight : collapsedHeight // Hauteur explicite
     
     // Alias pour propager les propriétés de AssetSelectionPanel
     property alias assetPanel: assetPanel
@@ -47,9 +48,21 @@ Rectangle {
 
     required property var logic
 
+
+    // Smooth height animation
+    Behavior on height {
+        NumberAnimation {
+            duration: 250
+        }
+    }
+
     // Menu sélection Asset Case Editor
     MenuSelector {
         id: topToolbar
+        isExpanded: root.isExpanded
+        onIsExpandedChanged: {
+            root.isExpanded = isExpanded
+        }
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -82,9 +95,6 @@ Rectangle {
     // Content area with stacked views
     color: "transparent"
 
-    // Définition explicite des dimensions
-    width: parent.width
-    height: parent.height
 
     // Stack layout to switch between panels
     StackLayout {
@@ -93,12 +103,17 @@ Rectangle {
         anchors.topMargin: 0
         currentIndex: currentPanelIndex
         visible: true // Assurer que le StackLayout est visible
-        height: root.isExpanded ? root.expandedHeight : root.collapsedHeight
+
 
         // Asset Selection Panel
         AssetSelectionPanel {
             id: assetPanel
             logic: root.logic
+
+            height: root.expandedHeight
+
+            collapsedHeight: root.collapsedHeight
+            expandedHeight: root.expandedHeight
             width: parent.width
             isExpanded: root.isExpanded
             // Connexion de tous les signaux pour la propagation vers l'Editor
@@ -112,7 +127,10 @@ Rectangle {
 
             // Surveiller les changements de propriétés pour propager les signaux
             onCurrentViewChanged: {
+                console.log("AssetSelectionPanel currentView changed to:", currentView)
                 root.viewChanged(currentView);
+                // Propager le changement vers le parent
+                //root.currentView = currentView;
             }
 
             onActiveFilterChanged: {
@@ -133,6 +151,11 @@ Rectangle {
         CaseSelectionPanel {
             id: casePanel
             logic: root.logic
+
+            height: root.expandedHeight
+
+            collapsedHeight: root.collapsedHeight
+            expandedHeight: root.expandedHeight
             width: parent.width
             isExpanded: root.isExpanded
 
@@ -152,7 +175,7 @@ Rectangle {
     function clearAssetSelection() {
         if (currentPanelIndex === 0) {
             // Si nous sommes sur le panel d'assets
-            assetPanel.clearAssetSelection();
+            assetPanel.assetManagerSettings.clearAssetSelection()
         }
     }
 

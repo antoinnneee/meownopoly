@@ -230,7 +230,7 @@ Rectangle {
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
             if (root.isAssetSelected) {
-                clearAssetSelection()
+                assetPanel.assetManagerSettings.clearAssetSelection()
                 event.accepted = true
             }
         }
@@ -275,6 +275,7 @@ Rectangle {
         totalTilesCount: snapableTilesList.length
     }
 
+    /*
     // Panneau de contrôle de la grille (composant séparé)
     GridControlPanel {
         id: gridControls
@@ -291,8 +292,7 @@ Rectangle {
             logic.cancelSelection()
         }
     }
-
-
+    */
     // Panneau de configuration des cases
     CaseConfigurationPanel {
         id: caseConfigPanel
@@ -307,7 +307,6 @@ Rectangle {
             logic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
         }
     }
-
     // Panneau de configuration des connexions
     ConnectionsConfigurationPanel {
         id: connectionsPanel
@@ -364,7 +363,6 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: isExpanded ? 400 : 0 // Hauteur explicite
         
         // Connexion à la logique
         logic: logic

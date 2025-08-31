@@ -7,7 +7,7 @@ ScrollView {
     id: root
     
     // Properties
-    property string activeFilter: "All"
+    required property string activeFilter
     property string searchText: ""
     
     // Signals
@@ -46,17 +46,7 @@ ScrollView {
         Component.onCompleted: {
             generateCategories()
         }
-        
-        // Refresh categories when assets are reloaded
-        Connections {
-            target: AssetManager
-            function onDecorationModelChanged() {
-                generateCategories()
-            }
-            function onPlayerIconModelChanged() {
-                generateCategories()
-            }
-        }
+
         
         function generateCategories() {
             var newCategories = []
