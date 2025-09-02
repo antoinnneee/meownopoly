@@ -97,7 +97,7 @@ public:
     void setCategories(const QStringList &categories);
 
     // QML accessible methods
-    Q_INVOKABLE AssetModel* getTypeModel(const QString &category, const QString &type);
+    Q_INVOKABLE AssetModel* getAssetModel(const QString &category, const QString &type);
 
     Q_INVOKABLE void loadAssets();
     Q_INVOKABLE void setAssetsBasePath(const QString &basePath);

@@ -22,7 +22,7 @@ SnapableElement {
     property DecorationParameter decorationSettings : DecorationParameter {
         decorationCategory: "decoration"
         decorationType: "grass"
-        decorationId: "1"//Math.floor(Math.random() * AssetManager.getTypeModel("decoration", decorationSettings.decorationType).rowCount())
+        decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
     }
     property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
     

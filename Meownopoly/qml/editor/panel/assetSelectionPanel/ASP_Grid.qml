@@ -33,7 +33,7 @@ ScrollView {
     //     onTriggered: {
     //         if (category && type) {
     //             isLoading = true
-    //             var retryModel = AssetManager.getTypeModel(category, type)
+    //             var retryModel = AssetManager.getAssetModel(category, type)
     //             if (retryModel) {
     //                 assetModel = retryModel
     //                 console.log("Model loaded on retry:", retryModel.rowCount(), "items")
@@ -50,7 +50,7 @@ ScrollView {
             console.log("loading model", category, type)
             isLoading = true
             
-            var model = AssetManager.getTypeModel(category, type)
+            var model = AssetManager.getAssetModel(category, type)
             if (model) {
                 assetModel = model
                 console.log("Model loaded successfully:", model.rowCount(), "items")

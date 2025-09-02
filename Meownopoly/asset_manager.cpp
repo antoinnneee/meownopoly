@@ -154,7 +154,7 @@ QObject* AssetManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
     return AssetManager::instance();
 }
 
-AssetModel* AssetManager::getTypeModel(const QString &category, const QString &type)
+AssetModel* AssetManager::getAssetModel(const QString &category, const QString &type)
 {
     // Vérification des paramètres
     if (category.isEmpty() || type.isEmpty()) {
@@ -597,7 +597,7 @@ bool AssetManager::isAssetValid(const QString &category, const QString &type, co
         return false;
     }
     
-    AssetModel* model = getTypeModel(category, type);
+    AssetModel* model = getAssetModel(category, type);
     if (!model) {
         ASSET_ERROR("No model found for" << category << type);
         return false;
