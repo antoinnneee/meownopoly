@@ -88,7 +88,7 @@ void AssetModel::addAsset(const QString &path, const QString &type, const QStrin
 
 void AssetModel::clear()
 {
-    qDebug()<<"clear model";
+    ASSET_DEBUG("clear model");
     beginResetModel();
     m_assets.clear();
     endResetModel();
@@ -97,13 +97,13 @@ void AssetModel::clear()
 AssetModel* AssetModel::createFilteredModel(const QString &type) const
 {
     if (type.isEmpty()) {
-        qWarning() << "AssetModel::createFilteredModel: Type parameter is empty";
+        ASSET_ERROR("Type parameter is empty");
         return nullptr;
     }
     
     AssetModel *filteredModel = new AssetModel();
     if (!filteredModel) {
-        qWarning() << "AssetModel::createFilteredModel: Failed to create filtered model";
+        ASSET_ERROR("Failed to create filtered model");
         return nullptr;
     }
     
@@ -117,7 +117,7 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
         }
     }
     
-    qDebug() << "AssetModel::createFilteredModel: Created filtered model for type" << type << "with" << matchCount << "assets";
+    ASSET_INFO("Created filtered model for type" << type << "with" << matchCount << "assets");
     
     return filteredModel;
 }
@@ -158,23 +158,23 @@ AssetModel* AssetManager::getTypeModel(const QString &category, const QString &t
 {
     // Vérification des paramètres
     if (category.isEmpty() || type.isEmpty()) {
-        qWarning() << "AssetManager::getTypeModel: Invalid parameters - category:" << category << "type:" << type;
+        ASSET_ERROR("Invalid parameters - category:" << category << "type:" << type);
         return nullptr;
     }
     
     QString key = category + "_" + type;
-    qDebug() << "AssetManager::getTypeModel: Looking for key:" << key;
+    ASSET_DEBUG("Looking for key:" << key);
     
     // Vérifier si le modèle filtré existe déjà
     for (int i = m_filteredModels.size() - 1; i >= 0; --i) { // Parcourir à l'envers pour éviter les problèmes d'index
         if (m_filteredModels[i].first == key) {
             AssetModel* existingModel = m_filteredModels[i].second;
-            if (existingModel && existingModel->parent()) { // Vérifier que le pointeur est valide
-                qDebug() << "AssetManager::getTypeModel: Found existing model with" << existingModel->rowCount() << "assets";
-                return existingModel;
-            } else {
-                // Le modèle existe mais est null ou invalide, le supprimer du cache
-                qWarning() << "AssetManager::getTypeModel: Removing invalid model from cache for key:" << key;
+                    if (existingModel && existingModel->parent()) { // Vérifier que le pointeur est valide
+            ASSET_INFO("Found existing model with" << existingModel->rowCount() << "assets");
+            return existingModel;
+        } else {
+            // Le modèle existe mais est null ou invalide, le supprimer du cache
+            ASSET_ERROR("Removing invalid model from cache for key:" << key);
                 if (existingModel) {
                     existingModel->deleteLater(); // Suppression sécurisée
                 }
@@ -189,36 +189,36 @@ AssetModel* AssetManager::getTypeModel(const QString &category, const QString &t
     filteredModel = new AssetModel(this); // Avec parent directement
     if (filteredModel) {
         m_filteredModels.append(QPair<QString, AssetModel*>(key, filteredModel));
-        qDebug() << "AssetManager::getTypeModel: Created empty model for category:" << category;
+        ASSET_INFO("Created empty model for category:" << category);
     }
     return filteredModel;
 }
 
 QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
 {
-    qDebug() << "AssetManager::getAssetPath: Requesting" << category << type << id;
+    ASSET_DEBUG("Requesting" << category << type << id);
     
     if (isAssetValid(category, type, id)) {
         QString path = buildAssetPath(category, type, id + ".png");
-        qDebug() << "AssetManager::getAssetPath: Returning path:" << path;
+        ASSET_INFO("Returning path:" << path);
         return path;
     }
     
-    qWarning() << "AssetManager::getAssetPath: Asset not valid, returning empty path for" << category << type << id;
+    ASSET_ERROR("Asset not valid, returning empty path for" << category << type << id);
     return "";  // todo get default asset path
 }
 
 
 void AssetManager::reloadAssets()
 {
-    qDebug() << "AssetManager::reloadAssets: Forcing asset reload...";
+    ASSET_DEBUG("Forcing asset reload...");
     loadAssets();
 }
 
 
 void AssetManager::loadAssets()
 {
-    qDebug() << "AssetManager::loadAssets: Starting asset loading...";
+    ASSET_INFO("Starting asset loading...");
 
     
     // Clear filtered models cache
@@ -232,24 +232,24 @@ void AssetManager::loadAssets()
     
     QDir assetsDir(m_assetsBasePath);
     if (!assetsDir.exists()) {
-        qWarning() << "Assets directory does not exist:" << m_assetsBasePath;
+        ASSET_ERROR("Assets directory does not exist:" << m_assetsBasePath);
         return;
     }
 
     QStringList categories = assetsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     if (categories.isEmpty()) {
-        qWarning() << "AssetManager::loadAssets: No categories found in" << m_assetsBasePath;
+        ASSET_ERROR("No categories found in" << m_assetsBasePath);
     }
     
     setCategories(categories);
-    qDebug() << "AssetManager::loadAssets: Categories found:" << categories;
+    ASSET_INFO("Categories found:" << categories);
     
     for (const QString &category : categories) {
         QString categoryPath = assetsDir.absoluteFilePath(category); // basePath/category
         loadCategory(categoryPath, category);
     }
 
-    qDebug() << "AssetManager::loadAssets: Assets loaded successfully";
+    ASSET_INFO("Assets loaded successfully");
 }
 
 void AssetManager::setAssetsBasePath(const QString &basePath)
@@ -288,14 +288,14 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
     
     QFile metadataFile(metadataPath);
     if (!metadataFile.open(QIODevice::ReadOnly)) {
-        qWarning() << "Cannot open metadata file:" << metadataPath;
+        ASSET_ERROR("Cannot open metadata file:" << metadataPath);
         return;
     }
     
     QJsonParseError parseError;
     QJsonDocument doc = QJsonDocument::fromJson(metadataFile.readAll(), &parseError);
     if (parseError.error != QJsonParseError::NoError) {
-        qWarning() << "JSON parse error in" << metadataPath << ":" << parseError.errorString();
+        ASSET_ERROR("JSON parse error in" << metadataPath << ":" << parseError.errorString());
         return;
     }
     
@@ -340,7 +340,7 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         if (!targetModel) {
             targetModel = new AssetModel(this); // Avec parent pour gestion mémoire
             m_filteredModels.append(QPair<QString, AssetModel*>(key, targetModel));
-            qDebug() << "AssetManager::loadTypeFromDirectory: Created new model for" << key;
+            ASSET_INFO("Created new model for" << key);
         }
 
         
@@ -368,7 +368,7 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
 {
     QDir dir(directoryPath);
     if (!dir.exists()) {
-        qWarning() << "Directory does not exist:" << directoryPath;
+        ASSET_ERROR("Directory does not exist:" << directoryPath);
         return false;
     }
     
@@ -378,7 +378,7 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
     QStringList imageFiles = dir.entryList(filters, QDir::Files);
     
     if (imageFiles.isEmpty()) {
-        qWarning() << "No image files found in:" << directoryPath;
+        ASSET_ERROR("No image files found in:" << directoryPath);
         return false;
     }
     
@@ -413,7 +413,7 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
         QSize imageSize = reader.size();
         
         if (!imageSize.isValid()) {
-            qWarning() << "Cannot read image dimensions for:" << fullPath;
+            ASSET_ERROR("Cannot read image dimensions for:" << fullPath);
             continue;
         }
         
@@ -457,7 +457,7 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
     QFile metadataFile(metadataPath);
     
     if (!metadataFile.open(QIODevice::WriteOnly)) {
-        qWarning() << "Cannot create metadata file:" << metadataPath;
+        ASSET_ERROR("Cannot create metadata file:" << metadataPath);
         return false;
     }
     
@@ -465,8 +465,8 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
     metadataFile.write(doc.toJson());
     metadataFile.close();
     
-    qDebug() << "Generated metadata for" << imageFiles.size() << "assets in:" << directoryPath;
-    qDebug() << "Metadata saved to:" << metadataPath;
+    ASSET_INFO("Generated metadata for" << imageFiles.size() << "assets in:" << directoryPath);
+    ASSET_INFO("Metadata saved to:" << metadataPath);
     
     return true;
 }
@@ -475,7 +475,7 @@ bool AssetManager::generateAllMetadata()
 {
     QDir assetsDir(m_assetsBasePath);
     if (!assetsDir.exists()) {
-        qWarning() << "Assets base directory does not exist:" << m_assetsBasePath;
+        ASSET_ERROR("Assets base directory does not exist:" << m_assetsBasePath);
         return false;
     }
     
@@ -498,7 +498,7 @@ bool AssetManager::generateAllMetadata()
         }
     }
     
-    qDebug() << "Generated metadata for" << generatedCount << "directories";
+    ASSET_INFO("Generated metadata for" << generatedCount << "directories");
     
     // Reload assets after generation
     if (success && generatedCount > 0) {
@@ -593,51 +593,51 @@ bool AssetManager::isAssetValid(const QString &category, const QString &type, co
 {
     // Vérifications de base
     if (category.isEmpty() || type.isEmpty() || id.isEmpty()) {
-        qWarning() << "AssetManager::isAssetValid: Invalid parameters - category:" << category << "type:" << type << "id:" << id;
+        ASSET_ERROR("Invalid parameters - category:" << category << "type:" << type << "id:" << id);
         return false;
     }
     
     AssetModel* model = getTypeModel(category, type);
     if (!model) {
-        qWarning() << "AssetManager::isAssetValid: No model found for" << category << type;
+        ASSET_ERROR("No model found for" << category << type);
         return false;
     }
     
     // Vérifier que le modèle est toujours valide
     if (!model->parent()) {
-        qWarning() << "AssetManager::isAssetValid: Model has no parent, potentially invalid";
+        ASSET_ERROR("Model has no parent, potentially invalid");
         return false;
     }
     
     int rowCount = model->rowCount();
-    qDebug() << "AssetManager::isAssetValid: Searching for id" << id << "in model with" << rowCount << "assets";
+    ASSET_DEBUG("Searching for id" << id << "in model with" << rowCount << "assets");
     
     for (int i = 0; i < rowCount; i++) {
         QModelIndex index = model->index(i, 0);
         if (!index.isValid()) {
-            qWarning() << "AssetManager::isAssetValid: Invalid index at row" << i;
+            ASSET_ERROR("Invalid index at row" << i);
             continue;
         }
         
         QVariant idData = model->data(index, AssetModel::IdRole);
         if (idData.toString() == id) {
-            qDebug() << "AssetManager::isAssetValid: Found asset" << id << "at row" << i;
+            ASSET_INFO("Found asset" << id << "at row" << i);
             return true;
         }
     }
     
-    qDebug() << "AssetManager::isAssetValid: Asset" << id << "not found in" << category << type;
+    ASSET_DEBUG("Asset" << id << "not found in" << category << type);
     return false;
 }
 
 void AssetManager::cleanupInvalidModels()
 {
-    qDebug() << "AssetManager::cleanupInvalidModels: Cleaning up invalid models...";
+    ASSET_DEBUG("Cleaning up invalid models...");
     
     for (int i = m_filteredModels.size() - 1; i >= 0; --i) {
         AssetModel* model = m_filteredModels[i].second;
         if (!model || !model->parent()) {
-            qWarning() << "AssetManager::cleanupInvalidModels: Removing invalid model for key:" << m_filteredModels[i].first;
+            ASSET_ERROR("Removing invalid model for key:" << m_filteredModels[i].first);
             if (model) {
                 model->deleteLater();
             }
@@ -645,5 +645,5 @@ void AssetManager::cleanupInvalidModels()
         }
     }
     
-    qDebug() << "AssetManager::cleanupInvalidModels: Cleanup complete. Remaining models:" << m_filteredModels.size();
+    ASSET_INFO("Cleanup complete. Remaining models:" << m_filteredModels.size());
 }

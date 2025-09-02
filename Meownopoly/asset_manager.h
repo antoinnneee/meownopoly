@@ -13,6 +13,19 @@
 #include <QImageReader>
 #include <QJsonDocument>
 
+// Debug defines
+#define ENABLE_ASSET_DEBUG 1
+
+#if ENABLE_ASSET_DEBUG
+    #define ASSET_DEBUG(msg) qDebug() << "[ASSET_DEBUG]" << msg
+    #define ASSET_INFO(msg) qDebug() << "\033[34m[ASSET_INFO]\033[0m" << msg << Q_FUNC_INFO
+    #define ASSET_ERROR(msg) qWarning() << "\033[31m[ASSET_ERROR]\033[0m" << msg << Q_FUNC_INFO
+#else
+    #define ASSET_DEBUG(msg)
+    #define ASSET_INFO(msg)
+    #define ASSET_ERROR(msg)
+#endif
+
 #define DEFAULT_ASSETS_LOCATION "asset_extracted/"
 
 class AssetModel : public QAbstractListModel
