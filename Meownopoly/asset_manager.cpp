@@ -100,13 +100,13 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
         ASSET_ERROR("Type parameter is empty");
         return nullptr;
     }
-    
+
     AssetModel *filteredModel = new AssetModel();
     if (!filteredModel) {
         ASSET_ERROR("Failed to create filtered model");
         return nullptr;
     }
-    
+
     int matchCount = 0;
     for (const Asset &asset : m_assets) {
         if (asset.type == type) {
@@ -116,9 +116,9 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
             matchCount++;
         }
     }
-    
+
     ASSET_INFO("Created filtered model for type" << type << "with" << matchCount << "assets");
-    
+
     return filteredModel;
 }
 
@@ -161,14 +161,14 @@ AssetModel* AssetManager::getAssetModel(const QString &category, const QString &
         ASSET_ERROR("Invalid parameters - category:" << category << "type:" << type);
         return nullptr;
     }
-    
+
     QString key = category + "_" + type;
     ASSET_DEBUG("Looking for key:" << key);
-    
-    // Vérifier si le modèle filtré existe déjà
-    for (int i = m_filteredModels.size() - 1; i >= 0; --i) { // Parcourir à l'envers pour éviter les problèmes d'index
-        if (m_filteredModels[i].first == key) {
-            AssetModel* existingModel = m_filteredModels[i].second;
+
+    // Vérifier si le modèle filtré existe déj�
+    for (int i = m_models.size() - 1; i >= 0; --i) { // Parcourir à l'envers pour éviter les problèmes d'index
+        if (m_models[i].first == key) {
+            AssetModel* existingModel = m_models[i].second;
                     if (existingModel && existingModel->parent()) { // Vérifier que le pointeur est valide
             ASSET_INFO("Found existing model with" << existingModel->rowCount() << "assets");
             return existingModel;
@@ -178,17 +178,17 @@ AssetModel* AssetManager::getAssetModel(const QString &category, const QString &
                 if (existingModel) {
                     existingModel->deleteLater(); // Suppression sécurisée
                 }
-                m_filteredModels.removeAt(i);
+                m_models.removeAt(i);
                 break;
             }
         }
     }
-    
+
     AssetModel *filteredModel = nullptr;
 
     filteredModel = new AssetModel(this); // Avec parent directement
     if (filteredModel) {
-        m_filteredModels.append(QPair<QString, AssetModel*>(key, filteredModel));
+        m_models.append(QPair<QString, AssetModel*>(key, filteredModel));
         ASSET_INFO("Created empty model for category:" << category);
     }
     return filteredModel;
@@ -197,13 +197,13 @@ AssetModel* AssetManager::getAssetModel(const QString &category, const QString &
 QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
 {
     ASSET_DEBUG("Requesting" << category << type << id);
-    
+
     if (isAssetValid(category, type, id)) {
         QString path = buildAssetPath(category, type, id + ".png");
         ASSET_INFO("Returning path:" << path);
         return path;
     }
-    
+
     ASSET_ERROR("Asset not valid, returning empty path for" << category << type << id);
     return "";  // todo get default asset path
 }
@@ -220,16 +220,16 @@ void AssetManager::loadAssets()
 {
     ASSET_INFO("Starting asset loading...");
 
-    
+
     // Clear filtered models cache
     cleanupInvalidModels(); // Nettoyer d'abord les modèles invalides
-    for (const QPair<QString, AssetModel*> &pair : m_filteredModels) {
+    for (const QPair<QString, AssetModel*> &pair : m_models) {
         if (pair.second) {
             pair.second->deleteLater(); // Suppression sécurisée
         }
     }
-    m_filteredModels.clear();
-    
+    m_models.clear();
+
     QDir assetsDir(m_assetsBasePath);
     if (!assetsDir.exists()) {
         ASSET_ERROR("Assets directory does not exist:" << m_assetsBasePath);
@@ -240,10 +240,10 @@ void AssetManager::loadAssets()
     if (categories.isEmpty()) {
         ASSET_ERROR("No categories found in" << m_assetsBasePath);
     }
-    
+
     setCategories(categories);
     ASSET_INFO("Categories found:" << categories);
-    
+
     for (const QString &category : categories) {
         QString categoryPath = assetsDir.absoluteFilePath(category); // basePath/category
         loadCategory(categoryPath, category);
@@ -272,9 +272,9 @@ void AssetManager::setCategories(const QStringList &categories)
 void AssetManager::loadCategory(const QString &categoryPath, const QString &categoryName)
 {
     QDir categoryDir(categoryPath);
-    
+
     QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    
+
     for (const QString &typeName : typeDirectories) {
         QString typePath = categoryDir.absoluteFilePath(typeName);
         loadTypeFromDirectory(typePath, typeName, categoryName);
@@ -285,36 +285,36 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
 {
     QDir typeDir(typePath);
     QString metadataPath = typeDir.absoluteFilePath("metadata.json");
-    
+
     QFile metadataFile(metadataPath);
     if (!metadataFile.open(QIODevice::ReadOnly)) {
         ASSET_ERROR("Cannot open metadata file:" << metadataPath);
         return;
     }
-    
+
     QJsonParseError parseError;
     QJsonDocument doc = QJsonDocument::fromJson(metadataFile.readAll(), &parseError);
     if (parseError.error != QJsonParseError::NoError) {
         ASSET_ERROR("JSON parse error in" << metadataPath << ":" << parseError.errorString());
         return;
     }
-    
+
     QJsonObject rootObject = doc.object();
     QJsonArray assetsArray = rootObject["assets"].toArray();
-    
+
     for (const QJsonValue &value : assetsArray) {
         QJsonObject assetObj = value.toObject();
-        
+
         QString id = assetObj["id"].toString();
         QString filename = assetObj["filename"].toString();
         int ratioWidth = assetObj["ratioWidth"].toInt();
         int ratioHeight = assetObj["ratioHeight"].toInt();
         int width = assetObj["width"].toInt();
         int height = assetObj["height"].toInt();
-        
+
         QString fullPath = buildAssetPath(categoryName, typeName, filename);
-        
-        // Add to appropriate model 
+
+        // Add to appropriate model
         // todo: select model from variable, list with type and model
         AssetModel *targetModel = nullptr;
 
@@ -322,7 +322,7 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         targetModel = nullptr;
 
         // Chercher le modèle existant
-        for (const QPair<QString, AssetModel*> &pair : m_filteredModels) {
+        for (const QPair<QString, AssetModel*> &pair : m_models) {
             if (pair.first == key) {
                 targetModel = pair.second;
                 // Vérifier que le modèle est toujours valide
@@ -339,11 +339,11 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         // Créer un nouveau modèle si pas trouvé ou invalide
         if (!targetModel) {
             targetModel = new AssetModel(this); // Avec parent pour gestion mémoire
-            m_filteredModels.append(QPair<QString, AssetModel*>(key, targetModel));
+            m_models.append(QPair<QString, AssetModel*>(key, targetModel));
             ASSET_INFO("Created new model for" << key);
         }
 
-        
+
         if (targetModel) {
             targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename);
         }
@@ -354,7 +354,7 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
 QString AssetManager::buildAssetPath(const QString &category, const QString &type, const QString &filename) const
 {
     QDir assetsDir(m_assetsBasePath);
-    
+
     if (type.isEmpty()) {
         // For categories without types (like player_icons)
         return "file:///" + assetsDir.absoluteFilePath(category + "/" + filename);
@@ -371,56 +371,56 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
         ASSET_ERROR("Directory does not exist:" << directoryPath);
         return false;
     }
-    
+
     // Get all PNG files in the directory
     QStringList filters;
     filters << "*.png" << "*.jpg" << "*.jpeg";  // maybe not work with other than png
     QStringList imageFiles = dir.entryList(filters, QDir::Files);
-    
+
     if (imageFiles.isEmpty()) {
         ASSET_ERROR("No image files found in:" << directoryPath);
         return false;
     }
-    
+
     // Sort files naturally (1.png, 2.png, 10.png, etc.)
     std::sort(imageFiles.begin(), imageFiles.end(), [](const QString &a, const QString &b) {
         QFileInfo fileInfoA(a);
         QFileInfo fileInfoB(b);
-        
+
         // Extract numbers from filenames for natural sorting
         QString baseA = fileInfoA.baseName();
         QString baseB = fileInfoB.baseName();
-        
+
         bool okA, okB;
         int numA = baseA.toInt(&okA);
         int numB = baseB.toInt(&okB);
-        
+
         if (okA && okB) {
             return numA < numB;
         }
-        
+
         return a < b;
     });
-    
+
     QJsonArray assetsArray;
-    
+
     for (int i = 0; i < imageFiles.size(); ++i) {
         const QString &filename = imageFiles[i];
         QString fullPath = dir.absoluteFilePath(filename);
-        
+
         // Read image dimensions
         QImageReader reader(fullPath);
         QSize imageSize = reader.size();
-        
+
         if (!imageSize.isValid()) {
             ASSET_ERROR("Cannot read image dimensions for:" << fullPath);
             continue;
         }
-        
+
         // Generate ID from filename (remove extension)
         QFileInfo fileInfo(filename);
         QString id = fileInfo.baseName();
-        
+
         // Calculate ratio as integers
         int w = imageSize.width();
         int h = imageSize.height();
@@ -435,7 +435,7 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
         int gcd = a;
         int ratioWidth = w / gcd;
         int ratioHeight = h / gcd;
-        
+
         // Create asset object
         QJsonObject assetObj;
         assetObj["id"] = id;
@@ -444,30 +444,30 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
         assetObj["ratioHeight"] = ratioHeight;
         assetObj["width"] = imageSize.width();
         assetObj["height"] = imageSize.height();
-        
+
         assetsArray.append(assetObj);
     }
-    
+
     // Create metadata object
     QJsonObject metadataObj;
     metadataObj["assets"] = assetsArray;
-    
+
     // Write to metadata.json
     QString metadataPath = dir.absoluteFilePath("metadata.json");
     QFile metadataFile(metadataPath);
-    
+
     if (!metadataFile.open(QIODevice::WriteOnly)) {
         ASSET_ERROR("Cannot create metadata file:" << metadataPath);
         return false;
     }
-    
+
     QJsonDocument doc(metadataObj);
     metadataFile.write(doc.toJson());
     metadataFile.close();
-    
+
     ASSET_INFO("Generated metadata for" << imageFiles.size() << "assets in:" << directoryPath);
     ASSET_INFO("Metadata saved to:" << metadataPath);
-    
+
     return true;
 }
 
@@ -478,10 +478,10 @@ bool AssetManager::generateAllMetadata()
         ASSET_ERROR("Assets base directory does not exist:" << m_assetsBasePath);
         return false;
     }
-    
+
     bool success = true;
     int generatedCount = 0;
-    
+
     for (const QString &category : m_categories) {
         QString categoryPath = assetsDir.absoluteFilePath(category);
         QDir categoryDir(categoryPath);
@@ -497,14 +497,14 @@ bool AssetManager::generateAllMetadata()
             }
         }
     }
-    
+
     ASSET_INFO("Generated metadata for" << generatedCount << "directories");
-    
+
     // Reload assets after generation
     if (success && generatedCount > 0) {
         loadAssets();
     }
-    
+
     return success;
 }
 
@@ -512,11 +512,11 @@ QStringList AssetManager::scanAvailableAssets()
 {
     QStringList result;
     QDir assetsDir(m_assetsBasePath);
-    
+
     if (!assetsDir.exists()) {
         return result;
     }
-    
+
     loadAssets(); // load assets to get categories
 
     for (const QString &category : m_categories) {
@@ -524,11 +524,11 @@ QStringList AssetManager::scanAvailableAssets()
         QDir categoryDir(categoryPath);
         if (categoryDir.exists()) {
             QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        
+
             for (const QString &typeName : typeDirectories) {
                 QString typePath = categoryDir.absoluteFilePath(typeName);
                 QDir typeDir(typePath);
-                
+
                 QStringList filters;
                 filters << "*.png" << "*.jpg" << "*.jpeg";
                 QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
@@ -546,46 +546,46 @@ QStringList AssetManager::getAvailableTypes(const QString &category) const
 {
     QStringList types;
     QDir assetsDir(m_assetsBasePath);
-    
+
     if (!assetsDir.exists()) {
         return types;
     }
-    
+
     QString categoryPath = assetsDir.absoluteFilePath(category);
     QDir categoryDir(categoryPath);
-    
+
     if (!categoryDir.exists()) {
         return types;
     }
-    
+
     // For categories with subdirectories (like decoration), return the subdirectory names
     QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    
+
     for (const QString &typeName : typeDirectories) {
         QString typePath = categoryDir.absoluteFilePath(typeName);
         QDir typeDir(typePath);
-        
+
         QStringList filters;
         filters << "*.png" << "*.jpg" << "*.jpeg";
         QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
-        
+
         if (!imageFiles.isEmpty()) {
             types << typeName;
         }
     }
-    
+
     return types;
 }
 
 QStringList AssetManager::getAvailableCategories() const
 {
     QDir assetsDir(m_assetsBasePath);
-    
+
     if (!assetsDir.exists()) {
         return m_categories;
     }
 
-    
+
     return m_categories;
 }
 
@@ -596,36 +596,36 @@ bool AssetManager::isAssetValid(const QString &category, const QString &type, co
         ASSET_ERROR("Invalid parameters - category:" << category << "type:" << type << "id:" << id);
         return false;
     }
-    
+
     AssetModel* model = getAssetModel(category, type);
     if (!model) {
         ASSET_ERROR("No model found for" << category << type);
         return false;
     }
-    
+
     // Vérifier que le modèle est toujours valide
     if (!model->parent()) {
         ASSET_ERROR("Model has no parent, potentially invalid");
         return false;
     }
-    
+
     int rowCount = model->rowCount();
     ASSET_DEBUG("Searching for id" << id << "in model with" << rowCount << "assets");
-    
+
     for (int i = 0; i < rowCount; i++) {
         QModelIndex index = model->index(i, 0);
         if (!index.isValid()) {
             ASSET_ERROR("Invalid index at row" << i);
             continue;
         }
-        
+
         QVariant idData = model->data(index, AssetModel::IdRole);
         if (idData.toString() == id) {
             ASSET_INFO("Found asset" << id << "at row" << i);
             return true;
         }
     }
-    
+
     ASSET_DEBUG("Asset" << id << "not found in" << category << type);
     return false;
 }
@@ -633,17 +633,17 @@ bool AssetManager::isAssetValid(const QString &category, const QString &type, co
 void AssetManager::cleanupInvalidModels()
 {
     ASSET_DEBUG("Cleaning up invalid models...");
-    
-    for (int i = m_filteredModels.size() - 1; i >= 0; --i) {
-        AssetModel* model = m_filteredModels[i].second;
+
+    for (int i = m_models.size() - 1; i >= 0; --i) {
+        AssetModel* model = m_models[i].second;
         if (!model || !model->parent()) {
-            ASSET_ERROR("Removing invalid model for key:" << m_filteredModels[i].first);
+            ASSET_ERROR("Removing invalid model for key:" << m_models[i].first);
             if (model) {
                 model->deleteLater();
             }
-            m_filteredModels.removeAt(i);
+            m_models.removeAt(i);
         }
     }
-    
-    ASSET_INFO("Cleanup complete. Remaining models:" << m_filteredModels.size());
+
+    ASSET_INFO("Cleanup complete. Remaining models:" << m_models.size());
 }
