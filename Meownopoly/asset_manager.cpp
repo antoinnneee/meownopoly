@@ -584,7 +584,7 @@ QStringList AssetManager::getAvailableCategories() const
     if (!assetsDir.exists()) {
         return m_categories;
     }
-    
+
     
     return m_categories;
 }

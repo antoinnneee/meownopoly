@@ -14,7 +14,7 @@
 #include <QJsonDocument>
 
 // Debug defines
-#define ENABLE_ASSET_DEBUG 1
+#define ENABLE_ASSET_DEBUG 0
 
 #if ENABLE_ASSET_DEBUG
     #define ASSET_DEBUG(msg) qDebug() << "[ASSET_DEBUG]" << msg
@@ -125,7 +125,7 @@ private:
     QString m_assetsBasePath;
     static AssetManager *m_pThis;
     
-    QList<QPair<QString, AssetModel*>> m_filteredModels;
+    QList<QPair<QString, AssetModel*>> m_models;
 
     QStringList m_categories;
 };
