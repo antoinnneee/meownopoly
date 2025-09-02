@@ -25,25 +25,25 @@ ScrollView {
     onCategoryChanged: updateModel()
     onTypeChanged: updateModel()
     
-    // Timer for retrying model loading
-    Timer {
-        id: retryTimer
-        interval: 1000
-        repeat: false
-        onTriggered: {
-            if (category && type) {
-                isLoading = true
-                var retryModel = AssetManager.getTypeModel(category, type)
-                if (retryModel) {
-                    assetModel = retryModel
-                    console.log("Model loaded on retry:", retryModel.rowCount(), "items")
-                } else {
-                    console.warn("Model still null after retry for", category, type)
-                }
-                isLoading = false
-            }
-        }
-    }
+    // // Timer for retrying model loading
+    // Timer {
+    //     id: retryTimer
+    //     interval: 1000
+    //     repeat: false
+    //     onTriggered: {
+    //         if (category && type) {
+    //             isLoading = true
+    //             var retryModel = AssetManager.getTypeModel(category, type)
+    //             if (retryModel) {
+    //                 assetModel = retryModel
+    //                 console.log("Model loaded on retry:", retryModel.rowCount(), "items")
+    //             } else {
+    //                 console.warn("Model still null after retry for", category, type)
+    //             }
+    //             isLoading = false
+    //         }
+    //     }
+    // }
     
     function updateModel() {
         if (category && type) {
@@ -57,14 +57,6 @@ ScrollView {
             } else {
                 console.warn("Failed to load model for", category, type)
                 assetModel = null
-                
-                // Optionally try to reload assets if they're not loaded
-                if (!AssetManager.areAssetsLoaded()) {
-                    console.log("Assets not loaded, attempting reload...")
-                    AssetManager.reloadAssets()
-                    // Retry after a short delay
-                    retryTimer.start()
-                }
             }
             
             isLoading = false

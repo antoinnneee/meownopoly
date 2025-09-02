@@ -24,7 +24,7 @@ SnapableElement {
         decorationType: "grass"
         decorationId: "1"//Math.floor(Math.random() * AssetManager.getTypeModel("decoration", decorationSettings.decorationType).rowCount())
     }
-    property string imagePath: AssetManager.buildAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
+    property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
     
     // MultiEffect properties - Color effects (always enabled)
     displaySettings.effectBrightness: 0.0

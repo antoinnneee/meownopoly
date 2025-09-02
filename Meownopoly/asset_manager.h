@@ -67,8 +67,6 @@ class AssetManager : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QStringList categories READ categories NOTIFY categoriesChanged)
-    Q_PROPERTY(AssetModel* decorationModel READ decorationModel NOTIFY decorationModelChanged)
-    Q_PROPERTY(AssetModel* tileModel READ tileModel NOTIFY tileModelChanged)
     Q_PROPERTY(QString assetsBasePath READ assetsBasePath NOTIFY assetsBasePathChanged)
 
 public:
@@ -78,8 +76,6 @@ public:
     static QObject* qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
     // Property getters
-    AssetModel* decorationModel() const { return m_decorationModel; }
-    AssetModel* tileModel() const { return m_tileModel; }
     QString assetsBasePath() const { return m_assetsBasePath; }
     Q_INVOKABLE QString buildAssetPath(const QString &category, const QString &type, const QString &filename) const;
     Q_INVOKABLE QString getAssetPath(const QString &category, const QString &type, const QString &id);
@@ -89,15 +85,12 @@ public:
 
     // QML accessible methods
     Q_INVOKABLE AssetModel* getTypeModel(const QString &category, const QString &type);
-    Q_INVOKABLE QString getDecorationPath(const QString &type, const QString &id) const;
-    Q_INVOKABLE QString getTilePath(const QString &type, const QString &id) const;
 
     Q_INVOKABLE void loadAssets();
     Q_INVOKABLE void setAssetsBasePath(const QString &basePath);
     Q_INVOKABLE QStringList getAvailableTypes(const QString &category) const;
     Q_INVOKABLE QStringList getAvailableCategories() const;
     Q_INVOKABLE bool isAssetValid(const QString &category, const QString &type, const QString &id);
-    Q_INVOKABLE bool areAssetsLoaded() const;
     Q_INVOKABLE void reloadAssets();
         
     // Metadata generation
@@ -108,9 +101,7 @@ public:
 public slots:
 
 signals:
-    void decorationModelChanged();
     void assetsBasePathChanged();
-    void tileModelChanged();
     void categoriesChanged();
 
 private:
@@ -118,8 +109,6 @@ private:
     void loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName);
     void cleanupInvalidModels();
 
-    AssetModel *m_decorationModel;
-    AssetModel *m_tileModel;
     QString m_assetsBasePath;
     static AssetManager *m_pThis;
     

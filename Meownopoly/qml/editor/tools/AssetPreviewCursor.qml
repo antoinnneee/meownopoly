@@ -40,15 +40,6 @@ Item {
                     return ""
                 }
                 return AssetManager.getAssetPath(root.assetCategory, root.assetType, root.assetId)
-                /*
-                if (root.assetCategory === "decoration") {
-                    return AssetManager.getDecorationPath(root.assetType, root.assetId)
-                } else if (root.assetCategory === "tile") {
-                    return AssetManager.getTilePath(root.assetType, root.assetId)
-                } else if (root.assetCategory === "avatar") {
-                    return AssetManager.getPlayerIconPath(root.assetId)
-                }
-                */
             }
             fillMode: Image.PreserveAspectFit
             smooth: true
