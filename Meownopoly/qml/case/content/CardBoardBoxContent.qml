@@ -17,7 +17,6 @@ Item {
 
     property var fallbackIcons: "📦❓"
 
-
     Text {
         id: nameText
         anchors {

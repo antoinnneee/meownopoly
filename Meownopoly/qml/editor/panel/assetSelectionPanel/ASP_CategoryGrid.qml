@@ -159,7 +159,7 @@ ScrollView {
                         
                         Component.onCompleted: {
                             // Get asset count for this category/type
-                            var model = AssetManager.getTypeModel(modelData.category, modelData.type)
+                            var model = AssetManager.getAssetModel(modelData.category, modelData.type)
                             if (model) {
                                 text = model.rowCount() + " items"
                             } else {

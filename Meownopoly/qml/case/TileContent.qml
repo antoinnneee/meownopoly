@@ -38,7 +38,7 @@ Item {
 
     Component {
         id: restAreaContent
-        RestAreaContent {
+        RestAreaContent2 {
             caseData: (root.caseData.type === Case.CS_RestArea) ? root.caseData : null
             familyColors: root.familyColors
         }
@@ -46,56 +46,56 @@ Item {
 
     Component {
         id: kibbleDispenserContent
-        KibbleDispenserContent{
+        KibbleDispenserContent2{
             caseData: (root.caseData.type === Case.CS_KibbleDispenser) ? root.caseData : null
         }
     }
 
     Component {
         id: cardBoardBoxContent
-        CardBoardBoxContent {
+        CardBoardBoxContent2 {
             caseData: (root.caseData.type === Case.CS_CardBoardBox) ? root.caseData : null
         }
     }
 
     Component {
         id: catNipContent
-        CatNipContent {
+        CatNipContent2 {
             caseData: (root.caseData.type === Case.CS_CatNip) ? root.caseData : null
         }
     }
 
     Component {
         id: jailContent
-        JailContent {
+        JailContent2 {
             caseData: root.caseData
         }
     }
 
     Component {
         id: toJailContent
-        ToJailContent {
+        ToJailContent2 {
             caseData: (root.caseData.type === Case.CS_ToJail) ? root.caseData : null
         }
     }
 
     Component {
         id: catDoorContent
-        CatDoorContent {
+        CatDoorContent2 {
             caseData: (root.caseData.type === Case.CS_CatDoor) ? root.caseData : null
         }
     }
 
     Component {
         id: freeNapContent
-        FreeNapContent {
+        FreeNapContent2 {
             caseData: (root.caseData.type === Case.CS_FreeNap) ? root.caseData : null
         }
     }
 
     Component {
         id: catDeviceContent
-        CatDeviceContent {
+        CatDeviceContent2 {
             caseData: (root.caseData.type === Case.CS_Device) ? root.caseData : null
         }
     }

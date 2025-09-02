@@ -34,7 +34,7 @@
 #include <map/map.h>
 #include <map/maploader.h>
 #include <map/mapinfo.h>
-
+#include "tools/debug_info.h"
 
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
