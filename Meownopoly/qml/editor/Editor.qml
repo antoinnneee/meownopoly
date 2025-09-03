@@ -40,10 +40,10 @@ Rectangle {
     property alias maxPlanDisplayed: logic.maxPlanDisplayed
     
     // Asset selection properties
-    property alias selectedAssetCategory: assetPanel.currentSelectedAssetCategory
-    property alias selectedAssetType: assetPanel.currentSelectedAssetType
-    property alias selectedAssetId: assetPanel.currentSelectedAssetId
-    property alias isAssetSelected: assetPanel.isAssetSelected
+    property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
+    property alias selectedAssetType: selectionPanel.currentSelectedAssetType
+    property alias selectedAssetId: selectionPanel.currentSelectedAssetId
+    property alias isAssetSelected: selectionPanel.isAssetSelected
 
     property MapInfo mapInfo: MapInfo{
         mapName: "no_name"
@@ -145,7 +145,7 @@ Rectangle {
             }
         }
         onGridRightClicked: {
-            assetPanel.clearAssetSelection()
+            selectionPanel.clearAssetSelection()
         }
     }
 
@@ -230,7 +230,7 @@ Rectangle {
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
             if (root.isAssetSelected) {
-                assetPanel.assetManagerSettings.clearAssetSelection()
+                selectionPanel.assetManagerSettings.clearAssetSelection()
                 event.accepted = true
             }
         }
@@ -332,9 +332,9 @@ Rectangle {
         if (!newTile || !newTile.displaySettings) return
 
         // Get current effects from the visual effects panel
-        if (!assetPanel.selectedDecoration) return
+        if (!selectionPanel.selectedDecoration) return
 
-        var visualEffectsPanel = assetPanel.assetPanel.visualEffectsPanel
+        var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
         if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
 
         var currentEffects = visualEffectsPanel.getCurrentEffects()
@@ -383,7 +383,7 @@ Rectangle {
     }
 
     SelectionPanel{
-        id: assetPanel
+        id: selectionPanel
 
         anchors.bottom: parent.bottom
         anchors.left: parent.left
