@@ -11,10 +11,13 @@ EBP_Content {
 
     property string selectedCategory: ""
     property string selectedType: ""
+    property var selectedDecoration
 
     property string selected
     property bool showEffectsPanel: true
     signal assetSelected(string category, string type, string id)
+
+    property alias visualEffectsPanel : effectsPanel
 
 
     // Main content (categories/assets)
@@ -81,11 +84,10 @@ EBP_Content {
         VisualEffectsPanel {
             id: effectsPanel
             width: effectsScrollView.width - 20 // Account for scrollbar
-            targetDecoration: root.selectedDecoration
+            targetDecoration: contentArea.selectedDecoration
             
             onEffectChanged: {
                 // Optional: emit signal when effects change
-                console.log("Visual effect changed")
             }
         }
     }

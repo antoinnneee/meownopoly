@@ -106,6 +106,7 @@ Rectangle {
         editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
+        assetPanel: assetPanel.assetPanel
     }
     EditorDynamicComponent {
         id: editorDynamicComponent
@@ -327,10 +328,44 @@ Rectangle {
     }
 
 
+    // Function to apply visual effects to a new decoration tile
+    function applyVisualEffectsToNewTile(newTile) {
+        if (!newTile || !newTile.displaySettings) return
+
+        // Get current effects from the visual effects panel
+        if (!assetPanel.selectedDecoration) return
+
+        var visualEffectsPanel = assetPanel.assetPanel.visualEffectsPanel
+        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
+
+        var currentEffects = visualEffectsPanel.getCurrentEffects()
+        if (!currentEffects) return
+
+        // Apply color effects
+        newTile.displaySettings.effectBrightness = currentEffects.brightness
+        newTile.displaySettings.effectContrast = currentEffects.contrast
+        newTile.displaySettings.effectSaturation = currentEffects.saturation
+        newTile.displaySettings.effectColorization = currentEffects.colorization
+        newTile.displaySettings.effectColorizationColor = currentEffects.colorizationColor
+
+        // Apply advanced effects
+        newTile.displaySettings.effectBlurEnabled = currentEffects.blurEnabled
+        newTile.displaySettings.effectBlur = currentEffects.blur
+        newTile.displaySettings.effectShadowEnabled = currentEffects.shadowEnabled
+        newTile.displaySettings.effectShadowBlur = currentEffects.shadowBlur
+
+        // Apply transform effects
+        newTile.displaySettings.rotationAngle = currentEffects.rotationAngle
+        newTile.displaySettings.mirrorHorizontal = currentEffects.mirrorHorizontal
+        newTile.displaySettings.mirrorVertical = currentEffects.mirrorVertical
+
+        console.log("Applied visual effects to new tile")
+    }
+
     // Function to place the selected asset
     function placeSelectedAsset(gridX, gridY) {
         if (!root.isAssetSelected) return
-        
+
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
         gridX = gridX - logic.currentElementWidth/2
         gridY = gridY - logic.currentElementHeight/2
@@ -341,6 +376,9 @@ Rectangle {
             newTile.decorationSettings.decorationCategory = root.selectedAssetCategory
             newTile.decorationSettings.decorationType = root.selectedAssetType
             newTile.decorationSettings.decorationId = root.selectedAssetId
+
+            // Apply visual effects to the new tile (only if effects are not locked)
+            applyVisualEffectsToNewTile(newTile)
         }
 
     }

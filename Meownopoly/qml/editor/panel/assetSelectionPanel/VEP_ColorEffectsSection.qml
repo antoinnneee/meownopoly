@@ -454,6 +454,7 @@ GroupBox {
                     onAccepted: {
                         presetEditorDialog.presetColor = selectedColor
                         presetColorField.color = selectedColor
+                        console.log("new color selected")
                     }
                 }
                 
@@ -506,6 +507,7 @@ GroupBox {
                             colorPresets[presetEditorDialog.presetIndex].name = presetNameField.text
                             colorPresets[presetEditorDialog.presetIndex].color = presetEditorDialog.presetColor
                             colorPresetsChanged()
+                            applyActivePreset()
                         }
                         presetEditorDialog.close()
                     }

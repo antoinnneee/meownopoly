@@ -7,7 +7,9 @@ Rectangle {
     
     // Properties for the target decoration element
     property var targetDecoration: null
-    
+    property alias rotationSlider: rotationSlider
+    property alias horizontalMirrorCheck: horizontalMirrorCheck
+    property alias verticalMirrorCheck: verticalMirrorCheck
     // Visual properties
     color: "transparent"
     radius: 4

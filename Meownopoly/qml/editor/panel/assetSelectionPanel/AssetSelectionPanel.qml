@@ -25,6 +25,7 @@ EditorBottomPanel {
     property string selectedType: ""
     
     property alias assetManagerSettings: assetManagerSettings
+    property alias visualEffectsPanel: contentArea.visualEffectsPanel
     // Current selection state (from parent)
     QtObject{
         id: assetManagerSettings
@@ -125,6 +126,7 @@ EditorBottomPanel {
             onAssetSelected: function(category, type, id) {
                 root.assetSelected(category, type, id)
             }
+            selectedDecoration: root.selectedDecoration
             isExpanded: true
     }
 
