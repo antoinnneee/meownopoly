@@ -127,5 +127,7 @@
         <file>qml/case/content/JailContent2.qml</file>
         <file>qml/case/content/ToJailContent2.qml</file>
         <file>qml/case/content/CatDeviceContent2.qml</file>
+        <file>qml/editor/panel/MenuSelector_Button.qml</file>
+        <file>qml/item_icon/SizeSelector.qml</file>
     </qresource>
 </RCC>
