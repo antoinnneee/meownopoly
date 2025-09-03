@@ -25,7 +25,7 @@ Item {
         gridCanvas.requestPaint()
     }
 
-    property int boardSize:  Screen.pixelDensity * 700
+    property int boardSize:  gridSize * 500 // 500 croisillons
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5
     property bool showGrid: true
