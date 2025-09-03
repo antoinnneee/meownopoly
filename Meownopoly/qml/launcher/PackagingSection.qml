@@ -35,7 +35,7 @@ import QtQuick.Dialogs
 Rectangle {
     id: root
     Layout.fillWidth: true
-    Layout.preferredHeight: 160
+    Layout.preferredHeight: 180
     color: "#3a3a3a"
     radius: 10
     border.color: "#555555"

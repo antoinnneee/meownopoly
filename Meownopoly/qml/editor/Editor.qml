@@ -106,7 +106,6 @@ Rectangle {
         editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
-        assetPanel: assetPanel.assetPanel
     }
     EditorDynamicComponent {
         id: editorDynamicComponent
