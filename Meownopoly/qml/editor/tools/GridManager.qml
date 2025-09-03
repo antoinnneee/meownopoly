@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls
 
 /**
@@ -22,10 +22,10 @@ Item {
     property int gridSize: Screen.pixelDensity * mmSize
     onGridSizeChanged: {
         console.log("gridSize changed:", gridSize)
-        gridCanvas.requestPaint()
+        // Les Repeater se mettent à jour automatiquement quand gridSize change
     }
 
-    property int boardSize:  gridSize * 500 // 500 croisillons
+    property int boardSize:  gridSize * 600 // 600 croisillons
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5
     property bool showGrid: true
@@ -139,53 +139,48 @@ Item {
     }
     
 
-    
-    // Canvas pour dessiner la grille
-    Canvas {
-        id: gridCanvas
+
+    // Grille ultra-optimisée avec un seul Repeater
+    Item {
+        id: gridContainer
         anchors.fill: parent
-        visible: showGrid
-        opacity: resizeMode ? Math.min(1.0, gridOpacity + 0.3) : gridOpacity
-        renderStrategy: Canvas.Threaded
-        onPaint: {
-            if (!showGrid) return
-            
-            var ctx = getContext("2d")
-            ctx.clearRect(0, 0, width, height)
-            
-            // Couleur plus intense en mode redimensionnement
-            ctx.strokeStyle = resizeMode ? Qt.lighter(gridColor, 1.2) : gridColor
-            ctx.lineWidth = resizeMode ? lineWidth + 1 : lineWidth
-            
-            // Dessiner les lignes verticales
-            for (var x = 0; x <= width; x += gridSize) {
-                ctx.beginPath()
-                ctx.moveTo(x, 0)
-                ctx.lineTo(x, height)
-                ctx.stroke()
+
+        property int verticalLinesCount: Math.ceil(width / gridManager.gridSize) + 1
+        property int horizontalLinesCount: Math.ceil(height / gridManager.gridSize) + 1
+
+        Repeater {
+            id: gridLinesRepeater
+            model: parent.verticalLinesCount + parent.horizontalLinesCount
+
+            Rectangle {
+                // Propriétés communes
+                color: gridManager.resizeMode ? Qt.lighter(gridManager.gridColor, 1.2) : gridManager.gridColor
+                opacity: gridManager.resizeMode ? Math.min(1.0, gridManager.gridOpacity + 0.3) : gridManager.gridOpacity
+                visible: gridManager.showGrid
+
+                // Déterminer si c'est une ligne verticale ou horizontale
+                readonly property bool isVertical: index < gridContainer.verticalLinesCount
+                readonly property int verticalIndex: isVertical ? index : -1
+                readonly property int horizontalIndex: isVertical ? -1 : index - gridContainer.verticalLinesCount
+
+                // Position et taille selon le type de ligne
+                x: isVertical ? verticalIndex * gridManager.gridSize : 0
+                y: isVertical ? 0 : horizontalIndex * gridManager.gridSize
+                width: isVertical ?
+                       (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth) :
+                       parent.width
+                height: isVertical ?
+                        parent.height :
+                        (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth)
+
+                // Masquer les lignes qui dépassent les limites
+                // visible: visible && (isVertical ? x < parent.width : y < parent.height)
             }
-            
-            // Dessiner les lignes horizontales
-            for (var y = 0; y <= height; y += gridSize) {
-                ctx.beginPath()
-                ctx.moveTo(0, y)
-                ctx.lineTo(width, y)
-                ctx.stroke()
-            }
-        }
-        
-        // Redessiner quand les propriétés changent
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-        
-        Connections {
-            target: gridManager
-            function onGridColorChanged() { gridCanvas.requestPaint() }
-            function onShowGridChanged() { gridCanvas.requestPaint() }
-            function onLineWidthChanged() { gridCanvas.requestPaint() }
-            function onResizeModeChanged() { gridCanvas.requestPaint() }
         }
     }
+
+    // Les propriétés se mettent à jour automatiquement via les bindings QML
+    // Pas besoin de Connections supplémentaires avec l'approche Repeater
     MouseArea{
         anchors.fill: parent
         drag.target: isEdit ? null : gridManager
