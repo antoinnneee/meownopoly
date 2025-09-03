@@ -75,17 +75,27 @@ bool FolderCompressor::compress(QString sourceFolder, QString prefex)
     return true;
 }
 
-bool FolderCompressor::decompressFolder(QString sourceFile, QString destinationFolder)
+bool FolderCompressor::decompressFolder(QString sourceFile, QString destinationFolder, FolderCompressorDeleteOptions deleteOptions)
 {
-    //validation
     QFile src(sourceFile);
-    if(!src.exists())
-    {//file not found, to handle later
+    if(!src.exists()) //file not found, to handle later
+    {
         return false;
     }
+    
+    // Delete destination folder if requested
+    if(deleteOptions & FC_DELETE_DESTINATION)
+    {
+        QDir destDir(destinationFolder);
+        if(destDir.exists())
+        {
+            destDir.removeRecursively();
+        }
+    }
+    
     QDir dir;
-    if(!dir.mkpath(destinationFolder))
-    {//could not create folder
+    if(!dir.mkpath(destinationFolder)) //could not create folder
+    {
         return false;
     }
 
@@ -126,5 +136,12 @@ bool FolderCompressor::decompressFolder(QString sourceFile, QString destinationF
     }
 
     file.close();
+    
+    // Delete source file if requested
+    if(deleteOptions & FC_DELETE_SOURCE)
+    {
+        QFile::remove(sourceFile);
+    }
+    
     return true;
 }

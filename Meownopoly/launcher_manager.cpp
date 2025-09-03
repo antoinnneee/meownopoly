@@ -348,7 +348,7 @@ void LauncherManager::onDownloadFinished()
         QString compressedFile = QString("assets_v%1.meow").arg(m_latestVersion);
         QString extractPath = "asset_extracted";
         
-        bool success = m_folderCompressor->decompressFolder(compressedFile, extractPath);
+        bool success = m_folderCompressor->decompressFolder(compressedFile, extractPath, FC_DELETE_BOTH);
         if (success) {
             emit logMessage("✅ Assets extraits avec succès vers: " + extractPath);
             setCurrentVersion(m_latestVersion);
