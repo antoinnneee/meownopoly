@@ -145,6 +145,7 @@ void LauncherManager::forceDownloadResources(const QString &serverUrl)
     setDownloadProgress(0.0);
     setDownloadStatus("Téléchargement forcé...");
     
+    m_currentVersion = "0.0.0";
     // First check for updates to get the latest version
     checkForUpdates(serverUrl);
     // The download will be triggered in onVersionCheckFinished

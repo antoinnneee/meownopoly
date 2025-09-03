@@ -17,6 +17,7 @@ Rectangle {
     
     signal checkForUpdatesRequested()
     signal downloadResourcesRequested()
+    signal forceDownloadRequested()
     signal launchGameRequested()
     
     ColumnLayout {
@@ -63,6 +64,26 @@ Rectangle {
                 
                 background: Rectangle {
                     color: parent.enabled ? (parent.pressed ? "#388e3c" : "#4caf50") : "#666666"
+                    radius: 6
+                }
+                
+                contentItem: Text {
+                    text: parent.text
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: 12
+                }
+            }
+
+            Button {
+                text: "Forcer le téléchargement"
+                enabled: !root.isDownloading
+                onClicked: root.forceDownloadRequested()
+                Layout.preferredWidth: 150
+                
+                background: Rectangle {
+                    color: parent.enabled ? (parent.pressed ? "#ff9800" : "#ff5722") : "#666666"
                     radius: 6
                 }
                 

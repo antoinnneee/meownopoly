@@ -170,6 +170,7 @@ Rectangle {
                 onCheckForUpdatesRequested: logic.checkForUpdates()
                 onDownloadResourcesRequested: logic.downloadResources()
                 onLaunchGameRequested: root.launchGame()
+                onForceDownloadRequested: logic.forceDownloadResources()
             }
             
             // Section 4: Création de paquets

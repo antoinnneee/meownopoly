@@ -75,6 +75,11 @@ QtObject {
         return major + "." + minor + "." + patch
     }
     
+    function forceDownloadResources() {
+        root.settings.lastVersion = "0.0.0"
+        LauncherManager.forceDownloadResources(root.serverUrl)
+    }
+
     // Fonctions appelées par l'interface - délèguent au singleton
     function testConnection() {
         LauncherManager.testServerConnection(root.serverUrl)
