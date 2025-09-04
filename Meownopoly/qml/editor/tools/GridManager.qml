@@ -1,5 +1,6 @@
-import QtQuick
+import QtQuick 2.15
 import QtQuick.Controls
+
 
 /**
  * GridManager simple et réactif pour l'éditeur
@@ -138,6 +139,16 @@ Item {
         console.log("GridManager moved to:", gridManager.x, gridManager.y)
     }
     
+    function moveToGridCenter()
+    {
+
+        // Appliquer le décalage au GridManager
+        var parentCenterX = parent ? parent.width / 2 : width / 2
+        var parentCenterY = parent ? parent.height / 2 : height / 2
+        gridManager.x = parentCenterX - width/2
+        gridManager.y = parentCenterY - height/2
+        console.log("GridManager moved to:", gridManager.x, gridManager.y)
+    }
 
 
     // Grille ultra-optimisée avec un seul Repeater
