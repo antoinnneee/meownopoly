@@ -208,6 +208,9 @@ Rectangle {
             assetCategory: root.selectedAssetCategory
             assetType: root.selectedAssetType
             assetId: root.selectedAssetId
+            unitSizeWidth: root.currentElementWidth
+            unitSizeHeight: root.currentElementHeight
+            gridManager: editorGrid
         }
     }
 
@@ -366,8 +369,8 @@ Rectangle {
         if (!root.isAssetSelected) return
 
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
-        gridX = gridX - logic.currentElementWidth/2
-        gridY = gridY - logic.currentElementHeight/2
+        gridX = gridX
+        gridY = gridY
         // Create appropriate element based on category
         var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
         // Set decoration properties if needed
