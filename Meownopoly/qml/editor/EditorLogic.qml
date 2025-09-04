@@ -265,7 +265,7 @@ QtObject {
             snapableTilesList.push(newTile)
             // Désélectionner tout et sélectionner le nouveau tile
             deselectAllTiles()
-            newTile.isSelected = true
+//            newTile.isSelected = true
             currentSelectedElement = newTile
             newTile.snapToGridFromGrid()
         }
