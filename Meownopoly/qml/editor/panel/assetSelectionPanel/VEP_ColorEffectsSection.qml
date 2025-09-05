@@ -115,10 +115,10 @@ GroupBox {
             Layout.fillWidth: true
             sliderText: "Brightness:"
             onEffectChanged: function(value) {
-                if (targetDecoration) {
+                if (targetDecoration && targetDecoration.isSelected) {
                     targetDecoration.displaySettings.effectBrightness = value
-                    control.effectChanged()
                 }
+                control.effectChanged()
             }
         }
 
@@ -129,10 +129,10 @@ GroupBox {
             Layout.fillWidth: true
             sliderText: "Contrast:"
             onEffectChanged: function(value) {
-                if (targetDecoration) {
+                if (targetDecoration && targetDecoration.isSelected) {
                     targetDecoration.displaySettings.effectContrast = value
-                    control.effectChanged()
                 }
+                control.effectChanged()
             }
         }
         
@@ -143,10 +143,10 @@ GroupBox {
             Layout.fillWidth: true
             sliderText: "Saturation:"
             onEffectChanged: function(value) {
-                if (targetDecoration) {
+                if (targetDecoration && targetDecoration.isSelected) {
                     targetDecoration.displaySettings.effectSaturation = value
-                    control.effectChanged()
                 }
+                control.effectChanged()
             }
         }
         
@@ -159,10 +159,10 @@ GroupBox {
             Layout.fillWidth: true
             sliderText: "Colorization:"
             onEffectChanged: function(value) {
-                if (targetDecoration) {
+                if (targetDecoration && targetDecoration.isSelected) {
                     targetDecoration.displaySettings.effectColorization = value
-                    control.effectChanged()
                 }
+                control.effectChanged()
             }
         }
         
@@ -434,10 +434,10 @@ GroupBox {
     }
     
     function applyActivePreset() {
-        if (activePresetIndex >= 0 && activePresetIndex < colorPresets.length && targetDecoration) {
+        if (activePresetIndex >= 0 && activePresetIndex < colorPresets.length && targetDecoration && targetDecoration.isSelected) {
             targetDecoration.displaySettings.effectColorizationColor = colorPresets[activePresetIndex].color
-            control.effectChanged()
         }
+        control.effectChanged()
     }
     
     function openPresetEditor(index) {

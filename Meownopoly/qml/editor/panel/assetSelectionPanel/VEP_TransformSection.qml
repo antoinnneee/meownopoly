@@ -89,10 +89,10 @@ Rectangle {
                         stepSize: 1
                         
                         onValueChanged: {
-                            if (targetDecoration) {
+                            if (targetDecoration && targetDecoration.isSelected) {
                                 targetDecoration.displaySettings.rotationAngle = value
-                                root.effectChanged()
                             }
+                            root.effectChanged()
                         }
                     }
                     
@@ -144,10 +144,10 @@ Rectangle {
                         font.pixelSize: 11
                         
                         onCheckedChanged: {
-                            if (targetDecoration) {
+                            if (targetDecoration && targetDecoration.isSelected) {
                                 targetDecoration.displaySettings.mirrorHorizontal = checked
-                                root.effectChanged()
                             }
+                            root.effectChanged()
                         }
                     }
                     
@@ -158,10 +158,10 @@ Rectangle {
                         font.pixelSize: 11
                         
                         onCheckedChanged: {
-                            if (targetDecoration) {
+                            if (targetDecoration && targetDecoration.isSelected) {
                                 targetDecoration.displaySettings.mirrorVertical = checked
-                                root.effectChanged()
                             }
+                            root.effectChanged()
                         }
                     }
                 }

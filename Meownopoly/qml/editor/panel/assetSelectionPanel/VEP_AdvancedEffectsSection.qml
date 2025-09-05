@@ -164,10 +164,10 @@ GroupBox {
 
                 
                 onCheckedChanged: {
-                    if (targetDecoration) {
+                    if (targetDecoration && targetDecoration.isSelected) {
                         targetDecoration.displaySettings.effectShadowEnabled = checked
-                        effectChanged()
                     }
+                    control.effectChanged()
                 }
 
             }
