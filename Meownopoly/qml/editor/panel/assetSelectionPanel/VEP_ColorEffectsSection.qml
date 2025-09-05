@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import QtCore
 
 GroupBox {
     title: "Color Effects"
@@ -22,9 +23,21 @@ GroupBox {
     signal effectChanged()
     // signal colorPresetsChanged()
 
-    // Initialize default presets
+    // Settings pour la persistance des presets
+    Settings {
+        id: colorPresetSettings
+        category: "ColorPresets"
+        
+        // Propriétés pour sauvegarder les presets
+        property string presetsData: ""
+        property int activeIndex: -1
+    }
+
+    // Initialize presets (charger depuis les settings ou utiliser les défauts)
     Component.onCompleted: {
-        if (colorPresets.length === 0) {
+        // Essayer de charger les presets sauvegardés
+        if (!loadColorPresets()) {
+            // Si pas de presets sauvegardés, utiliser les presets par défaut
             colorPresets = [
                 { name: "Red", color: "#ff0000", active: false },
                 { name: "Green", color: "#00ff00", active: false },
@@ -33,6 +46,8 @@ GroupBox {
                 { name: "Magenta", color: "#ff00ff", active: false },
                 { name: "Cyan", color: "#00ffff", active: false }
             ]
+            // Sauvegarder les presets par défaut
+            saveColorPresets()
         }
     }
 
@@ -315,6 +330,67 @@ GroupBox {
 
     }
     
+    // Functions pour la persistance des presets
+    function saveColorPresets() {
+        try {
+            var presetsToSave = colorPresets.map(function(preset) {
+                return {
+                    name: preset.name,
+                    color: preset.color.toString(),
+                    active: preset.active
+                }
+            })
+            
+            colorPresetSettings.presetsData = JSON.stringify(presetsToSave)
+            colorPresetSettings.activeIndex = activePresetIndex
+            colorPresetSettings.sync() // Force la synchronisation
+            
+            console.log("Presets sauvegardés:", presetsToSave.length, "presets")
+        } catch (error) {
+            console.error("Erreur lors de la sauvegarde des presets:", error)
+        }
+    }
+    
+    function loadColorPresets() {
+        try {
+            if (colorPresetSettings.presetsData !== "") {
+                var loadedPresets = JSON.parse(colorPresetSettings.presetsData)
+                
+                // Valider et nettoyer les données chargées
+                var validPresets = []
+                for (var i = 0; i < loadedPresets.length; i++) {
+                    var preset = loadedPresets[i]
+                    if (preset.name && preset.color) {
+                        validPresets.push({
+                            name: preset.name,
+                            color: preset.color,
+                            active: preset.active || false
+                        })
+                    }
+                }
+                
+                if (validPresets.length > 0) {
+                    colorPresets = validPresets
+                    activePresetIndex = colorPresetSettings.activeIndex
+                    
+                    // S'assurer que l'index actif est valide
+                    if (activePresetIndex >= 0 && activePresetIndex < colorPresets.length) {
+                        colorPresets[activePresetIndex].active = true
+                    } else {
+                        activePresetIndex = -1
+                    }
+                    
+                    console.log("Presets chargés:", colorPresets.length, "presets")
+                    colorPresetsChanged()
+                    return true
+                }
+            }
+        } catch (error) {
+            console.error("Erreur lors du chargement des presets:", error)
+        }
+        return false
+    }
+    
     // Functions
     function addNewPreset() {
 
@@ -325,6 +401,7 @@ GroupBox {
         }
         colorPresets.push(newPreset)
         colorPresetsChanged()
+        saveColorPresets() // Sauvegarder après ajout
 
     }
     
@@ -333,6 +410,7 @@ GroupBox {
             colorPresets.splice(activePresetIndex, 1)
             activePresetIndex = -1
             colorPresetsChanged()
+            saveColorPresets() // Sauvegarder après suppression
         }
     }
     
@@ -351,6 +429,7 @@ GroupBox {
         }
         
         colorPresetsChanged()
+        saveColorPresets() // Sauvegarder après sélection
         applyActivePreset()
     }
     
@@ -507,6 +586,7 @@ GroupBox {
                             colorPresets[presetEditorDialog.presetIndex].name = presetNameField.text
                             colorPresets[presetEditorDialog.presetIndex].color = presetEditorDialog.presetColor
                             colorPresetsChanged()
+                            saveColorPresets() // Sauvegarder après modification
                             applyActivePreset()
                         }
                         presetEditorDialog.close()
