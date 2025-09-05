@@ -129,5 +129,6 @@
         <file>qml/case/content/CatDeviceContent2.qml</file>
         <file>qml/editor/panel/MenuSelector_Button.qml</file>
         <file>qml/item_icon/SizeSelector.qml</file>
+        <file>qml/editor/EditorScrollLogic.qml</file>
     </qresource>
 </RCC>

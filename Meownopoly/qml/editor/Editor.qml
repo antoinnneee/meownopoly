@@ -409,20 +409,30 @@ Rectangle {
 
     WheelHandler {
         onWheel: (wheel)=> {
-             if (wheel.modifiers & Qt.ControlModifier) {
-                 console.log(wheel.angleDelta)
-                 if (wheel.angleDelta.y > 0)
-                    editorGrid.updateSize(editorGrid.mmSize + 1)
-                 else if (editorGrid.mmSize > 1)
-                     editorGrid.updateSize(editorGrid.mmSize - 1)
-                 for (var i = 0; i < root.snapableTilesList.length; i++) {
-                     if (root.snapableTilesList[i]) {
-                         root.snapableTilesList[i].isSelected = false
-                         root.snapableTilesList[i].snapToGridFromGrid()
-                     }
-                 }
-             }
-         }
+            if (wheel.angleDelta.y > 0)
+            {
+                logic.scrollLogic.scrollUp(wheel)
+            }
+            else if (editorGrid.mmSize > 1)
+            {
+                logic.scrollLogic.scrollDown(wheel)
+            }
+            if (wheel.angleDelta.x > 0)
+            {
+                logic.scrollLogic.scrollRight(wheel)
+            }
+            else if (wheel.angleDelta.x < 0)
+            {
+                logic.scrollLogic.scrollLeft(wheel)
+            }
+            for (var i = 0; i < root.snapableTilesList.length; i++) {
+                if (root.snapableTilesList[i]) {
+                    root.snapableTilesList[i].isSelected = false
+                    root.snapableTilesList[i].snapToGridFromGrid()
+                }
+            }
+
+        }
     }
 
     // Panneau de sélection des maps

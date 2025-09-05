@@ -7,6 +7,7 @@ import "tools/snapable"
 import MapInfo
 
 QtObject {
+    id: logic
     property list<SnapableElement> snapableTilesList
     property var currentSelectedElement
     required property var editorDynamicComponent
@@ -21,7 +22,10 @@ QtObject {
     property int minPlanDisplayed: 1
     property int maxPlanDisplayed: 10
 
-
+    EditorScrollLogic {
+        id: scrollLogic
+        editorGrid: 1
+    }
 
 
     // Propriétés pour la sélection par rectangle
