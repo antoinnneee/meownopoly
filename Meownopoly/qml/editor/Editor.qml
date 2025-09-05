@@ -200,7 +200,6 @@ Rectangle {
                 assetPreview.mouseY = mouse.y
             }
         }
-        
         // Asset preview cursor
         AssetPreviewCursor {
             id: assetPreview
@@ -211,6 +210,7 @@ Rectangle {
             unitSizeWidth: root.currentElementWidth
             unitSizeHeight: root.currentElementHeight
             gridManager: editorGrid
+            selectionPanel: selectionPanel
         }
     }
 
