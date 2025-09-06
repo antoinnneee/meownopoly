@@ -2,7 +2,7 @@ import QtQuick 2.15
 
 Item {
     property bool isExpanded: false
-    required property string currentView
+    required property var currentView
 
     property string searchText: ""
     required property string activeFilter

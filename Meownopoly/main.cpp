@@ -2,11 +2,13 @@
 #include <QQmlApplicationEngine>
 #include <QSurfaceFormat>
 #include "qmlapp.h"
+#include <QLoggingCategory>
 
 int main(int argc, char *argv[])
 {
     qInstallMessageHandler(0);
     QGuiApplication app(argc, argv);
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.qml.binding.removal.info=true"));
 
     app.setOrganizationName("Pattoune Corp");
     app.setOrganizationDomain("pattounecorp.ovh");

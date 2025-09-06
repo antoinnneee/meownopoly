@@ -256,9 +256,9 @@ Rectangle {
                      if (wheel.modifiers & Qt.ControlModifier) {
                          //console.log(wheel.angleDelta)
                          if (wheel.angleDelta.y > 0)
-                         editorGrid.updateSize(editorGrid.mmSize + 1)
-                         else if (editorGrid.mmSize > 1)
-                         editorGrid.updateSize(editorGrid.mmSize - 1)
+                         logic.updateSize(logic.mmSize + 1)
+                         else if (logic.mmSize > 1)
+                         logic.updateSize(logic.mmSize - 1)
                          for (var i = 0; i < snapableTilesList.length; i++) {
                              if (snapableTilesList[i]) {
                                  snapableTilesList[i].isSelected = false

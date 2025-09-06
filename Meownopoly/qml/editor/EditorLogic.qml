@@ -35,7 +35,7 @@ Item {
 
     property ScrollLogic scrollLogic : ScrollLogic {
         editorGrid: logic.editorGrid
-        logic: parent
+        logic: logic
     }
 
     TileLogic{
@@ -56,6 +56,10 @@ Item {
 
     
     property int mmSize : 10
+    function updateSize(mm) {
+        if (mm > 0)
+            mmSize = mm
+    }
 
     onIsEditingChanged:{
         console.log("Édition:", isEditing)

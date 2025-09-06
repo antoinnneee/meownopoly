@@ -12,15 +12,6 @@ Item {
     // Propriétés configurables
     required property var logic
     property int mmSize: logic.mmSize
-    onMmSizeChanged: {
-        console.log("mmSize changed:", mmSize)
-        gridSize = Screen.pixelDensity * mmSize
-    }
-    
-    function updateSize(mm) {
-        if (mm > 0)
-            mmSize = mm
-    }
 
     property int gridSize: Screen.pixelDensity * mmSize
     onGridSizeChanged: {

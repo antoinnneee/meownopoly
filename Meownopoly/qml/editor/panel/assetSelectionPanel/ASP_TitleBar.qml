@@ -32,10 +32,6 @@ EBP_TitleBar {
     Item { Layout.fillWidth: true }
 
     backButton.visible: titleBar.isExpanded && titleBar.currentView === "assets"
-    // backButton.Layout.column: 0
-    onBackButtonClicked: {
-        titleBar.currentView = "categories"
-    }
 
 
     // Clear selection button (visible when asset is selected)

@@ -16,6 +16,7 @@ EBP_Content {
     property string selected
     property bool showEffectsPanel: true
     signal assetSelected(string category, string type, string id)
+    signal categorieSelected()
 
     property alias visualEffectsPanel : effectsPanel
 
@@ -42,7 +43,7 @@ EBP_Content {
             onCategorySelected: function(category, type) {
                 contentArea.selectedCategory = category
                 contentArea.selectedType = type
-                contentArea.currentView = "assets"
+                categorieSelected()
             }
         }
         

@@ -12,10 +12,6 @@ EditorBottomPanel {
 
     property alias activeFilter: titleBar.activeFilter
 
-    onCurrentViewChanged: {
-        titleBar.currentView = currentView
-        contentArea.currentView = currentView
-    }
 
     property string selectedCategory: ""
     property string selectedType: ""
@@ -92,6 +88,10 @@ EditorBottomPanel {
             root.currentView = titleBar.currentView
         }
 
+        onBackButtonClicked: {
+            root.currentView = "categories"
+        }
+
 
         currentSelectedCategory: root.currentSelectedCategory
         currentSelectedType: root.currentSelectedType
@@ -99,7 +99,6 @@ EditorBottomPanel {
 
         searchText: root.searchText
         currentView: root.currentView
-
 
     }
 
@@ -112,13 +111,9 @@ EditorBottomPanel {
             currentSelectedId: root.currentSelectedId
             showEffectsPanel: root.showEffectsPanel
             currentView: root.currentView
-            onCurrentViewChanged: {
-                console.log("currentView changed in contentArea")
-                // Propager le changement vers le parent
-                root.currentView = contentArea.currentView
-            }
             activeFilter: titleBar.activeFilter
             searchText: root.searchText
+            onCategorieSelected: root.currentView = "assets"
             onAssetSelected: function(category, type, id) {
                 root.assetSelected(category, type, id)
             }

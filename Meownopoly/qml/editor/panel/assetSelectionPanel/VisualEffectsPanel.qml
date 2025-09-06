@@ -49,34 +49,12 @@ Rectangle {
                 Layout.fillWidth: true
             }
 
-            Rectangle {
+            VEP_ButtonLock {
                 id: lockButton
-                Layout.preferredWidth: 30
                 Layout.preferredHeight: 30
-                color: root.effectsLocked ? "#4a4a4a" : "#3a3a3a"
-                border.color: "#666666"
-                border.width: 1
-                radius: 4
-
-                Text {
-                    anchors.centerIn: parent
-                    text: root.effectsLocked ? "🔒" : "🔓"
-                    font.pixelSize: 16
-                }
-
-                MouseArea {
-                    id: lockMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onEntered: lockButton.opacity = 0.8
-                    onExited: lockButton.opacity = 1.0
-                    onClicked: root.toggleLock()
-                }
-
-                ToolTip {
-                    visible: lockMouseArea.containsMouse
-                    text: root.effectsLocked ? "Déverrouiller les effets visuels" : "Verrouiller les effets visuels"
-                }
+                Layout.preferredWidth: 30
+                effectsLocked: root.effectsLocked
+                onClicked: root.effectsLocked = !root.effectsLocked
             }
         }
         
@@ -129,11 +107,7 @@ Rectangle {
         }
 
     }
-    
-    // Functions
-    function toggleLock() {
-        root.effectsLocked = !root.effectsLocked
-    }
+
 
     function getCurrentEffects() {
         var effects = {
