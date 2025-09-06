@@ -97,7 +97,7 @@ Rectangle {
 
         onGridClicked:  function(position) {
             if (!isSelectionActive) {
-                logic.deselectAllTiles()
+                logic.tileLogic.deselectAllTiles()
             }
         }
         onGridPressed : function(position) {
@@ -161,21 +161,21 @@ Rectangle {
             text: "Créer une Case"
             onTriggered: {
                 console.log(contextMenu.clickGridCoord)
-                logic.createNewTileAtPosition(Case.CS_KibbleDispenser, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Case)
+                logic.tileLogic.createNewTileAtPosition(Case.CS_KibbleDispenser, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Case)
             }
         }
 
         MenuItem {
             text: "Créer un Personnage"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Personnage)
+                logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Personnage)
             }
         }
 
         MenuItem {
             text: "Créer un Élément"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Decoration)
+                logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, GameBoard.TileType.Decoration)
             }
         }
     }
@@ -228,7 +228,7 @@ Rectangle {
         }
 
         onRequestChangeType: function(newType)  {
-            logic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
+            logic.tileLogic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
         }
     }
 

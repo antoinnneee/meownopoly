@@ -163,15 +163,15 @@ Item {
                     stepSize: 1
                     width: parent.width
                     
-                    first.value: logic.minPlanDisplayed
-                    second.value: logic.maxPlanDisplayed
+                    first.value: logic.planLogic.minPlanDisplayed
+                    second.value: logic.planLogic.maxPlanDisplayed
                     
                     first.onValueChanged: {
-                        logic.minPlanDisplayed = Math.round(first.value)
+                        logic.planLogic.minPlanDisplayed = Math.round(first.value)
                     }
                     
                     second.onValueChanged: {
-                        logic.maxPlanDisplayed = Math.round(second.value)
+                        logic.planLogic.maxPlanDisplayed = Math.round(second.value)
                     }
                     
                     // Custom styling for better visibility
@@ -251,8 +251,8 @@ Item {
                         width: 35
                         height: 20
                         onClicked: {
-                            logic.minPlanDisplayed = 1
-                            logic.maxPlanDisplayed = 10
+                            logic.planLogic.minPlanDisplayed = 1
+                            logic.planLogic.maxPlanDisplayed = 10
                         }
                         background: Rectangle {
                             color: parent.pressed ? "#95a5a6" : "#bdc3c7"
@@ -266,52 +266,8 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
                     }
-                    
-                    Button {
-                        text: "Seul"
-                        font.pixelSize: 8
-                        width: 35
-                        height: 20
-                        onClicked: {
-                            var currentMax = logic.maxPlanDisplayed
-                            logic.minPlanDisplayed = currentMax
-                            logic.maxPlanDisplayed = currentMax
-                        }
-                        background: Rectangle {
-                            color: parent.pressed ? "#95a5a6" : "#bdc3c7"
-                            radius: 3
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#2c3e50"
-                            font.pixelSize: 8
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                    
-                    Button {
-                        text: "↑3"
-                        font.pixelSize: 8
-                        width: 25
-                        height: 20
-                        onClicked: {
-                            var currentMax = logic.maxPlanDisplayed
-                            logic.minPlanDisplayed = Math.max(1, currentMax - 2)
-                            logic.maxPlanDisplayed = currentMax
-                        }
-                        background: Rectangle {
-                            color: parent.pressed ? "#95a5a6" : "#bdc3c7"
-                            radius: 3
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#2c3e50"
-                            font.pixelSize: 8
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
+
+
                 }
             }
         }

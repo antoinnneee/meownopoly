@@ -22,7 +22,7 @@ Item{
             // Gestion de la sélection
             onElementClicked: function(element) {
                 // Désélectionner tous les autres éléments
-                logic.deselectAllTiles()
+                logic.tileLogic.deselectAllTiles()
                 // Sélectionner l'élément cliqué
                 element.isSelected = true
                 logic.currentSelectedElement = element
@@ -52,7 +52,7 @@ Item{
                 }
             }
             onElementPressed: function(element) {
-                logic.deselectAllTiles()
+                logic.tileLogic.deselectAllTiles()
                 element.isSelected = true
                 logic.currentSelectedElement = element
 
@@ -69,7 +69,7 @@ Item{
                 // Gestion de la sélection
                 onElementClicked: function(element) {
                     // Désélectionner tous les autres éléments
-                    logic.deselectAllTiles()
+                    logic.tileLogic.deselectAllTiles()
                     // Sélectionner l'élément cliqué
                     element.isSelected = true
                     logic.currentSelectedElement = element
@@ -98,7 +98,7 @@ Item{
                     }
                 }
                 onElementPressed: function(element) {
-                    logic.deselectAllTiles()
+                    logic.tileLogic.deselectAllTiles()
                     element.isSelected = true
                     logic.currentSelectedElement = element
                 }

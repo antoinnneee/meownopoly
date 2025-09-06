@@ -35,10 +35,6 @@ Rectangle {
     property alias currentElementWidth: logic.currentElementWidth
     property alias currentElementHeight: logic.currentElementHeight
     
-    // Plan range properties
-    property alias minPlanDisplayed: logic.minPlanDisplayed
-    property alias maxPlanDisplayed: logic.maxPlanDisplayed
-    
     // Asset selection properties
     property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
     property alias selectedAssetType: selectionPanel.currentSelectedAssetType
@@ -141,7 +137,7 @@ Rectangle {
                 placeSelectedAsset(position.x, position.y)
             }
             if (!root.isAssetSelected) {
-                logic.deselectAllTiles()
+                logic.tileLogic.deselectAllTiles()
             }
         }
         onGridRightClicked: {
@@ -250,14 +246,14 @@ Rectangle {
             text: "Créer une Case"
             onTriggered: {
                 console.log(contextMenu.clickGridCoord)
-                logic.createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
+                logic.tileLogic.createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
             }
         }
 
         MenuItem {
             text: "Créer une Décoration"
             onTriggered: {
-                logic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.DecorationTile)
+                logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.DecorationTile)
             }
         }
     }
@@ -307,7 +303,7 @@ Rectangle {
         }
 
         onRequestChangeType: function(newType)  {
-            logic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
+            logic.tileLogic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
         }
     }
     // Panneau de configuration des connexions
@@ -372,7 +368,7 @@ Rectangle {
         gridX = gridX
         gridY = gridY
         // Create appropriate element based on category
-        var newTile = logic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
+        var newTile = logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
         // Set decoration properties if needed
         if (newTile && newTile.decorationSettings.decorationType !== undefined) {
             newTile.decorationSettings.decorationCategory = root.selectedAssetCategory

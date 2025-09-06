@@ -1,5 +1,5 @@
 import QtQuick 2.15
-import "tools"
+import "../tools"
 
 QtObject {
     required property GridManager editorGrid

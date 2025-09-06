@@ -7,6 +7,8 @@ import "tools"
 import "tools/snapable"
 import MapInfo
 
+import "logic"
+
 Item {
     id: logic
     property list<SnapableElement> snapableTilesList
@@ -17,18 +19,31 @@ Item {
     required property MapInfo mapInfo
     required property var workArea
 
-    property alias scrollLogic: scrollLogic
-
     property bool isEditing : false
-    
-    // New range-based plan visibility
-    property int minPlanDisplayed: 1
-    property int maxPlanDisplayed: 10
 
-    EditorScrollLogic {
-        id: scrollLogic
+    property alias minPlanDisplayed: logic.planLogic.minPlanDisplayed
+    property alias maxPlanDisplayed: logic.planLogic.maxPlanDisplayed
+    property alias planLogic: planLogic
+    property alias tileLogic: tileLogic
+
+    PlanLogic {
+        id: planLogic
+        logic: parent
+        editorGrid: logic.editorGrid
+        snapableTilesList: logic.snapableTilesList
+    }
+
+    property ScrollLogic scrollLogic : ScrollLogic {
         editorGrid: logic.editorGrid
         logic: parent
+    }
+
+    TileLogic{
+        id: tileLogic
+        logic: parent
+        editorGrid: logic.editorGrid
+        snapableTilesList: logic.snapableTilesList
+        editorDynamicComponent: logic.editorDynamicComponent
     }
 
 
@@ -54,35 +69,6 @@ Item {
                     snapableTilesList[i].visible = true
                 }
             }
-    }
-    
-    onMinPlanDisplayedChanged: {
-        updatePlanVisibility()
-    }
-    
-    onMaxPlanDisplayedChanged: {
-        updatePlanVisibility()
-    }
-    
-    // Function to update visibility based on plan range
-    function updatePlanVisibility() {
-        if (isEditing) {
-            console.log("Changement de plage de plans affichés:", minPlanDisplayed, "-", maxPlanDisplayed)
-            for (var i = 0; i < snapableTilesList.length; i++) {
-                if (snapableTilesList[i]) {
-                    var currentTile = snapableTilesList[i]
-                    var tileZ = currentTile.z || currentTile.displaySettings.zLayer || 1
-                    
-                    if ((tileZ >= minPlanDisplayed && tileZ <= maxPlanDisplayed) || tileZ === 11 ) {
-                        currentTile.enabled = true
-                        currentTile.opacity = 1
-                    } else {
-                        currentTile.enabled = false
-                        currentTile.opacity = 0.2
-                    }
-                }
-            }
-        }
     }
 
     function saveMap(){
@@ -113,16 +99,6 @@ Item {
     }
 
 
-    // Fonction pour désélectionner tous les tiles
-    function deselectAllTiles() {
-        // Désélectionner tous les tiles dans la liste
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i]) {
-                snapableTilesList[i].isSelected = false
-            }
-        }
-        currentSelectedElement = null
-    }
 
 
     /*
@@ -240,77 +216,6 @@ Item {
         }
     }
 
-    // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
-    function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
-        var newTile
-        switch (isDecoration){
-        case ItemSnapable.DecorationTile:
-            newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
-                                                                                          "displaySettings.gridRelativePositionX": gridX,
-                                                                                          "displaySettings.gridRelativePositionY": gridY,
-                                                                                          "displaySettings.unitSizeWidth": currentElementWidth,
-                                                                                          "displaySettings.unitSizeHeight": currentElementHeight,
-                                                                                          "displaySettings.zLayer": 5
-                                                                                      })
-
-
-            break
-        case ItemSnapable.CaseTile:
-            newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                                                                                        "displaySettings.gridRelativePositionX": gridX,
-                                                                                        "displaySettings.gridRelativePositionY": gridY,
-                                                                                        "displaySettings.unitSizeWidth": currentElementWidth,
-                                                                                        "displaySettings.unitSizeHeight": currentElementHeight,
-                                                                                        "caseData": Game.getNewCaseType(caseType),
-                                                                                    })
-
-            break
-
-        default:
-            break
-        }
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            // Désélectionner tout et sélectionner le nouveau tile
-            deselectAllTiles()
-//            newTile.isSelected = true
-            currentSelectedElement = newTile
-            newTile.snapToGridFromGrid()
-        }
-        return newTile
-    }
-
-    function changeCaseType(snapableCase, newType)  {
-        var newTile = createNewTileAtPosition(newType, snapableCase.displaySettings.gridRelativePositionX, snapableCase.displaySettings.gridRelativePositionY, ItemSnapable.CaseTile)
-        newTile.displaySettings.unitSizeWidth = snapableCase.displaySettings.unitSizeWidth
-        newTile.displaySettings.unitSizeHeight = snapableCase.displaySettings.unitSizeHeight
-
-
-
-        for (var i = 0; i < snapableCase.connectionManager.previousElements.length; i++) {
-            var prevEl = snapableCase.connectionManager.previousElements[i]
-            if (prevEl) {
-                prevEl.connectionManager.addNextElement(newTile)
-            }
-        }
-        for (var i = 0; i < snapableCase.connectionManager.nextElements.length; i++) {
-            var nextEl = snapableCase.connectionManager.nextElements[i]
-            if (nextEl) {
-                nextEl.connectionManager.addPreviousElement(newTile)
-            }
-        }
-
-
-        newTile.caseData.name = snapableCase.caseData.name
-
-
-        snapableCase.elementDeleted(snapableCase)
-        snapableCase.connectionManager.deleteLinkedConnection()
-
-        newTile.isSelected = true
-        newTile.elementConfigurationRequested(newTile)
-
-    }
 
     // Fonction pour mettre à jour l'apparence du rectangle de sélection
     function updateSelectionRect() {
@@ -376,14 +281,14 @@ Item {
                                                                                         "unitSizeWidth": unitWidth,
                                                                                         "unitSizeHeight": unitHeight,
                                                                                         "caseData": Game.getNewCaseType(defaultCaseType),
-                                                                                        "z": maxPlanDisplayed
+                                                                                        "z": planLogic.maxPlanDisplayed
                                                                                     })
 
         if (newTile) {
             snapableTilesList.push(newTile)
 
             // Désélectionner tout et sélectionner le nouveau tile
-            deselectAllTiles()
+            tileLogic.deselectAllTiles()
             newTile.isSelected = true
             currentSelectedElement = newTile
             newTile.snapToGridFromGrid()
@@ -442,7 +347,7 @@ Item {
 
                 // Si la position est libre, créer un élément
                 if (!positionOccupied) {
-                    lastTile = createNewTileAtPosition(defaultCaseType, x, y, ItemSnapable.CaseTile)
+                    lastTile = tileLogic.createNewTileAtPosition(defaultCaseType, x, y, ItemSnapable.CaseTile)
                     tilesPlaced++;
 
                     // Avancer horizontalement de la taille de l'élément
@@ -455,7 +360,7 @@ Item {
 
         // Si au moins un élément a été placé, le dernier reste sélectionné
         if (tilesPlaced > 0 && lastTile) {
-            deselectAllTiles()
+            tileLogic.deselectAllTiles()
             lastTile.isSelected = true
             currentSelectedElement = lastTile
         }
