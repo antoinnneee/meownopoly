@@ -184,6 +184,7 @@ GroupBox {
                 color: "#cccccc"
                 font.pixelSize: 10
                 font.bold: true
+                x:4
             }
             
             ColumnLayout {

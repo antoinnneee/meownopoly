@@ -17,7 +17,7 @@ Rectangle {
     border.width: 1
     
     // Dimensions
-    height: mainLayout.implicitHeight + 8
+    height: mainLayout.implicitHeight + 16
     width: mainLayout.implicitWidth
     
     // Signals
