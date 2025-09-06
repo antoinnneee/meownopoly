@@ -31,10 +31,6 @@ Rectangle {
     property alias selectionCurrent: logic.selectionCurrent
     property alias isSelectingArea: logic.isSelectingArea
     property alias defaultCaseType: logic.defaultCaseType
-
-    property alias currentElementWidth: logic.currentElementWidth
-    property alias currentElementHeight: logic.currentElementHeight
-    
     // Asset selection properties
     property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
     property alias selectedAssetType: selectionPanel.currentSelectedAssetType
@@ -52,16 +48,16 @@ Rectangle {
         target: MapLoader
         function onFoundCaseTile(dp, caseData){
             console.log("Found case tile:", dp, caseData)
-            logic.createCaseTile(dp, caseData);
+            logic.tileLogic.createCaseTile(dp, caseData);
         }
         function onFoundDecorationTile(dp, decorationParameter){
             console.log("Found decoration tile:", dp, decorationParameter)
-            logic.createDecorationTile(dp, decorationParameter);
+            logic.tileLogic.createDecorationTile(dp, decorationParameter);
         }
         function onMapLoaded(map, mapInfo)
         {
             console.log("Map loaded")
-            logic.builtConnections();
+            logic.tileLogic.builtConnections();
             root.mapInfo = mapInfo;
         }
     }
@@ -203,8 +199,8 @@ Rectangle {
             assetCategory: root.selectedAssetCategory
             assetType: root.selectedAssetType
             assetId: root.selectedAssetId
-            unitSizeWidth: root.currentElementWidth
-            unitSizeHeight: root.currentElementHeight
+            unitSizeWidth: logic.tileLogic.currentElementWidth
+            unitSizeHeight: logic.tileLogic.currentElementHeight
             gridManager: editorGrid
             selectionPanel: selectionPanel
         }

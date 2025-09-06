@@ -12,6 +12,10 @@ QtObject {
 
     required property EditorDynamicComponent editorDynamicComponent
 
+    // Propriétés pour la taille des éléments créés
+    property int currentElementWidth: 3
+    property int currentElementHeight: 4
+
     // Fonction pour désélectionner tous les tiles
     function deselectAllTiles() {
         // Désélectionner tous les tiles dans la liste
@@ -32,8 +36,8 @@ QtObject {
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                           "displaySettings.gridRelativePositionX": gridX,
                                                                                           "displaySettings.gridRelativePositionY": gridY,
-                                                                                          "displaySettings.unitSizeWidth": logic.currentElementWidth,
-                                                                                          "displaySettings.unitSizeHeight": logic.currentElementHeight,
+                                                                                          "displaySettings.unitSizeWidth": currentElementWidth,
+                                                                                          "displaySettings.unitSizeHeight": currentElementHeight,
                                                                                           "displaySettings.zLayer": 5
                                                                                       })
             break
@@ -41,8 +45,8 @@ QtObject {
             newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
                                                                                         "displaySettings.gridRelativePositionX": gridX,
                                                                                         "displaySettings.gridRelativePositionY": gridY,
-                                                                                        "displaySettings.unitSizeWidth": logic.currentElementWidth,
-                                                                                        "displaySettings.unitSizeHeight": logic.currentElementHeight,
+                                                                                        "displaySettings.unitSizeWidth": currentElementWidth,
+                                                                                        "displaySettings.unitSizeHeight": currentElementHeight,
                                                                                         "caseData": Game.getNewCaseType(caseType),
                                                                                     })
             break
@@ -85,6 +89,122 @@ QtObject {
 
         newTile.isSelected = true
         newTile.elementConfigurationRequested(newTile)
+    }
+
+    // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
+    function createCaseTile(dispSettings, caseData) {
+        var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
+                                                                                        "displaySettings": dispSettings,
+                                                                                        "caseData": caseData
+                                                                                    })
+
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            newTile.snapToGridFromGrid()
+        }
+        return newTile
+    }
+
+    function createDecorationTile(dispSettings, decorationParameter) {
+        var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
+                                                                                        "displaySettings": dispSettings,
+                                                                                        "decorationSettings": decorationParameter
+                                                                                    })
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            newTile.snapToGridFromGrid()
+        }
+        return newTile
+    }
+
+
+    // Fonction pour supprimer un élément
+    function deleteElement(element) {
+        console.log("Suppression de l'élément:", element)
+
+        // Trouver l'index de l'élément dans la liste
+        var index = -1
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            if (snapableTilesList[i] === element) {
+                index = i
+                break
+            }
+        }
+
+        if (index !== -1) {
+            // Supprimer l'élément de la liste
+            snapableTilesList.splice(index, 1)
+
+            // Si c'était l'élément sélectionné, le désélectionner
+            if (logic.currentSelectedElement === element) {
+                logic.currentSelectedElement = null
+            }
+
+            // Détruire l'objet QML
+            element.destroy()
+        } else {
+            console.log("Erreur: Élément non trouvé dans la liste")
+        }
+    }
+
+
+    function builtConnections()
+    {
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var tile = snapableTilesList[i]
+            if (tile && tile.caseData) {
+                tile.blockConnections = true
+                var caseData = tile.caseData
+                var nextList = caseData.getNextList()
+                for (var j = 0; j < nextList.length; j++) {
+                    var nextElCaseData = nextList[j]
+                    var nextEl = snapableTilesList.find(function(tile) {
+                        return tile.caseData === nextElCaseData
+                    })
+                    if (nextEl) {
+                        nextEl.blockConnections = true
+                        tile.connectionManager.addNextElement(nextEl)
+                        nextEl.connectionManager.addPreviousElement(tile)
+                        nextEl.blockConnections = false
+                    }
+                }
+                tile.blockConnections = false
+            }
+        }
+    }
+
+    /*
+============================
+= Gestion des connections =
+============================
+*/
+    function deleteElementsConnections(element) {
+        var nexts = element.connectionManager.nextElements || []
+        // itere sur les segments de connexion element->next
+        for (var j = 0; j < nexts.length; j++) {
+            var nextEl = nexts[j]
+            // itere sur les segments de connexion nextEl->element
+            var prevs = nextEl.connectionManager.previousElements || []
+            for (var k = 0; k < prevs.length; k++) {
+                var prevEl = prevs[k]
+                if (prevEl === element) {
+                    nextEl.connectionManager.removePreviousElement(element)
+                }
+            }
+        }
+        // itere sur les segments de connexion element->prev
+        var prevs = element.connectionManager.previousElements || []
+        for (var j = 0; j < prevs.length; j++) {
+            var prevEl = prevs[j]
+            // itere sur les segments de connexion prevEl->element
+            var nexts = prevEl.connectionManager.nextElements || []
+            for (var k = 0; k < nexts.length; k++) {
+                var nextEl = nexts[k]
+                if (nextEl === element) {
+                    prevEl.connectionManager.removeNextElement(element)
+                }
+            }
+        }
     }
 
 }

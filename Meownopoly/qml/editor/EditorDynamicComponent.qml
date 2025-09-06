@@ -30,8 +30,8 @@ Item{
             }
             // Gestion de la suppression
             onElementDeleted: function(element) {
-                logic.deleteElementsConnections(element)
-                logic.deleteElement(element)
+                logic.tileLogic.deleteElementsConnections(element)
+                logic.tileLogic.deleteElement(element)
             }
             
             // Gestion de la configuration
@@ -77,9 +77,9 @@ Item{
                 
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
-                    logic.deleteElementsConnections(element)
+                    logic.tileLogic.deleteElementsConnections(element)
                     element.connectionManager.deleteLinkedConnection()
-                    logic.deleteElement(element)
+                    logic.tileLogic.deleteElement(element)
                 }
                 
                 // Gestion de la configuration

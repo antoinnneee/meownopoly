@@ -52,9 +52,6 @@ Item {
     property bool isSelectingArea: false
     property int defaultCaseType: Case.CS_KibbleDispenser
 
-    // Propriétés pour la taille des éléments créés
-    property int currentElementWidth: 3
-    property int currentElementHeight: 4
     
     property int mmSize : 10
 
@@ -98,121 +95,6 @@ Item {
 
 
 
-
-    /*
-============================
-= Gestion des connections =
-============================
-*/
-    function deleteElementsConnections(element) {
-        var nexts = element.connectionManager.nextElements || []
-        // itere sur les segments de connexion element->next
-        for (var j = 0; j < nexts.length; j++) {
-            var nextEl = nexts[j]
-            // itere sur les segments de connexion nextEl->element
-            var prevs = nextEl.connectionManager.previousElements || []
-            for (var k = 0; k < prevs.length; k++) {
-                var prevEl = prevs[k]
-                if (prevEl === element) {
-                    nextEl.connectionManager.removePreviousElement(element)
-                }
-            }
-        }
-        // itere sur les segments de connexion element->prev
-        var prevs = element.connectionManager.previousElements || []
-        for (var j = 0; j < prevs.length; j++) {
-            var prevEl = prevs[j]
-            // itere sur les segments de connexion prevEl->element
-            var nexts = prevEl.connectionManager.nextElements || []
-            for (var k = 0; k < nexts.length; k++) {
-                var nextEl = nexts[k]
-                if (nextEl === element) {
-                    prevEl.connectionManager.removeNextElement(element)
-                }
-            }
-        }
-    }
-
-    // Fonction pour supprimer un élément
-    function deleteElement(element) {
-        console.log("Suppression de l'élément:", element)
-
-        // Trouver l'index de l'élément dans la liste
-        var index = -1
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i] === element) {
-                index = i
-                break
-            }
-        }
-
-        if (index !== -1) {
-            // Supprimer l'élément de la liste
-            snapableTilesList.splice(index, 1)
-
-            // Si c'était l'élément sélectionné, le désélectionner
-            if (currentSelectedElement === element) {
-                currentSelectedElement = null
-            }
-
-            // Détruire l'objet QML
-            element.destroy()
-        } else {
-            console.log("Erreur: Élément non trouvé dans la liste")
-        }
-    }
-
-    // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
-    function createCaseTile(dispSettings, caseData) {
-        var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                                                                                        "displaySettings": dispSettings,
-                                                                                        "caseData": caseData
-                                                                                    })
-
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            newTile.snapToGridFromGrid()
-        }
-        return newTile
-    }
-
-    function createDecorationTile(dispSettings, decorationParameter) {
-
-        var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
-                                                                                        "displaySettings": dispSettings,
-                                                                                        "decorationSettings": decorationParameter
-                                                                                    })
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            newTile.snapToGridFromGrid()
-        }
-        return newTile
-    }
-
-    function builtConnections()
-    {
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            var tile = snapableTilesList[i]
-            if (tile && tile.caseData) {
-                tile.blockConnections = true
-                var caseData = tile.caseData
-                var nextList = caseData.getNextList()
-                for (var j = 0; j < nextList.length; j++) {
-                    var nextElCaseData = nextList[j]
-                    var nextEl = snapableTilesList.find(function(tile) {
-                        return tile.caseData === nextElCaseData
-                    })
-                    if (nextEl) {
-                        nextEl.blockConnections = true
-                        tile.connectionManager.addNextElement(nextEl)
-                        nextEl.connectionManager.addPreviousElement(tile)
-                        nextEl.blockConnections = false
-                    }
-                }
-                tile.blockConnections = false
-            }
-        }
-    }
 
 
     // Fonction pour mettre à jour l'apparence du rectangle de sélection
@@ -299,10 +181,10 @@ Item {
     // Fonction pour remplir une zone sélectionnée avec plusieurs éléments
     function fillSelectionWithTiles(startX, startY, width, height) {
         console.log("Remplissage de la zone sélectionnée:", startX, startY, width, height)
-        console.log("Dimensions des éléments:", currentElementWidth, currentElementHeight)
+        console.log("Dimensions des éléments:", tileLogic.currentElementWidth, tileLogic.currentElementHeight)
 
         // Vérifier si les dimensions sont valides
-        if (currentElementWidth <= 0 || currentElementHeight <= 0) {
+        if (tileLogic.currentElementWidth <= 0 || tileLogic.currentElementHeight <= 0) {
             console.error("Dimensions d'élément invalides")
             return
         }
@@ -312,8 +194,8 @@ Item {
         var lastTile = null
 
         // Balayer de haut en bas, de gauche à droite
-        for (var y = startY; y <= startY + height - currentElementHeight; y++) {
-            for (var x = startX; x <= startX + width - currentElementWidth; x++) {
+        for (var y = startY; y <= startY + height - tileLogic.currentElementHeight; y++) {
+            for (var x = startX; x <= startX + width - tileLogic.currentElementWidth; x++) {
                 console.log(x, y)
                 // Vérifier si la position est libre
                 var positionOccupied = false
@@ -331,9 +213,9 @@ Item {
 
                     // Calculer les limites du nouvel élément
                     var newTileLeft = x
-                    var newTileRight = x + currentElementWidth
+                    var newTileRight = x + tileLogic.currentElementWidth
                     var newTileTop = y
-                    var newTileBottom = y + currentElementHeight
+                    var newTileBottom = y + tileLogic.currentElementHeight
 
                     // Vérifier s'il y a chevauchement
                     if (!(newTileRight <= tileLeft || newTileLeft >= tileRight ||
@@ -349,7 +231,7 @@ Item {
                     tilesPlaced++;
 
                     // Avancer horizontalement de la taille de l'élément
-                    x += currentElementWidth - 1; // -1 car la boucle incrémente x
+                    x += tileLogic.currentElementWidth - 1; // -1 car la boucle incrémente x
                 }
             }
         }

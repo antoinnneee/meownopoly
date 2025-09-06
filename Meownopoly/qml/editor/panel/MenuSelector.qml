@@ -101,8 +101,8 @@ Item {
                 topRightRadius: 3
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                widthSpinBox.value: logic.currentElementWidth
-                onValueChanged: function(value) { logic.currentElementWidth = value }
+                widthSpinBox.value: logic.tileLogic.currentElementWidth
+                onValueChanged: function(value) { logic.tileLogic.currentElementWidth = value }
             }
             SizeSelector{
                 text: "H:"
@@ -112,8 +112,8 @@ Item {
                 bottomRightRadius: 3
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                widthSpinBox.value: logic.currentElementHeight
-                onValueChanged: function(value) { logic.currentElementHeight = value }
+                widthSpinBox.value: logic.tileLogic.currentElementHeight
+                onValueChanged: function(value) { logic.tileLogic.currentElementHeight = value }
             }
         }
     }

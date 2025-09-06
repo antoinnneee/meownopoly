@@ -33,8 +33,8 @@ Rectangle {
     property alias isSelectingArea: logic.isSelectingArea
     property alias defaultCaseType: logic.defaultCaseType
 
-    property alias currentElementWidth: logic.currentElementWidth
-    property alias currentElementHeight: logic.currentElementHeight
+    property alias currentElementWidth: logic.tileLogic.currentElementWidth
+    property alias currentElementHeight: logic.tileLogic.currentElementHeight
 
     color: logic.isEditing ? "#B3B3D0D8" : "lightblue"
     enum TileType {
