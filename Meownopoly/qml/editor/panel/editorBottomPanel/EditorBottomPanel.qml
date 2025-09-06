@@ -1,10 +1,11 @@
 import QtQuick 2.15
+import "../.."
 
 Rectangle {
     id: root
 
     property bool isExpanded: true
-    required property var logic
+    required property EditorLogic logic
 
 
     property alias contentArea: contentPlaceHolder.children

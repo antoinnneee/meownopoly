@@ -3,18 +3,21 @@ import Game
 import Case
 import ItemSnapable
 import TileType
+import "tools"
 import "tools/snapable"
 import MapInfo
 
-QtObject {
+Item {
     id: logic
     property list<SnapableElement> snapableTilesList
     property var currentSelectedElement
-    required property var editorDynamicComponent
-    required property var workArea
-    required property var editorGrid
+    required property EditorDynamicComponent editorDynamicComponent
+    required property GridManager editorGrid
     required property var selectionRect
     required property MapInfo mapInfo
+    required property var workArea
+
+    property alias scrollLogic: scrollLogic
 
     property bool isEditing : false
     
@@ -24,7 +27,8 @@ QtObject {
 
     EditorScrollLogic {
         id: scrollLogic
-        editorGrid: 1
+        editorGrid: logic.editorGrid
+        logic: parent
     }
 
 

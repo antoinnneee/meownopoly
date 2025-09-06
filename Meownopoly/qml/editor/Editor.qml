@@ -413,7 +413,7 @@ Rectangle {
             {
                 logic.scrollLogic.scrollUp(wheel)
             }
-            else if (editorGrid.mmSize > 1)
+            else if (wheel.angleDelta.y < 0)
             {
                 logic.scrollLogic.scrollDown(wheel)
             }

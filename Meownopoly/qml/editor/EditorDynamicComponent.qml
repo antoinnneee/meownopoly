@@ -4,7 +4,7 @@ import "tools/snapable"
 
 Item{
     id: editorDynamicComponent
-    required property var editorGrid
+    required property GridManager editorGrid
     required property var logic
     required property var workArea
     required property var caseConfigPanel

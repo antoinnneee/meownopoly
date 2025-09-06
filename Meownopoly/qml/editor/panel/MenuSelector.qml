@@ -2,10 +2,11 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../item_icon"
+import ".."
 
 Item {
     id: root    
-    required property var logic
+    required property EditorLogic logic
     property bool isExpanded: false
 
     // Signal émis quand un bouton est cliqué

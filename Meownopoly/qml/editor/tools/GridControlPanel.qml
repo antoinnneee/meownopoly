@@ -7,7 +7,7 @@ import Game
 Item {
     id: gridControlPanel
 
-    required property var logic
+    required property EditorLogic logic
 
     // Référence vers le GridManager
     property var gridManager: null

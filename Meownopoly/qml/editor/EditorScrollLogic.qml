@@ -1,18 +1,20 @@
 import QtQuick 2.15
+import "tools"
 
 QtObject {
-    property var editorGrid
+    required property GridManager editorGrid
+    required property var logic
 
     function scrollUp(wheel) {
         if (wheel.modifiers & Qt.ControlModifier) {
             console.log("CTRL + scrollUp")
-            editorGridd.updateSize(parent.mmSize + 1)
+            editorGrid.updateSize(editorGrid.mmSize + 1)
         }
     }
     function scrollDown(wheel) {
         if (wheel.modifiers & Qt.ControlModifier) {
             console.log("CTRL + scrollDown")
-            editorGridd.updateSize(parent.mmSize - 1)
+            editorGrid.updateSize(editorGrid.mmSize - 1)
         }
     }
     function scrollLeft(wheel) {

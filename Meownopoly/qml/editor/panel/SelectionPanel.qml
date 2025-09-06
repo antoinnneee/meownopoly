@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import AssetManager
+import ".."
 
 import "./assetSelectionPanel"
 import "./caseSelectionPanel"
@@ -57,7 +58,7 @@ Rectangle {
     signal resizeFinished(int finalHeight)
 
 
-    required property var logic
+    required property EditorLogic logic
 
     // Persistance de la hauteur personnalisée
     Component.onCompleted: {

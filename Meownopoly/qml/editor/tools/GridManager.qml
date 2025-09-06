@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls
+import ".."
 
 
 /**
@@ -17,7 +18,8 @@ Item {
     }
     
     function updateSize(mm) {
-        mmSize = mm
+        if (mm > 0)
+            mmSize = mm
     }
 
     property int gridSize: Screen.pixelDensity * mmSize
