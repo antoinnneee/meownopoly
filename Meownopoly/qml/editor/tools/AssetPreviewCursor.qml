@@ -85,12 +85,21 @@ Item {
         id: assetPreviewComponent
         SnapableDecoration {
             id: snapableDecoration
+            Rectangle{
+                color: "transparent"
+                border.color: "black"
+                anchors.fill: parent
+                border.width: 3
+                radius: 4
+            }
+
             decorationSettings: DecorationParameter {
                 decorationCategory: root.assetCategory
                 decorationType: root.assetType
                 decorationId: root.assetId
             }
             parent: workArea
+            visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
             displaySettings.unitSizeWidth: root.unitSizeWidth
@@ -99,8 +108,6 @@ Item {
             Component.onCompleted: {
                 root.snapablePreview = snapableDecoration
             }
-
-
         }
     }
 
@@ -111,9 +118,9 @@ Item {
     
     Rectangle {
         anchors.fill: parent
-        color: "#80000000"
+        color: "#A0000000"
         border.color: "#4A90E2"
-        border.width: 2
+        border.width: 4
         radius: 4
         visible: root.visible
         

@@ -37,9 +37,38 @@ Item {
         snapableTilesList: logic.snapableTilesList
     }
 
-    property ScrollLogic scrollLogic : ScrollLogic {
-        editorGrid: logic.editorGrid
-        logic: logic
+    property ScrollLogic scrollLogic
+
+    Component{
+        id: scrollLogic_normal_comp
+        ScrollLogic {
+            id: scrollLogic_normal
+            editorGrid: _editorGrid
+            logic: _logic
+            Component.onCompleted: {
+                logic.scrollLogic = scrollLogic_normal
+            }
+        }
+    }
+
+    Component{
+        id: scrollLogic_pose_comp
+        ScrollLogic_POSE {
+            id: scrollLogic_pose
+            editorGrid: _editorGrid
+            logic: _logic
+            Component.onCompleted: {
+                logic.scrollLogic = scrollLogic_pose
+            }
+        }
+    }
+
+    Loader {
+        id: scrollLogicLoader
+        sourceComponent: (logic.editorMouseMode == EditorEnum.EM_NORMAL) ? scrollLogic_normal_comp
+                                                                         : scrollLogic_pose_comp
+        property GridManager _editorGrid : parent.editorGrid
+        property var _logic : parent
     }
 
     TileLogic{

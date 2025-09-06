@@ -2,8 +2,8 @@ import QtQuick 2.15
 import "../tools"
 
 QtObject {
-    required property GridManager editorGrid
-    required property var logic
+    property GridManager editorGrid
+    property var logic
 
     function scrollUp(wheel) {
         if (wheel.modifiers & Qt.ControlModifier) {
