@@ -333,32 +333,10 @@ Rectangle {
         var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
         if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
 
-        console.log("applyVisualEffectsToNewTile GET")
         var currentEffects = visualEffectsPanel.getCurrentEffects()
         if (!currentEffects) return
 
-        // Apply color effects
-        newTile.displaySettings.effectBrightness = currentEffects.brightness
-        newTile.displaySettings.effectContrast = currentEffects.contrast
-        newTile.displaySettings.effectSaturation = currentEffects.saturation
-        newTile.displaySettings.effectColorization = currentEffects.colorization
-        newTile.displaySettings.effectColorizationColor = currentEffects.colorizationColor
-
-        // Apply advanced effects
-        newTile.displaySettings.effectBlurEnabled = currentEffects.blurEnabled
-        newTile.displaySettings.effectBlur = currentEffects.blur
-        newTile.displaySettings.effectShadowEnabled = currentEffects.shadowEnabled
-        newTile.displaySettings.effectShadowBlur = currentEffects.shadowBlur
-
-        // Apply transform effects
-        newTile.displaySettings.rotationAngle = currentEffects.rotationAngle
-        newTile.displaySettings.mirrorHorizontal = currentEffects.mirrorHorizontal
-        newTile.displaySettings.mirrorVertical = currentEffects.mirrorVertical
-
-        console.log("Applied visual effects to new tile")
-        console.log("mirrorHorizontal: ", currentEffects.mirrorHorizontal)
-        console.log("mirrorVertical: ", currentEffects.mirrorVertical)
-        console.log("rotationAngle: ", currentEffects.rotationAngle)
+        newTile.applyVisualEffects(currentEffects)
     }
 
     // Function to place the selected asset
@@ -411,33 +389,7 @@ Rectangle {
         }
     }
 
-    WheelHandler {
-        onWheel: (wheel)=> {
-            if (wheel.angleDelta.y > 0)
-            {
-                logic.scrollLogic.scrollUp(wheel)
-            }
-            else if (wheel.angleDelta.y < 0)
-            {
-                logic.scrollLogic.scrollDown(wheel)
-            }
-            if (wheel.angleDelta.x > 0)
-            {
-                logic.scrollLogic.scrollRight(wheel)
-            }
-            else if (wheel.angleDelta.x < 0)
-            {
-                logic.scrollLogic.scrollLeft(wheel)
-            }
-            for (var i = 0; i < root.snapableTilesList.length; i++) {
-                if (root.snapableTilesList[i]) {
-                    root.snapableTilesList[i].isSelected = false
-                    root.snapableTilesList[i].snapToGridFromGrid()
-                }
-            }
-
-        }
-    }
+    Editor_WheelHandler { }
 
     // Panneau de sélection des maps
     MapSelectionPanel {

@@ -135,5 +135,6 @@
         <file>qml/editor/panel/assetSelectionPanel/VEP_ButtonLock.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_ButtonMirror.qml</file>
         <file>qml/editor/logic/ScrollLogic_POSE.qml</file>
+        <file>qml/editor/Editor_WheelHandler.qml</file>
     </qresource>
 </RCC>

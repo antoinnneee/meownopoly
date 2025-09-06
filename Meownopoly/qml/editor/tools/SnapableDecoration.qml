@@ -232,4 +232,25 @@ SnapableElement {
         resetRotation()
         resetMirror()
     }
+
+    function applyVisualEffects(effects)    // generate from VisualEffectsPanel@getCurrentEffects()
+    {
+        // Apply color effects
+        displaySettings.effectBrightness = effects.brightness
+        displaySettings.effectContrast = effects.contrast
+        displaySettings.effectSaturation = effects.saturation
+        displaySettings.effectColorization = effects.colorization
+        displaySettings.effectColorizationColor = effects.colorizationColor
+
+        // Apply advanced effects
+        displaySettings.effectBlurEnabled = effects.blurEnabled
+        displaySettings.effectBlur = effects.blur
+        displaySettings.effectShadowEnabled = effects.shadowEnabled
+        displaySettings.effectShadowBlur = effects.shadowBlur
+
+        // Apply transform effects
+        displaySettings.rotationAngle = effects.rotationAngle
+        displaySettings.mirrorHorizontal = effects.mirrorHorizontal
+        displaySettings.mirrorVertical = effects.mirrorVertical
+    }
 }

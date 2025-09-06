@@ -153,17 +153,12 @@ Rectangle {
             mirrorHorizontal: transformSection.horizontalMirrorCheck.checked,
             mirrorVertical: transformSection.verticalMirrorCheck.checked
         }
-        console.log("GET  visual effects")
-        console.log("mirrorHorizontal: ", effects.mirrorHorizontal)
-        console.log("mirrorVertical: ", effects.mirrorVertical)
-        console.log("rotationAngle: ", effects.rotationAngle)
 
         return effects
     }
 
     function updateFromTarget() {
         if (!targetDecoration || root.effectsLocked) return
-        console.log("set visual panel effect from target")
         
         // Update sliders from target values
         colorEffectsSection.brightnessSlider.value = targetDecoration.displaySettings.effectBrightness
