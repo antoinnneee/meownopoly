@@ -366,8 +366,8 @@ Rectangle {
         if (!root.isAssetSelected) return
 
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
-        gridX = gridX
-        gridY = gridY
+        gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
+        gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
         // Create appropriate element based on category
         var newTile = logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
         // Set decoration properties if needed

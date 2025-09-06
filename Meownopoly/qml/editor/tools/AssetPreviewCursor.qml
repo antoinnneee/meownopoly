@@ -60,7 +60,7 @@ Item {
     property int gridYPosition:  0
     onXChanged: {
         var point = gridManager.getGridPosition(mouseX, mouseY)
-        gridXPosition = point.x
+        gridXPosition = point.x - Math.trunc(logic.tileLogic.currentElementWidth/2)
         if (snapablePreview) {
             snapablePreview.x = gridXPosition * gridManager.gridSize
         }
@@ -68,7 +68,7 @@ Item {
 
     onYChanged: {
         var point = gridManager.getGridPosition(mouseX, mouseY)
-        gridYPosition = point.y
+        gridYPosition = point.y - Math.trunc(logic.tileLogic.currentElementHeight/2)
         if (snapablePreview) {
             snapablePreview.y = gridYPosition * gridManager.gridSize
         }
@@ -89,8 +89,9 @@ Item {
                 color: "transparent"
                 border.color: "black"
                 anchors.fill: parent
-                border.width: 3
+                border.width: 1
                 radius: 4
+                opacity: 0.2
             }
 
             decorationSettings: DecorationParameter {
