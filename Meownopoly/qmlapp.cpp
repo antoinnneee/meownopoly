@@ -35,6 +35,7 @@
 #include <map/maploader.h>
 #include <map/mapinfo.h>
 #include "tools/debug_info.h"
+#include "tools/editorenum.h"
 
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
@@ -48,6 +49,7 @@ QmlApp::QmlApp(QWindow *parent)
     AssetManager::registerQml();
     MapLoader::registerQml();
     MapInfo::registerQml();
+    EditorEnum::registerQml();
 
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);

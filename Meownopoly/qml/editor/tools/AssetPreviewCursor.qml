@@ -25,16 +25,13 @@ Item {
     Connections{
         target: selectionPanel.assetPanel.visualEffectsPanel
         function onEffectChanged(){
-            console.log("Effect change in visual panel")
             var newTile = snapablePreview
 
             var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
             if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
-            console.log("visual effect panelfound")
 
             var currentEffects = visualEffectsPanel.getCurrentEffects()
             if (!currentEffects) return
-            console.log("get current effet, ok", currentEffects)
             // Apply color effects
             newTile.displaySettings.effectBrightness = currentEffects.brightness
             newTile.displaySettings.effectContrast = currentEffects.contrast
@@ -52,41 +49,9 @@ Item {
             newTile.displaySettings.rotationAngle = currentEffects.rotationAngle
             newTile.displaySettings.mirrorHorizontal = currentEffects.mirrorHorizontal
             newTile.displaySettings.mirrorVertical = currentEffects.mirrorVertical
-
         }
-
     }
 
-    /*
-    selectionPanel.onVisualEffectChanged: {
-        var newTile = snapablePreview
-
-        var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
-        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
-
-        var currentEffects = visualEffectsPanel.getCurrentEffects()
-        if (!currentEffects) return
-
-        // Apply color effects
-        newTile.displaySettings.effectBrightness = currentEffects.brightness
-        newTile.displaySettings.effectContrast = currentEffects.contrast
-        newTile.displaySettings.effectSaturation = currentEffects.saturation
-        newTile.displaySettings.effectColorization = currentEffects.colorization
-        newTile.displaySettings.effectColorizationColor = currentEffects.colorizationColor
-
-        // Apply advanced effects
-        newTile.displaySettings.effectBlurEnabled = currentEffects.blurEnabled
-        newTile.displaySettings.effectBlur = currentEffects.blur
-        newTile.displaySettings.effectShadowEnabled = currentEffects.shadowEnabled
-        newTile.displaySettings.effectShadowBlur = currentEffects.shadowBlur
-
-        // Apply transform effects
-        newTile.displaySettings.rotationAngle = currentEffects.rotationAngle
-        newTile.displaySettings.mirrorHorizontal = currentEffects.mirrorHorizontal
-        newTile.displaySettings.mirrorVertical = currentEffects.mirrorVertical
-
-    }
-*/
     // Position the preview at mouse cursor
     x: mouseX - width / 2
     y: mouseY - height / 2

@@ -17,7 +17,7 @@ Item {
     property bool showInfoPanel: true
 
     // Propriété pour le mode de sélection
-    signal selectionModeChanged(bool isActive)
+    // signal selectionModeChanged(bool isActive)
     signal cancelSelectionRequested()
 
 
@@ -124,7 +124,7 @@ Item {
                 onClicked: {
                     isSelectionActive = checked
                     console.log("Mode sélection: " + checked)
-                    selectionModeChanged(checked)
+                    // selectionModeChanged(checked)
                     if (!checked) {
                         logic.cancelSelection()
                     }

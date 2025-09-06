@@ -6,7 +6,7 @@ import TileType
 import "tools"
 import "tools/snapable"
 import MapInfo
-
+import EditorEnum
 import "logic"
 
 Item {
@@ -18,6 +18,8 @@ Item {
     required property var selectionRect
     required property MapInfo mapInfo
     required property var workArea
+
+    property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
     property bool isEditing : false
 
@@ -92,10 +94,6 @@ Item {
         }
         Game.registerMap(mapInfo, caseList, decoList)
     }
-
-
-
-
 
     // Fonction pour mettre à jour l'apparence du rectangle de sélection
     function updateSelectionRect() {

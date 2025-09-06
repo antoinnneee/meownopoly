@@ -10,16 +10,12 @@ import "../editorBottomPanel"
 EditorBottomPanel {
     id: root
 
-
-    // property string activeFilter
     property alias activeFilter: titleBar.activeFilter
-//    property alias currentView: root.currentView
-    // property string currentView: "categories" // "categories" or "assets"
+
     onCurrentViewChanged: {
         titleBar.currentView = currentView
         contentArea.currentView = currentView
     }
-
 
     property string selectedCategory: ""
     property string selectedType: ""
@@ -39,6 +35,7 @@ EditorBottomPanel {
             assetManagerSettings.currentSelectedCategory = ""
             assetManagerSettings.currentSelectedType = ""
             assetManagerSettings.currentSelectedId = ""
+            root.assetCleared()
         }
 
     }
@@ -55,8 +52,7 @@ EditorBottomPanel {
     
     // Signals
     signal assetSelected(string category, string type, string id)
-    signal selectionModeChanged(bool isActive)
-
+    signal assetCleared()
 
 
     onAssetSelected: function(category, type, id) {
@@ -86,7 +82,7 @@ EditorBottomPanel {
             root.assetSelected(category, type, id)
         }
         onSearchTextChanged: {
-            console.log("EditorBottomPanel - searchText filter changed", searchText)
+            // console.log("EditorBottomPanel - searchText filter changed", searchText)
             root.searchText = searchText
             root.searchText = Qt.binding(function(){ return root.searchText})
         }

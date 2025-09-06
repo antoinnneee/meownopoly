@@ -45,12 +45,11 @@ Rectangle {
     // Signals to propagate from child panels
     // Signaux pour propager les événements vers l'Editor
     signal assetSelected(string category, string type, string id)
+    signal assetCleared()
     signal caseSelected(string category, string type, string id)
-    signal selectionModeChanged(bool isActive)
-    // Signaux supplémentaires pour les changements de propriétés
+    // signal selectionModeChanged(bool isActive)
+
     signal viewChanged(string viewName)
-    signal filterChanged(string filterName)
-    signal textSearchChanged(string searchText)
     signal visualEffectChanged()
     
     // Signaux de redimensionnement
@@ -192,15 +191,10 @@ Rectangle {
         }
         
         // Animation de couleur au survol
-        Behavior on color {
-            ColorAnimation { duration: 150 }
-        }
+        Behavior on color { ColorAnimation { duration: 150 }}
     }
 
-
-    // Content area with stacked views
     color: "transparent"
-
 
     // Stack layout to switch between panels
     StackLayout {
@@ -210,25 +204,27 @@ Rectangle {
         currentIndex: root.currentPanelIndex
         visible: true // Assurer que le StackLayout est visible
 
-
         // Asset Selection Panel
         AssetSelectionPanel {
             id: assetPanel
             logic: root.logic
 
-            Layout.preferredHeight: root.expandedHeight
-
             collapsedHeight: root.collapsedHeight
             expandedHeight: root.expandedHeight
             Layout.preferredWidth: parent.width
             isExpanded: root.isExpanded
-            // Connexion de tous les signaux pour la propagation vers l'Editor
-            onSelectionModeChanged: function(isActive) {
-                root.selectionModeChanged(isActive);
-            }
+
+            Layout.preferredHeight: root.expandedHeight
 
             onAssetSelected: function(category, type, id) {
-                root.assetSelected(category, type, id);
+                if (category === "" && type === "" && id === "") {
+                    console.log("asset cleared")
+                    root.assetCleared()
+                }
+                else {
+                    console.log("asset selected : ",category, type, id )
+                    root.assetSelected(category, type, id);
+                }
             }
 
             // Surveiller les changements de propriétés pour propager les signaux
@@ -237,14 +233,6 @@ Rectangle {
                 root.viewChanged(currentView);
                 // Propager le changement vers le parent
                 //root.currentView = currentView;
-            }
-
-            onActiveFilterChanged: {
-                root.filterChanged(activeFilter);
-            }
-
-            onSearchTextChanged: {
-                root.textSearchChanged(searchText);
             }
 
             Component.onCompleted: {
@@ -265,10 +253,10 @@ Rectangle {
             Layout.preferredWidth: parent.width
             isExpanded: root.isExpanded
 
-            onSelectionModeChanged: function(isActive) {
-                // Propager le signal vers le haut si nécessaire
-                selectionModeChanged(isActive);
-            }
+            // onSelectionModeChanged: function(isActive) {
+            //     // Propager le signal vers le haut si nécessaire
+            //     selectionModeChanged(isActive);
+            // }
 
             onCaseSelected: function(category, type, id) {
                 // Propager le signal vers le haut si nécessaire
@@ -282,6 +270,7 @@ Rectangle {
         if (root.currentPanelIndex === 0) {
             // Si nous sommes sur le panel d'assets
             assetPanel.assetManagerSettings.clearAssetSelection()
+
         }
     }
 

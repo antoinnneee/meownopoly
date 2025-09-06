@@ -14,6 +14,7 @@ import "panel/caseConfigPanel"
 import "panel/assetSelectionPanel"
 import MapLoader
 import MapInfo
+import EditorEnum
 
 Rectangle {
     id: root
@@ -396,6 +397,13 @@ Rectangle {
                 return currentSelectedElement
             }
             return null
+        }
+
+        onAssetSelected: function(category, type, id) {
+            logic.editorMouseMode = EditorEnum.EM_POSE
+        }
+        onAssetCleared: function() {
+            logic.editorMouseMode = EditorEnum.EM_NORMAL
         }
     }
 

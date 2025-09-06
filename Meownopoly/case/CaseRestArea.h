@@ -6,10 +6,6 @@
 
 class Player;
 
-
-
-
-
 class CaseRestArea : public CaseCatPerks
 {
     Q_OBJECT

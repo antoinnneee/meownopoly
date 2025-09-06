@@ -51,7 +51,8 @@ SOURCES += \
     meowstyle.cpp \
     player.cpp \
     qmlapp.cpp \
-    tools/appinfo.cpp
+    tools/appinfo.cpp \
+    tools/editorenum.cpp
 
 HEADERS += \
     QtFolderCompressor/FolderCompressor.h \
@@ -83,6 +84,7 @@ HEADERS += \
     qmlapp.h \
     tools/debug_Info.h	\
     tools/appinfo.h \
+    tools/editorenum.h
 
 RESOURCES += qml.qrc \
     config.qrc

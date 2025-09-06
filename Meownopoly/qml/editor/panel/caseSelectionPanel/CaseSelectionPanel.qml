@@ -56,7 +56,6 @@ EditorBottomPanel {
     // Signals
     signal caseSelected(string category, string type, string id)
     width: 450
-    signal selectionModeChanged(bool isActive)
 
     onCaseSelected: function(category, type, id) {
         if (root.isCaseSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
