@@ -201,8 +201,6 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: function(mouse) {
             if (mouse.button === Qt.LeftButton){
-                console.log("click location : ", mouseX, mouseY)
-                console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
                 gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
             }
             if (mouse.button === Qt.RightButton){

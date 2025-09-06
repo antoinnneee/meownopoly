@@ -6,7 +6,7 @@ import "../tools/snapable"
 import ".."
 
 QtObject {
-    required property list<SnapableElement> snapableTilesList
+    required property var snapableTilesList
     required property GridManager editorGrid
     required property var logic
 

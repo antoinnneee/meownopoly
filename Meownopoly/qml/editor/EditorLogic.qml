@@ -21,8 +21,6 @@ Item {
 
     property bool isEditing : false
 
-    property alias minPlanDisplayed: logic.planLogic.minPlanDisplayed
-    property alias maxPlanDisplayed: logic.planLogic.maxPlanDisplayed
     property alias planLogic: planLogic
     property alias tileLogic: tileLogic
 
