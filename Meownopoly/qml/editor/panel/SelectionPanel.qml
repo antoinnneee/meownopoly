@@ -226,6 +226,9 @@ Rectangle {
                     root.assetSelected(category, type, id);
                 }
             }
+            onAssetCleared: {
+                root.assetCleared()
+            }
 
             // Surveiller les changements de propriétés pour propager les signaux
             onCurrentViewChanged: {

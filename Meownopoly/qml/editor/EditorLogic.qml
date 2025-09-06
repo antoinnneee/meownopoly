@@ -21,6 +21,10 @@ Item {
 
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
+    onEditorMouseModeChanged: {
+        console.log("mouse mode change : ", editorMouseMode)
+    }
+
     property bool isEditing : false
 
     property alias planLogic: planLogic
