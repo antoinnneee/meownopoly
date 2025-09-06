@@ -133,5 +133,6 @@
         <file>qml/editor/logic/ScrollLogic.qml</file>
         <file>qml/editor/logic/TileLogic.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_ButtonLock.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/VEP_ButtonMirror.qml</file>
     </qresource>
 </RCC>

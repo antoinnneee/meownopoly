@@ -32,15 +32,42 @@ Rectangle {
         anchors.margins: 8
         spacing: 8
         
-        // Title
-        Text {
-            id: title
-            text: "Transform"
-            color: "#ffffff"
-            font.pixelSize: 14
-            font.bold: true
+        // Title with mirror buttons
+        RowLayout {
             anchors.left: parent.left
             anchors.right: parent.right
+            spacing: 10
+
+            Text {
+                id: title
+                text: "Transform"
+                color: "#ffffff"
+                font.pixelSize: 14
+                font.bold: true
+                Layout.fillWidth: true
+            }
+            
+            VEP_ButtonMirror {
+                id: horizontalMirrorButton
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: 30
+                isHorizontal: true
+                isMirrored: horizontalMirrorCheck.checked
+                onClicked: {
+                    horizontalMirrorCheck.checked = !horizontalMirrorCheck.checked
+                }
+            }
+            
+            VEP_ButtonMirror {
+                id: verticalMirrorButton
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: 30
+                isHorizontal: false
+                isMirrored: verticalMirrorCheck.checked
+                onClicked: {
+                    verticalMirrorCheck.checked = !verticalMirrorCheck.checked
+                }
+            }
         }
         
         // Rotation Section
@@ -108,63 +135,30 @@ Rectangle {
             }
         }
         
-        // Mirror Section
-        Rectangle {
-            id: mirrorSection
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: mirrorLayout.implicitHeight + 8
-            color: "#333333"
-            radius: 4
+        // Hidden checkboxes for mirror functionality (kept for compatibility)
+        CheckBox {
+            id: horizontalMirrorCheck
+            visible: false
+            checked: false
             
-            Column {
-                id: mirrorLayout
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.margins: 6
-                spacing: 6
-                
-                Text {
-                    text: "Mirror"
-                    color: "#cccccc"
-                    font.pixelSize: 12
-                    font.bold: true
+            onCheckedChanged: {
+                if (targetDecoration && targetDecoration.isSelected) {
+                    targetDecoration.displaySettings.mirrorHorizontal = checked
                 }
-                
-                Row {
-                    spacing: 16
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    
-                    CheckBox {
-                        id: horizontalMirrorCheck
-                        text: "Horizontal"
-                        checked: false
-                        font.pixelSize: 11
-                        
-                        onCheckedChanged: {
-                            if (targetDecoration && targetDecoration.isSelected) {
-                                targetDecoration.displaySettings.mirrorHorizontal = checked
-                            }
-                            root.effectChanged()
-                        }
-                    }
-                    
-                    CheckBox {
-                        id: verticalMirrorCheck
-                        text: "Vertical"
-                        checked: false
-                        font.pixelSize: 11
-                        
-                        onCheckedChanged: {
-                            if (targetDecoration && targetDecoration.isSelected) {
-                                targetDecoration.displaySettings.mirrorVertical = checked
-                            }
-                            root.effectChanged()
-                        }
-                    }
+                root.effectChanged()
+            }
+        }
+        
+        CheckBox {
+            id: verticalMirrorCheck
+            visible: false
+            checked: false
+            
+            onCheckedChanged: {
+                if (targetDecoration && targetDecoration.isSelected) {
+                    targetDecoration.displaySettings.mirrorVertical = checked
                 }
+                root.effectChanged()
             }
         }
     }
@@ -180,8 +174,5 @@ Rectangle {
         horizontalMirrorCheck.checked = targetDecoration.displaySettings.mirrorHorizontal
         verticalMirrorCheck.checked = targetDecoration.displaySettings.mirrorVertical
     }
-    
-    onTargetDecorationChanged: {
-        updateFromTarget()
-    }
+
 }

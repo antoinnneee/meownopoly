@@ -333,6 +333,7 @@ Rectangle {
         var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
         if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
 
+        console.log("applyVisualEffectsToNewTile GET")
         var currentEffects = visualEffectsPanel.getCurrentEffects()
         if (!currentEffects) return
 
@@ -355,6 +356,9 @@ Rectangle {
         newTile.displaySettings.mirrorVertical = currentEffects.mirrorVertical
 
         console.log("Applied visual effects to new tile")
+        console.log("mirrorHorizontal: ", currentEffects.mirrorHorizontal)
+        console.log("mirrorVertical: ", currentEffects.mirrorVertical)
+        console.log("rotationAngle: ", currentEffects.rotationAngle)
     }
 
     // Function to place the selected asset

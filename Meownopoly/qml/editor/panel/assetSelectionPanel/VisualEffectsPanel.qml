@@ -34,7 +34,7 @@ Rectangle {
         anchors.margins: 10
         spacing: 10
         
-        // Title with lock button
+        // Title with mirror buttons and lock button
         RowLayout {
             anchors.left: parent.left
             anchors.right: parent.right
@@ -48,7 +48,29 @@ Rectangle {
                 font.bold: true
                 Layout.fillWidth: true
             }
-
+            
+            VEP_ButtonMirror {
+                id: horizontalMirrorButton
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: 30
+                isHorizontal: true
+                isMirrored: transformSection.horizontalMirrorCheck.checked
+                onClicked: {
+                    transformSection.horizontalMirrorCheck.checked = !transformSection.horizontalMirrorCheck.checked
+                }
+            }
+            
+            VEP_ButtonMirror {
+                id: verticalMirrorButton
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: 30
+                isHorizontal: false
+                isMirrored: transformSection.verticalMirrorCheck.checked
+                onClicked: {
+                    transformSection.verticalMirrorCheck.checked = !transformSection.verticalMirrorCheck.checked
+                }
+            }
+            
             VEP_ButtonLock {
                 id: lockButton
                 Layout.preferredHeight: 30
@@ -131,11 +153,17 @@ Rectangle {
             mirrorHorizontal: transformSection.horizontalMirrorCheck.checked,
             mirrorVertical: transformSection.verticalMirrorCheck.checked
         }
+        console.log("GET  visual effects")
+        console.log("mirrorHorizontal: ", effects.mirrorHorizontal)
+        console.log("mirrorVertical: ", effects.mirrorVertical)
+        console.log("rotationAngle: ", effects.rotationAngle)
+
         return effects
     }
 
     function updateFromTarget() {
         if (!targetDecoration || root.effectsLocked) return
+        console.log("set visual panel effect from target")
         
         // Update sliders from target values
         colorEffectsSection.brightnessSlider.value = targetDecoration.displaySettings.effectBrightness
