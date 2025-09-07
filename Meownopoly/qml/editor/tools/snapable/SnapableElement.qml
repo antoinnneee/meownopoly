@@ -47,8 +47,6 @@ Rectangle {
     readonly property int globalCenterX: snapableElement.x + snapableElement.width / 2
     readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
 
-
-
     property alias connectionManager: connectionManager
     // Expose le point central en coordonnées locales et scène
     readonly property point centerLocal: Qt.point(width / 2, height / 2)
@@ -69,11 +67,11 @@ Rectangle {
     signal elementClicked(var element)
     signal elementPressed(var element)
     onElementPressed: {
-
         console.log("element pressed");
         isDragging = true
         isSelected = true
     }
+
     signal elementReleased(var element)
     onElementReleased: {
         console.log("element release");
@@ -86,7 +84,6 @@ Rectangle {
         if (autoSnap && gridManager && gridManager.snapToGrid) {
             snapToGrid()
         }
-        
     }
 
     signal elementResized(var element, real newWidth, real newHeight)
@@ -103,7 +100,6 @@ Rectangle {
     }
     SnapableElementCreateAnimation {
         id: createAnimation
-
     }
 
     color: elementColor
@@ -172,8 +168,7 @@ Rectangle {
             elementClicked(snapableElement)
         }
         
-        onPositionChanged: function(mouse) {
-
+        onPositionChanged: function(mouse) { }
     }
     
     // Contrôles de l'élément (boutons de plan et suppression)

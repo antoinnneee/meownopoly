@@ -130,9 +130,12 @@ Rectangle {
         pressAndHoldInterval: 250
         drag.target: null
         drag.axis: Drag.XAndYAxis
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+
         property list<SnapableElement> clickElement:[]
         property var clickPosition
         property list<var> elementInitialPosition:[]
+
         function elementClicked(tile)
         {
             clickElement.push(tile)
@@ -143,6 +146,11 @@ Rectangle {
 
         onPressed: function (mouse) {
             clickPosition = Qt.point(mouse.x, mouse.y)
+            if (mouse.button === Qt.RightButton) {
+                drag.target = editorGrid
+                mouse.accepted = true
+                return
+            }
             console.log("main MA pressed : nb Element ", clickElement.length)
             mouse.accepted = true
             // propagate pressed to first clicked element
