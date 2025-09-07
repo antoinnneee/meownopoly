@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtCore
 import QtQuick.Effects
 import AssetManager
 import ".."
@@ -20,7 +21,7 @@ Rectangle {
     property int currentPanelIndex: 0 // 0 = Asset Selection, 1 = Case Selection
     
     // Propriétés de redimensionnement
-    property int customHeight: 400 // Hauteur personnalisée de l'utilisateur
+    property int customHeight: Screen.pixelDensity * 75// Hauteur personnalisée de l'utilisateur
     property int minHeight: 100 // Hauteur minimale configurable
     property int maxHeight: parent.height * 0.7 // Hauteur maximale dynamique
     property bool isResizing: false // État de redimensionnement actif
@@ -59,34 +60,7 @@ Rectangle {
 
     required property EditorLogic logic
 
-    // Persistance de la hauteur personnalisée
-    Component.onCompleted: {
-        loadCustomHeight()
-    }
-    
-    Component.onDestruction: {
-        saveCustomHeight()
-    }
-    
-    function saveCustomHeight() {
-        // Sauvegarder la hauteur personnalisée dans les paramètres
-        if (typeof Settings !== 'undefined') {
-            Settings.setValue("SelectionPanel/customHeight", root.customHeight)
-        }
-    }
-    
-    function loadCustomHeight() {
-        // Charger la hauteur personnalisée depuis les paramètres
-        if (typeof Settings !== 'undefined') {
-            var savedHeight = Settings.value("SelectionPanel/customHeight", 400)
-            root.customHeight = Math.max(root.minHeight, Math.min(savedHeight, root.maxHeight))
-        }
-    }
-    
-    function resetToDefaultHeight() {
-        root.customHeight = 400
-        saveCustomHeight()
-    }
+
 
     // Smooth height animation
     Behavior on height {
