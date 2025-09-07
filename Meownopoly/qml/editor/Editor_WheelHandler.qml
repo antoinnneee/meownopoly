@@ -37,7 +37,7 @@ WheelHandler {
                  for (var i = 0; i < root.snapableTilesList.length; i++) {
                      if (root.snapableTilesList[i]) {
                          root.snapableTilesList[i].isSelected = false
-                         root.snapableTilesList[i].snapToGridFromGrid()
+                         root.snapableTilesList[i].snapToGridFromGridPos()
                      }
                  }
                  

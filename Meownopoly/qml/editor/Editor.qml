@@ -63,34 +63,7 @@ Rectangle {
         }
     }
 
-    Button{
-        id: loadMapButton
-        text: "Load Map"
-        onClicked: {
-            console.log("Opening map selection panel")
-            mapSelectionPanel.isVisible = true
-        }
-        z:1000
-        
-        // Style moderne pour le bouton
-        background: Rectangle {
-            radius: 8
-            color: loadMapButton.hovered ? "#74b9ff" : "#6c5ce7"
-            border.color: "#5f3dc4"
-            border.width: 1
-            
-            Behavior on color { ColorAnimation { duration: 150 } }
-        }
-        
-        contentItem: Text {
-            text: loadMapButton.text
-            color: "#ffffff"
-            font.pixelSize: 12
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-    }
+    Editor_WheelHandler { }
 
     EditorLogic {
         id: logic
@@ -100,6 +73,7 @@ Rectangle {
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
     }
+
     EditorDynamicComponent {
         id: editorDynamicComponent
         editorGrid: editorGrid
@@ -108,6 +82,16 @@ Rectangle {
         caseConfigPanel: caseConfigPanel
         connectionsPanel: connectionsPanel
     }
+
+    LoadMapButton {
+        id: loadMapButton
+
+        onClicked: {
+            console.log("Opening map selection panel")
+            mapSelectionPanel.isVisible = true
+        }
+    }
+
 
     // Grille de l'éditeur
     GridManager {
@@ -120,13 +104,7 @@ Rectangle {
         
 
         onGridPressed : function(position) {
-            // Si un asset est sélectionné, le placer directement
-            if (root.isAssetSelected) {
-            } else {
-                // Sinon, afficher le menu contextuel
-                contextMenu.clickGridCoord = position
-                contextMenu.popup()
-            }
+            // moved to main MA
         }
         onGridClicked:  function(position) {
             if (root.isAssetSelected) {
@@ -142,6 +120,49 @@ Rectangle {
         }
     }
 
+    MouseArea{
+        id: mainMa
+        z:0
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: selectionPanel.top
+        property list<SnapableElement> clickElement:[]
+        function elementClicked(tile)
+        {
+            clickElement.push(tile)
+        }
+/*
+        onPressed: function (mouse) {
+            console.log("main MA pressed :", clickElement.length)
+            mouse.accepted = false
+
+        }
+        */
+        onReleased: function(mouse) {
+            console.log("main MA release", clickElement.length)
+
+            for (var i = 0; i < clickElement.length; i++) {
+                clickElement[i].dragArea.released(mouse)
+            }
+            clickElement = []
+        }
+        onClicked: function(mouse) {
+            if (root.isAssetSelected) {
+                mouse.accepted = false
+            }
+            else {
+                console.log("main MA clicked", clickElement.length)
+                var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
+                var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
+                console.log("Placing selected asset at:", gridPos)
+                placeSelectedAsset(gridPos.x, gridPos.y)
+                contextMenu.clickGridCoord = gridPos
+                contextMenu.popup()
+                mouse.accepted = true
+            }
+        }
+    }
     // Zone de travail de l'éditeur (par-dessus la grille)
     Item {
         id: workArea
@@ -208,15 +229,8 @@ Rectangle {
     }
 
     // Rectangle de sélection
-    Rectangle {
+    SelectionRect {
         id: selectionRect
-        parent: workArea
-        visible: false
-        color: "#C7E8FF" // Bleu semi-transparent
-        border.width: 2
-        border.color: "#3498db"
-        opacity: 0.7
-        z: 100 // S'assurer qu'il est au-dessus des autres éléments
     }
     
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
@@ -271,24 +285,6 @@ Rectangle {
         totalTilesCount: snapableTilesList.length
     }
 
-    /*
-    // Panneau de contrôle de la grille (composant séparé)
-    GridControlPanel {
-        id: gridControls
-        anchors.fill: parent
-        gridManager: editorGrid
-        showControlPanel: true
-        showInfoPanel: true
-        logic: logic
-        property alias isEdit : root.isEditing
-        property alias currentWidth: root.currentElementWidth
-        property alias currentHeight: root.currentElementHeight
-
-        onCancelSelectionRequested: {
-            logic.cancelSelection()
-        }
-    }
-    */
     // Panneau de configuration des cases
     CaseConfigurationPanel {
         id: caseConfigPanel
@@ -306,6 +302,7 @@ Rectangle {
     // Panneau de configuration des connexions
     ConnectionsConfigurationPanel {
         id: connectionsPanel
+
         height: parent.height
         width: parent.width/2
 
@@ -321,7 +318,6 @@ Rectangle {
             }
         }
     }
-
 
     // Function to apply visual effects to a new decoration tile
     function applyVisualEffectsToNewTile(newTile) {
@@ -357,7 +353,6 @@ Rectangle {
             // Apply visual effects to the new tile (only if effects are not locked)
             applyVisualEffectsToNewTile(newTile)
         }
-
     }
 
     SelectionPanel{
@@ -389,8 +384,6 @@ Rectangle {
         }
     }
 
-    Editor_WheelHandler { }
-
     // Panneau de sélection des maps
     MapSelectionPanel {
         id: mapSelectionPanel
@@ -405,5 +398,4 @@ Rectangle {
             // Le chargement est déjà fait dans le panel via MapLoader.loadMap(mapName)
         }
     }
-
 }

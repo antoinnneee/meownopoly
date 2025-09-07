@@ -66,6 +66,8 @@ Item{
             SnapableDecoration {
                 gridManager: editorGrid
 
+                generalMA: mainMA
+
                 // Gestion de la sélection
                 onElementClicked: function(element) {
                     // Désélectionner tous les autres éléments
@@ -102,7 +104,6 @@ Item{
                     element.isSelected = true
                     logic.currentSelectedElement = element
                 }
-
             }
         }
 }

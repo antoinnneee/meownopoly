@@ -20,6 +20,7 @@ Item {
     property int tileType: caseData.type
     property string tileName: caseData.name
     property bool isHovered: false
+    property alias mouseArea: mouseArea
 
     property list<Player> playerList
     property int maxPlayer : 4
@@ -43,6 +44,7 @@ Item {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
+        enabled: true
         hoverEnabled: true
         z: 100
 

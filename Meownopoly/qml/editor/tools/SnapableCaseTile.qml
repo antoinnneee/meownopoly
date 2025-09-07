@@ -77,6 +77,7 @@ SnapableElement {
         id: caseTile
         anchors.fill: parent
         caseData: root.caseData
+        mouseArea.enabled: false
         z: 1  // Assurer que le contenu est sous les poignées
     }
     

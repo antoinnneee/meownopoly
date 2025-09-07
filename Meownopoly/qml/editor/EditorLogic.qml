@@ -196,7 +196,8 @@ Item {
                                                                                         "unitSizeWidth": unitWidth,
                                                                                         "unitSizeHeight": unitHeight,
                                                                                         "caseData": Game.getNewCaseType(defaultCaseType),
-                                                                                        "z": planLogic.maxPlanDisplayed
+                                                                                        "z": planLogic.maxPlanDisplayed,
+                                                                                        "generalMA": mainMa
                                                                                     })
 
         if (newTile) {
@@ -206,7 +207,7 @@ Item {
             tileLogic.deselectAllTiles()
             newTile.isSelected = true
             currentSelectedElement = newTile
-            newTile.snapToGridFromGrid()
+            newTile.snapToGridFromGridPos()
         }
 
         return newTile

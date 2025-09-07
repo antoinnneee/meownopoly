@@ -262,7 +262,7 @@ Rectangle {
                          for (var i = 0; i < snapableTilesList.length; i++) {
                              if (snapableTilesList[i]) {
                                  snapableTilesList[i].isSelected = false
-                                 snapableTilesList[i].snapToGridFromGrid()
+                                 snapableTilesList[i].snapToGridFromGridPos()
                              }
                          }
                          // les chemins sont liés aux Items; pas besoin de rebuild ici

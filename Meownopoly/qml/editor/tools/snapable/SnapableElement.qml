@@ -26,10 +26,11 @@ Rectangle {
     property bool isResizing: false
     property bool isSelected: false
 
-    // Propriété pour stocker la valeur z originale
-    property DisplayParameter displaySettings : DisplayParameter {
+    property var generalMA: null
+    property alias dragArea: dragArea
 
-    }
+    // Propriété pour stocker la valeur z originale
+    property DisplayParameter displaySettings : DisplayParameter { }
 
     z: displaySettings.zLayer
 
@@ -47,8 +48,6 @@ Rectangle {
     readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
 
 
-    // Mettre à jour les positions relatives quand les positions absolues changent (drag)
-    property bool updatingFromRelative: false
 
     property alias connectionManager: connectionManager
     // Expose le point central en coordonnées locales et scène
@@ -123,12 +122,19 @@ Rectangle {
         z: 50  // Au-dessus du contenu mais sous les poignées
         
         onPressed: {
+            console.log("snap pressed");
             isDragging = true
             isSelected = true
+            if (generalMA)
+            {
+                generalMA.elementClicked(snapableElement)
+            }
             elementPressed(snapableElement)
+            mouse.accepted = false
         }
         
         onReleased: {
+            console.log("snap release");
             isDragging = false
             
             // Mettre à jour les positions relatives après le drag
@@ -143,7 +149,12 @@ Rectangle {
         }
         
         onClicked: {
+            console.log("snap clicked");
             isSelected = true
+            if (generalMA)
+            {
+                generalMA.elementClicked(snapableElement)
+            }
             elementClicked(snapableElement)
         }
         
@@ -189,20 +200,16 @@ Rectangle {
     // Fonctions utilitaires améliorées
     function updateRelativePosition() {
         if (!gridManager || gridManager.gridSize === 0) return
-        
-        updatingFromRelative = true
-        
+
         // Calculer les nouvelles positions relatives basées sur les positions absolues
         displaySettings.gridRelativePositionX = Math.round(x / gridManager.gridSize)
         displaySettings.gridRelativePositionY = Math.round(y / gridManager.gridSize)
 
-        updatingFromRelative = false
     }
 
     function snapToGrid() {
         if (!gridManager || !gridManager.snapToGrid) return
 
-        updatingFromRelative = true
 
         // Calculer les positions snappées en unités de grille
         var snappedGridX = Math.round(x / gridManager.gridSize)
@@ -213,15 +220,13 @@ Rectangle {
         displaySettings.gridRelativePositionY = snappedGridY
 
 
-        updatingFromRelative = false
         gridManager.snapElement2(snapableElement)
         snapCompleted(snapableElement)
     }
 
-    function snapToGridFromGrid() {
+    function snapToGridFromGridPos() {
         if (!gridManager || !gridManager.snapToGrid) return
 
-        updatingFromRelative = false
         gridManager.snapElement2(snapableElement)
         snapCompleted(snapableElement)
     }

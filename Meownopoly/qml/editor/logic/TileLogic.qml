@@ -38,7 +38,8 @@ QtObject {
                                                                                           "displaySettings.gridRelativePositionY": gridY,
                                                                                           "displaySettings.unitSizeWidth": currentElementWidth,
                                                                                           "displaySettings.unitSizeHeight": currentElementHeight,
-                                                                                          "displaySettings.zLayer": 5
+                                                                                          "displaySettings.zLayer": 5,
+                                                                                          "generalMA": mainMa
                                                                                       })
             break
         case ItemSnapable.CaseTile:
@@ -48,6 +49,7 @@ QtObject {
                                                                                         "displaySettings.unitSizeWidth": currentElementWidth,
                                                                                         "displaySettings.unitSizeHeight": currentElementHeight,
                                                                                         "caseData": Game.getNewCaseType(caseType),
+                                                                                        "generalMA": mainMa
                                                                                     })
             break
         default:
@@ -59,7 +61,7 @@ QtObject {
             deselectAllTiles()
 //            newTile.isSelected = true
             logic.currentSelectedElement = newTile
-            newTile.snapToGridFromGrid()
+            newTile.snapToGridFromGridPos()
         }
         return newTile
     }
@@ -95,12 +97,13 @@ QtObject {
     function createCaseTile(dispSettings, caseData) {
         var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
-                                                                                        "caseData": caseData
+                                                                                        "caseData": caseData,
+                                                                                        "generalMA": mainMa
                                                                                     })
 
         if (newTile) {
             snapableTilesList.push(newTile)
-            newTile.snapToGridFromGrid()
+            newTile.snapToGridFromGridPos()
         }
         return newTile
     }
@@ -108,11 +111,12 @@ QtObject {
     function createDecorationTile(dispSettings, decorationParameter) {
         var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
-                                                                                        "decorationSettings": decorationParameter
+                                                                                        "decorationSettings": decorationParameter,
+                                                                                          "generalMA": mainMa
                                                                                     })
         if (newTile) {
             snapableTilesList.push(newTile)
-            newTile.snapToGridFromGrid()
+            newTile.snapToGridFromGridPos()
         }
         return newTile
     }
