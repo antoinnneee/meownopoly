@@ -155,6 +155,12 @@ Rectangle {
             }
             console.log("main MA pressed : nb Element ", clickElement.length)
             mouse.accepted = true
+            for (var i = clickElement.length - 1; i >= 0; i--) {
+                clickElement[i].elementPressed(clickElement[i])
+                clickElement[i].parent = groupeSelection
+            }
+            drag.target = groupeSelection
+            return
             // propagate pressed to first clicked element
             if (clickElement.length > 0) {
                 clickElement[0].elementPressed(clickElement[0])
@@ -164,9 +170,20 @@ Rectangle {
 
         onReleased: function(mouse) {
             console.log("main MA release : nb Element ", clickElement.length)
-            for (var i = 0; i < clickElement.length; i++) {
+            var deltaX = 0
+            var deltaY = 0
+            deltaX = groupeSelection.x
+            deltaY = groupeSelection.y
+            for (var i = clickElement.length - 1; i >= 0; i--) {
+                // getting new grid position
+                var newGridPos = editorGrid.getGridPosition(clickElement[i].x + deltaX, clickElement[i].y + deltaY)
+                clickElement[i].x = clickElement[i].x + deltaX
+                clickElement[i].y = clickElement[i].y + deltaY
+                clickElement[i].parent = workArea
                 clickElement[i].elementReleased(clickElement[i])
             }
+            groupeSelection.x = 0
+            groupeSelection.y = 0
             if ( clickElement.length === 0)
                 logic.tileLogic.deselectAllTiles()
             drag.target = null
@@ -215,6 +232,7 @@ Rectangle {
     Item {
         id: workArea
         anchors.fill: editorGrid
+        Item { id: groupeSelection}
 
         // MouseArea pour gérer la sélection par rectangle
         MouseArea {
