@@ -188,9 +188,12 @@ Item {
     MouseArea{
         anchors.fill: parent
         drag.target: isEdit ? null : gridManager
-        pressAndHoldInterval: 200
+        pressAndHoldInterval: 250
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: function(mouse) {
+
+            mouse.accepted = false
+            return;
             if (mouse.button === Qt.LeftButton){
                 gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
             }

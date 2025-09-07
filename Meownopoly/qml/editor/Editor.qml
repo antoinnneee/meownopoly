@@ -148,8 +148,11 @@ Rectangle {
             clickElement = []
         }
         onClicked: function(mouse) {
-            if (root.isAssetSelected) {
-                mouse.accepted = false
+            if (root.editorMouseMode == EditorEnum.EM_NORMAL) {
+                mouse.accepted = true
+                contextMenu.clickGridCoord = gridPos
+                contextMenu.popup()
+                mouse.accepted = true
             }
             else {
                 console.log("main MA clicked", clickElement.length)
@@ -157,8 +160,6 @@ Rectangle {
                 var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
                 console.log("Placing selected asset at:", gridPos)
                 placeSelectedAsset(gridPos.x, gridPos.y)
-                contextMenu.clickGridCoord = gridPos
-                contextMenu.popup()
                 mouse.accepted = true
             }
         }
