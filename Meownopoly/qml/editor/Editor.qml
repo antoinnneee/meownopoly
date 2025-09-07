@@ -147,6 +147,8 @@ Rectangle {
         onPressed: function (mouse) {
             clickPosition = Qt.point(mouse.x, mouse.y)
             if (mouse.button === Qt.RightButton) {
+                if (logic.editorMouseMode === EditorEnum.EM_POSE)
+                    selectionPanel.clearAssetSelection()
                 drag.target = editorGrid
                 mouse.accepted = true
                 return
@@ -165,6 +167,8 @@ Rectangle {
             for (var i = 0; i < clickElement.length; i++) {
                 clickElement[i].elementReleased(clickElement[i])
             }
+            if ( clickElement.length === 0)
+                logic.tileLogic.deselectAllTiles()
             drag.target = null
             clickElement = []
         }
