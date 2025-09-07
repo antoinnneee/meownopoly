@@ -105,6 +105,7 @@ Item {
             y:gridYPosition * gridManager.gridSize
             displaySettings.unitSizeWidth: root.unitSizeWidth
             displaySettings.unitSizeHeight: root.unitSizeHeight
+            z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
                 root.snapablePreview = snapableDecoration

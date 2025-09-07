@@ -17,7 +17,7 @@ ScrollLogic {
     }
     function scrollDown(wheel) {
         if (wheel.modifiers & Qt.ControlModifier) {
-            console.log("CTRL POSE+ scrollDown")
+            console.log("CTRL POSE + scrollDown")
             if (logic.tileLogic.currentElementHeight > 1)
                 logic.tileLogic.currentElementHeight -=1
         }

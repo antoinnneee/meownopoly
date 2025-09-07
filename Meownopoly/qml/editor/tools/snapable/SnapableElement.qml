@@ -68,7 +68,27 @@ Rectangle {
     // Signaux
     signal elementClicked(var element)
     signal elementPressed(var element)
+    onElementPressed: {
+
+        console.log("element pressed");
+        isDragging = true
+        isSelected = true
+    }
     signal elementReleased(var element)
+    onElementReleased: {
+        console.log("element release");
+        isDragging = false
+        
+        // Mettre à jour les positions relatives après le drag
+        updateRelativePosition()
+        
+        // Auto-snap si activé et gridManager disponible
+        if (autoSnap && gridManager && gridManager.snapToGrid) {
+            snapToGrid()
+        }
+        
+    }
+
     signal elementResized(var element, real newWidth, real newHeight)
     signal snapCompleted(var element)
     signal elementDeleted(var element)
@@ -122,30 +142,24 @@ Rectangle {
         z: 50  // Au-dessus du contenu mais sous les poignées
         
         onPressed: {
-            console.log("snap pressed");
-            isDragging = true
-            isSelected = true
+            console.log("snap pressed detected");
             if (generalMA)
             {
                 generalMA.elementClicked(snapableElement)
             }
-            elementPressed(snapableElement)
+            else
+            {
+                elementPressed(snapableElement)
+            }
             mouse.accepted = false
         }
         
         onReleased: {
             console.log("snap release");
-            isDragging = false
-            
-            // Mettre à jour les positions relatives après le drag
-            updateRelativePosition()
-            
-            // Auto-snap si activé et gridManager disponible
-            if (autoSnap && gridManager && gridManager.snapToGrid) {
-                snapToGrid()
+            if (!generalMA)
+            {
+                elementReleased(snapableElement)
             }
-            
-            elementReleased(snapableElement)
         }
         
         onClicked: {

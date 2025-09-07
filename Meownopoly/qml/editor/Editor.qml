@@ -131,33 +131,44 @@ Rectangle {
         function elementClicked(tile)
         {
             clickElement.push(tile)
-        }
-/*
-        onPressed: function (mouse) {
-            console.log("main MA pressed :", clickElement.length)
-            mouse.accepted = false
 
         }
-        */
+
+        onPressed: function (mouse) {
+            console.log("main MA pressed : nb Element ", clickElement.length)
+            mouse.accepted = true
+            // propagate pressed to first clicked element
+            if (clickElement.length > 0) {
+                clickElement[0].elementPressed(clickElement[0])
+            }
+
+        }
+        onPressAndHold: function (mouse) {
+            var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
+            var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
+            contextMenu.clickGridCoord = gridPos
+            contextMenu.popup()
+
+        }
+
         onReleased: function(mouse) {
-            console.log("main MA release", clickElement.length)
+            console.log("main MA release : nb Element ", clickElement.length)
 
             for (var i = 0; i < clickElement.length; i++) {
-                clickElement[i].dragArea.released(mouse)
+                clickElement[i].elementReleased(clickElement[i])
             }
             clickElement = []
         }
         onClicked: function(mouse) {
-            if (root.editorMouseMode == EditorEnum.EM_NORMAL) {
-                mouse.accepted = true
-                contextMenu.clickGridCoord = gridPos
-                contextMenu.popup()
+            var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
+            var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
+            if (logic.editorMouseMode == EditorEnum.EM_NORMAL) {
+//                contextMenu.clickGridCoord = gridPos
+//                contextMenu.popup()
                 mouse.accepted = true
             }
             else {
                 console.log("main MA clicked", clickElement.length)
-                var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
-                var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
                 console.log("Placing selected asset at:", gridPos)
                 placeSelectedAsset(gridPos.x, gridPos.y)
                 mouse.accepted = true
