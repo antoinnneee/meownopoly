@@ -141,7 +141,7 @@ Rectangle {
 
         z: 50  // Au-dessus du contenu mais sous les poignées
         
-        onPressed: {
+        onPressed: function(mouse) {
             console.log("snap pressed detected");
             if (generalMA)
             {
@@ -154,7 +154,7 @@ Rectangle {
             mouse.accepted = false
         }
         
-        onReleased: {
+        onReleased: function(mouse) {
             console.log("snap release");
             if (!generalMA)
             {
@@ -162,7 +162,7 @@ Rectangle {
             }
         }
         
-        onClicked: {
+        onClicked: function(mouse) {
             console.log("snap clicked");
             isSelected = true
             if (generalMA)
@@ -172,14 +172,8 @@ Rectangle {
             elementClicked(snapableElement)
         }
         
-        onPositionChanged: {
-//           assetPreview.mouseX = drag.target.x + mouse.x
-//            assetPreview.mouseY = drag.target.y + mouse.y
-            if (isDragging) {
-            }
-//            mouse.accepted = false
+        onPositionChanged: function(mouse) {
 
-        }
     }
     
     // Contrôles de l'élément (boutons de plan et suppression)

@@ -127,44 +127,68 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: selectionPanel.top
+        pressAndHoldInterval: 250
+        drag.target: null
+        drag.axis: Drag.XAndYAxis
         property list<SnapableElement> clickElement:[]
+        property var clickPosition
+        property list<var> elementInitialPosition:[]
         function elementClicked(tile)
         {
             clickElement.push(tile)
-
+            var realPos = mainMa.mapToItem(editorGrid, tile.x, tile.y)
+            var pos = Qt.point(realPos.x, realPos.y)
+            elementInitialPosition.push(pos)
         }
 
         onPressed: function (mouse) {
+            clickPosition = Qt.point(mouse.x, mouse.y)
             console.log("main MA pressed : nb Element ", clickElement.length)
             mouse.accepted = true
             // propagate pressed to first clicked element
             if (clickElement.length > 0) {
                 clickElement[0].elementPressed(clickElement[0])
+                drag.target = clickElement[0]   // solution temporaire, ne permet pas de déplacer un groupe d'element
+            }
+        }
+
+        onReleased: function(mouse) {
+            console.log("main MA release : nb Element ", clickElement.length)
+            for (var i = 0; i < clickElement.length; i++) {
+                clickElement[i].elementReleased(clickElement[i])
+            }
+            drag.target = null
+            clickElement = []
+        }
+
+        onPositionChanged: function(mouse) {
+            /*
+            console.log("position changed", mouse.x, mouse.y)
+            var deltaX = mouse.x - clickPosition.x
+            var deltaY = mouse.y - clickPosition.y
+            if (clickElement.length > 0) {
+                clickElement[0].x = elementInitialPosition[0].x + deltaX
+                clickElement[0].y = elementInitialPosition[0].y + deltaY
+
+            }
+            */
+        }
+
+        onPressAndHold: function (mouse) {
+            if (drag.active === true) {
+                return
             }
 
-        }
-        onPressAndHold: function (mouse) {
             var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
             var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
             contextMenu.clickGridCoord = gridPos
             contextMenu.popup()
 
         }
-
-        onReleased: function(mouse) {
-            console.log("main MA release : nb Element ", clickElement.length)
-
-            for (var i = 0; i < clickElement.length; i++) {
-                clickElement[i].elementReleased(clickElement[i])
-            }
-            clickElement = []
-        }
         onClicked: function(mouse) {
             var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
             var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
             if (logic.editorMouseMode == EditorEnum.EM_NORMAL) {
-//                contextMenu.clickGridCoord = gridPos
-//                contextMenu.popup()
                 mouse.accepted = true
             }
             else {
