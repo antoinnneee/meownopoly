@@ -138,5 +138,8 @@
         <file>qml/editor/Editor_WheelHandler.qml</file>
         <file>qml/editor/tools/LoadMapButton.qml</file>
         <file>qml/editor/tools/SelectionRect.qml</file>
+        <file>qml/editor/logic/MouseLogic_Base.qml</file>
+        <file>qml/editor/logic/MouseLogic_Selection.qml</file>
+        <file>qml/editor/logic/MouseLogic_Pose.qml</file>
     </qresource>
 </RCC>

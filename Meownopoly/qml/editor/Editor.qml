@@ -133,106 +133,42 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
 
         property list<SnapableElement> clickElement:[]
-        property var clickPosition
         property list<var> elementInitialPosition:[]
-        property bool dragOccured : false
         drag.onActiveChanged: {
             console.log("drag changed", drag.active);
-            dragOccured = drag.active
         }
 
         function elementClicked(tile)
         {
-            clickElement.push(tile)
-            var realPos = mainMa.mapToItem(editorGrid, tile.x, tile.y)
-            var pos = Qt.point(realPos.x, realPos.y)
-            elementInitialPosition.push(pos)
+            logic.mouseLogic.elementClicked(tile, drag)
         }
 
         onPressed: function (mouse) {
-            clickPosition = Qt.point(mouse.x, mouse.y)
-            if (mouse.button === Qt.RightButton) {
-                if (logic.editorMouseMode === EditorEnum.EM_POSE)
-                    selectionPanel.clearAssetSelection()
-                drag.target = editorGrid
-                mouse.accepted = true
-                return
+            if (mouse.button === Qt.LeftButton) {
+            logic.mouseLogic.pressedLeft(mouse, drag)
             }
-            console.log("main MA pressed : nb Element ", clickElement.length)
-            mouse.accepted = true
-            for (var i = clickElement.length - 1; i >= 0; i--) {
-                clickElement[i].elementPressed(clickElement[i])
-                clickElement[i].parent = groupeSelection
+            else if (mouse.button === Qt.MiddleButton) {
+            logic.mouseLogic.pressedMiddle(mouse, drag)
             }
-            drag.target = groupeSelection
-            return
-            // propagate pressed to first clicked element
-            if (clickElement.length > 0) {
-                clickElement[0].elementPressed(clickElement[0])
-                drag.target = clickElement[0]   // solution temporaire, ne permet pas de déplacer un groupe d'element
+            else if (mouse.button === Qt.RightButton) {
+            logic.mouseLogic.pressedRight(mouse, drag)
             }
         }
 
         onReleased: function(mouse) {
-            console.log("main MA release : nb Element ", clickElement.length)
-            var deltaX = 0
-            var deltaY = 0
-            deltaX = groupeSelection.x
-            deltaY = groupeSelection.y
-            for (var i = clickElement.length - 1; i >= 0; i--) {
-                // getting new grid position
-                var newGridPos = editorGrid.getGridPosition(clickElement[i].x + deltaX, clickElement[i].y + deltaY)
-                clickElement[i].x = clickElement[i].x + deltaX
-                clickElement[i].y = clickElement[i].y + deltaY
-                clickElement[i].parent = workArea
-                clickElement[i].elementReleased(clickElement[i])
-                if (drag.active)
-                    clickElement[i].isSelected = false
-            }
-            groupeSelection.x = 0
-            groupeSelection.y = 0
-            if ( clickElement.length === 0)
-                logic.tileLogic.deselectAllTiles()
-            drag.target = null
-            clickElement = []
+            logic.mouseLogic.release(mouse, drag)
         }
 
         onPositionChanged: function(mouse) {
-            /*
-            console.log("position changed", mouse.x, mouse.y)
-            var deltaX = mouse.x - clickPosition.x
-            var deltaY = mouse.y - clickPosition.y
-            if (clickElement.length > 0) {
-                clickElement[0].x = elementInitialPosition[0].x + deltaX
-                clickElement[0].y = elementInitialPosition[0].y + deltaY
-
-            }
-            */
         }
 
         onPressAndHold: function (mouse) {
-            if (drag.active === true) {
-                return
-            }
-
-            var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
-            var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
-            contextMenu.clickGridCoord = gridPos
-            contextMenu.popup()
+            logic.mouseLogic.pressedAndHold(mouse)
 
         }
         onClicked: function(mouse) {
-            var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
-            var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
-            if (logic.editorMouseMode == EditorEnum.EM_NORMAL) {
-                mouse.accepted = true
-            }
-            else {
-                console.log("main MA clicked", clickElement.length)
-                console.log("Placing selected asset at:", gridPos)
-                placeSelectedAsset(gridPos.x, gridPos.y)
-                mouse.accepted = true
-            }
+            logic.mouseLogic.clicked(mouse)
+            return;
         }
     }
     // Zone de travail de l'éditeur (par-dessus la grille)
@@ -260,9 +196,9 @@ Rectangle {
             }
 
             onReleased: function(mouse){
-                    console.log("Finalisation de la sélection")
-                    logic.finishSelection()
-                    mouse.accepted = true
+                console.log("Finalisation de la sélection")
+                logic.finishSelection()
+                mouse.accepted = true
             }
 
             onCanceled: {

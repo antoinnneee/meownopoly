@@ -37,6 +37,36 @@ Item {
         snapableTilesList: logic.snapableTilesList
     }
 
+    property MouseLogic_Base mouseLogic
+
+    Component {
+        id: mouseLogic_selection_comp
+        MouseLogic_Selection {
+            id: mouseLogic_selection
+            logic: _logic
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_selection
+            }
+        }
+    }
+    
+    Component {
+        id: mouseLogic_pose_comp
+        MouseLogic_Pose {
+            id: mouseLogic_pose
+            logic: _logic
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_pose
+            }
+        }
+    }
+    
+    Loader {
+        id: mouseLogicLoader
+        sourceComponent: (logic.editorMouseMode == EditorEnum.EM_NORMAL) ? mouseLogic_selection_comp
+                                                                         : mouseLogic_pose_comp
+        property var _logic : parent
+    }
     property ScrollLogic scrollLogic
 
     Component{

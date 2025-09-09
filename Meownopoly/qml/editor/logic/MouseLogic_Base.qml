@@ -1,0 +1,61 @@
+import QtQuick 2.15
+import "../tools/snapable"
+QtObject {
+    property list<SnapableElement> clickElement:[]
+    property var clickPosition
+    property list<var> elementInitialPosition:[]
+    property var logic
+
+    function elementClicked(tile)
+    {
+        clickElement.push(tile)
+        var realPos = mainMa.mapToItem(editorGrid, tile.x, tile.y)
+        var pos = Qt.point(realPos.x, realPos.y)
+        elementInitialPosition.push(pos)
+        console.log("Add element to list")
+    }
+
+    function pressedLeft(mouse, drag)
+    {
+
+        console.log("main MA pressed LEFT : ", clickElement.length, " elements")
+        mouse.accepted = true
+
+    }
+
+    function pressedRight(mouse, drag)
+    {
+
+        console.log("main MA pressed RIGHT : ", clickElement.length, " elements")
+        mouse.accepted = true
+
+    }
+    function pressedMiddle(mouse, drag)
+    {
+        console.log("main MA pressed MIDDLE : ", clickElement.length, " elements")
+        mouse.accepted = true
+    }
+
+    function release(mouse, drag)
+    {
+        console.log("main MA released : ", clickElement.length, " elements")
+        clickElement = []
+        elementInitialPosition = []
+    }
+
+    function pressedAndHold(mouse, drag)
+    {
+        console.log("main MA pressed and hold : ", clickElement.length, " elements")
+
+        var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
+        var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
+        contextMenu.clickGridCoord = gridPos
+        contextMenu.popup()
+    }
+
+    function clicked(mouse, drag)
+    {
+        console.log("main MA clicked : ", clickElement.length, " elements")
+    }
+
+}
