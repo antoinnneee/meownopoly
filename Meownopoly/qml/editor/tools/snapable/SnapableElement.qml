@@ -32,7 +32,7 @@ Rectangle {
     // Propriété pour stocker la valeur z originale
     property DisplayParameter displaySettings : DisplayParameter { }
 
-    z: displaySettings.zLayer + displaySettings.zOrder
+    z:  (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer
 
     property TileType type
     // : 0 // 0: case, 1: personnage, 2: decoration
@@ -105,16 +105,7 @@ Rectangle {
     color: elementColor
     border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
     border.width: isSelected ? borderWidth + 2 : borderWidth
-    
-    // Z-order: valeur élevée si sélectionné
-    onIsSelectedChanged: {
-        if (isSelected) {
-            z = 11 + displaySettings.zOrder
-        } else {
-            z = displaySettings.zLayer + displaySettings.zOrder
-        }
-    }
-    
+
     // Effet de survol avec transition optimisée
     scale: isDragging ? 1.05 : 1.0
     

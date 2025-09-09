@@ -166,74 +166,13 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         
-        property bool isDragging: false
-        property point dragStartPosition
-        
         onClicked: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
                 root.assetClicked(root.assetId)
             }
         }
+    }
 
-    }
-    
-    // Drag handler for visual feedback
-    Item {
-        id: dragHandler
-        
-        property bool active: false
-        
-        function startDrag() {
-            active = true
-            dragPreview.visible = true
-        }
-        
-        function stopDrag() {
-            active = false
-            dragPreview.visible = false
-        }
-    }
-    
-    // Drag preview (follows mouse when dragging)
-    Rectangle {
-        id: dragPreview
-        parent: root.parent.parent.parent // Move to a higher level for global positioning
-        width: 60
-        height: 60
-        color: "#80444444"
-        border.color: "#4A90E2"
-        border.width: 2
-        radius: 6
-        visible: false
-        z: 1000
-        
-        Image {
-            anchors.centerIn: parent
-            width: parent.width - 8
-            height: parent.height - 8
-            source: root.assetPath
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-            opacity: 0.8
-        }
-        
-        // Follow mouse position when dragging
-        Connections {
-            target: mouseArea
-            function onPositionChanged(mouse) {
-                if (mouseArea.isDragging && dragPreview.visible) {
-                    var globalPos = mouseArea.mapToItem(dragPreview.parent, mouse.x, mouse.y)
-                    dragPreview.x = globalPos.x - dragPreview.width / 2
-                    dragPreview.y = globalPos.y - dragPreview.height / 2
-                }
-            }
-            
-            function onReleased() {
-                dragHandler.stopDrag()
-            }
-        }
-    }
-    
     // Hover effect
     Rectangle {
         anchors.fill: parent

@@ -91,6 +91,10 @@ EditorBottomPanel {
         onBackButtonClicked: {
             root.currentView = "categories"
         }
+        onButtonClicked: function(text, index)  {
+            titleBar.activeFilter = text
+            root.currentView = "categories"
+        }
 
 
         currentSelectedCategory: root.currentSelectedCategory

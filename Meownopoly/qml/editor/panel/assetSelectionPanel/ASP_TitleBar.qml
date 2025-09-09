@@ -23,9 +23,6 @@ EBP_TitleBar {
     buttonModel: ["All", "Decoration", "Tile"]
 
     onButtonClicked: function(text, index) {
-        console.log(index, "filter button clicked", text)
-        titleBar.activeFilter = text
-        titleBar.currentView = "categories"
     }
 
     // Spacer

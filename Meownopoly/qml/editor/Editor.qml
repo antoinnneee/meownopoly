@@ -127,7 +127,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: selectionPanel.top
-        pressAndHoldInterval: 250
+        pressAndHoldInterval: 350
         drag.target: null
         drag.axis: Drag.XAndYAxis
         acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -135,6 +135,11 @@ Rectangle {
         property list<SnapableElement> clickElement:[]
         property var clickPosition
         property list<var> elementInitialPosition:[]
+        property bool dragOccured : false
+        drag.onActiveChanged: {
+            console.log("drag changed", drag.active);
+            dragOccured = drag.active
+        }
 
         function elementClicked(tile)
         {
@@ -181,6 +186,8 @@ Rectangle {
                 clickElement[i].y = clickElement[i].y + deltaY
                 clickElement[i].parent = workArea
                 clickElement[i].elementReleased(clickElement[i])
+                if (drag.active)
+                    clickElement[i].isSelected = false
             }
             groupeSelection.x = 0
             groupeSelection.y = 0
