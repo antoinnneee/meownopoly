@@ -206,15 +206,15 @@ QtObject {
             }
         }
         // itere sur les segments de connexion element->prev
-        var prevs = element.connectionManager.previousElements || []
-        for (var j = 0; j < prevs.length; j++) {
-            var prevEl = prevs[j]
+        var p_prevs = element.connectionManager.previousElements || []
+        for (var p_j = 0; j < p_prevs.length; j++) {
+            var p_prevEl = p_prevs[p_j]
             // itere sur les segments de connexion prevEl->element
-            var nexts = prevEl.connectionManager.nextElements || []
-            for (var k = 0; k < nexts.length; k++) {
-                var nextEl = nexts[k]
-                if (nextEl === element) {
-                    prevEl.connectionManager.removeNextElement(element)
+            var p_nexts = p_prevEl.connectionManager.nextElements || []
+            for (var p_k = 0; p_k < p_nexts.length; p_k++) {
+                var p_nextEl = p_nexts[p_k]
+                if (p_nextEl === element) {
+                    p_prevEl.connectionManager.removeNextElement(element)
                 }
             }
         }
