@@ -11,6 +11,10 @@ MouseLogic_Base {
             clickElement[0].parent = groupeSelection
             drag.target = clickElement[0]   // solution temporaire, ne permet pas de déplacer un groupe d'element
         }
+        else
+        {
+            logic.tileLogic.deselectAllTiles()
+        }
         mouse.accepted = true
     }
 
