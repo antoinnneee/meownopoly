@@ -188,6 +188,7 @@ Rectangle {
 
             onPressed:function(mouse) {
                 logic.startSelection(mouse)
+
             }
 
             onPositionChanged:function(mouse) {

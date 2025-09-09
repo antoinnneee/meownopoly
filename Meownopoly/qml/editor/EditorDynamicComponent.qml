@@ -52,8 +52,6 @@ Item{
                 }
             }
             onElementPressed: function(element) {
-                logic.tileLogic.deselectAllTiles()
-                element.isSelected = true
                 logic.currentSelectedElement = element
 
             }
@@ -100,8 +98,6 @@ Item{
                     }
                 }
                 onElementPressed: function(element) {
-                    logic.tileLogic.deselectAllTiles()
-                    element.isSelected = true
                     logic.currentSelectedElement = element
                 }
             }
