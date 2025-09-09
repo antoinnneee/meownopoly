@@ -23,6 +23,7 @@ public:
     Q_PROPERTY(int gridRelativePositionX READ gridRelativePositionX WRITE setGridRelativePositionX NOTIFY gridRelativePositionXChanged)
     Q_PROPERTY(int gridRelativePositionY READ gridRelativePositionY WRITE setGridRelativePositionY NOTIFY gridRelativePositionYChanged)
     Q_PROPERTY(int zLayer READ zLayer WRITE setZLayer NOTIFY zLayerChanged)
+    Q_PROPERTY(float zOrder READ zOrder WRITE setZOrder NOTIFY zOrderChanged FINAL) // small addition to ZLayer
 
     // effects brightness, contrast, saturation, colorization
     Q_PROPERTY(double effectBrightness READ effectBrightness WRITE setEffectBrightness NOTIFY effectBrightnessChanged)
@@ -53,7 +54,7 @@ public:
     Q_PROPERTY(bool mirrorHorizontal READ mirrorHorizontal WRITE setMirrorHorizontal NOTIFY mirrorHorizontalChanged)
     Q_PROPERTY(bool mirrorVertical READ mirrorVertical WRITE setMirrorVertical NOTIFY mirrorVerticalChanged)
 
-    DisplayParameter(int unitSizeWidth = 0, int unitSizeHeight = 0, int gridRelativePosition = 0, int gridRelativePositionY = 0, int zLayer = 5, QObject *parent = nullptr);
+    DisplayParameter(int unitSizeWidth = 0, int unitSizeHeight = 0, int gridRelativePosition = 0, int gridRelativePositionY = 0, int zLayer = 5, float zOrder = 0, QObject *parent = nullptr);
     DisplayParameter(const QJsonObject &json, QObject *parent = nullptr);
     QString toJSON();
 
@@ -116,6 +117,9 @@ public:
     bool mirrorVertical() const;
     void setMirrorVertical(bool mirrorVertical);
 
+    float zOrder() const;
+    void setZOrder(float newZOrder);
+
 signals:
     void unitSizeWidthChanged();
     void unitSizeHeightChanged();
@@ -145,6 +149,8 @@ signals:
     void rotationAngleChanged();
     void mirrorHorizontalChanged();
     void mirrorVerticalChanged();
+
+    void zOrderChanged();
 
 private :
     int m_unitSizeWidth;
@@ -179,6 +185,7 @@ private :
     bool m_mirrorHorizontal;
     bool m_mirrorVertical;
 
+    float m_zOrder;
 };
 
 #endif // DISPLAYPARAMETER_H

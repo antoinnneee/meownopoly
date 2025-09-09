@@ -1,7 +1,7 @@
 #include "Displayparameter.h"
 
 
-DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, QObject *parent)
+DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, float zOrder, QObject *parent)
     : QObject(parent)
 {
     m_unitSizeWidth = unitSizeWidth;
@@ -9,6 +9,7 @@ DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gr
     m_gridRelativePositionX = gridRelativePositionX;
     m_gridRelativePositionY = gridRelativePositionY;
     m_zLayer = zLayer;
+    m_zOrder = zOrder;
     m_effectBrightness = 0.0;
     m_effectContrast = 0.0;
     m_effectSaturation = 0.0;
@@ -41,6 +42,7 @@ DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QO
     m_gridRelativePositionX = json["gridRelativePositionX"].toInt();
     m_gridRelativePositionY = json["gridRelativePositionY"].toInt();
     m_zLayer = json["zLayer"].toInt();
+    m_zOrder = json["zOrder"].toDouble();
     m_effectBrightness = json["effectBrightness"].toDouble();
     m_effectContrast = json["effectContrast"].toDouble();
     m_effectSaturation = json["effectSaturation"].toDouble();
@@ -75,6 +77,7 @@ QString DisplayParameter::toJSON()
     json += "    \"gridRelativePositionX\": " + QString::number(m_gridRelativePositionX) + ",\n";
     json += "    \"gridRelativePositionY\": " + QString::number(m_gridRelativePositionY) + ",\n";
     json += "    \"zLayer\": " + QString::number(m_zLayer) + ",\n";
+    json += "    \"zOrder\": " + QString::number(m_zOrder) + ",\n";
     json += "    \"effectBrightness\": " + QString::number(m_effectBrightness) + ",\n";
     json += "    \"effectContrast\": " + QString::number(m_effectContrast) + ",\n";
     json += "    \"effectSaturation\": " + QString::number(m_effectSaturation) + ",\n";
@@ -364,4 +367,17 @@ void DisplayParameter::setMirrorVertical(bool mirrorVertical)
 {
     m_mirrorVertical = mirrorVertical;
     emit mirrorVerticalChanged();
+}
+
+float DisplayParameter::zOrder() const
+{
+    return m_zOrder;
+}
+
+void DisplayParameter::setZOrder(float newZOrder)
+{
+    if (qFuzzyCompare(m_zOrder, newZOrder))
+        return;
+    m_zOrder = newZOrder;
+    emit zOrderChanged();
 }

@@ -16,6 +16,8 @@ QtObject {
     property int currentElementWidth: 3
     property int currentElementHeight: 4
 
+    property real currentZOrder: 0.00001
+
     // Fonction pour désélectionner tous les tiles
     function deselectAllTiles() {
         // Désélectionner tous les tiles dans la liste
@@ -31,6 +33,7 @@ QtObject {
     // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
     function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         var newTile
+        currentZOrder = currentZOrder + 0.00001
         switch (isDecoration){
         case ItemSnapable.DecorationTile:
             newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
@@ -39,6 +42,7 @@ QtObject {
                                                                                           "displaySettings.unitSizeWidth": currentElementWidth,
                                                                                           "displaySettings.unitSizeHeight": currentElementHeight,
                                                                                           "displaySettings.zLayer": 5,
+                                                                                          "displaySettings.zOrder": currentZOrder,
                                                                                           "generalMA": mainMa
                                                                                       })
             break
@@ -48,6 +52,7 @@ QtObject {
                                                                                         "displaySettings.gridRelativePositionY": gridY,
                                                                                         "displaySettings.unitSizeWidth": currentElementWidth,
                                                                                         "displaySettings.unitSizeHeight": currentElementHeight,
+                                                                                        "displaySettings.zOrder": currentZOrder,
                                                                                         "caseData": Game.getNewCaseType(caseType),
                                                                                         "generalMA": mainMa
                                                                                     })
@@ -95,6 +100,8 @@ QtObject {
 
     // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
     function createCaseTile(dispSettings, caseData) {
+        currentZOrder = currentZOrder + 0.00001
+        dispSettings.zOrder = currentZOrder
         var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
                                                                                         "caseData": caseData,
@@ -109,6 +116,8 @@ QtObject {
     }
 
     function createDecorationTile(dispSettings, decorationParameter) {
+        currentZOrder = currentZOrder + 0.00001
+        dispSettings.zOrder = currentZOrder
         var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
                                                                                         "decorationSettings": decorationParameter,

@@ -32,7 +32,7 @@ Rectangle {
     // Propriété pour stocker la valeur z originale
     property DisplayParameter displaySettings : DisplayParameter { }
 
-    z: displaySettings.zLayer
+    z: displaySettings.zLayer + displaySettings.zOrder
 
     property TileType type
     // : 0 // 0: case, 1: personnage, 2: decoration
@@ -109,10 +109,9 @@ Rectangle {
     // Z-order: valeur élevée si sélectionné
     onIsSelectedChanged: {
         if (isSelected) {
-            displaySettings.zLayer = z
-            z = 11
+            z = 11 + displaySettings.zOrder
         } else {
-            z = displaySettings.zLayer
+            z = displaySettings.zLayer + displaySettings.zOrder
         }
     }
     

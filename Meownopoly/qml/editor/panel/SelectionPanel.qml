@@ -89,7 +89,6 @@ Rectangle {
             console.log("Bouton cliqué avec index : " + index);
             // Changer le panneau affiché en fonction de l'index du bouton
             root.currentPanelIndex = index;
-            stackView.currentIndex = index;
         }
     }
 
