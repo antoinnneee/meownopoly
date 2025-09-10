@@ -136,6 +136,7 @@ Rectangle {
         property list<var> elementInitialPosition:[]
         drag.onActiveChanged: {
             console.log("drag changed", drag.active);
+            logic.mouseLogic.dragChanged(drag)
         }
 
         function elementClicked(tile)
@@ -167,7 +168,15 @@ Rectangle {
 
         }
         onClicked: function(mouse) {
-            logic.mouseLogic.clicked(mouse)
+            if (mouse.button === Qt.LeftButton) {
+                logic.mouseLogic.clickedLeft(mouse, drag)
+            }
+            else if (mouse.button === Qt.RightButton) {
+                logic.mouseLogic.clickedRight(mouse, drag)
+            }
+            else if (mouse.button === Qt.MiddleButton) {
+                logic.mouseLogic.clickedMiddle(mouse, drag)
+            }
             return;
         }
     }

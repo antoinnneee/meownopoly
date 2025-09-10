@@ -53,9 +53,29 @@ QtObject {
         contextMenu.popup()
     }
 
+    function clickedLeft(mouse, drag)
+    {
+        console.log("main MA clicked : ", clickElement.length, " elements")
+    }
+
+    function clickedRight(mouse, drag)
+    {
+        console.log("main MA clicked right : ", clickElement.length, " elements")
+    }
+
+    function clickedMiddle(mouse, drag)
+    {
+
+    }
+
     function clicked(mouse, drag)
     {
         console.log("main MA clicked : ", clickElement.length, " elements")
+    }
+
+    function dragChanged(drag)
+    {
+
     }
 
 }

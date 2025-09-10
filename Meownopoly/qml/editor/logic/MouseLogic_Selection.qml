@@ -4,6 +4,17 @@ import "../tools/snapable"
 MouseLogic_Base {
     id: mouseLogic
     property list<SnapableElement> selectedElements: []
+    property bool isDragging: false
+
+    function dragChanged(drag)
+    {
+        console.log("[LOGIC] drag changed")
+        if (!drag.active)
+        {
+            unselectAllElements()
+        }
+        isDragging = drag.active
+    }
 
     function unselectAllElements()
     {
@@ -86,37 +97,36 @@ MouseLogic_Base {
     function release(mouse, drag)
     {
         console.log("[LOGIC] release")
-        clickElement = []
-        if (drag.active)
+        if (isDragging)
         {
             unselectAllElements()
         }
-
-        if (mouse.modifiers & Qt.ControlModifier)
-        {
-            return
-        }
-        console.log("[LOGIC] release without drag active")
-        // for (var i = clickElement.length - 1; i >= 0; i--) {
-        //     // getting new grid position
-        //     if (clickElement[i].isDragging)
-        //     {
-        //         var newGridPos = editorGrid.getGridPosition(clickElement[i].x + deltaX, clickElement[i].y + deltaY)
-        //         clickElement[i].x = clickElement[i].x + deltaX
-        //         clickElement[i].y = clickElement[i].y + deltaY
-        //         clickElement[i].parent = workArea
-        //         clickElement[i].elementReleased(clickElement[i])
-        //         if (drag.active)
-        //             clickElement[i].isSelected = false
-        //     }
-        // }
-//        drag.target = null
-//        selectedElements = []
     }
 
-    function clicked(mouse, drag)
+    function clickedLeft(mouse, drag)
     {
+        console.log("[LOGIC] clicked left")
         mouse.accepted = true
+        /*
+        if (!(mouse.modifiers & Qt.ControlModifier))
+        {
+            unselectAllElements()
+            if (clickElement.length > 0) {
+                clickElement[0].elementPressed(clickElement[0])
+                clickElement[0].parent = groupeSelection
+                drag.target = groupeSelection 
+                selectedElements.push(clickElement[0])
+            }
+        }
+        */
+        unselectAllElements()
+        if (clickElement.length > 0) {
+            clickElement[0].elementPressed(clickElement[0])
+            clickElement[0].parent = groupeSelection
+            drag.target = groupeSelection
+            selectedElements.push(clickElement[0])
+        }
+        clickElement = []
     }
 
     function pressAndHold(mouse, drag)

@@ -13,13 +13,13 @@ MouseLogic_Base {
         drag.target = editorGrid
         mouse.accepted = true
     }
-    
+
     function release(mouse, drag)
     {
         drag.target = null
         clickElement = []
     }
-    function clicked(mouse, drag)
+    function clickedLeft(mouse, drag)
     {
         var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
         var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)

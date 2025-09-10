@@ -20,7 +20,7 @@ Item {
     signal buttonClicked(int index)
 
     // Boutons de menu
-    Row {
+    RowLayout {
         id: menuSelector
         anchors.left: parent.left
         height: parent.height
@@ -29,7 +29,7 @@ Item {
         Button {
             id: expandButton
             width: 30
-            height: parent.height
+            Layout.fillHeight: true
             background: Rectangle {
                 anchors.fill: parent
                 color: parent.pressed ? "#555555" : "#444444"
@@ -79,12 +79,16 @@ Item {
                 required property color menuColor
                 required property string menuBorderColor
                 required property string menuText
+                Layout.fillHeight: true
+                Layout.leftMargin: (index) ? -8 : 0
+                z: -index
                 buttonIndex: index
-                color: menuColor
-                border.color: menuBorderColor
+                mainColor: menuColor
+                borderColor: menuBorderColor
                 text: menuText
                 onButtonClicked: function(index) {
                     root.buttonClicked(index)
+
                 }
             }
         }
@@ -93,6 +97,7 @@ Item {
             height: parent.height
             width: Screen.pixelDensity * 35
             spacing: 0
+            Layout.fillHeight: true
             SizeSelector{
                 text: "W:"
                 // @disable-check M16
