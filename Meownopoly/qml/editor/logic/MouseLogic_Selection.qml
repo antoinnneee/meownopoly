@@ -30,15 +30,25 @@ MouseLogic_Base {
         {
             // multi selection
             console.log("[LOGIC] pressed left with control modifier")
-            for (var i = clickElement.length - 1; i >= 0; i--) {
-                if (!clickElement[i].isSelected)
+            if (clickElement.length >= 0) {
+                if (!clickElement[0].isSelected)
                 {
-                    clickElement[i].elementPressed(clickElement[i])
-                    clickElement[i].parent = groupeSelection
-                    clickElement[i].x = clickElement[i].x - deltaX
-                    clickElement[i].y = clickElement[i].y - deltaY
-                    selectedElements.push(clickElement[i])
-                    break
+                    clickElement[0].elementPressed(clickElement[0])
+                    clickElement[0].parent = groupeSelection
+                    clickElement[0].x = clickElement[0].x - deltaX
+                    clickElement[0].y = clickElement[0].y - deltaY
+                    selectedElements.push(clickElement[0])
+                }
+                else
+                {
+                    selectedElements[0].x = selectedElements[0].x + deltaX
+                    selectedElements[0].y = selectedElements[0].y + deltaY
+                    selectedElements[0].isSelected = false
+                    selectedElements[0].parent = workArea
+                    selectedElements[0].elementReleased(selectedElements[0])
+                    selectedElements.splice(0,1)
+                    logic.currentSelectedElement = null // todo use selectedElements instead of logic.currentSelectedElement
+
                 }
             }
             drag.target = groupeSelection
