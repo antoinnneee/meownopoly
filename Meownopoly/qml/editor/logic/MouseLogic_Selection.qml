@@ -9,10 +9,6 @@ MouseLogic_Base {
     function dragChanged(drag)
     {
         console.log("[LOGIC] drag changed")
-        if (!drag.active)
-        {
-            unselectAllElements()
-        }
         isDragging = drag.active
     }
 
@@ -103,7 +99,7 @@ MouseLogic_Base {
         if (isDragging)
         {
             clickElement = []
-            unselectAllElements()
+            //unselectAllElements()
         }
     }
 
@@ -177,17 +173,20 @@ MouseLogic_Base {
 
         clickElement = []
     }
+    function clickedRight(mouse, drag) {
+
+        var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
+        var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
+        contextMenu.clickGridCoord = gridPos
+        contextMenu.popup()
+        mouse.accepted = true
+    }
 
     function pressAndHold(mouse, drag)
     {
         if (drag.active === true) {
             return
         }
-        var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
-        var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
-        contextMenu.clickGridCoord = gridPos
-        contextMenu.popup()
-        mouse.accepted = true
     }
 
 }
