@@ -109,8 +109,8 @@ Rectangle {
                         id: rotationSlider
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - 80
-                        from: 0
-                        to: 360
+                        from: -180
+                        to: 180
                         value: 0
                         stepSize: 1
                         

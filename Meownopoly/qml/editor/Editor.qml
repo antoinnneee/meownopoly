@@ -396,6 +396,12 @@ Rectangle {
         onAssetCleared: function() {
             logic.editorMouseMode = EditorEnum.EM_NORMAL
         }
+        onEffectChanged: {
+            var effects = selectionPanel.assetPanel.visualEffectsPanel.getCurrentEffects()
+            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
+            }
+        }
     }
 
     // Panneau de sélection des maps

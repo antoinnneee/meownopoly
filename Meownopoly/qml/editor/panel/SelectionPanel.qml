@@ -56,6 +56,8 @@ Rectangle {
     signal resizeStarted()
     signal resizeFinished(int finalHeight)
 
+    signal effectChanged()
+
 
     required property EditorLogic logic
 
@@ -208,6 +210,9 @@ Rectangle {
                 root.viewChanged(currentView);
                 // Propager le changement vers le parent
                 //root.currentView = currentView;
+            }
+            onEffectChanged: {
+                root.effectChanged()
             }
 
             Component.onCompleted: {
