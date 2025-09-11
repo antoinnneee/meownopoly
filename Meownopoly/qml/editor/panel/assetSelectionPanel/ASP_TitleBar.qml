@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import AssetManager
 
 import "../"
@@ -36,31 +36,4 @@ EBP_TitleBar {
         id: clearButton
         visible: titleBar.isExpanded && titleBar.currentSelectedId !== ""
     }
-
-        // Expand/collapse button
-        // Button {
-        //     id: expandButton
-        //     width: 30
-        //     Layout.fillHeight: true
-        //     Layout.topMargin: -6
-        //     Layout.bottomMargin:  0
-        
-        //     background: Rectangle {
-        //         color: parent.pressed ? "#555555" : "#444444"
-        //         border.color: "#666666"
-        //         border.width: 1
-        //         radius: 4
-        //     }
-        
-        //     contentItem: Text {
-        //         text: root.isExpanded ? "▼" : "▲"
-        //         color: "white"
-        //         font.pixelSize: 12
-        //         horizontalAlignment: Text.AlignHCenter
-        //         verticalAlignment: Text.AlignVCenter
-        //         anchors.fill:expandButton
-        //     }
-        
-        //     onClicked: root.isExpanded = !root.isExpanded
-        // }
 }

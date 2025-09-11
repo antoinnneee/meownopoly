@@ -33,7 +33,6 @@ EditorBottomPanel {
             assetManagerSettings.currentSelectedId = ""
             root.assetCleared()
         }
-
     }
 
     property alias currentSelectedCategory: assetManagerSettings.currentSelectedCategory

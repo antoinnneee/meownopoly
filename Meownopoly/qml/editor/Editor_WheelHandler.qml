@@ -10,7 +10,7 @@ import ItemSnapable
 import "tools"
 import "tools/snapable"
 import "panel"
-import "panel/caseConfigPanel"
+import "panel/caseSelectionPanel"
 import "panel/assetSelectionPanel"
 import MapLoader
 import MapInfo

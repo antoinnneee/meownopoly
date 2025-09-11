@@ -35,8 +35,6 @@ public:
     ItemSnapable(const QJsonObject &json, QObject *parent = nullptr);
     
 
-
-
     Case * caseData() const;
     void setCaseData(Case * caseData);
     DisplayParameter * displayParameter() const;

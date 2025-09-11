@@ -75,19 +75,6 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_Item.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/AssetSelectionPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VisualEffectsPanel.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_Header.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseConfigurationPanel.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_GeneralConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_RentConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_TypeSelector.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_PanelElement.qml</file>
         <file>qml/editor/panel/ConnectionsConfigurationPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_ColorEffectsSection.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_Slider.qml</file>
@@ -95,13 +82,7 @@
         <file>qml/editor/panel/assetSelectionPanel/VEP_ResetButtonsPanel.qml</file>
         <file>qml/editor/panel/MapSelectionPanel.qml</file>
         <file>qml/editor/panel/MenuSelector.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CaseSelectionPanel.qml</file>
         <file>qml/editor/panel/SelectionPanel.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_CaseConfigPanel.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_CategoryGrid.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_Grid.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_Item.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/qmldir</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_TransformSection.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_TitleBar.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_TitleBar.qml</file>
@@ -113,10 +94,6 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_ContentArea.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_Content.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_SearchBar.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_TitleBar.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_ClearButton.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_ContentArea.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_StatusIndicator.qml</file>
         <file>qml/case/content/RestAreaContent2.qml</file>
         <file>qml/case/content/CaseContent_Base.qml</file>
         <file>qml/case/content/CardBoardBoxContent2.qml</file>
@@ -141,5 +118,11 @@
         <file>qml/editor/logic/MouseLogic_Base.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection.qml</file>
         <file>qml/editor/logic/MouseLogic_Pose.qml</file>
+        <file>qml/editor/panel/MenuSelector.qml.autosave</file>
+        <file>qml/editor/panel/caseSelectionPanel/CaseSelectionPanel.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_TitleBar.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/qmldir</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_ClearButton.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_ContentArea.qml</file>
     </qresource>
 </RCC>

@@ -10,7 +10,6 @@ import ItemSnapable
 import "tools"
 import "tools/snapable"
 import "panel"
-import "panel/caseConfigPanel"
 import "panel/assetSelectionPanel"
 import MapLoader
 import MapInfo
@@ -295,20 +294,7 @@ Rectangle {
         totalTilesCount: snapableTilesList.length
     }
 
-    // Panneau de configuration des cases
-    CaseConfigurationPanel {
-        id: caseConfigPanel
-        height: parent.height
-        width: parent.width/2
 
-        onConfigurationClosed: {
-
-        }
-
-        onRequestChangeType: function(newType)  {
-            logic.tileLogic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
-        }
-    }
     // Panneau de configuration des connexions
     ConnectionsConfigurationPanel {
         id: connectionsPanel

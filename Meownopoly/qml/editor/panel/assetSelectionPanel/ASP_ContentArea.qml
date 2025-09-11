@@ -30,7 +30,6 @@ EBP_Content {
         anchors.bottom: parent.bottom
         anchors.rightMargin: contentArea.showEffectsPanel ? 5 : 0
 
-
         // Category grid
         ASP_CategoryGrid {
             id: categoryGrid

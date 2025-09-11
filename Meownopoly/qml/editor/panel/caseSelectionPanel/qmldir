@@ -1,6 +1,0 @@
-module CaseSelectionPanel
-CaseSelectionPanel 1.0 CaseSelectionPanel.qml
-CSP_Grid 1.0 CSP_Grid.qml
-CSP_CategoryGrid 1.0 CSP_CategoryGrid.qml
-CSP_Item 1.0 CSP_Item.qml
-CSP_CaseConfigPanel 1.0 CSP_CaseConfigPanel.qml

@@ -25,25 +25,6 @@ ScrollView {
     onCategoryChanged: updateModel()
     onTypeChanged: updateModel()
     
-    // // Timer for retrying model loading
-    // Timer {
-    //     id: retryTimer
-    //     interval: 1000
-    //     repeat: false
-    //     onTriggered: {
-    //         if (category && type) {
-    //             isLoading = true
-    //             var retryModel = AssetManager.getAssetModel(category, type)
-    //             if (retryModel) {
-    //                 assetModel = retryModel
-    //                 console.log("Model loaded on retry:", retryModel.rowCount(), "items")
-    //             } else {
-    //                 console.warn("Model still null after retry for", category, type)
-    //             }
-    //             isLoading = false
-    //         }
-    //     }
-    // }
     
     function updateModel() {
         if (category && type) {
