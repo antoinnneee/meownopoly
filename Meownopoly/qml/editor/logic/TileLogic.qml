@@ -22,8 +22,8 @@ QtObject {
     function deselectAllTiles() {
         // Désélectionner tous les tiles dans la liste
         for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i]) {
-                snapableTilesList[i].isSelected = false
+            if (snapableTilesList[i].isSelected) {
+                snapableTilesList[i].elementUnselected()
             }
         }
         if (logic.mouseLogic && logic.mouseLogic.selectedElements.length)

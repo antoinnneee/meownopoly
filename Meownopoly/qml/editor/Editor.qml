@@ -391,10 +391,10 @@ Rectangle {
         //Connect the selected decoration element for effects
 
         onAssetSelected: function(category, type, id) {
-            logic.editorMouseMode = EditorEnum.EM_POSE
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
         }
         onAssetCleared: function() {
-            logic.editorMouseMode = EditorEnum.EM_NORMAL
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
         onEffectChanged: {
             var effects = selectionPanel.assetPanel.visualEffectsPanel.getCurrentEffects()

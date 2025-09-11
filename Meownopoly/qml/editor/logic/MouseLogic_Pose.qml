@@ -11,6 +11,11 @@ MouseLogic_Base {
     {
         selectionPanel.clearAssetSelection()
         drag.target = editorGrid
+        mouse.accepted = false  // to cancel right click on other mode
+    }
+
+    function clickRight(mouse, drag)
+    {
         mouse.accepted = true
     }
 

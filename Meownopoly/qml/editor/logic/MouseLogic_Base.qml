@@ -7,6 +7,42 @@ QtObject {
     property var logic
     property list<SnapableElement> selectedElements: []
 
+    function unselectAllElements()
+    {
+        var deltaX = groupeSelection.x
+        var deltaY = groupeSelection.y
+        for (var i = 0; i < selectedElements.length; i++) {
+            selectedElements[i].x = selectedElements[i].x + deltaX
+            selectedElements[i].y = selectedElements[i].y + deltaY
+            selectedElements[i].parent = workArea
+            selectedElements[i].elementReleased()
+        }
+        selectedElements = []
+        groupeSelection.x = 0
+        groupeSelection.y = 0
+        logic.tileLogic.deselectAllTiles() // can be improved
+    }
+
+    function unselectSelectedElements()
+    {
+        var deltaX = groupeSelection.x
+        var deltaY = groupeSelection.y
+        for (var i = 0; i < selectedElements.length; i++) {
+            selectedElements[i].x = selectedElements[i].x + deltaX
+            selectedElements[i].y = selectedElements[i].y + deltaY
+            selectedElements[i].parent = workArea
+            selectedElements[i].elementUnselected()
+        }
+        selectedElements = []
+        groupeSelection.x = 0
+        groupeSelection.y = 0
+    }
+    function changeMouseMode(mode)
+    {
+        unselectSelectedElements()
+        logic.editorMouseMode = mode
+    }
+
     function elementClicked(tile)
     {
         clickElement.push(tile)
