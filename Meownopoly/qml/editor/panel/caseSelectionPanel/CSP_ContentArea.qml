@@ -32,23 +32,23 @@ EBP_Content {
 
         // NE PAS METTRE CECI POUR CSP_ContentArea
         // Category grid
-        // ASP_CategoryGrid {
-        //     id: categoryGrid
-        //     anchors.fill: parent
-        //     anchors.topMargin: 6
-        //     visible: contentArea.currentView === "categories"
-        //     activeFilter: contentArea.activeFilter
-        //     searchText: contentArea.searchText
+        CSP_CategoryGrid {
+            id: categoryGrid
+            anchors.fill: parent
+            anchors.topMargin: 6
+            visible: contentArea.currentView === "categories"
+            activeFilter: contentArea.activeFilter
+            searchText: contentArea.searchText
 
-        //     onCategorySelected: function(category, type) {
-        //         contentArea.selectedCategory = category
-        //         contentArea.selectedType = type
-        //         categorieSelected()
-        //     }
-        // }
+            onCategorySelected: function(category, type) {
+                contentArea.selectedCategory = category
+                contentArea.selectedType = type
+                categorieSelected()
+            }
+        }
 
         // Asset grid
-        ASP_Grid {
+        CSP_Grid {
             id: assetGrid
             anchors.fill: parent
             anchors.topMargin: 6
@@ -82,15 +82,15 @@ EBP_Content {
         ScrollBar.vertical.policy: ScrollBar.AsNeeded
         ScrollBar.horizontal.policy: ScrollBar.AsNeeded
 
-        VisualEffectsPanel {
-            id: effectsPanel
-            width: effectsScrollView.width - 20 // Account for scrollbar
-            targetDecoration: contentArea.selectedDecoration
+        // VisualEffectsPanel {
+        //     id: effectsPanel
+        //     width: effectsScrollView.width - 20 // Account for scrollbar
+        //     targetDecoration: contentArea.selectedDecoration
 
-            onEffectChanged: {
-                // Optional: emit signal when effects change
-            }
-        }
+        //     onEffectChanged: {
+        //         // Optional: emit signal when effects change
+        //     }
+        // }
     }
 
 }

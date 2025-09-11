@@ -102,11 +102,10 @@ EditorBottomPanel {
          searchText: root.searchText
          currentView: root.currentView
 
-
     }
 
     // Content area (visible only when expanded)
-     contentArea: ASP_ContentArea {
+     contentArea: CSP_ContentArea {
             id: contentArea
             anchors.fill: parent
             currentSelectedCategory: root.currentSelectedCategory

@@ -124,5 +124,7 @@
         <file>qml/editor/panel/assetSelectionPanel/qmldir</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_ClearButton.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_ContentArea.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_CategoryGrid.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_Grid.qml</file>
     </qresource>
 </RCC>
