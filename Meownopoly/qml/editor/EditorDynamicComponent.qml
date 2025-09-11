@@ -19,15 +19,6 @@ Item{
         SnapableCaseTile {
             gridManager: editorGrid
 
-            // Gestion de la sélection
-            onElementClicked: function(element) {
-                // Désélectionner tous les autres éléments
-                logic.tileLogic.deselectAllTiles()
-                // Sélectionner l'élément cliqué
-                element.isSelected = true
-                logic.currentSelectedElement = element
-
-            }
             // Gestion de la suppression
             onElementDeleted: function(element) {
                 logic.tileLogic.deleteElementsConnections(element)
@@ -51,10 +42,6 @@ Item{
                     editorGrid.moveToConfigElement(element)
                 }
             }
-            onElementPressed: function(element) {
-                logic.currentSelectedElement = element
-
-            }
         }
     }
         // Composant dynamique pour créer des SnapableDecoration
@@ -66,14 +53,6 @@ Item{
 
                 generalMA: mainMA
 
-                // Gestion de la sélection
-                onElementClicked: function(element) {
-                    // Désélectionner tous les autres éléments
-                    logic.tileLogic.deselectAllTiles()
-                    // Sélectionner l'élément cliqué
-                    element.isSelected = true
-                    logic.currentSelectedElement = element
-                }
                 
                 // Gestion de la suppression
                 onElementDeleted: function(element) {
@@ -96,9 +75,6 @@ Item{
                         connectionsPanel.isVisible = true
                         editorGrid.moveToConfigElement(element)
                     }
-                }
-                onElementPressed: function(element) {
-                    logic.currentSelectedElement = element
                 }
             }
         }

@@ -43,9 +43,8 @@ EditorBottomPanel {
     property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
 
     // Selected decoration element for effects
-    property var selectedDecoration: null
-    property bool showEffectsPanel: true//selectedDecoration !== null && selectedDecoration.type === 2 // DecorationTile
-    
+    property bool showEffectsPanel: true
+
     // Signals
     signal assetSelected(string category, string type, string id)
     signal assetCleared()
@@ -121,7 +120,6 @@ EditorBottomPanel {
             onAssetSelected: function(category, type, id) {
                 root.assetSelected(category, type, id)
             }
-            selectedDecoration: root.selectedDecoration
             isExpanded: true
     }
 

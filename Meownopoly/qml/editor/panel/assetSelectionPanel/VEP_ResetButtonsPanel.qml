@@ -4,10 +4,7 @@ import QtQuick.Layouts 1.15
 
 Rectangle {
     id: root
-    
-    // Properties for the target decoration element
-    property var targetDecoration: null
-    
+
     // Visual properties
     color: "transparent"
     
@@ -17,6 +14,9 @@ Rectangle {
     
     // Signals
     signal effectChanged()
+    signal resetColorEffects()
+    signal resetAllEffects()
+    signal resetAllTransforms()
     
     // Reset buttons layout
     Column {
@@ -36,10 +36,8 @@ Rectangle {
                 Layout.fillWidth: true
                 
                 onClicked: {
-                    if (root.targetDecoration) {
-                        root.targetDecoration.resetColorEffects()
+                        root.resetColorEffects()
                         root.effectChanged()
-                    }
                 }
                 
                 background: Rectangle {
@@ -61,10 +59,8 @@ Rectangle {
                 Layout.fillWidth: true
                 
                 onClicked: {
-                    if (root.targetDecoration) {
-                        root.targetDecoration.resetAllEffects()
+                        root.resetAllEffects()
                         root.effectChanged()
-                    }
                 }
                 
                 background: Rectangle {
@@ -93,10 +89,8 @@ Rectangle {
                 Layout.fillWidth: true
                 
                 onClicked: {
-                    if (root.targetDecoration) {
-                        root.targetDecoration.resetAllTransforms()
+                        root.resetAllTransforms()
                         root.effectChanged()
-                    }
                 }
                 
                 background: Rectangle {
@@ -118,11 +112,9 @@ Rectangle {
                 Layout.fillWidth: true
                 
                 onClicked: {
-                    if (root.targetDecoration) {
-                        root.targetDecoration.resetAllEffects()
-                        root.targetDecoration.resetAllTransforms()
+                        root.resetAllEffects()
+                        root.resetAllTransforms()
                         root.effectChanged()
-                    }
                 }
                 
                 background: Rectangle {

@@ -5,6 +5,7 @@ QtObject {
     property var clickPosition
     property list<var> elementInitialPosition:[]
     property var logic
+    property list<SnapableElement> selectedElements: []
 
     function elementClicked(tile)
     {

@@ -3,7 +3,6 @@ import "../tools/snapable"
 
 MouseLogic_Base {
     id: mouseLogic
-    property list<SnapableElement> selectedElements: []
     property bool isDragging: false
 
     function dragChanged(drag)
@@ -20,7 +19,23 @@ MouseLogic_Base {
             selectedElements[i].x = selectedElements[i].x + deltaX
             selectedElements[i].y = selectedElements[i].y + deltaY
             selectedElements[i].parent = workArea
-            selectedElements[i].elementReleased(selectedElements[i])
+            selectedElements[i].elementReleased()
+        }
+        selectedElements = []
+        groupeSelection.x = 0
+        groupeSelection.y = 0
+        logic.tileLogic.deselectAllTiles() // can be improved
+    }
+
+    function unselectSelectedElements()
+    {
+        var deltaX = groupeSelection.x
+        var deltaY = groupeSelection.y
+        for (var i = 0; i < selectedElements.length; i++) {
+            selectedElements[i].x = selectedElements[i].x + deltaX
+            selectedElements[i].y = selectedElements[i].y + deltaY
+            selectedElements[i].parent = workArea
+            selectedElements[i].elementReleased()
         }
         selectedElements = []
         groupeSelection.x = 0
@@ -43,7 +58,7 @@ MouseLogic_Base {
             if (clickElement.length >= 0) {
                 if (!clickElement[0].isSelected)
                 {
-                    clickElement[0].elementPressed(clickElement[0])
+                    clickElement[0].elementPressed()
                     clickElement[0].parent = groupeSelection
                     clickElement[0].x = clickElement[0].x - deltaX
                     clickElement[0].y = clickElement[0].y - deltaY
@@ -55,10 +70,8 @@ MouseLogic_Base {
                     selectedElements[0].y = selectedElements[0].y + deltaY
                     selectedElements[0].isSelected = false
                     selectedElements[0].parent = workArea
-                    selectedElements[0].elementReleased(selectedElements[0])
+                    selectedElements[0].elementReleased()
                     selectedElements.splice(0,1)
-                    logic.currentSelectedElement = null // todo use selectedElements instead of logic.currentSelectedElement
-
                 }
             }
             drag.target = groupeSelection
@@ -68,7 +81,7 @@ MouseLogic_Base {
             console.log("[LOGIC] pressed left without control modifier")
             unselectAllElements()
             if (clickElement.length > 0) {
-                clickElement[0].elementPressed(clickElement[0])
+                clickElement[0].elementPressed()
                 clickElement[0].parent = groupeSelection
                 drag.target = groupeSelection 
                 selectedElements.push(clickElement[0])
@@ -82,7 +95,7 @@ MouseLogic_Base {
             console.log("main MA pressed : nb Element ", clickElement.length)
             mouse.accepted = true
             for (var i = clickElement.length - 1; i >= 0; i--) {
-                clickElement[i].elementPressed(clickElement[i])
+                clickElement[i].elementPressed()
                 clickElement[i].parent = groupeSelection
             }
             drag.target = groupeSelection
@@ -112,7 +125,7 @@ MouseLogic_Base {
         {
             unselectAllElements()
             if (clickElement.length > 0) {
-                clickElement[0].elementPressed(clickElement[0])
+                clickElement[0].elementPressed()
                 clickElement[0].parent = groupeSelection
                 drag.target = groupeSelection 
                 selectedElements.push(clickElement[0])
@@ -128,7 +141,7 @@ MouseLogic_Base {
             else if (clickElement.length > 0) { // unselect all and select clicked
                 console.log("[LOGIC] unselect all and select clicked", clickElement[0])
                 unselectAllElements()
-                clickElement[0].elementPressed(clickElement[0])
+                clickElement[0].elementPressed()
                 clickElement[0].parent = groupeSelection
                 drag.target = groupeSelection
                 selectedElements.push(clickElement[0])
@@ -146,7 +159,7 @@ MouseLogic_Base {
                 if (!clickElement[0].isSelected)
                 {
 
-                    clickElement[0].elementPressed(clickElement[0])
+                    clickElement[0].elementPressed()
                     clickElement[0].parent = groupeSelection
                     clickElement[0].x = clickElement[0].x - deltaX
                     clickElement[0].y = clickElement[0].y - deltaY
@@ -161,7 +174,7 @@ MouseLogic_Base {
                             selectedElements[i].y = selectedElements[i].y + deltaY
                             selectedElements[i].isSelected = false
                             selectedElements[i].parent = workArea
-                            selectedElements[i].elementReleased(selectedElements[i])
+                            selectedElements[i].elementReleased()
                             selectedElements.splice(i,1)
                             break
                         }

@@ -4,8 +4,7 @@ import QtQuick.Controls
 Rectangle {
     id: infoPanel
     
-    // Propriétés exposées 
-    property var selectedElement: null
+    // Propriétés exposées
     property var gridManager: null
     property int totalTilesCount: 0
     
@@ -84,86 +83,8 @@ Rectangle {
             font.pixelSize: 11
             color: "#2c3e50"
         }
-        
-        Column {
-            width: parent.width
-            spacing: 3
-            
-            Text {
-                text: selectedElement ? 
-                      ("Nom: " + (selectedElement.caseData ? selectedElement.caseData.name : "Non défini")) : 
-                      "Aucun élément sélectionné"
-                font.pixelSize: 9
-                color: selectedElement ? "#27ae60" : "#7f8c8d"
-                font.bold: selectedElement !== null
-            }
-            
-            Text {
-                text: selectedElement ? 
-                      ("Type: " + getCaseTypeName(selectedElement.caseData ? selectedElement.caseData.type : -1)) : 
-                      ""
-                font.pixelSize: 9
-                color: "#3498db"
-                visible: selectedElement !== null
-            }
-            
-            Text {
-                text: selectedElement ? 
-                      ("Dimensions: " + Math.round(selectedElement.width) + "×" + Math.round(selectedElement.height) + "px") : 
-                      ""
-                font.pixelSize: 9
-                color: "#e74c3c"
-                visible: selectedElement !== null
-            }
-            
-            Text {  
-                text: selectedElement ? 
-                      ("Position: (" + Math.round(selectedElement.x) + ", " + Math.round(selectedElement.y) + ")") : 
-                      ""
-                font.pixelSize: 9
-                color: "#f39c12"
-                visible: selectedElement !== null
-            }
-            
-            Text {
-                text: selectedElement && gridManager ? 
-                      ("Grille: " + Math.round(selectedElement.width / gridManager.gridSize) + "×" + 
-                       Math.round(selectedElement.height / gridManager.gridSize) + " cellules") : 
-                      ""
-                font.pixelSize: 9
-                color: "#9b59b6"
-                visible: selectedElement !== null && gridManager !== null
-            }
-            
-            Text {
-                text: selectedElement ? 
-                      ("Position grille: (" + selectedElement.gridRelativePositionX + ", " + 
-                       selectedElement.gridRelativePositionY + ")") : 
-                      ""
-                font.pixelSize: 9
-                color: "#1abc9c"
-                visible: selectedElement !== null
-            }
-            
-            // Affichage du plan (Z)
-            Text {
-                text: selectedElement ? 
-                      ("Plan: " + selectedElement.z) : 
-                      ""
-                font.pixelSize: 9
-                color: "#4ECDC4"
-                font.bold: true
-                visible: selectedElement !== null
-            }
-        }
-        
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: "#cccccc"
-            visible: selectedElement !== null
-        }
-        
+
+
         // Paramètres de grille
     }
     
@@ -211,16 +132,5 @@ Rectangle {
             duration: 100
         }
     }
-    
-    // Fonction publique pour déclencher l'animation de mise à jour
-    function triggerUpdateAnimation() {
-        selectionUpdateAnimation.start()
-    }
-    
-    // Observer les changements de sélection
-    onSelectedElementChanged: {
-        if (selectedElement) {
-            triggerUpdateAnimation()
-        }
-    }
+
 } 

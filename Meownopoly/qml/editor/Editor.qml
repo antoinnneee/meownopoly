@@ -24,7 +24,6 @@ Rectangle {
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
-    property alias currentSelectedElement: logic.currentSelectedElement
     property alias isEditing: logic.isEditing
 
     property alias isSelectionActive: logic.isSelectionActive
@@ -289,7 +288,7 @@ Rectangle {
     }
 
 
-    // Panneau d'information sur l'élément sélectionné (nouveau composant)
+    // Panneau d'information sur l'élément sélectionné
     InfoPanel {
         id: infoPanel
 
@@ -299,7 +298,6 @@ Rectangle {
             margins: 10
         }
 
-        selectedElement: currentSelectedElement
         gridManager: editorGrid
         totalTilesCount: snapableTilesList.length
     }
@@ -325,6 +323,7 @@ Rectangle {
         height: parent.height
         width: parent.width/2
 
+        /*
         function selectElementToConnect(kind) {
             // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
             if (!currentSelectedElement || !connectionsPanel.targetElement) return
@@ -336,6 +335,7 @@ Rectangle {
                 connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
             }
         }
+    */
     }
 
     // Function to apply visual effects to a new decoration tile
@@ -343,7 +343,7 @@ Rectangle {
         if (!newTile || !newTile.displaySettings) return
 
         // Get current effects from the visual effects panel
-        if (!selectionPanel.selectedDecoration) return
+        // if (!selectionPanel.selectedDecoration) return
 
         var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
         if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
@@ -365,6 +365,7 @@ Rectangle {
         var newTile = logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
         // Set decoration properties if needed
         if (newTile && newTile.decorationSettings.decorationType !== undefined) {
+            console.log("Setting decoration properties for new tile")
             newTile.decorationSettings.decorationCategory = root.selectedAssetCategory
             newTile.decorationSettings.decorationType = root.selectedAssetType
             newTile.decorationSettings.decorationId = root.selectedAssetId
@@ -388,12 +389,6 @@ Rectangle {
         isExpanded: true
 
         //Connect the selected decoration element for effects
-        selectedDecoration: {
-            if (currentSelectedElement && currentSelectedElement.type === ItemSnapable.DecorationTile) {
-                return currentSelectedElement
-            }
-            return null
-        }
 
         onAssetSelected: function(category, type, id) {
             logic.editorMouseMode = EditorEnum.EM_POSE

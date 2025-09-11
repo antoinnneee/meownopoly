@@ -9,7 +9,6 @@ Rectangle {
     id: root
     
     // Properties for the target decoration element
-    property var targetDecoration: null
     property bool effectsLocked: false
     
     // Visual properties
@@ -84,7 +83,6 @@ Rectangle {
             id: colorEffectsSection
             anchors.left: parent.left
             anchors.right: parent.right
-            targetDecoration: root.targetDecoration
 
             onEffectChanged: {
                 root.effectChanged()
@@ -96,7 +94,6 @@ Rectangle {
             id: advancedEffectsSection
             anchors.left: parent.left
             anchors.right: parent.right
-            targetDecoration: root.targetDecoration
 
             onEffectChanged: {
                 root.effectChanged()
@@ -108,7 +105,6 @@ Rectangle {
             id: transformSection
             anchors.left: parent.left
             anchors.right: parent.right
-            targetDecoration: root.targetDecoration
 
             onEffectChanged: {
                 root.effectChanged()
@@ -120,10 +116,8 @@ Rectangle {
             id: resetButtonsPanel
             anchors.left: parent.left
             anchors.right: parent.right
-            targetDecoration: root.targetDecoration
             
             onEffectChanged: {
-                root.updateFromTarget()
                 root.effectChanged()
             }
         }
@@ -158,6 +152,7 @@ Rectangle {
     }
 
     function updateFromTarget() {
+        /*
         if (!targetDecoration || root.effectsLocked) return
         
         // Update sliders from target values
@@ -176,9 +171,7 @@ Rectangle {
         
         // Update transform section
         transformSection.updateFromTarget()
+        */
     }
-    
-    onTargetDecorationChanged: {
-        updateFromTarget()
-    }
+
 }
