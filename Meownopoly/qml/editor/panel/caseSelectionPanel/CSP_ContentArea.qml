@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import "../editorBottomPanel"
-
+import "../assetSelectionPanel"
 
 EBP_Content {
     id: contentArea
@@ -18,7 +18,7 @@ EBP_Content {
     signal assetSelected(string category, string type, string id)
     signal categorieSelected()
 
-    property alias visualEffectsPanel : effectsPanel
+    // property alias visualEffectsPanel : effectsPanel
 
 
     // Main content (categories/assets)
@@ -26,7 +26,7 @@ EBP_Content {
         id: mainContent
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.right: contentArea.showEffectsPanel ? effectsScrollView.left : parent.right
+        anchors.right: /*contentArea.showEffectsPanel ? effectsScrollView.left : */parent.right
         anchors.bottom: parent.bottom
         anchors.rightMargin: contentArea.showEffectsPanel ? 5 : 0
 
@@ -82,15 +82,15 @@ EBP_Content {
         ScrollBar.vertical.policy: ScrollBar.AsNeeded
         ScrollBar.horizontal.policy: ScrollBar.AsNeeded
 
-        // VisualEffectsPanel {
-        //     id: effectsPanel
-        //     width: effectsScrollView.width - 20 // Account for scrollbar
-        //     targetDecoration: contentArea.selectedDecoration
+        VisualEffectsPanel {
+            id: effectsPanel
+            width: effectsScrollView.width - 20 // Account for scrollbar
+            targetDecoration: contentArea.selectedDecoration
 
-        //     onEffectChanged: {
-        //         // Optional: emit signal when effects change
-        //     }
-        // }
+            onEffectChanged: {
+                // Optional: emit signal when effects change
+            }
+        }
     }
 
 }

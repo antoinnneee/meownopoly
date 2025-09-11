@@ -30,15 +30,7 @@ ScrollView {
         rowSpacing: 10
 
         // Define category metadata with icons and descriptions
-        property var categoryMetadata: {
-            "grass": { name: "Grass", icon: "🌱", description: "Various grass textures" },
-            "tree": { name: "Trees", icon: "🌳", description: "Tree decorations" },
-            "toy": { name: "Toys", icon: "🎁", description: "Toys decorations" },
-            "other": { name: "Other Decorations", icon: "🎨", description: "Miscellaneous decorations" },
-            "water": { name: "Water", icon: "💧", description: "Water decorations" },
-            "avatar": { name: "Player Icons", icon: "👤", description: "Character avatars" },
-            "player_icons": { name: "Player Icons", icon: "👤", description: "Character avatars" }
-        }
+        property var categoryMetadata
 
         // Dynamically generate categories from AssetManager
         property var categories: []
@@ -50,10 +42,8 @@ ScrollView {
 
         function generateCategories() {
             var newCategories = []
-            var availableCategories = AssetManager.getAvailableCategories()
 
-            for (var i = 0; i < availableCategories.length; i++) {
-                var categoryName = availableCategories[i]
+                var categoryName = "ui"
                 var types = AssetManager.getAvailableTypes(categoryName)
 
                 for (var j = 0; j < types.length; j++) {
@@ -79,7 +69,6 @@ ScrollView {
                         })
                     }
                 }
-            }
 
             categories = newCategories
         }

@@ -63,7 +63,7 @@ ScrollView {
         Repeater {
             model: root.assetModel
 
-            ASP_Item {
+            CSP_Item {
                 Layout.preferredWidth: 80
                 Layout.preferredHeight: 80
 

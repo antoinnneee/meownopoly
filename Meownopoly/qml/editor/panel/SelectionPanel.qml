@@ -234,7 +234,7 @@ Rectangle {
             //     selectionModeChanged(isActive);
             // }
 
-            onCaseSelected: function(category, type, id) {
+            onAssetSelected: function(category, type, id) {
                 // Propager le signal vers le haut si nécessaire
                 caseSelected(category, type, id);
             }
