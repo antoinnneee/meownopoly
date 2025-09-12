@@ -45,6 +45,8 @@ ScrollView {
 
                 var categoryName = "ui"
                 var types = AssetManager.getAvailableTypes(categoryName)
+            console.log("Generating categories for", categoryName, "with types:", types)
+
 
                 for (var j = 0; j < types.length; j++) {
                     var typeName = types[j]

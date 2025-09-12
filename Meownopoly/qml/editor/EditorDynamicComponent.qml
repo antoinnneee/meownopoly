@@ -7,7 +7,7 @@ Item{
     required property GridManager editorGrid
     required property var logic
     required property var workArea
-    required property var caseConfigPanel
+    // required property var caseConfigPanel
     required property var connectionsPanel
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
@@ -38,7 +38,7 @@ Item{
             onElementConfigurationRequested: function(element) {
                 console.log("Configuration demandée pour:", element)
                 if (element) {
-                    caseConfigPanel.openConfiguration(element)
+                    // caseConfigPanel.openConfiguration(element)
                     editorGrid.moveToConfigElement(element)
 
                 }
@@ -57,49 +57,49 @@ Item{
             }
         }
     }
-        // Composant dynamique pour créer des SnapableDecoration
-        
+    // Composant dynamique pour créer des SnapableDecoration
+
     Component {
-            id: snapableDecorationComponent
-            SnapableDecoration {
-                gridManager: editorGrid
+        id: snapableDecorationComponent
+        SnapableDecoration {
+            gridManager: editorGrid
 
-                generalMA: mainMA
+            generalMA: mainMA
 
-                // Gestion de la sélection
-                onElementClicked: function(element) {
-                    // Désélectionner tous les autres éléments
-                    logic.tileLogic.deselectAllTiles()
-                    // Sélectionner l'élément cliqué
-                    element.isSelected = true
-                    logic.currentSelectedElement = element
-                }
-                
-                // Gestion de la suppression
-                onElementDeleted: function(element) {
-                    logic.tileLogic.deleteElementsConnections(element)
-                    element.connectionManager.deleteLinkedConnection()
-                    logic.tileLogic.deleteElement(element)
-                }
-                
-                // Gestion de la configuration
-                onElementConfigurationRequested: function(element) {
-                    console.log("Configuration demandée pour:", element)
-                    if (element.caseData) {
-                        caseConfigPanel.openConfiguration(element)
-                    }
-                }
-
-                onElementConnectionsConfigurationRequested: function(element) {
-                    if (element) {
-                        connectionsPanel.targetElement = element
-                        connectionsPanel.isVisible = true
-                        editorGrid.moveToConfigElement(element)
-                    }
-                }
-                onElementPressed: function(element) {
-                    logic.currentSelectedElement = element
-                }
+            // Gestion de la sélection
+            onElementClicked: function(element) {
+                // Désélectionner tous les autres éléments
+                logic.tileLogic.deselectAllTiles()
+                // Sélectionner l'élément cliqué
+                element.isSelected = true
+                logic.currentSelectedElement = element
             }
+
+            // Gestion de la suppression
+            onElementDeleted: function(element) {
+                logic.tileLogic.deleteElementsConnections(element)
+                element.connectionManager.deleteLinkedConnection()
+                logic.tileLogic.deleteElement(element)
+            }
+
+            // Gestion de la configuration
+            onElementConfigurationRequested: function(element) {
+                console.log("Configuration demandée pour:", element)
+                // if (element.caseData) {
+                // caseConfigPanel.openConfiguration(element)
+                // }
+            }
+
+            // onElementConnectionsConfigurationRequested: function(element) {
+            //     if (element) {
+            //         connectionsPanel.targetElement = element
+            //         connectionsPanel.isVisible = true
+            //         editorGrid.moveToConfigElement(element)
+            //     }
+            // }
+            // onElementPressed: function(element) {
+            //     logic.currentSelectedElement = element
+            // }
         }
+    }
 }

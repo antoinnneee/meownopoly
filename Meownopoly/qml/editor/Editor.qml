@@ -78,7 +78,7 @@ Rectangle {
         editorGrid: editorGrid
         logic: logic
         workArea: workArea
-        caseConfigPanel: caseConfigPanel
+        // caseConfigPanel: caseConfigPanel
         connectionsPanel: connectionsPanel
     }
 
