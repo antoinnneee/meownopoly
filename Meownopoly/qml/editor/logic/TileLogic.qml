@@ -22,11 +22,12 @@ QtObject {
     function deselectAllTiles() {
         // Désélectionner tous les tiles dans la liste
         for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i]) {
-                snapableTilesList[i].isSelected = false
+            if (snapableTilesList[i].isSelected) {
+                snapableTilesList[i].elementUnselected()
             }
         }
-        logic.currentSelectedElement = null
+        if (logic.mouseLogic && logic.mouseLogic.selectedElements.length)
+        logic.mouseLogic.selectedElements = []
     }
 
 
@@ -64,8 +65,8 @@ QtObject {
             snapableTilesList.push(newTile)
             // Désélectionner tout et sélectionner le nouveau tile
             deselectAllTiles()
-//            newTile.isSelected = true
-            logic.currentSelectedElement = newTile
+
+            //logic.currentSelectedElement = newTile
             newTile.snapToGridFromGridPos()
         }
         return newTile
@@ -149,9 +150,7 @@ QtObject {
             snapableTilesList.splice(index, 1)
 
             // Si c'était l'élément sélectionné, le désélectionner
-            if (logic.currentSelectedElement === element) {
-                logic.currentSelectedElement = null
-            }
+            logic.mouseLogic.unselectSelectedElements()
 
             // Détruire l'objet QML
             element.destroy()

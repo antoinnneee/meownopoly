@@ -38,7 +38,6 @@ Rectangle {
     property alias currentSelectedAssetType: assetPanel.currentSelectedType
     property alias currentSelectedAssetId: assetPanel.currentSelectedId
     property alias isAssetSelected: assetPanel.isAssetSelected
-    property alias selectedDecoration: assetPanel.selectedDecoration
     property alias activeAssetFilter: assetPanel.activeFilter
     property alias assetSearchText: assetPanel.searchText
     property alias assetView: assetPanel.currentView
@@ -56,6 +55,8 @@ Rectangle {
     // Signaux de redimensionnement
     signal resizeStarted()
     signal resizeFinished(int finalHeight)
+
+    signal effectChanged()
 
 
     required property EditorLogic logic
@@ -209,6 +210,9 @@ Rectangle {
                 root.viewChanged(currentView);
                 // Propager le changement vers le parent
                 //root.currentView = currentView;
+            }
+            onEffectChanged: {
+                root.effectChanged()
             }
 
             Component.onCompleted: {

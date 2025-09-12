@@ -10,8 +10,6 @@ GroupBox {
     id: control
     title: "Advanced Effects"
     
-    property var targetDecoration: null
-
     property alias blurSlider: blurSlider
     property alias blurEnabledCheck: blurEnabledCheck
     property alias shadowBlurSlider: shadowBlurSlider
@@ -87,10 +85,7 @@ GroupBox {
                 Layout.fillHeight: true
 
                 onCheckedChanged: {
-                    if (control.targetDecoration) {
-                        control.targetDecoration.displaySettings.effectBlurEnabled = checked
                         control.effectChanged()
-                    }
                 }
                 indicator: Rectangle {
                     implicitWidth: 20
@@ -123,10 +118,7 @@ GroupBox {
                 from: 0
                 to: 1
                 onEffectChanged: function(value) {
-                    if (control.targetDecoration) {
-                        control.targetDecoration.displaySettings.effectBlur = value
                         control.effectChanged()
-                    }
                 }
             }
 
@@ -164,9 +156,6 @@ GroupBox {
 
                 
                 onCheckedChanged: {
-                    if (targetDecoration && targetDecoration.isSelected) {
-                        targetDecoration.displaySettings.effectShadowEnabled = checked
-                    }
                     control.effectChanged()
                 }
 
@@ -180,10 +169,7 @@ GroupBox {
                 from: 0
                 to: 1
                 onEffectChanged: function(value) {
-                    if (control.targetDecoration) {
-                        control.targetDecoration.displaySettings.effectShadowBlur = value
                         control.effectChanged()
-                    }
                 }
             }
         }

@@ -19,15 +19,6 @@ Item{
         SnapableCaseTile {
             gridManager: editorGrid
 
-            // Gestion de la sélection
-            onElementClicked: function(element) {
-                // Désélectionner tous les autres éléments
-                logic.tileLogic.deselectAllTiles()
-                // Sélectionner l'élément cliqué
-                element.isSelected = true
-                logic.currentSelectedElement = element
-
-            }
             // Gestion de la suppression
             onElementDeleted: function(element) {
                 logic.tileLogic.deleteElementsConnections(element)
@@ -51,10 +42,6 @@ Item{
                     editorGrid.moveToConfigElement(element)
                 }
             }
-            onElementPressed: function(element) {
-                logic.currentSelectedElement = element
-
-            }
         }
     }
     // Composant dynamique pour créer des SnapableDecoration
@@ -66,13 +53,29 @@ Item{
 
             generalMA: mainMA
 
-            // Gestion de la sélection
-            onElementClicked: function(element) {
-                // Désélectionner tous les autres éléments
-                logic.tileLogic.deselectAllTiles()
-                // Sélectionner l'élément cliqué
-                element.isSelected = true
-                logic.currentSelectedElement = element
+                
+                // Gestion de la suppression
+                onElementDeleted: function(element) {
+                    logic.tileLogic.deleteElementsConnections(element)
+                    element.connectionManager.deleteLinkedConnection()
+                    logic.tileLogic.deleteElement(element)
+                }
+                
+                // Gestion de la configuration
+                onElementConfigurationRequested: function(element) {
+                    console.log("Configuration demandée pour:", element)
+                    if (element.caseData) {
+                        caseConfigPanel.openConfiguration(element)
+                    }
+                }
+
+                onElementConnectionsConfigurationRequested: function(element) {
+                    if (element) {
+                        connectionsPanel.targetElement = element
+                        connectionsPanel.isVisible = true
+                        editorGrid.moveToConfigElement(element)
+                    }
+                }
             }
 
             // Gestion de la suppression

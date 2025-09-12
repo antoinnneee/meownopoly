@@ -8,7 +8,6 @@ GroupBox {
     title: "Color Effects"
     id: control
 
-    property var targetDecoration: null
     property alias brightnessSlider: brightnessSlider
     property alias contrastSlider: contrastSlider
     property alias saturationSlider: saturationSlider
@@ -115,9 +114,6 @@ GroupBox {
             Layout.fillWidth: true
             sliderText: "Brightness:"
             onEffectChanged: function(value) {
-                if (targetDecoration && targetDecoration.isSelected) {
-                    targetDecoration.displaySettings.effectBrightness = value
-                }
                 control.effectChanged()
             }
         }
@@ -129,9 +125,6 @@ GroupBox {
             Layout.fillWidth: true
             sliderText: "Contrast:"
             onEffectChanged: function(value) {
-                if (targetDecoration && targetDecoration.isSelected) {
-                    targetDecoration.displaySettings.effectContrast = value
-                }
                 control.effectChanged()
             }
         }
@@ -143,9 +136,6 @@ GroupBox {
             Layout.fillWidth: true
             sliderText: "Saturation:"
             onEffectChanged: function(value) {
-                if (targetDecoration && targetDecoration.isSelected) {
-                    targetDecoration.displaySettings.effectSaturation = value
-                }
                 control.effectChanged()
             }
         }
@@ -159,9 +149,6 @@ GroupBox {
             Layout.fillWidth: true
             sliderText: "Colorization:"
             onEffectChanged: function(value) {
-                if (targetDecoration && targetDecoration.isSelected) {
-                    targetDecoration.displaySettings.effectColorization = value
-                }
                 control.effectChanged()
             }
         }
@@ -435,9 +422,6 @@ GroupBox {
     }
     
     function applyActivePreset() {
-        if (activePresetIndex >= 0 && activePresetIndex < colorPresets.length && targetDecoration && targetDecoration.isSelected) {
-            targetDecoration.displaySettings.effectColorizationColor = colorPresets[activePresetIndex].color
-        }
         control.effectChanged()
     }
     

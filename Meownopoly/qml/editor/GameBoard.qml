@@ -24,7 +24,6 @@ Rectangle {
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
-    property alias currentSelectedElement: logic.currentSelectedElement
     property alias isEditing: logic.isEditing
 
     property alias isSelectionActive: logic.isSelectionActive
@@ -68,7 +67,6 @@ Rectangle {
         logic: logic
         workArea: workArea
         caseConfigPanel: caseConfigPanel
-        connectionsPanel: connectionsPanel
     }
 
     // Rectangle de sélection
@@ -190,7 +188,6 @@ Rectangle {
             margins: 10
         }
 
-        selectedElement: currentSelectedElement
         gridManager: editorGrid
         totalTilesCount: snapableTilesList.length
     }
@@ -229,25 +226,6 @@ Rectangle {
 
         onRequestChangeType: function(newType)  {
             logic.tileLogic.changeCaseType(caseConfigPanel.targetSnapableCase, newType)
-        }
-    }
-
-    // Panneau de configuration des connexions
-    ConnectionsConfigurationPanel {
-        id: connectionsPanel
-        height: parent.height
-        width: parent.width/2
-
-        function selectElementToConnect(kind) {
-            // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
-            if (!currentSelectedElement || !connectionsPanel.targetElement) return
-            if (currentSelectedElement === connectionsPanel.targetElement) return
-
-            if (kind === "previous") {
-                connectionsPanel.targetElement.connectionManager.addPreviousElement(currentSelectedElement)
-            } else if (kind === "next") {
-                connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
-            }
         }
     }
 

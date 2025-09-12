@@ -7,16 +7,41 @@ Button{
     text: "Load Map"
     z:1000
 
-    // Style moderne pour le bouton
+
+    property color mainColor : "#6c5ce7"
+
+    onClicked: {
+        animation.running = true
+    }
+
+    SequentialAnimation {
+        id: animation
+        ColorAnimation {
+            target: background
+            property: "color"
+            from: background.color
+            to: Qt.lighter(mainColor, 1.2)
+            duration: 150
+            easing.type: Easing.InOutQuad
+        }
+        ColorAnimation {
+            target: background
+            property: "color"
+            to: background.color
+            duration: 200
+            easing.type: Easing.InOutQuad
+        }
+    }
+
     background: Rectangle {
+        id: background
         radius: 8
-        color: loadMapButton.hovered ? "#74b9ff" : "#6c5ce7"
+        color: loadMapButton.hovered ? Qt.lighter(mainColor, 1.1) : mainColor
         border.color: "#5f3dc4"
         border.width: 1
-        
-        Behavior on color { ColorAnimation { duration: 150 } }
+
+       Behavior on color { ColorAnimation { duration: loadMapButton.hovered ? 150 : 250} }
     }
-    
     contentItem: Text {
         text: loadMapButton.text
         color: "#ffffff"

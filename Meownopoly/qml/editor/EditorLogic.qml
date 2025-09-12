@@ -12,7 +12,6 @@ import "logic"
 Item {
     id: logic
     property list<SnapableElement> snapableTilesList
-    property var currentSelectedElement
     required property EditorDynamicComponent editorDynamicComponent
     required property GridManager editorGrid
     required property var selectionRect
@@ -236,7 +235,7 @@ Item {
             // Désélectionner tout et sélectionner le nouveau tile
             tileLogic.deselectAllTiles()
             newTile.isSelected = true
-            currentSelectedElement = newTile
+            //currentSelectedElement = newTile
             newTile.snapToGridFromGridPos()
         }
 
@@ -308,7 +307,7 @@ Item {
         if (tilesPlaced > 0 && lastTile) {
             tileLogic.deselectAllTiles()
             lastTile.isSelected = true
-            currentSelectedElement = lastTile
+            //currentSelectedElement = lastTile
         }
     }
 

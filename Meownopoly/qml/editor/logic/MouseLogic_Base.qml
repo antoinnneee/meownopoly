@@ -5,6 +5,43 @@ QtObject {
     property var clickPosition
     property list<var> elementInitialPosition:[]
     property var logic
+    property list<SnapableElement> selectedElements: []
+
+    function unselectAllElements()
+    {
+        var deltaX = groupeSelection.x
+        var deltaY = groupeSelection.y
+        for (var i = 0; i < selectedElements.length; i++) {
+            selectedElements[i].x = selectedElements[i].x + deltaX
+            selectedElements[i].y = selectedElements[i].y + deltaY
+            selectedElements[i].parent = workArea
+            selectedElements[i].elementReleased()
+        }
+        selectedElements = []
+        groupeSelection.x = 0
+        groupeSelection.y = 0
+        logic.tileLogic.deselectAllTiles() // can be improved
+    }
+
+    function unselectSelectedElements()
+    {
+        var deltaX = groupeSelection.x
+        var deltaY = groupeSelection.y
+        for (var i = 0; i < selectedElements.length; i++) {
+            selectedElements[i].x = selectedElements[i].x + deltaX
+            selectedElements[i].y = selectedElements[i].y + deltaY
+            selectedElements[i].parent = workArea
+            selectedElements[i].elementUnselected()
+        }
+        selectedElements = []
+        groupeSelection.x = 0
+        groupeSelection.y = 0
+    }
+    function changeMouseMode(mode)
+    {
+        unselectSelectedElements()
+        logic.editorMouseMode = mode
+    }
 
     function elementClicked(tile)
     {
@@ -53,9 +90,29 @@ QtObject {
         contextMenu.popup()
     }
 
+    function clickedLeft(mouse, drag)
+    {
+        console.log("main MA clicked : ", clickElement.length, " elements")
+    }
+
+    function clickedRight(mouse, drag)
+    {
+        console.log("main MA clicked right : ", clickElement.length, " elements")
+    }
+
+    function clickedMiddle(mouse, drag)
+    {
+
+    }
+
     function clicked(mouse, drag)
     {
         console.log("main MA clicked : ", clickElement.length, " elements")
+    }
+
+    function dragChanged(drag)
+    {
+
     }
 
 }

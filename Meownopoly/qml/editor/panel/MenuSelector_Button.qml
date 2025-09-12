@@ -1,36 +1,62 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-Rectangle {
+Button {
     id: control
-    property string text: "Menu Assets"
+
+    width: 100
+    height: 35
+
+    text: "Menu Assets"
+    property color mainColor : "#b05758"
+    property color borderColor : "#862a2a"
     property int buttonIndex: 0
 
     signal buttonClicked(int index)
-    
 
-    color: "#b05758"
-    border.color: "#862a2a"
-    border.width: 1
-    radius: 4
-    width: 100
-    height: 35
-    Text {
+    onClicked: {
+        animation.running = true
+        control.buttonClicked(control.buttonIndex)
+    }
+
+    SequentialAnimation {
+        id: animation
+        ColorAnimation {
+            target: background
+            property: "color"
+            from: background.color
+            to: Qt.lighter(mainColor, 1.2)
+            duration: 150
+            easing.type: Easing.InOutQuad
+        }
+        ColorAnimation {
+            target: background
+            property: "color"
+            to: background.color
+            duration: 200
+            easing.type: Easing.InOutQuad
+        }
+    }
+
+    contentItem: Text {
         text: control.text
-        anchors.centerIn: parent
+        color: "#ffffff"
         font.pixelSize: 12
         font.bold: true
-        color: "white"
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
     }
-    
-    MouseArea {
+
+    background: Rectangle {
+        id: background
         anchors.fill: parent
-        hoverEnabled: true
-        onEntered: control.opacity = 0.9
-        onExited: control.opacity = 1.0
-        onClicked: {
-            control.buttonClicked(control.buttonIndex)
-        }
+        color: control.hovered ? Qt.lighter(mainColor, 1.1) : mainColor
+        border.color:control.hovered ? Qt.lighter(borderColor, 1.1) : borderColor
+        border.width: 1
+        topLeftRadius: 0
+        topRightRadius: 10
+
+       Behavior on color { ColorAnimation { duration: control.hovered ? 150 : 250} }
     }
 }

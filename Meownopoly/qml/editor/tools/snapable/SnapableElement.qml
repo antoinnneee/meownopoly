@@ -64,15 +64,15 @@ Rectangle {
     }
     
     // Signaux
-    signal elementClicked(var element)
-    signal elementPressed(var element)
+    signal elementClicked()
+    signal elementPressed()
     onElementPressed: {
         console.log("element pressed");
         isDragging = true
         isSelected = true
     }
 
-    signal elementReleased(var element)
+    signal elementReleased()
     onElementReleased: {
         console.log("element release");
         isDragging = false
@@ -84,6 +84,12 @@ Rectangle {
         if (autoSnap && gridManager && gridManager.snapToGrid) {
             snapToGrid()
         }
+    }
+    signal elementUnselected()
+    onElementUnselected: {
+        console.log("element unselected");
+        isSelected = false
+        elementReleased()
     }
 
     signal elementResized(var element, real newWidth, real newHeight)
@@ -135,7 +141,7 @@ Rectangle {
             }
             else
             {
-                elementPressed(snapableElement)
+                elementPressed()
             }
             mouse.accepted = false
         }
@@ -144,18 +150,8 @@ Rectangle {
             console.log("snap release");
             if (!generalMA)
             {
-                elementReleased(snapableElement)
+                elementReleased()
             }
-        }
-        
-        onClicked: function(mouse) {
-            console.log("snap clicked");
-            isSelected = true
-            if (generalMA)
-            {
-                generalMA.elementClicked(snapableElement)
-            }
-            elementClicked(snapableElement)
         }
         
         onPositionChanged: function(mouse) { }

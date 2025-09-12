@@ -6,7 +6,6 @@ Rectangle {
     id: root
     
     // Properties for the target decoration element
-    property var targetDecoration: null
     property alias rotationSlider: rotationSlider
     property alias horizontalMirrorCheck: horizontalMirrorCheck
     property alias verticalMirrorCheck: verticalMirrorCheck
@@ -110,15 +109,12 @@ Rectangle {
                         id: rotationSlider
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - 80
-                        from: 0
-                        to: 360
+                        from: -180
+                        to: 180
                         value: 0
                         stepSize: 1
                         
                         onValueChanged: {
-                            if (targetDecoration && targetDecoration.isSelected) {
-                                targetDecoration.displaySettings.rotationAngle = value
-                            }
                             root.effectChanged()
                         }
                     }
@@ -142,9 +138,6 @@ Rectangle {
             checked: false
             
             onCheckedChanged: {
-                if (targetDecoration && targetDecoration.isSelected) {
-                    targetDecoration.displaySettings.mirrorHorizontal = checked
-                }
                 root.effectChanged()
             }
         }
@@ -155,16 +148,14 @@ Rectangle {
             checked: false
             
             onCheckedChanged: {
-                if (targetDecoration && targetDecoration.isSelected) {
-                    targetDecoration.displaySettings.mirrorVertical = checked
-                }
                 root.effectChanged()
             }
         }
     }
-    
+
     // Functions
     function updateFromTarget() {
+        /*
         if (!targetDecoration) return
         
         // Update rotation slider
@@ -173,6 +164,7 @@ Rectangle {
         // Update mirror checkboxes
         horizontalMirrorCheck.checked = targetDecoration.displaySettings.mirrorHorizontal
         verticalMirrorCheck.checked = targetDecoration.displaySettings.mirrorVertical
+        */
     }
 
 }
