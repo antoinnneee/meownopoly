@@ -8,6 +8,7 @@ import ".."
 
 import "./assetSelectionPanel"
 import "./caseSelectionPanel"
+import "./mapSelectionPanel"
 Rectangle {
     id: root
 
@@ -234,6 +235,20 @@ Rectangle {
                 // Propager le signal vers le haut si nécessaire
                 caseSelected(category, type, id);
             }
+        }
+
+        // Case Selection Panel
+        MapSelectionPanel {
+            id: mapPanel
+            logic: root.logic
+
+            Layout.preferredHeight: root.expandedHeight
+
+            collapsedHeight: root.collapsedHeight
+            expandedHeight: root.expandedHeight
+            Layout.preferredWidth: parent.width
+            isExpanded: root.isExpanded
+
         }
     }
 

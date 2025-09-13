@@ -390,18 +390,4 @@ Rectangle {
         }
     }
 
-    // Panneau de sélection des maps
-    MapSelectionPanel {
-        id: mapSelectionPanel
-        anchors.fill: parent
-        
-        onConfigurationClosed: {
-            console.log("Map selection panel closed")
-        }
-        
-        onMapSelected: function(mapName) {
-            console.log("Map selected:", mapName)
-            // Le chargement est déjà fait dans le panel via MapLoader.loadMap(mapName)
-        }
-    }
 }

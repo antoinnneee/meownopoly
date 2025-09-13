@@ -20,14 +20,20 @@ EditorBottomPanel {
 
 
     // Title bar
-     titleBar: null
+     titleBar: MSP_TitleBar {
+         currentView: "general" // "general", "saveLoad", or "background"
+         activeFilter: ""
+         onCurrentViewChanged:  {
+             root.currentView = titleBar.currentView
+         }
+     }
 
-     contentArea: SSP_ContentArea {
+     contentArea: MSP_ContentArea {
             id: contentArea
             anchors.fill: parent
 
-            currentView: root.currentView
-            activeFilter: titleBar.activeFilter
+            currentView: "general" // "general", "saveLoad", or "background"
+            activeFilter: ""
 
             isExpanded: true
             searchText: root.searchText
