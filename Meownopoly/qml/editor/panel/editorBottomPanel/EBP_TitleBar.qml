@@ -4,13 +4,15 @@ import QtQuick.Layouts 1.15
 
 RowLayout {
     id: titleBar
-    property string activeFilter: ""
-    property string searchText: ""
     property bool isExpanded : false
+    property string activeFilter: ""
+
     property string titleText: "DEMO"
     property string subTitleText: "DEMO"
     property string subTitleColor: "#999999"
-    property var buttonModel:  ["All", "Decoration", "Tile"]
+
+    property string searchText: ""
+    property var buttonModel:  [/*"All", "Decoration", "Tile"*/]
 
 
     property alias titleBarArea: titleBarArea

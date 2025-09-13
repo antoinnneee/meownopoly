@@ -211,14 +211,6 @@ Rectangle {
                 // Propager le changement vers le parent
                 //root.currentView = currentView;
             }
-            onEffectChanged: {
-                root.effectChanged()
-            }
-
-            Component.onCompleted: {
-                // Initialisation
-                console.log("AssetSelectionPanel initialisé et connecté au SelectionPanel");
-            }
         }
 
         // Case Selection Panel

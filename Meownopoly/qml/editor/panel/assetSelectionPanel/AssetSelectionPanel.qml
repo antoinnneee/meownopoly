@@ -121,9 +121,6 @@ EditorBottomPanel {
                 root.assetSelected(category, type, id)
             }
             isExpanded: true
-            onEffectChanged: {
-                root.effectChanged()
-            }
     }
 
     // Status indicator

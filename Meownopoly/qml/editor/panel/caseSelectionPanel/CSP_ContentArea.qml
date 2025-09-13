@@ -68,29 +68,5 @@ EBP_Content {
         }
     }
 
-    // Visual Effects Panel in ScrollView
-    ScrollView {
-        id: effectsScrollView
-        anchors.top: parent.top
-        anchors.right: parent.right
-        contentHeight: effectsPanel.height
-        width: parent.width *0.42
-        anchors.bottom: parent.bottom
-
-        visible: root.showEffectsPanel
-
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
-        ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-
-        VisualEffectsPanel {
-            id: effectsPanel
-            width: effectsScrollView.width - 20 // Account for scrollbar
-            targetDecoration: contentArea.selectedDecoration
-
-            onEffectChanged: {
-                // Optional: emit signal when effects change
-            }
-        }
-    }
 
 }

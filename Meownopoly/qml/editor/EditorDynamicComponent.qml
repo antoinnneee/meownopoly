@@ -53,30 +53,6 @@ Item{
 
             generalMA: mainMA
 
-                
-                // Gestion de la suppression
-                onElementDeleted: function(element) {
-                    logic.tileLogic.deleteElementsConnections(element)
-                    element.connectionManager.deleteLinkedConnection()
-                    logic.tileLogic.deleteElement(element)
-                }
-                
-                // Gestion de la configuration
-                onElementConfigurationRequested: function(element) {
-                    console.log("Configuration demandée pour:", element)
-                    if (element.caseData) {
-                        caseConfigPanel.openConfiguration(element)
-                    }
-                }
-
-                onElementConnectionsConfigurationRequested: function(element) {
-                    if (element) {
-                        connectionsPanel.targetElement = element
-                        connectionsPanel.isVisible = true
-                        editorGrid.moveToConfigElement(element)
-                    }
-                }
-            }
 
             // Gestion de la suppression
             onElementDeleted: function(element) {
@@ -88,21 +64,19 @@ Item{
             // Gestion de la configuration
             onElementConfigurationRequested: function(element) {
                 console.log("Configuration demandée pour:", element)
-                // if (element.caseData) {
-                // caseConfigPanel.openConfiguration(element)
-                // }
+                if (element.caseData) {
+                    caseConfigPanel.openConfiguration(element)
+                }
             }
 
-            // onElementConnectionsConfigurationRequested: function(element) {
-            //     if (element) {
-            //         connectionsPanel.targetElement = element
-            //         connectionsPanel.isVisible = true
-            //         editorGrid.moveToConfigElement(element)
-            //     }
-            // }
-            // onElementPressed: function(element) {
-            //     logic.currentSelectedElement = element
-            // }
+            onElementConnectionsConfigurationRequested: function(element) {
+                if (element) {
+                    connectionsPanel.targetElement = element
+                    connectionsPanel.isVisible = true
+                    editorGrid.moveToConfigElement(element)
+                }
+            }
         }
     }
 }
+

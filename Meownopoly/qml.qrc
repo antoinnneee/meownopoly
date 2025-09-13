@@ -127,5 +127,8 @@
         <file>qml/editor/panel/caseSelectionPanel/CSP_CategoryGrid.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_Grid.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_Item.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MapSelectionPanel.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_ContentArea.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_TitleBar.qml</file>
     </qresource>
 </RCC>
