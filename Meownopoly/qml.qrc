@@ -117,7 +117,6 @@
         <file>qml/editor/logic/MouseLogic_Base.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection.qml</file>
         <file>qml/editor/logic/MouseLogic_Pose.qml</file>
-        <file>qml/editor/panel/MenuSelector.qml.autosave</file>
         <file>qml/editor/panel/caseSelectionPanel/CaseSelectionPanel.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_TitleBar.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/qmldir</file>

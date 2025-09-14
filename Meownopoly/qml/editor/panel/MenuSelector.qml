@@ -66,7 +66,7 @@ Item {
                 menuBorderColor: "#8a8224"
             }
             ListElement {
-                menuText: "Menu Edition"
+                menuText: "Menu Carte"
                 menuColor: "#4a90e2"
                 menuBorderColor: "#306aa8"
             }

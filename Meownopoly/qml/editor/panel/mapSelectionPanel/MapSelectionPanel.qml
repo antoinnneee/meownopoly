@@ -17,22 +17,27 @@ EditorBottomPanel {
     signal effectChanged()
 
 
-
-
     // Title bar
      titleBar: MSP_TitleBar {
-         currentView: "general" // "general", "saveLoad", or "background"
+         anchors.left: parent.left
+         anchors.right: parent.horizontalCenter
+         anchors.top: parent.top
+         isExpanded: true
+
+         currentView: root.currentView // "general", "saveLoad", or "background"
          activeFilter: ""
-         onCurrentViewChanged:  {
-             root.currentView = titleBar.currentView
-         }
+
+         // onCurrentViewChanged:  {
+         //     root.currentView = titleBar.currentView
+         // }
      }
 
      contentArea: MSP_ContentArea {
             id: contentArea
             anchors.fill: parent
 
-            currentView: "general" // "general", "saveLoad", or "background"
+
+            currentView: ""
             activeFilter: ""
 
             isExpanded: true

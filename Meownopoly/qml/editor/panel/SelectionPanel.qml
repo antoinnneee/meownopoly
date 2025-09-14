@@ -14,7 +14,7 @@ Rectangle {
 
     // Properties
     property bool isExpanded: true
-    property string currentView: "categories" // "categories" or "assets"
+    // property string currentView: "categories" // "categories" or "assets"
     property string selectedCategory: ""
     property string selectedType: ""
     property string searchText: ""

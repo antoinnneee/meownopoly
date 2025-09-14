@@ -16,11 +16,12 @@ EBP_TitleBar {
     required property string currentView // "categories" or "assets"
 
     titleText: "Paramétrage de la carte"
-    subTitleText: titleBar.currentSelectedId !== "" ?
-                      "Selected: " + titleBar.currentSelectedType + " #" + titleBar.currentSelectedId :
-                      "Click to select an asset"
+    subTitleText: ""
+    // subTitleText: titleBar.currentSelectedId !== "" ?
+    //                   "Selected: " + titleBar.currentSelectedType + " #" + titleBar.currentSelectedId :
+    //                   "Click to select an asset"
     subTitleColor: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
-    buttonModel: ["All", "Decoration", "Tile"]
+    buttonModel: []
 
     onButtonClicked: function(text, index) {
     }
@@ -28,6 +29,7 @@ EBP_TitleBar {
     // Spacer
     Item { Layout.fillWidth: true }
 
-    backButton.visible: titleBar.isExpanded && titleBar.currentView === "assets"
+    searchBar.visible: false
+    backButton.visible: false
 
 }

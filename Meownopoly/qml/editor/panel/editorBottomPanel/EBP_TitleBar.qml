@@ -17,6 +17,7 @@ RowLayout {
 
     property alias titleBarArea: titleBarArea
     property alias backButton: backButton
+    property alias searchBar: searchbar
 
     signal buttonClicked(string text, int index)
     signal backButtonClicked()
@@ -80,6 +81,4 @@ RowLayout {
             backButtonClicked()
         }
     }
-
-
 }
