@@ -10,9 +10,10 @@ Item {
     
     // Column layout for buttons
     Column {
-        width: parent.width * 0.7
+        width: parent.width * 0.5
         height: parent.height
         anchors.margins: 10
+        anchors.leftMargin: 10
         spacing: 15
         
         // General parameters button

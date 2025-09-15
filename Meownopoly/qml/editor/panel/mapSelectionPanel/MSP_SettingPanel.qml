@@ -27,7 +27,7 @@ Rectangle {
         
         Column {
             id: generalLayout
-            width: parent.width * 0.7
+            width: parent.width
             spacing: 15
             padding: 10
             

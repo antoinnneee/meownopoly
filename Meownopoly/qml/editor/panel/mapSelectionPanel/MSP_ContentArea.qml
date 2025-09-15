@@ -12,15 +12,18 @@ EBP_Content {
     property string mapName: "New Map"
     property string mapVersion: "1.0"
     property string backgroundPath: ""
-    
+
     signal effectChanged()
+
+    Component.onCompleted: currentView = "general"     // property string currentView: "general" // "general", "saveLoad", or "background"
+
 
     mainContent: MSP_SettingSelection {
         id: mainContent
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        anchors.rightMargin: 5
+        anchors.rightMargin: 15
         width: parent.width
 
     }
@@ -31,11 +34,10 @@ EBP_Content {
     sidePanel : ScrollView {
         id: secondContent
         anchors.top: parent.top
-        anchors.right: parent.right
         anchors.bottom: parent.bottom
+        anchors.right: parent.right
         anchors.left: parent.left
         width: parent.width
-
 
         ScrollBar.vertical.policy: ScrollBar.AsNeeded
         ScrollBar.horizontal.policy: ScrollBar.AsNeeded

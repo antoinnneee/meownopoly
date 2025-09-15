@@ -24,6 +24,8 @@ Item {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.rightMargin: 5
+        anchors.leftMargin: 5
+
         width: parent.width * 0.58
 
     }
