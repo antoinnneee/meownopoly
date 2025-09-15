@@ -17,7 +17,7 @@ Item {
         
         Column {
             id: generalLayout
-            width: parent.width
+            width: parent.width * 0.7
             spacing: 15
             padding: 10
             
@@ -233,7 +233,6 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        fileDialog.open()
                     }
                 }
             }

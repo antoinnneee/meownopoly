@@ -17,6 +17,12 @@ EBP_Content {
 
     mainContent: MSP_SettingSelection {
         id: mainContent
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 5
+        width: parent.width
+
     }
 
 
@@ -27,7 +33,9 @@ EBP_Content {
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+        anchors.left: parent.left
         width: parent.width
+
 
         ScrollBar.vertical.policy: ScrollBar.AsNeeded
         ScrollBar.horizontal.policy: ScrollBar.AsNeeded

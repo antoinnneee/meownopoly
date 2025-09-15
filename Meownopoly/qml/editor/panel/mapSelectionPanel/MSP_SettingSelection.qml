@@ -6,16 +6,12 @@ import "../editorBottomPanel"
 
 Item {
     id: mainContent
-    anchors.top: parent.top
-    anchors.left: parent.left
-    anchors.bottom: parent.bottom
-    anchors.rightMargin: 5
-    width: parent.width
     
     
     // Column layout for buttons
     Column {
-        anchors.fill: parent
+        width: parent.width * 0.7
+        height: parent.height
         anchors.margins: 10
         spacing: 15
         

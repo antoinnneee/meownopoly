@@ -11,10 +11,6 @@ EditorBottomPanel {
     id: root
 
     property alias activeFilter: titleBar.activeFilter
-    Component.onCompleted: {
-        console.log("AssetSelectionPanel initialized")
-        console.log("size is", width, height)
-    }
 
     property string selectedCategory: ""
     property string selectedType: ""
