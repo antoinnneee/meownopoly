@@ -16,23 +16,24 @@ Item {
     opacity: isExpanded ? 1.0 : 0.0
 
     property alias mainContent : mainContentHolder.children
-    property alias sidePanel : sidePanelHolder.panel
+    property alias sidePanel : sidePanel.children
 
     Item {
         id: mainContentHolder
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.right: sidePanelHolder.left
         anchors.bottom: parent.bottom
         anchors.rightMargin: 5
-
         width: parent.width * 0.58
+
     }
 
-    EBP_SideContent {
-
-        id: sidePanelHolder
-        // property alias side: sidePanel
+    Item {
+        id : sidePanel
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: parent.width * 0.42
     }
 
 }

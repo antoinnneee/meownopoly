@@ -7,8 +7,9 @@ ScrollView {
     anchors.top: parent.top
     anchors.right: parent.right
     contentHeight: sidePanelHolder.height
-    width: parent.width *0.42
     anchors.bottom: parent.bottom
+
+    width: parent.width *0.42
 
     visible: root.showEffectsPanel
 

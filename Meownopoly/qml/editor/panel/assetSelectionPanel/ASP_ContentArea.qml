@@ -28,7 +28,9 @@ EBP_Content {
         anchors.bottom: parent.bottom
         anchors.rightMargin: 5
 
-        width: parent.width * 0.58
+        // width: parent.width * 0.58
+        width: parent.width
+
 
         // Category grid
         ASP_CategoryGrid {
@@ -67,11 +69,27 @@ EBP_Content {
         }
     }
     
-    sidePanel: VisualEffectsPanel {
-        id: effectsPanel
-        onEffectChanged: {
-            // Optional: emit signal when effects change
-            contentArea.effectChanged()
+    sidePanel: ScrollView {
+        id: effectsScrollView
+        anchors.top: parent.top
+        anchors.right: parent.right
+        contentHeight: effectsPanel.height
+        anchors.bottom: parent.bottom
+        width: parent.width
+
+        visible: root.showEffectsPanel
+
+        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+        ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+
+        VisualEffectsPanel {
+            id: effectsPanel
+            width: effectsScrollView.width - 20 // Account for scrollbar
+
+            onEffectChanged: {
+                // Optional: emit signal when effects change
+                contentArea.effectChanged()
+            }
         }
     }
 

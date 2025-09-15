@@ -20,8 +20,8 @@ EBP_Content {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        width: parent.width * 0.58
         anchors.rightMargin: 5
+        width: parent.width
 
 
         // Column layout for buttons
@@ -110,315 +110,331 @@ EBP_Content {
 
     // Main content area (left side - 58%)
     
-    sidePanel : Item {
-        // General parameters view
+    sidePanel : ScrollView {
+        id: secondContent
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: parent.width
+
+        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+        ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+
+        // Content changes based on selected view
         Item {
-            id: generalParamsView
-            visible: contentArea.currentView === "general"
-            width: parent.width
-            height: generalLayout.height
+            id: contentContainer
+            width: secondContent.width - 20 // Account for scrollbar
 
-            Column {
-                id: generalLayout
+            // General parameters view
+            Item {
+                id: generalParamsView
+                visible: contentArea.currentView === "general"
                 width: parent.width
-                spacing: 15
-                padding: 10
+                height: generalLayout.height
 
-                Text {
-                    text: "Map Settings"
-                    color: "#FFFFFF"
-                    font.pixelSize: 18
-                    font.bold: true
-                }
-
-                // Map name input
                 Column {
-                    width: parent.width - parent.padding * 2
-                    spacing: 5
+                    id: generalLayout
+                    width: parent.width
+                    spacing: 15
+                    padding: 10
 
                     Text {
-                        text: "Map Name"
-                        color: "#DDDDDD"
-                        font.pixelSize: 14
+                        text: "Map Settings"
+                        color: "#FFFFFF"
+                        font.pixelSize: 18
+                        font.bold: true
                     }
 
-                    Rectangle {
-                        width: parent.width
-                        height: 40
-                        color: "#2A2A2A"
-                        border.color: "#444444"
-                        border.width: 1
+                    // Map name input
+                    Column {
+                        width: parent.width - parent.padding * 2
+                        spacing: 5
 
-                        TextInput {
-                            anchors.fill: parent
-                            anchors.margins: 5
-                            color: "#FFFFFF"
+                        Text {
+                            text: "Map Name"
+                            color: "#DDDDDD"
                             font.pixelSize: 14
-                            text: contentArea.mapName
-                            clip: true
-                            verticalAlignment: TextInput.AlignVCenter
-
-                            onTextChanged: {
-                                contentArea.mapName = text
-                            }
-                        }
-                    }
-                }
-
-                // Map version input
-                Column {
-                    width: parent.width - parent.padding * 2
-                    spacing: 5
-
-                    Text {
-                        text: "Version"
-                        color: "#DDDDDD"
-                        font.pixelSize: 14
-                    }
-
-                    Rectangle {
-                        width: parent.width
-                        height: 40
-                        color: "#2A2A2A"
-                        border.color: "#444444"
-                        border.width: 1
-
-                        TextInput {
-                            anchors.fill: parent
-                            anchors.margins: 5
-                            color: "#FFFFFF"
-                            font.pixelSize: 14
-                            text: contentArea.mapVersion
-                            clip: true
-                            verticalAlignment: TextInput.AlignVCenter
-
-                            onTextChanged: {
-                                contentArea.mapVersion = text
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Save/Load map view
-        Item {
-            id: saveLoadView
-            visible: contentArea.currentView === "saveLoad"
-            width: parent.width
-            height: saveLoadLayout.height
-
-            Column {
-                id: saveLoadLayout
-                width: parent.width
-                spacing: 15
-                padding: 10
-
-                Text {
-                    text: "Save/Load Options"
-                    color: "#FFFFFF"
-                    font.pixelSize: 18
-                    font.bold: true
-                }
-
-                // Save button
-                Rectangle {
-                    width: parent.width - parent.padding * 2
-                    height: 40
-                    color: "#2A2A2A"
-                    border.color: "#4CAF50"
-                    border.width: 1
-                    radius: 5
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Save Current Map"
-                        color: "#FFFFFF"
-                        font.pixelSize: 14
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            console.log("Saving map:", contentArea.mapName, "v" + contentArea.mapVersion)
-                        }
-                    }
-                }
-
-                // Load button
-                Rectangle {
-                    width: parent.width - parent.padding * 2
-                    height: 40
-                    color: "#2A2A2A"
-                    border.color: "#2196F3"
-                    border.width: 1
-                    radius: 5
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Load Map"
-                        color: "#FFFFFF"
-                        font.pixelSize: 14
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            console.log("Open load map dialog")
-                        }
-                    }
-                }
-
-                // New map button
-                Rectangle {
-                    width: parent.width - parent.padding * 2
-                    height: 40
-                    color: "#2A2A2A"
-                    border.color: "#FFC107"
-                    border.width: 1
-                    radius: 5
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Create New Map"
-                        color: "#FFFFFF"
-                        font.pixelSize: 14
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            console.log("Creating new map")
-                            contentArea.mapName = "New Map"
-                            contentArea.mapVersion = "1.0"
-                        }
-                    }
-                }
-            }
-        }
-
-        // Background modification view
-        Item {
-            id: backgroundView
-            visible: contentArea.currentView === "background"
-            width: parent.width
-            height: backgroundLayout.height
-
-            Column {
-                id: backgroundLayout
-                width: parent.width
-                spacing: 15
-                padding: 10
-
-                Text {
-                    text: "Background Settings"
-                    color: "#FFFFFF"
-                    font.pixelSize: 18
-                    font.bold: true
-                }
-
-                // Select background button
-                Rectangle {
-                    width: parent.width - parent.padding * 2
-                    height: 40
-                    color: "#2A2A2A"
-                    border.color: "#E91E63"
-                    border.width: 1
-                    radius: 5
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Select Image/GIF"
-                        color: "#FFFFFF"
-                        font.pixelSize: 14
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            fileDialog.open()
-                        }
-                    }
-                }
-
-                // Current background path
-                Column {
-                    width: parent.width - parent.padding * 2
-                    spacing: 5
-                    visible: contentArea.backgroundPath !== ""
-
-                    Text {
-                        text: "Selected File:"
-                        color: "#DDDDDD"
-                        font.pixelSize: 14
-                    }
-
-                    Text {
-                        text: contentArea.backgroundPath
-                        color: "#4CAF50"
-                        font.pixelSize: 12
-                        width: parent.width
-                        wrapMode: Text.WrapAnywhere
-                        elide: Text.ElideMiddle
-                    }
-                }
-
-                // Image scaling options
-                Column {
-                    width: parent.width - parent.padding * 2
-                    spacing: 5
-                    visible: contentArea.backgroundPath !== ""
-
-                    Text {
-                        text: "Image Scaling"
-                        color: "#DDDDDD"
-                        font.pixelSize: 14
-                    }
-
-                    ComboBox {
-                        width: parent.width
-                        height: 40
-                        model: ["Stretch", "Preserve Aspect Ratio", "Preserve Aspect Fit", "Tile"]
-
-                        contentItem: Text {
-                            text: parent.displayText
-                            color: "#FFFFFF"
-                            verticalAlignment: Text.AlignVCenter
-                            elide: Text.ElideRight
-                            leftPadding: 5
                         }
 
-                        background: Rectangle {
-                            color: "#2A2A2A"
-                            border.color: "#444444"
-                            border.width: 1
-                        }
-
-                        popup.background: Rectangle {
-                            color: "#2A2A2A"
-                            border.color: "#444444"
-                            border.width: 1
-                        }
-
-                        delegate: ItemDelegate {
+                        Rectangle {
                             width: parent.width
-                            contentItem: Text {
-                                text: modelData
+                            height: 40
+                            color: "#2A2A2A"
+                            border.color: "#444444"
+                            border.width: 1
+
+                            TextInput {
+                                anchors.fill: parent
+                                anchors.margins: 5
                                 color: "#FFFFFF"
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: 14
+                                text: contentArea.mapName
+                                clip: true
+                                verticalAlignment: TextInput.AlignVCenter
+
+                                onTextChanged: {
+                                    contentArea.mapName = text
+                                }
                             }
-                            highlighted: parent.highlightedIndex === index
+                        }
+                    }
+
+                    // Map version input
+                    Column {
+                        width: parent.width - parent.padding * 2
+                        spacing: 5
+
+                        Text {
+                            text: "Version"
+                            color: "#DDDDDD"
+                            font.pixelSize: 14
                         }
 
-                        onActivated: {
-                            console.log("Selected scaling mode:", model[index])
+                        Rectangle {
+                            width: parent.width
+                            height: 40
+                            color: "#2A2A2A"
+                            border.color: "#444444"
+                            border.width: 1
+
+                            TextInput {
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                color: "#FFFFFF"
+                                font.pixelSize: 14
+                                text: contentArea.mapVersion
+                                clip: true
+                                verticalAlignment: TextInput.AlignVCenter
+
+                                onTextChanged: {
+                                    contentArea.mapVersion = text
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Save/Load map view
+            Item {
+                id: saveLoadView
+                visible: contentArea.currentView === "saveLoad"
+                width: parent.width
+                height: saveLoadLayout.height
+
+                Column {
+                    id: saveLoadLayout
+                    width: parent.width
+                    spacing: 15
+                    padding: 10
+
+                    Text {
+                        text: "Save/Load Options"
+                        color: "#FFFFFF"
+                        font.pixelSize: 18
+                        font.bold: true
+                    }
+
+                    // Save button
+                    Rectangle {
+                        width: parent.width - parent.padding * 2
+                        height: 40
+                        color: "#2A2A2A"
+                        border.color: "#4CAF50"
+                        border.width: 1
+                        radius: 5
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Save Current Map"
+                            color: "#FFFFFF"
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                console.log("Saving map:", contentArea.mapName, "v" + contentArea.mapVersion)
+                            }
+                        }
+                    }
+
+                    // Load button
+                    Rectangle {
+                        width: parent.width - parent.padding * 2
+                        height: 40
+                        color: "#2A2A2A"
+                        border.color: "#2196F3"
+                        border.width: 1
+                        radius: 5
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Load Map"
+                            color: "#FFFFFF"
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                console.log("Open load map dialog")
+                            }
+                        }
+                    }
+
+                    // New map button
+                    Rectangle {
+                        width: parent.width - parent.padding * 2
+                        height: 40
+                        color: "#2A2A2A"
+                        border.color: "#FFC107"
+                        border.width: 1
+                        radius: 5
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Create New Map"
+                            color: "#FFFFFF"
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                console.log("Creating new map")
+                                contentArea.mapName = "New Map"
+                                contentArea.mapVersion = "1.0"
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Background modification view
+            Item {
+                id: backgroundView
+                visible: contentArea.currentView === "background"
+                width: parent.width
+                height: backgroundLayout.height
+
+                Column {
+                    id: backgroundLayout
+                    width: parent.width
+                    spacing: 15
+                    padding: 10
+
+                    Text {
+                        text: "Background Settings"
+                        color: "#FFFFFF"
+                        font.pixelSize: 18
+                        font.bold: true
+                    }
+
+                    // Select background button
+                    Rectangle {
+                        width: parent.width - parent.padding * 2
+                        height: 40
+                        color: "#2A2A2A"
+                        border.color: "#E91E63"
+                        border.width: 1
+                        radius: 5
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Select Image/GIF"
+                            color: "#FFFFFF"
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                fileDialog.open()
+                            }
+                        }
+                    }
+
+                    // Current background path
+                    Column {
+                        width: parent.width - parent.padding * 2
+                        spacing: 5
+                        visible: contentArea.backgroundPath !== ""
+
+                        Text {
+                            text: "Selected File:"
+                            color: "#DDDDDD"
+                            font.pixelSize: 14
+                        }
+
+                        Text {
+                            text: contentArea.backgroundPath
+                            color: "#4CAF50"
+                            font.pixelSize: 12
+                            width: parent.width
+                            wrapMode: Text.WrapAnywhere
+                            elide: Text.ElideMiddle
+                        }
+                    }
+
+                    // Image scaling options
+                    Column {
+                        width: parent.width - parent.padding * 2
+                        spacing: 5
+                        visible: contentArea.backgroundPath !== ""
+
+                        Text {
+                            text: "Image Scaling"
+                            color: "#DDDDDD"
+                            font.pixelSize: 14
+                        }
+
+                        ComboBox {
+                            width: parent.width
+                            height: 40
+                            model: ["Stretch", "Preserve Aspect Ratio", "Preserve Aspect Fit", "Tile"]
+
+                            contentItem: Text {
+                                text: parent.displayText
+                                color: "#FFFFFF"
+                                verticalAlignment: Text.AlignVCenter
+                                elide: Text.ElideRight
+                                leftPadding: 5
+                            }
+
+                            background: Rectangle {
+                                color: "#2A2A2A"
+                                border.color: "#444444"
+                                border.width: 1
+                            }
+
+                            popup.background: Rectangle {
+                                color: "#2A2A2A"
+                                border.color: "#444444"
+                                border.width: 1
+                            }
+
+                            delegate: ItemDelegate {
+                                width: parent.width
+                                contentItem: Text {
+                                    text: modelData
+                                    color: "#FFFFFF"
+                                    elide: Text.ElideRight
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                highlighted: parent.highlightedIndex === index
+                            }
+
+                            onActivated: {
+                                console.log("Selected scaling mode:", model[index])
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
 
     // ScrollView for second content (right side - 42%)
     // ScrollView {
@@ -447,4 +463,4 @@ EBP_Content {
     //         }
     //     }
     // }
-}
+
