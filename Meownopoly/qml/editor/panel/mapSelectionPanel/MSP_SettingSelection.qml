@@ -8,29 +8,44 @@ Item {
     id: mainContent
     
     
-    // Column layout for buttons
-    Column {
-        width: parent.width * 0.5
-        height: parent.height
+    // Row layout for buttons
+    Row {
+        anchors.centerIn: parent
+        width: parent.width * 0.9
+        height: parent.height * 0.8
         anchors.margins: 10
-        anchors.leftMargin: 10
-        spacing: 15
+        spacing: 20
+        layoutDirection: Qt.LeftToRight
         
         // General parameters button
         Rectangle {
             id: generalButton
-            width: parent.width
-            height: 50
+            width: 160
+            height: 160
             color: contentArea.currentView === "general" ? "#3F51B5" : "#1E1E1E"
             border.color: "#333333"
             border.width: 1
-            radius: 5
+            radius: 8
             
-            Text {
+            Column {
                 anchors.centerIn: parent
-                text: "General Parameters"
-                color: "#FFFFFF"
-                font.pixelSize: 16
+                spacing: 10
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "🗺️"
+                    font.pixelSize: 60
+                }
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "General Parameters"
+                    color: "#FFFFFF"
+                    font.pixelSize: 14
+                    horizontalAlignment: Text.AlignHCenter
+                    width: parent.width
+                    wrapMode: Text.Wrap
+                }
             }
             
             MouseArea {
@@ -38,24 +53,41 @@ Item {
                 onClicked: {
                     contentArea.currentView = "general"
                 }
+                hoverEnabled: true
+                onEntered: parent.opacity = 0.8
+                onExited: parent.opacity = 1.0
             }
         }
         
         // Save/Load button
         Rectangle {
             id: saveLoadButton
-            width: parent.width
-            height: 50
+            width: 160
+            height: 160
             color: contentArea.currentView === "saveLoad" ? "#3F51B5" : "#1E1E1E"
             border.color: "#333333"
             border.width: 1
-            radius: 5
+            radius: 8
             
-            Text {
+            Column {
                 anchors.centerIn: parent
-                text: "Save/Load Map"
-                color: "#FFFFFF"
-                font.pixelSize: 16
+                spacing: 10
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "💾"
+                    font.pixelSize: 60
+                }
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Save/Load Map"
+                    color: "#FFFFFF"
+                    font.pixelSize: 14
+                    horizontalAlignment: Text.AlignHCenter
+                    width: parent.width
+                    wrapMode: Text.Wrap
+                }
             }
             
             MouseArea {
@@ -63,24 +95,41 @@ Item {
                 onClicked: {
                     contentArea.currentView = "saveLoad"
                 }
+                hoverEnabled: true
+                onEntered: parent.opacity = 0.8
+                onExited: parent.opacity = 1.0
             }
         }
         
         // Background modification button
         Rectangle {
             id: backgroundButton
-            width: parent.width
-            height: 50
+            width: 160
+            height: 160
             color: contentArea.currentView === "background" ? "#3F51B5" : "#1E1E1E"
             border.color: "#333333"
             border.width: 1
-            radius: 5
+            radius: 8
             
-            Text {
+            Column {
                 anchors.centerIn: parent
-                text: "Modify Background"
-                color: "#FFFFFF"
-                font.pixelSize: 16
+                spacing: 10
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "🖼️"
+                    font.pixelSize: 60
+                }
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Modify Background"
+                    color: "#FFFFFF"
+                    font.pixelSize: 14
+                    horizontalAlignment: Text.AlignHCenter
+                    width: parent.width
+                    wrapMode: Text.Wrap
+                }
             }
             
             MouseArea {
@@ -88,6 +137,9 @@ Item {
                 onClicked: {
                     contentArea.currentView = "background"
                 }
+                hoverEnabled: true
+                onEntered: parent.opacity = 0.8
+                onExited: parent.opacity = 1.0
             }
         }
     }
