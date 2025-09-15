@@ -128,7 +128,6 @@
         <file>qml/editor/panel/mapSelectionPanel/MapSelectionPanel.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_ContentArea.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_TitleBar.qml</file>
-        <file>qml/editor/panel/editorBottomPanel/EBP_SideContent.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_SettingPanel.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_SettingSelection.qml</file>
     </qresource>

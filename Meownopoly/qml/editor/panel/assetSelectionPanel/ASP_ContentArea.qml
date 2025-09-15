@@ -71,9 +71,9 @@ EBP_Content {
         id: effectsScrollView
         anchors.top: parent.top
         anchors.right: parent.right
-        contentHeight: effectsPanel.height
         anchors.bottom: parent.bottom
         width: parent.width
+        contentHeight: effectsPanel.height
 
         visible: root.showEffectsPanel
 

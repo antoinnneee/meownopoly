@@ -32,19 +32,20 @@ EBP_Content {
     // Main content area (left side - 58%)
     
     sidePanel : ScrollView {
-        id: secondContent
+        id: sidePanelScroll
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.left: parent.left
         width: parent.width
+        contentHeight: sidePanel.height
 
         ScrollBar.vertical.policy: ScrollBar.AsNeeded
         ScrollBar.horizontal.policy: ScrollBar.AsNeeded
 
         // Content changes based on selected view
         MSP_SettingPanel {
-            id: contentContainer
+            id: sidePanel
         }
     }
 }

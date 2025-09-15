@@ -5,10 +5,10 @@ import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 
 Rectangle {
-    id: contentContainer
-    width: secondContent.width - 20 // Account for scrollbar
+    id: sidePanel
+    width: sidePanelScroll.width - 20 // Account for scrollbar
     height: Math.max(generalParamsView.height, saveLoadView.height, backgroundView.height) + 20 // Add padding
-    
+
     // Visual properties
     color: "#2a2a2a"
     radius: 8
@@ -46,7 +46,8 @@ Rectangle {
                 border.color: "#444444"
                 border.width: 1
                 height: controlsColumn.height + 20
-
+                
+                // Main details column
                 Column {
                     id: controlsColumn
                     width: parent.width - 20
@@ -54,26 +55,60 @@ Rectangle {
                     anchors.top: parent.top
                     anchors.topMargin: 10
                     spacing: 15
-
-                    // Map name input
-                    Column {
+                    
+                    // Map info header with icon
+                    Item {
                         width: parent.width
-                        spacing: 5
-
+                        height: 30
+                        
+                        Rectangle {
+                            width: 30
+                            height: 30
+                            radius: 15
+                            color: "#4A90E2"
+                            opacity: 0.2
+                            
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🗺️"
+                                font.pixelSize: 16
+                            }
+                        }
+                        
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 40
+                            text: "Map Information"
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                        }
+                    }
+                    
+                    // Grid layout for map details
+                    GridLayout {
+                        width: parent.width
+                        columns: 2
+                        columnSpacing: 10
+                        rowSpacing: 15
+                        
+                        // Map name
                         Text {
                             text: "Map Name"
                             color: "#999999"
                             font.pixelSize: 14
+                            Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
-
+                        
                         Rectangle {
-                            width: parent.width
+                            Layout.fillWidth: true
                             height: 40
                             color: "transparent"
                             border.color: "#4A90E2"
                             border.width: 1
                             radius: 4
-
+                            
                             TextInput {
                                 anchors.fill: parent
                                 anchors.margins: 5
@@ -82,33 +117,29 @@ Rectangle {
                                 text: contentArea.mapName
                                 clip: true
                                 verticalAlignment: TextInput.AlignVCenter
-
+                                
                                 onTextChanged: {
                                     contentArea.mapName = text
                                 }
                             }
                         }
-                    }
-
-                    // Map version input
-                    Column {
-                        width: parent.width
-                        spacing: 5
-
+                        
+                        // Version
                         Text {
                             text: "Version"
                             color: "#999999"
                             font.pixelSize: 14
+                            Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
-
+                        
                         Rectangle {
-                            width: parent.width
+                            Layout.fillWidth: true
                             height: 40
                             color: "transparent"
                             border.color: "#4A90E2"
                             border.width: 1
                             radius: 4
-
+                            
                             TextInput {
                                 anchors.fill: parent
                                 anchors.margins: 5
@@ -117,129 +148,253 @@ Rectangle {
                                 text: contentArea.mapVersion
                                 clip: true
                                 verticalAlignment: TextInput.AlignVCenter
-
+                                
                                 onTextChanged: {
                                     contentArea.mapVersion = text
                                 }
                             }
                         }
-                    }
-                    
-                    // Dates section (using Grid for horizontal layout)
-                    Column {
-                        width: parent.width
-                        spacing: 5
                         
+                        // Creation date
                         Text {
-                            text: "Dates"
+                            text: "Created"
                             color: "#999999"
                             font.pixelSize: 14
+                            Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
                         
-                        // Date grid for 2-column layout
-                        Grid {
-                            width: parent.width
-                            columns: 2
-                            columnSpacing: 10
-                            rowSpacing: 10
-                            
-                            // Date of Creation
-                            Column {
-                                width: (parent.width - parent.columnSpacing) / 2
-                                spacing: 3
-                                
-                                Text {
-                                    text: "Created"
-                                    color: "#999999"
-                                    font.pixelSize: 12
-                                }
-                                
-                                Rectangle {
-                                    width: parent.width
-                                    height: 30
-                                    color: "transparent"
-                                    border.color: "#4A90E2"
-                                    border.width: 1
-                                    radius: 4
-                                    
-                                    TextInput {
-                                        anchors.fill: parent
-                                        anchors.margins: 5
-                                        color: "white"
-                                        font.pixelSize: 12
-                                        text: "2025-09-15"
-                                        clip: true
-                                        verticalAlignment: TextInput.AlignVCenter
-                                    }
-                                }
-                            }
-                            
-                            // Last modification
-                            Column {
-                                width: (parent.width - parent.columnSpacing) / 2
-                                spacing: 3
-                                
-                                Text {
-                                    text: "Modified"
-                                    color: "#999999"
-                                    font.pixelSize: 12
-                                }
-                                
-                                Rectangle {
-                                    width: parent.width
-                                    height: 30
-                                    color: "transparent"
-                                    border.color: "#4A90E2"
-                                    border.width: 1
-                                    radius: 4
-                                    
-                                    TextInput {
-                                        anchors.fill: parent
-                                        anchors.margins: 5
-                                        color: "white"
-                                        font.pixelSize: 12
-                                        text: "2025-09-15"
-                                        clip: true
-                                        verticalAlignment: TextInput.AlignVCenter
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Description input
-                    Column {
-                        width: parent.width
-                        spacing: 5
-
-                        Text {
-                            text: "Description"
-                            color: "#999999"
-                            font.pixelSize: 14
-                        }
-
                         Rectangle {
-                            width: parent.width
-                            height: 80
+                            Layout.fillWidth: true
+                            height: 40
                             color: "transparent"
                             border.color: "#4A90E2"
                             border.width: 1
                             radius: 4
-
-                            TextArea {
+                            
+                            Row {
                                 anchors.fill: parent
                                 anchors.margins: 5
+                                spacing: 5
+                                
+                                Text {
+                                    text: "📅"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    font.pixelSize: 14
+                                }
+                                
+                                TextInput {
+                                    width: parent.width - 25
+                                    height: parent.height
+                                    color: "white"
+                                    font.pixelSize: 14
+                                    text: "2023-09-15"
+                                    verticalAlignment: TextInput.AlignVCenter
+                                }
+                            }
+                        }
+                        
+                        // Last modification
+                        Text {
+                            text: "Modified"
+                            color: "#999999"
+                            font.pixelSize: 14
+                            Layout.alignment: Qt.AlignTop | Qt.AlignLeft
+                        }
+                        
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 40
+                            color: "transparent"
+                            border.color: "#4A90E2"
+                            border.width: 1
+                            radius: 4
+                            
+                            Row {
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                spacing: 5
+                                
+                                Text {
+                                    text: "🕒"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    font.pixelSize: 14
+                                }
+                                
+                                Text {
+                                    width: parent.width - 25
+                                    height: parent.height
+                                    color: "#4CAF50"
+                                    font.pixelSize: 14
+                                    text: "2023-09-18 (3 days ago)"
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Description section
+                    Item {
+                        width: parent.width
+                        height: 30
+                        
+                        Rectangle {
+                            width: 30
+                            height: 30
+                            radius: 15
+                            color: "#FFC107"
+                            opacity: 0.2
+                            
+                            Text {
+                                anchors.centerIn: parent
+                                text: "📝"
+                                font.pixelSize: 16
+                            }
+                        }
+                        
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 40
+                            text: "Description"
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                        }
+                    }
+                    
+                    // Description text area
+                    Rectangle {
+                        width: parent.width
+                        height: 120
+                        color: "transparent"
+                        border.color: "#4A90E2"
+                        border.width: 1
+                        radius: 4
+                        
+                        Flickable {
+                            id: flickable
+                            anchors.fill: parent
+                            anchors.margins: 5
+                            contentWidth: descriptionInput.paintedWidth
+                            contentHeight: descriptionInput.paintedHeight
+                            clip: true
+                            
+                            TextArea {
+                                id: descriptionInput
+                                width: flickable.width
+                                height: Math.max(flickable.height, paintedHeight)
                                 color: "white"
                                 font.pixelSize: 14
-                                text: "A detailed map description can go here. Include information about the map's theme, features, or any other relevant details."
-                                wrapMode: TextArea.Wrap
+                                wrapMode: TextEdit.Wrap
+                                placeholderText: "Enter map description here..."
+                                placeholderTextColor: "#666666"
+                                text: ""
                                 background: null
+                            }
+                        }
+                        
+                        // Scrollbar for description
+                        ScrollBar {
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 2
+                            width: 8
+                            policy: ScrollBar.AsNeeded
+                            active: true
+                            orientation: Qt.Vertical
+                            size: flickable.height / flickable.contentHeight
+                            position: flickable.contentY / flickable.contentHeight
+                            visible: flickable.contentHeight > flickable.height
+                            
+                            contentItem: Rectangle {
+                                implicitWidth: 8
+                                radius: width / 2
+                                color: "#999999"
+                                opacity: 0.5
+                            }
+                        }
+                    }
+                    
+                    // Stats section
+                    Item {
+                        width: parent.width
+                        height: 30
+                        
+                        Rectangle {
+                            width: 30
+                            height: 30
+                            radius: 15
+                            color: "#E91E63"
+                            opacity: 0.2
+                            
+                            Text {
+                                anchors.centerIn: parent
+                                text: "📊"
+                                font.pixelSize: 16
+                            }
+                        }
+                        
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 40
+                            text: "Statistics"
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                        }
+                    }
+                    
+                    // Quick stats in badges
+                    Flow {
+                        width: parent.width
+                        spacing: 10
+                        
+                        // Stats badges with subtle colors
+                        Repeater {
+                            model: [
+                                {icon: "🏠", label: "Tiles", value: "36", color: "#4A90E2"},
+                                {icon: "🎮", label: "Players", value: "4", color: "#4CAF50"},
+                                {icon: "🛒", label: "Items", value: "52", color: "#FFC107"},
+                                {icon: "🎲", label: "Events", value: "12", color: "#E91E63"}
+                            ]
+                            
+                            Rectangle {
+                                width: modelData.label.length * 11 + 50
+                                height: 30
+                                radius: 15
+                                color: Qt.rgba(
+                                    parseInt(modelData.color.substr(1, 2), 16) / 255,
+                                    parseInt(modelData.color.substr(3, 2), 16) / 255,
+                                    parseInt(modelData.color.substr(5, 2), 16) / 255,
+                                    0.15
+                                )
+                                border.color: modelData.color
+                                border.width: 1
+                                
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 5
+                                    
+                                    Text {
+                                        text: modelData.icon
+                                        font.pixelSize: 14
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    
+                                    Text {
+                                        text: modelData.label + ": " + modelData.value
+                                        color: "white"
+                                        font.pixelSize: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-
         }
     }
     
