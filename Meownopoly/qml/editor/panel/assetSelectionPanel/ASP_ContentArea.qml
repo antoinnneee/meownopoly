@@ -27,8 +27,6 @@ EBP_Content {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.rightMargin: 5
-
-        // width: parent.width * 0.58
         width: parent.width
 
 
