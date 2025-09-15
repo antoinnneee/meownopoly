@@ -10,6 +10,12 @@ import "../editorBottomPanel"
 EditorBottomPanel {
     id: root
 
+    Component.onCompleted: {
+        console.log("MapSelectionPanel initialized")
+        console.log("size is", width, height)
+    }
+
+
     property bool showEffectsPanel: true
 
     // Signals

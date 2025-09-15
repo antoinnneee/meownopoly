@@ -20,14 +20,15 @@ EBP_Content {
     property alias visualEffectsPanel : effectsPanel
     signal effectChanged()
 
-    // Main content (categories/assets)
-    Item {
+
+    mainContent: Item {
         id: mainContent
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.right: contentArea.showEffectsPanel ? effectsScrollView.left : parent.right
         anchors.bottom: parent.bottom
-        anchors.rightMargin: contentArea.showEffectsPanel ? 5 : 0
+        anchors.rightMargin: 5
+
+        width: parent.width * 0.58
 
         // Category grid
         ASP_CategoryGrid {
@@ -66,29 +67,14 @@ EBP_Content {
         }
     }
     
-    // Visual Effects Panel in ScrollView
-    ScrollView {
-        id: effectsScrollView
-        anchors.top: parent.top
-        anchors.right: parent.right
-        contentHeight: effectsPanel.height
-        width: parent.width *0.42
-        anchors.bottom: parent.bottom
-        
-        visible: root.showEffectsPanel
-        
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
-        ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-        
-        VisualEffectsPanel {
-            id: effectsPanel
-            width: effectsScrollView.width - 20 // Account for scrollbar
-            
-            onEffectChanged: {
-                // Optional: emit signal when effects change
-                contentArea.effectChanged()
-            }
+    sidePanel: VisualEffectsPanel {
+        id: effectsPanel
+        onEffectChanged: {
+            // Optional: emit signal when effects change
+            contentArea.effectChanged()
         }
     }
-    
+
+    // Visual Effects Panel in ScrollView
 }
+

@@ -1,6 +1,10 @@
 import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 Item {
+
+    id: contentArea
+
     property bool isExpanded: false
     required property var currentView
 
@@ -10,5 +14,25 @@ Item {
 
     visible: isExpanded
     opacity: isExpanded ? 1.0 : 0.0
+
+    property alias mainContent : mainContentHolder.children
+    property alias sidePanel : sidePanelHolder.panel
+
+    Item {
+        id: mainContentHolder
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: sidePanelHolder.left
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 5
+
+        width: parent.width * 0.58
+    }
+
+    EBP_SideContent {
+
+        id: sidePanelHolder
+        // property alias side: sidePanel
+    }
 
 }

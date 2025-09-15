@@ -11,6 +11,7 @@ Rectangle {
     property alias contentArea: contentPlaceHolder.children
 
     property alias titleBar: titlePlaceHolder.children
+
     // Filter Properties
     property string currentView: "categories" // "categories" or "assets"
     property string searchText: ""
@@ -43,6 +44,4 @@ Rectangle {
         anchors.top: titlePlaceHolder.bottom
         anchors.bottom: parent.bottom
         }
-
-
 }
