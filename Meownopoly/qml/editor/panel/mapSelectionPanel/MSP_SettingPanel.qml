@@ -459,6 +459,11 @@ Rectangle {
 
                         onClicked: {
                             console.log("Saving map:", contentArea.mapName, "v" + contentArea.mapVersion)
+                            if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
+                                logic.saveMap()
+                            } else {
+                                console.error("La fonction saveMap n'est pas accessible. Vérifiez que la variable 'logic' est définie.")
+                            }
                         }
                     }
 
