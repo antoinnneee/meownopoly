@@ -212,6 +212,10 @@ Rectangle {
                 // Propager le changement vers le parent
                 //root.currentView = currentView;
             }
+
+            onEffectChanged: {
+                root.effectChanged()
+            }
         }
 
         // Case Selection Panel

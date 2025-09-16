@@ -67,14 +67,12 @@ Rectangle {
     signal elementClicked()
     signal elementPressed()
     onElementPressed: {
-        console.log("element pressed");
         isDragging = true
         isSelected = true
     }
 
     signal elementReleased()
     onElementReleased: {
-        console.log("element release");
         isDragging = false
         
         // Mettre à jour les positions relatives après le drag
@@ -87,7 +85,6 @@ Rectangle {
     }
     signal elementUnselected()
     onElementUnselected: {
-        console.log("element unselected");
         isSelected = false
         elementReleased()
     }

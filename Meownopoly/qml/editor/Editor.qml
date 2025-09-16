@@ -387,8 +387,10 @@ Rectangle {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
         onEffectChanged: {
+            console.log("effect changed")
             var effects = selectionPanel.assetPanel.visualEffectsPanel.getCurrentEffects()
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                console.log("set new effect")
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
         }
