@@ -209,8 +209,10 @@ Rectangle {
             onCurrentViewChanged: {
                 console.log("AssetSelectionPanel currentView changed to:", currentView)
                 root.viewChanged(currentView);
-                // Propager le changement vers le parent
-                //root.currentView = currentView;
+            }
+
+            onEffectChanged: {
+                root.effectChanged()
             }
         }
 

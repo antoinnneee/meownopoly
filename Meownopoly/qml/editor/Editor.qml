@@ -309,19 +309,23 @@ Rectangle {
         height: parent.height
         width: parent.width/2
 
-        /*
         function selectElementToConnect(kind) {
+            var selectedElements = logic.mouseLogic.selectedElements
             // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
-            if (!currentSelectedElement || !connectionsPanel.targetElement) return
-            if (currentSelectedElement === connectionsPanel.targetElement) return
+            if (!selectedElements || !connectionsPanel.targetElement) return
 
-            if (kind === "previous") {
-                connectionsPanel.targetElement.connectionManager.addPreviousElement(currentSelectedElement)
-            } else if (kind === "next") {
-                connectionsPanel.targetElement.connectionManager.addNextElement(currentSelectedElement)
+            for (var i = 0; i < selectedElements.length; i++) {
+                if (selectedElements[i] !== connectionsPanel.targetElement) {
+                    if (kind === "previous") {
+                        connectionsPanel.targetElement.connectionManager.addPreviousElement(selectedElements[i])
+                    } else if (kind === "next") {
+                        connectionsPanel.targetElement.connectionManager.addNextElement(selectedElements[i])
+                    }
+                }
             }
+
+
         }
-    */
     }
 
     // Function to apply visual effects to a new decoration tile
