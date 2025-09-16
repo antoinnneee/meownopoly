@@ -20,12 +20,7 @@ EBP_Content {
 
     mainContent: MSP_SettingSelection {
         id: mainContent
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        anchors.rightMargin: 15
-        width: parent.width
-
+        anchors.fill: parent
     }
 
 
@@ -33,11 +28,7 @@ EBP_Content {
     
     sidePanel : ScrollView {
         id: sidePanelScroll
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.left: parent.left
-        width: parent.width
+        anchors.fill: parent
         contentHeight: sidePanel.height
 
         ScrollBar.vertical.policy: ScrollBar.AsNeeded

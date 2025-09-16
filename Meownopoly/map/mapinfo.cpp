@@ -13,6 +13,7 @@ MapInfo::MapInfo(const QJsonObject &json)
 {
     m_mapName = json["name"].toString();
     m_mapDescription = json["description"].toString();
+    m_mapCreationDate = json["creation"].toString();
     m_mapLastModified = json["lastModified"].toString();
     m_version = json["version"].toInt();
 }
@@ -22,6 +23,7 @@ QString MapInfo::toJSON()
     QJsonObject json;
     json["name"] = m_mapName;
     json["description"] = m_mapDescription;
+    json["creation"] = m_mapCreationDate;
     json["lastModified"] = m_mapLastModified;
     json["version"] = m_version;
     return QJsonDocument(json).toJson(QJsonDocument::Indented);
@@ -43,6 +45,14 @@ void MapInfo::setMapDescription(const QString &mapDescription)
 {
     m_mapDescription = mapDescription;
     emit mapDescriptionChanged(mapDescription);
+}
+
+void MapInfo::setMapCreationDate(const QString &newMapCreationDate)
+{
+    if (m_mapCreationDate == newMapCreationDate)
+        return;
+    m_mapCreationDate = newMapCreationDate;
+    emit mapCreationDateChanged();
 }
 
 void MapInfo::setMapLastModified(const QString &mapLastModified)
@@ -77,3 +87,8 @@ int MapInfo::getVersion() const
     return m_version;
 }
 
+
+QString MapInfo::mapCreationDate() const
+{
+    return m_mapCreationDate;
+}

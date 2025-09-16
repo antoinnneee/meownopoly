@@ -43,5 +43,5 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: titlePlaceHolder.bottom
         anchors.bottom: parent.bottom
-        }
+    }
 }
