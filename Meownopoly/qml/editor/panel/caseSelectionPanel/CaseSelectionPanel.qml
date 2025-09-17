@@ -13,55 +13,6 @@ EditorBottomPanel {
     property alias activeFilter: titleBar.activeFilter
 
 
-    property string selectedCategory: ""
-    property string selectedType: ""
-
-
-    QtObject{
-        id: assetManagerSettings
-        property string currentSelectedCategory: ""
-        property string currentSelectedType: ""
-        property string currentSelectedId: ""
-
-        // Function to clear asset selection
-        function clearAssetSelection() {
-            console.log("Clearing asset selection")
-            assetManagerSettings.currentSelectedCategory = ""
-            assetManagerSettings.currentSelectedType = ""
-            assetManagerSettings.currentSelectedId = ""
-            root.assetCleared()
-        }
-
-    }
-
-    property alias currentSelectedCategory: assetManagerSettings.currentSelectedCategory
-    property alias currentSelectedType: assetManagerSettings.currentSelectedType
-    property alias currentSelectedId: assetManagerSettings.currentSelectedId
-
-    property bool isAssetSelected: currentSelectedCategory !== "" && currentSelectedType !== "" && currentSelectedId !== ""
-
-    // Selected decoration element for effects
-    property var selectedDecoration: null
-    property bool showEffectsPanel: true//selectedDecoration !== null && selectedDecoration.type === 2 // DecorationTile
-    
-    // Signals
-    signal assetSelected(string category, string type, string id)
-    signal assetCleared()
-
-
-    onAssetSelected: function(category, type, id) {
-        if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
-            assetManagerSettings.clearAssetSelection();
-            return
-        }
-        console.log("Asset selected for placement:", category, type, id)
-        root.currentSelectedCategory = category
-        root.currentSelectedType = type
-        root.currentSelectedId = id
-    }
-
-
-
     // Title bar
      titleBar: CSP_TitleBar {
          id: titleBar
@@ -94,11 +45,6 @@ EditorBottomPanel {
              root.currentView = "categories"
          }
 
-
-         currentSelectedCategory: root.currentSelectedCategory
-         currentSelectedType: root.currentSelectedType
-         currentSelectedId: root.currentSelectedId
-
          searchText: root.searchText
          currentView: root.currentView
 
@@ -108,18 +54,9 @@ EditorBottomPanel {
      contentArea: CSP_ContentArea {
             id: contentArea
             anchors.fill: parent
-            currentSelectedCategory: root.currentSelectedCategory
-            currentSelectedType: root.currentSelectedType
-            currentSelectedId: root.currentSelectedId
-            showEffectsPanel: root.showEffectsPanel
             currentView: root.currentView
             activeFilter: titleBar.activeFilter
             searchText: root.searchText
-            onCategorieSelected: root.currentView = "assets"
-            onAssetSelected: function(category, type, id) {
-                root.assetSelected(category, type, id)
-            }
-            selectedDecoration: root.selectedDecoration
             isExpanded: true
     }
 

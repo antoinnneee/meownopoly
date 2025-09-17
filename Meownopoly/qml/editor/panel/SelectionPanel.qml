@@ -230,15 +230,6 @@ Rectangle {
             Layout.preferredWidth: parent.width
             isExpanded: root.isExpanded
 
-            // onSelectionModeChanged: function(isActive) {
-            //     // Propager le signal vers le haut si nécessaire
-            //     selectionModeChanged(isActive);
-            // }
-
-            onAssetSelected: function(category, type, id) {
-                // Propager le signal vers le haut si nécessaire
-                caseSelected(category, type, id);
-            }
         }
 
         // Case Selection Panel

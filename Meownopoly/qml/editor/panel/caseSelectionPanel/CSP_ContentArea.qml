@@ -5,20 +5,6 @@ import "../assetSelectionPanel"
 
 EBP_Content {
     id: contentArea
-    property string currentSelectedCategory: ""
-    property string currentSelectedType: ""
-    property string currentSelectedId: ""
-
-    property string selectedCategory: ""
-    property string selectedType: ""
-    property var selectedDecoration
-
-    property string selected
-    property bool showEffectsPanel: true
-    signal assetSelected(string category, string type, string id)
-    signal categorieSelected()
-
-    // property alias visualEffectsPanel : effectsPanel
 
 
     // Main content (categories/assets)
@@ -26,46 +12,8 @@ EBP_Content {
         id: mainContent
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.right: /*contentArea.showEffectsPanel ? effectsScrollView.left : */parent.right
+        anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.rightMargin: contentArea.showEffectsPanel ? 5 : 0
-
-        // NE PAS METTRE CECI POUR CSP_ContentArea
-        // Category grid
-        CSP_CategoryGrid {
-            id: categoryGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: contentArea.currentView === "categories"
-            activeFilter: contentArea.activeFilter
-            searchText: contentArea.searchText
-
-            onCategorySelected: function(category, type) {
-                contentArea.selectedCategory = category
-                contentArea.selectedType = type
-                categorieSelected()
-            }
-        }
-
-        // Asset grid
-        CSP_Grid {
-            id: assetGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: contentArea.currentView === "assets"
-            category: contentArea.selectedCategory
-            type: contentArea.selectedType
-            searchText: contentArea.searchText
-
-            // Pass selection state
-            currentSelectedCategory: contentArea.currentSelectedCategory
-            currentSelectedType: contentArea.currentSelectedType
-            currentSelectedId: contentArea.currentSelectedId
-
-            onAssetSelected: function(id) {
-                contentArea.assetSelected(contentArea.selectedCategory, contentArea.selectedType, id)
-            }
-        }
     }
 
 
