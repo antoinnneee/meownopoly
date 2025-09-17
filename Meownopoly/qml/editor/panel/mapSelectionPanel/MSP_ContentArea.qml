@@ -15,7 +15,10 @@ EBP_Content {
 
     signal effectChanged()
 
-    Component.onCompleted: currentView = "general"     // property string currentView: "general" // "general", "saveLoad", or "background"
+    // property string currentView: "general" // "general", "saveLoad", or "background"
+    Component.onCompleted:{
+        currentView = "general"
+    }
     onCurrentViewChanged: {
         sidePanel.getContentHeight()
         sidePanelScroll.height = sidePanel

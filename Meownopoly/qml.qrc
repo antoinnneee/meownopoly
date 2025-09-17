@@ -142,5 +142,8 @@
         <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CCP_TypeSelector.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_General.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_SaveLoad.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_Background.qml</file>
     </qresource>
 </RCC>

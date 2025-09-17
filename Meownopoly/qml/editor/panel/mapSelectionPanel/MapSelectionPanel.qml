@@ -27,10 +27,6 @@ EditorBottomPanel {
 
          currentView: root.currentView // "general", "saveLoad", or "background"
          activeFilter: ""
-
-         // onCurrentViewChanged:  {
-         //     root.currentView = titleBar.currentView
-         // }
      }
 
      contentArea: MSP_ContentArea {
