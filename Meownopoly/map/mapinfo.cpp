@@ -29,7 +29,6 @@ QString MapInfo::toJSON()
     return QJsonDocument(json).toJson(QJsonDocument::Indented);
 }
 
-
 void MapInfo::registerQml()
 {
     qmlRegisterType<MapInfo>("MapInfo", 1, 0, "MapInfo");

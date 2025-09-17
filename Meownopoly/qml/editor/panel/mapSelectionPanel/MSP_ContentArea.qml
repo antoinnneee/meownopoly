@@ -16,7 +16,10 @@ EBP_Content {
     signal effectChanged()
 
     Component.onCompleted: currentView = "general"     // property string currentView: "general" // "general", "saveLoad", or "background"
-
+    onCurrentViewChanged: {
+        sidePanel.getContentHeight()
+        sidePanelScroll.height = sidePanel
+    }
 
     mainContent: MSP_SettingSelection {
         id: mainContent
