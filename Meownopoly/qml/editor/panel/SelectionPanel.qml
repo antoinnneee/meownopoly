@@ -228,7 +228,7 @@ Rectangle {
             collapsedHeight: root.collapsedHeight
             expandedHeight: root.expandedHeight
             Layout.preferredWidth: parent.width
-            isExpanded: root.isExpanded
+            isExpanded: true
 
         }
 

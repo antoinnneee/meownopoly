@@ -11,7 +11,15 @@ EditorBottomPanel {
     id: root
 
     property alias activeFilter: titleBar.activeFilter
+    property int selectedCaseType: -1
+    property string selectedCaseTypeName: ""
+    property string currentView: "categories"
+    property string searchText: ""
+//    isExpanded: true
 
+    // Signaux
+    signal caseTypeSelected(int type, string typeName)
+    signal caseTypeCleared()
 
     // Title bar
      titleBar: CSP_TitleBar {
@@ -31,7 +39,6 @@ EditorBottomPanel {
              root.searchText = searchText
              root.searchText = Qt.binding(function(){ return root.searchText})
          }
-
 
          onCurrentViewChanged:  {
              root.currentView = titleBar.currentView
@@ -53,12 +60,43 @@ EditorBottomPanel {
     // Content area (visible only when expanded)
      contentArea: CSP_ContentArea {
             id: contentArea
+            visible: true
             anchors.fill: parent
             currentView: root.currentView
             activeFilter: titleBar.activeFilter
             searchText: root.searchText
             isExpanded: true
+            
+            onCaseTypeSelected: function(type, typeName) {
+                console.log("CaseSelectionPanel - case type selected:", type, typeName)
+                root.selectedCaseType = type
+                root.selectedCaseTypeName = typeName
+                root.caseTypeSelected(type, typeName)
+            }
+            
+            onCaseTypeCleared: function() {
+                console.log("CaseSelectionPanel - case type cleared")
+                root.selectedCaseType = -1
+                root.selectedCaseTypeName = ""
+                root.caseTypeCleared()
+            }
     }
 
-
+    // Fonction pour obtenir le type de case sélectionné
+    function getSelectedCaseType() {
+        return root.selectedCaseType
+    }
+    
+    // Fonction pour obtenir le nom du type de case sélectionné
+    function getSelectedCaseTypeName() {
+        return root.selectedCaseTypeName
+    }
+    
+    // Fonction pour effacer la sélection
+    function clearSelection() {
+        contentArea.caseTypeSelector.selectedType = -1
+        root.selectedCaseType = -1
+        root.selectedCaseTypeName = ""
+        root.caseTypeCleared()
+    }
 }

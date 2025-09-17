@@ -20,7 +20,7 @@ EBP_TitleBar {
                       "Click to select an asset"
     subTitleColor: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
 
-    buttonModel: ["All", "Propriétés", "Evenements"]
+    buttonModel: ["All", "Property", "Event"]
 
     onButtonClicked: function(text, index) {
     }
