@@ -37,7 +37,6 @@ EditorBottomPanel {
             id: contentArea
             anchors.fill: parent
 
-
             currentView: ""
             activeFilter: ""
 
