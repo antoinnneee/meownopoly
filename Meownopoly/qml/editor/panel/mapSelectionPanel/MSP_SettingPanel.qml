@@ -4,16 +4,21 @@ import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 
+import MapInfo
+
 Rectangle {
     id: sidePanel
     width: sidePanelScroll.width - 20 // Account for scrollbar
-    // height: titleSection.height + Math.max(
-    //              contentArea.currentView === "general" ? generalParamsView.height : 0,
-    //              contentArea.currentView === "saveLoad" ? saveLoadView.height : 0,
-    //              contentArea.currentView === "background" ? backgroundView.height : 0
-    //            ) + 20 // Add padding
 
-height : getContentHeight()
+    property string mapName
+    property int mapVersion
+    property string backgroundPath: ""
+    property string backgroundScaling: "Stretch"
+    property string dateOfCreation
+    property string dateOfLastModification
+    property string description
+
+    height : getContentHeight()
     function getContentHeight() {
         // Calculer précisément la hauteur en fonction de la vue active
         var contentHeight = 0;
@@ -22,23 +27,21 @@ height : getContentHeight()
         case "saveLoad": contentHeight = saveLoadView.height; break;
         case "background": contentHeight = backgroundView.height; break;
         }
-        
+
         // Utiliser la hauteur exacte sans padding supplémentaire
         return titleSection.height + contentHeight;
     }
-    
+
     // Mettre à jour la hauteur quand la vue change
     Connections {
         target: contentArea
         function onCurrentViewChanged() {
-            // Attendre le prochain cycle d'événements pour s'assurer 
-            // que les hauteurs des enfants sont à jour
             Qt.callLater(function() {
                 sidePanel.height = getContentHeight();
             });
         }
     }
-    
+
     // Mettre à jour également quand le panneau devient visible
     onVisibleChanged: {
         if (visible) {
@@ -62,7 +65,7 @@ height : getContentHeight()
         width: parent.width
         height: 60 // Réduit la hauteur
         z: 10
-        
+
         // Title card
         Rectangle {
             anchors.fill: parent
@@ -71,30 +74,30 @@ height : getContentHeight()
             radius: 8
             border.color: "#555555"
             border.width: 1
-            
+
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "#333333" }
                 GradientStop { position: 1.0; color: "#2a2a2a" }
             }
-            
+
             Row {
                 anchors.centerIn: parent
                 spacing: 15
-                
+
                 Rectangle {
                     width: 40
                     height: 40
                     radius: 20
                     color: "#4A90E2"
                     opacity: 0.3
-                    
+
                     Text {
                         anchors.centerIn: parent
                         text: "✏️"
                         font.pixelSize: 18
                     }
                 }
-                
+
                 Text {
                     text: "Map Settings"
                     color: "white"
@@ -144,27 +147,27 @@ height : getContentHeight()
                         height: 40
                         color: "#383838"
                         radius: 6
-                        
+
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
                             anchors.leftMargin: 10
                             spacing: 10
-                            
+
                             Rectangle {
                                 width: 30
                                 height: 30
                                 radius: 15
                                 color: "#4A90E2"
                                 opacity: 0.2
-                                
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: "🗺️"
                                     font.pixelSize: 16
                                 }
                             }
-                            
+
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Map Information"
@@ -198,17 +201,30 @@ height : getContentHeight()
                             border.width: 1
                             radius: 4
 
-                            TextInput {
+                            Row {
                                 anchors.fill: parent
                                 anchors.margins: 5
-                                color: "white"
-                                font.pixelSize: 14
-                                text: contentArea.mapName
-                                clip: true
-                                verticalAlignment: TextInput.AlignVCenter
-
-                                onTextChanged: {
-                                    contentArea.mapName = text
+                                spacing: 5
+                                
+                                Text {
+                                    text: "📁"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    font.pixelSize: 14
+                                }
+                                
+                                TextField {
+                                    width: parent.width - 25
+                                    height: parent.height
+                                    color: "#4CAF50"
+                                    font.pixelSize: 14
+                                    verticalAlignment: Text.AlignVCenter
+                                    placeholderTextColor: "#666666"
+                                    placeholderText: "Name of the map"
+                                    onFocusChanged: {
+                                        if (focus && text === "") {placeholderText = ""}
+                                        else if (!focus && text === "") {placeholderText = "Name of the map"}
+                                    }
+                                    onEditingFinished: mapName = text
                                 }
                             }
                         }
@@ -229,17 +245,29 @@ height : getContentHeight()
                             border.width: 1
                             radius: 4
 
-                            TextInput {
+                            Row {
                                 anchors.fill: parent
                                 anchors.margins: 5
-                                color: "white"
-                                font.pixelSize: 14
-                                text: contentArea.mapVersion
-                                clip: true
-                                verticalAlignment: TextInput.AlignVCenter
-
-                                onTextChanged: {
-                                    contentArea.mapVersion = text
+                                spacing: 5
+                                Text {
+                                    text: "📈"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    font.pixelSize: 14
+                                }
+                                
+                                TextField {
+                                    width: parent.width - 25
+                                    height: parent.height
+                                    color: "white"
+                                    font.pixelSize: 14
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    onFocusChanged: {
+                                        if (focus && text === "") {placeholderText = ""}
+                                        else if (!focus && text === "") {placeholderText = "1.0"}
+                                    }
+                                    placeholderTextColor: "#666666"
+                                    placeholderText: "1.0"
+                                    onEditingFinished: mapVersion = parseInt(text) || 1
                                 }
                             }
                         }
@@ -271,12 +299,18 @@ height : getContentHeight()
                                     font.pixelSize: 14
                                 }
 
-                                TextInput {
+                                TextField {
                                     width: parent.width - 25
                                     height: parent.height
                                     color: "white"
                                     font.pixelSize: 14
-                                    text: "2023-09-15"
+                                    onFocusChanged: {
+                                        if (focus && text === "") {placeholderText = ""}
+                                        else if (!focus && text === "") {placeholderText = "2023-09-15"}
+                                    }
+                                    placeholderTextColor: "#666666"
+                                    placeholderText: "2023-09-15"
+                                    onEditingFinished: dateOfCreation = text
                                     verticalAlignment: TextInput.AlignVCenter
                                 }
                             }
@@ -309,13 +343,19 @@ height : getContentHeight()
                                     font.pixelSize: 14
                                 }
 
-                                Text {
+                                TextField {
                                     width: parent.width - 25
                                     height: parent.height
                                     color: "#4CAF50"
                                     font.pixelSize: 14
-                                    text: "2023-09-18 (3 days ago)"
                                     verticalAlignment: Text.AlignVCenter
+                                    placeholderTextColor: "#666666"
+                                    placeholderText: "2023-09-18 (3 days ago)"
+                                    onEditingFinished: dateOfCreation = text
+                                    onFocusChanged: {
+                                        if (focus && text === "") {placeholderText = ""}
+                                        else if (!focus && text === "") {placeholderText = "2023-09-18 (3 days ago)"}
+                                    }
                                 }
                             }
                         }
@@ -327,27 +367,27 @@ height : getContentHeight()
                         height: 40
                         color: "#383838"
                         radius: 6
-                        
+
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
                             anchors.leftMargin: 10
                             spacing: 10
-                            
+
                             Rectangle {
                                 width: 30
                                 height: 30
                                 radius: 15
                                 color: "#FFC107"
                                 opacity: 0.2
-                                
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: "📝"
                                     font.pixelSize: 16
                                 }
                             }
-                            
+
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Description"
@@ -418,27 +458,27 @@ height : getContentHeight()
                         height: 40
                         color: "#383838"
                         radius: 6
-                        
+
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
                             anchors.leftMargin: 10
                             spacing: 10
-                            
+
                             Rectangle {
                                 width: 30
                                 height: 30
                                 radius: 15
                                 color: "#E91E63"
                                 opacity: 0.2
-                                
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: "📊"
                                     font.pixelSize: 16
                                 }
                             }
-                            
+
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Statistics"
@@ -564,6 +604,10 @@ height : getContentHeight()
                         onClicked: {
                             console.log("Saving map:", contentArea.mapName, "v" + contentArea.mapVersion)
                             if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
+                                var mapInfo = logic.mapInfo
+                                mapInfo.name = contentArea.mapName
+                                mapInfo.version = contentArea.mapVersion
+
                                 logic.saveMap()
                             } else {
                                 console.error("La fonction saveMap n'est pas accessible. Vérifiez que la variable 'logic' est définie.")
