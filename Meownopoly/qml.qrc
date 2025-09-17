@@ -122,13 +122,25 @@
         <file>qml/editor/panel/assetSelectionPanel/qmldir</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_ClearButton.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_ContentArea.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_CategoryGrid.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_Grid.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_Item.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_CaseTypeCell.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_CaseTypeSelector.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MapSelectionPanel.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_ContentArea.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_TitleBar.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_SettingPanel.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_SettingSelection.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CaseConfigurationPanel.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_GeneralConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_Header.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_PanelElement.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_RentConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_TypeSelector.qml</file>
     </qresource>
 </RCC>

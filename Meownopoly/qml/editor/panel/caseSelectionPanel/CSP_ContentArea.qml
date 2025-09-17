@@ -5,68 +5,43 @@ import "../assetSelectionPanel"
 
 EBP_Content {
     id: contentArea
-    property string currentSelectedCategory: ""
-    property string currentSelectedType: ""
-    property string currentSelectedId: ""
-
-    property string selectedCategory: ""
-    property string selectedType: ""
-    property var selectedDecoration
-
-    property string selected
-    property bool showEffectsPanel: true
-    signal assetSelected(string category, string type, string id)
-    signal categorieSelected()
-
-    // property alias visualEffectsPanel : effectsPanel
-
+    
+    // Propriétés requises par EBP_Content
+    currentView: "categories"
+    activeFilter: "All"
+    
+    // Propriétés supplémentaires
+    searchText: ""
+    isExpanded: true
+    
+    // Signaux
+    signal caseTypeSelected(int type, string typeName)
+    signal caseTypeCleared()
 
     // Main content (categories/assets)
     Item {
         id: mainContent
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.right: /*contentArea.showEffectsPanel ? effectsScrollView.left : */parent.right
+        anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.rightMargin: contentArea.showEffectsPanel ? 5 : 0
-
-        // NE PAS METTRE CECI POUR CSP_ContentArea
-        // Category grid
-        CSP_CategoryGrid {
-            id: categoryGrid
+        
+        // Sélecteur de types de cases
+        CSP_CaseTypeSelector {
+            id: caseTypeSelector
             anchors.fill: parent
-            anchors.topMargin: 6
-            visible: contentArea.currentView === "categories"
+            currentView: contentArea.currentView
             activeFilter: contentArea.activeFilter
-            searchText: contentArea.searchText
-
-            onCategorySelected: function(category, type) {
-                contentArea.selectedCategory = category
-                contentArea.selectedType = type
-                categorieSelected()
+            
+            onTypeSelected: function(type, typeName) {
+                console.log("Case type selected:", type, typeName)
+                contentArea.caseTypeSelected(type, typeName)
             }
-        }
-
-        // Asset grid
-        CSP_Grid {
-            id: assetGrid
-            anchors.fill: parent
-            anchors.topMargin: 6
-            visible: contentArea.currentView === "assets"
-            category: contentArea.selectedCategory
-            type: contentArea.selectedType
-            searchText: contentArea.searchText
-
-            // Pass selection state
-            currentSelectedCategory: contentArea.currentSelectedCategory
-            currentSelectedType: contentArea.currentSelectedType
-            currentSelectedId: contentArea.currentSelectedId
-
-            onAssetSelected: function(id) {
-                contentArea.assetSelected(contentArea.selectedCategory, contentArea.selectedType, id)
+            
+            onTypeCleared: function() {
+                console.log("Case type cleared")
+                contentArea.caseTypeCleared()
             }
         }
     }
-
-
 }
