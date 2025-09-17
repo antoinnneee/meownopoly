@@ -39,7 +39,7 @@ Rectangle {
     property MapInfo mapInfo: MapInfo{
         mapName: "no_name"
         mapDescription: "no_description"
-        // mapCreation: "no_creation"
+        mapCreationDate: "no_creation"
         mapLastModified: "no_last_modified"
         version: 0
     }
