@@ -102,7 +102,7 @@ Item {
 
     TileLogic{
         id: tileLogic
-        logic: parent
+        logic: logic
         editorGrid: logic.editorGrid
         snapableTilesList: logic.snapableTilesList
         editorDynamicComponent: logic.editorDynamicComponent
