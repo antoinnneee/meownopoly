@@ -160,12 +160,12 @@ Item {
             spacing: 10
             padding: 5
             
-            Text {
-                text: "Available Maps"
-                color: "white"
-                font.pixelSize: 16
-                font.bold: true
-            }
+            // Text {
+            //     text: "Available Maps"
+            //     color: "white"
+            //     font.pixelSize: 16
+            //     font.bold: true
+            // }
             
             // Container pour les cartes
             Rectangle {
@@ -260,7 +260,7 @@ Item {
                             
                             onClicked: {
                                 console.log("Selected map: " + modelData)
-                                if (typeof logic !== 'undefined' && typeof logic.loadMap === 'function') {
+                                if (typeof logic !== 'undefined' && typeof logic.loadMap() === 'function') {
                                     logic.loadMap(modelData)
                                     saveLoadView.currentView = "buttons"
                                 } else {
