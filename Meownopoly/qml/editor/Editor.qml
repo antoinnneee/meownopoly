@@ -41,6 +41,8 @@ Rectangle {
         mapDescription: "no_description"
         mapCreationDate: "no_creation"
         mapLastModified: "no_last_modified"
+        backgroundPath: "no_path"
+        backgroundScaling: "no_mode"
         version: 0
     }
 

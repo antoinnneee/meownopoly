@@ -49,10 +49,11 @@ Item {
                 // Background selector
                 MSP_SP_BackgroundSelector {
                     width: parent.width
-                    imagePath: contentArea.backgroundPath || ""
+                    imagePath: backgroundPath
                     
                     onImageSelected: function(path) {
                         contentArea.backgroundPath = path;
+                        imagePath = path;
                         console.log("Background image selected:", path);
                     }
                     
