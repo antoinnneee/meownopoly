@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
+import "."
 
 import MapInfo
 
@@ -13,6 +14,8 @@ Item {
     height: backgroundLayout.height
     anchors.top: titleSection.bottom
     
+    // property alias panelInfo : sidePanel
+
     Column {
         id: backgroundLayout
         width: parent.width
@@ -43,109 +46,37 @@ Item {
                 anchors.topMargin: 10
                 spacing: 15
                 
-                // Select background button
-                Button {
+                // Background selector
+                MSP_SP_BackgroundSelector {
                     width: parent.width
-                    height: 40
-                    flat: true
+                    imagePath: contentArea.backgroundPath || ""
                     
-                    background: Rectangle {
-                        anchors.fill: parent
-                        color: "transparent"
-                        border.color: "#E91E63"
-                        border.width: 1
-                        radius: 4
+                    onImageSelected: function(path) {
+                        contentArea.backgroundPath = path;
+                        console.log("Background image selected:", path);
                     }
                     
-                    contentItem: Text {
-                        text: "Select Image/GIF"
-                        color: "#E91E63"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 14
+                    onScalingModeSelected: function(mode) {
+                        console.log("Scaling mode changed:", mode);
+                        // Mettre à jour le mode de mise à l'échelle
+                        if (mode === "stretch") {
+                            // Code pour le mode Stretch
+                        } else if (mode === "fit") {
+                            // Code pour le mode Fit
+                        } else if (mode === "repeat") {
+                            // Code pour le mode Repeat
+                        }
                     }
                     
-                    onClicked: {
+                    onImageRemoved: {
+                        contentArea.backgroundPath = "";
+                        console.log("Background image removed");
                     }
                 }
                 
-                // Current background path
-                Column {
-                    width: parent.width
-                    spacing: 5
-                    visible: contentArea.backgroundPath !== ""
-                    
-                    Text {
-                        text: "Selected File:"
-                        color: "#999999"
-                        font.pixelSize: 14
-                    }
-                    
-                    Text {
-                        text: contentArea.backgroundPath
-                        color: "#4CAF50"
-                        font.pixelSize: 12
-                        width: parent.width
-                        wrapMode: Text.WrapAnywhere
-                        elide: Text.ElideMiddle
-                    }
-                }
+                // Information sur l'image sélectionnée - gérée dans le sélecteur
                 
-                // Image scaling options
-                Column {
-                    width: parent.width
-                    spacing: 5
-                    visible: contentArea.backgroundPath !== ""
-                    
-                    Text {
-                        text: "Image Scaling"
-                        color: "#999999"
-                        font.pixelSize: 14
-                    }
-                    
-                    ComboBox {
-                        width: parent.width
-                        height: 40
-                        model: ["Stretch", "Preserve Aspect Ratio", "Preserve Aspect Fit", "Tile"]
-                        
-                        contentItem: Text {
-                            text: parent.displayText
-                            color: "white"
-                            verticalAlignment: Text.AlignVCenter
-                            elide: Text.ElideRight
-                            leftPadding: 5
-                        }
-                        
-                        background: Rectangle {
-                            color: "transparent"
-                            border.color: "#4A90E2"
-                            border.width: 1
-                            radius: 4
-                        }
-                        
-                        popup.background: Rectangle {
-                            color: "#222222"
-                            border.color: "#4A90E2"
-                            border.width: 1
-                            radius: 4
-                        }
-                        
-                        delegate: ItemDelegate {
-                            width: parent.width
-                            contentItem: Text {
-                                text: modelData
-                                color: "white"
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            highlighted: parent.highlightedIndex === index
-                        }
-                        
-                        onActivated: {
-                            console.log("Selected scaling mode:", model[index])
-                        }
-                    }
-                }
+                // Options de mise à l'échelle - gérées dans le sélecteur
             }
         }
     }

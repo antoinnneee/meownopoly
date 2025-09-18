@@ -13,6 +13,10 @@ class MapInfo : public QObject
     Q_PROPERTY(QString mapLastModified READ getMapLastModified WRITE setMapLastModified NOTIFY mapLastModifiedChanged)
     Q_PROPERTY(int version READ getVersion WRITE setVersion NOTIFY versionChanged)
 
+    Q_PROPERTY(QString musicPath READ getMusicPath WRITE setMusicPath NOTIFY musicPathChanged FINAL)
+    Q_PROPERTY(QString backgroundPath READ getBackgroundPath WRITE setBackgroundPath NOTIFY backgroundPathChanged FINAL)
+    Q_PROPERTY(QString backgroundScaling READ getBackgroundScaling WRITE setBackgroundScaling NOTIFY backgroundScalingChanged FINAL)
+
 
 public:
     MapInfo();
@@ -36,6 +40,15 @@ public:
     QString mapCreationDate() const;
     void setMapCreationDate(const QString &newMapCreationDate);
 
+    QString getMusicPath() const;
+    void setMusicPath(const QString &newMusicPath);
+
+    QString getBackgroundPath() const;
+    void setBackgroundPath(const QString &newBackgroundPath);
+
+    QString getBackgroundScaling() const;
+    void setBackgroundScaling(const QString &newBackgroundScaling);
+
 signals:
     void mapNameChanged(const QString &mapName);
     void mapDescriptionChanged(const QString &mapDescription);
@@ -44,6 +57,12 @@ signals:
 
     void mapCreationDateChanged();
 
+    void musicPathChanged();
+
+    void backgroundPathChanged();
+
+    void backgroundScalingChanged();
+
 private:
     QString m_mapName = "no_name";
     QString m_mapDescription = "no_description";
@@ -51,6 +70,10 @@ private:
     QString m_mapLastModified = "no_last_modified";
     int m_version = 0;
 
+    QString musicPath = "";
+
+    QString backgroundPath = "";
+    QString backgroundScaling = "Stretch";
 };
 
 #endif // MAPINFO_H

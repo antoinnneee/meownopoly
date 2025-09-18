@@ -54,6 +54,45 @@ void MapInfo::setMapCreationDate(const QString &newMapCreationDate)
     emit mapCreationDateChanged();
 }
 
+QString MapInfo::getMusicPath() const
+{
+    return musicPath;
+}
+
+void MapInfo::setMusicPath(const QString &newMusicPath)
+{
+    if (musicPath == newMusicPath)
+        return;
+    musicPath = newMusicPath;
+    emit musicPathChanged();
+}
+
+QString MapInfo::getBackgroundPath() const
+{
+    return backgroundPath;
+}
+
+void MapInfo::setBackgroundPath(const QString &newBackgroundPath)
+{
+    if (backgroundPath == newBackgroundPath)
+        return;
+    backgroundPath = newBackgroundPath;
+    emit backgroundPathChanged();
+}
+
+QString MapInfo::getBackgroundScaling() const
+{
+    return backgroundScaling;
+}
+
+void MapInfo::setBackgroundScaling(const QString &newBackgroundScaling)
+{
+    if (backgroundScaling == newBackgroundScaling)
+        return;
+    backgroundScaling = newBackgroundScaling;
+    emit backgroundScalingChanged();
+}
+
 void MapInfo::setMapLastModified(const QString &mapLastModified)
 {
     m_mapLastModified = mapLastModified;

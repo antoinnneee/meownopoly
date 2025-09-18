@@ -12,7 +12,9 @@ Item {
     width: parent.width
     height: generalLayout.height
     anchors.top: titleSection.bottom
-    
+
+    // property alias panelInfo : sidePanel
+
     Column {
         id: generalLayout
         width: parent.width

@@ -13,7 +13,9 @@ Item {
     width: parent.width
     height: currentView === "buttons" ? saveLoadLayout.height : availableMapsView.height
     anchors.top: titleSection.bottom
-    
+
+    // property alias panelInfo : sidePanel
+
     // Propriété pour gérer les vues
     property string currentView: "buttons"
     
@@ -74,9 +76,12 @@ Item {
                         console.log("Saving map:", contentArea.mapName, "v" + contentArea.mapVersion)
                         if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                             var mapInfo = logic.mapInfo
-                            mapInfo.name = contentArea.mapName
-                            mapInfo.version = contentArea.mapVersion
-                            
+                            mapInfo.mapName = mapName
+                            mapInfo.version = mapVersion
+                            mapInfo.mapDescription = description
+                            mapInfo.mapCreationDate = dateOfCreation
+                            mapInfo.mapLastModified = dateOfLastModification
+
                             logic.saveMap()
                         } else {
                             console.error("La fonction saveMap n'est pas accessible. Vérifiez que la variable 'logic' est définie.")
@@ -160,12 +165,6 @@ Item {
             spacing: 10
             padding: 5
             
-            // Text {
-            //     text: "Available Maps"
-            //     color: "white"
-            //     font.pixelSize: 16
-            //     font.bold: true
-            // }
             
             // Container pour les cartes
             Rectangle {
@@ -236,7 +235,7 @@ Item {
                         
                         ScrollBar.vertical: ScrollBar {
                             active: true
-                            policy: ScrollBar.AsNeeded
+                            policy: ScrollBar.AlwaysOn
                         }
                         
                         delegate: Button {
@@ -260,8 +259,8 @@ Item {
                             
                             onClicked: {
                                 console.log("Selected map: " + modelData)
-                                if (typeof logic !== 'undefined' && typeof logic.loadMap() === 'function') {
-                                    logic.loadMap(modelData)
+                                if (typeof logic !== 'undefined') {
+                                    MapLoader.loadMap(modelData)
                                     saveLoadView.currentView = "buttons"
                                 } else {
                                     console.error("La fonction loadMap n'est pas accessible")

@@ -109,15 +109,18 @@ Rectangle {
     // General parameters view
     MSP_SP_General {
         id: generalParamsView
+        property alias panelInfo : sidePanel
     }
 
     // Save/Load map view
     MSP_SP_SaveLoad {
         id: saveLoadView
+        property alias panelInfo : sidePanel
     }
 
     // Background modification view
     MSP_SP_Background {
         id: backgroundView
+        property alias panelInfo : sidePanel
     }
 }
