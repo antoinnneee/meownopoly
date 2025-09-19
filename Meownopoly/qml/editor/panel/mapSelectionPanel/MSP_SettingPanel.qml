@@ -49,6 +49,22 @@ Rectangle {
             });
         }
     }
+    
+    // Connections pour écouter les changements de hauteur de saveLoadView
+    Connections {
+        target: saveLoadView
+        function onRefreshContentHeight() {
+            Qt.callLater(function() {
+                sidePanel.height = getContentHeight();
+            });
+        }
+        
+        function onMapsLoaded() {
+            Qt.callLater(function() {
+                sidePanel.height = getContentHeight();
+            });
+        }
+    }
 
     // Mettre à jour également quand le panneau devient visible
     onVisibleChanged: {
@@ -118,7 +134,7 @@ Rectangle {
     MSP_SP_SaveLoad {
         id: saveLoadView
         property alias panelInfo : sidePanel
-        onRefreshContentHeigt: getContentHeight()
+        onRefreshContentHeight: getContentHeight()
         Component.onCompleted: getContentHeight()
     }
 

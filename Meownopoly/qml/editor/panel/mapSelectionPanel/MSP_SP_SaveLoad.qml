@@ -12,22 +12,36 @@ Item {
     id: saveLoadView
     visible: contentArea.currentView === "saveLoad"
     width: parent.width
-    height: currentView === "buttons" ? saveLoadLayout.height : availableMapsColumn.contentHeight
+    height: saveLoadLayout.height
     anchors.top: titleSection.bottom
-
-    // property alias panelInfo : sidePanel
 
     // Propriété pour gérer les vues
     property string currentView: "buttons"
     
-    signal refreshContentHeigt()
+    // Signal pour notifier que la hauteur du contenu a changé
+    signal refreshContentHeight()
+    
+    // Signal émis quand la liste des maps est chargée
+    signal mapsLoaded()
+    
+    // Fonction pour calculer la hauteur totale
+    function updateHeight() {
+        // Force layout update
+        saveLoadLayout.height = saveLoadLayout.implicitHeight
+        // Notify parent to update its height
+        refreshContentHeight()
+    }
 
+    // Mettre à jour quand la vue change
+    onCurrentViewChanged: {
+        Qt.callLater(updateHeight)
+    }
 
     Column {
         id: saveLoadLayout
         width: parent.width
-        spacing: 10 // réduit l'espacement
-        padding: 5 // réduit le padding
+        spacing: 10
+        padding: 5
         
         Text {
             text: "Save/Load Options"
@@ -36,7 +50,7 @@ Item {
             font.bold: true
         }
         
-        // Controls container
+        // Controls container - Boutons principaux
         Rectangle {
             width: parent.width - parent.padding * 2
             color: "#333333"
@@ -117,8 +131,10 @@ Item {
                     
                     onClicked: {
                         console.log("Loading available maps")
-                        availableMapsView.maps = MapLoader.getAvailableMaps()
+                        mapsList.maps = MapLoader.getAvailableMaps()
                         saveLoadView.currentView = "availableMaps"
+                        // Notify that maps are loaded
+                        saveLoadView.mapsLoaded()
                     }
                 }
                 
@@ -152,129 +168,151 @@ Item {
                 }
             }
         }
-    }
-    
-    // Vue des cartes disponibles
-    Item {
-        id: availableMapsView
-        visible: saveLoadView.currentView === "availableMaps"
-        onVisibleChanged: {
-            if (visible) {
-                refreshContentHeigt()
-            }
-        }
-        width: parent.width
-        height: mapsContainer.height + 20
         
-        property var maps: []
-        
-        Column {
-            id: availableMapsColumn
-            width: parent.width
-            spacing: 10
-            padding: 5
+        // Container pour la liste des maps disponibles
+        Rectangle {
+            id: mapsContainer
+            width: parent.width - parent.padding * 2
+            color: "#333333"
+            radius: 6
+            border.color: "#4A90E2"
+            border.width: 1
+            visible: saveLoadView.currentView === "availableMaps"
+            height: mapsList.visible ? mapsList.height + headerSection.height + 20 : 0
             
-            
-            // Container pour les cartes
+            // Header avec bouton retour
             Rectangle {
-                id: mapsContainer
-                width: parent.width - parent.padding * 2
-                height: mapsContentColumn.height + 20
-                color: "#333333"
-                radius: 6
-                border.color: "#4A90E2"
-                border.width: 1
+                id: headerSection
+                width: parent.width
+                height: 40
+                color: "#383838"
+                radius: 4
+                anchors.top: parent.top
+                anchors.topMargin: 10
+                anchors.horizontalCenter: parent.horizontalCenter
                 
-                Column {
-                    id: mapsContentColumn
-                    width: parent.width - 20
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: 10
-                    spacing: 15
+                Row {
+                    anchors.fill: parent
+                    anchors.margins: 5
+                    spacing: 10
                     
-                    // Header avec bouton retour
-                    Rectangle {
-                        width: parent.width
-                        height: 40
-                        color: "#383838"
-                        radius: 4
+                    Button {
+                        width: 30
+                        height: 30
+                        flat: true
                         
-                        Row {
-                            anchors.fill: parent
-                            anchors.margins: 5
-                            spacing: 10
-                            
-                            Button {
-                                width: 30
-                                height: 30
-                                flat: true
-                                
-                                contentItem: Text {
-                                    text: "←"
-                                    color: "#4A90E2"
-                                    font.pixelSize: 16
-                                    font.bold: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-                                
-                                onClicked: {
-                                    saveLoadView.currentView = "buttons"
-                                }
-                            }
-                            
-                            Text {
-                                text: "Select a Map"
-                                color: "white"
-                                font.pixelSize: 14
-                                font.bold: true
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                        contentItem: Text {
+                            text: "←"
+                            color: "#4A90E2"
+                            font.pixelSize: 16
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        
+                        onClicked: {
+                            saveLoadView.currentView = "buttons"
                         }
                     }
                     
-                    // Liste des cartes
-                    ListView {
-                        width: parent.width
-                        height: Math.min(300, contentHeight)
-                        model: availableMapsView.maps
-                        spacing: 5
-                        clip: true
-                        
-                        ScrollBar.vertical: ScrollBar {
-                            active: true
-                            policy: ScrollBar.AlwaysOn
-                        }
-                        
-                        delegate: Button {
-                            width: parent.width
-                            height: 40
-                            
-                            background: Rectangle {
-                                anchors.fill: parent
-                                color: "#444444"
-                                radius: 4
-                                border.color: "#4A90E2"
-                                border.width: 1
-                            }
-                            
-                            contentItem: Text {
-                                text: modelData
-                                color: "white"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            
-                            onClicked: {
-                                console.log("Selected map: " + modelData)
-                                if (typeof logic !== 'undefined') {
-                                    MapLoader.loadMap(modelData)
-                                    saveLoadView.currentView = "buttons"
-                                } else {
-                                    console.error("La fonction loadMap n'est pas accessible")
-                                }
-                            }
+                    Text {
+                        text: "Select a Map"
+                        color: "white"
+                        font.pixelSize: 14
+                        font.bold: true
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
+            
+            // Liste des maps avec support de défilement amélioré
+            ListView {
+                id: mapsList
+                anchors.top: headerSection.bottom
+                anchors.topMargin: 10
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width - 20
+                height: Math.min(300, contentHeight) // Limite la hauteur max à 300px
+                model: []
+                spacing: 5
+                clip: true
+                focus: true
+                interactive: true
+                boundsBehavior: Flickable.StopAtBounds
+                
+                // Défilement par molette de souris géré via un WheelHandler
+                WheelHandler {
+                    id: wheelHandler
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    property: "contentY"
+                    orientation: Qt.Vertical
+                    target: mapsList
+                    
+                    onWheel: {
+                        // Empêcher la propagation au parent
+                        event.accepted = true
+                    }
+                }
+                
+                property var maps: []
+                onMapsChanged: {
+                    model = maps
+                    // Déclencher la mise à jour de hauteur après le chargement du modèle
+                    Qt.callLater(saveLoadView.updateHeight)
+                    // Réinitialiser la position de défilement
+                    contentY = 0
+                    // Donner le focus à la liste
+                    forceActiveFocus()
+                }
+                
+                // S'assurer que la liste prend le focus quand elle devient visible
+                onVisibleChanged: {
+                    if (visible) {
+                        forceActiveFocus()
+                    }
+                }
+                
+                ScrollBar.vertical: ScrollBar {
+                    id: scrollBar
+                    active: mapsList.contentHeight > mapsList.height
+                    policy: ScrollBar.AlwaysOn
+                    visible: mapsList.contentHeight > mapsList.height
+                    interactive: true
+                    
+                    contentItem: Rectangle {
+                        implicitWidth: 8
+                        radius: width / 2
+                        color: "#999999"
+                        opacity: scrollBar.pressed ? 0.8 : 0.5
+                    }
+                }
+                
+                delegate: Button {
+                    width: mapsList.width
+                    height: 40
+                    
+                    background: Rectangle {
+                        anchors.fill: parent
+                        color: "#444444"
+                        radius: 4
+                        border.color: "#4A90E2"
+                        border.width: 1
+                    }
+                    
+                    contentItem: Text {
+                        text: modelData
+                        color: "white"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    
+                    onClicked: {
+                        console.log("Selected map: " + modelData)
+                        if (typeof logic !== 'undefined') {
+                            MapLoader.loadMap(modelData)
+                            saveLoadView.currentView = "buttons"
+                        } else {
+                            console.error("La fonction loadMap n'est pas accessible")
                         }
                     }
                 }
