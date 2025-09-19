@@ -7,11 +7,12 @@ import "../editorBottomPanel"
 import MapInfo
 import MapLoader
 
+
 Item {
     id: saveLoadView
     visible: contentArea.currentView === "saveLoad"
     width: parent.width
-    height: currentView === "buttons" ? saveLoadLayout.height : availableMapsView.height
+    height: currentView === "buttons" ? saveLoadLayout.height : availableMapsColumn.contentHeight
     anchors.top: titleSection.bottom
 
     // property alias panelInfo : sidePanel
@@ -19,6 +20,9 @@ Item {
     // Propriété pour gérer les vues
     property string currentView: "buttons"
     
+    signal refreshContentHeigt()
+
+
     Column {
         id: saveLoadLayout
         width: parent.width
@@ -154,6 +158,11 @@ Item {
     Item {
         id: availableMapsView
         visible: saveLoadView.currentView === "availableMaps"
+        onVisibleChanged: {
+            if (visible) {
+                refreshContentHeigt()
+            }
+        }
         width: parent.width
         height: mapsContainer.height + 20
         

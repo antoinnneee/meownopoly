@@ -39,6 +39,7 @@ Rectangle {
         return titleSection.height + contentHeight;
     }
 
+
     // Mettre à jour la hauteur quand la vue change
     Connections {
         target: contentArea
@@ -110,17 +111,21 @@ Rectangle {
     MSP_SP_General {
         id: generalParamsView
         property alias panelInfo : sidePanel
+        Component.onCompleted: getContentHeight()
     }
 
     // Save/Load map view
     MSP_SP_SaveLoad {
         id: saveLoadView
         property alias panelInfo : sidePanel
+        onRefreshContentHeigt: getContentHeight()
+        Component.onCompleted: getContentHeight()
     }
 
     // Background modification view
     MSP_SP_Background {
         id: backgroundView
         property alias panelInfo : sidePanel
+        Component.onCompleted: getContentHeight()
     }
 }

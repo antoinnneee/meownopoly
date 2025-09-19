@@ -8,7 +8,7 @@ Item {
     width: parent.width
     height: imageContainer.height + (scalingSelector.visible ? scalingSelector.height + 8 : 0)
     
-    property string imagePath: ""
+    property string imagePath
     property string scalingMode: "stretch" // stretch, fit, repeat
     
     signal imageSelected(string path)
@@ -30,7 +30,7 @@ Item {
         Column {
             anchors.centerIn: parent
             spacing: 10
-            visible: root.imagePath === ""
+            visible: backgroundPath === ""
             
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -62,8 +62,8 @@ Item {
             id: selectedImage
             anchors.fill: parent
             anchors.margins: 4
-            visible: root.imagePath !== ""
-            source: root.imagePath
+            visible: backgroundPath !== ""
+            source: backgroundPath
             fillMode: {
                 switch(root.scalingMode) {
                     case "stretch": return Image.Stretch;
@@ -84,7 +84,7 @@ Item {
             height: 24
             radius: 12
             color: "#CC2222"
-            visible: root.imagePath !== ""
+            visible: backgroundPath !== ""
             opacity: removeMouseArea.containsMouse ? 1.0 : 0.8
             z: 10  // Assure que le bouton est au-dessus de l'image
             
@@ -101,7 +101,7 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    root.imagePath = "";
+                    backgroundPath = "";
                     root.imageRemoved();
                 }
             }
@@ -116,7 +116,7 @@ Item {
             // Évite de déclencher le click sur le bouton de suppression
             propagateComposedEvents: false
             // Désactive les clics dans la zone du bouton de suppression
-            enabled: root.imagePath === "" || !removeButton.contains(Qt.point(mouseX, mouseY))
+            enabled: backgroundPath === "" || !removeButton.contains(Qt.point(mouseX, mouseY))
         }
     }
     
@@ -129,7 +129,7 @@ Item {
         anchors.horizontalCenter: imageContainer.horizontalCenter
         anchors.topMargin: 8
         color: "transparent"
-        visible: root.imagePath !== ""
+        visible: backgroundPath !== ""
         
         Row {
             anchors.fill: parent
@@ -216,8 +216,8 @@ Item {
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.bmp)"]
         onAccepted: {
             // Utilisation de selectedFile de la nouvelle API
-            root.imagePath = fileDialog.selectedFile;
-            root.imageSelected(root.imagePath);
+            backgroundPath = fileDialog.selectedFile;
+            root.imageSelected(backgroundPath);
         }
     }
 }

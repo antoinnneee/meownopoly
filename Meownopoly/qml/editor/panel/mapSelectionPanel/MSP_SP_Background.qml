@@ -13,7 +13,7 @@ Item {
     width: parent.width
     height: backgroundLayout.height
     anchors.top: titleSection.bottom
-    
+
     // property alias panelInfo : sidePanel
 
     Column {
@@ -52,8 +52,7 @@ Item {
                     imagePath: backgroundPath
                     
                     onImageSelected: function(path) {
-                        contentArea.backgroundPath = path;
-                        imagePath = path;
+                        backgroundPath = path;
                         console.log("Background image selected:", path);
                     }
                     
@@ -74,10 +73,6 @@ Item {
                         console.log("Background image removed");
                     }
                 }
-                
-                // Information sur l'image sélectionnée - gérée dans le sélecteur
-                
-                // Options de mise à l'échelle - gérées dans le sélecteur
             }
         }
     }
