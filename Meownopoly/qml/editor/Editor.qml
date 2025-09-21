@@ -330,18 +330,20 @@ Rectangle {
 
     // Function to place the selected asset
     function placeSelectedAsset(gridX, gridY) {
+        gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
+        gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
         if (!root.isAssetSelected) {
             if (!selectionPanel.caseTypeSelected !== -1)
             {
-                logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
+                var newCaseTile = logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, gridX, gridY, ItemSnapable.CaseTile)
+
 
             }
                 return;
         }
 
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
-        gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
-        gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
+
         // Create appropriate element based on category
         var newTile = logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
         // Set decoration properties if needed
@@ -383,6 +385,12 @@ Rectangle {
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
+        }
+        onCaseTypeSelectedChanged: {
+            if (selectionPanel.caseTypeSelected !== -1)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+            else
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
     }
 
