@@ -19,6 +19,10 @@ EditorBottomPanel {
 
     // Signaux
     signal caseTypeSelected(int type, string typeName)
+    onCaseTypeSelected: {
+        console.log("case selected : ", type, typeName)
+    }
+
     signal caseTypeCleared()
 
     // Title bar

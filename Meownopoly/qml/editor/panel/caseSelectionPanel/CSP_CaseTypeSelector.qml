@@ -101,7 +101,7 @@ EBP_Content {
         var filtered = []
         for (var i = 0; i < caseTypesModel.count; i++) {
             var item = caseTypesModel.get(i)
-            if (root.activeFilter === "All" || item.caseCategory === root.activeFilter) {
+            if (root.activeFilter === "All" || item.modelCaseCategory === root.activeFilter) {
                 filtered.push(item)
             }
         }
@@ -125,7 +125,7 @@ EBP_Content {
             // Repeater pour créer les cellules
             Repeater {
                 id: repeater
-                model: caseTypesModel
+                model: getFilteredModel()
                 
                 CSP_CaseTypeCell {
                     id: cell
@@ -175,27 +175,7 @@ EBP_Content {
             }
         }
     }
-    
-    // Message quand aucun type n'est sélectionné
-    Text {
-        id: noSelectionText
-        anchors.centerIn: parent
-        text: "Sélectionnez un type de case pour commencer"
-        color: "#999999"
-        font.pixelSize: 14
-        visible: root.selectedType === -1 && repeater.count > 0
-    }
-    
-    // Message quand aucun résultat de filtre
-    Text {
-        id: noResultsText
-        anchors.centerIn: parent
-        text: "Aucun type de case trouvé pour le filtre '" + root.activeFilter + "'"
-        color: "#999999"
-        font.pixelSize: 14
-        visible: repeater.count === 0
-    }
-    
+
     // Fonction pour calculer le nombre de colonnes optimal
     function calculateOptimalColumns() {
         var availableWidth = width - 40 // Marges

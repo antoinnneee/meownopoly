@@ -41,6 +41,8 @@ Rectangle {
     property alias isAssetSelected: assetPanel.isAssetSelected
     property alias assetView: assetPanel.currentView
 
+    property alias caseTypeSelected: casePanel.selectedCaseType
+
     // Signals to propagate from child panels
     // Signaux pour propager les événements vers l'Editor
     signal assetSelected(string category, string type, string id)

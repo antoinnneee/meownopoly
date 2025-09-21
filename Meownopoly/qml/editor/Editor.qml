@@ -100,23 +100,6 @@ Rectangle {
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
-        
-
-        onGridPressed : function(position) {
-            // moved to main MA
-        }
-        onGridClicked:  function(position) {
-            if (root.isAssetSelected) {
-                console.log("Placing selected asset at:", position)
-                placeSelectedAsset(position.x, position.y)
-            }
-            if (!root.isAssetSelected) {
-                logic.tileLogic.deselectAllTiles()
-            }
-        }
-        onGridRightClicked: {
-            selectionPanel.clearAssetSelection()
-        }
     }
 
     MouseArea{
@@ -347,7 +330,14 @@ Rectangle {
 
     // Function to place the selected asset
     function placeSelectedAsset(gridX, gridY) {
-        if (!root.isAssetSelected) return
+        if (!root.isAssetSelected) {
+            if (!selectionPanel.caseTypeSelected !== -1)
+            {
+                logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
+
+            }
+                return;
+        }
 
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
         gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
@@ -365,6 +355,7 @@ Rectangle {
             applyVisualEffectsToNewTile(newTile)
         }
     }
+
 
     SelectionPanel{
         id: selectionPanel
