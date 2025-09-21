@@ -605,7 +605,7 @@ Rectangle {
                             console.log("Saving map:", contentArea.mapName, "v" + contentArea.mapVersion)
                             if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                                 var mapInfo = logic.mapInfo
-                                mapInfo.name = contentArea.mapName
+                                mapInfo.mapName = contentArea.mapName
                                 mapInfo.version = contentArea.mapVersion
 
                                 logic.saveMap()
