@@ -39,8 +39,6 @@ Rectangle {
     property alias currentSelectedAssetType: assetPanel.currentSelectedType
     property alias currentSelectedAssetId: assetPanel.currentSelectedId
     property alias isAssetSelected: assetPanel.isAssetSelected
-    property alias activeAssetFilter: assetPanel.activeFilter
-    property alias assetSearchText: assetPanel.searchText
     property alias assetView: assetPanel.currentView
 
     // Signals to propagate from child panels
