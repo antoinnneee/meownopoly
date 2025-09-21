@@ -15,11 +15,10 @@ Rectangle {
     // Properties
     property bool isExpanded: true
     // property string currentView: "categories" // "categories" or "assets"
-    property string selectedCategory: ""
-    property string selectedType: ""
-    property string searchText: ""
-    property string activeFilter: "All" // "All", "Decoration", "Characters"
     property int currentPanelIndex: 0 // 0 = Asset Selection, 1 = Case Selection
+    onCurrentPanelIndexChanged: {
+        clearAssetSelection()
+    }
     
     // Propriétés de redimensionnement
     property int customHeight: Screen.pixelDensity * 75// Hauteur personnalisée de l'utilisateur
@@ -59,10 +58,7 @@ Rectangle {
 
     signal effectChanged()
 
-
     required property EditorLogic logic
-
-
 
     // Smooth height animation
     Behavior on height {
@@ -83,7 +79,6 @@ Rectangle {
         anchors.bottom: parent.top
         height: 35
         z: 10
-
 
         logic: root.logic
 
@@ -247,11 +242,8 @@ Rectangle {
 
     // Fonction pour effacer la sélection d'asset
     function clearAssetSelection() {
-        if (root.currentPanelIndex === 0) {
-            // Si nous sommes sur le panel d'assets
-            assetPanel.assetManagerSettings.clearAssetSelection()
-
-        }
+        assetPanel.assetManagerSettings.clearAssetSelection()
+        casePanel.clearSelection()
     }
 
 }

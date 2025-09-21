@@ -19,10 +19,6 @@ EditorBottomPanel {
 
     // Signaux
     signal caseTypeSelected(int type, string typeName)
-    onCaseTypeSelected: {
-        console.log("case selected : ", type, typeName)
-    }
-
     signal caseTypeCleared()
 
     // Title bar
@@ -98,9 +94,6 @@ EditorBottomPanel {
     
     // Fonction pour effacer la sélection
     function clearSelection() {
-        contentArea.caseTypeSelector.selectedType = -1
-        root.selectedCaseType = -1
-        root.selectedCaseTypeName = ""
-        root.caseTypeCleared()
+        contentArea.clearCaseSelection()
     }
 }

@@ -28,12 +28,12 @@ EBP_TitleBar {
     // Spacer
     Item { Layout.fillWidth: true }
 
-    backButton.visible: titleBar.isExpanded && titleBar.currentView === "assets"
+    backButton.visible: titleBar.currentView === "assets"
 
 
     // Clear selection button (visible when asset is selected)
     ASP_ClearButton {
         id: clearButton
-        visible: titleBar.isExpanded && titleBar.currentSelectedId !== ""
+        visible: titleBar.currentSelectedId !== ""
     }
 }

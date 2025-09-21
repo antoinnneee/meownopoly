@@ -33,7 +33,7 @@ Button {
         ColorAnimation {
             target: background
             property: "color"
-            to: background.color
+            to: control.mainColor
             duration: 200
             easing.type: Easing.InOutQuad
         }

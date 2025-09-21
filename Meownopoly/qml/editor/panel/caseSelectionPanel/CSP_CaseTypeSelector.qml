@@ -184,6 +184,11 @@ EBP_Content {
         var optimalColumns = Math.floor((availableWidth + spacing) / (cellWidth + spacing))
         return Math.max(2, Math.min(optimalColumns, 6)) // Entre 2 et 6 colonnes
     }
+    function clearCaseSelection()
+    {
+        root.selectedType = -1
+        root.typeCleared()
+    }
     
     // Mise à jour automatique du nombre de colonnes
     onWidthChanged: {
