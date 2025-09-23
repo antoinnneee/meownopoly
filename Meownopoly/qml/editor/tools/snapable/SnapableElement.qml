@@ -13,7 +13,6 @@ Rectangle {
     // Propriétés configurables
     // Connexion au GridManager du parent (Editor)
     required property GridManager gridManager
-    property bool isDraggable: !isAssetSelected
     property bool isResizable: true
     property bool blockConnections: false
     property bool autoSnap: true
@@ -120,10 +119,7 @@ Rectangle {
     MouseArea {
         id: dragArea
         anchors.fill: parent
-        enabled: isDraggable && !isResizing
-        
-        drag.target: isDraggable ? parent : null
-        drag.axis: Drag.XAndYAxis
+        enabled: !isResizing
 
         propagateComposedEvents: true
         preventStealing: true

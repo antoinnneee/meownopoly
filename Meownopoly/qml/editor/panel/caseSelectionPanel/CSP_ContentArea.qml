@@ -44,4 +44,8 @@ EBP_Content {
             }
         }
     }
+    function clearCaseSelection()
+    {
+        caseTypeSelector.clearCaseSelection()
+    }
 }

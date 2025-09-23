@@ -94,9 +94,6 @@ EditorBottomPanel {
     
     // Fonction pour effacer la sélection
     function clearSelection() {
-        contentArea.caseTypeSelector.selectedType = -1
-        root.selectedCaseType = -1
-        root.selectedCaseTypeName = ""
-        root.caseTypeCleared()
+        contentArea.clearCaseSelection()
     }
 }

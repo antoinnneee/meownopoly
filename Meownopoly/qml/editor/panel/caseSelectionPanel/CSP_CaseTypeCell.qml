@@ -13,14 +13,7 @@ Item {
     property string caseName: ""
     property string caseIcon: ""
     property color caseColor: "#E0E0E0"
-    
-    Component.onCompleted: {
-        console.log("caseType", caseType)
-        console.log("caseName", caseName)
-        console.log("caseIcon", caseIcon)
-        console.log("caseColor", caseColor)
-        console.log("isSelected", isSelected)
-    }
+
     // Signaux
     signal clicked(int type)
     signal hovered(bool hovered)

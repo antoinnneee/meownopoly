@@ -102,23 +102,6 @@ Rectangle {
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
-        
-
-        onGridPressed : function(position) {
-            // moved to main MA
-        }
-        onGridClicked:  function(position) {
-            if (root.isAssetSelected) {
-                console.log("Placing selected asset at:", position)
-                placeSelectedAsset(position.x, position.y)
-            }
-            if (!root.isAssetSelected) {
-                logic.tileLogic.deselectAllTiles()
-            }
-        }
-        onGridRightClicked: {
-            selectionPanel.clearAssetSelection()
-        }
     }
 
     MouseArea{
@@ -349,11 +332,20 @@ Rectangle {
 
     // Function to place the selected asset
     function placeSelectedAsset(gridX, gridY) {
-        if (!root.isAssetSelected) return
-
-        console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
         gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
         gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
+        if (!root.isAssetSelected) {
+            if (!selectionPanel.caseTypeSelected !== -1)
+            {
+                var newCaseTile = logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, gridX, gridY, ItemSnapable.CaseTile)
+
+
+            }
+                return;
+        }
+
+        console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
+
         // Create appropriate element based on category
         var newTile = logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
         // Set decoration properties if needed
@@ -367,6 +359,7 @@ Rectangle {
             applyVisualEffectsToNewTile(newTile)
         }
     }
+
 
     SelectionPanel{
         id: selectionPanel
@@ -394,6 +387,12 @@ Rectangle {
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
+        }
+        onCaseTypeSelectedChanged: {
+            if (selectionPanel.caseTypeSelected !== -1)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+            else
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
     }
 
