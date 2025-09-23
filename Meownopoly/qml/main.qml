@@ -21,7 +21,7 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: editor
+        initialItem: launcher
     }
 
     Component {
@@ -31,7 +31,6 @@ ApplicationWindow {
                 //stackView.pop()
                 stackView.push(editor)
             }
-
             onTestViewRequested: {
                 stackView.pop()
                 stackView.push(test_view)

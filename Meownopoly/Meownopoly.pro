@@ -96,10 +96,9 @@ QML_IMPORT_PATH = $$PWD
 QML_DESIGNER_IMPORT_PATH = $$PWD/case/
 
 windows: {
-    CONFIG(release) {
-        DESTDIR = $$PWD/bin/windows_setup/release
+        # DESTDIR = $$PWD/bin/windows_setup/release
+        DESTDIR = $$PWD/bin/debug
         QMAKE_POST_LINK =  windeployqt $$shell_path($$DESTDIR/$${TARGET}.exe) --qmldir $$PWD --no-translations
-    }
 }
 
 

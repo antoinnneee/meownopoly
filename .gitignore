@@ -7,3 +7,4 @@ Meownopoly/.qtc_clangd/
 /asset_server/assets
 /asset_server/versions
 *.autosave
+/bin
