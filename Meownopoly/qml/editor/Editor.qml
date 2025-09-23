@@ -145,6 +145,7 @@ Rectangle {
         }
 
         onPositionChanged: function(mouse) {
+
         }
 
         onPressAndHold: function (mouse) {
@@ -168,7 +169,27 @@ Rectangle {
     Item {
         id: workArea
         anchors.fill: editorGrid
-        Item { id: groupeSelection}
+        Item { id: groupeSelection
+             property int gridXPosition:  0
+             property int gridYPosition:  0
+            // onXChanged:  function() {
+            //     console.log("groupeSelection position changed")
+                
+            //     var point = editorGrid.getGridPosition(groupeSelection.x, groupeSelection.y)
+            //     gridXPosition = point.x - Math.trunc(logic.tileLogic.currentElementWidth/2)
+
+            //     groupeSelection.x = gridXPosition * editorGrid.gridSize
+
+            // }
+            // onYChanged:  function() {
+            //     console.log("groupeSelection position changed")
+                
+            //     var point = editorGrid.getGridPosition(groupeSelection.x, groupeSelection.y)
+            //     gridYPosition = point.y - Math.trunc(logic.tileLogic.currentElementHeight/2)
+
+            //     groupeSelection.y = gridYPosition * editorGrid.gridSize
+            // }
+        }
 
         // MouseArea pour gérer la sélection par rectangle
         MouseArea {
@@ -206,7 +227,7 @@ Rectangle {
             id: cursorTracker
             anchors.fill: parent
             hoverEnabled: true
-            enabled: root.isAssetSelected && !isSelectionActive
+            enabled: logic.editorMouseMode === EditorEnum.EM_POSE
             acceptedButtons: Qt.NoButton // Don't interfere with clicks
             propagateComposedEvents: true
             preventStealing: true
@@ -224,6 +245,8 @@ Rectangle {
             assetCategory: root.selectedAssetCategory
             assetType: root.selectedAssetType
             assetId: root.selectedAssetId
+            caseType: selectionPanel.caseTypeSelected
+            isCasePreview: selectionPanel.caseTypeSelected !== -1
             unitSizeWidth: logic.tileLogic.currentElementWidth
             unitSizeHeight: logic.tileLogic.currentElementHeight
             gridManager: editorGrid
