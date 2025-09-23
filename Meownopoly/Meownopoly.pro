@@ -95,6 +95,14 @@ QML_IMPORT_PATH = $$PWD
 # Additional import path used to resolve QML modules just for Qt Quick Designer
 QML_DESIGNER_IMPORT_PATH = $$PWD/case/
 
+windows: {
+    CONFIG(release) {
+        DESTDIR = $$PWD/bin/windows_setup/release
+        QMAKE_POST_LINK =  windeployqt $$shell_path($$DESTDIR/$${TARGET}.exe) --qmldir $$PWD --no-translations
+    }
+}
+
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
