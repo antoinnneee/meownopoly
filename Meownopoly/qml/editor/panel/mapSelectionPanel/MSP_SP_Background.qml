@@ -14,7 +14,11 @@ Item {
     height: backgroundLayout.height
     anchors.top: titleSection.bottom
 
-    // property alias panelInfo : sidePanel
+    Rectangle {
+        anchors.fill: parent
+        color: "transparent"
+        border.color: "red"
+    }
 
     Column {
         id: backgroundLayout
@@ -96,6 +100,7 @@ Item {
                         } else if (mode === "repeat") {
                             // Code pour le mode Repeat
                         }
+                        backgroundScaling = mode;
                     }
                     
                     onImageRemoved: {

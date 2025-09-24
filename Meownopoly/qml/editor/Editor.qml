@@ -25,6 +25,7 @@ Rectangle {
         anchors.fill: parent
         visible : logic.backgroundInfo.backgroundPath === "" ? false : true
         source: logic.backgroundInfo.backgroundPath
+        onFillModeChanged: console.log("Background fill mode changed to:", fillMode)
         fillMode: {
             if (logic.backgroundInfo.backgroundScaling === "stretch") return Image.Stretch
             else if (logic.backgroundInfo.backgroundScaling === "fit") return Image.PreserveAspectFit

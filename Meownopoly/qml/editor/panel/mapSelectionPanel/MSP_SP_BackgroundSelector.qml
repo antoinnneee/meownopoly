@@ -6,7 +6,7 @@ import QtQuick.Layouts 1.15
 Item {
     id: root
     width: parent.width
-    height: imageContainer.height + (scalingSelector.visible ? scalingSelector.height + 8 : 0)
+    height: imageContainer.height + scalingSelector.height
     
     property string imagePath
     property string scalingMode: "stretch" // stretch, fit, repeat
@@ -102,6 +102,7 @@ Item {
                 hoverEnabled: true
                 onClicked: {
                     backgroundPath = "";
+                    backgroundScaling = "fit";
                     root.imageRemoved();
                 }
             }
@@ -217,8 +218,11 @@ Item {
         onAccepted: {
             // Utilisation de selectedFile de la nouvelle API
             backgroundPath = fileDialog.selectedFile;
-            root.imageSelected(backgroundPath);
+            // root.imageSelected(backgroundPath);
+            // root.scalingModeSelected(backgroundScaling)
             logic.backgroundInfo.backgroundPath = backgroundPath;
+            logic.backgroundInfo.backgroundScaling = backgroundScaling;
+
         }
     }
 }
