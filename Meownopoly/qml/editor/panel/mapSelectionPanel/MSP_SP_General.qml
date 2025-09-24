@@ -13,7 +13,8 @@ Item {
     height: generalLayout.height
     anchors.top: titleSection.bottom
 
-    // property alias panelInfo : sidePanel
+
+    signal newMap()
 
     Column {
         id: generalLayout
@@ -72,6 +73,52 @@ Item {
                             color: "white"
                             font.pixelSize: 14
                             font.bold: true
+                        }
+                        
+                        // Spacer
+                        Item {
+                            width: parent.parent.width - saveButton.width - 210
+                            height: 1
+                        }
+                        
+                        // Save button
+                        Button {
+                            id: saveButton
+                            width: 100
+                            height: 30
+                            flat: true
+                            
+                            background: Rectangle {
+                                anchors.fill: parent
+                                color: "#4CAF50"
+                                opacity: 0.8
+                                radius: 4
+                            }
+                            
+                            contentItem: Text {
+                                text: "Save Map"
+                                color: "white"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+                            
+                            onClicked: {
+                                console.log("Saving map:", contentArea.mapName, "v" + contentArea.mapVersion)
+                                if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
+                                    var mapInfo = logic.mapInfo
+                                    mapInfo.mapName = mapName
+                                    mapInfo.version = mapVersion
+                                    mapInfo.mapDescription = description
+                                    mapInfo.mapCreationDate = dateOfCreation
+                                    mapInfo.mapLastModified = dateOfLastModification
+                                    logic.saveMap()
+                                    newMap()
+                                } else {
+                                    console.error("La fonction saveMap n'est pas accessible. Vérifiez que la variable 'logic' est définie.")
+                                }
+                            }
                         }
                     }
                 }

@@ -18,16 +18,22 @@ Item {
     required property MapInfo mapInfo
     required property var workArea
 
+    property alias backgroundInfo : backgroundInfo
+
+
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
     onEditorMouseModeChanged: {
         console.log("mouse mode change : ", editorMouseMode)
     }
 
-    property bool isEditing : false
-
     property alias planLogic: planLogic
     property alias tileLogic: tileLogic
+
+    BackgroundInfo {
+        id: backgroundInfo
+        backgroundPath: mapInfo.backgroundPath
+    }
 
     PlanLogic {
         id: planLogic
@@ -121,17 +127,6 @@ Item {
     function updateSize(mm) {
         if (mm > 0)
             mmSize = mm
-    }
-
-    onIsEditingChanged:{
-        console.log("Édition:", isEditing)
-        if (!isEditing)
-            for (var i = 0; i < snapableTilesList.length; i++) {
-                if (snapableTilesList[i]) {
-                    snapableTilesList[i].enabled = true
-                    snapableTilesList[i].visible = true
-                }
-            }
     }
 
     function saveMap(){

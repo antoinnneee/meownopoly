@@ -21,7 +21,7 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: launcher
+        initialItem: titleScreen
     }
 
     Component {

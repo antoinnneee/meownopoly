@@ -218,6 +218,7 @@ Item {
             // Utilisation de selectedFile de la nouvelle API
             backgroundPath = fileDialog.selectedFile;
             root.imageSelected(backgroundPath);
+            logic.backgroundInfo.backgroundPath = backgroundPath;
         }
     }
 }

@@ -22,11 +22,41 @@ Item {
         spacing: 10 // réduit l'espacement
         padding: 5 // réduit le padding
         
-        Text {
-            text: "Background Settings"
-            color: "white"
-            font.pixelSize: 16
-            font.bold: true
+        // Header avec titre, format standard
+        Rectangle {
+            width: parent.width - parent.padding * 2
+            height: 40
+            color: "#383838"
+            radius: 6
+            
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                spacing: 10
+                
+                Rectangle {
+                    width: 30
+                    height: 30
+                    radius: 15
+                    color: "#E91E63"
+                    opacity: 0.2
+                    
+                    Text {
+                        anchors.centerIn: parent
+                        text: "🖼️"
+                        font.pixelSize: 16
+                    }
+                }
+                
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Background Settings"
+                    color: "white"
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+            }
         }
         
         // Controls container

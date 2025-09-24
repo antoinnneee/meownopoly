@@ -18,12 +18,26 @@ import EditorEnum
 Rectangle {
     id: root
 
-    color: logic.isEditing ? "#B3B3D0D8" : "lightblue"
+    color: "lightblue"
     border.width: 0
+
+    Image {
+        anchors.fill: parent
+        visible : logic.backgroundInfo.backgroundPath === "" ? false : true
+        source: logic.backgroundInfo.backgroundPath
+        fillMode: {
+            if (logic.backgroundInfo.backgroundScaling === "stretch") return Image.Stretch
+            else if (logic.backgroundInfo.backgroundScaling === "fit") return Image.PreserveAspectFit
+            else if (logic.backgroundInfo.backgroundScaling === "repeat") return Image.Tile
+            else return Image.Stretch
+        }
+        onSourceChanged: {
+            console.log("Background image changed to:", source)
+        }
+    }
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
-    property alias isEditing: logic.isEditing
 
     property alias isSelectionActive: logic.isSelectionActive
     property alias selectionStart: logic.selectionStart
@@ -172,55 +186,38 @@ Rectangle {
         Item { id: groupeSelection
              property int gridXPosition:  0
              property int gridYPosition:  0
-            // onXChanged:  function() {
-            //     console.log("groupeSelection position changed")
-                
-            //     var point = editorGrid.getGridPosition(groupeSelection.x, groupeSelection.y)
-            //     gridXPosition = point.x - Math.trunc(logic.tileLogic.currentElementWidth/2)
-
-            //     groupeSelection.x = gridXPosition * editorGrid.gridSize
-
-            // }
-            // onYChanged:  function() {
-            //     console.log("groupeSelection position changed")
-                
-            //     var point = editorGrid.getGridPosition(groupeSelection.x, groupeSelection.y)
-            //     gridYPosition = point.y - Math.trunc(logic.tileLogic.currentElementHeight/2)
-
-            //     groupeSelection.y = gridYPosition * editorGrid.gridSize
-            // }
         }
 
-        // MouseArea pour gérer la sélection par rectangle
-        MouseArea {
-            id: selectionMouseArea
-            anchors.fill: parent
-            enabled: isEditing && isSelectionActive
-            hoverEnabled: true
-            z: 99 // Juste en-dessous du rectangle de sélection
-            preventStealing: true // Empêche le vol d'événements par d'autres MouseArea
+        // // MouseArea pour gérer la sélection par rectangle
+        // MouseArea {
+        //     id: selectionMouseArea
+        //     anchors.fill: parent
+        //     enabled: isEditing && isSelectionActive
+        //     hoverEnabled: true
+        //     z: 99 // Juste en-dessous du rectangle de sélection
+        //     preventStealing: true // Empêche le vol d'événements par d'autres MouseArea
 
-            onPressed:function(mouse) {
-                logic.startSelection(mouse)
+        //     onPressed:function(mouse) {
+        //         logic.startSelection(mouse)
 
-            }
+        //     }
 
-            onPositionChanged:function(mouse) {
-                logic.updateSelection(mouse.x, mouse.y)
-                mouse.accepted = true
-            }
+        //     onPositionChanged:function(mouse) {
+        //         logic.updateSelection(mouse.x, mouse.y)
+        //         mouse.accepted = true
+        //     }
 
-            onReleased: function(mouse){
-                console.log("Finalisation de la sélection")
-                logic.finishSelection()
-                mouse.accepted = true
-            }
+        //     onReleased: function(mouse){
+        //         console.log("Finalisation de la sélection")
+        //         logic.finishSelection()
+        //         mouse.accepted = true
+        //     }
 
-            onCanceled: {
-                console.log("Annulation de la sélection")
-                logic.cancelSelection()
-            }
-        }
+        //     onCanceled: {
+        //         console.log("Annulation de la sélection")
+        //         logic.cancelSelection()
+        //     }
+        // }
         
         // MouseArea to track cursor position for asset preview
         MouseArea {

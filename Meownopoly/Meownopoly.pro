@@ -14,6 +14,12 @@ android:{
 
 }
 
+
+# windows: {
+# DESTDIR = $$PWD/bin/windows/release
+# QMAKE_POST_LINK =  windeployqt $$shell_path($$DESTDIR/$${TARGET}.exe) --qmldir $$PWD/qml --no-translations
+# }
+
 CONFIG += c++20
 
 # You can make your code fail to compile if it uses deprecated APIs.
