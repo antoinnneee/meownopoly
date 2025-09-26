@@ -111,6 +111,9 @@ public:
     Q_INVOKABLE bool generateAllMetadata();
     Q_INVOKABLE QStringList scanAvailableAssets();
 
+
+    Q_INVOKABLE QStringList getAvailableBackgrounds() const;
+
 public slots:
 
 signals:

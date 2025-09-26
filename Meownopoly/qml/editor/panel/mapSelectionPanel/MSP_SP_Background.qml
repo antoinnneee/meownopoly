@@ -6,6 +6,7 @@ import "../editorBottomPanel"
 import "."
 
 import MapInfo
+import AssetManager 1.0
 
 Item {
     id: backgroundView
@@ -164,7 +165,7 @@ Item {
                         height: 300
                         spacing: 10
                         clip: true
-                        model: 3
+                        model: AssetManager.getAvailableBackgrounds()
                         
                         delegate: Rectangle {
                             width: defaultThemesList.width
@@ -177,9 +178,7 @@ Item {
                                 id: bgImage
                                 anchors.fill: parent
                                 anchors.margins: 2
-                                source: index === 0 ? "qrc:/assets/background/BK_water.png" :
-                                       index === 1 ? "qrc:/assets/background/BK_grass.png" :
-                                       "qrc:/assets/background/BK_desert.png"
+                                source: modelData
                                 fillMode: Image.PreserveAspectCrop
                             }
                             
@@ -193,7 +192,12 @@ Item {
                                 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: index === 0 ? "Eau" : (index === 1 ? "Herbe" : "Désert")
+                                    // Extraire le nom du fichier à partir du chemin complet et enlever l'extension
+                                    text: {
+                                        var path = modelData;
+                                        var fileName = path.substring(path.lastIndexOf("/") + 1);
+                                        return fileName.replace(/\.[^/.]+$/, ""); // Enlever l'extension
+                                    }
                                     color: "white"
                                     font.pixelSize: 14
                                 }
@@ -202,7 +206,6 @@ Item {
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    logic.mapInfo.backgroundIndex = index
                                     logic.mapInfo.backgroundPath = bgImage.source
                                     logic.mapInfo.backgroundScaling = "Fit" // Valeur par défaut
                                 }

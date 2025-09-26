@@ -165,7 +165,7 @@ AssetModel* AssetManager::getAssetModel(const QString &category, const QString &
     QString key = category + "_" + type;
     ASSET_DEBUG("Looking for key:" << key);
 
-    // Vérifier si le modèle filtré existe déj�
+    // Vérifier si le modèle filtré existe déj�
     for (int i = m_models.size() - 1; i >= 0; --i) { // Parcourir à l'envers pour éviter les problèmes d'index
         if (m_models[i].first == key) {
             AssetModel* existingModel = m_models[i].second;
@@ -540,6 +540,34 @@ QStringList AssetManager::scanAvailableAssets()
     }
 
     return result;
+}
+
+QStringList AssetManager::getAvailableBackgrounds() const
+{
+    QStringList backgrounds;
+    QString backgroundPath = m_assetsBasePath + "/background";
+    QDir directory(backgroundPath);
+    
+    // Vérifier que le dossier existe
+    if (!directory.exists()) {
+        ASSET_ERROR("Background directory does not exist: " + backgroundPath);
+        return backgrounds;
+    }
+    
+    // Configurer les filtres pour les fichiers d'image
+    QStringList filters;
+    filters << "*.png" << "*.jpg" << "*.jpeg" << "*.webp";
+    directory.setNameFilters(filters);
+    directory.setFilter(QDir::Files | QDir::NoDotAndDotDot);
+    
+    // Récupérer la liste des fichiers avec leurs chemins absolus
+    QFileInfoList fileList = directory.entryInfoList();
+    for (const QFileInfo &fileInfo : fileList) {
+        // Ajouter le chemin absolu avec le préfixe file:///
+        backgrounds.append("file:///" + fileInfo.absoluteFilePath());
+    }
+    
+    return backgrounds;
 }
 
 QStringList AssetManager::getAvailableTypes(const QString &category) const

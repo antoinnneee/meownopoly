@@ -15,6 +15,7 @@ import MapLoader
 import MapInfo
 import EditorEnum
 import QtQuick.Dialogs
+import AssetManager 1.0
 
 Rectangle {
     id: menuMapAtStart
@@ -145,12 +146,12 @@ Rectangle {
                     spacing: 10
 
                     Button {
-                        text: "stretch"
+                        text: "Stretch"
                         width: (parent.width - 20) / 3
                         height: parent.height
                         
                         background: Rectangle {
-                            color: menuMapAtStart.selectedDisplayMode === "stretch" ? "#4A90E2" : "#333333"
+                            color: menuMapAtStart.selectedDisplayMode === "Stretch" ? "#4A90E2" : "#333333"
                             radius: 6
                         }
                         
@@ -162,17 +163,17 @@ Rectangle {
                         }
 
                         onClicked: {
-                            menuMapAtStart.selectedDisplayMode = "stretch"
+                            menuMapAtStart.selectedDisplayMode = "Stretch"
                         }
                     }
 
                     Button {
-                        text: "fill"
+                        text: "Fill"
                         width: (parent.width - 20) / 3
                         height: parent.height
                         
                         background: Rectangle {
-                            color: menuMapAtStart.selectedDisplayMode === "fill" ? "#4A90E2" : "#333333"
+                            color: menuMapAtStart.selectedDisplayMode === "Fill" ? "#4A90E2" : "#333333"
                             radius: 6
                         }
                         
@@ -184,17 +185,17 @@ Rectangle {
                         }
 
                         onClicked: {
-                            menuMapAtStart.selectedDisplayMode = "fill"
+                            menuMapAtStart.selectedDisplayMode = "Fill"
                         }
                     }
 
                     Button {
-                        text: "tile"
+                        text: "Tile"
                         width: (parent.width - 20) / 3
                         height: parent.height
                         
                         background: Rectangle {
-                            color: menuMapAtStart.selectedDisplayMode === "tile" ? "#4A90E2" : "#333333"
+                            color: menuMapAtStart.selectedDisplayMode === "Tile" ? "#4A90E2" : "#333333"
                             radius: 6
                         }
                         
@@ -206,7 +207,7 @@ Rectangle {
                         }
 
                         onClicked: {
-                            menuMapAtStart.selectedDisplayMode = "tile"
+                            menuMapAtStart.selectedDisplayMode = "Tile"
                         }
                     }
                 }
@@ -226,7 +227,7 @@ Rectangle {
                     spacing: 10
                     clip: true
 
-                    model: 3
+                    model: AssetManager.getAvailableBackgrounds()
 
                     delegate: Rectangle {
                         width: listBackGround.width
@@ -239,9 +240,7 @@ Rectangle {
                             id: bgImage
                             anchors.fill: parent
                             anchors.margins: 2
-                            source: index === 0 ? "C:/QtProject/meownopoly/Meownopoly/build/asset_extracted/background/BK_water.png" :
-                                   index === 1 ? "C:/QtProject/meownopoly/Meownopoly/build/asset_extracted/background/BK_grass.png" :
-                                   "C:/QtProject/meownopoly/Meownopoly/build/asset_extracted/background/BK_desert.png"
+                            source: modelData
                             fillMode: Image.PreserveAspectCrop
                         }
                         
@@ -253,18 +252,46 @@ Rectangle {
                             height: 26
                             color: "#80000000" 
                             
-                            Text {
-                                anchors.centerIn: parent
-                                text: index === 0 ? "Eau" : (index === 1 ? "Herbe" : "Désert")
-                                color: "white"
-                                font.pixelSize: 14
-                            }
+                                Text {
+                                    anchors.centerIn: parent
+                                    // Extraire le nom du fichier à partir du chemin complet et enlever l'extension
+                                    text: {
+                                        var path = modelData;
+                                        var fileName = path.substring(path.lastIndexOf("/") + 1);
+                                        return fileName.replace(/\.[^/.]+$/, ""); // Enlever l'extension
+                                    }
+                                    color: "white"
+                                    font.pixelSize: 14
+                                }
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
                                 menuMapAtStart.selectedBackground = index
+                                
+                                // Mettre à jour les propriétés de mapInfo si logic est disponible
+                                if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
+                                    // Définir le chemin de l'image de fond
+                                    logic.mapInfo.backgroundPath = bgImage.source
+                                    
+                                    // Définir le mode de mise à l'échelle en fonction du mode sélectionné
+                                    var scaling;
+                                    switch(menuMapAtStart.selectedDisplayMode) {
+                                        case "Stretch":
+                                            scaling = "Stretch";
+                                            break;
+                                        case "Fill":
+                                            scaling = "Fit";
+                                            break;
+                                        case "Tile":
+                                            scaling = "Tile";
+                                            break;
+                                        default:
+                                            scaling = "Fit"; // Valeur par défaut
+                                    }
+                                    logic.mapInfo.backgroundScaling = scaling;
+                                }
                             }
                         }
                     }
