@@ -189,37 +189,6 @@ Rectangle {
              property int gridYPosition:  0
         }
 
-        // // MouseArea pour gérer la sélection par rectangle
-        // MouseArea {
-        //     id: selectionMouseArea
-        //     anchors.fill: parent
-        //     enabled: isEditing && isSelectionActive
-        //     hoverEnabled: true
-        //     z: 99 // Juste en-dessous du rectangle de sélection
-        //     preventStealing: true // Empêche le vol d'événements par d'autres MouseArea
-
-        //     onPressed:function(mouse) {
-        //         logic.startSelection(mouse)
-
-        //     }
-
-        //     onPositionChanged:function(mouse) {
-        //         logic.updateSelection(mouse.x, mouse.y)
-        //         mouse.accepted = true
-        //     }
-
-        //     onReleased: function(mouse){
-        //         console.log("Finalisation de la sélection")
-        //         logic.finishSelection()
-        //         mouse.accepted = true
-        //     }
-
-        //     onCanceled: {
-        //         console.log("Annulation de la sélection")
-        //         logic.cancelSelection()
-        //     }
-        // }
-        
         // MouseArea to track cursor position for asset preview
         MouseArea {
             id: cursorTracker
@@ -230,7 +199,7 @@ Rectangle {
             propagateComposedEvents: true
             preventStealing: true
             z: 50
-            
+
             onPositionChanged: function(mouse) {
                 assetPreview.mouseX = mouse.x
                 assetPreview.mouseY = mouse.y
@@ -256,10 +225,10 @@ Rectangle {
     SelectionRect {
         id: selectionRect
     }
-    
+
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
-    
+
     // Keyboard shortcuts
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
@@ -270,13 +239,64 @@ Rectangle {
         }
     }
 
+    SelectionPanel{
+        id: selectionPanel
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        // Connexion à la logique
+        logic: logic
+
+        // Définir la valeur d'expansion par défaut
+        isExpanded: true
+
+        //Connect the selected decoration element for effects
+
+        onAssetSelected: function(category, type, id) {
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+        }
+        onAssetCleared: function() {
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+        }
+        onEffectChanged: {
+            var effects = selectionPanel.assetPanel.visualEffectsPanel.getCurrentEffects()
+            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
+            }
+        }
+        onCaseTypeSelectedChanged: {
+            if (selectionPanel.caseTypeSelected !== -1)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+            else
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+        }
+    }
+
+    MenuMapAtStart {
+        id: menuMapAtStart
+
+        onBackgroundSelected: function(bgIndex, displayMode) {
+            // Show info panel after background selection
+            infoPanel.visible = true
+
+            // Handle the background selection
+            console.log("Selected background: " + bgIndex + " with mode: " + displayMode)
+
+            // Uncomment to actually set the background
+            // logic.backgroundInfo.backgroundPath = "qrc:/assets/tile/water/water_" + (bgIndex + 1) + ".jpg"
+            // logic.backgroundInfo.backgroundScaling = displayMode
+        }
+    }
+
 
     // Menu contextuel pour la création d'éléments
     Menu {
         id: contextMenu
 
         property var clickGridCoord: Qt.point(0, 0)
-        
+
         MenuItem {
             text: "Créer une Case"
             onTriggered: {
@@ -293,10 +313,10 @@ Rectangle {
         }
     }
 
-
     // Panneau d'information sur l'élément sélectionné
     InfoPanel {
         id: infoPanel
+        visible: false  // Hidden by default
 
         anchors {
             top: parent.top
@@ -380,41 +400,4 @@ Rectangle {
             applyVisualEffectsToNewTile(newTile)
         }
     }
-
-
-    SelectionPanel{
-        id: selectionPanel
-
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        
-        // Connexion à la logique
-        logic: logic
-        
-        // Définir la valeur d'expansion par défaut
-        isExpanded: true
-
-        //Connect the selected decoration element for effects
-
-        onAssetSelected: function(category, type, id) {
-            logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
-        }
-        onAssetCleared: function() {
-            logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
-        }
-        onEffectChanged: {
-            var effects = selectionPanel.assetPanel.visualEffectsPanel.getCurrentEffects()
-            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
-                logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
-            }
-        }
-        onCaseTypeSelectedChanged: {
-            if (selectionPanel.caseTypeSelected !== -1)
-                logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
-            else
-                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
-        }
-    }
-
 }
