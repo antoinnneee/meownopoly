@@ -333,6 +333,7 @@ Rectangle {
                     
                     onCheckedChanged: {
                         menuMapAtStart.snapToGrid = checked
+                        logic.mapInfo.isBackgroundOnGrill = checked
                     }
                 }
             }

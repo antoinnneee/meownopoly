@@ -93,6 +93,20 @@ void MapInfo::setBackgroundScaling(const QString &newBackgroundScaling)
     emit backgroundScalingChanged();
 }
 
+bool MapInfo::getIsBackgroundOnGrill() const
+{
+    return isBackgroundOnGrill;
+}
+
+void MapInfo::setIsBackgroundOnGrill(bool newIsBackgroundOnGrill)
+{
+    if (isBackgroundOnGrill == newIsBackgroundOnGrill)
+        return;
+    isBackgroundOnGrill = newIsBackgroundOnGrill;
+    emit isBackgroundOnGrillChanged();
+}
+
+
 void MapInfo::setMapLastModified(const QString &mapLastModified)
 {
     m_mapLastModified = mapLastModified;

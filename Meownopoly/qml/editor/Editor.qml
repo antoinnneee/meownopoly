@@ -22,7 +22,7 @@ Rectangle {
     border.width: 0
 
     Image {
-        anchors.fill: parent
+        anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
 
         visible : mapInfo.backgroundPath === "" ? false : true
         source: mapInfo.backgroundPath
@@ -64,6 +64,7 @@ Rectangle {
         mapLastModified: "no_last_modified"
         backgroundPath: ""
         backgroundScaling: "Stretch"
+        isBackgroundOnGrill: false
         version: 0
     }
 

@@ -16,7 +16,7 @@ class MapInfo : public QObject
     Q_PROPERTY(QString musicPath READ getMusicPath WRITE setMusicPath NOTIFY musicPathChanged FINAL)
     Q_PROPERTY(QString backgroundPath READ getBackgroundPath WRITE setBackgroundPath NOTIFY backgroundPathChanged FINAL)
     Q_PROPERTY(QString backgroundScaling READ getBackgroundScaling WRITE setBackgroundScaling NOTIFY backgroundScalingChanged FINAL)
-
+    Q_PROPERTY(bool isBackgroundOnGrill READ getIsBackgroundOnGrill WRITE setIsBackgroundOnGrill NOTIFY isBackgroundOnGrillChanged FINAL)
 
 public:
     MapInfo();
@@ -49,6 +49,9 @@ public:
     QString getBackgroundScaling() const;
     void setBackgroundScaling(const QString &newBackgroundScaling);
 
+    bool getIsBackgroundOnGrill() const;
+    void setIsBackgroundOnGrill(bool newIsBackgroundOnGrill);
+
 signals:
     void mapNameChanged(const QString &mapName);
     void mapDescriptionChanged(const QString &mapDescription);
@@ -63,6 +66,8 @@ signals:
 
     void backgroundScalingChanged();
 
+    void isBackgroundOnGrillChanged();
+
 private:
     QString m_mapName = "no_name";
     QString m_mapDescription = "no_description";
@@ -74,6 +79,7 @@ private:
 
     QString backgroundPath = "";
     QString backgroundScaling = "Stretch";
+    bool isBackgroundOnGrill = false;
 };
 
 #endif // MAPINFO_H
