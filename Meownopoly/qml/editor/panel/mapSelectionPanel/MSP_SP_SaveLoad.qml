@@ -4,7 +4,6 @@ import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 
-import MapInfo
 import MapLoader
 
 Item {
@@ -123,6 +122,7 @@ Item {
                 onClicked: {
                     console.log("Selected map: " + modelData)
                     if (typeof logic !== 'undefined') {
+                        logic.removeCurrentMap()
                         MapLoader.loadMap(modelData)
                     } else {
                         console.error("La fonction loadMap n'est pas accessible")

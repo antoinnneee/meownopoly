@@ -129,6 +129,16 @@ Item {
             mmSize = mm
     }
 
+    function removeCurrentMap(){
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var element = snapableTilesList[i]
+            logic.tileLogic.deleteElementsConnections(element)
+            element.connectionManager.deleteLinkedConnection()
+            logic.tileLogic.deleteElement(element)
+        }
+        snapableTilesList = []
+    }
+
     function saveMap(){
         var caseList = [];
         var decoList = [];
