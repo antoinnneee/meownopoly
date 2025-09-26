@@ -23,15 +23,21 @@ Rectangle {
 
     Image {
         anchors.fill: parent
-        visible : logic.backgroundInfo.backgroundPath === "" ? false : true
-        source: logic.backgroundInfo.backgroundPath
-        onFillModeChanged: console.log("Background fill mode changed to:", fillMode)
+
+        visible : mapInfo.backgroundPath === "" ? false : true
+        source: mapInfo.backgroundPath
+
+        sourceSize.width: 200
+        sourceSize.height: 200
+
         fillMode: {
-            if (logic.backgroundInfo.backgroundScaling === "stretch") return Image.Stretch
-            else if (logic.backgroundInfo.backgroundScaling === "fit") return Image.PreserveAspectFit
-            else if (logic.backgroundInfo.backgroundScaling === "repeat") return Image.Tile
+            if (mapInfo.backgroundScaling === "Stretch") return Image.Stretch
+            else if (mapInfo.backgroundScaling === "Fit") return Image.PreserveAspectFit
+            else if (mapInfo.backgroundScaling === "Tile") return Image.Tile
             else return Image.Stretch
         }
+        onFillModeChanged: console.log("Background fill mode changed to:", fillMode)
+
         onSourceChanged: {
             console.log("Background image changed to:", source)
         }
@@ -56,8 +62,8 @@ Rectangle {
         mapDescription: "no_description"
         mapCreationDate: "no_creation"
         mapLastModified: "no_last_modified"
-        backgroundPath: "no_path"
-        backgroundScaling: "no_mode"
+        backgroundPath: ""
+        backgroundScaling: "Stretch"
         version: 0
     }
 
@@ -285,8 +291,8 @@ Rectangle {
             console.log("Selected background: " + bgIndex + " with mode: " + displayMode)
 
             // Uncomment to actually set the background
-            // logic.backgroundInfo.backgroundPath = "qrc:/assets/tile/water/water_" + (bgIndex + 1) + ".jpg"
-            // logic.backgroundInfo.backgroundScaling = displayMode
+            // mapInfo.backgroundPath = "qrc:/assets/tile/water/water_" + (bgIndex + 1) + ".jpg"
+            // mapInfo.backgroundScaling = displayMode
         }
     }
 

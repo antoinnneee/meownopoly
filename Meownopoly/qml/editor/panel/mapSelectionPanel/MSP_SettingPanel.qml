@@ -12,8 +12,6 @@ Rectangle {
 
     property string mapName
     property int mapVersion
-    property string backgroundPath: ""
-    property string backgroundScaling: "Stretch"
     property string dateOfCreation
     property string dateOfLastModification
     property string description

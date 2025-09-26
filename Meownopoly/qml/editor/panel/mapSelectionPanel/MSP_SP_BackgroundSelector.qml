@@ -8,13 +8,8 @@ Item {
     width: parent.width
     height: imageContainer.height + scalingSelector.height
     
-    property string imagePath
-    property string scalingMode: "stretch" // stretch, fit, repeat
-    
-    signal imageSelected(string path)
-    signal scalingModeSelected(string mode)
-    signal imageRemoved()
-    
+    property var mapInfo : logic.mapInfo
+
     // Image selection square
     Rectangle {
         id: imageContainer
@@ -30,7 +25,7 @@ Item {
         Column {
             anchors.centerIn: parent
             spacing: 10
-            visible: backgroundPath === ""
+            visible: mapInfo.backgroundPath === ""
             
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -62,13 +57,13 @@ Item {
             id: selectedImage
             anchors.fill: parent
             anchors.margins: 4
-            visible: backgroundPath !== ""
-            source: backgroundPath
+            visible: mapInfo.backgroundPath !== ""
+            source: mapInfo.backgroundPath
             fillMode: {
-                switch(root.scalingMode) {
+                switch(mapInfo.backgroundScaling) {
                     case "stretch": return Image.Stretch;
                     case "fit": return Image.PreserveAspectFit;
-                    case "repeat": return Image.Tile;
+                    case "Tile": return Image.Tile;
                     default: return Image.Stretch;
                 }
             }
@@ -84,7 +79,7 @@ Item {
             height: 24
             radius: 12
             color: "#CC2222"
-            visible: backgroundPath !== ""
+            visible: mapInfo.backgroundPath !== ""
             opacity: removeMouseArea.containsMouse ? 1.0 : 0.8
             z: 10  // Assure que le bouton est au-dessus de l'image
             
@@ -101,7 +96,7 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    backgroundPath = "";
+                    mapInfo.backgroundPath = "";
                     backgroundScaling = "fit";
                     root.imageRemoved();
                 }
@@ -117,7 +112,7 @@ Item {
             // Évite de déclencher le click sur le bouton de suppression
             propagateComposedEvents: false
             // Désactive les clics dans la zone du bouton de suppression
-            enabled: backgroundPath === "" || !removeButton.contains(Qt.point(mouseX, mouseY))
+            enabled: mapInfo.backgroundPath === "" || !removeButton.contains(Qt.point(mouseX, mouseY))
         }
     }
     
@@ -130,7 +125,7 @@ Item {
         anchors.horizontalCenter: imageContainer.horizontalCenter
         anchors.topMargin: 8
         color: "transparent"
-        visible: backgroundPath !== ""
+        visible: mapInfo.backgroundPath !== ""
         
         Row {
             anchors.fill: parent
@@ -140,22 +135,21 @@ Item {
             Rectangle {
                 width: parent.width / 3
                 height: parent.height
-                color: root.scalingMode === "stretch" ? "#E91E63" : "transparent"
+                color: mapInfo.backgroundScaling === "Stretch" ? "#E91E63" : "transparent"
                 border.color: "#444444"
                 border.width: 1
                 
                 Text {
                     anchors.centerIn: parent
                     text: "Stretch"
-                    color: root.scalingMode === "stretch" ? "white" : "#AAAAAA"
+                    color: mapInfo.backgroundScaling === "Stretch" ? "white" : "#AAAAAA"
                     font.pixelSize: 12
                 }
                 
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        root.scalingMode = "stretch";
-                        scalingModeSelected(root.scalingMode);
+                        mapInfo.backgroundScaling = "Stretch";
                     }
                 }
             }
@@ -164,46 +158,44 @@ Item {
             Rectangle {
                 width: parent.width / 3
                 height: parent.height
-                color: root.scalingMode === "fit" ? "#E91E63" : "transparent"
+                color: mapInfo.backgroundScaling === "Fit" ? "#E91E63" : "transparent"
                 border.color: "#444444"
                 border.width: 1
                 
                 Text {
                     anchors.centerIn: parent
                     text: "Fit"
-                    color: root.scalingMode === "fit" ? "white" : "#AAAAAA"
+                    color: mapInfo.backgroundScaling === "Fit" ? "white" : "#AAAAAA"
                     font.pixelSize: 12
                 }
                 
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        root.scalingMode = "fit";
-                        root.scalingModeSelected(root.scalingMode);
+                        mapInfo.backgroundScaling = "Fit";
                     }
                 }
             }
             
-            // Repeat button
+            // Tile button
             Rectangle {
                 width: parent.width / 3
                 height: parent.height
-                color: root.scalingMode === "repeat" ? "#E91E63" : "transparent"
+                color: mapInfo.backgroundScaling === "Tile" ? "#E91E63" : "transparent"
                 border.color: "#444444"
                 border.width: 1
                 
                 Text {
                     anchors.centerIn: parent
-                    text: "Repeat"
-                    color: root.scalingMode === "repeat" ? "white" : "#AAAAAA"
+                    text: "Tile"
+                    color: mapInfo.backgroundScaling === "Tile" ? "white" : "#AAAAAA"
                     font.pixelSize: 12
                 }
                 
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        root.scalingMode = "repeat";
-                        root.scalingModeSelected(root.scalingMode);
+                        mapInfo.backgroundScaling = "Tile";
                     }
                 }
             }
@@ -217,12 +209,7 @@ Item {
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.bmp)"]
         onAccepted: {
             // Utilisation de selectedFile de la nouvelle API
-            backgroundPath = fileDialog.selectedFile;
-            // root.imageSelected(backgroundPath);
-            // root.scalingModeSelected(backgroundScaling)
-            logic.backgroundInfo.backgroundPath = backgroundPath;
-            logic.backgroundInfo.backgroundScaling = backgroundScaling;
-
+            mapInfo.backgroundPath = fileDialog.selectedFile;
         }
     }
 }

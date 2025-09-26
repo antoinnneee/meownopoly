@@ -18,8 +18,6 @@ Item {
     required property MapInfo mapInfo
     required property var workArea
 
-    property alias backgroundInfo : backgroundInfo
-
 
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
@@ -29,11 +27,6 @@ Item {
 
     property alias planLogic: planLogic
     property alias tileLogic: tileLogic
-
-    BackgroundInfo {
-        id: backgroundInfo
-        backgroundPath: mapInfo.backgroundPath
-    }
 
     PlanLogic {
         id: planLogic

@@ -83,30 +83,6 @@ Item {
                 // Background selector
                 MSP_SP_BackgroundSelector {
                     width: parent.width
-                    imagePath: backgroundPath
-                    
-                    onImageSelected: function(path) {
-                        backgroundPath = path;
-                        console.log("Background image selected:", path);
-                    }
-                    
-                    onScalingModeSelected: function(mode) {
-                        console.log("Scaling mode changed:", mode);
-                        // Mettre à jour le mode de mise à l'échelle
-                        if (mode === "stretch") {
-                            // Code pour le mode Stretch
-                        } else if (mode === "fit") {
-                            // Code pour le mode Fit
-                        } else if (mode === "repeat") {
-                            // Code pour le mode Repeat
-                        }
-                        backgroundScaling = mode;
-                    }
-                    
-                    onImageRemoved: {
-                        contentArea.backgroundPath = "";
-                        console.log("Background image removed");
-                    }
                 }
             }
         }
