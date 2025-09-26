@@ -129,15 +129,37 @@ Item {
             mmSize = mm
     }
 
+    // function removeCurrentMap(){
+    //     for (var i = 0; i < snapableTilesList.length; i++) {
+    //         var element = snapableTilesList[i]
+    //         // logic.tileLogic.deleteElementsConnections(element)
+    //         element.elementDeleted(element)
+    //         // element.connectionManager.deleteLinkedConnection()
+    //         // logic.tileLogic.deleteElement(element)
+    //     }
+    // }
+
     function removeCurrentMap(){
+        // Make a copy of the list since it will be modified during deletion
+        var elementsToRemove = []
         for (var i = 0; i < snapableTilesList.length; i++) {
-            var element = snapableTilesList[i]
-            logic.tileLogic.deleteElementsConnections(element)
-            element.connectionManager.deleteLinkedConnection()
-            logic.tileLogic.deleteElement(element)
+            elementsToRemove.push(snapableTilesList[i])
         }
-        snapableTilesList = []
+
+        // Process each element in the copied list
+        for (var i = 0; i < elementsToRemove.length; i++) {
+            // Find the SnapableElementControl for this element and emit deleteRequested
+            if (elementsToRemove[i]) {
+                // The deleteAnimation will automatically call elementDeleted when finished
+                elementsToRemove[i].children.forEach(function(child) {
+                    if (child.toString().indexOf("SnapableElementControl") !== -1) {
+                        child.deleteRequested()
+                    }
+                })
+            }
+        }
     }
+
 
     function saveMap(){
         var caseList = [];

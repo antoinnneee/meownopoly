@@ -158,8 +158,7 @@ Rectangle {
         zLayer: displaySettings.zLayer
         onLayerChanged: function(newLayer) {displaySettings.zLayer = newLayer}
                 
-        onDeleteRequested: {
-//            elementDeleted(snapableElement)
+        onDeleteRequested:{
             deleteAnimation.start()
         }
         

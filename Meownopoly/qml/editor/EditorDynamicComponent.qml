@@ -21,8 +21,12 @@ Item{
 
             // Gestion de la suppression
             onElementDeleted: function(element) {
+                console.log("Suppression de l'élément:", element)
                 logic.tileLogic.deleteElementsConnections(element)
+                element.connectionManager.deleteLinkedConnection()
                 logic.tileLogic.deleteElement(element)
+                console.log("Etat de l'élément:", element)
+
             }
             
             // Gestion de la configuration

@@ -13,7 +13,7 @@ Item {
     
     // Signaux
     signal layerChanged(int newLayer)
-    signal deleteRequested()
+    signal deleteRequested
     signal configurationRequested()
     signal connectionsConfigurationRequested()
 
@@ -183,7 +183,7 @@ Item {
                 hoverEnabled: true
                 onClicked: {
                     console.log("Suppression de l'élément demandée")
-                    deleteRequested()
+                    deleteRequested(true)
                 }
                 
                 onEntered: deleteButton.state = "hovered"
