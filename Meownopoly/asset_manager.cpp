@@ -583,7 +583,6 @@ bool AssetManager::isTransparent(float px, float py, QString path)
     QColor color = image.pixelColor(image.width()/px, image.height()/py);
     if (!color.isValid())
         return true;
-    qDebug() << color;
     return (color.alpha() == 0);
 }
 
