@@ -31,7 +31,7 @@ Rectangle {
     signal backgroundSelected(int bgIndex, string displayMode, bool snapToGrid)
 
     property int selectedBackground: -1
-    property string selectedDisplayMode: "fill"
+    property string selectedDisplayMode: "Fit"
     property string selectedMap: ""
     property bool snapToGrid: true
 
@@ -45,7 +45,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 50
             color: "transparent"
-            
+
             Text {
                 anchors.centerIn: parent
                 text: "Configuration de la carte"
@@ -74,7 +74,7 @@ Rectangle {
                     border.width: 1
                     border.color: chooseBackgroundBtn.checked ? "#FFFFFF" : "#555555"
                 }
-                
+
                 contentItem: Text {
                     text: chooseBackgroundBtn.text
                     color: "white"
@@ -103,7 +103,7 @@ Rectangle {
                     border.width: 1
                     border.color: loadMapBtn.checked ? "#FFFFFF" : "#555555"
                 }
-                
+
                 contentItem: Text {
                     text: loadMapBtn.text
                     color: "white"
@@ -138,7 +138,7 @@ Rectangle {
                     color: "#FFFFFF"
                     font.pixelSize: 14
                 }
-                
+
                 // Display mode buttons
                 Row {
                     Layout.fillWidth: true
@@ -149,12 +149,12 @@ Rectangle {
                         text: "Stretch"
                         width: (parent.width - 20) / 3
                         height: parent.height
-                        
+
                         background: Rectangle {
                             color: menuMapAtStart.selectedDisplayMode === "Stretch" ? "#4A90E2" : "#333333"
                             radius: 6
                         }
-                        
+
                         contentItem: Text {
                             text: parent.text
                             color: "white"
@@ -168,15 +168,15 @@ Rectangle {
                     }
 
                     Button {
-                        text: "Fill"
+                        text: "Fit"
                         width: (parent.width - 20) / 3
                         height: parent.height
-                        
+
                         background: Rectangle {
-                            color: menuMapAtStart.selectedDisplayMode === "Fill" ? "#4A90E2" : "#333333"
+                            color: menuMapAtStart.selectedDisplayMode === "Fit" ? "#4A90E2" : "#333333"
                             radius: 6
                         }
-                        
+
                         contentItem: Text {
                             text: parent.text
                             color: "white"
@@ -185,7 +185,7 @@ Rectangle {
                         }
 
                         onClicked: {
-                            menuMapAtStart.selectedDisplayMode = "Fill"
+                            menuMapAtStart.selectedDisplayMode = "Fit"
                         }
                     }
 
@@ -193,12 +193,12 @@ Rectangle {
                         text: "Tile"
                         width: (parent.width - 20) / 3
                         height: parent.height
-                        
+
                         background: Rectangle {
                             color: menuMapAtStart.selectedDisplayMode === "Tile" ? "#4A90E2" : "#333333"
                             radius: 6
                         }
-                        
+
                         contentItem: Text {
                             text: parent.text
                             color: "white"
@@ -211,7 +211,7 @@ Rectangle {
                         }
                     }
                 }
-                
+
                 // Background selection label
                 Text {
                     text: "Sélectionner un arrière-plan:"
@@ -243,15 +243,15 @@ Rectangle {
                             source: modelData
                             fillMode: Image.PreserveAspectCrop
                         }
-                        
+
                         // Caption overlay
                         Rectangle {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.bottom: parent.bottom
                             height: 26
-                            color: "#80000000" 
-                            
+                            color: "#80000000"
+
                                 Text {
                                     anchors.centerIn: parent
                                     // Extraire le nom du fichier à partir du chemin complet et enlever l'extension
@@ -269,19 +269,19 @@ Rectangle {
                             anchors.fill: parent
                             onClicked: {
                                 menuMapAtStart.selectedBackground = index
-                                
+
                                 // Mettre à jour les propriétés de mapInfo si logic est disponible
                                 if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
                                     // Définir le chemin de l'image de fond
                                     logic.mapInfo.backgroundPath = bgImage.source
-                                    
+
                                     // Définir le mode de mise à l'échelle en fonction du mode sélectionné
                                     var scaling;
                                     switch(menuMapAtStart.selectedDisplayMode) {
                                         case "Stretch":
                                             scaling = "Stretch";
                                             break;
-                                        case "Fill":
+                                        case "Fit":
                                             scaling = "Fit";
                                             break;
                                         case "Tile":
@@ -296,14 +296,14 @@ Rectangle {
                         }
                     }
                 }
-                
+
                 // Snap to grid checkbox
                 CheckBox {
                     id: snapToGridCheckBox
                     text: "Fixé à la grille ?"
                     Layout.fillWidth: true
                     checked: menuMapAtStart.snapToGrid
-                    
+
                     indicator: Rectangle {
                         implicitWidth: 20
                         implicitHeight: 20
@@ -313,7 +313,7 @@ Rectangle {
                         border.color: "#4A90E2"
                         border.width: 1
                         color: snapToGridCheckBox.checked ? "#4A90E2" : "transparent"
-                        
+
                         Text {
                             anchors.centerIn: parent
                             text: "✓"
@@ -322,7 +322,7 @@ Rectangle {
                             visible: snapToGridCheckBox.checked
                         }
                     }
-                    
+
                     contentItem: Text {
                         text: snapToGridCheckBox.text
                         font.pixelSize: 14
@@ -330,7 +330,7 @@ Rectangle {
                         verticalAlignment: Text.AlignVCenter
                         leftPadding: snapToGridCheckBox.indicator.width + snapToGridCheckBox.spacing
                     }
-                    
+
                     onCheckedChanged: {
                         menuMapAtStart.snapToGrid = checked
                         logic.mapInfo.isBackgroundOnGrill = checked
@@ -338,7 +338,7 @@ Rectangle {
                 }
             }
         }
-        
+
         // Load map content
         Rectangle {
             id: loadMapContent
@@ -346,11 +346,11 @@ Rectangle {
             Layout.fillHeight: true
             color: "transparent"
             visible: false
-            
+
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 10
-                
+
                 // Maps container
                 Rectangle {
                     id: mapsContainer
@@ -377,21 +377,21 @@ Rectangle {
                             anchors.left: parent.left
                             anchors.leftMargin: 12
                             spacing: 10
-                            
+
                             Rectangle {
                                 width: 28
                                 height: 28
                                 radius: 14
                                 color: "#4A90E2"
                                 opacity: 0.3
-                                
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: "🗺️"
                                     font.pixelSize: 16
                                 }
                             }
-                            
+
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Cartes disponibles"
@@ -441,12 +441,12 @@ Rectangle {
                             height: 40
                             color: menuMapAtStart.selectedMap === modelData ? "#3A5998" : "#333333"
                             radius: 4
-                            
+
                             Row {
                                 anchors.fill: parent
                                 anchors.leftMargin: 10
                                 spacing: 10
-                                
+
                                 Rectangle {
                                     width: 24
                                     height: 24
@@ -454,14 +454,14 @@ Rectangle {
                                     color: "#4A90E2"
                                     opacity: 0.2
                                     anchors.verticalCenter: parent.verticalCenter
-                                    
+
                                     Text {
                                         anchors.centerIn: parent
                                         text: "📄"
                                         font.pixelSize: 14
                                     }
                                 }
-                                
+
                                 Text {
                                     text: modelData
                                     color: "white"
@@ -480,7 +480,7 @@ Rectangle {
                         }
                     }
                 }
-                
+
             }
         }
 
@@ -493,14 +493,14 @@ Rectangle {
             Button {
                 text: "Confirmer"
                 Layout.fillWidth: true
-                
+
                 background: Rectangle {
                     color: "#4CAF50"  // Green color
                     radius: 8
                     border.width: 1
                     border.color: "#FFFFFF"
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
                     font.pixelSize: 14
@@ -509,7 +509,7 @@ Rectangle {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-                
+
                 onClicked: {
                     if (backgroundContent.visible && menuMapAtStart.selectedBackground !== -1) {
                         // Emit signal to show InfoPanel and hide this popup
@@ -530,14 +530,14 @@ Rectangle {
             Button {
                 text: "Annuler"
                 Layout.fillWidth: true
-                
+
                 background: Rectangle {
                     color: "#F44336"  // Red color
                     radius: 8
                     border.width: 1
                     border.color: "#FFFFFF"
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
                     font.pixelSize: 14
@@ -546,7 +546,7 @@ Rectangle {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-                
+
                 onClicked: {
                     menuMapAtStart.visible = false
                 }

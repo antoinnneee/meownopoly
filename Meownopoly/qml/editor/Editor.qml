@@ -32,15 +32,19 @@ Rectangle {
 
         fillMode: {
             if (mapInfo.backgroundScaling === "Stretch") return Image.Stretch
-            else if (mapInfo.backgroundScaling === "Fit") return Image.PreserveAspectFit
+            else if (mapInfo.backgroundScaling === "Fit") return Image.PreserveAspectCrop
             else if (mapInfo.backgroundScaling === "Tile") return Image.Tile
             else return Image.Stretch
         }
-        onFillModeChanged: console.log("Background fill mode changed to:", fillMode)
+        onFillModeChanged:{
+            source : mapInfo.backgroundPath
+            console.log("Background fill mode changed to:", fillMode)
+        }
 
         onSourceChanged: {
             console.log("Background image changed to:", source)
         }
+
     }
 
     // Liste pour stocker tous les SnapableCaseTile créés
