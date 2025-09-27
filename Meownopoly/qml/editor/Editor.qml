@@ -37,7 +37,6 @@ Rectangle {
             else return Image.Stretch
         }
         onFillModeChanged:{
-            source : mapInfo.backgroundPath
             console.log("Background fill mode changed to:", fillMode)
         }
 

@@ -164,7 +164,7 @@ Item {
                 
                 Text {
                     anchors.centerIn: parent
-                    text: "Fit"
+                    text: "Crop"
                     color: mapInfo.backgroundScaling === "Fit" ? "white" : "#AAAAAA"
                     font.pixelSize: 12
                 }

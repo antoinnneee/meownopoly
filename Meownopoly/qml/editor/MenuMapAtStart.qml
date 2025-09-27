@@ -164,6 +164,7 @@ Rectangle {
 
                         onClicked: {
                             menuMapAtStart.selectedDisplayMode = "Stretch"
+                            mapInfo.backgroundScaling = "Stretch"
                         }
                     }
 
@@ -186,6 +187,8 @@ Rectangle {
 
                         onClicked: {
                             menuMapAtStart.selectedDisplayMode = "Fit"
+                            mapInfo.backgroundScaling = "Fit"
+
                         }
                     }
 
@@ -208,6 +211,8 @@ Rectangle {
 
                         onClicked: {
                             menuMapAtStart.selectedDisplayMode = "Tile"
+                            mapInfo.backgroundScaling = "Tile"
+
                         }
                     }
                 }
@@ -549,6 +554,8 @@ Rectangle {
 
                 onClicked: {
                     menuMapAtStart.visible = false
+                    mapInfo.backgroundPath = ""
+                    mapInfo.backgroundScaling = "Fit"
                 }
             }
         }
