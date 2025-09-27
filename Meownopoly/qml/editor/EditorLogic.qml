@@ -47,7 +47,7 @@ Item {
             }
         }
     }
-    
+
     Component {
         id: mouseLogic_pose_comp
         MouseLogic_Pose {
@@ -58,7 +58,7 @@ Item {
             }
         }
     }
-    
+
     Loader {
         id: mouseLogicLoader
         sourceComponent: (logic.editorMouseMode == EditorEnum.EM_NORMAL) ? mouseLogic_selection_comp
@@ -115,7 +115,7 @@ Item {
     property bool isSelectingArea: false
     property int defaultCaseType: Case.CS_KibbleDispenser
 
-    
+
     property int mmSize : 10
     function updateSize(mm) {
         if (mm > 0)
@@ -143,6 +143,7 @@ Item {
         }
     }
 
+
     function saveMap(){
         var caseList = [];
         var decoList = [];
@@ -169,6 +170,14 @@ Item {
         }
         Game.registerMap(mapInfo, caseList, decoList)
     }
+
+
+
+
+
+
+
+    //// A DEGAGER CI-DESSOUS /////
 
     // Fonction pour mettre à jour l'apparence du rectangle de sélection
     function updateSelectionRect() {

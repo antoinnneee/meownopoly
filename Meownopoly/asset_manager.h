@@ -111,8 +111,11 @@ public:
     Q_INVOKABLE bool generateAllMetadata();
     Q_INVOKABLE QStringList scanAvailableAssets();
 
-
     Q_INVOKABLE QStringList getAvailableBackgrounds() const;
+
+
+    Q_INVOKABLE bool isTransparent(int x, int y, QString path);
+
 
 public slots:
 

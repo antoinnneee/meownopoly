@@ -130,8 +130,14 @@ Rectangle {
             console.log("snap pressed detected");
             if (generalMA)
             {
-                generalMA.elementClicked(snapableElement)
+                if (!isTransparent){
+                    console.log("non transparent click")
+                    generalMA.elementClicked(snapableElement)
+                    }
+                else
+                    console.log("transparent click")
             }
+            //ELSE A VIRER
             else
             {
                 elementPressed()
@@ -178,6 +184,10 @@ Rectangle {
         z: 100
     }
     
+    function isTransparent(mouse){
+        return false
+    }
+
     // Fonctions utilitaires améliorées
     function updateRelativePosition() {
         if (!gridManager || gridManager.gridSize === 0) return
