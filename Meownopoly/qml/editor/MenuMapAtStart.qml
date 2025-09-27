@@ -168,7 +168,7 @@ Rectangle {
                     }
 
                     Button {
-                        text: "Fit"
+                        text: "Crop"
                         width: (parent.width - 20) / 3
                         height: parent.height
 
