@@ -177,8 +177,17 @@ SnapableElement {
     }
 
     function isTransparent(mouse){
-        console.log("Est-ce transparent " + AssetManager.isTransparent(tileImage.width/mouse.x, tileImage.height/mouse.y, imagePath))
-        return AssetManager.isTransparent(tileImage.width/mouse.x, tileImage.height/mouse.y, imagePath)
+        var deltaHeight = tileImage.height - tileImage.paintedHeight
+        var deltaWidth = tileImage.width - tileImage.paintedWidth
+
+        var imageX = mouse.x - deltaWidth/2
+        var imageY = mouse.y - deltaHeight/2
+
+
+
+        // change coord to relative to the image
+        console.log("Est-ce transparent " + AssetManager.isTransparent(tileImage.paintedWidth/imageX, tileImage.paintedHeight/imageY, imagePath))
+        return AssetManager.isTransparent(tileImage.paintedWidth/imageX, tileImage.paintedHeight/imageY, imagePath)
     }
 
     
