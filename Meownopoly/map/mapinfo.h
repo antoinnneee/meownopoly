@@ -17,6 +17,7 @@ class MapInfo : public QObject
     Q_PROPERTY(QString backgroundPath READ getBackgroundPath WRITE setBackgroundPath NOTIFY backgroundPathChanged FINAL)
     Q_PROPERTY(QString backgroundScaling READ getBackgroundScaling WRITE setBackgroundScaling NOTIFY backgroundScalingChanged FINAL)
     Q_PROPERTY(bool isBackgroundOnGrill READ getIsBackgroundOnGrill WRITE setIsBackgroundOnGrill NOTIFY isBackgroundOnGrillChanged FINAL)
+    Q_PROPERTY(int backgroundTileSize READ getBackgroundTileSize WRITE setBackgroundTileSize NOTIFY backgroundTileSizeChanged FINAL)
 
 public:
     MapInfo();
@@ -52,6 +53,9 @@ public:
     bool getIsBackgroundOnGrill() const;
     void setIsBackgroundOnGrill(bool newIsBackgroundOnGrill);
 
+    int getBackgroundTileSize() const;
+    void setBackgroundTileSize(int newBackgroundTileSize);
+
 signals:
     void mapNameChanged(const QString &mapName);
     void mapDescriptionChanged(const QString &mapDescription);
@@ -68,6 +72,8 @@ signals:
 
     void isBackgroundOnGrillChanged();
 
+    void backgroundTileSizeChanged();
+
 private:
     QString m_mapName = "no_name";
     QString m_mapDescription = "no_description";
@@ -79,6 +85,7 @@ private:
 
     QString backgroundPath = "";
     QString backgroundScaling = "Stretch";
+    int backgroundTileSize = 200;
     bool isBackgroundOnGrill = false;
 };
 

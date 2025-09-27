@@ -27,8 +27,8 @@ Rectangle {
         visible : mapInfo.backgroundPath === "" ? false : true
         source: mapInfo.backgroundPath
 
-        sourceSize.width: 200
-        sourceSize.height: 200
+        sourceSize.width: mapInfo.backgroundTileSize
+        sourceSize.height: source.width
 
         fillMode: {
             if (mapInfo.backgroundScaling === "Stretch") return Image.Stretch

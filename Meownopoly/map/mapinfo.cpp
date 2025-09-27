@@ -106,6 +106,19 @@ void MapInfo::setIsBackgroundOnGrill(bool newIsBackgroundOnGrill)
     emit isBackgroundOnGrillChanged();
 }
 
+int MapInfo::getBackgroundTileSize() const
+{
+    return backgroundTileSize;
+}
+
+void MapInfo::setBackgroundTileSize(int newBackgroundTileSize)
+{
+    if (backgroundTileSize == newBackgroundTileSize)
+        return;
+    backgroundTileSize = newBackgroundTileSize;
+    emit backgroundTileSizeChanged();
+}
+
 
 void MapInfo::setMapLastModified(const QString &mapLastModified)
 {

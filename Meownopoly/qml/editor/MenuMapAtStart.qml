@@ -65,7 +65,7 @@ MouseArea {
                     anchors.centerIn: parent
                     text: "Configuration de la carte"
                     color: "#FFFFFF"
-                    font.pixelSize: 18
+                    font.pixelSize: 20
                     font.bold: true
                 }
             }
@@ -79,6 +79,7 @@ MouseArea {
                 Button {
                     id: chooseBackgroundBtn
                     text: "Nouvelle Carte"
+
                     width: parent.width / 2 - 5
                     height: parent.height
                     checked: true
@@ -95,6 +96,7 @@ MouseArea {
                         color: "white"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 17
                     }
 
                     onClicked: {
@@ -108,6 +110,8 @@ MouseArea {
                 Button {
                     id: loadMapBtn
                     text: "Charger une carte"
+                    font.bold: true
+
                     width: parent.width / 2 - 5
                     height: parent.height
                     checked: false
@@ -124,6 +128,8 @@ MouseArea {
                         color: "white"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 17
+
                     }
 
                     onClicked: {
@@ -145,13 +151,13 @@ MouseArea {
 
                 ColumnLayout {
                     anchors.fill: parent
-                    spacing: 12
+                    spacing: 20
 
                     // Display mode label
                     Text {
                         text: "Mode d'affichage:"
                         color: "#FFFFFF"
-                        font.pixelSize: 14
+                        font.pixelSize: 16
                     }
 
                     // Display mode buttons
@@ -162,6 +168,7 @@ MouseArea {
 
                         Button {
                             text: "Stretch"
+                            font.pixelSize: 14
                             width: (parent.width - 20) / 3
                             height: parent.height
 
@@ -184,7 +191,9 @@ MouseArea {
                         }
 
                         Button {
+                            id: fitButton
                             text: "Fit"
+                            font.pixelSize: 14
                             width: (parent.width - 20) / 3
                             height: parent.height
 
@@ -207,27 +216,74 @@ MouseArea {
                             }
                         }
 
-                        Button {
-                            text: "Tile"
+                        ColumnLayout {
                             width: (parent.width - 20) / 3
-                            height: parent.height
+                            spacing: 4
+                            
+                            Button {
+                                text: "Tile"
+                                font.pixelSize: 14
+                                Layout.fillWidth: true
+                                Layout.maximumHeight: fitButton.height
 
-                            background: Rectangle {
-                                color: menuMapAtStart.selectedDisplayMode === "Tile" ? "#4A90E2" : "#333333"
-                                radius: 6
+                                background: Rectangle {
+                                    color: menuMapAtStart.selectedDisplayMode === "Tile" ? "#4A90E2" : "#333333"
+                                    radius: 6
+                                }
+
+                                contentItem: Text {
+                                    text: parent.text
+                                    color: "white"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+
+                                onClicked: {
+                                    menuMapAtStart.selectedDisplayMode = "Tile"
+                                    mapInfo.backgroundScaling = "Tile"
+                                }
                             }
 
-                            contentItem: Text {
-                                text: parent.text
-                                color: "white"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
+                            Slider {
+                                id: tileSizeSlider
+                                Layout.fillWidth: true
+                                from: 20
+                                to: 400
+                                stepSize: 20
+                                value: 100
+                                visible : enabled
+                                enabled: menuMapAtStart.selectedDisplayMode === "Tile"
+                                
+                                onValueChanged: {
+                                    if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
+                                        logic.mapInfo.backgroundTileSize = value
+                                    }
+                                }
 
-                            onClicked: {
-                                menuMapAtStart.selectedDisplayMode = "Tile"
-                                mapInfo.backgroundScaling = "Tile"
+                                background: Rectangle {
+                                    x: tileSizeSlider.leftPadding
+                                    y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
+                                    width: tileSizeSlider.availableWidth
+                                    height: 4
+                                    radius: 2
+                                    color: "#333333"
 
+                                    Rectangle {
+                                        width: tileSizeSlider.visualPosition * parent.width
+                                        height: parent.height
+                                        color: "#4A90E2"
+                                        radius: 2
+                                    }
+                                }
+                                handle: Rectangle {
+                                    x: tileSizeSlider.leftPadding + tileSizeSlider.visualPosition * (tileSizeSlider.availableWidth - width)
+                                    y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
+                                    width: 16
+                                    height: 16
+                                    radius: 8
+                                    color: tileSizeSlider.pressed ? "#FFFFFF" : "#F0F0F0"
+                                    border.color: "#4A90E2"
+                                }
                             }
                         }
                     }
