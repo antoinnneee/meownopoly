@@ -14,7 +14,7 @@
 #include <QJsonDocument>
 
 // Debug defines
-#define ENABLE_ASSET_DEBUG 0
+#define ENABLE_ASSET_DEBUG 1
 
 #if ENABLE_ASSET_DEBUG
     #define ASSET_DEBUG(msg) qDebug() << "[ASSET_DEBUG]" << msg

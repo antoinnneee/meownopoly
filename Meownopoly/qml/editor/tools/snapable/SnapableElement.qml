@@ -130,7 +130,7 @@ Rectangle {
             console.log("snap pressed detected");
             if (generalMA)
             {
-                if (!isTransparent){
+                if (!isTransparent(mouse)){
                     console.log("non transparent click")
                     generalMA.elementClicked(snapableElement)
                     }

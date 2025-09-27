@@ -579,6 +579,7 @@ bool AssetManager::isTransparent(int x, int y, QString path)
     }
 
     QColor color = image.pixelColor(x, y);
+    qDebug() << "Pixel at (" << x << "," << y << ") has alpha:" << color.alpha();
     return (color.alpha() == 0);
 }
 
