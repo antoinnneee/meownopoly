@@ -37,13 +37,12 @@ Rectangle {
             else return Image.Stretch
         }
         onFillModeChanged:{
-            console.log("Background fill mode changed to:", fillMode)
+            console.log("Background fill mode changed to:", mapInfo.backgroundScaling)
         }
 
         onSourceChanged: {
             console.log("Background image changed to:", source)
         }
-
     }
 
     // Liste pour stocker tous les SnapableCaseTile créés
@@ -285,18 +284,8 @@ Rectangle {
     }
 
     MenuMapAtStart {
-        id: menuMapAtStart
-
-        onBackgroundSelected: function(bgIndex, displayMode) {
-            // Show info panel after background selection
+        onBackgroundSelected: function() {
             infoPanel.visible = true
-
-            // Handle the background selection
-            console.log("Selected background: " + bgIndex + " with mode: " + displayMode)
-
-            // Uncomment to actually set the background
-            // mapInfo.backgroundPath = "qrc:/assets/tile/water/water_" + (bgIndex + 1) + ".jpg"
-            // mapInfo.backgroundScaling = displayMode
         }
     }
 
