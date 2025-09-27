@@ -570,6 +570,18 @@ QStringList AssetManager::getAvailableBackgrounds() const
     return backgrounds;
 }
 
+bool AssetManager::isTransparent(int x, int y, QString path)
+{
+    QImage image(path);
+    if (image.isNull()) {
+        ASSET_ERROR("Failed to load image:" << path);
+        return false; // or true, depending on how you want to handle errors
+    }
+
+    QColor color = image.pixelColor(x, y);
+    return (color.alpha() == 0);
+}
+
 QStringList AssetManager::getAvailableTypes(const QString &category) const
 {
     QStringList types;

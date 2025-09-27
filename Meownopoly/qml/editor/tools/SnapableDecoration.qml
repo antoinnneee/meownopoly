@@ -24,6 +24,7 @@ SnapableElement {
         decorationType: "grass"
         decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
     }
+
     property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
     
     // MultiEffect properties - Color effects (always enabled)
@@ -174,6 +175,12 @@ SnapableElement {
         // Performance optimization: auto-padding management
         autoPaddingEnabled: false//displaySettings.effectBlurEnabled || displaySettings.effectShadowEnabled
     }
+
+    function isTransparent(mouse){
+        console.log("Est-ce transparent " + AssetManager.isTransparent(mouseX, mouseY, imagePath))
+        return AssetManager.isTransparent(mouseX, mouseY, imagePath)
+    }
+
     
     // Functions to reset effects
     function resetColorEffects() {
