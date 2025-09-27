@@ -129,7 +129,6 @@ MouseArea {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 17
-
                     }
 
                     onClicked: {
@@ -623,7 +622,7 @@ MouseArea {
                     }
 
                     onClicked: {
-                        menuMapAtStart.visible = false
+                        root.visible = false
                         mapInfo.backgroundPath = ""
                         mapInfo.backgroundScaling = "Fit"
                     }

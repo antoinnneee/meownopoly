@@ -6,8 +6,8 @@ import QtQuick.Layouts 1.15
 Item {
     id: root
     width: parent.width
-    height: imageContainer.height + scalingSelector.height
-    
+    // height: imageContainer.height + scalingSelector.height
+    height: 200
     property var mapInfo : logic.mapInfo
 
     // Image selection square
@@ -45,7 +45,7 @@ Item {
             
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Choisir une image"
+                text: qsTr("Choisir une image")
                 color: "#AAAAAA"
                 font.pixelSize: 14
                 opacity: 0.7
@@ -116,9 +116,9 @@ Item {
         }
     }
     
-    // Scaling mode selector (appears when image is selected)
+    // Espace pour information sur l'image sélectionnée
     Rectangle {
-        id: scalingSelector
+        id: imageInfoArea
         width: imageContainer.width
         height: 30
         anchors.top: imageContainer.bottom
@@ -127,85 +127,25 @@ Item {
         color: "transparent"
         visible: mapInfo.backgroundPath !== ""
         
-        Row {
-            anchors.fill: parent
-            spacing: 0
-            
-            // Stretch button
-            Rectangle {
-                width: parent.width / 3
-                height: parent.height
-                color: mapInfo.backgroundScaling === "Stretch" ? "#E91E63" : "transparent"
-                border.color: "#444444"
-                border.width: 1
-                
-                Text {
-                    anchors.centerIn: parent
-                    text: "Stretch"
-                    color: mapInfo.backgroundScaling === "Stretch" ? "white" : "#AAAAAA"
-                    font.pixelSize: 12
-                }
-                
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        mapInfo.backgroundScaling = "Stretch";
-                    }
-                }
+        Text {
+            anchors.centerIn: parent
+            text: {
+                var path = mapInfo.backgroundPath;
+                var fileName = path.substring(path.lastIndexOf("/") + 1);
+                return fileName.replace(/\.[^/.]+$/, ""); // Enlever l'extension
             }
-            
-            // Fit button
-            Rectangle {
-                width: parent.width / 3
-                height: parent.height
-                color: mapInfo.backgroundScaling === "Fit" ? "#E91E63" : "transparent"
-                border.color: "#444444"
-                border.width: 1
-                
-                Text {
-                    anchors.centerIn: parent
-                    text: "Fit"
-                    color: mapInfo.backgroundScaling === "Fit" ? "white" : "#AAAAAA"
-                    font.pixelSize: 12
-                }
-                
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        mapInfo.backgroundScaling = "Fit";
-                    }
-                }
-            }
-            
-            // Tile button
-            Rectangle {
-                width: parent.width / 3
-                height: parent.height
-                color: mapInfo.backgroundScaling === "Tile" ? "#E91E63" : "transparent"
-                border.color: "#444444"
-                border.width: 1
-                
-                Text {
-                    anchors.centerIn: parent
-                    text: "Tile"
-                    color: mapInfo.backgroundScaling === "Tile" ? "white" : "#AAAAAA"
-                    font.pixelSize: 12
-                }
-                
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        mapInfo.backgroundScaling = "Tile";
-                    }
-                }
-            }
+            color: "#AAAAAA"
+            font.pixelSize: 12
+            elide: Text.ElideMiddle
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
         }
     }
     
     // File dialog for image selection
     FileDialog {
         id: fileDialog
-        title: "Sélectionner une image"
+        title: qsTr("Sélectionner une image")
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.bmp)"]
         onAccepted: {
             // Utilisation de selectedFile de la nouvelle API
