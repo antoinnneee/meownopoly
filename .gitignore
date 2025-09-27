@@ -8,3 +8,4 @@ Meownopoly/.qtc_clangd/
 /asset_server/versions
 *.autosave
 Meownopoly/bin
+Meownopoly/bin/*
