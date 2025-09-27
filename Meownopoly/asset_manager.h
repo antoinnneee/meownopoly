@@ -14,7 +14,7 @@
 #include <QJsonDocument>
 
 // Debug defines
-#define ENABLE_ASSET_DEBUG 0
+#define ENABLE_ASSET_DEBUG 1
 
 #if ENABLE_ASSET_DEBUG
     #define ASSET_DEBUG(msg) qDebug() << "[ASSET_DEBUG]" << msg
@@ -114,7 +114,7 @@ public:
     Q_INVOKABLE QStringList getAvailableBackgrounds() const;
 
 
-    Q_INVOKABLE bool isTransparent(int x, int y, QString path);
+    Q_INVOKABLE bool isTransparent(float px, float py, QString path);
 
 
 public slots:
