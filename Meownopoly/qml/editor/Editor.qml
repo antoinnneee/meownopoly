@@ -28,7 +28,7 @@ Rectangle {
         source: mapInfo.backgroundPath
 
         sourceSize.width: mapInfo.backgroundTileSize
-        sourceSize.height: source.width
+        sourceSize.height: mapInfo.backgroundTileSize
 
         fillMode: {
             if (mapInfo.backgroundScaling === "Stretch") return Image.Stretch
@@ -106,15 +106,6 @@ Rectangle {
         workArea: workArea
         // caseConfigPanel: caseConfigPanel
         connectionsPanel: connectionsPanel
-    }
-
-    LoadMapButton {
-        id: loadMapButton
-
-        onClicked: {
-            console.log("Opening map selection panel")
-            mapSelectionPanel.isVisible = true
-        }
     }
 
 

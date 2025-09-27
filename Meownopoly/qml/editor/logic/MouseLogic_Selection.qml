@@ -126,7 +126,6 @@ MouseLogic_Base {
             if (clickElement.length > 0) {
                 if (!clickElement[0].isSelected)
                 {
-
                     clickElement[0].elementPressed()
                     clickElement[0].parent = groupeSelection
                     clickElement[0].x = clickElement[0].x - deltaX
