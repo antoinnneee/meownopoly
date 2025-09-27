@@ -114,7 +114,7 @@ public:
     Q_INVOKABLE QStringList getAvailableBackgrounds() const;
 
 
-    Q_INVOKABLE bool isTransparent(int x, int y, QString path);
+    Q_INVOKABLE bool isTransparent(float px, float py, QString path);
 
 
 public slots:

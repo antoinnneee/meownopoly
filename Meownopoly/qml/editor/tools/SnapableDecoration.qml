@@ -177,8 +177,8 @@ SnapableElement {
     }
 
     function isTransparent(mouse){
-        console.log("Est-ce transparent " + AssetManager.isTransparent(mouse.x, mouse.y, imagePath))
-        return AssetManager.isTransparent(mouse.x, mouse.y, imagePath)
+        console.log("Est-ce transparent " + AssetManager.isTransparent(tileImage.width/mouse.x, tileImage.height/mouse.y, imagePath))
+        return AssetManager.isTransparent(tileImage.width/mouse.x, tileImage.height/mouse.y, imagePath)
     }
 
     

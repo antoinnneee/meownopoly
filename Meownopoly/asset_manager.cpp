@@ -570,16 +570,18 @@ QStringList AssetManager::getAvailableBackgrounds() const
     return backgrounds;
 }
 
-bool AssetManager::isTransparent(int x, int y, QString path)
+bool AssetManager::isTransparent(float px, float py, QString path)
 {
+    if (path.startsWith("file:///"))
+        path = path.right(path.length() - 8);
     QImage image(path);
     if (image.isNull()) {
         ASSET_ERROR("Failed to load image:" << path);
         return false; // or true, depending on how you want to handle errors
     }
 
-    QColor color = image.pixelColor(x, y);
-    qDebug() << "Pixel at (" << x << "," << y << ") has alpha:" << color.alpha();
+    QColor color = image.pixelColor(image.width()/px, image.height()/py);
+    qDebug() << color;
     return (color.alpha() == 0);
 }
 
