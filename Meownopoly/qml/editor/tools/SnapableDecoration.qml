@@ -183,10 +183,6 @@ SnapableElement {
         var imageX = mouse.x - deltaWidth/2
         var imageY = mouse.y - deltaHeight/2
 
-
-
-        // change coord to relative to the image
-        console.log("Est-ce transparent " + AssetManager.isTransparent(tileImage.paintedWidth/imageX, tileImage.paintedHeight/imageY, imagePath))
         return AssetManager.isTransparent(tileImage.paintedWidth/imageX, tileImage.paintedHeight/imageY, imagePath)
     }
 
