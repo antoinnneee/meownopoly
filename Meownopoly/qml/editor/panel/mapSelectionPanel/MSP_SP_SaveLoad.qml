@@ -114,6 +114,7 @@ Item {
 
                 contentItem: Text {
                     text: modelData
+                    font.pixelSize: 16
                     color: "white"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
