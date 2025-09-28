@@ -21,7 +21,7 @@ public:
 public slots:
 
 signals:
-    void mapLoaded(Map *map, MapInfo *mapInfo);
+    void mapLoaded(Map *map);
     void foundCaseTile(DisplayParameter *dp, Case *caseData);
     void foundDecorationTile(DisplayParameter *displayParameter, DecorationParameter *decorationParameter);
 

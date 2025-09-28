@@ -48,7 +48,8 @@ Map *MapLoader::loadMap(QString mapName)
     for (ItemSnapable *is : map->decorationTiles()) {
         emit foundDecorationTile(is->displayParameter(), is->decorationParameter());
     }
-    emit mapLoaded(map, mapInfo);
+    map->setMapInfo(mapInfo);
+    emit mapLoaded(map);
     return map;
 }
 

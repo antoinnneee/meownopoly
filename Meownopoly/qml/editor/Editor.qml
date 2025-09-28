@@ -62,12 +62,26 @@ Rectangle {
             console.log("Found decoration tile:", dp, decorationParameter)
             logic.tileLogic.createDecorationTile(dp, decorationParameter);
         }
-        function onMapLoaded(map, mapInfo)
+        function onMapLoaded(map)
         {
             console.log("Map loaded")
             logic.tileLogic.builtConnections();
+
             mapInfo = map.mapInfo
-            // root.mapInfo = mapInfo;
+            // var tmpInfo = map.mapInfo
+
+
+            // mapInfo.mapName = tmpInfo.mapName
+            // mapInfo.version = tmpInfo.version
+            // mapInfo.mapDescription = tmpInfo.mapDescription
+            // mapInfo.mapCreationDate = tmpInfo.mapCreationDate
+            // mapInfo.mapLastModified = tmpInfo.mapLastModified
+            // mapInfo.backgroundPath = tmpInfo.backgroundPath
+            // mapInfo.backgroundScaling = tmpInfo.backgroundScaling
+            // mapInfo.backgroundTileSize = tmpInfo.backgroundTileSize
+            // mapInfo.isBackgroundOnGrill = tmpInfo.isBackgroundOnGrill
+            // mapInfo.musicPath = tmpInfo.musicPath
+
         }
     }
 
@@ -80,13 +94,6 @@ Rectangle {
         editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
-        onMapInfoChanged: {
-        onMapNameChanged:
-            console.log("MapInfo mapName changed to:", mapInfo.mapName)
-        onBackgroundPathChanged:
-            console.log("MapInfo backgroundPath changed to:", mapInfo.backgroundPath)
-        }
-
     }
 
     EditorDynamicComponent {

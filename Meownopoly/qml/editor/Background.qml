@@ -24,9 +24,10 @@ Image {
     sourceSize.width: mapInfo.backgroundTileSize
     sourceSize.height: mapInfo.backgroundTileSize
 
+
     fillMode: {
         if (mapInfo.backgroundScaling === "Stretch") return Image.Stretch
-        else if (mapInfo.backgroundScaling === "Fit") return Image.PreserveAspectCrop
+        else if (mapInfo.backgroundScaling === "Fit") return Image.PreserveAspectFit
         else if (mapInfo.backgroundScaling === "Tile") return Image.Tile
         else return Image.Stretch
     }

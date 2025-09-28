@@ -97,7 +97,7 @@ Item {
                 hoverEnabled: true
                 onClicked: {
                     mapInfo.backgroundPath = "";
-                    backgroundScaling = "fit";
+                    mapInfo.backgroundScaling = "Fit";
                     root.imageRemoved();
                 }
             }
