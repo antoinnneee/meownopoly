@@ -163,7 +163,7 @@ SnapableElement {
         shadowOpacity: displaySettings.effectShadowOpacity
         shadowScale: displaySettings.effectShadowScale
         
-        // Mask effect ??
+        // Mask effect
         maskEnabled: effectMaskEnabled
         maskSource: effectMaskSource
         maskInverted: effectMaskInverted
