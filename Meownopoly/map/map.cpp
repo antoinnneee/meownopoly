@@ -37,6 +37,7 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
             m_decorationTiles.append(is);
         }
     }
+
     qDebug() << "Snapable tiles loaded successfully";
     qDebug() << "--------------------------------";
     qDebug() << "building links between snapable tiles";

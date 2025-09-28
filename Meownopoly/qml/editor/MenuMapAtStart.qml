@@ -116,6 +116,8 @@ MouseArea {
                     height: parent.height
                     checked: false
 
+                    enabled : MapLoader.getAvailableMaps().length > 0
+                    opacity : enabled ? 1.0 : 0.5
                     background: Rectangle {
                         color: loadMapBtn.checked ? "#4A90E2" : "#333333"
                         radius: 8

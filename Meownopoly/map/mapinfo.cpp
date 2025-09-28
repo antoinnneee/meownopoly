@@ -16,6 +16,13 @@ MapInfo::MapInfo(const QJsonObject &json)
     m_mapCreationDate = json["creation"].toString();
     m_mapLastModified = json["lastModified"].toString();
     m_version = json["version"].toInt();
+
+    m_backgroundPath = json["backgroundPath"].toString();
+    m_backgroundScaling = json["backgroundScaling"].toString();
+    m_backgroundTileSize = json["backgroundTileSize"].toInt(50);
+
+    m_musicPath = json["musicPath"].toString();
+
 }
 
 QString MapInfo::toJSON()
@@ -26,6 +33,13 @@ QString MapInfo::toJSON()
     json["creation"] = m_mapCreationDate;
     json["lastModified"] = m_mapLastModified;
     json["version"] = m_version;
+
+    json["backgroundPath"] = m_backgroundPath;
+    json["backgroundScaling"] = m_backgroundScaling;
+    json["backgroundTileSize"] = m_backgroundTileSize;
+
+    json["musicPath"] = m_musicPath;
+
     return QJsonDocument(json).toJson(QJsonDocument::Indented);
 }
 
@@ -56,66 +70,66 @@ void MapInfo::setMapCreationDate(const QString &newMapCreationDate)
 
 QString MapInfo::getMusicPath() const
 {
-    return musicPath;
+    return m_musicPath;
 }
 
 void MapInfo::setMusicPath(const QString &newMusicPath)
 {
-    if (musicPath == newMusicPath)
+    if (m_musicPath == newMusicPath)
         return;
-    musicPath = newMusicPath;
+    m_musicPath = newMusicPath;
     emit musicPathChanged();
 }
 
 QString MapInfo::getBackgroundPath() const
 {
-    return backgroundPath;
+    return m_backgroundPath;
 }
 
 void MapInfo::setBackgroundPath(const QString &newBackgroundPath)
 {
-    if (backgroundPath == newBackgroundPath)
+    if (m_backgroundPath == newBackgroundPath)
         return;
-    backgroundPath = newBackgroundPath;
+    m_backgroundPath = newBackgroundPath;
     emit backgroundPathChanged();
 }
 
 QString MapInfo::getBackgroundScaling() const
 {
-    return backgroundScaling;
+    return m_backgroundScaling;
 }
 
 void MapInfo::setBackgroundScaling(const QString &newBackgroundScaling)
 {
-    if (backgroundScaling == newBackgroundScaling)
+    if (m_backgroundScaling == newBackgroundScaling)
         return;
-    backgroundScaling = newBackgroundScaling;
+    m_backgroundScaling = newBackgroundScaling;
     emit backgroundScalingChanged();
 }
 
 bool MapInfo::getIsBackgroundOnGrill() const
 {
-    return isBackgroundOnGrill;
+    return m_isBackgroundOnGrill;
 }
 
 void MapInfo::setIsBackgroundOnGrill(bool newIsBackgroundOnGrill)
 {
-    if (isBackgroundOnGrill == newIsBackgroundOnGrill)
+    if (m_isBackgroundOnGrill == newIsBackgroundOnGrill)
         return;
-    isBackgroundOnGrill = newIsBackgroundOnGrill;
+   m_isBackgroundOnGrill = newIsBackgroundOnGrill;
     emit isBackgroundOnGrillChanged();
 }
 
 int MapInfo::getBackgroundTileSize() const
 {
-    return backgroundTileSize;
+    return m_backgroundTileSize;
 }
 
 void MapInfo::setBackgroundTileSize(int newBackgroundTileSize)
 {
-    if (backgroundTileSize == newBackgroundTileSize)
+    if (m_backgroundTileSize == newBackgroundTileSize)
         return;
-    backgroundTileSize = newBackgroundTileSize;
+    m_backgroundTileSize = newBackgroundTileSize;
     emit backgroundTileSizeChanged();
 }
 
