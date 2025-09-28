@@ -2,6 +2,7 @@
 #define MAP_H
 
 #include <QObject>
+#include "MapInfo.h"
 #include "item_snapable/ItemSnapable.h"
 
 class Map : public QObject
@@ -47,6 +48,9 @@ private:
     QString m_mapDescription;
     QList<ItemSnapable*> m_caseTiles;
     QList<ItemSnapable*> m_decorationTiles;
+
+
+    MapInfo *mapInfo = nullptr;
 
 };
 
