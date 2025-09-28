@@ -102,7 +102,6 @@ protected:
     QUuid m_uniqueId = QUuid::createUuid();
     CaseType type = CS_Unknow;
 
-
 };
 Q_DECLARE_METATYPE(Case)
 

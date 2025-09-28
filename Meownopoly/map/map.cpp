@@ -10,16 +10,6 @@ Map::Map(QObject *parent) : QObject(parent)
 
 Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 {
-    m_mapName = jsonObject["name"].toString();
-    m_mapVersion = jsonObject["version"].toString();
-    m_mapDescription = jsonObject["description"].toString();
-
-    qDebug() << "--------------------------------";
-    qDebug() << "Start loading map:" << m_mapName;
-    qDebug() << "Map version:" << m_mapVersion;
-    qDebug() << "Map description:" << m_mapDescription;
-    qDebug() << "--------------------------------";
-
     QJsonArray snapableTilesArray = jsonObject["snapableTiles"].toArray();
     qDebug() << "Snapable tiles:" << snapableTilesArray.size();
     qDebug() << "--------------------------------";
@@ -62,4 +52,17 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 
     qDebug() << "--------------------------------";
 
+}
+
+MapInfo *Map::getMapInfo() const
+{
+    return mapInfo;
+}
+
+void Map::setMapInfo(MapInfo *newMapInfo)
+{
+    if (mapInfo == newMapInfo)
+        return;
+    mapInfo = newMapInfo;
+    emit mapInfoChanged();
 }

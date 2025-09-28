@@ -53,6 +53,7 @@ Rectangle {
 
     Connections{
         target: MapLoader
+
         function onFoundCaseTile(dp, caseData){
             console.log("Found case tile:", dp, caseData)
             logic.tileLogic.createCaseTile(dp, caseData);
@@ -65,7 +66,8 @@ Rectangle {
         {
             console.log("Map loaded")
             logic.tileLogic.builtConnections();
-            root.mapInfo = mapInfo;
+            mapInfo = map.mapInfo
+            // root.mapInfo = mapInfo;
         }
     }
 
