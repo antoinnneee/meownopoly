@@ -75,18 +75,18 @@ signals:
     void backgroundTileSizeChanged();
 
 private:
-    QString m_mapName = "no_name";
-    QString m_mapDescription = "no_description";
-    QString m_mapCreationDate = "no_creation";
-    QString m_mapLastModified = "no_last_modified";
-    int m_version = 0;
+    QString m_mapName = "";
+    QString m_mapDescription = "";
+    QString m_mapCreationDate = "";
+    QString m_mapLastModified = "";
+    int m_version;
 
-    QString musicPath = "";
+    QString m_backgroundPath = "";
+    QString m_backgroundScaling = "Fit";
+    int m_backgroundTileSize = 200;
+    bool m_isBackgroundOnGrill = false;
 
-    QString backgroundPath = "";
-    QString backgroundScaling = "Stretch";
-    int backgroundTileSize = 200;
-    bool isBackgroundOnGrill = false;
+    QString m_musicPath = "";
 };
 
 #endif // MAPINFO_H

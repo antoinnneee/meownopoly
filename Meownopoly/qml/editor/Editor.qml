@@ -21,28 +21,10 @@ Rectangle {
     color: "lightblue"
     border.width: 0
 
-    Image {
+    Background {
+        id: background
         anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
 
-        visible : mapInfo.backgroundPath === "" ? false : true
-        source: mapInfo.backgroundPath
-
-        sourceSize.width: mapInfo.backgroundTileSize
-        sourceSize.height: mapInfo.backgroundTileSize
-
-        fillMode: {
-            if (mapInfo.backgroundScaling === "Stretch") return Image.Stretch
-            else if (mapInfo.backgroundScaling === "Fit") return Image.PreserveAspectCrop
-            else if (mapInfo.backgroundScaling === "Tile") return Image.Tile
-            else return Image.Stretch
-        }
-        onFillModeChanged:{
-            console.log("Background fill mode changed to:", mapInfo.backgroundScaling)
-        }
-
-        onSourceChanged: {
-            console.log("Background image changed to:", source)
-        }
     }
 
     // Liste pour stocker tous les SnapableCaseTile créés
@@ -60,14 +42,13 @@ Rectangle {
     property alias isAssetSelected: selectionPanel.isAssetSelected
 
     property MapInfo mapInfo: MapInfo{
-        mapName: "no_name"
-        mapDescription: "no_description"
-        mapCreationDate: "no_creation"
-        mapLastModified: "no_last_modified"
-        backgroundPath: ""
-        backgroundScaling: "Stretch"
-        isBackgroundOnGrill: false
-        version: 0
+        // mapName: ""
+        // mapDescription: ""
+        // mapCreationDate: ""
+        // mapLastModified: ""
+        // backgroundPath: ""
+        // backgroundScaling: "Fit"
+        // isBackgroundOnGrill: false
     }
 
     Connections{
@@ -97,6 +78,13 @@ Rectangle {
         editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
+        onMapInfoChanged: {
+        onMapNameChanged:
+            console.log("MapInfo mapName changed to:", mapInfo.mapName)
+        onBackgroundPathChanged:
+            console.log("MapInfo backgroundPath changed to:", mapInfo.backgroundPath)
+        }
+
     }
 
     EditorDynamicComponent {

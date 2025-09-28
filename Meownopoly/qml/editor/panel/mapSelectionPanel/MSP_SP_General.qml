@@ -164,11 +164,8 @@ Item {
                                 font.pixelSize: 14
                                 verticalAlignment: Text.AlignVCenter
                                 placeholderTextColor: "#666666"
-                                placeholderText: "Name of the map"
-                                onFocusChanged: {
-                                    if (focus && text === "") {placeholderText = ""}
-                                    else if (!focus && text === "") {placeholderText = "Name of the map"}
-                                }
+                                placeholderText: text === "" ? "Name of the map" : ""
+                                text: logic.mapInfo.mapName
                                 onEditingFinished: mapName = text
                             }
                         }
@@ -206,12 +203,9 @@ Item {
                                 color: "white"
                                 font.pixelSize: 14
                                 verticalAlignment: TextInput.AlignVCenter
-                                onFocusChanged: {
-                                    if (focus && text === "") {placeholderText = ""}
-                                    else if (!focus && text === "") {placeholderText = "1.0"}
-                                }
                                 placeholderTextColor: "#666666"
-                                placeholderText: "1.0"
+                                placeholderText: text === "" ? "1.0" : ""
+                                text: logic.mapInfo.version.toString()
                                 onEditingFinished: mapVersion = parseInt(text) || 1
                             }
                         }
@@ -249,12 +243,9 @@ Item {
                                 height: parent.height
                                 color: "white"
                                 font.pixelSize: 14
-                                onFocusChanged: {
-                                    if (focus && text === "") {placeholderText = ""}
-                                    else if (!focus && text === "") {placeholderText = "2023-09-15"}
-                                }
                                 placeholderTextColor: "#666666"
-                                placeholderText: "2023-09-15"
+                                placeholderText: text === "" ? "2023-09-15" : ""
+                                text: logic.mapInfo.mapCreationDate
                                 onEditingFinished: dateOfCreation = text
                                 verticalAlignment: TextInput.AlignVCenter
                             }
@@ -295,12 +286,9 @@ Item {
                                 font.pixelSize: 14
                                 verticalAlignment: Text.AlignVCenter
                                 placeholderTextColor: "#666666"
-                                placeholderText: "2023-09-18 (3 days ago)"
+                                placeholderText: text === "" ? "2023-09-18 (3 days ago)" : ""
+                                text: logic.mapInfo.mapLastModified
                                 onEditingFinished: dateOfCreation = text
-                                onFocusChanged: {
-                                    if (focus && text === "") {placeholderText = ""}
-                                    else if (!focus && text === "") {placeholderText = "2023-09-18 (3 days ago)"}
-                                }
                             }
                         }
                     }
@@ -367,9 +355,9 @@ Item {
                             color: "white"
                             font.pixelSize: 14
                             wrapMode: TextEdit.Wrap
-                            placeholderText: "Enter map description here..."
+                            placeholderText: text === "" ? "Enter map description here..." : ""
+                            text : logic.mapInfo.mapDescription
                             placeholderTextColor: "#666666"
-                            text: ""
                             background: null
                         }
                     }
