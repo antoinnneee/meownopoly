@@ -14,10 +14,12 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain("pattounecorp.ovh");
     app.setApplicationName("Meownopoly");
     // Configure surface format to reduce flickering during resize
+    /*
     QSurfaceFormat format;
     format.setSwapInterval(0);  // Disable VSync to prevent resize flickering
     format.setRenderableType(QSurfaceFormat::OpenGL);
     QSurfaceFormat::setDefaultFormat(format);
+    */
 
     QmlApp a;
     qInstallMessageHandler(0);
