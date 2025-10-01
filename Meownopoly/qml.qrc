@@ -148,5 +148,6 @@
         <file>qml/editor/panel/mapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
         <file>qml/editor/MenuMapAtStart.qml</file>
         <file>qml/editor/Background.qml</file>
+        <file>qml/test/Test_Comp.qml</file>
     </qresource>
 </RCC>

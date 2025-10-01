@@ -230,7 +230,7 @@ Rectangle {
         // Test 3D Button
         Button {
             id: test3DButton
-            text: "🐱 Test 3D"
+            text: "🐱 Test Component"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
 
@@ -249,7 +249,7 @@ Rectangle {
 
             onClicked: {
                 root.test3DRequested()
-                console.log("Test 3D requested")
+                console.log("Test Component requested")
             }
         }
         

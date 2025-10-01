@@ -42,7 +42,7 @@ ApplicationWindow {
 
             onTest3DRequested: {
                 stackView.pop()
-                stackView.push(testPaw)
+                stackView.push(testComp)
             }
             
             onLauncherRequested: {
@@ -83,8 +83,8 @@ ApplicationWindow {
 
 
     Component {
-        id: test3D
-        TEST_3D {
+        id: testComp
+        Test_Comp {
             width: root.width
             height: root.height
             visible: false
