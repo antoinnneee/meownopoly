@@ -95,7 +95,7 @@ MouseLogic_Base {
             if (clickElement.length > 0) {
                 clickElement[0].elementPressed()
                 clickElement[0].parent = groupeSelection
-                drag.target = groupeSelection 
+                drag.target = groupeSelection
                 selectedElements.push(clickElement[0])
             }
         }

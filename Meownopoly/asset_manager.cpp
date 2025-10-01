@@ -16,6 +16,7 @@ AssetModel::AssetModel(QObject *parent)
 {
 }
 
+
 int AssetModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
@@ -207,7 +208,6 @@ QString AssetManager::getAssetPath(const QString &category, const QString &type,
     ASSET_ERROR("Asset not valid, returning empty path for" << category << type << id);
     return "";  // todo get default asset path
 }
-
 
 void AssetManager::reloadAssets()
 {

@@ -1,6 +1,21 @@
 #include "Displayparameter.h"
 
 
+QString DisplayParameter::getAnimePath(QString imagePath)
+{
+    // return "file:///C:/QtProject/meownopoly/Meownopoly/build/asset_extracted/decoration/tree/0-animated.png";
+
+    QString animePath = imagePath;
+    animePath = animePath.replace(animePath.indexOf(".png"), 4, "-animated.png");
+    if (QFile::exists(animePath.remove("file:///"))){
+    return animePath.prepend("file:///");
+    }
+    else {
+        qDebug() << Q_FUNC_INFO << " Error, fileName does not exist : " << animePath;
+        return imagePath;
+    }
+}
+
 DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, float zOrder, QObject *parent)
     : QObject(parent)
 {
@@ -29,7 +44,7 @@ DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gr
     
     // Initialize rotation properties
     m_rotationAngle = 0.0;
-        
+
     // Initialize mirror properties
     m_mirrorHorizontal = false;
     m_mirrorVertical = false;
