@@ -88,12 +88,8 @@ SnapableElement {
     Loader {
         id: loaderImage
         anchors.fill: parent
-        // sourceComponent: (!isSelected && displaySettings.getAnimePath(imagePath) !== imagePath) && !forceImage ? spriteAnimationComponent : tileImageComponent
-
-        Component.onCompleted: sourceComponent = spriteAnimationComponent
-        onSourceComponentChanged: {
-            console.log("Loader sourceComponent changed to", sourceComponent === spriteAnimationComponent ? "spriteAnimationComponent" : "tileImageComponent")
-        }
+        property bool forceImage: false
+        sourceComponent: (!isSelected && displaySettings.getAnimePath(imagePath) !== imagePath) && !forceImage ? spriteAnimationComponent : tileImageComponent
         Component {
             id: spriteAnimationComponent
             AnimatedSprite {
@@ -205,19 +201,11 @@ SnapableElement {
 
     function isTransparent(mouse){
 
-        if (loaderImage.sourceComponent === spriteAnimationComponent){
-            loaderImage.sourceComponent =  tileImageComponent
-        }
+        loaderImage.forceImage = true
 
         while (loaderImage.status !== Loader.Ready){
             // Wait for the image to load
         }
-
-        console.log("IS READY ? " + loaderImage.status)
-
-                // if (!loaderImage.item || typeof loaderImage.item.paintedHeight === 'undefined') {
-        //     return false  // On considere les sprites animes comme non-transparents
-        // }
 
         var deltaHeight = loaderImage.item.height - loaderImage.item.paintedHeight
         var deltaWidth = loaderImage.item.width - loaderImage.item.paintedWidth
@@ -227,9 +215,7 @@ SnapableElement {
 
         var flag = AssetManager.isTransparent(loaderImage.item.paintedWidth/imageX, loaderImage.item.paintedHeight/imageY, imagePath)
 
-        if (loaderImage.sourceComponent === tileImageComponent){
-            loaderImage.sourceComponent = spriteAnimationComponent
-        }
+        loaderImage.forceImage = false
         return flag;
     }
 
