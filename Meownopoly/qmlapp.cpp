@@ -36,6 +36,9 @@
 #include <map/mapinfo.h>
 #include "tools/debug_info.h"
 #include "tools/editorenum.h"
+#include "animation_manager.h"
+#include "liveimage.h"
+#include "animationprovider.h"
 
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
@@ -50,7 +53,7 @@ QmlApp::QmlApp(QWindow *parent)
     MapLoader::registerQml();
     MapInfo::registerQml();
     EditorEnum::registerQml();
-
+    AnimationProvider::registerQml();
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);
     rootContext()->setContextProperty("folderCompressor", folderCompressor);
@@ -61,8 +64,19 @@ QmlApp::QmlApp(QWindow *parent)
     // Create and expose AssetManager instance to QML
     assetManager = AssetManager::instance();
 
+    /*
+    // Charger l'animation depuis le dossier anim et la démarrer automatiquement
+    QString animFolderPath = "C:/Users/Antoine/Documents/GitHub/meownopoly/Meownopoly/anim";
+    animationManager->loadAnimationFromFolder("test", animFolderPath);
+    animationManager->startAnimation("test", 15); // 15 FPS pour une animation fluide
+*/
+//    qmlRegisterType<LiveImage>("MyApp.Images", 1, 0, "LiveImage");
+//    AnimationProvider * provider = AnimationProvider::instance();
+//    provider->loadImagesFromFolder("C:/Users/Antoine/Documents/GitHub/meownopoly/Meownopoly/anim");
+
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
+
 }
 
 /*

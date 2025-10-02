@@ -29,6 +29,8 @@ CONFIG += c++20
 
 SOURCES += \
     QtFolderCompressor/FolderCompressor.cpp \
+    animation_manager.cpp \
+    animationprovider.cpp \
     asset_manager.cpp \
     card.cpp \
     case/Case.cpp \
@@ -50,6 +52,7 @@ SOURCES += \
     item_snapable/SnapableDeco.cpp \
     item_snapable/decorationparameter.cpp \
     launcher_manager.cpp \
+    liveimage.cpp \
     main.cpp \
     map/map.cpp \
     map/mapinfo.cpp \
@@ -62,6 +65,8 @@ SOURCES += \
 
 HEADERS += \
     QtFolderCompressor/FolderCompressor.h \
+    animation_manager.h \
+    animationprovider.h \
     asset_manager.h \
     card.h \
     case/Case.h \
@@ -82,6 +87,7 @@ HEADERS += \
     item_snapable/SnapableDeco.h \
     item_snapable/decorationparameter.h \
     launcher_manager.h \
+    liveimage.h \
     map/map.h \
     map/mapinfo.h \
     map/maploader.h \

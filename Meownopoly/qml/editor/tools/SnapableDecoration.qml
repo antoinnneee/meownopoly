@@ -8,6 +8,9 @@ import AssetManager
 import ItemSnapable
 import DecorationParameter
 
+import MyApp.Images
+import AnimationProvider
+
 SnapableElement {
     // Configuration du redimensionnement
     isResizable: true
@@ -83,6 +86,7 @@ SnapableElement {
 
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
+
 
     AnimatedImage {
         id: tileImage
