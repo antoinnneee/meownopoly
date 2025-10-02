@@ -128,7 +128,7 @@ Item {
                     }
 
                     onCheckedChanged: {
-                        logic.mapInfo.isBackgroundOnGrill = checked
+                            logic.mapInfo.isBackgroundOnGrill = checked
                     }
                 }
 
@@ -433,6 +433,7 @@ Item {
                     spacing: 10
 
                     MSP_SP_BackgroundSelector {
+
                         id: backgroundSelector
                         width: parent.width
                     }

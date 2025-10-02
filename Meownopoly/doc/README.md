@@ -69,23 +69,45 @@ Chaque tour se compose de **4 phases distinctes** :
 - Influence sur les phases de jeu en cours
 - Modificateurs spéciaux selon le personnage choisi
 
-## 🏗️ Fonctionnalités Techniques
+## 🏗️ Architecture Technique
 
 ### Technologies Utilisées
 - **Qt/QML** pour l'interface utilisateur
 - **C++** pour la logique de jeu
-- **JSON** pour la configuration des cases
+- **JSON** pour la configuration des cases et des maps
 - **CSV** pour les données de propriétés
 
 ### Structure du Projet
 ```
 Meownopoly/
-├── case/              # Classes des différents types de cases
-├── qml/               # Interface utilisateur QML
-├── config/            # Fichiers de configuration
-├── asset/             # Ressources graphiques
-└── tools/             # Outils de développement
+├── asset_manager.cpp/h   # Gestionnaire de ressources
+├── case/                # Classes des différents types de cases
+├── config/              # Fichiers de configuration
+├── doc/                 # Documentation
+├── item_snapable/       # Éléments plaçables sur la grille
+├── map/                 # Gestion des cartes
+├── qml/                 # Interface utilisateur QML
+│   ├── case/            # Composants QML des cases
+│   ├── editor/          # Éditeur de cartes
+│   ├── launcher/        # Interface du lanceur
+│   └── menu/            # Menu principal
+├── QtFolderCompressor/  # Compression/décompression
+└── tools/               # Outils de développement
 ```
+
+### Composants Principaux
+
+#### 1. Gestionnaire d'Assets
+Système de gestion des ressources graphiques avec prise en charge des métadonnées et différentes catégories d'assets (décorations, icônes, etc.).
+
+#### 2. Éditeur de Maps
+Interface utilisateur permettant de créer et modifier des cartes de jeu avec placement de cases et décorations.
+
+#### 3. Launcher
+Interface de lancement avec gestion des mises à jour, configuration serveur et création de paquets de ressources.
+
+#### 4. Système d'Effets Visuels
+Composants pour appliquer des effets visuels aux éléments de jeu (flou, ombre, colorisation, etc.).
 
 ## 🎨 Assets et Thème
 
@@ -129,6 +151,15 @@ Comme dans le Monopoly traditionnel, l'objectif est de devenir le joueur le plus
 
 Le jeu supporte plusieurs joueurs (minimum 2), avec des mécaniques qui s'adaptent au nombre de participants.
 
+## 📚 Documentation Additionnelle
+
+- [Asset Manager](./ASSET_MANAGER.md) - Documentation du système de gestion d'assets
+- [Launcher Architecture](./LAUNCHER_ARCHITECTURE.md) - Architecture du launcher et pattern singleton
+- [Héritage QML](./INHERITANCE_QML.md) - Guide sur l'utilisation de l'héritage en QML
+- [Effets Visuels](./VISUAL_EFFECTS_SYSTEM.md) - Documentation du système d'effets visuels
+- [Serveur de Ressources](./SERVEUR_RESSOURCES.md) - Implémentation du serveur de ressources
+- [Asset Preview Cursor](./ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md) - Support des cases dans le curseur de prévisualisation
+
 ---
 
-**Amusez-vous bien dans Meownopoly ! 🐾** 
+**Amusez-vous bien dans Meownopoly ! 🐾**

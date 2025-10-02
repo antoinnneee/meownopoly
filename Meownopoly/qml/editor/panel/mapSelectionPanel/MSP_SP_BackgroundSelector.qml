@@ -8,7 +8,6 @@ Item {
     width: parent.width
     // height: imageContainer.height + scalingSelector.height
     height: 200
-    property var mapInfo : logic.mapInfo
 
     // Image selection square
     Rectangle {
@@ -25,7 +24,7 @@ Item {
         Column {
             anchors.centerIn: parent
             spacing: 10
-            visible: mapInfo.backgroundPath === ""
+            visible: logic.mapInfo.backgroundPath === ""
             
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -57,10 +56,10 @@ Item {
             id: selectedImage
             anchors.fill: parent
             anchors.margins: 4
-            visible: mapInfo.backgroundPath !== ""
-            source: mapInfo.backgroundPath
+            visible: logic.mapInfo.backgroundPath !== ""
+            source: logic.mapInfo.backgroundPath
             fillMode: {
-                switch(mapInfo.backgroundScaling) {
+                switch(logic.mapInfo.backgroundScaling) {
                     case "stretch": return Image.Stretch;
                     case "fit": return Image.PreserveAspectFit;
                     case "Tile": return Image.Tile;
@@ -79,7 +78,7 @@ Item {
             height: 24
             radius: 12
             color: "#CC2222"
-            visible: mapInfo.backgroundPath !== ""
+            visible: logic.mapInfo.backgroundPath !== ""
             opacity: removeMouseArea.containsMouse ? 1.0 : 0.8
             z: 10  // Assure que le bouton est au-dessus de l'image
             
@@ -96,9 +95,9 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    mapInfo.backgroundPath = "";
-                    mapInfo.backgroundScaling = "Fit";
-                    root.imageRemoved();
+                    logic.mapInfo.backgroundPath = "";
+                    logic.mapInfo.backgroundScaling = "Fit";
+                    // root.imageRemoved();
                 }
             }
         }
@@ -112,7 +111,7 @@ Item {
             // Évite de déclencher le click sur le bouton de suppression
             propagateComposedEvents: false
             // Désactive les clics dans la zone du bouton de suppression
-            enabled: mapInfo.backgroundPath === "" || !removeButton.contains(Qt.point(mouseX, mouseY))
+            enabled: logic.mapInfo.backgroundPath === "" || !removeButton.contains(Qt.point(mouseX, mouseY))
         }
     }
     
@@ -125,12 +124,12 @@ Item {
         anchors.horizontalCenter: imageContainer.horizontalCenter
         anchors.topMargin: 8
         color: "transparent"
-        visible: mapInfo.backgroundPath !== ""
+        visible: logic.mapInfo.backgroundPath !== ""
         
         Text {
             anchors.centerIn: parent
             text: {
-                var path = mapInfo.backgroundPath;
+                var path = logic.mapInfo.backgroundPath;
                 var fileName = path.substring(path.lastIndexOf("/") + 1);
                 return fileName.replace(/\.[^/.]+$/, ""); // Enlever l'extension
             }
@@ -149,7 +148,7 @@ Item {
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.bmp)"]
         onAccepted: {
             // Utilisation de selectedFile de la nouvelle API
-            mapInfo.backgroundPath = fileDialog.selectedFile;
+            logic.mapInfo.backgroundPath = fileDialog.selectedFile;
         }
     }
 }

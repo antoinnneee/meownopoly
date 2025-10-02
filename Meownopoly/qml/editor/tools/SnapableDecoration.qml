@@ -25,8 +25,12 @@ SnapableElement {
         decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
     }
 
+    Component.onCompleted: {
+        AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount()
+    }
+
     property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
-    
+
     // MultiEffect properties - Color effects (always enabled)
     displaySettings.effectBrightness: 0.0
     displaySettings.effectContrast: 0.0
@@ -39,7 +43,7 @@ SnapableElement {
     displaySettings.effectBlur: 0.0           // 0.0 to 1.0
     displaySettings.effectBlurMax: 32
     displaySettings.effectBlurMultiplier: 1.0
-    
+
     displaySettings.effectShadowEnabled: false
     displaySettings.effectShadowBlur: 1.0
     displaySettings.effectShadowColor: Qt.rgba(0.0, 0.0, 0.0, 1.0)
@@ -47,14 +51,14 @@ SnapableElement {
     displaySettings.effectShadowVerticalOffset: 0.0
     displaySettings.effectShadowOpacity: 1.0
     displaySettings.effectShadowScale: 1.0
-    
+
     // Rotation properties
     displaySettings.rotationAngle: 0.0
-    
+
     // Mirror properties
     displaySettings.mirrorHorizontal: false
     displaySettings.mirrorVertical: false
-    
+
     property bool effectMaskEnabled: false
     property var effectMaskSource: null
     property bool effectMaskInverted: false
@@ -62,72 +66,95 @@ SnapableElement {
     property real effectMaskThresholdMax: 1.0
     property real effectMaskSpreadAtMin: 0.0
     property real effectMaskSpreadAtMax: 0.0
-    
+
     // Helper function to check if any effect is active
     readonly property bool hasActiveEffects: displaySettings.effectBrightness !== 0.0 ||
-                                           displaySettings.effectContrast !== 0.0 ||
-                                           displaySettings.effectSaturation !== 0.0 ||
-                                           displaySettings.effectColorization !== 0.0 ||
-                                           displaySettings.effectBlurEnabled || 
-                                           displaySettings.effectShadowEnabled || 
-                                           effectMaskEnabled
-                                           
+                                             displaySettings.effectContrast !== 0.0 ||
+                                             displaySettings.effectSaturation !== 0.0 ||
+                                             displaySettings.effectColorization !== 0.0 ||
+                                             displaySettings.effectBlurEnabled ||
+                                             displaySettings.effectShadowEnabled ||
+                                             effectMaskEnabled
+
     // Helper function to check if any transform is active
     readonly property bool hasActiveTransforms: displaySettings.rotationAngle !== 0.0 ||
-                                              displaySettings.mirrorHorizontal ||
-                                              displaySettings.mirrorVertical
-                                           
+                                                displaySettings.mirrorHorizontal ||
+                                                displaySettings.mirrorVertical
+
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
 
-    Image {
-        id: tileImage
-        anchors.fill: parent
-        source: imagePath
-        z: 1  // Assurer que le contenu est sous les poignées
-        asynchronous: true
-        cache: true  // Cache the image to prevent reloading
-        fillMode: Image.PreserveAspectFit
-        smooth: true
-        mipmap: true  // Enable mipmapping for better quality when scaling down
-        
-        // Hide source image when effects are applied for optimal performance
-        visible: !hasActiveEffects
-        
-        // Apply mirror effects using scale
-        transform: [ 
-            Scale{
-                xScale: displaySettings.mirrorHorizontal ? -1 : 1
-                yScale: displaySettings.mirrorVertical ? -1 : 1
-                origin.x: tileImage.width / 2
-                origin.y: tileImage.height / 2
-            },
-            Rotation{
-                angle: displaySettings.rotationAngle
-                origin.x: tileImage.width / 2
-                origin.y: tileImage.height / 2
-            }
-        ]
-        
 
-        onStatusChanged: {
-            if (status === Image.Error) {
-                console.log("AssetManager path failed, falling back to legacy system")
+    Loader {
+        id: loaderImage
+        anchors.fill: parent
+        // sourceComponent: (!isSelected && displaySettings.getAnimePath(imagePath) !== imagePath) && !forceImage ? spriteAnimationComponent : tileImageComponent
+
+        Component.onCompleted: sourceComponent = spriteAnimationComponent
+        onSourceComponentChanged: {
+            console.log("Loader sourceComponent changed to", sourceComponent === spriteAnimationComponent ? "spriteAnimationComponent" : "tileImageComponent")
+        }
+        Component {
+            id: spriteAnimationComponent
+            AnimatedSprite {
+                anchors.fill: parent
+                source: displaySettings.getAnimePath(imagePath)
+                // frameWidth: AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "width").toString()
+                // frameHeight: AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "height").toString()
+                frameCount: 16
+                frameDuration: 170
+            }
+        }
+
+        Component {
+            id: tileImageComponent
+            Image {
+                id: tileImage
+                anchors.fill: parent
+                source: imagePath
+                z: 1  // Assurer que le contenu est sous les poignées
+                asynchronous: true
+                cache: true  // Cache the image to prevent reloading
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true  // Enable mipmapping for better quality when scaling down
+
+                // Hide source image when effects are applied for optimal performance
+                visible: !hasActiveEffects
+
+                // Apply mirror effects using scale
+                transform: [
+                    Scale{
+                        xScale: displaySettings.mirrorHorizontal ? -1 : 1
+                        yScale: displaySettings.mirrorVertical ? -1 : 1
+                        origin.x: tileImage.width / 2
+                        origin.y: tileImage.height / 2
+                    },
+                    Rotation{
+                        angle: displaySettings.rotationAngle
+                        origin.x: tileImage.width / 2
+                        origin.y: tileImage.height / 2
+                    }
+                ]
+                onStatusChanged: {
+                    if (status === Image.Error) {
+                        console.log("AssetManager path failed, falling back to legacy system")
+                    }
+                }
             }
         }
     }
-    
-    // MultiEffect component - only visible when effects are active
+
     MultiEffect {
         id: multiEffect
         anchors.fill: parent
-        source: tileImage
+        source: loaderImage.item
         z: 2  // Above the source image but below handles
         visible: shouldCreateEffect
-        
+
         // Apply the same transforms as the source image
-        
-        transform: [ 
+
+        transform: [
             Scale{
                 xScale: displaySettings.mirrorHorizontal ? -1 : 1
                 yScale: displaySettings.mirrorVertical ? -1 : 1
@@ -140,20 +167,20 @@ SnapableElement {
                 origin.y: multiEffect.height / 2
             }
         ]
-        
+
         // Color effects (always available)
         brightness: displaySettings.effectBrightness
         contrast: displaySettings.effectContrast
         saturation: displaySettings.effectSaturation
         colorization: displaySettings.effectColorization
         colorizationColor: displaySettings.effectColorizationColor
-        
+
         // Blur effect
         blurEnabled: displaySettings.effectBlurEnabled
         blur: displaySettings.effectBlur
         blurMax: displaySettings.effectBlurMax
         blurMultiplier: displaySettings.effectBlurMultiplier
-        
+
         // Shadow effect
         shadowEnabled: displaySettings.effectShadowEnabled
         shadowBlur: displaySettings.effectShadowBlur
@@ -162,8 +189,8 @@ SnapableElement {
         shadowVerticalOffset: displaySettings.effectShadowVerticalOffset
         shadowOpacity: displaySettings.effectShadowOpacity
         shadowScale: displaySettings.effectShadowScale
-        
-        // Mask effect
+
+        // Mask effect ??
         maskEnabled: effectMaskEnabled
         maskSource: effectMaskSource
         maskInverted: effectMaskInverted
@@ -171,22 +198,41 @@ SnapableElement {
         maskThresholdMax: effectMaskThresholdMax
         maskSpreadAtMin: effectMaskSpreadAtMin
         maskSpreadAtMax: effectMaskSpreadAtMax
-        
+
         // Performance optimization: auto-padding management
         autoPaddingEnabled: false//displaySettings.effectBlurEnabled || displaySettings.effectShadowEnabled
     }
 
     function isTransparent(mouse){
-        var deltaHeight = tileImage.height - tileImage.paintedHeight
-        var deltaWidth = tileImage.width - tileImage.paintedWidth
+
+        if (loaderImage.sourceComponent === spriteAnimationComponent){
+            loaderImage.sourceComponent =  tileImageComponent
+        }
+
+        while (loaderImage.status !== Loader.Ready){
+            // Wait for the image to load
+        }
+
+        console.log("IS READY ? " + loaderImage.status)
+
+                // if (!loaderImage.item || typeof loaderImage.item.paintedHeight === 'undefined') {
+        //     return false  // On considere les sprites animes comme non-transparents
+        // }
+
+        var deltaHeight = loaderImage.item.height - loaderImage.item.paintedHeight
+        var deltaWidth = loaderImage.item.width - loaderImage.item.paintedWidth
 
         var imageX = mouse.x - deltaWidth/2
         var imageY = mouse.y - deltaHeight/2
 
-        return AssetManager.isTransparent(tileImage.paintedWidth/imageX, tileImage.paintedHeight/imageY, imagePath)
+        var flag = AssetManager.isTransparent(loaderImage.item.paintedWidth/imageX, loaderImage.item.paintedHeight/imageY, imagePath)
+
+        if (loaderImage.sourceComponent === tileImageComponent){
+            loaderImage.sourceComponent = spriteAnimationComponent
+        }
+        return flag;
     }
 
-    
     // Functions to reset effects
     function resetColorEffects() {
         displaySettings.effectBrightness = 0.0
@@ -195,14 +241,14 @@ SnapableElement {
         displaySettings.effectColorization = 0.0
         displaySettings.effectColorizationColor = "#ffffff"
     }
-    
+
     function resetBlurEffect() {
         displaySettings.effectBlurEnabled = false
         displaySettings.effectBlur = 0.0
         displaySettings.effectBlurMax = 32
         displaySettings.effectBlurMultiplier = 1.0
     }
-    
+
     function resetShadowEffect() {
         displaySettings.effectShadowEnabled = false
         displaySettings.effectShadowBlur = 1.0
@@ -212,7 +258,7 @@ SnapableElement {
         displaySettings.effectShadowOpacity = 1.0
         displaySettings.effectShadowScale = 1.0
     }
-    
+
     function resetMaskEffect() {
         effectMaskEnabled = false
         effectMaskSource = null
@@ -222,24 +268,24 @@ SnapableElement {
         effectMaskSpreadAtMin = 0.0
         effectMaskSpreadAtMax = 0.0
     }
-    
+
     function resetAllEffects() {
         resetColorEffects()
         resetBlurEffect()
         resetShadowEffect()
         resetMaskEffect()
     }
-    
+
     // Functions to reset transforms
     function resetRotation() {
         displaySettings.rotationAngle = 0.0
     }
-    
+
     function resetMirror() {
         displaySettings.mirrorHorizontal = false
         displaySettings.mirrorVertical = false
     }
-    
+
     function resetAllTransforms() {
         resetRotation()
         resetMirror()
