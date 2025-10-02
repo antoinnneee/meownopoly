@@ -6,7 +6,7 @@ QString DisplayParameter::getAnimePath(QString imagePath)
     // return "file:///C:/QtProject/meownopoly/Meownopoly/build/asset_extracted/decoration/tree/0-animated.png";
 
     QString animePath = imagePath;
-    animePath = animePath.replace(animePath.indexOf(".png"), 4, "-animated.png");
+    animePath = animePath.replace(animePath.indexOf(".png"), 4, "-animated.gif");
     if (QFile::exists(animePath.remove("file:///"))){
     return animePath.prepend("file:///");
     }
