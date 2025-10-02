@@ -25,9 +25,9 @@ SnapableElement {
         decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
     }
 
-    Component.onCompleted: {
-        AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount()
-    }
+    // Component.onCompleted: {
+    //     AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount()
+    // }
 
     property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
 
@@ -84,7 +84,6 @@ SnapableElement {
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
 
-
     Loader {
         id: loaderImage
         anchors.fill: parent
@@ -92,13 +91,18 @@ SnapableElement {
         sourceComponent: (!isSelected && displaySettings.getAnimePath(imagePath) !== imagePath) && !forceImage ? spriteAnimationComponent : tileImageComponent
         Component {
             id: spriteAnimationComponent
+
+            // Sprite
+            // AnimatedSpriteDirectory
             AnimatedSprite {
                 anchors.fill: parent
                 source: displaySettings.getAnimePath(imagePath)
-                frameWidth: parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "width"))
-                frameHeight: parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "height"))
+                frameWidth: parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "width"))*
+                                parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "ratioWidth"))
+                frameHeight: parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "height"))*
+                             parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "ratioHeight"))
                 frameCount: 16
-                frameDuration: 100
+                frameDuration: 10000
             }
         }
 
