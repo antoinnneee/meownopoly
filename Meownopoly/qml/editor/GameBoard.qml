@@ -13,6 +13,7 @@ import CaseCardBoardBox
 import CaseJail
 import CaseToJail
 import CaseCatDoor
+import "tools"
 import CaseFreeNap
 import CaseCatDevice
 import "tools"
@@ -70,15 +71,8 @@ Rectangle {
     }
 
     // Rectangle de sélection
-    Rectangle {
+    SelectionRect {
         id: selectionRect
-        parent: workArea
-        visible: false
-        color: "#C7E8FF" // Bleu semi-transparent
-        border.width: 2
-        border.color: "#3498db"
-        opacity: 0.7
-        z: 100 // S'assurer qu'il est au-dessus des autres éléments
     }
     // Grille de l'éditeur
     GridManager {

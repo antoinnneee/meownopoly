@@ -158,52 +158,5 @@ Item {
                 }
             }
         }
-        
-        // Bouton de suppression
-        Rectangle {
-            id: deleteButton
-            width: parent.width
-            height: width
-            color: "#F44336"
-            border.color: "white"
-            border.width: 1
-            radius: 4
-            
-            Text {
-                anchors.centerIn: parent
-                text: "🗑️"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 24
-            }
-            
-            MouseArea {
-                id: deleteButtonMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    console.log("Suppression de l'élément demandée")
-                    deleteRequested()
-                }
-                
-                onEntered: deleteButton.state = "hovered"
-                onExited: deleteButton.state = ""
-            }
-            
-            states: State {
-                name: "hovered"
-                PropertyChanges { 
-                    target: deleteButton
-                    scale: 1.05
-                }
-            }
-            
-            transitions: Transition {
-                NumberAnimation { 
-                    properties: "scale"
-                    duration: 100
-                }
-            }
-        }
     }
 }

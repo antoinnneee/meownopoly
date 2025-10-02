@@ -182,24 +182,9 @@ Item {
     // Fonction pour mettre à jour l'apparence du rectangle de sélection
     function updateSelectionRect() {
         if (!isSelectingArea) return
-
-        // Calculer les coordonnées et dimensions en pixels
-        var startX = selectionStart.x * editorGrid.gridSize
-        var startY = selectionStart.y * editorGrid.gridSize
-        var currentX = selectionCurrent.x * editorGrid.gridSize
-        var currentY = selectionCurrent.y * editorGrid.gridSize
-
-        // Assurer que le rectangle est correctement positionné peu importe la direction du drag
-        var x = Math.min(startX, currentX)
-        var y = Math.min(startY, currentY)
-        var width = Math.abs(currentX - startX)
-        var height = Math.abs(currentY - startY)
-
-        // Mise à jour du rectangle de sélection
-        selectionRect.x = x
-        selectionRect.y = y
-        selectionRect.width = width
-        selectionRect.height = height
+        
+        // Déléguer la logique de géométrie au composant SelectionRect
+        selectionRect.updateGeometryFromGrid(selectionStart, selectionCurrent, editorGrid.gridSize)
     }
 
     // Fonction pour finaliser la sélection et créer une case
@@ -224,13 +209,13 @@ Item {
 
         // Réinitialiser l'état de sélection
         isSelectingArea = false
-        selectionRect.visible = false
+        selectionRect.hide()
     }
 
     // Fonction pour annuler la sélection en cours
     function cancelSelection() {
         isSelectingArea = false
-        selectionRect.visible = false
+        selectionRect.hide()
     }
 
     // Fonction pour créer une case à partir d'une sélection
@@ -353,7 +338,7 @@ Item {
                 var gridPos = editorGrid.getGridPosition(mouse.x, mouse.y)
                 selectionStart = gridPos
                 selectionCurrent = gridPos
-                selectionRect.visible = true
+                selectionRect.show()
                 logic.updateSelectionRect()
                 mouse.accepted = true // Important pour éviter la propagation
             } else {

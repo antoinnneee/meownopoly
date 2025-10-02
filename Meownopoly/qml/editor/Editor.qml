@@ -179,7 +179,10 @@ Rectangle {
         }
 
         onPositionChanged: function(mouse) {
-
+            // Mettre à jour la sélection par rectangle si active
+            if (logic.mouseLogic.isRectangleSelecting) {
+                logic.mouseLogic.updateRectangleSelection(mouse.x, mouse.y)
+            }
         }
 
         onPressAndHold: function (mouse) {
@@ -287,27 +290,6 @@ Rectangle {
     }
 
 
-    // Menu contextuel pour la création d'éléments
-    Menu {
-        id: contextMenu
-
-        property var clickGridCoord: Qt.point(0, 0)
-
-        MenuItem {
-            text: "Créer une Case"
-            onTriggered: {
-                console.log(contextMenu.clickGridCoord)
-                logic.tileLogic.createNewTileAtPosition(Case.CS_RestArea, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.CaseTile)
-            }
-        }
-
-        MenuItem {
-            text: "Créer une Décoration"
-            onTriggered: {
-                logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, contextMenu.clickGridCoord.x, contextMenu.clickGridCoord.y, ItemSnapable.DecorationTile)
-            }
-        }
-    }
 
     // Panneau d'information sur l'élément sélectionné
     InfoPanel {

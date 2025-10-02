@@ -86,8 +86,6 @@ QtObject {
 
         var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
         var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
-        contextMenu.clickGridCoord = gridPos
-        contextMenu.popup()
     }
 
     function clickedLeft(mouse, drag)

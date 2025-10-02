@@ -4,16 +4,46 @@ import "../tools/snapable"
 MouseLogic_Base {
     id: mouseLogic
     property bool isDragging: false
+    
+    // Propriétés pour la sélection par rectangle
+    property bool isRectangleSelecting: false
+    property point rectangleStart: Qt.point(0, 0)
+    property point rectangleCurrent: Qt.point(0, 0)
 
     function dragChanged(drag)
     {
         console.log("[LOGIC] drag changed")
         isDragging = drag.active
+        
+        // Si on est en mode sélection rectangle, empêcher le drag
+        if (isRectangleSelecting) {
+            drag.target = null
+        }
     }
 
     function pressedLeft(mouse, drag)
     {
         mouse.accepted = true
+        
+        // Si aucun élément n'est cliqué, commencer la sélection par rectangle
+        if (clickElement.length === 0) {
+            console.log("[LOGIC] Starting rectangle selection")
+            isRectangleSelecting = true
+            rectangleStart = Qt.point(mouse.x, mouse.y)
+            rectangleCurrent = Qt.point(mouse.x, mouse.y)
+            
+            // Empêcher le drag de la carte pendant la sélection rectangle
+            drag.target = null
+            
+            // Activer le rectangle de sélection
+            if (logic.selectionRect) {
+                logic.selectionRect.show()
+                logic.selectionRect.updateGeometry(rectangleStart, rectangleCurrent)
+            }
+            return
+        }
+        
+        // Si un élément est cliqué, utiliser la logique normale
         var deltaX = groupeSelection.x
         var deltaY = groupeSelection.y
         drag.target = groupeSelection
@@ -29,6 +59,19 @@ MouseLogic_Base {
     function release(mouse, drag)
     {
         console.log("[LOGIC] release drag:", isDragging)
+        
+        // Finaliser la sélection par rectangle si active
+        if (isRectangleSelecting) {
+            console.log("[LOGIC] Finalizing rectangle selection")
+            finalizeRectangleSelection()
+            isRectangleSelecting = false
+            if (logic.selectionRect) {
+                logic.selectionRect.hide()
+            }
+            // Réinitialiser le drag pour les prochaines interactions
+            drag.target = null
+        }
+        
         if (isDragging)
         {
             clickElement = []
@@ -92,11 +135,7 @@ MouseLogic_Base {
         clickElement = []
     }
     function clickedRight(mouse, drag) {
-
-        var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
-        var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
-        contextMenu.clickGridCoord = gridPos
-        contextMenu.popup()
+        // Menu contextuel supprimé - pas d'action sur clic droit
         mouse.accepted = true
     }
 
@@ -105,6 +144,73 @@ MouseLogic_Base {
         if (drag.active === true) {
             return
         }
+    }
+    
+    // Fonction pour mettre à jour la sélection par rectangle
+    function updateRectangleSelection(mouseX, mouseY) {
+        if (!isRectangleSelecting) return
+        
+        rectangleCurrent = Qt.point(mouseX, mouseY)
+        
+        // Mettre à jour le rectangle visuel
+        if (logic.selectionRect) {
+            logic.selectionRect.updateGeometry(rectangleStart, rectangleCurrent)
+        }
+        
+        // Détecter les éléments dans le rectangle et les sélectionner
+        var elementsInRect = getElementsInRectangle(rectangleStart, rectangleCurrent)
+        selectElementsInRectangle(elementsInRect)
+    }
+    
+    // Fonction pour détecter les éléments dans le rectangle
+    function getElementsInRectangle(start, current) {
+        var elements = []
+        
+        // Calculer les limites du rectangle
+        var rectLeft = Math.min(start.x, current.x)
+        var rectRight = Math.max(start.x, current.x)
+        var rectTop = Math.min(start.y, current.y)
+        var rectBottom = Math.max(start.y, current.y)
+        
+        // Parcourir tous les éléments snapables
+        for (var i = 0; i < logic.snapableTilesList.length; i++) {
+            var element = logic.snapableTilesList[i]
+            if (!element) continue
+            
+            // Calculer les limites de l'élément
+            var elementLeft = element.x
+            var elementRight = element.x + element.width
+            var elementTop = element.y
+            var elementBottom = element.y + element.height
+            
+            // Vérifier l'intersection
+            if (!(elementRight < rectLeft || elementLeft > rectRight || 
+                  elementBottom < rectTop || elementTop > rectBottom)) {
+                elements.push(element)
+            }
+        }
+        
+        return elements
+    }
+    
+    // Fonction pour sélectionner les éléments dans le rectangle
+    function selectElementsInRectangle(elements) {
+        // Désélectionner tous les éléments actuels
+        unselectAllElements()
+        
+        // Sélectionner les nouveaux éléments
+        for (var i = 0; i < elements.length; i++) {
+            var element = elements[i]
+            element.elementPressed()
+            element.parent = groupeSelection
+            selectedElements.push(element)
+        }
+    }
+    
+    // Fonction pour finaliser la sélection par rectangle
+    function finalizeRectangleSelection() {
+        var elementsInRect = getElementsInRectangle(rectangleStart, rectangleCurrent)
+        selectElementsInRectangle(elementsInRect)
     }
 
 }
