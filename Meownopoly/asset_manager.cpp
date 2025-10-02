@@ -209,7 +209,7 @@ QString AssetManager::getAssetPath(const QString &category, const QString &type,
     return "";  // todo get default asset path
 }
 
-QVariant AssetManager::getAssetElement(const QString &category, const QString &type, const QString &id, const QString &elementName)
+QString AssetManager::getAssetElement(const QString &category, const QString &type, const QString &id, const QString &elementName)
 {
 
     QString modelName = category + "-" + type;
@@ -236,7 +236,7 @@ QVariant AssetManager::getAssetElement(const QString &category, const QString &t
             for (auto it = roles.constBegin(); it != roles.constEnd(); ++it) {
                 if (it.value() == elementName.toLatin1()) {
                     // Utiliser data() avec le rôle trouvé
-                    return model->data(index, it.key());
+                    return model->data(index, it.key()).toString();
                 }
             }
             ASSET_ERROR("Role name not found:" << elementName);

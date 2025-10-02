@@ -88,7 +88,12 @@ SnapableElement {
     Loader {
         id: loaderImage
         anchors.fill: parent
-        sourceComponent: !isSelected && displaySettings.getAnimePath(imagePath) !== imagePath ? spriteAnimationComponent : tileImageComponent
+        // sourceComponent: (!isSelected && displaySettings.getAnimePath(imagePath) !== imagePath) && !forceImage ? spriteAnimationComponent : tileImageComponent
+
+        Component.onCompleted: sourceComponent = spriteAnimationComponent
+        onSourceComponentChanged: {
+            console.log("Loader sourceComponent changed to", sourceComponent === spriteAnimationComponent ? "spriteAnimationComponent" : "tileImageComponent")
+        }
         Component {
             id: spriteAnimationComponent
             AnimatedSprite {
@@ -199,26 +204,33 @@ SnapableElement {
     }
 
     function isTransparent(mouse){
-        if (loaderImage.item === spriteAnimationComponent){
-            loaderImage.item = tileImageComponent
+
+        if (loaderImage.sourceComponent === spriteAnimationComponent){
+            loaderImage.sourceComponent =  tileImageComponent
         }
 
-        console.log("ENTER ITEM " + loaderImage.item)
-        // if (!loaderImage.item || typeof loaderImage.item.paintedHeight === 'undefined') {
+        while (loaderImage.status !== Loader.Ready){
+            // Wait for the image to load
+        }
+
+        console.log("IS READY ? " + loaderImage.status)
+
+                // if (!loaderImage.item || typeof loaderImage.item.paintedHeight === 'undefined') {
         //     return false  // On considere les sprites animes comme non-transparents
         // }
+
         var deltaHeight = loaderImage.item.height - loaderImage.item.paintedHeight
         var deltaWidth = loaderImage.item.width - loaderImage.item.paintedWidth
 
         var imageX = mouse.x - deltaWidth/2
         var imageY = mouse.y - deltaHeight/2
 
-        if (loaderImage.item === tileImageComponent){
-            loaderImage.item = spriteAnimationComponent
-        }
-        console.log("EXIT ITEM " + loaderImage.item)
+        var flag = AssetManager.isTransparent(loaderImage.item.paintedWidth/imageX, loaderImage.item.paintedHeight/imageY, imagePath)
 
-        return AssetManager.isTransparent(loaderImage.item.paintedWidth/imageX, loaderImage.item.paintedHeight/imageY, imagePath)
+        if (loaderImage.sourceComponent === tileImageComponent){
+            loaderImage.sourceComponent = spriteAnimationComponent
+        }
+        return flag;
     }
 
     // Functions to reset effects

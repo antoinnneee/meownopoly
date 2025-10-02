@@ -96,7 +96,7 @@ public:
     Q_INVOKABLE QString buildAssetPath(const QString &category, const QString &type, const QString &filename) const;
     Q_INVOKABLE QString getAssetPath(const QString &category, const QString &type, const QString &id);
 
-    Q_INVOKABLE QVariant getAssetElement(const QString &category, const QString &type, const QString &id, const QString &elementName);
+    Q_INVOKABLE QString getAssetElement(const QString &category, const QString &type, const QString &id, const QString &elementName);
 
     Q_INVOKABLE QStringList categories() const { return m_categories; }
     void setCategories(const QStringList &categories);
