@@ -85,10 +85,6 @@ SnapableElement {
         id: loaderImage
         anchors.fill: parent
         sourceComponent: !isSelected && displaySettings.getAnimePath(imagePath) !== imagePath ? spriteAnimationComponent : tileImageComponent
-
-        property real paintedHeightItem : 0
-        property real paintedWidthItem : 0
-
         Component {
             id: spriteAnimationComponent
             AnimatedSprite {
@@ -103,7 +99,6 @@ SnapableElement {
         Component {
             id: tileImageComponent
             Image {
-                signal setPaintedSize(real height, real width)
                 id: tileImage
                 anchors.fill: parent
                 source: imagePath
@@ -113,9 +108,6 @@ SnapableElement {
                 fillMode: Image.PreserveAspectFit
                 smooth: true
                 mipmap: true  // Enable mipmapping for better quality when scaling down
-
-
-                Component.onCompleted: setPaintedSize(paintedHeight, paintedWidth)
 
                 // Hide source image when effects are applied for optimal performance
                 visible: !hasActiveEffects
@@ -139,13 +131,6 @@ SnapableElement {
                         console.log("AssetManager path failed, falling back to legacy system")
                     }
                 }
-            }
-        }
-        Connections {
-            target: loaderImage.item
-            function onSetPaintedSize(height, width){
-                paintedHeightItem = height
-                paintedWidthItem = width
             }
         }
     }
@@ -209,20 +194,23 @@ SnapableElement {
     }
 
     function isTransparent(mouse){
-        console.log("height ", loaderImage.item.height)
-        console.log("width ", loaderImage.item.width)
-        console.log("paintedHeight ", loaderImage.item.paintedHeight)
-        console.log("paintedWidth ", loaderImage.item.paintedWidth)
+        // Vérifier si l'item est une Image (pas un AnimatedSprite)
+        if (!loaderImage.item || typeof loaderImage.item.paintedHeight === 'undefined') {
+            console.log("Item is not an Image or has no paintedHeight property")
+            return false  // On considère les sprites animés comme non-transparents
+        }
 
-        var deltaHeight = loaderImage.item.height - loaderImage.paintedHeight
-        var deltaWidth = loaderImage.item.width - loaderImage.paintedWidth
+        console.log("loaderImage.item.height ", loaderImage.item.height, " paintedHeight ", loaderImage.item.paintedHeight)
+        console.log("loaderImage.item.width ", loaderImage.item.width, " paintedWidth ", loaderImage.item.paintedWidth)
+
+        var deltaHeight = loaderImage.item.height - loaderImage.item.paintedHeight
+        var deltaWidth = loaderImage.item.width - loaderImage.item.paintedWidth
 
         var imageX = mouse.x - deltaWidth/2
         var imageY = mouse.y - deltaHeight/2
 
-        return AssetManager.isTransparent(loaderImage.paintedWidth/imageX, loaderImage.paintedHeight/imageY, imagePath)
+        return AssetManager.isTransparent(loaderImage.item.paintedWidth/imageX, loaderImage.item.paintedHeight/imageY, imagePath)
     }
-
 
     // Functions to reset effects
     function resetColorEffects() {
