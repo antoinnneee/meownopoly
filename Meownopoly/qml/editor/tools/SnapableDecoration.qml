@@ -25,6 +25,10 @@ SnapableElement {
         decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
     }
 
+    Component.onCompleted: {
+        AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount()
+    }
+
     property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
 
     // MultiEffect properties - Color effects (always enabled)
@@ -90,12 +94,13 @@ SnapableElement {
             AnimatedSprite {
                 anchors.fill: parent
                 source: displaySettings.getAnimePath(imagePath)
-                frameWidth: 512
-                frameHeight: 512
+                // frameWidth: AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "width").toString()
+                // frameHeight: AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "height").toString()
                 frameCount: 16
                 frameDuration: 170
             }
         }
+
         Component {
             id: tileImageComponent
             Image {
@@ -194,20 +199,24 @@ SnapableElement {
     }
 
     function isTransparent(mouse){
-        // Vérifier si l'item est une Image (pas un AnimatedSprite)
-        if (!loaderImage.item || typeof loaderImage.item.paintedHeight === 'undefined') {
-            console.log("Item is not an Image or has no paintedHeight property")
-            return false  // On considère les sprites animés comme non-transparents
+        if (loaderImage.item === spriteAnimationComponent){
+            loaderImage.item = tileImageComponent
         }
 
-        console.log("loaderImage.item.height ", loaderImage.item.height, " paintedHeight ", loaderImage.item.paintedHeight)
-        console.log("loaderImage.item.width ", loaderImage.item.width, " paintedWidth ", loaderImage.item.paintedWidth)
-
+        console.log("ENTER ITEM " + loaderImage.item)
+        // if (!loaderImage.item || typeof loaderImage.item.paintedHeight === 'undefined') {
+        //     return false  // On considere les sprites animes comme non-transparents
+        // }
         var deltaHeight = loaderImage.item.height - loaderImage.item.paintedHeight
         var deltaWidth = loaderImage.item.width - loaderImage.item.paintedWidth
 
         var imageX = mouse.x - deltaWidth/2
         var imageY = mouse.y - deltaHeight/2
+
+        if (loaderImage.item === tileImageComponent){
+            loaderImage.item = spriteAnimationComponent
+        }
+        console.log("EXIT ITEM " + loaderImage.item)
 
         return AssetManager.isTransparent(loaderImage.item.paintedWidth/imageX, loaderImage.item.paintedHeight/imageY, imagePath)
     }

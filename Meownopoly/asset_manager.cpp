@@ -157,7 +157,7 @@ QObject* AssetManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 AssetModel* AssetManager::getAssetModel(const QString &category, const QString &type)
 {
-    // VÃ©rification des paramÃ¨tres
+    // VÃ©rification des paramEtres
     if (category.isEmpty() || type.isEmpty()) {
         ASSET_ERROR("Invalid parameters - category:" << category << "type:" << type);
         return nullptr;
@@ -207,6 +207,43 @@ QString AssetManager::getAssetPath(const QString &category, const QString &type,
 
     ASSET_ERROR("Asset not valid, returning empty path for" << category << type << id);
     return "";  // todo get default asset path
+}
+
+QVariant AssetManager::getAssetElement(const QString &category, const QString &type, const QString &id, const QString &elementName)
+{
+
+    QString modelName = category + "-" + type;
+    AssetModel *model = nullptr;
+
+    QVariant element;
+
+    for (int i = 0; i < m_models.size(); i++){
+        if (m_models.at(i).first == modelName){
+            model = m_models.at(i).second;
+            break;
+        }
+    }
+    if (model == nullptr){
+        ASSET_ERROR("no models founds");
+        return "";
+    }
+
+    for (int i = 0; i < model->rowCount(); i++){
+        QModelIndex index = model->index(i, 0);
+        if (model->data(index, AssetModel::IdRole).toString() == id){
+            // Convertir le nom du rôle en entier en utilisant roleNames()
+            QHash<int, QByteArray> roles = model->roleNames();
+            for (auto it = roles.constBegin(); it != roles.constEnd(); ++it) {
+                if (it.value() == elementName.toLatin1()) {
+                    // Utiliser data() avec le rôle trouvé
+                    return model->data(index, it.key());
+                }
+            }
+            ASSET_ERROR("Role name not found:" << elementName);
+            return "";
+        }
+    }
+    return "";
 }
 
 void AssetManager::reloadAssets()

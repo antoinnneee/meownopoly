@@ -32,6 +32,21 @@ class AssetModel : public QAbstractListModel
 {
     Q_OBJECT
 
+private:
+    struct Asset {
+        QString path;
+        QString type;
+        QString category;
+        int ratioWidth;
+        int ratioHeight;
+        int width;
+        int height;
+        QString id;
+        QString filename;
+    };
+
+    QList<Asset> m_assets;
+
 public:
     enum AssetRoles {
         PathRole = Qt::UserRole + 1,
@@ -53,27 +68,15 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     // Asset management
-    void addAsset(const QString &path, const QString &type, const QString &category, 
+    void addAsset(const QString &path, const QString &type, const QString &category,
                   int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename);
     void clear();
     
     // Filtering
     Q_INVOKABLE AssetModel* createFilteredModel(const QString &type) const;
 
-private:
-    struct Asset {
-        QString path;
-        QString type;
-        QString category;
-        int ratioWidth;
-        int ratioHeight;
-        int width;
-        int height;
-        QString id;
-        QString filename;
-    };
+    QList<Asset> getAssetList(){return m_assets;}
 
-    QList<Asset> m_assets;
 };
 
 class AssetManager : public QObject
@@ -93,6 +96,8 @@ public:
     Q_INVOKABLE QString buildAssetPath(const QString &category, const QString &type, const QString &filename) const;
     Q_INVOKABLE QString getAssetPath(const QString &category, const QString &type, const QString &id);
 
+    Q_INVOKABLE QVariant getAssetElement(const QString &category, const QString &type, const QString &id, const QString &elementName);
+
     Q_INVOKABLE QStringList categories() const { return m_categories; }
     void setCategories(const QStringList &categories);
 
@@ -105,7 +110,7 @@ public:
     Q_INVOKABLE QStringList getAvailableCategories() const;
     Q_INVOKABLE bool isAssetValid(const QString &category, const QString &type, const QString &id);
     Q_INVOKABLE void reloadAssets();
-        
+
     // Metadata generation
     Q_INVOKABLE bool generateMetadataForDirectory(const QString &directoryPath);
     Q_INVOKABLE bool generateAllMetadata();
