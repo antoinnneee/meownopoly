@@ -95,10 +95,10 @@ SnapableElement {
             AnimatedSprite {
                 anchors.fill: parent
                 source: displaySettings.getAnimePath(imagePath)
-                // frameWidth: AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "width").toString()
-                // frameHeight: AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "height").toString()
+                frameWidth: parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "width"))
+                frameHeight: parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "height"))
                 frameCount: 16
-                frameDuration: 170
+                frameDuration: 100
             }
         }
 
