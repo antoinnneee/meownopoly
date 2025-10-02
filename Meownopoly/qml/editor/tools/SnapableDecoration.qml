@@ -8,7 +8,6 @@ import AssetManager
 import ItemSnapable
 import DecorationParameter
 
-import MyApp.Images
 import AnimationProvider
 
 SnapableElement {
