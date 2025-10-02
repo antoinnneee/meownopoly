@@ -83,7 +83,6 @@ SnapableElement {
 
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
-
     AnimatedImage {
         id: tileImage
         anchors.fill: parent
