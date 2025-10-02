@@ -18,56 +18,8 @@ MouseLogic_Base {
         var deltaY = groupeSelection.y
         drag.target = groupeSelection
         return
-        // propagate pressed to first clicked element
-        if (mouse.modifiers & Qt.ControlModifier)
-        {
-            // multi selection
-            console.log("[LOGIC] pressed left with control modifier")
-            if (clickElement.length >= 0) {
-                if (!clickElement[0].isSelected)
-                {
-                    clickElement[0].elementPressed()
-                    clickElement[0].parent = groupeSelection
-                    clickElement[0].x = clickElement[0].x - deltaX
-                    clickElement[0].y = clickElement[0].y - deltaY
-                    selectedElements.push(clickElement[0])
-                }
-                else
-                {
-                    selectedElements[0].x = selectedElements[0].x + deltaX
-                    selectedElements[0].y = selectedElements[0].y + deltaY
-                    selectedElements[0].isSelected = false
-                    selectedElements[0].parent = workArea
-                    selectedElements[0].elementReleased()
-                    selectedElements.splice(0,1)
-                }
-            }
-            drag.target = groupeSelection
-        }
-        else
-        {
-            console.log("[LOGIC] pressed left without control modifier")
-            unselectAllElements()
-            if (clickElement.length > 0) {
-                clickElement[0].elementPressed()
-                clickElement[0].parent = groupeSelection
-                drag.target = groupeSelection 
-                selectedElements.push(clickElement[0])
-            }
-        }
-        mouse.accepted = true
     }
 
-    // multi selection : 
-    /*
-            console.log("main MA pressed : nb Element ", clickElement.length)
-            mouse.accepted = true
-            for (var i = clickElement.length - 1; i >= 0; i--) {
-                clickElement[i].elementPressed()
-                clickElement[i].parent = groupeSelection
-            }
-            drag.target = groupeSelection
-    */
     function pressedRight(mouse, drag)
     {
         drag.target = editorGrid
@@ -88,18 +40,6 @@ MouseLogic_Base {
     {
         console.log("[LOGIC] clicked left")
         mouse.accepted = true
-        /*
-        if (!(mouse.modifiers & Qt.ControlModifier))
-        {
-            unselectAllElements()
-            if (clickElement.length > 0) {
-                clickElement[0].elementPressed()
-                clickElement[0].parent = groupeSelection
-                drag.target = groupeSelection
-                selectedElements.push(clickElement[0])
-            }
-        }
-        */
         if (!(mouse.modifiers & Qt.ControlModifier))
         {
             if ((clickElement.length > 0 && selectedElements.length > 0) && clickElement[0] === selectedElements[0]) {   // unselect item
@@ -148,9 +88,7 @@ MouseLogic_Base {
                     }
                 }
             }
-
         }
-
         clickElement = []
     }
     function clickedRight(mouse, drag) {

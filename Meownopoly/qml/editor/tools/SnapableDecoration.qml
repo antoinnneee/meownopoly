@@ -95,7 +95,6 @@ SnapableElement {
         smooth: true
         mipmap: true  // Enable mipmapping for better quality when scaling down
 
-        playing: true
         // Hide source image when effects are applied for optimal performance
         visible: !hasActiveEffects
 
