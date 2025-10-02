@@ -27,6 +27,28 @@ Rectangle {
 
     }
 
+    Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_Delete) {
+            var selectItem = logic.mouseLogic.selectedElements
+            for (var i = 0; i < selectItem.length; i++) {
+                selectItem[i].deleteRequest()
+            }
+            event.accepted = true
+        }
+        else if (event.key === Qt.Key_Escape) {
+            if (root.isAssetSelected) {
+                selectionPanel.assetManagerSettings.clearAssetSelection()
+                event.accepted = true
+            }
+        }
+
+    }
+
+    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
+    focus: true
+
+
+
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
 
@@ -221,19 +243,6 @@ Rectangle {
     // Rectangle de sélection
     SelectionRect {
         id: selectionRect
-    }
-
-    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
-    focus: true
-
-    // Keyboard shortcuts
-    Keys.onPressed: function(event) {
-        if (event.key === Qt.Key_Escape) {
-            if (root.isAssetSelected) {
-                selectionPanel.assetManagerSettings.clearAssetSelection()
-                event.accepted = true
-            }
-        }
     }
 
     SelectionPanel{

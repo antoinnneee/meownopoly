@@ -90,9 +90,14 @@ Rectangle {
 
     signal elementResized(var element, real newWidth, real newHeight)
     signal snapCompleted(var element)
-    signal elementDeleted(var element)
     signal elementConfigurationRequested(var element)
     signal elementConnectionsConfigurationRequested(var element)
+
+    signal elementDeleted(var element)  // sent after delete
+    function deleteRequest()
+    {
+        elementControls.deleteRequested()
+    }
     
     SnapableElementDeleteAnimation {
         id: deleteAnimation
