@@ -114,7 +114,6 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-
             onClicked: {
                 root.startGameRequested()  // Emit the signal
             }

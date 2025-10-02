@@ -36,8 +36,13 @@ Rectangle {
             event.accepted = true
         }
         else if (event.key === Qt.Key_Escape) {
+            console.log("ESCAPED")
             if (root.isAssetSelected) {
                 selectionPanel.assetManagerSettings.clearAssetSelection()
+                event.accepted = true
+            } else {
+                // Afficher le menu d'échappement
+                escMenu.show()
                 event.accepted = true
             }
         }
@@ -46,6 +51,11 @@ Rectangle {
 
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
+    
+    // Fonction pour redonner le focus à l'éditeur
+    function regainFocus() {
+        forceActiveFocus()
+    }
 
 
 
@@ -90,19 +100,6 @@ Rectangle {
             logic.tileLogic.builtConnections();
 
             mapInfo = map.mapInfo
-            // var tmpInfo = map.mapInfo
-
-
-            // mapInfo.mapName = tmpInfo.mapName
-            // mapInfo.version = tmpInfo.version
-            // mapInfo.mapDescription = tmpInfo.mapDescription
-            // mapInfo.mapCreationDate = tmpInfo.mapCreationDate
-            // mapInfo.mapLastModified = tmpInfo.mapLastModified
-            // mapInfo.backgroundPath = tmpInfo.backgroundPath
-            // mapInfo.backgroundScaling = tmpInfo.backgroundScaling
-            // mapInfo.backgroundTileSize = tmpInfo.backgroundTileSize
-            // mapInfo.isBackgroundOnGrill = tmpInfo.isBackgroundOnGrill
-            // mapInfo.musicPath = tmpInfo.musicPath
 
         }
     }
@@ -376,6 +373,31 @@ Rectangle {
 
             // Apply visual effects to the new tile (only if effects are not locked)
             applyVisualEffectsToNewTile(newTile)
+        }
+    }
+
+    // Menu d'échappement
+    EditorEscMenu {
+        id: escMenu
+        
+        onReturnToMainMenu: {
+            console.log("Retour au menu principal demandé")
+            // Retourner au menu principal via le StackView
+            // Nous devons accéder au StackView parent depuis l'éditeur
+            var stackView = parent
+            while (stackView && !stackView.hasOwnProperty('pop')) {
+                stackView = stackView.parent
+            }
+            if (stackView && stackView.pop) {
+                stackView.pop()
+            }
+        }
+        
+        onVisibleChanged: {
+            if (!visible) {
+                // Redonner le focus à l'éditeur quand le menu se ferme
+                root.forceActiveFocus()
+            }
         }
     }
 }

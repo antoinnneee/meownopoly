@@ -149,5 +149,6 @@
         <file>qml/editor/MenuMapAtStart.qml</file>
         <file>qml/editor/Background.qml</file>
         <file>qml/test/Test_Comp.qml</file>
+        <file>qml/editor/EditorEscMenu.qml</file>
     </qresource>
 </RCC>
