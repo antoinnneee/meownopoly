@@ -84,63 +84,38 @@ SnapableElement {
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
 
-    Loader {
-        id: loaderImage
+    AnimatedImage {
+        id: tileImage
         anchors.fill: parent
-        property bool forceImage: false
-        sourceComponent: (!isSelected && displaySettings.getAnimePath(imagePath) !== imagePath) && !forceImage ? spriteAnimationComponent : tileImageComponent
-        Component {
-            id: spriteAnimationComponent
+        source: displaySettings.getAnimePath(imagePath)
+        z: 1  // Assurer que le contenu est sous les poignées
+        asynchronous: true
+        cache: true  // Cache the image to prevent reloading
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+        mipmap: true  // Enable mipmapping for better quality when scaling down
 
-            // Sprite
-            // AnimatedSpriteDirectory
-            AnimatedSprite {
-                anchors.fill: parent
-                source: displaySettings.getAnimePath(imagePath)
-                frameWidth: parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "width"))*
-                                parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "ratioWidth"))
-                frameHeight: parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "height"))*
-                             parseInt(AssetManager.getAssetElement(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId, "ratioHeight"))
-                frameCount: 16
-                frameDuration: 10000
+        playing: true
+        // Hide source image when effects are applied for optimal performance
+        visible: !hasActiveEffects
+
+        // Apply mirror effects using scale
+        transform: [
+            Scale{
+                xScale: displaySettings.mirrorHorizontal ? -1 : 1
+                yScale: displaySettings.mirrorVertical ? -1 : 1
+                origin.x: tileImage.width / 2
+                origin.y: tileImage.height / 2
+            },
+            Rotation{
+                angle: displaySettings.rotationAngle
+                origin.x: tileImage.width / 2
+                origin.y: tileImage.height / 2
             }
-        }
-
-        Component {
-            id: tileImageComponent
-            Image {
-                id: tileImage
-                anchors.fill: parent
-                source: imagePath
-                z: 1  // Assurer que le contenu est sous les poignées
-                asynchronous: true
-                cache: true  // Cache the image to prevent reloading
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: true  // Enable mipmapping for better quality when scaling down
-
-                // Hide source image when effects are applied for optimal performance
-                visible: !hasActiveEffects
-
-                // Apply mirror effects using scale
-                transform: [
-                    Scale{
-                        xScale: displaySettings.mirrorHorizontal ? -1 : 1
-                        yScale: displaySettings.mirrorVertical ? -1 : 1
-                        origin.x: tileImage.width / 2
-                        origin.y: tileImage.height / 2
-                    },
-                    Rotation{
-                        angle: displaySettings.rotationAngle
-                        origin.x: tileImage.width / 2
-                        origin.y: tileImage.height / 2
-                    }
-                ]
-                onStatusChanged: {
-                    if (status === Image.Error) {
-                        console.log("AssetManager path failed, falling back to legacy system")
-                    }
-                }
+        ]
+        onStatusChanged: {
+            if (status === Image.Error) {
+                console.log("AssetManager path failed, falling back to legacy system")
             }
         }
     }
@@ -148,7 +123,7 @@ SnapableElement {
     MultiEffect {
         id: multiEffect
         anchors.fill: parent
-        source: loaderImage.item
+        source: tileImage
         z: 2  // Above the source image but below handles
         visible: shouldCreateEffect
 
@@ -205,21 +180,14 @@ SnapableElement {
 
     function isTransparent(mouse){
 
-        loaderImage.forceImage = true
-
-        while (loaderImage.status !== Loader.Ready){
-            // Wait for the image to load
-        }
-
-        var deltaHeight = loaderImage.item.height - loaderImage.item.paintedHeight
-        var deltaWidth = loaderImage.item.width - loaderImage.item.paintedWidth
+        var deltaHeight = tileImage.height - tileImage.paintedHeight
+        var deltaWidth = tileImage.width - tileImage.paintedWidth
 
         var imageX = mouse.x - deltaWidth/2
         var imageY = mouse.y - deltaHeight/2
 
-        var flag = AssetManager.isTransparent(loaderImage.item.paintedWidth/imageX, loaderImage.item.paintedHeight/imageY, imagePath)
+        var flag = AssetManager.isTransparent(tileImage.paintedWidth/imageX, tileImage.paintedHeight/imageY, imagePath)
 
-        loaderImage.forceImage = false
         return flag;
     }
 
