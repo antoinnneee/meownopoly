@@ -29,8 +29,11 @@ MouseLogic_Base {
         if (clickElement.length === 0) {
             console.log("[LOGIC] Starting rectangle selection")
             isRectangleSelecting = true
-            rectangleStart = Qt.point(mouse.x, mouse.y)
-            rectangleCurrent = Qt.point(mouse.x, mouse.y)
+            
+            // Convertir les coordonnées de mainMa vers workArea
+            var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+            rectangleStart = Qt.point(workAreaPos.x, workAreaPos.y)
+            rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
             
             // Empêcher le drag de la carte pendant la sélection rectangle
             drag.target = null
@@ -150,7 +153,9 @@ MouseLogic_Base {
     function updateRectangleSelection(mouseX, mouseY) {
         if (!isRectangleSelecting) return
         
-        rectangleCurrent = Qt.point(mouseX, mouseY)
+        // Convertir les coordonnées de mainMa vers workArea
+        var workAreaPos = mainMa.mapToItem(workArea, mouseX, mouseY)
+        rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
         
         // Mettre à jour le rectangle visuel
         if (logic.selectionRect) {
