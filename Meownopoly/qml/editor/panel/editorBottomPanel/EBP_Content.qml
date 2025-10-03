@@ -12,9 +12,11 @@ Item {
     required property string activeFilter
 
 
+
     visible: isExpanded
     opacity: isExpanded ? 1.0 : 0.0
 
+    property real sidePanelRatio: 0.42
     property alias mainContent : mainContentHolder.children
     property alias sidePanel : sidePanel.children
 
@@ -26,7 +28,7 @@ Item {
         anchors.rightMargin: 5
         anchors.leftMargin: 5
 
-        width: parent.width * 0.58
+        width: parent.width * (1-sidePanelRatio)
 
     }
 
@@ -35,7 +37,7 @@ Item {
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        width: parent.width * 0.42
+        width: parent.width * sidePanelRatio
     }
 
 }

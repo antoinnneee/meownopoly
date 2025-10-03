@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
@@ -10,11 +10,12 @@ Rectangle {
     property alias horizontalMirrorCheck: horizontalMirrorCheck
     property alias verticalMirrorCheck: verticalMirrorCheck
     // Visual properties
-    color: "transparent"
+    color: "#333333"
     radius: 4
     border.color: "#555555"
     border.width: 1
-    
+
+    bottomLeftRadius: 0
     // Dimensions
     height: mainLayout.implicitHeight + 16
     width: mainLayout.implicitWidth

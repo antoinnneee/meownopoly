@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls 2.15
 import "../editorBottomPanel"
 
@@ -20,6 +20,7 @@ EBP_Content {
     property alias visualEffectsPanel : effectsPanel
     signal effectChanged()
 
+    sidePanelRatio: 0.5
 
     mainContent: Item {
         id: mainContent
@@ -82,11 +83,56 @@ EBP_Content {
 
         VisualEffectsPanel {
             id: effectsPanel
-            width: effectsScrollView.width - 20 // Account for scrollbar
+            anchors.left: parent.left
+            anchors.right: secondarySection.left
+            anchors.leftMargin: 0
+            anchors.rightMargin: 6 // Account for scrollbar
 
             onEffectChanged: {
                 // Optional: emit signal when effects change
                 contentArea.effectChanged()
+            }
+        }
+
+        // Main layout
+        Column {
+            id: secondarySection
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.rightMargin: 20
+            anchors.topMargin: 0
+            width: parent.width/2
+            // // Transform Section
+            VEP_TransformSection {
+                id: transformSection
+                anchors.right: parent.right
+                anchors.left: parent.left
+
+                onEffectChanged: {
+//                    root.effectChanged()
+                    contentArea.effectChanged()
+                }
+            }
+            // Advanced Effects Section
+            VEP_AdvancedEffectsSection {
+                id: advancedEffectsSection
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                onEffectChanged: {
+                    contentArea.effectChanged()
+                }
+            }
+            // Reset buttons panel
+            VEP_ResetButtonsPanel {
+                id: resetButtonsPanel
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                onEffectChanged: {
+                    contentArea.effectChanged()
+                }
             }
         }
     }
