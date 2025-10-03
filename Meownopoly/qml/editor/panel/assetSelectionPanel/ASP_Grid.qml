@@ -64,8 +64,8 @@ ScrollView {
             model: root.assetModel
             
             ASP_Item {
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 80
+                Layout.preferredWidth: Screen.pixelDensity*25
+                Layout.preferredHeight:  Screen.pixelDensity*25
                 
                 // Asset data
                 assetPath: model.path || ""

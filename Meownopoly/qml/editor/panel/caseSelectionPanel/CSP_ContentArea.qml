@@ -17,9 +17,10 @@ EBP_Content {
     // Signaux
     signal caseTypeSelected(int type, string typeName)
     signal caseTypeCleared()
+    sidePanelRatio: 0.5
 
     // Main content (categories/assets)
-    Item {
+    mainContent: Item {
         id: mainContent
         anchors.top: parent.top
         anchors.left: parent.left

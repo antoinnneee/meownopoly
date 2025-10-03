@@ -48,21 +48,19 @@ Rectangle {
         // Image preview
         Rectangle {
             width: parent.width
-            height: parent.height - 25 // Leave space for text
+            height: parent.height
             color: "transparent"
             clip: true
             
             Image {
                 id: previewImage
                 anchors.centerIn: parent
-                width: Math.min(parent.width - 4, sourceSize.width)
-                height: Math.min(parent.height - 4, sourceSize.height)
+                width: Math.min(parent.width - 2, sourceSize.width)
+                height: Math.min(parent.height - 2, sourceSize.height)
                 source: root.assetPath
                 fillMode: Image.PreserveAspectFit
                 smooth: true
-                mipmap: true
                 asynchronous: true
-                cache: true
                 
                 // Loading placeholder
                 Rectangle {
@@ -133,26 +131,6 @@ Rectangle {
                     font.bold: true
                     elide: Text.ElideMiddle
                     horizontalAlignment: Text.AlignHCenter
-                }
-                
-                // Dimensions
-                Text {
-                    width: parent.width
-                    text: root.assetWidth + "×" + root.assetHeight
-                    color: "#CCCCCC"
-                    font.pixelSize: 8
-                    horizontalAlignment: Text.AlignHCenter
-                    visible: root.assetWidth > 0 && root.assetHeight > 0
-                }
-                
-                // Ratio (if different from 1:1)
-                Text {
-                    width: parent.width
-                    text: root.assetRatioWidth + ":" + root.assetRatioHeight
-                    color: "#999999"
-                    font.pixelSize: 7
-                    horizontalAlignment: Text.AlignHCenter
-                    visible: root.assetRatioWidth !== 1 || root.assetRatioHeight !== 1
                 }
             }
         }
@@ -234,13 +212,6 @@ Rectangle {
                 color: "#CCCCCC"
                 font.pixelSize: 10
                 visible: root.assetRatioWidth !== 1 || root.assetRatioHeight !== 1
-            }
-            
-            Text {
-                text: "Double-click to place • Drag to position"
-                color: "#999999"
-                font.pixelSize: 9
-                font.italic: true
             }
         }
         

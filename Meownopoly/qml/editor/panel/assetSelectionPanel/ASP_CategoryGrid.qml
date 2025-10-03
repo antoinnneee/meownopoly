@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import AssetManager
+import QtQuick.Window
 
 ScrollView {
     id: root
@@ -116,8 +117,8 @@ ScrollView {
             
             // Category card
             Rectangle {
-                Layout.preferredWidth: 100
-                Layout.preferredHeight: 100
+                Layout.preferredWidth: Screen.pixelDensity*25
+                Layout.preferredHeight:  Screen.pixelDensity*25
                 color: categoryMouseArea.containsMouse ? "#555555" : "#444444"
                 border.color: "#666666"
                 border.width: 1
