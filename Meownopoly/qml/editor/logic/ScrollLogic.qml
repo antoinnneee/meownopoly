@@ -7,13 +7,11 @@ QtObject {
 
     function scrollUp(wheel) {
         if (wheel.modifiers & Qt.ControlModifier) {
-            console.log("CTRL + scrollUp")
             logic.updateSize(logic.mmSize + 1)
         }
     }
     function scrollDown(wheel) {
         if (wheel.modifiers & Qt.ControlModifier) {
-            console.log("CTRL + scrollDown")
             logic.updateSize(logic.mmSize - 1)
         }
     }

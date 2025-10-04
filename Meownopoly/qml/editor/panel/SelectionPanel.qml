@@ -188,11 +188,9 @@ Rectangle {
 
             onAssetSelected: function(category, type, id) {
                 if (category === "" && type === "" && id === "") {
-                    console.log("asset cleared")
                     root.assetCleared()
                 }
                 else {
-                    console.log("asset selected : ",category, type, id )
                     root.assetSelected(category, type, id);
                 }
             }
@@ -202,7 +200,6 @@ Rectangle {
 
             // Surveiller les changements de propriétés pour propager les signaux
             onCurrentViewChanged: {
-                console.log("AssetSelectionPanel currentView changed to:", currentView)
                 root.viewChanged(currentView);
             }
 
