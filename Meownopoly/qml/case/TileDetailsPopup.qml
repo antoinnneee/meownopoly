@@ -17,7 +17,7 @@ Popup {
 
     required property Case caseData
 
-    property int tileType: caseData.type
+    property int tileType: (caseData != undefined) ? caseData.type : 0
     property string tileName: ""
     property var familyColors: []
 
@@ -38,7 +38,7 @@ Popup {
             Rectangle {
                 Layout.fillWidth: true
                 height: 40
-                color: root.tileType === 1 && root.caseData && root.caseData.family ?
+                color: root.tileType === 1 && root.caseData != undefined && root.caseData.family ?
                        root.familyColors[root.caseData.family] : "#34495e"
                 radius: 4
 
@@ -86,6 +86,7 @@ Popup {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 sourceComponent: {
+                    if (root.caseData == undefined) return null;
                     switch(root.tileType) {
                         case Case.CS_RestArea: return restAreaDetails
                         case Case.CS_KibbleDispenser: return kibbleDispenserDetails
@@ -126,7 +127,7 @@ Popup {
     Component {
         id: restAreaDetails
         RestAreaDetails {
-            caseData: (root.caseData.type === Case.CS_RestArea) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_RestArea) ? root.caseData : null
             familyColors: root.familyColors
         }
     }
@@ -134,21 +135,21 @@ Popup {
     Component {
         id: kibbleDispenserDetails
         KibbleDispenserDetails {
-            caseData: (root.caseData.type === Case.CS_KibbleDispenser) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_KibbleDispenser) ? root.caseData : null
         }
     }
 
     Component {
         id: cardBoardBoxDetails
         CardBoardBoxDetails {
-            caseData: (root.caseData.type === Case.CS_CardBoardBox) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_CardBoardBox) ? root.caseData : null
         }
     }
 
     Component {
         id: catNipDetails
         CatNipDetails {
-            caseData: (root.caseData.type === Case.CS_CatNip) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_CatNip) ? root.caseData : null
         }
     }
 
@@ -160,28 +161,28 @@ Popup {
     Component {
         id: toJailDetails
         ToJailDetails {
-            caseData: (root.caseData.type === Case.CS_ToJail) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_ToJail) ? root.caseData : null
         }
     }
 
     Component {
         id: catDoorDetails
         CatDoorDetails {
-            caseData: (root.caseData.type === Case.CS_CatDoor) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_CatDoor) ? root.caseData : null
         }
     }
 
     Component {
         id: freeNapDetails
         FreeNapDetails {
-            caseData: (root.caseData.type === Case.CS_FreeNap) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_FreeNap) ? root.caseData : null
         }
     }
 
     Component {
         id: catDeviceDetails
         CatDeviceDetails {
-            caseData: (root.caseData.type === Case.CS_Device) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_Device) ? root.caseData : null
         }
     }
 

@@ -367,8 +367,7 @@ GroupBox {
                     } else {
                         activePresetIndex = -1
                     }
-                    
-                    console.log("Presets chargés:", colorPresets.length, "presets")
+
                     colorPresetsChanged()
                     return true
                 }
