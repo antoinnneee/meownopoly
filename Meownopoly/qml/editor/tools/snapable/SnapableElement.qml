@@ -114,7 +114,7 @@ Rectangle {
     border.width: isSelected ? borderWidth + 2 : borderWidth
 
     // Effet de survol avec transition optimisée
-    scale: isDragging ? 1.05 : 1.0
+    scale: 1.0
     
     Component.onCompleted: {
         snapToGrid()
@@ -136,11 +136,8 @@ Rectangle {
             if (generalMA)
             {
                 if (!isTransparent(mouse)){
-                    console.log("non transparent click")
                     generalMA.elementClicked(snapableElement)
                     }
-                else
-                    console.log("transparent click")
             }
             //ELSE A VIRER
             else

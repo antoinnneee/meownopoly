@@ -119,6 +119,7 @@ Rectangle {
         editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
+        selectionPanel: selectionPanel
     }
 
     EditorDynamicComponent {
@@ -284,6 +285,7 @@ Rectangle {
             else
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
+
     }
 
     MenuMapAtStart {

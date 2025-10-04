@@ -17,6 +17,7 @@ EBP_Content {
     signal assetSelected(string category, string type, string id)
     signal categorieSelected()
 
+    property int titleHeight
     property alias visualEffectsPanel : effectsPanel
     signal effectChanged()
 
@@ -71,6 +72,7 @@ EBP_Content {
     sidePanel: ScrollView {
         id: effectsScrollView
         anchors.top: parent.top
+        anchors.topMargin: -contentArea.titleHeight
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         width: parent.width

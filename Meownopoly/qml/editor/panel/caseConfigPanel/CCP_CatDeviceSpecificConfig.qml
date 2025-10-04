@@ -24,8 +24,6 @@ CCP_PanelElement {
         taxeSpinBox.value = targetCase.taxe || 0
         updatingValues = false
     }
-    
-    property bool updatingValues: false
 
     ColumnLayout {
         anchors.fill: parent
@@ -36,7 +34,7 @@ CCP_PanelElement {
             text: "🔌 Configuration de l'Appareil Électronique - Service public achetable"
             font.italic: true
             font.pixelSize: 12
-            color: "#6c757d"
+            color: "#888888"
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             Layout.bottomMargin: 5
@@ -54,6 +52,20 @@ CCP_PanelElement {
             title: "⚡ Configuration du Service"
             Layout.fillWidth: true
             
+            background: Rectangle {
+                color: "#2a2a2a"
+                radius: 4
+                border.color: "#444444"
+                border.width: 1
+            }
+            
+            label: Text {
+                text: parent.title
+                color: "#cccccc"
+                font.bold: true
+                font.pixelSize: 12
+            }
+            
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 10
@@ -62,7 +74,7 @@ CCP_PanelElement {
                     text: "Configurez la taxe d'utilisation que les autres joueurs devront payer"
                     font.italic: true
                     font.pixelSize: 11
-                    color: "#6c757d"
+                    color: "#888888"
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
@@ -75,49 +87,24 @@ CCP_PanelElement {
                         text: "💡 Taxe d'utilisation:"
                         font.bold: true
                         font.pixelSize: 14
+                        color: "#cccccc"
                         Layout.minimumWidth: 150
                     }
                     
-                    SpinBox {
+                    CCP_StyledSpinBox {
                         id: taxeSpinBox
                         from: 0
                         to: 999
                         stepSize: 10
                         value: 50
+                        suffix: "K"
                         
                         Layout.preferredWidth: 120
-                        
-                        textFromValue: function(value, locale) {
-                            return value + "K"
-                        }
-                        
-                        valueFromText: function(text, locale) {
-                            return parseInt(text.replace("K", ""))
-                        }
                         
                         onValueChanged: {
                             if (!updatingValues && targetCase) {
                                 targetCase.taxe = value
                             }
-                        }
-                        
-                        // Style personnalisé
-                        background: Rectangle {
-                            color: "#ffffff"
-                            border.color: "#ced4da"
-                            border.width: 1
-                            radius: 4
-                        }
-                        
-                        contentItem: TextInput {
-                            text: taxeSpinBox.textFromValue(taxeSpinBox.value, taxeSpinBox.locale)
-                            font.pixelSize: 14
-                            color: "#495057"
-                            horizontalAlignment: Qt.AlignHCenter
-                            verticalAlignment: Qt.AlignVCenter
-                            readOnly: !taxeSpinBox.editable
-                            validator: taxeSpinBox.validator
-                            inputMethodHints: Qt.ImhFormattedNumbersOnly
                         }
                     }
                     
@@ -136,9 +123,9 @@ CCP_PanelElement {
         Rectangle {
             Layout.fillWidth: true
             height: 100
-            color: "#e7f3ff"
+            color: "#1a2a3a"
             radius: 6
-            border.color: "#b3d9ff"
+            border.color: "#2a3a4a"
             border.width: 1
             
             ColumnLayout {
@@ -150,13 +137,13 @@ CCP_PanelElement {
                     text: "🔍 Fonctionnement"
                     font.bold: true
                     font.pixelSize: 13
-                    color: "#004085"
+                    color: "#99ccff"
                 }
                 
                 Text {
                     text: "• Les joueurs peuvent acheter cet appareil électronique\n• Quand un autre joueur atterrit dessus, il paie la taxe d'utilisation au propriétaire\n• Plus vous possédez d'appareils du même type, plus les revenus augmentent"
                     font.pixelSize: 11
-                    color: "#004085"
+                    color: "#80b3d9"
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
@@ -167,9 +154,9 @@ CCP_PanelElement {
         Rectangle {
             Layout.fillWidth: true
             height: 80
-            color: "#d1f2eb"
+            color: "#1a3a3a"
             radius: 6
-            border.color: "#a3e4d7"
+            border.color: "#2a4a4a"
             border.width: 1
             
             ColumnLayout {
@@ -181,13 +168,13 @@ CCP_PanelElement {
                     text: "💰 Conseil Économique"
                     font.bold: true
                     font.pixelSize: 13
-                    color: "#00695c"
+                    color: "#99f0d9"
                 }
                 
                 Text {
                     text: "Équilibrez le prix d'achat avec la taxe d'utilisation pour créer un investissement attractif mais pas trop puissant."
                     font.pixelSize: 11
-                    color: "#00695c"
+                    color: "#80d9c0"
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }

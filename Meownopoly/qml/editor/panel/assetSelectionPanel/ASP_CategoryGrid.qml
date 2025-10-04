@@ -71,7 +71,7 @@ ScrollView {
                         newCategories.push({
                             name: typeName.charAt(0).toUpperCase() + typeName.slice(1),
                             category: categoryName,
-                            type: typeName.slice(1),
+                            type: typeName,
                             icon: "📁",
                             description: typeName + " assets"
                         })

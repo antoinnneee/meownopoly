@@ -21,6 +21,9 @@ QtObject {
         groupeSelection.x = 0
         groupeSelection.y = 0
         logic.tileLogic.deselectAllTiles() // can be improved
+        
+        // Effacer la configuration de case
+        clearCaseConfiguration()
     }
 
     function unselectSelectedElements()
@@ -36,6 +39,33 @@ QtObject {
         selectedElements = []
         groupeSelection.x = 0
         groupeSelection.y = 0
+        
+        // Effacer la configuration de case
+        clearCaseConfiguration()
+    }
+    
+    // Fonction pour effacer la configuration de case
+    function clearCaseConfiguration() {
+        if (!logic.selectionPanel) {
+            return
+        }
+        
+        var casePanel = logic.selectionPanel.casePanel
+        if (!casePanel) {
+            return
+        }
+        
+        var contentArea = casePanel.contentArea
+        if (!contentArea) {
+            return
+        }
+        
+        var configPanel = contentArea.caseConfigurationPanelSection
+        if (!configPanel) {
+            return
+        }
+        
+        configPanel.clearTarget()
     }
     function changeMouseMode(mode)
     {

@@ -119,6 +119,7 @@ EditorBottomPanel {
             onEffectChanged: {
                 root.effectChanged()
             }
+            titleHeight: titleBar.height
     }
 
     // Status indicator
