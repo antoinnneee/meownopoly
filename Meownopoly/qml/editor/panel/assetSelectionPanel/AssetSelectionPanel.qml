@@ -26,7 +26,6 @@ EditorBottomPanel {
 
         // Function to clear asset selection
         function clearAssetSelection() {
-            console.log("Clearing asset selection")
             assetManagerSettings.currentSelectedCategory = ""
             assetManagerSettings.currentSelectedType = ""
             assetManagerSettings.currentSelectedId = ""
@@ -55,7 +54,6 @@ EditorBottomPanel {
             assetManagerSettings.clearAssetSelection();
             return
         }
-        console.log("Asset selected for placement:", category, type, id)
         root.currentSelectedCategory = category
         root.currentSelectedType = type
         root.currentSelectedId = id
@@ -73,11 +71,9 @@ EditorBottomPanel {
         isExpanded: true
 
         onAssetSelected: function(category, type, id) {
-            console.log("titleBar select asset", category, type, id)
             root.assetSelected(category, type, id)
         }
         onSearchTextChanged: {
-            // console.log("EditorBottomPanel - searchText filter changed", searchText)
             root.searchText = searchText
             root.searchText = Qt.binding(function(){ return root.searchText})
         }

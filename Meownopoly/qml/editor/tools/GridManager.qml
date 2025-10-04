@@ -15,7 +15,6 @@ Item {
 
     property int gridSize: Screen.pixelDensity * mmSize
     onGridSizeChanged: {
-        console.log("gridSize changed:", gridSize)
         // Les Repeater se mettent à jour automatiquement quand gridSize change
     }
 
