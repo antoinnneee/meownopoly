@@ -231,11 +231,11 @@ QString AssetManager::getAssetElement(const QString &category, const QString &ty
     for (int i = 0; i < model->rowCount(); i++){
         QModelIndex index = model->index(i, 0);
         if (model->data(index, AssetModel::IdRole).toString() == id){
-            // Convertir le nom du rôle en entier en utilisant roleNames()
+            // Convertir le nom du rï¿½le en entier en utilisant roleNames()
             QHash<int, QByteArray> roles = model->roleNames();
             for (auto it = roles.constBegin(); it != roles.constEnd(); ++it) {
                 if (it.value() == elementName.toLatin1()) {
-                    // Utiliser data() avec le rôle trouvé
+                    // Utiliser data() avec le rï¿½le trouvï¿½
                     return model->data(index, it.key()).toString();
                 }
             }
@@ -244,6 +244,11 @@ QString AssetManager::getAssetElement(const QString &category, const QString &ty
         }
     }
     return "";
+}
+
+QString AssetManager::getAnimatedGifPath(const QString &category, const QString &type, const QString &id)
+{
+    return buildAssetPath(category, type, id + "-animated.gif");
 }
 
 void AssetManager::reloadAssets()

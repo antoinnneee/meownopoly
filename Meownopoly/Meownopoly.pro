@@ -61,7 +61,8 @@ SOURCES += \
     player.cpp \
     qmlapp.cpp \
     tools/appinfo.cpp \
-    tools/editorenum.cpp
+    tools/editorenum.cpp \
+    tools/logger.cpp
 
 HEADERS += \
     QtFolderCompressor/FolderCompressor.h \
@@ -96,7 +97,8 @@ HEADERS += \
     qmlapp.h \
     tools/debug_Info.h	\
     tools/appinfo.h \
-    tools/editorenum.h
+    tools/editorenum.h \
+    tools/logger.h
 
 RESOURCES += qml.qrc \
     config.qrc

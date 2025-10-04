@@ -8,8 +8,6 @@ import AssetManager
 import ItemSnapable
 import DecorationParameter
 
-import AnimationProvider
-
 SnapableElement {
     // Configuration du redimensionnement
     isResizable: true
@@ -90,7 +88,7 @@ SnapableElement {
     AnimatedImage {
         id: tileImage
         anchors.fill: parent
-        source: displaySettings.getAnimePath(imagePath)
+        source: decorationSettings.getAnimePath(imagePath)
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true
         cache: true  // Cache the image to prevent reloading

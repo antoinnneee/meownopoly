@@ -38,7 +38,8 @@
 #include "tools/editorenum.h"
 #include "animation_manager.h"
 #include "liveimage.h"
-#include "animationprovider.h"
+//#include "animationprovider.h"
+#include "tools/logger.h"
 
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
@@ -53,7 +54,8 @@ QmlApp::QmlApp(QWindow *parent)
     MapLoader::registerQml();
     MapInfo::registerQml();
     EditorEnum::registerQml();
-    AnimationProvider::registerQml();
+//    AnimationProvider::registerQml();
+    Logger::registerQml();
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);
     rootContext()->setContextProperty("folderCompressor", folderCompressor);

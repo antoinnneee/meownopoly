@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 // import MyApp.Images
-import AnimationProvider
+//import AnimationProvider
 import QtQuick.Effects
 
 Rectangle {

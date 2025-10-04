@@ -8,6 +8,7 @@ import "tools/snapable"
 import MapInfo
 import EditorEnum
 import "logic"
+import Logger
 
 Item {
     id: logic
@@ -22,7 +23,6 @@ Item {
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
     onEditorMouseModeChanged: {
-        console.log("mouse mode change : ", editorMouseMode)
     }
 
     property alias planLogic: planLogic

@@ -1,20 +1,6 @@
 #include "Displayparameter.h"
+#include "tools/logger.h"
 
-
-QString DisplayParameter::getAnimePath(QString imagePath)
-{
-    // return "file:///C:/QtProject/meownopoly/Meownopoly/build/asset_extracted/decoration/tree/0-animated.png";
-
-    QString animePath = imagePath;
-    animePath = animePath.replace(animePath.indexOf(".png"), 4, "-animated.gif");
-    if (QFile::exists(animePath.remove("file:///"))){
-    return animePath.prepend("file:///");
-    }
-    else {
-        qDebug() << Q_FUNC_INFO << " Error, fileName does not exist : " << animePath;
-        return imagePath;
-    }
-}
 
 DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, float zOrder, QObject *parent)
     : QObject(parent)
@@ -115,7 +101,6 @@ QString DisplayParameter::toJSON()
     json += "}";
     return json;
 }
-
 int DisplayParameter::unitSizeWidth() const
 {
     return m_unitSizeWidth;

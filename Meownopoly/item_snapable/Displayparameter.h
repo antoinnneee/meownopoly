@@ -56,7 +56,6 @@ public:
     Q_PROPERTY(bool mirrorVertical READ mirrorVertical WRITE setMirrorVertical NOTIFY mirrorVerticalChanged)
 
 
-    Q_INVOKABLE QString getAnimePath(QString imagePath);
 
     DisplayParameter(int unitSizeWidth = 0, int unitSizeHeight = 0, int gridRelativePosition = 0, int gridRelativePositionY = 0, int zLayer = 5, float zOrder = 0, QObject *parent = nullptr);
     DisplayParameter(const QJsonObject &json, QObject *parent = nullptr);
