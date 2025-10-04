@@ -143,6 +143,7 @@ GroupBox {
         // Colorization control
         VEP_Slider {
             id: colorizationSlider
+            accentColor: (activePresetIndex == -1) ? "#569c58" : colorPresets[activePresetIndex].color
             from: 0
             to: 1
             Layout.topMargin: 1
@@ -409,8 +410,16 @@ GroupBox {
         
         // Select new
         if (index >= 0 && index < colorPresets.length) {
-            activePresetIndex = index
-            colorPresets[index].active = true
+            if (index !== activePresetIndex)
+            {
+                activePresetIndex = index
+                colorPresets[index].active = true
+            }
+            else
+            {
+                activePresetIndex = -1
+
+            }
         } else {
             activePresetIndex = -1
         }

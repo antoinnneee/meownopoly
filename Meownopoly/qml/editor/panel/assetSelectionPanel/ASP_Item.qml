@@ -42,13 +42,15 @@ Rectangle {
     // Main content
     Column {
         anchors.fill: parent
-        anchors.margins: 4
-        spacing: 2
-        
+        anchors.margins: 2
+        spacing: -1
+
+
         // Image preview
         Rectangle {
+            id: assetPreview
             width: parent.width
-            height: parent.height
+            height: parent.height - assetInfo.implicitHeight
             color: "transparent"
             clip: true
             
@@ -76,63 +78,38 @@ Rectangle {
                     }
                 }
                 
-                // Error placeholder
-                Rectangle {
-                    anchors.fill: parent
-                    color: "#2A2A2A"
-                    border.color: "#666666"
-                    border.width: 1
-                    visible: parent.status === Image.Error
-                    
-                    Text {
-                        anchors.centerIn: parent
-                        text: "❌"
-                        color: "#FF6B6B"
-                        font.pixelSize: 16
-                    }
-                }
-                
                 // Favorite indicator
                 Rectangle {
+                    id: favoriteIndicator
                     anchors.top: parent.top
                     anchors.right: parent.right
-                    width: 16
-                    height: 16
-                    color: "#FFD700"
+                    width: favoriteText.implicitWidth / 2
+                    height: favoriteText.implicitHeight / 2
                     radius: 8
-                    visible: root.isFavorite
+                    visible:true
+                    color: "transparent"
                     
                     Text {
+                        id: favoriteText
                         anchors.centerIn: parent
-                        text: "★"
-                        color: "white"
-                        font.pixelSize: 10
+                        color: '#ffc400'
+                        text: root.isFavorite ? "★" : "☆"
+                        font.pointSize: 13
                     }
                 }
             }
         }
-        
-        // Asset info
-        Rectangle {
+        // Asset ID/Name
+        Text {
+            id: assetInfo
             width: parent.width
-            height: 23
-            color: "transparent"
-            
-            Column {
-                anchors.fill: parent
-                spacing: 1
-                
-                // Asset ID/Name
-                Text {
-                    width: parent.width
-                    text: root.assetId || root.assetFilename
-                    color: "white"
-                    font.pixelSize: 9
-                    font.bold: true
-                    elide: Text.ElideMiddle
-                    horizontalAlignment: Text.AlignHCenter
-                }
-            }
+
+            text: root.assetId || root.assetFilename
+            color: "white"
+            font.pointSize: 8
+            font.bold: true
+            elide: Text.ElideMiddle
+            horizontalAlignment: Text.AlignHCenter
         }
     }
     
@@ -149,6 +126,16 @@ Rectangle {
                 root.assetClicked(root.assetId)
             }
         }
+    }
+    MouseArea {
+        x: favoriteIndicator.x
+        y: favoriteIndicator.y
+        width: favoriteText.implicitWidth
+        height: favoriteText.implicitHeight
+        onClicked: {
+            root.isFavorite = !root.isFavorite
+        }
+        z:10
     }
 
     // Hover effect

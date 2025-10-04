@@ -28,7 +28,7 @@ Item {
         anchors.rightMargin: 5
         anchors.leftMargin: 5
 
-        width: parent.width * (1-sidePanelRatio)
+        width: parent.width * (1-sidePanelRatio) - anchors.rightMargin - anchors.leftMargin
 
     }
 

@@ -370,10 +370,10 @@ Rectangle {
 
         // Create appropriate element based on category
 //        DisplayParameter dispSettings = new DisplayParameter()
-        var dispSettings = Qt.createQmlObject("import DisplayParameter
-                    DisplayParameter { }", root)
-        var decorationParameter = Qt.createQmlObject("import DecorationParameter
-                    DecorationParameter { }", root)
+        var dispSettings = Qt.createQmlObject(`import DisplayParameter
+                    DisplayParameter { }`, root)
+        var decorationParameter = Qt.createQmlObject(`import DecorationParameter
+                    DecorationParameter { }`, root)
         dispSettings.gridRelativePositionX = gridX
         dispSettings.gridRelativePositionY = gridY
         dispSettings.unitSizeWidth = logic.tileLogic.currentElementWidth
