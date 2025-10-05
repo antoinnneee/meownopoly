@@ -204,7 +204,7 @@ GroupBox {
                         if (currentIndex < availableTypes.length - 1 && !updatingValues) {
                             let newIndex = currentIndex + 1
                             let newType = availableTypes[newIndex]
-                            currentType = newType
+                            //currentType = newType
                             typeChanged(newType)
                         }
                     }
@@ -235,10 +235,6 @@ GroupBox {
             default: return "#777777"
         }
     }
-    
-    function updateControls() {
-        if (!targetCase) return
-        currentType = targetCase.type
-    }
+
 }
 

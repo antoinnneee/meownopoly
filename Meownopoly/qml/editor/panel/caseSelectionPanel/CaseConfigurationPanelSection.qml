@@ -125,9 +125,6 @@ Rectangle {
         
         updatingValues = true
         
-        // Update type section
-        typeSection.updateControls()
-        
         // Update general section
         generalSection.updateControls()
         
