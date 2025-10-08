@@ -358,10 +358,18 @@ Rectangle {
     function placeSelectedAsset(gridX, gridY) {
         gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
         gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
-        if (!root.isAssetSelected) {
+        if (!root.isAssetSelected) {    // place case
             if (!selectionPanel.caseTypeSelected !== -1)
             {
                 var newCaseTile = logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, gridX, gridY, ItemSnapable.CaseTile)
+                mainMa.elementClicked(newCaseTile)
+                newCaseTile.elementPressed()
+                newCaseTile.parent = groupeSelection
+                newCaseTile.x = newCaseTile.x - groupeSelection.x
+                newCaseTile.y = newCaseTile.y - groupeSelection.y
+                logic.mouseLogic.selectedElements.push(newCaseTile)
+                // Mettre à jour la configuration de case si applicable
+                logic.mouseLogic.updateCaseConfiguration()
 
 
             }
@@ -386,6 +394,8 @@ Rectangle {
         decorationParameter.decorationId = root.selectedAssetId
         var newTile = logic.tileLogic.createDecorationTile(dispSettings, decorationParameter)
         root.applyVisualEffectsToNewTile(newTile)
+        mainMa.elementClicked(newTile)
+
     }
 
     // Menu d'échappement

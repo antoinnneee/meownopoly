@@ -111,6 +111,8 @@ SnapableElement {
                 angle: displaySettings.rotationAngle
                 origin.x: tileImage.width / 2
                 origin.y: tileImage.height / 2
+                // axis.y:0.2
+                axis.z:1
             }
         ]
         onStatusChanged: {
