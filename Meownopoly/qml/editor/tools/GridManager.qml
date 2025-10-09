@@ -148,12 +148,14 @@ Item {
         id: gridContainer
         anchors.fill: parent
 
-        property int verticalLinesCount: Math.ceil(width / gridManager.gridSize) + 1
-        property int horizontalLinesCount: Math.ceil(height / gridManager.gridSize) + 1
+        property int verticalLinesCount: (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
+                                                                : 0
+        property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
+                                                                  :0
 
         Repeater {
             id: gridLinesRepeater
-            model: parent.verticalLinesCount + parent.horizontalLinesCount
+            model:  parent.verticalLinesCount + parent.horizontalLinesCount
 
             Rectangle {
                 // Propriétés communes
@@ -175,9 +177,6 @@ Item {
                 height: isVertical ?
                         parent.height :
                         (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth)
-
-                // Masquer les lignes qui dépassent les limites
-                // visible: visible && (isVertical ? x < parent.width : y < parent.height)
             }
         }
     }

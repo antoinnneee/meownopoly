@@ -27,7 +27,6 @@ Rectangle {
     Background {
         id: background
         anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
-
     }
 
     Keys.onPressed: function(event) {
