@@ -37,12 +37,10 @@ EBP_Content {
             activeFilter: contentArea.activeFilter
             
             onTypeSelected: function(type, typeName) {
-                console.log("Case type selected:", type, typeName)
                 contentArea.caseTypeSelected(type, typeName)
             }
             
             onTypeCleared: function() {
-                console.log("Case type cleared")
                 contentArea.caseTypeCleared()
             }
         }

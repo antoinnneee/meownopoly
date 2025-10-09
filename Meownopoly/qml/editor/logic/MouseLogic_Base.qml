@@ -171,7 +171,7 @@ QtObject {
         // Si un seul élément est sélectionné et que c'est une case, mettre à jour la configuration
         if (selectedElements.length === 1) {
             var element = selectedElements[0]
-            if (element.caseData !== undefined) {
+            if (element.caseData) {
                 console.log("[LOGIC] Updating case configuration for:", element.caseData.name)
                 configPanel.setTargetCase(element)
             } else {

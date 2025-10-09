@@ -41,7 +41,7 @@ Rectangle {
         else if (event.key === Qt.Key_Escape) {
             console.log("ESCAPED")
             if (root.isAssetSelected) {
-                selectionPanel.assetManagerSettings.clearAssetSelection()
+                selectionPanel.clearAssetSelection()
                 event.accepted = true
             } else {
                 // Afficher le menu d'échappement

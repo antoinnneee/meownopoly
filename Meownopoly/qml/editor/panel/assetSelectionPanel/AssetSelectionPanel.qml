@@ -29,7 +29,6 @@ EditorBottomPanel {
             assetManagerSettings.currentSelectedCategory = ""
             assetManagerSettings.currentSelectedType = ""
             assetManagerSettings.currentSelectedId = ""
-            root.assetCleared()
         }
     }
 
@@ -48,16 +47,19 @@ EditorBottomPanel {
 
     signal effectChanged()
 
+    function updateSelectedAsset(category, type, id)
+    {
+         if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
+             root.assetCleared()
+             return
+         }
+         root.currentSelectedCategory = category
+         root.currentSelectedType = type
+         root.currentSelectedId = id
+         root.assetSelected(category, type, id)
 
-    onAssetSelected: function(category, type, id) {
-        if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
-            assetManagerSettings.clearAssetSelection();
-            return
-        }
-        root.currentSelectedCategory = category
-        root.currentSelectedType = type
-        root.currentSelectedId = id
     }
+
 
 
 
@@ -85,6 +87,7 @@ EditorBottomPanel {
 
         onBackButtonClicked: {
             root.currentView = "categories"
+            root.assetCleared()
         }
         onButtonClicked: function(text, index)  {
             titleBar.activeFilter = text
@@ -113,7 +116,7 @@ EditorBottomPanel {
             searchText: root.searchText
             onCategorieSelected: root.currentView = "assets"
             onAssetSelected: function(category, type, id) {
-                root.assetSelected(category, type, id)
+                root.updateSelectedAsset(category, type, id)
             }
             isExpanded: true
             onEffectChanged: {

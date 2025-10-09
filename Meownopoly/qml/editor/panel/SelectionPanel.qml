@@ -189,14 +189,15 @@ Rectangle {
 
             onAssetSelected: function(category, type, id) {
                 if (category === "" && type === "" && id === "") {
-                    root.assetCleared()
+                    // root.assetCleared()
+                    // root.clearAssetSelection()
                 }
                 else {
                     root.assetSelected(category, type, id);
                 }
             }
             onAssetCleared: {
-                root.assetCleared()
+                root.clearAssetSelection()
             }
 
             // Surveiller les changements de propriétés pour propager les signaux
@@ -242,6 +243,7 @@ Rectangle {
     function clearAssetSelection() {
         assetPanel.assetManagerSettings.clearAssetSelection()
         casePanel.clearSelection()
+        assetCleared()
     }
 
 }
