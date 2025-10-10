@@ -38,7 +38,6 @@ Rectangle {
             event.accepted = true
         }
         else if (event.key === Qt.Key_Escape) {
-            console.log("ESCAPED")
             if (root.isAssetSelected) {
                 selectionPanel.clearAssetSelection()
                 event.accepted = true

@@ -39,6 +39,7 @@ SOURCES += \
     case/CaseCatNip.cpp \
     case/CaseCardBoardBox.cpp \
     case/CaseCatPerks.cpp \
+    case/CaseFactory.cpp \
     case/CaseFreeNap.cpp \
     case/CaseJail.cpp \
     case/CaseKibbleDispenser.cpp \
@@ -76,6 +77,7 @@ HEADERS += \
     case/CaseCatNip.h \
     case/CaseCardBoardBox.h \
     case/CaseCatPerks.h \
+    case/CaseFactory.h \
     case/CaseFreeNap.h \
     case/CaseJail.h \
     case/CaseKibbleDispenser.h \

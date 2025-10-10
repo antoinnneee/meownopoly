@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
+import QtCore
+
 import QtQml
 import Game
 import Case
@@ -56,17 +58,56 @@ MouseArea {
             spacing: 12
 
             // Header with title
-            Rectangle {
+            RowLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
-                color: "transparent"
-
+                // color: "transparent"
                 Text {
-                    anchors.centerIn: parent
+                    Layout.alignment: Qt.AlignLeft
+                    horizontalAlignment: Text.AlignLeft
+                    // anchors.centerIn: parent
                     text: "Configuration de la carte"
                     color: "#FFFFFF"
                     font.pixelSize: 20
                     font.bold: true
+                }
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                Button {
+                    id: displayMenuBtn
+                    Layout.alignment: Qt.AlignRight
+                    Layout.fillWidth: false
+                    Layout.rightMargin: 0
+                    background: Rectangle {
+                        color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
+                        radius: 8
+                        border.width: 1
+                        border.color: displayMenuBtn.checked ? "#FFFFFF" : "#555555"
+                    }
+                    contentItem: Text {
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        text: displayMenuBtn.checked ? "Afficher la prochaine fois" : "Ne plus afficher"
+                        color: "white"
+                        font.pixelSize: 13
+                    }
+                    onClicked:{
+                        checked = !checked
+                        stBackGroundEditor.setValue("showBackground", checked)
+                        stBackGroundEditor.sync()
+                    }
+                    Settings {
+                        id: stBackGroundEditor
+                        category: "showBackgroundEditor"
+                        property bool showBackground: value("showBackground", "true")
+                        Component.onCompleted: {
+                            displayMenuBtn.checked = stBackGroundEditor.showBackground
+                            root.visible = showBackground
+                            root.enabled = showBackground
+                        }
+                    }
                 }
             }
 
@@ -588,7 +629,7 @@ MouseArea {
                     }
 
                     onClicked: {
-                        if (backgroundContent.visible && menuMapAtStart.selectedBackground !== -1) {
+                        if (backgroundContent.visible /*&& menuMapAtStart.selectedBackground !== -1*/) {
                             root.visible = false
                             root.backgroundSelected()
                         }

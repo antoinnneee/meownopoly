@@ -179,7 +179,6 @@ Case *Game::getNewCaseType(Case::CaseType type)
         qDebug() << "Unknown case type:" << type << "returning NULL";
         break;
     }
-
     return newCase;
 }
 

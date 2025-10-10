@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Particles
+import QtCore
 import MapLoader
 
 Rectangle {
@@ -13,6 +14,9 @@ Rectangle {
     radius: 10
     border.color: "#4A90E2"
     border.width: 2
+    onVisibleChanged: isVisble(visible)
+
+    signal isVisble(bool visible)
     
     ParticleSystem {
         id: particleSystem
@@ -453,8 +457,45 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: 15
                         
+                        Button {
+                            id: displayMenuBtn
+                            height: 50
+                            background: Rectangle {
+                                color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
+                                radius: 8
+                                border.width: 1
+                                border.color: displayMenuBtn.checked ? "#FFFFFF" : "#555555"
+                            }
+                            contentItem: Text {
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                text: displayMenuBtn.checked ? "Afficher la modification de carte au lancement de l'éditeur ?" :
+                                                               "Ne pas afficher la modification de carte au lancement de l'éditeur ?"
+                                color: "white"
+                                font.pixelSize: 13
+                            }
+                            onVisibleChanged: {
+                                console.log("stBackGroundEditor.value ", stBackGroundEditor.value("showBackground", "true"))
+                                state = stBackGroundEditor.value("showBackground", "true")
+                                // checked = stBackGroundEditor.value("showBackground", "true")
+                                console.log("checked ", checked)
+                            }
+                            onClicked:{
+                                checked = !checked
+                                stBackGroundEditor.setValue("showBackground", checked)
+                                stBackGroundEditor.sync()
+                            }
+                            Settings {
+                                id: stBackGroundEditor
+                                category: "showBackgroundEditor"
+                                property bool showBackground: value("showBackground", "true")
+                            }
+                        }
+
                         Column {
                             width: parent.width
+                            anchors.top: displayMenuBtn.bottom
+                            anchors.topMargin: 10
                             spacing: 20
                             
                             // Section Graphiques
