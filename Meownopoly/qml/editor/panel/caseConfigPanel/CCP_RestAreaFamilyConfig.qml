@@ -30,19 +30,6 @@ CCP_PanelElement {
     }
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
-        
-        // Note explicative
-        Text {
-            text: "🏠 Configuration de la famille de propriété"
-            font.italic: true
-            font.pixelSize: 12
-            color: "#6c757d"
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            Layout.bottomMargin: 5
-        }
-        
         // Famille/Couleur
         RowLayout {
             Layout.fillWidth: true
@@ -51,6 +38,7 @@ CCP_PanelElement {
                 text: "Famille:"
                 font.bold: true
                 Layout.preferredWidth: 80
+                color: "#cccccc"
             }
             
             ComboBox {
@@ -112,14 +100,14 @@ CCP_PanelElement {
                             text: delegate.textValue
                             anchors.verticalCenter: parent.verticalCenter
                             font.pixelSize: 14
-                            color: "#333333"
+                            color: "#000000"
                         }
                     }
                     
                     highlighted: familyComboBox.highlightedIndex === index
                     
                     background: Rectangle {
-                        color: highlighted ? "#e3f2fd" : "transparent"
+                        color: highlighted ? "#e3f2fd" : "#ffffff"
                         radius: 2
                     }
                 }
@@ -145,7 +133,7 @@ CCP_PanelElement {
                         text: familyComboBox.displayText
                         anchors.verticalCenter: parent.verticalCenter
                         font.pixelSize: 14
-                        color: "#333333"
+                        color: "#ffffff"
                     }
                 }
             }

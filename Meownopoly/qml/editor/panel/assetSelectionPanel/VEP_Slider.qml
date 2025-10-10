@@ -9,7 +9,9 @@ RowLayout {
     property alias from: slider.from
     property alias to: slider.to
 
+    property color accentColor: "#569c58"
     signal effectChanged(var value)
+    clip: true
 
     Label {
         id: sliderText
@@ -18,6 +20,7 @@ RowLayout {
         color: "#cccccc"
         font.pointSize: 8
         Layout.preferredWidth: Screen.pixelDensity * 17
+        Layout.minimumWidth: Screen.pixelDensity * 13
         Layout.fillHeight: true
     }
 
@@ -25,6 +28,7 @@ RowLayout {
     Slider {
         id: slider
         Layout.fillWidth: true
+        Layout.minimumWidth: Screen.pixelDensity * 17
         Layout.fillHeight: true
         from: -1.0
         to: 1.0
@@ -52,19 +56,19 @@ RowLayout {
             height: slider.horizontal ? 6 : slider.position * parent.height
 
             radius: 3
-            color: "#569c58"
+            color: control.accentColor
         }
     }
         
         handle: Rectangle {
-            implicitWidth: 12
-            implicitHeight: 12
+            implicitWidth: Screen.pixelDensity*3
+            implicitHeight: Screen.pixelDensity*6
             x: slider.leftPadding + (slider.horizontal ? slider.visualPosition * (slider.availableWidth - width) : (slider.availableWidth - width) / 2)
             y: slider.topPadding + (slider.horizontal ? (slider.availableHeight - height) / 2 : slider.visualPosition * (slider.availableHeight - height))
             radius: width / 2
-            color: slider.pressed ? "#569c58" : "#444444"
+            color: slider.pressed ? control.accentColor : "#444444"
             border.width: slider.visualFocus ? 2 : 1
-            border.color: slider.pressed ? "#444444" : "#569c58"
+            border.color: slider.pressed ? "#444444" : control.accentColor
         }
     }
     
@@ -79,7 +83,8 @@ RowLayout {
         text: "Reset"
         onClicked: slider.value = 0.0
         Layout.fillHeight: true
-        width:  Screen.pixelDensity * 7
+        Layout.minimumWidth: Screen.pixelDensity*7
+        Layout.preferredWidth: Screen.pixelDensity*14
         
         background: Rectangle {
             color: parent.pressed ? "#666666" : "#555555"
@@ -88,6 +93,7 @@ RowLayout {
         }
         
         contentItem: Text {
+            anchors.fill:parent
             text: parent.text
             color: "#cccccc"
             font.pointSize: 8

@@ -1,7 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick.Layouts
 import AssetManager
+import QtQuick.Window
 
 ScrollView {
     id: root
@@ -18,23 +19,20 @@ ScrollView {
         generateCategories()
     }
     
-    // Content
-    contentWidth: gridLayout.implicitWidth
     contentHeight: gridLayout.implicitHeight
-    
     GridLayout {
         id: gridLayout
         anchors.fill: parent
-        columns: Math.max(1, Math.floor(root.width / 120)) // Responsive columns
         columnSpacing: 10
         rowSpacing: 10
+        columns: Math.max(1, Math.floor(parent.width / (Screen.pixelDensity*25))-1)
         
         // Define category metadata with icons and descriptions
         property var categoryMetadata: {
             "grass": { name: "Grass", icon: "🌱", description: "Various grass textures" },
             "tree": { name: "Trees", icon: "🌳", description: "Tree decorations" },
             "toy": { name: "Toys", icon: "🎁", description: "Toys decorations" },
-            "other": { name: "Other Decorations", icon: "🎨", description: "Miscellaneous decorations" },
+            "other": { name: "Other", icon: "🎨", description: "Miscellaneous decorations" },
             "water": { name: "Water", icon: "💧", description: "Water decorations" },
             "avatar": { name: "Player Icons", icon: "👤", description: "Character avatars" },
             "player_icons": { name: "Player Icons", icon: "👤", description: "Character avatars" }
@@ -116,8 +114,8 @@ ScrollView {
             
             // Category card
             Rectangle {
-                Layout.preferredWidth: 100
-                Layout.preferredHeight: 100
+                Layout.preferredWidth: Screen.pixelDensity*25
+                Layout.preferredHeight:  Screen.pixelDensity*25
                 color: categoryMouseArea.containsMouse ? "#555555" : "#444444"
                 border.color: "#666666"
                 border.width: 1
@@ -140,32 +138,16 @@ ScrollView {
                     
                     // Name
                     Text {
-                        text: modelData.category + " / " + modelData.name
+                        text: modelData.category + "\n" + modelData.name
+                        elide: Text.ElideNone
                         color: "white"
-                        font.pixelSize: 12
                         font.bold: true
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.Wrap
-                        width: 90
-                    }
-                    
-                    // Asset count
-                    Text {
-                        id: countText
-                        color: "#CCCCCC"
-                        font.pixelSize: 10
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        
-                        Component.onCompleted: {
-                            // Get asset count for this category/type
-                            var model = AssetManager.getAssetModel(modelData.category, modelData.type)
-                            if (model) {
-                                text = model.rowCount() + " items"
-                            } else {
-                                text = "0 items"
-                            }
-                        }
+                        wrapMode: Text.WordWrap
+                        minimumPointSize: 8
+                        fontSizeMode: Text.Fit
+                        width: parent.width
                     }
                 }
                 

@@ -21,6 +21,7 @@ Item {
         Layout.fillHeight: true
         anchors.fill: parent
         sourceComponent: {
+            if (root.caseData == undefined) return null;
             switch(root.caseData.type) {
                 case Case.CS_KibbleDispenser: return kibbleDispenserContent
                 case Case.CS_RestArea: return restAreaContent
@@ -39,7 +40,7 @@ Item {
     Component {
         id: restAreaContent
         RestAreaContent2 {
-            caseData: (root.caseData.type === Case.CS_RestArea) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_RestArea) ? root.caseData : null
             familyColors: root.familyColors
         }
     }
@@ -47,21 +48,21 @@ Item {
     Component {
         id: kibbleDispenserContent
         KibbleDispenserContent2{
-            caseData: (root.caseData.type === Case.CS_KibbleDispenser) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_KibbleDispenser) ? root.caseData : null
         }
     }
 
     Component {
         id: cardBoardBoxContent
         CardBoardBoxContent2 {
-            caseData: (root.caseData.type === Case.CS_CardBoardBox) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_CardBoardBox) ? root.caseData : null
         }
     }
 
     Component {
         id: catNipContent
         CatNipContent2 {
-            caseData: (root.caseData.type === Case.CS_CatNip) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_CatNip) ? root.caseData : null
         }
     }
 
@@ -75,28 +76,28 @@ Item {
     Component {
         id: toJailContent
         ToJailContent2 {
-            caseData: (root.caseData.type === Case.CS_ToJail) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_ToJail) ? root.caseData : null
         }
     }
 
     Component {
         id: catDoorContent
         CatDoorContent2 {
-            caseData: (root.caseData.type === Case.CS_CatDoor) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_CatDoor) ? root.caseData : null
         }
     }
 
     Component {
         id: freeNapContent
         FreeNapContent2 {
-            caseData: (root.caseData.type === Case.CS_FreeNap) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_FreeNap) ? root.caseData : null
         }
     }
 
     Component {
         id: catDeviceContent
         CatDeviceContent2 {
-            caseData: (root.caseData.type === Case.CS_Device) ? root.caseData : null
+            caseData: (root.caseData != undefined && root.caseData.type === Case.CS_Device) ? root.caseData : null
         }
     }
 } 

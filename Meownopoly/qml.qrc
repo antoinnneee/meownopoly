@@ -49,7 +49,6 @@
         <file>qml/editor/tools/snapable/SnapableElementResizeHandles.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementDeleteAnimation.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementCreateAnimation.qml</file>
-        <file>qml/editor/GameBoard.qml</file>
         <file>qml/editor/tools/SnapablePlayerTile.qml</file>
         <file>qml/case/PlayerTile.qml</file>
         <file>qml/launcher/Launcher.qml</file>
@@ -129,6 +128,21 @@
         <file>qml/editor/panel/mapSelectionPanel/MSP_TitleBar.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_SettingPanel.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_SettingSelection.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_General.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_SaveLoad.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_Background.qml</file>
+        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
+        <file>qml/editor/MenuMapAtStart.qml</file>
+        <file>qml/editor/Background.qml</file>
+        <file>qml/test/Test_Comp.qml</file>
+        <file>qml/editor/EditorEscMenu.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CaseConfigurationPanelSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CCPS_TypeSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CCPS_GeneralSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CCPS_RestAreaSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CCPS_KibbleDispenserSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CCPS_CardBoardBoxSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CCPS_CatDeviceSection.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CaseConfigurationPanel.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
@@ -141,14 +155,6 @@
         <file>qml/editor/panel/caseConfigPanel/CCP_RentConfig.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_TypeSelector.qml</file>
-        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_General.qml</file>
-        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_SaveLoad.qml</file>
-        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_Background.qml</file>
-        <file>qml/editor/panel/mapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
-        <file>qml/editor/MenuMapAtStart.qml</file>
-        <file>qml/editor/Background.qml</file>
-        <file>qml/test/Test_Comp.qml</file>
-        <file>qml/editor/EditorEscMenu.qml</file>
+        <file>qml/editor/panel/caseConfigPanel/CCP_StyledSpinBox.qml</file>
     </qresource>
 </RCC>

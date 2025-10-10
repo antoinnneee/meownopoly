@@ -24,6 +24,8 @@ ScrollView {
     // Update model when category/type changes
     onCategoryChanged: updateModel()
     onTypeChanged: updateModel()
+
+    contentHeight: gridLayout.implicitHeight
     
     
     function updateModel() {
@@ -48,24 +50,21 @@ ScrollView {
     }
     
     Component.onCompleted: updateModel()
-    
-    // Content
-    contentWidth: gridLayout.implicitWidth
-    contentHeight: gridLayout.implicitHeight
+
     
     GridLayout {
         id: gridLayout
         anchors.fill: parent
-        columns: Math.max(1, Math.floor(root.width / 90))
         columnSpacing: 10
         rowSpacing: 10
-        
+        columns: Math.max(1, Math.floor(parent.width / (Screen.pixelDensity*25))-1)
+
         Repeater {
             model: root.assetModel
             
             ASP_Item {
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 80
+                Layout.preferredWidth: Screen.pixelDensity*25
+                Layout.preferredHeight:  Screen.pixelDensity*25
                 
                 // Asset data
                 assetPath: model.path || ""
@@ -93,7 +92,6 @@ ScrollView {
                 }
                 
                 onAssetClicked: function(id) {
-                    //console.log(assetPath, assetId, assetFilename)
                     root.assetSelected(id)
                 }
 

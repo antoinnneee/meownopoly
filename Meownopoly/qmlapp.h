@@ -17,6 +17,7 @@
 #include "game.h"
 #include "QtFolderCompressor/FolderCompressor.h"
 #include "asset_manager.h"
+#include "animation_manager.h"
 
 
 class QmlApp : public QQmlApplicationEngine

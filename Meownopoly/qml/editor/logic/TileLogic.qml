@@ -32,6 +32,8 @@ QtObject {
 
 
     // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
+
+
     function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
         var newTile
         currentZOrder = currentZOrder + 0.00001
@@ -98,6 +100,7 @@ QtObject {
         newTile.isSelected = true
         newTile.elementConfigurationRequested(newTile)
     }
+
 
     // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
     function createCaseTile(dispSettings, caseData) {

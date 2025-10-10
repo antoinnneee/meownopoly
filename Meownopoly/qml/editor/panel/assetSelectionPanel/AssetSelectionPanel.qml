@@ -26,11 +26,9 @@ EditorBottomPanel {
 
         // Function to clear asset selection
         function clearAssetSelection() {
-            console.log("Clearing asset selection")
             assetManagerSettings.currentSelectedCategory = ""
             assetManagerSettings.currentSelectedType = ""
             assetManagerSettings.currentSelectedId = ""
-            root.assetCleared()
         }
     }
 
@@ -49,17 +47,19 @@ EditorBottomPanel {
 
     signal effectChanged()
 
+    function updateSelectedAsset(category, type, id)
+    {
+         if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
+             root.assetCleared()
+             return
+         }
+         root.currentSelectedCategory = category
+         root.currentSelectedType = type
+         root.currentSelectedId = id
+         root.assetSelected(category, type, id)
 
-    onAssetSelected: function(category, type, id) {
-        if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
-            assetManagerSettings.clearAssetSelection();
-            return
-        }
-        console.log("Asset selected for placement:", category, type, id)
-        root.currentSelectedCategory = category
-        root.currentSelectedType = type
-        root.currentSelectedId = id
     }
+
 
 
 
@@ -73,11 +73,9 @@ EditorBottomPanel {
         isExpanded: true
 
         onAssetSelected: function(category, type, id) {
-            console.log("titleBar select asset", category, type, id)
             root.assetSelected(category, type, id)
         }
         onSearchTextChanged: {
-            // console.log("EditorBottomPanel - searchText filter changed", searchText)
             root.searchText = searchText
             root.searchText = Qt.binding(function(){ return root.searchText})
         }
@@ -89,6 +87,7 @@ EditorBottomPanel {
 
         onBackButtonClicked: {
             root.currentView = "categories"
+            root.assetCleared()
         }
         onButtonClicked: function(text, index)  {
             titleBar.activeFilter = text
@@ -117,12 +116,13 @@ EditorBottomPanel {
             searchText: root.searchText
             onCategorieSelected: root.currentView = "assets"
             onAssetSelected: function(category, type, id) {
-                root.assetSelected(category, type, id)
+                root.updateSelectedAsset(category, type, id)
             }
             isExpanded: true
             onEffectChanged: {
                 root.effectChanged()
             }
+            titleHeight: titleBar.height
     }
 
     // Status indicator

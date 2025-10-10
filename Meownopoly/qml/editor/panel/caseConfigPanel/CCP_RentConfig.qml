@@ -14,24 +14,24 @@ CCP_PanelElement {
     function updateControls() {
         if (!targetCase || !targetCase.rentPrice) return
         updatingValues = true
-        // Mettre à jour tous les SpinBox de location
-        var spinBoxes = []
-        // Récupérer tous les SpinBox dans le Repeater et le SpinBox de l'hôtel
-        for (var i = 0; i < repeater.count; i++) {
-            var item = repeater.itemAt(i)
-            if (item && item.children) {
-                for (var j = 0; j < item.children.length; j++) {
-                    var child = item.children[j]
-                    if (child.rentIndex !== undefined && targetCase.rentPrice.length > child.rentIndex) {
-                        child.value = targetCase.rentPrice[child.rentIndex]
-                    }
-                }
-            }
+        
+        // Mettre à jour chaque SpinBox individuellement
+        if (terrainNuSpinBox && targetCase.rentPrice.length > 0) {
+            terrainNuSpinBox.value = targetCase.rentPrice[0]
         }
-        // Mettre à jour le SpinBox de l'hôtel
-        if (hotelSpinBox && targetCase.rentPrice.length > 5) {
-            hotelSpinBox.value = targetCase.rentPrice[5]
+        if (star1SpinBox && targetCase.rentPrice.length > 1) {
+            star1SpinBox.value = targetCase.rentPrice[1]
         }
+        if (star2SpinBox && targetCase.rentPrice.length > 2) {
+            star2SpinBox.value = targetCase.rentPrice[2]
+        }
+        if (star3SpinBox && targetCase.rentPrice.length > 3) {
+            star3SpinBox.value = targetCase.rentPrice[3]
+        }
+        if (hotelSpinBox && targetCase.rentPrice.length > 4) {
+            hotelSpinBox.value = targetCase.rentPrice[4]
+        }
+        
         updatingValues = false
     }
 
@@ -43,108 +43,215 @@ CCP_PanelElement {
             text: "💡 Définissez les prix de location selon le niveau d'amélioration de la propriété"
             font.italic: true
             font.pixelSize: 12
-            color: "#6c757d"
+            color: "#888888"
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             Layout.bottomMargin: 5
         }
 
-        // Prix terrain nu à 4 étoiles
-        Repeater {
-            id: repeater
-            model: [
-                { index: 0, label: "🏞️ Terrain nu:", step: 5, color: "#495057", bold: true },
-                { index: 1, label: "⭐ 1 étoile:", step: 5, color: "#495057", bold: true },
-                { index: 2, label: "⭐⭐ 2 étoiles:", step: 5, color: "#495057", bold: true },
-                { index: 3, label: "⭐⭐⭐ 3 étoiles:", step: 5, color: "#495057", bold: true },
-                { index: 4, label: "⭐⭐⭐⭐ 4 étoiles:", step: 5, color: "#495057", bold: true }
-            ]
-
-            RowLayout {
+        // Prix de location organisés en 2 colonnes
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 15
+            
+            // Colonne gauche (Terrain nu, 2 étoiles)
+            ColumnLayout {
                 Layout.fillWidth: true
-
-                Label {
-                    text: modelData.label
-                    font.bold: modelData.bold
-                    Layout.preferredWidth: 120
-                    color: modelData.color
-                }
-
-                SpinBox {
+                spacing: 10
+                
+                // Terrain nu
+                ColumnLayout {
                     Layout.fillWidth: true
-                    from: 0
-                    to: 10000
-                    stepSize: modelData.step
-
-                    property int rentIndex: modelData.index
-
-                    textFromValue: function(value, locale) {
-                        return value + "K"
+                    spacing: 5
+                    
+                    Label {
+                        text: "🏞️ Terrain nu"
+                        font.bold: true
+                        color: "#cccccc"
+                        font.pixelSize: 11
                     }
-
-                    valueFromText: function(text, locale) {
-                        return parseInt(text.replace("K", ""))
-                    }
-
-                    Component.onCompleted: {
-                        if (targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
-                            value = targetCase.rentPrice[rentIndex]
+                    
+                    CCP_StyledSpinBox {
+                        id: terrainNuSpinBox
+                        Layout.fillWidth: true
+                        from: 0
+                        to: 10000
+                        stepSize: 5
+                        suffix: "K"
+                        
+                        property int rentIndex: 0
+                        
+                        Component.onCompleted: {
+                            if (targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
+                                value = targetCase.rentPrice[rentIndex]
+                            }
+                        }
+                        
+                        onValueChanged: {
+                            if (!updatingValues && targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
+                                targetCase.rentPrice[rentIndex] = value
+                            }
                         }
                     }
-
-                    onValueChanged: {
-                        if (!updatingValues && targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
-                            targetCase.rentPrice[rentIndex] = value
+                }
+                
+                // 2 étoiles
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 5
+                    
+                    Label {
+                        text: "⭐⭐ 2 étoiles"
+                        font.bold: true
+                        color: "#cccccc"
+                        font.pixelSize: 11
+                    }
+                    
+                    CCP_StyledSpinBox {
+                        id: star2SpinBox
+                        Layout.fillWidth: true
+                        from: 0
+                        to: 10000
+                        stepSize: 5
+                        suffix: "K"
+                        
+                        property int rentIndex: 2
+                        
+                        Component.onCompleted: {
+                            if (targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
+                                value = targetCase.rentPrice[rentIndex]
+                            }
+                        }
+                        
+                        onValueChanged: {
+                            if (!updatingValues && targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
+                                targetCase.rentPrice[rentIndex] = value
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Colonne droite (1 étoile, 3 étoiles)
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                
+                // 1 étoile
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 5
+                    
+                    Label {
+                        text: "⭐ 1 étoile"
+                        font.bold: true
+                        color: "#cccccc"
+                        font.pixelSize: 11
+                    }
+                    
+                    CCP_StyledSpinBox {
+                        id: star1SpinBox
+                        Layout.fillWidth: true
+                        from: 0
+                        to: 10000
+                        stepSize: 5
+                        suffix: "K"
+                        
+                        property int rentIndex: 1
+                        
+                        Component.onCompleted: {
+                            if (targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
+                                value = targetCase.rentPrice[rentIndex]
+                            }
+                        }
+                        
+                        onValueChanged: {
+                            if (!updatingValues && targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
+                                targetCase.rentPrice[rentIndex] = value
+                            }
+                        }
+                    }
+                }
+                
+                // 3 étoiles
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 5
+                    
+                    Label {
+                        text: "⭐⭐⭐ 3 étoiles"
+                        font.bold: true
+                        color: "#cccccc"
+                        font.pixelSize: 11
+                    }
+                    
+                    CCP_StyledSpinBox {
+                        id: star3SpinBox
+                        Layout.fillWidth: true
+                        from: 0
+                        to: 10000
+                        stepSize: 5
+                        suffix: "K"
+                        
+                        property int rentIndex: 3
+                        
+                        Component.onCompleted: {
+                            if (targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
+                                value = targetCase.rentPrice[rentIndex]
+                            }
+                        }
+                        
+                        onValueChanged: {
+                            if (!updatingValues && targetCase && targetCase.rentPrice && targetCase.rentPrice.length > rentIndex) {
+                                targetCase.rentPrice[rentIndex] = value
+                            }
                         }
                     }
                 }
             }
         }
+        
         // Séparateur visuel
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#dee2e6"
+            color: "#555555"
             Layout.topMargin: 5
             Layout.bottomMargin: 5
         }
-
-        // Hôtel
-        RowLayout {
+        
+        // Hôtel (séparé en dessous)
+        ColumnLayout {
             Layout.fillWidth: true
-
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 8
+            
             Label {
-                text: "🏨 Hôtel:"
+                text: "🏨 Hôtel"
                 font.bold: true
-                Layout.preferredWidth: 120
-                color: "#dc3545"
-                font.pixelSize: 16
+                color: "#ff6b6b"
+                font.pixelSize: 14
+                Layout.alignment: Qt.AlignHCenter
             }
-
-            SpinBox {
+            
+            CCP_StyledSpinBox {
                 id: hotelSpinBox
-                Layout.fillWidth: true
+                Layout.preferredWidth: 200
+                Layout.alignment: Qt.AlignHCenter
                 from: 0
                 to: 10000
                 stepSize: 10
-
-                textFromValue: function(value, locale) {
-                    return value + "K"
-                }
-
-                valueFromText: function(text, locale) {
-                    return parseInt(text.replace("K", ""))
-                }
-
+                suffix: "K"
+                
                 Component.onCompleted: {
-                    if (targetCase && targetCase.rentPrice && targetCase.rentPrice.length > 5) {
-                        value = targetCase.rentPrice[5]
+                    if (targetCase && targetCase.rentPrice && targetCase.rentPrice.length > 4) {
+                        value = targetCase.rentPrice[4]
                     }
                 }
-
+                
                 onValueChanged: {
-                    if (!updatingValues && targetCase && targetCase.rentPrice && targetCase.rentPrice.length > 5) {
-                        targetCase.rentPrice[5] = value
+                    if (!updatingValues && targetCase && targetCase.rentPrice && targetCase.rentPrice.length > 4) {
+                        targetCase.rentPrice[4] = value
                     }
                 }
             }

@@ -13,13 +13,16 @@ EBP_Content {
     // Propriétés supplémentaires
     searchText: ""
     isExpanded: true
+    property alias caseConfigurationPanelSection: caseConfigurationPanelSection  // Exposer pour l'accès externe
     
     // Signaux
     signal caseTypeSelected(int type, string typeName)
     signal caseTypeCleared()
+    sidePanelRatio: 0.5
 
+    property int titleHeight
     // Main content (categories/assets)
-    Item {
+    mainContent: Item {
         id: mainContent
         anchors.top: parent.top
         anchors.left: parent.left
@@ -34,13 +37,27 @@ EBP_Content {
             activeFilter: contentArea.activeFilter
             
             onTypeSelected: function(type, typeName) {
-                console.log("Case type selected:", type, typeName)
                 contentArea.caseTypeSelected(type, typeName)
             }
             
             onTypeCleared: function() {
-                console.log("Case type cleared")
                 contentArea.caseTypeCleared()
+            }
+        }
+    }
+
+    sidePanel: CaseConfigurationPanelSection{
+        id: caseConfigurationPanelSection
+        anchors.fill: parent
+        anchors.topMargin: -contentArea.titleHeight
+        
+        // Gérer le changement de type de case
+        onRequestChangeType: function(newType) {
+            if (targetCase) {
+                console.log("Changing case type to:", newType)
+                targetCase.type = newType
+                // Mettre à jour les contrôles pour refléter le nouveau type
+                updateControls()
             }
         }
     }

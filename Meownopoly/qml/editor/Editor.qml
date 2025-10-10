@@ -14,6 +14,9 @@ import "panel/assetSelectionPanel"
 import MapLoader
 import MapInfo
 import EditorEnum
+import Logger
+import DisplayParameter
+import DecorationParameter
 
 Rectangle {
     id: root
@@ -24,7 +27,6 @@ Rectangle {
     Background {
         id: background
         anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
-
     }
 
     Keys.onPressed: function(event) {
@@ -38,7 +40,7 @@ Rectangle {
         else if (event.key === Qt.Key_Escape) {
             console.log("ESCAPED")
             if (root.isAssetSelected) {
-                selectionPanel.assetManagerSettings.clearAssetSelection()
+                selectionPanel.clearAssetSelection()
                 event.accepted = true
             } else {
                 // Afficher le menu d'échappement
@@ -87,16 +89,19 @@ Rectangle {
         target: MapLoader
 
         function onFoundCaseTile(dp, caseData){
-            console.log("Found case tile:", dp, caseData)
+            Logger.info("Found case tile:" + dp + " " + caseData, "MAP_LOADING")
+            //console.log("Found case tile:", dp, caseData)
             logic.tileLogic.createCaseTile(dp, caseData);
         }
         function onFoundDecorationTile(dp, decorationParameter){
-            console.log("Found decoration tile:", dp, decorationParameter)
+            Logger.info("Found decoration tile:" + dp + " " + decorationParameter, "MAP_LOADING")
+            //console.log("Found decoration tile:", dp, decorationParameter)
             logic.tileLogic.createDecorationTile(dp, decorationParameter);
         }
         function onMapLoaded(map)
         {
-            console.log("Map loaded")
+            Logger.success("Map loaded", "MAP_LOADING")
+            //console.log("Map loaded")
             logic.tileLogic.builtConnections();
 
             mapInfo = map.mapInfo
@@ -113,6 +118,7 @@ Rectangle {
         editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
+        selectionPanel: selectionPanel
     }
 
     EditorDynamicComponent {
@@ -278,6 +284,7 @@ Rectangle {
             else
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
+
     }
 
     MenuMapAtStart {
@@ -350,30 +357,44 @@ Rectangle {
     function placeSelectedAsset(gridX, gridY) {
         gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
         gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
-        if (!root.isAssetSelected) {
+        if (!root.isAssetSelected) {    // place case
             if (!selectionPanel.caseTypeSelected !== -1)
             {
                 var newCaseTile = logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, gridX, gridY, ItemSnapable.CaseTile)
+                mainMa.elementClicked(newCaseTile)
+                newCaseTile.elementPressed()
+                newCaseTile.parent = groupeSelection
+                newCaseTile.x = newCaseTile.x - groupeSelection.x
+                newCaseTile.y = newCaseTile.y - groupeSelection.y
+                logic.mouseLogic.selectedElements.push(newCaseTile)
+                // Mettre à jour la configuration de case si applicable
+                logic.mouseLogic.updateCaseConfiguration()
 
 
             }
-                return;
+            return;
         }
 
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
 
         // Create appropriate element based on category
-        var newTile = logic.tileLogic.createNewTileAtPosition(Case.CS_Unknow, gridX, gridY, ItemSnapable.DecorationTile)
-        // Set decoration properties if needed
-        if (newTile && newTile.decorationSettings.decorationType !== undefined) {
-            console.log("Setting decoration properties for new tile")
-            newTile.decorationSettings.decorationCategory = root.selectedAssetCategory
-            newTile.decorationSettings.decorationType = root.selectedAssetType
-            newTile.decorationSettings.decorationId = root.selectedAssetId
+//        DisplayParameter dispSettings = new DisplayParameter()
+        var dispSettings = Qt.createQmlObject(`import DisplayParameter
+                    DisplayParameter { }`, root)
+        var decorationParameter = Qt.createQmlObject(`import DecorationParameter
+                    DecorationParameter { }`, root)
+        dispSettings.gridRelativePositionX = gridX
+        dispSettings.gridRelativePositionY = gridY
+        dispSettings.unitSizeWidth = logic.tileLogic.currentElementWidth
+        dispSettings.unitSizeHeight = logic.tileLogic.currentElementHeight
+        dispSettings.zLayer = 5
+        decorationParameter.decorationCategory = root.selectedAssetCategory
+        decorationParameter.decorationType = root.selectedAssetType
+        decorationParameter.decorationId = root.selectedAssetId
+        var newTile = logic.tileLogic.createDecorationTile(dispSettings, decorationParameter)
+        root.applyVisualEffectsToNewTile(newTile)
+        mainMa.elementClicked(newTile)
 
-            // Apply visual effects to the new tile (only if effects are not locked)
-            applyVisualEffectsToNewTile(newTile)
-        }
     }
 
     // Menu d'échappement

@@ -27,7 +27,6 @@ MouseLogic_Base {
         
         // Si aucun élément n'est cliqué, commencer la sélection par rectangle
         if (clickElement.length === 0) {
-            console.log("[LOGIC] Starting rectangle selection")
             isRectangleSelecting = true
             
             // Convertir les coordonnées de mainMa vers workArea
@@ -61,11 +60,9 @@ MouseLogic_Base {
 
     function release(mouse, drag)
     {
-        console.log("[LOGIC] release drag:", isDragging)
         
         // Finaliser la sélection par rectangle si active
         if (isRectangleSelecting) {
-            console.log("[LOGIC] Finalizing rectangle selection")
             finalizeRectangleSelection()
             isRectangleSelecting = false
             if (logic.selectionRect) {
@@ -84,7 +81,6 @@ MouseLogic_Base {
 
     function clickedLeft(mouse, drag)
     {
-        console.log("[LOGIC] clicked left")
         mouse.accepted = true
         if (!(mouse.modifiers & Qt.ControlModifier))
         {
@@ -99,6 +95,9 @@ MouseLogic_Base {
                 clickElement[0].parent = groupeSelection
                 drag.target = groupeSelection
                 selectedElements.push(clickElement[0])
+                
+                // Mettre à jour la configuration de case si applicable
+                updateCaseConfiguration()
             }
             else
             {
@@ -117,6 +116,9 @@ MouseLogic_Base {
                     clickElement[0].x = clickElement[0].x - deltaX
                     clickElement[0].y = clickElement[0].y - deltaY
                     selectedElements.push(clickElement[0])
+                    
+                    // Mettre à jour la configuration de case si applicable
+                    updateCaseConfiguration()
                 }
                 else
                 {
@@ -132,6 +134,9 @@ MouseLogic_Base {
                             break
                         }
                     }
+                    
+                    // Mettre à jour la configuration de case si applicable
+                    updateCaseConfiguration()
                 }
             }
         }
@@ -216,6 +221,10 @@ MouseLogic_Base {
     function finalizeRectangleSelection() {
         var elementsInRect = getElementsInRectangle(rectangleStart, rectangleCurrent)
         selectElementsInRectangle(elementsInRect)
+        
+        // Mettre à jour la configuration de case si applicable
+        updateCaseConfiguration()
     }
+
 
 }

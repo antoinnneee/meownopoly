@@ -21,6 +21,8 @@ public:
     void setDecorationType(const QString &decorationType);
     QString decorationId() const;
     void setDecorationId(const QString &decorationId);
+    Q_INVOKABLE QString getAnimePath(QString imagePath);
+
 
 signals:
     void decorationTypeChanged();

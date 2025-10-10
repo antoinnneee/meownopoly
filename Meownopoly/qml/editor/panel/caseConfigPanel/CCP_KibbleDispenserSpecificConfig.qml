@@ -41,7 +41,7 @@ CCP_PanelElement {
             text: "🥫 Configuration du distributeur de croquettes - récompense donnée au joueur"
             font.italic: true
             font.pixelSize: 12
-            color: "#6c757d"
+            color: "#888888"
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             Layout.bottomMargin: 5
@@ -55,15 +55,17 @@ CCP_PanelElement {
             Label {
                 text: "Récompense (kibbles):"
                 font.pixelSize: 14
+                color: "#cccccc"
                 Layout.minimumWidth: 150
             }
             
-            SpinBox {
+            CCP_StyledSpinBox {
                 id: rewardSpinBox
                 from: 0
                 to: 10000
                 stepSize: 50
                 value: 200
+                suffix: "K"
                 
                 Layout.preferredWidth: 120
                 
@@ -72,31 +74,12 @@ CCP_PanelElement {
                         targetCase.reward = value
                     }
                 }
-                
-                // Style personnalisé
-                background: Rectangle {
-                    color: "#ffffff"
-                    border.color: "#ced4da"
-                    border.width: 1
-                    radius: 4
-                }
-                
-                contentItem: TextInput {
-                    text: rewardSpinBox.textFromValue(rewardSpinBox.value, rewardSpinBox.locale)
-                    font.pixelSize: 14
-                    color: "#495057"
-                    horizontalAlignment: Qt.AlignHCenter
-                    verticalAlignment: Qt.AlignVCenter
-                    readOnly: !rewardSpinBox.editable
-                    validator: rewardSpinBox.validator
-                    inputMethodHints: Qt.ImhFormattedNumbersOnly
-                }
             }
             
             Text {
                 text: "kibbles"
                 font.pixelSize: 12
-                color: "#6c757d"
+                color: "#888888"
             }
             
             Item { Layout.fillWidth: true } // Spacer
@@ -106,9 +89,9 @@ CCP_PanelElement {
         Rectangle {
             Layout.fillWidth: true
             height: 60
-            color: "#e9ecef"
-            radius: 4
-            border.color: "#dee2e6"
+            color: "#2a3a2a"
+            radius: 6
+            border.color: "#3a4a3a"
             border.width: 1
             
             ColumnLayout {
@@ -120,13 +103,13 @@ CCP_PanelElement {
                     text: "ℹ️ Information"
                     font.bold: true
                     font.pixelSize: 12
-                    color: "#495057"
+                    color: "#99d6af"
                 }
                 
                 Text {
                     text: "Quand un joueur atterrit sur cette case, il reçoit le nombre de kibbles spécifié."
                     font.pixelSize: 11
-                    color: "#6c757d"
+                    color: "#80c1a0"
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }

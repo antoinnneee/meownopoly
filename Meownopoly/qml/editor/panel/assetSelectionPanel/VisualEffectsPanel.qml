@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
@@ -16,7 +16,6 @@ Rectangle {
     radius: 8
     border.color: "#444444"
     border.width: 1
-    
     // Dimensions
     height: mainLayout.implicitHeight + 12
     width: mainLayout.implicitWidth
@@ -84,39 +83,6 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
 
-            onEffectChanged: {
-                root.effectChanged()
-            }
-        }
-
-        // Advanced Effects Section
-        VEP_AdvancedEffectsSection {
-            id: advancedEffectsSection
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            onEffectChanged: {
-                root.effectChanged()
-            }
-        }
-        
-        // // Transform Section
-        VEP_TransformSection {
-            id: transformSection
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            onEffectChanged: {
-                root.effectChanged()
-            }
-        }
-        
-        // Reset buttons panel
-        VEP_ResetButtonsPanel {
-            id: resetButtonsPanel
-            anchors.left: parent.left
-            anchors.right: parent.right
-            
             onEffectChanged: {
                 root.effectChanged()
             }

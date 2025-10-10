@@ -83,10 +83,12 @@ SnapableElement {
 
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
+
+
     AnimatedImage {
         id: tileImage
         anchors.fill: parent
-        source: displaySettings.getAnimePath(imagePath)
+        source: decorationSettings.getAnimePath(imagePath)
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true
         cache: true  // Cache the image to prevent reloading
@@ -109,6 +111,8 @@ SnapableElement {
                 angle: displaySettings.rotationAngle
                 origin.x: tileImage.width / 2
                 origin.y: tileImage.height / 2
+                // axis.y:0.2
+                axis.z:1
             }
         ]
         onStatusChanged: {

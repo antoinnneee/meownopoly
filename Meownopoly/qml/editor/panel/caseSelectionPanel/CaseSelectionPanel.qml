@@ -15,6 +15,7 @@ EditorBottomPanel {
     property string selectedCaseTypeName: ""
     property string currentView: "categories"
     property string searchText: ""
+    property alias csp_contentArea: csp_contentArea
 //    isExpanded: true
 
     // Signaux
@@ -59,13 +60,14 @@ EditorBottomPanel {
 
     // Content area (visible only when expanded)
      contentArea: CSP_ContentArea {
-            id: contentArea
+            id: csp_contentArea
             visible: true
             anchors.fill: parent
             currentView: root.currentView
             activeFilter: titleBar.activeFilter
             searchText: root.searchText
             isExpanded: true
+            titleHeight: titleBar.height
             
             onCaseTypeSelected: function(type, typeName) {
                 console.log("CaseSelectionPanel - case type selected:", type, typeName)
@@ -94,6 +96,6 @@ EditorBottomPanel {
     
     // Fonction pour effacer la sélection
     function clearSelection() {
-        contentArea.clearCaseSelection()
+        csp_contentArea.clearCaseSelection()
     }
 }

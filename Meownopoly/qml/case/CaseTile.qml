@@ -16,9 +16,9 @@ Item {
     required property Case caseData
 
     // Properties
-    property var tileIndex: caseData.uniqueId
-    property int tileType: caseData.type
-    property string tileName: caseData.name
+    property var tileIndex: (caseData != undefined) ? caseData.uniqueId : ""
+    property int tileType: (caseData != undefined) ? caseData.type : 0
+    property string tileName: (caseData != undefined) ? caseData.name : ""
     property bool isHovered: false
     property alias mouseArea: mouseArea
 
@@ -64,7 +64,7 @@ Item {
     // Ownership indicator - ribbon at bottom left
     OwnershipIndicator {
         id: ownershipIndicator
-        visible: (root.caseData.owner != undefined) ? true: false
-        ribbonColor: (root.caseData.owner != undefined) ?root.caseData.owner.color : "#7f8c8d"
+        visible: (root.caseData != undefined && root.caseData.owner != undefined) ? true: false
+        ribbonColor: (root.caseData != undefined && root.caseData.owner != undefined) ?root.caseData.owner.color : "#7f8c8d"
     }
 }

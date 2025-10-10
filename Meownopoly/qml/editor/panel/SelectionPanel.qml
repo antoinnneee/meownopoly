@@ -41,6 +41,7 @@ Rectangle {
     property alias assetView: assetPanel.currentView
 
     property alias caseTypeSelected: casePanel.selectedCaseType
+    property alias casePanel: casePanel
 
     // Signals to propagate from child panels
     // Signaux pour propager les événements vers l'Editor
@@ -188,21 +189,19 @@ Rectangle {
 
             onAssetSelected: function(category, type, id) {
                 if (category === "" && type === "" && id === "") {
-                    console.log("asset cleared")
-                    root.assetCleared()
+                    // root.assetCleared()
+                    // root.clearAssetSelection()
                 }
                 else {
-                    console.log("asset selected : ",category, type, id )
                     root.assetSelected(category, type, id);
                 }
             }
             onAssetCleared: {
-                root.assetCleared()
+                root.clearAssetSelection()
             }
 
             // Surveiller les changements de propriétés pour propager les signaux
             onCurrentViewChanged: {
-                console.log("AssetSelectionPanel currentView changed to:", currentView)
                 root.viewChanged(currentView);
             }
 
@@ -244,6 +243,7 @@ Rectangle {
     function clearAssetSelection() {
         assetPanel.assetManagerSettings.clearAssetSelection()
         casePanel.clearSelection()
+        assetCleared()
     }
 
 }

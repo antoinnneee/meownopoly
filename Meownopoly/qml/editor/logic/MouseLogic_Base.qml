@@ -21,6 +21,9 @@ QtObject {
         groupeSelection.x = 0
         groupeSelection.y = 0
         logic.tileLogic.deselectAllTiles() // can be improved
+        
+        // Effacer la configuration de case
+        clearCaseConfiguration()
     }
 
     function unselectSelectedElements()
@@ -36,6 +39,33 @@ QtObject {
         selectedElements = []
         groupeSelection.x = 0
         groupeSelection.y = 0
+        
+        // Effacer la configuration de case
+        clearCaseConfiguration()
+    }
+    
+    // Fonction pour effacer la configuration de case
+    function clearCaseConfiguration() {
+        if (!logic.selectionPanel) {
+            return
+        }
+        
+        var casePanel = logic.selectionPanel.casePanel
+        if (!casePanel) {
+            return
+        }
+        
+        var contentArea = casePanel.contentArea
+        if (!contentArea) {
+            return
+        }
+        
+        var configPanel = contentArea.caseConfigurationPanelSection
+        if (!configPanel) {
+            return
+        }
+        
+        configPanel.clearTarget()
     }
     function changeMouseMode(mode)
     {
@@ -111,6 +141,47 @@ QtObject {
     function dragChanged(drag)
     {
 
+    }
+    // Fonction pour mettre à jour la configuration de case dans le panneau
+    function updateCaseConfiguration() {
+        if (!logic.selectionPanel) {
+            console.log("[LOGIC] selectionPanel not available")
+            return
+        }
+
+        // Accéder au CaseConfigurationPanelSection via le SelectionPanel
+        var casePanel = logic.selectionPanel.casePanel
+        if (!casePanel) {
+            console.log("[LOGIC] casePanel not available")
+            return
+        }
+
+        var contentArea = casePanel.csp_contentArea
+        if (!contentArea) {
+            console.log("[LOGIC] contentArea not available")
+            return
+        }
+
+        var configPanel = contentArea.caseConfigurationPanelSection
+        if (!configPanel) {
+            console.log("[LOGIC] caseConfigurationPanelSection not available")
+            return
+        }
+
+        // Si un seul élément est sélectionné et que c'est une case, mettre à jour la configuration
+        if (selectedElements.length === 1) {
+            var element = selectedElements[0]
+            if (element.caseData) {
+                console.log("[LOGIC] Updating case configuration for:", element.caseData.name)
+                configPanel.setTargetCase(element)
+            } else {
+                // Ce n'est pas une case, effacer la configuration
+                configPanel.clearTarget()
+            }
+        } else {
+            // Plusieurs éléments sélectionnés ou aucun, effacer la configuration
+            configPanel.clearTarget()
+        }
     }
 
 }

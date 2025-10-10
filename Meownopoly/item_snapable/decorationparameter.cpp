@@ -1,5 +1,8 @@
 #include "decorationparameter.h"
 #include <QJsonObject>
+#include <QFile>
+#include "tools/logger.h"
+#include "asset_manager.h"
 
 DecorationParameter::DecorationParameter(QObject *parent)
     : QObject{parent}
@@ -14,6 +17,18 @@ DecorationParameter::DecorationParameter(const QJsonObject &json, QObject *paren
     m_decorationCategory = json["decorationCategory"].toString();
     m_decorationType = json["decorationType"].toString();
     m_decorationId = json["decorationId"].toString();
+}
+
+QString DecorationParameter::getAnimePath(QString imagePath)
+{
+    QString animePath = AssetManager::instance()->getAnimatedGifPath(m_decorationCategory, m_decorationType, m_decorationId);
+    if (QFile::exists(animePath.remove("file:///"))){
+        return animePath.prepend("file:///");
+    }
+    else {
+        Logger::instance()->error(QString("Error, no animated gif found for : ") + animePath, "DECORATION_PARAMETER");
+        return imagePath;
+    }
 }
 
 QString DecorationParameter::toJSON()

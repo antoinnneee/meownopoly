@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
@@ -28,6 +28,7 @@ GroupBox {
         radius: 4
         border.color: "#555555"
         border.width: 1
+        topLeftRadius: 0
     }
     label: RowLayout {
         x: control.leftPadding

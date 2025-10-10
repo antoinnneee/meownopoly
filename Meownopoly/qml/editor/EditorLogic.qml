@@ -8,6 +8,7 @@ import "tools/snapable"
 import MapInfo
 import EditorEnum
 import "logic"
+import Logger
 
 Item {
     id: logic
@@ -17,12 +18,12 @@ Item {
     required property var selectionRect
     required property MapInfo mapInfo
     required property var workArea
+    property var selectionPanel: null  // Référence au SelectionPanel pour la configuration des cases
 
 
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
     onEditorMouseModeChanged: {
-        console.log("mouse mode change : ", editorMouseMode)
     }
 
     property alias planLogic: planLogic
@@ -264,7 +265,6 @@ Item {
         // Balayer de haut en bas, de gauche à droite
         for (var y = startY; y <= startY + height - tileLogic.currentElementHeight; y++) {
             for (var x = startX; x <= startX + width - tileLogic.currentElementWidth; x++) {
-                console.log(x, y)
                 // Vérifier si la position est libre
                 var positionOccupied = false
 
@@ -303,8 +303,6 @@ Item {
                 }
             }
         }
-
-        console.log("Éléments placés:", tilesPlaced)
 
         // Si au moins un élément a été placé, le dernier reste sélectionné
         if (tilesPlaced > 0 && lastTile) {
@@ -352,7 +350,6 @@ Item {
     function updateSelection(mouseX, mouseY)
     {
         if (isSelectingArea) {
-            //                    console.log("Mise à jour de la sélection")
             // Mettre à jour la position courante
             var gridPos = editorGrid.getGridPosition(mouseX, mouseY)
             selectionCurrent = gridPos

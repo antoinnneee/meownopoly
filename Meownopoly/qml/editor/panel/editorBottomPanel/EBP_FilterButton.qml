@@ -11,7 +11,6 @@ RowLayout {
 
     required property string activeFilter
     onActiveFilterChanged: {
-        console.log("filterButton - active filter change to", activeFilter)
     }
 
     property var buttonModel : ["Button 1", "Button 2", "Button 3"]
