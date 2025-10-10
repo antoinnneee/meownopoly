@@ -183,21 +183,6 @@ QList<Case*> Game::getPurchasableCases() const
     return purchasableCases;
 }
 
-QList<Case*> Game::getTemporaryCases() const
-{
-    QList<Case*> temporaryCases;
-    
-    // Traverse all cases to find non-purchasable ones
-    for (Case* caseObj : m_board) {
-        // Check if it's not a purchasable type or has no price
-        CaseCatPerks* catPerks = qobject_cast<CaseCatPerks*>(caseObj);
-        if (!catPerks || catPerks->price() <= 0) {
-            temporaryCases.append(caseObj);
-        }
-    }
-    
-    return temporaryCases;
-}
 
 Case* Game::getCaseById(const QString &uniqueId) const
 {
