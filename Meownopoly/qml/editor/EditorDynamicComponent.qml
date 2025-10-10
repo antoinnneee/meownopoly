@@ -8,7 +8,7 @@ Item{
     required property var logic
     required property var workArea
     // required property var caseConfigPanel
-    required property var connectionsPanel
+    required property var selectionPanel
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
 
@@ -41,8 +41,8 @@ Item{
 
             onElementConnectionsConfigurationRequested: function(element) {
                 if (element) {
-                    connectionsPanel.targetElement = element
-                    connectionsPanel.isVisible = true
+                    selectionPanel.connectionsPanel.setTargetElement(element)
+                    selectionPanel.casePanel.csp_contentArea.currentTabIndex = 1
                     editorGrid.moveToConfigElement(element)
                 }
             }
@@ -75,8 +75,8 @@ Item{
 
             onElementConnectionsConfigurationRequested: function(element) {
                 if (element) {
-                    connectionsPanel.targetElement = element
-                    connectionsPanel.isVisible = true
+                    selectionPanel.connectionsPanel.setTargetElement(element)
+                    selectionPanel.casePanel.csp_contentArea.currentTabIndex = 1
                     editorGrid.moveToConfigElement(element)
                 }
             }

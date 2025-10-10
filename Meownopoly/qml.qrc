@@ -74,7 +74,6 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_Item.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/AssetSelectionPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VisualEffectsPanel.qml</file>
-        <file>qml/editor/panel/ConnectionsConfigurationPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_ColorEffectsSection.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_Slider.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_AdvancedEffectsSection.qml</file>
@@ -121,6 +120,7 @@
         <file>qml/editor/panel/assetSelectionPanel/qmldir</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_ClearButton.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_ContentArea.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/ConnectionsConfigurationSection.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_CaseTypeCell.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CSP_CaseTypeSelector.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MapSelectionPanel.qml</file>

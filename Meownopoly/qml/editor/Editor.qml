@@ -127,7 +127,7 @@ Rectangle {
         logic: logic
         workArea: workArea
         // caseConfigPanel: caseConfigPanel
-        connectionsPanel: connectionsPanel
+        selectionPanel: selectionPanel
     }
 
 
@@ -311,29 +311,25 @@ Rectangle {
     }
 
 
-    // Panneau de configuration des connexions
-    ConnectionsConfigurationPanel {
-        id: connectionsPanel
-
-        height: parent.height
-        width: parent.width/2
-
-        function selectElementToConnect(kind) {
+    // Gestion des connexions via le SelectionPanel
+    Connections {
+        target: selectionPanel
+        function onConnectionRequested(kind) {
             var selectedElements = logic.mouseLogic.selectedElements
+            var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
+            console.log("onConnectionRequested", kind, selectedElements, targetElement)
             // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
-            if (!selectedElements || !connectionsPanel.targetElement) return
+            if (!selectedElements || !targetElement) return
 
             for (var i = 0; i < selectedElements.length; i++) {
-                if (selectedElements[i] !== connectionsPanel.targetElement) {
+                if (selectedElements[i] !== targetElement) {
                     if (kind === "previous") {
-                        connectionsPanel.targetElement.connectionManager.addPreviousElement(selectedElements[i])
+                        targetElement.connectionManager.addPreviousElement(selectedElements[i])
                     } else if (kind === "next") {
-                        connectionsPanel.targetElement.connectionManager.addNextElement(selectedElements[i])
+                        targetElement.connectionManager.addNextElement(selectedElements[i])
                     }
                 }
             }
-
-
         }
     }
 

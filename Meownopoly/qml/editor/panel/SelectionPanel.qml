@@ -42,6 +42,7 @@ Rectangle {
 
     property alias caseTypeSelected: casePanel.selectedCaseType
     property alias casePanel: casePanel
+    property alias connectionsPanel: casePanel.connectionsConfigSection  // Exposer le panneau de connexions
 
     // Signals to propagate from child panels
     // Signaux pour propager les événements vers l'Editor
@@ -58,6 +59,7 @@ Rectangle {
     signal resizeFinished(int finalHeight)
 
     signal effectChanged()
+    signal connectionRequested(string kind)  // Propager les demandes de connexion
 
     required property EditorLogic logic
 
@@ -221,6 +223,10 @@ Rectangle {
             expandedHeight: root.expandedHeight
             Layout.preferredWidth: parent.width
             isExpanded: true
+            
+            onConnectionRequested: function(kind) {
+                root.connectionRequested(kind)
+            }
 
         }
 
