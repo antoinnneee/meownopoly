@@ -193,9 +193,7 @@ Rectangle {
             }
 
             onClicked: {
-                // TODO: Implement server creation functionality
                 root.editorRequested()
-                console.log("show editor")
             }
         }
 

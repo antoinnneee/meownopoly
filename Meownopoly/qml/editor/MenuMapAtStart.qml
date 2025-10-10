@@ -71,11 +71,14 @@ MouseArea {
                     font.pixelSize: 20
                     font.bold: true
                 }
+                Item {
+                    Layout.fillWidth: true
+                }
+
                 Button {
                     id: displayMenuBtn
                     Layout.alignment: Qt.AlignRight
                     Layout.rightMargin: 0
-                    checked: true
                     background: Rectangle {
                         color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
                         radius: 8
@@ -85,19 +88,22 @@ MouseArea {
                     contentItem: Text {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        text: displayMenuBtn.checked ? "Afficher la prochaine fois ?" : "Ne plus afficher"
+                        text: displayMenuBtn.checked ? "Afficher la prochaine fois" : "Ne plus afficher"
                         color: "white"
                         font.pixelSize: 13
                     }
                     onClicked:{
-                        console.log("Clicked, ", checked)
+                        displayMenuBtn.checked = !displayMenuBtn.checked
                         stBackGroundEditor.setValue("showBackground", checked)
-                        checked = !checked
+                        stBackGroundEditor.sync()
+                    }
+                    Component.onCompleted: {
+                        displayMenuBtn.checked = stBackGroundEditor.value("showBackground", "true")
                     }
                     Settings {
                         id: stBackGroundEditor
                         category: "showBackgroundEditor"
-                        property bool showBackground: value("showBackground", "true")
+                        property bool showBackground: stBackGroundEditor.value("showBackground", "true")
                         Component.onCompleted: {
                             root.visible = showBackground
                             root.enabled = showBackground
