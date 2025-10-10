@@ -39,7 +39,7 @@ public:
 
     Player *owner() const;
     Q_INVOKABLE void setOwner(Player *newOwner);
-    Q_INVOKABLE virtual QString toJSON();
+    Q_INVOKABLE virtual QString toJSON() override;
 
 
 signals:

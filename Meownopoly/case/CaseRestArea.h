@@ -73,7 +73,7 @@ public:
     QList<int> rentPrice() const;
     void setRentPrice(const QList<int> &newRentPrice);
 
-    Q_INVOKABLE virtual QString toJSON() override;
+    Q_INVOKABLE QString toJSON() override final;
 
 signals:
     void restQualityChanged();

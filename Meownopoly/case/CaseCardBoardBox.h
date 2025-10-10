@@ -13,7 +13,7 @@ public:
     CaseCardBoardBox(const QJsonObject &json, QObject *parent = nullptr);
     ~CaseCardBoardBox() override = default;
 
-    Q_INVOKABLE virtual QString toJSON();
+    Q_INVOKABLE QString toJSON() override final;
 
 signals:
     void cardDrawn();
