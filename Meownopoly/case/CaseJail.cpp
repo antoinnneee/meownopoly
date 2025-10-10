@@ -1,8 +1,8 @@
 #include "CaseJail.h"
 #include <QDebug>
 
-CaseJail::CaseJail(const QString &name, QUuid uniqueId, int jailFine)
-    : Case(name, uniqueId), m_jailFine(jailFine) {
+CaseJail::CaseJail(const QString &name, int jailFine)
+    : Case(name), m_jailFine(jailFine) {
 
     setType(Case::CS_Jail);
 }

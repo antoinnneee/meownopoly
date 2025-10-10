@@ -9,7 +9,7 @@ class CaseCardBoardBox : public Case {
 
 public:
     explicit CaseCardBoardBox(QObject *parent = nullptr);
-    CaseCardBoardBox(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
+    CaseCardBoardBox(const QString &name, QObject *parent = nullptr);
     CaseCardBoardBox(const QJsonObject &json, QObject *parent = nullptr);
     ~CaseCardBoardBox() override = default;
 

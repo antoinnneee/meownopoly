@@ -8,7 +8,7 @@
 class CaseJail : public Case {
     Q_OBJECT
 public:
-    CaseJail(const QString &name, QUuid uniqueId, int jailFine = -1);
+    CaseJail(const QString &name, int jailFine = -1);
     CaseJail(const QJsonObject &json, QObject *parent = nullptr);
     // void onLand(Player* player) override;
     void sendToJail(Player* player);

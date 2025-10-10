@@ -3,13 +3,13 @@
 #include "../player.h"
 
 CaseFreeNap::CaseFreeNap(QObject *parent)
-    : Case("Free Nap", QUuid::createUuid(), parent)
+    : Case("Free Nap", parent)
 {
     setType(Case::CS_FreeNap);
 }
 
-CaseFreeNap::CaseFreeNap(const QString &name, QUuid uniqueId, QObject *parent)
-    : Case(name, uniqueId, parent)
+CaseFreeNap::CaseFreeNap(const QString &name, QObject *parent)
+    : Case(name, parent)
 {
     setType(Case::CS_FreeNap);
 }

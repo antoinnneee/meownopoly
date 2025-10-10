@@ -4,13 +4,13 @@
 #include <QJsonObject>
 
 CaseToJail::CaseToJail(QObject *parent)
-    : Case("Go To Jail", QUuid::createUuid(), parent)
+    : Case("Go To Jail", parent)
 {
     setType(Case::CS_ToJail);
 }
 
-CaseToJail::CaseToJail(const QString &name, QUuid uniqueId, QObject *parent)
-    : Case(name, uniqueId, parent)
+CaseToJail::CaseToJail(const QString &name, QObject *parent)
+    : Case(name, parent)
 {
     setType(Case::CS_ToJail);
 }

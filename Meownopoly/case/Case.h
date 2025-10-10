@@ -35,7 +35,7 @@ public:
     Q_PROPERTY(CaseType type READ getType WRITE setType NOTIFY typeChanged FINAL)
     
     explicit Case(QObject *parent = nullptr);
-    Case(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
+    Case(const QString &name, QObject *parent = nullptr);
     Case(const QJsonObject &json, QObject *parent = nullptr);
 
 

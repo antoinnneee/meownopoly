@@ -2,14 +2,13 @@
 #define CASETOJAIL_H
 
 #include "Case.h"
-#include "player.h"
 #include "CaseJail.h"
 
 class CaseToJail : public Case {
     Q_OBJECT
 public:
     explicit CaseToJail(QObject *parent = nullptr);
-    CaseToJail(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
+    CaseToJail(const QString &name, QObject *parent = nullptr);
     CaseToJail(const QJsonObject &json, QObject *parent = nullptr);
 
     // void onLand(Player* player) override;

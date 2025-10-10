@@ -4,11 +4,13 @@
 #include "game.h"
 
 Case::Case(QObject *parent)
-    : QObject(parent), m_name("Unknown"),m_uniqueId(QUuid::createUuid()), type(Case::CS_Unknow) {}
+    : QObject(parent), m_name("Unknown"), type(Case::CS_Unknow) {
+    m_uniqueId = QUuid::createUuid();
+}
 
-Case::Case(const QString &name, QUuid uniqueId, QObject *parent)
-    : QObject(parent), m_name(name),m_uniqueId(uniqueId), type(Case::CS_Unknow) {
-
+Case::Case(const QString &name, QObject *parent)
+    : QObject(parent), m_name(name), type(Case::CS_Unknow) {
+    m_uniqueId = QUuid::createUuid();
 }
 
 Case::Case(const QJsonObject &json, QObject *parent)

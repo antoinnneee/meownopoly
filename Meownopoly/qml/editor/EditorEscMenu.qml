@@ -475,10 +475,7 @@ Rectangle {
                                 font.pixelSize: 13
                             }
                             onVisibleChanged: {
-                                console.log("stBackGroundEditor.value ", stBackGroundEditor.value("showBackground", "true"))
                                 state = stBackGroundEditor.value("showBackground", "true")
-                                // checked = stBackGroundEditor.value("showBackground", "true")
-                                console.log("checked ", checked)
                             }
                             onClicked:{
                                 checked = !checked
