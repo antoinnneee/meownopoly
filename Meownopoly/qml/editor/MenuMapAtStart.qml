@@ -71,15 +71,11 @@ MouseArea {
                     font.pixelSize: 20
                     font.bold: true
                 }
-                Item {
-                    Layout.fillWidth: true
-                }
-
                 Button {
                     id: displayMenuBtn
                     Layout.alignment: Qt.AlignRight
-                    Layout.fillWidth: false
                     Layout.rightMargin: 0
+                    checked: true
                     background: Rectangle {
                         color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
                         radius: 8
@@ -89,21 +85,20 @@ MouseArea {
                     contentItem: Text {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        text: displayMenuBtn.checked ? "Afficher la prochaine fois" : "Ne plus afficher"
+                        text: displayMenuBtn.checked ? "Afficher la prochaine fois ?" : "Ne plus afficher"
                         color: "white"
                         font.pixelSize: 13
                     }
                     onClicked:{
-                        checked = !checked
+                        console.log("Clicked, ", checked)
                         stBackGroundEditor.setValue("showBackground", checked)
-                        stBackGroundEditor.sync()
+                        checked = !checked
                     }
                     Settings {
                         id: stBackGroundEditor
                         category: "showBackgroundEditor"
                         property bool showBackground: value("showBackground", "true")
                         Component.onCompleted: {
-                            displayMenuBtn.checked = stBackGroundEditor.showBackground
                             root.visible = showBackground
                             root.enabled = showBackground
                         }
