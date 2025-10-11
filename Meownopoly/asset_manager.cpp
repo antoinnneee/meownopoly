@@ -248,7 +248,7 @@ QString AssetManager::getAssetElement(const QString &category, const QString &ty
 
 QString AssetManager::getAnimatedGifPath(const QString &category, const QString &type, const QString &id)
 {
-    return buildAssetPath(category, type, id + "-animated.gif");
+    return buildAssetPath(category, type, id + "-animated.webp");
 }
 
 void AssetManager::reloadAssets()
