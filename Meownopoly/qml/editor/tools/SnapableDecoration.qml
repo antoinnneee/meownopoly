@@ -86,6 +86,7 @@ SnapableElement {
 
 
     AnimatedImage {
+
         id: tileImage
         anchors.fill: parent
         source: decorationSettings.getAnimePath(imagePath)
