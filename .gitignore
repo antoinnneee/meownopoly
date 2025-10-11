@@ -7,8 +7,10 @@ Meownopoly/debug/
 /image_tools/data/**/*.mp4
 /image_tools/data/**/*.png
 /image_tools/data/output
+/image_tools/data/**/*.webp
 /image_tools/output/**/*.png
 /image_tools/output/**/*.mp4
+/image_tools/output/**/*.webp
 /image_tools/models_cache
 *.user
 Meownopoly/Meownopoly.pro.user
@@ -19,3 +21,4 @@ Meownopoly/.qtc_clangd/
 *.autosave
 Meownopoly/bin
 Meownopoly/bin/*
+/image_tools/__pycache__

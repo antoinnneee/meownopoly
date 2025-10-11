@@ -17,22 +17,25 @@ from PIL import Image
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import time
-from transformers import pipeline
+from transformers import AutoModelForImageSegmentation
+from torchvision import transforms
 
 # Verrou pour synchroniser l'affichage des messages
 print_lock = threading.Lock()
 
 class BackgroundRemovalProcessor:
     """
-    Classe pour gérer la suppression de fond avec un modèle de segmentation
+    Classe pour gérer la suppression de fond avec BiRefNet
     """
     
-    def __init__(self, device=None):
+    def __init__(self, device=None, use_lite=False, batch_size=4):
         """
         Initialise le processeur de suppression de fond
         
         Args:
             device (str, optional): Device à utiliser ('cuda', 'cpu', ou None pour auto-détection)
+            use_lite (bool): Utiliser BiRefNet_lite (plus rapide, moins précis)
+            batch_size (int): Taille du batch pour traitement par lots (si lite)
         """
         # Forcer l'utilisation du GPU si disponible, sinon utiliser OpenCV
         if device is None:
@@ -46,45 +49,67 @@ class BackgroundRemovalProcessor:
             self.device = device
             self.use_gpu = (device == 'cuda' and torch.cuda.is_available())
         
-        self.pipe = None
+        self.use_lite = use_lite
+        self.batch_size = batch_size if use_lite else 1  # Batch uniquement pour lite
+        self.model = None
+        self.transform = None
         self._load_model()
     
     def _load_model(self):
         """
-        Charge un modèle de segmentation pour la suppression de fond
+        Charge BiRefNet pour la suppression de fond
         """
         # Ne charger le modèle IA que si GPU est disponible
         if not self.use_gpu:
             with print_lock:
                 print("[INFO] GPU non disponible - utilisation directe d'OpenCV")
-            self.pipe = None
+            self.model = None
             return
         
         try:
+            # Choisir le modèle selon le mode lite
+            if self.use_lite:
+                model_name = 'ZhengPeng7/BiRefNet_lite'
+                model_desc = 'BiRefNet_lite (rapide)'
+            else:
+                model_name = 'ZhengPeng7/BiRefNet'
+                model_desc = 'BiRefNet (qualité maximale)'
+            
             with print_lock:
-                print(f"[MODEL] Chargement du modèle de suppression de fond sur GPU...")
+                print(f"[MODEL] Chargement de {model_desc} sur GPU...")
             
-            # Utiliser un modèle de segmentation disponible sur Hugging Face
-            # Nous utilisons un modèle de segmentation d'objets qui peut servir pour la suppression de fond
-            model_name = "facebook/detr-resnet-50-panoptic"
-            
-            # Créer le pipeline de segmentation sur GPU uniquement
-            self.pipe = pipeline(
-                "image-segmentation",
-                model=model_name,
-                device=0  # Forcer l'utilisation du GPU
+            # Charger BiRefNet depuis Hugging Face
+            self.model = AutoModelForImageSegmentation.from_pretrained(
+                model_name,
+                trust_remote_code=True
             )
+            self.model.to(self.device)
+            self.model.eval()
+            
+            # Activer half precision pour plus de vitesse
+            if self.use_lite:
+                self.model.half()
+            
+            # Définir les transformations pour BiRefNet
+            self.transform = transforms.Compose([
+                transforms.Resize((1024, 1024)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
             
             with print_lock:
-                print(f"[MODEL] Modèle de suppression de fond chargé avec succès sur GPU")
+                print(f"[MODEL] {model_desc} chargé avec succès sur GPU")
+                if self.use_lite:
+                    print(f"[MODEL] Mode FP16 activé pour plus de vitesse")
+                    print(f"[MODEL] Traitement par batch de {self.batch_size} images")
                 
         except Exception as e:
             with print_lock:
-                print(f"[ERREUR] Impossible de charger le modèle sur GPU: {e}")
+                print(f"[ERREUR] Impossible de charger BiRefNet sur GPU: {e}")
             # Fallback vers une méthode simple basée sur OpenCV
             with print_lock:
                 print("[FALLBACK] Utilisation de la méthode OpenCV...")
-            self.pipe = None
+            self.model = None
     
     def remove_background(self, image_path):
         """
@@ -100,10 +125,10 @@ class BackgroundRemovalProcessor:
             # Charger l'image
             image = Image.open(image_path).convert('RGB')
             
-            # Utiliser le modèle IA seulement si GPU disponible et modèle chargé
-            if self.use_gpu and self.pipe is not None:
-                # Utiliser le modèle de segmentation sur GPU
-                return self._remove_background_with_model(image)
+            # Utiliser BiRefNet si GPU disponible et modèle chargé
+            if self.use_gpu and self.model is not None:
+                # Utiliser BiRefNet sur GPU
+                return self._remove_background_with_birefnet(image)
             else:
                 # Utiliser la méthode OpenCV
                 return self._remove_background_simple(image)
@@ -111,32 +136,111 @@ class BackgroundRemovalProcessor:
         except Exception as e:
             raise Exception(f"Erreur lors du traitement de {image_path}: {e}")
     
-    def _remove_background_with_model(self, image):
+    def _remove_background_with_birefnet(self, image):
         """
-        Supprime le fond en utilisant le modèle de segmentation
+        Supprime le fond en utilisant BiRefNet (image unique)
         """
         try:
-            # Utiliser le pipeline de segmentation
-            results = self.pipe(image)
+            # Sauvegarder la taille originale
+            original_size = image.size
             
-            # Créer un masque combiné de tous les objets détectés
-            mask = np.zeros((image.height, image.width), dtype=np.uint8)
+            # Préparer l'image pour le modèle
+            input_tensor = self.transform(image).unsqueeze(0).to(self.device)
             
-            for result in results:
-                if result['mask'].mode == 'L':
-                    mask = np.maximum(mask, np.array(result['mask']))
+            # Convertir en FP16 si mode lite
+            if self.use_lite:
+                input_tensor = input_tensor.half()
             
-            # Convertir en image RGBA
-            image_np = np.array(image)
-            rgba_image = np.zeros((image_np.shape[0], image_np.shape[1], 4), dtype=np.uint8)
-            rgba_image[:, :, :3] = image_np  # RGB
-            rgba_image[:, :, 3] = mask  # Alpha
+            # Inférence avec BiRefNet
+            with torch.no_grad():
+                output = self.model(input_tensor)[-1].sigmoid()
+                
+                # Convertir en FP32 si nécessaire
+                if self.use_lite:
+                    output = output.float()
+            
+            # Extraire le masque alpha
+            mask = output[0, 0].cpu().numpy()
+            mask = (mask * 255).astype(np.uint8)
+            
+            # Redimensionner le masque à la taille originale
+            mask_image = Image.fromarray(mask).resize(original_size, Image.BILINEAR)
+            mask_array = np.array(mask_image)
+            
+            # Convertir l'image en array
+            image_array = np.array(image)
+            
+            # Créer l'image RGBA
+            rgba_image = np.zeros((image_array.shape[0], image_array.shape[1], 4), dtype=np.uint8)
+            rgba_image[:, :, :3] = image_array  # RGB
+            rgba_image[:, :, 3] = mask_array  # Alpha
             
             return Image.fromarray(rgba_image, 'RGBA')
             
         except Exception as e:
             # Fallback vers la méthode simple
+            print(f"Erreur BiRefNet: {e}")
             return self._remove_background_simple(image)
+    
+    def _remove_background_batch_birefnet(self, images_data):
+        """
+        Supprime le fond en utilisant BiRefNet par batch
+        
+        Args:
+            images_data: Liste de tuples (image, original_size, image_path)
+            
+        Returns:
+            Liste d'images RGBA
+        """
+        try:
+            # Préparer le batch de tenseurs
+            batch_tensors = []
+            for image, _, _ in images_data:
+                tensor = self.transform(image)
+                batch_tensors.append(tensor)
+            
+            # Créer le batch
+            batch = torch.stack(batch_tensors).to(self.device)
+            
+            # Convertir en FP16 si mode lite
+            if self.use_lite:
+                batch = batch.half()
+            
+            # Inférence avec BiRefNet sur le batch
+            with torch.no_grad():
+                outputs = self.model(batch)[-1].sigmoid()
+                
+                # Convertir en FP32 si nécessaire
+                if self.use_lite:
+                    outputs = outputs.float()
+            
+            # Traiter chaque image du batch
+            results = []
+            for idx, (image, original_size, _) in enumerate(images_data):
+                # Extraire le masque alpha pour cette image
+                mask = outputs[idx, 0].cpu().numpy()
+                mask = (mask * 255).astype(np.uint8)
+                
+                # Redimensionner le masque à la taille originale
+                mask_image = Image.fromarray(mask).resize(original_size, Image.BILINEAR)
+                mask_array = np.array(mask_image)
+                
+                # Convertir l'image en array
+                image_array = np.array(image)
+                
+                # Créer l'image RGBA
+                rgba_image = np.zeros((image_array.shape[0], image_array.shape[1], 4), dtype=np.uint8)
+                rgba_image[:, :, :3] = image_array  # RGB
+                rgba_image[:, :, 3] = mask_array  # Alpha
+                
+                results.append(Image.fromarray(rgba_image, 'RGBA'))
+            
+            return results
+            
+        except Exception as e:
+            # Fallback: traiter individuellement
+            print(f"Erreur batch BiRefNet: {e}, fallback vers traitement individuel")
+            return [self._remove_background_simple(img) for img, _, _ in images_data]
     
     def _remove_background_simple(self, image):
         """
@@ -232,46 +336,104 @@ def traiter_sequence(sequence_path, output_base, processor, nb_threads=None):
     with print_lock:
         print(f"[SEQUENCE] {sequence_path.name} ({len(images)} images)")
     
-    # Déterminer le nombre de threads
-    if nb_threads is None:
-        nb_threads = min(len(images), os.cpu_count() or 1)
-    
     images_traitees = 0
     erreurs = 0
     
-    # Traiter les images avec multi-threading
-    with ThreadPoolExecutor(max_workers=nb_threads) as executor:
-        # Soumettre toutes les tâches
-        futures = {
-            executor.submit(
-                traiter_image_unique, 
-                image_path, 
-                output_sequence / image_path.name,
-                processor
-            ): image_path
-            for image_path in images
-        }
-        
-        # Traiter les résultats au fur et à mesure
-        for future in as_completed(futures):
-            nom_fichier, succès, erreur = future.result()
+    # Si GPU est utilisé avec BiRefNet
+    if processor.use_gpu and processor.model is not None:
+        # Traitement par batch si lite, sinon séquentiel
+        if processor.use_lite and processor.batch_size > 1:
+            with print_lock:
+                print(f"[INFO] Traitement par batch de {processor.batch_size} avec BiRefNet_lite (GPU)")
             
-            if erreur:
-                with print_lock:
-                    print(f"[ERREUR] {sequence_path.name}/{nom_fichier}: {erreur}")
-                erreurs += 1
-            else:
-                images_traitees += 1
-                if images_traitees % 10 == 0:
+            # Traiter les images par batch
+            for batch_start in range(0, len(images), processor.batch_size):
+                batch_end = min(batch_start + processor.batch_size, len(images))
+                batch_paths = images[batch_start:batch_end]
+                
+                try:
+                    # Charger et préparer le batch d'images
+                    images_data = []
+                    for img_path in batch_paths:
+                        image = Image.open(img_path).convert('RGB')
+                        original_size = image.size
+                        images_data.append((image, original_size, img_path))
+                    
+                    # Traiter le batch
+                    results = processor._remove_background_batch_birefnet(images_data)
+                    
+                    # Sauvegarder les résultats
+                    for idx, (result, img_path) in enumerate(zip(results, batch_paths)):
+                        output_path = output_sequence / img_path.name
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        result.save(output_path, 'PNG')
+                        images_traitees += 1
+                    
+                    if images_traitees % 10 == 0 or images_traitees == len(images):
+                        with print_lock:
+                            print(f"[PROGRES] {sequence_path.name}: {images_traitees}/{len(images)} images traitées")
+                
+                except Exception as e:
                     with print_lock:
-                        print(f"[PROGRES] {sequence_path.name}: {images_traitees}/{len(images)} images traitées")
+                        print(f"[ERREUR] Batch {batch_start}-{batch_end}: {e}")
+                    erreurs += len(batch_paths)
+        else:
+            with print_lock:
+                print(f"[INFO] Traitement séquentiel avec BiRefNet (GPU)")
+            
+            # Traiter les images une par une
+            for idx, image_path in enumerate(images, 1):
+                output_path = output_sequence / image_path.name
+                nom_fichier, succès, erreur = traiter_image_unique(image_path, output_path, processor)
+                
+                if erreur:
+                    with print_lock:
+                        print(f"[ERREUR] {sequence_path.name}/{nom_fichier}: {erreur}")
+                    erreurs += 1
+                else:
+                    images_traitees += 1
+                    if images_traitees % 10 == 0:
+                        with print_lock:
+                            print(f"[PROGRES] {sequence_path.name}: {images_traitees}/{len(images)} images traitées")
+    else:
+        # Utiliser multi-threading pour OpenCV (CPU)
+        # Déterminer le nombre de threads
+        if nb_threads is None:
+            nb_threads = min(len(images), os.cpu_count() or 1)
+        
+        # Traiter les images avec multi-threading
+        with ThreadPoolExecutor(max_workers=nb_threads) as executor:
+            # Soumettre toutes les tâches
+            futures = {
+                executor.submit(
+                    traiter_image_unique, 
+                    image_path, 
+                    output_sequence / image_path.name,
+                    processor
+                ): image_path
+                for image_path in images
+            }
+            
+            # Traiter les résultats au fur et à mesure
+            for future in as_completed(futures):
+                nom_fichier, succès, erreur = future.result()
+                
+                if erreur:
+                    with print_lock:
+                        print(f"[ERREUR] {sequence_path.name}/{nom_fichier}: {erreur}")
+                    erreurs += 1
+                else:
+                    images_traitees += 1
+                    if images_traitees % 10 == 0:
+                        with print_lock:
+                            print(f"[PROGRES] {sequence_path.name}: {images_traitees}/{len(images)} images traitées")
     
     with print_lock:
         print(f"[OK] {sequence_path.name}: {images_traitees} images traitées, {erreurs} erreurs")
     
     return images_traitees, erreurs
 
-def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False, force_cpu=False):
+def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False, force_cpu=False, use_lite=False, batch_size=4):
     """
     Traite toutes les séquences d'images avec suppression de fond
     
@@ -280,6 +442,8 @@ def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False
         nb_threads (int, optional): Nombre de threads à utiliser
         force_gpu (bool): Forcer l'utilisation du GPU (arrêter si non disponible)
         force_cpu (bool): Forcer l'utilisation du CPU (utiliser OpenCV)
+        use_lite (bool): Utiliser BiRefNet_lite (plus rapide, moins précis)
+        batch_size (int): Taille du batch pour BiRefNet_lite
     """
     # Définir les chemins
     dossier_png_seq = Path("output/png_seq")
@@ -331,7 +495,7 @@ def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False
         else:
             device = 'cuda' if gpu_available else 'cpu'
         
-        processor = BackgroundRemovalProcessor(device=device)
+        processor = BackgroundRemovalProcessor(device=device, use_lite=use_lite, batch_size=batch_size)
     except Exception as e:
         print(f"[ERREUR] Impossible d'initialiser le processeur: {e}")
         return
@@ -367,11 +531,12 @@ def main():
         epilog="""
 Exemples d'utilisation:
   python supprimer_fond.py                           # Traite toutes les séquences (GPU si disponible)
+  python supprimer_fond.py --lite                    # Utilise BiRefNet_lite (plus rapide)
   python supprimer_fond.py --sequence anim_tree_00037 # Traite une séquence spécifique
   python supprimer_fond.py --gpu                     # Force l'utilisation du GPU
   python supprimer_fond.py --cpu                     # Force l'utilisation d'OpenCV
   python supprimer_fond.py --threads 4               # Utilise 4 threads par séquence
-  python supprimer_fond.py --force                   # Sans confirmation
+  python supprimer_fond.py --lite --force            # BiRefNet_lite sans confirmation
         """
     )
     
@@ -407,6 +572,19 @@ Exemples d'utilisation:
         help="Forcer l'utilisation du CPU (utiliser OpenCV)"
     )
     
+    parser.add_argument(
+        "--lite",
+        action="store_true",
+        help="Utiliser BiRefNet_lite (plus rapide, moins précis)"
+    )
+    
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=4,
+        help="Taille du batch pour BiRefNet_lite (défaut: 4)"
+    )
+    
     args = parser.parse_args()
     
     # Vérifier les arguments contradictoires
@@ -423,11 +601,16 @@ Exemples d'utilisation:
     
     # Afficher le mode de traitement
     if args.gpu:
-        print("Mode: GPU forcé")
+        mode_str = "GPU forcé"
     elif args.cpu:
-        print("Mode: CPU forcé (OpenCV)")
+        mode_str = "CPU forcé (OpenCV)"
     else:
-        print("Mode: Auto (GPU si disponible, sinon OpenCV)")
+        mode_str = "Auto (GPU si disponible, sinon OpenCV)"
+    
+    if args.lite and not args.cpu:
+        mode_str += " + BiRefNet_lite (rapide)"
+    
+    print(f"Mode: {mode_str}")
     
     # Demander confirmation sauf si --force
     if not args.force:
@@ -441,7 +624,7 @@ Exemples d'utilisation:
             sys.exit(0)
     
     # Lancer le traitement
-    traiter_sequences(args.sequence, args.threads, args.gpu, args.cpu)
+    traiter_sequences(args.sequence, args.threads, args.gpu, args.cpu, args.lite, args.batch_size)
 
 if __name__ == "__main__":
     main()

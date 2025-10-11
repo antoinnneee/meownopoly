@@ -29,6 +29,17 @@ Ce script permet de supprimer automatiquement le fond des séquences d'images PN
 python supprimer_fond.py
 ```
 
+### Utiliser BiRefNet_lite (plus rapide)
+```bash
+python supprimer_fond.py --lite
+```
+
+### Utiliser BiRefNet_lite avec batch processing personnalisé
+```bash
+python supprimer_fond.py --lite --batch-size 4  # Défaut : 4 (recommandé)
+python supprimer_fond.py --lite --batch-size 8  # Batch plus grand (plus de VRAM nécessaire)
+```
+
 ### Forcer l'utilisation du GPU
 ```bash
 python supprimer_fond.py --gpu
@@ -70,11 +81,23 @@ output/
 
 ## Méthodes de suppression de fond
 
-### 1. Modèle de segmentation IA (GPU uniquement)
-- Utilise un modèle de segmentation d'objets de Facebook
-- Plus précis pour les objets complexes
+### 1. BiRefNet (GPU uniquement)
+- Utilise le modèle BiRefNet de pointe pour la segmentation d'images
+- Performance SOTA (State-of-the-Art) sur la suppression de fond
+- Plus précis pour les objets complexes avec détails fins
 - Nécessite une connexion internet pour le premier téléchargement
 - **Utilise uniquement le GPU** - ne fonctionne pas sur CPU
+- Modèle chargé depuis Hugging Face : `ZhengPeng7/BiRefNet`
+
+**Variante BiRefNet_lite** (option `--lite`) :
+- Version allégée et plus rapide
+- Utilise FP16 (half precision) pour économiser la mémoire
+- 2-3x plus rapide que BiRefNet standard
+- Légèrement moins précis mais excellent compromis vitesse/qualité
+- Modèle : `ZhengPeng7/BiRefNet_lite`
+- **Supporte le batch processing** : traite plusieurs images simultanément
+- Batch de 4 images par défaut (configurable avec `--batch-size`)
+- Batch optimal : 4 pour RTX 3050 (4.4 images/s vs 4.0 en séquentiel)
 
 ### 2. Méthode OpenCV (CPU)
 - Utilise l'algorithme GrabCut d'OpenCV
@@ -83,7 +106,7 @@ output/
 - **Utilise uniquement le CPU**
 
 ### 3. Mode automatique
-- **GPU disponible** : Utilise le modèle IA sur GPU
+- **GPU disponible** : Utilise BiRefNet sur GPU
 - **GPU non disponible** : Utilise automatiquement OpenCV sur CPU
 
 ## Exemples de résultats
@@ -92,9 +115,15 @@ Les images de sortie sont au format PNG avec transparence (canal alpha), permett
 
 ## Performance
 
-- **Vitesse GPU** : Environ 5-10 images par seconde (modèle IA)
-- **Vitesse CPU** : Environ 3-4 images par seconde (OpenCV)
-- **Qualité** : Bonne qualité de suppression de fond
+- **BiRefNet standard** : ~1.0 images/s (qualité maximale, traitement séquentiel)
+- **BiRefNet_lite (batch de 4)** : ~4.4 images/s (excellent compromis vitesse/qualité)
+- **BiRefNet_lite (séquentiel)** : ~4.0 images/s 
+- **OpenCV (CPU)** : ~3-4 images/s (qualité correcte)
+- **Qualité** : Excellente avec BiRefNet, très bonne avec BiRefNet_lite, bonne avec OpenCV
+- **Mémoire GPU** : 
+  - BiRefNet : ~4-5 GB VRAM (traitement séquentiel uniquement)
+  - BiRefNet_lite : ~2-3 GB VRAM (FP16, supporte batch processing)
+- **Batch optimal** : 4 images pour BiRefNet_lite (meilleur compromis)
 - **Compatibilité** : Fonctionne sur Windows, Linux et macOS
 
 ## Dépannage
@@ -103,9 +132,10 @@ Les images de sortie sont au format PNG avec transparence (canal alpha), permett
 - Utilisez `--cpu` pour forcer l'utilisation d'OpenCV
 - Le mode automatique basculera sur OpenCV si le GPU n'est pas disponible
 
-### Erreur de modèle IA
+### Erreur de modèle BiRefNet
 - Le script utilisera automatiquement la méthode OpenCV en fallback
 - Vérifiez votre connexion internet pour le téléchargement du modèle
+- Le modèle (~444 MB) sera téléchargé depuis Hugging Face au premier lancement
 
 ### Problèmes de performance
 - Utilisez l'option `--threads` pour ajuster le nombre de threads

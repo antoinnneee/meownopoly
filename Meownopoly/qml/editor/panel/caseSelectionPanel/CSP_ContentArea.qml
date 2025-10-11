@@ -61,9 +61,20 @@ EBP_Content {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.leftMargin: 10
             anchors.topMargin: -contentArea.titleHeight
-            height: 40
+            height: Screen.pixelDensity * 12
             currentIndex: contentArea.currentTabIndex
+
+
+            background: Rectangle {
+                color: "#2a2a2a"
+                border.color: "#444444"
+                border.width: 1
+                radius: 10
+                visible: false
+            }
             
             onCurrentIndexChanged: {
                 contentArea.currentTabIndex = currentIndex
@@ -71,41 +82,51 @@ EBP_Content {
             
             TabButton {
                 text: "⚙️ Case"
-                width: implicitWidth
-                height: parent.height
-                background: Rectangle {
-                    color: parent.checked ? "#4a90e2" : "#333333"
-                    border.color: "#555555"
-                    border.width: 1
-                    radius: 4
-                }
+                display: AbstractButton.TextOnly
+                
                 contentItem: Text {
                     text: parent.text
-                    color: parent.checked ? "#ffffff" : "#cccccc"
+                    color: parent.checked ? "#ffffff" : "#888888"
                     font.pixelSize: 12
                     font.bold: parent.checked
                     horizontalAlignment: Text.AlignHCenter
+
                     verticalAlignment: Text.AlignVCenter
+                }
+                
+                background: Rectangle {
+                    color: parent.checked ? "#4a90e2" : "#333333"
+                    border.color: parent.checked ? "#5a9fe8" : "#444444"
+                    border.width: 1
+                    radius: 10
+                    
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
                 }
             }
             
             TabButton {
                 text: "🔗 Connexions"
-                width: implicitWidth
-                height: parent.height
-                background: Rectangle {
-                    color: parent.checked ? "#4a90e2" : "#333333"
-                    border.color: "#555555"
-                    border.width: 1
-                    radius: 4
-                }
+                
                 contentItem: Text {
                     text: parent.text
-                    color: parent.checked ? "#ffffff" : "#cccccc"
+                    color: parent.checked ? "#ffffff" : "#888888"
                     font.pixelSize: 12
                     font.bold: parent.checked
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
+                }
+                
+                background: Rectangle {
+                    color: parent.checked ? "#4a90e2" : "#333333"
+                    border.color: parent.checked ? "#5a9fe8" : "#444444"
+                    border.width: 1
+                    radius: 10
+                    
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
                 }
             }
         }
