@@ -1,3 +1,4 @@
+Meownopoly/debug/
 /Meownopoly/build
 /Meownopoly/Meownopoly.pro.user.8506b9e
 /image_tools/convertir_webp.py
@@ -9,3 +10,12 @@
 /image_tools/output/**/*.png
 /image_tools/output/**/*.mp4
 /image_tools/models_cache
+*.user
+Meownopoly/Meownopoly.pro.user
+Meownopoly/.qtc_clangd/
+/asset_server/node_modules
+/asset_server/assets
+/asset_server/versions
+*.autosave
+Meownopoly/bin
+Meownopoly/bin/*

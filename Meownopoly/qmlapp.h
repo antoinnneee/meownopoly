@@ -4,8 +4,20 @@
 #include <QObject>
 #include <QQmlApplicationEngine>
 #include <QtQuick/QQuickView>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QHttpMultiPart>
+#include <QUrl>
+#include <QFile>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QTimer>
+#include <QStandardPaths>
 #include "game.h"
-#include <ollamatranslator.h>
+#include "QtFolderCompressor/FolderCompressor.h"
+#include "asset_manager.h"
+#include "animation_manager.h"
 
 
 class QmlApp : public QQmlApplicationEngine
@@ -17,6 +29,7 @@ public:
     bool event(QEvent *event) override;
     ~QmlApp() override;
 
+
 signals:
 
 public slots:
@@ -25,7 +38,9 @@ private slots:
 
 private:
     Game *game = nullptr;
-    OllamaTranslator *ollama = nullptr;
+    FolderCompressor *folderCompressor = nullptr;
+    AssetManager *assetManager = nullptr;
+    QNetworkAccessManager *networkManager = nullptr;
 };
 
 #endif // __QMLAPP_H

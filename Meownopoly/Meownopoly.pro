@@ -1,4 +1,4 @@
-QT += quick core qml widgets core-private quickcontrols2
+QT += quick core qml widgets core-private quickcontrols2 quick3d network
 
 android:{
     QT += core-private
@@ -14,68 +14,105 @@ android:{
 
 }
 
+
+# windows: {
+# DESTDIR = $$PWD/bin/windows/release
+# QMAKE_POST_LINK =  windeployqt $$shell_path($$DESTDIR/$${TARGET}.exe) --qmldir $$PWD/qml --no-translations
+# }
+
 CONFIG += c++20
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+
 SOURCES += \
+    QtFolderCompressor/FolderCompressor.cpp \
+    animation_manager.cpp \
+    animationprovider.cpp \
+    asset_manager.cpp \
+    card.cpp \
     case/Case.cpp \
+    case/CaseCatDevice.cpp \
     case/CaseCatDoor.cpp \
     case/CaseCatNip.cpp \
     case/CaseCardBoardBox.cpp \
+    case/CaseCatPerks.cpp \
     case/CaseFreeNap.cpp \
     case/CaseJail.cpp \
     case/CaseKibbleDispenser.cpp \
+    case/CaseRestArea.cpp \
     case/CaseToJail.cpp \
-    case/caserestarea.cpp \
-    case/casestart.cpp \
     game.cpp \
     game_loader.cpp \
-    json_ai_lang.cpp \
+    item_snapable/Displayparameter.cpp \
+    item_snapable/ItemSnapable.cpp \
+    item_snapable/SnapableCase.cpp \
+    item_snapable/SnapableDeco.cpp \
+    item_snapable/decorationparameter.cpp \
+    launcher_manager.cpp \
+    liveimage.cpp \
     main.cpp \
-    ollamatranslator.cpp \
+    map/map.cpp \
+    map/mapinfo.cpp \
+    map/maploader.cpp \
+    meowstyle.cpp \
     player.cpp \
     qmlapp.cpp \
-    tools/crashReportTool.cpp \
     tools/appinfo.cpp \
-    test/suite.cpp \
-    testMain.cpp \
+    tools/editorenum.cpp \
+    tools/logger.cpp
 
 HEADERS += \
+    QtFolderCompressor/FolderCompressor.h \
+    animation_manager.h \
+    animationprovider.h \
+    asset_manager.h \
+    card.h \
     case/Case.h \
+    case/CaseCatDevice.h \
     case/CaseCatDoor.h \
     case/CaseCatNip.h \
     case/CaseCardBoardBox.h \
+    case/CaseCatPerks.h \
     case/CaseFreeNap.h \
     case/CaseJail.h \
     case/CaseKibbleDispenser.h \
+    case/CaseRestArea.h \
     case/CaseToJail.h \
-    case/caserestarea.h \
-    case/casestart.h \
     game.h \
-    json_ai_lang.h \
-    ollamatranslator.h \
+    item_snapable/Displayparameter.h \
+    item_snapable/ItemSnapable.h \
+    item_snapable/SnapableCase.h \
+    item_snapable/SnapableDeco.h \
+    item_snapable/decorationparameter.h \
+    launcher_manager.h \
+    liveimage.h \
+    map/map.h \
+    map/mapinfo.h \
+    map/maploader.h \
+    meowstyle.h \
     player.h \
     qmlapp.h \
     tools/debug_Info.h	\
-    tools/crashReportTool.h \
     tools/appinfo.h \
-    test/suite.hpp \
+    tools/editorenum.h \
+    tools/logger.h
 
 RESOURCES += qml.qrc \
-    asset.qrc \
     config.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
-QML_IMPORT_PATH =
+QML_IMPORT_PATH = $$PWD
 
 # Additional import path used to resolve QML modules just for Qt Quick Designer
-QML_DESIGNER_IMPORT_PATH =
+QML_DESIGNER_IMPORT_PATH = $$PWD/case/
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES +=
 

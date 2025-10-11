@@ -1,35 +1,44 @@
 #ifndef CASECATDOOR_H
 #define CASECATDOOR_H
 
-#include "Case.h"
-#include "player.h"
+#include "CaseCatPerks.h"
 
-class CaseCatDoor : public Case {
+class CaseCatDoor : public CaseCatPerks {
+
     Q_OBJECT
-    Q_PROPERTY(Player* owner READ owner WRITE setOwner NOTIFY ownerChanged)
-    Q_PROPERTY(int price READ price WRITE setPrice NOTIFY priceChanged)
-    Q_PROPERTY(int rent READ rent CONSTANT)
+    Q_PROPERTY(int indexCatDoor READ indexCatDoor WRITE setIndexCatDoor NOTIFY indexCatDoorChanged FINAL)
+    Q_PROPERTY(int travelPrice READ travelPrice WRITE setTravelPrice NOTIFY travelPriceChanged FINAL)
 
 public:
-    explicit CaseCatDoor(QObject *parent = nullptr);
-    CaseCatDoor(const QString &name, int position, int price = 200, QObject *parent = nullptr);
+    CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER);
+    CaseCatDoor(const QJsonObject &json, QObject *parent = nullptr);
     ~CaseCatDoor() override = default;
 
-    int rent() const;
-    Player* owner() const;
-    void setOwner(Player* newOwner);
-    int price() const;
-    void setPrice(int newPrice);
-    void onLand(Player* player) override;
+    Q_INVOKABLE bool buyCase(Player *buyer);
+    Q_INVOKABLE bool sellCase(Player *buyer);
+
+
+    // void onLand(Player* player) override;
+
+
+    int indexCatDoor() const;
+    void setIndexCatDoor(int newIndexCatDoor);
+
+    int travelPrice() const;
+    void setTravelPrice(int newTravelPrice);
+
+    Q_INVOKABLE virtual QString toJSON() override;
 
 signals:
-    void ownerChanged();
-    void priceChanged();
+    void indexCatDoorChanged();
+
+    void travelPriceChanged();
 
 private:
-    Player* m_owner = nullptr;
-    int m_baseRent = 25;
-    int m_price = 200;
+
+
+    int m_indexCatDoor;
+    int m_travelPrice;
 };
 
 #endif // CASECATDOOR_H

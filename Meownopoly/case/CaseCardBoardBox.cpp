@@ -3,20 +3,29 @@
 #include "../player.h"
 
 CaseCardBoardBox::CaseCardBoardBox(QObject *parent)
-    : Case("Card Board Box", -1, parent)
+    : Case("Card Board Box", QUuid::createUuid(), parent)
 {
-    setType(CT_CardBoardBox);
+    setType(Case::CS_CardBoardBox);
 }
 
-CaseCardBoardBox::CaseCardBoardBox(const QString &name, int position, QObject *parent)
-    : Case(name, position, parent)
+CaseCardBoardBox::CaseCardBoardBox(const QString &name, QUuid uniqueId, QObject *parent)
+    : Case(name, uniqueId, parent)
 {
-    setType(CT_CardBoardBox);
+    setType(Case::CS_CardBoardBox);
 }
 
-void CaseCardBoardBox::onLand(Player* player)
+CaseCardBoardBox::CaseCardBoardBox(const QJsonObject &json, QObject *parent)
+    : Case(json, parent)
 {
-    Q_UNUSED(player);
-    qDebug() << "Player landed on Card Board Box";
-    // TODO: Implement community chest card logic
-} 
+    setType(Case::CS_CardBoardBox);
+}
+
+QString CaseCardBoardBox::toJSON()
+{
+    QString json;
+    json = Case::toJSON();
+    json.removeLast();
+    json.removeLast();
+    json += "\n}";
+    return json;
+}

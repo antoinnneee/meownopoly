@@ -1,0 +1,233 @@
+import QtQuick 2.15
+import QtQuick.Controls
+import "."
+import "../"
+
+import ItemSnapable
+import TileType
+import DisplayParameter
+
+Rectangle {
+    id: snapableElement
+    
+    // Propriétés configurables
+    // Connexion au GridManager du parent (Editor)
+    required property GridManager gridManager
+    property bool isResizable: true
+    property bool blockConnections: false
+    property bool autoSnap: true
+    property color elementColor: "transparent"
+    property color borderColor: "gray"
+    property int borderWidth: 0
+    
+    // Propriétés d'état
+    property bool isDragging: false
+    property bool isResizing: false
+    property bool isSelected: false
+
+    property var generalMA: null
+    property alias dragArea: dragArea
+
+    // Propriété pour stocker la valeur z originale
+    property DisplayParameter displaySettings : DisplayParameter { }
+
+    z:  (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer
+
+    property TileType type
+    // : 0 // 0: case, 1: personnage, 2: decoration
+    
+    // Positions calculées à partir des coordonnées relatives
+    x: displaySettings.gridRelativePositionX * gridManager.gridSize
+    y: displaySettings.gridRelativePositionY * gridManager.gridSize
+
+    width:  gridManager.gridSize * displaySettings.unitSizeWidth
+    height:  gridManager.gridSize * displaySettings.unitSizeHeight
+
+    readonly property int globalCenterX: snapableElement.x + snapableElement.width / 2
+    readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
+
+    property alias connectionManager: connectionManager
+    // Expose le point central en coordonnées locales et scène
+    readonly property point centerLocal: Qt.point(width / 2, height / 2)
+    function centerInScene() {
+        var p = mapToItem(null, width / 2, height / 2)
+        return Qt.point(p.x, p.y)
+    }
+    
+    SnapableElementConnections {
+        id: connectionManager
+        parentElement: snapableElement
+        anchors.fill: snapableElement
+        z: 40
+        parent: snapableElement.parent
+    }
+    
+    // Signaux
+    signal elementClicked()
+    signal elementPressed()
+    onElementPressed: {
+        isDragging = true
+        isSelected = true
+    }
+
+    signal elementReleased()
+    onElementReleased: {
+        isDragging = false
+        
+        // Mettre à jour les positions relatives après le drag
+        updateRelativePosition()
+        
+        // Auto-snap si activé et gridManager disponible
+        if (autoSnap && gridManager && gridManager.snapToGrid) {
+            snapToGrid()
+        }
+    }
+    signal elementUnselected()
+    onElementUnselected: {
+        isSelected = false
+        elementReleased()
+    }
+
+    signal elementResized(var element, real newWidth, real newHeight)
+    signal snapCompleted(var element)
+    signal elementConfigurationRequested(var element)
+    signal elementConnectionsConfigurationRequested(var element)
+
+    signal elementDeleted(var element)  // sent after delete
+    function deleteRequest()
+    {
+        elementControls.deleteRequested()
+    }
+    
+    SnapableElementDeleteAnimation {
+        id: deleteAnimation
+        onFinished: {
+            elementDeleted(snapableElement)
+        }
+    }
+    SnapableElementCreateAnimation {
+        id: createAnimation
+    }
+
+    color: elementColor
+    border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
+    border.width: isSelected ? borderWidth + 2 : borderWidth
+
+    // Effet de survol avec transition optimisée
+    scale: 1.0
+    
+    Component.onCompleted: {
+        snapToGrid()
+        createAnimation.start()
+    }
+    // Zone de drag & drop
+    MouseArea {
+        id: dragArea
+        anchors.fill: parent
+        enabled: !isResizing
+
+        propagateComposedEvents: true
+        preventStealing: true
+
+        z: 50  // Au-dessus du contenu mais sous les poignées
+        
+        onPressed: function(mouse) {
+            console.log("snap pressed detected");
+            if (generalMA)
+            {
+                if (!isTransparent(mouse)){
+                    generalMA.elementClicked(snapableElement)
+                    }
+            }
+            //ELSE A VIRER
+            else
+            {
+                elementPressed()
+            }
+            mouse.accepted = false
+        }
+        
+        onReleased: function(mouse) {
+            console.log("snap release");
+            if (!generalMA)
+            {
+                elementReleased()
+            }
+        }
+        
+        onPositionChanged: function(mouse) { }
+    }
+    
+    // Contrôles de l'élément (boutons de plan et suppression)
+    SnapableElementControl {
+        id: elementControls
+        targetElement: snapableElement
+        isVisible: isSelected
+        zLayer: displaySettings.zLayer
+        onLayerChanged: function(newLayer) {displaySettings.zLayer = newLayer}
+                
+        onDeleteRequested:{
+            deleteAnimation.start()
+        }
+        
+        onConfigurationRequested: {
+            elementConfigurationRequested(snapableElement)
+        }
+
+        onConnectionsConfigurationRequested: {
+            elementConnectionsConfigurationRequested(snapableElement)
+        }
+    }
+
+    // Poignées de redimensionnement
+    SnapableElementResizeHandles {
+        id: resizeHandles
+        anchors.fill: parent
+        z: 100
+    }
+    
+    function isTransparent(mouse){
+        return false
+    }
+
+    // Fonctions utilitaires améliorées
+    function updateRelativePosition() {
+        if (!gridManager || gridManager.gridSize === 0) return
+
+        // Calculer les nouvelles positions relatives basées sur les positions absolues
+        displaySettings.gridRelativePositionX = Math.round(x / gridManager.gridSize)
+        displaySettings.gridRelativePositionY = Math.round(y / gridManager.gridSize)
+
+    }
+
+    function snapToGrid() {
+        if (!gridManager || !gridManager.snapToGrid) return
+
+
+        // Calculer les positions snappées en unités de grille
+        var snappedGridX = Math.round(x / gridManager.gridSize)
+        var snappedGridY = Math.round(y / gridManager.gridSize)
+
+        // Mettre à jour les positions relatives (qui vont automatiquement mettre à jour x et y)
+        displaySettings.gridRelativePositionX = snappedGridX
+        displaySettings.gridRelativePositionY = snappedGridY
+
+
+        gridManager.snapElement2(snapableElement)
+        snapCompleted(snapableElement)
+    }
+
+    function snapToGridFromGridPos() {
+        if (!gridManager || !gridManager.snapToGrid) return
+
+        gridManager.snapElement2(snapableElement)
+        snapCompleted(snapableElement)
+    }
+
+    // selection tools
+    function select() { isSelected = true }
+    function deselect() { isSelected = false }
+    function toggleSelection() { isSelected = !isSelected }
+
+
+} 

@@ -9,16 +9,17 @@ class CaseCardBoardBox : public Case {
 
 public:
     explicit CaseCardBoardBox(QObject *parent = nullptr);
-    CaseCardBoardBox(const QString &name, int position, QObject *parent = nullptr);
+    CaseCardBoardBox(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
+    CaseCardBoardBox(const QJsonObject &json, QObject *parent = nullptr);
     ~CaseCardBoardBox() override = default;
 
-    void onLand(Player* player) override;
+    Q_INVOKABLE virtual QString toJSON();
 
 signals:
     void cardDrawn();
 
 private:
-    enum CaseType type = CT_CardBoardBox;
+    enum CaseType type = CS_CardBoardBox;
     // Add any private members needed for community chest card functionality
 };
 

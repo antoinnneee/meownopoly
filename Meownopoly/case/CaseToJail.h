@@ -9,14 +9,16 @@ class CaseToJail : public Case {
     Q_OBJECT
 public:
     explicit CaseToJail(QObject *parent = nullptr);
-    CaseToJail(const QString &name, int position, QObject *parent = nullptr);
+    CaseToJail(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
+    CaseToJail(const QJsonObject &json, QObject *parent = nullptr);
 
-    void onLand(Player* player) override;
+    // void onLand(Player* player) override;
     void setJailCase(CaseJail* jailCase);
+    Q_INVOKABLE virtual QString toJSON();
 
 private:
     CaseJail* m_jailCase = nullptr;
-    enum CaseType type = CT_ToJail;
+    enum CaseType type = CS_ToJail;
 };
 
 #endif // CASETOJAIL_H 

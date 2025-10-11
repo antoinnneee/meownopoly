@@ -7,19 +7,27 @@
 class CaseFreeNap : public Case {
     Q_OBJECT
 
+    Q_PROPERTY(int kibbleAmount READ kibbleAmount WRITE setKibbleAmount NOTIFY kibbleAmountChanged FINAL)
 public:
     explicit CaseFreeNap(QObject *parent = nullptr);
-    CaseFreeNap(const QString &name, int position, QObject *parent = nullptr);
+    CaseFreeNap(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
+    CaseFreeNap(const QJsonObject &json, QObject *parent = nullptr);
 
-    int poolMoney() const;
-    void setPoolMoney(int amount);
-    void addToPool(int amount);
+    Q_INVOKABLE void addToPool(int amount);
 
-    void onLand(Player* player) override;
+    // void onLand(Player* player) override;
+
+    int kibbleAmount() const;
+    void setKibbleAmount(int newKibbleAmount);
+
+    Q_INVOKABLE virtual QString toJSON() override;
+
+signals:
+    void kibbleAmountChanged();
 
 private:
-    enum CaseType type = CT_FreeNap;
-    int m_poolMoney = 0;
+    enum CaseType type = CS_FreeNap;
+    int m_kibbleAmount = 0;
 };
 
 #endif // CASEFREENAP_H 

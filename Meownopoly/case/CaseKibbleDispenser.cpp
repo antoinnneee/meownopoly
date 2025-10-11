@@ -3,15 +3,24 @@
 #include "../player.h"
 
 CaseKibbleDispenser::CaseKibbleDispenser(QObject *parent)
-    : Case("Kibble Dispenser", -1, parent)
+    : Case("Kibble Dispenser", QUuid::createUuid(), parent)
 {
-    setType(CT_KibbleDispenser);
+    setType(Case::CS_KibbleDispenser);
+
 }
 
-CaseKibbleDispenser::CaseKibbleDispenser(const QString &name, int position, int reward, QObject *parent)
-    : Case(name, position, parent), m_reward(reward)
+CaseKibbleDispenser::CaseKibbleDispenser(const QString &name, QUuid id, int reward, QObject *parent)
+    : Case(name, id, parent), m_reward(reward)
 {
-    setType(CT_KibbleDispenser);
+    setType(Case::CS_KibbleDispenser);
+}
+
+CaseKibbleDispenser::CaseKibbleDispenser(const QJsonObject &json, QObject *parent)
+    : Case(json, parent)
+{
+    setType(Case::CS_KibbleDispenser);
+    
+    m_reward = json["reward"].toInt();
 }
 
 int CaseKibbleDispenser::reward() const {
@@ -20,10 +29,23 @@ int CaseKibbleDispenser::reward() const {
 
 void CaseKibbleDispenser::setReward(int newReward) {
     m_reward = newReward;
+    emit rewardChanged();
 }
 
-void CaseKibbleDispenser::onLand(Player* player)
+// void CaseKibbleDispenser::onLand(Player* player)
+// {
+//     qDebug() << "Player landed on Kibble Dispenser and received" << m_reward << "kibble";
+//     player->earnKibble(m_reward);
+// }
+
+QString CaseKibbleDispenser::toJSON()
 {
-    qDebug() << "Player landed on Kibble Dispenser and received" << m_reward << "kibble";
-    player->earnKibble(m_reward);
-} 
+    QString json;
+    json = Case::toJSON();
+    json.removeLast();
+    json.removeLast();
+    json+= ",\n";
+    json += "    \"reward\": " + QString::number(m_reward) + "\n";
+    json += "}";
+    return json;
+}

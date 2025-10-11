@@ -3,20 +3,37 @@
 #include "../player.h"
 
 CaseCatNip::CaseCatNip(QObject *parent)
-    : Case("Cat Nip", -1, parent)
+    : Case("Cat Nip", QUuid::createUuid(), parent)
 {
-    setType(CT_CatNip);
+    setType(Case::CS_CatNip);
 }
 
-CaseCatNip::CaseCatNip(const QString &name, int position, QObject *parent)
-    : Case(name, position, parent)
+CaseCatNip::CaseCatNip(const QString &name, QUuid uniqueId, QObject *parent)
+    : Case(name, uniqueId, parent)
 {
-    setType(CT_CatNip);
+    setType(Case::CS_CatNip);
 }
 
-void CaseCatNip::onLand(Player* player)
+CaseCatNip::CaseCatNip(const QJsonObject &json, QObject *parent)
+    : Case(json, parent)
 {
-    Q_UNUSED(player);
-    qDebug() << "Player landed on Cat Nip";
-    // TODO: Implement chance card logic
-} 
+    setType(Case::CS_CatNip);
+}
+
+QString CaseCatNip::toJSON()
+{
+    QString json;
+    json = Case::toJSON();
+    json.removeLast();
+    json.removeLast();
+    json += "\n}";
+    return json;
+}
+
+
+// void CaseCatNip::onLand(Player* player)
+// {
+//     Q_UNUSED(player);
+//     qDebug() << "Player landed on Cat Nip";
+//     // TODO: Implement chance card logic
+// }

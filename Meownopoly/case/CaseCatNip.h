@@ -9,16 +9,18 @@ class CaseCatNip : public Case {
 
 public:
     explicit CaseCatNip(QObject *parent = nullptr);
-    CaseCatNip(const QString &name, int position, QObject *parent = nullptr);
+    CaseCatNip(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
+    CaseCatNip(const QJsonObject &json, QObject *parent = nullptr);
     ~CaseCatNip() override = default;
 
-    void onLand(Player* player) override;
+    // void onLand(Player* player) override;
+    Q_INVOKABLE virtual QString toJSON();
 
 signals:
     void cardDrawn();
 
 private:
-    enum CaseType type = CT_CatNip;
+    enum CaseType type = CS_CatNip;
 };
 
 #endif // CASECATNIP_H 

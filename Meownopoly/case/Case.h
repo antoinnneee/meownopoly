@@ -2,57 +2,107 @@
 #define CASE_H
 
 #include <QObject>
+#include <QQmlEngine>
 #include <QString>
-
-// Forward declaration instead of including player.h
-class Player;
-
-enum CaseType{
-    CT_KibbleDispenser, // depart
-    CT_RestArea,        // terrain
-    CT_CardBoardBox,    // caisse communauté
-    CT_CatNip,          // chance
-    CT_Jail,            // prison
-    CT_ToJail,          // go to jail
-    CT_CatDoor,         // gare
-    CT_FreeNap,         // free parking
-    CT_WaterFountain,   // service des eaux
-    CT_LaserPointer,    // service electricite
-    CT_GoldenCollar,    // Taxe de luxe
-    CT_FurTax,          // Taxe sur le revenu
-    CT_Unknow,
-    CT_Count
-};
+#include "player.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QUuid>
 
 class Case : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString name READ name CONSTANT)
-    Q_PROPERTY(int position READ position CONSTANT)
-    Q_PROPERTY(int type READ getType CONSTANT)
     
 public:
+    enum CaseType{
+        CS_KibbleDispenser, // depart
+        CS_RestArea,        // terrain
+        CS_CardBoardBox,    // caisse communauté
+        CS_CatNip,          // chance
+        CS_Jail,            // prison
+        CS_ToJail,          // go to jail
+        CS_CatDoor,         // gare
+        CS_FreeNap,         // free parking
+        CS_Device,    // service electricite
+        CS_Taxe,    // Taxe de luxe   // Taxe sur le revenu
+        CS_Unknow,
+        CS_Count,
+    };
+    Q_ENUM(CaseType)
+
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
+    Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
+    Q_PROPERTY(CaseType type READ getType WRITE setType NOTIFY typeChanged FINAL)
+    
     explicit Case(QObject *parent = nullptr);
-    Case(const QString &name, int position = -1, QObject *parent = nullptr);
+    Case(const QString &name, QUuid uniqueId, QObject *parent = nullptr);
+    Case(const QJsonObject &json, QObject *parent = nullptr);
 
-    int position() const;
-    void setPosition(int newPosition);
 
-    enum CaseType getType() const;
+
+    QUuid uniqueId() const;
+    void setUniqueId(QUuid newUniqueId);
+
+    CaseType getType() const;
     void setType(CaseType newType);
 
     QString name() const;
     void setName(const QString &newName);
 
-    virtual void onLand(Player* player);
+    // Static conversion function from int to CaseType enum
+    static CaseType intToCaseType(int type);
+
+    Q_INVOKABLE void removePlayer(Player *player);
+    Q_INVOKABLE void addPlayer(Player *player);
+
+    
+    // Overloaded versions with player parameter for direct calls
+    Q_INVOKABLE virtual void onLand(Player* player);
+    Q_INVOKABLE virtual void onLeave(Player* player); 
+    Q_INVOKABLE virtual void onHover(Player* player);
+
+    Q_INVOKABLE virtual QString toJSON();
+
+
+// ---- CHAINED LIST MANIPULATION ----
+
+    bool addNode();
+    bool removeNode();
+
+
+    bool isNextEmpty(){return next.isEmpty();}
+    bool isPrevEmpty(){return prev.isEmpty();}
+
+    Q_INVOKABLE void addNext(Case *newNext);
+    Q_INVOKABLE bool removeNext(Case *caseToRemove); // Nouvelle fonction
+    Q_INVOKABLE  bool removeNextAt(int index); // Nouvelle fonction
+
+    Q_INVOKABLE void addPrev(Case *newPrev);
+    Q_INVOKABLE bool removePrev(Case *caseToRemove); // Nouvelle fonction
+    Q_INVOKABLE bool removePrevAt(int index); // Nouvelle fonction
+
+    Q_INVOKABLE QList<Case*> getNextList() {return next;}
+    Q_INVOKABLE QList<Case*> getPrevList() {return prev;}
+    QList<Case*> next = QList<Case*>();
+    QList<Case*> prev = QList<Case*>();
+
 
 signals:
 
-private:
+    void nameChanged();
+
+    void uniqueIdChanged();
+
+    void typeChanged();
+
+protected:
+    QList<Player*> listPlayer;
+
     QString m_name = "Unknown";
-    int m_position = -1;
-    enum CaseType type = CT_Unknow;
+    QUuid m_uniqueId = QUuid::createUuid();
+    CaseType type = CS_Unknow;
 
 };
+Q_DECLARE_METATYPE(Case)
 
 #endif // CASE_H

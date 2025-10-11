@@ -2,61 +2,81 @@
 #include <QDebug>
 #include "../player.h"
 
-CaseCatDoor::CaseCatDoor(QObject *parent)
-    : Case("Cat Door", -1, parent)
+
+CaseCatDoor::CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER_NOP)
+    : CASECATPERKS_DEFAULT_CONSTRUCS_PARAMETER
 {
-    setType(CT_CatDoor);
+    setType(Case::CS_CatDoor);
 }
 
-CaseCatDoor::CaseCatDoor(const QString &name, int position, int price, QObject *parent)
-    : Case(name, position, parent)
+CaseCatDoor::CaseCatDoor(const QJsonObject &json, QObject *parent)
+    : CaseCatPerks(json, parent)
 {
-    setType(CT_CatDoor);
-    m_price = price;
+    setType(Case::CS_CatDoor);
+    
+    m_indexCatDoor = json["indexCatDoor"].toInt();
+    m_travelPrice = json["travelPrice"].toInt();
 }
 
-int CaseCatDoor::rent() const
+bool CaseCatDoor::buyCase(Player *buyer)
 {
-    return m_baseRent;
-}
-
-Player* CaseCatDoor::owner() const
-{
-    return m_owner;
-}
-
-void CaseCatDoor::setOwner(Player* newOwner)
-{
-    if (m_owner != newOwner) {
-        m_owner = newOwner;
-        emit ownerChanged();
+    if (CaseCatPerks::buyCase(buyer)){
+        buyer->addCatDoor(this);
+        return true;
     }
+    return false;
 }
 
-int CaseCatDoor::price() const
+bool CaseCatDoor::sellCase(Player *buyer)
 {
-    return m_price;
+    CaseCatPerks::sellCase(buyer);
+    buyer->removeCatDoor(this);
+    return true;
+
+    return false;
+
 }
 
-void CaseCatDoor::setPrice(int newPrice)
+// void CaseCatDoor::onLand(Player* player)
+// {
+// }
+
+
+
+int CaseCatDoor::indexCatDoor() const
 {
-    if (m_price != newPrice) {
-        m_price = newPrice;
-        emit priceChanged();
-    }
+    return m_indexCatDoor;
 }
 
-void CaseCatDoor::onLand(Player* player)
+void CaseCatDoor::setIndexCatDoor(int newIndexCatDoor)
 {
-    if (m_owner && m_owner != player) {
-        // Calculate rent based on how many cat doors the owner has
-        int rentAmount = m_baseRent;
-        if (player->canAfford(rentAmount)) {
-            player->spendKibble(rentAmount);
-            m_owner->earnKibble(rentAmount);
-            qDebug() << "Player paid rent of" << rentAmount << "for Cat Door";
-        }
-    } else if (!m_owner) {
-        qDebug() << "Cat Door is available for purchase for" << m_price;
-    }
-} 
+    if (m_indexCatDoor == newIndexCatDoor)
+        return;
+    m_indexCatDoor = newIndexCatDoor;
+    emit indexCatDoorChanged();
+}
+
+int CaseCatDoor::travelPrice() const
+{
+    return m_travelPrice;
+}
+
+void CaseCatDoor::setTravelPrice(int newTravelPrice)
+{
+    if (m_travelPrice == newTravelPrice)
+        return;
+    m_travelPrice = newTravelPrice;
+    emit travelPriceChanged();
+}
+
+QString CaseCatDoor::toJSON()
+{
+    QString json;
+    json = CaseCatPerks::toJSON();
+    json.removeLast();
+    json.removeLast();
+    json += ",\n    \"indexCatDoor\": " + QString::number(m_indexCatDoor) + ",\n";
+    json += "    \"travelPrice\": " + QString::number(m_travelPrice) + "\n";
+    json += "}";
+    return json;
+}

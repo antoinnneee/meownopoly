@@ -1,0 +1,383 @@
+#include "Displayparameter.h"
+#include "tools/logger.h"
+
+
+DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, float zOrder, QObject *parent)
+    : QObject(parent)
+{
+    m_unitSizeWidth = unitSizeWidth;
+    m_unitSizeHeight = unitSizeHeight;
+    m_gridRelativePositionX = gridRelativePositionX;
+    m_gridRelativePositionY = gridRelativePositionY;
+    m_zLayer = zLayer;
+    m_zOrder = zOrder;
+    m_effectBrightness = 0.0;
+    m_effectContrast = 0.0;
+    m_effectSaturation = 0.0;
+    m_effectColorization = 0.0;
+    m_effectColorizationColor = QColor(255, 255, 255);
+    m_effectBlurEnabled = false;
+    m_effectBlur = 0.0;
+    m_effectBlurMax = 32;
+    m_effectBlurMultiplier = 1.0;
+    m_effectShadowEnabled = false;
+    m_effectShadowBlur = 1.0;
+    m_effectShadowColor = QColor(0, 0, 0, 1.0);
+    m_effectShadowHorizontalOffset = 0.0;
+    m_effectShadowVerticalOffset = 0.0;
+    m_effectShadowOpacity = 1.0;
+    m_effectShadowScale = 1.0;
+    
+    // Initialize rotation properties
+    m_rotationAngle = 0.0;
+
+    // Initialize mirror properties
+    m_mirrorHorizontal = false;
+    m_mirrorVertical = false;
+}
+
+DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QObject(parent)
+{
+    m_unitSizeWidth = json["unitSizeWidth"].toInt();
+    m_unitSizeHeight = json["unitSizeHeight"].toInt();
+    m_gridRelativePositionX = json["gridRelativePositionX"].toInt();
+    m_gridRelativePositionY = json["gridRelativePositionY"].toInt();
+    m_zLayer = json["zLayer"].toInt();
+    m_zOrder = json["zOrder"].toDouble();
+    m_effectBrightness = json["effectBrightness"].toDouble();
+    m_effectContrast = json["effectContrast"].toDouble();
+    m_effectSaturation = json["effectSaturation"].toDouble();
+    m_effectColorization = json["effectColorization"].toDouble();
+    m_effectColorizationColor = QColor(json["effectColorizationColor"].toString());
+    m_effectBlurEnabled = json["effectBlurEnabled"].toInt();
+    m_effectBlur = json["effectBlur"].toDouble();
+    m_effectBlurMax = json["effectBlurMax"].toInt();
+    m_effectBlurMultiplier = json["effectBlurMultiplier"].toDouble();
+    m_effectShadowEnabled = json["effectShadowEnabled"].toInt();
+    m_effectShadowBlur = json["effectShadowBlur"].toDouble();
+    m_effectShadowColor = QColor(json["effectShadowColor"].toString());
+    m_effectShadowHorizontalOffset = json["effectShadowHorizontalOffset"].toDouble();
+    m_effectShadowVerticalOffset = json["effectShadowVerticalOffset"].toDouble();
+    m_effectShadowOpacity = json["effectShadowOpacity"].toDouble();
+    m_effectShadowScale = json["effectShadowScale"].toDouble();
+    
+    // Load rotation properties
+    m_rotationAngle = json["rotationAngle"].toDouble();
+    
+    // Load mirror properties
+    m_mirrorHorizontal = json["mirrorHorizontal"].toInt();
+    m_mirrorVertical = json["mirrorVertical"].toInt();
+}
+
+QString DisplayParameter::toJSON()
+{
+    QString json;
+    json += "{\n";
+    json += "    \"unitSizeWidth\": " + QString::number(m_unitSizeWidth) + ",\n";
+    json += "    \"unitSizeHeight\": " + QString::number(m_unitSizeHeight) + ",\n";
+    json += "    \"gridRelativePositionX\": " + QString::number(m_gridRelativePositionX) + ",\n";
+    json += "    \"gridRelativePositionY\": " + QString::number(m_gridRelativePositionY) + ",\n";
+    json += "    \"zLayer\": " + QString::number(m_zLayer) + ",\n";
+    json += "    \"zOrder\": " + QString::number(m_zOrder) + ",\n";
+    json += "    \"effectBrightness\": " + QString::number(m_effectBrightness) + ",\n";
+    json += "    \"effectContrast\": " + QString::number(m_effectContrast) + ",\n";
+    json += "    \"effectSaturation\": " + QString::number(m_effectSaturation) + ",\n";
+    json += "    \"effectColorization\": " + QString::number(m_effectColorization) + ",\n";
+    json += "    \"effectColorizationColor\": \"" + m_effectColorizationColor.name() + "\",\n";
+    json += "    \"effectBlurEnabled\": " + QString::number(m_effectBlurEnabled) + ",\n";
+    json += "    \"effectBlur\": " + QString::number(m_effectBlur) + ",\n";
+    json += "    \"effectBlurMax\": " + QString::number(m_effectBlurMax) + ",\n";
+    json += "    \"effectBlurMultiplier\": " + QString::number(m_effectBlurMultiplier) + ",\n";
+    json += "    \"effectShadowEnabled\": " + QString::number(m_effectShadowEnabled) + ",\n";
+    json += "    \"effectShadowBlur\": " + QString::number(m_effectShadowBlur) + ",\n";
+    json += "    \"effectShadowColor\": \"" + m_effectShadowColor.name() + "\",\n";
+    json += "    \"effectShadowHorizontalOffset\": " + QString::number(m_effectShadowHorizontalOffset) + ",\n";
+    json += "    \"effectShadowVerticalOffset\": " + QString::number(m_effectShadowVerticalOffset) + ",\n";
+    json += "    \"effectShadowOpacity\": " + QString::number(m_effectShadowOpacity) + ",\n";
+    json += "    \"effectShadowScale\": " + QString::number(m_effectShadowScale) + ",\n";
+    json += "    \"rotationAngle\": " + QString::number(m_rotationAngle) + ",\n";
+    json += "    \"mirrorHorizontal\": " + QString::number(m_mirrorHorizontal) + ",\n";
+    json += "    \"mirrorVertical\": " + QString::number(m_mirrorVertical) + "\n";
+    json += "}";
+    return json;
+}
+int DisplayParameter::unitSizeWidth() const
+{
+    return m_unitSizeWidth;
+}
+
+void DisplayParameter::setUnitSizeWidth(int unitSizeWidth)
+{
+    m_unitSizeWidth = unitSizeWidth;
+    emit unitSizeWidthChanged();
+}
+
+int DisplayParameter::unitSizeHeight() const
+{
+    return m_unitSizeHeight;
+}
+
+void DisplayParameter::setUnitSizeHeight(int unitSizeHeight)
+{
+    m_unitSizeHeight = unitSizeHeight;
+    emit unitSizeHeightChanged();
+}
+
+int DisplayParameter::gridRelativePositionX() const
+{
+    return m_gridRelativePositionX;
+}
+
+void DisplayParameter::setGridRelativePositionX(int gridRelativePositionX)
+{
+    m_gridRelativePositionX = gridRelativePositionX;
+    emit gridRelativePositionXChanged();
+}
+
+int DisplayParameter::gridRelativePositionY() const
+{
+    return m_gridRelativePositionY;
+}
+
+void DisplayParameter::setGridRelativePositionY(int gridRelativePositionY)
+{
+    m_gridRelativePositionY = gridRelativePositionY;
+    emit gridRelativePositionYChanged();
+}
+
+int DisplayParameter::zLayer() const
+{
+    return m_zLayer;
+}
+
+void DisplayParameter::setZLayer(int zLayer)
+{
+    m_zLayer = zLayer;
+    emit zLayerChanged();
+}
+
+double DisplayParameter::effectBrightness() const
+{
+    return m_effectBrightness;
+}
+
+void DisplayParameter::setEffectBrightness(double effectBrightness)
+{
+    m_effectBrightness = effectBrightness;
+    emit effectBrightnessChanged();
+}
+
+double DisplayParameter::effectContrast() const
+{
+    return m_effectContrast;
+}
+
+void DisplayParameter::setEffectContrast(double effectContrast)
+{
+    m_effectContrast = effectContrast;
+    emit effectContrastChanged();
+}
+
+double DisplayParameter::effectSaturation() const
+{
+    return m_effectSaturation;
+}
+
+void DisplayParameter::setEffectSaturation(double effectSaturation)
+{
+    m_effectSaturation = effectSaturation;
+    emit effectSaturationChanged();
+}
+
+double DisplayParameter::effectColorization() const
+{
+    return m_effectColorization;
+}
+
+void DisplayParameter::setEffectColorization(double effectColorization)
+{
+    m_effectColorization = effectColorization;
+    emit effectColorizationChanged();
+}
+
+QColor DisplayParameter::effectColorizationColor() const
+{
+    return m_effectColorizationColor;
+}
+
+void DisplayParameter::setEffectColorizationColor(QColor effectColorizationColor)
+{
+    m_effectColorizationColor = effectColorizationColor;
+    emit effectColorizationColorChanged();
+}
+
+bool DisplayParameter::effectBlurEnabled() const
+{
+    return m_effectBlurEnabled;
+}
+
+void DisplayParameter::setEffectBlurEnabled(bool effectBlurEnabled)
+{
+    m_effectBlurEnabled = effectBlurEnabled;
+    emit effectBlurEnabledChanged();
+}
+
+double DisplayParameter::effectBlur() const
+{
+    return m_effectBlur;    
+}
+
+void DisplayParameter::setEffectBlur(double effectBlur)
+{
+    m_effectBlur = effectBlur;
+    emit effectBlurChanged();
+}
+
+int DisplayParameter::effectBlurMax() const
+{
+    return m_effectBlurMax;
+}
+
+void DisplayParameter::setEffectBlurMax(int effectBlurMax)
+{
+    m_effectBlurMax = effectBlurMax;
+    emit effectBlurMaxChanged();
+}
+
+double DisplayParameter::effectBlurMultiplier() const
+{
+    return m_effectBlurMultiplier;
+}
+
+void DisplayParameter::setEffectBlurMultiplier(double effectBlurMultiplier)
+{
+    m_effectBlurMultiplier = effectBlurMultiplier;
+    emit effectBlurMultiplierChanged();
+}
+
+bool DisplayParameter::effectShadowEnabled() const
+{
+    return m_effectShadowEnabled;
+}
+
+void DisplayParameter::setEffectShadowEnabled(bool effectShadowEnabled)
+{
+    m_effectShadowEnabled = effectShadowEnabled;
+    emit effectShadowEnabledChanged();
+}
+
+double DisplayParameter::effectShadowBlur() const
+{
+    return m_effectShadowBlur;
+}
+
+void DisplayParameter::setEffectShadowBlur(double effectShadowBlur)
+{
+    m_effectShadowBlur = effectShadowBlur;
+    emit effectShadowBlurChanged();
+}
+
+QColor DisplayParameter::effectShadowColor() const
+{
+    return m_effectShadowColor;
+}
+
+void DisplayParameter::setEffectShadowColor(QColor effectShadowColor)
+{
+    m_effectShadowColor = effectShadowColor;
+    emit effectShadowColorChanged();
+}
+
+double DisplayParameter::effectShadowHorizontalOffset() const
+{
+    return m_effectShadowHorizontalOffset;
+}
+
+void DisplayParameter::setEffectShadowHorizontalOffset(double effectShadowHorizontalOffset)
+{
+    m_effectShadowHorizontalOffset = effectShadowHorizontalOffset;
+    emit effectShadowHorizontalOffsetChanged();
+}
+
+double DisplayParameter::effectShadowVerticalOffset() const
+{
+    return m_effectShadowVerticalOffset;
+}
+
+void DisplayParameter::setEffectShadowVerticalOffset(double effectShadowVerticalOffset)
+{
+    m_effectShadowVerticalOffset = effectShadowVerticalOffset;
+    emit effectShadowVerticalOffsetChanged();
+}
+
+double DisplayParameter::effectShadowOpacity() const
+{
+    return m_effectShadowOpacity;
+}
+
+void DisplayParameter::setEffectShadowOpacity(double effectShadowOpacity)
+{
+    m_effectShadowOpacity = effectShadowOpacity;
+    emit effectShadowOpacityChanged();
+}
+
+double DisplayParameter::effectShadowScale() const
+{
+    return m_effectShadowScale;
+}
+
+void DisplayParameter::setEffectShadowScale(double effectShadowScale)
+{
+    m_effectShadowScale = effectShadowScale;
+    emit effectShadowScaleChanged();
+}
+
+// Rotation methods
+double DisplayParameter::rotationAngle() const
+{
+    return m_rotationAngle;
+}
+
+void DisplayParameter::setRotationAngle(double rotationAngle)
+{
+    m_rotationAngle = rotationAngle;
+    emit rotationAngleChanged();
+}
+
+
+
+// Mirror methods
+bool DisplayParameter::mirrorHorizontal() const
+{
+    return m_mirrorHorizontal;
+}
+
+void DisplayParameter::setMirrorHorizontal(bool mirrorHorizontal)
+{
+    m_mirrorHorizontal = mirrorHorizontal;
+    emit mirrorHorizontalChanged();
+}
+
+bool DisplayParameter::mirrorVertical() const
+{
+    return m_mirrorVertical;
+}
+
+void DisplayParameter::setMirrorVertical(bool mirrorVertical)
+{
+    m_mirrorVertical = mirrorVertical;
+    emit mirrorVerticalChanged();
+}
+
+float DisplayParameter::zOrder() const
+{
+    return m_zOrder;
+}
+
+void DisplayParameter::setZOrder(float newZOrder)
+{
+    if (qFuzzyCompare(m_zOrder, newZOrder))
+        return;
+    m_zOrder = newZOrder;
+    emit zOrderChanged();
+}

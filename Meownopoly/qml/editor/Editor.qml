@@ -1,0 +1,420 @@
+import QtQuick 2.15
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Window
+import QtQuick.Shapes
+import QtQml
+import Game
+import Case
+import ItemSnapable
+import "tools"
+import "tools/snapable"
+import "panel"
+import "panel/assetSelectionPanel"
+import MapLoader
+import MapInfo
+import EditorEnum
+import Logger
+import DisplayParameter
+import DecorationParameter
+
+Rectangle {
+    id: root
+
+    color: "lightblue"
+    border.width: 0
+
+    Background {
+        id: background
+        anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
+    }
+
+    Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_Delete) {
+            var selectItem = logic.mouseLogic.selectedElements
+            for (var i = 0; i < selectItem.length; i++) {
+                selectItem[i].deleteRequest()
+            }
+            event.accepted = true
+        }
+        else if (event.key === Qt.Key_Escape) {
+            console.log("ESCAPED")
+            if (root.isAssetSelected) {
+                selectionPanel.clearAssetSelection()
+                event.accepted = true
+            } else {
+                // Afficher le menu d'échappement
+                escMenu.show()
+                event.accepted = true
+            }
+        }
+
+    }
+
+    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
+    focus: true
+    
+    // Fonction pour redonner le focus à l'éditeur
+    function regainFocus() {
+        forceActiveFocus()
+    }
+
+
+
+    // Liste pour stocker tous les SnapableCaseTile créés
+    property alias snapableTilesList: logic.snapableTilesList
+
+    property alias isSelectionActive: logic.isSelectionActive
+    property alias selectionStart: logic.selectionStart
+    property alias selectionCurrent: logic.selectionCurrent
+    property alias isSelectingArea: logic.isSelectingArea
+    property alias defaultCaseType: logic.defaultCaseType
+    // Asset selection properties
+    property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
+    property alias selectedAssetType: selectionPanel.currentSelectedAssetType
+    property alias selectedAssetId: selectionPanel.currentSelectedAssetId
+    property alias isAssetSelected: selectionPanel.isAssetSelected
+
+    property MapInfo mapInfo: MapInfo{
+        // mapName: ""
+        // mapDescription: ""
+        // mapCreationDate: ""
+        // mapLastModified: ""
+        // backgroundPath: ""
+        // backgroundScaling: "Fit"
+        // isBackgroundOnGrill: false
+    }
+
+    Connections{
+        target: MapLoader
+
+        function onFoundCaseTile(dp, caseData){
+            Logger.info("Found case tile:" + dp + " " + caseData, "MAP_LOADING")
+            //console.log("Found case tile:", dp, caseData)
+            logic.tileLogic.createCaseTile(dp, caseData);
+        }
+        function onFoundDecorationTile(dp, decorationParameter){
+            Logger.info("Found decoration tile:" + dp + " " + decorationParameter, "MAP_LOADING")
+            //console.log("Found decoration tile:", dp, decorationParameter)
+            logic.tileLogic.createDecorationTile(dp, decorationParameter);
+        }
+        function onMapLoaded(map)
+        {
+            Logger.success("Map loaded", "MAP_LOADING")
+            //console.log("Map loaded")
+            logic.tileLogic.builtConnections();
+
+            mapInfo = map.mapInfo
+
+        }
+    }
+
+    Editor_WheelHandler { }
+
+    EditorLogic {
+        id: logic
+        workArea: workArea
+        editorGrid: editorGrid
+        editorDynamicComponent: editorDynamicComponent
+        selectionRect:  selectionRect
+        mapInfo: root.mapInfo
+        selectionPanel: selectionPanel
+    }
+
+    EditorDynamicComponent {
+        id: editorDynamicComponent
+        editorGrid: editorGrid
+        logic: logic
+        workArea: workArea
+        // caseConfigPanel: caseConfigPanel
+        selectionPanel: selectionPanel
+    }
+
+
+    // Grille de l'éditeur
+    GridManager {
+        id: editorGrid
+        logic: logic
+        gridColor: "#80000000"
+        gridOpacity: 0.3
+        showGrid: true
+        snapToGrid: true
+    }
+
+    MouseArea{
+        id: mainMa
+        z:0
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: selectionPanel.top
+        pressAndHoldInterval: 350
+        drag.target: null
+        drag.axis: Drag.XAndYAxis
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+        property list<SnapableElement> clickElement:[]
+        property list<var> elementInitialPosition:[]
+        drag.onActiveChanged: {
+            console.log("drag changed", drag.active);
+            logic.mouseLogic.dragChanged(drag)
+        }
+
+        function elementClicked(tile)
+        {
+            logic.mouseLogic.elementClicked(tile, drag)
+        }
+
+        onPressed: function (mouse) {
+            if (mouse.button === Qt.LeftButton) {
+            logic.mouseLogic.pressedLeft(mouse, drag)
+            }
+            else if (mouse.button === Qt.MiddleButton) {
+            logic.mouseLogic.pressedMiddle(mouse, drag)
+            }
+            else if (mouse.button === Qt.RightButton) {
+            logic.mouseLogic.pressedRight(mouse, drag)
+            }
+        }
+
+        onReleased: function(mouse) {
+            logic.mouseLogic.release(mouse, drag)
+        }
+
+        onPositionChanged: function(mouse) {
+            // Mettre à jour la sélection par rectangle si active
+            if (logic.mouseLogic.isRectangleSelecting) {
+                logic.mouseLogic.updateRectangleSelection(mouse.x, mouse.y)
+            }
+        }
+
+        onPressAndHold: function (mouse) {
+            logic.mouseLogic.pressedAndHold(mouse)
+
+        }
+        onClicked: function(mouse) {
+            if (mouse.button === Qt.LeftButton) {
+                logic.mouseLogic.clickedLeft(mouse, drag)
+            }
+            else if (mouse.button === Qt.RightButton) {
+                logic.mouseLogic.clickedRight(mouse, drag)
+            }
+            else if (mouse.button === Qt.MiddleButton) {
+                logic.mouseLogic.clickedMiddle(mouse, drag)
+            }
+            return;
+        }
+    }
+    // Zone de travail de l'éditeur (par-dessus la grille)
+    Item {
+        id: workArea
+        anchors.fill: editorGrid
+        Item { id: groupeSelection
+             property int gridXPosition:  0
+             property int gridYPosition:  0
+        }
+
+        // MouseArea to track cursor position for asset preview
+        MouseArea {
+            id: cursorTracker
+            anchors.fill: parent
+            hoverEnabled: true
+            enabled: logic.editorMouseMode === EditorEnum.EM_POSE
+            acceptedButtons: Qt.NoButton // Don't interfere with clicks
+            propagateComposedEvents: true
+            preventStealing: true
+            z: 50
+
+            onPositionChanged: function(mouse) {
+                assetPreview.mouseX = mouse.x
+                assetPreview.mouseY = mouse.y
+            }
+        }
+        // Asset preview cursor
+        AssetPreviewCursor {
+            id: assetPreview
+            parent: workArea
+            assetCategory: root.selectedAssetCategory
+            assetType: root.selectedAssetType
+            assetId: root.selectedAssetId
+            caseType: selectionPanel.caseTypeSelected
+            isCasePreview: selectionPanel.caseTypeSelected !== -1
+            unitSizeWidth: logic.tileLogic.currentElementWidth
+            unitSizeHeight: logic.tileLogic.currentElementHeight
+            gridManager: editorGrid
+            selectionPanel: selectionPanel
+        }
+    }
+
+    // Rectangle de sélection
+    SelectionRect {
+        id: selectionRect
+    }
+
+    SelectionPanel{
+        id: selectionPanel
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        // Connexion à la logique
+        logic: logic
+
+        // Définir la valeur d'expansion par défaut
+        isExpanded: true
+
+        //Connect the selected decoration element for effects
+
+        onAssetSelected: function(category, type, id) {
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+        }
+        onAssetCleared: function() {
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+        }
+        onEffectChanged: {
+            var effects = selectionPanel.assetPanel.visualEffectsPanel.getCurrentEffects()
+            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
+            }
+        }
+        onCaseTypeSelectedChanged: {
+            if (selectionPanel.caseTypeSelected !== -1)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+            else
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+        }
+
+    }
+
+    MenuMapAtStart {
+        onBackgroundSelected: function() {
+            infoPanel.visible = true
+        }
+    }
+
+
+
+    // Panneau d'information sur l'élément sélectionné
+    InfoPanel {
+        id: infoPanel
+        visible: false  // Hidden by default
+
+        anchors {
+            top: parent.top
+            left: parent.left
+            margins: 10
+        }
+
+        gridManager: editorGrid
+        totalTilesCount: snapableTilesList.length
+    }
+
+
+    // Gestion des connexions via le SelectionPanel
+    Connections {
+        target: selectionPanel
+        function onConnectionRequested(kind) {
+            var selectedElements = logic.mouseLogic.selectedElements
+            var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
+            console.log("onConnectionRequested", kind, selectedElements, targetElement)
+            // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
+            if (!selectedElements || !targetElement) return
+
+            for (var i = 0; i < selectedElements.length; i++) {
+                if (selectedElements[i] !== targetElement) {
+                    if (kind === "previous") {
+                        targetElement.connectionManager.addPreviousElement(selectedElements[i])
+                    } else if (kind === "next") {
+                        targetElement.connectionManager.addNextElement(selectedElements[i])
+                    }
+                }
+            }
+        }
+    }
+
+    // Function to apply visual effects to a new decoration tile
+    function applyVisualEffectsToNewTile(newTile) {
+        if (!newTile || !newTile.displaySettings) return
+
+        // Get current effects from the visual effects panel
+        // if (!selectionPanel.selectedDecoration) return
+
+        var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
+        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
+
+        var currentEffects = visualEffectsPanel.getCurrentEffects()
+        if (!currentEffects) return
+
+        newTile.applyVisualEffects(currentEffects)
+    }
+
+    // Function to place the selected asset
+    function placeSelectedAsset(gridX, gridY) {
+        gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
+        gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
+        if (!root.isAssetSelected) {    // place case
+            if (!selectionPanel.caseTypeSelected !== -1)
+            {
+                var newCaseTile = logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, gridX, gridY, ItemSnapable.CaseTile)
+                mainMa.elementClicked(newCaseTile)
+                newCaseTile.elementPressed()
+                newCaseTile.parent = groupeSelection
+                newCaseTile.x = newCaseTile.x - groupeSelection.x
+                newCaseTile.y = newCaseTile.y - groupeSelection.y
+                logic.mouseLogic.selectedElements.push(newCaseTile)
+                // Mettre à jour la configuration de case si applicable
+                logic.mouseLogic.updateCaseConfiguration()
+
+
+            }
+            return;
+        }
+
+        console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
+
+        // Create appropriate element based on category
+//        DisplayParameter dispSettings = new DisplayParameter()
+        var dispSettings = Qt.createQmlObject(`import DisplayParameter
+                    DisplayParameter { }`, root)
+        var decorationParameter = Qt.createQmlObject(`import DecorationParameter
+                    DecorationParameter { }`, root)
+        dispSettings.gridRelativePositionX = gridX
+        dispSettings.gridRelativePositionY = gridY
+        dispSettings.unitSizeWidth = logic.tileLogic.currentElementWidth
+        dispSettings.unitSizeHeight = logic.tileLogic.currentElementHeight
+        dispSettings.zLayer = 5
+        decorationParameter.decorationCategory = root.selectedAssetCategory
+        decorationParameter.decorationType = root.selectedAssetType
+        decorationParameter.decorationId = root.selectedAssetId
+        var newTile = logic.tileLogic.createDecorationTile(dispSettings, decorationParameter)
+        root.applyVisualEffectsToNewTile(newTile)
+        mainMa.elementClicked(newTile)
+
+    }
+
+    // Menu d'échappement
+    EditorEscMenu {
+        id: escMenu
+        
+        onReturnToMainMenu: {
+            console.log("Retour au menu principal demandé")
+            // Retourner au menu principal via le StackView
+            // Nous devons accéder au StackView parent depuis l'éditeur
+            var stackView = parent
+            while (stackView && !stackView.hasOwnProperty('pop')) {
+                stackView = stackView.parent
+            }
+            if (stackView && stackView.pop) {
+                stackView.pop()
+            }
+        }
+        
+        onVisibleChanged: {
+            if (!visible) {
+                // Redonner le focus à l'éditeur quand le menu se ferme
+                root.forceActiveFocus()
+            }
+        }
+    }
+}

@@ -3,37 +3,55 @@
 #include "../player.h"
 
 CaseFreeNap::CaseFreeNap(QObject *parent)
-    : Case("Free Nap", -1, parent)
+    : Case("Free Nap", QUuid::createUuid(), parent)
 {
-    setType(CT_FreeNap);
+    setType(Case::CS_FreeNap);
 }
 
-CaseFreeNap::CaseFreeNap(const QString &name, int position, QObject *parent)
-    : Case(name, position, parent)
+CaseFreeNap::CaseFreeNap(const QString &name, QUuid uniqueId, QObject *parent)
+    : Case(name, uniqueId, parent)
 {
-    setType(CT_FreeNap);
+    setType(Case::CS_FreeNap);
 }
 
-int CaseFreeNap::poolMoney() const
+CaseFreeNap::CaseFreeNap(const QJsonObject &json, QObject *parent)
+    : Case(json, parent)
 {
-    return m_poolMoney;
-}
-
-void CaseFreeNap::setPoolMoney(int amount)
-{
-    m_poolMoney = amount;
+    setType(Case::CS_FreeNap);
 }
 
 void CaseFreeNap::addToPool(int amount)
 {
-    m_poolMoney += amount;
+    setKibbleAmount(m_kibbleAmount + amount);
+
 }
 
-void CaseFreeNap::onLand(Player* player)
+// void CaseFreeNap::onLand(Player* player)
+// {
+//     qDebug() << "Player" << player->name()<<" landed on Free Nap, collecting" << m_kibbleAmount << "kibble (todo)";
+// }
+
+int CaseFreeNap::kibbleAmount() const
 {
-    qDebug() << "Player landed on Free Nap, collecting" << m_poolMoney << "kibble";
-    if (m_poolMoney > 0) {
-        player->earnKibble(m_poolMoney);
-        m_poolMoney = 0;  // Reset pool after collection
-    }
+    return m_kibbleAmount;
+}
+
+void CaseFreeNap::setKibbleAmount(int newKibbleAmount)
+{
+    if (m_kibbleAmount == newKibbleAmount)
+        return;
+    m_kibbleAmount = newKibbleAmount;
+    emit kibbleAmountChanged();
+}
+
+QString CaseFreeNap::toJSON()
+{
+    QString json;
+    json = Case::toJSON();
+    json.removeLast();
+    json.removeLast();
+    json+= ",\n";
+    json += "    \"kibbleAmount\": " + QString::number(m_kibbleAmount) + "\n";
+    json += "}";
+    return json;
 }
