@@ -34,7 +34,18 @@ class BackgroundRemovalProcessor:
         Args:
             device (str, optional): Device à utiliser ('cuda', 'cpu', ou None pour auto-détection)
         """
-        self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
+        # Forcer l'utilisation du GPU si disponible, sinon utiliser OpenCV
+        if device is None:
+            if torch.cuda.is_available():
+                self.device = 'cuda'
+                self.use_gpu = True
+            else:
+                self.device = 'cpu'
+                self.use_gpu = False
+        else:
+            self.device = device
+            self.use_gpu = (device == 'cuda' and torch.cuda.is_available())
+        
         self.pipe = None
         self._load_model()
     
@@ -42,30 +53,37 @@ class BackgroundRemovalProcessor:
         """
         Charge un modèle de segmentation pour la suppression de fond
         """
+        # Ne charger le modèle IA que si GPU est disponible
+        if not self.use_gpu:
+            with print_lock:
+                print("[INFO] GPU non disponible - utilisation directe d'OpenCV")
+            self.pipe = None
+            return
+        
         try:
             with print_lock:
-                print(f"[MODEL] Chargement du modèle de suppression de fond sur {self.device}...")
+                print(f"[MODEL] Chargement du modèle de suppression de fond sur GPU...")
             
             # Utiliser un modèle de segmentation disponible sur Hugging Face
             # Nous utilisons un modèle de segmentation d'objets qui peut servir pour la suppression de fond
             model_name = "facebook/detr-resnet-50-panoptic"
             
-            # Créer le pipeline de segmentation
+            # Créer le pipeline de segmentation sur GPU uniquement
             self.pipe = pipeline(
                 "image-segmentation",
                 model=model_name,
-                device=0 if self.device == 'cuda' else -1
+                device=0  # Forcer l'utilisation du GPU
             )
             
             with print_lock:
-                print(f"[MODEL] Modèle de suppression de fond chargé avec succès sur {self.device}")
+                print(f"[MODEL] Modèle de suppression de fond chargé avec succès sur GPU")
                 
         except Exception as e:
             with print_lock:
-                print(f"[ERREUR] Impossible de charger le modèle: {e}")
+                print(f"[ERREUR] Impossible de charger le modèle sur GPU: {e}")
             # Fallback vers une méthode simple basée sur OpenCV
             with print_lock:
-                print("[FALLBACK] Utilisation de la méthode OpenCV simple...")
+                print("[FALLBACK] Utilisation de la méthode OpenCV...")
             self.pipe = None
     
     def remove_background(self, image_path):
@@ -82,11 +100,12 @@ class BackgroundRemovalProcessor:
             # Charger l'image
             image = Image.open(image_path).convert('RGB')
             
-            if self.pipe is not None:
-                # Utiliser le modèle de segmentation
+            # Utiliser le modèle IA seulement si GPU disponible et modèle chargé
+            if self.use_gpu and self.pipe is not None:
+                # Utiliser le modèle de segmentation sur GPU
                 return self._remove_background_with_model(image)
             else:
-                # Utiliser la méthode OpenCV simple
+                # Utiliser la méthode OpenCV
                 return self._remove_background_simple(image)
                 
         except Exception as e:
@@ -252,13 +271,15 @@ def traiter_sequence(sequence_path, output_base, processor, nb_threads=None):
     
     return images_traitees, erreurs
 
-def traiter_sequences(sequence_specifique=None, nb_threads=None):
+def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False, force_cpu=False):
     """
     Traite toutes les séquences d'images avec suppression de fond
     
     Args:
         sequence_specifique (str, optional): Nom d'une séquence spécifique à traiter
         nb_threads (int, optional): Nombre de threads à utiliser
+        force_gpu (bool): Forcer l'utilisation du GPU (arrêter si non disponible)
+        force_cpu (bool): Forcer l'utilisation du CPU (utiliser OpenCV)
     """
     # Définir les chemins
     dossier_png_seq = Path("output/png_seq")
@@ -283,16 +304,34 @@ def traiter_sequences(sequence_specifique=None, nb_threads=None):
         print(f"Aucune séquence trouvée dans {dossier_png_seq}.")
         return
     
-    print(f"[SUPPRESSION FOND] Suppression de fond avec BiRefNet")
+    print(f"[SUPPRESSION FOND] Suppression de fond automatique")
     print(f"Dossier source: {dossier_png_seq}")
     print(f"Dossier de sortie: {dossier_output}")
     print(f"Séquences à traiter: {len(sequences)}")
     print(f"Threads par séquence: {nb_threads if nb_threads else 'auto'}")
+    
+    # Vérifier la disponibilité du GPU
+    gpu_available = torch.cuda.is_available()
+    print(f"GPU disponible: {'Oui' if gpu_available else 'Non'}")
+    if gpu_available:
+        print(f"GPU: {torch.cuda.get_device_name(0)}")
+    
+    if force_gpu and not gpu_available:
+        print("[ERREUR] GPU requis mais non disponible. Utilisez --cpu pour forcer l'utilisation du CPU.")
+        return
+    
     print("-" * 60)
     
     # Initialiser le processeur de suppression de fond
     try:
-        processor = BackgroundRemovalProcessor()
+        if force_gpu:
+            device = 'cuda'
+        elif force_cpu:
+            device = 'cpu'
+        else:
+            device = 'cuda' if gpu_available else 'cpu'
+        
+        processor = BackgroundRemovalProcessor(device=device)
     except Exception as e:
         print(f"[ERREUR] Impossible d'initialiser le processeur: {e}")
         return
@@ -327,8 +366,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Exemples d'utilisation:
-  python supprimer_fond.py                           # Traite toutes les séquences
+  python supprimer_fond.py                           # Traite toutes les séquences (GPU si disponible)
   python supprimer_fond.py --sequence anim_tree_00037 # Traite une séquence spécifique
+  python supprimer_fond.py --gpu                     # Force l'utilisation du GPU
+  python supprimer_fond.py --cpu                     # Force l'utilisation d'OpenCV
   python supprimer_fond.py --threads 4               # Utilise 4 threads par séquence
   python supprimer_fond.py --force                   # Sans confirmation
         """
@@ -354,7 +395,24 @@ Exemples d'utilisation:
         help="Ne pas demander de confirmation"
     )
     
+    parser.add_argument(
+        "--gpu",
+        action="store_true",
+        help="Forcer l'utilisation du GPU (arrêter si non disponible)"
+    )
+    
+    parser.add_argument(
+        "--cpu",
+        action="store_true",
+        help="Forcer l'utilisation du CPU (utiliser OpenCV)"
+    )
+    
     args = parser.parse_args()
+    
+    # Vérifier les arguments contradictoires
+    if args.gpu and args.cpu:
+        print("[ERREUR] Les options --gpu et --cpu sont mutuellement exclusives.")
+        sys.exit(1)
     
     # Afficher les informations
     print("[SUPPRESSION FOND] Suppresseur de fond automatique")
@@ -363,10 +421,19 @@ Exemples d'utilisation:
     print(f"Séquence: {args.sequence if args.sequence else 'toutes'}")
     print(f"Threads: {args.threads if args.threads else 'auto'}")
     
+    # Afficher le mode de traitement
+    if args.gpu:
+        print("Mode: GPU forcé")
+    elif args.cpu:
+        print("Mode: CPU forcé (OpenCV)")
+    else:
+        print("Mode: Auto (GPU si disponible, sinon OpenCV)")
+    
     # Demander confirmation sauf si --force
     if not args.force:
         print("\n[ATTENTION] Cette opération va supprimer le fond de toutes les images.")
-        print("[ATTENTION] Le modèle de suppression de fond sera téléchargé depuis Hugging Face si nécessaire.")
+        if not args.cpu:
+            print("[ATTENTION] Le modèle de suppression de fond sera téléchargé depuis Hugging Face si nécessaire.")
         
         reponse = input("\nVoulez-vous continuer ? (o/N): ").strip().lower()
         if reponse not in ['o', 'oui', 'y', 'yes']:
@@ -374,7 +441,7 @@ Exemples d'utilisation:
             sys.exit(0)
     
     # Lancer le traitement
-    traiter_sequences(args.sequence, args.threads)
+    traiter_sequences(args.sequence, args.threads, args.gpu, args.cpu)
 
 if __name__ == "__main__":
     main()

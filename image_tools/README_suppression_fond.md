@@ -24,9 +24,19 @@ Ce script permet de supprimer automatiquement le fond des séquences d'images PN
 
 ## Utilisation
 
-### Traiter toutes les séquences
+### Traiter toutes les séquences (mode auto)
 ```bash
 python supprimer_fond.py
+```
+
+### Forcer l'utilisation du GPU
+```bash
+python supprimer_fond.py --gpu
+```
+
+### Forcer l'utilisation d'OpenCV (CPU)
+```bash
+python supprimer_fond.py --cpu
 ```
 
 ### Traiter une séquence spécifique
@@ -60,15 +70,21 @@ output/
 
 ## Méthodes de suppression de fond
 
-### 1. Modèle de segmentation (par défaut)
+### 1. Modèle de segmentation IA (GPU uniquement)
 - Utilise un modèle de segmentation d'objets de Facebook
 - Plus précis pour les objets complexes
 - Nécessite une connexion internet pour le premier téléchargement
+- **Utilise uniquement le GPU** - ne fonctionne pas sur CPU
 
-### 2. Méthode OpenCV (fallback)
+### 2. Méthode OpenCV (CPU)
 - Utilise l'algorithme GrabCut d'OpenCV
 - Fonctionne hors ligne
 - Bon pour les objets centrés dans l'image
+- **Utilise uniquement le CPU**
+
+### 3. Mode automatique
+- **GPU disponible** : Utilise le modèle IA sur GPU
+- **GPU non disponible** : Utilise automatiquement OpenCV sur CPU
 
 ## Exemples de résultats
 
@@ -76,18 +92,25 @@ Les images de sortie sont au format PNG avec transparence (canal alpha), permett
 
 ## Performance
 
-- **Vitesse** : Environ 2-4 images par seconde (selon la méthode utilisée)
+- **Vitesse GPU** : Environ 5-10 images par seconde (modèle IA)
+- **Vitesse CPU** : Environ 3-4 images par seconde (OpenCV)
 - **Qualité** : Bonne qualité de suppression de fond
 - **Compatibilité** : Fonctionne sur Windows, Linux et macOS
 
 ## Dépannage
 
-### Erreur de modèle
-Si le modèle de segmentation ne se charge pas, le script utilisera automatiquement la méthode OpenCV.
+### GPU non disponible
+- Utilisez `--cpu` pour forcer l'utilisation d'OpenCV
+- Le mode automatique basculera sur OpenCV si le GPU n'est pas disponible
+
+### Erreur de modèle IA
+- Le script utilisera automatiquement la méthode OpenCV en fallback
+- Vérifiez votre connexion internet pour le téléchargement du modèle
 
 ### Problèmes de performance
 - Utilisez l'option `--threads` pour ajuster le nombre de threads
 - Sur GPU, les performances peuvent être améliorées
+- Utilisez `--gpu` pour forcer l'utilisation du GPU
 
 ### Images non traitées
 Vérifiez que les images source sont au format PNG et dans le bon dossier.
