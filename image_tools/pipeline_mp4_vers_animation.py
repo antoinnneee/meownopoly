@@ -82,7 +82,7 @@ def deplacer_dossier(source, destination, ecraser=True):
         print(f"[ERREUR] Impossible de déplacer {source} vers {destination}: {e}")
         return False
 
-def pipeline_complet(sequence_specifique=None, qualite=100, batch_size=4, nb_threads=None, loop=False, force=False):
+def pipeline_complet(sequence_specifique=None, qualite=100, batch_size=4, nb_threads=None, loop=False, force=False, use_lite=False, double_pass=False, use_rmbg=False, no_normalize=False, use_opencv=False):
     """
     Exécute le pipeline complet de transformation MP4 vers Animation WebP
     
@@ -93,6 +93,11 @@ def pipeline_complet(sequence_specifique=None, qualite=100, batch_size=4, nb_thr
         nb_threads (int, optional): Nombre de threads à utiliser
         loop (bool): Si True, boucle infinie pour l'animation
         force (bool): Si True, ne pas demander de confirmation
+        use_lite (bool): Si True, utilise BiRefNet_lite (plus rapide, moins précis)
+        double_pass (bool): Si True, applique la suppression de fond deux fois pour améliorer la qualité
+        use_rmbg (bool): Si True, utilise le modèle RMBG-2.0 au lieu de BiRefNet
+        no_normalize (bool): Si True, désactive la normalisation des images
+        use_opencv (bool): Si True, utilise OpenCV pour la suppression de fond (plus rapide, moins précis)
     """
     debut_total = time.time()
     
@@ -127,6 +132,14 @@ def pipeline_complet(sequence_specifique=None, qualite=100, batch_size=4, nb_thr
     
     print(f"[PIPELINE] Pipeline automatique MP4 → Animation WebP")
     print(f"Fichiers MP4 à traiter: {len(fichiers_mp4)}")
+    if use_opencv:
+        print(f"Modèle: OpenCV (rapide, moins précis)")
+    elif use_rmbg:
+        print(f"Modèle: RMBG-2.0")
+    else:
+        print(f"Modèle BiRefNet: {'Lite (rapide)' if use_lite else 'Normal (qualité maximale)'}")
+    print(f"Double passage suppression fond: {'Oui' if double_pass else 'Non'}")
+    print(f"Normalisation: {'Désactivée' if no_normalize else 'Activée'}")
     print(f"Qualité WebP: {qualite}%")
     print(f"Boucle animation: {'Oui' if loop else 'Non'}")
     print(f"Threads: {nb_threads if nb_threads else 'auto'}")
@@ -185,15 +198,34 @@ def pipeline_complet(sequence_specifique=None, qualite=100, batch_size=4, nb_thr
                 raise Exception("Échec du déplacement vers data/png_seq/")
             print(f"   Déplacé vers {sequence_data}")
             
-            # ÉTAPE 4: Suppression de fond
-            print(f"[ÉTAPE 4/7] Suppression de fond (BiRefNet GPU)...")
+            # ÉTAPE 4: Suppression de fond (simple ou double passage)
+            if use_opencv:
+                modele_desc = "OpenCV (rapide)"
+            elif use_rmbg:
+                modele_desc = "RMBG-2.0"
+            else:
+                modele_desc = "BiRefNet_lite (rapide)" if use_lite else "BiRefNet (qualité maximale)"
+            if double_pass:
+                print(f"[ÉTAPE 4/7] Suppression de fond - Premier passage ({modele_desc})...")
+            else:
+                print(f"[ÉTAPE 4/7] Suppression de fond ({modele_desc})...")
+            
             # Temporairement déplacer la séquence vers output/png_seq pour la suppression de fond
             temp_sequence = dossier_png_seq_output / nom_sequence
             if not deplacer_dossier(sequence_data, temp_sequence):
                 raise Exception("Échec du déplacement temporaire pour suppression de fond")
             
-            traiter_sequences(sequence_specifique=nom_sequence, nb_threads=nb_threads, 
-                            force_gpu=True, use_lite=False, batch_size=batch_size)
+            # Premier passage de suppression de fond
+            if use_opencv:
+                # Forcer l'utilisation d'OpenCV
+                traiter_sequences(sequence_specifique=nom_sequence, nb_threads=nb_threads, 
+                                force_cpu=True, use_lite=use_lite, batch_size=batch_size,
+                                use_rmbg=use_rmbg, no_normalize=no_normalize)
+            else:
+                # Utiliser les modèles IA
+                traiter_sequences(sequence_specifique=nom_sequence, nb_threads=nb_threads, 
+                                force_gpu=True, use_lite=use_lite, batch_size=batch_size,
+                                use_rmbg=use_rmbg, no_normalize=no_normalize)
             
             # Vérifier que la suppression de fond a fonctionné
             no_bg_output = dossier_no_bg_output / nom_sequence
@@ -201,12 +233,44 @@ def pipeline_complet(sequence_specifique=None, qualite=100, batch_size=4, nb_thr
                 raise Exception("Échec de la suppression de fond")
             
             nb_frames_no_bg = len(list(no_bg_output.glob("*.png")))
-            print(f"   {nb_frames_no_bg} frames traitées")
+            print(f"   Premier passage: {nb_frames_no_bg} frames traitées")
+            
+            # Deuxième passage si demandé
+            if double_pass:
+                print(f"[ÉTAPE 4.5/7] Suppression de fond - Deuxième passage ({modele_desc} GPU)...")
+                
+                # Déplacer le résultat du premier passage vers le dossier d'entrée pour le deuxième passage
+                temp_sequence_2 = dossier_png_seq_output / nom_sequence
+                if not deplacer_dossier(no_bg_output, temp_sequence_2):
+                    raise Exception("Échec du déplacement pour deuxième passage")
+                
+                # Deuxième passage de suppression de fond
+                if use_opencv:
+                    # Forcer l'utilisation d'OpenCV
+                    traiter_sequences(sequence_specifique=nom_sequence, nb_threads=nb_threads, 
+                                    force_cpu=True, use_lite=use_lite, batch_size=batch_size,
+                                    use_rmbg=use_rmbg, no_normalize=no_normalize)
+                else:
+                    # Utiliser les modèles IA
+                    traiter_sequences(sequence_specifique=nom_sequence, nb_threads=nb_threads, 
+                                    force_gpu=True, use_lite=use_lite, batch_size=batch_size,
+                                    use_rmbg=use_rmbg, no_normalize=no_normalize)
+                
+                # Vérifier que le deuxième passage a fonctionné
+                no_bg_output_2 = dossier_no_bg_output / nom_sequence
+                if not no_bg_output_2.exists() or not list(no_bg_output_2.glob("*.png")):
+                    raise Exception("Échec du deuxième passage de suppression de fond")
+                
+                nb_frames_no_bg_2 = len(list(no_bg_output_2.glob("*.png")))
+                print(f"   Deuxième passage: {nb_frames_no_bg_2} frames traitées")
+                print(f"   Double passage terminé: {nb_frames_no_bg_2} frames finales")
             
             # ÉTAPE 5: Déplacer vers data/png_to_webp/
             print(f"[ÉTAPE 5/7] Déplacement vers data/png_to_webp/...")
             png_to_webp_data = dossier_png_to_webp_data / nom_sequence
-            if not deplacer_dossier(no_bg_output, png_to_webp_data):
+            # Utiliser le bon dossier de sortie selon le nombre de passages
+            source_dossier = no_bg_output_2 if double_pass else no_bg_output
+            if not deplacer_dossier(source_dossier, png_to_webp_data):
                 raise Exception("Échec du déplacement vers data/png_to_webp/")
             print(f"   Déplacé vers {png_to_webp_data}")
             
@@ -277,9 +341,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Exemples d'utilisation:
-  python pipeline_mp4_vers_animation.py                    # Traite tous les MP4
+  python pipeline_mp4_vers_animation.py                    # Traite tous les MP4 avec BiRefNet normal
   python pipeline_mp4_vers_animation.py --sequence anim_tree_00038  # Traite un MP4 spécifique
-  python pipeline_mp4_vers_animation.py --qualite 80       # Qualité WebP 80%
+  python pipeline_mp4_vers_animation.py --lite             # Utilise BiRefNet_lite (plus rapide)
+  python pipeline_mp4_vers_animation.py --rmbg             # Utilise le modèle RMBG-2.0
+  python pipeline_mp4_vers_animation.py --opencv           # Utilise OpenCV (rapide, moins précis)
+  python pipeline_mp4_vers_animation.py --double-pass      # Double passage suppression fond
+  python pipeline_mp4_vers_animation.py --no-normalize     # Désactive la normalisation
+  python pipeline_mp4_vers_animation.py --quality 80       # Qualité WebP 80%
   python pipeline_mp4_vers_animation.py --loop             # Animation en boucle
   python pipeline_mp4_vers_animation.py --force            # Sans confirmation
         """
@@ -293,7 +362,7 @@ Exemples d'utilisation:
     )
     
     parser.add_argument(
-        "--qualite",
+        "--quality",
         type=int,
         default=100,
         choices=range(0, 101),
@@ -311,6 +380,7 @@ Exemples d'utilisation:
     parser.add_argument(
         "--threads",
         type=int,
+        default=8,
         metavar="N",
         help="Nombre de threads à utiliser (par défaut: auto)"
     )
@@ -319,6 +389,36 @@ Exemples d'utilisation:
         "--loop",
         action="store_true",
         help="Créer des animations en boucle infinie"
+    )
+    
+    parser.add_argument(
+        "--lite",
+        action="store_true",
+        help="Utiliser BiRefNet_lite (plus rapide, moins précis)"
+    )
+    
+    parser.add_argument(
+        "--double-pass",
+        action="store_true",
+        help="Appliquer la suppression de fond deux fois pour améliorer la qualité"
+    )
+    
+    parser.add_argument(
+        "--rmbg",
+        action="store_true",
+        help="Utiliser le modèle RMBG-2.0 au lieu de BiRefNet"
+    )
+    
+    parser.add_argument(
+        "--no-normalize",
+        action="store_true",
+        help="Désactiver la normalisation des images"
+    )
+    
+    parser.add_argument(
+        "--opencv",
+        action="store_true",
+        help="Utiliser OpenCV pour la suppression de fond (plus rapide, moins précis)"
     )
     
     parser.add_argument(
@@ -334,7 +434,15 @@ Exemples d'utilisation:
     print(f"Dossier source: data/mp4/")
     print(f"Dossier final: output/animation/")
     print(f"Séquence: {args.sequence if args.sequence else 'toutes'}")
-    print(f"Qualité WebP: {args.qualite}%")
+    if args.opencv:
+        print(f"Modèle: OpenCV (rapide, moins précis)")
+    elif args.rmbg:
+        print(f"Modèle: RMBG-2.0")
+    else:
+        print(f"Modèle BiRefNet: {'Lite (rapide)' if args.lite else 'Normal (qualité maximale)'}")
+    print(f"Double passage suppression fond: {'Oui' if args.double_pass else 'Non'}")
+    print(f"Normalisation: {'Désactivée' if args.no_normalize else 'Activée'}")
+    print(f"Qualité WebP: {args.quality}%")
     print(f"Boucle: {'Oui' if args.loop else 'Non'}")
     print(f"Threads: {args.threads if args.threads else 'auto'}")
     
@@ -352,11 +460,16 @@ Exemples d'utilisation:
     # Lancer le pipeline
     succes = pipeline_complet(
         sequence_specifique=args.sequence,
-        qualite=args.qualite,
+        qualite=args.quality,
         batch_size=args.batch_size,
         nb_threads=args.threads,
         loop=args.loop,
-        force=args.force
+        force=args.force,
+        use_lite=args.lite,
+        double_pass=args.double_pass,
+        use_rmbg=args.rmbg,
+        no_normalize=args.no_normalize,
+        use_opencv=args.opencv
     )
     
     if not succes:

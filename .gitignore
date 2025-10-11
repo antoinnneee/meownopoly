@@ -22,3 +22,6 @@ Meownopoly/.qtc_clangd/
 Meownopoly/bin
 Meownopoly/bin/*
 /image_tools/__pycache__
+image_tools/anim_tree_00001.webp
+image_tools/output.webp
+image_tools/anim_tree_00037.webp

@@ -19,6 +19,10 @@ import threading
 import time
 from transformers import AutoModelForImageSegmentation
 from torchvision import transforms
+import huggingface_hub
+
+huggingface_token = ""
+huggingface_hub.login(huggingface_token)
 
 # Verrou pour synchroniser l'affichage des messages
 print_lock = threading.Lock()
@@ -28,7 +32,7 @@ class BackgroundRemovalProcessor:
     Classe pour gérer la suppression de fond avec BiRefNet
     """
     
-    def __init__(self, device=None, use_lite=False, batch_size=4):
+    def __init__(self, device=None, use_lite=False, batch_size=2, use_rmbg=False, no_normalize=False):
         """
         Initialise le processeur de suppression de fond
         
@@ -36,6 +40,8 @@ class BackgroundRemovalProcessor:
             device (str, optional): Device à utiliser ('cuda', 'cpu', ou None pour auto-détection)
             use_lite (bool): Utiliser BiRefNet_lite (plus rapide, moins précis)
             batch_size (int): Taille du batch pour traitement par lots (si lite)
+            use_rmbg (bool): Si True, utilise le modèle RMBG-2.0 au lieu de BiRefNet
+            no_normalize (bool): Si True, désactive la normalisation des images
         """
         # Forcer l'utilisation du GPU si disponible, sinon utiliser OpenCV
         if device is None:
@@ -50,6 +56,8 @@ class BackgroundRemovalProcessor:
             self.use_gpu = (device == 'cuda' and torch.cuda.is_available())
         
         self.use_lite = use_lite
+        self.use_rmbg = use_rmbg
+        self.no_normalize = no_normalize
         self.batch_size = batch_size if use_lite else 1  # Batch uniquement pour lite
         self.model = None
         self.transform = None
@@ -67,10 +75,15 @@ class BackgroundRemovalProcessor:
             return
         
         try:
-            # Choisir le modèle selon le mode lite
-            if self.use_lite:
-                model_name = 'ZhengPeng7/BiRefNet_lite'
-                model_desc = 'BiRefNet_lite (rapide)'
+            # Choisir le modèle selon les options
+            if self.use_rmbg:
+                model_name = 'briaai/RMBG-2.0'
+                model_desc = 'RMBG-2.0'
+                torch.set_float32_matmul_precision(['high', 'highest'][0])
+            elif self.use_lite:
+#                model_name = 'ZhengPeng7/BiRefNet_lite'
+                model_name = 'ZhengPeng7/BiRefNet_512x512'
+                model_desc = 'BiRefNet_512x512 (rapide)'
             else:
                 model_name = 'ZhengPeng7/BiRefNet'
                 model_desc = 'BiRefNet (qualité maximale)'
@@ -91,11 +104,23 @@ class BackgroundRemovalProcessor:
                 self.model.half()
             
             # Définir les transformations pour BiRefNet
-            self.transform = transforms.Compose([
-                transforms.Resize((1024, 1024)),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-            ])
+            # Utiliser 512x512 pour BiRefNet_512x512, 1024x1024 pour BiRefNet standard
+            input_size = (512, 512) if self.use_lite else (1024, 1024)
+            
+            # Option: normalisation (recommandée) vs pas de normalisation
+            use_normalization = not self.no_normalize  # Utiliser le paramètre passé
+            
+            if use_normalization:
+                self.transform = transforms.Compose([
+                    transforms.Resize(input_size),
+                    transforms.ToTensor(),
+                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                ])
+            else:
+                self.transform = transforms.Compose([
+                    transforms.Resize(input_size),
+                    transforms.ToTensor()
+                ])
             
             with print_lock:
                 print(f"[MODEL] {model_desc} chargé avec succès sur GPU")
@@ -268,7 +293,7 @@ class BackgroundRemovalProcessor:
         mask2 = mask2 * 255
         
         # Appliquer une morphologie pour nettoyer le masque
-        kernel = np.ones((3,3), np.uint8)
+        kernel = np.ones((1,1), np.uint8)
         mask2 = cv2.morphologyEx(mask2, cv2.MORPH_CLOSE, kernel)
         mask2 = cv2.morphologyEx(mask2, cv2.MORPH_OPEN, kernel)
         
@@ -379,7 +404,10 @@ def traiter_sequence(sequence_path, output_base, processor, nb_threads=None):
                     erreurs += len(batch_paths)
         else:
             with print_lock:
-                print(f"[INFO] Traitement séquentiel avec BiRefNet (GPU)")
+                if processor.use_rmbg:
+                    print(f"[INFO] Traitement séquentiel avec RMBG-2.0 (GPU)")
+                else:
+                    print(f"[INFO] Traitement séquentiel avec BiRefNet (GPU)")
             
             # Traiter les images une par une
             for idx, image_path in enumerate(images, 1):
@@ -433,7 +461,7 @@ def traiter_sequence(sequence_path, output_base, processor, nb_threads=None):
     
     return images_traitees, erreurs
 
-def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False, force_cpu=False, use_lite=False, batch_size=4):
+def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False, force_cpu=False, use_lite=False, batch_size=4, use_rmbg=False, no_normalize=False):
     """
     Traite toutes les séquences d'images avec suppression de fond
     
@@ -444,6 +472,8 @@ def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False
         force_cpu (bool): Forcer l'utilisation du CPU (utiliser OpenCV)
         use_lite (bool): Utiliser BiRefNet_lite (plus rapide, moins précis)
         batch_size (int): Taille du batch pour BiRefNet_lite
+        use_rmbg (bool): Si True, utilise le modèle RMBG-2.0 au lieu de BiRefNet
+        no_normalize (bool): Si True, désactive la normalisation des images
     """
     # Définir les chemins
     dossier_png_seq = Path("output/png_seq")
@@ -495,7 +525,7 @@ def traiter_sequences(sequence_specifique=None, nb_threads=None, force_gpu=False
         else:
             device = 'cuda' if gpu_available else 'cpu'
         
-        processor = BackgroundRemovalProcessor(device=device, use_lite=use_lite, batch_size=batch_size)
+        processor = BackgroundRemovalProcessor(device=device, use_lite=use_lite, batch_size=batch_size, use_rmbg=use_rmbg, no_normalize=no_normalize)
     except Exception as e:
         print(f"[ERREUR] Impossible d'initialiser le processeur: {e}")
         return
@@ -584,6 +614,7 @@ Exemples d'utilisation:
         default=4,
         help="Taille du batch pour BiRefNet_lite (défaut: 4)"
     )
+    
     
     args = parser.parse_args()
     
