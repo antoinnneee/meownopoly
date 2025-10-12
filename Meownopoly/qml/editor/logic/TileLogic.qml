@@ -125,7 +125,7 @@ QtObject {
         var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
                                                                                         "decorationSettings": decorationParameter,
-                                                                                          "generalMA": mainMa
+                                                                                        "generalMA": mainMa
                                                                                     })
         if (newTile) {
             snapableTilesList.push(newTile)

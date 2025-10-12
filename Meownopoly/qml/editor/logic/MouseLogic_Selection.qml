@@ -81,6 +81,7 @@ MouseLogic_Base {
 
     function clickedLeft(mouse, drag)
     {
+        console.log("click left")
         mouse.accepted = true
         if (!(mouse.modifiers & Qt.ControlModifier))
         {
@@ -138,6 +139,10 @@ MouseLogic_Base {
                     // Mettre à jour la configuration de case si applicable
                     updateCaseConfiguration()
                 }
+            }
+            else
+            {
+                unselectSelectedElements()
             }
         }
         clickElement = []

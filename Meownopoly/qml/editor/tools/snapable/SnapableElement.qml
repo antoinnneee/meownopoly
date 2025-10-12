@@ -29,7 +29,11 @@ Rectangle {
     property alias dragArea: dragArea
 
     // Propriété pour stocker la valeur z originale
-    property DisplayParameter displaySettings : DisplayParameter { }
+    property ItemSnapable itemSnapable : ItemSnapable{ id: snapableParameters}
+
+    property alias displaySettings : snapableParameters.displayParameter
+
+//    property DisplayParameter displaySettings : DisplayParameter { }
 
     z:  (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer
 

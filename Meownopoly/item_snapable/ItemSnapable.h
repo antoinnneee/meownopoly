@@ -21,6 +21,7 @@ class ItemSnapable : public QObject
     Q_PROPERTY(Case* caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
+
     enum TileType {
         CaseTile,
         DecorationTile,
@@ -58,7 +59,7 @@ signals:
 
 private :
     Case * m_caseData = nullptr;
-    DisplayParameter * m_displayParameter = nullptr;
+    DisplayParameter * m_displayParameter = new DisplayParameter;
     DecorationParameter * m_decorationParameter = nullptr;
     QJsonObject m_json;
 };
