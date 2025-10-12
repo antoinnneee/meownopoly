@@ -31,6 +31,12 @@ MouseLogic_Selection {
                 changeMouseMode(EditorEnum.EM_NORMAL)
             }
         }
+        else
+        {
+            console.log("go back to normal selection mode")
+            changeMouseMode(EditorEnum.EM_NORMAL)
+        }
+
         clickElement = []
     }
 }
