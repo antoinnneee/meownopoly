@@ -11,9 +11,7 @@ import "snapable"
 
 SnapableElement {
     id: root
-    required property Case caseData
     type : ItemSnapable.CaseTile
-
 
     // Configuration du redimensionnement
     isResizable: true

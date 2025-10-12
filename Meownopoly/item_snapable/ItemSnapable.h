@@ -21,6 +21,8 @@ class ItemSnapable : public QObject
     Q_PROPERTY(Case* caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
+    Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
+
     enum TileType {
         CaseTile,
         DecorationTile,
@@ -51,16 +53,22 @@ public:
 
     QJsonObject getOriginalJson() const { return m_json; }
 
+    QUuid uniqueId() const;
+    void setUniqueId(const QUuid &newUniqueId);
+
 signals:
     void caseDataChanged();
     void displayParameterChanged();
     void decorationParameterChanged();
 
+    void uniqueIdChanged();
+
 private :
     Case * m_caseData = nullptr;
-    DisplayParameter * m_displayParameter = nullptr;
-    DecorationParameter * m_decorationParameter = nullptr;
+    DisplayParameter * m_displayParameter = new DisplayParameter;
+    DecorationParameter * m_decorationParameter = new DecorationParameter;
     QJsonObject m_json;
+    QUuid m_uniqueId;
 };
 
 #endif // ITEMSNAPABLE_H

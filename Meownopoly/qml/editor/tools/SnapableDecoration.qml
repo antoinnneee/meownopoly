@@ -18,17 +18,6 @@ SnapableElement {
 
     type : ItemSnapable.DecorationTile
 
-
-    property DecorationParameter decorationSettings : DecorationParameter {
-        decorationCategory: "decoration"
-        decorationType: "grass"
-        decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
-    }
-
-    // Component.onCompleted: {
-    //     AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount()
-    // }
-
     property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
 
     // MultiEffect properties - Color effects (always enabled)

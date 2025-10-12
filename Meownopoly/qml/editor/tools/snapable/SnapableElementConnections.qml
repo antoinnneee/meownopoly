@@ -15,7 +15,6 @@ Item {
 
     onNextElementsChanged: {
         nextElementsSegments.updateModel()
-
     }
     onPreviousElementsChanged: {
     }
