@@ -8,10 +8,8 @@ import MapLoader
 
 Item {
     id: saveLoadView
-    visible: contentArea.currentView === "saveLoad"
     width: parent.width
-    height: 250
-    anchors.top: titleSection.bottom
+    height: mapsContainer.height
 
     function refreshMapList(){
        mapsList.model = MapLoader.getAvailableMaps()
@@ -19,11 +17,14 @@ Item {
 
     Rectangle {
         id: mapsContainer
-        anchors.fill: parent
+        width: parent.width
+        height: headerSection.height + contentHeight + 20
         color: "#333333"
         radius: 6
         border.color: "#4A90E2"
         border.width: 1
+        
+        property int contentHeight: mapsList.visible ? Math.max(200, mapsList.contentHeight + 20) : 140
 
         // Header avec titre
         Rectangle {
@@ -72,14 +73,15 @@ Item {
             anchors.top: headerSection.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.bottom: parent.bottom
             anchors.margins: 10
+            height: Math.max(200, contentHeight)
             model: []
             spacing: 5
             clip: true
             focus: true
             interactive: true
             boundsBehavior: Flickable.StopAtBounds
+            visible: model.length > 0
 
             Component.onCompleted: {
                 refreshMapList()
@@ -91,6 +93,9 @@ Item {
                 policy: ScrollBar.AsNeeded
                 visible: mapsList.contentHeight > mapsList.height
                 interactive: true
+                anchors.rightMargin: 8
+                anchors.topMargin: 5
+                anchors.bottomMargin: 5
 
                 contentItem: Rectangle {
                     implicitWidth: 8
@@ -101,7 +106,7 @@ Item {
             }
 
             delegate: Button {
-                width: mapsList.width
+                width: mapsList.width - 20
                 height: 40
 
                 background: Rectangle {
@@ -128,6 +133,43 @@ Item {
                     } else {
                         console.error("La fonction loadMap n'est pas accessible")
                     }
+                }
+            }
+        }
+        
+        // Message "Aucune carte enregistrée" quand la liste est vide
+        Rectangle {
+            id: emptyStateMessage
+            anchors.top: headerSection.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: 10
+            anchors.topMargin: 20
+            height: 100
+            visible: mapsList.model.length === 0
+            
+            color: "#3a3a3a"
+            radius: 8
+            border.color: "#555555"
+            border.width: 1
+            
+            Column {
+                anchors.centerIn: parent
+                spacing: 10
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "📂"
+                    font.pixelSize: 32
+                    opacity: 0.5
+                }
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Aucune carte enregistrée"
+                    color: "#999999"
+                    font.pixelSize: 14
+                    font.italic: true
                 }
             }
         }

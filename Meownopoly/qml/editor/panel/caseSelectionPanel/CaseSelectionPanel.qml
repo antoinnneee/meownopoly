@@ -17,6 +17,7 @@ EditorBottomPanel {
     property string searchText: ""
     property alias csp_contentArea: csp_contentArea
     property alias connectionsConfigSection: csp_contentArea.connectionsConfigSection  // Exposer le panneau de connexions
+    property alias currentTabIndex: csp_contentArea.currentTabIndex
 //    isExpanded: true
 
     // Signaux

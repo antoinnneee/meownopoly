@@ -31,6 +31,7 @@ Rectangle {
     // Propriété pour stocker la valeur z originale
     property DisplayParameter displaySettings : DisplayParameter { }
 
+
     z:  (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer
 
     property TileType type

@@ -375,8 +375,6 @@ Rectangle {
                 logic.mouseLogic.selectedElements.push(newCaseTile)
                 // Mettre à jour la configuration de case si applicable
                 logic.mouseLogic.updateCaseConfiguration()
-
-
             }
             return;
         }

@@ -84,11 +84,32 @@ Rectangle {
         z: 10
 
         logic: root.logic
+        
+        // Synchroniser l'index du panel actif
+        currentPanelIndex: root.currentPanelIndex
+        
+        // Synchroniser les onglets des panels
+        assetTabIndex: assetPanel.currentTabIndex
+        caseTabIndex: casePanel.currentTabIndex
+        mapTabIndex: mapPanel.currentTabIndex
 
         onButtonClicked: function(index) {
             console.log("Bouton cliqué avec index : " + index);
             // Changer le panneau affiché en fonction de l'index du bouton
             root.currentPanelIndex = index;
+        }
+        
+        // Gérer les changements d'onglets
+        onAssetTabChanged: function(tabIndex) {
+            assetPanel.currentTabIndex = tabIndex
+        }
+        
+        onCaseTabChanged: function(tabIndex) {
+            casePanel.currentTabIndex = tabIndex
+        }
+        
+        onMapTabChanged: function(tabIndex) {
+            mapPanel.currentTabIndex = tabIndex
         }
     }
 
