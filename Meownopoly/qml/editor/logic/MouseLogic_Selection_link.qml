@@ -18,7 +18,7 @@ MouseLogic_Selection {
         var deltaX = groupeSelection.x
         var deltaY = groupeSelection.y
         if (clickElement.length > 0) {
-            if (clickElement[0] != linkSourceCase)
+            if (clickElement[0] !== linkSourceCase)
             {
                 console.log(clickElement[0], linkSourceCase)
                 logic.tileLogic.createSnapableLink(linkSourceCase, clickElement[0], kind)

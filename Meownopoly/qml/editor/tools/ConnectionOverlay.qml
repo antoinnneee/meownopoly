@@ -9,6 +9,8 @@ Shape {
     required property var fromElement
     required property var toElement
     
+    property bool selected: false
+
     // Propriétés calculées pour les positions
     property real startX: fromElement ? fromElement.globalCenterX : 0
     property real endX: toElement ? toElement.globalCenterX : 0
@@ -38,7 +40,7 @@ Shape {
         dotLine.pathElements = []
     }
 
-    z: 20000
+    z: (selected) ? 20000 : 10000
 
     // ColorAnimation {
     //     from: "red"
@@ -63,9 +65,10 @@ Shape {
     }
     ShapePath {
         id: shapePath
-        strokeColor: "#96e78383"
+        strokeColor:(connectionOverlay.selected) ? "white" : "#96e78383"
         strokeWidth: 1
         capStyle: ShapePath.RoundCap
+        joinStyle: ShapePath.RoundJoin
         property alias stop1Color: stop1.color
         property alias stop2Color: stop2.color
         property alias stop1: stop1
@@ -76,9 +79,9 @@ Shape {
             y1: connectionOverlay.startY
             x2: connectionOverlay.endX
             y2: connectionOverlay.endY
-            GradientStop { id: stop0; position: 0.0; color: "blue" }
-            GradientStop { id: stop1; position: 0.0; color: "red" }
-            GradientStop { id: stop2;position: 1.0; color: "blue" }
+            GradientStop { id: stop0; position: 0.0; color: connectionOverlay.selected ? "#4A9FFF" : "#6DB3F2" }
+            GradientStop { id: stop1; position: 0.0; color: connectionOverlay.selected ? "#B565D8" : "#9B7EBD" }
+            GradientStop { id: stop2;position: 1.0; color: connectionOverlay.selected ? "#4A9FFF" : "#6DB3F2" }
         }
 
         fillRule: ShapePath.WindingFill
@@ -91,7 +94,9 @@ Shape {
                 Qt.point(connectionOverlay.endX - connectionOverlay.perpX * connectionOverlay.halfWidth, 
                          connectionOverlay.endY - connectionOverlay.perpY * connectionOverlay.halfWidth),
                 Qt.point(connectionOverlay.startX - connectionOverlay.perpX * connectionOverlay.halfWidth, 
-                         connectionOverlay.startY - connectionOverlay.perpY * connectionOverlay.halfWidth)
+                         connectionOverlay.startY - connectionOverlay.perpY * connectionOverlay.halfWidth),
+                Qt.point(connectionOverlay.startX + connectionOverlay.perpX * connectionOverlay.halfWidth, 
+                         connectionOverlay.startY + connectionOverlay.perpY * connectionOverlay.halfWidth)
             ]
         }
     }
