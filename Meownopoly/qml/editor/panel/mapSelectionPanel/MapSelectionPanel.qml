@@ -10,8 +10,8 @@ import "../editorBottomPanel"
 EditorBottomPanel {
     id: root
 
-
     property bool showEffectsPanel: true
+    property alias currentTabIndex: contentArea.currentTabIndex
 
     // Signals
 
@@ -20,6 +20,7 @@ EditorBottomPanel {
 
     // Title bar
      titleBar: MSP_TitleBar {
+         id: titleBar
          anchors.left: parent.left
          anchors.right: parent.horizontalCenter
          anchors.top: parent.top
@@ -38,6 +39,7 @@ EditorBottomPanel {
 
             isExpanded: true
             searchText: root.searchText
+            titleHeight: titleBar.height
 
     }
 }

@@ -45,6 +45,7 @@ Rectangle {
     property alias decorationSettings : snapableParameters.decorationParameter
 //    property DisplayParameter displaySettings : DisplayParameter { }
 
+
     z:  (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer
 
     property TileType type

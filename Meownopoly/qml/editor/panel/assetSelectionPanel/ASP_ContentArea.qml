@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 
 
@@ -20,6 +21,9 @@ EBP_Content {
     property int titleHeight
     property alias visualEffectsPanel : effectsPanel
     signal effectChanged()
+    
+    // Propriété pour gérer l'onglet actif (0=Visual Effects, 1=Transform)
+    property int currentTabIndex: 0
 
     sidePanelRatio: 0.5
 
@@ -69,76 +73,105 @@ EBP_Content {
         }
     }
     
-    sidePanel: ScrollView {
-        id: effectsScrollView
-        anchors.top: parent.top
-        anchors.topMargin: -contentArea.titleHeight
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        width: parent.width
-        contentHeight: effectsPanel.height
-
-        visible: root.showEffectsPanel
-
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
-        ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-
-        VisualEffectsPanel {
-            id: effectsPanel
-            anchors.left: parent.left
-            anchors.right: secondarySection.left
-            anchors.leftMargin: 0
-            anchors.rightMargin: 6 // Account for scrollbar
-
-            onEffectChanged: {
-                // Optional: emit signal when effects change
-                contentArea.effectChanged()
-            }
-        }
-
-        // Main layout
-        Column {
-            id: secondarySection
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.rightMargin: 20
-            anchors.topMargin: 0
-            width: parent.width/2
-            // // Transform Section
-            VEP_TransformSection {
-                id: transformSection
-                anchors.right: parent.right
-                anchors.left: parent.left
-
-                onEffectChanged: {
-//                    root.effectChanged()
-                    contentArea.effectChanged()
+    sidePanel: Item {
+        anchors.fill: parent
+        
+        // StackLayout pour les contenus des onglets (contrôlé depuis MenuSelector)
+        StackLayout {
+            id: stackLayout
+            anchors.fill: parent
+            anchors.topMargin: -contentArea.titleHeight
+            currentIndex: contentArea.currentTabIndex
+            
+            // Onglet Visual Effects Panel
+            ScrollView {
+                id: effectsScrollView
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                contentHeight: effectsPanelContainer.height
+                clip: true
+                
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+                
+                Item {
+                    id: effectsPanelContainer
+                    width: effectsScrollView.availableWidth
+                    height: effectsPanel.height
+                    
+                    VisualEffectsPanel {
+                        id: effectsPanel
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 16
+                        
+                        onEffectChanged: {
+                            contentArea.effectChanged()
+                        }
+                    }
                 }
             }
-            // Advanced Effects Section
-            VEP_AdvancedEffectsSection {
-                id: advancedEffectsSection
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                onEffectChanged: {
-                    contentArea.effectChanged()
-                }
-            }
-            // Reset buttons panel
-            VEP_ResetButtonsPanel {
-                id: resetButtonsPanel
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                onEffectChanged: {
-                    contentArea.effectChanged()
+            
+            // Onglet Transform & Advanced
+            ScrollView {
+                id: transformScrollView
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                contentHeight: transformContainer.height
+                clip: true
+                
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+                
+                Item {
+                    id: transformContainer
+                    width: transformScrollView.availableWidth
+                    height: secondarySection.height + 20
+                    
+                    Column {
+                        id: secondarySection
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 16
+                        spacing: 10
+                        
+                        // Transform Section
+                        VEP_TransformSection {
+                            id: transformSection
+                            width: parent.width
+                            
+                            onEffectChanged: {
+                                contentArea.effectChanged()
+                            }
+                        }
+                        
+                        // Advanced Effects Section
+                        VEP_AdvancedEffectsSection {
+                            id: advancedEffectsSection
+                            width: parent.width
+                            
+                            onEffectChanged: {
+                                contentArea.effectChanged()
+                            }
+                        }
+                        
+                        // Reset buttons panel
+                        VEP_ResetButtonsPanel {
+                            id: resetButtonsPanel
+                            width: parent.width
+                            
+                            onEffectChanged: {
+                                contentArea.effectChanged()
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-
-    // Visual Effects Panel in ScrollView
 }
 
