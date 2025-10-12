@@ -118,6 +118,7 @@ Rectangle {
             
             delegate: Rectangle {
                 required property int index
+                required property var modelData
                 width: ListView.view.width
                 height: 36
                 color: itemMouseArea.containsMouse ? "#444444" : "#333333"

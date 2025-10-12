@@ -163,6 +163,28 @@ QtObject {
     }
 
 
+
+ /*
+============================
+====== Gestion des connections ======
+============================
+*/
+    function createSnapableLink(source, target, kind)
+    {
+        if (!source || !target) {
+            return
+        }
+        if (source === target) {
+            return
+        }
+
+        if (kind === "previous") {
+            source.connectionManager.addPreviousElement(target)
+        } else if (kind === "next") {
+            source.connectionManager.addNextElement(target)
+        }
+    }
+
     function builtConnections()
     {
         for (var i = 0; i < snapableTilesList.length; i++) {
@@ -187,12 +209,6 @@ QtObject {
             }
         }
     }
-
-    /*
-============================
-= Gestion des connections =
-============================
-*/
     function deleteElementsConnections(element) {
         var nexts = element.connectionManager.nextElements || []
         // itere sur les segments de connexion element->next

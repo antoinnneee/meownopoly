@@ -317,6 +317,7 @@ Rectangle {
         function onConnectionRequested(kind) {
 
             var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
+
             /* save selected element to reasign it */
             var selectedElements = []
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
@@ -324,8 +325,9 @@ Rectangle {
             }
             console.log("onConnectionRequested", kind, selectedElements)
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_SELECTION_LINK)
-            logic.mouseLogic.kind = kind;
-            logic.mouseLogic.setSelectedElementList(selectedElements);
+            logic.mouseLogic.kind = kind
+            logic.mouseLogic.setSelectedElementList(selectedElements)
+            logic.mouseLogic.linkSourceCase = targetElement
             /*
             if (!selectedElements || !targetElement) return
 
