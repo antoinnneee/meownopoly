@@ -6,6 +6,7 @@ import "../"
 import ItemSnapable
 import TileType
 import DisplayParameter
+import DecorationParameter
 
 Rectangle {
     id: snapableElement
@@ -29,10 +30,19 @@ Rectangle {
     property alias dragArea: dragArea
 
     // Propriété pour stocker la valeur z originale
+
     property ItemSnapable itemSnapable : ItemSnapable{ id: snapableParameters}
 
+/*
+    property DecorationParameter decorationSettings : DecorationParameter {
+        decorationCategory: "decoration"
+        decorationType: "grass"
+        decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
+    }
+    */
+    property alias caseData: snapableParameters.caseData
     property alias displaySettings : snapableParameters.displayParameter
-
+    property alias decorationSettings : snapableParameters.decorationParameter
 //    property DisplayParameter displaySettings : DisplayParameter { }
 
     z:  (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer

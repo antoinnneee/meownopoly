@@ -15,6 +15,8 @@
 
 ItemSnapable::ItemSnapable() {
     qDebug() << "New ItemSnapable created";
+    m_uniqueId = QUuid::createUuid();
+
 }
 
 void ItemSnapable::registerQml()
@@ -30,7 +32,6 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
 {
     m_caseData = caseData;
     m_displayParameter = displayParameter;
-    m_decorationParameter = nullptr;
 }
 
 ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent)
@@ -69,6 +70,9 @@ DisplayParameter *ItemSnapable::displayParameter() const {
 }
 
 void ItemSnapable::setDisplayParameter(DisplayParameter * displayParameter) {
+    qDebug() << "set display settings";
+    if (m_displayParameter)
+        delete m_displayParameter;
     m_displayParameter = displayParameter; emit displayParameterChanged();
 }
 
@@ -77,6 +81,8 @@ DecorationParameter *ItemSnapable::decorationParameter() const {
 }
 
 void ItemSnapable::setDecorationParameter(DecorationParameter * decorationParameter) {
+    if (m_decorationParameter)
+        delete m_decorationParameter;
     m_decorationParameter = decorationParameter; emit decorationParameterChanged();
 }
 
@@ -147,4 +153,17 @@ QString ItemSnapable::toJSON()
 void ItemSnapable::print()
 {
     qDebug() << "ItemSnapable: " << m_caseData->toJSON() << " " << m_displayParameter->toJSON();
+}
+
+QUuid ItemSnapable::uniqueId() const
+{
+    return m_uniqueId;
+}
+
+void ItemSnapable::setUniqueId(const QUuid &newUniqueId)
+{
+    if (m_uniqueId == newUniqueId)
+        return;
+    m_uniqueId = newUniqueId;
+    emit uniqueIdChanged();
 }
