@@ -21,6 +21,8 @@ Rectangle {
     
     // Signals
     signal removeElement(var element, int index)
+    signal elementHovered(var element)
+    signal elementUnhovered()
     
     color: "#333333"
     radius: 8
@@ -132,6 +134,12 @@ Rectangle {
                     id: itemMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
+                    onEntered: {
+                        root.elementHovered(modelData)
+                    }
+                    onExited: {
+                        root.elementUnhovered()
+                    }
                 }
                 
                 RowLayout {

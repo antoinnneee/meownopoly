@@ -10,6 +10,7 @@ Rectangle {
     // Properties
     property var targetSnapableElement: null
     property bool updatingValues: false
+    property var hoveredConnectionElement: null
     
     // Visual properties
     color: "#2a2a2a"
@@ -176,6 +177,22 @@ Rectangle {
                             root.targetSnapableElement.connectionManager.removePreviousElement(element)
                         }
                     }
+                    
+                    onElementHovered: function(element) {
+                        root.hoveredConnectionElement = element
+                        // Pour les éléments précédents, c'est leur connectionManager qui crée l'overlay
+                        if (element && element.connectionManager) {
+                            element.connectionManager.hoveredElement = root.targetSnapableElement
+                        }
+                    }
+                    
+                    onElementUnhovered: {
+                        // Réinitialiser tous les hoveredElement
+                        if (root.hoveredConnectionElement && root.hoveredConnectionElement.connectionManager) {
+                            root.hoveredConnectionElement.connectionManager.hoveredElement = null
+                        }
+                        root.hoveredConnectionElement = null
+                    }
                 }
                 
                 // Section des éléments suivants
@@ -200,6 +217,22 @@ Rectangle {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
                             root.targetSnapableElement.connectionManager.removeNextElement(element)
                         }
+                    }
+                    
+                    onElementHovered: function(element) {
+                        root.hoveredConnectionElement = element
+                        // Pour les éléments suivants, c'est le targetSnapableElement.connectionManager qui crée l'overlay
+                        if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
+                            root.targetSnapableElement.connectionManager.hoveredElement = element
+                        }
+                    }
+                    
+                    onElementUnhovered: {
+                        // Réinitialiser tous les hoveredElement
+                        if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
+                            root.targetSnapableElement.connectionManager.hoveredElement = null
+                        }
+                        root.hoveredConnectionElement = null
                     }
                 }
             }

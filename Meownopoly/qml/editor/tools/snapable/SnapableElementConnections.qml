@@ -6,6 +6,7 @@ Item {
     property var parentElement
     property var previousElements: []
     property var nextElements: []
+    property var hoveredElement: null
 
     signal nextElementAdded(var element)
     signal previousElementAdded(var element)
@@ -47,6 +48,7 @@ Item {
         delegate: ConnectionOverlay{
             x: -parentElement.x
             y: -parentElement.y
+            selected: toElement === connectionManager.hoveredElement
         }
     }
 
