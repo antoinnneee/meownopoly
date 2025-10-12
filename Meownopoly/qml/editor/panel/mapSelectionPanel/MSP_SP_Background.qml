@@ -10,18 +10,10 @@ import AssetManager 1.0
 
 Item {
     id: backgroundView
-    visible: contentArea.currentView === "background"
     width: parent.width
     height: backgroundLayout.height
-    anchors.top: titleSection.bottom
 
     property string currentThemeMode: "default" // "default" or "custom"
-
-    Rectangle {
-        anchors.fill: parent
-        color: "transparent"
-        border.color: "red"
-    }
 
     Column {
         id: backgroundLayout

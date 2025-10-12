@@ -8,11 +8,15 @@ import MapInfo
 
 Item {
     id: generalParamsView
-    visible: contentArea.currentView === "general"
     width: parent.width
     height: generalLayout.height
-    anchors.top: titleSection.bottom
 
+    // Propriétés pour stocker les informations de la carte
+    property string mapName: logic.mapInfo.mapName
+    property string mapVersion: logic.mapInfo.version
+    property string dateOfCreation: logic.mapInfo.mapCreationDate
+    property string dateOfLastModification: logic.mapInfo.mapLastModified
+    property string description: logic.mapInfo.mapDescription
 
     signal newMap()
 
@@ -105,7 +109,7 @@ Item {
                             }
                             
                             onClicked: {
-                                console.log("Saving map:", contentArea.mapName, "v" + contentArea.mapVersion)
+                                console.log("Saving map:", mapName, "v" + mapVersion)
                                 if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                                     var mapInfo = logic.mapInfo
                                     mapInfo.mapName = mapName
@@ -367,7 +371,9 @@ Item {
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
-                        anchors.margins: 2
+                        anchors.rightMargin: 8
+                        anchors.topMargin: 5
+                        anchors.bottomMargin: 5
                         width: 8
                         policy: ScrollBar.AsNeeded
                         active: true

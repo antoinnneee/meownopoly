@@ -11,9 +11,7 @@ import "snapable"
 
 SnapableElement {
     id: root
-    required property Case caseData
     type : ItemSnapable.CaseTile
-
 
     // Configuration du redimensionnement
     isResizable: true
@@ -69,8 +67,6 @@ SnapableElement {
         console.log("Syncing connections for case:", root.caseData.name)
         console.log("- Next cases count:", root.caseData.next ? root.caseData.next.length : 0)
         console.log("- Previous cases count:", root.caseData.prev ? root.caseData.prev.length : 0)
-
-
     }
 
     CaseTile {

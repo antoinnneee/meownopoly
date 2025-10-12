@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 import "../assetSelectionPanel"
 
@@ -14,10 +15,15 @@ EBP_Content {
     searchText: ""
     isExpanded: true
     property alias caseConfigurationPanelSection: caseConfigurationPanelSection  // Exposer pour l'accès externe
+    property alias connectionsConfigSection: connectionsConfigSection  // Exposer pour l'accès externe
+    
+    // Propriétés pour les onglets
+    property int currentTabIndex: 0  // 0=Case, 1=Connexions
     
     // Signaux
     signal caseTypeSelected(int type, string typeName)
     signal caseTypeCleared()
+    signal connectionRequested(string kind)  // Propager les demandes de connexion
     sidePanelRatio: 0.5
 
     property int titleHeight
@@ -46,18 +52,38 @@ EBP_Content {
         }
     }
 
-    sidePanel: CaseConfigurationPanelSection{
-        id: caseConfigurationPanelSection
+    sidePanel: Item {
         anchors.fill: parent
-        anchors.topMargin: -contentArea.titleHeight
         
-        // Gérer le changement de type de case
-        onRequestChangeType: function(newType) {
-            if (targetCase) {
-                console.log("Changing case type to:", newType)
-                targetCase.type = newType
-                // Mettre à jour les contrôles pour refléter le nouveau type
-                updateControls()
+        // StackLayout pour les contenus des onglets (contrôlé depuis MenuSelector)
+        StackLayout {
+            id: stackLayout
+            anchors.fill: parent
+            anchors.topMargin: -contentArea.titleHeight
+            currentIndex: contentArea.currentTabIndex
+            
+            // Onglet Configuration Case
+            CaseConfigurationPanelSection {
+                id: caseConfigurationPanelSection
+                
+                // Gérer le changement de type de case
+                onRequestChangeType: function(newType) {
+                    if (targetCase) {
+                        console.log("Changing case type to:", newType)
+                        targetCase.type = newType
+                        // Mettre à jour les contrôles pour refléter le nouveau type
+                        updateControls()
+                    }
+                }
+            }
+            
+            // Onglet Configuration Connexions
+            ConnectionsConfigurationSection {
+                id: connectionsConfigSection
+                
+                onRequestAddConnection: function(kind) {
+                    contentArea.connectionRequested(kind)
+                }
             }
         }
     }
