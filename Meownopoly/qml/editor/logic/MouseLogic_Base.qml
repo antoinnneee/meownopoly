@@ -69,7 +69,7 @@ QtObject {
     }
     function changeMouseMode(mode)
     {
-        unselectSelectedElements()
+        unselectAllElements()
         logic.editorMouseMode = mode
     }
 
