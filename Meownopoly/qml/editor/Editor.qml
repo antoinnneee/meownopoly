@@ -126,7 +126,7 @@ Rectangle {
         logic: logic
         workArea: workArea
         // caseConfigPanel: caseConfigPanel
-        connectionsPanel: connectionsPanel
+        selectionPanel: selectionPanel
     }
 
 
@@ -310,29 +310,36 @@ Rectangle {
     }
 
 
-    // Panneau de configuration des connexions
-    ConnectionsConfigurationPanel {
-        id: connectionsPanel
+    // Gestion des connexions via le SelectionPanel
+    Connections {
+        target: selectionPanel
+        function onConnectionRequested(kind) {
 
-        height: parent.height
-        width: parent.width/2
+            var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
 
-        function selectElementToConnect(kind) {
-            var selectedElements = logic.mouseLogic.selectedElements
-            // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
-            if (!selectedElements || !connectionsPanel.targetElement) return
+            /* save selected element to reasign it */
+            var selectedElements = []
+            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                selectedElements.push(logic.mouseLogic.selectedElements[i])
+            }
+            console.log("onConnectionRequested", kind, selectedElements)
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_SELECTION_LINK)
+            logic.mouseLogic.kind = kind
+            logic.mouseLogic.setSelectedElementList(selectedElements)
+            logic.mouseLogic.linkSourceCase = targetElement
+            /*
+            if (!selectedElements || !targetElement) return
 
             for (var i = 0; i < selectedElements.length; i++) {
-                if (selectedElements[i] !== connectionsPanel.targetElement) {
+                if (selectedElements[i] !== targetElement) {
                     if (kind === "previous") {
-                        connectionsPanel.targetElement.connectionManager.addPreviousElement(selectedElements[i])
+                        targetElement.connectionManager.addPreviousElement(selectedElements[i])
                     } else if (kind === "next") {
-                        connectionsPanel.targetElement.connectionManager.addNextElement(selectedElements[i])
+                        targetElement.connectionManager.addNextElement(selectedElements[i])
                     }
                 }
             }
-
-
+            */
         }
     }
 

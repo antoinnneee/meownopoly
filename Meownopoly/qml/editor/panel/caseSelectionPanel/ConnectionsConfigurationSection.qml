@@ -1,0 +1,228 @@
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+
+pragma ComponentBehavior: Bound
+
+Rectangle {
+    id: root
+    
+    // Properties
+    property var targetSnapableElement: null
+    property bool updatingValues: false
+    
+    // Visual properties
+    color: "#2a2a2a"
+    radius: 8
+    border.color: "#444444"
+    border.width: 1
+    
+    // Signals
+    signal requestAddConnection(string kind)
+    signal configurationChanged()
+    
+    // Main scrollable content
+    ScrollView {
+        anchors.fill: parent
+        anchors.margins: 10
+        contentWidth: availableWidth
+        clip: true
+        
+        Column {
+            id: mainLayout
+            width: parent.width
+            spacing: 10
+            
+            // Title
+            Text {
+                id: titleText
+                text: "Configuration des Connexions"
+                color: "#ffffff"
+                font.pixelSize: 16
+                font.bold: true
+                width: parent.width
+            }
+            
+            // Section des actions
+            Rectangle {
+                width: parent.width
+                height: 60
+                color: "#333333"
+                radius: 8
+                border.color: "#555555"
+                border.width: 1
+                
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 12
+                    
+                    // Bouton ajouter précédent
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 36
+                        radius: 8
+                        color: addPrevBtn.containsMouse ? "#5a67d8" : "#667eea"
+                        
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: addPrevBtn.containsMouse ? "#667eea" : "#74b9ff" }
+                            GradientStop { position: 1.0; color: addPrevBtn.containsMouse ? "#5a67d8" : "#6c5ce7" }
+                        }
+                        
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        
+                        MouseArea {
+                            id: addPrevBtn
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                if (root.targetSnapableElement) {
+                                    root.requestAddConnection("previous")
+                                }
+                            }
+                        }
+                        
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            
+                            Text {
+                                text: "⬅️"
+                                font.pixelSize: 12
+                            }
+                            
+                            Label {
+                                text: "Ajouter Précédent"
+                                color: "#ffffff"
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+                        }
+                    }
+                    
+                    // Bouton ajouter suivant
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 36
+                        radius: 8
+                        color: addNextBtn.containsMouse ? "#00a085" : "#00b894"
+                        
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: addNextBtn.containsMouse ? "#00b894" : "#55efc4" }
+                            GradientStop { position: 1.0; color: addNextBtn.containsMouse ? "#00a085" : "#00b894" }
+                        }
+                        
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        
+                        MouseArea {
+                            id: addNextBtn
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                console.log("next button clicked")
+                                if (root.targetSnapableElement) {
+                                    console.log("add next request")
+                                    root.requestAddConnection("next")
+                                }
+                            }
+                        }
+                        
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            
+                            Text {
+                                text: "➡️"
+                                font.pixelSize: 12
+                            }
+                            
+                            Label {
+                                text: "Ajouter Suivant"
+                                color: "#ffffff"
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Sections des éléments côte à côte
+            RowLayout {
+                width: parent.width
+                height: 300
+                spacing: 10
+                
+                // Section des éléments précédents
+                ConnectionListSection {
+                    id: previousSection
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    
+                    title: "Éléments Précédents"
+                    emptyMessage: "Aucun élément précédent"
+                    emptyIcon: "📭"
+                    directionIcon: "⬅️"
+                    headerColor: "#74b9ff"
+                    badgeColor: "#74b9ff"
+                    connectionType: "previous"
+                    
+                    listModel: root.targetSnapableElement && root.targetSnapableElement.connectionManager 
+                        ? root.targetSnapableElement.connectionManager.previousElements 
+                        : []
+                    
+                    onRemoveElement: function(element, index) {
+                        if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
+                            root.targetSnapableElement.connectionManager.removePreviousElement(element)
+                        }
+                    }
+                }
+                
+                // Section des éléments suivants
+                ConnectionListSection {
+                    id: nextSection
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    
+                    title: "Éléments Suivants"
+                    emptyMessage: "Aucun élément suivant"
+                    emptyIcon: "📪"
+                    directionIcon: "➡️"
+                    headerColor: "#00b894"
+                    badgeColor: "#00b894"
+                    connectionType: "next"
+                    
+                    listModel: root.targetSnapableElement && root.targetSnapableElement.connectionManager 
+                        ? root.targetSnapableElement.connectionManager.nextElements 
+                        : []
+                    
+                    onRemoveElement: function(element, index) {
+                        if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
+                            root.targetSnapableElement.connectionManager.removeNextElement(element)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Functions
+    function setTargetElement(snapableElement) {
+        if (snapableElement) {
+            targetSnapableElement = snapableElement
+            updateControls()
+        }
+    }
+
+    function updateControls() {
+        if (!targetSnapableElement) return
+        
+        updatingValues = true
+        // Les ListView se mettront à jour automatiquement via les bindings
+        updatingValues = false
+    }
+    
+    function clearTarget() {
+        targetSnapableElement = null
+    }
+}

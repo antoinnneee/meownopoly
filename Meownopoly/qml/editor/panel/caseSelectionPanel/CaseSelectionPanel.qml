@@ -16,11 +16,13 @@ EditorBottomPanel {
     property string currentView: "categories"
     property string searchText: ""
     property alias csp_contentArea: csp_contentArea
+    property alias connectionsConfigSection: csp_contentArea.connectionsConfigSection  // Exposer le panneau de connexions
 //    isExpanded: true
 
     // Signaux
     signal caseTypeSelected(int type, string typeName)
     signal caseTypeCleared()
+    signal connectionRequested(string kind)  // Propager les demandes de connexion
 
     // Title bar
      titleBar: CSP_TitleBar {
@@ -82,17 +84,12 @@ EditorBottomPanel {
                 root.selectedCaseTypeName = ""
                 root.caseTypeCleared()
             }
+            
+            onConnectionRequested: function(kind) {
+                root.connectionRequested(kind)
+            }
     }
 
-    // Fonction pour obtenir le type de case sélectionné
-    function getSelectedCaseType() {
-        return root.selectedCaseType
-    }
-    
-    // Fonction pour obtenir le nom du type de case sélectionné
-    function getSelectedCaseTypeName() {
-        return root.selectedCaseTypeName
-    }
     
     // Fonction pour effacer la sélection
     function clearSelection() {

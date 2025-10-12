@@ -38,4 +38,11 @@ MouseLogic_Base {
         mouse.accepted = true
     }
 
+    function changeMouseMode(mode)
+    {
+        unselectSelectedElements()
+        logic.editorMouseMode = mode
+    }
+
+
 }

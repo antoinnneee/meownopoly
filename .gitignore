@@ -1,5 +1,17 @@
 Meownopoly/debug/
 /Meownopoly/build
+/Meownopoly/Meownopoly.pro.user.8506b9e
+/image_tools/convertir_webp.py
+/image_tools/data/*/*.png
+/image_tools/data/*/*.mp4
+/image_tools/data/**/*.mp4
+/image_tools/data/**/*.png
+/image_tools/data/output
+/image_tools/data/**/*.webp
+/image_tools/output/**/*.png
+/image_tools/output/**/*.mp4
+/image_tools/output/**/*.webp
+/image_tools/models_cache
 *.user
 Meownopoly/Meownopoly.pro.user
 Meownopoly/.qtc_clangd/
@@ -9,3 +21,7 @@ Meownopoly/.qtc_clangd/
 *.autosave
 Meownopoly/bin
 Meownopoly/bin/*
+/image_tools/__pycache__
+image_tools/anim_tree_00001.webp
+image_tools/output.webp
+image_tools/anim_tree_00037.webp

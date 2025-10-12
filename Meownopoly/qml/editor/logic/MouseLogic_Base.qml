@@ -167,13 +167,26 @@ QtObject {
             console.log("[LOGIC] caseConfigurationPanelSection not available")
             return
         }
+        var configLinkPanel = contentArea.connectionsConfigSection
+        if (!configLinkPanel) {
+            console.log("[LOGIC] connectionConfigurationPanel not available")
+            return
+        }
 
         // Si un seul élément est sélectionné et que c'est une case, mettre à jour la configuration
         if (selectedElements.length === 1) {
             var element = selectedElements[0]
+            if (configLinkPanel)
+            {
+                configLinkPanel.setTargetElement(element)
+            }
             if (element.caseData) {
                 console.log("[LOGIC] Updating case configuration for:", element.caseData.name)
-                configPanel.setTargetCase(element)
+                if (configPanel)
+                {
+                    configPanel.setTargetCase(element)
+                }
+
             } else {
                 // Ce n'est pas une case, effacer la configuration
                 configPanel.clearTarget()
@@ -184,4 +197,15 @@ QtObject {
         }
     }
 
+    function setSelectedElementList(selectedList)
+    {
+        selectedElements = selectedList
+        for (var i = 0; i < selectedElements.length; i++) {
+            console.log(selectedElements[i])
+            selectedElements[i].parent = groupeSelection
+            selectedElements[i].elementPressed()
+            selectedElements[i].x = selectedElements[i].x - groupeSelection.x
+            selectedElements[i].y = selectedElements[i].y - groupeSelection.y
+        }
+    }
 }

@@ -14,9 +14,6 @@ Item {
     property int mmSize: logic.mmSize
 
     property int gridSize: Screen.pixelDensity * mmSize
-    onGridSizeChanged: {
-        // Les Repeater se mettent à jour automatiquement quand gridSize change
-    }
 
     property int boardSize:  gridSize * 600 // 600 croisillons
     property color gridColor: "#40808080"
@@ -178,32 +175,6 @@ Item {
                         parent.height :
                         (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth)
             }
-        }
-    }
-
-    // Les propriétés se mettent à jour automatiquement via les bindings QML
-    // Pas besoin de Connections supplémentaires avec l'approche Repeater
-    MouseArea{
-        anchors.fill: parent
-        drag.target: isEdit ? null : gridManager
-        pressAndHoldInterval: 250
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: function(mouse) {
-
-            mouse.accepted = false
-            return;
-            if (mouse.button === Qt.LeftButton){
-                gridManager.gridClicked(gridManager.getGridPosition(mouseX, mouseY))
-            }
-            if (mouse.button === Qt.RightButton){
-                gridManager.gridRightClicked(gridManager.getGridPosition(mouseX, mouseY))
-            }
-        }
-
-        onPressAndHold: {
-            console.log("click location : ", mouseX, mouseY)
-            console.log("grid location : ", gridManager.getGridPosition(mouseX, mouseY))
-            gridManager.gridPressed(gridManager.getGridPosition(mouseX, mouseY))
         }
     }
 

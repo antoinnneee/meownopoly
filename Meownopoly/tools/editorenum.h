@@ -15,7 +15,8 @@ public:
 
     enum EditorMouseMode {
         EM_NORMAL,
-        EM_POSE
+        EM_POSE,
+        EM_SELECTION_LINK,
     };
     Q_ENUM(EditorMouseMode)
 
