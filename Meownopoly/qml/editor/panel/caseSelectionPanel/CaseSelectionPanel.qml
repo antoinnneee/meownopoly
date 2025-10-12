@@ -90,15 +90,6 @@ EditorBottomPanel {
             }
     }
 
-    // Fonction pour obtenir le type de case sélectionné
-    function getSelectedCaseType() {
-        return root.selectedCaseType
-    }
-    
-    // Fonction pour obtenir le nom du type de case sélectionné
-    function getSelectedCaseTypeName() {
-        return root.selectedCaseTypeName
-    }
     
     // Fonction pour effacer la sélection
     function clearSelection() {

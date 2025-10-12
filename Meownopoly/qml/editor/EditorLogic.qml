@@ -60,10 +60,22 @@ Item {
         }
     }
 
+    Component {
+        id: mouseLogic_selectionLink_comp
+        MouseLogic_Selection_link {
+            id: mouseLogic_selectionLink
+            logic: _logic
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_selectionLink
+            }
+        }
+    }
+
     Loader {
         id: mouseLogicLoader
         sourceComponent: (logic.editorMouseMode == EditorEnum.EM_NORMAL) ? mouseLogic_selection_comp
-                                                                         : mouseLogic_pose_comp
+                        : (logic.editorMouseMode == EditorEnum.EM_POSE) ? mouseLogic_pose_comp
+                        : mouseLogic_selectionLink_comp
         property var _logic : parent
     }
     property ScrollLogic scrollLogic

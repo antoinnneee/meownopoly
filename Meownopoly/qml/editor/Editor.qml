@@ -315,10 +315,18 @@ Rectangle {
     Connections {
         target: selectionPanel
         function onConnectionRequested(kind) {
-            var selectedElements = logic.mouseLogic.selectedElements
+
             var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
-            console.log("onConnectionRequested", kind, selectedElements, targetElement)
-            // Simple stratégie: utiliser l'élément actuellement sélectionné dans l'éditeur
+            /* save selected element to reasign it */
+            var selectedElements = []
+            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                selectedElements.push(logic.mouseLogic.selectedElements[i])
+            }
+            console.log("onConnectionRequested", kind, selectedElements)
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_SELECTION_LINK)
+            logic.mouseLogic.kind = kind;
+            logic.mouseLogic.setSelectedElementList(selectedElements);
+            /*
             if (!selectedElements || !targetElement) return
 
             for (var i = 0; i < selectedElements.length; i++) {
@@ -330,6 +338,7 @@ Rectangle {
                     }
                 }
             }
+            */
         }
     }
 

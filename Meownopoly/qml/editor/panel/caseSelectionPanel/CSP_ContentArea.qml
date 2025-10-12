@@ -144,7 +144,6 @@ EBP_Content {
             // Onglet Configuration Case
             CaseConfigurationPanelSection {
                 id: caseConfigurationPanelSection
-                anchors.fill: parent
                 
                 // Gérer le changement de type de case
                 onRequestChangeType: function(newType) {
@@ -160,7 +159,6 @@ EBP_Content {
             // Onglet Configuration Connexions
             ConnectionsConfigurationSection {
                 id: connectionsConfigSection
-                anchors.fill: parent
                 
                 onRequestAddConnection: function(kind) {
                     contentArea.connectionRequested(kind)
