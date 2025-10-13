@@ -8,6 +8,9 @@ Item {
     width: parent.width
     // height: imageContainer.height + scalingSelector.height
     height: 200
+    
+    // Signal émis quand une image est sélectionnée
+    signal backgroundSelected()
 
     // Image selection square
     Rectangle {
@@ -149,6 +152,8 @@ Item {
         onAccepted: {
             // Utilisation de selectedFile de la nouvelle API
             logic.mapInfo.backgroundPath = fileDialog.selectedFile;
+            // Émettre le signal pour indiquer qu'une image a été sélectionnée
+            root.backgroundSelected();
         }
     }
 }

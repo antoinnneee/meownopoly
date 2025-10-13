@@ -248,198 +248,200 @@ Item {
             }
         }
 
-        // Boutons de sélection de thème
+        // Indicateurs de sélection de thème (non cliquables)
         Row {
             width: parent.width - parent.padding * 2
             height: 40
             spacing: 10
             anchors.horizontalCenter: parent.horizontalCenter
 
-            // Bouton Thème par défaut
-            Button {
-                id: defaultThemeButton
+            // Indicateur Thème par défaut
+            Rectangle {
+                id: defaultThemeIndicator
                 width: parent.width / 2 - 5
                 height: parent.height
-                text: "Thème par défaut"
+                color: backgroundView.currentThemeMode === "default" ? "#4A90E2" : "#333333"
+                radius: 6
+                border.width: 1
+                border.color: backgroundView.currentThemeMode === "default" ? "#FFFFFF" : "#555555"
 
-                background: Rectangle {
-                    color: backgroundView.currentThemeMode === "default" ? "#4A90E2" : "#333333"
-                    radius: 6
-                    border.width: 1
-                    border.color: backgroundView.currentThemeMode === "default" ? "#FFFFFF" : "#555555"
-                }
-
-                contentItem: Text {
-                    text: defaultThemeButton.text
+                Text {
+                    anchors.centerIn: parent
+                    text: "Thème par défaut"
                     color: "white"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: {
-                    backgroundView.currentThemeMode = "default"
                 }
             }
 
-            // Bouton Thème personnalisé
-            Button {
-                id: customThemeButton
+            // Indicateur Thème personnalisé
+            Rectangle {
+                id: customThemeIndicator
                 width: parent.width / 2 - 5
                 height: parent.height
-                text: "Thème personnalisé"
+                color: backgroundView.currentThemeMode === "custom" ? "#4A90E2" : "#333333"
+                radius: 6
+                border.width: 1
+                border.color: backgroundView.currentThemeMode === "custom" ? "#FFFFFF" : "#555555"
 
-                background: Rectangle {
-                    color: backgroundView.currentThemeMode === "custom" ? "#4A90E2" : "#333333"
-                    radius: 6
-                    border.width: 1
-                    border.color: backgroundView.currentThemeMode === "custom" ? "#FFFFFF" : "#555555"
-                }
-
-                contentItem: Text {
-                    text: customThemeButton.text
+                Text {
+                    anchors.centerIn: parent
+                    text: "Thème personnalisé"
                     color: "white"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: {
-                    backgroundView.currentThemeMode = "custom"
                 }
             }
         }
 
-        // Controls container
+        // Controls container - affichage côte à côte
         Rectangle {
             width: parent.width - parent.padding * 2
             color: "#333333"
             radius: 6
             border.color: "#444444"
             border.width: 1
-            height: (backgroundView.currentThemeMode === "default" ? defaultThemesContainer.height : customThemeContainer.height) + 20
+            height: Math.max(defaultThemesContainer.height, customThemeContainer.height) + 20
 
-            // Conteneur pour les thèmes par défaut
-            Item {
-                id: defaultThemesContainer
+            Row {
                 width: parent.width - 20
-                height: defaultThemesColumn.height
+                height: parent.height - 20
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: 10
-                visible: backgroundView.currentThemeMode === "default"
+                spacing: 10
 
-                Column {
-                    id: defaultThemesColumn
-                    width: parent.width
-                    spacing: 10
+                // Conteneur pour les thèmes par défaut (moitié gauche)
+                Rectangle {
+                    id: defaultThemesContainer
+                    width: (parent.width - parent.spacing) / 2
+                    height: defaultThemesColumn.height
+                    color: "transparent"
 
-                    Text {
-                        text: "Sélectionner un arrière-plan:"
-                        color: "#FFFFFF"
-                        font.pixelSize: 14
-                        font.bold: true
-                        height: 20
-                    }
-
-                    // Liste des thèmes par défaut
-                    ListView {
-                        id: defaultThemesList
+                    Column {
+                        id: defaultThemesColumn
                         width: parent.width
-                        height: 300
                         spacing: 10
-                        clip: true
-                        model: AssetManager.getAvailableBackgrounds()
 
-                        delegate: Rectangle {
-                            width: defaultThemesList.width
-                            height: 90
-                            radius: 8
-                            border.width: logic.mapInfo.backgroundIndex === index ? 3 : 1
-                            border.color: logic.mapInfo.backgroundIndex === index ? "#4A90E2" : "#555555"
+                        Text {
+                            text: "Sélectionner un arrière-plan:"
+                            color: "#FFFFFF"
+                            font.pixelSize: 14
+                            font.bold: true
+                            height: 20
+                        }
 
-                            Image {
-                                id: bgImage
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                source: modelData
-                                fillMode: Image.PreserveAspectCrop
-                            }
+                        // Liste des thèmes par défaut
+                        ListView {
+                            id: defaultThemesList
+                            width: parent.width
+                            height: 300
+                            spacing: 10
+                            clip: true
+                            model: AssetManager.getAvailableBackgrounds()
 
-                            // Caption overlay
-                            Rectangle {
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.bottom: parent.bottom
-                                height: 26
-                                color: "#80000000"
+                            delegate: Rectangle {
+                                width: defaultThemesList.width
+                                height: 90
+                                radius: 8
+                                border.width: logic.mapInfo.backgroundIndex === index ? 3 : 1
+                                border.color: logic.mapInfo.backgroundIndex === index ? "#4A90E2" : "#555555"
 
-                                Text {
-                                    anchors.centerIn: parent
-                                    // Extraire le nom du fichier à partir du chemin complet et enlever l'extension
-                                    text: {
-                                        var path = modelData;
-                                        var fileName = path.substring(path.lastIndexOf("/") + 1);
-                                        return fileName.replace(/\.[^/.]+$/, ""); // Enlever l'extension
-                                    }
-                                    color: "white"
-                                    font.pixelSize: 14
+                                Image {
+                                    id: bgImage
+                                    anchors.fill: parent
+                                    anchors.margins: 2
+                                    source: modelData
+                                    fillMode: Image.PreserveAspectCrop
                                 }
-                            }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    logic.mapInfo.backgroundPath = bgImage.source
-                                    logic.mapInfo.backgroundScaling = "Fit" // Valeur par défaut
+                                // Caption overlay
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: 26
+                                    color: "#80000000"
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        // Extraire le nom du fichier à partir du chemin complet et enlever l'extension
+                                        text: {
+                                            var path = modelData;
+                                            var fileName = path.substring(path.lastIndexOf("/") + 1);
+                                            return fileName.replace(/\.[^/.]+$/, ""); // Enlever l'extension
+                                        }
+                                        color: "white"
+                                        font.pixelSize: 14
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: {
+                                        logic.mapInfo.backgroundPath = bgImage.source
+                                        logic.mapInfo.backgroundScaling = "Fit" // Valeur par défaut
+                                        backgroundView.currentThemeMode = "default"
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // Information sur le mode d'affichage (les contrôles sont désormais communs)
-                    Text {
-                        text: "Utilisez les contrôles d'affichage ci-dessus pour ajuster l'arrière-plan."
-                        color: "#AAAAAA"
-                        font.pixelSize: 12
-                        height: 20
-                        width: parent.width
-                        wrapMode: Text.WordWrap
-                        horizontalAlignment: Text.AlignHCenter
-                        visible: logic.mapInfo.backgroundIndex !== -1
+                        // Information sur le mode d'affichage
+                        Text {
+                            text: "Utilisez les contrôles d'affichage ci-dessus pour ajuster l'arrière-plan."
+                            color: "#AAAAAA"
+                            font.pixelSize: 12
+                            height: 20
+                            width: parent.width
+                            wrapMode: Text.WordWrap
+                            horizontalAlignment: Text.AlignHCenter
+                            visible: logic.mapInfo.backgroundIndex !== -1
+                        }
                     }
                 }
-            }
 
-            // Conteneur pour le thème personnalisé
-            Item {
-                id: customThemeContainer
-                width: parent.width - 20
-                height: customThemeColumn.height
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: 10
-                visible: backgroundView.currentThemeMode === "custom"
+                // Conteneur pour le thème personnalisé (moitié droite)
+                Rectangle {
+                    id: customThemeContainer
+                    width: (parent.width - parent.spacing) / 2
+                    height: customThemeColumn.height
+                    color: "transparent"
 
-                Column {
-                    id: customThemeColumn
-                    width: parent.width
-                    spacing: 10
-
-                    MSP_SP_BackgroundSelector {
-
-                        id: backgroundSelector
+                    Column {
+                        id: customThemeColumn
                         width: parent.width
-                    }
-                    
-                    // Information sur le mode d'affichage (les contrôles sont désormais communs)
-                    Text {
-                        text: "Utilisez les contrôles d'affichage ci-dessus pour ajuster l'arrière-plan."
-                        color: "#AAAAAA"
-                        font.pixelSize: 12
-                        height: 20
-                        width: parent.width
-                        wrapMode: Text.WordWrap
-                        horizontalAlignment: Text.AlignHCenter
-                        visible: logic.mapInfo.backgroundPath !== ""
+                        spacing: 10
+
+                        Text {
+                            text: "Thème personnalisé:"
+                            color: "#FFFFFF"
+                            font.pixelSize: 14
+                            font.bold: true
+                            height: 20
+                        }
+
+                        MSP_SP_BackgroundSelector {
+                            id: backgroundSelector
+                            width: parent.width
+                            
+                            // Ajouter un signal pour détecter quand l'utilisateur clique sur la caméra
+                            onBackgroundSelected: {
+                                backgroundView.currentThemeMode = "custom"
+                            }
+                        }
+                        
+                        // Information sur le mode d'affichage
+                        Text {
+                            text: "Utilisez les contrôles d'affichage ci-dessus pour ajuster l'arrière-plan."
+                            color: "#AAAAAA"
+                            font.pixelSize: 12
+                            height: 20
+                            width: parent.width
+                            wrapMode: Text.WordWrap
+                            horizontalAlignment: Text.AlignHCenter
+                            visible: logic.mapInfo.backgroundPath !== ""
+                        }
                     }
                 }
             }

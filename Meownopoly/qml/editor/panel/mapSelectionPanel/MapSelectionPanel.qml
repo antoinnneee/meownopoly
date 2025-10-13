@@ -27,7 +27,7 @@ EditorBottomPanel {
          isExpanded: true
          
          onCurrentTabIndexChanged: {
-             contentArea.currentTabIndex = currentTabIndex
+             titleBar.currentTabIndex = currentTabIndex
          }
      }
 
