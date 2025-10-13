@@ -27,7 +27,7 @@ RowLayout {
             width: 200
             required property int index
             required property var modelData
-            
+
             background: Rectangle {
                 color: parent.checked ? "#4A90E2" : "transparent"
                 border.color: "#4A90E2"

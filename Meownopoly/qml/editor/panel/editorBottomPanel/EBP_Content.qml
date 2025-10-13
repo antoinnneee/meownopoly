@@ -11,6 +11,14 @@ Item {
     property string searchText: ""
     required property string activeFilter
 
+    signal sidePanelDeactived
+
+    onSidePanelDeactived: {
+        sidePanel.enabled = false;
+        mainContentHolder.width = contentArea.width;
+        mainContentHolder.anchors.right = contentArea.right;
+    }
+
 
 
     visible: isExpanded

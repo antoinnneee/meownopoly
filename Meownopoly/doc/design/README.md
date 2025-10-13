@@ -41,3 +41,5 @@ Documentation sur l'utilisation de l'héritage en QML.
 
 **Dernière mise à jour** : 12 octobre 2025
 
+
+
