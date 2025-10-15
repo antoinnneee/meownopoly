@@ -55,90 +55,11 @@ EBP_Content {
     sidePanel: Item {
         anchors.fill: parent
         
-        // TabBar pour basculer entre les onglets
-        TabBar {
-            id: tabBar
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-            anchors.leftMargin: 10
-            anchors.topMargin: -contentArea.titleHeight
-            height: Screen.pixelDensity * 12
-            currentIndex: contentArea.currentTabIndex
-
-
-            background: Rectangle {
-                color: "#2a2a2a"
-                border.color: "#444444"
-                border.width: 1
-                radius: 10
-                visible: false
-            }
-            
-            onCurrentIndexChanged: {
-                contentArea.currentTabIndex = currentIndex
-            }
-            
-            TabButton {
-                text: "⚙️ Case"
-                display: AbstractButton.TextOnly
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: parent.checked ? "#ffffff" : "#888888"
-                    font.pixelSize: 12
-                    font.bold: parent.checked
-                    horizontalAlignment: Text.AlignHCenter
-
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
-                background: Rectangle {
-                    color: parent.checked ? "#4a90e2" : "#333333"
-                    border.color: parent.checked ? "#5a9fe8" : "#444444"
-                    border.width: 1
-                    radius: 10
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-            }
-            
-            TabButton {
-                text: "🔗 Connexions"
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: parent.checked ? "#ffffff" : "#888888"
-                    font.pixelSize: 12
-                    font.bold: parent.checked
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
-                background: Rectangle {
-                    color: parent.checked ? "#4a90e2" : "#333333"
-                    border.color: parent.checked ? "#5a9fe8" : "#444444"
-                    border.width: 1
-                    radius: 10
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-            }
-        }
-        
-        // StackLayout pour les contenus des onglets
+        // StackLayout pour les contenus des onglets (contrôlé depuis MenuSelector)
         StackLayout {
             id: stackLayout
-            anchors.top: tabBar.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.margins: 5
+            anchors.fill: parent
+            anchors.topMargin: -contentArea.titleHeight
             currentIndex: contentArea.currentTabIndex
             
             // Onglet Configuration Case

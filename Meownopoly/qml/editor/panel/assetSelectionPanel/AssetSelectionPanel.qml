@@ -17,6 +17,7 @@ EditorBottomPanel {
     
     property alias assetManagerSettings: assetManagerSettings
     property alias visualEffectsPanel: contentArea.visualEffectsPanel
+    property alias currentTabIndex: contentArea.currentTabIndex
     // Current selection state (from parent)
     QtObject{
         id: assetManagerSettings

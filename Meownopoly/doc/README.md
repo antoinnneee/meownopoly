@@ -2,6 +2,25 @@
 
 **Un jeu de société inspiré du Monopoly avec un thème félin adorable !**
 
+---
+
+## 📚 Documentation
+
+> **Vous cherchez la documentation technique ?**
+> - 📖 [INDEX.md](./INDEX.md) - **Index complet de toute la documentation**
+> - 📁 [STRUCTURE_DOCUMENTATION.md](./STRUCTURE_DOCUMENTATION.md) - Organisation des documents
+> - 🏗️ [architecture/](./architecture/) - Documentation technique et architecture
+> - 📘 [guides/](./guides/) - Guides utilisateur et développeur
+> - 🎨 [design/](./design/) - Standards UI et design
+> - ✨ [features/](./features/) - Fonctionnalités spécifiques
+>
+> **⭐ Nouveau !** Documentation complète sur l'architecture de l'éditeur de maps :
+> - [Analyse Complète](./architecture/ANALYSE_ARCHITECTURE_EDITEUR.md) (500 lignes, 12 sections)
+> - [Résumé Rapide](./architecture/RESUME_ARCHITECTURE_EDITEUR.md) (vue d'ensemble)
+> - [Diagrammes Visuels](./architecture/DIAGRAMMES_ARCHITECTURE_EDITEUR.md) (schémas ASCII)
+
+---
+
 ## 🎯 Aperçu du Jeu
 
 Meownopoly est une version modernisée et thématisée du classique Monopoly, où les joueurs incarnent des chats qui se disputent le contrôle de différentes propriétés et territoires. Le jeu introduit des mécaniques innovantes comme les copropriétés, les enchères anonymes et des phases de jeu structurées.

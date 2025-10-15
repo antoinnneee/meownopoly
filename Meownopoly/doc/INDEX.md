@@ -5,30 +5,59 @@ Bienvenue dans la documentation du projet Meownopoly ! Ce document sert d'index 
 ## 📖 Documentation Générale
 
 - [README](./README.md) - Aperçu général du projet et du jeu
-- [Structure du Projet](./PROJECT_STRUCTURE.md) - Organisation des fichiers et architecture
+- [🚀 QUICK_START](./QUICK_START.md) - **Guide de démarrage rapide** (Nouveau !)
+- [📁 STRUCTURE_DOCUMENTATION](./STRUCTURE_DOCUMENTATION.md) - Organisation complète de la documentation
 
-## 🎮 Documentation Utilisateur
+---
 
-- [Guide de Gameplay](./GAMEPLAY_GUIDE.md) - Règles et mécaniques de jeu
-- [Guide de l'Éditeur de Maps](./MAP_EDITOR_GUIDE.md) - Création de plateaux personnalisés
+## 🏗️ Architecture ([/architecture](./architecture/))
 
-## 💻 Documentation Développeur
+Documentation technique sur l'architecture du système et les composants.
 
-- [Guide du Développeur](./DEVELOPER_GUIDE.md) - Guide complet pour les développeurs
-- [Directives de Contribution](./CONTRIBUTION_GUIDELINES.md) - Comment contribuer au projet
+### Architecture Générale
+- [Structure du Projet](./architecture/PROJECT_STRUCTURE.md) - Organisation des fichiers et architecture globale
+- [Architecture du Launcher](./architecture/LAUNCHER_ARCHITECTURE.md) - Pattern singleton et structure
 
-## 🔧 Documentation Technique
+### Architecture de l'Éditeur ⭐ **NOUVEAU**
+- [📖 Analyse Complète](./architecture/ANALYSE_ARCHITECTURE_EDITEUR.md) - Analyse détaillée de l'éditeur (12 sections)
+- [📋 Résumé](./architecture/RESUME_ARCHITECTURE_EDITEUR.md) - Vue d'ensemble rapide avec points clés
+- [📊 Diagrammes](./architecture/DIAGRAMMES_ARCHITECTURE_EDITEUR.md) - Diagrammes visuels ASCII
 
-- [Gestionnaire d'Assets](./ASSET_MANAGER.md) - Système de gestion des ressources
-- [Architecture du Launcher](./LAUNCHER_ARCHITECTURE.md) - Pattern singleton et structure
-- [Héritage QML](./INHERITANCE_QML.md) - Utilisation de l'héritage en QML
-- [Serveur de Ressources](./SERVEUR_RESSOURCES.md) - Implémentation du serveur
-- [Système d'Effets Visuels](./VISUAL_EFFECTS_SYSTEM.md) - Effets post-processing
-- [Support du Curseur Asset Preview](./ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md) - Prévisualisation des cases
+### Systèmes
+- [Gestionnaire d'Assets](./architecture/ASSET_MANAGER.md) - Système de gestion des ressources
+- [Système d'Effets Visuels](./architecture/VISUAL_EFFECTS_SYSTEM.md) - Effets post-processing
 
-## 🎨 Guide de Style
+---
 
-- [Guide de Style UI](./UI_STYLE_GUIDE.md) - Standards d'interface utilisateur
+## 📘 Guides ([/guides](./guides/))
+
+Guides pratiques pour les utilisateurs et développeurs.
+
+### Pour les Utilisateurs
+- [Guide de Gameplay](./guides/GAMEPLAY_GUIDE.md) - Règles et mécaniques de jeu
+- [Guide de l'Éditeur de Maps](./guides/MAP_EDITOR_GUIDE.md) - Création de plateaux personnalisés
+
+### Pour les Développeurs
+- [Guide du Développeur](./guides/DEVELOPER_GUIDE.md) - Guide complet pour les développeurs
+- [Directives de Contribution](./guides/CONTRIBUTION_GUIDELINES.md) - Comment contribuer au projet
+
+---
+
+## 🎨 Design & UI ([/design](./design/))
+
+Documentation sur le design et l'interface utilisateur.
+
+- [Guide de Style UI](./design/UI_STYLE_GUIDE.md) - Standards d'interface utilisateur
+- [Héritage QML](./design/INHERITANCE_QML.md) - Utilisation de l'héritage en QML
+
+---
+
+## ✨ Fonctionnalités ([/features](./features/))
+
+Documentation sur les fonctionnalités spécifiques.
+
+- [Support du Curseur Asset Preview](./features/ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md) - Prévisualisation des cases
+- [Serveur de Ressources](./features/SERVEUR_RESSOURCES.md) - Implémentation du serveur
 
 ## 📁 Documentation Externe
 
@@ -38,32 +67,43 @@ Bienvenue dans la documentation du projet Meownopoly ! Ce document sert d'index 
 
 ## 🔍 Recherche par Sujet
 
-### Pour les Nouveaux Utilisateurs
+### 🆕 Pour Comprendre l'Éditeur de Maps
+> Documentation complète sur l'architecture de l'éditeur
+- [📖 Analyse Complète de l'Éditeur](./architecture/ANALYSE_ARCHITECTURE_EDITEUR.md) - **Commencez ici pour tout comprendre**
+- [📋 Résumé Rapide](./architecture/RESUME_ARCHITECTURE_EDITEUR.md) - Vue d'ensemble condensée
+- [📊 Diagrammes Visuels](./architecture/DIAGRAMMES_ARCHITECTURE_EDITEUR.md) - Flux et schémas
+
+### 👤 Pour les Nouveaux Utilisateurs
 - [README](./README.md)
-- [Guide de Gameplay](./GAMEPLAY_GUIDE.md)
+- [Guide de Gameplay](./guides/GAMEPLAY_GUIDE.md)
 
-### Pour les Créateurs de Contenu
-- [Guide de l'Éditeur de Maps](./MAP_EDITOR_GUIDE.md)
-- [Gestionnaire d'Assets](./ASSET_MANAGER.md)
+### 🎨 Pour les Créateurs de Contenu
+- [Guide de l'Éditeur de Maps](./guides/MAP_EDITOR_GUIDE.md)
+- [Gestionnaire d'Assets](./architecture/ASSET_MANAGER.md)
+- [Support du Curseur Asset Preview](./features/ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md)
 
-### Pour les Nouveaux Développeurs
-- [Structure du Projet](./PROJECT_STRUCTURE.md)
-- [Guide du Développeur](./DEVELOPER_GUIDE.md)
-- [Directives de Contribution](./CONTRIBUTION_GUIDELINES.md)
+### 👨‍💻 Pour les Nouveaux Développeurs
+- [Structure du Projet](./architecture/PROJECT_STRUCTURE.md)
+- [Guide du Développeur](./guides/DEVELOPER_GUIDE.md)
+- [Directives de Contribution](./guides/CONTRIBUTION_GUIDELINES.md)
 
-### Pour les Experts Techniques
-- [Architecture du Launcher](./LAUNCHER_ARCHITECTURE.md)
-- [Système d'Effets Visuels](./VISUAL_EFFECTS_SYSTEM.md)
-- [Serveur de Ressources](./SERVEUR_RESSOURCES.md)
+### 🔬 Pour les Experts Techniques
+- [Architecture de l'Éditeur - Analyse Complète](./architecture/ANALYSE_ARCHITECTURE_EDITEUR.md) ⭐
+- [Architecture du Launcher](./architecture/LAUNCHER_ARCHITECTURE.md)
+- [Système d'Effets Visuels](./architecture/VISUAL_EFFECTS_SYSTEM.md)
+- [Serveur de Ressources](./features/SERVEUR_RESSOURCES.md)
 
-### Pour les Designers
-- [Guide de Style UI](./UI_STYLE_GUIDE.md)
-- [Support du Curseur Asset Preview](./ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md)
+### 🎨 Pour les Designers UI/UX
+- [Guide de Style UI](./design/UI_STYLE_GUIDE.md)
+- [Héritage QML](./design/INHERITANCE_QML.md)
 
 ## 📅 Historique des Mises à Jour
 
 | Date | Document | Modification |
 |------|----------|--------------|
+| 2025-10-12 | INDEX | Réorganisation avec sous-dossiers (architecture/, guides/, design/, features/) |
+| 2025-10-12 | Architecture/Éditeur | **🆕 Création de 3 documents sur l'architecture de l'éditeur** |
+| 2025-10-12 | Tous | Déplacement des fichiers dans la nouvelle structure |
 | 2025-09-30 | Tous | Création initiale de la documentation complète |
 | 2025-09-30 | README | Mise à jour et amélioration de la structure |
 | 2025-09-30 | UI_STYLE_GUIDE | Création du guide de style UI |

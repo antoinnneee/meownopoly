@@ -97,7 +97,6 @@ ApplicationWindow {
         }
     }
 
-    
     Component {
         id: launcher
         Launcher {
@@ -109,7 +108,6 @@ ApplicationWindow {
                 stackView.pop()
                 stackView.push(titleScreen)
             }
-            
             onLaunchGame: {
                 // Ici on peut ajouter la logique pour lancer le jeu principal
                 stackView.pop()
