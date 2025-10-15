@@ -13,9 +13,6 @@ Item {
     
     // Signaux
     signal layerChanged(int newLayer)
-    signal deleteRequested()
-    signal configurationRequested()
-    signal connectionsConfigurationRequested()
 
     // Propriété pour accéder à la valeur z du target
     readonly property int currentZ: targetElement ? targetElement.z : 0
@@ -56,107 +53,6 @@ Item {
 
             }
         }
-        
-        // Séparateur
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: "white"
-            opacity: 0.3
-        }
-        
-        // Bouton de configuration
-        Rectangle {
-            id: configButton
-            width: parent.width
-            height: width
-            color: "#2196F3"
-            border.color: "white"
-            border.width: 1
-            radius: 4
-            
-            Text {
-                anchors.centerIn: parent
-                text: "⚙️"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 20
-            }
-            
-            MouseArea {
-                id: configButtonMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    console.log("Configuration de l'élément demandée")
-                    configurationRequested()
-                }
-                
-                onEntered: configButton.state = "hovered"
-                onExited: configButton.state = ""
-            }
-            
-            states: State {
-                name: "hovered"
-                PropertyChanges { 
-                    target: configButton
-                    scale: 1.05
-                }
-            }
-            
-            transitions: Transition {
-                NumberAnimation { 
-                    properties: "scale"
-                    duration: 100
-                }
-            }
-        }
 
-        // Bouton de configuration des connexions (en dessous du bouton d'attributs)
-        Rectangle {
-            id: connectionsButton
-            width: parent.width
-            height: width
-            color: "#6f42c1" // violet
-            border.color: "white"
-            border.width: 1
-            radius: 4
-
-            Text {
-                anchors.centerIn: parent
-                text: "🔗"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 20
-            }
-
-            MouseArea {
-                id: connectionsButtonMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    console.log("Configuration des connexions demandée")
-                    connectionsConfigurationRequested()
-                }
-
-                onEntered: connectionsButton.state = "hovered"
-                onExited: connectionsButton.state = ""
-            }
-
-            states: State {
-                name: "hovered"
-                PropertyChanges {
-                    target: connectionsButton
-                    scale: 1.05
-                }
-            }
-
-            transitions: Transition {
-                NumberAnimation {
-                    properties: "scale"
-                    duration: 100
-                }
-            }
-        }
     }
 }

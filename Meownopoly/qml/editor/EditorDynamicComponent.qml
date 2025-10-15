@@ -25,26 +25,6 @@ Item{
                 logic.tileLogic.deleteElementsConnections(element)
                 element.connectionManager.deleteLinkedConnection()
                 logic.tileLogic.deleteElement(element)
-                console.log("Etat de l'élément:", element)
-
-            }
-            
-            // Gestion de la configuration
-            onElementConfigurationRequested: function(element) {
-                console.log("Configuration demandée pour:", element)
-                if (element) {
-                    // caseConfigPanel.openConfiguration(element)
-                    editorGrid.moveToConfigElement(element)
-
-                }
-            }
-
-            onElementConnectionsConfigurationRequested: function(element) {
-                if (element) {
-                    selectionPanel.connectionsPanel.setTargetElement(element)
-                    selectionPanel.casePanel.csp_contentArea.currentTabIndex = 1
-                    editorGrid.moveToConfigElement(element)
-                }
             }
         }
     }
@@ -57,7 +37,6 @@ Item{
 
             generalMA: mainMA
 
-
             // Gestion de la suppression
             onElementDeleted: function(element) {
                 logic.tileLogic.deleteElementsConnections(element)
@@ -65,21 +44,6 @@ Item{
                 logic.tileLogic.deleteElement(element)
             }
 
-            // Gestion de la configuration
-            onElementConfigurationRequested: function(element) {
-                console.log("Configuration demandée pour:", element)
-                if (element.caseData) {
-                    caseConfigPanel.openConfiguration(element)
-                }
-            }
-
-            onElementConnectionsConfigurationRequested: function(element) {
-                if (element) {
-                    selectionPanel.connectionsPanel.setTargetElement(element)
-                    selectionPanel.casePanel.csp_contentArea.currentTabIndex = 1
-                    editorGrid.moveToConfigElement(element)
-                }
-            }
         }
     }
 }

@@ -105,13 +105,11 @@ Rectangle {
 
     signal elementResized(var element, real newWidth, real newHeight)
     signal snapCompleted(var element)
-    signal elementConfigurationRequested(var element)
-    signal elementConnectionsConfigurationRequested(var element)
 
     signal elementDeleted(var element)  // sent after delete
     function deleteRequest()
     {
-        elementControls.deleteRequested()
+        deleteAnimation.start()
     }
     
     SnapableElementDeleteAnimation {
@@ -180,18 +178,6 @@ Rectangle {
         isVisible: isSelected
         zLayer: displaySettings.zLayer
         onLayerChanged: function(newLayer) {displaySettings.zLayer = newLayer}
-                
-        onDeleteRequested:{
-            deleteAnimation.start()
-        }
-        
-        onConfigurationRequested: {
-            elementConfigurationRequested(snapableElement)
-        }
-
-        onConnectionsConfigurationRequested: {
-            elementConnectionsConfigurationRequested(snapableElement)
-        }
     }
 
     // Poignées de redimensionnement
