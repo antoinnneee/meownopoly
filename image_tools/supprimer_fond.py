@@ -13,7 +13,7 @@ import torch
 import numpy as np
 import argparse
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageFilter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import time
@@ -26,6 +26,28 @@ huggingface_hub.login(huggingface_token)
 
 # Verrou pour synchroniser l'affichage des messages
 print_lock = threading.Lock()
+
+def refine_mask(mask, threshold=0.5, apply_morphology=True):
+    """
+    Refine the mask to improve edge quality and remove noise.
+    """
+    # Convert to numpy array
+    mask_array = np.array(mask).astype(np.float32) / 255.0
+    
+    # Apply threshold to create clearer separation
+    mask_array = np.where(mask_array > threshold, mask_array, 0)
+    
+    # Slightly enhance the mask values for better visibility
+    mask_array = np.clip(mask_array * 1.1, 0, 1)
+    
+    # Convert back to PIL
+    mask_refined = Image.fromarray((mask_array * 255).astype(np.uint8))
+    
+    if apply_morphology:
+        # Apply slight blur to smooth edges
+        mask_refined = mask_refined.filter(ImageFilter.GaussianBlur(radius=0.5))
+    
+    return mask_refined
 
 class BackgroundRemovalProcessor:
     """
@@ -97,7 +119,7 @@ class BackgroundRemovalProcessor:
                 trust_remote_code=True
             )
             self.model.to(self.device)
-            self.model.eval()
+            self.model.eval().to(self.device)
             
             # Activer half precision pour plus de vitesse
             if self.use_lite:
@@ -178,29 +200,45 @@ class BackgroundRemovalProcessor:
             
             # Inférence avec BiRefNet
             with torch.no_grad():
-                output = self.model(input_tensor)[-1].sigmoid()
+                if self.use_rmbg:
+                    # RMBG model
+                    preds = self.model(input_tensor)
+                    # Handle nested structure from RMBG
+                    while isinstance(preds, (list, tuple)):
+                        preds = preds[-1]
+                    pred = preds.sigmoid().to(torch.float32).cpu().squeeze()
+                else:
+                    # BiRefNet model
+                    preds = self.model(input_tensor)[-1].sigmoid().to(torch.float32).cpu()
+                    pred = preds.squeeze()
                 
                 # Convertir en FP32 si nécessaire
                 if self.use_lite:
-                    output = output.float()
+                    pred = pred.float()
             
-            # Extraire le masque alpha
-            mask = output[0, 0].cpu().numpy()
-            mask = (mask * 255).astype(np.uint8)
+            # Convertir le masque en PIL Image
+            pred_pil = transforms.ToPILImage()(pred)
             
-            # Redimensionner le masque à la taille originale
-            mask_image = Image.fromarray(mask).resize(original_size, Image.BILINEAR)
-            mask_array = np.array(mask_image)
+            # Redimensionner le masque à la taille originale avec interpolation de haute qualité
+            mask = pred_pil.resize(original_size, Image.LANCZOS)
             
-            # Convertir l'image en array
-            image_array = np.array(image)
+            # Déterminer le seuil selon le modèle
+            if self.use_lite:
+                threshold = 0.3  # 512 model needs higher threshold
+            elif self.use_rmbg:
+                threshold = 0.15  # RMBG-2.0 is very precise, use lower threshold
+            else:
+                threshold = 0.2  # BiRefNet 1024 standard
             
-            # Créer l'image RGBA
-            rgba_image = np.zeros((image_array.shape[0], image_array.shape[1], 4), dtype=np.uint8)
-            rgba_image[:, :, :3] = image_array  # RGB
-            rgba_image[:, :, 3] = mask_array  # Alpha
+            # Raffiner le masque pour améliorer la qualité
+            mask = refine_mask(mask, threshold=threshold, apply_morphology=True)
             
-            return Image.fromarray(rgba_image, 'RGBA')
+            # Appliquer le masque pour créer un fond transparent
+            input_image = image.convert("RGBA")
+            # Utiliser le masque directement comme canal alpha pour la transparence
+            input_image.putalpha(mask)
+            
+            return input_image
             
         except Exception as e:
             # Fallback vers la méthode simple
@@ -233,32 +271,50 @@ class BackgroundRemovalProcessor:
             
             # Inférence avec BiRefNet sur le batch
             with torch.no_grad():
-                outputs = self.model(batch)[-1].sigmoid()
+                if self.use_rmbg:
+                    # RMBG model
+                    preds = self.model(batch)
+                    # Handle nested structure from RMBG
+                    while isinstance(preds, (list, tuple)):
+                        preds = preds[-1]
+                    outputs = preds.sigmoid().to(torch.float32).cpu()
+                else:
+                    # BiRefNet model
+                    outputs = self.model(batch)[-1].sigmoid().to(torch.float32).cpu()
                 
                 # Convertir en FP32 si nécessaire
                 if self.use_lite:
                     outputs = outputs.float()
             
+            # Déterminer le seuil selon le modèle
+            if self.use_lite:
+                threshold = 0.3  # 512 model needs higher threshold
+            elif self.use_rmbg:
+                threshold = 0.15  # RMBG-2.0 is very precise, use lower threshold
+            else:
+                threshold = 0.2  # BiRefNet 1024 standard
+            
             # Traiter chaque image du batch
             results = []
             for idx, (image, original_size, _) in enumerate(images_data):
                 # Extraire le masque alpha pour cette image
-                mask = outputs[idx, 0].cpu().numpy()
-                mask = (mask * 255).astype(np.uint8)
+                pred = outputs[idx].squeeze()
                 
-                # Redimensionner le masque à la taille originale
-                mask_image = Image.fromarray(mask).resize(original_size, Image.BILINEAR)
-                mask_array = np.array(mask_image)
+                # Convertir le masque en PIL Image
+                pred_pil = transforms.ToPILImage()(pred)
                 
-                # Convertir l'image en array
-                image_array = np.array(image)
+                # Redimensionner le masque à la taille originale avec interpolation de haute qualité
+                mask = pred_pil.resize(original_size, Image.LANCZOS)
                 
-                # Créer l'image RGBA
-                rgba_image = np.zeros((image_array.shape[0], image_array.shape[1], 4), dtype=np.uint8)
-                rgba_image[:, :, :3] = image_array  # RGB
-                rgba_image[:, :, 3] = mask_array  # Alpha
+                # Raffiner le masque pour améliorer la qualité
+                mask = refine_mask(mask, threshold=threshold, apply_morphology=True)
                 
-                results.append(Image.fromarray(rgba_image, 'RGBA'))
+                # Appliquer le masque pour créer un fond transparent
+                input_image = image.convert("RGBA")
+                # Utiliser le masque directement comme canal alpha pour la transparence
+                input_image.putalpha(mask)
+                
+                results.append(input_image)
             
             return results
             
