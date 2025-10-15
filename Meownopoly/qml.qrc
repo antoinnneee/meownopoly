@@ -158,5 +158,6 @@
         <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
         <file>qml/editor/panel/caseConfigPanel/CCP_StyledSpinBox.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
+        <file>qml/editor/tools/LinkPreviewCursor.qml</file>
     </qresource>
 </RCC>
