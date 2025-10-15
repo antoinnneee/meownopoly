@@ -41,6 +41,10 @@ Rectangle {
             if (root.isAssetSelected) {
                 selectionPanel.clearAssetSelection()
                 event.accepted = true
+            } else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
+                logic.mouseLogic.unselectAllElements()
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+                event.accepted = true
             } else {
                 // Afficher le menu d'échappement
                 escMenu.show()
@@ -229,6 +233,25 @@ Rectangle {
                 assetPreview.mouseY = mouse.y
             }
         }
+        
+        // MouseArea to track cursor position for link preview
+        MouseArea {
+            id: linkTracker
+            anchors.fill: parent
+            hoverEnabled: true
+            enabled: logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
+            acceptedButtons: Qt.NoButton // Don't interfere with clicks
+            propagateComposedEvents: true
+            preventStealing: true
+            z: 50
+            
+
+            onPositionChanged: function(mouse) {
+                if (logic.mouseLogic && logic.mouseLogic.updateMousePosition) {
+                    logic.mouseLogic.updateMousePosition(mouse.x, mouse.y)
+                }
+            }
+        }
         // Asset preview cursor
         AssetPreviewCursor {
             id: assetPreview
@@ -327,6 +350,11 @@ Rectangle {
             logic.mouseLogic.kind = kind
             logic.mouseLogic.setSelectedElementList(selectedElements)
             logic.mouseLogic.linkSourceCase = targetElement
+            
+            // Afficher la prévisualisation du lien
+            if (logic.mouseLogic && logic.mouseLogic.showLinkPreview) {
+                logic.mouseLogic.showLinkPreview()
+            }
             /*
             if (!selectedElements || !targetElement) return
 
@@ -357,6 +385,13 @@ Rectangle {
         if (!currentEffects) return
 
         newTile.applyVisualEffects(currentEffects)
+    }
+    
+    // Fonction pour nettoyer les ressources lors de la fermeture
+    Component.onDestruction: {
+        if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
+            logic.mouseLogic.hideLinkPreview()
+        }
     }
 
     // Function to place the selected asset

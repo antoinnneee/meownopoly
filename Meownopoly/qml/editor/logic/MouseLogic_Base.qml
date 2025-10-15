@@ -70,6 +70,12 @@ QtObject {
     function changeMouseMode(mode)
     {
         unselectAllElements()
+        
+        // Masquer la prévisualisation du lien si on change de mode
+        if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
+            logic.mouseLogic.hideLinkPreview()
+        }
+        
         logic.editorMouseMode = mode
     }
 
