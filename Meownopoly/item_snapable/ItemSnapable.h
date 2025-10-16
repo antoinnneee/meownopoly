@@ -28,6 +28,7 @@ class ItemSnapable : public QObject
         CaseTile,
         DecorationTile,
     };
+    Q_ENUM(TileType)
 
 
 public:
@@ -71,8 +72,8 @@ public:
     Q_INVOKABLE QList<ItemSnapable*> getPrevList() {return prev;}
     QList<ItemSnapable*> next = QList<ItemSnapable*>();
     QList<ItemSnapable*> prev = QList<ItemSnapable*>();
-    TileType tileType() const;
-    void setTileType(const TileType &newTileType);
+    ItemSnapable::TileType tileType() const;
+    void setTileType(const ItemSnapable::TileType &newTileType);
 
 signals:
     void caseDataChanged();

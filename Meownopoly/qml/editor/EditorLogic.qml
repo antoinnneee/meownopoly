@@ -167,14 +167,14 @@ Item {
             if (tile) {
                 var displayInfo = tile.displaySettings
 
-                if (tile.type == 0){
+                if (tile.type === ItemSnapable.CaseTile){
                     var caseData = tile.caseData;
                     if (caseData){
                         var caseInfo = [caseData, displayInfo]
                         caseList.push(caseInfo)
                     }
                 }
-                else if (tile.type == 1){
+                else if (tile.type === ItemSnapable.DecorationTile){
                     var decorationInfoData = tile.decorationSettings
                     var decorationInfo = [decorationInfoData, displayInfo]
                     decoList.push(decorationInfo)

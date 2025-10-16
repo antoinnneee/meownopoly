@@ -231,12 +231,12 @@ bool ItemSnapable::removePrevAt(int index)
     return false;
 }
 
-TileType ItemSnapable::tileType() const
+ItemSnapable::TileType ItemSnapable::tileType() const
 {
 
 }
 
-void ItemSnapable::setTileType(const TileType &newTileType)
+void ItemSnapable::setTileType(const ItemSnapable::TileType &newTileType)
 {
 
 }
