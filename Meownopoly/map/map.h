@@ -36,6 +36,7 @@ signals:
 
 private:
 
+    QList<ItemSnapable*> m_tiles;
     QList<ItemSnapable*> m_caseTiles;
     QList<ItemSnapable*> m_decorationTiles;
 

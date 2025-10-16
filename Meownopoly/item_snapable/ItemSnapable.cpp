@@ -230,3 +230,13 @@ bool ItemSnapable::removePrevAt(int index)
     }
     return false;
 }
+
+TileType ItemSnapable::tileType() const
+{
+
+}
+
+void ItemSnapable::setTileType(const TileType &newTileType)
+{
+
+}

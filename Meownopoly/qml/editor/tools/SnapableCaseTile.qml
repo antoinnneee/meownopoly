@@ -5,13 +5,13 @@ import Case
 import Player
 
 import ItemSnapable
-
+import TileType
 import "../../case"
 import "snapable"
 
 SnapableElement {
     id: root
-    type : ItemSnapable.CaseTile
+    type : TileType.CaseTile
 
     Connections{
         target: root.caseData

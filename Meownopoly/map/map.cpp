@@ -18,31 +18,32 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
     for (const QJsonValueRef value : snapableTilesArray) {
         const QJsonObject tileObject = value.toObject();
         ItemSnapable *is = new ItemSnapable(tileObject);
-        if (tileObject.contains("caseData")) {
-            ItemSnapable *is = new ItemSnapable(tileObject);
+        m_tiles.append(is);
+        /*
+        if (is->tileType() == TileType::CaseTile){
             m_caseTiles.append(is);
         }
-        else if (tileObject.contains("decorationParameter")) {
-            ItemSnapable *is = new ItemSnapable(tileObject);
+        if (is->tileType() == TileType::DecorationTile){
             m_decorationTiles.append(is);
         }
+*/
     }
 
     qDebug() << "Snapable tiles loaded successfully";
     qDebug() << "--------------------------------";
     qDebug() << "building links between snapable tiles";
-    for (ItemSnapable *is : std::as_const(m_caseTiles)) {
-        Case *caseData = is->caseData();
+
+    for (ItemSnapable *is : std::as_const(m_tiles)) {
         QJsonObject originalJson = is->getOriginalJson();
         QJsonArray nextIdArray = originalJson["next"].toArray();
 
         for (const QJsonValueRef value : nextIdArray) {
             QString nextId = value.toString();
-            for (ItemSnapable *targetTile : m_caseTiles) {
+            for (ItemSnapable *targetTile : m_tiles) {
                 if (targetTile->uniqueId().toString() == nextId) {
-                    caseData->addNext(targetTile);
-                    targetTile->addPrev(caseData);
-                    qDebug() << "Link built between" << caseData->name() << "and" << targetTile->caseData()->name();
+                   is->addNext(targetTile);
+                    targetTile->addPrev(is);
+                    qDebug() << "Link built between" << is->uniqueId() << "and" << targetTile->uniqueId();
                 }
             }
         }

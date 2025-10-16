@@ -18,6 +18,7 @@ class ItemSnapable : public QObject
 {
     Q_OBJECT
 
+    
     Q_PROPERTY(Case* caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
@@ -28,7 +29,6 @@ class ItemSnapable : public QObject
         DecorationTile,
     };
 
-    Q_ENUM(TileType)
 
 public:
     ItemSnapable();
@@ -71,6 +71,9 @@ public:
     Q_INVOKABLE QList<ItemSnapable*> getPrevList() {return prev;}
     QList<ItemSnapable*> next = QList<ItemSnapable*>();
     QList<ItemSnapable*> prev = QList<ItemSnapable*>();
+    TileType tileType() const;
+    void setTileType(const TileType &newTileType);
+
 signals:
     void caseDataChanged();
     void displayParameterChanged();
@@ -78,12 +81,15 @@ signals:
 
     void uniqueIdChanged();
 
+    void tileTypeChanged();
+
 private :
     Case * m_caseData = nullptr;
     DisplayParameter * m_displayParameter = new DisplayParameter;
     DecorationParameter * m_decorationParameter = new DecorationParameter;
     QJsonObject m_json;
     QUuid m_uniqueId;
+    TileType m_tileType;
 };
 
 #endif // ITEMSNAPABLE_H

@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import TileType
 import "tools"
 import "tools/snapable"
 

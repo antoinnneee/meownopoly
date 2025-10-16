@@ -7,7 +7,7 @@ import "snapable"
 import AssetManager
 import ItemSnapable
 import DecorationParameter
-
+import TileType
 SnapableElement {
     // Configuration du redimensionnement
     isResizable: true
@@ -16,7 +16,7 @@ SnapableElement {
     displaySettings.unitSizeHeight: 6
     displaySettings.unitSizeWidth:4
 
-    type : ItemSnapable.DecorationTile
+    type : TileType.DecorationTile
 
     property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
 
