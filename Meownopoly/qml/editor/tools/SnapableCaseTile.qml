@@ -13,6 +13,18 @@ SnapableElement {
     id: root
     type : ItemSnapable.CaseTile
 
+    Connections{
+        target: root.caseData
+        function onTypeChanged()
+        {
+            console.log("qml type changed")
+        }
+    }
+
+    onTypeChanged: {
+        console.log("tileType change to", type)
+    }
+
     // Configuration du redimensionnement
     isResizable: true
     autoSnap: true

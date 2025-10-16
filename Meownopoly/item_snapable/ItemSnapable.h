@@ -56,6 +56,21 @@ public:
     QUuid uniqueId() const;
     void setUniqueId(const QUuid &newUniqueId);
 
+
+
+    Q_INVOKABLE void addNext(ItemSnapable *newNext);
+    Q_INVOKABLE bool removeNext(ItemSnapable *caseToRemove); // Nouvelle fonction
+    Q_INVOKABLE  bool removeNextAt(int index); // Nouvelle fonction
+
+    Q_INVOKABLE void addPrev(ItemSnapable *newPrev);
+    Q_INVOKABLE bool removePrev(ItemSnapable *caseToRemove); // Nouvelle fonction
+    Q_INVOKABLE bool removePrevAt(int index); // Nouvelle fonction
+
+
+    Q_INVOKABLE QList<ItemSnapable*> getNextList() {return next;}
+    Q_INVOKABLE QList<ItemSnapable*> getPrevList() {return prev;}
+    QList<ItemSnapable*> next = QList<ItemSnapable*>();
+    QList<ItemSnapable*> prev = QList<ItemSnapable*>();
 signals:
     void caseDataChanged();
     void displayParameterChanged();

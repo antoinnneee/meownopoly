@@ -55,6 +55,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
     if (m_json.contains("decorationParameter")) {
         m_decorationParameter = new DecorationParameter(m_json["decorationParameter"].toObject(), this);
     }
+    m_uniqueId = QUuid(m_json["uniqueId"].toString());
 }
 
 Case *ItemSnapable::caseData() const {
@@ -136,6 +137,7 @@ QString ItemSnapable::toJSON()
 {
     QString json;
     json += "{\n";
+    json += "    \"uniqueId\": \"" + m_uniqueId.toString() + "\"\n";
     if (m_caseData != nullptr) {
         json += "    \"caseData\": " + m_caseData->toJSON() + ",\n";
     }
@@ -143,7 +145,16 @@ QString ItemSnapable::toJSON()
         json += "    \"decorationParameter\": " + m_decorationParameter->toJSON() + ",\n";
     }
     json += "    \"displayParameter\": " + m_displayParameter->toJSON() + "\n";
-
+    json += "    \"next\": [ ";
+    for (int i = 0; i < next.size(); i++) {
+        json += "\"" + next.at(i)->uniqueId().toString() + "\"" + (i < next.size() - 1 ? ", " : "");
+    }
+    json += "],\n";
+    json += "    \"prev\": [ ";
+    for (int i = 0; i < prev.size(); i++) {
+        json += "\"" + prev.at(i)->uniqueId().toString() + "\"" + (i < prev.size() - 1 ? ", " : "");
+    }
+    json += "]\n";
     json += "}";
     return json;
 }
@@ -166,4 +177,56 @@ void ItemSnapable::setUniqueId(const QUuid &newUniqueId)
         return;
     m_uniqueId = newUniqueId;
     emit uniqueIdChanged();
+}
+
+
+// ---- CHAINED LIST MANIPULATION ----
+
+
+void ItemSnapable::addNext(ItemSnapable *newNext)
+{
+    next.append(newNext);
+}
+
+bool ItemSnapable::removeNext(ItemSnapable *caseToRemove)
+{
+    int index = next.indexOf(caseToRemove);
+    if (index != -1) {
+        next.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+bool ItemSnapable::removeNextAt(int index)
+{
+    if (index >= 0 && index < next.size()) {
+        next.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+void ItemSnapable::addPrev(ItemSnapable *newPrev)
+{
+    prev.append(newPrev);
+}
+
+bool ItemSnapable::removePrev(ItemSnapable *caseToRemove)
+{
+    int index = prev.indexOf(caseToRemove);
+    if (index != -1) {
+        prev.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+bool ItemSnapable::removePrevAt(int index)
+{
+    if (index >= 0 && index < prev.size()) {
+        prev.removeAt(index);
+        return true;
+    }
+    return false;
 }

@@ -31,7 +31,6 @@ public:
     Q_ENUM(CaseType)
 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
-    Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(CaseType type READ getType WRITE setType NOTIFY typeChanged FINAL)
     
     explicit Case(QObject *parent = nullptr);
@@ -40,8 +39,6 @@ public:
 
 
 
-    QUuid uniqueId() const;
-    void setUniqueId(QUuid newUniqueId);
 
     CaseType getType() const;
     void setType(CaseType newType);
@@ -64,34 +61,11 @@ public:
     Q_INVOKABLE virtual QString toJSON();
 
 
-// ---- CHAINED LIST MANIPULATION ----
-
-    bool addNode();
-    bool removeNode();
-
-
-    bool isNextEmpty(){return next.isEmpty();}
-    bool isPrevEmpty(){return prev.isEmpty();}
-
-    Q_INVOKABLE void addNext(Case *newNext);
-    Q_INVOKABLE bool removeNext(Case *caseToRemove); // Nouvelle fonction
-    Q_INVOKABLE  bool removeNextAt(int index); // Nouvelle fonction
-
-    Q_INVOKABLE void addPrev(Case *newPrev);
-    Q_INVOKABLE bool removePrev(Case *caseToRemove); // Nouvelle fonction
-    Q_INVOKABLE bool removePrevAt(int index); // Nouvelle fonction
-
-    Q_INVOKABLE QList<Case*> getNextList() {return next;}
-    Q_INVOKABLE QList<Case*> getPrevList() {return prev;}
-    QList<Case*> next = QList<Case*>();
-    QList<Case*> prev = QList<Case*>();
-
 
 signals:
 
     void nameChanged();
 
-    void uniqueIdChanged();
 
     void typeChanged();
 
@@ -99,7 +73,6 @@ protected:
     QList<Player*> listPlayer;
 
     QString m_name = "Unknown";
-    QUuid m_uniqueId = QUuid::createUuid();
     CaseType type = CS_Unknow;
 
 };

@@ -42,7 +42,7 @@ QString CaseToJail::toJSON()
     json.removeLast();
     json.removeLast();
     json+= ",\n";
-    json += "    \"jailCase\":" + m_jailCase->uniqueId().toString()  + "\n";
+   // json += "    \"jailCase\":" + m_jailCase->uniqueId().toString()  + "\n";
     json += "}";
     return json;
 }

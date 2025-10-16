@@ -184,14 +184,3 @@ QList<Case*> Game::getPurchasableCases() const
 }
 
 
-Case* Game::getCaseById(const QString &uniqueId) const
-{
-    // Find a case by its unique ID
-    for (Case* caseObj : m_board) {
-        if (caseObj->uniqueId().toString() == uniqueId) {
-            return caseObj;
-        }
-    }
-    
-    return nullptr;
-}

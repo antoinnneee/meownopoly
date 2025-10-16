@@ -5,12 +5,10 @@
 
 Case::Case(QObject *parent)
     : QObject(parent), m_name("Unknown"), type(Case::CS_Unknow) {
-    m_uniqueId = QUuid::createUuid();
 }
 
 Case::Case(const QString &name, QObject *parent)
     : QObject(parent), m_name(name), type(Case::CS_Unknow) {
-    m_uniqueId = QUuid::createUuid();
 }
 
 Case::Case(const QJsonObject &json, QObject *parent)
@@ -18,20 +16,10 @@ Case::Case(const QJsonObject &json, QObject *parent)
 {
 
     m_name = json["name"].toString();
-    m_uniqueId = QUuid::fromString(json["uniqueId"].toString());
     type = intToCaseType(json["type"].toInt());
 
 }
 
-QUuid Case::uniqueId() const {
-    return m_uniqueId;
-}
-
-void Case::setUniqueId(QUuid newUniqueId)
-{
-    m_uniqueId = newUniqueId;
-    emit uniqueIdChanged();
-}
 
 Case::CaseType Case::getType() const
 {
@@ -40,6 +28,7 @@ Case::CaseType Case::getType() const
 
 void Case::setType(CaseType newType)
 {
+    qDebug()<<"void Case::setType(CaseType newType)";
     type = newType;
     emit typeChanged();
 }
@@ -84,18 +73,7 @@ QString Case::toJSON()
     QString json;
     json += "{\n";
     json += "    \"name\": \"" + name() + "\",\n";
-    json += "    \"uniqueId\": \"" + uniqueId().toString() + "\",\n";
     json += "    \"type\": " + QString::number(type) + ",\n";
-    json += "    \"next\": [ ";
-    for (int i = 0; i < next.size(); i++) {
-        json += "\"" + next.at(i)->uniqueId().toString() + "\"" + (i < next.size() - 1 ? ", " : "");
-    }
-    json += "],\n";
-    json += "    \"prev\": [ ";
-    for (int i = 0; i < prev.size(); i++) {
-        json += "\"" + prev.at(i)->uniqueId().toString() + "\"" + (i < prev.size() - 1 ? ", " : "");
-    }
-    json += "]\n";
     json += "}";
     return json;
 }
@@ -134,54 +112,3 @@ Case::CaseType Case::intToCaseType(int type)
     }
 }
 
-
-// ---- CHAINED LIST MANIPULATION ----
-
-
-void Case::addNext(Case *newNext)
-{
-    next.append(newNext);
-}
-
-bool Case::removeNext(Case *caseToRemove)
-{
-    int index = next.indexOf(caseToRemove);
-    if (index != -1) {
-        next.removeAt(index);
-        return true;
-    }
-    return false;
-}
-
-bool Case::removeNextAt(int index)
-{
-    if (index >= 0 && index < next.size()) {
-        next.removeAt(index);
-        return true;
-    }
-    return false;
-}
-
-void Case::addPrev(Case *newPrev)
-{
-    prev.append(newPrev);
-}
-
-bool Case::removePrev(Case *caseToRemove)
-{
-    int index = prev.indexOf(caseToRemove);
-    if (index != -1) {
-        prev.removeAt(index);
-        return true;
-    }
-    return false;
-}
-
-bool Case::removePrevAt(int index)
-{
-    if (index >= 0 && index < prev.size()) {
-        prev.removeAt(index);
-        return true;
-    }
-    return false;
-}

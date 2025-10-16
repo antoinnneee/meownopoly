@@ -15,9 +15,9 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
     qDebug() << "--------------------------------";
     qDebug() << "Start loading snapable tiles";
 
-
     for (const QJsonValueRef value : snapableTilesArray) {
         const QJsonObject tileObject = value.toObject();
+        ItemSnapable *is = new ItemSnapable(tileObject);
         if (tileObject.contains("caseData")) {
             ItemSnapable *is = new ItemSnapable(tileObject);
             m_caseTiles.append(is);
@@ -34,15 +34,14 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
     for (ItemSnapable *is : std::as_const(m_caseTiles)) {
         Case *caseData = is->caseData();
         QJsonObject originalJson = is->getOriginalJson();
-        QJsonObject caseDataJson = originalJson["caseData"].toObject();
-        QJsonArray nextIdArray = caseDataJson["next"].toArray();
+        QJsonArray nextIdArray = originalJson["next"].toArray();
 
         for (const QJsonValueRef value : nextIdArray) {
             QString nextId = value.toString();
             for (ItemSnapable *targetTile : m_caseTiles) {
-                if (targetTile->caseData()->uniqueId().toString() == nextId) {
-                    caseData->addNext(targetTile->caseData());
-                    targetTile->caseData()->addPrev(caseData);
+                if (targetTile->uniqueId().toString() == nextId) {
+                    caseData->addNext(targetTile);
+                    targetTile->addPrev(caseData);
                     qDebug() << "Link built between" << caseData->name() << "and" << targetTile->caseData()->name();
                 }
             }

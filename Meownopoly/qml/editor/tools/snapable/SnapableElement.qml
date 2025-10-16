@@ -7,10 +7,16 @@ import ItemSnapable
 import TileType
 import DisplayParameter
 import DecorationParameter
+import Case
 
-Rectangle {
+ Rectangle {
     id: snapableElement
     
+    // 0: case, 1: personnage, 2: decoration
+    property TileType type
+
+    property var caseType: 0
+
     // Propriétés configurables
     // Connexion au GridManager du parent (Editor)
     required property GridManager gridManager
@@ -43,13 +49,12 @@ Rectangle {
     property alias caseData: snapableParameters.caseData
     property alias displaySettings : snapableParameters.displayParameter
     property alias decorationSettings : snapableParameters.decorationParameter
+
 //    property DisplayParameter displaySettings : DisplayParameter { }
 
 
     z:  (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer
 
-    property TileType type
-    // : 0 // 0: case, 1: personnage, 2: decoration
     
     // Positions calculées à partir des coordonnées relatives
     x: displaySettings.gridRelativePositionX * gridManager.gridSize
