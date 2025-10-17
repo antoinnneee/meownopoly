@@ -96,6 +96,10 @@ Rectangle {
             //console.log("Found case tile:", dp, caseData)
             logic.tileLogic.createCaseTile(dp, caseData);
         }
+        function onFoundItemSnapableTile(itemSnapableData){
+            Logger.info("Found itemSnapableData tile:" + itemSnapableData, "MAP_LOADING")
+            logic.tileLogic.createItemSnapable(itemSnapableData);
+        }
         function onFoundDecorationTile(dp, decorationParameter){
             Logger.info("Found decoration tile:" + dp + " " + decorationParameter, "MAP_LOADING")
             //console.log("Found decoration tile:", dp, decorationParameter)

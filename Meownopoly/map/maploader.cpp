@@ -42,11 +42,10 @@ Map *MapLoader::loadMap(QString mapName)
     QJsonObject jsonObject = MapLoader::readMapFile(mapName);
     MapInfo *mapInfo = new MapInfo(jsonObject["mapInfo"].toObject());
     Map *map = new Map(jsonObject);
-    for (ItemSnapable *is : map->tiles()) {
-        if (is->tileType() == ItemSnapable::CaseTile)
-            emit foundCaseTile(is->displayParameter(), is->caseData());
-        else
-            emit foundDecorationTile(is->displayParameter(), is->decorationParameter());
+
+    for (int i = 0; i < map->tiles().size(); i++) {
+        ItemSnapable *is = map->tiles().value(i);
+        emit foundItemSnapableTile(is);
     }
     map->setMapInfo(mapInfo);
     emit mapLoaded(map);

@@ -35,7 +35,8 @@ import Case
 
     // Propriété pour stocker la valeur z originale
 
-    property ItemSnapable itemSnapable : ItemSnapable{ id: snapableParameters}
+    property ItemSnapable snapableParameters: ItemSnapable{ id: snapableParameters}
+    property alias itemSnapable: snapableParameters
 
 /*
     property DecorationParameter decorationSettings : DecorationParameter {

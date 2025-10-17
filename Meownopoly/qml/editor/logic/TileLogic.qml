@@ -101,6 +101,24 @@ QtObject {
         newTile.elementConfigurationRequested(newTile)
     }
 
+    function createItemSnapable(itemSnapableData) {
+        currentZOrder = currentZOrder + 0.00001
+        console.log(itemSnapableData)
+        itemSnapableData.print()
+        //itemSnapableData.dispSettings.zOrder = currentZOrder
+        var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
+                                                                                        "generalMA": mainMa,
+                                                                                        "snapableParameters": itemSnapableData,
+                                                                                        "displaySettings": itemSnapableData.displayParameter,
+                                                                                        "caseData": itemSnapableData.caseData
+                                                                                    })
+
+        if (newTile) {
+            snapableTilesList.push(newTile)
+            newTile.snapToGridFromGridPos()
+        }
+        return newTile
+    }
 
     // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
     function createCaseTile(dispSettings, caseData) {

@@ -51,7 +51,7 @@ public:
     // Helper function to create the correct Case type from JSON
     static Case* getNewCaseFromJSON(const QJsonObject &caseJson, QObject *parent = nullptr);
 
-    void print();
+    Q_INVOKABLE void print();
 
     QJsonObject getOriginalJson() const { return m_json; }
 

@@ -167,7 +167,7 @@ QString ItemSnapable::toJSON()
 
 void ItemSnapable::print()
 {
-    qDebug() << "ItemSnapable: " << m_caseData->toJSON() << " " << m_displayParameter->toJSON();
+    qDebug().noquote() << "ItemSnapable: " << toJSON();
 }
 
 QUuid ItemSnapable::uniqueId() const
