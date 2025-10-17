@@ -69,7 +69,7 @@ Item{
             // Gestion de la configuration
             onElementConfigurationRequested: function(element) {
                 console.log("Configuration demandée pour:", element)
-                if (element.caseData) {
+                if (element.snapableParameters.caseData) {
                     caseConfigPanel.openConfiguration(element)
                 }
             }

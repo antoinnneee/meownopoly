@@ -56,7 +56,7 @@ QtObject {
                                                                                         "displaySettings.unitSizeWidth": currentElementWidth,
                                                                                         "displaySettings.unitSizeHeight": currentElementHeight,
                                                                                         "displaySettings.zOrder": currentZOrder,
-                                                                                        "caseData": Game.getNewCaseType(caseType),
+                                                                                        "snapableParameters.caseData": Game.getNewCaseType(caseType),
                                                                                         "generalMA": mainMa
                                                                                     })
             break
@@ -78,7 +78,7 @@ QtObject {
         var newTile = createNewTileAtPosition(newType, snapableCase.displaySettings.gridRelativePositionX, snapableCase.displaySettings.gridRelativePositionY, ItemSnapable.CaseTile)
         newTile.displaySettings.unitSizeWidth = snapableCase.displaySettings.unitSizeWidth
         newTile.displaySettings.unitSizeHeight = snapableCase.displaySettings.unitSizeHeight
-        newTile.caseData.name = snapableCase.caseData.name
+        newTile.snapableParameters.caseData.name = snapableCase.snapableParameters.caseData.name
 
         for (var i = 0; i < snapableCase.connectionManager.previousElements.length; i++) {
             var prevEl = snapableCase.connectionManager.previousElements[i]
@@ -103,17 +103,28 @@ QtObject {
 
     function createItemSnapable(itemSnapableData) {
         currentZOrder = currentZOrder + 0.00001
-        console.log(itemSnapableData)
+        console.log("data:",itemSnapableData)
         itemSnapableData.print()
-        //itemSnapableData.dispSettings.zOrder = currentZOrder
-        var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                                                                                        "generalMA": mainMa,
-                                                                                        "snapableParameters": itemSnapableData,
-                                                                                        "displaySettings": itemSnapableData.displayParameter,
-                                                                                        "caseData": itemSnapableData.caseData
-                                                                                    })
-
+        
+        // Créer le bon type de tile selon le tileType
+        // On passe directement itemSnapableData pour conserver les références next/prev
+        var newTile
+        if (itemSnapableData.tileType === ItemSnapable.CaseTile) {
+            newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
+                "generalMA": mainMa,
+                "snapableParameters": itemSnapableData
+            })
+        } else if (itemSnapableData.tileType === ItemSnapable.DecorationTile) {
+            newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
+                "generalMA": mainMa,
+                "snapableParameters": itemSnapableData
+            })
+        }
+        
         if (newTile) {
+            console.log("created item")
+            newTile.snapableParameters.print()
+            
             snapableTilesList.push(newTile)
             newTile.snapToGridFromGridPos()
         }
@@ -126,7 +137,7 @@ QtObject {
         dispSettings.zOrder = currentZOrder
         var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
-                                                                                        "caseData": caseData,
+                                                                                        "snapableParameters.caseData": caseData,
                                                                                         "generalMA": mainMa
                                                                                     })
 
@@ -142,7 +153,7 @@ QtObject {
         dispSettings.zOrder = currentZOrder
         var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
-                                                                                        "decorationSettings": decorationParameter,
+                                                                                        "snapableParameters.decorationParameter": decorationParameter,
                                                                                         "generalMA": mainMa
                                                                                     })
         if (newTile) {
@@ -209,11 +220,11 @@ QtObject {
             var tile = snapableTilesList[i]
             if (tile ) {
                 tile.blockConnections = true
-                var nextList = tile.itemSnapable.getNextList()
+                var nextList = tile.snapableParameters.getNextList()
                 for (var j = 0; j < nextList.length; j++) {
                     var nextElCaseData = nextList[j]
                     var nextEl = snapableTilesList.find(function(tile) {
-                        return tile.itemSnapable === nextElCaseData
+                        return tile.snapableParameters === nextElCaseData
                     })
                     if (nextEl) {
                         nextEl.blockConnections = true

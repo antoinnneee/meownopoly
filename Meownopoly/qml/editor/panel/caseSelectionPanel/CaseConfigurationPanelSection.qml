@@ -113,9 +113,9 @@ Rectangle {
     
     // Functions
     function setTargetCase(snapableCase) {
-        if (snapableCase && snapableCase.caseData !== undefined) {
+        if (snapableCase && snapableCase.snapableParameters.caseData !== undefined) {
             targetSnapableCase = snapableCase
-            targetCase = snapableCase.caseData
+            targetCase = snapableCase.snapableParameters.caseData
             updateControls()
         }
     }

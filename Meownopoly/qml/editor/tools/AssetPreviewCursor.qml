@@ -117,7 +117,7 @@ Item {
                 opacity: 0.2
             }
 
-            decorationSettings: DecorationParameter {
+            snapableParameters.decorationParameter: DecorationParameter {
                 decorationCategory: root.assetCategory
                 decorationType: root.assetType
                 decorationId: root.assetId
@@ -126,8 +126,8 @@ Item {
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            displaySettings.unitSizeWidth: root.unitSizeWidth
-            displaySettings.unitSizeHeight: root.unitSizeHeight
+            //displaySettings.unitSizeWidth: root.unitSizeWidth
+            //displaySettings.unitSizeHeight: root.unitSizeHeight
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
@@ -149,13 +149,13 @@ Item {
                 opacity: 0.2
             }
 
-            caseData: Game.getNewCaseType(caseType)
+            snapableParameters.caseData: Game.getNewCaseType(caseType)
             parent: workArea
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            displaySettings.unitSizeWidth: root.unitSizeWidth
-            displaySettings.unitSizeHeight: root.unitSizeHeight
+            //displaySettings.unitSizeWidth: root.unitSizeWidth
+            //displaySettings.unitSizeHeight: root.unitSizeHeight
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {

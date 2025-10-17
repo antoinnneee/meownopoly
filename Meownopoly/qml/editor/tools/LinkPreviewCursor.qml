@@ -50,9 +50,9 @@ Shape {
         if (hoveredElement) {
             // Vérifier si c'est une case ou une décoration
             // CaseTile = 0, DecorationTile = 1 selon ItemSnapable.h
-            if (hoveredElement.type === 0 || hoveredElement.caseData) {
+            if (hoveredElement.type === 0 || hoveredElement.snapableParameters.caseData) {
                 return linkColorCase  // Vert pour les cases
-            } else if (hoveredElement.type === 1 || hoveredElement.decorationSettings) {
+            } else if (hoveredElement.type === 1 || hoveredElement.snapableParameters.decorationParameter) {
                 return linkColorDecoration  // Violet pour les décorations
             }
         }

@@ -247,3 +247,41 @@ void ItemSnapable::setTileType(const ItemSnapable::TileType &newTileType)
     m_tileType = newTileType;
     emit tileTypeChanged();
 }
+
+void ItemSnapable::copyFrom(ItemSnapable* source)
+{
+    if (!source) return;
+    
+    // Copier le type de tile
+    setTileType(source->tileType());
+    
+    // Copier les display parameters
+    if (source->displayParameter()) {
+        m_displayParameter->setGridRelativePositionX(source->displayParameter()->gridRelativePositionX());
+        m_displayParameter->setGridRelativePositionY(source->displayParameter()->gridRelativePositionY());
+        m_displayParameter->setUnitSizeWidth(source->displayParameter()->unitSizeWidth());
+        m_displayParameter->setUnitSizeHeight(source->displayParameter()->unitSizeHeight());
+        m_displayParameter->setZLayer(source->displayParameter()->zLayer());
+        m_displayParameter->setZOrder(source->displayParameter()->zOrder());
+        emit displayParameterChanged();
+    }
+    
+    // Copier les case data si c'est un CaseTile
+    if (source->tileType() == CaseTile && source->caseData()) {
+        setCaseData(source->caseData());
+    }
+    
+    // Copier les decoration parameters si c'est une DecorationTile
+    if (source->tileType() == DecorationTile && source->decorationParameter()) {
+        m_decorationParameter->setDecorationCategory(source->decorationParameter()->decorationCategory());
+        m_decorationParameter->setDecorationType(source->decorationParameter()->decorationType());
+        m_decorationParameter->setDecorationId(source->decorationParameter()->decorationId());
+        emit decorationParameterChanged();
+    }
+    
+    // Copier l'UUID
+    setUniqueId(source->uniqueId());
+
+    
+    qDebug() << "ItemSnapable data copied from source";
+}

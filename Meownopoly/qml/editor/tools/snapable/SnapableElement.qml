@@ -35,8 +35,7 @@ import Case
 
     // Propriété pour stocker la valeur z originale
 
-    property ItemSnapable snapableParameters: ItemSnapable{ id: snapableParameters}
-    property alias itemSnapable: snapableParameters
+    required property ItemSnapable snapableParameters
 
 /*
     property DecorationParameter decorationSettings : DecorationParameter {
@@ -45,25 +44,37 @@ import Case
         decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
     }
     */
-    property alias caseData: snapableParameters.caseData
-    property alias displaySettings : snapableParameters.displayParameter
-    property alias decorationSettings : snapableParameters.decorationParameter
+//    property alias displaySettings : snapableParameters.displayParameter
+//    property alias decorationSettings : snapableParameters.decorationParameter
     // 0: case, 1: personnage, 2: decoration
 //    property TileType type
-    property alias type: snapableParameters.tileType
+    property int type: 0
+
+    Component.onCompleted: {
+        // Si snapableParameters n'a pas été fourni, créer une instance par défaut
+        if (!snapableParameters) {
+            snapableParameters = Qt.createQmlObject('import ItemSnapable 1.0; ItemSnapable {}', snapableElement)
+        }
+        
+        // displaySettings = snapableParameters.displayParameter
+        // uniqueId = snapableParameters.uniqueId
+        snapToGrid()
+        createAnimation.start()
+        snapableParameters.displayParameterChanged()
+    }
 
 //    property DisplayParameter displaySettings : DisplayParameter { }
 
 
-    z:  (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer
+    z:  (isSelected) ? snapableParameters.displayParameter.zOrder + 11 : snapableParameters.displayParameter.zOrder + snapableParameters.displayParameter.zLayer
 
     
     // Positions calculées à partir des coordonnées relatives
-    x: displaySettings.gridRelativePositionX * gridManager.gridSize
-    y: displaySettings.gridRelativePositionY * gridManager.gridSize
+    x: snapableParameters.displayParameter.gridRelativePositionX * gridManager.gridSize
+    y: snapableParameters.displayParameter.gridRelativePositionY * gridManager.gridSize
 
-    width:  gridManager.gridSize * displaySettings.unitSizeWidth
-    height:  gridManager.gridSize * displaySettings.unitSizeHeight
+    width:  gridManager.gridSize * snapableParameters.displayParameter.unitSizeWidth
+    height:  gridManager.gridSize * snapableParameters.displayParameter.unitSizeHeight
 
     readonly property int globalCenterX: snapableElement.x + snapableElement.width / 2
     readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
@@ -137,11 +148,7 @@ import Case
 
     // Effet de survol avec transition optimisée
     scale: 1.0
-    
-    Component.onCompleted: {
-        snapToGrid()
-        createAnimation.start()
-    }
+
     // Zone de drag & drop
     MouseArea {
         id: dragArea
@@ -185,8 +192,8 @@ import Case
         id: elementControls
         targetElement: snapableElement
         isVisible: isSelected
-        zLayer: displaySettings.zLayer
-        onLayerChanged: function(newLayer) {displaySettings.zLayer = newLayer}
+        zLayer: snapableParameters.displayParameter.zLayer
+        onLayerChanged: function(newLayer) {snapableParameters.displayParameter.zLayer = newLayer}
                 
         onDeleteRequested:{
             deleteAnimation.start()
@@ -217,8 +224,8 @@ import Case
         if (!gridManager || gridManager.gridSize === 0) return
 
         // Calculer les nouvelles positions relatives basées sur les positions absolues
-        displaySettings.gridRelativePositionX = Math.round(x / gridManager.gridSize)
-        displaySettings.gridRelativePositionY = Math.round(y / gridManager.gridSize)
+        snapableParameters.displayParameter.gridRelativePositionX = Math.round(x / gridManager.gridSize)
+        snapableParameters.displayParameter.gridRelativePositionY = Math.round(y / gridManager.gridSize)
 
     }
 
@@ -231,8 +238,8 @@ import Case
         var snappedGridY = Math.round(y / gridManager.gridSize)
 
         // Mettre à jour les positions relatives (qui vont automatiquement mettre à jour x et y)
-        displaySettings.gridRelativePositionX = snappedGridX
-        displaySettings.gridRelativePositionY = snappedGridY
+        snapableParameters.displayParameter.gridRelativePositionX = snappedGridX
+        snapableParameters.displayParameter.gridRelativePositionY = snappedGridY
 
 
         gridManager.snapElement2(snapableElement)

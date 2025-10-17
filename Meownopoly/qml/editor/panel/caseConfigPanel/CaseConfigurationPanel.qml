@@ -229,9 +229,9 @@ Rectangle {
             targetCase = null
             targetSnapableCase = snapableElement
             isPlayerConfiguration = true
-        } else if (snapableElement.caseData !== undefined) {
+        } else if (snapableElement.snapableParameters.caseData !== undefined) {
             // C'est une case
-            targetCase = snapableElement.caseData
+            targetCase = snapableElement.snapableParameters.caseData
             targetPlayer = null
             targetSnapableCase = snapableElement
             isPlayerConfiguration = false

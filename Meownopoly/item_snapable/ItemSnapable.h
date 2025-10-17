@@ -68,13 +68,15 @@ public:
     Q_INVOKABLE bool removePrev(ItemSnapable *caseToRemove); // Nouvelle fonction
     Q_INVOKABLE bool removePrevAt(int index); // Nouvelle fonction
 
-
     Q_INVOKABLE QList<ItemSnapable*> getNextList() {return next;}
     Q_INVOKABLE QList<ItemSnapable*> getPrevList() {return prev;}
     QList<ItemSnapable*> next = QList<ItemSnapable*>();
     QList<ItemSnapable*> prev = QList<ItemSnapable*>();
     ItemSnapable::TileType tileType() const;
     void setTileType(const ItemSnapable::TileType &newTileType);
+
+    // Copie les données d'un autre ItemSnapable
+    Q_INVOKABLE void copyFrom(ItemSnapable* source);
 
 signals:
     void caseDataChanged();
