@@ -97,26 +97,23 @@ Item {
 
                                 background: Rectangle {
                                     anchors.fill: parent
-                                    color: MapLoader.mapAlreadyExist(mapName, MapLoader.CUSTOM)? "#008B8B" : "#4CAF50"
+                                    property var mapInfo : logic.mapInfo
+                                    color: MapLoader.mapAlreadyExist(mapInfo.mapName, MapLoader.CUSTOM)? "#008B8B" : "#4CAF50"
                                     opacity: 0.8
                                     radius: 4
                                 }
 
                                 contentItem: Text {
-                                    // text: "Save Map"
-                                    text: MapLoader.mapAlreadyExist(mapName, MapLoader.CUSTOM)? "Mettre a jour la carte" : "Enregistrer carte"
+                                    property var mapInfo : logic.mapInfo
+                                    text: MapLoader.mapAlreadyExist(mapInfo.mapName, MapLoader.CUSTOM)? "Mettre a jour la carte" : "Enregistrer carte"
                                     color: "white"
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                     font.pixelSize: 12
                                     font.bold: true
-                                    Component.onCompleted: {
-                                        console.log("MAP NAME " + mapName)
-                                    }
                                 }
 
                                 onClicked: {
-                                    console.log("Saving map:", mapName, "v" + mapVersion)
                                     if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                                         var mapInfo = logic.mapInfo
                                         mapInfo.mapName = mapName
@@ -124,7 +121,10 @@ Item {
                                         mapInfo.mapDescription = description
                                         mapInfo.mapCreationDate = dateOfCreation
                                         mapInfo.mapLastModified = dateOfLastModification
-                                        logic.saveMap(false)
+                                        console.log("Saving map with name: " + mapName)
+                                        console.log(" MapInfo.AUTOSAVE_MAP_NAME : " + mapInfo.autosaveMapName)
+                                        console.log("is it identical " + mapName === mapInfo.autosaveMapName)
+                                        logic.saveMap(mapName === mapInfo.autosaveMapName ? MapLoader.AUTOSAVE : MapLoader.CUSTOM)
                                         newMap()
                                     } else {
                                         console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")

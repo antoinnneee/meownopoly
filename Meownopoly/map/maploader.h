@@ -17,6 +17,7 @@ public:
     enum MapType{
         AUTOSAVE,
         CUSTOM
+        // UNDOREDO
     };
 
     Q_ENUM(MapType)

@@ -138,14 +138,6 @@ QString MapInfo::autosaveMapName() const
     return m_autosaveMapName;
 }
 
-void MapInfo::setAutosaveMapName(const QString &newAutosaveMapName)
-{
-    if (m_autosaveMapName == newAutosaveMapName)
-        return;
-    m_autosaveMapName = newAutosaveMapName;
-    emit autosaveMapNameChanged();
-}
-
 
 void MapInfo::setMapLastModified(const QString &mapLastModified)
 {

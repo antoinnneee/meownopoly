@@ -39,17 +39,22 @@ Rectangle {
     property alias isAssetSelected: selectionPanel.isAssetSelected
 
     Component.onCompleted: {
-        if (!MapLoader.mapAlreadyExist(MapLoader.AUTOSAVE_MAP_NAME, MapLoader.AUTOSAVE)){
+        if (!MapLoader.mapAlreadyExist(mapInfo.autosaveMapName, MapLoader.AUTOSAVE)){
             console.log("Creating autosave map")
             MapLoader.createJsonMap("", MapLoader.AUTOSAVE)
             logic.saveMap(MapLoader.AUTOSAVE)
         }
-        MapLoader.loadMap(MapLoader.AUTOSAVE_MAP_NAME, MapLoader.AUTOSAVE)
+        else {
+            console.log("Autosave map already exists")
+        }
+
+        MapLoader.loadMap(mapInfo.autosaveMapName, MapLoader.AUTOSAVE)
     }
 
 
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
+
     function regainFocus() {
         forceActiveFocus()
     }

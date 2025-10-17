@@ -30,7 +30,6 @@ bool Game::addTileToJson(QJsonObject jsonObject, QString mapName, MapLoader::Map
     QJsonDocument jsonDoc(jsonObject);
     QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Indented);
 
-
     QDir dir("map");
     if (!dir.exists()) {
         dir.mkpath(".");
@@ -38,12 +37,14 @@ bool Game::addTileToJson(QJsonObject jsonObject, QString mapName, MapLoader::Map
     QFile map;
 
     switch (isAutoSave) {
-        case MapLoader::AUTOSAVE:
-            map.setFileName((QString)MAP_FILE_PATH + (QString)AUTOSAVE_MAP_NAME + ".json");
-            break;
-        case MapLoader::CUSTOM:
-            map.setFileName(MAP_FILE_PATH + mapName + "_map.json");
-            break;
+    case MapLoader::AUTOSAVE:
+        map.setFileName((QString)MAP_FILE_PATH + (QString)AUTOSAVE_MAP_NAME + ".json");
+        break;
+    case MapLoader::CUSTOM:
+        map.setFileName((QString)MAP_FILE_PATH + mapName + "_map.json");
+        break;
+    // case MapLoader::UNDOREDO:
+    //     break;
     }
 
     if (!map.open(QIODevice::ReadWrite)) {
@@ -67,15 +68,17 @@ bool Game::addTileToJson(QJsonObject jsonObject, QString mapName, MapLoader::Map
 bool Game::registerMap(MapInfo* mapInfo, QVariantList caseList, QVariantList decorationList, MapLoader::MapType isAutoSave)
 {
     QJsonArray snapableTilesArray;
-
-    // Ajouter les informations de la map
     QJsonObject jsonObject;
+
+    // TO DELETE
+    //Get mapInfo as QJsonObject
     QString mapInfoJson = mapInfo->toJSON();
     QJsonDocument mapInfoDoc = QJsonDocument::fromJson(mapInfoJson.toUtf8());
     QJsonObject mapInfoObject = mapInfoDoc.object();
 
-    jsonObject["mapInfo"] = mapInfoObject;
+    // QJsonObject mapInfoObject = QJsonDocument::fromJson(mapInfo->toJSON().toUtf8()).object();
 
+    //Get cases and decorations as QJsonArray
     for (int i = 0; i < caseList.size(); ++i) {
         QVariantList caseInfo = caseList.at(i).toList();
         if (caseInfo.size() >= 2) {
@@ -103,7 +106,9 @@ bool Game::registerMap(MapInfo* mapInfo, QVariantList caseList, QVariantList dec
         }
     }
 
+    jsonObject["mapInfo"] = mapInfoObject;
     jsonObject["snapableTiles"] = snapableTilesArray;
+
     addTileToJson(jsonObject, mapInfo->getMapName(), isAutoSave);
     return true;
 }
