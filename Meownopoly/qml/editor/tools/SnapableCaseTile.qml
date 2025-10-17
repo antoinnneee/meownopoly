@@ -11,7 +11,7 @@ import "snapable"
 
 SnapableElement {
     id: root
-    type : TileType.CaseTile
+    type : ItemSnapable.CaseTile
 
     Connections{
         target: root.caseData
@@ -32,8 +32,8 @@ SnapableElement {
         if (root.blockConnections) return
         console.log("Next element added:", element)
         // Synchroniser avec les données C++ : ajouter la case suivante
-        if (element && element.caseData && root.caseData) {
-            root.caseData.addNext(element.caseData)
+        if (element && element.itemSnapable && root.itemSnapable) {
+            root.itemSnapable.addNext(element.itemSnapable)
             console.log("Added next case:", element.caseData.name, "to", root.caseData.name)
         }
     }
@@ -41,8 +41,8 @@ SnapableElement {
         if (root.blockConnections) return
         console.log("Previous element added:", element)
         // Synchroniser avec les données C++ : ajouter la case précédente
-        if (element && element.caseData && root.caseData) {
-            root.caseData.addPrev(element.caseData)
+        if (element && element.itemSnapable && root.itemSnapable) {
+            root.itemSnapable.addPrev(element.itemSnapable)
             console.log("Added previous case:", element.caseData.name, "to", root.caseData.name)
         }
     }

@@ -28,6 +28,9 @@ public:
     MapInfo *getMapInfo() const;
     void setMapInfo(MapInfo *newMapInfo);
 
+    QList<ItemSnapable *> tiles() const;
+    void setTiles(const QList<ItemSnapable *> &newTiles);
+
 signals:
     void caseTilesChanged();
     void decorationTilesChanged();

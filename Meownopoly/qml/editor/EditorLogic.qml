@@ -158,6 +158,20 @@ Item {
 
 
     function saveMap(){
+        var itemSnapableList = [];
+
+
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var tile = snapableTilesList[i]
+            if (tile) {
+                var displayInfo = tile.displaySettings
+                itemSnapableList.push(tile.itemSnapable)
+            }
+        }
+        Game.registerMap(mapInfo, itemSnapableList)
+    }
+/*
+    function saveMap(){
         var caseList = [];
         var decoList = [];
 
@@ -184,6 +198,7 @@ Item {
         Game.registerMap(mapInfo, caseList, decoList)
     }
 
+  */
 
 
 

@@ -16,7 +16,7 @@ SnapableElement {
     displaySettings.unitSizeHeight: 6
     displaySettings.unitSizeWidth:4
 
-    type : TileType.DecorationTile
+    type : ItemSnapable.DecorationTile
 
     property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
 

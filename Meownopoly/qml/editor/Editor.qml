@@ -104,7 +104,6 @@ Rectangle {
         function onMapLoaded(map)
         {
             Logger.success("Map loaded", "MAP_LOADING")
-            //console.log("Map loaded")
             logic.tileLogic.builtConnections();
 
             mapInfo = map.mapInfo

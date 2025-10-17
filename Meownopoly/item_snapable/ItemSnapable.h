@@ -23,12 +23,8 @@ class ItemSnapable : public QObject
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
     Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
+    Q_PROPERTY(TileType tileType READ tileType WRITE setTileType NOTIFY tileTypeChanged FINAL)
 
-    enum TileType {
-        CaseTile,
-        DecorationTile,
-    };
-    Q_ENUM(TileType)
 
 
 public:
@@ -36,7 +32,12 @@ public:
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(const QJsonObject &json, QObject *parent = nullptr);
-    
+
+    enum TileType {
+        CaseTile,
+        DecorationTile,
+    };
+    Q_ENUM(TileType)
 
     Case * caseData() const;
     void setCaseData(Case * caseData);

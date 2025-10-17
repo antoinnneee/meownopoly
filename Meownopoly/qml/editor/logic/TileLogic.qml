@@ -189,14 +189,13 @@ QtObject {
     {
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
-            if (tile && tile.caseData) {
+            if (tile ) {
                 tile.blockConnections = true
-                var caseData = tile.caseData
-                var nextList = caseData.getNextList()
+                var nextList = tile.itemSnapable.getNextList()
                 for (var j = 0; j < nextList.length; j++) {
                     var nextElCaseData = nextList[j]
                     var nextEl = snapableTilesList.find(function(tile) {
-                        return tile.caseData === nextElCaseData
+                        return tile.itemSnapable === nextElCaseData
                     })
                     if (nextEl) {
                         nextEl.blockConnections = true

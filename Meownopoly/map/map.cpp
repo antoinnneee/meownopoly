@@ -66,3 +66,13 @@ void Map::setMapInfo(MapInfo *newMapInfo)
     mapInfo = newMapInfo;
     emit mapInfoChanged();
 }
+
+QList<ItemSnapable *> Map::tiles() const
+{
+    return m_tiles;
+}
+
+void Map::setTiles(const QList<ItemSnapable *> &newTiles)
+{
+    m_tiles = newTiles;
+}

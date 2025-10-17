@@ -73,7 +73,7 @@ QString Case::toJSON()
     QString json;
     json += "{\n";
     json += "    \"name\": \"" + name() + "\",\n";
-    json += "    \"type\": " + QString::number(type) + ",\n";
+    json += "    \"type\": " + QString::number(type) + "\n";
     json += "}";
     return json;
 }

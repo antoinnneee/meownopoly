@@ -32,6 +32,7 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
 {
     m_caseData = caseData;
     m_displayParameter = displayParameter;
+    m_uniqueId = QUuid::createUuid();
 }
 
 ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent)
@@ -40,6 +41,7 @@ ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayPar
     m_decorationParameter = decorationParameter;
     m_displayParameter = displayParameter;
     m_caseData = nullptr;
+    m_uniqueId = QUuid::createUuid();
 }
 
 ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
@@ -56,6 +58,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
         m_decorationParameter = new DecorationParameter(m_json["decorationParameter"].toObject(), this);
     }
     m_uniqueId = QUuid(m_json["uniqueId"].toString());
+    m_tileType = TileType(m_json["tileType"].toInt());
 }
 
 Case *ItemSnapable::caseData() const {
@@ -137,14 +140,15 @@ QString ItemSnapable::toJSON()
 {
     QString json;
     json += "{\n";
-    json += "    \"uniqueId\": \"" + m_uniqueId.toString() + "\"\n";
+    json += "    \"uniqueId\": \"" + m_uniqueId.toString() + "\",\n";
+    json += "    \"tileType\": " + QString::number(m_tileType) + ",\n";
     if (m_caseData != nullptr) {
         json += "    \"caseData\": " + m_caseData->toJSON() + ",\n";
     }
     if (m_decorationParameter != nullptr) {
         json += "    \"decorationParameter\": " + m_decorationParameter->toJSON() + ",\n";
     }
-    json += "    \"displayParameter\": " + m_displayParameter->toJSON() + "\n";
+    json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
     json += "    \"next\": [ ";
     for (int i = 0; i < next.size(); i++) {
         json += "\"" + next.at(i)->uniqueId().toString() + "\"" + (i < next.size() - 1 ? ", " : "");
@@ -233,10 +237,13 @@ bool ItemSnapable::removePrevAt(int index)
 
 ItemSnapable::TileType ItemSnapable::tileType() const
 {
-
+    return m_tileType;
 }
 
 void ItemSnapable::setTileType(const ItemSnapable::TileType &newTileType)
 {
-
+    if (m_tileType == newTileType)
+        return;
+    m_tileType = newTileType;
+    emit tileTypeChanged();
 }

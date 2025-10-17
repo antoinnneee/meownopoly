@@ -11,9 +11,7 @@ import Case
 
  Rectangle {
     id: snapableElement
-    
-    // 0: case, 1: personnage, 2: decoration
-    property TileType type
+
 
     property var caseType: 0
 
@@ -49,6 +47,9 @@ import Case
     property alias caseData: snapableParameters.caseData
     property alias displaySettings : snapableParameters.displayParameter
     property alias decorationSettings : snapableParameters.decorationParameter
+    // 0: case, 1: personnage, 2: decoration
+//    property TileType type
+    property alias type: snapableParameters.tileType
 
 //    property DisplayParameter displaySettings : DisplayParameter { }
 
