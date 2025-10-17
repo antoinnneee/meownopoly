@@ -392,7 +392,7 @@ Item {
             font.pixelSize: 13
             
             onClicked: {
-                logic.saveMap()
+                logic.saveMap(false)
                 
                 // Effet de confirmation
                 saveAnimation.restart()

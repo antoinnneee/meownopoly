@@ -129,7 +129,7 @@ Item {
                     console.log("Selected map: " + modelData)
                     if (typeof logic !== 'undefined') {
                         logic.removeCurrentMap()
-                        MapLoader.loadMap(modelData)
+                        MapLoader.loadMap(modelData, MapLoader.CUSTOM)
                     } else {
                         console.error("La fonction loadMap n'est pas accessible")
                     }

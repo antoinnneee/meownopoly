@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 
 import MapInfo
+import MapLoader
 
 Item {
     id: generalParamsView
@@ -90,24 +91,28 @@ Item {
                             // Save button
                             Button {
                                 id: saveButton
-                                width: 100
+                                width: implicitWidth
                                 height: 30
                                 flat: true
 
                                 background: Rectangle {
                                     anchors.fill: parent
-                                    color: "#4CAF50"
+                                    color: MapLoader.mapAlreadyExist(mapName, MapLoader.CUSTOM)? "#008B8B" : "#4CAF50"
                                     opacity: 0.8
                                     radius: 4
                                 }
 
                                 contentItem: Text {
-                                    text: "Save Map"
+                                    // text: "Save Map"
+                                    text: MapLoader.mapAlreadyExist(mapName, MapLoader.CUSTOM)? "Mettre a jour la carte" : "Enregistrer carte"
                                     color: "white"
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                     font.pixelSize: 12
                                     font.bold: true
+                                    Component.onCompleted: {
+                                        console.log("MAP NAME " + mapName)
+                                    }
                                 }
 
                                 onClicked: {
@@ -119,10 +124,10 @@ Item {
                                         mapInfo.mapDescription = description
                                         mapInfo.mapCreationDate = dateOfCreation
                                         mapInfo.mapLastModified = dateOfLastModification
-                                        logic.saveMap()
+                                        logic.saveMap(false)
                                         newMap()
                                     } else {
-                                        console.error("La fonction saveMap n'est pas accessible. Vérifiez que la variable 'logic' est définie.")
+                                        console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")
                                     }
                                 }
                             }
@@ -172,7 +177,7 @@ Item {
                                     placeholderTextColor: "#666666"
                                     placeholderText: text === "" ? "Name of the map" : ""
                                     text: logic.mapInfo.mapName
-                                    onEditingFinished: mapName = text
+                                    onEditingFinished: logic.mapInfo.mapName = text
                                 }
                             }
                         }

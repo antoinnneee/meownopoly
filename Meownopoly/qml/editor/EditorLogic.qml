@@ -73,8 +73,8 @@ Item {
 
     Loader {
         id: mouseLogicLoader
-        sourceComponent: (logic.editorMouseMode == EditorEnum.EM_NORMAL) ? mouseLogic_selection_comp
-                        : (logic.editorMouseMode == EditorEnum.EM_POSE) ? mouseLogic_pose_comp
+        sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? mouseLogic_selection_comp
+                        : (logic.editorMouseMode === EditorEnum.EM_POSE) ? mouseLogic_pose_comp
                         : mouseLogic_selectionLink_comp
         property var _logic : parent
     }
@@ -128,7 +128,6 @@ Item {
     property bool isSelectingArea: false
     property int defaultCaseType: Case.CS_KibbleDispenser
 
-
     property int mmSize : 10
     function updateSize(mm) {
         if (mm > 0)
@@ -157,10 +156,12 @@ Item {
     }
 
 
-    function saveMap(){
+    function saveMap(isAutoSave){
+
+        console.log("Sauvegarde de la map", mapInfo.mapName, "AutoSave:", isAutoSave)
+
         var caseList = [];
         var decoList = [];
-
 
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
@@ -181,12 +182,8 @@ Item {
                 }
             }
         }
-        Game.registerMap(mapInfo, caseList, decoList)
+        Game.registerMap(mapInfo, caseList, decoList, isAutoSave)
     }
-
-
-
-
 
 
 

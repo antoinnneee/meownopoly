@@ -384,7 +384,7 @@ Rectangle {
                                 console.log("Chargement de la carte:", modelData)
                                 if (typeof logic !== 'undefined') {
                                     logic.removeCurrentMap()
-                                    MapLoader.loadMap(modelData)
+                                    MapLoader.loadMap(modelData, MapLoader.CUSTOM)
                                 }
                                 escMenu.hide()
                             }

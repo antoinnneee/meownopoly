@@ -3,20 +3,21 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
+import QtQuick.Dialogs
 import QtCore
+
+import "tools"
+import "tools/snapable"
+import "panel"
+import "panel/assetSelectionPanel"
 
 import QtQml
 import Game
 import Case
 import ItemSnapable
-import "tools"
-import "tools/snapable"
-import "panel"
-import "panel/assetSelectionPanel"
 import MapLoader
 import MapInfo
 import EditorEnum
-import QtQuick.Dialogs
 import AssetManager 1.0
 
 MouseArea {
@@ -26,7 +27,6 @@ MouseArea {
 
 
     onClicked: {
-        // Convertir les coordonnées du clic de la MouseArea vers le système de coordonnées du menuMapAtStart
         var mappedPoint = root.mapToItem(menuMapAtStart, mouseX, mouseY)
         if (!menuMapAtStart.contains(mappedPoint)) {
             menuMapAtStart.opacity = 0.15
@@ -638,7 +638,7 @@ MouseArea {
                             console.log("Loading map: " + menuMapAtStart.selectedMap)
                             if (typeof logic !== 'undefined') {
                                 logic.removeCurrentMap()
-                                MapLoader.loadMap(menuMapAtStart.selectedMap)
+                                MapLoader.loadMap(menuMapAtStart.selectedMap, MapLoader.CUSTOM)
                             }
                             root.visible = false
                         }

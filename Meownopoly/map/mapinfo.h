@@ -4,6 +4,9 @@
 #include <QString>
 #include <QObject>
 
+#define AUTOSAVE_MAP_NAME "autosave_tmp"
+
+
 class MapInfo : public QObject
 {
     Q_OBJECT
@@ -18,6 +21,8 @@ class MapInfo : public QObject
     Q_PROPERTY(QString backgroundScaling READ getBackgroundScaling WRITE setBackgroundScaling NOTIFY backgroundScalingChanged FINAL)
     Q_PROPERTY(bool isBackgroundOnGrill READ getIsBackgroundOnGrill WRITE setIsBackgroundOnGrill NOTIFY isBackgroundOnGrillChanged FINAL)
     Q_PROPERTY(int backgroundTileSize READ getBackgroundTileSize WRITE setBackgroundTileSize NOTIFY backgroundTileSizeChanged FINAL)
+
+    Q_PROPERTY(QString autosaveMapName READ autosaveMapName WRITE setAutosaveMapName NOTIFY autosaveMapNameChanged FINAL)
 
 public:
     MapInfo();
@@ -56,6 +61,9 @@ public:
     int getBackgroundTileSize() const;
     void setBackgroundTileSize(int newBackgroundTileSize);
 
+    QString autosaveMapName() const;
+    void setAutosaveMapName(const QString &newAutosaveMapName);
+
 signals:
     void mapNameChanged(const QString &mapName);
     void mapDescriptionChanged(const QString &mapDescription);
@@ -74,7 +82,10 @@ signals:
 
     void backgroundTileSizeChanged();
 
+    void autosaveMapNameChanged();
+
 private:
+    QString m_autosaveMapName = AUTOSAVE_MAP_NAME;
     QString m_mapName = "";
     QString m_mapDescription = "";
     QString m_mapCreationDate = "";

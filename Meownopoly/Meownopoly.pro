@@ -11,9 +11,10 @@ android:{
     appinfo.obj.depends = FORCE
     QMAKE_EXTRA_TARGETS += appinfo.obj
     PRE_TARGETDEPS += appinfo.obj
-
 }
 
+#if changement in path need to REBUILD !
+DEFINES += BUILD_DIR=\\\"$$OUT_PWD\\\"
 
 # windows: {
 # DESTDIR = $$PWD/bin/windows/release

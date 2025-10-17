@@ -24,9 +24,34 @@ Rectangle {
     color: "lightblue"
     border.width: 0
 
-    Background {
-        id: background
-        anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
+    // Liste pour stocker tous les SnapableCaseTile créés
+    property alias snapableTilesList: logic.snapableTilesList
+
+    property alias isSelectionActive: logic.isSelectionActive
+    property alias selectionStart: logic.selectionStart
+    property alias selectionCurrent: logic.selectionCurrent
+    property alias isSelectingArea: logic.isSelectingArea
+    property alias defaultCaseType: logic.defaultCaseType
+    // Asset selection properties
+    property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
+    property alias selectedAssetType: selectionPanel.currentSelectedAssetType
+    property alias selectedAssetId: selectionPanel.currentSelectedAssetId
+    property alias isAssetSelected: selectionPanel.isAssetSelected
+
+    Component.onCompleted: {
+        if (!MapLoader.mapAlreadyExist(MapLoader.AUTOSAVE_MAP_NAME, MapLoader.AUTOSAVE)){
+            console.log("Creating autosave map")
+            MapLoader.createJsonMap("", MapLoader.AUTOSAVE)
+            logic.saveMap(MapLoader.AUTOSAVE)
+        }
+        MapLoader.loadMap(MapLoader.AUTOSAVE_MAP_NAME, MapLoader.AUTOSAVE)
+    }
+
+
+    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
+    focus: true
+    function regainFocus() {
+        forceActiveFocus()
     }
 
     Keys.onPressed: function(event) {
@@ -47,41 +72,16 @@ Rectangle {
                 event.accepted = true
             }
         }
-
     }
-
-    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
-    focus: true
-    
-    // Fonction pour redonner le focus à l'éditeur
-    function regainFocus() {
-        forceActiveFocus()
-    }
-
-
-
-    // Liste pour stocker tous les SnapableCaseTile créés
-    property alias snapableTilesList: logic.snapableTilesList
-
-    property alias isSelectionActive: logic.isSelectionActive
-    property alias selectionStart: logic.selectionStart
-    property alias selectionCurrent: logic.selectionCurrent
-    property alias isSelectingArea: logic.isSelectingArea
-    property alias defaultCaseType: logic.defaultCaseType
-    // Asset selection properties
-    property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
-    property alias selectedAssetType: selectionPanel.currentSelectedAssetType
-    property alias selectedAssetId: selectionPanel.currentSelectedAssetId
-    property alias isAssetSelected: selectionPanel.isAssetSelected
 
     property MapInfo mapInfo: MapInfo{
-        // mapName: ""
-        // mapDescription: ""
-        // mapCreationDate: ""
-        // mapLastModified: ""
-        // backgroundPath: ""
-        // backgroundScaling: "Fit"
-        // isBackgroundOnGrill: false
+        mapName: autosaveMapName
+        mapDescription: ""
+        mapCreationDate: ""
+        mapLastModified: ""
+        backgroundPath: ""
+        backgroundScaling: "Fit"
+        isBackgroundOnGrill: false
     }
 
     Connections{
@@ -140,6 +140,11 @@ Rectangle {
         snapToGrid: true
     }
 
+    Background {
+        id: background
+        anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
+    }
+
     MouseArea{
         id: mainMa
         z:0
@@ -166,13 +171,13 @@ Rectangle {
 
         onPressed: function (mouse) {
             if (mouse.button === Qt.LeftButton) {
-            logic.mouseLogic.pressedLeft(mouse, drag)
+                logic.mouseLogic.pressedLeft(mouse, drag)
             }
             else if (mouse.button === Qt.MiddleButton) {
-            logic.mouseLogic.pressedMiddle(mouse, drag)
+                logic.mouseLogic.pressedMiddle(mouse, drag)
             }
             else if (mouse.button === Qt.RightButton) {
-            logic.mouseLogic.pressedRight(mouse, drag)
+                logic.mouseLogic.pressedRight(mouse, drag)
             }
         }
 
@@ -209,8 +214,8 @@ Rectangle {
         id: workArea
         anchors.fill: editorGrid
         Item { id: groupeSelection
-             property int gridXPosition:  0
-             property int gridYPosition:  0
+            property int gridXPosition:  0
+            property int gridYPosition:  0
         }
 
         // MouseArea to track cursor position for asset preview
@@ -382,11 +387,11 @@ Rectangle {
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
 
         // Create appropriate element based on category
-//        DisplayParameter dispSettings = new DisplayParameter()
+        //        DisplayParameter dispSettings = new DisplayParameter()
         var dispSettings = Qt.createQmlObject(`import DisplayParameter
-                    DisplayParameter { }`, root)
+                                              DisplayParameter { }`, root)
         var decorationParameter = Qt.createQmlObject(`import DecorationParameter
-                    DecorationParameter { }`, root)
+                                                     DecorationParameter { }`, root)
         dispSettings.gridRelativePositionX = gridX
         dispSettings.gridRelativePositionY = gridY
         dispSettings.unitSizeWidth = logic.tileLogic.currentElementWidth
@@ -398,7 +403,6 @@ Rectangle {
         var newTile = logic.tileLogic.createDecorationTile(dispSettings, decorationParameter)
         root.applyVisualEffectsToNewTile(newTile)
         mainMa.elementClicked(newTile)
-
     }
 
     // Menu d'échappement
