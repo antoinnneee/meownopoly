@@ -79,9 +79,9 @@ Shape {
             y1: connectionOverlay.startY
             x2: connectionOverlay.endX
             y2: connectionOverlay.endY
-            GradientStop { id: stop0; position: 0.0; color: connectionOverlay.selected ? "#4A9FFF" : "#6DB3F2" }
-            GradientStop { id: stop1; position: 0.0; color: connectionOverlay.selected ? "#B565D8" : "#9B7EBD" }
-            GradientStop { id: stop2;position: 1.0; color: connectionOverlay.selected ? "#4A9FFF" : "#6DB3F2" }
+            GradientStop { id: stop0; position: 0.0; color: connectionOverlay.selected ? "#004A9FFF" : "#006DB3F2" }
+            GradientStop { id: stop1; position: 0.0; color: connectionOverlay.selected ? "#FFB565D8" : "#FF9B7EBD" }
+            GradientStop { id: stop2;position: 1.0; color: connectionOverlay.selected ? "#004A9FFF" : "#006DB3F2" }
         }
 
         fillRule: ShapePath.WindingFill

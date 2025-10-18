@@ -45,8 +45,21 @@ Item {
         id: connectionRepeater
         model: nextElementsSegments
         delegate: ConnectionOverlay{
-            x: -parentElement.x
-            y: -parentElement.y
+            // Si parentElement est dans groupeSelection, on doit aussi soustraire la position de groupeSelection
+            x: {
+                var offset = -parentElement.x
+                if (parentElement.parent && typeof parentElement.parent.gridXPosition !== 'undefined') {
+                    offset -= parentElement.parent.x
+                }
+                return offset
+            }
+            y: {
+                var offset = -parentElement.y
+                if (parentElement.parent && typeof parentElement.parent.gridYPosition !== 'undefined') {
+                    offset -= parentElement.parent.y
+                }
+                return offset
+            }
             selected: toElement === connectionManager.hoveredElement
         }
     }

@@ -60,8 +60,25 @@ import ItemSnapableFactory
     width:  gridManager.gridSize * snapableParameters.displayParameter.unitSizeWidth
     height:  gridManager.gridSize * snapableParameters.displayParameter.unitSizeHeight
 
-    readonly property int globalCenterX: snapableElement.x + snapableElement.width / 2
-    readonly property int globalCenterY: snapableElement.y + snapableElement.height / 2
+    // Calcul des coordonnées globales du centre dans le référentiel workArea
+    // Si on est dans groupeSelection, on ajoute sa position pour obtenir les coordonnées dans workArea
+    property point globalCenter: {
+        var centerX = x + width / 2
+        var centerY = y + height / 2
+        
+        // Détecter si on est dans groupeSelection en vérifiant ses propriétés uniques
+        // groupeSelection a des propriétés gridXPosition et gridYPosition
+        if (parent && typeof parent.gridXPosition !== 'undefined') {
+            // On est dans groupeSelection, ajouter son offset
+            centerX += parent.x
+            centerY += parent.y
+        }
+        
+        return Qt.point(centerX, centerY)
+    }
+    
+    readonly property int globalCenterX: globalCenter.x
+    readonly property int globalCenterY: globalCenter.y
 
     property alias connectionManager: connectionManager
     // Expose le point central en coordonnées locales et scène
