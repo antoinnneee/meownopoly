@@ -6,6 +6,8 @@
         <file>qml/test/TEST_VIEW_0.qml</file>
         <file>qml/test/TEST_VIEW_1.qml</file>
         <file>qml/test/TEST_CASE.qml</file>
+        <file>qml/test/TEST_PARTICLE_BUTTON.qml</file>
+        <file>qml/test/TEST_PARTICLE_BUTTON_SIMPLE.qml</file>
         <file>qml/test/TEST_VIEW_3.qml</file>
         <file>qml/test/TEST_ASSET_MANAGER.qml</file>
         <file>qml/case/CaseTile.qml</file>
@@ -157,5 +159,6 @@
         <file>qml/editor/panel/caseConfigPanel/CCP_StyledSpinBox.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/editor/tools/LinkPreviewCursor.qml</file>
+        <file>qml/ui_item/ParticleButton.qml</file>
     </qresource>
 </RCC>

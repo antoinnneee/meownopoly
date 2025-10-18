@@ -185,8 +185,6 @@ Item {
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            // snapableParameters.displaySettings.unitSizeWidth: root.unitSizeWidth
-            // snapableParameters.displaySettings.unitSizeHeight: root.unitSizeHeight
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {

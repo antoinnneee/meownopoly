@@ -42,7 +42,7 @@ ApplicationWindow {
 
             onTest3DRequested: {
                 stackView.pop()
-                stackView.push(testComp)
+                stackView.push(test_view)
             }
             
             onLauncherRequested: {
@@ -66,7 +66,7 @@ ApplicationWindow {
     }
     Component{
         id: test_view
-        TEST_CASE{
+        TEST_PARTICLE_BUTTON_SIMPLE{
             width:root.width
             height:root.height
             visible: false
