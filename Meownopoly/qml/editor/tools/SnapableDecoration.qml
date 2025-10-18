@@ -13,40 +13,10 @@ SnapableElement {
     isResizable: true
     autoSnap: true
 
-    snapableParameters.displayParameter.unitSizeHeight: 6
-    snapableParameters.displayParameter.unitSizeWidth:4
 
     type : ItemSnapable.DecorationTile
 
     property string imagePath: AssetManager.getAssetPath(snapableParameters.decorationParameter.decorationCategory, snapableParameters.decorationParameter.decorationType, snapableParameters.decorationParameter.decorationId)
-
-    // MultiEffect properties - Color effects (always enabled)
-    snapableParameters.displayParameter.effectBrightness: 0.0
-    snapableParameters.displayParameter.effectContrast: 0.0
-    snapableParameters.displayParameter.effectSaturation: 0.0
-    snapableParameters.displayParameter.effectColorization: 0.0
-    snapableParameters.displayParameter.effectColorizationColor: "#ffffff"
-
-    // MultiEffect properties - Optional effects
-    snapableParameters.displayParameter.effectBlurEnabled: false
-    snapableParameters.displayParameter.effectBlur: 0.0           // 0.0 to 1.0
-    snapableParameters.displayParameter.effectBlurMax: 32
-    snapableParameters.displayParameter.effectBlurMultiplier: 1.0
-
-    snapableParameters.displayParameter.effectShadowEnabled: false
-    snapableParameters.displayParameter.effectShadowBlur: 1.0
-    snapableParameters.displayParameter.effectShadowColor: Qt.rgba(0.0, 0.0, 0.0, 1.0)
-    snapableParameters.displayParameter.effectShadowHorizontalOffset: 0.0
-    snapableParameters.displayParameter.effectShadowVerticalOffset: 0.0
-    snapableParameters.displayParameter.effectShadowOpacity: 1.0
-    snapableParameters.displayParameter.effectShadowScale: 1.0
-
-    // Rotation properties
-    snapableParameters.displayParameter.rotationAngle: 0.0
-
-    // Mirror properties
-    snapableParameters.displayParameter.mirrorHorizontal: false
-    snapableParameters.displayParameter.mirrorVertical: false
 
     property bool effectMaskEnabled: false
     property var effectMaskSource: null
@@ -184,28 +154,28 @@ SnapableElement {
 
     // Functions to reset effects
     function resetColorEffects() {
-        displaySettings.effectBrightness = 0.0
-        displaySettings.effectContrast = 0.0
-        displaySettings.effectSaturation = 0.0
-        displaySettings.effectColorization = 0.0
-        displaySettings.effectColorizationColor = "#ffffff"
+        snapableParameters.displayParameter.effectBrightness = 0.0
+        snapableParameters.displayParameter.effectContrast = 0.0
+        snapableParameters.displayParameter.effectSaturation = 0.0
+        snapableParameters.displayParameter.effectColorization = 0.0
+        snapableParameters.displayParameter.effectColorizationColor = "#ffffff"
     }
 
     function resetBlurEffect() {
-        displaySettings.effectBlurEnabled = false
-        displaySettings.effectBlur = 0.0
-        displaySettings.effectBlurMax = 32
-        displaySettings.effectBlurMultiplier = 1.0
+        snapableParameters.displayParameter.effectBlurEnabled = false
+        snapableParameters.displayParameter.effectBlur = 0.0
+        snapableParameters.displayParameter.effectBlurMax = 32
+        snapableParameters.displayParameter.effectBlurMultiplier = 1.0
     }
 
     function resetShadowEffect() {
-        displaySettings.effectShadowEnabled = false
-        displaySettings.effectShadowBlur = 1.0
-        displaySettings.effectShadowColor = Qt.rgba(0.0, 0.0, 0.0, 1.0)
-        displaySettings.effectShadowHorizontalOffset = 0.0
-        displaySettings.effectShadowVerticalOffset = 0.0
-        displaySettings.effectShadowOpacity = 1.0
-        displaySettings.effectShadowScale = 1.0
+        snapableParameters.displayParameter.effectShadowEnabled = false
+        snapableParameters.displayParameter.effectShadowBlur = 1.0
+        snapableParameters.displayParameter.effectShadowColor = Qt.rgba(0.0, 0.0, 0.0, 1.0)
+        snapableParameters.displayParameter.effectShadowHorizontalOffset = 0.0
+        snapableParameters.displayParameter.effectShadowVerticalOffset = 0.0
+        snapableParameters.displayParameter.effectShadowOpacity = 1.0
+        snapableParameters.displayParameter.effectShadowScale = 1.0
     }
 
     function resetMaskEffect() {
@@ -227,12 +197,12 @@ SnapableElement {
 
     // Functions to reset transforms
     function resetRotation() {
-        displaySettings.rotationAngle = 0.0
+        snapableParameters.displayParameter.rotationAngle = 0.0
     }
 
     function resetMirror() {
-        displaySettings.mirrorHorizontal = false
-        displaySettings.mirrorVertical = false
+        snapableParameters.displayParameter.mirrorHorizontal = false
+        snapableParameters.displayParameter.mirrorVertical = false
     }
 
     function resetAllTransforms() {
@@ -243,21 +213,21 @@ SnapableElement {
     function applyVisualEffects(effects)    // generate from VisualEffectsPanel@getCurrentEffects()
     {
         // Apply color effects
-        displaySettings.effectBrightness = effects.brightness
-        displaySettings.effectContrast = effects.contrast
-        displaySettings.effectSaturation = effects.saturation
-        displaySettings.effectColorization = effects.colorization
-        displaySettings.effectColorizationColor = effects.colorizationColor
+        snapableParameters.displayParameter.effectBrightness = effects.brightness
+        snapableParameters.displayParameter.effectContrast = effects.contrast
+        snapableParameters.displayParameter.effectSaturation = effects.saturation
+        snapableParameters.displayParameter.effectColorization = effects.colorization
+        snapableParameters.displayParameter.effectColorizationColor = effects.colorizationColor
 
         // Apply advanced effects
-        displaySettings.effectBlurEnabled = effects.blurEnabled
-        displaySettings.effectBlur = effects.blur
-        displaySettings.effectShadowEnabled = effects.shadowEnabled
-        displaySettings.effectShadowBlur = effects.shadowBlur
+        snapableParameters.displayParameter.effectBlurEnabled = effects.blurEnabled
+        snapableParameters.displayParameter.effectBlur = effects.blur
+        snapableParameters.displayParameter.effectShadowEnabled = effects.shadowEnabled
+        snapableParameters.displayParameter.effectShadowBlur = effects.shadowBlur
 
         // Apply transform effects
-        displaySettings.rotationAngle = effects.rotationAngle
-        displaySettings.mirrorHorizontal = effects.mirrorHorizontal
-        displaySettings.mirrorVertical = effects.mirrorVertical
+        snapableParameters.displayParameter.rotationAngle = effects.rotationAngle
+        snapableParameters.displayParameter.mirrorHorizontal = effects.mirrorHorizontal
+        snapableParameters.displayParameter.mirrorVertical = effects.mirrorVertical
     }
 }

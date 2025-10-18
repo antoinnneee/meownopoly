@@ -56,7 +56,6 @@ Item{
         SnapableDecoration {
             gridManager: editorGrid
 
-            generalMA: mainMA
 
 
             // Gestion de la suppression

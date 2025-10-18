@@ -32,7 +32,7 @@ public:
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(const QJsonObject &json, QObject *parent = nullptr);
-
+    ItemSnapable(Case::CaseType caseType, QObject *parent = nullptr);
     enum TileType {
         CaseTile,
         DecorationTile,
@@ -47,9 +47,6 @@ public:
     void setDecorationParameter(DecorationParameter * decorationParameter);
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
-    
-    // Helper function to create the correct Case type from JSON
-    static Case* getNewCaseFromJSON(const QJsonObject &caseJson, QObject *parent = nullptr);
 
     Q_INVOKABLE void print();
 

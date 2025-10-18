@@ -4,15 +4,26 @@ import AssetManager
 import DecorationParameter
 import "../panel"
 import Game
-
+import ItemSnapable
+import ItemSnapableFactory
 
 Item {
     id: root
     
     // Properties
     property string assetCategory: ""
+    onAssetCategoryChanged: {
+        snapablePreview.snapableParameters.decorationParameter.decorationCategory = assetCategory
+    }
+
     property string assetType: ""
+    onAssetTypeChanged: {
+        snapablePreview.snapableParameters.decorationParameter.decorationType = assetType
+    }
     property string assetId: ""
+    onAssetIdChanged: {
+        snapablePreview.snapableParameters.decorationParameter.decorationId = assetId
+    }
     property int caseType: -1  // Pour les SnapableCaseTile
     property bool isCasePreview: false  // Distingue entre décorations et cases
     visible: (assetCategory !== "" && assetType !== "" && assetId !== "") || (isCasePreview && caseType !== -1)
@@ -56,22 +67,22 @@ Item {
             var currentEffects = visualEffectsPanel.getCurrentEffects()
             if (!currentEffects) return
             // Apply color effects
-            newTile.displaySettings.effectBrightness = currentEffects.brightness
-            newTile.displaySettings.effectContrast = currentEffects.contrast
-            newTile.displaySettings.effectSaturation = currentEffects.saturation
-            newTile.displaySettings.effectColorization = currentEffects.colorization
-            newTile.displaySettings.effectColorizationColor = currentEffects.colorizationColor
+            newTile.snapableParameters.displayParameter.effectBrightness = currentEffects.brightness
+            newTile.snapableParameters.displayParameter.effectContrast = currentEffects.contrast
+            newTile.snapableParameters.displayParameter.effectSaturation = currentEffects.saturation
+            newTile.snapableParameters.displayParameter.effectColorization = currentEffects.colorization
+            newTile.snapableParameters.displayParameter.effectColorizationColor = currentEffects.colorizationColor
 
             // Apply advanced effects
-            newTile.displaySettings.effectBlurEnabled = currentEffects.blurEnabled
-            newTile.displaySettings.effectBlur = currentEffects.blur
-            newTile.displaySettings.effectShadowEnabled = currentEffects.shadowEnabled
-            newTile.displaySettings.effectShadowBlur = currentEffects.shadowBlur
+            newTile.snapableParameters.displayParameter.effectBlurEnabled = currentEffects.blurEnabled
+            newTile.snapableParameters.displayParameter.effectBlur = currentEffects.blur
+            newTile.snapableParameters.displayParameter.effectShadowEnabled = currentEffects.shadowEnabled
+            newTile.snapableParameters.displayParameter.effectShadowBlur = currentEffects.shadowBlur
 
             // Apply transform effects
-            newTile.displaySettings.rotationAngle = currentEffects.rotationAngle
-            newTile.displaySettings.mirrorHorizontal = currentEffects.mirrorHorizontal
-            newTile.displaySettings.mirrorVertical = currentEffects.mirrorVertical
+            newTile.snapableParameters.displayParameter.rotationAngle = currentEffects.rotationAngle
+            newTile.snapableParameters.displayParameter.mirrorHorizontal = currentEffects.mirrorHorizontal
+            newTile.snapableParameters.displayParameter.mirrorVertical = currentEffects.mirrorVertical
         }
     }
 
@@ -117,11 +128,12 @@ Item {
                 opacity: 0.2
             }
 
-            snapableParameters.decorationParameter: DecorationParameter {
-                decorationCategory: root.assetCategory
-                decorationType: root.assetType
-                decorationId: root.assetId
-            }
+
+
+            snapableParameters : ItemSnapableFactory.createItemSnapable()
+
+
+
             parent: workArea
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
@@ -131,7 +143,12 @@ Item {
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
+                console.log("preview load complete")
                 root.snapablePreview = snapableDecoration
+
+                snapableParameters.decorationParameter.decorationCategory = root.assetCategory
+                snapableParameters.decorationParameter.decorationType = root.assetType
+                snapableParameters.decorationParameter.decorationId = root.assetId
             }
         }
     }
@@ -149,7 +166,8 @@ Item {
                 opacity: 0.2
             }
 
-            snapableParameters.caseData: Game.getNewCaseType(caseType)
+            snapableParameters : ItemSnapableFactory.createItemSnapable(caseType)
+
             parent: workArea
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
@@ -159,6 +177,7 @@ Item {
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
+                console.log("preview load complete")
                 root.snapablePreview = snapableCaseTile
             }
         }

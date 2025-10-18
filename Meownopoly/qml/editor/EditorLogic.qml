@@ -164,7 +164,7 @@ Item {
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
             if (tile) {
-                var displayInfo = tile.displaySettings
+                var displayInfo = tile.snapableParameters.displayParameter
                 itemSnapableList.push(tile.itemSnapable)
             }
         }
@@ -179,7 +179,7 @@ Item {
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
             if (tile) {
-                var displayInfo = tile.displaySettings
+                var displayInfo = tile.snapableParameters.displayParameter
 
                 if (tile.type === ItemSnapable.CaseTile){
                     var caseData = tile.snapableParameters.caseData;
@@ -301,10 +301,10 @@ Item {
                     if (!tile) continue
 
                     // Calculer les limites de l'élément existant
-                    var tileLeft = tile.displaySettings.gridRelativePositionX
-                    var tileRight = tileLeft + tile.displaySettings.unitSizeWidth
-                    var tileTop = tile.displaySettings.gridRelativePositionY
-                    var tileBottom = tileTop + tile.displaySettings.unitSizeHeight
+                    var tileLeft = tile.snapableParameters.displayParameter.gridRelativePositionX
+                    var tileRight = tileLeft + tile.snapableParameters.displayParameter.unitSizeWidth
+                    var tileTop = tile.snapableParameters.displayParameter.gridRelativePositionY
+                    var tileBottom = tileTop + tile.snapableParameters.displayParameter.unitSizeHeight
 
                     // Calculer les limites du nouvel élément
                     var newTileLeft = x

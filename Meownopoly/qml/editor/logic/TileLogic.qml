@@ -75,9 +75,9 @@ QtObject {
     }
 
     function changeCaseType(snapableCase, newType)  {
-        var newTile = createNewTileAtPosition(newType, snapableCase.displaySettings.gridRelativePositionX, snapableCase.displaySettings.gridRelativePositionY, ItemSnapable.CaseTile)
-        newTile.displaySettings.unitSizeWidth = snapableCase.displaySettings.unitSizeWidth
-        newTile.displaySettings.unitSizeHeight = snapableCase.displaySettings.unitSizeHeight
+        var newTile = createNewTileAtPosition(newType, snapableCase.snapableParameters.displayParameter.gridRelativePositionX, snapableCase.snapableParameters.displayParameter.gridRelativePositionY, ItemSnapable.CaseTile)
+        newTile.snapableParameters.displayParameter.unitSizeWidth = snapableCase.snapableParameters.displayParameter.unitSizeWidth
+        newTile.snapableParameters.displayParameter.unitSizeHeight = snapableCase.snapableParameters.displayParameter.unitSizeHeight
         newTile.snapableParameters.caseData.name = snapableCase.snapableParameters.caseData.name
 
         for (var i = 0; i < snapableCase.connectionManager.previousElements.length; i++) {

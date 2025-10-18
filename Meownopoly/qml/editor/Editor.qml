@@ -17,6 +17,7 @@ import EditorEnum
 import Logger
 import DisplayParameter
 import DecorationParameter
+import ItemSnapableFactory
 
 Rectangle {
     id: root
@@ -376,7 +377,7 @@ Rectangle {
 
     // Function to apply visual effects to a new decoration tile
     function applyVisualEffectsToNewTile(newTile) {
-        if (!newTile || !newTile.displaySettings) return
+        if (!newTile || !newTile.snapableParameters.displayParameter) return
 
         // Get current effects from the visual effects panel
         // if (!selectionPanel.selectedDecoration) return
@@ -404,7 +405,21 @@ Rectangle {
         if (!root.isAssetSelected) {    // place case
             if (!selectionPanel.caseTypeSelected !== -1)
             {
-                var newCaseTile = logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, gridX, gridY, ItemSnapable.CaseTile)
+                var snapableParameters = ItemSnapableFactory.createItemSnapable(selectionPanel.caseTypeSelected)
+
+                snapableParameters.displayParameter.gridRelativePositionX = gridX
+                snapableParameters.displayParameter.gridRelativePositionY = gridY
+                snapableParameters.displayParameter.unitSizeWidth = logic.tileLogic.currentElementWidth
+                snapableParameters.displayParameter.unitSizeHeight = logic.tileLogic.currentElementHeight
+                snapableParameters.displayParameter.zLayer = 5
+                snapableParameters.decorationParameter.decorationCategory = root.selectedAssetCategory
+                snapableParameters.decorationParameter.decorationType = root.selectedAssetType
+                snapableParameters.decorationParameter.decorationId = root.selectedAssetId
+                // snapableParameters.tileType = ItemSnapable.DecorationTile
+        //        var newTile = logic.tileLogic.createDecorationTile(snapableParameters)
+                var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
+                return;
+//                var newCaseTile = logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, gridX, gridY, ItemSnapable.CaseTile)
                 mainMa.elementClicked(newCaseTile)
                 newCaseTile.elementPressed()
                 newCaseTile.parent = groupeSelection
@@ -420,20 +435,19 @@ Rectangle {
         console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
 
         // Create appropriate element based on category
-//        DisplayParameter dispSettings = new DisplayParameter()
-        var dispSettings = Qt.createQmlObject(`import DisplayParameter
-                    DisplayParameter { }`, root)
-        var decorationParameter = Qt.createQmlObject(`import DecorationParameter
-                    DecorationParameter { }`, root)
-        dispSettings.gridRelativePositionX = gridX
-        dispSettings.gridRelativePositionY = gridY
-        dispSettings.unitSizeWidth = logic.tileLogic.currentElementWidth
-        dispSettings.unitSizeHeight = logic.tileLogic.currentElementHeight
-        dispSettings.zLayer = 5
-        decorationParameter.decorationCategory = root.selectedAssetCategory
-        decorationParameter.decorationType = root.selectedAssetType
-        decorationParameter.decorationId = root.selectedAssetId
-        var newTile = logic.tileLogic.createDecorationTile(dispSettings, decorationParameter)
+        var snapableParameters = ItemSnapableFactory.createItemSnapable()
+
+        snapableParameters.displayParameter.gridRelativePositionX = gridX
+        snapableParameters.displayParameter.gridRelativePositionY = gridY
+        snapableParameters.displayParameter.unitSizeWidth = logic.tileLogic.currentElementWidth
+        snapableParameters.displayParameter.unitSizeHeight = logic.tileLogic.currentElementHeight
+        snapableParameters.displayParameter.zLayer = 5
+        snapableParameters.decorationParameter.decorationCategory = root.selectedAssetCategory
+        snapableParameters.decorationParameter.decorationType = root.selectedAssetType
+        snapableParameters.decorationParameter.decorationId = root.selectedAssetId
+        // snapableParameters.tileType = ItemSnapable.DecorationTile
+//        var newTile = logic.tileLogic.createDecorationTile(snapableParameters)
+        var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
         root.applyVisualEffectsToNewTile(newTile)
         mainMa.elementClicked(newTile)
 

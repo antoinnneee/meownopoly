@@ -8,6 +8,7 @@ import TileType
 import DisplayParameter
 import DecorationParameter
 import Case
+import ItemSnapableFactory
 
  Rectangle {
     id: snapableElement
@@ -53,8 +54,10 @@ import Case
     Component.onCompleted: {
         // Si snapableParameters n'a pas été fourni, créer une instance par défaut
         if (!snapableParameters) {
-            snapableParameters = Qt.createQmlObject('import ItemSnapable 1.0; ItemSnapable {}', snapableElement)
+            console.log("null snapable")
+            snapableParameters = ItemSnapableFactory.createItemSnapable()
         }
+        console.log("snap completed")
         
         // displaySettings = snapableParameters.displayParameter
         // uniqueId = snapableParameters.uniqueId

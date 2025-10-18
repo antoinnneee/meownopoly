@@ -1,6 +1,7 @@
 #include "ItemSnapable.h"
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
+#include "case/CaseFactory.h"
 
 // Include all case types
 #include "../case/CaseRestArea.h"
@@ -16,6 +17,8 @@
 ItemSnapable::ItemSnapable() {
     qDebug() << "New ItemSnapable created";
     m_uniqueId = QUuid::createUuid();
+    m_caseData = new Case();
+    m_tileType = DecorationTile;
 
 }
 
@@ -49,7 +52,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
 {
     m_json = json;
     if (m_json.contains("caseData")) {
-        m_caseData = getNewCaseFromJSON(m_json["caseData"].toObject(), this);
+        m_caseData = CaseFactory::createCase(m_json["caseData"].toObject());
     }
     if (m_json.contains("displayParameter")) {
         m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
@@ -59,6 +62,16 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
     }
     m_uniqueId = QUuid(m_json["uniqueId"].toString());
     m_tileType = TileType(m_json["tileType"].toInt());
+}
+
+ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)
+: QObject(parent)
+{
+    m_caseData = CaseFactory::createCase(caseType);
+    m_displayParameter = new DisplayParameter();
+    m_decorationParameter = new DecorationParameter();
+    m_uniqueId = QUuid::createUuid();
+    m_tileType = CaseTile;
 }
 
 Case *ItemSnapable::caseData() const {
@@ -89,53 +102,6 @@ void ItemSnapable::setDecorationParameter(DecorationParameter * decorationParame
         delete m_decorationParameter;
     m_decorationParameter = decorationParameter; emit decorationParameterChanged();
 }
-
-Case* ItemSnapable::getNewCaseFromJSON(const QJsonObject &caseJson, QObject *parent)
-{
-    Case* newCase = nullptr;
-    
-    // Extract type from JSON and convert to enum
-    Case::CaseType type = Case::intToCaseType(caseJson["type"].toInt());
-    switch (type) {
-    case Case::CS_RestArea:
-        newCase = new CaseRestArea(caseJson);
-        break;
-    case Case::CS_KibbleDispenser:
-        newCase = new CaseKibbleDispenser(caseJson); // Default kibble amount
-        break;
-    case Case::CS_CardBoardBox:
-        newCase = new CaseCardBoardBox(caseJson);
-        break;
-    case Case::CS_CatNip:
-        newCase = new CaseCatNip(caseJson);
-        break;
-    case Case::CS_Jail:
-        newCase = new CaseJail(caseJson);
-        break;
-    case Case::CS_ToJail:
-        newCase = new CaseToJail(caseJson);
-        break;
-    case Case::CS_CatDoor:
-        newCase = new CaseCatDoor(caseJson);
-        break;
-    case Case::CS_FreeNap:
-        newCase = new CaseFreeNap(caseJson);
-        break;
-    case Case::CS_Device:
-        newCase = new CaseCatDevice(caseJson);
-        break;
-    case Case::CS_Taxe:
-        newCase = new CaseKibbleDispenser(caseJson); // Tax case as KibbleDispenser
-        break;
-    default:
-        qDebug() << "Unknown case type:" << type << "creating base Case";
-        newCase = new Case(caseJson, parent);
-        break;
-    }
-
-    return newCase;
-}
-
 QString ItemSnapable::toJSON()
 {
     QString json;
