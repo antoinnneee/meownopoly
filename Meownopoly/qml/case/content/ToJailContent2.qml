@@ -14,7 +14,7 @@ CaseContent_Base {
     tileColor: "darkred"
     // Icons for different tile types
     tileIcons:AssetManager.getAssetPath("ui", "case", "tojail")
-    nameText.text:  root.caseData.nameText
+    nameText.text:  root.caseData.name
     
     nameText.anchors.horizontalCenter: root.horizontalCenter
     nameText.anchors.top: root.top

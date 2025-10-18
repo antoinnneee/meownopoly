@@ -47,7 +47,7 @@ QString CaseJail::toJSON()
     json.removeLast();
     json.removeLast();
     json+= ",\n";
-    json += "    \"jailFine\": " + QString::number(m_jailFine) + ",\n";
+    json += "    \"jailFine\": " + QString::number(m_jailFine) + "\n";
     json += "}";
     return json;
 } 
