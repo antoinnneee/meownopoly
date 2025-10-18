@@ -71,7 +71,6 @@ void Logger::success(const QString &message, const QString &category)
 void Logger::logMessage(const QString &level, const QString &message, const QString &category, const QString &color)
 {
     QString formattedMessage;
-    
     if (!category.isEmpty()) {
         formattedMessage = QString("[%1] %2").arg(category, message);
     } else {

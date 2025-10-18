@@ -61,7 +61,6 @@ RowLayout {
         onButtonClicked: function(text, index) {
             titleBar.buttonClicked(text, index)
         }
-
     }
     // Search bar (optional, visible when expanded)
     EBP_SearchBar {

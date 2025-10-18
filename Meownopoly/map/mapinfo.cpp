@@ -133,6 +133,11 @@ void MapInfo::setBackgroundTileSize(int newBackgroundTileSize)
     emit backgroundTileSizeChanged();
 }
 
+QString MapInfo::autosaveMapName() const
+{
+    return m_autosaveMapName;
+}
+
 
 void MapInfo::setMapLastModified(const QString &mapLastModified)
 {

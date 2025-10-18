@@ -38,6 +38,8 @@
 #include "tools/editorenum.h"
 #include "animation_manager.h"
 #include "liveimage.h"
+#include "tools/undoredomanager.h"
+
 //#include "animationprovider.h"
 #include "tools/logger.h"
 #include "item_snapable/itemsnapablefactory.h"
@@ -57,6 +59,7 @@ QmlApp::QmlApp(QWindow *parent)
     ItemSnapableFactory::registerQml();
 //    AnimationProvider::registerQml();
     Logger::registerQml();
+    UndoRedoManager::registerQml();
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);
     rootContext()->setContextProperty("folderCompressor", folderCompressor);

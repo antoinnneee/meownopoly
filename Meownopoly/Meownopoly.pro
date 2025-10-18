@@ -1,4 +1,4 @@
-QT += quick core qml widgets core-private quickcontrols2 quick3d network
+QT += quick core qml widgets core-private quickcontrols2 network
 
 android:{
     QT += core-private
@@ -11,9 +11,10 @@ android:{
     appinfo.obj.depends = FORCE
     QMAKE_EXTRA_TARGETS += appinfo.obj
     PRE_TARGETDEPS += appinfo.obj
-
 }
 
+#if changement in path need to REBUILD !
+DEFINES += BUILD_DIR=\\\"$$OUT_PWD\\\"
 
 # windows: {
 # DESTDIR = $$PWD/bin/windows/release
@@ -64,7 +65,8 @@ SOURCES += \
     qmlapp.cpp \
     tools/appinfo.cpp \
     tools/editorenum.cpp \
-    tools/logger.cpp
+    tools/logger.cpp \
+    tools/undoredomanager.cpp \
 
 HEADERS += \
     QtFolderCompressor/FolderCompressor.h \
@@ -102,7 +104,8 @@ HEADERS += \
     tools/debug_Info.h	\
     tools/appinfo.h \
     tools/editorenum.h \
-    tools/logger.h
+    tools/logger.h \
+    tools/undoredomanager.h \
 
 RESOURCES += qml.qrc \
     config.qrc

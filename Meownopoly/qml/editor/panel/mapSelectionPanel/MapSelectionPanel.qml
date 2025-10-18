@@ -11,7 +11,7 @@ EditorBottomPanel {
     id: root
 
     property bool showEffectsPanel: true
-    property alias currentTabIndex: contentArea.currentTabIndex
+    property alias currentTabIndex: titleBar.currentTabIndex
 
     // Signals
 
@@ -25,9 +25,10 @@ EditorBottomPanel {
          anchors.right: parent.horizontalCenter
          anchors.top: parent.top
          isExpanded: true
-
-         currentView: root.currentView // "general", "saveLoad", or "background"
-         activeFilter: ""
+         
+         onCurrentTabIndexChanged: {
+             titleBar.currentTabIndex = currentTabIndex
+         }
      }
 
      contentArea: MSP_ContentArea {
@@ -36,6 +37,7 @@ EditorBottomPanel {
 
             currentView: ""
             activeFilter: ""
+            currentTabIndex: titleBar.currentTabIndex
 
             isExpanded: true
             searchText: root.searchText

@@ -384,7 +384,12 @@ Rectangle {
                                 console.log("Chargement de la carte:", modelData)
                                 if (typeof logic !== 'undefined') {
                                     logic.removeCurrentMap()
-                                    MapLoader.loadMap(modelData)
+                                    var normalizedMapName = MapLoader.findMapFileByName(modelData)
+                                    if (normalizedMapName !== "") {
+                                        MapLoader.loadMap(normalizedMapName, MapLoader.CUSTOM)
+                                    } else {
+                                        console.error("Could not find map file for: " + modelData)
+                                    }
                                 }
                                 escMenu.hide()
                             }

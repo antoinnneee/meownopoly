@@ -14,10 +14,9 @@
 #include "card.h"
 #include "player.h"
 #include "item_snapable/ItemSnapable.h"
-
-#define CASE_FILE_PATH ":/config/cases.json"
-
 #include "map/mapinfo.h"
+#include "map/maploader.h"
+
 
 class Game : public QObject
 {
@@ -72,10 +71,12 @@ public:
 
     // JSON Case Management
 
+
+
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
-    bool addTileToJson(QJsonObject jsonObject, QString mapName);
-    Q_INVOKABLE bool registerMap(MapInfo* mapInfo, QVariantList itemSnapable);
+    bool addTileToJson(QJsonObject jsonObject, QString mapName, MapLoader::MapType isAutoSave);
+    Q_INVOKABLE bool registerMap(MapInfo* mapInfo, QVariantList  caseList, QVariantList  decorationList, MapLoader::MapType isAutoSave);
 
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
 

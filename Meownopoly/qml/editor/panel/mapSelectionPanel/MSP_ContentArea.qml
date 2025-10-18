@@ -21,6 +21,7 @@ EBP_Content {
 
     // Synchroniser currentView avec currentTabIndex pour compatibilité
     onCurrentTabIndexChanged: {
+        console.log("Current Tab Index changed to: " + currentTabIndex)
         switch(currentTabIndex) {
             case 0: currentView = "general"; break;
             case 1: currentView = "saveLoad"; break;
@@ -99,10 +100,10 @@ EBP_Content {
 
     // Side panel - vide mais conserve la largeur pour cohérence avec les autres menus
     sidePanel: Item {
+        Component.onCompleted: sidePanelDeactived()
+
         anchors.fill: parent
         anchors.topMargin: -contentArea.titleHeight
-        
-        // Panel vide, juste pour maintenir la structure
         Rectangle {
             anchors.fill: parent
             anchors.margins: 10

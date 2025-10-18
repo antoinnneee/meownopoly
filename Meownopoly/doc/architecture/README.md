@@ -65,3 +65,5 @@ Documentation complète sur l'architecture de l'éditeur de cartes :
 
 **Dernière mise à jour** : 12 octobre 2025
 
+
+

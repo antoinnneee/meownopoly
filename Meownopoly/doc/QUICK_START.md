@@ -285,3 +285,5 @@ doc/design/UI_STYLE_GUIDE.md
 
 *Dernière mise à jour : 12 octobre 2025*
 
+
+

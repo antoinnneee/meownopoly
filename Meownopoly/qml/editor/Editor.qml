@@ -25,9 +25,39 @@ Rectangle {
     color: "lightblue"
     border.width: 0
 
-    Background {
-        id: background
-        anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
+    // Liste pour stocker tous les SnapableCaseTile créés
+    property alias snapableTilesList: logic.snapableTilesList
+
+    property alias isSelectionActive: logic.isSelectionActive
+    property alias selectionStart: logic.selectionStart
+    property alias selectionCurrent: logic.selectionCurrent
+    property alias isSelectingArea: logic.isSelectingArea
+    property alias defaultCaseType: logic.defaultCaseType
+    // Asset selection properties
+    property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
+    property alias selectedAssetType: selectionPanel.currentSelectedAssetType
+    property alias selectedAssetId: selectionPanel.currentSelectedAssetId
+    property alias isAssetSelected: selectionPanel.isAssetSelected
+
+    Component.onCompleted: {
+        if (!MapLoader.mapAlreadyExist(mapInfo.autosaveMapName, MapLoader.AUTOSAVE)){
+            console.log("Creating autosave map")
+            MapLoader.createJsonMap("", MapLoader.AUTOSAVE)
+            logic.saveMap(MapLoader.AUTOSAVE)
+        }
+        else {
+            console.log("Autosave map already exists")
+        }
+
+        MapLoader.loadMap(mapInfo.autosaveMapName, MapLoader.AUTOSAVE)
+    }
+
+
+    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
+    focus: true
+
+    function regainFocus() {
+        forceActiveFocus()
     }
 
     Keys.onPressed: function(event) {
@@ -52,41 +82,16 @@ Rectangle {
                 event.accepted = true
             }
         }
-
     }
-
-    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
-    focus: true
-    
-    // Fonction pour redonner le focus à l'éditeur
-    function regainFocus() {
-        forceActiveFocus()
-    }
-
-
-
-    // Liste pour stocker tous les SnapableCaseTile créés
-    property alias snapableTilesList: logic.snapableTilesList
-
-    property alias isSelectionActive: logic.isSelectionActive
-    property alias selectionStart: logic.selectionStart
-    property alias selectionCurrent: logic.selectionCurrent
-    property alias isSelectingArea: logic.isSelectingArea
-    property alias defaultCaseType: logic.defaultCaseType
-    // Asset selection properties
-    property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
-    property alias selectedAssetType: selectionPanel.currentSelectedAssetType
-    property alias selectedAssetId: selectionPanel.currentSelectedAssetId
-    property alias isAssetSelected: selectionPanel.isAssetSelected
 
     property MapInfo mapInfo: MapInfo{
-        // mapName: ""
-        // mapDescription: ""
-        // mapCreationDate: ""
-        // mapLastModified: ""
-        // backgroundPath: ""
-        // backgroundScaling: "Fit"
-        // isBackgroundOnGrill: false
+        mapName: autosaveMapName
+        mapDescription: ""
+        mapCreationDate: ""
+        mapLastModified: ""
+        backgroundPath: ""
+        backgroundScaling: "Fit"
+        isBackgroundOnGrill: false
     }
 
     Connections{
@@ -102,7 +107,20 @@ Rectangle {
             Logger.success("Map loaded", "MAP_LOADING")
             logic.tileLogic.builtConnections();
 
-            mapInfo = map.mapInfo
+            // Copy properties from loaded map to preserve bindings
+            if (map.mapInfo) {
+                mapInfo.mapName = map.mapInfo.mapName
+                mapInfo.mapDescription = map.mapInfo.mapDescription
+                mapInfo.mapCreationDate = map.mapInfo.mapCreationDate
+                mapInfo.mapLastModified = map.mapInfo.mapLastModified
+                mapInfo.version = map.mapInfo.version
+                mapInfo.backgroundPath = map.mapInfo.backgroundPath
+                mapInfo.backgroundScaling = map.mapInfo.backgroundScaling
+                mapInfo.backgroundTileSize = map.mapInfo.backgroundTileSize
+                mapInfo.isBackgroundOnGrill = map.mapInfo.isBackgroundOnGrill
+                mapInfo.musicPath = map.mapInfo.musicPath
+            }
+
         }
     }
 
@@ -138,6 +156,11 @@ Rectangle {
         snapToGrid: true
     }
 
+    Background {
+        id: background
+        anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
+    }
+
     MouseArea{
         id: mainMa
         z:0
@@ -164,13 +187,13 @@ Rectangle {
 
         onPressed: function (mouse) {
             if (mouse.button === Qt.LeftButton) {
-            logic.mouseLogic.pressedLeft(mouse, drag)
+                logic.mouseLogic.pressedLeft(mouse, drag)
             }
             else if (mouse.button === Qt.MiddleButton) {
-            logic.mouseLogic.pressedMiddle(mouse, drag)
+                logic.mouseLogic.pressedMiddle(mouse, drag)
             }
             else if (mouse.button === Qt.RightButton) {
-            logic.mouseLogic.pressedRight(mouse, drag)
+                logic.mouseLogic.pressedRight(mouse, drag)
             }
         }
 
@@ -207,8 +230,8 @@ Rectangle {
         id: workArea
         anchors.fill: editorGrid
         Item { id: groupeSelection
-             property int gridXPosition:  0
-             property int gridYPosition:  0
+            property int gridXPosition:  0
+            property int gridYPosition:  0
         }
 
         // MouseArea to track cursor position for asset preview
@@ -436,7 +459,6 @@ Rectangle {
         var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
         root.applyVisualEffectsToNewTile(newTile)
         mainMa.elementClicked(newTile)
-
     }
 
     // Menu d'échappement

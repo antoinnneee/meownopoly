@@ -4,9 +4,13 @@
 #include <QString>
 #include <QObject>
 
+#define AUTOSAVE_MAP_NAME "autosave_tmp"
+
+
 class MapInfo : public QObject
 {
     Q_OBJECT
+
     Q_PROPERTY(QString mapName READ getMapName WRITE setMapName NOTIFY mapNameChanged)
     Q_PROPERTY(QString mapDescription READ getMapDescription WRITE setMapDescription NOTIFY mapDescriptionChanged)
     Q_PROPERTY(QString mapCreationDate READ mapCreationDate WRITE setMapCreationDate NOTIFY mapCreationDateChanged)
@@ -18,8 +22,11 @@ class MapInfo : public QObject
     Q_PROPERTY(QString backgroundScaling READ getBackgroundScaling WRITE setBackgroundScaling NOTIFY backgroundScalingChanged FINAL)
     Q_PROPERTY(bool isBackgroundOnGrill READ getIsBackgroundOnGrill WRITE setIsBackgroundOnGrill NOTIFY isBackgroundOnGrillChanged FINAL)
     Q_PROPERTY(int backgroundTileSize READ getBackgroundTileSize WRITE setBackgroundTileSize NOTIFY backgroundTileSizeChanged FINAL)
+    Q_PROPERTY(QString autosaveMapName READ autosaveMapName CONSTANT FINAL)
 
 public:
+
+
     MapInfo();
     MapInfo(const QJsonObject &json);
     static void registerQml();
@@ -56,6 +63,9 @@ public:
     int getBackgroundTileSize() const;
     void setBackgroundTileSize(int newBackgroundTileSize);
 
+
+    QString autosaveMapName() const;
+
 signals:
     void mapNameChanged(const QString &mapName);
     void mapDescriptionChanged(const QString &mapDescription);
@@ -74,12 +84,14 @@ signals:
 
     void backgroundTileSizeChanged();
 
+
 private:
+    const QString m_autosaveMapName = AUTOSAVE_MAP_NAME;
     QString m_mapName = "";
     QString m_mapDescription = "";
     QString m_mapCreationDate = "";
     QString m_mapLastModified = "";
-    int m_version;
+    int m_version = 0;
 
     QString m_backgroundPath = "";
     QString m_backgroundScaling = "Fit";

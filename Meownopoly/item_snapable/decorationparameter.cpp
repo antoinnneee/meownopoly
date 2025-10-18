@@ -22,6 +22,7 @@ DecorationParameter::DecorationParameter(const QJsonObject &json, QObject *paren
 QString DecorationParameter::getAnimePath(QString imagePath)
 {
     QString animePath = AssetManager::instance()->getAnimatedGifPath(m_decorationCategory, m_decorationType, m_decorationId);
+    qDebug() << "animePath " << animePath;
     if (QFile::exists(animePath.remove("file:///"))){
         return animePath.prepend("file:///");
     }

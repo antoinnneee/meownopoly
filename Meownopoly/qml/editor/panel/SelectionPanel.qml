@@ -91,7 +91,6 @@ Rectangle {
         // Synchroniser les onglets des panels
         assetTabIndex: assetPanel.currentTabIndex
         caseTabIndex: casePanel.currentTabIndex
-        mapTabIndex: mapPanel.currentTabIndex
 
         onButtonClicked: function(index) {
             console.log("Bouton cliqué avec index : " + index);
@@ -106,10 +105,6 @@ Rectangle {
         
         onCaseTabChanged: function(tabIndex) {
             casePanel.currentTabIndex = tabIndex
-        }
-        
-        onMapTabChanged: function(tabIndex) {
-            mapPanel.currentTabIndex = tabIndex
         }
     }
 
