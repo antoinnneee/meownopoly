@@ -184,6 +184,7 @@ Item {
                                     placeholderText: text === "" ? "Name of the map" : ""
                                     text: mapName === mapInfo.autosaveMapName ? "" : mapName
                                     onEditingFinished: logic.mapInfo.mapName = text
+                                    onTextChanged: logic.mapInfo.mapName = text
                                 }
                             }
                         }
