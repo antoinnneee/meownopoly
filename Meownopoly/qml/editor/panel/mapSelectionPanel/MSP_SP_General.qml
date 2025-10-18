@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
+import "../../../ui_item"
 
 import MapInfo
 import MapLoader
@@ -89,12 +90,17 @@ Item {
                             }
 
                             // Save button
-                            Button {
+                            ParticleButton {
                                 id: saveButton
                                 width: implicitWidth
                                 height: 30
                                 flat: true
 
+                            particleColor: "#32CD32"
+                            particleColorVariation: "#00FF00"
+                            particleCount: 30
+                            particleSize: 6
+                            particleLifeSpan: 1500
                                 background: Rectangle {
                                     anchors.fill: parent
                                     property var mapInfo : logic.mapInfo
