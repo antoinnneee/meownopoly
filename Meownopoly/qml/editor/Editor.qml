@@ -415,11 +415,8 @@ Rectangle {
                 snapableParameters.decorationParameter.decorationCategory = root.selectedAssetCategory
                 snapableParameters.decorationParameter.decorationType = root.selectedAssetType
                 snapableParameters.decorationParameter.decorationId = root.selectedAssetId
-                // snapableParameters.tileType = ItemSnapable.DecorationTile
-        //        var newTile = logic.tileLogic.createDecorationTile(snapableParameters)
                 var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
                 return;
-//                var newCaseTile = logic.tileLogic.createNewTileAtPosition(selectionPanel.caseTypeSelected, gridX, gridY, ItemSnapable.CaseTile)
                 mainMa.elementClicked(newCaseTile)
                 newCaseTile.elementPressed()
                 newCaseTile.parent = groupeSelection
@@ -445,8 +442,7 @@ Rectangle {
         snapableParameters.decorationParameter.decorationCategory = root.selectedAssetCategory
         snapableParameters.decorationParameter.decorationType = root.selectedAssetType
         snapableParameters.decorationParameter.decorationId = root.selectedAssetId
-        // snapableParameters.tileType = ItemSnapable.DecorationTile
-//        var newTile = logic.tileLogic.createDecorationTile(snapableParameters)
+
         var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
         root.applyVisualEffectsToNewTile(newTile)
         mainMa.elementClicked(newTile)

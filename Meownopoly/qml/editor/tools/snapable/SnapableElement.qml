@@ -49,7 +49,6 @@ import ItemSnapableFactory
 //    property alias decorationSettings : snapableParameters.decorationParameter
     // 0: case, 1: personnage, 2: decoration
 //    property TileType type
-    property int type: 0
 
     Component.onCompleted: {
         // Si snapableParameters n'a pas été fourni, créer une instance par défaut

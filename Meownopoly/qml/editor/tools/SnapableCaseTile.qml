@@ -11,7 +11,6 @@ import "snapable"
 
 SnapableElement {
     id: root
-    type : ItemSnapable.CaseTile
 
     Connections{
         target: root.snapableParameters.caseData
@@ -21,10 +20,6 @@ SnapableElement {
         }
     }
 
-    onTypeChanged: {
-        console.log("tileType change to", type)
-    }
-
     // Configuration du redimensionnement
     isResizable: true
     autoSnap: true
@@ -32,8 +27,8 @@ SnapableElement {
         if (root.blockConnections) return
         console.log("Next element added:", element)
         // Synchroniser avec les données C++ : ajouter la case suivante
-        if (element && element.itemSnapable && root.itemSnapable) {
-            root.itemSnapable.addNext(element.itemSnapable)
+        if (element && element.snapableParameters && root.snapableParameters) {
+            root.snapableParameters.addNext(element.snapableParameters)
             console.log("Added next case:", element.snapableParameters.caseData.name, "to", root.snapableParameters.caseData.name)
         }
     }
@@ -41,8 +36,8 @@ SnapableElement {
         if (root.blockConnections) return
         console.log("Previous element added:", element)
         // Synchroniser avec les données C++ : ajouter la case précédente
-        if (element && element.itemSnapable && root.itemSnapable) {
-            root.itemSnapable.addPrev(element.itemSnapable)
+        if (element && element.snapableParameters && root.snapableParameters) {
+            root.snapableParameters.addPrev(element.snapableParameters)
             console.log("Added previous case:", element.snapableParameters.caseData.name, "to", root.snapableParameters.caseData.name)
         }
     }
@@ -50,8 +45,8 @@ SnapableElement {
         if (root.blockConnections) return
         console.log("Next element removed:", element)
         // Synchroniser avec les données C++ : supprimer la case suivante
-        if (element && element.snapableParameters.caseData && root.snapableParameters.caseData) {
-            root.snapableParameters.caseData.removeNext(element.snapableParameters.caseData)
+        if (element && element.snapableParameters && root.snapableParameters) {
+            root.snapableParameters.removeNext(element.snapableParameters)
             console.log("Removed next case:", element.snapableParameters.caseData.name, "from", root.snapableParameters.caseData.name)
         }
     }
@@ -59,8 +54,8 @@ SnapableElement {
         if (root.blockConnections) return
         console.log("Previous element removed:", element)
         // Synchroniser avec les données C++ : supprimer la case précédente
-        if (element && element.snapableParameters.caseData && root.snapableParameters.caseData) {
-            root.snapableParameters.caseData.removePrev(element.snapableParameters.caseData)
+        if (element && element.snapableParameters && root.snapableParameters) {
+            root.snapableParameters.removePrev(element.snapableParameters)
             console.log("Removed previous case:", element.snapableParameters.caseData.name, "from", root.snapableParameters.caseData.name)
         }
     }
@@ -72,13 +67,13 @@ SnapableElement {
 
     // Fonction pour synchroniser les connexions depuis les données C++ vers l'interface QML
     function syncConnectionsFromCaseData() {
-        if (!root.snapableParameters.caseData) return
+        if (!root.snapableParameters) return
         
         // Cette fonction pourrait être appelée pour synchroniser les connexions existantes
         // depuis les données C++ vers l'interface QML si nécessaire
         console.log("Syncing connections for case:", root.snapableParameters.caseData.name)
-        console.log("- Next cases count:", root.snapableParameters.caseData.next ? root.snapableParameters.caseData.next.length : 0)
-        console.log("- Previous cases count:", root.snapableParameters.caseData.prev ? root.snapableParameters.caseData.prev.length : 0)
+        console.log("- Next cases count:", root.snapableParameters.next ? root.snapableParameters.next.length : 0)
+        console.log("- Previous cases count:", root.snapableParameters.prev ? root.snapableParameters.prev.length : 0)
     }
 
     CaseTile {

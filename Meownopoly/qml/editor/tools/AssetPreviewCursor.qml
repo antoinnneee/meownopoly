@@ -149,6 +149,8 @@ Item {
                 snapableParameters.decorationParameter.decorationCategory = root.assetCategory
                 snapableParameters.decorationParameter.decorationType = root.assetType
                 snapableParameters.decorationParameter.decorationId = root.assetId
+                snapableParameters.displayParameter.unitSizeWidth = root.unitSizeWidth
+                snapableParameters.displayParameter.unitSizeHeight = root.unitSizeHeight
             }
         }
     }

@@ -55,6 +55,8 @@ public:
     QUuid uniqueId() const;
     void setUniqueId(const QUuid &newUniqueId);
 
+    Q_INVOKABLE void changeCaseDataType(Case::CaseType caseType);
+
 
 
     Q_INVOKABLE void addNext(ItemSnapable *newNext);

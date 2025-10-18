@@ -65,7 +65,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
 }
 
 ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)
-: QObject(parent)
+    : QObject(parent)
 {
     m_caseData = CaseFactory::createCase(caseType);
     m_displayParameter = new DisplayParameter();
@@ -73,6 +73,16 @@ ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)
     m_uniqueId = QUuid::createUuid();
     m_tileType = CaseTile;
 }
+
+// ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)
+//     : QObject(parent)
+// {
+//     m_caseData = CaseFactory::createCase(caseType);
+//     m_displayParameter = new DisplayParameter();
+//     m_decorationParameter = new DecorationParameter();
+//     m_uniqueId = QUuid::createUuid();
+//     m_tileType = CaseTile;
+// }
 
 Case *ItemSnapable::caseData() const {
     return m_caseData;
@@ -147,6 +157,15 @@ void ItemSnapable::setUniqueId(const QUuid &newUniqueId)
         return;
     m_uniqueId = newUniqueId;
     emit uniqueIdChanged();
+}
+
+void ItemSnapable::changeCaseDataType(Case::CaseType caseType)
+{
+    if (m_caseData) {
+        m_caseData->deleteLater();
+    }
+    m_caseData = CaseFactory::createCase(caseType);
+    emit caseDataChanged();
 }
 
 
