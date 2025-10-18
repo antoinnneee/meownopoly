@@ -160,5 +160,6 @@
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/editor/tools/LinkPreviewCursor.qml</file>
         <file>qml/ui_item/ParticleButton.qml</file>
+        <file>qml/editor/tools/ConnectionOverlay2.qml</file>
     </qresource>
 </RCC>

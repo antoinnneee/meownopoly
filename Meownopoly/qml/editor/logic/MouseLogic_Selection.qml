@@ -116,6 +116,8 @@ MouseLogic_Base {
                     clickElement[0].parent = groupeSelection
                     clickElement[0].x = clickElement[0].x - deltaX
                     clickElement[0].y = clickElement[0].y - deltaY
+                    clickElement[0].x = clickElement[0].x - deltaX
+                    clickElement[0].y = clickElement[0].y - deltaY
                     selectedElements.push(clickElement[0])
                     
                     // Mettre à jour la configuration de case si applicable
