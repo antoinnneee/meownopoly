@@ -15,35 +15,35 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
     qDebug() << "--------------------------------";
     qDebug() << "Start loading snapable tiles";
 
-
     for (const QJsonValueRef value : snapableTilesArray) {
         const QJsonObject tileObject = value.toObject();
-        if (tileObject.contains("caseData")) {
-            ItemSnapable *is = new ItemSnapable(tileObject);
+        ItemSnapable *is = new ItemSnapable(tileObject);
+        m_tiles.append(is);
+        /*
+        if (is->tileType() == TileType::CaseTile){
             m_caseTiles.append(is);
         }
-        else if (tileObject.contains("decorationParameter")) {
-            ItemSnapable *is = new ItemSnapable(tileObject);
+        if (is->tileType() == TileType::DecorationTile){
             m_decorationTiles.append(is);
         }
+*/
     }
 
     qDebug() << "Snapable tiles loaded successfully";
     qDebug() << "--------------------------------";
     qDebug() << "building links between snapable tiles";
-    for (ItemSnapable *is : std::as_const(m_caseTiles)) {
-        Case *caseData = is->caseData();
+
+    for (ItemSnapable *is : std::as_const(m_tiles)) {
         QJsonObject originalJson = is->getOriginalJson();
-        QJsonObject caseDataJson = originalJson["caseData"].toObject();
-        QJsonArray nextIdArray = caseDataJson["next"].toArray();
+        QJsonArray nextIdArray = originalJson["next"].toArray();
 
         for (const QJsonValueRef value : nextIdArray) {
             QString nextId = value.toString();
-            for (ItemSnapable *targetTile : m_caseTiles) {
-                if (targetTile->caseData()->uniqueId().toString() == nextId) {
-                    caseData->addNext(targetTile->caseData());
-                    targetTile->caseData()->addPrev(caseData);
-                    qDebug() << "Link built between" << caseData->name() << "and" << targetTile->caseData()->name();
+            for (ItemSnapable *targetTile : m_tiles) {
+                if (targetTile->uniqueId().toString() == nextId) {
+                   is->addNext(targetTile);
+                    targetTile->addPrev(is);
+                    qDebug() << "Link built between" << is->uniqueId() << "and" << targetTile->uniqueId();
                 }
             }
         }
@@ -65,4 +65,14 @@ void Map::setMapInfo(MapInfo *newMapInfo)
         return;
     mapInfo = newMapInfo;
     emit mapInfoChanged();
+}
+
+QList<ItemSnapable *> Map::tiles() const
+{
+    return m_tiles;
+}
+
+void Map::setTiles(const QList<ItemSnapable *> &newTiles)
+{
+    m_tiles = newTiles;
 }

@@ -70,9 +70,10 @@ EBP_Content {
                 onRequestChangeType: function(newType) {
                     if (targetCase) {
                         console.log("Changing case type to:", newType)
-                        targetCase.type = newType
+                        //targetCase.type = newType
+                        targetSnapableCase.snapableParameters.changeCaseDataType(newType)
                         // Mettre à jour les contrôles pour refléter le nouveau type
-                        updateControls()
+                        setTargetCase(targetSnapableCase)
                     }
                 }
             }

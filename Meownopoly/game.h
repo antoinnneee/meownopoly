@@ -54,7 +54,6 @@ public:
     
     // Case library functions for UI
     Q_INVOKABLE QList<Case*> getPurchasableCases() const;
-    Q_INVOKABLE Case* getCaseById(const QString &uniqueId) const;
 
 
     QList<Player*> players() const { return m_listPlayers; }
@@ -76,7 +75,7 @@ public:
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
     bool addTileToJson(QJsonObject jsonObject, QString mapName);
-    Q_INVOKABLE bool registerMap(MapInfo* mapInfo, QVariantList  caseList, QVariantList  decorationList);
+    Q_INVOKABLE bool registerMap(MapInfo* mapInfo, QVariantList itemSnapable);
 
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
 

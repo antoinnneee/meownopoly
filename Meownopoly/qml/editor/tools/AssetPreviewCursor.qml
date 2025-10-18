@@ -4,23 +4,49 @@ import AssetManager
 import DecorationParameter
 import "../panel"
 import Game
-
+import ItemSnapable
+import ItemSnapableFactory
 
 Item {
     id: root
     
     // Properties
     property string assetCategory: ""
+    onAssetCategoryChanged: {
+        snapablePreview.snapableParameters.decorationParameter.decorationCategory = assetCategory
+    }
+
     property string assetType: ""
+    onAssetTypeChanged: {
+        snapablePreview.snapableParameters.decorationParameter.decorationType = assetType
+    }
     property string assetId: ""
+    onAssetIdChanged: {
+        snapablePreview.snapableParameters.decorationParameter.decorationId = assetId
+    }
     property int caseType: -1  // Pour les SnapableCaseTile
+    onCaseTypeChanged: {
+        if ( snapablePreview.snapableParameters != caseType)
+            snapablePreview.snapableParameters = ItemSnapableFactory.createItemSnapable(caseType)
+        snapablePreview.snapableParameters.displayParameter.unitSizeWidth = root.unitSizeWidth
+        snapablePreview.snapableParameters.displayParameter.unitSizeHeight = root.unitSizeHeight
+    }
     property bool isCasePreview: false  // Distingue entre décorations et cases
     visible: (assetCategory !== "" && assetType !== "" && assetId !== "") || (isCasePreview && caseType !== -1)
     property real mouseX: 0
     property real mouseY: 0
 
     property int unitSizeWidth: 4
+    onUnitSizeWidthChanged: {
+        snapablePreview.snapableParameters.displayParameter.unitSizeWidth = unitSizeWidth
+        updateGridPosition()
+    }
+
     property int unitSizeHeight: 6
+    onUnitSizeHeightChanged: {
+        snapablePreview.snapableParameters.displayParameter.unitSizeHeight = unitSizeHeight
+        updateGridPosition()
+    }
     required property GridManager gridManager
     property var snapablePreview
 
@@ -56,22 +82,22 @@ Item {
             var currentEffects = visualEffectsPanel.getCurrentEffects()
             if (!currentEffects) return
             // Apply color effects
-            newTile.displaySettings.effectBrightness = currentEffects.brightness
-            newTile.displaySettings.effectContrast = currentEffects.contrast
-            newTile.displaySettings.effectSaturation = currentEffects.saturation
-            newTile.displaySettings.effectColorization = currentEffects.colorization
-            newTile.displaySettings.effectColorizationColor = currentEffects.colorizationColor
+            newTile.snapableParameters.displayParameter.effectBrightness = currentEffects.brightness
+            newTile.snapableParameters.displayParameter.effectContrast = currentEffects.contrast
+            newTile.snapableParameters.displayParameter.effectSaturation = currentEffects.saturation
+            newTile.snapableParameters.displayParameter.effectColorization = currentEffects.colorization
+            newTile.snapableParameters.displayParameter.effectColorizationColor = currentEffects.colorizationColor
 
             // Apply advanced effects
-            newTile.displaySettings.effectBlurEnabled = currentEffects.blurEnabled
-            newTile.displaySettings.effectBlur = currentEffects.blur
-            newTile.displaySettings.effectShadowEnabled = currentEffects.shadowEnabled
-            newTile.displaySettings.effectShadowBlur = currentEffects.shadowBlur
+            newTile.snapableParameters.displayParameter.effectBlurEnabled = currentEffects.blurEnabled
+            newTile.snapableParameters.displayParameter.effectBlur = currentEffects.blur
+            newTile.snapableParameters.displayParameter.effectShadowEnabled = currentEffects.shadowEnabled
+            newTile.snapableParameters.displayParameter.effectShadowBlur = currentEffects.shadowBlur
 
             // Apply transform effects
-            newTile.displaySettings.rotationAngle = currentEffects.rotationAngle
-            newTile.displaySettings.mirrorHorizontal = currentEffects.mirrorHorizontal
-            newTile.displaySettings.mirrorVertical = currentEffects.mirrorVertical
+            newTile.snapableParameters.displayParameter.rotationAngle = currentEffects.rotationAngle
+            newTile.snapableParameters.displayParameter.mirrorHorizontal = currentEffects.mirrorHorizontal
+            newTile.snapableParameters.displayParameter.mirrorVertical = currentEffects.mirrorVertical
         }
     }
 
@@ -82,18 +108,20 @@ Item {
     property int gridXPosition:  0
     property int gridYPosition:  0
     onXChanged: {
-        var point = gridManager.getGridPosition(mouseX, mouseY)
-        gridXPosition = point.x - Math.trunc(logic.tileLogic.currentElementWidth/2)
-        if (snapablePreview) {
-            snapablePreview.x = gridXPosition * gridManager.gridSize
-        }
+        updateGridPosition()
     }
 
     onYChanged: {
+        updateGridPosition()
+    }
+    function updateGridPosition()
+    {
         var point = gridManager.getGridPosition(mouseX, mouseY)
         gridYPosition = point.y - Math.trunc(logic.tileLogic.currentElementHeight/2)
+        gridXPosition = point.x - Math.trunc(logic.tileLogic.currentElementWidth/2)
         if (snapablePreview) {
             snapablePreview.y = gridYPosition * gridManager.gridSize
+            snapablePreview.x = gridXPosition * gridManager.gridSize
         }
 
     }
@@ -117,21 +145,29 @@ Item {
                 opacity: 0.2
             }
 
-            decorationSettings: DecorationParameter {
-                decorationCategory: root.assetCategory
-                decorationType: root.assetType
-                decorationId: root.assetId
-            }
+
+
+            snapableParameters: ItemSnapableFactory.createItemSnapable()
+
+
+
             parent: workArea
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            displaySettings.unitSizeWidth: root.unitSizeWidth
-            displaySettings.unitSizeHeight: root.unitSizeHeight
+            //displaySettings.unitSizeWidth: root.unitSizeWidth
+            //displaySettings.unitSizeHeight: root.unitSizeHeight
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
+                console.log("preview load complete")
                 root.snapablePreview = snapableDecoration
+
+                snapableParameters.decorationParameter.decorationCategory = root.assetCategory
+                snapableParameters.decorationParameter.decorationType = root.assetType
+                snapableParameters.decorationParameter.decorationId = root.assetId
+                snapableParameters.displayParameter.unitSizeWidth = root.unitSizeWidth
+                snapableParameters.displayParameter.unitSizeHeight = root.unitSizeHeight
             }
         }
     }
@@ -149,17 +185,23 @@ Item {
                 opacity: 0.2
             }
 
-            caseData: Game.getNewCaseType(caseType)
+            snapableParameters : ItemSnapableFactory.createItemSnapable(root.caseType)
+
             parent: workArea
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            displaySettings.unitSizeWidth: root.unitSizeWidth
-            displaySettings.unitSizeHeight: root.unitSizeHeight
+            // snapableParameters.displaySettings.unitSizeWidth: root.unitSizeWidth
+            // snapableParameters.displaySettings.unitSizeHeight: root.unitSizeHeight
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
+                console.log("preview load complete", root.caseType)
                 root.snapablePreview = snapableCaseTile
+                if (snapableParameters.caseData.type != root.caseType)
+                    snapableParameters = ItemSnapableFactory.createItemSnapable(root.caseType)
+                snapableParameters.displayParameter.unitSizeWidth = root.unitSizeWidth
+                snapableParameters.displayParameter.unitSizeHeight = root.unitSizeHeight
             }
         }
     }

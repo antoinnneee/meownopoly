@@ -7,46 +7,68 @@ import "snapable"
 import AssetManager
 import ItemSnapable
 import DecorationParameter
-
+import TileType
 SnapableElement {
+    id: root
     // Configuration du redimensionnement
     isResizable: true
     autoSnap: true
 
-    displaySettings.unitSizeHeight: 6
-    displaySettings.unitSizeWidth:4
 
-    type : ItemSnapable.DecorationTile
+    connectionManager.onNextElementAdded:function(element) {
+        if (root.blockConnections) return
+        console.log("Next element added:", element)
+        // Synchroniser avec les données C++ : ajouter la case suivante
+        if (element && element.snapableParameters && root.snapableParameters) {
+            root.snapableParameters.addNext(element.snapableParameters)
+            console.log("Added next case:", element.snapableParameters.caseData.name, "to", root.snapableParameters.caseData.name)
+        }
+    }
+    connectionManager.onPreviousElementAdded:function(element) {
+        if (root.blockConnections) return
+        console.log("Previous element added:", element)
+        // Synchroniser avec les données C++ : ajouter la case précédente
+        if (element && element.snapableParameters && root.snapableParameters) {
+            root.snapableParameters.addPrev(element.snapableParameters)
+            console.log("Added previous case:", element.snapableParameters.caseData.name, "to", root.snapableParameters.caseData.name)
+        }
+    }
+    connectionManager.onNextElementRemoved:function(element) {
+        if (root.blockConnections) return
+        console.log("Next element removed:", element)
+        // Synchroniser avec les données C++ : supprimer la case suivante
+        if (element && element.snapableParameters && root.snapableParameters) {
+            root.snapableParameters.removeNext(element.snapableParameters)
+            console.log("Removed next case:", element.snapableParameters.caseData.name, "from", root.snapableParameters.caseData.name)
+        }
+    }
+    connectionManager.onPreviousElementRemoved:function(element) {
+        if (root.blockConnections) return
+        console.log("Previous element removed:", element)
+        // Synchroniser avec les données C++ : supprimer la case précédente
+        if (element && element.snapableParameters && root.snapableParameters) {
+            root.snapableParameters.removePrev(element.snapableParameters)
+            console.log("Removed previous case:", element.snapableParameters.caseData.name, "from", root.snapableParameters.caseData.name)
+        }
+    }
 
-    property string imagePath: AssetManager.getAssetPath(decorationSettings.decorationCategory, decorationSettings.decorationType, decorationSettings.decorationId)
+    Component.onCompleted: {
+        // Synchroniser les connexions existantes depuis les données C++ vers l'interface
+        syncConnectionsFromCaseData()
+    }
 
-    // MultiEffect properties - Color effects (always enabled)
-    displaySettings.effectBrightness: 0.0
-    displaySettings.effectContrast: 0.0
-    displaySettings.effectSaturation: 0.0
-    displaySettings.effectColorization: 0.0
-    displaySettings.effectColorizationColor: "#ffffff"
+    // Fonction pour synchroniser les connexions depuis les données C++ vers l'interface QML
+    function syncConnectionsFromCaseData() {
+        if (!root.snapableParameters) return
 
-    // MultiEffect properties - Optional effects
-    displaySettings.effectBlurEnabled: false
-    displaySettings.effectBlur: 0.0           // 0.0 to 1.0
-    displaySettings.effectBlurMax: 32
-    displaySettings.effectBlurMultiplier: 1.0
+        // Cette fonction pourrait être appelée pour synchroniser les connexions existantes
+        // depuis les données C++ vers l'interface QML si nécessaire
+        console.log("Syncing connections for case:", root.snapableParameters.caseData.name)
+        console.log("- Next cases count:", root.snapableParameters.next ? root.snapableParameters.next.length : 0)
+        console.log("- Previous cases count:", root.snapableParameters.prev ? root.snapableParameters.prev.length : 0)
+    }
 
-    displaySettings.effectShadowEnabled: false
-    displaySettings.effectShadowBlur: 1.0
-    displaySettings.effectShadowColor: Qt.rgba(0.0, 0.0, 0.0, 1.0)
-    displaySettings.effectShadowHorizontalOffset: 0.0
-    displaySettings.effectShadowVerticalOffset: 0.0
-    displaySettings.effectShadowOpacity: 1.0
-    displaySettings.effectShadowScale: 1.0
-
-    // Rotation properties
-    displaySettings.rotationAngle: 0.0
-
-    // Mirror properties
-    displaySettings.mirrorHorizontal: false
-    displaySettings.mirrorVertical: false
+    property string imagePath: AssetManager.getAssetPath(snapableParameters.decorationParameter.decorationCategory, snapableParameters.decorationParameter.decorationType, snapableParameters.decorationParameter.decorationId)
 
     property bool effectMaskEnabled: false
     property var effectMaskSource: null
@@ -57,18 +79,18 @@ SnapableElement {
     property real effectMaskSpreadAtMax: 0.0
 
     // Helper function to check if any effect is active
-    readonly property bool hasActiveEffects: displaySettings.effectBrightness !== 0.0 ||
-                                             displaySettings.effectContrast !== 0.0 ||
-                                             displaySettings.effectSaturation !== 0.0 ||
-                                             displaySettings.effectColorization !== 0.0 ||
-                                             displaySettings.effectBlurEnabled ||
-                                             displaySettings.effectShadowEnabled ||
+    readonly property bool hasActiveEffects: snapableParameters.displayParameter.effectBrightness !== 0.0 ||
+                                             snapableParameters.displayParameter.effectContrast !== 0.0 ||
+                                             snapableParameters.displayParameter.effectSaturation !== 0.0 ||
+                                             snapableParameters.displayParameter.effectColorization !== 0.0 ||
+                                             snapableParameters.displayParameter.effectBlurEnabled ||
+                                             snapableParameters.displayParameter.effectShadowEnabled ||
                                              effectMaskEnabled
 
     // Helper function to check if any transform is active
-    readonly property bool hasActiveTransforms: displaySettings.rotationAngle !== 0.0 ||
-                                                displaySettings.mirrorHorizontal ||
-                                                displaySettings.mirrorVertical
+    readonly property bool hasActiveTransforms: snapableParameters.displayParameter.rotationAngle !== 0.0 ||
+                                                snapableParameters.displayParameter.mirrorHorizontal ||
+                                                snapableParameters.displayParameter.mirrorVertical
 
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
@@ -77,7 +99,7 @@ SnapableElement {
     AnimatedImage {
         id: tileImage
         anchors.fill: parent
-        source: decorationSettings.getAnimePath(imagePath)
+        source: snapableParameters.decorationParameter.getAnimePath(imagePath)
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true
         cache: true  // Cache the image to prevent reloading
@@ -91,13 +113,13 @@ SnapableElement {
         // Apply mirror effects using scale
         transform: [
             Scale{
-                xScale: displaySettings.mirrorHorizontal ? -1 : 1
-                yScale: displaySettings.mirrorVertical ? -1 : 1
+                xScale: snapableParameters.displayParameter.mirrorHorizontal ? -1 : 1
+                yScale: snapableParameters.displayParameter.mirrorVertical ? -1 : 1
                 origin.x: tileImage.width / 2
                 origin.y: tileImage.height / 2
             },
             Rotation{
-                angle: displaySettings.rotationAngle
+                angle: snapableParameters.displayParameter.rotationAngle
                 origin.x: tileImage.width / 2
                 origin.y: tileImage.height / 2
                 // axis.y:0.2
@@ -122,39 +144,39 @@ SnapableElement {
 
         transform: [
             Scale{
-                xScale: displaySettings.mirrorHorizontal ? -1 : 1
-                yScale: displaySettings.mirrorVertical ? -1 : 1
+                xScale: snapableParameters.displayParameter.mirrorHorizontal ? -1 : 1
+                yScale: snapableParameters.displayParameter.mirrorVertical ? -1 : 1
                 origin.x: multiEffect.width / 2
                 origin.y: multiEffect.height / 2
             },
             Rotation{
-                angle: displaySettings.rotationAngle
+                angle: snapableParameters.displayParameter.rotationAngle
                 origin.x: multiEffect.width / 2
                 origin.y: multiEffect.height / 2
             }
         ]
 
         // Color effects (always available)
-        brightness: displaySettings.effectBrightness
-        contrast: displaySettings.effectContrast
-        saturation: displaySettings.effectSaturation
-        colorization: displaySettings.effectColorization
-        colorizationColor: displaySettings.effectColorizationColor
+        brightness: snapableParameters.displayParameter.effectBrightness
+        contrast: snapableParameters.displayParameter.effectContrast
+        saturation: snapableParameters.displayParameter.effectSaturation
+        colorization: snapableParameters.displayParameter.effectColorization
+        colorizationColor: snapableParameters.displayParameter.effectColorizationColor
 
         // Blur effect
-        blurEnabled: displaySettings.effectBlurEnabled
-        blur: displaySettings.effectBlur
-        blurMax: displaySettings.effectBlurMax
-        blurMultiplier: displaySettings.effectBlurMultiplier
+        blurEnabled: snapableParameters.displayParameter.effectBlurEnabled
+        blur: snapableParameters.displayParameter.effectBlur
+        blurMax: snapableParameters.displayParameter.effectBlurMax
+        blurMultiplier: snapableParameters.displayParameter.effectBlurMultiplier
 
         // Shadow effect
-        shadowEnabled: displaySettings.effectShadowEnabled
-        shadowBlur: displaySettings.effectShadowBlur
-        shadowColor: displaySettings.effectShadowColor
-        shadowHorizontalOffset: displaySettings.effectShadowHorizontalOffset
-        shadowVerticalOffset: displaySettings.effectShadowVerticalOffset
-        shadowOpacity: displaySettings.effectShadowOpacity
-        shadowScale: displaySettings.effectShadowScale
+        shadowEnabled: snapableParameters.displayParameter.effectShadowEnabled
+        shadowBlur: snapableParameters.displayParameter.effectShadowBlur
+        shadowColor: snapableParameters.displayParameter.effectShadowColor
+        shadowHorizontalOffset: snapableParameters.displayParameter.effectShadowHorizontalOffset
+        shadowVerticalOffset: snapableParameters.displayParameter.effectShadowVerticalOffset
+        shadowOpacity: snapableParameters.displayParameter.effectShadowOpacity
+        shadowScale: snapableParameters.displayParameter.effectShadowScale
 
         // Mask effect ??
         maskEnabled: effectMaskEnabled
@@ -166,7 +188,7 @@ SnapableElement {
         maskSpreadAtMax: effectMaskSpreadAtMax
 
         // Performance optimization: auto-padding management
-        autoPaddingEnabled: false//displaySettings.effectBlurEnabled || displaySettings.effectShadowEnabled
+        autoPaddingEnabled: false//displayParameter.effectBlurEnabled || displayParameter.effectShadowEnabled
     }
 
     function isTransparent(mouse){
@@ -184,28 +206,28 @@ SnapableElement {
 
     // Functions to reset effects
     function resetColorEffects() {
-        displaySettings.effectBrightness = 0.0
-        displaySettings.effectContrast = 0.0
-        displaySettings.effectSaturation = 0.0
-        displaySettings.effectColorization = 0.0
-        displaySettings.effectColorizationColor = "#ffffff"
+        snapableParameters.displayParameter.effectBrightness = 0.0
+        snapableParameters.displayParameter.effectContrast = 0.0
+        snapableParameters.displayParameter.effectSaturation = 0.0
+        snapableParameters.displayParameter.effectColorization = 0.0
+        snapableParameters.displayParameter.effectColorizationColor = "#ffffff"
     }
 
     function resetBlurEffect() {
-        displaySettings.effectBlurEnabled = false
-        displaySettings.effectBlur = 0.0
-        displaySettings.effectBlurMax = 32
-        displaySettings.effectBlurMultiplier = 1.0
+        snapableParameters.displayParameter.effectBlurEnabled = false
+        snapableParameters.displayParameter.effectBlur = 0.0
+        snapableParameters.displayParameter.effectBlurMax = 32
+        snapableParameters.displayParameter.effectBlurMultiplier = 1.0
     }
 
     function resetShadowEffect() {
-        displaySettings.effectShadowEnabled = false
-        displaySettings.effectShadowBlur = 1.0
-        displaySettings.effectShadowColor = Qt.rgba(0.0, 0.0, 0.0, 1.0)
-        displaySettings.effectShadowHorizontalOffset = 0.0
-        displaySettings.effectShadowVerticalOffset = 0.0
-        displaySettings.effectShadowOpacity = 1.0
-        displaySettings.effectShadowScale = 1.0
+        snapableParameters.displayParameter.effectShadowEnabled = false
+        snapableParameters.displayParameter.effectShadowBlur = 1.0
+        snapableParameters.displayParameter.effectShadowColor = Qt.rgba(0.0, 0.0, 0.0, 1.0)
+        snapableParameters.displayParameter.effectShadowHorizontalOffset = 0.0
+        snapableParameters.displayParameter.effectShadowVerticalOffset = 0.0
+        snapableParameters.displayParameter.effectShadowOpacity = 1.0
+        snapableParameters.displayParameter.effectShadowScale = 1.0
     }
 
     function resetMaskEffect() {
@@ -227,12 +249,12 @@ SnapableElement {
 
     // Functions to reset transforms
     function resetRotation() {
-        displaySettings.rotationAngle = 0.0
+        snapableParameters.displayParameter.rotationAngle = 0.0
     }
 
     function resetMirror() {
-        displaySettings.mirrorHorizontal = false
-        displaySettings.mirrorVertical = false
+        snapableParameters.displayParameter.mirrorHorizontal = false
+        snapableParameters.displayParameter.mirrorVertical = false
     }
 
     function resetAllTransforms() {
@@ -243,21 +265,21 @@ SnapableElement {
     function applyVisualEffects(effects)    // generate from VisualEffectsPanel@getCurrentEffects()
     {
         // Apply color effects
-        displaySettings.effectBrightness = effects.brightness
-        displaySettings.effectContrast = effects.contrast
-        displaySettings.effectSaturation = effects.saturation
-        displaySettings.effectColorization = effects.colorization
-        displaySettings.effectColorizationColor = effects.colorizationColor
+        snapableParameters.displayParameter.effectBrightness = effects.brightness
+        snapableParameters.displayParameter.effectContrast = effects.contrast
+        snapableParameters.displayParameter.effectSaturation = effects.saturation
+        snapableParameters.displayParameter.effectColorization = effects.colorization
+        snapableParameters.displayParameter.effectColorizationColor = effects.colorizationColor
 
         // Apply advanced effects
-        displaySettings.effectBlurEnabled = effects.blurEnabled
-        displaySettings.effectBlur = effects.blur
-        displaySettings.effectShadowEnabled = effects.shadowEnabled
-        displaySettings.effectShadowBlur = effects.shadowBlur
+        snapableParameters.displayParameter.effectBlurEnabled = effects.blurEnabled
+        snapableParameters.displayParameter.effectBlur = effects.blur
+        snapableParameters.displayParameter.effectShadowEnabled = effects.shadowEnabled
+        snapableParameters.displayParameter.effectShadowBlur = effects.shadowBlur
 
         // Apply transform effects
-        displaySettings.rotationAngle = effects.rotationAngle
-        displaySettings.mirrorHorizontal = effects.mirrorHorizontal
-        displaySettings.mirrorVertical = effects.mirrorVertical
+        snapableParameters.displayParameter.rotationAngle = effects.rotationAngle
+        snapableParameters.displayParameter.mirrorHorizontal = effects.mirrorHorizontal
+        snapableParameters.displayParameter.mirrorVertical = effects.mirrorVertical
     }
 }

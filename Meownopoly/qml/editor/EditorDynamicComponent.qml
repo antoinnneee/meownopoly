@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import TileType
 import "tools"
 import "tools/snapable"
 
@@ -35,7 +36,6 @@ Item{
         SnapableDecoration {
             gridManager: editorGrid
 
-            generalMA: mainMA
 
             // Gestion de la suppression
             onElementDeleted: function(element) {

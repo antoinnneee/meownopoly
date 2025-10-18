@@ -89,3 +89,50 @@ Case *CaseFactory::createCase(CaseType type)
     }
     return newCase;
 }
+
+Case* CaseFactory::createCase(const QJsonObject &caseJson)
+{
+    Case* newCase = nullptr;
+    
+    // Extract type from JSON and convert to enum
+    Case::CaseType type = Case::intToCaseType(caseJson["type"].toInt());
+    switch (type) {
+    case Case::CS_RestArea:
+        newCase = new CaseRestArea(caseJson);
+        break;
+    case Case::CS_KibbleDispenser:
+        newCase = new CaseKibbleDispenser(caseJson); // Default kibble amount
+        break;
+    case Case::CS_CardBoardBox:
+        newCase = new CaseCardBoardBox(caseJson);
+        break;
+    case Case::CS_CatNip:
+        newCase = new CaseCatNip(caseJson);
+        break;
+    case Case::CS_Jail:
+        newCase = new CaseJail(caseJson);
+        break;
+    case Case::CS_ToJail:
+        newCase = new CaseToJail(caseJson);
+        break;
+    case Case::CS_CatDoor:
+        newCase = new CaseCatDoor(caseJson);
+        break;
+    case Case::CS_FreeNap:
+        newCase = new CaseFreeNap(caseJson);
+        break;
+    case Case::CS_Device:
+        newCase = new CaseCatDevice(caseJson);
+        break;
+    case Case::CS_Taxe:
+        newCase = new CaseKibbleDispenser(caseJson); // Tax case as KibbleDispenser
+        break;
+    default:
+        qDebug() << "Unknown case type:" << type << "creating base Case";
+        newCase = new Case(caseJson);
+        break;
+    }
+
+    return newCase;
+}
+

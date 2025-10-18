@@ -160,11 +160,11 @@ Rectangle {
         if (!targetDecoration) return
         
         // Update rotation slider
-        rotationSlider.value = targetDecoration.displaySettings.rotationAngle
+        rotationSlider.value = targetDecoration.snapableParameters.displayParameter.rotationAngle
         
         // Update mirror checkboxes
-        horizontalMirrorCheck.checked = targetDecoration.displaySettings.mirrorHorizontal
-        verticalMirrorCheck.checked = targetDecoration.displaySettings.mirrorVertical
+        horizontalMirrorCheck.checked = targetDecoration.snapableParameters.displayParameter.mirrorHorizontal
+        verticalMirrorCheck.checked = targetDecoration.snapableParameters.displayParameter.mirrorVertical
         */
     }
 

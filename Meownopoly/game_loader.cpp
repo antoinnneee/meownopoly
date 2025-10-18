@@ -54,7 +54,7 @@ bool Game::addTileToJson(QJsonObject jsonObject, QString mapName)
     return true;
 }
 
-bool Game::registerMap(MapInfo* mapInfo, QVariantList caseList, QVariantList decorationList)
+bool Game::registerMap(MapInfo* mapInfo, QVariantList itemSnapableList)
 {
     QJsonArray snapableTilesArray;
 
@@ -66,31 +66,11 @@ bool Game::registerMap(MapInfo* mapInfo, QVariantList caseList, QVariantList dec
 
     jsonObject["mapInfo"] = mapInfoObject;
 
-    for (int i = 0; i < caseList.size(); ++i) {
-        QVariantList caseInfo = caseList.at(i).toList();
-        if (caseInfo.size() >= 2) {
-            // Extraction de caseData
-            QVariant caseData = caseInfo.at(0);
-            Case* currentCase = qvariant_cast<Case*>(caseData);
+    for (int i = 0; i < itemSnapableList.size(); ++i) {
+        QVariant itemSnapable = itemSnapableList.at(i);
+        ItemSnapable* currentTile = qvariant_cast<ItemSnapable*>(itemSnapable);
 
-            // Extraction de displayInfo
-            DisplayParameter* displayParameter = qvariant_cast<DisplayParameter*>(caseInfo.at(1));
-
-            ItemSnapable is(currentCase, displayParameter);
-            snapableTilesArray = formatTileDataToJson(is, snapableTilesArray);
-        }
-    }
-
-    for (int i = 0; i < decorationList.size(); ++i) {
-
-        QVariantList decorationInfo = decorationList.at(i).toList();
-        if (decorationInfo.size() >= 2) {
-            DecorationParameter* decorationParameter = qvariant_cast<DecorationParameter*>(decorationInfo.at(0));
-            DisplayParameter* displayParameter = qvariant_cast<DisplayParameter*>(decorationInfo.at(1));
-
-            ItemSnapable is(decorationParameter, displayParameter);
-            snapableTilesArray = formatTileDataToJson(is, snapableTilesArray);
-        }
+        snapableTilesArray = formatTileDataToJson(*currentTile, snapableTilesArray);
     }
 
     jsonObject["snapableTiles"] = snapableTilesArray;

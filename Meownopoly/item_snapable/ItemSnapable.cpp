@@ -1,6 +1,7 @@
 #include "ItemSnapable.h"
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
+#include "case/CaseFactory.h"
 
 // Include all case types
 #include "../case/CaseRestArea.h"
@@ -16,6 +17,8 @@
 ItemSnapable::ItemSnapable() {
     qDebug() << "New ItemSnapable created";
     m_uniqueId = QUuid::createUuid();
+    m_caseData = new Case();
+    m_tileType = DecorationTile;
 
 }
 
@@ -32,6 +35,7 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
 {
     m_caseData = caseData;
     m_displayParameter = displayParameter;
+    m_uniqueId = QUuid::createUuid();
 }
 
 ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent)
@@ -40,6 +44,7 @@ ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayPar
     m_decorationParameter = decorationParameter;
     m_displayParameter = displayParameter;
     m_caseData = nullptr;
+    m_uniqueId = QUuid::createUuid();
 }
 
 ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
@@ -47,7 +52,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
 {
     m_json = json;
     if (m_json.contains("caseData")) {
-        m_caseData = getNewCaseFromJSON(m_json["caseData"].toObject(), this);
+        m_caseData = CaseFactory::createCase(m_json["caseData"].toObject());
     }
     if (m_json.contains("displayParameter")) {
         m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
@@ -55,7 +60,29 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
     if (m_json.contains("decorationParameter")) {
         m_decorationParameter = new DecorationParameter(m_json["decorationParameter"].toObject(), this);
     }
+    m_uniqueId = QUuid(m_json["uniqueId"].toString());
+    m_tileType = TileType(m_json["tileType"].toInt());
 }
+
+ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)
+    : QObject(parent)
+{
+    m_caseData = CaseFactory::createCase(caseType);
+    m_displayParameter = new DisplayParameter();
+    m_decorationParameter = new DecorationParameter();
+    m_uniqueId = QUuid::createUuid();
+    m_tileType = CaseTile;
+}
+
+// ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)
+//     : QObject(parent)
+// {
+//     m_caseData = CaseFactory::createCase(caseType);
+//     m_displayParameter = new DisplayParameter();
+//     m_decorationParameter = new DecorationParameter();
+//     m_uniqueId = QUuid::createUuid();
+//     m_tileType = CaseTile;
+// }
 
 Case *ItemSnapable::caseData() const {
     return m_caseData;
@@ -85,65 +112,29 @@ void ItemSnapable::setDecorationParameter(DecorationParameter * decorationParame
         delete m_decorationParameter;
     m_decorationParameter = decorationParameter; emit decorationParameterChanged();
 }
-
-Case* ItemSnapable::getNewCaseFromJSON(const QJsonObject &caseJson, QObject *parent)
-{
-    Case* newCase = nullptr;
-    
-    // Extract type from JSON and convert to enum
-    Case::CaseType type = Case::intToCaseType(caseJson["type"].toInt());
-    switch (type) {
-    case Case::CS_RestArea:
-        newCase = new CaseRestArea(caseJson);
-        break;
-    case Case::CS_KibbleDispenser:
-        newCase = new CaseKibbleDispenser(caseJson); // Default kibble amount
-        break;
-    case Case::CS_CardBoardBox:
-        newCase = new CaseCardBoardBox(caseJson);
-        break;
-    case Case::CS_CatNip:
-        newCase = new CaseCatNip(caseJson);
-        break;
-    case Case::CS_Jail:
-        newCase = new CaseJail(caseJson);
-        break;
-    case Case::CS_ToJail:
-        newCase = new CaseToJail(caseJson);
-        break;
-    case Case::CS_CatDoor:
-        newCase = new CaseCatDoor(caseJson);
-        break;
-    case Case::CS_FreeNap:
-        newCase = new CaseFreeNap(caseJson);
-        break;
-    case Case::CS_Device:
-        newCase = new CaseCatDevice(caseJson);
-        break;
-    case Case::CS_Taxe:
-        newCase = new CaseKibbleDispenser(caseJson); // Tax case as KibbleDispenser
-        break;
-    default:
-        qDebug() << "Unknown case type:" << type << "creating base Case";
-        newCase = new Case(caseJson, parent);
-        break;
-    }
-
-    return newCase;
-}
-
 QString ItemSnapable::toJSON()
 {
     QString json;
     json += "{\n";
+    json += "    \"uniqueId\": \"" + m_uniqueId.toString() + "\",\n";
+    json += "    \"tileType\": " + QString::number(m_tileType) + ",\n";
     if (m_caseData != nullptr) {
         json += "    \"caseData\": " + m_caseData->toJSON() + ",\n";
     }
     if (m_decorationParameter != nullptr) {
         json += "    \"decorationParameter\": " + m_decorationParameter->toJSON() + ",\n";
     }
-    json += "    \"displayParameter\": " + m_displayParameter->toJSON() + "\n";
-
+    json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
+    json += "    \"next\": [ ";
+    for (int i = 0; i < next.size(); i++) {
+        json += "\"" + next.at(i)->uniqueId().toString() + "\"" + (i < next.size() - 1 ? ", " : "");
+    }
+    json += "],\n";
+    json += "    \"prev\": [ ";
+    for (int i = 0; i < prev.size(); i++) {
+        json += "\"" + prev.at(i)->uniqueId().toString() + "\"" + (i < prev.size() - 1 ? ", " : "");
+    }
+    json += "]\n";
     json += "}";
     return json;
 }
@@ -152,7 +143,7 @@ QString ItemSnapable::toJSON()
 
 void ItemSnapable::print()
 {
-    qDebug() << "ItemSnapable: " << m_caseData->toJSON() << " " << m_displayParameter->toJSON();
+    qDebug().noquote() << "ItemSnapable: " << toJSON();
 }
 
 QUuid ItemSnapable::uniqueId() const
@@ -166,4 +157,116 @@ void ItemSnapable::setUniqueId(const QUuid &newUniqueId)
         return;
     m_uniqueId = newUniqueId;
     emit uniqueIdChanged();
+}
+
+void ItemSnapable::changeCaseDataType(Case::CaseType caseType)
+{
+    if (m_caseData) {
+        m_caseData->deleteLater();
+    }
+    m_caseData = CaseFactory::createCase(caseType);
+    emit caseDataChanged();
+}
+
+
+// ---- CHAINED LIST MANIPULATION ----
+
+
+void ItemSnapable::addNext(ItemSnapable *newNext)
+{
+    next.append(newNext);
+}
+
+bool ItemSnapable::removeNext(ItemSnapable *caseToRemove)
+{
+    int index = next.indexOf(caseToRemove);
+    if (index != -1) {
+        next.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+bool ItemSnapable::removeNextAt(int index)
+{
+    if (index >= 0 && index < next.size()) {
+        next.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+void ItemSnapable::addPrev(ItemSnapable *newPrev)
+{
+    prev.append(newPrev);
+}
+
+bool ItemSnapable::removePrev(ItemSnapable *caseToRemove)
+{
+    int index = prev.indexOf(caseToRemove);
+    if (index != -1) {
+        prev.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+bool ItemSnapable::removePrevAt(int index)
+{
+    if (index >= 0 && index < prev.size()) {
+        prev.removeAt(index);
+        return true;
+    }
+    return false;
+}
+
+ItemSnapable::TileType ItemSnapable::tileType() const
+{
+    return m_tileType;
+}
+
+void ItemSnapable::setTileType(const ItemSnapable::TileType &newTileType)
+{
+    if (m_tileType == newTileType)
+        return;
+    m_tileType = newTileType;
+    emit tileTypeChanged();
+}
+
+void ItemSnapable::copyFrom(ItemSnapable* source)
+{
+    if (!source) return;
+    
+    // Copier le type de tile
+    setTileType(source->tileType());
+    
+    // Copier les display parameters
+    if (source->displayParameter()) {
+        m_displayParameter->setGridRelativePositionX(source->displayParameter()->gridRelativePositionX());
+        m_displayParameter->setGridRelativePositionY(source->displayParameter()->gridRelativePositionY());
+        m_displayParameter->setUnitSizeWidth(source->displayParameter()->unitSizeWidth());
+        m_displayParameter->setUnitSizeHeight(source->displayParameter()->unitSizeHeight());
+        m_displayParameter->setZLayer(source->displayParameter()->zLayer());
+        m_displayParameter->setZOrder(source->displayParameter()->zOrder());
+        emit displayParameterChanged();
+    }
+    
+    // Copier les case data si c'est un CaseTile
+    if (source->tileType() == CaseTile && source->caseData()) {
+        setCaseData(source->caseData());
+    }
+    
+    // Copier les decoration parameters si c'est une DecorationTile
+    if (source->tileType() == DecorationTile && source->decorationParameter()) {
+        m_decorationParameter->setDecorationCategory(source->decorationParameter()->decorationCategory());
+        m_decorationParameter->setDecorationType(source->decorationParameter()->decorationType());
+        m_decorationParameter->setDecorationId(source->decorationParameter()->decorationId());
+        emit decorationParameterChanged();
+    }
+    
+    // Copier l'UUID
+    setUniqueId(source->uniqueId());
+
+    
+    qDebug() << "ItemSnapable data copied from source";
 }

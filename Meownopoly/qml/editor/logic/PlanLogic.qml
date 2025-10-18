@@ -25,7 +25,7 @@ QtObject {
             for (var i = 0; i < snapableTilesList.length; i++) {
                 if (snapableTilesList[i]) {
                     var currentTile = snapableTilesList[i]
-                    var tileZ = currentTile.z || currentTile.displaySettings.zLayer || 1
+                    var tileZ = currentTile.z || currentTile.snapableParameters.displayParameter.zLayer || 1
 
                     if ((tileZ >= minPlanDisplayed && tileZ <= maxPlanDisplayed) || tileZ === 11 ) {
                         currentTile.enabled = true

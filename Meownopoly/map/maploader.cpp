@@ -1,6 +1,5 @@
 #include "maploader.h"
 
-#include "game.h"
 #include "map.h"
 
 #include <QQmlApplicationEngine>
@@ -8,6 +7,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <map/mapinfo.h>
+#include "item_snapable/ItemSnapable.h"
 
 MapLoader *MapLoader::m_pThis = nullptr;
 
@@ -42,11 +42,10 @@ Map *MapLoader::loadMap(QString mapName)
     QJsonObject jsonObject = MapLoader::readMapFile(mapName);
     MapInfo *mapInfo = new MapInfo(jsonObject["mapInfo"].toObject());
     Map *map = new Map(jsonObject);
-    for (ItemSnapable *is : map->caseTiles()) {
-        emit foundCaseTile(is->displayParameter(), is->caseData());
-    }
-    for (ItemSnapable *is : map->decorationTiles()) {
-        emit foundDecorationTile(is->displayParameter(), is->decorationParameter());
+
+    for (int i = 0; i < map->tiles().size(); i++) {
+        ItemSnapable *is = map->tiles().value(i);
+        emit foundItemSnapableTile(is);
     }
     map->setMapInfo(mapInfo);
     emit mapLoaded(map);

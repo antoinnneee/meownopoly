@@ -56,7 +56,7 @@ QtObject {
                                                                                         "displaySettings.unitSizeWidth": currentElementWidth,
                                                                                         "displaySettings.unitSizeHeight": currentElementHeight,
                                                                                         "displaySettings.zOrder": currentZOrder,
-                                                                                        "caseData": Game.getNewCaseType(caseType),
+                                                                                        "snapableParameters.caseData": Game.getNewCaseType(caseType),
                                                                                         "generalMA": mainMa
                                                                                     })
             break
@@ -75,10 +75,10 @@ QtObject {
     }
 
     function changeCaseType(snapableCase, newType)  {
-        var newTile = createNewTileAtPosition(newType, snapableCase.displaySettings.gridRelativePositionX, snapableCase.displaySettings.gridRelativePositionY, ItemSnapable.CaseTile)
-        newTile.displaySettings.unitSizeWidth = snapableCase.displaySettings.unitSizeWidth
-        newTile.displaySettings.unitSizeHeight = snapableCase.displaySettings.unitSizeHeight
-        newTile.caseData.name = snapableCase.caseData.name
+        var newTile = createNewTileAtPosition(newType, snapableCase.snapableParameters.displayParameter.gridRelativePositionX, snapableCase.snapableParameters.displayParameter.gridRelativePositionY, ItemSnapable.CaseTile)
+        newTile.snapableParameters.displayParameter.unitSizeWidth = snapableCase.snapableParameters.displayParameter.unitSizeWidth
+        newTile.snapableParameters.displayParameter.unitSizeHeight = snapableCase.snapableParameters.displayParameter.unitSizeHeight
+        newTile.snapableParameters.caseData.name = snapableCase.snapableParameters.caseData.name
 
         for (var i = 0; i < snapableCase.connectionManager.previousElements.length; i++) {
             var prevEl = snapableCase.connectionManager.previousElements[i]
@@ -101,6 +101,36 @@ QtObject {
         newTile.elementConfigurationRequested(newTile)
     }
 
+    function createItemSnapable(itemSnapableData) {
+        currentZOrder = currentZOrder + 0.00001
+        console.log("data:",itemSnapableData)
+        itemSnapableData.displayParameter.zOrder  = currentZOrder;
+        // itemSnapableData.print()
+        
+        // Créer le bon type de tile selon le tileType
+        // On passe directement itemSnapableData pour conserver les références next/prev
+        var newTile
+        if (itemSnapableData.tileType === ItemSnapable.CaseTile) {
+            newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
+                "generalMA": mainMa,
+                "snapableParameters": itemSnapableData
+            })
+        } else if (itemSnapableData.tileType === ItemSnapable.DecorationTile) {
+            newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
+                "generalMA": mainMa,
+                "snapableParameters": itemSnapableData
+            })
+        }
+        
+        if (newTile) {
+            // console.log("created item")
+            // newTile.snapableParameters.print()
+            
+            snapableTilesList.push(newTile)
+            newTile.snapToGridFromGridPos()
+        }
+        return newTile
+    }
 
     // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
     function createCaseTile(dispSettings, caseData) {
@@ -108,7 +138,7 @@ QtObject {
         dispSettings.zOrder = currentZOrder
         var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
-                                                                                        "caseData": caseData,
+                                                                                        "snapableParameters.caseData": caseData,
                                                                                         "generalMA": mainMa
                                                                                     })
 
@@ -124,7 +154,7 @@ QtObject {
         dispSettings.zOrder = currentZOrder
         var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
                                                                                         "displaySettings": dispSettings,
-                                                                                        "decorationSettings": decorationParameter,
+                                                                                        "snapableParameters.decorationParameter": decorationParameter,
                                                                                         "generalMA": mainMa
                                                                                     })
         if (newTile) {
@@ -189,14 +219,15 @@ QtObject {
     {
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
-            if (tile && tile.caseData) {
+            console.log("built tile connections", tile)
+            if (tile ) {
                 tile.blockConnections = true
-                var caseData = tile.caseData
-                var nextList = caseData.getNextList()
+                var nextList = tile.snapableParameters.getNextList()
+                console.log("nextlist connections", nextList)
                 for (var j = 0; j < nextList.length; j++) {
                     var nextElCaseData = nextList[j]
                     var nextEl = snapableTilesList.find(function(tile) {
-                        return tile.caseData === nextElCaseData
+                        return tile.snapableParameters === nextElCaseData
                     })
                     if (nextEl) {
                         nextEl.blockConnections = true

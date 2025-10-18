@@ -40,7 +40,7 @@
 #include "liveimage.h"
 //#include "animationprovider.h"
 #include "tools/logger.h"
-
+#include "item_snapable/itemsnapablefactory.h"
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
 {
@@ -54,6 +54,7 @@ QmlApp::QmlApp(QWindow *parent)
     MapLoader::registerQml();
     MapInfo::registerQml();
     EditorEnum::registerQml();
+    ItemSnapableFactory::registerQml();
 //    AnimationProvider::registerQml();
     Logger::registerQml();
     // Create and expose FolderCompressor instance to QML
