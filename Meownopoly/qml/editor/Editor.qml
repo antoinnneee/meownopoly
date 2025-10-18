@@ -92,27 +92,17 @@ Rectangle {
     Connections{
         target: MapLoader
 
-        function onFoundCaseTile(dp, caseData){
-            Logger.info("Found case tile:" + dp + " " + caseData, "MAP_LOADING")
-            //console.log("Found case tile:", dp, caseData)
-            logic.tileLogic.createCaseTile(dp, caseData);
-        }
         function onFoundItemSnapableTile(itemSnapableData){
             Logger.info("Found itemSnapableData tile:" + itemSnapableData, "MAP_LOADING")
             logic.tileLogic.createItemSnapable(itemSnapableData);
         }
-        function onFoundDecorationTile(dp, decorationParameter){
-            Logger.info("Found decoration tile:" + dp + " " + decorationParameter, "MAP_LOADING")
-            //console.log("Found decoration tile:", dp, decorationParameter)
-            logic.tileLogic.createDecorationTile(dp, decorationParameter);
-        }
+
         function onMapLoaded(map)
         {
             Logger.success("Map loaded", "MAP_LOADING")
             logic.tileLogic.builtConnections();
 
             mapInfo = map.mapInfo
-
         }
     }
 

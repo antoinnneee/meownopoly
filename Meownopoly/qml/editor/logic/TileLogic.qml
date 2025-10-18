@@ -31,76 +31,6 @@ QtObject {
     }
 
 
-    // Fonction pour créer un nouveau SnapableCaseTile à une position spécifique
-
-
-    function createNewTileAtPosition(caseType, gridX, gridY, isDecoration) {
-        var newTile
-        currentZOrder = currentZOrder + 0.00001
-        switch (isDecoration){
-        case ItemSnapable.DecorationTile:
-            newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
-                                                                                          "displaySettings.gridRelativePositionX": gridX,
-                                                                                          "displaySettings.gridRelativePositionY": gridY,
-                                                                                          "displaySettings.unitSizeWidth": currentElementWidth,
-                                                                                          "displaySettings.unitSizeHeight": currentElementHeight,
-                                                                                          "displaySettings.zLayer": 5,
-                                                                                          "displaySettings.zOrder": currentZOrder,
-                                                                                          "generalMA": mainMa
-                                                                                      })
-            break
-        case ItemSnapable.CaseTile:
-            newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                                                                                        "displaySettings.gridRelativePositionX": gridX,
-                                                                                        "displaySettings.gridRelativePositionY": gridY,
-                                                                                        "displaySettings.unitSizeWidth": currentElementWidth,
-                                                                                        "displaySettings.unitSizeHeight": currentElementHeight,
-                                                                                        "displaySettings.zOrder": currentZOrder,
-                                                                                        "snapableParameters.caseData": Game.getNewCaseType(caseType),
-                                                                                        "generalMA": mainMa
-                                                                                    })
-            break
-        default:
-            break
-        }
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            // Désélectionner tout et sélectionner le nouveau tile
-            deselectAllTiles()
-
-            //logic.currentSelectedElement = newTile
-            newTile.snapToGridFromGridPos()
-        }
-        return newTile
-    }
-
-    function changeCaseType(snapableCase, newType)  {
-        var newTile = createNewTileAtPosition(newType, snapableCase.snapableParameters.displayParameter.gridRelativePositionX, snapableCase.snapableParameters.displayParameter.gridRelativePositionY, ItemSnapable.CaseTile)
-        newTile.snapableParameters.displayParameter.unitSizeWidth = snapableCase.snapableParameters.displayParameter.unitSizeWidth
-        newTile.snapableParameters.displayParameter.unitSizeHeight = snapableCase.snapableParameters.displayParameter.unitSizeHeight
-        newTile.snapableParameters.caseData.name = snapableCase.snapableParameters.caseData.name
-
-        for (var i = 0; i < snapableCase.connectionManager.previousElements.length; i++) {
-            var prevEl = snapableCase.connectionManager.previousElements[i]
-            if (prevEl) {
-                prevEl.connectionManager.addNextElement(newTile)
-            }
-        }
-        for (var i = 0; i < snapableCase.connectionManager.nextElements.length; i++) {
-            var nextEl = snapableCase.connectionManager.nextElements[i]
-            if (nextEl) {
-                nextEl.connectionManager.addPreviousElement(newTile)
-            }
-        }
-
-
-        snapableCase.elementDeleted(snapableCase)
-        snapableCase.connectionManager.deleteLinkedConnection()
-
-        newTile.isSelected = true
-        newTile.elementConfigurationRequested(newTile)
-    }
-
     function createItemSnapable(itemSnapableData) {
         currentZOrder = currentZOrder + 0.00001
         console.log("data:",itemSnapableData)
@@ -131,39 +61,6 @@ QtObject {
         }
         return newTile
     }
-
-    // Fonction pour créer un case tile à partir d'un caseData et d'un displaySettings
-    function createCaseTile(dispSettings, caseData) {
-        currentZOrder = currentZOrder + 0.00001
-        dispSettings.zOrder = currentZOrder
-        var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                                                                                        "displaySettings": dispSettings,
-                                                                                        "snapableParameters.caseData": caseData,
-                                                                                        "generalMA": mainMa
-                                                                                    })
-
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            newTile.snapToGridFromGridPos()
-        }
-        return newTile
-    }
-
-    function createDecorationTile(dispSettings, decorationParameter) {
-        currentZOrder = currentZOrder + 0.00001
-        dispSettings.zOrder = currentZOrder
-        var newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
-                                                                                        "displaySettings": dispSettings,
-                                                                                        "snapableParameters.decorationParameter": decorationParameter,
-                                                                                        "generalMA": mainMa
-                                                                                    })
-        if (newTile) {
-            snapableTilesList.push(newTile)
-            newTile.snapToGridFromGridPos()
-        }
-        return newTile
-    }
-
 
     // Fonction pour supprimer un élément
     function deleteElement(element) {

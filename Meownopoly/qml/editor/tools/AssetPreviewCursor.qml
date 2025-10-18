@@ -145,18 +145,12 @@ Item {
                 opacity: 0.2
             }
 
-
-
             snapableParameters: ItemSnapableFactory.createItemSnapable()
-
-
 
             parent: workArea
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            //displaySettings.unitSizeWidth: root.unitSizeWidth
-            //displaySettings.unitSizeHeight: root.unitSizeHeight
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
@@ -210,52 +204,5 @@ Item {
         id: assetPreviewLoader
         sourceComponent: root.isCasePreview ? casePreviewComponent : decorationPreviewComponent
     }
-    
-    Rectangle {
-        anchors.fill: parent
-        color: "#A0000000"
-        border.color: "#4A90E2"
-        border.width: 4
-        radius: 4
-        visible: root.visible
-        
-        Image {
-            anchors.centerIn: parent
-            width: parent.width - 8
-            height: parent.height - 8
-            source: {
-                if (root.isCasePreview) {
-                    // Pour les cases, on peut utiliser une icône par défaut ou une icône basée sur le type de case
-                    return getCaseTypeIcon(root.caseType)
-                } else {
-                    if (root.assetCategory === "" || root.assetType === "" || root.assetId === "") {
-                        return ""
-                    }
-                    return AssetManager.getAssetPath(root.assetCategory, root.assetType, root.assetId)
-                }
-            }
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-            opacity: 0.8
-        }
-        
-        // Small indicator showing it's ready to place
-        Rectangle {
-            anchors.bottom: parent.bottom
-            anchors.right: parent.right
-            anchors.margins: -2
-            width: 12
-            height: 12
-            color: "#4CAF50"
-            radius: 6
-            
-            Text {
-                anchors.centerIn: parent
-                text: "+"
-                color: "white"
-                font.pixelSize: 8
-                font.bold: true
-            }
-        }
-    }
+
 }

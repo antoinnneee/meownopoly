@@ -82,10 +82,8 @@ Rectangle {
 
     Text {
         id: nameText
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            top: parent.top
-        }
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
         text: "no name"
         color: "#2c3e50"
         font.pixelSize: Math.min(parent.width * 0.13, 11)

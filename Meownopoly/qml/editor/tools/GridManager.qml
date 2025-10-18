@@ -41,17 +41,6 @@ Item {
     width: boardSize
     height: boardSize
     
-    // Fonction pour snapper une coordonnée à la grille
-    function snapToGridCoord(value) {
-        if (!snapToGrid) return value
-        return Math.round(value / gridSize) * gridSize
-    }
-    
-    // Fonction pour snapper un point (x, y) à la grille
-    function snapPoint(x, y) {
-        return Qt.point(snapToGridCoord(x), snapToGridCoord(y))
-    }
-    
     // Fonction alternative qui snap directement un élément (plus pratique)
     function snapElement2(element) {
         if (!snapToGrid) return
@@ -79,66 +68,6 @@ Item {
     function exitResizeMode() {
         resizeMode = false
     }
-
-    // Fonction pour centrer la vue sur un élément donné
-    function centeredOnElement(element) {
-        if (!element) return
-
-        // Calculer la position centrale de l'élément
-        var elementCenterX = element.x + element.width / 2
-        var elementCenterY = element.y + element.height / 2
-
-        // Calculer la position du GridManager pour centrer l'élément dans la vue
-        // Supposer que la vue parent a une taille connue (peut être ajustée selon le contexte)
-        var parentCenterX = parent ? parent.width / 2 : width / 2
-        var parentCenterY = parent ? parent.height / 2 : height / 2
-
-        // Calculer le décalage nécessaire pour centrer l'élément
-        var offsetX = parentCenterX - elementCenterX
-        var offsetY = parentCenterY - elementCenterY
-
-        // Appliquer le décalage au GridManager
-        gridManager.x = offsetX
-        gridManager.y = offsetY
-
-        console.log("GridManager moved to:", gridManager.x, gridManager.y)
-    }
-
-    // Fonction pour centrer la vue sur un élément donné
-    function moveToConfigElement(element) {
-        if (!element) return
-
-        // Calculer la position centrale de l'élément
-        var elementCenterX = element.x + element.width / 2
-        var elementCenterY = element.y + element.height / 2
-
-        // Calculer la position du GridManager pour centrer l'élément dans la vue
-        // Supposer que la vue parent a une taille connue (peut être ajustée selon le contexte)
-        var parentCenterX = parent ? parent.width * 0.75 : width / 2
-        var parentCenterY = parent ? parent.height / 2 : height / 2
-
-        // Calculer le décalage nécessaire pour centrer l'élément
-        var offsetX = parentCenterX - elementCenterX
-        var offsetY = parentCenterY - elementCenterY
-
-        // Appliquer le décalage au GridManager
-        gridManager.x = offsetX
-        gridManager.y = offsetY
-
-        console.log("GridManager moved to:", gridManager.x, gridManager.y)
-    }
-    
-    function moveToGridCenter()
-    {
-
-        // Appliquer le décalage au GridManager
-        var parentCenterX = parent ? parent.width / 2 : width / 2
-        var parentCenterY = parent ? parent.height / 2 : height / 2
-        gridManager.x = parentCenterX - width/2
-        gridManager.y = parentCenterY - height/2
-        console.log("GridManager moved to:", gridManager.x, gridManager.y)
-    }
-
 
     // Grille ultra-optimisée avec un seul Repeater
     Item {

@@ -150,20 +150,11 @@ import ItemSnapableFactory
                     generalMA.elementClicked(snapableElement)
                     }
             }
-            //ELSE A VIRER
-            else
-            {
-                elementPressed()
-            }
             mouse.accepted = false
         }
         
         onReleased: function(mouse) {
             console.log("snap release");
-            if (!generalMA)
-            {
-                elementReleased()
-            }
         }
         
         onPositionChanged: function(mouse) { }
@@ -176,18 +167,7 @@ import ItemSnapableFactory
         isVisible: isSelected
         zLayer: snapableParameters.displayParameter.zLayer
         onLayerChanged: function(newLayer) {snapableParameters.displayParameter.zLayer = newLayer}
-                
-        onDeleteRequested:{
-            deleteAnimation.start()
-        }
-        
-        onConfigurationRequested: {
-            elementConfigurationRequested(snapableElement)
-        }
 
-        onConnectionsConfigurationRequested: {
-            elementConnectionsConfigurationRequested(snapableElement)
-        }
     }
 
     // Poignées de redimensionnement
@@ -238,7 +218,5 @@ import ItemSnapableFactory
     // selection tools
     function select() { isSelected = true }
     function deselect() { isSelected = false }
-    function toggleSelection() { isSelected = !isSelected }
-
 
 } 
