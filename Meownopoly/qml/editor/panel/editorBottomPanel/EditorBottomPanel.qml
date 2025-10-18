@@ -1,4 +1,7 @@
 import QtQuick 2.15
+import QtQuick.Particles
+import AssetManager
+
 import "../.."
 
 Rectangle {
@@ -26,7 +29,47 @@ Rectangle {
     color: "#E6000000" // Semi-transparent black
     border.color: "#333333"
     border.width: 1
+    ParticleSystem {
+        id: particleSystem
+        anchors.fill: parent
+        clip: true
+        // Emitter for the initial burst
+        Emitter {
+            id: burstEmitter
+            enabled: true
+            anchors.fill: parent
+            lifeSpan: 2000
+            size: 50
+            emitRate: 15
+            velocity: AngleDirection {
+                angle: 270
+                angleVariation: 15
+                magnitude: 200
+                magnitudeVariation: 50
+            }
+        }
 
+        // Particle image for the initial burst
+        ImageParticle {
+            id: firework
+            // source: "qrc:///particleresources/glowdot.png"
+            source : AssetManager.getAssetPath("ui","particules","pawn1")
+            color: Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
+            colorVariation: 0.5
+            alpha: 0.75
+            rotationVariation: 360
+        }
+    }
+
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: {
+            burstEmitter.burst(1);
+            firework.color = Qt.rgba(Math.random(), Math.random(), Math.random(), 1);
+        }
+    }
     Item{
         id: titlePlaceHolder
         anchors.left: parent.left

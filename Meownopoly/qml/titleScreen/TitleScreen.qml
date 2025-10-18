@@ -39,7 +39,6 @@ Rectangle {
             alpha: 0.75
             rotationVariation: 360
         }
-
     }
 
     Timer {
