@@ -25,13 +25,28 @@ Item {
         snapablePreview.snapableParameters.decorationParameter.decorationId = assetId
     }
     property int caseType: -1  // Pour les SnapableCaseTile
+    onCaseTypeChanged: {
+        if ( snapablePreview.snapableParameters != caseType)
+            snapablePreview.snapableParameters = ItemSnapableFactory.createItemSnapable(caseType)
+        snapablePreview.snapableParameters.displayParameter.unitSizeWidth = root.unitSizeWidth
+        snapablePreview.snapableParameters.displayParameter.unitSizeHeight = root.unitSizeHeight
+    }
     property bool isCasePreview: false  // Distingue entre décorations et cases
     visible: (assetCategory !== "" && assetType !== "" && assetId !== "") || (isCasePreview && caseType !== -1)
     property real mouseX: 0
     property real mouseY: 0
 
     property int unitSizeWidth: 4
+    onUnitSizeWidthChanged: {
+        snapablePreview.snapableParameters.displayParameter.unitSizeWidth = unitSizeWidth
+        updateGridPosition()
+    }
+
     property int unitSizeHeight: 6
+    onUnitSizeHeightChanged: {
+        snapablePreview.snapableParameters.displayParameter.unitSizeHeight = unitSizeHeight
+        updateGridPosition()
+    }
     required property GridManager gridManager
     property var snapablePreview
 
@@ -93,18 +108,20 @@ Item {
     property int gridXPosition:  0
     property int gridYPosition:  0
     onXChanged: {
-        var point = gridManager.getGridPosition(mouseX, mouseY)
-        gridXPosition = point.x - Math.trunc(logic.tileLogic.currentElementWidth/2)
-        if (snapablePreview) {
-            snapablePreview.x = gridXPosition * gridManager.gridSize
-        }
+        updateGridPosition()
     }
 
     onYChanged: {
+        updateGridPosition()
+    }
+    function updateGridPosition()
+    {
         var point = gridManager.getGridPosition(mouseX, mouseY)
         gridYPosition = point.y - Math.trunc(logic.tileLogic.currentElementHeight/2)
+        gridXPosition = point.x - Math.trunc(logic.tileLogic.currentElementWidth/2)
         if (snapablePreview) {
             snapablePreview.y = gridYPosition * gridManager.gridSize
+            snapablePreview.x = gridXPosition * gridManager.gridSize
         }
 
     }
@@ -130,7 +147,7 @@ Item {
 
 
 
-            snapableParameters : ItemSnapableFactory.createItemSnapable()
+            snapableParameters: ItemSnapableFactory.createItemSnapable()
 
 
 
@@ -168,19 +185,23 @@ Item {
                 opacity: 0.2
             }
 
-            snapableParameters : ItemSnapableFactory.createItemSnapable(caseType)
+            snapableParameters : ItemSnapableFactory.createItemSnapable(root.caseType)
 
             parent: workArea
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            //displaySettings.unitSizeWidth: root.unitSizeWidth
-            //displaySettings.unitSizeHeight: root.unitSizeHeight
+            // snapableParameters.displaySettings.unitSizeWidth: root.unitSizeWidth
+            // snapableParameters.displaySettings.unitSizeHeight: root.unitSizeHeight
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
-                console.log("preview load complete")
+                console.log("preview load complete", root.caseType)
                 root.snapablePreview = snapableCaseTile
+                if (snapableParameters.caseData.type != root.caseType)
+                    snapableParameters = ItemSnapableFactory.createItemSnapable(root.caseType)
+                snapableParameters.displayParameter.unitSizeWidth = root.unitSizeWidth
+                snapableParameters.displayParameter.unitSizeHeight = root.unitSizeHeight
             }
         }
     }

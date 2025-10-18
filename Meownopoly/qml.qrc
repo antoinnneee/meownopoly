@@ -49,7 +49,6 @@
         <file>qml/editor/tools/snapable/SnapableElementResizeHandles.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementDeleteAnimation.qml</file>
         <file>qml/editor/tools/snapable/SnapableElementCreateAnimation.qml</file>
-        <file>qml/editor/tools/SnapablePlayerTile.qml</file>
         <file>qml/case/PlayerTile.qml</file>
         <file>qml/launcher/Launcher.qml</file>
         <file>qml/launcher/LauncherHeader.qml</file>
@@ -67,7 +66,6 @@
         <file>qml/editor/EditorLogic.qml</file>
         <file>qml/editor/EditorDynamicComponent.qml</file>
         <file>qml/item_icon/LayerVisualizer.qml</file>
-        <file>qml/editor/tools/SnapableCharacter.qml</file>
         <file>qml/editor/tools/AssetPreviewCursor.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_CategoryGrid.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_Grid.qml</file>

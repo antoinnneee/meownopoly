@@ -60,21 +60,6 @@ SnapableElement {
         }
     }
 
-    Component.onCompleted: {
-        // Synchroniser les connexions existantes depuis les données C++ vers l'interface
-        syncConnectionsFromCaseData()
-    }
-
-    // Fonction pour synchroniser les connexions depuis les données C++ vers l'interface QML
-    function syncConnectionsFromCaseData() {
-        if (!root.snapableParameters) return
-        
-        // Cette fonction pourrait être appelée pour synchroniser les connexions existantes
-        // depuis les données C++ vers l'interface QML si nécessaire
-        console.log("Syncing connections for case:", root.snapableParameters.caseData.name)
-        console.log("- Next cases count:", root.snapableParameters.next ? root.snapableParameters.next.length : 0)
-        console.log("- Previous cases count:", root.snapableParameters.prev ? root.snapableParameters.prev.length : 0)
-    }
 
     CaseTile {
         id: caseTile

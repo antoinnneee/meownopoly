@@ -9,6 +9,7 @@ import ItemSnapable
 import DecorationParameter
 import TileType
 SnapableElement {
+    id: root
     // Configuration du redimensionnement
     isResizable: true
     autoSnap: true

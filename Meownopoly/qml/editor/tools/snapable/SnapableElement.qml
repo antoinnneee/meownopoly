@@ -14,8 +14,6 @@ import ItemSnapableFactory
     id: snapableElement
 
 
-    property var caseType: 0
-
     // Propriétés configurables
     // Connexion au GridManager du parent (Editor)
     required property GridManager gridManager
@@ -38,18 +36,6 @@ import ItemSnapableFactory
 
     required property ItemSnapable snapableParameters
 
-/*
-    property DecorationParameter decorationSettings : DecorationParameter {
-        decorationCategory: "decoration"
-        decorationType: "grass"
-        decorationId: "1"//Math.floor(Math.random() * AssetManager.getAssetModel("decoration", decorationSettings.decorationType).rowCount())
-    }
-    */
-//    property alias displaySettings : snapableParameters.displayParameter
-//    property alias decorationSettings : snapableParameters.decorationParameter
-    // 0: case, 1: personnage, 2: decoration
-//    property TileType type
-
     Component.onCompleted: {
         // Si snapableParameters n'a pas été fourni, créer une instance par défaut
         if (!snapableParameters) {
@@ -65,12 +51,8 @@ import ItemSnapableFactory
         snapableParameters.displayParameterChanged()
     }
 
-//    property DisplayParameter displaySettings : DisplayParameter { }
-
-
     z:  (isSelected) ? snapableParameters.displayParameter.zOrder + 11 : snapableParameters.displayParameter.zOrder + snapableParameters.displayParameter.zLayer
 
-    
     // Positions calculées à partir des coordonnées relatives
     x: snapableParameters.displayParameter.gridRelativePositionX * gridManager.gridSize
     y: snapableParameters.displayParameter.gridRelativePositionY * gridManager.gridSize
