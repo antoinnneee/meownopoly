@@ -129,7 +129,12 @@ Item {
                     console.log("Selected map: " + modelData)
                     if (typeof logic !== 'undefined') {
                         logic.removeCurrentMap()
-                        MapLoader.loadMap(modelData, MapLoader.CUSTOM)
+                        var normalizedMapName = MapLoader.findMapFileByName(modelData)
+                        if (normalizedMapName !== "") {
+                            MapLoader.loadMap(normalizedMapName, MapLoader.CUSTOM)
+                        } else {
+                            console.error("Could not find map file for: " + modelData)
+                        }
                     } else {
                         console.error("La fonction loadMap n'est pas accessible")
                     }

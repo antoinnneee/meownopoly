@@ -638,7 +638,12 @@ MouseArea {
                             console.log("Loading map: " + menuMapAtStart.selectedMap)
                             if (typeof logic !== 'undefined') {
                                 logic.removeCurrentMap()
-                                MapLoader.loadMap(menuMapAtStart.selectedMap, MapLoader.CUSTOM)
+                                var normalizedMapName = MapLoader.findMapFileByName(menuMapAtStart.selectedMap)
+                                if (normalizedMapName !== "") {
+                                    MapLoader.loadMap(normalizedMapName, MapLoader.CUSTOM)
+                                } else {
+                                    console.error("Could not find map file for: " + menuMapAtStart.selectedMap)
+                                }
                             }
                             root.visible = false
                         }

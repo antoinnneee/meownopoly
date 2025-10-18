@@ -112,7 +112,6 @@ Item {
                                     font.pixelSize: 12
                                     font.bold: true
                                 }
-
                                 onClicked: {
                                     if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                                         var mapInfo = logic.mapInfo
@@ -123,7 +122,7 @@ Item {
                                         mapInfo.mapLastModified = dateOfLastModification
                                         console.log("Saving map with name: " + mapName)
                                         console.log(" MapInfo.AUTOSAVE_MAP_NAME : " + mapInfo.autosaveMapName)
-                                        console.log("is it identical " + mapName === mapInfo.autosaveMapName)
+                                        console.log("is it identical " + (mapName === mapInfo.autosaveMapName))
                                         logic.saveMap(mapName === mapInfo.autosaveMapName ? MapLoader.AUTOSAVE : MapLoader.CUSTOM)
                                         newMap()
                                     } else {
@@ -176,7 +175,7 @@ Item {
                                     verticalAlignment: Text.AlignVCenter
                                     placeholderTextColor: "#666666"
                                     placeholderText: text === "" ? "Name of the map" : ""
-                                    text: logic.mapInfo.mapName
+                                    text: mapName === mapInfo.autosaveMapName ? "" : mapName
                                     onEditingFinished: logic.mapInfo.mapName = text
                                 }
                             }

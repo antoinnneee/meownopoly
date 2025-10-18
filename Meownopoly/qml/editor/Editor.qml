@@ -108,7 +108,19 @@ Rectangle {
             //console.log("Map loaded")
             logic.tileLogic.builtConnections();
 
-            mapInfo = map.mapInfo
+            // Copy properties from loaded map to preserve bindings
+            if (map.mapInfo) {
+                mapInfo.mapName = map.mapInfo.mapName
+                mapInfo.mapDescription = map.mapInfo.mapDescription
+                mapInfo.mapCreationDate = map.mapInfo.mapCreationDate
+                mapInfo.mapLastModified = map.mapInfo.mapLastModified
+                mapInfo.version = map.mapInfo.version
+                mapInfo.backgroundPath = map.mapInfo.backgroundPath
+                mapInfo.backgroundScaling = map.mapInfo.backgroundScaling
+                mapInfo.backgroundTileSize = map.mapInfo.backgroundTileSize
+                mapInfo.isBackgroundOnGrill = map.mapInfo.isBackgroundOnGrill
+                mapInfo.musicPath = map.mapInfo.musicPath
+            }
 
         }
     }

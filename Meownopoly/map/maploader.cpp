@@ -58,7 +58,7 @@ QStringList MapLoader::getAvailableMaps()
     QStringList mapList;
     QDir mapDir("map");
 
-    // Vérifier si le dossier map existe
+    // VErifier si le dossier map existe
     if (!mapDir.exists()) {
         qDebug() << "Map directory does not exist: map/";
         return mapList;
@@ -69,25 +69,80 @@ QStringList MapLoader::getAvailableMaps()
     filters << "*_map.json";
     QStringList jsonFiles = mapDir.entryList(filters, QDir::Files);
 
-    // Extraire le nom de la map de chaque fichier
+    // Extraire le nom de la map de chaque fichier en lisant le JSON
     for (const QString &fileName : jsonFiles) {
         QFileInfo fileInfo(fileName);
         QString baseName = fileInfo.baseName(); // Nom sans extension
 
-        // Retirer le suffixe "_map" pour obtenir le nom de la map
+        // Retirer le suffixe "_map" pour obtenir le nom de fichier normalise
         if (baseName.endsWith("_map")) {
-            QString mapName = baseName.left(baseName.length() - 4); // Enlever "_map"
-            if (!mapName.isEmpty()) {
-                mapList.append(mapName);
+            QString normalizedMapName = baseName.left(baseName.length() - 4); // Enlever "_map"
+            if (!normalizedMapName.isEmpty()) {
+                // Lire le nom reel depuis le JSON
+                QJsonObject jsonObject = readMapFile(normalizedMapName, CUSTOM);
+                if (!jsonObject.isEmpty() && jsonObject.contains("mapInfo")) {
+                    QJsonObject mapInfo = jsonObject["mapInfo"].toObject();
+                    QString realMapName = mapInfo["name"].toString();
+                    if (!realMapName.isEmpty()) {
+                        mapList.append(realMapName);
+                    } else {
+                        // Fallback au nom normalisE si le nom dans le JSON est vide
+                        mapList.append(normalizedMapName);
+                    }
+                } else {
+                    // Fallback au nom normalisE si le JSON ne peut pas être lu
+                    mapList.append(normalizedMapName);
+                }
             }
         }
     }
 
-    // Trier la liste par ordre alphabétique
+    // Trier la liste par ordre alphabEtique
     mapList.sort();
 
     qDebug() << "Found" << mapList.size() << "maps:" << mapList;
     return mapList;
+}
+
+QString MapLoader::findMapFileByName(const QString &displayName)
+{
+    QDir mapDir("map");
+
+    // Verifier si le dossier map existe
+    if (!mapDir.exists()) {
+        qDebug() << "Map directory does not exist: map/";
+        return "";
+    }
+
+    // Filtrer les fichiers JSON qui se terminent par "_map.json"
+    QStringList filters;
+    filters << "*_map.json";
+    QStringList jsonFiles = mapDir.entryList(filters, QDir::Files);
+
+    // Chercher le fichier qui contient le nom d'affichage donne
+    for (const QString &fileName : jsonFiles) {
+        QFileInfo fileInfo(fileName);
+        QString baseName = fileInfo.baseName(); // Nom sans extension
+
+        // Retirer le suffixe "_map" pour obtenir le nom de fichier normalisE
+        if (baseName.endsWith("_map")) {
+            QString normalizedMapName = baseName.left(baseName.length() - 4); // Enlever "_map"
+            if (!normalizedMapName.isEmpty()) {
+                // Lire le nom reel depuis le JSON
+                QJsonObject jsonObject = readMapFile(normalizedMapName, CUSTOM);
+                if (!jsonObject.isEmpty() && jsonObject.contains("mapInfo")) {
+                    QJsonObject mapInfo = jsonObject["mapInfo"].toObject();
+                    QString realMapName = mapInfo["name"].toString();
+                    if (realMapName == displayName) {
+                        return normalizedMapName; // Retourner le nom de fichier normalisE
+                    }
+                }
+            }
+        }
+    }
+
+    qDebug() << "No map file found for display name:" << displayName;
+    return "";
 }
 
 QJsonObject MapLoader::readMapFile(QString mapName, MapType mapType)
@@ -98,7 +153,7 @@ QJsonObject MapLoader::readMapFile(QString mapName, MapType mapType)
         fileName = (QString)MAP_FILE_PATH + (QString)AUTOSAVE_MAP_NAME + ".json";;
         break;
     case CUSTOM:
-        fileName = (QString)MAP_FILE_PATH + mapName.toLower().replace(" ", "_") + "_map.json";
+        fileName = (QString)MAP_FILE_PATH + mapName.toLower().replace(" ", "_").trimmed() + "_map.json";
         break;
     }
 
@@ -123,7 +178,7 @@ bool MapLoader::mapAlreadyExist(const QString &mapName, MapType mapType)
         break;
     case CUSTOM:
         if (mapName != (QString)AUTOSAVE_MAP_NAME) // Prevent conflict with autosave map
-            flag = QFile::exists(MAP_FILE_PATH + mapName + "_map.json");
+            flag = QFile::exists(MAP_FILE_PATH + mapName.toLower().replace(" ", "_").trimmed() + "_map.json");
         break;
     }
     return flag;
@@ -145,7 +200,7 @@ QString MapLoader::createJsonMap(const QString &mapName, MapType mapType)
         break;
     }
     case CUSTOM:{
-        QFile customMap((QString)MAP_FILE_PATH + mapName + "_map.json");
+        QFile customMap((QString)MAP_FILE_PATH + mapName.toLower().replace(" ", "_").trimmed() + "_map.json");
         qDebug() << "Create custom map " << customMap.open(QIODevice::WriteOnly);
         customMap.close();
         if (!customMap.exists()){
@@ -168,7 +223,7 @@ bool MapLoader::removeJsonMap(const QString &mapName, MapType mapType)
         flag = QFile::remove((QString)MAP_FILE_PATH + (QString)AUTOSAVE_MAP_NAME + ".json");
         break;
     case CUSTOM:
-        flag = QFile::remove(MAP_FILE_PATH + mapName + "_map.json");
+        flag = QFile::remove(MAP_FILE_PATH + mapName.toLower().replace(" ", "_").trimmed() + "_map.json");
         break;
     }
     return flag;

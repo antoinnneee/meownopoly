@@ -31,6 +31,7 @@ public:
     Q_INVOKABLE bool removeJsonMap(const QString &mapName, MapType mapType);
     Q_INVOKABLE Map *loadMap(QString mapName, MapType mapType);
     Q_INVOKABLE QStringList getAvailableMaps();
+    Q_INVOKABLE QString findMapFileByName(const QString &displayName);
 
     static QJsonObject readMapFile(QString mapName, MapType mapType);
 

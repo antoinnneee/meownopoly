@@ -10,6 +10,14 @@
 #include "map/mapinfo.h"
 #include "map/maploader.h"
 
+// Helper function to normalize map names for consistent file naming
+QString normalizeMapName(const QString &mapName) {
+    QString normalized = mapName.toLower();
+    normalized = normalized.replace(" ", "_");
+    normalized = normalized.trimmed();
+    return normalized;
+}
+
 
 QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray)
 {
@@ -41,13 +49,13 @@ bool Game::addTileToJson(QJsonObject jsonObject, QString mapName, MapLoader::Map
         map.setFileName((QString)MAP_FILE_PATH + (QString)AUTOSAVE_MAP_NAME + ".json");
         break;
     case MapLoader::CUSTOM:
-        map.setFileName((QString)MAP_FILE_PATH + mapName + "_map.json");
+        map.setFileName((QString)MAP_FILE_PATH + normalizeMapName(mapName) + "_map.json");
         break;
     // case MapLoader::UNDOREDO:
     //     break;
     }
 
-    if (!map.open(QIODevice::ReadWrite)) {
+    if (!map.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         qDebug() << "Failed to open file for writing:" << map.fileName();
         return false;
     }
