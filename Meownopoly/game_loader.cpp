@@ -73,18 +73,17 @@ bool Game::addTileToJson(QJsonObject jsonObject, QString mapName, MapLoader::Map
     return true;
 }
 
-bool Game::registerMap(MapInfo* mapInfo, QVariantList caseList, QVariantList decorationList, MapLoader::MapType isAutoSave)
+bool Game::registerMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapLoader::MapType isAutoSave)
 {
     QJsonArray snapableTilesArray;
-    QJsonObject jsonObject;
 
-    // TO DELETE
-    //Get mapInfo as QJsonObject
+    // Ajouter les informations de la map
+    QJsonObject jsonObject;
     QString mapInfoJson = mapInfo->toJSON();
     QJsonDocument mapInfoDoc = QJsonDocument::fromJson(mapInfoJson.toUtf8());
     QJsonObject mapInfoObject = mapInfoDoc.object();
 
-    // QJsonObject mapInfoObject = QJsonDocument::fromJson(mapInfo->toJSON().toUtf8()).object();
+    jsonObject["mapInfo"] = mapInfoObject;
 
     for (int i = 0; i < itemSnapableList.size(); ++i) {
         QVariant itemSnapable = itemSnapableList.at(i);
@@ -93,13 +92,10 @@ bool Game::registerMap(MapInfo* mapInfo, QVariantList caseList, QVariantList dec
         snapableTilesArray = formatTileDataToJson(*currentTile, snapableTilesArray);
     }
 
-    jsonObject["mapInfo"] = mapInfoObject;
     jsonObject["snapableTiles"] = snapableTilesArray;
-
     addTileToJson(jsonObject, mapInfo->getMapName(), isAutoSave);
     return true;
 }
-
 QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
 {
     QList<ItemSnapable*> listItems;

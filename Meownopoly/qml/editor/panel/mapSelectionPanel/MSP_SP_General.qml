@@ -3,7 +3,6 @@ import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
-import "../../../ui_item"
 
 import MapInfo
 import MapLoader
@@ -57,64 +56,21 @@ Item {
 
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "Map Information"
-                            color: "white"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                        
-                        // Spacer
-                        Item {
-                            width: parent.parent.width - saveButton.width - 210
-                            height: 1
-                        }
-                        
-                        // Save button
-                        ParticleButton {
-                            id: saveButton
-                            width: 100
-                            height: 30
-                            text: "Save Map"
-                            
-                            // Configuration des particules avec les couleurs vertes
-                            particleColor: "#32CD32"
-                            particleColorVariation: "#00FF00"
-                            particleCount: 30
-                            particleSize: 6
-                            particleLifeSpan: 1500
-                            
-                            background: Rectangle {
-                                anchors.fill: parent
-                                color: saveButton.down ? "#45a049" : "#4CAF50"
-                                opacity: saveButton.hovered ? 1.0 : 0.8
-                                radius: 4
-                                
-                                Behavior on color {
-                                    ColorAnimation {
-                                        duration: 150
-                                    }
-                                }
-                                
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 150
-                                    }
-                                }
-                                
-                                // Effet de brillance au clic
-                                Rectangle {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
+                            spacing: 10
+
+                            Rectangle {
+                                width: 30
+                                height: 30
+                                radius: 15
+                                color: "#4A90E2"
+                                opacity: 0.2
+
+                                Text {
                                     anchors.centerIn: parent
-                                    width: parent.width
-                                    height: parent.height
-                                    radius: parent.radius
-                                    color: "white"
-                                    opacity: saveButton.down ? 0.2 : 0.0
-                                    
-                                    Behavior on opacity {
-                                        NumberAnimation {
-                                            duration: 100
-                                        }
-                                    }
+                                    text: "🗺️"
+                                    font.pixelSize: 16
                                 }
                             }
 
@@ -155,6 +111,7 @@ Item {
                                     verticalAlignment: Text.AlignVCenter
                                     font.pixelSize: 12
                                     font.bold: true
+
                                 }
                                 onClicked: {
                                     if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
