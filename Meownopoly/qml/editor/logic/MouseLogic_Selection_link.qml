@@ -20,8 +20,6 @@ MouseLogic_Selection {
     function clickedLeft(mouse, drag)
     {
         mouse.accepted = true
-        var deltaX = groupeSelection.x
-        var deltaY = groupeSelection.y
         if (clickElement.length > 0) {
             if (clickElement[0] !== linkSourceCase)
             {
