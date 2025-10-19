@@ -180,21 +180,10 @@ SnapableElement {
         snapableParameters.displayParameter.effectShadowScale = 1.0
     }
 
-    function resetMaskEffect() {
-        effectMaskEnabled = false
-        effectMaskSource = null
-        effectMaskInverted = false
-        effectMaskThresholdMin = 0.0
-        effectMaskThresholdMax = 1.0
-        effectMaskSpreadAtMin = 0.0
-        effectMaskSpreadAtMax = 0.0
-    }
-
     function resetAllEffects() {
         resetColorEffects()
         resetBlurEffect()
         resetShadowEffect()
-        resetMaskEffect()
     }
 
     // Functions to reset transforms
