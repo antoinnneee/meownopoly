@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 pragma ComponentBehavior: Bound
 
@@ -17,7 +17,9 @@ Rectangle {
     radius: 8
     border.color: "#444444"
     border.width: 1
-    
+
+    topLeftRadius: 0
+    topRightRadius: 0
     // Signals
     signal requestAddConnection(string kind)
     signal configurationChanged()
@@ -33,16 +35,6 @@ Rectangle {
             id: mainLayout
             width: parent.width
             spacing: 10
-            
-            // Title
-            Text {
-                id: titleText
-                text: "Configuration des Connexions"
-                color: "#ffffff"
-                font.pixelSize: 16
-                font.bold: true
-                width: parent.width
-            }
             
             // Section des actions
             Rectangle {

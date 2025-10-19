@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Case
 import CaseRestArea
 
@@ -11,7 +11,9 @@ Rectangle {
     property var targetSnapableCase: null
     property var targetCase: null
     property bool updatingValues: false
-    
+
+    topLeftRadius: 0
+    topRightRadius: 0
     // Visual properties
     color: "#2a2a2a"
     radius: 8
@@ -21,6 +23,7 @@ Rectangle {
     // Signals
     signal requestChangeType(var newType)
     signal configurationChanged()
+
     
     // Main scrollable content
     ScrollView {
@@ -33,16 +36,6 @@ Rectangle {
             id: mainLayout
             width: parent.width
             spacing: 10
-            
-            // Title
-            Text {
-                id: titleText
-                text: "Case Configuration"
-                color: "#ffffff"
-                font.pixelSize: 16
-                font.bold: true
-                width: parent.width
-            }
             
             // Type Selector Section
             CCPS_TypeSection {

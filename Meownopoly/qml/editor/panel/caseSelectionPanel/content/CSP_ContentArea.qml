@@ -1,6 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.Material
+import QtQuick.Layouts
 import "../../editorBottomPanel"
 import "../../assetSelectionPanel"
 import "main"
@@ -18,9 +19,7 @@ EBP_Content {
     isExpanded: true
     property alias caseConfigurationPanelSection: caseConfigurationPanelSection  // Exposer pour l'accès externe
     property alias connectionsConfigSection: connectionsConfigSection  // Exposer pour l'accès externe
-    
-    // Propriétés pour les onglets
-    property int currentTabIndex: 0  // 0=Case, 1=Connexions
+    property alias currentTabIndex: tabBar.currentIndex  // Exposer l'index de la TabBar pour la compatibilité
     
     // Signaux
     signal caseTypeSelected(int type, string typeName)
@@ -57,35 +56,127 @@ EBP_Content {
     sidePanel: Item {
         anchors.fill: parent
         
-        // StackLayout pour les contenus des onglets (contrôlé depuis MenuSelector)
-        StackLayout {
-            id: stackLayout
+        ColumnLayout {
             anchors.fill: parent
-            anchors.topMargin: -contentArea.titleHeight
-            currentIndex: contentArea.currentTabIndex
+            anchors.topMargin: - titleHeight
+            spacing: 0
             
-            // Onglet Configuration Case
-            CaseConfigurationPanelSection {
-                id: caseConfigurationPanelSection
+            // TabBar native QML
+            TabBar {
+                id: tabBar
+                Layout.fillWidth: true
+                Layout.preferredHeight: Screen.pixelDensity * 11
+                currentIndex: 0
+                background: Rectangle {
+                    color: "transparent"
+                }
+
+                contentItem: ListView {
+                    model: tabBar.contentModel
+                    currentIndex: tabBar.currentIndex
+
+                    spacing: tabBar.spacing
+                    orientation: ListView.Horizontal
+                    boundsBehavior: Flickable.StopAtBounds
+                    flickableDirection: Flickable.AutoFlickIfNeeded
+                    snapMode: ListView.SnapToItem
+
+                    highlightMoveDuration: 250
+                    highlightResizeDuration: 0
+                    highlightFollowsCurrentItem: true
+                    highlightRangeMode: ListView.ApplyRange
+                    preferredHighlightBegin: 48
+                    preferredHighlightEnd: width - 48
+
+                    highlight: Item {
+                        z: 2
+                    }
+                }
+                TabButton {
+                    text: "Configuration de la Case"
+                    font.pointSize: 11
+                    font.bold: true
+                    height: parent.height
+
+                    
+                    background: Rectangle {
+                        color: tabBar.currentIndex === 0 ? "#3a3a3a" : "#2a2a2a"
+                        topRightRadius:0
+                        bottomRightRadius: 0
+                        topLeftRadius: 8
+                        bottomLeftRadius: 0
+                        border.color: "#3a3a3a"
+                        border.width: 1
+
+                    }
+                    
+                    contentItem: Text {
+                        text: parent.text
+                        font: parent.font
+                        color: tabBar.currentIndex === 0 ? "#ffffff" : "#aaaaaa"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        bottomPadding: 4
+                    }
+                }
                 
-                // Gérer le changement de type de case
-                onRequestChangeType: function(newType) {
-                    if (targetCase) {
-                        console.log("Changing case type to:", newType)
-                        //targetCase.type = newType
-                        targetSnapableCase.snapableParameters.changeCaseDataType(newType)
-                        // Mettre à jour les contrôles pour refléter le nouveau type
-                        setTargetCase(targetSnapableCase)
+                TabButton {
+                    text: "Configuration des Connexions"
+                    font.pointSize: 11
+                    font.bold: true
+                    height: parent.height
+                    
+                    background: Rectangle {
+                        color: tabBar.currentIndex === 1 ? "#3a3a3a" : "#2a2a2a"
+                        border.color: "#3a3a3a"
+                        border.width: 1
+                        topRightRadius: 8
+                        bottomRightRadius: 0
+                        topLeftRadius: 0
+                        bottomLeftRadius: 0
+                    }
+                    
+                    contentItem: Text {
+                        text: parent.text
+                        font: parent.font
+                        color: tabBar.currentIndex === 1 ? "#ffffff" : "#aaaaaa"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        bottomPadding: 4
                     }
                 }
             }
             
-            // Onglet Configuration Connexions
-            ConnectionsConfigurationSection {
-                id: connectionsConfigSection
+            // StackLayout pour les contenus des onglets
+            StackLayout {
+                id: stackLayout
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                currentIndex: tabBar.currentIndex
                 
-                onRequestAddConnection: function(kind) {
-                    contentArea.connectionRequested(kind)
+                // Onglet Configuration Case
+                CaseConfigurationPanelSection {
+                    id: caseConfigurationPanelSection
+                    
+                    // Gérer le changement de type de case
+                    onRequestChangeType: function(newType) {
+                        if (targetCase) {
+                            console.log("Changing case type to:", newType)
+                            //targetCase.type = newType
+                            targetSnapableCase.snapableParameters.changeCaseDataType(newType)
+                            // Mettre à jour les contrôles pour refléter le nouveau type
+                            setTargetCase(targetSnapableCase)
+                        }
+                    }
+                }
+                
+                // Onglet Configuration Connexions
+                ConnectionsConfigurationSection {
+                    id: connectionsConfigSection
+                    
+                    onRequestAddConnection: function(kind) {
+                        contentArea.connectionRequested(kind)
+                    }
                 }
             }
         }
