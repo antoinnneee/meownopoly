@@ -70,6 +70,11 @@ QmlApp::QmlApp(QWindow *parent)
     // Create and expose AssetManager instance to QML
     assetManager = AssetManager::instance();
 
+    connect(MapLoader::instance(), &MapLoader::updateListEdits, UndoRedoManager::instance(), &UndoRedoManager::onUpdateListEdits);
+    connect(MapLoader::instance(), &MapLoader::askEdit, UndoRedoManager::instance(), &UndoRedoManager::onAskEdit);
+    connect(UndoRedoManager::instance(), &UndoRedoManager::returnEdit, MapLoader::instance(), &MapLoader::onReturnEdit);
+
+
     /*
     // Charger l'animation depuis le dossier anim et la démarrer automatiquement
     QString animFolderPath = "C:/Users/Antoine/Documents/GitHub/meownopoly/Meownopoly/anim";

@@ -25,3 +25,11 @@ QObject *UndoRedoManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngin
 }
 
 
+void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit)
+{
+}
+
+void UndoRedoManager::onAskEdit(EditAction editAction)
+{
+
+}

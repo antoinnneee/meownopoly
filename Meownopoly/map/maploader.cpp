@@ -8,6 +8,8 @@
 #include <QFileInfo>
 #include <map/mapinfo.h>
 #include "item_snapable/ItemSnapable.h"
+#include "tools/undoredomanager.h"
+
 
 MapLoader *MapLoader::m_pThis = nullptr;
 
@@ -169,6 +171,7 @@ QJsonObject MapLoader::readMapFile(QString mapName, MapType mapType)
     return jsonObject;
 }
 
+
 bool MapLoader::mapAlreadyExist(const QString &mapName, MapType mapType)
 {
     bool flag = false;
@@ -229,6 +232,10 @@ bool MapLoader::removeJsonMap(const QString &mapName, MapType mapType)
     return flag;
 }
 
+void MapLoader::onReturnEdit(QJsonObject newEdit)
+{
+
+}
 
 
 

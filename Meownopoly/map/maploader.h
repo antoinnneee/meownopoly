@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include "map/map.h"
+#include "tools/undoredomanager.h"
 
 #define MAP_FILE_PATH (BUILD_DIR "/map/")
 
@@ -35,13 +36,16 @@ public:
 
     static QJsonObject readMapFile(QString mapName, MapType mapType);
 
-public slots:
-
 signals:
     void mapLoaded(Map *map);
     void foundItemSnapableTile(ItemSnapable *itemSnapable);
 
-private slots:
+    void updateListEdits(QJsonObject newEdit);
+    void askEdit(UndoRedoManager::EditAction editAction);
+
+public slots:
+
+    void onReturnEdit(QJsonObject newEdit);
 
 private:
     explicit MapLoader(QObject *parent = nullptr);
