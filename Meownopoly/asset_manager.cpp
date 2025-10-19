@@ -49,6 +49,12 @@ QVariant AssetModel::data(const QModelIndex &index, int role) const
         return asset.id;
     case FilenameRole:
         return asset.filename;
+    case ExtensionRole:
+        return asset.extension;
+    case AnimatedRole:
+        return asset.animated;
+    case FrameCountRole:
+        return asset.frameCount;
     default:
         return QVariant();
     }
@@ -66,11 +72,15 @@ QHash<int, QByteArray> AssetModel::roleNames() const
     roles[HeightRole] = "height";
     roles[IdRole] = "id";
     roles[FilenameRole] = "filename";
+    roles[ExtensionRole] = "extension";
+    roles[AnimatedRole] = "animated";
+    roles[FrameCountRole] = "frameCount";
     return roles;
 }
 
 void AssetModel::addAsset(const QString &path, const QString &type, const QString &category,
-                         int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename)
+                         int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename, 
+                         const QString &extension, bool animated, int frameCount)
 {
     beginInsertRows(QModelIndex(), m_assets.size(), m_assets.size());
     Asset asset;
@@ -83,6 +93,9 @@ void AssetModel::addAsset(const QString &path, const QString &type, const QStrin
     asset.height = height;
     asset.id = id;
     asset.filename = filename;
+    asset.extension = extension;
+    asset.animated = animated;
+    asset.frameCount = frameCount;
     m_assets.append(asset);
     endInsertRows();
 }
@@ -113,7 +126,7 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
         if (asset.type == type) {
             filteredModel->addAsset(asset.path, asset.type, asset.category,
                                   asset.ratioWidth, asset.ratioHeight, asset.width, asset.height,
-                                  asset.id, asset.filename);
+                                  asset.id, asset.filename, asset.extension, asset.animated, asset.frameCount);
             matchCount++;
         }
     }
@@ -195,55 +208,92 @@ AssetModel* AssetManager::getAssetModel(const QString &category, const QString &
     return filteredModel;
 }
 
+// Implémentation des méthodes de AssetModel pour accéder directement aux assets
+Asset AssetModel::getAssetById(const QString &id) const
+{
+    for (const Asset &asset : m_assets) {
+        if (asset.id == id) {
+            return asset;
+        }
+    }
+    ASSET_ERROR("Asset not found with id:" << id);
+    return Asset(); // Retourne un asset vide si non trouvé
+}
+
+Asset AssetModel::getAssetByFilename(const QString &filename) const
+{
+    for (const Asset &asset : m_assets) {
+        if (asset.filename == filename) {
+            return asset;
+        }
+    }
+    ASSET_ERROR("Asset not found with filename:" << filename);
+    return Asset(); // Retourne un asset vide si non trouvé
+}
+
+// Helper function to convert Asset to QVariantMap for QML
+QVariantMap assetToVariantMap(const Asset &asset)
+{
+    QVariantMap map;
+    map["path"] = asset.path;
+    map["type"] = asset.type;
+    map["category"] = asset.category;
+    map["ratioWidth"] = asset.ratioWidth;
+    map["ratioHeight"] = asset.ratioHeight;
+    map["width"] = asset.width;
+    map["height"] = asset.height;
+    map["id"] = asset.id;
+    map["filename"] = asset.filename;
+    map["extension"] = asset.extension;
+    map["animated"] = asset.animated;
+    map["frameCount"] = asset.frameCount;
+    return map;
+}
+
+// Implémentation des méthodes de AssetManager
+QVariantMap AssetManager::getAssetByFilename(const QString &category, const QString &type, const QString &filename)
+{
+    ASSET_DEBUG("Getting asset by filename:" << category << type << filename);
+    
+    AssetModel *model = getAssetModel(category, type);
+    if (model == nullptr) {
+        ASSET_ERROR("No model found for" << category << type);
+        return QVariantMap();
+    }
+    
+    Asset asset = model->getAssetByFilename(filename);
+    return assetToVariantMap(asset);
+}
+
+QVariantMap AssetManager::getAssetById(const QString &category, const QString &type, const QString &id)
+{
+    ASSET_DEBUG("Getting asset by id:" << category << type << id);
+    
+    AssetModel *model = getAssetModel(category, type);
+    if (model == nullptr) {
+        ASSET_ERROR("No model found for" << category << type);
+        return QVariantMap();
+    }
+    
+    Asset asset = model->getAssetById(id);
+    qDebug()<< asset.path;
+    return assetToVariantMap(asset);
+}
+
 QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
 {
     ASSET_DEBUG("Requesting" << category << type << id);
 
-    if (isAssetValid(category, type, id)) {
-        QString path = buildAssetPath(category, type, id + ".png");
-        ASSET_INFO("Returning path:" << path);
-        return path;
-    }
-
-    ASSET_ERROR("Asset not valid, returning empty path for" << category << type << id);
-    return "";  // todo get default asset path
-}
-
-QString AssetManager::getAssetElement(const QString &category, const QString &type, const QString &id, const QString &elementName)
-{
-
-    QString modelName = category + "-" + type;
-    AssetModel *model = nullptr;
-
-    QVariant element;
-
-    for (int i = 0; i < m_models.size(); i++){
-        if (m_models.at(i).first == modelName){
-            model = m_models.at(i).second;
-            break;
-        }
-    }
-    if (model == nullptr){
-        ASSET_ERROR("no models founds");
+    
+    AssetModel *model = getAssetModel(category, type);
+    if (model == nullptr) {
+        ASSET_ERROR("Asset not valid, returning empty path for" << category << type << id);
         return "";
     }
+    
+    Asset asset = model->getAssetById(id);
 
-    for (int i = 0; i < model->rowCount(); i++){
-        QModelIndex index = model->index(i, 0);
-        if (model->data(index, AssetModel::IdRole).toString() == id){
-            // Convertir le nom du r�le en entier en utilisant roleNames()
-            QHash<int, QByteArray> roles = model->roleNames();
-            for (auto it = roles.constBegin(); it != roles.constEnd(); ++it) {
-                if (it.value() == elementName.toLatin1()) {
-                    // Utiliser data() avec le r�le trouv�
-                    return model->data(index, it.key()).toString();
-                }
-            }
-            ASSET_ERROR("Role name not found:" << elementName);
-            return "";
-        }
-    }
-    return "";
+    return asset.path;
 }
 
 QString AssetManager::getAnimatedGifPath(const QString &category, const QString &type, const QString &id)
@@ -353,6 +403,21 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         int ratioHeight = assetObj["ratioHeight"].toInt();
         int width = assetObj["width"].toInt();
         int height = assetObj["height"].toInt();
+        
+        // Extraire l'extension du filename
+        QString extension = assetObj["extension"].toString();
+        if (extension.isEmpty()) {
+            // Si pas dans le JSON, extraire du filename
+            QFileInfo fileInfo(filename);
+            extension = fileInfo.suffix();
+            if (extension.isEmpty()) {
+                extension = "png"; // Valeur par défaut
+            }
+        }
+        
+        // Charger les informations d'animation
+        bool animated = assetObj["animated"].toBool(false);
+        int frameCount = assetObj["frameCount"].toInt(1);
 
         QString fullPath = buildAssetPath(categoryName, typeName, filename);
 
@@ -387,7 +452,7 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
 
 
         if (targetModel) {
-            targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename);
+            targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename, extension, animated, frameCount);
         }
     }
 }
@@ -416,7 +481,7 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
 
     // Get all PNG files in the directory
     QStringList filters;
-    filters << "*.png" << "*.jpg" << "*.jpeg";  // maybe not work with other than png
+    filters << "*.png" << "*.jpg" << "*.jpeg" << "*.webp";  // maybe not work with other than png
     QStringList imageFiles = dir.entryList(filters, QDir::Files);
 
     if (imageFiles.isEmpty()) {
@@ -462,6 +527,13 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
         // Generate ID from filename (remove extension)
         QFileInfo fileInfo(filename);
         QString id = fileInfo.baseName();
+        QString extension = fileInfo.suffix();
+        
+        // Detect animation (important: reader already read the file, use it)
+        bool isAnimated = reader.supportsAnimation() && reader.imageCount() > 1;
+        int frameCount = isAnimated ? reader.imageCount() : 1;
+        
+        ASSET_INFO("Processing" << filename << "- Animated:" << isAnimated << "Frames:" << frameCount);
 
         // Calculate ratio as integers
         int w = imageSize.width();
@@ -482,6 +554,9 @@ bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
         QJsonObject assetObj;
         assetObj["id"] = id;
         assetObj["filename"] = filename;
+        assetObj["extension"] = extension;
+        assetObj["animated"] = isAnimated;
+        assetObj["frameCount"] = frameCount;
         assetObj["ratioWidth"] = ratioWidth;
         assetObj["ratioHeight"] = ratioHeight;
         assetObj["width"] = imageSize.width();
@@ -572,7 +647,7 @@ QStringList AssetManager::scanAvailableAssets()
                 QDir typeDir(typePath);
 
                 QStringList filters;
-                filters << "*.png" << "*.jpg" << "*.jpeg";
+                filters << "*.png" << "*.jpg" << "*.jpeg" << "*.webp";
                 QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
                 if (!imageFiles.isEmpty()) {
                     result << QString("%1/%2 (%3 images)").arg(category).arg(typeName).arg(imageFiles.size());
@@ -652,7 +727,7 @@ QStringList AssetManager::getAvailableTypes(const QString &category) const
         QDir typeDir(typePath);
 
         QStringList filters;
-        filters << "*.png" << "*.jpg" << "*.jpeg";
+        filters << "*.png" << "*.jpg" << "*.jpeg" << "*.webp";
         QStringList imageFiles = typeDir.entryList(filters, QDir::Files);
 
         if (!imageFiles.isEmpty()) {

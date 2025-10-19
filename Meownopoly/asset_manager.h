@@ -14,7 +14,7 @@
 #include <QJsonDocument>
 
 // Debug defines
-#define ENABLE_ASSET_DEBUG 0
+#define ENABLE_ASSET_DEBUG 1
 
 #if ENABLE_ASSET_DEBUG
     #define ASSET_DEBUG(msg) qDebug() << "[ASSET_DEBUG]" << msg
@@ -28,23 +28,26 @@
 
 #define DEFAULT_ASSETS_LOCATION "asset_extracted/"
 
+struct Asset {
+    QString path;
+    QString type;
+    QString category;
+    int ratioWidth;
+    int ratioHeight;
+    int width;
+    int height;
+    QString id;
+    QString filename;
+    QString extension;
+    bool animated;
+    int frameCount;
+};
+
 class AssetModel : public QAbstractListModel
 {
     Q_OBJECT
 
 private:
-    struct Asset {
-        QString path;
-        QString type;
-        QString category;
-        int ratioWidth;
-        int ratioHeight;
-        int width;
-        int height;
-        QString id;
-        QString filename;
-    };
-
     QList<Asset> m_assets;
 
 public:
@@ -57,7 +60,10 @@ public:
         WidthRole,
         HeightRole,
         IdRole,
-        FilenameRole
+        FilenameRole,
+        ExtensionRole,
+        AnimatedRole,
+        FrameCountRole
     };
 
     explicit AssetModel(QObject *parent = nullptr);
@@ -69,13 +75,17 @@ public:
 
     // Asset management
     void addAsset(const QString &path, const QString &type, const QString &category,
-                  int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename);
+                  int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename, 
+                  const QString &extension = "png", bool animated = false, int frameCount = 1);
     void clear();
     
     // Filtering
     Q_INVOKABLE AssetModel* createFilteredModel(const QString &type) const;
 
-    QList<Asset> getAssetList(){return m_assets;}
+    // Direct access to assets
+    QList<Asset> getAssetList() const {return m_assets;}
+    Asset getAssetById(const QString &id) const;
+    Asset getAssetByFilename(const QString &filename) const;
 
 };
 
@@ -93,28 +103,120 @@ public:
 
     // Property getters
     QString assetsBasePath() const { return m_assetsBasePath; }
+    
+    /**
+     * @brief Construit le chemin complet d'un asset
+     * @param category Catégorie de l'asset (ex: "decoration")
+     * @param type Type de l'asset (ex: "grass")
+     * @param filename Nom du fichier avec extension
+     * @return Chemin complet avec préfixe file:///
+     */
     Q_INVOKABLE QString buildAssetPath(const QString &category, const QString &type, const QString &filename) const;
+    
+    /**
+     * @brief Récupère le chemin d'un asset par son ID
+     * @param category Catégorie de l'asset
+     * @param type Type de l'asset
+     * @param id Identifiant de l'asset (sans extension)
+     * @return Chemin complet ou chaîne vide si non trouvé
+     * @note Utilise l'extension stockée dans les métadonnées
+     */
     Q_INVOKABLE QString getAssetPath(const QString &category, const QString &type, const QString &id);
 
-    Q_INVOKABLE QString getAssetElement(const QString &category, const QString &type, const QString &id, const QString &elementName);
+    /**
+     * @brief Récupère le chemin d'un GIF animé
+     * @param category Catégorie de l'asset
+     * @param type Type de l'asset
+     * @param id Identifiant de l'asset
+     * @return Chemin vers le fichier -animated.webp
+     */
     Q_INVOKABLE QString getAnimatedGifPath(const QString &category, const QString &type, const QString &id);
 
     Q_INVOKABLE QStringList categories() const { return m_categories; }
     void setCategories(const QStringList &categories);
 
     // QML accessible methods
+    /**
+     * @brief Récupère le modèle d'assets pour une catégorie et un type
+     * @param category Catégorie (ex: "decoration")
+     * @param type Type (ex: "grass")
+     * @return Modèle filtré pour utilisation dans ListView, GridView, etc.
+     * @note Le modèle est mis en cache automatiquement
+     */
     Q_INVOKABLE AssetModel* getAssetModel(const QString &category, const QString &type);
-
+    
+    // ==================== MÉTHODES RECOMMANDÉES ====================
+    // Ces méthodes retournent la structure Asset complète avec toutes les métadonnées
+    
+    /**
+     * @brief [RECOMMANDÉ] Récupère un asset complet par son nom de fichier
+     * @param category Catégorie de l'asset
+     * @param type Type de l'asset
+     * @param filename Nom du fichier avec extension (ex: "grass_01.png")
+     * @return QVariantMap avec tous les champs de l'asset
+     * @example var asset = AssetManager.getAssetByFilename("decoration", "grass", "grass_01.png");
+     */
+    Q_INVOKABLE QVariantMap getAssetByFilename(const QString &category, const QString &type, const QString &filename);
+    
+    /**
+     * @brief [RECOMMANDÉ] Récupère un asset complet par son ID
+     * @param category Catégorie de l'asset
+     * @param type Type de l'asset
+     * @param id Identifiant de l'asset (sans extension, ex: "grass_01")
+     * @return QVariantMap avec tous les champs de l'asset (vide si non trouvé)
+     * @note En QML, vérifiez if (asset.id) pour savoir si l'asset a été trouvé
+     * @example var asset = AssetManager.getAssetById("decoration", "grass", "grass_01");
+     */
+    Q_INVOKABLE QVariantMap getAssetById(const QString &category, const QString &type, const QString &id);
+    
     Q_INVOKABLE void loadAssets();
     Q_INVOKABLE void setAssetsBasePath(const QString &basePath);
+    
+    /**
+     * @brief Liste les types disponibles pour une catégorie
+     * @param category Nom de la catégorie
+     * @return Liste des types (ex: ["grass", "tree", "rock"])
+     */
     Q_INVOKABLE QStringList getAvailableTypes(const QString &category) const;
+    
+    /**
+     * @brief Liste toutes les catégories disponibles
+     * @return Liste des catégories (ex: ["decoration", "player_icons"])
+     */
     Q_INVOKABLE QStringList getAvailableCategories() const;
+    
+    /**
+     * @brief Vérifie si un asset existe
+     * @param category Catégorie de l'asset
+     * @param type Type de l'asset
+     * @param id Identifiant de l'asset
+     * @return true si l'asset existe, false sinon
+     */
     Q_INVOKABLE bool isAssetValid(const QString &category, const QString &type, const QString &id);
+    
     Q_INVOKABLE void reloadAssets();
 
-    // Metadata generation
+    // ==================== GÉNÉRATION DE MÉTADONNÉES ====================
+    
+    /**
+     * @brief Génère le fichier metadata.json pour un répertoire
+     * @param directoryPath Chemin du répertoire contenant les images
+     * @return true si la génération a réussi
+     * @note Scanne tous les fichiers .png, .jpg, .jpeg, .webp
+     * @note Génère automatiquement les dimensions, ratios et extensions
+     */
     Q_INVOKABLE bool generateMetadataForDirectory(const QString &directoryPath);
+    
+    /**
+     * @brief Génère les metadata.json pour tous les répertoires d'assets
+     * @return true si toutes les générations ont réussi
+     */
     Q_INVOKABLE bool generateAllMetadata();
+    
+    /**
+     * @brief Scanne et liste tous les assets disponibles
+     * @return Liste descriptive des assets (ex: "decoration/grass (5 images)")
+     */
     Q_INVOKABLE QStringList scanAvailableAssets();
 
     Q_INVOKABLE QStringList getAvailableBackgrounds() const;
