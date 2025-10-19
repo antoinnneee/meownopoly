@@ -47,6 +47,15 @@ GroupBox {
     
     property int currentType: targetCase ? targetCase.type : Case.CS_Unknow
     
+    Timer{
+        running: true
+        repeat:true
+        interval: 1000
+        onTriggered: {
+            console.log(currentType)
+        }
+    }
+
     // Index actuel dans la liste des types
     property int currentIndex: {
         let index = availableTypes.indexOf(currentType)
@@ -112,7 +121,6 @@ GroupBox {
                         if (currentIndex > 0 && !updatingValues) {
                             let newIndex = currentIndex - 1
                             let newType = availableTypes[newIndex]
-                            currentType = newType
                             typeChanged(newType)
                         }
                     }

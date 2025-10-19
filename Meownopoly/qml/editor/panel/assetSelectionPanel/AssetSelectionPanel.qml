@@ -57,6 +57,16 @@ EditorBottomPanel {
          root.currentSelectedCategory = category
          root.currentSelectedType = type
          root.currentSelectedId = id
+         
+         // Ajuster les dimensions au ratio natif de l'asset
+         var asset = AssetManager.getAssetById(category, type, id)
+         if (asset && asset.id && logic && logic.tileLogic) {
+             var ratioWidth = asset.ratioWidth || 1
+             var ratioHeight = asset.ratioHeight || 1
+             console.log("AssetSelectionPanel: Asset sélectionné avec ratio", ratioWidth + ":" + ratioHeight)
+             logic.tileLogic.adjustToNativeRatio(ratioWidth, ratioHeight)
+         }
+         
          root.assetSelected(category, type, id)
 
     }
