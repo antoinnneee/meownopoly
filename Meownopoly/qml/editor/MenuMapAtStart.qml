@@ -8,6 +8,7 @@ import QtCore
 
 import "tools"
 import "tools/snapable"
+import "tools/grid"
 import "panel"
 import "panel/assetSelectionPanel"
 

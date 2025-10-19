@@ -3,11 +3,12 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Effects
-import "snapable"
+
 import AssetManager
 import ItemSnapable
 import DecorationParameter
 import TileType
+
 SnapableElement {
     id: root
     // Configuration du redimensionnement
@@ -42,8 +43,7 @@ SnapableElement {
                                              snapableParameters.displayParameter.effectSaturation !== 0.0 ||
                                              snapableParameters.displayParameter.effectColorization !== 0.0 ||
                                              snapableParameters.displayParameter.effectBlurEnabled ||
-                                             snapableParameters.displayParameter.effectShadowEnabled ||
-                                             effectMaskEnabled
+                                             snapableParameters.displayParameter.effectShadowEnabled
 
     // Helper function to check if any transform is active
     readonly property bool hasActiveTransforms: snapableParameters.displayParameter.rotationAngle !== 0.0 ||

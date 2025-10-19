@@ -8,6 +8,8 @@ import Game
 import Case
 import ItemSnapable
 import "tools"
+import "tools/grid"
+import "tools/preview"
 import "tools/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
@@ -250,6 +252,7 @@ Rectangle {
                 assetPreview.mouseY = mouse.y
             }
         }
+
         
         // MouseArea to track cursor position for link preview
         MouseArea {
@@ -269,6 +272,7 @@ Rectangle {
                 }
             }
         }
+
         // Asset preview cursor
         AssetPreviewCursor {
             id: assetPreview

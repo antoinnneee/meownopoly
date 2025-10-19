@@ -5,6 +5,7 @@ import ItemSnapable
 import TileType
 import "tools"
 import "tools/snapable"
+import "tools/grid"
 import MapInfo
 import EditorEnum
 import "logic"

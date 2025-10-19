@@ -3,6 +3,8 @@ import ItemSnapable
 import Game
 import "../tools"
 import "../tools/snapable"
+import "../tools/grid"
+import "../tools/preview"
 import ".."
 
 QtObject {

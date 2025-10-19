@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Shapes
+import "../grid"
 
 Shape {
     id: linkPreviewCursor
@@ -50,9 +51,9 @@ Shape {
         if (hoveredElement) {
             // Vérifier si c'est une case ou une décoration
             // CaseTile = 0, DecorationTile = 1 selon ItemSnapable.h
-            if (hoveredElement.type === 0 || hoveredElement.snapableParameters.caseData) {
+            if (hoveredElement.type === 0) {
                 return linkColorCase  // Vert pour les cases
-            } else if (hoveredElement.type === 1 || hoveredElement.snapableParameters.decorationParameter) {
+            } else if (hoveredElement.type === 1) {
                 return linkColorDecoration  // Violet pour les décorations
             }
         }

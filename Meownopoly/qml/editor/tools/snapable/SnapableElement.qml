@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import "."
 import "../"
+import "../grid"
 
 import ItemSnapable
 import TileType
