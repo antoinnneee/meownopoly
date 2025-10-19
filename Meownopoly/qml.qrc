@@ -109,14 +109,7 @@
         <file>qml/editor/logic/MouseLogic_Selection.qml</file>
         <file>qml/editor/logic/MouseLogic_Pose.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/CaseSelectionPanel.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_TitleBar.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/qmldir</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_ClearButton.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_ContentArea.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/ConnectionsConfigurationSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/ConnectionListSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_CaseTypeCell.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CSP_CaseTypeSelector.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MapSelectionPanel.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_ContentArea.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_TitleBar.qml</file>
@@ -130,26 +123,6 @@
         <file>qml/editor/Background.qml</file>
         <file>qml/test/Test_Comp.qml</file>
         <file>qml/editor/EditorEscMenu.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CaseConfigurationPanelSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CCPS_TypeSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CCPS_GeneralSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CCPS_RestAreaSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CCPS_KibbleDispenserSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CCPS_CardBoardBoxSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/CCPS_CatDeviceSection.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CaseConfigurationPanel.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_GeneralConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_Header.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_PanelElement.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_RentConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseConfigPanel/CCP_StyledSpinBox.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/ui_item/ParticleButton.qml</file>
         <file>qml/editor/tools/grid/GridControlPanel.qml</file>
@@ -160,5 +133,33 @@
         <file>qml/editor/tools/snapable/ConnectionOverlay2.qml</file>
         <file>qml/editor/tools/snapable/SnapableCaseTile.qml</file>
         <file>qml/editor/tools/snapable/SnapableDecoration.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/main/CSP_CaseTypeCell.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/main/CSP_CaseTypeSelector.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CaseConfigurationPanel.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_CatPerksConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_GeneralConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_Header.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_PanelElement.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_RentConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_StyledSpinBox.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_TypeSelector.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/CaseConfigurationPanelSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_CardBoardBoxSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_CatDeviceSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_GeneralSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_KibbleDispenserSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_RestAreaSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_TypeSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/ConnectionListSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/side/ConnectionsConfigurationSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/content/CSP_ContentArea.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/title/CSP_ClearButton.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/title/CSP_TitleBar.qml</file>
     </qresource>
 </RCC>
