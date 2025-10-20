@@ -59,7 +59,7 @@ SOURCES += \
     main.cpp \
     map/map.cpp \
     map/mapinfo.cpp \
-    map/maploader.cpp \
+    map/mapfilemanager.cpp \
     meowstyle.cpp \
     player.cpp \
     qmlapp.cpp \
@@ -97,7 +97,8 @@ HEADERS += \
     liveimage.h \
     map/map.h \
     map/mapinfo.h \
-    map/maploader.h \
+    map/mapfilemanager.h \
+    map/maptypes.h \
     meowstyle.h \
     player.h \
     qmlapp.h \

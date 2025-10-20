@@ -32,7 +32,8 @@
 #include "asset_manager.h"
 
 #include <map/map.h>
-#include <map/maploader.h>
+#include <map/maptypes.h>
+#include <map/mapfilemanager.h>
 #include <map/mapinfo.h>
 #include "tools/debug_info.h"
 #include "tools/editorenum.h"
@@ -53,13 +54,17 @@ QmlApp::QmlApp(QWindow *parent)
     FolderCompressor::registerQml();
     LauncherManager::registerQml();
     AssetManager::registerQml();
-    MapLoader::registerQml();
+    MapFileManager::registerQml();
     MapInfo::registerQml();
     EditorEnum::registerQml();
     ItemSnapableFactory::registerQml();
 //    AnimationProvider::registerQml();
     Logger::registerQml();
     UndoRedoManager::registerQml();
+    
+    // Register MapTypes namespace for QML
+    qmlRegisterUncreatableMetaObject(MapTypes::staticMetaObject, "MapTypes", 1, 0, "MapTypes", "Error: only enums");
+    
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);
     rootContext()->setContextProperty("folderCompressor", folderCompressor);
@@ -70,9 +75,10 @@ QmlApp::QmlApp(QWindow *parent)
     // Create and expose AssetManager instance to QML
     assetManager = AssetManager::instance();
 
-    connect(MapLoader::instance(), &MapLoader::updateListEdits, UndoRedoManager::instance(), &UndoRedoManager::onUpdateListEdits);
-    connect(MapLoader::instance(), &MapLoader::askEdit, UndoRedoManager::instance(), &UndoRedoManager::onAskEdit);
-    connect(UndoRedoManager::instance(), &UndoRedoManager::returnEdit, MapLoader::instance(), &MapLoader::onReturnEdit);
+    // Connect Game signals to UndoRedoManager
+    connect(Game::instance(), &Game::updateListEdits, UndoRedoManager::instance(), &UndoRedoManager::onUpdateListEdits);
+    connect(Game::instance(), &Game::askEdit, UndoRedoManager::instance(), &UndoRedoManager::onAskEdit);
+    connect(UndoRedoManager::instance(), &UndoRedoManager::returnEdit, Game::instance(), &Game::onReturnEdit);
 
 
     /*

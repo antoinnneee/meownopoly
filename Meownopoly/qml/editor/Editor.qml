@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
@@ -11,7 +11,7 @@ import "tools"
 import "tools/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
-import MapLoader
+import MapFileManager 1.0`nimport MapTypes 1.0
 import MapInfo
 import EditorEnum
 import Logger
@@ -40,16 +40,16 @@ Rectangle {
     property alias isAssetSelected: selectionPanel.isAssetSelected
 
     Component.onCompleted: {
-        if (!MapLoader.mapAlreadyExist(mapInfo.autosaveMapName, MapLoader.AUTOSAVE)){
+        if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
             console.log("Creating autosave map")
-            MapLoader.createJsonMap("", MapLoader.AUTOSAVE)
-            logic.saveMap(MapLoader.AUTOSAVE)
+            MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
+            logic.saveMap(MapTypes.AUTOSAVE)
         }
         else {
             console.log("Autosave map already exists")
         }
 
-        MapLoader.loadMap(mapInfo.autosaveMapName, MapLoader.AUTOSAVE)
+        Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
     }
 
 
@@ -95,7 +95,7 @@ Rectangle {
     }
 
     Connections{
-        target: MapLoader
+        target: Game
 
         function onFoundItemSnapableTile(itemSnapableData){
             Logger.info("Found itemSnapableData tile:" + itemSnapableData, "MAP_LOADING")
@@ -486,3 +486,4 @@ Rectangle {
         }
     }
 }
+

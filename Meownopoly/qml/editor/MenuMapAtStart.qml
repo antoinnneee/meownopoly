@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
@@ -15,7 +15,7 @@ import QtQml
 import Game
 import Case
 import ItemSnapable
-import MapLoader
+import MapFileManager 1.0`nimport MapTypes 1.0
 import MapInfo
 import EditorEnum
 import AssetManager 1.0
@@ -158,7 +158,7 @@ MouseArea {
                     height: parent.height
                     checked: false
 
-                    enabled : MapLoader.getAvailableMaps().length > 0
+                    enabled : MapFileManager.getAvailableMaps().length > 0
                     opacity : enabled ? 1.0 : 0.5
                     background: Rectangle {
                         color: loadMapBtn.checked ? "#4A90E2" : "#333333"
@@ -537,7 +537,7 @@ MouseArea {
                             boundsBehavior: Flickable.StopAtBounds
 
                             Component.onCompleted: {
-                                model = MapLoader.getAvailableMaps()
+                                model = MapFileManager.getAvailableMaps()
                             }
 
                             ScrollBar.vertical: ScrollBar {
@@ -638,9 +638,9 @@ MouseArea {
                             console.log("Loading map: " + menuMapAtStart.selectedMap)
                             if (typeof logic !== 'undefined') {
                                 logic.removeCurrentMap()
-                                var normalizedMapName = MapLoader.findMapFileByName(menuMapAtStart.selectedMap)
+                                var normalizedMapName = MapFileManager.findMapFileByName(menuMapAtStart.selectedMap)
                                 if (normalizedMapName !== "") {
-                                    MapLoader.loadMap(normalizedMapName, MapLoader.CUSTOM)
+                                    Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
                                 } else {
                                     console.error("Could not find map file for: " + menuMapAtStart.selectedMap)
                                 }
@@ -684,3 +684,4 @@ MouseArea {
         }
     }
 }
+

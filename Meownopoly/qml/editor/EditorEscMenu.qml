@@ -1,9 +1,9 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Particles
 import QtCore
-import MapLoader
+import MapFileManager 1.0`nimport MapTypes 1.0
 
 Rectangle {
     id: escMenu
@@ -90,7 +90,7 @@ Rectangle {
     
     // Fonction pour rafraîchir la liste des cartes
     function refreshMapList() {
-        mapsList.model = MapLoader.getAvailableMaps()
+        mapsList.model = MapFileManager.getAvailableMaps()
     }
     
     visible: isVisible
@@ -384,9 +384,9 @@ Rectangle {
                                 console.log("Chargement de la carte:", modelData)
                                 if (typeof logic !== 'undefined') {
                                     logic.removeCurrentMap()
-                                    var normalizedMapName = MapLoader.findMapFileByName(modelData)
+                                    var normalizedMapName = MapFileManager.findMapFileByName(modelData)
                                     if (normalizedMapName !== "") {
-                                        MapLoader.loadMap(normalizedMapName, MapLoader.CUSTOM)
+                                        Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
                                     } else {
                                         console.error("Could not find map file for: " + modelData)
                                     }
@@ -794,3 +794,4 @@ Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo
     // Assurer que le menu peut recevoir le focus pour les raccourcis clavier
     focus: true
 }
+

@@ -1,10 +1,10 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 
-import MapLoader
+import MapFileManager 1.0`nimport MapTypes 1.0
 
 Item {
     id: saveLoadView
@@ -12,7 +12,7 @@ Item {
     height: mapsContainer.height
 
     function refreshMapList(){
-       mapsList.model = MapLoader.getAvailableMaps()
+       mapsList.model = MapFileManager.getAvailableMaps()
     }
 
     Rectangle {
@@ -129,9 +129,9 @@ Item {
                     console.log("Selected map: " + modelData)
                     if (typeof logic !== 'undefined') {
                         logic.removeCurrentMap()
-                        var normalizedMapName = MapLoader.findMapFileByName(modelData)
+                        var normalizedMapName = MapFileManager.findMapFileByName(modelData)
                         if (normalizedMapName !== "") {
-                            MapLoader.loadMap(normalizedMapName, MapLoader.CUSTOM)
+                            Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
                         } else {
                             console.error("Could not find map file for: " + modelData)
                         }
@@ -180,3 +180,4 @@ Item {
         }
     }
 }
+

@@ -1,9 +1,11 @@
-#ifndef MAP_H
+﻿#ifndef MAP_H
 #define MAP_H
 
 #include <QObject>
 #include "MapInfo.h"
 #include "item_snapable/ItemSnapable.h"
+#include "map/maptypes.h"
+#include "map/mapfilemanager.h"
 
 class Map : public QObject
 {
@@ -17,6 +19,8 @@ class Map : public QObject
 public:
     Map(QObject *parent = nullptr);
     Map(QJsonObject jsonObject, QObject *parent = nullptr);
+    
+    static Map *loadFromFile(const QString &mapName, MapTypes::MapType mapType);
 
     QList<ItemSnapable*> caseTiles() const { return m_caseTiles; }
     void setCaseTiles(const QList<ItemSnapable*> &caseTiles) { m_caseTiles = caseTiles; emit caseTilesChanged(); }
@@ -34,8 +38,10 @@ public:
 signals:
     void caseTilesChanged();
     void decorationTilesChanged();
-
     void mapInfoChanged();
+    
+    void mapLoaded(Map *map);
+    void foundItemSnapableTile(ItemSnapable *itemSnapable);
 
 private:
 

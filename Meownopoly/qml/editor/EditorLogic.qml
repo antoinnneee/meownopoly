@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import Game
 import Case
 import ItemSnapable
@@ -165,3 +165,4 @@ Item {
         Game.registerMap(mapInfo, itemSnapableList, isAutoSave)
     }
 }
+

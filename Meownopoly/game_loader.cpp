@@ -8,16 +8,10 @@
 #include <QString>
 
 #include "map/mapinfo.h"
-#include "map/maploader.h"
-
-// Helper function to normalize map names for consistent file naming
-QString normalizeMapName(const QString &mapName) {
-    QString normalized = mapName.toLower();
-    normalized = normalized.replace(" ", "_");
-    normalized = normalized.trimmed();
-    return normalized;
-}
-
+#include "map/mapfilemanager.h"
+#include "map/maptypes.h"
+#include "map/map.h"
+#include "tools/undoredomanager.h"
 
 QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray)
 {
@@ -32,48 +26,7 @@ QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTiles
     return snapableTilesArray;
 }
 
-bool Game::addTileToJson(QJsonObject jsonObject, QString mapName, MapLoader::MapType isAutoSave)
-{
-
-    QJsonDocument jsonDoc(jsonObject);
-    QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Indented);
-
-    QDir dir("map");
-    if (!dir.exists()) {
-        dir.mkpath(".");
-    }
-    QFile map;
-
-    switch (isAutoSave) {
-    case MapLoader::AUTOSAVE:
-        map.setFileName((QString)MAP_FILE_PATH + (QString)AUTOSAVE_MAP_NAME + ".json");
-        break;
-    case MapLoader::CUSTOM:
-        map.setFileName((QString)MAP_FILE_PATH + normalizeMapName(mapName) + "_map.json");
-        break;
-    // case MapLoader::UNDOREDO:
-    //     break;
-    }
-
-    if (!map.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qDebug() << "Failed to open file for writing:" << map.fileName();
-        return false;
-    }
-
-    qint64 bytesWritten = map.write(jsonData);
-    map.close();
-
-    if (bytesWritten == -1) {
-        qDebug() << "Failed to write to file:" << map.fileName();
-        return false;
-    }
-
-    qDebug() << "Map saved successfully to:" << map.fileName();
-    qDebug().noquote() << QString::fromUtf8(jsonData);
-    return true;
-}
-
-bool Game::registerMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapLoader::MapType isAutoSave)
+bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType)
 {
     QJsonArray snapableTilesArray;
 
@@ -93,9 +46,44 @@ bool Game::registerMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapLoade
     }
 
     jsonObject["snapableTiles"] = snapableTilesArray;
-    addTileToJson(jsonObject, mapInfo->getMapName(), isAutoSave);
-    return true;
+    return MapFileManager::saveMap(jsonObject, mapInfo->getMapName(), mapType);
 }
+
+Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
+{
+    return Map::loadFromFile(mapName, mapType);
+}
+
+QStringList Game::getAvailableMaps()
+{
+    return MapFileManager::getAvailableMaps();
+}
+
+QString Game::findMapFileByName(const QString &displayName)
+{
+    return MapFileManager::findMapFileByName(displayName);
+}
+
+bool Game::mapExists(const QString &mapName, MapTypes::MapType mapType)
+{
+    return MapFileManager::mapExists(mapName, mapType);
+}
+
+QString Game::createMapFile(const QString &mapName, MapTypes::MapType mapType)
+{
+    return MapFileManager::createMapFile(mapName, mapType);
+}
+
+bool Game::removeMapFile(const QString &mapName, MapTypes::MapType mapType)
+{
+    return MapFileManager::removeMapFile(mapName, mapType);
+}
+
+void Game::onReturnEdit(QJsonObject newEdit)
+{
+    // Slot vide comme dans MapLoader original
+}
+
 QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
 {
     QList<ItemSnapable*> listItems;
@@ -107,4 +95,3 @@ QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
     }
     return listItems;
 }
-

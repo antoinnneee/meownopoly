@@ -6,7 +6,7 @@ import "../editorBottomPanel"
 import "../../../ui_item"
 
 import MapInfo
-import MapLoader
+import MapFileManager 1.0`nimport MapTypes 1.0
 
 Item {
     id: generalParamsView
@@ -104,14 +104,14 @@ Item {
                                 background: Rectangle {
                                     anchors.fill: parent
                                     property var mapInfo : logic.mapInfo
-                                    color: MapLoader.mapAlreadyExist(mapInfo.mapName, MapLoader.CUSTOM)? "#008B8B" : "#4CAF50"
+                                    color: MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)? "#008B8B" : "#4CAF50"
                                     opacity: 0.8
                                     radius: 4
                                 }
 
                                 contentItem: Text {
                                     property var mapInfo : logic.mapInfo
-                                    text: MapLoader.mapAlreadyExist(mapInfo.mapName, MapLoader.CUSTOM)? "Mettre a jour la carte" : "Enregistrer carte"
+                                    text: MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)? "Mettre a jour la carte" : "Enregistrer carte"
                                     color: "white"
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
@@ -130,7 +130,7 @@ Item {
                                         console.log("Saving map with name: " + mapName)
                                         console.log(" MapInfo.AUTOSAVE_MAP_NAME : " + mapInfo.autosaveMapName)
                                         console.log("is it identical " + (mapName === mapInfo.autosaveMapName))
-                                        logic.saveMap(mapName === mapInfo.autosaveMapName ? MapLoader.AUTOSAVE : MapLoader.CUSTOM)
+                                        logic.saveMap(mapName === mapInfo.autosaveMapName ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
                                         newMap()
                                     } else {
                                         console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")
@@ -525,3 +525,4 @@ Item {
         }
     }
 }
+

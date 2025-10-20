@@ -15,7 +15,10 @@
 #include "player.h"
 #include "item_snapable/ItemSnapable.h"
 #include "map/mapinfo.h"
-#include "map/maploader.h"
+#include "map/map.h"
+#include "map/maptypes.h"
+#include "map/mapfilemanager.h"
+#include "tools/undoredomanager.h"
 
 
 class Game : public QObject
@@ -75,8 +78,8 @@ public:
 
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
-    bool addTileToJson(QJsonObject jsonObject, QString mapName, MapLoader::MapType isAutoSave);
-    Q_INVOKABLE bool registerMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapLoader::MapType isAutoSave);
+    Q_INVOKABLE bool saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType);
+    Q_INVOKABLE Map *loadMap(QString mapName, MapTypes::MapType mapType);
 
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
 
@@ -89,6 +92,7 @@ public:
     void setAssetPath(const QVariantList &newAssetPath);
 
 public slots:
+    void onReturnEdit(QJsonObject newEdit);
 
 signals:
     void gameStarted();
@@ -99,6 +103,11 @@ signals:
 
     void assetNumberChanged();
     void assetPathChanged();
+    
+    void mapLoaded(Map *map);
+    void foundItemSnapableTile(ItemSnapable *itemSnapable);
+    void updateListEdits(QJsonObject newEdit);
+    void askEdit(UndoRedoManager::EditAction editAction);
 
 private slots:
 
