@@ -12,35 +12,43 @@
 
 void MapFileManager::registerQml()
 {
-    qmlRegisterType<MapFileManager>("MapFileManager", 1, 0, "MapFileManager");
+    qmlRegisterSingletonType<MapFileManager>("MapFileManager", 1, 0, "MapFileManager", &MapFileManager::qmlInstance);
+}
+
+QObject *MapFileManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+    // Retourner une instance vide car on utilise des méthodes statiques
+    return new QObject();
 }
 
 QJsonObject MapFileManager::readMapFile(const QString &mapName, MapTypes::MapType mapType)
 {
     QString filePath = getMapFilePath(mapName, mapType);
     QFile file(filePath);
-    
+
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << "Failed to open map file for reading:" << filePath;
         return QJsonObject();
     }
-    
+
     QByteArray data = file.readAll();
     file.close();
-    
+
     QJsonParseError parseError;
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-    
+
     if (parseError.error != QJsonParseError::NoError) {
         qDebug() << "JSON parse error in" << filePath << ":" << parseError.errorString();
         return QJsonObject();
     }
-    
+
     if (!doc.isObject()) {
         qDebug() << "Invalid JSON format in" << filePath << "- expected object";
         return QJsonObject();
     }
-    
+
     return doc.object();
 }
 
@@ -48,32 +56,32 @@ QStringList MapFileManager::getAvailableMaps()
 {
     QStringList maps;
     QDir mapDir(MAP_FILE_PATH);
-    
+
     if (!mapDir.exists()) {
         qDebug() << "Map directory does not exist:" << MAP_FILE_PATH;
         return maps;
     }
-    
+
     QStringList filters;
     filters << "*.json";
     QFileInfoList fileList = mapDir.entryInfoList(filters, QDir::Files);
-    
+
     for (const QFileInfo &fileInfo : fileList) {
         QString fileName = fileInfo.baseName();
-        
+
         // Skip autosave files
         if (fileName == AUTOSAVE_MAP_NAME) {
             continue;
         }
-        
+
         // Remove "_map" suffix if present
         if (fileName.endsWith("_map")) {
             fileName = fileName.left(fileName.length() - 4);
         }
-        
+
         maps.append(fileName);
     }
-    
+
     return maps;
 }
 
@@ -81,11 +89,11 @@ QString MapFileManager::findMapFileByName(const QString &displayName)
 {
     QString normalizedName = normalizeMapName(displayName);
     QString filePath = getMapFilePath(normalizedName, MapTypes::CUSTOM);
-    
+
     if (QFile::exists(filePath)) {
         return filePath;
     }
-    
+
     return QString();
 }
 
@@ -98,7 +106,7 @@ bool MapFileManager::mapExists(const QString &mapName, MapTypes::MapType mapType
 bool MapFileManager::saveMap(const QJsonObject &mapData, const QString &mapName, MapTypes::MapType mapType)
 {
     QString filePath = getMapFilePath(mapName, mapType);
-    
+
     // Ensure directory exists
     QDir dir = QFileInfo(filePath).dir();
     if (!dir.exists()) {
@@ -107,24 +115,24 @@ bool MapFileManager::saveMap(const QJsonObject &mapData, const QString &mapName,
             return false;
         }
     }
-    
+
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         qDebug() << "Failed to open file for writing:" << filePath;
         return false;
     }
-    
+
     QJsonDocument doc(mapData);
     QByteArray jsonData = doc.toJson(QJsonDocument::Indented);
-    
+
     qint64 bytesWritten = file.write(jsonData);
     file.close();
-    
+
     if (bytesWritten == -1) {
         qDebug() << "Failed to write to file:" << filePath;
         return false;
     }
-    
+
     qDebug() << "Map saved successfully to:" << filePath;
     qDebug().noquote() << QString::fromUtf8(jsonData);
     return true;
@@ -134,7 +142,7 @@ QString MapFileManager::createMapFile(const QString &mapName, MapTypes::MapType 
 {
     QString normalizedName = normalizeMapName(mapName);
     QString filePath = getMapFilePath(normalizedName, mapType);
-    
+
     // Create empty JSON object
     QJsonObject emptyMap;
     QJsonObject emptyMapInfo;
@@ -143,28 +151,28 @@ QString MapFileManager::createMapFile(const QString &mapName, MapTypes::MapType 
     emptyMapInfo["author"] = "";
     emptyMap["mapInfo"] = emptyMapInfo;
     emptyMap["snapableTiles"] = QJsonArray();
-    
+
     if (saveMap(emptyMap, normalizedName, mapType)) {
         return filePath;
     }
-    
+
     return QString();
 }
 
 bool MapFileManager::removeMapFile(const QString &mapName, MapTypes::MapType mapType)
 {
     QString filePath = getMapFilePath(mapName, mapType);
-    
+
     if (!QFile::exists(filePath)) {
         qDebug() << "Map file does not exist:" << filePath;
         return false;
     }
-    
+
     if (!QFile::remove(filePath)) {
         qDebug() << "Failed to remove map file:" << filePath;
         return false;
     }
-    
+
     qDebug() << "Map file removed successfully:" << filePath;
     return true;
 }
@@ -181,7 +189,7 @@ QString MapFileManager::getMapFilePath(const QString &mapName, MapTypes::MapType
 {
     QString fileName;
     QString normalizedName = normalizeMapName(mapName);
-    
+
     switch (mapType) {
     case MapTypes::AUTOSAVE:
         fileName = (QString)AUTOSAVE_MAP_NAME + ".json";
@@ -197,5 +205,6 @@ QString MapFileManager::getMapFilePath(const QString &mapName, MapTypes::MapType
         fileName = normalizedName + ".json";
         break;
     }
+
     return MAP_FILE_PATH + fileName;
 }
