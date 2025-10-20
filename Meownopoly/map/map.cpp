@@ -90,18 +90,12 @@ Map *Map::loadFromFile(const QString &mapName, MapTypes::MapType mapType)
     
     Map *map = new Map(jsonObject);
     
-    // CrÃ©er MapInfo depuis JSON
+    // Créer MapInfo depuis JSON
     QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
     MapInfo *mapInfo = new MapInfo(mapInfoObject);
     map->setMapInfo(mapInfo);
     
-    // Ã‰mettre signaux pour chaque tuile
-    for (ItemSnapable *tile : map->m_tiles) {
-        emit map->foundItemSnapableTile(tile);
-    }
-    
-    // Ã‰mettre signal de chargement terminÃ©
-    emit map->mapLoaded(map);
+    // NE PAS émettre les signaux ici, Game le fera
     
     return map;
 }

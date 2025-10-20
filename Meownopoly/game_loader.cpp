@@ -51,12 +51,27 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
 
 Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 {
-    return Map::loadFromFile(mapName, mapType);
+    Map *map = Map::loadFromFile(mapName, mapType);
+    
+    if (map) {
+        // Relayer les signaux de Map vers Game
+        connect(map, &Map::foundItemSnapableTile, this, &Game::foundItemSnapableTile);
+        connect(map, &Map::mapLoaded, this, &Game::mapLoaded);
+        
+        // Émettre les signaux immédiatement car Map ne les émet plus
+        for (ItemSnapable *tile : map->tiles()) {
+            emit foundItemSnapableTile(tile);
+        }
+        emit mapLoaded(map);
+    }
+    
+    return map;
 }
 
 
 void Game::onReturnEdit(QJsonObject newEdit)
 {
+    Q_UNUSED(newEdit)
     // Slot vide comme dans MapLoader original
 }
 

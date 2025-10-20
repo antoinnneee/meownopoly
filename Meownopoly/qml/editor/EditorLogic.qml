@@ -162,7 +162,7 @@ Item {
                 itemSnapableList.push(tile.snapableParameters)
             }
         }
-        Game.registerMap(mapInfo, itemSnapableList, isAutoSave)
+        Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
     }
 }
 

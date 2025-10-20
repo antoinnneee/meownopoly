@@ -6,9 +6,9 @@
 #include <QStringList>
 #include <QQmlEngine>
 #include "map/maptypes.h"
+#include "map/mapinfo.h"
 
 #define MAP_FILE_PATH (BUILD_DIR "/map/")
-#define AUTOSAVE_MAP_NAME "autosave"
 
 class MapFileManager : public QObject
 {
@@ -20,20 +20,20 @@ public:
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
     static MapFileManager *instance();
 
-    // Reading operations
+    // Méthodes QML (instance, Q_INVOKABLE)
+    Q_INVOKABLE QStringList getAvailableMaps();
+    Q_INVOKABLE QString findMapFileByName(const QString &displayName);
+    Q_INVOKABLE bool mapExists(const QString &mapName, MapTypes::MapType mapType);
+    
+    // Méthodes C++ internes (static)
     static QJsonObject readMapFile(const QString &mapName, MapTypes::MapType mapType);
-    static QStringList getAvailableMaps();
-    static QString findMapFileByName(const QString &displayName);
-    static bool mapExists(const QString &mapName, MapTypes::MapType mapType);
-
-    // Writing operations
     static bool saveMap(const QJsonObject &mapData, const QString &mapName, MapTypes::MapType mapType);
     static QString createMapFile(const QString &mapName, MapTypes::MapType mapType);
     static bool removeMapFile(const QString &mapName, MapTypes::MapType mapType);
-
-    static QString getMapFilePath(const QString &mapName, MapTypes::MapType mapType);
-    // Utility methods
+    
+    // Utility methods (static)
     static QString normalizeMapName(const QString &mapName);
+    static QString getMapFilePath(const QString &mapName, MapTypes::MapType mapType);
 
 private:
     explicit MapFileManager(QObject *parent = nullptr);
