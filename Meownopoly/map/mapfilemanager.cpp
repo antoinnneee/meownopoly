@@ -10,6 +10,11 @@
 #include <QStandardPaths>
 #include <QCoreApplication>
 
+void MapFileManager::registerQml()
+{
+    qmlRegisterType<MapFileManager>("MapFileManager", 1, 0, "MapFileManager");
+}
+
 QJsonObject MapFileManager::readMapFile(const QString &mapName, MapTypes::MapType mapType)
 {
     QString filePath = getMapFilePath(mapName, mapType);
@@ -179,7 +184,7 @@ QString MapFileManager::getMapFilePath(const QString &mapName, MapTypes::MapType
     
     switch (mapType) {
     case MapTypes::AUTOSAVE:
-        fileName = AUTOSAVE_MAP_NAME + ".json";
+        fileName = (QString)AUTOSAVE_MAP_NAME + ".json";
         break;
     case MapTypes::CUSTOM:
         fileName = normalizedName + "_map.json";
@@ -192,6 +197,5 @@ QString MapFileManager::getMapFilePath(const QString &mapName, MapTypes::MapType
         fileName = normalizedName + ".json";
         break;
     }
-    
     return MAP_FILE_PATH + fileName;
 }

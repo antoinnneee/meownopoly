@@ -6,7 +6,8 @@ import "../editorBottomPanel"
 import "../../../ui_item"
 
 import MapInfo
-import MapFileManager 1.0`nimport MapTypes 1.0
+import MapFileManager
+import MapTypes
 
 Item {
     id: generalParamsView

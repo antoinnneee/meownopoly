@@ -54,30 +54,6 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
     return Map::loadFromFile(mapName, mapType);
 }
 
-QStringList Game::getAvailableMaps()
-{
-    return MapFileManager::getAvailableMaps();
-}
-
-QString Game::findMapFileByName(const QString &displayName)
-{
-    return MapFileManager::findMapFileByName(displayName);
-}
-
-bool Game::mapExists(const QString &mapName, MapTypes::MapType mapType)
-{
-    return MapFileManager::mapExists(mapName, mapType);
-}
-
-QString Game::createMapFile(const QString &mapName, MapTypes::MapType mapType)
-{
-    return MapFileManager::createMapFile(mapName, mapType);
-}
-
-bool Game::removeMapFile(const QString &mapName, MapTypes::MapType mapType)
-{
-    return MapFileManager::removeMapFile(mapName, mapType);
-}
 
 void Game::onReturnEdit(QJsonObject newEdit)
 {

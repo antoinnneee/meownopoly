@@ -4,7 +4,8 @@ import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 
-import MapFileManager 1.0`nimport MapTypes 1.0
+import MapFileManager
+import MapTypes
 
 Item {
     id: saveLoadView

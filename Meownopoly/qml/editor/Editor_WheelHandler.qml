@@ -12,7 +12,6 @@ import "tools/snapable"
 import "panel"
 import "panel/caseSelectionPanel"
 import "panel/assetSelectionPanel"
-import MapLoader
 import MapInfo
 import EditorEnum
 

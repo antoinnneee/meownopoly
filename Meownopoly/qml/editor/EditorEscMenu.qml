@@ -3,7 +3,8 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Particles
 import QtCore
-import MapFileManager 1.0`nimport MapTypes 1.0
+import MapFileManager
+import MapTypes
 
 Rectangle {
     id: escMenu

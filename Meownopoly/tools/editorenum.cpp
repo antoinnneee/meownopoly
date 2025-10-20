@@ -13,7 +13,6 @@ void EditorEnum::registerQml()
 {
     qmlRegisterSingletonType<EditorEnum>("EditorEnum", 1, 0, "EditorEnum", &EditorEnum::qmlInstance);
     qmlRegisterType<EditorMouseMode>("EditorEnum", 1, 0, "EditorMouseMode");
-
 }
 
 EditorEnum *EditorEnum::instance()

@@ -33,13 +33,13 @@
 
 #include <map/map.h>
 #include <map/maptypes.h>
-#include <map/mapfilemanager.h>
-#include <map/mapinfo.h>
 #include "tools/debug_info.h"
 #include "tools/editorenum.h"
 #include "animation_manager.h"
 #include "liveimage.h"
 #include "tools/undoredomanager.h"
+#include "map/mapinfo.h"
+#include "map/mapfilemanager.h"
 
 //#include "animationprovider.h"
 #include "tools/logger.h"

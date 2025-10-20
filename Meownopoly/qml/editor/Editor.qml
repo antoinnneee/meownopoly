@@ -11,7 +11,8 @@ import "tools"
 import "tools/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
-import MapFileManager 1.0`nimport MapTypes 1.0
+import MapFileManager
+import MapTypes
 import MapInfo
 import EditorEnum
 import Logger

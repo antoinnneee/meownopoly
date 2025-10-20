@@ -15,7 +15,8 @@ import QtQml
 import Game
 import Case
 import ItemSnapable
-import MapFileManager 1.0`nimport MapTypes 1.0
+import MapFileManager 1.0
+import MapTypes
 import MapInfo
 import EditorEnum
 import AssetManager 1.0
