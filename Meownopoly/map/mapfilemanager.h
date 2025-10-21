@@ -8,7 +8,7 @@
 #include "map/maptypes.h"
 #include "map/mapinfo.h"
 
-#define MAP_FILE_PATH (BUILD_DIR "/map/")
+#define MAP_FILE_PATH ("./map/")
 
 class MapFileManager : public QObject
 {

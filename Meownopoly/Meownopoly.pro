@@ -16,10 +16,10 @@ android:{
 #if changement in path need to REBUILD !
 DEFINES += BUILD_DIR=\\\"$$OUT_PWD\\\"
 
-# windows: {
-# DESTDIR = $$PWD/bin/windows/release
-# QMAKE_POST_LINK =  windeployqt $$shell_path($$DESTDIR/$${TARGET}.exe) --qmldir $$PWD/qml --no-translations
-# }
+windows: {
+    DESTDIR = $$PWD/bin/windows/release
+    QMAKE_POST_LINK =  windeployqt $$shell_path($$DESTDIR/$${TARGET}.exe) --qmldir $$PWD/qml --no-translations
+}
 
 CONFIG += c++20
 
