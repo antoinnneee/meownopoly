@@ -72,9 +72,7 @@ public:
 
     QList<Card *> listCards() const;
 
-    // JSON Case Management
-
-
+    // Map saving/loading
 
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);

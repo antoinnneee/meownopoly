@@ -88,13 +88,13 @@ Rectangle {
     }
 
     property MapInfo mapInfo: MapInfo{
-        mapName: autosaveMapName
-        mapDescription: ""
-        mapCreationDate: ""
-        mapLastModified: ""
-        backgroundPath: ""
-        backgroundScaling: "Fit"
-        isBackgroundOnGrill: false
+        // mapName: autosaveMapName
+        // mapDescription: ""
+        // mapCreationDate: ""
+        // mapLastModified: ""
+        // backgroundPath: ""
+        // backgroundScaling: "Fit"
+        // isBackgroundOnGrill: false
     }
 
     Connections{
@@ -123,7 +123,6 @@ Rectangle {
                 mapInfo.isBackgroundOnGrill = map.mapInfo.isBackgroundOnGrill
                 mapInfo.musicPath = map.mapInfo.musicPath
             }
-
         }
     }
 
@@ -147,7 +146,6 @@ Rectangle {
         // caseConfigPanel: caseConfigPanel
         selectionPanel: selectionPanel
     }
-
 
     // Grille de l'éditeur
     GridManager {

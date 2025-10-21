@@ -87,7 +87,7 @@ signals:
 
 private:
     const QString m_autosaveMapName = AUTOSAVE_MAP_NAME;
-    QString m_mapName = "";
+    QString m_mapName = m_autosaveMapName;
     QString m_mapDescription = "";
     QString m_mapCreationDate = "";
     QString m_mapLastModified = "";

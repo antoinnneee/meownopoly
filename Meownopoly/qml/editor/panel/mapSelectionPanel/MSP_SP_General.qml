@@ -15,6 +15,7 @@ Item {
     height: columnLeft.height > columnRight.height ? columnLeft.height : columnRight.height
 
     // Propriétés pour stocker les informations de la carte
+
     property string mapName: logic.mapInfo.mapName
     property string mapVersion: logic.mapInfo.version
     property string dateOfCreation: logic.mapInfo.mapCreationDate
@@ -107,8 +108,7 @@ Item {
                                     property var mapInfo : logic.mapInfo
                                     color: {
                                         if (mapName === mapInfo.autosaveMapName || mapName == ""){
-                                            // "#5E5A66"
-                                            "#6A555C"
+                                            "#5E5A66"
                                         }
                                         else if (MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)){
                                             "#008B8B"
