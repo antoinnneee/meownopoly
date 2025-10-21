@@ -156,7 +156,7 @@ QString MapFileManager::createMapFile(const QString &mapName, MapTypes::MapType 
 {
     QString normalizedName = normalizeMapName(mapName);
     QString filePath = getMapFilePath(normalizedName, mapType);
-    
+    qDebug() << Q_FUNC_INFO << "Creating map file at:" << filePath;
     // Create empty JSON object
     QJsonObject emptyMap;
     QJsonObject emptyMapInfo;

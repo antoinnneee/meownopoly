@@ -21,14 +21,14 @@ public:
     static MapFileManager *instance();
 
     // Méthodes QML (instance, Q_INVOKABLE)
+    Q_INVOKABLE bool mapExists(const QString &mapName, MapTypes::MapType mapType);
     Q_INVOKABLE QStringList getAvailableMaps();
     Q_INVOKABLE QString findMapFileByName(const QString &displayName);
-    Q_INVOKABLE bool mapExists(const QString &mapName, MapTypes::MapType mapType);
+    Q_INVOKABLE QString createMapFile(const QString &mapName, MapTypes::MapType mapType);
     
     // Méthodes C++ internes (static)
     static QJsonObject readMapFile(const QString &mapName, MapTypes::MapType mapType);
     static bool saveMap(const QJsonObject &mapData, const QString &mapName, MapTypes::MapType mapType);
-    static QString createMapFile(const QString &mapName, MapTypes::MapType mapType);
     static bool removeMapFile(const QString &mapName, MapTypes::MapType mapType);
     
     // Utility methods (static)

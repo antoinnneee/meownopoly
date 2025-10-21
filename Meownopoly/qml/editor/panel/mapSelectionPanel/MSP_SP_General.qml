@@ -97,28 +97,46 @@ Item {
                                 height: 30
                                 flat: true
 
-                            particleColor: "#32CD32"
-                            particleColorVariation: "#00FF00"
-                            particleCount: 30
-                            particleSize: 6
-                            particleLifeSpan: 1500
+                                particleColor: "#32CD32"
+                                particleColorVariation: "#00FF00"
+                                particleCount: 30
+                                particleSize: 6
+                                particleLifeSpan: 1500
                                 background: Rectangle {
                                     anchors.fill: parent
                                     property var mapInfo : logic.mapInfo
-                                    color: MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)? "#008B8B" : "#4CAF50"
+                                    color: {
+                                        if (mapName === mapInfo.autosaveMapName || mapName == ""){
+                                            // "#5E5A66"
+                                            "#6A555C"
+                                        }
+                                        else if (MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)){
+                                            "#008B8B"
+                                        }
+                                        else {
+                                            "#4CAF50"
+                                        }
+                                    }
                                     opacity: 0.8
                                     radius: 4
                                 }
 
                                 contentItem: Text {
                                     property var mapInfo : logic.mapInfo
-                                    text: MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)? "Mettre a jour la carte" : "Enregistrer carte"
+                                    text: if (mapName === mapInfo.autosaveMapName || mapName == ""){
+                                              "Sauvegarde automatique"
+                                          }
+                                          else if (MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)){
+                                              "Mettre a jour la carte"
+                                          }
+                                          else {
+                                              "Créer une carte"
+                                          }
                                     color: "white"
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                     font.pixelSize: 12
                                     font.bold: true
-
                                 }
                                 onClicked: {
                                     if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
@@ -128,10 +146,7 @@ Item {
                                         mapInfo.mapDescription = description
                                         mapInfo.mapCreationDate = dateOfCreation
                                         mapInfo.mapLastModified = dateOfLastModification
-                                        console.log("Saving map with name: " + mapName)
-                                        console.log(" MapInfo.AUTOSAVE_MAP_NAME : " + mapInfo.autosaveMapName)
-                                        console.log("is it identical " + (mapName === mapInfo.autosaveMapName))
-                                        logic.saveMap(mapName === mapInfo.autosaveMapName ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
+                                        logic.saveMap(mapName === mapInfo.autosaveMapName || mapName == "" ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
                                         newMap()
                                     } else {
                                         console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")

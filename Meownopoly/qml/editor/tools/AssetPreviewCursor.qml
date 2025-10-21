@@ -38,14 +38,18 @@ Item {
 
     property int unitSizeWidth: 4
     onUnitSizeWidthChanged: {
-        snapablePreview.snapableParameters.displayParameter.unitSizeWidth = unitSizeWidth
-        updateGridPosition()
+        if (typeof snapablePreview !== 'undefined'){
+            snapablePreview.snapableParameters.displayParameter.unitSizeWidth = unitSizeWidth
+            updateGridPosition()
+        }
     }
 
     property int unitSizeHeight: 6
     onUnitSizeHeightChanged: {
-        snapablePreview.snapableParameters.displayParameter.unitSizeHeight = unitSizeHeight
-        updateGridPosition()
+        if (typeof snapablePreview !== 'undefined'){
+            snapablePreview.snapableParameters.displayParameter.unitSizeHeight = unitSizeHeight
+            updateGridPosition()
+        }
     }
     required property GridManager gridManager
     property var snapablePreview
@@ -56,18 +60,18 @@ Item {
     // Fonction pour obtenir l'icône selon le type de case
     function getCaseTypeIcon(caseType) {
         return ""
-        switch(caseType) {
-            case 0: return "qrc:/assets/icons/kibble_dispenser.png"  // CS_KibbleDispenser
-            case 1: return "qrc:/assets/icons/rest_area.png"         // CS_RestArea
-            case 2: return "qrc:/assets/icons/cardboard_box.png"     // CS_CardBoardBox
-            case 3: return "qrc:/assets/icons/cat_nip.png"           // CS_CatNip
-            case 4: return "qrc:/assets/icons/jail.png"              // CS_Jail
-            case 5: return "qrc:/assets/icons/to_jail.png"           // CS_ToJail
-            case 6: return "qrc:/assets/icons/cat_door.png"          // CS_CatDoor
-            case 7: return "qrc:/assets/icons/free_nap.png"          // CS_FreeNap
-            case 8: return "qrc:/assets/icons/device.png"            // CS_Device
-            case 9: return "qrc:/assets/icons/taxe.png"              // CS_Taxe
-            default: return "qrc:/assets/icons/unknown_case.png"
+        switch(caseType){
+        case 0: return "qrc:/assets/icons/kibble_dispenser.png"  // CS_KibbleDispenser
+        case 1: return "qrc:/assets/icons/rest_area.png"         // CS_RestArea
+        case 2: return "qrc:/assets/icons/cardboard_box.png"     // CS_CardBoardBox
+        case 3: return "qrc:/assets/icons/cat_nip.png"           // CS_CatNip
+        case 4: return "qrc:/assets/icons/jail.png"              // CS_Jail
+        case 5: return "qrc:/assets/icons/to_jail.png"           // CS_ToJail
+        case 6: return "qrc:/assets/icons/cat_door.png"          // CS_CatDoor
+        case 7: return "qrc:/assets/icons/free_nap.png"          // CS_FreeNap
+        case 8: return "qrc:/assets/icons/device.png"            // CS_Device
+        case 9: return "qrc:/assets/icons/taxe.png"              // CS_Taxe
+        default: return "qrc:/assets/icons/unknown_case.png"
         }
     }
     
