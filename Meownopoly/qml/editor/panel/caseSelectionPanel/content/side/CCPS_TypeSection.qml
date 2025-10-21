@@ -11,14 +11,16 @@ GroupBox {
     // Properties
     property var targetCase: null
     property bool updatingValues: false
-    
+    padding: 12
+    spacing: 0
+
     // Signals
     signal typeChanged(int newType)
     
     // Visual styling
     background: Rectangle {
         color: "#333333"
-        radius: 4
+        radius: 8
         border.color: "#555555"
         border.width: 1
     }
@@ -46,7 +48,7 @@ GroupBox {
     ]
     
     property int currentType: targetCase ? targetCase.type : Case.CS_Unknow
-    
+
     // Index actuel dans la liste des types
     property int currentIndex: {
         let index = availableTypes.indexOf(currentType)
@@ -55,8 +57,6 @@ GroupBox {
     
     ColumnLayout {
         anchors.fill: parent
-        spacing: 8
-        
         Text {
             text: "Sélectionnez le type de case :"
             font.pixelSize: 10
@@ -97,7 +97,7 @@ GroupBox {
                     
                     contentItem: Text {
                         text: "◀"
-                        font.pixelSize: 14
+                        font.pointSize: 12
                         font.bold: true
                         color: leftArrow.enabled ? "#cccccc" : "#555555"
                         horizontalAlignment: Text.AlignHCenter
@@ -112,7 +112,6 @@ GroupBox {
                         if (currentIndex > 0 && !updatingValues) {
                             let newIndex = currentIndex - 1
                             let newType = availableTypes[newIndex]
-                            currentType = newType
                             typeChanged(newType)
                         }
                     }
@@ -133,7 +132,7 @@ GroupBox {
                     Text {
                         anchors.centerIn: parent
                         text: MeowStyle.getCaseTypeName(currentType)
-                        font.pixelSize: 13
+                        font.pointSize: 11
                         font.bold: true
                         color: "#ffffff"
                         horizontalAlignment: Text.AlignHCenter
@@ -189,7 +188,7 @@ GroupBox {
                     
                     contentItem: Text {
                         text: "▶"
-                        font.pixelSize: 14
+                        font.pointSize: 12
                         font.bold: true
                         color: rightArrow.enabled ? "#cccccc" : "#555555"
                         horizontalAlignment: Text.AlignHCenter

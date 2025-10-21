@@ -3,11 +3,12 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Effects
-import "snapable"
+
 import AssetManager
 import ItemSnapable
 import DecorationParameter
 import TileType
+
 SnapableElement {
     id: root
     // Configuration du redimensionnement
@@ -29,16 +30,12 @@ SnapableElement {
         console.log("- Next cases count:", root.snapableParameters.next ? root.snapableParameters.next.length : 0)
         console.log("- Previous cases count:", root.snapableParameters.prev ? root.snapableParameters.prev.length : 0)
     }
-
-    property string imagePath: AssetManager.getAssetPath(snapableParameters.decorationParameter.decorationCategory, snapableParameters.decorationParameter.decorationType, snapableParameters.decorationParameter.decorationId)
-
-    property bool effectMaskEnabled: false
-    property var effectMaskSource: null
-    property bool effectMaskInverted: false
-    property real effectMaskThresholdMin: 0.0
-    property real effectMaskThresholdMax: 1.0
-    property real effectMaskSpreadAtMin: 0.0
-    property real effectMaskSpreadAtMax: 0.0
+    property bool assetAvailable : (snapableParameters.decorationParameter.decorationCategory != ""
+                                    && snapableParameters.decorationParameter.decorationType  != ""
+                                    && snapableParameters.decorationParameter.decorationId  != "")
+    property var asset: (assetAvailable) ? AssetManager.getAssetById(snapableParameters.decorationParameter.decorationCategory, snapableParameters.decorationParameter.decorationType, snapableParameters.decorationParameter.decorationId) : null
+    property string imagePath: (asset && asset.id) ? asset.path : ""
+    property string extension: (asset && asset.id) ? asset.extension : ""
 
     // Helper function to check if any effect is active
     readonly property bool hasActiveEffects: snapableParameters.displayParameter.effectBrightness !== 0.0 ||
@@ -46,8 +43,7 @@ SnapableElement {
                                              snapableParameters.displayParameter.effectSaturation !== 0.0 ||
                                              snapableParameters.displayParameter.effectColorization !== 0.0 ||
                                              snapableParameters.displayParameter.effectBlurEnabled ||
-                                             snapableParameters.displayParameter.effectShadowEnabled ||
-                                             effectMaskEnabled
+                                             snapableParameters.displayParameter.effectShadowEnabled
 
     // Helper function to check if any transform is active
     readonly property bool hasActiveTransforms: snapableParameters.displayParameter.rotationAngle !== 0.0 ||
@@ -59,10 +55,9 @@ SnapableElement {
 
 
     AnimatedImage {
-
         id: tileImage
         anchors.fill: parent
-        source: snapableParameters.decorationParameter.getAnimePath(imagePath)
+        source:  (assetAvailable) ? imagePath : ""
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true
         cache: true  // Cache the image to prevent reloading
@@ -141,14 +136,6 @@ SnapableElement {
         shadowOpacity: snapableParameters.displayParameter.effectShadowOpacity
         shadowScale: snapableParameters.displayParameter.effectShadowScale
 
-        // Mask effect ??
-        maskEnabled: effectMaskEnabled
-        maskSource: effectMaskSource
-        maskInverted: effectMaskInverted
-        maskThresholdMin: effectMaskThresholdMin
-        maskThresholdMax: effectMaskThresholdMax
-        maskSpreadAtMin: effectMaskSpreadAtMin
-        maskSpreadAtMax: effectMaskSpreadAtMax
 
         // Performance optimization: auto-padding management
         autoPaddingEnabled: false//displayParameter.effectBlurEnabled || displayParameter.effectShadowEnabled
@@ -193,21 +180,10 @@ SnapableElement {
         snapableParameters.displayParameter.effectShadowScale = 1.0
     }
 
-    function resetMaskEffect() {
-        effectMaskEnabled = false
-        effectMaskSource = null
-        effectMaskInverted = false
-        effectMaskThresholdMin = 0.0
-        effectMaskThresholdMax = 1.0
-        effectMaskSpreadAtMin = 0.0
-        effectMaskSpreadAtMax = 0.0
-    }
-
     function resetAllEffects() {
         resetColorEffects()
         resetBlurEffect()
         resetShadowEffect()
-        resetMaskEffect()
     }
 
     // Functions to reset transforms

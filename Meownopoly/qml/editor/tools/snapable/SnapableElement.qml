@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import "."
 import "../"
+import "../grid"
 
 import ItemSnapable
 import TileType
@@ -51,7 +52,7 @@ import ItemSnapableFactory
         snapableParameters.displayParameterChanged()
     }
 
-    z:  (isSelected) ? snapableParameters.displayParameter.zOrder + 11 : snapableParameters.displayParameter.zOrder + snapableParameters.displayParameter.zLayer
+    z:  (isSelected && !isDragging) ? snapableParameters.displayParameter.zOrder + 11 : snapableParameters.displayParameter.zOrder + snapableParameters.displayParameter.zLayer
 
     // Positions calculées à partir des coordonnées relatives
     x: snapableParameters.displayParameter.gridRelativePositionX * gridManager.gridSize

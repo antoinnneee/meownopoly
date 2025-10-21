@@ -6,8 +6,7 @@ import Player
 
 import ItemSnapable
 import TileType
-import "../../case"
-import "snapable"
+import "../../../case"
 
 SnapableElement {
     id: root

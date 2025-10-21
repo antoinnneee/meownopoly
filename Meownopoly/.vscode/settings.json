@@ -5,6 +5,9 @@
         "type_traits": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp",
-        "xmemory": "cpp"
+        "xmemory": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp",
+        "vector": "cpp"
     }
 }

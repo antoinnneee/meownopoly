@@ -20,8 +20,6 @@ MouseLogic_Selection {
     function clickedLeft(mouse, drag)
     {
         mouse.accepted = true
-        var deltaX = groupeSelection.x
-        var deltaY = groupeSelection.y
         if (clickElement.length > 0) {
             if (clickElement[0] !== linkSourceCase)
             {
@@ -94,7 +92,7 @@ MouseLogic_Selection {
             currentMouseY = linkSourceCase.globalCenterY
             
             // Créer le composant LinkPreviewCursor
-            var component = Qt.createComponent("../tools/LinkPreviewCursor.qml")
+            var component = Qt.createComponent("../tools/preview/LinkPreviewCursor.qml")
             if (component.status === Component.Ready) {
                 linkPreviewCursor = component.createObject(workArea, {
                     "sourceElement": linkSourceCase,

@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import "../tools"
+import "../tools/grid"
 import "../tools/snapable"
 
 QtObject {

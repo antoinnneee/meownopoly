@@ -8,6 +8,8 @@ import Game
 import Case
 import ItemSnapable
 import "tools"
+import "tools/grid"
+import "tools/preview"
 import "tools/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
@@ -172,12 +174,21 @@ Rectangle {
         pressAndHoldInterval: 350
         drag.target: null
         drag.axis: Drag.XAndYAxis
+        drag.smoothed: false
         acceptedButtons: Qt.LeftButton | Qt.RightButton
 
         property list<SnapableElement> clickElement:[]
         property list<var> elementInitialPosition:[]
+        property point dragStartPos: Qt.point(0, 0)
+        property point targetStartPos: Qt.point(0, 0)
+        
         drag.onActiveChanged: {
             console.log("drag changed", drag.active);
+            if (drag.active && drag.target) {
+                // Sauvegarder les positions de départ
+                dragStartPos = Qt.point(mouseX, mouseY)
+                targetStartPos = Qt.point(drag.target.x, drag.target.y)
+            }
             logic.mouseLogic.dragChanged(drag)
         }
 
@@ -206,6 +217,22 @@ Rectangle {
             // Mettre à jour la sélection par rectangle si active
             if (logic.mouseLogic.isRectangleSelecting) {
                 logic.mouseLogic.updateRectangleSelection(mouse.x, mouse.y)
+            }
+            
+            // Gérer le snap pendant le drag
+            if (drag.active && drag.target && editorGrid.snapToGrid) {
+                var deltaX = mouse.x - dragStartPos.x
+                var deltaY = mouse.y - dragStartPos.y
+                
+                var newX = targetStartPos.x + deltaX
+                var newY = targetStartPos.y + deltaY
+                
+                // Snapper aux positions de la grille
+                var snappedX = Math.round(newX / editorGrid.gridSize) * editorGrid.gridSize
+                var snappedY = Math.round(newY / editorGrid.gridSize) * editorGrid.gridSize
+                
+                drag.target.x = snappedX
+                drag.target.y = snappedY
             }
         }
 
@@ -251,6 +278,7 @@ Rectangle {
                 assetPreview.mouseY = mouse.y
             }
         }
+
         
         // MouseArea to track cursor position for link preview
         MouseArea {
@@ -270,6 +298,7 @@ Rectangle {
                 }
             }
         }
+
         // Asset preview cursor
         AssetPreviewCursor {
             id: assetPreview

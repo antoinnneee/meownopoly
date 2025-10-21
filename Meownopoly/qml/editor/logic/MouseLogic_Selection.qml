@@ -9,6 +9,55 @@ MouseLogic_Base {
     property bool isRectangleSelecting: false
     property point rectangleStart: Qt.point(0, 0)
     property point rectangleCurrent: Qt.point(0, 0)
+    
+    // Propriétés pour gérer les positions initiales sans changer le parent
+    property var elementInitialPositions: ({})  // Map: element -> {x: initialX, y: initialY}
+    property var elementBindings: ({})  // Map: element -> {xBinding: Binding, yBinding: Binding}
+    
+    // Fonction pour créer les bindings pour un élément
+    function createBindingsForElement(element) {
+        if (!element) return
+        
+        // Stocker la position initiale relative
+        var initialX = element.x - groupeSelection.x
+        var initialY = element.y - groupeSelection.y
+        elementInitialPositions[element] = {x: initialX, y: initialY}
+        
+        // Créer les bindings dynamiquement en utilisant Qt.binding()
+        // Stocker les valeurs initiales dans des variables accessibles via closure
+        var bindingInitialX = initialX
+        var bindingInitialY = initialY
+        
+        // Créer les bindings
+        element.x = Qt.binding(function() { 
+            return groupeSelection.x + bindingInitialX
+        })
+        element.y = Qt.binding(function() { 
+            return groupeSelection.y + bindingInitialY
+        })
+        
+        // Marquer l'élément comme ayant des bindings actifs
+        elementBindings[element] = true
+    }
+    
+    // Fonction pour détruire les bindings pour un élément
+    function destroyBindingsForElement(element) {
+        if (!element) return
+        
+        if (elementBindings[element]) {
+            // Récupérer la position actuelle avant de casser les bindings
+            var currentX = element.x
+            var currentY = element.y
+            
+            // Casser les bindings en assignant des valeurs fixes
+            element.x = currentX
+            element.y = currentY
+            
+            delete elementBindings[element]
+        }
+        
+        delete elementInitialPositions[element]
+    }
 
     function dragChanged(drag)
     {
@@ -93,7 +142,8 @@ MouseLogic_Base {
                 console.log("[LOGIC] unselect all and select clicked", clickElement[0])
                 unselectAllElements()
                 clickElement[0].elementPressed()
-                clickElement[0].parent = groupeSelection
+                // Ne plus changer le parent, créer les bindings à la place
+                createBindingsForElement(clickElement[0])
                 drag.target = groupeSelection
                 selectedElements.push(clickElement[0])
                 
@@ -107,17 +157,12 @@ MouseLogic_Base {
         }
         else
         {
-            var deltaX = groupeSelection.x
-            var deltaY = groupeSelection.y
             if (clickElement.length > 0) {
                 if (!clickElement[0].isSelected)
                 {
                     clickElement[0].elementPressed()
-                    clickElement[0].parent = groupeSelection
-                    clickElement[0].x = clickElement[0].x - deltaX
-                    clickElement[0].y = clickElement[0].y - deltaY
-                    clickElement[0].x = clickElement[0].x - deltaX
-                    clickElement[0].y = clickElement[0].y - deltaY
+                    // Ne plus changer le parent, créer les bindings à la place
+                    createBindingsForElement(clickElement[0])
                     selectedElements.push(clickElement[0])
                     
                     // Mettre à jour la configuration de case si applicable
@@ -128,11 +173,10 @@ MouseLogic_Base {
                     // unselect element
                     for (var i = 0; i < selectedElements.length; i++) {
                         if (selectedElements[i] === clickElement[0]) {
-                            selectedElements[i].x = selectedElements[i].x + deltaX
-                            selectedElements[i].y = selectedElements[i].y + deltaY
                             selectedElements[i].isSelected = false
-                            selectedElements[i].parent = workArea
                             selectedElements[i].elementReleased()
+                            // Détruire les bindings au lieu de changer le parent
+                            destroyBindingsForElement(selectedElements[i])
                             selectedElements.splice(i,1)
                             break
                         }
@@ -219,7 +263,8 @@ MouseLogic_Base {
         for (var i = 0; i < elements.length; i++) {
             var element = elements[i]
             element.elementPressed()
-            element.parent = groupeSelection
+            // Ne plus changer le parent, créer les bindings à la place
+            createBindingsForElement(element)
             selectedElements.push(element)
         }
     }

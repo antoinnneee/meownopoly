@@ -9,13 +9,12 @@ QtObject {
 
     function unselectAllElements()
     {
-        var deltaX = groupeSelection.x
-        var deltaY = groupeSelection.y
         for (var i = 0; i < selectedElements.length; i++) {
-            selectedElements[i].x = selectedElements[i].x + deltaX
-            selectedElements[i].y = selectedElements[i].y + deltaY
-            selectedElements[i].parent = workArea
             selectedElements[i].elementReleased()
+            // Détruire les bindings si la fonction existe (pour MouseLogic_Selection)
+            if (typeof destroyBindingsForElement === "function") {
+                destroyBindingsForElement(selectedElements[i])
+            }
         }
         selectedElements = []
         groupeSelection.x = 0
@@ -28,13 +27,12 @@ QtObject {
 
     function unselectSelectedElements()
     {
-        var deltaX = groupeSelection.x
-        var deltaY = groupeSelection.y
         for (var i = 0; i < selectedElements.length; i++) {
-            selectedElements[i].x = selectedElements[i].x + deltaX
-            selectedElements[i].y = selectedElements[i].y + deltaY
-            selectedElements[i].parent = workArea
             selectedElements[i].elementUnselected()
+            // Détruire les bindings si la fonction existe (pour MouseLogic_Selection)
+            if (typeof destroyBindingsForElement === "function") {
+                destroyBindingsForElement(selectedElements[i])
+            }
         }
         selectedElements = []
         groupeSelection.x = 0
@@ -208,10 +206,12 @@ QtObject {
         selectedElements = selectedList
         for (var i = 0; i < selectedElements.length; i++) {
             console.log(selectedElements[i])
-            selectedElements[i].parent = groupeSelection
             selectedElements[i].elementPressed()
-            selectedElements[i].x = selectedElements[i].x - groupeSelection.x
-            selectedElements[i].y = selectedElements[i].y - groupeSelection.y
+            // Créer les bindings si la fonction existe (pour MouseLogic_Selection)
+            if (typeof createBindingsForElement === "function") {
+                createBindingsForElement(selectedElements[i])
+            }
+            
         }
     }
 }

@@ -3,6 +3,8 @@ import ItemSnapable
 import Game
 import "../tools"
 import "../tools/snapable"
+import "../tools/grid"
+import "../tools/preview"
 import ".."
 
 QtObject {
@@ -17,6 +19,38 @@ QtObject {
     property int currentElementHeight: 4
 
     property real currentZOrder: 0.00001
+    
+    /**
+     * @brief Ajuste les dimensions de l'élément pour respecter le ratio natif de l'image
+     * @param ratioWidth Largeur du ratio natif (ex: 4 pour 4:3)
+     * @param ratioHeight Hauteur du ratio natif (ex: 3 pour 4:3)
+     * @note Conserve la largeur actuelle et calcule la hauteur proportionnelle
+     * @example Si sélecteur est 8x8 et image est 4:3 -> résultat sera 8x6
+     */
+    function adjustToNativeRatio(ratioWidth, ratioHeight) {
+        if (!ratioWidth || !ratioHeight || ratioWidth <= 0 || ratioHeight <= 0) {
+            console.warn("TileLogic: Ratio invalide", ratioWidth, ratioHeight)
+            return
+        }
+        
+        // Utiliser la largeur actuelle comme référence
+        var referenceWidth = currentElementWidth
+        
+        // Calculer la nouvelle hauteur en respectant le ratio natif
+        // ratio = width/height => height = width/ratio
+        var nativeRatio = ratioWidth / ratioHeight
+        var newHeight = Math.round(referenceWidth / nativeRatio)
+        
+        // S'assurer qu'on a au moins 1 de hauteur
+        newHeight = Math.max(1, newHeight)
+        
+        console.log("TileLogic: Ajustement au ratio natif", ratioWidth + ":" + ratioHeight, 
+                    "(" + nativeRatio.toFixed(2) + ")",
+                    "de", currentElementWidth + "x" + currentElementHeight, 
+                    "vers", referenceWidth + "x" + newHeight)
+        
+        currentElementHeight = newHeight
+    }
 
     // Fonction pour désélectionner tous les tiles
     function deselectAllTiles() {
