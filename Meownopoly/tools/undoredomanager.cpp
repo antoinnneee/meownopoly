@@ -25,11 +25,27 @@ QObject *UndoRedoManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngin
 }
 
 
-void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit)
-{
+void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit){
+    m_listEdits.append(newEdit);
+    m_currentEditIndex = m_currentEditIndex +1;
 }
 
 void UndoRedoManager::onAskEdit(EditAction editAction)
 {
-
+    switch (editAction) {
+    case Preview:
+        if (m_currentEditIndex > 0){
+            m_currentEditIndex = m_currentEditIndex -1;
+            emit returnEdit(m_listEdits.at(m_currentEditIndex));
+        }
+        break;
+    case Next:
+        if (m_currentEditIndex < m_listEdits.size() -1){
+            m_currentEditIndex = m_currentEditIndex +1;
+            emit returnEdit(m_listEdits.at(m_currentEditIndex));
+        }
+        break;
+    default:
+        break;
+    }
 }

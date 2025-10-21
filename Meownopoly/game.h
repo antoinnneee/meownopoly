@@ -78,8 +78,11 @@ public:
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
     Q_INVOKABLE bool saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType);
     Q_INVOKABLE Map *loadMap(QString mapName, MapTypes::MapType mapType);
-
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
+
+    Q_INVOKABLE void askPreview();
+    Q_INVOKABLE void askNext();
+
 
 
     ~Game();
@@ -94,6 +97,8 @@ public slots:
 
 signals:
     void gameStarted();
+
+    void clearCurrentMap();
 
     void playersChanged();
     void currentPlayerIndexChanged();

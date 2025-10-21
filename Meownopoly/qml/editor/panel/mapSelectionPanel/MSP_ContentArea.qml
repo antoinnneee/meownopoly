@@ -55,7 +55,6 @@ EBP_Content {
                 MSP_SP_General {
                     id: generalParamsView
                     width: generalScrollView.availableWidth
-                    
                     onNewMap: saveLoadView.refreshMapList()
                 }
             }

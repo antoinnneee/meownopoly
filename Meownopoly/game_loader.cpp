@@ -28,6 +28,7 @@ QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTiles
 
 bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType)
 {
+    bool flag = false;
     QJsonArray snapableTilesArray;
 
     // Ajouter les informations de la map
@@ -46,19 +47,40 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
     }
 
     jsonObject["snapableTiles"] = snapableTilesArray;
-    return MapFileManager::saveMap(jsonObject, mapInfo->getMapName(), mapType);
+    switch (mapType) {
+    case MapTypes::AUTOSAVE:
+    case MapTypes::CUSTOM:
+        flag = MapFileManager::saveMap(jsonObject, mapInfo->getMapName(), mapType);
+        break;
+    case MapTypes::UNDOREDO:
+        emit updateListEdits(jsonObject);
+        flag = true;
+        break;
+    default:
+        break;
+    }
+    return flag;
 }
 
 Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 {
-    Map *map = Map::loadFromFile(mapName, mapType);
+    Map *map = nullptr;
+    switch (mapType) {
+    case MapTypes::CUSTOM:
+    case MapTypes::AUTOSAVE:
+        map = Map::loadMap(mapName, mapType);
+        break;
+    case MapTypes::UNDOREDO:
+        qWarning() << Q_FUNC_INFO << "  - SHOULD NOT BEEN SEEN WITH UNDOREDO TYPE";
+        break;
+    }
     
     if (map) {
         // Relayer les signaux de Map vers Game
         connect(map, &Map::foundItemSnapableTile, this, &Game::foundItemSnapableTile);
         connect(map, &Map::mapLoaded, this, &Game::mapLoaded);
         
-        // Émettre les signaux immédiatement car Map ne les émet plus
+        // Emettre les signaux immédiatement car Map ne les émet plus
         for (ItemSnapable *tile : map->tiles()) {
             emit foundItemSnapableTile(tile);
         }
@@ -71,8 +93,21 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 
 void Game::onReturnEdit(QJsonObject newEdit)
 {
-    Q_UNUSED(newEdit)
-    // Slot vide comme dans MapLoader original
+
+    emit clearCurrentMap();
+
+    Map *map = Map::loadMap(newEdit);
+    if (map) {
+        // Relayer les signaux de Map vers Game
+        connect(map, &Map::foundItemSnapableTile, this, &Game::foundItemSnapableTile);
+        connect(map, &Map::mapLoaded, this, &Game::mapLoaded);
+
+        // Emettre les signaux immédiatement car Map ne les émet plus
+        for (ItemSnapable *tile : map->tiles()) {
+            emit foundItemSnapableTile(tile);
+        }
+        emit mapLoaded(map);
+    }
 }
 
 QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
@@ -85,4 +120,14 @@ QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
         listItems.append(is);
     }
     return listItems;
+}
+
+void Game::askPreview()
+{
+    askEdit(UndoRedoManager::Preview);
+}
+
+void Game::askNext()
+{
+    askEdit(UndoRedoManager::Next);
 }

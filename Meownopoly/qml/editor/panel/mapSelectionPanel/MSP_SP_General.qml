@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import "../editorBottomPanel"
 import "../../../ui_item"
 
+import Game
 import MapInfo
 import MapFileManager
 import MapTypes
@@ -105,12 +106,11 @@ Item {
                                 particleLifeSpan: 1500
                                 background: Rectangle {
                                     anchors.fill: parent
-                                    property var mapInfo : logic.mapInfo
                                     color: {
-                                        if (mapName === mapInfo.autosaveMapName || mapName == ""){
+                                        if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == ""){
                                             "#5E5A66"
                                         }
-                                        else if (MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)){
+                                        else if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM)){
                                             "#008B8B"
                                         }
                                         else {
@@ -122,11 +122,10 @@ Item {
                                 }
 
                                 contentItem: Text {
-                                    property var mapInfo : logic.mapInfo
-                                    text: if (mapName === mapInfo.autosaveMapName || mapName == ""){
+                                    text: if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == ""){
                                               "Sauvegarde automatique"
                                           }
-                                          else if (MapFileManager.mapExists(mapInfo.mapName, MapTypes.CUSTOM)){
+                                          else if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM)){
                                               "Mettre a jour la carte"
                                           }
                                           else {
@@ -198,9 +197,11 @@ Item {
                                     verticalAlignment: Text.AlignVCenter
                                     placeholderTextColor: "#666666"
                                     placeholderText: text === "" ? "Name of the map" : ""
-                                    text: mapName === mapInfo.autosaveMapName ? "" : mapName
-                                    onEditingFinished: logic.mapInfo.mapName = text
-                                    onTextChanged: logic.mapInfo.mapName = text
+                                    text: mapName === logic.mapInfo.autosaveMapName ? "" : mapName
+                                    onTextChanged: {
+                                        logic.mapInfo.mapName = text
+                                        logic.saveMap(MapTypes.UNDOREDO)
+                                    }
                                 }
                             }
                         }

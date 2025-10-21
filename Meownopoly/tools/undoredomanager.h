@@ -12,8 +12,8 @@ class UndoRedoManager : public QObject
 public:
 
     enum EditAction{
-        CtrlZ,
-        CtrlY
+        Preview,
+        Next
     };
 
     Q_ENUM(EditAction)
@@ -39,7 +39,7 @@ private :
     static UndoRedoManager *m_instance;
 
     inline static int m_currentEditIndex = 0;
-    QList <QJsonObject> listEdits;
+    QList <QJsonObject> m_listEdits;
 };
 
 #endif // UNDOREDOMANAGER_H

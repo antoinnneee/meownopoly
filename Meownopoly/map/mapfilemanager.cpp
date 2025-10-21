@@ -211,7 +211,9 @@ QString MapFileManager::getMapFilePath(const QString &mapName, MapTypes::MapType
     case MapTypes::CUSTOM:
         fileName = normalizedName + "_map.json";
         break;
+    // UNDO REDO NOT USED
     case MapTypes::UNDOREDO:
+        qWarning() << Q_FUNC_INFO << "  - SHOULD NOT BEEN SEEN WITH UNDOREDO TYPE";
         fileName = normalizedName + "_undo.json";
         break;
     default:

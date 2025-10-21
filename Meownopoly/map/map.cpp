@@ -43,7 +43,7 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
             QString nextId = value.toString();
             for (ItemSnapable *targetTile : m_tiles) {
                 if (targetTile->uniqueId().toString() == nextId) {
-                   is->addNext(targetTile);
+                    is->addNext(targetTile);
                     targetTile->addPrev(is);
                     qDebug() << "Link built between" << is->uniqueId() << "and" << targetTile->uniqueId();
                 }
@@ -55,6 +55,7 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
     qDebug() << "--------------------------------";
 
 }
+
 
 MapInfo *Map::getMapInfo() const
 {
@@ -79,23 +80,42 @@ void Map::setTiles(const QList<ItemSnapable *> &newTiles)
     m_tiles = newTiles;
 }
 
-Map *Map::loadFromFile(const QString &mapName, MapTypes::MapType mapType)
+Map *Map::loadMap(QJsonObject newEdit)
 {
-    QJsonObject jsonObject = MapFileManager::readMapFile(mapName, mapType);
-    
-    if (jsonObject.isEmpty()) {
-        qDebug() << "Failed to read map file:" << mapName;
-        return nullptr;
-    }
-    
+    QJsonObject jsonObject = newEdit;
     Map *map = new Map(jsonObject);
-    
+
     // Créer MapInfo depuis JSON
     QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
     MapInfo *mapInfo = new MapInfo(mapInfoObject);
     map->setMapInfo(mapInfo);
-    
-    // NE PAS émettre les signaux ici, Game le fera
-    
+    return map;
+}
+
+Map *Map::loadMap(QString mapName, MapTypes::MapType mapType)
+{
+    QJsonObject jsonObject;
+    switch (mapType){
+    case MapTypes::AUTOSAVE:
+    case MapTypes::CUSTOM:
+        jsonObject = MapFileManager::readMapFile(mapName, mapType);
+        if (jsonObject.isEmpty()) {
+            qDebug() << "Failed to read map file:" << mapName;
+            return nullptr;
+        }
+        break;
+    case MapTypes::UNDOREDO:
+        qWarning() << Q_FUNC_INFO << "  - SHOULD NOT BEEN SEEN WITH UNDOREDO TYPE";
+        break;
+    default:
+        break;
+    }
+
+    Map *map = new Map(jsonObject);
+
+    // Créer MapInfo depuis JSON
+    QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
+    MapInfo *mapInfo = new MapInfo(mapInfoObject);
+    map->setMapInfo(mapInfo);
     return map;
 }

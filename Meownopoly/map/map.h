@@ -19,8 +19,6 @@ class Map : public QObject
 public:
     Map(QObject *parent = nullptr);
     Map(QJsonObject jsonObject, QObject *parent = nullptr);
-    
-    static Map *loadFromFile(const QString &mapName, MapTypes::MapType mapType);
 
     QList<ItemSnapable*> caseTiles() const { return m_caseTiles; }
     void setCaseTiles(const QList<ItemSnapable*> &caseTiles) { m_caseTiles = caseTiles; emit caseTilesChanged(); }
@@ -34,6 +32,10 @@ public:
 
     QList<ItemSnapable *> tiles() const;
     void setTiles(const QList<ItemSnapable *> &newTiles);
+
+    static Map* loadMap(QJsonObject newEdit);
+    static Map* loadMap(QString mapName, MapTypes::MapType mapType);
+
 
 signals:
     void caseTilesChanged();

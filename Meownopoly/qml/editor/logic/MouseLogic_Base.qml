@@ -7,6 +7,8 @@ QtObject {
     property var logic
     property list<SnapableElement> selectedElements: []
 
+    property bool isControlPressed : false
+
     function unselectAllElements()
     {
         for (var i = 0; i < selectedElements.length; i++) {

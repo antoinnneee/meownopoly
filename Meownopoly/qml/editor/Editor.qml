@@ -85,10 +85,25 @@ Rectangle {
                 event.accepted = true
             }
         }
+        else if (event.key === Qt.Key_Control) {
+            logic.mouseLogic.isControlPressed = true
+        }
+        else if (event.key === Qt.Key_Y) {
+            if (logic.mouseLogic.isControlPressed)
+                Game.askNext()
+        }
+        else if (event.key === Qt.Key_Z) {
+            if (logic.mouseLogic.isControlPressed)
+                Game.askPreview()
+        }
+    }
+    Keys.onReleased:{
+        logic.mouseLogic.isControlPressed = false
     }
 
+
     property MapInfo mapInfo: MapInfo{
-        // mapName: autosaveMapName
+        mapName: autosaveMapName
         // mapDescription: ""
         // mapCreationDate: ""
         // mapLastModified: ""
@@ -377,6 +392,12 @@ Rectangle {
         totalTilesCount: snapableTilesList.length
     }
 
+    Connections {
+        target: Game
+        function onClearCurrentMap() {
+            logic.removeCurrentMap()
+        }
+    }
 
     // Gestion des connexions via le SelectionPanel
     Connections {
