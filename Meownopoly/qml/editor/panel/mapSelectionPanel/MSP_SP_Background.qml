@@ -149,6 +149,7 @@ Item {
 
                         onClicked: {
                             logic.mapInfo.backgroundScaling = "Stretch"
+                            logic.saveMap(MapTypes.UNDOREDO)
                         }
                     }
 
@@ -171,6 +172,7 @@ Item {
 
                         onClicked: {
                             logic.mapInfo.backgroundScaling = "Fit"
+                            logic.saveMap(MapTypes.UNDOREDO)
                         }
                     }
 
@@ -198,6 +200,7 @@ Item {
 
                             onClicked: {
                                 logic.mapInfo.backgroundScaling = "Tile"
+                                logic.saveMap(MapTypes.UNDOREDO)
                             }
                         }
                         
@@ -214,6 +217,7 @@ Item {
                             onValueChanged: {
                                 if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
                                     logic.mapInfo.backgroundTileSize = value
+                                    logic.saveMap(MapTypes.UNDOREDO)
                                 }
                             }
 

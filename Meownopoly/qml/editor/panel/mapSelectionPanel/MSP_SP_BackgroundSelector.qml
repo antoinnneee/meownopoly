@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
+import MapTypes
 
 Item {
     id: root
@@ -100,7 +101,7 @@ Item {
                 onClicked: {
                     logic.mapInfo.backgroundPath = "";
                     logic.mapInfo.backgroundScaling = "Fit";
-                    // root.imageRemoved();
+                    logic.saveMap(MapTypes.UNDOREDO)
                 }
             }
         }
@@ -150,10 +151,9 @@ Item {
         title: qsTr("Sélectionner une image")
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.bmp)"]
         onAccepted: {
-            // Utilisation de selectedFile de la nouvelle API
             logic.mapInfo.backgroundPath = fileDialog.selectedFile;
-            // Émettre le signal pour indiquer qu'une image a été sélectionnée
             root.backgroundSelected();
+            logic.saveMap(MapTypes.UNDOREDO)
         }
     }
 }

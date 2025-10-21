@@ -90,10 +90,12 @@ Rectangle {
         }
         else if (event.key === Qt.Key_Y) {
             if (logic.mouseLogic.isControlPressed)
+                console.log("Redo requested via Ctrl+Y")
                 Game.askNext()
         }
         else if (event.key === Qt.Key_Z) {
             if (logic.mouseLogic.isControlPressed)
+                console.log("Undo requested via Ctrl+Z")
                 Game.askPreview()
         }
     }

@@ -241,7 +241,10 @@ Item {
                                     placeholderTextColor: "#666666"
                                     placeholderText: text === "" ? "1.0" : ""
                                     text: logic.mapInfo.version.toString()
-                                    onEditingFinished: mapVersion = parseInt(text) || 1
+                                    onEditingFinished: {
+                                        mapVersion = parseInt(text) || 1
+                                        logic.saveMap(MapTypes.UNDOREDO)
+                                    }
                                 }
                             }
                         }
