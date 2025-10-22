@@ -50,8 +50,6 @@ SOURCES += \
     game_loader.cpp \
     item_snapable/Displayparameter.cpp \
     item_snapable/ItemSnapable.cpp \
-    item_snapable/SnapableCase.cpp \
-    item_snapable/SnapableDeco.cpp \
     item_snapable/decorationparameter.cpp \
     item_snapable/itemsnapablefactory.cpp \
     launcher_manager.cpp \
@@ -89,8 +87,6 @@ HEADERS += \
     game.h \
     item_snapable/Displayparameter.h \
     item_snapable/ItemSnapable.h \
-    item_snapable/SnapableCase.h \
-    item_snapable/SnapableDeco.h \
     item_snapable/decorationparameter.h \
     item_snapable/itemsnapablefactory.h \
     launcher_manager.h \
