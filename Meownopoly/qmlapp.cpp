@@ -35,8 +35,6 @@
 #include <map/maptypes.h>
 #include "tools/debug_info.h"
 #include "tools/editorenum.h"
-#include "animation_manager.h"
-#include "liveimage.h"
 #include "tools/undoredomanager.h"
 #include "map/mapinfo.h"
 #include "map/mapfilemanager.h"

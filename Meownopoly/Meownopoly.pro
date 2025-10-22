@@ -30,8 +30,6 @@ CONFIG += c++20
 
 SOURCES += \
     QtFolderCompressor/FolderCompressor.cpp \
-    animation_manager.cpp \
-    animationprovider.cpp \
     asset_manager.cpp \
     card.cpp \
     case/Case.cpp \
@@ -46,6 +44,9 @@ SOURCES += \
     case/CaseKibbleDispenser.cpp \
     case/CaseRestArea.cpp \
     case/CaseToJail.cpp \
+    experiment/animation_manager.cpp \
+    experiment/animationprovider.cpp \
+    experiment/liveimage.cpp \
     game.cpp \
     game_loader.cpp \
     item_snapable/Displayparameter.cpp \
@@ -53,7 +54,6 @@ SOURCES += \
     item_snapable/decorationparameter.cpp \
     item_snapable/itemsnapablefactory.cpp \
     launcher_manager.cpp \
-    liveimage.cpp \
     main.cpp \
     map/map.cpp \
     map/mapinfo.cpp \
@@ -68,8 +68,6 @@ SOURCES += \
 
 HEADERS += \
     QtFolderCompressor/FolderCompressor.h \
-    animation_manager.h \
-    animationprovider.h \
     asset_manager.h \
     card.h \
     case/Case.h \
@@ -84,13 +82,15 @@ HEADERS += \
     case/CaseKibbleDispenser.h \
     case/CaseRestArea.h \
     case/CaseToJail.h \
+    experiment/animation_manager.h \
+    experiment/animationprovider.h \
+    experiment/liveimage.h \
     game.h \
     item_snapable/Displayparameter.h \
     item_snapable/ItemSnapable.h \
     item_snapable/decorationparameter.h \
     item_snapable/itemsnapablefactory.h \
     launcher_manager.h \
-    liveimage.h \
     map/map.h \
     map/mapinfo.h \
     map/mapfilemanager.h \
