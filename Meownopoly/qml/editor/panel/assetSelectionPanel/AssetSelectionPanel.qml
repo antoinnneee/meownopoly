@@ -14,6 +14,12 @@ EditorBottomPanel {
 
     property string selectedCategory: ""
     property string selectedType: ""
+    property bool comingFromOtherMenu: false // Track if we're coming from another menu
+    property string currentView: "categories" // "categories" or "assets"
+    
+    onComingFromOtherMenuChanged: {
+        console.log("AssetSelectionPanel: comingFromOtherMenu changed to", comingFromOtherMenu)
+    }
     
     property alias assetManagerSettings: assetManagerSettings
     property alias visualEffectsPanel: contentArea.visualEffectsPanel
@@ -71,6 +77,17 @@ EditorBottomPanel {
 
     }
 
+    // Function to handle coming from another menu
+    function setComingFromOtherMenu(value) {
+        root.comingFromOtherMenu = value
+        
+        // Si on vient d'un autre menu, on ne change pas l'état, on laisse l'état actuel
+        if (value) {
+            console.log("AssetSelectionPanel: Coming from other menu, keeping current state:", root.currentView)
+            // Ne pas forcer de changement d'état, laisser l'état actuel
+        }
+    }
+
 
 
 
@@ -97,8 +114,16 @@ EditorBottomPanel {
         }
 
         onBackButtonClicked: {
-            root.currentView = "categories"
-            root.assetCleared()
+            // Si on vient d'un autre menu, on reste dans la catégorie sélectionnée
+            // Sinon, on retourne à la sélection des catégories
+            if (root.comingFromOtherMenu) {
+                // Rester dans la catégorie actuelle
+                root.comingFromOtherMenu = false
+            } else {
+                // Retourner à la sélection des catégories
+                root.currentView = "categories"
+                root.assetCleared()
+            }
         }
         onButtonClicked: function(text, index)  {
             titleBar.activeFilter = text
@@ -125,7 +150,12 @@ EditorBottomPanel {
             currentView: root.currentView
             activeFilter: titleBar.activeFilter
             searchText: root.searchText
-            onCategorieSelected: root.currentView = "assets"
+            onCategorieSelected: {
+                root.currentView = "assets"
+                // Mettre à jour les propriétés de catégorie sélectionnée
+                root.selectedCategory = contentArea.selectedCategory
+                root.selectedType = contentArea.selectedType
+            }
             onAssetSelected: function(category, type, id) {
                 root.updateSelectedAsset(category, type, id)
             }

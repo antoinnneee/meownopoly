@@ -93,7 +93,23 @@ Rectangle {
         caseTabIndex: casePanel.currentTabIndex
 
         onButtonClicked: function(index) {
-            console.log("Bouton cliqué avec index : " + index);
+            console.log("Bouton cliqué avec index : " + index + " et currentPanelIndex : " + root.currentPanelIndex);
+            
+            // Si on clique sur le menu Assets (index 0)
+            if (index === 0) {
+                if (root.currentPanelIndex !== 0) {
+                    // On vient d'un autre menu, marquer le flag et ne pas changer l'état
+                    assetPanel.setComingFromOtherMenu(true)
+                } else {
+                    // On est déjà dans le menu Assets, retourner à la sélection des catégories
+                    assetPanel.currentView = "categories"
+                    assetPanel.assetCleared()
+                }
+            } else {
+                // Si on va vers un autre menu, réinitialiser le flag
+                assetPanel.setComingFromOtherMenu(false)
+            }
+            
             // Changer le panneau affiché en fonction de l'index du bouton
             root.currentPanelIndex = index;
         }
