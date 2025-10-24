@@ -142,7 +142,7 @@ MouseLogic_Base {
                 console.log("[LOGIC] unselect all and select clicked", clickElement[0])
                 unselectAllElements()
                 clickElement[0].elementPressed()
-                // Ne plus changer le parent, créer les bindings à la place
+
                 createBindingsForElement(clickElement[0])
                 drag.target = groupeSelection
                 selectedElements.push(clickElement[0])
@@ -161,12 +161,13 @@ MouseLogic_Base {
                 if (!clickElement[0].isSelected)
                 {
                     clickElement[0].elementPressed()
-                    // Ne plus changer le parent, créer les bindings à la place
+
                     createBindingsForElement(clickElement[0])
                     selectedElements.push(clickElement[0])
                     
                     // Mettre à jour la configuration de case si applicable
                     updateCaseConfiguration()
+                    //updateAssetPanelEffectConfiguration()
                 }
                 else
                 {

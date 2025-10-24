@@ -51,7 +51,6 @@ Rectangle {
     signal caseSelected(string category, string type, string id)
     // signal selectionModeChanged(bool isActive)
 
-    signal viewChanged(string viewName)
     signal visualEffectChanged()
     
     // Signaux de redimensionnement
@@ -234,10 +233,6 @@ Rectangle {
                 root.clearAssetSelection()
             }
 
-            // Surveiller les changements de propriétés pour propager les signaux
-            onCurrentViewChanged: {
-                root.viewChanged(currentView);
-            }
 
             onEffectChanged: {
                 root.effectChanged()

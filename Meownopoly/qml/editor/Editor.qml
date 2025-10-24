@@ -423,19 +423,7 @@ Rectangle {
             if (logic.mouseLogic && logic.mouseLogic.showLinkPreview) {
                 logic.mouseLogic.showLinkPreview()
             }
-            /*
-            if (!selectedElements || !targetElement) return
 
-            for (var i = 0; i < selectedElements.length; i++) {
-                if (selectedElements[i] !== targetElement) {
-                    if (kind === "previous") {
-                        targetElement.connectionManager.addPreviousElement(selectedElements[i])
-                    } else if (kind === "next") {
-                        targetElement.connectionManager.addNextElement(selectedElements[i])
-                    }
-                }
-            }
-            */
         }
     }
 

@@ -14,7 +14,6 @@ EBP_Content {
     property string selectedType: ""
 
     property string selected
-    property bool showEffectsPanel: true
     signal assetSelected(string category, string type, string id)
     signal categorieSelected()
 

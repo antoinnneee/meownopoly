@@ -146,7 +146,6 @@ EditorBottomPanel {
             currentSelectedCategory: root.currentSelectedCategory
             currentSelectedType: root.currentSelectedType
             currentSelectedId: root.currentSelectedId
-            showEffectsPanel: root.showEffectsPanel
             currentView: root.currentView
             activeFilter: titleBar.activeFilter
             searchText: root.searchText
