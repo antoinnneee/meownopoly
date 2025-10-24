@@ -9,6 +9,8 @@ Item {
     property var nextElements: []
     property var hoveredElement: null
 
+    property alias nextElementsSegments:nextElementsSegments
+
     signal nextElementAdded(var element)
     signal previousElementAdded(var element)
     signal nextElementRemoved(var element)
@@ -18,6 +20,8 @@ Item {
         nextElementsSegments.updateModel()
     }
     onPreviousElementsChanged: {
+        // Mise à jour du modèle pour les connexions visuelles
+//        nextElementsSegments.updateModel()
     }
     // Segments de connexion (fromItem -> toItem)
     ListModel {
@@ -121,9 +125,9 @@ Item {
             if (element.connectionManager && element.connectionManager.nextElements.includes(parentElement)) {
                 element.connectionManager.nextElements.splice(element.connectionManager.nextElements.indexOf(parentElement), 1)
                 element.connectionManager.nextElementRemoved(parentElement)
+                element.connectionManager.nextElementsSegments.updateModel()
             }
         }
-
     }
 
     function removeNextElement(element) {
