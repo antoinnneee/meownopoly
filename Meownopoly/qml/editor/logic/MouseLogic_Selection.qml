@@ -132,15 +132,20 @@ MouseLogic_Base {
     {
         console.log("click left")
         mouse.accepted = true
-        if (!(mouse.modifiers & Qt.ControlModifier))
+
+        if (clickElement.length == 0) {
+            unselectSelectedElements()
+            return
+        }
+
+        if (!(mouse.modifiers & Qt.ControlModifier))    // CTRL is not pressed => normal selection mode
         {
-            if ((clickElement.length > 0 && selectedElements.length > 0) && clickElement[0] === selectedElements[0]) {   // unselect item
-                console.log("[LOGIC] unselect item")
-                unselectAllElements()
+            if (clickElement[0] === selectedElements[0]) {
+                unselectSelectedElements()
             }
-            else if (clickElement.length > 0) { // unselect all and select clicked
+            else if (clickElement[0] !== selectedElements[0]) { // unselect all and select clicked
                 console.log("[LOGIC] unselect all and select clicked", clickElement[0])
-                unselectAllElements()
+                unselectSelectedElements()
                 clickElement[0].elementPressed()
 
                 createBindingsForElement(clickElement[0])
@@ -150,50 +155,42 @@ MouseLogic_Base {
                 // Mettre à jour la configuration de case si applicable
                 updateCaseConfiguration()
             }
-            else
-            {
-                unselectAllElements()
-            }
         }
-        else
+        else    // CTRL is pressed => add to selection
         {
-            if (clickElement.length > 0) {
-                if (!clickElement[0].isSelected)
-                {
-                    clickElement[0].elementPressed()
+            if (!clickElement[0].isSelected)
+            {
+                clickElement[0].elementPressed()
 
-                    createBindingsForElement(clickElement[0])
-                    selectedElements.push(clickElement[0])
-                    
-                    // Mettre à jour la configuration de case si applicable
-                    updateCaseConfiguration()
-                    //updateAssetPanelEffectConfiguration()
-                }
-                else
-                {
-                    // unselect element
-                    for (var i = 0; i < selectedElements.length; i++) {
-                        if (selectedElements[i] === clickElement[0]) {
-                            selectedElements[i].isSelected = false
-                            selectedElements[i].elementReleased()
-                            // Détruire les bindings au lieu de changer le parent
-                            destroyBindingsForElement(selectedElements[i])
-                            selectedElements.splice(i,1)
-                            break
-                        }
-                    }
-                    
-                    // Mettre à jour la configuration de case si applicable
-                    updateCaseConfiguration()
-                }
+                createBindingsForElement(clickElement[0])
+                selectedElements.push(clickElement[0])
+                
+                // Mettre à jour la configuration de case si applicable
+                updateCaseConfiguration()
+                //updateAssetPanelEffectConfiguration()
             }
             else
             {
-                unselectSelectedElements()
+                // unselect element
+                for (var i = 0; i < selectedElements.length; i++) {
+                    if (selectedElements[i] === clickElement[0]) {
+                        selectedElements[i].isSelected = false
+                        selectedElements[i].elementReleased()
+                        // Détruire les bindings au lieu de changer le parent
+                        destroyBindingsForElement(selectedElements[i])
+                        selectedElements.splice(i,1)
+                        break
+                    }
+                }
+                
+                // Mettre à jour la configuration de case si applicable
+                updateCaseConfiguration()
             }
+            
         }
         clickElement = []
     }
+
     function clickedRight(mouse, drag) {
         // Menu contextuel supprimé - pas d'action sur clic droit
         mouse.accepted = true
@@ -278,6 +275,5 @@ MouseLogic_Base {
         // Mettre à jour la configuration de case si applicable
         updateCaseConfiguration()
     }
-
 
 }

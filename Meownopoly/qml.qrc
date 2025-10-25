@@ -125,6 +125,7 @@
         <file>qml/editor/EditorEscMenu.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/ui_item/ParticleButton.qml</file>
+        <file>qml/ui_item/qmldir</file>
         <file>qml/editor/tools/grid/GridControlPanel.qml</file>
         <file>qml/editor/tools/grid/GridManager.qml</file>
         <file>qml/editor/tools/preview/AssetPreviewCursor.qml</file>
@@ -161,5 +162,6 @@
         <file>qml/editor/panel/caseSelectionPanel/content/CSP_ContentArea.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/title/CSP_ClearButton.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/title/CSP_TitleBar.qml</file>
+        <file>qml/ui_item/Player_Profil_Icon.qml</file>
     </qresource>
 </RCC>

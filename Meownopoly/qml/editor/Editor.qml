@@ -21,12 +21,19 @@ import Logger
 import DisplayParameter
 import DecorationParameter
 import ItemSnapableFactory
+import "../ui_item"
 
 Rectangle {
     id: root
 
     color: "lightblue"
     border.width: 0
+
+    // Player_Profil_Icon{
+    //     decorationParameter.decorationCategory: "ui"
+    //     decorationParameter.decorationType: "cat"
+    //     decorationParameter.decorationId: "cat"
+    // }
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList

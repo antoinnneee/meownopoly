@@ -16,6 +16,8 @@ MapFileManager *MapFileManager::m_instance = nullptr;
 void MapFileManager::registerQml()
 {
     qmlRegisterSingletonType<MapFileManager>("MapFileManager", 1, 0, "MapFileManager", &MapFileManager::qmlInstance);
+    qmlRegisterType<MapTypes::MapType>("MapTypes", 1, 0, "MapTypes");
+
 }
 
 QObject *MapFileManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)

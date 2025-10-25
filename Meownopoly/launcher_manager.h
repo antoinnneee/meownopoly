@@ -99,6 +99,8 @@ private:
     void setDownloadProgress(double progress);
     void setDownloadStatus(const QString &status);
     void setPackageCreated(bool created);
+
+    QString m_basePath;
 };
 
 #endif // LAUNCHER_MANAGER_H

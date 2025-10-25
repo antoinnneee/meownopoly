@@ -139,8 +139,8 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
 // AssetManager Implementation
 AssetManager::AssetManager(QObject *parent)
     : QObject(parent)
-    , m_assetsBasePath(DEFAULT_ASSETS_LOCATION)
 {
+    m_assetsBasePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/assets/";
     m_pThis = this;
     loadAssets();
 }

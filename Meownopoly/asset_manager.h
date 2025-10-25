@@ -14,7 +14,7 @@
 #include <QJsonDocument>
 
 // Debug defines
-#define ENABLE_ASSET_DEBUG 0
+#define ENABLE_ASSET_DEBUG 1
 
 #if ENABLE_ASSET_DEBUG
     #define ASSET_DEBUG(msg) qDebug() << "[ASSET_DEBUG]" << msg
@@ -25,8 +25,6 @@
     #define ASSET_INFO(msg)
     #define ASSET_ERROR(msg)
 #endif
-
-#define DEFAULT_ASSETS_LOCATION "asset_extracted/"
 
 struct Asset {
     QString path;

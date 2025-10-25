@@ -19,7 +19,12 @@ LauncherManager::LauncherManager(QObject *parent)
     
     // Load current version from file
     m_currentVersion = getCurrentVersionFromFile();
-    
+    m_basePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString downloadPath = m_basePath + "/download";
+    QDir().mkpath(downloadPath);
+    QString assetsPath = m_basePath + "/assets";
+    QDir().mkpath(assetsPath);
+
     emit logMessage("LauncherManager initialisé");
 }
 
@@ -111,7 +116,7 @@ void LauncherManager::downloadResources(const QString &serverUrl, const QString 
     
     QString formattedServerUrl = reformat_server_url(serverUrl);
     QString downloadUrl = formattedServerUrl + "/api/download/" + version;
-    QString fileName = QString("assets_v%1.meow").arg(version);
+    QString fileName = m_basePath + "/download/" + QString("assets_v%1.meow").arg(version);
     
     m_downloadFile = new QFile(fileName, this);
     if (!m_downloadFile->open(QIODevice::WriteOnly)) {
@@ -168,7 +173,7 @@ void LauncherManager::createResourcePackage(const QString &folderPath, const QSt
     emit logMessage("Création du paquet version " + version + " depuis: " + cleanPath);
     
     QString packageName = QString("assets_v%1.meow").arg(version);
-    QString packagePath = QDir::currentPath() + "/" + packageName;
+    QString packagePath = m_basePath + "/download"+ "/" + packageName;
     
     // Create version manifest
     QJsonObject manifest = createVersionManifest(version);
@@ -346,8 +351,8 @@ void LauncherManager::onDownloadFinished()
         emit logMessage("✅ Fichier téléchargé avec succès!");
         
         // Now extract the downloaded file
-        QString compressedFile = QString("assets_v%1.meow").arg(m_latestVersion);
-        QString extractPath = "asset_extracted";
+        QString compressedFile = m_basePath + "/download/" +QString("assets_v%1.meow").arg(m_latestVersion);
+        QString extractPath = m_basePath + "/assets/";
         
         bool success = m_folderCompressor->decompressFolder(compressedFile, extractPath, FC_DELETE_BOTH);
         if (success) {
@@ -436,7 +441,7 @@ void LauncherManager::onConnectionTestFinished()
 // Private helper methods implementations
 QString LauncherManager::getCurrentVersionFromFile()
 {
-    QString versionFile = "version.json";
+    QString versionFile = m_basePath + "/download/version.json";
     QFile file(versionFile);
     
     if (file.open(QIODevice::ReadOnly)) {
@@ -450,7 +455,7 @@ QString LauncherManager::getCurrentVersionFromFile()
 
 void LauncherManager::saveVersionInfo(const QString &version)
 {
-    QString versionFile = "version.json";
+    QString versionFile = m_basePath + "/download/version.json";
     QJsonObject obj = createVersionManifest(version);
     
     QFile file(versionFile);

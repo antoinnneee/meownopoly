@@ -12,7 +12,8 @@ QtObject {
     function unselectAllElements()
     {
         for (var i = 0; i < selectedElements.length; i++) {
-            selectedElements[i].elementReleased()
+            
+            selectedElements[i].elementUnselected()
             // Détruire les bindings si la fonction existe (pour MouseLogic_Selection)
             if (typeof destroyBindingsForElement === "function") {
                 destroyBindingsForElement(selectedElements[i])
