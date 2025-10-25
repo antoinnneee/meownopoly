@@ -16,14 +16,14 @@ LauncherManager::LauncherManager(QObject *parent)
     
     // Initialize folder compressor
     m_folderCompressor = new FolderCompressor(this);
-    
-    // Load current version from file
-    m_currentVersion = getCurrentVersionFromFile();
+
     m_basePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QString downloadPath = m_basePath + "/download";
     QDir().mkpath(downloadPath);
     QString assetsPath = m_basePath + "/assets";
     QDir().mkpath(assetsPath);
+    // Load current version from file
+    m_currentVersion = getCurrentVersionFromFile();
 
     emit logMessage("LauncherManager initialisé");
 }
