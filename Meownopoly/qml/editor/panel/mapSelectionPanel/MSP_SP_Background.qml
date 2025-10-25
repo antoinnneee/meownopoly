@@ -7,6 +7,7 @@ import "."
 
 import MapInfo
 import AssetManager 1.0
+import MapTypes
 
 Item {
     id: backgroundView
@@ -121,6 +122,7 @@ Item {
 
                     onCheckedChanged: {
                             logic.mapInfo.isBackgroundOnGrill = checked
+                            logic.saveMap(MapTypes.UNDOREDO)
                     }
                 }
 
@@ -392,6 +394,7 @@ Item {
                                         logic.mapInfo.backgroundPath = bgImage.source
                                         logic.mapInfo.backgroundScaling = "Fit" // Valeur par défaut
                                         backgroundView.currentThemeMode = "default"
+                                        logic.saveMap(MapTypes.UNDOREDO)
                                     }
                                 }
                             }

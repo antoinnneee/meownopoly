@@ -60,7 +60,7 @@ void UndoRedoManager::onAskEdit(EditAction editAction)
             m_isRestoringState = true;  // Bloquer les sauvegardes
             qDebug() << "[UNDO] Restoring state:" << m_currentEditIndex << "/" << m_listEdits.size();
             emit returnEdit(m_listEdits.at(m_currentEditIndex));
-            m_isRestoringState = false;  // Débloquer
+            m_isRestoringState = false;  // Debloquer
         } else {
             qDebug() << "[UNDO] Already at oldest state";
         }

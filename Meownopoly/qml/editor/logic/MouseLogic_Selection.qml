@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import "../tools/snapable"
 
+import MapTypes
+
 MouseLogic_Base {
     id: mouseLogic
     property bool isDragging: false
