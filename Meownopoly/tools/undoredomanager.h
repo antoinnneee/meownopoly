@@ -25,6 +25,9 @@ public:
     static UndoRedoManager* instance();
     static QObject* qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
     static void registerQml();
+    
+    // Nouvelle méthode pour vérifier si on peut sauvegarder
+    Q_INVOKABLE bool canSave() const { return !m_isRestoringState; }
 
 signals:
 
@@ -38,8 +41,9 @@ public slots:
 private :
     static UndoRedoManager *m_instance;
 
-    inline static int m_currentEditIndex = 0;
+    int m_currentEditIndex = 0;  // Commence à 0
     QList <QJsonObject> m_listEdits;
+    bool m_isRestoringState = false;  // Flag pour bloquer les sauvegardes pendant restauration
 };
 
 #endif // UNDOREDOMANAGER_H

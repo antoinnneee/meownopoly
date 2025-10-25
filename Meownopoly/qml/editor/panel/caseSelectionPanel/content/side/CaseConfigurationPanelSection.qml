@@ -11,6 +11,7 @@ Rectangle {
     property var targetSnapableCase: null
     property var targetCase: null
     property bool updatingValues: false
+    property var logic: null  // Référence au logic pour sauvegarder
 
     topLeftRadius: 0
     topRightRadius: 0
@@ -57,6 +58,7 @@ Rectangle {
                 width: parent.width
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
+                logic: root.logic
                 
                 onConfigurationChanged: root.configurationChanged()
             }
@@ -67,6 +69,7 @@ Rectangle {
                 width: parent.width
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
+                logic: root.logic
                 visible: targetCase && targetCase.type === Case.CS_RestArea
                 
                 onConfigurationChanged: root.configurationChanged()
@@ -77,6 +80,7 @@ Rectangle {
                 width: parent.width
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
+                logic: root.logic
                 visible: targetCase && targetCase.type === Case.CS_KibbleDispenser
                 
                 onConfigurationChanged: root.configurationChanged()
@@ -87,6 +91,7 @@ Rectangle {
                 width: parent.width
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
+                logic: root.logic
                 visible: targetCase && targetCase.type === Case.CS_CardBoardBox
                 
                 onConfigurationChanged: root.configurationChanged()
@@ -97,6 +102,7 @@ Rectangle {
                 width: parent.width
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
+                logic: root.logic
                 visible: targetCase && targetCase.type === Case.CS_Device
                 
                 onConfigurationChanged: root.configurationChanged()

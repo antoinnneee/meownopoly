@@ -20,6 +20,7 @@ EBP_Content {
     property alias caseConfigurationPanelSection: caseConfigurationPanelSection  // Exposer pour l'accès externe
     property alias connectionsConfigSection: connectionsConfigSection  // Exposer pour l'accès externe
     property alias currentTabIndex: tabBar.currentIndex  // Exposer l'index de la TabBar pour la compatibilité
+    property var logic: null  // Référence au logic pour sauvegarder
     
     // Signaux
     signal caseTypeSelected(int type, string typeName)
@@ -157,6 +158,7 @@ EBP_Content {
                 // Onglet Configuration Case
                 CaseConfigurationPanelSection {
                     id: caseConfigurationPanelSection
+                    logic: contentArea.logic
                     
                     // Gérer le changement de type de case
                     onRequestChangeType: function(newType) {
@@ -173,6 +175,7 @@ EBP_Content {
                 // Onglet Configuration Connexions
                 ConnectionsConfigurationSection {
                     id: connectionsConfigSection
+                    logic: contentArea.logic
                     
                     onRequestAddConnection: function(kind) {
                         contentArea.connectionRequested(kind)

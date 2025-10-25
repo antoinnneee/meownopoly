@@ -5,6 +5,7 @@ import Case
 import CaseRestArea
 import MeowStyle
 import Player
+import MapTypes
 
 Rectangle {
     id: root
@@ -15,6 +16,7 @@ Rectangle {
     property var targetPlayer: null
     property bool isVisible: false
     property bool isPlayerConfiguration: false // Indique si on configure un joueur ou une case
+    property var logic: null  // Référence au logic pour sauvegarder
 
     // Propriétés internes pour éviter les binding loops
     property bool updatingValues: false
@@ -199,6 +201,10 @@ Rectangle {
                         }
                         root.isVisible = false
                         configurationClosed()
+                        // Sauvegarder après application des modifications
+                        if (logic) {
+                            logic.saveMap(MapTypes.UNDOREDO)
+                        }
                     }
                 }
             }

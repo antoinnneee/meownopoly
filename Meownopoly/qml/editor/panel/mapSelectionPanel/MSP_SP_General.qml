@@ -200,6 +200,8 @@ Item {
                                     text: mapName === logic.mapInfo.autosaveMapName ? "" : mapName
                                     onTextChanged: {
                                         logic.mapInfo.mapName = text
+                                    }
+                                    onEditingFinished: {
                                         logic.saveMap(MapTypes.UNDOREDO)
                                     }
                                 }

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import ".."
 import "../grid"
+import MapTypes
 
 Rectangle {
     id: handle
@@ -76,6 +77,9 @@ Rectangle {
             if (gridManager && gridManager.exitResizeMode) {
                 gridManager.exitResizeMode()
             }
+            
+            // Sauvegarder après redimensionnement
+            logic.saveMap(MapTypes.UNDOREDO)
         }
         
         onPositionChanged: {

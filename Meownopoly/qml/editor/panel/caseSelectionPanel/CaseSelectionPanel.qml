@@ -73,6 +73,7 @@ EditorBottomPanel {
             searchText: root.searchText
             isExpanded: true
             titleHeight: titleBar.height
+            logic: root.logic
             
             onCaseTypeSelected: function(type, typeName) {
                 console.log("CaseSelectionPanel - case type selected:", type, typeName)

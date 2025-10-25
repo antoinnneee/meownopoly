@@ -26,25 +26,58 @@ QObject *UndoRedoManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngin
 
 
 void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit){
+    // Si on est en train de restaurer un etat, ignorer completement
+    if (m_isRestoringState) {
+        qDebug() << "[UNDO] Ignoring save during state restoration";
+        return;
+    }
+    
+    // Si on n'est pas à la fin, supprimer toutes les entrées futures
+    if (m_currentEditIndex < m_listEdits.size() - 1) {
+        int removed = m_listEdits.size() - m_currentEditIndex - 1;
+        m_listEdits = m_listEdits.mid(0, m_currentEditIndex + 1);
+        qDebug() << "[UNDO] Removed" << removed << "future states";
+    }
+    
+    // Ajouter le nouvel etat
     m_listEdits.append(newEdit);
-    m_currentEditIndex = m_currentEditIndex +1;
+    m_currentEditIndex = m_listEdits.size() - 1;
+    
+    qDebug() << "[UNDO] State saved at index:" << m_currentEditIndex << "/ Total:" << m_listEdits.size();
 }
 
 void UndoRedoManager::onAskEdit(EditAction editAction)
 {
+    if (m_listEdits.isEmpty()) {
+        qDebug() << "[UNDO] No states available";
+        return;
+    }
+    
     switch (editAction) {
-    case Preview:
-        if (m_currentEditIndex > 0){
-            m_currentEditIndex = m_currentEditIndex -1;
+    case Preview:  // Undo
+        if (m_currentEditIndex > 0) {
+            m_currentEditIndex--;
+            m_isRestoringState = true;  // Bloquer les sauvegardes
+            qDebug() << "[UNDO] Restoring state:" << m_currentEditIndex << "/" << m_listEdits.size();
             emit returnEdit(m_listEdits.at(m_currentEditIndex));
+            m_isRestoringState = false;  // Débloquer
+        } else {
+            qDebug() << "[UNDO] Already at oldest state";
         }
         break;
-    case Next:
-        if (m_currentEditIndex < m_listEdits.size() -1){
-            m_currentEditIndex = m_currentEditIndex +1;
+        
+    case Next:  // Redo
+        if (m_currentEditIndex < m_listEdits.size() - 1) {
+            m_currentEditIndex++;
+            m_isRestoringState = true;  // Bloquer les sauvegardes
+            qDebug() << "[REDO] Restoring state:" << m_currentEditIndex << "/" << m_listEdits.size();
             emit returnEdit(m_listEdits.at(m_currentEditIndex));
+            m_isRestoringState = false;  // Débloquer
+        } else {
+            qDebug() << "[REDO] Already at newest state";
         }
         break;
+        
     default:
         break;
     }

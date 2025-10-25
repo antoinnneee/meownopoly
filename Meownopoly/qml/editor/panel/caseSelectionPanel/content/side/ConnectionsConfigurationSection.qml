@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import MapTypes
 
 pragma ComponentBehavior: Bound
 
@@ -11,6 +12,7 @@ Rectangle {
     property var targetSnapableElement: null
     property bool updatingValues: false
     property var hoveredConnectionElement: null
+    property var logic: null  // Référence au logic pour sauvegarder
     
     // Visual properties
     color: "#2a2a2a"
@@ -167,6 +169,9 @@ Rectangle {
                     onRemoveElement: function(element, index) {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
                             root.targetSnapableElement.connectionManager.removePreviousElement(element)
+                            if (logic) {
+                                logic.saveMap(MapTypes.UNDOREDO)
+                            }
                         }
                     }
                     
@@ -208,6 +213,9 @@ Rectangle {
                     onRemoveElement: function(element, index) {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
                             root.targetSnapableElement.connectionManager.removeNextElement(element)
+                            if (logic) {
+                                logic.saveMap(MapTypes.UNDOREDO)
+                            }
                         }
                     }
                     

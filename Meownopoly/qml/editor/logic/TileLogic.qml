@@ -144,6 +144,9 @@ QtObject {
         } else if (kind === "next") {
             source.connectionManager.addNextElement(target)
         }
+        
+        // Sauvegarder après création de la connexion
+        logic.saveMap(MapTypes.UNDOREDO)
     }
 
     function builtConnections()

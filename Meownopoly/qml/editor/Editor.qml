@@ -21,6 +21,7 @@ import Logger
 import DisplayParameter
 import DecorationParameter
 import ItemSnapableFactory
+import UndoRedoManager 1.0
 
 Rectangle {
     id: root
@@ -67,7 +68,11 @@ Rectangle {
         if (event.key === Qt.Key_Delete) {
             var selectItem = logic.mouseLogic.selectedElements
             for (var i = 0; i < selectItem.length; i++) {
-                selectItem[i].deleteRequest()
+                selectItem[i].deleteRequest(false)
+            }
+            // Sauvegarder une seule fois après toutes les suppressions
+            if (selectItem.length > 0) {
+                logic.saveMap(MapTypes.UNDOREDO)
             }
             event.accepted = true
         }
@@ -140,6 +145,9 @@ Rectangle {
                 mapInfo.isBackgroundOnGrill = map.mapInfo.isBackgroundOnGrill
                 mapInfo.musicPath = map.mapInfo.musicPath
             }
+            
+            // Sauvegarder l'état initial pour undo/redo
+            logic.saveMap(MapTypes.UNDOREDO)
         }
     }
 
@@ -361,6 +369,7 @@ Rectangle {
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
+            logic.saveMap(MapTypes.UNDOREDO)
         }
         onCaseTypeSelectedChanged: {
             if (selectionPanel.caseTypeSelected !== -1)

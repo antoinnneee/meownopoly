@@ -217,6 +217,12 @@ Item {
                             onValueChanged: {
                                 if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
                                     logic.mapInfo.backgroundTileSize = value
+                                }
+                            }
+                            
+                            onPressedChanged: {
+                                // Sauvegarder seulement quand l'utilisateur relâche le slider
+                                if (!pressed && typeof logic !== 'undefined') {
                                     logic.saveMap(MapTypes.UNDOREDO)
                                 }
                             }

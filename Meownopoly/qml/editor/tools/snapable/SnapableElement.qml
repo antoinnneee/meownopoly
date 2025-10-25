@@ -11,6 +11,8 @@ import DecorationParameter
 import Case
 import ItemSnapableFactory
 
+import MapTypes
+
  Rectangle {
     id: snapableElement
 
@@ -164,8 +166,11 @@ import ItemSnapableFactory
     signal snapCompleted(var element)
 
     signal elementDeleted(var element)  // sent after delete
-    function deleteRequest()
+    property bool shouldSaveOnDelete: true
+    
+    function deleteRequest(saveAfter)
     {
+        shouldSaveOnDelete = (saveAfter === undefined || saveAfter === true)
         deleteAnimation.start()
     }
     
@@ -173,6 +178,9 @@ import ItemSnapableFactory
         id: deleteAnimation
         onFinished: {
             elementDeleted(snapableElement)
+            if (shouldSaveOnDelete) {
+                logic.saveMap(MapTypes.UNDOREDO)
+            }
         }
     }
     SnapableElementCreateAnimation {

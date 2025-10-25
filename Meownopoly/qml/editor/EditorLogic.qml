@@ -10,6 +10,8 @@ import MapInfo
 import EditorEnum
 import "logic"
 import Logger
+import UndoRedoManager 1.0
+import MapTypes
 
 Item {
     id: logic
@@ -136,24 +138,31 @@ Item {
     }
 
     function removeCurrentMap(){
-            // Make a copy of the list since it will be modified during deletion
+            // Copier la liste car elle sera modifiée pendant la suppression
             var elementsToRemove = []
             for (var i = 0; i < snapableTilesList.length; i++) {
                 elementsToRemove.push(snapableTilesList[i])
             }
-
-            // Process each element in the copied list
+            
+            // Vider la liste principale d'abord
+            snapableTilesList = []
+            
+            // Détruire les éléments directement sans animation ni sauvegarde
             for (var i = 0; i < elementsToRemove.length; i++) {
-                // Find the SnapableElementControl for this element and emit deleteRequested
                 if (elementsToRemove[i]) {
-                    // The deleteAnimation will automatically call elementDeleted when finished
-                    elementsToRemove[i].deleteRequest()
+                    elementsToRemove[i].destroy()  // Destruction directe
                 }
             }
         }
 
 
     function saveMap(isAutoSave){
+        // Ne pas sauvegarder si on est en mode restauration
+        if (isAutoSave === MapTypes.UNDOREDO && !UndoRedoManager.canSave()) {
+            console.log("[SAVE] Blocked during restoration")
+            return
+        }
+        
         var itemSnapableList = [];
 
         for (var i = 0; i < snapableTilesList.length; i++) {

@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Case
 import "caseConfigPanel"
+import MapTypes
 
 GroupBox {
     id: control
@@ -11,9 +12,16 @@ GroupBox {
     // Properties
     property var targetCase: null
     property bool updatingValues: false
+    property var logic: null  // Référence au logic pour sauvegarder
     
     // Signals
     signal configurationChanged()
+    
+    onConfigurationChanged: {
+        if (logic) {
+            logic.saveMap(MapTypes.UNDOREDO)
+        }
+    }
     
     // Visual styling
     background: Rectangle {

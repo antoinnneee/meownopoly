@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import MapTypes
 
 MouseLogic_Base {
     id: mouseLogic
@@ -23,6 +24,7 @@ MouseLogic_Base {
     {
         drag.target = null
         clickElement = []
+        // Ne pas sauvegarder ici, c'est trop tôt (avant la création de l'élément)
     }
     function clickedLeft(mouse, drag)
     {
@@ -31,6 +33,8 @@ MouseLogic_Base {
         console.log("Placing selected asset at:", gridPos)
         placeSelectedAsset(gridPos.x, gridPos.y)
         mouse.accepted = true
+        // Sauvegarder APRÈS la création de l'élément
+        logic.saveMap(MapTypes.UNDOREDO)
     }
 
     function pressAndHold(mouse, drag)

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../item_icon"
+import MapTypes
 
 Item {
     id: controlsRoot
@@ -45,6 +46,7 @@ Item {
                 onLayerClicked: function(index){
                     console.log("layer " + index + "clicked")
                     layerChanged(index +1)
+                    logic.saveMap(MapTypes.UNDOREDO)
                 }
 
                 Behavior on scale {

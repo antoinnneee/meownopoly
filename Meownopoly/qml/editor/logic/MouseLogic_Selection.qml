@@ -125,6 +125,8 @@ MouseLogic_Base {
         {
             clickElement = []
             //unselectAllElements()
+            // Sauvegarder après déplacement d'éléments
+            logic.saveMap(MapTypes.UNDOREDO)
         }
     }
 
