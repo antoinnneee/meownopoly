@@ -26,8 +26,6 @@
     #define ASSET_ERROR(msg)
 #endif
 
-#define DEFAULT_ASSETS_LOCATION "asset_extracted/"
-
 struct Asset {
     QString path;
     QString type;

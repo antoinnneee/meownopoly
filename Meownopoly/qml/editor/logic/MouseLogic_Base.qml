@@ -12,7 +12,8 @@ QtObject {
     function unselectAllElements()
     {
         for (var i = 0; i < selectedElements.length; i++) {
-            selectedElements[i].elementReleased()
+            
+            selectedElements[i].elementUnselected()
             // Détruire les bindings si la fonction existe (pour MouseLogic_Selection)
             if (typeof destroyBindingsForElement === "function") {
                 destroyBindingsForElement(selectedElements[i])
@@ -148,6 +149,31 @@ QtObject {
     {
 
     }
+/*
+    function updateAssetPanelEffectConfiguration()
+    {
+        if (!logic.selectionPanel) {
+            console.log("[LOGIC] selectionPanel not available")
+            return
+        }
+        var assetPanel = logic.selectionPanel.assetPanel
+        if (!assetPanel) {
+            console.log("[LOGIC] assetPanel not available")
+            return
+        }
+        var contentArea = assetPanel.contentArea
+        if (!contentArea) {
+            console.log("[LOGIC] contentArea not available")
+            return
+        }
+        var effectsPanel = contentArea.effectsPanel
+        if (!effectsPanel) {
+            console.log("[LOGIC] effectsPanel not available")
+            return
+        }
+
+    }
+*/
     // Fonction pour mettre à jour la configuration de case dans le panneau
     function updateCaseConfiguration() {
         if (!logic.selectionPanel) {

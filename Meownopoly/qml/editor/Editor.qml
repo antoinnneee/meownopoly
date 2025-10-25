@@ -21,13 +21,19 @@ import Logger
 import DisplayParameter
 import DecorationParameter
 import ItemSnapableFactory
-import UndoRedoManager 1.0
+import UndoRedoManager
 
 Rectangle {
     id: root
 
     color: "lightblue"
     border.width: 0
+
+    // Player_Profil_Icon{
+    //     decorationParameter.decorationCategory: "ui"
+    //     decorationParameter.decorationType: "cat"
+    //     decorationParameter.decorationId: "cat"
+    // }
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
@@ -432,19 +438,7 @@ Rectangle {
             if (logic.mouseLogic && logic.mouseLogic.showLinkPreview) {
                 logic.mouseLogic.showLinkPreview()
             }
-            /*
-            if (!selectedElements || !targetElement) return
 
-            for (var i = 0; i < selectedElements.length; i++) {
-                if (selectedElements[i] !== targetElement) {
-                    if (kind === "previous") {
-                        targetElement.connectionManager.addPreviousElement(selectedElements[i])
-                    } else if (kind === "next") {
-                        targetElement.connectionManager.addNextElement(selectedElements[i])
-                    }
-                }
-            }
-            */
         }
     }
 
