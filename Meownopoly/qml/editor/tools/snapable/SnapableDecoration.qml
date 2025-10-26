@@ -60,7 +60,6 @@ SnapableElement {
         source:  (assetAvailable) ? imagePath : ""
         z: 1  // Assurer que le contenu est sous les poignées
         asynchronous: true
-        cache: true  // Cache the image to prevent reloading
         fillMode: Image.PreserveAspectFit
         smooth: true
         mipmap: true  // Enable mipmapping for better quality when scaling down

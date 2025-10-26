@@ -68,15 +68,6 @@ import MapTypes
     property point globalCenter: {
         var centerX = x + width / 2
         var centerY = y + height / 2
-        
-        // Détecter si on est dans groupeSelection en vérifiant ses propriétés uniques
-        // groupeSelection a des propriétés gridXPosition et gridYPosition
-        if (parent && typeof parent.gridXPosition !== 'undefined') {
-            // On est dans groupeSelection, ajouter son offset
-            centerX += parent.x
-            centerY += parent.y
-        }
-        
         return Qt.point(centerX, centerY)
     }
     
@@ -84,12 +75,6 @@ import MapTypes
     readonly property int globalCenterY: globalCenter.y
 
     property alias connectionManager: connectionManager
-    // Expose le point central en coordonnées locales et scène
-    readonly property point centerLocal: Qt.point(width / 2, height / 2)
-    function centerInScene() {
-        var p = mapToItem(null, width / 2, height / 2)
-        return Qt.point(p.x, p.y)
-    }
 
     SnapableElementConnections {
         id: connectionManager
