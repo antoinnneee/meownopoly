@@ -17,7 +17,7 @@ Rectangle {
     
     Text {
         anchors.centerIn: parent
-        text: lockButton.effectsLocked ? "🔒" : "🔓"
+        text: lockButton.effectsLocked ? "🖌️" : "🔗"
         font.pixelSize: 16
     }
     

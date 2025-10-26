@@ -23,6 +23,16 @@ GroupBox {
     padding:4
     spacing: 2
 
+    function updateFromDisplayParameter(dispParam) {
+        // // Update checkboxes
+         blurEnabledCheck.checked = dispParam.effectBlurEnabled
+         shadowEnabledCheck.checked = dispParam.effectShadowEnabled
+
+        // // Update blur/shadow sliders
+        blurSlider.value = dispParam.effectBlur
+        shadowBlurSlider.value = dispParam.effectShadowBlur
+    }
+
     background: Rectangle {
         color: "#333333"
         radius: 4

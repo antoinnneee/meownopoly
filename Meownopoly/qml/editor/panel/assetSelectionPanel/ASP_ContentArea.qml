@@ -19,12 +19,28 @@ EBP_Content {
 
     property int titleHeight
     property alias visualEffectsPanel : effectsPanel
+    property alias effectLocked: effectsPanel.effectsLocked
+
+    property bool blockEffectChangedSignal: false
     signal effectChanged()
     
     // Propriété pour gérer l'onglet actif (0=Visual Effects, 1=Transform)
     property int currentTabIndex: 0
 
     sidePanelRatio: 0.5
+    function updateFromDisplayParameter(dispParam) {
+        if (effectLocked){
+            effectChanged()
+        }
+        else
+        {
+            blockEffectChangedSignal = true
+            effectsPanel.updateFromDisplayParameter(dispParam)
+            transformSection.updateFromDisplayParameter(dispParam)
+            advancedEffectsSection.updateFromDisplayParameter(dispParam)
+            blockEffectChangedSignal = false
+        }
+    }
 
     mainContent: Item {
         id: mainContent
@@ -71,7 +87,8 @@ EBP_Content {
             }
         }
     }
-    
+
+
     sidePanel: Item {
         anchors.fill: parent
         
@@ -107,6 +124,9 @@ EBP_Content {
                         anchors.rightMargin: 16
                         
                         onEffectChanged: {
+                            if (contentArea.blockEffectChangedSignal) {
+                                return
+                            }
                             contentArea.effectChanged()
                         }
                     }
@@ -144,6 +164,9 @@ EBP_Content {
                             width: parent.width
                             
                             onEffectChanged: {
+                                if (contentArea.blockEffectChangedSignal) {
+                                    return
+                                }
                                 contentArea.effectChanged()
                             }
                         }
@@ -154,6 +177,9 @@ EBP_Content {
                             width: parent.width
                             
                             onEffectChanged: {
+                                if (contentArea.blockEffectChangedSignal) {
+                                    return
+                                }
                                 contentArea.effectChanged()
                             }
                         }
@@ -164,6 +190,9 @@ EBP_Content {
                             width: parent.width
                             
                             onEffectChanged: {
+                                if (contentArea.blockEffectChangedSignal) {
+                                    return
+                                }
                                 contentArea.effectChanged()
                             }
                         }

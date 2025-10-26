@@ -154,18 +154,13 @@ Rectangle {
         }
     }
 
-    // Functions
-    function updateFromTarget() {
-        /*
-        if (!targetDecoration) return
-        
-        // Update rotation slider
-        rotationSlider.value = targetDecoration.snapableParameters.displayParameter.rotationAngle
-        
-        // Update mirror checkboxes
-        horizontalMirrorCheck.checked = targetDecoration.snapableParameters.displayParameter.mirrorHorizontal
-        verticalMirrorCheck.checked = targetDecoration.snapableParameters.displayParameter.mirrorVertical
-        */
+    function updateFromDisplayParameter(dispParam) {
+      rotationSlider.value = dispParam.rotationAngle
+
+      // Update mirror checkboxes
+      horizontalMirrorCheck.checked = dispParam.mirrorHorizontal
+      verticalMirrorCheck.checked = dispParam.mirrorVertical
     }
+
 
 }

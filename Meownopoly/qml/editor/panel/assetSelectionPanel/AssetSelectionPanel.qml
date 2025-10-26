@@ -22,8 +22,9 @@ EditorBottomPanel {
     }
     
     property alias assetManagerSettings: assetManagerSettings
-    property alias visualEffectsPanel: contentArea.visualEffectsPanel
-    property alias currentTabIndex: contentArea.currentTabIndex
+    property alias visualEffectsPanel: asp_contentArea.visualEffectsPanel
+    property alias currentTabIndex: asp_contentArea.currentTabIndex
+    property alias asp_contentArea: asp_contentArea
     // Current selection state (from parent)
     QtObject{
         id: assetManagerSettings
@@ -141,7 +142,7 @@ EditorBottomPanel {
     }
 
      contentArea: ASP_ContentArea {
-            id: contentArea
+            id: asp_contentArea
             anchors.fill: parent
             currentSelectedCategory: root.currentSelectedCategory
             currentSelectedType: root.currentSelectedType
@@ -152,8 +153,8 @@ EditorBottomPanel {
             onCategorieSelected: {
                 root.currentView = "assets"
                 // Mettre à jour les propriétés de catégorie sélectionnée
-                root.selectedCategory = contentArea.selectedCategory
-                root.selectedType = contentArea.selectedType
+                root.selectedCategory = asp_contentArea.selectedCategory
+                root.selectedType = asp_contentArea.selectedType
             }
             onAssetSelected: function(category, type, id) {
                 root.updateSelectedAsset(category, type, id)

@@ -117,27 +117,16 @@ Rectangle {
         return effects
     }
 
-    function updateFromTarget() {
-        /*
-        if (!targetDecoration || root.effectsLocked) return
+    function updateFromDisplayParameter(dispParam) {
+        console.log("update from disp")
+      if (root.effectsLocked) return
         
         // Update sliders from target values
-        colorEffectsSection.brightnessSlider.value = targetDecoration.displaySettings.effectBrightness
-        colorEffectsSection.contrastSlider.value = targetDecoration.displaySettings.effectContrast
-        colorEffectsSection.saturationSlider.value = targetDecoration.displaySettings.effectSaturation
-        colorEffectsSection.colorizationSlider.value = targetDecoration.displaySettings.effectColorization
-        
-        // Update checkboxes
-        advancedEffectsSection.blurEnabledCheck.checked = targetDecoration.displaySettings.effectBlurEnabled
-        advancedEffectsSection.shadowEnabledCheck.checked = targetDecoration.displaySettings.effectShadowEnabled
-        
-        // Update blur/shadow sliders
-        advancedEffectsSection.blurSlider.value = targetDecoration.displaySettings.effectBlur
-        advancedEffectsSection.shadowBlurSlider.value = targetDecoration.displaySettings.effectShadowBlur
-        
-        // Update transform section
-        transformSection.updateFromTarget()
-        */
+        colorEffectsSection.brightnessSlider.value = dispParam.effectBrightness
+        colorEffectsSection.contrastSlider.value = dispParam.effectContrast
+        colorEffectsSection.saturationSlider.value = dispParam.effectSaturation
+        colorEffectsSection.colorizationSlider.value = dispParam.effectColorization
+
     }
 
 }

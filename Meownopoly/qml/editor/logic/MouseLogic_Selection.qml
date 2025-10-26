@@ -158,6 +158,7 @@ MouseLogic_Base {
                 
                 // Mettre à jour la configuration de case si applicable
                 updateCaseConfiguration()
+                updateAssetPanelEffectConfiguration(selectedElements[0].snapableParameters.displayParameter)
             }
         }
         else    // CTRL is pressed => add to selection
@@ -171,7 +172,7 @@ MouseLogic_Base {
                 
                 // Mettre à jour la configuration de case si applicable
                 updateCaseConfiguration()
-                //updateAssetPanelEffectConfiguration()
+                updateAssetPanelEffectConfiguration(clickElement[0].snapableParameters.displayParameter)
             }
             else
             {
