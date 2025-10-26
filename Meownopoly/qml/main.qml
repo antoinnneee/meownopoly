@@ -58,10 +58,14 @@ ApplicationWindow {
 
     Component {
         id: editor
-        Editor{
-        width:root.width
-        height:root.height
-        visible: false
+        Editor {
+            width:root.width
+            height:root.height
+            visible: false
+            escMenu.onReturnToMainMenu: {
+                console.log("Retour au menu principal demandé")
+                stackView.pop()
+            }
         }
     }
     Component{

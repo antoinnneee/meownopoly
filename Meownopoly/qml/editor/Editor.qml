@@ -51,6 +51,8 @@ Rectangle {
     property alias selectedAssetId: selectionPanel.currentSelectedAssetId
     property alias isAssetSelected: selectionPanel.isAssetSelected
 
+    property alias escMenu:escMenu
+
     Component.onCompleted: {
         if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
             console.log("Creating autosave map")
@@ -485,15 +487,6 @@ Rectangle {
                 snapableParameters.decorationParameter.decorationType = root.selectedAssetType
                 snapableParameters.decorationParameter.decorationId = root.selectedAssetId
                 var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
-                return;
-                mainMa.elementClicked(newCaseTile)
-                newCaseTile.elementPressed()
-                newCaseTile.parent = groupeSelection
-                newCaseTile.x = newCaseTile.x - groupeSelection.x
-                newCaseTile.y = newCaseTile.y - groupeSelection.y
-                logic.mouseLogic.selectedElements.push(newCaseTile)
-                // Mettre à jour la configuration de case si applicable
-                logic.mouseLogic.updateCaseConfiguration()
             }
             return;
         }
@@ -519,21 +512,7 @@ Rectangle {
 
     // Menu d'échappement
     EditorEscMenu {
-        id: escMenu
-        
-        onReturnToMainMenu: {
-            console.log("Retour au menu principal demandé")
-            // Retourner au menu principal via le StackView
-            // Nous devons accéder au StackView parent depuis l'éditeur
-            var stackView = parent
-            while (stackView && !stackView.hasOwnProperty('pop')) {
-                stackView = stackView.parent
-            }
-            if (stackView && stackView.pop) {
-                stackView.pop()
-            }
-        }
-        
+        id: escMenu        
         onVisibleChanged: {
             if (!visible) {
                 // Redonner le focus à l'éditeur quand le menu se ferme
