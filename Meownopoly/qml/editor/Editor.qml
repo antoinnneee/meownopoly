@@ -30,6 +30,8 @@ Rectangle {
     border.width: 0
 
     // Player_Profil_Icon{
+    //     x:100
+    //     y:100
     //     decorationParameter.decorationCategory: "ui"
     //     decorationParameter.decorationType: "cat"
     //     decorationParameter.decorationId: "cat"
