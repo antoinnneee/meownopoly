@@ -32,6 +32,7 @@ public:
 signals:
 
     void returnEdit(QJsonObject editAction);
+    void forceUnSelectAllElement();
 
 public slots:
 

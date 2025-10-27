@@ -52,7 +52,9 @@ void UndoRedoManager::onAskEdit(EditAction editAction)
         qDebug() << "[UNDO] No states available";
         return;
     }
-    
+
+    emit forceUnSelectAllElement();
+
     switch (editAction) {
     case Preview:  // Undo
         if (m_currentEditIndex > 0) {

@@ -1,6 +1,8 @@
 import QtQuick 2.15
+import UndoRedoManager
 import "../tools/snapable"
 QtObject {
+    id: mouseLogicBase
     property list<SnapableElement> clickElement:[]
     property var clickPosition
     property list<var> elementInitialPosition:[]
@@ -8,6 +10,16 @@ QtObject {
     property list<SnapableElement> selectedElements: []
 
     property bool isControlPressed : false
+
+    property Connections undoRedoConnections: Connections {
+        target: UndoRedoManager
+        function onForceUnSelectAllElement() {
+            while (!unselectAllElements()){
+            }
+        }
+    }
+
+
 
     function unselectAllElements()
     {
@@ -26,6 +38,7 @@ QtObject {
         
         // Effacer la configuration de case
         clearCaseConfiguration()
+        return true
     }
 
     function unselectSelectedElements()
