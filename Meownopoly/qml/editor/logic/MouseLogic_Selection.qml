@@ -175,13 +175,14 @@ MouseLogic_Base {
         }
         
         // Détecter les éléments dans le rectangle et les sélectionner
-        var elementsInRect = getElementsInRectangle(rectangleStart, rectangleCurrent)
-        selectElementsInRectangle(elementsInRect)
+        var elementsResult = getElementsInRectangle(rectangleStart, rectangleCurrent)
+        selectElementsInRectangle(elementsResult.inRectangle)
     }
     
     // Fonction pour détecter les éléments dans le rectangle
     function getElementsInRectangle(start, current) {
-        var elements = []
+        var elementsInRect = []
+        var elementsOutRect = []
         
         // Calculer les limites du rectangle
         var rectLeft = Math.min(start.x, current.x)
@@ -203,11 +204,16 @@ MouseLogic_Base {
             // Vérifier l'intersection
             if (!(elementRight < rectLeft || elementLeft > rectRight || 
                   elementBottom < rectTop || elementTop > rectBottom)) {
-                elements.push(element)
+                elementsInRect.push(element)
+            } else {
+                elementsOutRect.push(element)
             }
         }
         
-        return elements
+        return {
+            inRectangle: elementsInRect,
+            outRectangle: elementsOutRect
+        }
     }
     
     // Fonction pour sélectionner les éléments dans le rectangle
@@ -228,8 +234,8 @@ MouseLogic_Base {
     
     // Fonction pour finaliser la sélection par rectangle
     function finalizeRectangleSelection() {
-        var elementsInRect = getElementsInRectangle(rectangleStart, rectangleCurrent)
-        selectElementsInRectangle(elementsInRect)
+        var elementsResult = getElementsInRectangle(rectangleStart, rectangleCurrent)
+        selectElementsInRectangle(elementsResult.inRectangle)
         
         // Mettre à jour la configuration de case si applicable
         updateCaseConfiguration()

@@ -225,11 +225,7 @@ QtObject {
         for (var i = 0; i < selectedElements.length; i++) {
             console.log(selectedElements[i])
             selectedElements[i].elementPressed()
-            // Créer les bindings si la fonction existe (pour MouseLogic_Selection)
-            if (typeof createBindingsForElement === "function") {
-                createBindingsForElement(selectedElements[i])
-            }
-            
+            createBindingsForElement(selectedElements[i])
         }
     }
 
