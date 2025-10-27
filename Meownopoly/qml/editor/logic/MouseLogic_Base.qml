@@ -32,10 +32,7 @@ QtObject {
     {
         for (var i = 0; i < selectedElements.length; i++) {
             selectedElements[i].elementUnselected()
-            // Détruire les bindings si la fonction existe (pour MouseLogic_Selection)
-            if (typeof destroyBindingsForElement === "function") {
-                destroyBindingsForElement(selectedElements[i])
-            }
+            destroyBindingsForElement(selectedElements[i])
         }
         selectedElements = []
         groupeSelection.x = 0
@@ -235,4 +232,55 @@ QtObject {
             
         }
     }
+
+    // Propriétés pour gérer les positions initiales sans changer le parent
+    property var elementInitialPositions: ({})  // Map: element -> {x: initialX, y: initialY}
+    property var elementBindings: ({})  // Map: element -> {xBinding: Binding, yBinding: Binding}
+
+    // Fonction pour créer les bindings pour un élément
+    function createBindingsForElement(element) {
+        if (!element) return
+
+        // Stocker la position initiale relative
+        var initialX = element.x - groupeSelection.x
+        var initialY = element.y - groupeSelection.y
+        elementInitialPositions[element] = {x: initialX, y: initialY}
+
+        // Créer les bindings dynamiquement en utilisant Qt.binding()
+        // Stocker les valeurs initiales dans des variables accessibles via closure
+        var bindingInitialX = initialX
+        var bindingInitialY = initialY
+
+        // Créer les bindings
+        element.x = Qt.binding(function() {
+            return groupeSelection.x + bindingInitialX
+        })
+        element.y = Qt.binding(function() {
+            return groupeSelection.y + bindingInitialY
+        })
+
+        // Marquer l'élément comme ayant des bindings actifs
+        elementBindings[element] = true
+    }
+
+    // Fonction pour détruire les bindings pour un élément
+    function destroyBindingsForElement(element) {
+        if (!element) return
+
+        if (elementBindings[element]) {
+            // Récupérer la position actuelle avant de casser les bindings
+            var currentX = element.x
+            var currentY = element.y
+
+            // Casser les bindings en assignant des valeurs fixes
+            element.x = currentX
+            element.y = currentY
+
+            delete elementBindings[element]
+        }
+
+        if (elementInitialPositions[element])
+            delete elementInitialPositions[element]
+    }
+
 }
