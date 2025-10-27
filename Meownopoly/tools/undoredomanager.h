@@ -29,10 +29,15 @@ public:
     // Nouvelle méthode pour vérifier si on peut sauvegarder
     Q_INVOKABLE bool canSave() const { return !m_isRestoringState; }
 
+    bool isRestoringState() const;
+    void setIsRestoringState(bool newIsRestoringState);
+
 signals:
 
     void returnEdit(QJsonObject editAction);
     void forceUnSelectAllElement();
+
+    void isRestoringStateChanged();
 
 public slots:
 
@@ -45,6 +50,7 @@ private :
     int m_currentEditIndex = 0;  // Commence à 0
     QList <QJsonObject> m_listEdits;
     bool m_isRestoringState = false;  // Flag pour bloquer les sauvegardes pendant restauration
+    Q_PROPERTY(bool isRestoringState READ isRestoringState WRITE setIsRestoringState NOTIFY isRestoringStateChanged FINAL)
 };
 
 #endif // UNDOREDOMANAGER_H

@@ -84,3 +84,16 @@ void UndoRedoManager::onAskEdit(EditAction editAction)
         break;
     }
 }
+
+bool UndoRedoManager::isRestoringState() const
+{
+    return m_isRestoringState;
+}
+
+void UndoRedoManager::setIsRestoringState(bool newIsRestoringState)
+{
+    if (m_isRestoringState == newIsRestoringState)
+        return;
+    m_isRestoringState = newIsRestoringState;
+    emit isRestoringStateChanged();
+}
