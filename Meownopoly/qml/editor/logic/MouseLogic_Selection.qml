@@ -176,7 +176,7 @@ MouseLogic_Base {
         
         // Détecter les éléments dans le rectangle et les sélectionner
         var elementsResult = getElementsInRectangle(rectangleStart, rectangleCurrent)
-        selectElementsInRectangle(elementsResult.inRectangle)
+        selectElementsInRectangle(elementsResult)
     }
     
     // Fonction pour détecter les éléments dans le rectangle
@@ -218,16 +218,30 @@ MouseLogic_Base {
     
     // Fonction pour sélectionner les éléments dans le rectangle
     function selectElementsInRectangle(elements) {
-        
-        // Sélectionner les nouveaux éléments
-        for (var i = 0; i < elements.length; i++) {
-            var element = elements[i]
-            if (!element.isSelected)
+        var elementsIn = elements.inRectangle
+        var elementsOut = elements.outRectangle
+        for (var j = 0; j < elementsOut.length; j++) {
+            var elementOut = elementsOut[j]
+            if (elementOut.isSelected)
             {
-                element.elementPressed()
+                elementOut.elementUnselected()
+                destroyBindingsForElement(elementOut)
+                var selectElementIndex = selectedElements.indexOf(elementOut)
+                if (selectElementIndex !== -1)
+                {
+                    selectedElements.splice(selectElementIndex, 1)
+                }
+            }
+        }
+        // Sélectionner les nouveaux éléments
+        for (var i = 0; i < elementsIn.length; i++) {
+            var elementIn = elementsIn[i]
+            if (!elementIn.isSelected)
+            {
+                elementIn.elementPressed()
                 // Ne plus changer le parent, créer les bindings à la place
-                createBindingsForElement(element)
-                selectedElements.push(element)
+                createBindingsForElement(elementIn)
+                selectedElements.push(elementIn)
             }
         }
     }
@@ -235,7 +249,7 @@ MouseLogic_Base {
     // Fonction pour finaliser la sélection par rectangle
     function finalizeRectangleSelection() {
         var elementsResult = getElementsInRectangle(rectangleStart, rectangleCurrent)
-        selectElementsInRectangle(elementsResult.inRectangle)
+        selectElementsInRectangle(elementsResult)
         
         // Mettre à jour la configuration de case si applicable
         updateCaseConfiguration()
