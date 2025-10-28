@@ -69,10 +69,7 @@ QtObject {
 
     function createItemSnapable(itemSnapableData) {
         currentZOrder = currentZOrder + 0.00001
-        // console.log("data:",itemSnapableData)
         itemSnapableData.displayParameter.zOrder  = currentZOrder;
-        // itemSnapableData.print()
-        
         // Créer le bon type de tile selon le tileType
         // On passe directement itemSnapableData pour conserver les références next/prev
         var newTile
@@ -155,11 +152,9 @@ QtObject {
     {
         for (var i = 0; i < snapableTilesList.length; i++) {
             var tile = snapableTilesList[i]
-            // console.log("built tile connections", tile)
             if (tile ) {
                 tile.blockConnections = true
                 var nextList = tile.snapableParameters.getNextList()
-                // console.log("nextlist connections", nextList)
                 for (var j = 0; j < nextList.length; j++) {
                     var nextElCaseData = nextList[j]
                     var nextEl = snapableTilesList.find(function(tile) {

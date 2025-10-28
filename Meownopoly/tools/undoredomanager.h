@@ -8,9 +8,9 @@
 class UndoRedoManager : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool isRestoringState READ isRestoringState WRITE setIsRestoringState NOTIFY isRestoringStateChanged FINAL)
 public:
 
-    Q_PROPERTY(bool isRestoringState READ isRestoringState WRITE setIsRestoringState NOTIFY isRestoringStateChanged FINAL)
 
     enum EditAction{
         Preview,

@@ -14,6 +14,17 @@ Item {
     property int mmSize: logic.mmSize
 
     property int gridSize: Screen.pixelDensity * mmSize
+    onGridSizeChanged: {
+
+       var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
+                                                            : 0
+       var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
+                                                            : 0
+        if (newVerticalLinesCount > gridContainer.verticalLinesCount || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
+            gridContainer.verticalLinesCount = newVerticalLinesCount
+            gridContainer.horizontalLinesCount = newHorizontalLinesCount
+        }
+    }
 
     property int boardSize:  gridSize * 600 // 600 croisillons
     property color gridColor: "#40808080"
@@ -49,7 +60,7 @@ Item {
         var elementWidth = element.snapableParameters.displayParameter.unitSizeWidth * gridSize
         var elementHeight = element.snapableParameters.displayParameter.unitSizeHeight * gridSize
         element.x = posGridX
-        element.y =posGridY
+        element.y = posGridY
     }
 
     // Fonction pour obtenir la position de grille la plus proche
@@ -74,6 +85,8 @@ Item {
         id: gridContainer
         anchors.fill: parent
 
+        property color lightColor:  Qt.lighter(gridManager.gridColor, 1.2)
+
         property int verticalLinesCount: (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
                                                                 : 0
         property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
@@ -85,8 +98,8 @@ Item {
 
             Rectangle {
                 // Propriétés communes
-                color: gridManager.resizeMode ? Qt.lighter(gridManager.gridColor, 1.2) : gridManager.gridColor
-                opacity: gridManager.resizeMode ? Math.min(1.0, gridManager.gridOpacity + 0.3) : gridManager.gridOpacity
+                color: gridManager.resizeMode ? gridContainer.lightColor: gridManager.gridColor
+                opacity: gridManager.resizeMode ? 1 : gridManager.gridOpacity
                 visible: gridManager.showGrid
 
                 // Déterminer si c'est une ligne verticale ou horizontale

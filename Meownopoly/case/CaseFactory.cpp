@@ -84,7 +84,7 @@ Case *CaseFactory::createCase(CaseType type)
         newCase = new CaseKibbleDispenser("TAXE NOT IMPLEMENTED");
         break;
     default:
-        qDebug() << "Unknown case type:" << type << "returning NULL";
+        //qDebug() << "Unknown case type:" << type << "returning NULL";
         break;
     }
     return newCase;
@@ -128,7 +128,7 @@ Case* CaseFactory::createCase(const QJsonObject &caseJson)
         newCase = new CaseKibbleDispenser(caseJson); // Tax case as KibbleDispenser
         break;
     default:
-        qDebug() << "Unknown case type:" << type << "creating base Case";
+        // qDebug() << "Unknown case type:" << type << "creating base Case";
         newCase = new Case(caseJson);
         break;
     }
