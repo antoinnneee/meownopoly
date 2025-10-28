@@ -22,6 +22,7 @@ import DisplayParameter
 import DecorationParameter
 import ItemSnapableFactory
 import UndoRedoManager
+import "../ui_item"
 
 Rectangle {
     id: root
@@ -29,13 +30,13 @@ Rectangle {
     color: "lightblue"
     border.width: 0
 
-    // Player_Profil_Icon{
-    //     x:100
-    //     y:100
-    //     decorationParameter.decorationCategory: "ui"
-    //     decorationParameter.decorationType: "cat"
-    //     decorationParameter.decorationId: "cat"
-    // }
+    Player_Profil_Icon{
+        x:100
+        y:100
+        decorationParameter.decorationCategory: "ui"
+        decorationParameter.decorationType: "cat"
+        decorationParameter.decorationId: "cat"
+    }
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
