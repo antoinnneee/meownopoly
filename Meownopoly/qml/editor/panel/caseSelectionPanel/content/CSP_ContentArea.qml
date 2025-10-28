@@ -65,6 +65,7 @@ EBP_Content {
             // TabBar native QML
             TabBar {
                 id: tabBar
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: Screen.pixelDensity * 11
                 currentIndex: 0
@@ -99,6 +100,7 @@ EBP_Content {
                     font.bold: true
                     height: parent.height
 
+
                     
                     background: Rectangle {
                         color: tabBar.currentIndex === 0 ? "#3a3a3a" : "#2a2a2a"
@@ -108,6 +110,7 @@ EBP_Content {
                         bottomLeftRadius: 0
                         border.color: "#3a3a3a"
                         border.width: 1
+
 
                     }
                     
@@ -154,6 +157,16 @@ EBP_Content {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 currentIndex: tabBar.currentIndex
+                onCurrentIndexChanged: {
+                    if (currentIndex === 1)
+                    {
+                        logic.tileLogic.displayLinkEnable = true
+                    }
+                    else
+                    {
+                        logic.tileLogic.displayLinkEnable = false
+                    }
+                }
                 
                 // Onglet Configuration Case
                 CaseConfigurationPanelSection {

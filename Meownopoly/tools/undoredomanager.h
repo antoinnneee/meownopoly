@@ -2,8 +2,7 @@
 #define UNDOREDOMANAGER_H
 
 #include <QObject>
-#include "qqmlengine.h"
-#include "qtmetamacros.h"
+#include <QQmlEngine>
 #include <QJsonObject>
 
 class UndoRedoManager : public QObject
@@ -34,17 +33,16 @@ public:
     bool isRestoringState() const;
     void setIsRestoringState(bool newIsRestoringState);
 
-signals:
-
-    void returnEdit(QJsonObject editAction);
-    void forceUnSelectAllElement();
-
-    void isRestoringStateChanged();
-
 public slots:
 
     void onUpdateListEdits(QJsonObject newEdit);
     void onAskEdit(EditAction editAction);
+
+signals:
+
+    void returnEdit(QJsonObject editAction);
+    void forceUnSelectAllElement();
+    void isRestoringStateChanged();
 
 private :
     static UndoRedoManager *m_instance;

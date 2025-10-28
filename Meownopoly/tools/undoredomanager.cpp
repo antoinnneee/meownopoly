@@ -1,3 +1,5 @@
+
+#include <QQmlEngine>
 #include "undoredomanager.h"
 
 UndoRedoManager *UndoRedoManager::m_instance = nullptr;
@@ -6,7 +8,7 @@ UndoRedoManager::UndoRedoManager() {}
 
 void UndoRedoManager::registerQml()
 {
-    instance();
+    UndoRedoManager::instance();
     qmlRegisterSingletonType<UndoRedoManager>("UndoRedoManager", 1, 0, "UndoRedoManager", &UndoRedoManager::qmlInstance);
 }
 

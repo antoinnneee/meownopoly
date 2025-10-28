@@ -34,6 +34,7 @@ import UndoRedoManager
     property bool isSelected: false
 
     property var generalMA: null
+    property bool displayLinkEnable: false
     property alias dragArea: dragArea
 
     // Propriété pour stocker la valeur z originale

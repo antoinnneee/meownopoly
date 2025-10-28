@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import TileType
+import EditorEnum
 import "tools"
 import "tools/snapable"
 import "tools/grid"
@@ -20,6 +21,7 @@ Item{
         id: snapableCaseTileComponent
         SnapableCaseTile {
             gridManager: editorGrid
+            displayLinkEnable: logic.tileLogic.displayLinkEnable === true
 
             // Gestion de la suppression
             onElementDeleted: function(element) {
@@ -36,6 +38,7 @@ Item{
         id: snapableDecorationComponent
         SnapableDecoration {
             gridManager: editorGrid
+            displayLinkEnable: logic.tileLogic.displayLinkEnable === true
 
 
             // Gestion de la suppression

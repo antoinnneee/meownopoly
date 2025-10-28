@@ -19,6 +19,8 @@ QtObject {
     property int currentElementHeight: 4
 
     property real currentZOrder: 0.00001
+
+    property bool displayLinkEnable :false
     
     /**
      * @brief Ajuste les dimensions de l'élément pour respecter le ratio natif de l'image
