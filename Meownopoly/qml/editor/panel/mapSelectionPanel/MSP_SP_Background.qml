@@ -392,7 +392,6 @@ Item {
                                     anchors.fill: parent
                                     onClicked: {
                                         logic.mapInfo.backgroundPath = bgImage.source
-                                        logic.mapInfo.backgroundScaling = "Fit" // Valeur par défaut
                                         backgroundView.currentThemeMode = "default"
                                         logic.saveMap(MapTypes.UNDOREDO)
                                     }
