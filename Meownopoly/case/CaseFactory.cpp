@@ -128,7 +128,7 @@ Case* CaseFactory::createCase(const QJsonObject &caseJson)
         newCase = new CaseKibbleDispenser(caseJson); // Tax case as KibbleDispenser
         break;
     default:
-        qDebug() << "Unknown case type:" << type << "creating base Case";
+        // qDebug() << "Unknown case type:" << type << "creating base Case";
         newCase = new Case(caseJson);
         break;
     }
