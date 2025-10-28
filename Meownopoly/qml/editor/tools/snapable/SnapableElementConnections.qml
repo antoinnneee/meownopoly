@@ -93,7 +93,7 @@ Item {
     }
 
     function addPreviousElement(element) {
-        console.log(" function addPreviousElement(element)")
+        // console.log(" function addPreviousElement(element)")
         if (element && !previousElements.includes(element)) {
             // Réaffecter pour notifier QML
             previousElements = previousElements.concat([element])
@@ -106,7 +106,7 @@ Item {
     }
 
     function addNextElement(element) {
-        console.log(" function addNextElement(element)")
+        // console.log(" function addNextElement(element)")
         if (element && !nextElements.includes(element)) {
             // Réaffecter pour notifier QML
             nextElements = nextElements.concat([element])

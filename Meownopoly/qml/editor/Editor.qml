@@ -221,7 +221,7 @@ Rectangle {
         property point targetStartPos: Qt.point(0, 0)
         
         drag.onActiveChanged: {
-            console.log("drag changed", drag.active);
+            // console.log("drag changed", drag.active);
             if (drag.active && drag.target) {
                 // Sauvegarder les positions de départ
                 dragStartPos = Qt.point(mouseX, mouseY)
