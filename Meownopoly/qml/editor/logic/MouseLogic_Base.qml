@@ -17,12 +17,10 @@ QtObject {
     property bool isControlPressed : false
 
 
-
-
     function unselectAllElements()
     {
         for (var i = 0; i < selectedElements.length; i++) {
-            
+
             selectedElements[i].elementUnselected()
             destroyBindingsForElement(selectedElements[i])
         }
@@ -30,7 +28,7 @@ QtObject {
         groupeSelection.x = 0
         groupeSelection.y = 0
         logic.tileLogic.deselectAllTiles() // can be improved
-        
+
         // Effacer la configuration de case
         clearCaseConfiguration()
         return true
@@ -45,44 +43,44 @@ QtObject {
         selectedElements = []
         groupeSelection.x = 0
         groupeSelection.y = 0
-        
+
         // Effacer la configuration de case
         clearCaseConfiguration()
     }
-    
+
     // Fonction pour effacer la configuration de case
     function clearCaseConfiguration() {
         if (!logic.selectionPanel) {
             return
         }
-        
+
         var casePanel = logic.selectionPanel.casePanel
         if (!casePanel) {
             return
         }
-        
+
         var contentArea = casePanel.contentArea
         if (!contentArea) {
             return
         }
-        
+
         var configPanel = contentArea.caseConfigurationPanelSection
         if (!configPanel) {
             return
         }
-        
+
         configPanel.clearTarget()
     }
     function changeMouseMode(mode)
     {
         unselectAllElements()
-        
+
         // Masquer la prévisualisation du lien si on change de mode
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
             console.log("hideLinkPreview")
             logic.mouseLogic.hideLinkPreview()
         }
-        
+
         logic.editorMouseMode = mode
     }
 

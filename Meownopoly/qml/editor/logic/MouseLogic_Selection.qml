@@ -11,6 +11,10 @@ MouseLogic_Base {
     property bool isRectangleSelecting: false
     property point rectangleStart: Qt.point(0, 0)
     property point rectangleCurrent: Qt.point(0, 0)
+    
+    // Nouvelles propriétés pour détecter le mouvement même lors d'un "clic"
+    property point pressPosition: Qt.point(0, 0)
+    property bool hadPressWithoutElement: false
 
     function dragChanged(drag)
     {
@@ -27,25 +31,30 @@ MouseLogic_Base {
     {
         mouse.accepted = true
         
+        // Convertir les coordonnées de mainMa vers workArea
+        var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+        
+        // Stocker la position de presse pour détecter le mouvement plus tard
+        pressPosition = Qt.point(workAreaPos.x, workAreaPos.y)
+        
         // Si aucun élément n'est cliqué, commencer la sélection par rectangle
         if (clickElement.length === 0) {
+            hadPressWithoutElement = true
             isRectangleSelecting = true
             
-            // Convertir les coordonnées de mainMa vers workArea
-            var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
             rectangleStart = Qt.point(workAreaPos.x, workAreaPos.y)
             rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
-            
-            // Empêcher le drag de la carte pendant la sélection rectangle
-            drag.target = null
             
             // Activer le rectangle de sélection
             if (logic.selectionRect) {
                 logic.selectionRect.show()
                 logic.selectionRect.updateGeometry(rectangleStart, rectangleCurrent)
             }
+            drag.target = null
             return
         }
+        
+        hadPressWithoutElement = false
         
         // Si un élément est cliqué, utiliser la logique normale
         var deltaX = groupeSelection.x
@@ -87,8 +96,38 @@ MouseLogic_Base {
     {
         console.log("click left")
         mouse.accepted = true
+        
+        // Calculer la distance parcourue entre press et release
+        var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+        var deltaX = Math.abs(workAreaPos.x - pressPosition.x)
+        var deltaY = Math.abs(workAreaPos.y - pressPosition.y)
+        var hasMoved = (deltaX > 5 || deltaY > 5)  // Seuil de 5 pixels
+        
+        // Si on a appuyé sans élément et qu'on a bougé, c'est une sélection rectangle
+        if (hadPressWithoutElement && hasMoved) {
+            console.log("Détection de sélection rectangle via clic rapide")
+            rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
+            finalizeRectangleSelection()
+            
+            if (logic.selectionRect) {
+                logic.selectionRect.hide()
+            }
+            
+            isRectangleSelecting = false
+            hadPressWithoutElement = false
+            clickElement = []
+            return
+        }
+        
+        // Réinitialiser les flags
+        isRectangleSelecting = false
+        hadPressWithoutElement = false
+        
+        if (logic.selectionRect) {
+            logic.selectionRect.hide()
+        }
 
-        if (clickElement.length == 0) {
+        if (clickElement.length === 0) {
             unselectSelectedElements()
             return
         }
