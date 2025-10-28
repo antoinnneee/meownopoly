@@ -17,7 +17,6 @@ QtObject {
     property bool isControlPressed : false
 
 
-
     function unselectAllElements()
     {
         for (var i = 0; i < selectedElements.length; i++) {
