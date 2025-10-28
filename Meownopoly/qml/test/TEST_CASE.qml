@@ -96,8 +96,7 @@ Rectangle {
                 // Mise à jour de la case quand la sélection change
                 onCurrentValueChanged: {
                     if (currentValue !== undefined) {
-                        console.log(currentValue);
-                       caseInfo = Game.getNewCaseType(currentValue);
+                        aseInfo = Game.getNewCaseType(currentValue);
                         if (caseInfo.type == Case.CS_RestArea)
                         {
                             caseInfo.setOwner(player);

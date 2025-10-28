@@ -47,10 +47,7 @@ import UndoRedoManager
             console.log("null snapable")
             snapableParameters = ItemSnapableFactory.createItemSnapable()
         }
-        console.log("snap completed")
         
-        // displaySettings = snapableParameters.displayParameter
-        // uniqueId = snapableParameters.uniqueId
         snapToGrid()
 
         //Check if we are restoring state from undo/redo

@@ -71,8 +71,6 @@ QtObject {
         currentZOrder = currentZOrder + 0.00001
         // console.log("data:",itemSnapableData)
         itemSnapableData.displayParameter.zOrder  = currentZOrder;
-        // itemSnapableData.print()
-        
         // Créer le bon type de tile selon le tileType
         // On passe directement itemSnapableData pour conserver les références next/prev
         var newTile

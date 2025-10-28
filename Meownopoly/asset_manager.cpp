@@ -276,7 +276,7 @@ QVariantMap AssetManager::getAssetById(const QString &category, const QString &t
     }
     
     Asset asset = model->getAssetById(id);
-    qDebug()<< asset.path;
+    //qDebug()<< asset.path;
     return assetToVariantMap(asset);
 }
 

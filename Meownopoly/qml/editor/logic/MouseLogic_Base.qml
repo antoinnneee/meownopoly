@@ -230,7 +230,6 @@ QtObject {
     {
         selectedElements = selectedList
         for (var i = 0; i < selectedElements.length; i++) {
-            console.log(selectedElements[i])
             selectedElements[i].elementPressed()
             createBindingsForElement(selectedElements[i])
         }

@@ -84,7 +84,7 @@ Case *CaseFactory::createCase(CaseType type)
         newCase = new CaseKibbleDispenser("TAXE NOT IMPLEMENTED");
         break;
     default:
-        qDebug() << "Unknown case type:" << type << "returning NULL";
+        //qDebug() << "Unknown case type:" << type << "returning NULL";
         break;
     }
     return newCase;
