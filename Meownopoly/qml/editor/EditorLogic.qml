@@ -22,6 +22,7 @@ Item {
     required property MapInfo mapInfo
     required property var workArea
 
+
     property var selectionPanel: null  // Référence au SelectionPanel pour la configuration des cases
 
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL

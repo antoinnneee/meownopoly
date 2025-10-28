@@ -26,10 +26,7 @@ QtObject {
         for (var i = 0; i < selectedElements.length; i++) {
             
             selectedElements[i].elementUnselected()
-            // Détruire les bindings si la fonction existe (pour MouseLogic_Selection)
-            if (typeof destroyBindingsForElement === "function") {
-                destroyBindingsForElement(selectedElements[i])
-            }
+            destroyBindingsForElement(selectedElements[i])
         }
         selectedElements = []
         groupeSelection.x = 0
@@ -84,6 +81,7 @@ QtObject {
         
         // Masquer la prévisualisation du lien si on change de mode
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
+            console.log("hideLinkPreview")
             logic.mouseLogic.hideLinkPreview()
         }
         

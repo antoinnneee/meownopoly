@@ -8,6 +8,7 @@ Item {
     property var previousElements: []
     property var nextElements: []
     property var hoveredElement: null
+    visible: parentElement.displayLinkEnable
 
     property alias nextElementsSegments:nextElementsSegments
 
