@@ -18,7 +18,7 @@ MouseLogic_Base {
 
     function dragChanged(drag)
     {
-        console.log("[LOGIC] drag changed")
+        // console.log("[LOGIC] drag changed")
         isDragging = drag.active
         
         // Si on est en mode sélection rectangle, empêcher le drag
@@ -94,7 +94,6 @@ MouseLogic_Base {
 
     function clickedLeft(mouse, drag)
     {
-        console.log("click left")
         mouse.accepted = true
         
         // Calculer la distance parcourue entre press et release
@@ -105,7 +104,7 @@ MouseLogic_Base {
         
         // Si on a appuyé sans élément et qu'on a bougé, c'est une sélection rectangle
         if (hadPressWithoutElement && hasMoved) {
-            console.log("Détection de sélection rectangle via clic rapide")
+            // console.log("Détection de sélection rectangle via clic rapide")
             rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
             finalizeRectangleSelection()
             
@@ -138,7 +137,7 @@ MouseLogic_Base {
                 unselectSelectedElements()
             }
             else if (clickElement[0] !== selectedElements[0]) { // unselect all and select clicked
-                console.log("[LOGIC] unselect all and select clicked", clickElement[0])
+                // console.log("[LOGIC] unselect all and select clicked", clickElement[0])
                 unselectSelectedElements()
                 clickElement[0].elementPressed()
 
@@ -201,7 +200,7 @@ MouseLogic_Base {
     // Fonction pour mettre à jour la sélection par rectangle
     function updateRectangleSelection(mouseX, mouseY) {
         if (!isRectangleSelecting) return
-        console.log("update RectangleSelection")
+        // console.log("update RectangleSelection")
         
         // Convertir les coordonnées de mainMa vers workArea
         var workAreaPos = mainMa.mapToItem(workArea, mouseX, mouseY)
@@ -210,7 +209,7 @@ MouseLogic_Base {
         // Mettre à jour le rectangle visuel
         if (logic.selectionRect) {
             logic.selectionRect.updateGeometry(rectangleStart, rectangleCurrent)
-            console.log("update updateGeometry")
+            // console.log("update updateGeometry")
         }
         
         // Détecter les éléments dans le rectangle et les sélectionner

@@ -49,6 +49,7 @@ private :
 
     int m_currentEditIndex = 0;  // Commence à 0
     QList <QJsonObject> m_listEdits;
+    QJsonObject m_edit;
     bool m_isRestoringState = false;  // Flag pour bloquer les sauvegardes pendant restauration
 };
 
