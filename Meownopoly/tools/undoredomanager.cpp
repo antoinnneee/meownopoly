@@ -6,6 +6,7 @@ UndoRedoManager::UndoRedoManager() {}
 
 void UndoRedoManager::registerQml()
 {
+    instance();
     qmlRegisterSingletonType<UndoRedoManager>("UndoRedoManager", 1, 0, "UndoRedoManager", &UndoRedoManager::qmlInstance);
 }
 

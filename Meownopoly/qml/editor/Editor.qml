@@ -129,6 +129,14 @@ Rectangle {
         // isBackgroundOnGrill: false
     }
 
+    Connections {
+        target: UndoRedoManager
+        function onForceUnSelectAllElement() {
+            unselectAllElements()
+            }
+        }
+
+
     Connections{
         target: Game
 

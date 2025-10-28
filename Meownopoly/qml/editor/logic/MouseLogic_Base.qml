@@ -1,4 +1,7 @@
 import QtQuick 2.15
+import QtQml
+
+import Game
 import UndoRedoManager
 import "../tools/snapable"
 QtObject {
@@ -11,20 +14,12 @@ QtObject {
 
     property bool isControlPressed : false
 
-    property Connections undoRedoConnections: Connections {
-        target: UndoRedoManager
-        function onForceUnSelectAllElement() {
-            while (!unselectAllElements()){
-            }
-        }
-    }
-
 
 
     function unselectAllElements()
     {
         for (var i = 0; i < selectedElements.length; i++) {
-            
+
             selectedElements[i].elementUnselected()
             // Détruire les bindings si la fonction existe (pour MouseLogic_Selection)
             if (typeof destroyBindingsForElement === "function") {
@@ -35,7 +30,7 @@ QtObject {
         groupeSelection.x = 0
         groupeSelection.y = 0
         logic.tileLogic.deselectAllTiles() // can be improved
-        
+
         // Effacer la configuration de case
         clearCaseConfiguration()
         return true
@@ -50,43 +45,43 @@ QtObject {
         selectedElements = []
         groupeSelection.x = 0
         groupeSelection.y = 0
-        
+
         // Effacer la configuration de case
         clearCaseConfiguration()
     }
-    
+
     // Fonction pour effacer la configuration de case
     function clearCaseConfiguration() {
         if (!logic.selectionPanel) {
             return
         }
-        
+
         var casePanel = logic.selectionPanel.casePanel
         if (!casePanel) {
             return
         }
-        
+
         var contentArea = casePanel.contentArea
         if (!contentArea) {
             return
         }
-        
+
         var configPanel = contentArea.caseConfigurationPanelSection
         if (!configPanel) {
             return
         }
-        
+
         configPanel.clearTarget()
     }
     function changeMouseMode(mode)
     {
         unselectAllElements()
-        
+
         // Masquer la prévisualisation du lien si on change de mode
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
             logic.mouseLogic.hideLinkPreview()
         }
-        
+
         logic.editorMouseMode = mode
     }
 

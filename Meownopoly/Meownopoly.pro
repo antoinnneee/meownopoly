@@ -107,6 +107,8 @@ HEADERS += \
 RESOURCES += qml.qrc \
     config.qrc
 
+# CONFIG += qmlcache  # Désactivé car nécessite TARGETPATH pour Qt 6.10+
+
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH = $$PWD
 
