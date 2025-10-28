@@ -194,7 +194,6 @@ import UndoRedoManager
         z: 50  // Au-dessus du contenu mais sous les poignées
         
         onPressed: function(mouse) {
-            console.log("snap pressed detected");
             if (generalMA)
             {
                 if (!isTransparent(mouse)){

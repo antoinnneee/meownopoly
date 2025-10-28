@@ -118,7 +118,6 @@ Rectangle {
     }
 
     function updateFromDisplayParameter(dispParam) {
-        console.log("update from disp")
       if (root.effectsLocked) return
         
         // Update sliders from target values
