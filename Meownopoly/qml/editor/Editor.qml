@@ -128,7 +128,12 @@ Rectangle {
         // backgroundScaling: "Fit"
         // isBackgroundOnGrill: false
     }
-
+    Connections {
+        target: UndoRedoManager
+        function onForceUnSelectAllElement() {
+                logic.mouseLogic.unselectSelectedElements()
+        }
+    }
     Connections{
         target: Game
 
@@ -204,7 +209,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: selectionPanel.top
-        pressAndHoldInterval: 350
+        pressAndHoldInterval: 300
         drag.target: null
         drag.axis: Drag.XAndYAxis
         drag.smoothed: false
@@ -259,13 +264,15 @@ Rectangle {
                 
                 var newX = targetStartPos.x + deltaX
                 var newY = targetStartPos.y + deltaY
-                
-                // Snapper aux positions de la grille
-                var snappedX = Math.round(newX / editorGrid.gridSize) * editorGrid.gridSize
-                var snappedY = Math.round(newY / editorGrid.gridSize) * editorGrid.gridSize
-                
-                drag.target.x = snappedX
-                drag.target.y = snappedY
+                if (drag.target == groupeSelection)
+                {
+                    // Snapper aux positions de la grille
+                   var snappedX = Math.round(newX / editorGrid.gridSize) * editorGrid.gridSize
+                    var snappedY = Math.round(newY / editorGrid.gridSize) * editorGrid.gridSize
+
+                    drag.target.x = snappedX
+                    drag.target.y = snappedY
+                }
             }
         }
 

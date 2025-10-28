@@ -1,4 +1,9 @@
 import QtQuick 2.15
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Window
+import QtQuick.Shapes
+import QtQml
 import UndoRedoManager
 import "../tools/snapable"
 QtObject {
@@ -11,13 +16,6 @@ QtObject {
 
     property bool isControlPressed : false
 
-    property Connections undoRedoConnections: Connections {
-        target: UndoRedoManager
-        function onForceUnSelectAllElement() {
-            while (!unselectAllElements()){
-            }
-        }
-    }
 
 
 
