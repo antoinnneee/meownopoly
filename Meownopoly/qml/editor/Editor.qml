@@ -374,7 +374,13 @@ Rectangle {
         isExpanded: true
 
         //Connect the selected decoration element for effects
-
+        Timer {
+            id: saveMapTimer
+            interval: 100
+            onTriggered: {
+                logic.saveMap(MapTypes.UNDOREDO)
+            }
+        }
         onAssetSelected: function(category, type, id) {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
         }
@@ -386,7 +392,10 @@ Rectangle {
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
-            logic.saveMap(MapTypes.UNDOREDO)
+            if (saveMapTimer.running)
+                saveMapTimer.restart()
+            else
+                saveMapTimer.start()
         }
         onCaseTypeSelectedChanged: {
             if (selectionPanel.caseTypeSelected !== -1)
