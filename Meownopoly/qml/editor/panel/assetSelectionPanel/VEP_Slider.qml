@@ -34,7 +34,7 @@ RowLayout {
         to: 1.0
         value: 0.0
         stepSize: 0.01
-        
+
         onValueChanged: {
                 control.effectChanged(value)
         }

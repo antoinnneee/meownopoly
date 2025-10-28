@@ -102,7 +102,7 @@ void Game::onReturnEdit(QJsonObject newEdit)
         connect(map, &Map::foundItemSnapableTile, this, &Game::foundItemSnapableTile);
         connect(map, &Map::mapLoaded, this, &Game::mapLoaded);
 
-        // Emettre les signaux immédiatement car Map ne les émet plus
+        // Emettre les signaux immediatement car Map ne les émet plus
         for (ItemSnapable *tile : map->tiles()) {
             emit foundItemSnapableTile(tile);
         }
