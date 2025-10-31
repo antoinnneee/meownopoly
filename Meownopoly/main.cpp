@@ -1,8 +1,10 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QSurfaceFormat>
-#include "qmlapp.h"
 #include <QLoggingCategory>
+#include <QSettings>
+
+#include "qmlapp.h"
 
 int main(int argc, char *argv[])
 {
@@ -13,6 +15,7 @@ int main(int argc, char *argv[])
     app.setOrganizationName("Pattoune Corp");
     app.setOrganizationDomain("pattounecorp.ovh");
     app.setApplicationName("Meownopoly");
+
     // Configure surface format to reduce flickering during resize
     /*
     QSurfaceFormat format;

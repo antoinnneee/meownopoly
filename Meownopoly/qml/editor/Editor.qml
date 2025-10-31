@@ -4,15 +4,18 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
-import Game
-import Case
-import ItemSnapable
+import QtCore
+
 import "tools"
 import "tools/grid"
 import "tools/preview"
 import "tools/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
+
+import Game
+import Case
+import ItemSnapable
 import MapFileManager
 import MapTypes
 import MapInfo
@@ -54,27 +57,29 @@ Rectangle {
     property alias escMenu:escMenu
 
     Component.onCompleted: {
-        if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
-            console.log("Creating autosave map")
-            MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
-            logic.saveMap(MapTypes.AUTOSAVE)
-        }
-        else {
-            console.log("Autosave map already exists")
-        }
+        initializeEditor()
+    }
 
-        Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
-        tmpSaver.running = true
+    Settings {
+        id: stEnableAutoSave
+        category: "Editor/SaveConfig"
+        property var currentMap : value("currentMap", mapInfo.autosaveMapName)
+        property var enableAutoSave: value("enableAutoSave", 0)
     }
 
     Timer {
         id: tmpSaver
-        interval: 1000*60  // 1 minute
+        interval: 1000*10  // 1 minute
         repeat: true
         running: false
+        property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
         onTriggered: {
             console.log("Auto-saving map:", mapInfo.mapName)
-            logic.saveMap(MapTypes.AUTOSAVE)
+            if (isMapCustom)
+                logic.saveMap(MapTypes.CUSTOM)
+            else
+                logic.saveMap(MapTypes.AUTOSAVE)
+
             busyTimer.start()
         }
     }
@@ -192,7 +197,10 @@ Rectangle {
                 mapInfo.isBackgroundOnGrill = map.mapInfo.isBackgroundOnGrill
                 mapInfo.musicPath = map.mapInfo.musicPath
             }
-            
+
+            if (mapInfo.mapName !== stEnableAutoSave.currentMap)
+                stEnableAutoSave.setValue("currentMap", mapInfo.mapName)
+
             // Sauvegarder l'état initial pour undo/redo
             logic.saveMap(MapTypes.UNDOREDO)
         }
@@ -506,6 +514,32 @@ Rectangle {
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
             logic.mouseLogic.hideLinkPreview()
         }
+    }
+
+    function initializeEditor() {
+        if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
+            console.log("Creating autosave map")
+            MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
+            logic.saveMap(MapTypes.AUTOSAVE)
+        }
+        else {
+            console.log("Autosave map already exists")
+        }
+        if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
+            if (MapFileManager.mapExists(stEnableAutoSave.currentMap, MapTypes.CUSTOM)){
+                Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)
+                mapInfo.mapName = stEnableAutoSave.currentMap
+            }
+            else {
+                stEnableAutoSave.setValue("currentMap", mapInfo.autosaveMapName)
+                mapInfo.mapName = mapInfo.autosaveMapName
+                Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+            }
+        }
+        else  {
+            Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+        }
+        tmpSaver.running = true
     }
 
     // Function to place the selected asset

@@ -85,6 +85,9 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
             emit foundItemSnapableTile(tile);
         }
         emit mapLoaded(map);
+        //ici
+        // settings.setValue("NomDeLaValeur", "MaValeur");
+
     }
     
     return map;

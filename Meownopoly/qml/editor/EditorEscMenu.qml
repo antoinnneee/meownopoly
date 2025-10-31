@@ -466,14 +466,14 @@ Rectangle {
 
                         Column {
                             width: parent.width
-                            anchors.top: displayMenuBtn.bottom
+                            // anchors.top: displayMenuBtn.bottom
                             anchors.topMargin: 10
                             spacing: 20
 
                             Button {
                                 id: displayMenuBtn
                                 height: 50
-                                width: escMenu.width * 0.8
+                                width: escMenu.width * 0.82
                                 background: Rectangle {
                                     color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
                                     radius: 8
@@ -491,17 +491,17 @@ Rectangle {
                                     font.pixelSize: 13
                                 }
                                 onVisibleChanged: {
-                                    state = stBackGroundEditor.value("showBackground", "true")
+                                    state = stBackGroundEditor.value("selectBackgroundAtStart", "true")
                                 }
                                 onClicked:{
                                     checked = !checked
-                                    stBackGroundEditor.setValue("showBackground", checked)
+                                    stBackGroundEditor.setValue("selectBackgroundAtStart", checked)
                                     stBackGroundEditor.sync()
                                 }
                                 Settings {
                                     id: stBackGroundEditor
-                                    property bool showBackground: value("showBackground", "true")
-                                    category: "showBackgroundEditor"
+                                    property bool selectBackgroundAtStart: value("selectBackgroundAtStart", "true")
+                                    category: "Editor"
                                 }
                             }
                             Row {
@@ -548,7 +548,7 @@ Rectangle {
                                         font.pixelSize: 13
                                     }
                                     onVisibleChanged: {
-                                        enableAutoSaveBtn.indexBt = stEnableAutoSave.value("enableAutoSave", "indexBt")
+                                        enableAutoSaveBtn.indexBt = stEnableAutoSave.value("enableAutoSave", "0")
                                     }
                                     onClicked:{
                                         enableAutoSaveBtn.indexBt % 3 ? enableAutoSaveBtn.indexBt += 1 : enableAutoSaveBtn.indexBt = 1
@@ -557,42 +557,41 @@ Rectangle {
                                     }
                                     Settings {
                                         id: stEnableAutoSave
-                                        property bool enableAutoSave: value("enableAutoSave", "indexBt")
-                                        category: "enableAutoSaveEditor"
+                                        category: "Editor/SaveConfig"
                                     }
                                 }
 
-                                Button {
-                                    id: saveType
-                                    background: Rectangle {
-                                        color: saveType.checked ? "#4A90E2" : "#333333"
-                                        radius: 8
-                                        border.width: 1
-                                        border.color: saveType.checked ? "#FFFFFF" : "#555555"
-                                    }
-                                    contentItem: Text {
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        text: saveType.checked ? "Sauvegarde toute les minutes" :
-                                                                       "Sauvegarde sur changement"
-                                        wrapMode: Text.WordWrap
-                                        color: "white"
-                                        font.pixelSize: 13
-                                    }
-                                    onVisibleChanged: {
-                                        state = stAutoSaveType.value("autoSaveType", "true")
-                                    }
-                                    onClicked:{
-                                        checked = !checked
-                                        stAutoSaveType.setValue("autoSaveType", checked)
-                                        stAutoSaveType.sync()
-                                    }
-                                    Settings {
-                                        id: stAutoSaveType
-                                        property bool showBackground: value("autoSaveType", "true")
-                                        category: "enableAutoSaveEditor"
-                                    }
-                                }
+                                // Button {
+                                //     id: saveType
+                                //     background: Rectangle {
+                                //         color: saveType.checked ? "#4A90E2" : "#333333"
+                                //         radius: 8
+                                //         border.width: 1
+                                //         border.color: saveType.checked ? "#FFFFFF" : "#555555"
+                                //     }
+                                //     contentItem: Text {
+                                //         horizontalAlignment: Text.AlignHCenter
+                                //         verticalAlignment: Text.AlignVCenter
+                                //         text: saveType.checked ? "Sauvegarde toute les minutes" :
+                                //                                        "Sauvegarde sur changement"
+                                //         wrapMode: Text.WordWrap
+                                //         color: "white"
+                                //         font.pixelSize: 13
+                                //     }
+                                //     onVisibleChanged: {
+                                //         state = stAutoSaveType.value("autoSaveType", "true")
+                                //     }
+                                //     onClicked:{
+                                //         checked = !checked
+                                //         stAutoSaveType.setValue("autoSaveType", checked)
+                                //         stAutoSaveType.sync()
+                                //     }
+                                //     Settings {
+                                //         id: stAutoSaveType
+                                //         property bool selectBackgroundAtStart: value("autoSaveType", "true")
+                                //         category: "editor/SaveConfig"
+                                //     }
+                                // }
                             }
 
                             // Section Graphiques
