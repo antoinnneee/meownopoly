@@ -64,8 +64,40 @@ Rectangle {
         }
 
         Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+        tmpSaver.running = true
     }
 
+    Timer {
+        id: tmpSaver
+        interval: 1000*60  // 1 minute
+        repeat: true
+        running: false
+        onTriggered: {
+            console.log("Auto-saving map:", mapInfo.mapName)
+            logic.saveMap(MapTypes.AUTOSAVE)
+            busyTimer.start()
+        }
+    }
+
+    Timer {
+        id: busyTimer
+        interval: 2500
+        repeat: false
+        running: false
+        triggeredOnStart: true
+        onTriggered: {
+            savingIndicator.running = savingIndicator.running ? false : true
+        }
+    }
+
+    BusyIndicator {
+        id: savingIndicator
+        anchors.right: parent.right
+        anchors.top: parent.top
+        width: Screen.pixelDensity * 10
+        height: width
+        running: false
+    }
 
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
@@ -106,12 +138,12 @@ Rectangle {
         else if (event.key === Qt.Key_Y) {
             if (logic.mouseLogic.isControlPressed)
                 console.log("Redo requested via Ctrl+Y")
-                Game.askNext()
+            Game.askNext()
         }
         else if (event.key === Qt.Key_Z) {
             if (logic.mouseLogic.isControlPressed)
                 console.log("Undo requested via Ctrl+Z")
-                Game.askPreview()
+            Game.askPreview()
         }
     }
     Keys.onReleased:{
@@ -131,7 +163,7 @@ Rectangle {
     Connections {
         target: UndoRedoManager
         function onForceUnSelectAllElement() {
-                logic.mouseLogic.unselectSelectedElements()
+            logic.mouseLogic.unselectSelectedElements()
         }
     }
     Connections{
@@ -267,7 +299,7 @@ Rectangle {
                 if (drag.target == groupeSelection)
                 {
                     // Snapper aux positions de la grille
-                   var snappedX = Math.round(newX / editorGrid.gridSize) * editorGrid.gridSize
+                    var snappedX = Math.round(newX / editorGrid.gridSize) * editorGrid.gridSize
                     var snappedY = Math.round(newY / editorGrid.gridSize) * editorGrid.gridSize
 
                     drag.target.x = snappedX
@@ -519,7 +551,7 @@ Rectangle {
 
     // Menu d'échappement
     EditorEscMenu {
-        id: escMenu        
+        id: escMenu
         onVisibleChanged: {
             if (!visible) {
                 // Redonner le focus à l'éditeur quand le menu se ferme

@@ -9,8 +9,8 @@ import MapTypes
 
 Rectangle {
     id: escMenu
-    width: 400
-    height: 500
+    width: Screen.pixelDensity * 150
+    height: Screen.pixelDensity * 125
     anchors.centerIn: parent
     color: "#2C2C2C"
     radius: 10
@@ -463,45 +463,138 @@ Rectangle {
                     ScrollView {
                         anchors.fill: parent
                         anchors.margins: 15
-                        
-                        Button {
-                            id: displayMenuBtn
-                            height: 50
-                            background: Rectangle {
-                                color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
-                                radius: 8
-                                border.width: 1
-                                border.color: displayMenuBtn.checked ? "#FFFFFF" : "#555555"
-                            }
-                            contentItem: Text {
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                                text: displayMenuBtn.checked ? "Afficher la modification de carte au lancement de l'éditeur ?" :
-                                                               "Ne pas afficher la modification de carte au lancement de l'éditeur ?"
-                                color: "white"
-                                font.pixelSize: 13
-                            }
-                            onVisibleChanged: {
-                                state = stBackGroundEditor.value("showBackground", "true")
-                            }
-                            onClicked:{
-                                checked = !checked
-                                stBackGroundEditor.setValue("showBackground", checked)
-                                stBackGroundEditor.sync()
-                            }
-                            Settings {
-                                id: stBackGroundEditor
-                                category: "showBackgroundEditor"
-                                property bool showBackground: value("showBackground", "true")
-                            }
-                        }
 
                         Column {
                             width: parent.width
                             anchors.top: displayMenuBtn.bottom
                             anchors.topMargin: 10
                             spacing: 20
-                            
+
+                            Button {
+                                id: displayMenuBtn
+                                height: 50
+                                width: escMenu.width * 0.8
+                                background: Rectangle {
+                                    color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
+                                    radius: 8
+                                    border.width: 1
+                                    border.color: displayMenuBtn.checked ? "#FFFFFF" : "#555555"
+                                }
+                                contentItem: Text {
+                                    id: txt
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: displayMenuBtn.checked ? "Afficher la modification de carte au lancement de l'éditeur ?" :
+                                                                   "Ne pas afficher la modification de carte au lancement de l'éditeur ?"
+                                    wrapMode: Text.WordWrap
+                                    color: "white"
+                                    font.pixelSize: 13
+                                }
+                                onVisibleChanged: {
+                                    state = stBackGroundEditor.value("showBackground", "true")
+                                }
+                                onClicked:{
+                                    checked = !checked
+                                    stBackGroundEditor.setValue("showBackground", checked)
+                                    stBackGroundEditor.sync()
+                                }
+                                Settings {
+                                    id: stBackGroundEditor
+                                    property bool showBackground: value("showBackground", "true")
+                                    category: "showBackgroundEditor"
+                                }
+                            }
+                            Row {
+                                id: rowSave
+                                height: 50
+                                width: escMenu.width
+                                Button {
+                                    id: enableAutoSaveBtn
+                                    height: 50
+                                    width: escMenu.width * 0.5
+                                    property int indexBt : 1
+                                    background: Rectangle {
+                                        color: {
+                                            switch (enableAutoSaveBtn.indexBt){
+                                            case 1 :
+                                            default: "#333333"; break;
+                                            case 2 : "#4A90E2"; break;
+                                            case 3 : "#63C76F"; break;
+                                            }
+                                        }
+                                        border.color: {
+                                            switch (enableAutoSaveBtn.indexBt){
+                                            case 1 :
+                                            default: "#555555"; break;
+                                            case 2 :
+                                            case 3 : "#FFFFFF"; break;
+                                            }
+                                        }
+
+                                        border.width: 1
+                                        radius: 8
+                                    }
+                                    contentItem: Text {
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        text:switch (enableAutoSaveBtn.indexBt){
+                                             case 1 :
+                                             default: "Pas de sauvegarde automatique"; break;
+                                             case 2 : "Sauvegarde sur carte par défaut"; break;
+                                             case 3 : "Sauvegarde sur carte courante"; break;
+                                             }
+                                        wrapMode: Text.WordWrap
+                                        color: "white"
+                                        font.pixelSize: 13
+                                    }
+                                    onVisibleChanged: {
+                                        enableAutoSaveBtn.indexBt = stEnableAutoSave.value("enableAutoSave", "indexBt")
+                                    }
+                                    onClicked:{
+                                        enableAutoSaveBtn.indexBt % 3 ? enableAutoSaveBtn.indexBt += 1 : enableAutoSaveBtn.indexBt = 1
+                                        stEnableAutoSave.setValue("enableAutoSave", enableAutoSaveBtn.indexBt)
+                                        stEnableAutoSave.sync()
+                                    }
+                                    Settings {
+                                        id: stEnableAutoSave
+                                        property bool enableAutoSave: value("enableAutoSave", "indexBt")
+                                        category: "enableAutoSaveEditor"
+                                    }
+                                }
+
+                                Button {
+                                    id: saveType
+                                    background: Rectangle {
+                                        color: saveType.checked ? "#4A90E2" : "#333333"
+                                        radius: 8
+                                        border.width: 1
+                                        border.color: saveType.checked ? "#FFFFFF" : "#555555"
+                                    }
+                                    contentItem: Text {
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        text: saveType.checked ? "Sauvegarde toute les minutes" :
+                                                                       "Sauvegarde sur changement"
+                                        wrapMode: Text.WordWrap
+                                        color: "white"
+                                        font.pixelSize: 13
+                                    }
+                                    onVisibleChanged: {
+                                        state = stAutoSaveType.value("autoSaveType", "true")
+                                    }
+                                    onClicked:{
+                                        checked = !checked
+                                        stAutoSaveType.setValue("autoSaveType", checked)
+                                        stAutoSaveType.sync()
+                                    }
+                                    Settings {
+                                        id: stAutoSaveType
+                                        property bool showBackground: value("autoSaveType", "true")
+                                        category: "enableAutoSaveEditor"
+                                    }
+                                }
+                            }
+
                             // Section Graphiques
                             Column {
                                 width: parent.width

@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QJsonObject>
+#include <QProcess>
+
 
 class UndoRedoManager : public QObject
 {
@@ -32,6 +34,9 @@ public:
 
     bool isRestoringState() const;
     void setIsRestoringState(bool newIsRestoringState);
+
+    // void compareJsonObject(QJsonObject newEdit);
+    // void compareJsonFields(const QJsonObject& oldObj, const QJsonObject& newObj, const QString& path);
 
 public slots:
 
