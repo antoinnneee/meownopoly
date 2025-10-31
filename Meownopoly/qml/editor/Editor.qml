@@ -64,7 +64,7 @@ Rectangle {
         id: stEnableAutoSave
         category: "Editor/SaveConfig"
         property var currentMap : value("currentMap", mapInfo.autosaveMapName)
-        property var enableAutoSave: value("enableAutoSave", 0)
+        property var saveEvent: value("saveEvent", 0)
     }
 
     Timer {
@@ -86,7 +86,7 @@ Rectangle {
 
     Timer {
         id: busyTimer
-        interval: 2500
+        interval: 1500
         repeat: false
         running: false
         triggeredOnStart: true

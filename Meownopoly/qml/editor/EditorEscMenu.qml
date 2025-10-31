@@ -508,11 +508,12 @@ Rectangle {
                                 id: rowSave
                                 height: 50
                                 width: escMenu.width
+                                spacing: 10
                                 Button {
                                     id: enableAutoSaveBtn
                                     height: 50
                                     width: escMenu.width * 0.5
-                                    property int indexBt : 1
+                                    property int indexBt : stEnableAutoSave.value("saveEvent", "0")
                                     background: Rectangle {
                                         color: {
                                             switch (enableAutoSaveBtn.indexBt){
@@ -540,58 +541,116 @@ Rectangle {
                                         text:switch (enableAutoSaveBtn.indexBt){
                                              case 1 :
                                              default: "Pas de sauvegarde automatique"; break;
-                                             case 2 : "Sauvegarde sur carte par défaut"; break;
-                                             case 3 : "Sauvegarde sur carte courante"; break;
+                                             case 2 : "Sauvegarde toute les "; break;
+                                             case 3 : "Sauvegarde sur modification"; break;
                                              }
                                         wrapMode: Text.WordWrap
                                         color: "white"
                                         font.pixelSize: 13
                                     }
                                     onVisibleChanged: {
-                                        enableAutoSaveBtn.indexBt = stEnableAutoSave.value("enableAutoSave", "0")
+                                        enableAutoSaveBtn.indexBt = parseInt(stEnableAutoSave.value("saveEvent", "0"))
+                                        if (enableAutoSaveBtn.indexBt == 2) {
+                                            saveIntervalSpinBox.value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
+                                        }
                                     }
                                     onClicked:{
                                         enableAutoSaveBtn.indexBt % 3 ? enableAutoSaveBtn.indexBt += 1 : enableAutoSaveBtn.indexBt = 1
-                                        stEnableAutoSave.setValue("enableAutoSave", enableAutoSaveBtn.indexBt)
+                                        stEnableAutoSave.setValue("saveEvent", enableAutoSaveBtn.indexBt)
                                         stEnableAutoSave.sync()
+                                        if (enableAutoSaveBtn.indexBt == 2) {
+                                            saveIntervalSpinBox.value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
+                                        }
                                     }
                                     Settings {
                                         id: stEnableAutoSave
                                         category: "Editor/SaveConfig"
                                     }
                                 }
-
-                                // Button {
-                                //     id: saveType
-                                //     background: Rectangle {
-                                //         color: saveType.checked ? "#4A90E2" : "#333333"
-                                //         radius: 8
-                                //         border.width: 1
-                                //         border.color: saveType.checked ? "#FFFFFF" : "#555555"
-                                //     }
-                                //     contentItem: Text {
-                                //         horizontalAlignment: Text.AlignHCenter
-                                //         verticalAlignment: Text.AlignVCenter
-                                //         text: saveType.checked ? "Sauvegarde toute les minutes" :
-                                //                                        "Sauvegarde sur changement"
-                                //         wrapMode: Text.WordWrap
-                                //         color: "white"
-                                //         font.pixelSize: 13
-                                //     }
-                                //     onVisibleChanged: {
-                                //         state = stAutoSaveType.value("autoSaveType", "true")
-                                //     }
-                                //     onClicked:{
-                                //         checked = !checked
-                                //         stAutoSaveType.setValue("autoSaveType", checked)
-                                //         stAutoSaveType.sync()
-                                //     }
-                                //     Settings {
-                                //         id: stAutoSaveType
-                                //         property bool selectBackgroundAtStart: value("autoSaveType", "true")
-                                //         category: "editor/SaveConfig"
-                                //     }
-                                // }
+                                
+                                // Conteneur discret pour l'intervalle de sauvegarde
+                                Row {
+                                    id: intervalRow
+                                    height: 50
+                                    visible: enableAutoSaveBtn.indexBt == 2
+                                    spacing: 8
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    
+                                    // SpinBox discret
+                                    SpinBox {
+                                        id: saveIntervalSpinBox
+                                        height: 35
+                                        width: 50
+                                        from: 1
+                                        to: 5
+                                        value: parseInt(stEnableAutoSave.value("saveInterval", "1"))
+                                        
+                                        contentItem: TextInput {
+                                            text: saveIntervalSpinBox.textFromValue(saveIntervalSpinBox.value, saveIntervalSpinBox.locale)
+                                            font.pixelSize: 12
+                                            color: "#CCCCCC"
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            readOnly: true
+                                            selectByMouse: false
+                                        }
+                                        
+                                        background: Rectangle {
+                                            color: "#2A2A2A"
+                                            radius: 4
+                                            border.color: "#555555"
+                                            border.width: 1
+                                        }
+                                        
+                                        up.indicator: Rectangle {
+                                            x: saveIntervalSpinBox.mirrored ? 0 : parent.width - width
+                                            height: parent.height / 2
+                                            implicitWidth: 18
+                                            color: saveIntervalSpinBox.up.pressed ? "#3A3A3A" : "#2A2A2A"
+                                            border.color: "#555555"
+                                            border.width: 1
+                                            radius: 4
+                                            Text {
+                                                text: "+"
+                                                color: "#CCCCCC"
+                                                font.pixelSize: 11
+                                                anchors.centerIn: parent
+                                            }
+                                        }
+                                        
+                                        down.indicator: Rectangle {
+                                            x: saveIntervalSpinBox.mirrored ? 0 : parent.width - width
+                                            y: parent.height / 2
+                                            height: parent.height / 2
+                                            implicitWidth: 18
+                                            color: saveIntervalSpinBox.down.pressed ? "#3A3A3A" : "#2A2A2A"
+                                            border.color: "#555555"
+                                            border.width: 1
+                                            radius: 4
+                                            Text {
+                                                text: "−"
+                                                color: "#CCCCCC"
+                                                font.pixelSize: 11
+                                                anchors.centerIn: parent
+                                            }
+                                        }
+                                        
+                                        onValueChanged: {
+                                            if (visible) {
+                                                stEnableAutoSave.setValue("saveInterval", value.toString())
+                                                stEnableAutoSave.sync()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Texte "minutes"
+                                    Text {
+                                        text: "minutes"
+                                        color: "#CCCCCC"
+                                        font.pixelSize: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
                             }
 
                             // Section Graphiques
