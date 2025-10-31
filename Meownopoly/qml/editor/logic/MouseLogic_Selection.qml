@@ -1,5 +1,5 @@
 import QtQuick 2.15
-import "../tools/snapable"
+import "../../component/snapable"
 
 import MapTypes
 

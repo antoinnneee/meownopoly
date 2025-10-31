@@ -7,10 +7,10 @@ import QtQml
 import Game
 import Case
 import ItemSnapable
-import "tools"
-import "tools/grid"
-import "tools/preview"
-import "tools/snapable"
+import "../component"
+import "../component/grid"
+import "../component/preview"
+import "../component/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
 import MapFileManager

@@ -1,7 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../../../item_icon"
+import "../../ui_item"
+
 import MapTypes
 
 Item {

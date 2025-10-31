@@ -1,9 +1,9 @@
 import QtQuick 2.15
 import TileType
 import EditorEnum
-import "tools"
-import "tools/snapable"
-import "tools/grid"
+import "../component"
+import "../component/snapable"
+import "../component/grid"
 
 Item{
     id: editorDynamicComponent

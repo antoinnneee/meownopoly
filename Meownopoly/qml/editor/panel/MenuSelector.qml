@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../../item_icon"
+import "../../ui_item"
 import ".."
 
 Item {

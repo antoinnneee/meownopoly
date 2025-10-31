@@ -10,43 +10,12 @@
         <file>qml/test/TEST_PARTICLE_BUTTON_SIMPLE.qml</file>
         <file>qml/test/TEST_VIEW_3.qml</file>
         <file>qml/test/TEST_ASSET_MANAGER.qml</file>
-        <file>qml/case/CaseTile.qml</file>
-        <file>qml/case/StarRating.qml</file>
-        <file>qml/case/TileContent.qml</file>
-        <file>qml/case/TileDetailsPopup.qml</file>
-        <file>qml/case/details/JailDetails.qml</file>
-        <file>qml/case/details/KibbleDispenserDetails.qml</file>
-        <file>qml/case/details/RestAreaDetails.qml</file>
-        <file>qml/case/content/RestAreaContent.qml</file>
         <file>qml/test/TEST_BOARD.qml</file>
-        <file>qml/case/content/KibbleDispenserContent.qml</file>
-        <file>qml/case/content/CardBoardBoxContent.qml</file>
-        <file>qml/case/content/CatNipContent.qml</file>
-        <file>qml/case/content/JailContent.qml</file>
-        <file>qml/case/content/ToJailContent.qml</file>
-        <file>qml/case/content/CatDoorContent.qml</file>
-        <file>qml/case/content/FreeNapContent.qml</file>
-        <file>qml/case/content/CatDeviceContent.qml</file>
-        <file>qml/case/details/CardBoardBoxDetails.qml</file>
-        <file>qml/case/details/CatNipDetails.qml</file>
-        <file>qml/case/details/ToJailDetails.qml</file>
-        <file>qml/case/details/CatDoorDetails.qml</file>
-        <file>qml/case/details/FreeNapDetails.qml</file>
-        <file>qml/case/details/CatDeviceDetails.qml</file>
-        <file>qml/case/OwnershipIndicator.qml</file>
         <file>qml/editor/Editor.qml</file>
         <file>qml/test/TEST_3D.qml</file>
         <file>qml/editor/CreationPanel.qml</file>
         <file>qml/editor/InfoPanel.qml</file>
         <file>qml/editor/panel/PlayerSelector.qml</file>
-        <file>qml/editor/tools/snapable/ResizeHandle.qml</file>
-        <file>qml/editor/tools/snapable/SnapableElement.qml</file>
-        <file>qml/editor/tools/snapable/SnapableElementConnections.qml</file>
-        <file>qml/editor/tools/snapable/SnapableElementControl.qml</file>
-        <file>qml/editor/tools/snapable/SnapableElementResizeHandles.qml</file>
-        <file>qml/editor/tools/snapable/SnapableElementDeleteAnimation.qml</file>
-        <file>qml/editor/tools/snapable/SnapableElementCreateAnimation.qml</file>
-        <file>qml/case/PlayerTile.qml</file>
         <file>qml/launcher/Launcher.qml</file>
         <file>qml/launcher/LauncherHeader.qml</file>
         <file>qml/launcher/ServerConfigSection.qml</file>
@@ -62,7 +31,6 @@
         <file>qml/menu/pawTools.js</file>
         <file>qml/editor/EditorLogic.qml</file>
         <file>qml/editor/EditorDynamicComponent.qml</file>
-        <file>qml/item_icon/LayerVisualizer.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_CategoryGrid.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_Grid.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_Item.qml</file>
@@ -85,18 +53,7 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_ContentArea.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_Content.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_SearchBar.qml</file>
-        <file>qml/case/content/RestAreaContent2.qml</file>
-        <file>qml/case/content/CaseContent_Base.qml</file>
-        <file>qml/case/content/CardBoardBoxContent2.qml</file>
-        <file>qml/case/content/KibbleDispenserContent2.qml</file>
-        <file>qml/case/content/CatDoorContent2.qml</file>
-        <file>qml/case/content/CatNipContent2.qml</file>
-        <file>qml/case/content/FreeNapContent2.qml</file>
-        <file>qml/case/content/JailContent2.qml</file>
-        <file>qml/case/content/ToJailContent2.qml</file>
-        <file>qml/case/content/CatDeviceContent2.qml</file>
         <file>qml/editor/panel/MenuSelector_Button.qml</file>
-        <file>qml/item_icon/SizeSelector.qml</file>
         <file>qml/editor/logic/PlanLogic.qml</file>
         <file>qml/editor/logic/ScrollLogic.qml</file>
         <file>qml/editor/logic/TileLogic.qml</file>
@@ -104,7 +61,6 @@
         <file>qml/editor/panel/assetSelectionPanel/VEP_ButtonMirror.qml</file>
         <file>qml/editor/logic/ScrollLogic_POSE.qml</file>
         <file>qml/editor/Editor_WheelHandler.qml</file>
-        <file>qml/editor/tools/SelectionRect.qml</file>
         <file>qml/editor/logic/MouseLogic_Base.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection.qml</file>
         <file>qml/editor/logic/MouseLogic_Pose.qml</file>
@@ -126,14 +82,6 @@
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/ui_item/ParticleButton.qml</file>
         <file>qml/ui_item/qmldir</file>
-        <file>qml/editor/tools/grid/GridControlPanel.qml</file>
-        <file>qml/editor/tools/grid/GridManager.qml</file>
-        <file>qml/editor/tools/preview/AssetPreviewCursor.qml</file>
-        <file>qml/editor/tools/preview/LinkPreviewCursor.qml</file>
-        <file>qml/editor/tools/snapable/ConnectionOverlay.qml</file>
-        <file>qml/editor/tools/snapable/ConnectionOverlay2.qml</file>
-        <file>qml/editor/tools/snapable/SnapableCaseTile.qml</file>
-        <file>qml/editor/tools/snapable/SnapableDecoration.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/content/main/CSP_CaseTypeCell.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/content/main/CSP_CaseTypeSelector.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CaseConfigurationPanel.qml</file>
@@ -163,5 +111,57 @@
         <file>qml/editor/panel/caseSelectionPanel/title/CSP_ClearButton.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/title/CSP_TitleBar.qml</file>
         <file>qml/ui_item/Player_Profil_Icon.qml</file>
+        <file>qml/component/grid/GridControlPanel.qml</file>
+        <file>qml/component/grid/GridManager.qml</file>
+        <file>qml/component/preview/AssetPreviewCursor.qml</file>
+        <file>qml/component/preview/LinkPreviewCursor.qml</file>
+        <file>qml/component/snapable/ConnectionOverlay.qml</file>
+        <file>qml/component/snapable/ConnectionOverlay2.qml</file>
+        <file>qml/component/snapable/ResizeHandle.qml</file>
+        <file>qml/component/snapable/SnapableCaseTile.qml</file>
+        <file>qml/component/snapable/SnapableDecoration.qml</file>
+        <file>qml/component/snapable/SnapableElement.qml</file>
+        <file>qml/component/snapable/SnapableElementConnections.qml</file>
+        <file>qml/component/snapable/SnapableElementControl.qml</file>
+        <file>qml/component/snapable/SnapableElementCreateAnimation.qml</file>
+        <file>qml/component/snapable/SnapableElementDeleteAnimation.qml</file>
+        <file>qml/component/snapable/SnapableElementResizeHandles.qml</file>
+        <file>qml/component/SelectionRect.qml</file>
+        <file>qml/ui_item/LayerVisualizer.qml</file>
+        <file>qml/ui_item/SizeSelector.qml</file>
+        <file>qml/component/case/content/CardBoardBoxContent.qml</file>
+        <file>qml/component/case/content/CardBoardBoxContent2.qml</file>
+        <file>qml/component/case/content/CaseContent_Base.qml</file>
+        <file>qml/component/case/content/CatDeviceContent.qml</file>
+        <file>qml/component/case/content/CatDeviceContent2.qml</file>
+        <file>qml/component/case/content/CatDoorContent.qml</file>
+        <file>qml/component/case/content/CatDoorContent2.qml</file>
+        <file>qml/component/case/content/CatNipContent.qml</file>
+        <file>qml/component/case/content/CatNipContent2.qml</file>
+        <file>qml/component/case/content/FreeNapContent.qml</file>
+        <file>qml/component/case/content/FreeNapContent2.qml</file>
+        <file>qml/component/case/content/JailContent.qml</file>
+        <file>qml/component/case/content/JailContent2.qml</file>
+        <file>qml/component/case/content/KibbleDispenserContent.qml</file>
+        <file>qml/component/case/content/KibbleDispenserContent2.qml</file>
+        <file>qml/component/case/content/RestAreaContent.qml</file>
+        <file>qml/component/case/content/RestAreaContent2.qml</file>
+        <file>qml/component/case/content/ToJailContent.qml</file>
+        <file>qml/component/case/content/ToJailContent2.qml</file>
+        <file>qml/component/case/details/CardBoardBoxDetails.qml</file>
+        <file>qml/component/case/details/CatDeviceDetails.qml</file>
+        <file>qml/component/case/details/CatDoorDetails.qml</file>
+        <file>qml/component/case/details/CatNipDetails.qml</file>
+        <file>qml/component/case/details/FreeNapDetails.qml</file>
+        <file>qml/component/case/details/JailDetails.qml</file>
+        <file>qml/component/case/details/KibbleDispenserDetails.qml</file>
+        <file>qml/component/case/details/RestAreaDetails.qml</file>
+        <file>qml/component/case/details/ToJailDetails.qml</file>
+        <file>qml/component/case/CaseTile.qml</file>
+        <file>qml/component/case/OwnershipIndicator.qml</file>
+        <file>qml/component/case/PlayerTile.qml</file>
+        <file>qml/component/case/StarRating.qml</file>
+        <file>qml/component/case/TileContent.qml</file>
+        <file>qml/component/case/TileDetailsPopup.qml</file>
     </qresource>
 </RCC>

@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import AssetManager
 import DecorationParameter
-import "../../panel"
+import "../../editor/panel"
 import "../snapable"
 import "../grid"
 import Game

@@ -6,9 +6,9 @@ import QtQuick.Shapes
 import QtQuick.Dialogs
 import QtCore
 
-import "tools"
-import "tools/snapable"
-import "tools/grid"
+import "../component"
+import "../component/snapable"
+import "../component/grid"
 import "panel"
 import "panel/assetSelectionPanel"
 

@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import EditorEnum
-import "../tools/snapable"
+import "../../component/snapable"
 
 MouseLogic_Selection {
     id: mouseLogic

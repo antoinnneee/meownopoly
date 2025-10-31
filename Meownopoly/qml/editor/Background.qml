@@ -7,8 +7,7 @@ import QtQml
 import Game
 import Case
 import ItemSnapable
-import "tools"
-import "tools/snapable"
+import "../component/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
 import MapInfo

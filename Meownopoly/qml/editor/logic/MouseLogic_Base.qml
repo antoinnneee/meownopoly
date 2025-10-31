@@ -5,7 +5,7 @@ import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
 import UndoRedoManager
-import "../tools/snapable"
+import "../../component/snapable"
 QtObject {
     id: mouseLogicBase
     property list<SnapableElement> clickElement:[]
