@@ -31,8 +31,8 @@ Rectangle {
     border.width: 0
 
     Player_Profil_Icon{
-        x:100
-        y:100
+        x:10
+        y:10
         decorationParameter.decorationCategory: "ui"
         decorationParameter.decorationType: "cat"
         decorationParameter.decorationId: "cat"

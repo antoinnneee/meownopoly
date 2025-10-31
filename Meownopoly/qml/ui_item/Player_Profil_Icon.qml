@@ -17,7 +17,7 @@ Item {
     
     // Propriétés configurables
     property DecorationParameter decorationParameter: DecorationParameter {}
-    property real iconSize: Screen.pixelDensity * 50
+    property real iconSize: Screen.pixelDensity * 30
     property real cornerRadius: 10
     property color frameColor: "#FFFFFF"
     property real frameWidth: Screen.pixelDensity*1
