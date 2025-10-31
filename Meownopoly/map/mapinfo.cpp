@@ -20,6 +20,7 @@ MapInfo::MapInfo(const QJsonObject &json)
     m_backgroundPath = json["backgroundPath"].toString();
     m_backgroundScaling = json["backgroundScaling"].toString();
     m_backgroundTileSize = json["backgroundTileSize"].toInt(50);
+    m_isBackgroundOnGrill = json["isBackgroundOnGrill"].toBool(false);
 
     m_musicPath = json["musicPath"].toString();
 
@@ -37,6 +38,7 @@ QString MapInfo::toJSON()
     json["backgroundPath"] = m_backgroundPath;
     json["backgroundScaling"] = m_backgroundScaling;
     json["backgroundTileSize"] = m_backgroundTileSize;
+    json["isBackgroundOnGrill"] = m_isBackgroundOnGrill;
 
     json["musicPath"] = m_musicPath;
 
