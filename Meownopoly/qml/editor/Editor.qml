@@ -69,9 +69,9 @@ Rectangle {
 
     Timer {
         id: tmpSaver
-        interval: 1000*10  // 1 minute
+        interval: stEnableAutoSave.value("saveInterval", "1")
         repeat: true
-        running: false
+        running: stEnableAutoSave.value("saveEvent", 0) === 1 ? true : false
         property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
         onTriggered: {
             console.log("Auto-saving map:", mapInfo.mapName)
@@ -539,7 +539,9 @@ Rectangle {
         else  {
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         }
-        tmpSaver.running = true
+        if (stEnableAutoSave.value("saveEvent", 0) === 1) {
+            tmpSaver.start()
+        }
     }
 
     // Function to place the selected asset

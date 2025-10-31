@@ -11,6 +11,7 @@
 #include "map/mapfilemanager.h"
 #include "map/maptypes.h"
 #include "map/map.h"
+#include "qsettings.h"
 #include "tools/undoredomanager.h"
 
 QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray)
@@ -47,6 +48,7 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
     }
 
     jsonObject["snapableTiles"] = snapableTilesArray;
+    QSettings settings;
     switch (mapType) {
     case MapTypes::AUTOSAVE:
     case MapTypes::CUSTOM:
@@ -55,6 +57,9 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
     case MapTypes::UNDOREDO:
         emit updateListEdits(jsonObject);
         flag = true;
+        settings.beginGroup("Editor/SaveConfig");
+        if (settings.value("saveEvent", 0).toInt() == 2) flag = MapFileManager::saveMap(jsonObject, mapInfo->getMapName(), mapType);
+        settings.endGroup();
         break;
     default:
         break;
