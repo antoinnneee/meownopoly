@@ -122,12 +122,6 @@ Rectangle {
 
     property MapInfo mapInfo: MapInfo{
         mapName: autosaveMapName
-        // mapDescription: ""
-        // mapCreationDate: ""
-        // mapLastModified: ""
-        // backgroundPath: ""
-        // backgroundScaling: "Fit"
-        // isBackgroundOnGrill: false
     }
     Connections {
         target: UndoRedoManager
@@ -173,17 +167,11 @@ Rectangle {
         id: logic
         workArea: workArea
         editorGrid: editorGrid
-        editorDynamicComponent: editorDynamicComponent
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
         selectionPanel: selectionPanel
     }
 
-    EditorDynamicComponent {
-        id: editorDynamicComponent
-        editorGrid: editorGrid
-        logic: logic
-    }
 
     // Grille de l'éditeur
     GridManager {

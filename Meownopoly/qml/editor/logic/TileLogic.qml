@@ -11,7 +11,7 @@ QtObject {
     required property var snapableTilesList
     required property var logic
 
-    required property EditorDynamicComponent dynamicComponent
+    required property var dynamicComponent
 
     // Propriétés pour la taille des éléments créés
     property int currentElementWidth: 3

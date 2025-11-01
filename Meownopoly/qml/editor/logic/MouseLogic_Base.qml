@@ -8,7 +8,7 @@ import UndoRedoManager
 import "../../component/snapable"
 import "../../component/grid"
 QtObject {
-    id: mouseLogicBase
+    id: mouseLogic
     property bool isDragging: false
     property list<SnapableElement> clickElement:[]
     property var clickPosition
@@ -148,8 +148,8 @@ QtObject {
     {
         console.log("main MA pressed and hold : ", clickElement.length, " elements")
 
-        var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
-        var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
+        var realPos = mainMa.mapToItem(grid, mouse.x, mouse.y)
+        var gridPos = grid.getGridPosition(realPos.x, realPos.y)
     }
 
     function clickedLeft(mouse, drag)

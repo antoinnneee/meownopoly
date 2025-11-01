@@ -16,12 +16,16 @@ import MapTypes
 Item {
     id: logic
     property list<SnapableElement> snapableTilesList
-    required property EditorDynamicComponent editorDynamicComponent
     required property GridManager editorGrid
     required property var selectionRect
     required property MapInfo mapInfo
     required property var workArea
 
+    property int mmSize : 10
+    function updateSize(mm) {
+        if (mm > 0)
+            mmSize = mm
+    }
 
     property var selectionPanel: null  // Référence au SelectionPanel pour la configuration des cases
 
@@ -123,9 +127,14 @@ Item {
         id: tileLogic
         logic: logic
         snapableTilesList: logic.snapableTilesList
-        dynamicComponent: logic.editorDynamicComponent
+        dynamicComponent: editorDynamicComponent
     }
 
+    EditorDynamicComponent {
+        id: editorDynamicComponent
+        editorGrid: logic.editorGrid
+        logic: logic
+    }
 
     // Propriétés pour la sélection par rectangle
     property bool isSelectionActive: false

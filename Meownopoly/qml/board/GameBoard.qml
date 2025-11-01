@@ -18,6 +18,11 @@ Rectangle {
     color: "lightblue"
     border.width: 0
 
+    Component.onCompleted: {
+
+        Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+    }
+
     property alias snapableTilesList: logic.snapableTilesList
     property MapInfo mapInfo: MapInfo {
         function setMapInfo(info){
@@ -37,14 +42,18 @@ Rectangle {
     Item {
         id: logic
         anchors.fill: parent
+        property alias tileLogic:tileLogic
 
-        property int mmSize : 10
+        property int mmSize : 12
         function updateSize(mm) {
             if (mm > 0)
                 mmSize = mm
         }
         property list<SnapableElement> snapableTilesList
-        property MouseLogic_Base mouseLogic
+        property MouseLogic_Base mouseLogic : MouseLogic_Selection {
+            grid: gameGrid
+            logic: logic
+        }
 
         TileLogic{
             id: tileLogic
@@ -52,13 +61,13 @@ Rectangle {
             snapableTilesList: logic.snapableTilesList
             dynamicComponent: gameDynamicComponent
         }
+        GameDynamicComponent {
+            id: gameDynamicComponent
+            gameGrid: gameGrid
+            logic: logic
+        }
 
     }
-    GameDynamicComponent {
-        id: gameDynamicComponent
-        gameGrid: gameGrid
-        logic: logic
-    }  
 
     // Grille de l'éditeur
     GridManager {
@@ -68,14 +77,25 @@ Rectangle {
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
+        z: 1
     }
-
 
     Background {
         id: background
         grid: gameGrid
         anchors.fill: mapInfo.isBackgroundOnGrill ? gameGrid : parent
+        z: 0
     }
+    Item{
+        id: workArea
+        anchors.fill: gameGrid
+        Item { id: groupeSelection
+            property int gridXPosition:  0
+            property int gridYPosition:  0
+        }
+
+    }
+
     Connections{
         target: Game
 
@@ -93,7 +113,7 @@ Rectangle {
             }
         }
     }
-    
+
     MouseArea{
         id: mainMa
         z:0
@@ -109,21 +129,14 @@ Rectangle {
 
         property list<SnapableElement> clickElement:[]
         property list<var> elementInitialPosition:[]
-        property point dragStartPos: Qt.point(0, 0)
-        property point targetStartPos: Qt.point(0, 0)
-        
+
         drag.onActiveChanged: {
-            // console.log("drag changed", drag.active);
-            if (drag.active && drag.target) {
-                // Sauvegarder les positions de départ
-                dragStartPos = Qt.point(mouseX, mouseY)
-                targetStartPos = Qt.point(drag.target.x, drag.target.y)
-            }
-            logic.mouseLogic.dragChanged(drag)
+            logic.mouseLogic.dragChanged(mouseX, mouseY, drag)
         }
 
         function elementClicked(tile)
         {
+            console.log("element clicked")
             logic.mouseLogic.elementClicked(tile, drag)
         }
 

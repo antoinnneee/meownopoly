@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls
+import QtQuick.Window
 import ".."
 
 
@@ -8,14 +9,21 @@ import ".."
  */
 Item {
     id: gridManager
-    
-    // Propriétés configurables
+
     required property var logic
+
+
+
     property int mmSize: logic.mmSize
-
     property int gridSize: Screen.pixelDensity * mmSize
-    onGridSizeChanged: {
+    property int boardSize:  gridSize * 600 // 600 croisillons
+    // Propriétés configurables
+    width: boardSize
+    height: boardSize
 
+    onGridSizeChanged: {
+        console.log("gridsize change :", mmSize, boardSize)
+        console.log("width height :", width, height)
        var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
                                                             : 0
        var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
@@ -24,9 +32,9 @@ Item {
             gridContainer.verticalLinesCount = newVerticalLinesCount
             gridContainer.horizontalLinesCount = newHorizontalLinesCount
         }
+        console.log("gridsize change :", newVerticalLinesCount, newHorizontalLinesCount, mmSize)
     }
 
-    property int boardSize:  gridSize * 600 // 600 croisillons
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5
     property bool showGrid: true
@@ -49,9 +57,6 @@ Item {
     signal gridRightClicked(var position)
 
 
-    width: boardSize
-    height: boardSize
-    
     // Fonction alternative qui snap directement un élément (plus pratique)
     function snapElement2(element) {
         if (!snapToGrid) return
