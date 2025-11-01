@@ -178,7 +178,7 @@ Item {
         }
         Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
         if (stEnableAutoSave.saveEvent === 3 && isAutoSave === MapTypes.UNDOREDO){
-            console.log("[AUTO SAVE] Triggered after manual save")
+            console.log("[SAVE ON MODIFICATION] Triggered after manual save")
             Game.saveMap(mapInfo, itemSnapableList, mapInfo.mapName === mapInfo.autosaveMapName ? MapTypes.AUTO_SAVE : MapTypes.CUSTOM)
         }
     }

@@ -56,6 +56,8 @@ Rectangle {
 
     property alias escMenu:escMenu
 
+    signal updateSettings()
+
     Component.onCompleted: {
         initializeEditor()
     }
@@ -67,12 +69,17 @@ Rectangle {
         property int saveEvent: value("saveEvent", "0")
     }
 
+    onUpdateSettings: {
+    tmpSaver.repeat = stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
+    tmpSaver.running = stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
+    }
+
     Timer {
         id: tmpSaver
         // interval: stEnableAutoSave.value("saveInterval", "1")
         interval: 1000*10
 
-        repeat: true
+        repeat: stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
         running: stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
         property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
         onTriggered: {
@@ -528,6 +535,7 @@ Rectangle {
             console.log("Autosave map already exists")
         }
         if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
+            console.log("Loading custom map:", stEnableAutoSave.currentMap)
             if (MapFileManager.mapExists(stEnableAutoSave.currentMap, MapTypes.CUSTOM)){
                 Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)
                 mapInfo.mapName = stEnableAutoSave.currentMap
@@ -539,6 +547,7 @@ Rectangle {
             }
         }
         else  {
+            console.log("Loading autosave map")
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         }
         if (stEnableAutoSave.value("saveEvent", "0") === 1) {
@@ -595,6 +604,10 @@ Rectangle {
                 // Redonner le focus à l'éditeur quand le menu se ferme
                 root.forceActiveFocus()
             }
+        }
+        onIndexSaveEvent: {
+            stEnableAutoSave.sync()
+            root.updateSettings()
         }
     }
 }

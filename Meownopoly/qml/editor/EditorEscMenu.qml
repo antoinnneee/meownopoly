@@ -19,7 +19,7 @@ Rectangle {
     onVisibleChanged: isVisble(visible)
 
     signal isVisble(bool visible)
-    
+    signal indexSaveEvent(int index)
     ParticleSystem {
         id: particleSystem
         anchors.fill: parent
@@ -558,6 +558,7 @@ Rectangle {
                                         enableAutoSaveBtn.indexBt % 3 ? enableAutoSaveBtn.indexBt += 1 : enableAutoSaveBtn.indexBt = 1
                                         stEnableAutoSave.setValue("saveEvent", enableAutoSaveBtn.indexBt)
                                         stEnableAutoSave.sync()
+                                        escMenu.indexSaveEvent(enableAutoSaveBtn.indexBt)
                                         if (enableAutoSaveBtn.indexBt == 2) {
                                             saveIntervalSpinBox.value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
                                         }
