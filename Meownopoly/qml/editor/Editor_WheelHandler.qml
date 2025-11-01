@@ -34,10 +34,10 @@ WheelHandler {
                  {
                      logic.scrollLogic.scrollLeft(wheel)
                  }
-                 for (var i = 0; i < root.snapableTilesList.length; i++) {
-                     if (root.snapableTilesList[i]) {
-                         root.snapableTilesList[i].isSelected = false
-                         root.snapableTilesList[i].snapToGridFromGridPos()
+                 for (var i = 0; i < logic.snapableTilesList.length; i++) {
+                     if (logic.snapableTilesList[i]) {
+                         logic.snapableTilesList[i].isSelected = false
+                         logic.snapableTilesList[i].snapToGridFromGridPos()
                      }
                  }
                  

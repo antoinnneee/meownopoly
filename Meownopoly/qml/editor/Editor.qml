@@ -176,7 +176,7 @@ Rectangle {
     // Grille de l'éditeur
     GridManager {
         id: editorGrid
-        logic: logic
+        mmSize: logic.mmSize
         gridColor: "#80000000"
         gridOpacity: 0.3
         showGrid: true
@@ -255,7 +255,8 @@ Rectangle {
     Item {
         id: workArea
         anchors.fill: editorGrid
-        Item { id: groupeSelection
+        Item {
+            id: groupeSelection
             property int gridXPosition:  0
             property int gridYPosition:  0
         }

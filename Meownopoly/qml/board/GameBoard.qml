@@ -1,13 +1,22 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Window
+import QtQuick.Shapes
+import QtQuick.Layouts
+import QtQml
 
 
 import Logger
 import Game
+import Case
 import MapTypes
+import MapFileManager
 import MapInfo
-import "../editor/logic"
+import EditorEnum
+import DisplayParameter
+import DecorationParameter
+import ItemSnapable
+import "logic"
 import "../component"
 import "../component/snapable"
 import "../component/grid"
@@ -21,6 +30,7 @@ Rectangle {
     Component.onCompleted: {
 
         Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+        gameGrid.mmSize = 8
     }
 
     property alias snapableTilesList: logic.snapableTilesList
@@ -39,44 +49,47 @@ Rectangle {
         }
     }
 
-    Item {
+    GameLogic {
         id: logic
         anchors.fill: parent
-        property alias tileLogic:tileLogic
-
-        property int mmSize : 12
-        function updateSize(mm) {
-            if (mm > 0)
-                mmSize = mm
-        }
-        property list<SnapableElement> snapableTilesList
-        property MouseLogic_Base mouseLogic : MouseLogic_Selection {
-            grid: gameGrid
-            logic: logic
-        }
-
-        TileLogic{
-            id: tileLogic
-            logic: logic
-            snapableTilesList: logic.snapableTilesList
-            dynamicComponent: gameDynamicComponent
-        }
-        GameDynamicComponent {
-            id: gameDynamicComponent
-            gameGrid: gameGrid
-            logic: logic
-        }
-
+        grid: gameGrid
     }
+    WheelHandler {
+        onWheel: (wheel)=> {
+                     if (wheel.angleDelta.y > 0)
+                     {
+                         logic.scrollLogic.scrollUp(wheel)
+                     }
+                     else if (wheel.angleDelta.y < 0)
+                     {
+                         logic.scrollLogic.scrollDown(wheel)
+                     }
+                     if (wheel.angleDelta.x > 0)
+                     {
+                         logic.scrollLogic.scrollRight(wheel)
+                     }
+                     else if (wheel.angleDelta.x < 0)
+                     {
+                         logic.scrollLogic.scrollLeft(wheel)
+                     }
+                     for (var i = 0; i < logic.snapableTilesList.length; i++) {
+                         if (logic.snapableTilesList[i]) {
+                             logic.snapableTilesList[i].isSelected = false
+                             logic.snapableTilesList[i].snapToGridFromGridPos()
+                         }
+                     }
 
+                 }
+    }
     // Grille de l'éditeur
     GridManager {
         id: gameGrid
-        logic: logic
+        mmSize: logic.mmSize
         gridColor: "#80000000"
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
+        anchors.fill: parent
         z: 1
     }
 
@@ -89,7 +102,8 @@ Rectangle {
     Item{
         id: workArea
         anchors.fill: gameGrid
-        Item { id: groupeSelection
+        Item {
+            id: groupeSelection
             property int gridXPosition:  0
             property int gridYPosition:  0
         }

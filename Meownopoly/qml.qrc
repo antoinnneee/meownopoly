@@ -165,5 +165,11 @@
         <file>qml/board/GameBoard.qml</file>
         <file>qml/board/GameDynamicComponent.qml</file>
         <file>qml/component/Background.qml</file>
+        <file>qml/board/logic/MouseLogic_Base.qml</file>
+        <file>qml/board/logic/PlanLogic.qml</file>
+        <file>qml/board/logic/ScrollLogic.qml</file>
+        <file>qml/board/logic/ScrollLogic_POSE.qml</file>
+        <file>qml/board/logic/TileLogic.qml</file>
+        <file>qml/board/logic/GameLogic.qml</file>
     </qresource>
 </RCC>

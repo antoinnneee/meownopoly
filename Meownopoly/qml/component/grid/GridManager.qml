@@ -10,11 +10,7 @@ import ".."
 Item {
     id: gridManager
 
-    required property var logic
-
-
-
-    property int mmSize: logic.mmSize
+    property int mmSize: 12
     property int gridSize: Screen.pixelDensity * mmSize
     property int boardSize:  gridSize * 600 // 600 croisillons
     // Propriétés configurables
