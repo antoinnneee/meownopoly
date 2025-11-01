@@ -269,4 +269,71 @@ import UndoRedoManager
     function select() { isSelected = true }
     function deselect() { isSelected = false }
 
+    // Functions to reset effects
+    function resetColorEffects() {
+        snapableParameters.displayParameter.effectBrightness = 0.0
+        snapableParameters.displayParameter.effectContrast = 0.0
+        snapableParameters.displayParameter.effectSaturation = 0.0
+        snapableParameters.displayParameter.effectColorization = 0.0
+        snapableParameters.displayParameter.effectColorizationColor = "#ffffff"
+    }
+
+    function resetBlurEffect() {
+        snapableParameters.displayParameter.effectBlurEnabled = false
+        snapableParameters.displayParameter.effectBlur = 0.0
+        snapableParameters.displayParameter.effectBlurMax = 32
+        snapableParameters.displayParameter.effectBlurMultiplier = 1.0
+    }
+
+    function resetShadowEffect() {
+        snapableParameters.displayParameter.effectShadowEnabled = false
+        snapableParameters.displayParameter.effectShadowBlur = 1.0
+        snapableParameters.displayParameter.effectShadowColor = Qt.rgba(0.0, 0.0, 0.0, 1.0)
+        snapableParameters.displayParameter.effectShadowHorizontalOffset = 0.0
+        snapableParameters.displayParameter.effectShadowVerticalOffset = 0.0
+        snapableParameters.displayParameter.effectShadowOpacity = 1.0
+        snapableParameters.displayParameter.effectShadowScale = 1.0
+    }
+
+    function resetAllEffects() {
+        resetColorEffects()
+        resetBlurEffect()
+        resetShadowEffect()
+    }
+
+    // Functions to reset transforms
+    function resetRotation() {
+        snapableParameters.displayParameter.rotationAngle = 0.0
+    }
+
+    function resetMirror() {
+        snapableParameters.displayParameter.mirrorHorizontal = false
+        snapableParameters.displayParameter.mirrorVertical = false
+    }
+
+    function resetAllTransforms() {
+        resetRotation()
+        resetMirror()
+    }
+
+    function applyVisualEffects(effects)    // generate from VisualEffectsPanel@getCurrentEffects()
+    {
+        // Apply color effects
+        snapableParameters.displayParameter.effectBrightness = effects.brightness
+        snapableParameters.displayParameter.effectContrast = effects.contrast
+        snapableParameters.displayParameter.effectSaturation = effects.saturation
+        snapableParameters.displayParameter.effectColorization = effects.colorization
+        snapableParameters.displayParameter.effectColorizationColor = effects.colorizationColor
+
+        // Apply advanced effects
+        snapableParameters.displayParameter.effectBlurEnabled = effects.blurEnabled
+        snapableParameters.displayParameter.effectBlur = effects.blur
+        snapableParameters.displayParameter.effectShadowEnabled = effects.shadowEnabled
+        snapableParameters.displayParameter.effectShadowBlur = effects.shadowBlur
+
+        // Apply transform effects
+        snapableParameters.displayParameter.rotationAngle = effects.rotationAngle
+        snapableParameters.displayParameter.mirrorHorizontal = effects.mirrorHorizontal
+        snapableParameters.displayParameter.mirrorVertical = effects.mirrorVertical
+    }
 } 

@@ -92,7 +92,7 @@ MouseLogic_Selection {
             currentMouseY = linkSourceCase.globalCenterY
             
             // Créer le composant LinkPreviewCursor
-            var component = Qt.createComponent("../tools/preview/LinkPreviewCursor.qml")
+            var component = Qt.createComponent("../../component/preview/LinkPreviewCursor.qml")
             if (component.status === Component.Ready) {
                 linkPreviewCursor = component.createObject(workArea, {
                     "sourceElement": linkSourceCase,

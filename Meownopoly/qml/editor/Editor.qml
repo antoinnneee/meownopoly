@@ -298,6 +298,26 @@ Rectangle {
             else
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
+        onConnectionRequested:  function (kind) {
+            var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
+
+            /* save selected element to reasign it */
+            var selectedElements = []
+            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                selectedElements.push(logic.mouseLogic.selectedElements[i])
+            }
+            console.log("onConnectionRequested", kind, selectedElements)
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_SELECTION_LINK)
+            logic.mouseLogic.kind = kind
+            logic.mouseLogic.setSelectedElementList(selectedElements)
+            logic.mouseLogic.linkSourceCase = targetElement
+
+
+            // Afficher la prévisualisation du lien
+            if (logic.mouseLogic && logic.mouseLogic.showLinkPreview) {
+                logic.mouseLogic.showLinkPreview()
+            }
+        }
 
     }
 
@@ -331,40 +351,6 @@ Rectangle {
         }
     }
 
-    // Gestion des connexions via le SelectionPanel
-    Connections {
-        target: selectionPanel
-        function onConnectionRequested(kind) {
-            var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
-
-            /* save selected element to reasign it */
-            var selectedElements = []
-            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
-                selectedElements.push(logic.mouseLogic.selectedElements[i])
-            }
-            console.log("onConnectionRequested", kind, selectedElements)
-            logic.mouseLogic.changeMouseMode(EditorEnum.EM_SELECTION_LINK)
-            logic.mouseLogic.kind = kind
-            logic.mouseLogic.setSelectedElementList(selectedElements)
-            logic.mouseLogic.linkSourceCase = targetElement
-        }
-    }
-
-    // Function to apply visual effects to a new decoration tile
-    function applyVisualEffectsToNewTile(newTile) {
-        if (!newTile || !newTile.snapableParameters.displayParameter) return
-
-        // Get current effects from the visual effects panel
-        // if (!selectionPanel.selectedDecoration) return
-
-        var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
-        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
-
-        var currentEffects = visualEffectsPanel.getCurrentEffects()
-        if (!currentEffects) return
-
-        newTile.applyVisualEffects(currentEffects)
-    }
     
     // Fonction pour nettoyer les ressources lors de la fermeture
     Component.onDestruction: {
@@ -375,31 +361,19 @@ Rectangle {
 
     // Function to place the selected asset
     function placeSelectedAsset(gridX, gridY) {
+        var snapableParameters
         gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
         gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
         if (!root.isAssetSelected) {    // place case
-            if (!selectionPanel.caseTypeSelected !== -1)
-            {
-                var snapableParameters = ItemSnapableFactory.createItemSnapable(selectionPanel.caseTypeSelected)
-
-                snapableParameters.displayParameter.gridRelativePositionX = gridX
-                snapableParameters.displayParameter.gridRelativePositionY = gridY
-                snapableParameters.displayParameter.unitSizeWidth = logic.tileLogic.currentElementWidth
-                snapableParameters.displayParameter.unitSizeHeight = logic.tileLogic.currentElementHeight
-                snapableParameters.displayParameter.zLayer = 5
-                snapableParameters.decorationParameter.decorationCategory = selectionPanel.currentSelectedAssetCategory
-                snapableParameters.decorationParameter.decorationType = selectionPanel.currentSelectedAssetType
-                snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
-                var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
+            if (selectionPanel.caseTypeSelected == -1){ //no type selected
+                return
             }
-            return;
+            snapableParameters = ItemSnapableFactory.createItemSnapable(selectionPanel.caseTypeSelected)
         }
-
-        console.log("Placing asset:", selectionPanel.currentSelectedAssetCategory, selectionPanel.currentSelectedAssetType, selectionPanel.currentSelectedAssetId, "at", gridX, gridY)
-
-        // Create appropriate element based on category
-        var snapableParameters = ItemSnapableFactory.createItemSnapable()
-
+        else    // place decoration
+        {
+            snapableParameters = ItemSnapableFactory.createItemSnapable()
+        }
         snapableParameters.displayParameter.gridRelativePositionX = gridX
         snapableParameters.displayParameter.gridRelativePositionY = gridY
         snapableParameters.displayParameter.unitSizeWidth = logic.tileLogic.currentElementWidth
@@ -410,7 +384,12 @@ Rectangle {
         snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
 
         var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
-        root.applyVisualEffectsToNewTile(newTile)
+
+        var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
+        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
+
+        var currentEffects = visualEffectsPanel.getCurrentEffects()
+        newTile.applyVisualEffects(currentEffects)
         mainMa.elementClicked(newTile)
     }
 

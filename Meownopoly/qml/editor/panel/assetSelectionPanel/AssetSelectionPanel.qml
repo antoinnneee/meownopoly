@@ -55,6 +55,10 @@ EditorBottomPanel {
 
     signal effectChanged()
 
+    function getCurrentEffects() {
+        return visualEffectsPanel.getCurrentEffects()
+    }
+
     function updateSelectedAsset(category, type, id)
     {
          if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
