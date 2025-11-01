@@ -14,7 +14,6 @@
         <file>qml/editor/Editor.qml</file>
         <file>qml/test/TEST_3D.qml</file>
         <file>qml/editor/CreationPanel.qml</file>
-        <file>qml/editor/InfoPanel.qml</file>
         <file>qml/editor/panel/PlayerSelector.qml</file>
         <file>qml/launcher/Launcher.qml</file>
         <file>qml/launcher/LauncherHeader.qml</file>
@@ -171,5 +170,6 @@
         <file>qml/board/GameLogic.qml</file>
         <file>qml/board/Game_WheelHandler.qml</file>
         <file>qml/component/GlobalMa.qml</file>
+        <file>qml/component/AdminCommandPanel.qml</file>
     </qresource>
 </RCC>

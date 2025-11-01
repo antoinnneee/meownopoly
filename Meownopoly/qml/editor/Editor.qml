@@ -30,6 +30,19 @@ Rectangle {
     color: "lightblue"
     border.width: 0
 
+    AdminCommandPanel{
+        id: adminCommandPanel
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 10
+        visible: false
+
+        height: Screen.pixelDensity * 100
+        z: 120
+        
+    }
+
     Player_Profil_Icon{
         x:10
         y:10
@@ -48,6 +61,7 @@ Rectangle {
     property alias escMenu:escMenu
 
     Component.onCompleted: {
+        editorGrid.mmSize = 8
         if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
             console.log("Creating autosave map")
             MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
@@ -69,6 +83,7 @@ Rectangle {
     }
 
     Keys.onPressed: function(event) {
+        console.log("event", event.key)
         if (event.key === Qt.Key_Delete) {
             var selectItem = logic.mouseLogic.selectedElements
             for (var i = 0; i < selectItem.length; i++) {
@@ -106,6 +121,11 @@ Rectangle {
             if (logic.mouseLogic.isControlPressed)
                 console.log("Undo requested via Ctrl+Z")
                 Game.askPreview()
+        }
+        else if (event.key == 178)
+        {
+            adminCommandPanel.visible = !adminCommandPanel.visible
+
         }
     }
     Keys.onReleased:{
@@ -151,6 +171,10 @@ Rectangle {
             
             // Sauvegarder l'état initial pour undo/redo
             logic.saveMap(MapTypes.UNDOREDO)
+        }
+
+        function onClearCurrentMap() {
+            logic.removeCurrentMap()
         }
     }
 
@@ -323,33 +347,9 @@ Rectangle {
 
     MenuMapAtStart {
         onBackgroundSelected: function() {
-            infoPanel.visible = true
         }
     }
 
-
-
-    // Panneau d'information sur l'élément sélectionné
-    InfoPanel {
-        id: infoPanel
-        visible: false  // Hidden by default
-
-        anchors {
-            top: parent.top
-            left: parent.left
-            margins: 10
-        }
-
-        gridManager: editorGrid
-        totalTilesCount: snapableTilesList.length
-    }
-
-    Connections {
-        target: Game
-        function onClearCurrentMap() {
-            logic.removeCurrentMap()
-        }
-    }
 
     
     // Fonction pour nettoyer les ressources lors de la fermeture

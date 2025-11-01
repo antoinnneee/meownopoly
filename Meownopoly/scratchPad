@@ -1,0 +1,30 @@
+
+Qt.createQmlObject(`
+                import QtQuick
+                Item{
+                    Repeater{
+                        id: repeater
+                        model: 0
+                        Rectangle{
+                            color: "red"
+                            width: 20
+                            height: 20
+                            z:1000
+                        }
+                    }
+                    Timer{
+                        interval: 1000
+                        running: true
+                        onTriggered: {
+                            repeater.model += 1
+                            var randomColor = "rgb(" + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + ")"
+                            repeater.itemAt(repeater.model - 1).color = randomColor
+                            repeater.itemAt(repeater.model - 1).x = Math.floor(Math.random() * 500)
+                            repeater.itemAt(repeater.model - 1).y = Math.floor(Math.random() * 500)
+                        }
+                    }
+                }
+                `,
+                editorGrid,
+                "myRect"
+            );
