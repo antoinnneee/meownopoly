@@ -31,8 +31,8 @@ Item {
 
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
-    onEditorMouseModeChanged: {
-    }
+    property ScrollLogic scrollLogic
+    property MouseLogic_Base mouseLogic
 
     property alias planLogic: planLogic
     property alias tileLogic: tileLogic
@@ -44,84 +44,24 @@ Item {
         snapableTilesList: logic.snapableTilesList
     }
 
-    property MouseLogic_Base mouseLogic
-
-    Component {
-        id: mouseLogic_selection_comp
-        MouseLogic_Selection {
-            id: mouseLogic_selection
-            logic: _logic
-            grid: _grid
-            Component.onCompleted: {
-                logic.mouseLogic = mouseLogic_selection
-            }
-        }
-    }
-
-    Component {
-        id: mouseLogic_pose_comp
-        MouseLogic_Pose {
-            id: mouseLogic_pose
-            logic: _logic
-            grid: _grid
-            Component.onCompleted: {
-                logic.mouseLogic = mouseLogic_pose
-            }
-        }
-    }
-
-    Component {
-        id: mouseLogic_selectionLink_comp
-        MouseLogic_Selection_link {
-            id: mouseLogic_selectionLink
-            logic: _logic
-            Component.onCompleted: {
-                logic.mouseLogic = mouseLogic_selectionLink
-            }
-        }
-    }
 
     Loader {
         id: mouseLogicLoader
-        sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? mouseLogic_selection_comp
-                        : (logic.editorMouseMode === EditorEnum.EM_POSE) ? mouseLogic_pose_comp
-                        : mouseLogic_selectionLink_comp
+        sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? editorDynamicComponent.mouseLogic_selection_comp
+                        : (logic.editorMouseMode === EditorEnum.EM_POSE) ? editorDynamicComponent.mouseLogic_pose_comp
+                        : editorDynamicComponent.mouseLogic_selectionLink_comp
         property var _logic : parent
         property var _grid: editorGrid
-    }
-    property ScrollLogic scrollLogic
-
-    Component{
-        id: scrollLogic_normal_comp
-        ScrollLogic {
-            id: scrollLogic_normal
-            editorGrid: _editorGrid
-            logic: _logic
-            Component.onCompleted: {
-                logic.scrollLogic = scrollLogic_normal
-            }
-        }
-    }
-
-    Component{
-        id: scrollLogic_pose_comp
-        ScrollLogic_POSE {
-            id: scrollLogic_pose
-            editorGrid: _editorGrid
-            logic: _logic
-            Component.onCompleted: {
-                logic.scrollLogic = scrollLogic_pose
-            }
-        }
     }
 
     Loader {
         id: scrollLogicLoader
-        sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? scrollLogic_normal_comp
-                                                                         : scrollLogic_pose_comp
+        sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? editorDynamicComponent.scrollLogic_normal_comp
+                                                                         : editorDynamicComponent.scrollLogic_pose_comp
         property GridManager _editorGrid : parent.editorGrid
         property var _logic : parent
     }
+
 
     TileLogic{
         id: tileLogic
@@ -135,13 +75,6 @@ Item {
         editorGrid: logic.editorGrid
         logic: logic
     }
-
-    // Propriétés pour la sélection par rectangle
-    property bool isSelectionActive: false
-    property point selectionStart: Qt.point(0, 0)
-    property point selectionCurrent: Qt.point(0, 0)
-    property bool isSelectingArea: false
-    property int defaultCaseType: Case.CS_KibbleDispenser
 
 
     function removeCurrentMap(){

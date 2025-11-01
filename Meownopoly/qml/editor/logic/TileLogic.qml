@@ -6,6 +6,7 @@ import "../../component/snapable"
 import "../../component/grid"
 import "../../component/preview"
 import ".."
+import MapTypes
 
 QtObject {
     required property var snapableTilesList
@@ -186,6 +187,7 @@ QtObject {
             }
         }
     }
+
 
 }
 

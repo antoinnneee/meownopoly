@@ -18,8 +18,6 @@ Item {
     height: boardSize
 
     onGridSizeChanged: {
-        console.log("gridsize change :", mmSize, boardSize)
-        console.log("width height :", width, height)
        var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
                                                             : 0
        var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
@@ -28,7 +26,6 @@ Item {
             gridContainer.verticalLinesCount = newVerticalLinesCount
             gridContainer.horizontalLinesCount = newHorizontalLinesCount
         }
-        console.log("gridsize change :", newVerticalLinesCount, newHorizontalLinesCount, mmSize)
     }
 
     property color gridColor: "#40808080"
@@ -44,7 +41,6 @@ Item {
     readonly property int snapSize: gridSize
 
     property bool isEdit: false
-    property bool isSelectionActive: false
     
     // Signal émis quand les paramètres changent
     signal gridSettingsChanged()

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import TileType
 import EditorEnum
 import "../component"
+import "logic"
 import "../component/snapable"
 import "../component/grid"
 
@@ -11,6 +12,12 @@ Item{
     required property var logic
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
+    property alias mouseLogic_selection_comp: mouseLogic_selection_comp
+    property alias mouseLogic_pose_comp: mouseLogic_pose_comp
+    property alias mouseLogic_selectionLink_comp: mouseLogic_selectionLink_comp
+    property alias scrollLogic_normal_comp: scrollLogic_normal_comp
+    property alias scrollLogic_pose_comp: scrollLogic_pose_comp
+
 
 
     // Composant dynamique pour créer des SnapableCaseTile
@@ -46,5 +53,68 @@ Item{
 
         }
     }
+
+
+    Component {
+        id: mouseLogic_selection_comp
+        MouseLogic_Selection {
+            id: mouseLogic_selection
+            logic: _logic
+            grid: _grid
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_selection
+            }
+        }
+    }
+
+    Component {
+        id: mouseLogic_pose_comp
+        MouseLogic_Pose {
+            id: mouseLogic_pose
+            logic: _logic
+            grid: _grid
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_pose
+            }
+        }
+    }
+
+    Component {
+        id: mouseLogic_selectionLink_comp
+        MouseLogic_Selection_link {
+            id: mouseLogic_selectionLink
+            logic: _logic
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_selectionLink
+            }
+        }
+    }
+
+
+    Component{
+        id: scrollLogic_normal_comp
+        ScrollLogic {
+            id: scrollLogic_normal
+            editorGrid: _editorGrid
+            logic: _logic
+            Component.onCompleted: {
+                logic.scrollLogic = scrollLogic_normal
+            }
+        }
+    }
+
+    Component{
+        id: scrollLogic_pose_comp
+        ScrollLogic_POSE {
+            id: scrollLogic_pose
+            editorGrid: _editorGrid
+            logic: _logic
+            Component.onCompleted: {
+                logic.scrollLogic = scrollLogic_pose
+            }
+        }
+    }
+
+
 }
 

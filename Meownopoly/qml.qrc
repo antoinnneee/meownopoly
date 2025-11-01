@@ -110,7 +110,6 @@
         <file>qml/editor/panel/caseSelectionPanel/title/CSP_ClearButton.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/title/CSP_TitleBar.qml</file>
         <file>qml/ui_item/Player_Profil_Icon.qml</file>
-        <file>qml/component/grid/GridControlPanel.qml</file>
         <file>qml/component/grid/GridManager.qml</file>
         <file>qml/component/preview/AssetPreviewCursor.qml</file>
         <file>qml/component/preview/LinkPreviewCursor.qml</file>
@@ -168,8 +167,9 @@
         <file>qml/board/logic/MouseLogic_Base.qml</file>
         <file>qml/board/logic/PlanLogic.qml</file>
         <file>qml/board/logic/ScrollLogic.qml</file>
-        <file>qml/board/logic/ScrollLogic_POSE.qml</file>
         <file>qml/board/logic/TileLogic.qml</file>
-        <file>qml/board/logic/GameLogic.qml</file>
+        <file>qml/board/GameLogic.qml</file>
+        <file>qml/board/Game_WheelHandler.qml</file>
+        <file>qml/component/GlobalMa.qml</file>
     </qresource>
 </RCC>

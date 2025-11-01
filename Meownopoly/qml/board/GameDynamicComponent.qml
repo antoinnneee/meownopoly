@@ -4,6 +4,7 @@ import EditorEnum
 
 import "../component/snapable"
 import "../component/grid"
+import "logic"
 
 Item{
     id: gameDynamicComponent
@@ -11,6 +12,8 @@ Item{
     required property var logic
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
+    property alias mouseLogic_selection_comp: mouseLogic_selection_comp
+    property alias scrollLogic_normal_comp: scrollLogic_normal_comp
 
 
     Component {
@@ -44,5 +47,30 @@ Item{
 
         }
     }
+
+
+    Component {
+        id: mouseLogic_selection_comp
+        MouseLogic_Base {
+            id: mouseLogic_selection
+            logic: _logic
+            grid: _grid
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_selection
+            }
+        }
+    }
+    Component{
+        id: scrollLogic_normal_comp
+        ScrollLogic {
+            id: scrollLogic_normal
+            editorGrid: _grid
+            logic: _logic
+            Component.onCompleted: {
+                logic.scrollLogic = scrollLogic_normal
+            }
+        }
+    }
+
 }
 

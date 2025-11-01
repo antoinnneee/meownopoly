@@ -41,15 +41,8 @@ Rectangle {
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
 
-    property alias isSelectionActive: logic.isSelectionActive
-    property alias selectionStart: logic.selectionStart
-    property alias selectionCurrent: logic.selectionCurrent
-    property alias isSelectingArea: logic.isSelectingArea
-    property alias defaultCaseType: logic.defaultCaseType
     // Asset selection properties
-    property alias selectedAssetCategory: selectionPanel.currentSelectedAssetCategory
-    property alias selectedAssetType: selectionPanel.currentSelectedAssetType
-    property alias selectedAssetId: selectionPanel.currentSelectedAssetId
+
     property alias isAssetSelected: selectionPanel.isAssetSelected
 
     property alias escMenu:escMenu
@@ -189,67 +182,10 @@ Rectangle {
         anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
     }
 
-    MouseArea{
+    GlobalMa {
         id: mainMa
-        z:0
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
+        mouseLogic: logic.mouseLogic
         anchors.bottom: selectionPanel.top
-        pressAndHoldInterval: 300
-        drag.target: null
-        drag.axis: Drag.XAndYAxis
-        drag.smoothed: false
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-        property list<SnapableElement> clickElement:[]
-        property list<var> elementInitialPosition:[]
-        
-        drag.onActiveChanged: {
-            logic.mouseLogic.dragChanged(mouseX, mouseY, drag)
-        }
-
-        function elementClicked(tile)
-        {
-            logic.mouseLogic.elementClicked(tile, drag)
-        }
-
-        onPressed: function (mouse) {
-            if (mouse.button === Qt.LeftButton) {
-                logic.mouseLogic.pressedLeft(mouse, drag)
-            }
-            else if (mouse.button === Qt.MiddleButton) {
-                logic.mouseLogic.pressedMiddle(mouse, drag)
-            }
-            else if (mouse.button === Qt.RightButton) {
-                logic.mouseLogic.pressedRight(mouse, drag)
-            }
-        }
-
-        onReleased: function(mouse) {
-            logic.mouseLogic.release(mouse, drag)
-        }
-
-        onPositionChanged: function(mouse) {
-            logic.mouseLogic.positionChanged(mouse, drag)
-        }
-
-        onPressAndHold: function (mouse) {
-            logic.mouseLogic.pressedAndHold(mouse)
-
-        }
-        onClicked: function(mouse) {
-            if (mouse.button === Qt.LeftButton) {
-                logic.mouseLogic.clickedLeft(mouse, drag)
-            }
-            else if (mouse.button === Qt.RightButton) {
-                logic.mouseLogic.clickedRight(mouse, drag)
-            }
-            else if (mouse.button === Qt.MiddleButton) {
-                logic.mouseLogic.clickedMiddle(mouse, drag)
-            }
-            return;
-        }
     }
     // Zone de travail de l'éditeur (par-dessus la grille)
     Item {
@@ -302,9 +238,9 @@ Rectangle {
         AssetPreviewCursor {
             id: assetPreview
             parent: workArea
-            assetCategory: root.selectedAssetCategory
-            assetType: root.selectedAssetType
-            assetId: root.selectedAssetId
+            assetCategory: selectionPanel.currentSelectedAssetCategory
+            assetType: selectionPanel.currentSelectedAssetType
+            assetId: selectionPanel.currentSelectedAssetId
             caseType: selectionPanel.caseTypeSelected
             isCasePreview: selectionPanel.caseTypeSelected !== -1
             unitSizeWidth: logic.tileLogic.currentElementWidth
@@ -399,7 +335,6 @@ Rectangle {
     Connections {
         target: selectionPanel
         function onConnectionRequested(kind) {
-
             var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
 
             /* save selected element to reasign it */
@@ -412,12 +347,6 @@ Rectangle {
             logic.mouseLogic.kind = kind
             logic.mouseLogic.setSelectedElementList(selectedElements)
             logic.mouseLogic.linkSourceCase = targetElement
-            
-            // Afficher la prévisualisation du lien
-            if (logic.mouseLogic && logic.mouseLogic.showLinkPreview) {
-                logic.mouseLogic.showLinkPreview()
-            }
-
         }
     }
 
@@ -458,15 +387,15 @@ Rectangle {
                 snapableParameters.displayParameter.unitSizeWidth = logic.tileLogic.currentElementWidth
                 snapableParameters.displayParameter.unitSizeHeight = logic.tileLogic.currentElementHeight
                 snapableParameters.displayParameter.zLayer = 5
-                snapableParameters.decorationParameter.decorationCategory = root.selectedAssetCategory
-                snapableParameters.decorationParameter.decorationType = root.selectedAssetType
-                snapableParameters.decorationParameter.decorationId = root.selectedAssetId
+                snapableParameters.decorationParameter.decorationCategory = selectionPanel.currentSelectedAssetCategory
+                snapableParameters.decorationParameter.decorationType = selectionPanel.currentSelectedAssetType
+                snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
                 var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
             }
             return;
         }
 
-        console.log("Placing asset:", root.selectedAssetCategory, root.selectedAssetType, root.selectedAssetId, "at", gridX, gridY)
+        console.log("Placing asset:", selectionPanel.currentSelectedAssetCategory, selectionPanel.currentSelectedAssetType, selectionPanel.currentSelectedAssetId, "at", gridX, gridY)
 
         // Create appropriate element based on category
         var snapableParameters = ItemSnapableFactory.createItemSnapable()
@@ -476,9 +405,9 @@ Rectangle {
         snapableParameters.displayParameter.unitSizeWidth = logic.tileLogic.currentElementWidth
         snapableParameters.displayParameter.unitSizeHeight = logic.tileLogic.currentElementHeight
         snapableParameters.displayParameter.zLayer = 5
-        snapableParameters.decorationParameter.decorationCategory = root.selectedAssetCategory
-        snapableParameters.decorationParameter.decorationType = root.selectedAssetType
-        snapableParameters.decorationParameter.decorationId = root.selectedAssetId
+        snapableParameters.decorationParameter.decorationCategory = selectionPanel.currentSelectedAssetCategory
+        snapableParameters.decorationParameter.decorationType = selectionPanel.currentSelectedAssetType
+        snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
 
         var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
         root.applyVisualEffectsToNewTile(newTile)

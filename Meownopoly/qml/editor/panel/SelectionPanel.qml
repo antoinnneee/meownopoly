@@ -38,7 +38,6 @@ Rectangle {
     property alias currentSelectedAssetType: assetPanel.currentSelectedType
     property alias currentSelectedAssetId: assetPanel.currentSelectedId
     property alias isAssetSelected: assetPanel.isAssetSelected
-    property alias assetView: assetPanel.currentView
 
     property alias caseTypeSelected: casePanel.selectedCaseType
     property alias casePanel: casePanel

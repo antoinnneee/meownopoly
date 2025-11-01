@@ -120,5 +120,7 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-DISTFILES +=
+DISTFILES += \
+    qml/board/Game_WheelHandler.qml \
+    qml/editor/GlobalMa.qml
 
