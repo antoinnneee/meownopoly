@@ -167,6 +167,16 @@ public:
      */
     Q_INVOKABLE QVariantMap getAssetById(const QString &category, const QString &type, const QString &id);
     
+    /**
+     * @brief Récupère un asset aléatoire parmi ceux disponibles pour une catégorie et un type
+     * @param category Catégorie de l'asset (ex: "decoration")
+     * @param type Type de l'asset (ex: "grass")
+     * @return QVariantMap avec tous les champs de l'asset (vide si aucun asset trouvé)
+     * @note En QML, vérifiez if (asset.id) pour savoir si un asset a été trouvé
+     * @example var randomAsset = AssetManager.getRandomAsset("decoration", "grass");
+     */
+    Q_INVOKABLE QVariantMap getRandomAsset(const QString &category, const QString &type);
+    
     Q_INVOKABLE void loadAssets();
     Q_INVOKABLE void setAssetsBasePath(const QString &basePath);
     

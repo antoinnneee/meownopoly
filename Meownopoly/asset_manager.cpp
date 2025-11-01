@@ -5,6 +5,7 @@
 #include <QQmlEngine>
 #include <QDir>
 #include <QImageReader>
+#include <QRandomGenerator>
 #include <algorithm>
 #include <type_traits>
 
@@ -278,6 +279,38 @@ QVariantMap AssetManager::getAssetById(const QString &category, const QString &t
     Asset asset = model->getAssetById(id);
     //qDebug()<< asset.path;
     return assetToVariantMap(asset);
+}
+
+QVariantMap AssetManager::getRandomAsset(const QString &category, const QString &type)
+{
+    ASSET_DEBUG("Getting random asset for:" << category << type);
+    
+    AssetModel *model = getAssetModel(category, type);
+    if (model == nullptr) {
+        ASSET_ERROR("No model found for" << category << type);
+        return QVariantMap();
+    }
+    
+    int rowCount = model->rowCount();
+    if (rowCount == 0) {
+        ASSET_ERROR("Model is empty for" << category << type);
+        return QVariantMap();
+    }
+    
+    // Générer un index aléatoire entre 0 et rowCount - 1
+    int randomIndex = QRandomGenerator::global()->bounded(rowCount);
+    
+    ASSET_DEBUG("Selected random index:" << randomIndex << "out of" << rowCount << "assets");
+    
+    // Récupérer l'asset depuis le modèle
+    QList<Asset> assets = model->getAssetList();
+    if (randomIndex >= 0 && randomIndex < assets.size()) {
+        Asset asset = assets.at(randomIndex);
+        return assetToVariantMap(asset);
+    }
+    
+    ASSET_ERROR("Failed to retrieve asset at index" << randomIndex);
+    return QVariantMap();
 }
 
 QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)

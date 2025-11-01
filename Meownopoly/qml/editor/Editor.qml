@@ -35,7 +35,7 @@ Rectangle {
         y:10
         decorationParameter.decorationCategory: "ui"
         decorationParameter.decorationType: "cat"
-        decorationParameter.decorationId: "cat"
+        decorationParameter.decorationId: ""
     }
 
     // Liste pour stocker tous les SnapableCaseTile créés

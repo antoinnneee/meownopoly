@@ -27,6 +27,19 @@ Item {
 
     property real radStopGrad: firstStopGrad * (fadeOverlay.height/topLeftFade.height)
 
+    Component.onCompleted: {
+        if (decorationParameter.decorationId == "")
+        {
+            var randomAsset = AssetManager.getRandomAsset(decorationParameter.decorationCategory, decorationParameter.decorationType);
+            if (randomAsset.id) {
+                console.log("Asset sélectionné:", randomAsset.path);
+                console.log("ID:", randomAsset.id);
+                console.log("Dimensions:", randomAsset.width, "x", randomAsset.height);
+                decorationParameter.decorationId = randomAsset.id
+            }
+        }
+    }
+
     // Taille par défaut
     width: iconSize
     height: iconSize
