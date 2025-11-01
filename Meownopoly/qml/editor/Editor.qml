@@ -64,14 +64,16 @@ Rectangle {
         id: stEnableAutoSave
         category: "Editor/SaveConfig"
         property var currentMap : value("currentMap", mapInfo.autosaveMapName)
-        property var saveEvent: value("saveEvent", 0)
+        property int saveEvent: value("saveEvent", "0")
     }
 
     Timer {
         id: tmpSaver
-        interval: stEnableAutoSave.value("saveInterval", "1")
+        // interval: stEnableAutoSave.value("saveInterval", "1")
+        interval: 1000*10
+
         repeat: true
-        running: stEnableAutoSave.value("saveEvent", 0) === 1 ? true : false
+        running: stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
         property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
         onTriggered: {
             console.log("Auto-saving map:", mapInfo.mapName)
@@ -539,7 +541,7 @@ Rectangle {
         else  {
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         }
-        if (stEnableAutoSave.value("saveEvent", 0) === 1) {
+        if (stEnableAutoSave.value("saveEvent", "0") === 1) {
             tmpSaver.start()
         }
     }

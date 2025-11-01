@@ -29,6 +29,7 @@ QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTiles
 
 bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType)
 {
+    qDebug() << "Game::saveMap called " << mapInfo->getMapName() << " Type: " << mapType;
     bool flag = false;
     QJsonArray snapableTilesArray;
 
@@ -55,11 +56,8 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
         flag = MapFileManager::saveMap(jsonObject, mapInfo->getMapName(), mapType);
         break;
     case MapTypes::UNDOREDO:
-        emit updateListEdits(jsonObject);
         flag = true;
-        settings.beginGroup("Editor/SaveConfig");
-        if (settings.value("saveEvent", 0).toInt() == 2) flag = MapFileManager::saveMap(jsonObject, mapInfo->getMapName(), mapType);
-        settings.endGroup();
+        emit updateListEdits(jsonObject);
         break;
     default:
         break;

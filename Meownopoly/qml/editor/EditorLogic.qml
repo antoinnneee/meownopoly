@@ -1,17 +1,20 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
+import QtCore
+
 import Game
 import Case
 import ItemSnapable
 import TileType
+import MapInfo
+import EditorEnum
+import Logger
+import UndoRedoManager
+import MapTypes
+
 import "tools"
 import "tools/snapable"
 import "tools/grid"
-import MapInfo
-import EditorEnum
 import "logic"
-import Logger
-import UndoRedoManager 1.0
-import MapTypes
 
 Item {
     id: logic
@@ -174,6 +177,20 @@ Item {
             }
         }
         Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
+        if (stEnableAutoSave.saveEvent === 3 && isAutoSave === MapTypes.UNDOREDO){
+            console.log("[AUTO SAVE] Triggered after manual save")
+            Game.saveMap(mapInfo, itemSnapableList, mapInfo.mapName === mapInfo.autosaveMapName ? MapTypes.AUTO_SAVE : MapTypes.CUSTOM)
+        }
+    }
+    Settings {
+        id: stEnableAutoSave
+        category: "Editor/SaveConfig"
+        property var currentMap : value("currentMap", mapInfo.autosaveMapName)
+        property int saveEvent: value("saveEvent", "0")
+        // onCurrentMapChanged: console.log("currentMap :", currentMap, " saveEvent:", saveEvent)
     }
 }
+
+
+
 
