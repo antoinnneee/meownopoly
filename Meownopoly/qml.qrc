@@ -76,7 +76,6 @@
         <file>qml/editor/panel/mapSelectionPanel/MSP_SP_Background.qml</file>
         <file>qml/editor/panel/mapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
         <file>qml/editor/MenuMapAtStart.qml</file>
-        <file>qml/editor/Background.qml</file>
         <file>qml/test/Test_Comp.qml</file>
         <file>qml/editor/EditorEscMenu.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
@@ -163,5 +162,8 @@
         <file>qml/component/case/StarRating.qml</file>
         <file>qml/component/case/TileContent.qml</file>
         <file>qml/component/case/TileDetailsPopup.qml</file>
+        <file>qml/board/GameBoard.qml</file>
+        <file>qml/board/GameDynamicComponent.qml</file>
+        <file>qml/component/Background.qml</file>
     </qresource>
 </RCC>

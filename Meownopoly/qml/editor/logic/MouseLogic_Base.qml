@@ -6,32 +6,55 @@ import QtQuick.Shapes
 import QtQml
 import UndoRedoManager
 import "../../component/snapable"
+import "../../component/grid"
 QtObject {
     id: mouseLogicBase
+    property bool isDragging: false
     property list<SnapableElement> clickElement:[]
     property var clickPosition
     property list<var> elementInitialPosition:[]
     property var logic
+    property GridManager grid
     property list<SnapableElement> selectedElements: []
 
     property bool isControlPressed : false
 
+    property point dragStartPos: Qt.point(0, 0)
+    property point targetStartPos: Qt.point(0, 0)
 
-    function unselectAllElements()
-    {
-        for (var i = 0; i < selectedElements.length; i++) {
-
-            selectedElements[i].elementUnselected()
-            destroyBindingsForElement(selectedElements[i])
+    function dragChanged(mouseX, mouseY, drag) {
+        isDragging = drag.active
+        if (drag.active && drag.target) {
+            // Sauvegarder les positions de départ
+            dragStartPos = Qt.point(mouseX, mouseY)
+            targetStartPos = Qt.point(drag.target.x, drag.target.y)
         }
-        selectedElements = []
-        groupeSelection.x = 0
-        groupeSelection.y = 0
-        logic.tileLogic.deselectAllTiles() // can be improved
 
-        // Effacer la configuration de case
-        clearCaseConfiguration()
-        return true
+    }
+    function positionChanged(mouse, drag)
+    {
+        // Mettre à jour la sélection par rectangle si active
+        if (mouseLogic.isRectangleSelecting) {
+            mouseLogic.updateRectangleSelection(mouse.x, mouse.y)
+        }
+        
+        // Gérer le snap pendant le drag
+        if (drag.active && drag.target && grid.snapToGrid) {
+            var deltaX = mouse.x - dragStartPos.x
+            var deltaY = mouse.y - dragStartPos.y
+            
+            var newX = targetStartPos.x + deltaX
+            var newY = targetStartPos.y + deltaY
+            if (drag.target == groupeSelection)
+            {
+                // Snapper aux positions de la grille
+                var snappedX = Math.round(newX / grid.gridSize) * grid.gridSize
+                var snappedY = Math.round(newY / grid.gridSize) * grid.gridSize
+
+                drag.target.x = snappedX
+                drag.target.y = snappedY
+            }
+        }
     }
 
     function unselectSelectedElements()
@@ -73,7 +96,7 @@ QtObject {
     }
     function changeMouseMode(mode)
     {
-        unselectAllElements()
+        unselectSelectedElements()
 
         // Masquer la prévisualisation du lien si on change de mode
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
@@ -149,10 +172,6 @@ QtObject {
         console.log("main MA clicked : ", clickElement.length, " elements")
     }
 
-    function dragChanged(drag)
-    {
-
-    }
     function updateAssetPanelEffectConfiguration(dispParam)
     {
         if (!logic.selectionPanel) {

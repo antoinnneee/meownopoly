@@ -1,23 +1,22 @@
 import QtQuick 2.15
 import TileType
 import EditorEnum
-import "../component"
+
 import "../component/snapable"
 import "../component/grid"
 
 Item{
-    id: editorDynamicComponent
-    required property GridManager editorGrid
+    id: gameDynamicComponent
+    required property GridManager gameGrid
     required property var logic
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
 
 
-    // Composant dynamique pour créer des SnapableCaseTile
     Component {
         id: snapableCaseTileComponent
         SnapableCaseTile {
-            gridManager: editorGrid
+            gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
 
             // Gestion de la suppression
@@ -29,12 +28,11 @@ Item{
             }
         }
     }
-    // Composant dynamique pour créer des SnapableDecoration
 
     Component {
         id: snapableDecorationComponent
         SnapableDecoration {
-            gridManager: editorGrid
+            gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
 
             // Gestion de la suppression

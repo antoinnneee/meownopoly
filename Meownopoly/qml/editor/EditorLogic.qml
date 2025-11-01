@@ -47,6 +47,7 @@ Item {
         MouseLogic_Selection {
             id: mouseLogic_selection
             logic: _logic
+            grid: _grid
             Component.onCompleted: {
                 logic.mouseLogic = mouseLogic_selection
             }
@@ -58,6 +59,7 @@ Item {
         MouseLogic_Pose {
             id: mouseLogic_pose
             logic: _logic
+            grid: _grid
             Component.onCompleted: {
                 logic.mouseLogic = mouseLogic_pose
             }
@@ -81,6 +83,7 @@ Item {
                         : (logic.editorMouseMode === EditorEnum.EM_POSE) ? mouseLogic_pose_comp
                         : mouseLogic_selectionLink_comp
         property var _logic : parent
+        property var _grid: editorGrid
     }
     property ScrollLogic scrollLogic
 
@@ -119,9 +122,8 @@ Item {
     TileLogic{
         id: tileLogic
         logic: logic
-        editorGrid: logic.editorGrid
         snapableTilesList: logic.snapableTilesList
-        editorDynamicComponent: logic.editorDynamicComponent
+        dynamicComponent: logic.editorDynamicComponent
     }
 
 
@@ -132,11 +134,6 @@ Item {
     property bool isSelectingArea: false
     property int defaultCaseType: Case.CS_KibbleDispenser
 
-    property int mmSize : 10
-    function updateSize(mm) {
-        if (mm > 0)
-            mmSize = mm
-    }
 
     function removeCurrentMap(){
             // Copier la liste car elle sera modifiée pendant la suppression

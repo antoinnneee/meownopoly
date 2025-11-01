@@ -9,10 +9,9 @@ import ".."
 
 QtObject {
     required property var snapableTilesList
-    required property GridManager editorGrid
     required property var logic
 
-    required property EditorDynamicComponent editorDynamicComponent
+    required property EditorDynamicComponent dynamicComponent
 
     // Propriétés pour la taille des éléments créés
     property int currentElementWidth: 3
@@ -54,18 +53,6 @@ QtObject {
         currentElementHeight = newHeight
     }
 
-    // Fonction pour désélectionner tous les tiles
-    function deselectAllTiles() {
-        // Désélectionner tous les tiles dans la liste
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i].isSelected) {
-                snapableTilesList[i].elementUnselected()
-            }
-        }
-        if (logic.mouseLogic && logic.mouseLogic.selectedElements.length)
-        logic.mouseLogic.selectedElements = []
-    }
-
 
     function createItemSnapable(itemSnapableData) {
         currentZOrder = currentZOrder + 0.00001
@@ -74,12 +61,12 @@ QtObject {
         // On passe directement itemSnapableData pour conserver les références next/prev
         var newTile
         if (itemSnapableData.tileType === ItemSnapable.CaseTile) {
-            newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
+            newTile = dynamicComponent.snapableCaseTileComponent.createObject(workArea, {
                 "generalMA": mainMa,
                 "snapableParameters": itemSnapableData
             })
         } else if (itemSnapableData.tileType === ItemSnapable.DecorationTile) {
-            newTile = editorDynamicComponent.snapableDecorationComponent.createObject(workArea, {
+            newTile = dynamicComponent.snapableDecorationComponent.createObject(workArea, {
                 "generalMA": mainMa,
                 "snapableParameters": itemSnapableData
             })

@@ -5,7 +5,6 @@ import MapTypes
 
 MouseLogic_Base {
     id: mouseLogic
-    property bool isDragging: false
     
     // Propriétés pour la sélection par rectangle
     property bool isRectangleSelecting: false
@@ -16,11 +15,14 @@ MouseLogic_Base {
     property point pressPosition: Qt.point(0, 0)
     property bool hadPressWithoutElement: false
 
-    function dragChanged(drag)
+    function dragChanged(mouseX, mouseY, drag)
     {
-        // console.log("[LOGIC] drag changed")
         isDragging = drag.active
-        
+        if (drag.active && drag.target) {
+            // Sauvegarder les positions de départ
+            dragStartPos = Qt.point(mouseX, mouseY)
+            targetStartPos = Qt.point(drag.target.x, drag.target.y)
+        }
         // Si on est en mode sélection rectangle, empêcher le drag
         if (isRectangleSelecting) {
             drag.target = null

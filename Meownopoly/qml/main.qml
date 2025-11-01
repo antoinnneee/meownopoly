@@ -6,6 +6,7 @@ import "titleScreen/"
 import "test/"
 import "editor/"
 import "launcher/"
+import "board"
 import QtQuick.Window
 import Game
 
@@ -27,6 +28,10 @@ ApplicationWindow {
     Component {
         id: titleScreen
         TitleScreen {
+            onStartGameRequested: {
+                stackView.push(gameBoard)
+            }
+
             onEditorRequested:{
                 //stackView.pop()
                 stackView.push(editor)
@@ -53,6 +58,15 @@ ApplicationWindow {
             onAssetManagerTestRequested: {
                 stackView.push(assetManagerTest)
             }
+        }
+    }
+
+    Component {
+        id: gameBoard
+        GameBoard {
+            width:root.width
+            height:root.height
+            visible: false
         }
     }
 

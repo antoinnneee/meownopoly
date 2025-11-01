@@ -4,17 +4,15 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
-import Game
-import Case
 import ItemSnapable
 import "../component/snapable"
-import "panel"
-import "panel/assetSelectionPanel"
+import "../component/grid"
 import MapInfo
 import EditorEnum
 
 Image {
-    anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
+    required property GridManager grid
+    anchors.fill: mapInfo.isBackgroundOnGrill ? grid : parent
 
     visible : mapInfo.backgroundPath === "" ? false : true
     source: mapInfo.backgroundPath

@@ -92,7 +92,7 @@ Rectangle {
                 selectionPanel.clearAssetSelection()
                 event.accepted = true
             } else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
-                logic.mouseLogic.unselectAllElements()
+                logic.mouseLogic.unSelectSelectedElements()
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
                 event.accepted = true
             } else {
@@ -183,9 +183,6 @@ Rectangle {
         id: editorDynamicComponent
         editorGrid: editorGrid
         logic: logic
-        workArea: workArea
-        // caseConfigPanel: caseConfigPanel
-        selectionPanel: selectionPanel
     }
 
     // Grille de l'éditeur
@@ -200,6 +197,7 @@ Rectangle {
 
     Background {
         id: background
+        grid: editorGrid
         anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
     }
 
@@ -218,17 +216,9 @@ Rectangle {
 
         property list<SnapableElement> clickElement:[]
         property list<var> elementInitialPosition:[]
-        property point dragStartPos: Qt.point(0, 0)
-        property point targetStartPos: Qt.point(0, 0)
         
         drag.onActiveChanged: {
-            // console.log("drag changed", drag.active);
-            if (drag.active && drag.target) {
-                // Sauvegarder les positions de départ
-                dragStartPos = Qt.point(mouseX, mouseY)
-                targetStartPos = Qt.point(drag.target.x, drag.target.y)
-            }
-            logic.mouseLogic.dragChanged(drag)
+            logic.mouseLogic.dragChanged(mouseX, mouseY, drag)
         }
 
         function elementClicked(tile)
@@ -253,28 +243,7 @@ Rectangle {
         }
 
         onPositionChanged: function(mouse) {
-            // Mettre à jour la sélection par rectangle si active
-            if (logic.mouseLogic.isRectangleSelecting) {
-                logic.mouseLogic.updateRectangleSelection(mouse.x, mouse.y)
-            }
-            
-            // Gérer le snap pendant le drag
-            if (drag.active && drag.target && editorGrid.snapToGrid) {
-                var deltaX = mouse.x - dragStartPos.x
-                var deltaY = mouse.y - dragStartPos.y
-                
-                var newX = targetStartPos.x + deltaX
-                var newY = targetStartPos.y + deltaY
-                if (drag.target == groupeSelection)
-                {
-                    // Snapper aux positions de la grille
-                   var snappedX = Math.round(newX / editorGrid.gridSize) * editorGrid.gridSize
-                    var snappedY = Math.round(newY / editorGrid.gridSize) * editorGrid.gridSize
-
-                    drag.target.x = snappedX
-                    drag.target.y = snappedY
-                }
-            }
+            logic.mouseLogic.positionChanged(mouse, drag)
         }
 
         onPressAndHold: function (mouse) {
