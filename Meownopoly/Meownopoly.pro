@@ -62,6 +62,7 @@ SOURCES += \
     player.cpp \
     qmlapp.cpp \
     tools/appinfo.cpp \
+    tools/cursor_manager.cpp \
     tools/editorenum.cpp \
     tools/logger.cpp \
     tools/undoredomanager.cpp \
@@ -100,6 +101,7 @@ HEADERS += \
     qmlapp.h \
     tools/debug_Info.h	\
     tools/appinfo.h \
+    tools/cursor_manager.h \
     tools/editorenum.h \
     tools/logger.h \
     tools/undoredomanager.h \

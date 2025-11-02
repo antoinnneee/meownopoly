@@ -5,6 +5,7 @@ import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
 import UndoRedoManager
+import CursorManager
 import "../../component/snapable"
 import "../../component/grid"
 QtObject {
@@ -302,6 +303,21 @@ QtObject {
 
         if (elementInitialPositions[element])
             delete elementInitialPositions[element]
+    }
+
+    // Fonction pour déplacer la souris au centre de la fenêtre
+    function moveMouseToWindowCenter() {
+        var rootEditor = logic.parent
+
+        var centerX = rootEditor.width / 2 + rootEditor.appPositionX
+        var centerY = rootEditor.height / 2 + rootEditor.appPositionY
+        
+        console.log("[MOUSE_LOGIC] Centre de la fenêtre calculé: (" + centerX + ", " + centerY + ")")
+        
+        // Déplacer le curseur au centre de la fenêtre via le singleton CursorManager
+        CursorManager.setPos(centerX, centerY)
+        
+        return Qt.point(centerX, centerY)
     }
 
 }

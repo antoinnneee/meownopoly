@@ -17,6 +17,7 @@ Item {
     width: boardSize
     height: boardSize
 
+
     onGridSizeChanged: {
        var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
                                                             : 0
@@ -114,6 +115,7 @@ Item {
                 // Position et taille selon le type de ligne
                 x: isVertical ? verticalIndex * gridManager.gridSize : 0
                 y: isVertical ? 0 : horizontalIndex * gridManager.gridSize
+
                 width: isVertical ?
                        (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth) :
                        parent.width

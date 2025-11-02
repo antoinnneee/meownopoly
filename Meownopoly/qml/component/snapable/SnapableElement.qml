@@ -17,7 +17,6 @@ import UndoRedoManager
  Rectangle {
     id: snapableElement
 
-
     // Propriétés configurables
     // Connexion au GridManager du parent (Editor)
     required property GridManager gridManager
@@ -120,6 +119,7 @@ import UndoRedoManager
             if (element && element.snapableParameters && root.snapableParameters) {
                 root.snapableParameters.removePrev(element.snapableParameters)
                 console.log("Removed previous case:", element.snapableParameters.caseData.name, "from", root.snapableParameters.caseData.name)
+
             }
         }
     }

@@ -41,6 +41,7 @@
 
 //#include "animationprovider.h"
 #include "tools/logger.h"
+#include "tools/cursor_manager.h"
 #include "item_snapable/itemsnapablefactory.h"
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
@@ -58,6 +59,7 @@ QmlApp::QmlApp(QWindow *parent)
     ItemSnapableFactory::registerQml();
 //    AnimationProvider::registerQml();
     Logger::registerQml();
+    CursorManager::registerQml();
     UndoRedoManager::registerQml();
     
     // Register MapTypes namespace for QML

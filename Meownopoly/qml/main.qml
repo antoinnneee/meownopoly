@@ -18,7 +18,7 @@ ApplicationWindow {
     height: 720
     visible: true
     title: "Meownopoly"
-    
+
     StackView {
         id: stackView
         anchors.fill: parent
@@ -76,6 +76,8 @@ ApplicationWindow {
             width:root.width
             height:root.height
             visible: false
+            appPositionX: root.x
+            appPositionY: root.y
             escMenu.onReturnToMainMenu: {
                 console.log("Retour au menu principal demandé")
                 stackView.pop()

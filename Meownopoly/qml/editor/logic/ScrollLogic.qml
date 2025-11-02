@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import "../../component"
 import "../../component/grid"
+import CursorManager
 
 QtObject {
     property GridManager editorGrid
@@ -19,7 +20,6 @@ QtObject {
             // Calculer la position de grille avant le zoom
             var realPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
             var gridPosition = editorGrid.getGridRealPosition(realPos.x, realPos.y)
-            console.log("Position avant zoom:", realPos)
             
             // Mettre à jour mmSize
             var newMmSize = oldMmSize + deltaSize;
@@ -36,9 +36,19 @@ QtObject {
                 logic.tileLogic.currentElementHeight = Math.max(1, Math.round(newHeight));
                 
                 // Calculer la nouvelle position de grille après le zoom
-                var newRealPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
+
+                var rootEditor = logic.parent
+
+                var centerViewX = rootEditor.width / 2
+                var centerViewY = (rootEditor.availableHeight) / 2
+
+                var centerViewGlobalX = centerViewX + rootEditor.appPositionX
+                var centerViewGlobalY = centerViewY + rootEditor.appPositionY
+
+//                var newRealPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
+                var newRealPos = parent.mapToItem(editorGrid, centerViewX, centerViewY)
                 var newGridPosition = editorGrid.getGridRealPosition(newRealPos.x, newRealPos.y)
-                console.log("Position après zoom:", newRealPos)
+                CursorManager.setPos(centerViewGlobalX, centerViewGlobalY)
                 
                 // Calculer le décalage nécessaire pour maintenir la même position de grille
                 var deltaX = (gridPosition.x - newGridPosition.x) * editorGrid.gridSize
@@ -47,8 +57,7 @@ QtObject {
                 // Appliquer le décalage à la grille
                 editorGrid.x -= deltaX
                 editorGrid.y -= deltaY
-                
-                console.log("Décalage appliqué:", deltaX, deltaY)
+
             }
         }
     }

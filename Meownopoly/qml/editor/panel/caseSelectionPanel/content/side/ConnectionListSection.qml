@@ -186,6 +186,7 @@ Rectangle {
                             hoverEnabled: true
                             onClicked: {
                                 root.removeElement(modelData, index)
+                                //root.listModel = connectionList.model
                             }
                         }
                         

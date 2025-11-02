@@ -29,6 +29,9 @@ Rectangle {
 
     color: "lightblue"
     border.width: 0
+    property int appPositionX: 0
+    property int appPositionY: 0
+    property int availableHeight: height - selectionPanel.height
 
     AdminCommandPanel{
         id: adminCommandPanel
