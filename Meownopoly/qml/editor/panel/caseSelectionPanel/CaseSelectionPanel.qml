@@ -6,8 +6,6 @@ import AssetManager
 
 import "../"
 import "../editorBottomPanel"
-import "content"
-import "title"
 
 EditorBottomPanel {
     id: root

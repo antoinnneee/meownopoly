@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
-import "../../editorBottomPanel"
-import "../../assetSelectionPanel"
+import "../editorBottomPanel"
+import "../assetSelectionPanel"
 import "main"
 import "side"
 

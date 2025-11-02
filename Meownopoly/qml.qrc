@@ -80,34 +80,6 @@
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/ui_item/ParticleButton.qml</file>
         <file>qml/ui_item/qmldir</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/main/CSP_CaseTypeCell.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/main/CSP_CaseTypeSelector.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CaseConfigurationPanel.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_CatPerksConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_GeneralConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_Header.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_PanelElement.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_RentConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_StyledSpinBox.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/caseConfigPanel/CCP_TypeSelector.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/CaseConfigurationPanelSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_CardBoardBoxSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_CatDeviceSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_GeneralSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_KibbleDispenserSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_RestAreaSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/CCPS_TypeSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/ConnectionListSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/side/ConnectionsConfigurationSection.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/content/CSP_ContentArea.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/title/CSP_ClearButton.qml</file>
-        <file>qml/editor/panel/caseSelectionPanel/title/CSP_TitleBar.qml</file>
         <file>qml/ui_item/Player_Profil_Icon.qml</file>
         <file>qml/component/grid/GridManager.qml</file>
         <file>qml/component/preview/AssetPreviewCursor.qml</file>
@@ -171,5 +143,33 @@
         <file>qml/board/Game_WheelHandler.qml</file>
         <file>qml/component/GlobalMa.qml</file>
         <file>qml/component/AdminCommandPanel.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_ClearButton.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_TitleBar.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/CSP_ContentArea.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/main/CSP_CaseTypeCell.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/main/CSP_CaseTypeSelector.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CaseConfigurationPanel.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_CatPerksConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_GeneralConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_Header.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_PanelElement.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_RentConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_StyledSpinBox.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/caseConfigPanel/CCP_TypeSelector.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/CaseConfigurationPanelSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/CCPS_CardBoardBoxSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/CCPS_CatDeviceSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/CCPS_GeneralSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/CCPS_KibbleDispenserSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/CCPS_RestAreaSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/CCPS_TypeSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/ConnectionListSection.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/ConnectionsConfigurationSection.qml</file>
     </qresource>
 </RCC>
