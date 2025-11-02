@@ -21,7 +21,7 @@ Item {
     required property MapInfo mapInfo
     required property var workArea
 
-    property int mmSize : 10
+    property int mmSize : editorGrid.mmSize
     function updateSize(mm) {
         if (mm > 0)
             mmSize = mm

@@ -134,8 +134,8 @@ Rectangle {
                     border.width: 1
                     radius: 6
                     clip: true
-                    implicitWidth: chatArea.width
-                    implicitHeight: chatArea.height
+                    width: chatArea.width
+                    height: chatArea.height
                 }
             }
         }

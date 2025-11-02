@@ -18,15 +18,15 @@ QtObject {
             
             // Calculer la position de grille avant le zoom
             var realPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
-            var gridPosition = editorGrid.getGridPosition(realPos.x, realPos.y)
-            console.log("Position avant zoom:", gridPosition)
+            var gridPosition = editorGrid.getGridRealPosition(realPos.x, realPos.y)
+            console.log("Position avant zoom:", realPos)
             
             // Mettre à jour mmSize
             var newMmSize = oldMmSize + deltaSize;
-            logic.updateSize(newMmSize);
             
             // Ajuster les dimensions inversement proportionnelles pour garder le ratio visuel
             if (newMmSize > 0) {
+                editorGrid.mmSize = newMmSize
                 // On calcule d'abord la largeur, puis on dérive la hauteur pour maintenir le ratio
                 var newWidth = oldWidth * oldMmSize / newMmSize;
                 var newHeight = newWidth / aspectRatio;
@@ -37,8 +37,8 @@ QtObject {
                 
                 // Calculer la nouvelle position de grille après le zoom
                 var newRealPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
-                var newGridPosition = editorGrid.getGridPosition(newRealPos.x, newRealPos.y)
-                console.log("Position après zoom:", newGridPosition)
+                var newGridPosition = editorGrid.getGridRealPosition(newRealPos.x, newRealPos.y)
+                console.log("Position après zoom:", newRealPos)
                 
                 // Calculer le décalage nécessaire pour maintenir la même position de grille
                 var deltaX = (gridPosition.x - newGridPosition.x) * editorGrid.gridSize

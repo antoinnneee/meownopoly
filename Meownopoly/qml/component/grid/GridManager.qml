@@ -67,6 +67,13 @@ Item {
             Math.floor(y / gridSize)
         )
     }
+    // Fonction pour obtenir la position de grille la plus proche
+    function getGridRealPosition(x, y) {
+        return Qt.point(
+            x / gridSize,
+            y / gridSize
+        )
+    }
     
     // Fonctions pour activer/désactiver le mode redimensionnement
     function enterResizeMode() {
