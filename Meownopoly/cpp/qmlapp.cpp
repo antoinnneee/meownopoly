@@ -8,10 +8,10 @@
 
 #include <QDir>
 #include <QStandardPaths>
-#include "game.h"
+#include "game/game.h"
 #include "meowstyle.h"
 #include "item_snapable/ItemSnapable.h"
-#include "launcher_manager.h"
+#include "launcher/launcher_manager.h"
 
 #include <QJsonArray>
 #include <QJsonObject>
@@ -29,7 +29,7 @@
 #include <QJniObject.h>
 #endif
 #include "QtFolderCompressor/FolderCompressor.h"
-#include "asset_manager.h"
+#include "assetManager/asset_manager.h"
 
 #include <map/map.h>
 #include <map/maptypes.h>
@@ -43,6 +43,8 @@
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
 #include "item_snapable/itemsnapablefactory.h"
+
+
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
 {

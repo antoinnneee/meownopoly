@@ -27,11 +27,14 @@ CONFIG += c++20
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+# Ajouter cpp au chemin de recherche pour les sources et headers
+VPATH += cpp
+# Ajouter cpp au chemin d'inclusion pour que les includes puissent omettre cpp/
+INCLUDEPATH += cpp
 
 SOURCES += \
     QtFolderCompressor/FolderCompressor.cpp \
-    asset_manager.cpp \
-    card.cpp \
+    assetManager/asset_manager.cpp \
     case/Case.cpp \
     case/CaseCatDevice.cpp \
     case/CaseCatDoor.cpp \
@@ -44,22 +47,23 @@ SOURCES += \
     case/CaseKibbleDispenser.cpp \
     case/CaseRestArea.cpp \
     case/CaseToJail.cpp \
+    cpp/game/card.cpp \
+    cpp/game/game.cpp \
+    cpp/game/game_loader.cpp \
+    cpp/game/player.cpp \
     experiment/animation_manager.cpp \
     experiment/animationprovider.cpp \
     experiment/liveimage.cpp \
-    game.cpp \
-    game_loader.cpp \
     item_snapable/Displayparameter.cpp \
     item_snapable/ItemSnapable.cpp \
     item_snapable/decorationparameter.cpp \
     item_snapable/itemsnapablefactory.cpp \
-    launcher_manager.cpp \
+    launcher/launcher_manager.cpp \
     main.cpp \
     map/map.cpp \
     map/mapinfo.cpp \
     map/mapfilemanager.cpp \
     meowstyle.cpp \
-    player.cpp \
     qmlapp.cpp \
     tools/appinfo.cpp \
     tools/cursor_manager.cpp \
@@ -67,10 +71,10 @@ SOURCES += \
     tools/logger.cpp \
     tools/undoredomanager.cpp \
 
+
 HEADERS += \
     QtFolderCompressor/FolderCompressor.h \
-    asset_manager.h \
-    card.h \
+    assetManager/asset_manager.h \
     case/Case.h \
     case/CaseCatDevice.h \
     case/CaseCatDoor.h \
@@ -83,21 +87,22 @@ HEADERS += \
     case/CaseKibbleDispenser.h \
     case/CaseRestArea.h \
     case/CaseToJail.h \
+    cpp/game/card.h \
+    cpp/game/game.h \
+    cpp/game/player.h \
     experiment/animation_manager.h \
     experiment/animationprovider.h \
     experiment/liveimage.h \
-    game.h \
     item_snapable/Displayparameter.h \
     item_snapable/ItemSnapable.h \
     item_snapable/decorationparameter.h \
     item_snapable/itemsnapablefactory.h \
-    launcher_manager.h \
+    launcher/launcher_manager.h \
     map/map.h \
     map/mapinfo.h \
     map/mapfilemanager.h \
     map/maptypes.h \
     meowstyle.h \
-    player.h \
     qmlapp.h \
     tools/debug_Info.h	\
     tools/appinfo.h \
@@ -106,8 +111,7 @@ HEADERS += \
     tools/logger.h \
     tools/undoredomanager.h \
 
-RESOURCES += qml.qrc \
-    config.qrc
+RESOURCES += qml.qrc
 
 # CONFIG += qmlcache  # Désactivé car nécessite TARGETPATH pour Qt 6.10+
 
@@ -123,6 +127,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    qml/board/Game_WheelHandler.qml \
-    qml/editor/GlobalMa.qml
+
 

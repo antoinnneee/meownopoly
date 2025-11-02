@@ -1,5 +1,5 @@
 #include "CaseCatPerks.h"
-#include "../player.h"
+#include "game/player.h"
 #include <QString>
 
 

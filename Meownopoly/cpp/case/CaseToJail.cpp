@@ -1,5 +1,5 @@
 #include "CaseToJail.h"
-#include "../player.h"
+#include "game/player.h"
 #include <QDebug>
 #include <QJsonObject>
 

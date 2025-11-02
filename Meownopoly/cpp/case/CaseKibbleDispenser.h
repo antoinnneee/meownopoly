@@ -2,7 +2,7 @@
 #define CASEKIBBLEDISPENSER_H
 
 #include "Case.h"
-#include "player.h"
+#include "game/player.h"
 
 class CaseKibbleDispenser : public Case {
     Q_OBJECT

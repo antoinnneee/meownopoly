@@ -213,7 +213,6 @@ Rectangle {
 
     // Fonctions utilitaires
     function getCaseTypeName(type) {
-        // Utilise la méthode helper du singleton MeowStyle
         return MeowStyle.getCaseTypeName(type)
     }
 

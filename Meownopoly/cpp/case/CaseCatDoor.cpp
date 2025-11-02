@@ -1,6 +1,6 @@
 #include "CaseCatDoor.h"
 #include <QDebug>
-#include "../player.h"
+#include "game/player.h"
 
 
 CaseCatDoor::CaseCatDoor(CASECATPERKS_DEFAULT_PARAMETER_NOP)

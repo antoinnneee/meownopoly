@@ -1,7 +1,7 @@
 #include "Case.h"
-#include "../player.h"
+#include "game/player.h"
 #include <QDebug>
-#include "game.h"
+#include "game/game.h"
 
 Case::Case(QObject *parent)
     : QObject(parent), m_name("Unknown"), type(Case::CS_Unknow) {

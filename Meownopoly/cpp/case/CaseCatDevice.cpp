@@ -1,5 +1,5 @@
 #include "CaseCatDevice.h"
-#include "../player.h"
+#include "game/player.h"
 
 // CaseCatDevice::CaseCatDevice(QObject *parent)
 //     : CaseCatPerks("Unknown Cat Device", -1, morgagePrice, parent)

@@ -1,6 +1,6 @@
 #include "CaseKibbleDispenser.h"
 #include <QDebug>
-#include "../player.h"
+#include "game/player.h"
 
 CaseKibbleDispenser::CaseKibbleDispenser(QObject *parent)
     : Case("Kibble Dispenser", parent)

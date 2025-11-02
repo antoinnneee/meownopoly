@@ -1,6 +1,6 @@
 #include "CaseCatNip.h"
 #include <QDebug>
-#include "../player.h"
+#include "game/player.h"
 
 CaseCatNip::CaseCatNip(QObject *parent)
     : Case("Cat Nip", parent)

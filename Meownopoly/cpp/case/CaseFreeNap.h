@@ -2,7 +2,7 @@
 #define CASEFREENAP_H
 
 #include "Case.h"
-#include "player.h"
+#include "game/player.h"
 
 class CaseFreeNap : public Case {
     Q_OBJECT

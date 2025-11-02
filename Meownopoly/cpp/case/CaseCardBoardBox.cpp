@@ -1,6 +1,6 @@
 #include "CaseCardBoardBox.h"
 #include <QDebug>
-#include "../player.h"
+#include "game/player.h"
 
 CaseCardBoardBox::CaseCardBoardBox(QObject *parent)
     : Case("Card Board Box", parent)

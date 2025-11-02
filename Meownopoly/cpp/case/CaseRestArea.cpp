@@ -1,6 +1,6 @@
 #include "CaseRestArea.h"
 #include <QDebug>
-#include "../player.h"
+#include "game/player.h"
 
 #include <QJsonDocument>
 #include <QJsonArray>

@@ -2,7 +2,7 @@
 #define CASECARDBOARDBOX_H
 
 #include "Case.h"
-#include "player.h"
+#include "game/player.h"
 
 class CaseCardBoardBox : public Case {
     Q_OBJECT

@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QString>
-#include "player.h"
+#include "game/player.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QUuid>

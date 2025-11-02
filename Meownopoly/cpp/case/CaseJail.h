@@ -2,7 +2,7 @@
 #define CASEJAIL_H
 
 #include "Case.h"
-#include "player.h"
+#include "game/player.h"
 #include <QMap>
 
 class CaseJail : public Case {

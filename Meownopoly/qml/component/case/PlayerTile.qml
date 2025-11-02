@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import Game
 import Case
 import Player
-import MeowStyle
 import AssetManager
 
 Rectangle {

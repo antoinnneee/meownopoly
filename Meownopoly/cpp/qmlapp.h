@@ -14,9 +14,9 @@
 #include <QJsonDocument>
 #include <QTimer>
 #include <QStandardPaths>
-#include "game.h"
+#include "game/game.h"
 #include "QtFolderCompressor/FolderCompressor.h"
-#include "asset_manager.h"
+#include "assetManager/asset_manager.h"
 
 
 class QmlApp : public QQmlApplicationEngine

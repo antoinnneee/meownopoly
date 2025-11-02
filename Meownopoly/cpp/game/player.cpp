@@ -1,4 +1,4 @@
-#include "player.h"
+#include "game/player.h"
 #include <QRandomGenerator>
 #include <QDebug>
 

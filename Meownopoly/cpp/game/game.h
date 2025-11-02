@@ -12,7 +12,7 @@
 #include "case/CaseRestArea.h"
 
 #include "card.h"
-#include "player.h"
+#include "game/player.h"
 #include "item_snapable/ItemSnapable.h"
 #include "map/mapinfo.h"
 #include "map/map.h"

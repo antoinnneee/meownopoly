@@ -1,6 +1,6 @@
 #include "CaseFreeNap.h"
 #include <QDebug>
-#include "../player.h"
+#include "game/player.h"
 
 CaseFreeNap::CaseFreeNap(QObject *parent)
     : Case("Free Nap", parent)
