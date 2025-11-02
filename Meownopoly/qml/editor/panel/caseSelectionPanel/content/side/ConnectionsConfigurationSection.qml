@@ -57,14 +57,19 @@ Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 36
                         radius: 8
-                        color: addPrevBtn.containsMouse ? "#5a67d8" : "#667eea"
+                        color: addPrevBtn.pressed ? "#4a5ac8" : (addPrevBtn.containsMouse ? "#5a67d8" : "#667eea")
                         
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: addPrevBtn.containsMouse ? "#667eea" : "#74b9ff" }
-                            GradientStop { position: 1.0; color: addPrevBtn.containsMouse ? "#5a67d8" : "#6c5ce7" }
+                            GradientStop { position: 0.0; color: addPrevBtn.pressed ? "#5a67d8" : (addPrevBtn.containsMouse ? "#667eea" : "#74b9ff") }
+                            GradientStop { position: 1.0; color: addPrevBtn.pressed ? "#4a5ac8" : (addPrevBtn.containsMouse ? "#5a67d8" : "#6c5ce7") }
                         }
                         
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        scale: addPrevBtn.pressed ? 0.95 : 1.0
+                        opacity: addPrevBtn.pressed ? 0.8 : 1.0
+                        
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on scale { NumberAnimation { duration: 40 } }
+                        Behavior on opacity { NumberAnimation { duration: 80 } }
                         
                         MouseArea {
                             id: addPrevBtn
@@ -100,14 +105,20 @@ Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 36
                         radius: 8
-                        color: addNextBtn.containsMouse ? "#00a085" : "#00b894"
+                        color: addNextBtn.pressed ? "#009075" : (addNextBtn.containsMouse ? "#00a085" : "#00b894")
                         
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: addNextBtn.containsMouse ? "#00b894" : "#55efc4" }
-                            GradientStop { position: 1.0; color: addNextBtn.containsMouse ? "#00a085" : "#00b894" }
+                            GradientStop { position: 0.0; color: addNextBtn.pressed ? "#00a085" : (addNextBtn.containsMouse ? "#00b894" : "#55efc4") }
+                            GradientStop { position: 1.0; color: addNextBtn.pressed ? "#009075" : (addNextBtn.containsMouse ? "#00a085" : "#00b894") }
                         }
                         
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        scale: addNextBtn.pressed ? 0.95 : 1.0
+                        opacity: addNextBtn.pressed ? 0.8 : 1.0
+
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on scale { NumberAnimation { duration: 40 } }
+                        Behavior on opacity { NumberAnimation { duration: 80 } }
                         
                         MouseArea {
                             id: addNextBtn
