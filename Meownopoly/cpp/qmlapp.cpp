@@ -9,8 +9,8 @@
 #include <QDir>
 #include <QStandardPaths>
 #include "game/game.h"
-#include "meowstyle.h"
-#include "item_snapable/ItemSnapable.h"
+#include "game/meowstyle.h"
+#include "game/item_snapable/ItemSnapable.h"
 #include "launcher/launcher_manager.h"
 
 #include <QJsonArray>
@@ -28,21 +28,22 @@
 #ifdef Q_OS_ANDROID
 #include <QJniObject.h>
 #endif
-#include "QtFolderCompressor/FolderCompressor.h"
+#include "tools/QtFolderCompressor/FolderCompressor.h"
 #include "assetManager/asset_manager.h"
 
-#include <map/map.h>
-#include <map/maptypes.h>
-#include "tools/debug_info.h"
 #include "tools/editorenum.h"
-#include "tools/undoredomanager.h"
-#include "map/mapinfo.h"
-#include "map/mapfilemanager.h"
+
+#include "game/map/map.h"
+#include "game/map/maptypes.h"
+#include "game/map/undoredomanager.h"
+#include "game/map/mapinfo.h"
+#include "game/map/mapfilemanager.h"
+
+#include "game/item_snapable/itemsnapablefactory.h"
 
 //#include "animationprovider.h"
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
-#include "item_snapable/itemsnapablefactory.h"
 
 
 QmlApp::QmlApp(QWindow *parent)

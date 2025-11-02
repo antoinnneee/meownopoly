@@ -1,18 +1,7 @@
 #include "ItemSnapable.h"
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
-#include "case/CaseFactory.h"
-
-// Include all case types
-#include "../case/CaseRestArea.h"
-#include "../case/CaseCardBoardBox.h"
-#include "../case/CaseCatNip.h"
-#include "../case/CaseJail.h"
-#include "../case/CaseToJail.h"
-#include "../case/CaseCatDoor.h"
-#include "../case/CaseFreeNap.h"
-#include "../case/CaseCatDevice.h"
-#include "../case/CaseKibbleDispenser.h"
+#include "game/case/CaseFactory.h"
 
 ItemSnapable::ItemSnapable() {
     qDebug() << "New ItemSnapable created";

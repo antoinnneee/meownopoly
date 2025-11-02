@@ -3,7 +3,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include <QMap>
-#include "case/Case.h"
+#include "game/case/Case.h"
 
 MeowStyle *MeowStyle::m_pThis = nullptr;
 

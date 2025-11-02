@@ -1,6 +1,6 @@
 ﻿#include "map.h"
-#include "map/mapfilemanager.h"
-#include "map/maptypes.h"
+#include "mapfilemanager.h"
+#include "maptypes.h"
 
 #include <QJsonArray>
 #include <QJsonObject>

@@ -3,9 +3,8 @@
 
 #include <QObject>
 #include "MapInfo.h"
-#include "item_snapable/ItemSnapable.h"
-#include "map/maptypes.h"
-#include "map/mapfilemanager.h"
+#include "game/item_snapable/ItemSnapable.h"
+#include "maptypes.h"
 
 class Map : public QObject
 {

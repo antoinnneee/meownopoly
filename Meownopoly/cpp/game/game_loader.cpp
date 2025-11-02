@@ -11,7 +11,7 @@
 #include "map/mapfilemanager.h"
 #include "map/maptypes.h"
 #include "map/map.h"
-#include "tools/undoredomanager.h"
+#include "game/map/undoredomanager.h"
 
 QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray)
 {

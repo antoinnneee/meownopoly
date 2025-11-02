@@ -15,7 +15,7 @@
 #include <QTimer>
 #include <QStandardPaths>
 #include "game/game.h"
-#include "QtFolderCompressor/FolderCompressor.h"
+#include "tools/QtFolderCompressor/FolderCompressor.h"
 #include "assetManager/asset_manager.h"
 
 

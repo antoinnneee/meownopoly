@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QUuid>
-#include "case/Case.h"
+#include "Case.h"
 
 #define CASECATPERKS_DEFAULT_PARAMETER const QString &name, int morgagePrice = -1, int price = -1, int sellPrice = -1, QObject *parent = nullptr
 #define CASECATPERKS_DEFAULT_PARAMETER_NOP const QString &name, int morgagePrice, int price, int sellPrice, QObject *parent

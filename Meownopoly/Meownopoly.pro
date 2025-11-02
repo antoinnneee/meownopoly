@@ -33,20 +33,20 @@ VPATH += cpp
 INCLUDEPATH += cpp
 
 SOURCES += \
-    QtFolderCompressor/FolderCompressor.cpp \
+    tools/QtFolderCompressor/FolderCompressor.cpp \
     assetManager/asset_manager.cpp \
-    case/Case.cpp \
-    case/CaseCatDevice.cpp \
-    case/CaseCatDoor.cpp \
-    case/CaseCatNip.cpp \
-    case/CaseCardBoardBox.cpp \
-    case/CaseCatPerks.cpp \
-    case/CaseFactory.cpp \
-    case/CaseFreeNap.cpp \
-    case/CaseJail.cpp \
-    case/CaseKibbleDispenser.cpp \
-    case/CaseRestArea.cpp \
-    case/CaseToJail.cpp \
+    game/case/Case.cpp \
+    game/case/CaseCatDevice.cpp \
+    game/case/CaseCatDoor.cpp \
+    game/case/CaseCatNip.cpp \
+    game/case/CaseCardBoardBox.cpp \
+    game/case/CaseCatPerks.cpp \
+    game/case/CaseFactory.cpp \
+    game/case/CaseFreeNap.cpp \
+    game/case/CaseJail.cpp \
+    game/case/CaseKibbleDispenser.cpp \
+    game/case/CaseRestArea.cpp \
+    game/case/CaseToJail.cpp \
     cpp/game/card.cpp \
     cpp/game/game.cpp \
     cpp/game/game_loader.cpp \
@@ -54,62 +54,62 @@ SOURCES += \
     experiment/animation_manager.cpp \
     experiment/animationprovider.cpp \
     experiment/liveimage.cpp \
-    item_snapable/Displayparameter.cpp \
-    item_snapable/ItemSnapable.cpp \
-    item_snapable/decorationparameter.cpp \
-    item_snapable/itemsnapablefactory.cpp \
+    game/item_snapable/Displayparameter.cpp \
+    game/item_snapable/ItemSnapable.cpp \
+    game/item_snapable/decorationparameter.cpp \
+    game/item_snapable/itemsnapablefactory.cpp \
     launcher/launcher_manager.cpp \
     main.cpp \
-    map/map.cpp \
-    map/mapinfo.cpp \
-    map/mapfilemanager.cpp \
-    meowstyle.cpp \
+    game/map/map.cpp \
+    game/map/mapinfo.cpp \
+    game/map/mapfilemanager.cpp \
+    game/meowstyle.cpp \
     qmlapp.cpp \
     tools/appinfo.cpp \
     tools/cursor_manager.cpp \
     tools/editorenum.cpp \
     tools/logger.cpp \
-    tools/undoredomanager.cpp \
+    game/map/undoredomanager.cpp \
 
 
 HEADERS += \
-    QtFolderCompressor/FolderCompressor.h \
+    tools/QtFolderCompressor/FolderCompressor.h \
     assetManager/asset_manager.h \
-    case/Case.h \
-    case/CaseCatDevice.h \
-    case/CaseCatDoor.h \
-    case/CaseCatNip.h \
-    case/CaseCardBoardBox.h \
-    case/CaseCatPerks.h \
-    case/CaseFactory.h \
-    case/CaseFreeNap.h \
-    case/CaseJail.h \
-    case/CaseKibbleDispenser.h \
-    case/CaseRestArea.h \
-    case/CaseToJail.h \
+    game/case/Case.h \
+    game/case/CaseCatDevice.h \
+    game/case/CaseCatDoor.h \
+    game/case/CaseCatNip.h \
+    game/case/CaseCardBoardBox.h \
+    game/case/CaseCatPerks.h \
+    game/case/CaseFactory.h \
+    game/case/CaseFreeNap.h \
+    game/case/CaseJail.h \
+    game/case/CaseKibbleDispenser.h \
+    game/case/CaseRestArea.h \
+    game/case/CaseToJail.h \
     cpp/game/card.h \
     cpp/game/game.h \
     cpp/game/player.h \
     experiment/animation_manager.h \
     experiment/animationprovider.h \
     experiment/liveimage.h \
-    item_snapable/Displayparameter.h \
-    item_snapable/ItemSnapable.h \
-    item_snapable/decorationparameter.h \
-    item_snapable/itemsnapablefactory.h \
+    game/item_snapable/Displayparameter.h \
+    game/item_snapable/ItemSnapable.h \
+    game/item_snapable/decorationparameter.h \
+    game/item_snapable/itemsnapablefactory.h \
     launcher/launcher_manager.h \
-    map/map.h \
-    map/mapinfo.h \
-    map/mapfilemanager.h \
-    map/maptypes.h \
-    meowstyle.h \
+    game/map/map.h \
+    game/map/mapinfo.h \
+    game/map/mapfilemanager.h \
+    game/map/maptypes.h \
+    game/meowstyle.h \
     qmlapp.h \
     tools/debug_Info.h	\
     tools/appinfo.h \
     tools/cursor_manager.h \
     tools/editorenum.h \
     tools/logger.h \
-    tools/undoredomanager.h \
+    game/map/undoredomanager.h \
 
 RESOURCES += qml.qrc
 

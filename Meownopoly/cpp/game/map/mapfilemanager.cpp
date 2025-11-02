@@ -1,5 +1,5 @@
 ﻿#include "mapfilemanager.h"
-#include "map/maptypes.h"
+#include "maptypes.h"
 
 #include <QFile>
 #include <QDir>

@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QUrl>
-#include "case/Case.h"
+#include "game/case/Case.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>

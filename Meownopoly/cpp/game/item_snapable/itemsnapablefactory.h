@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QQmlEngine>
-#include "case/Case.h"
+#include "game/case/Case.h"
 #include "ItemSnapable.h"
 
 class ItemSnapableFactory : public QObject

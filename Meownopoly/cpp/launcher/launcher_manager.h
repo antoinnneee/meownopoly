@@ -12,7 +12,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QDateTime>
-#include "QtFolderCompressor/FolderCompressor.h"
+#include "tools/QtFolderCompressor/FolderCompressor.h"
 
 class LauncherManager : public QObject
 {

@@ -7,18 +7,16 @@
 #include <QList>
 #include <QVariant>
 #include <QDir>
-#include "case/Case.h"
-#include "case/CaseCatPerks.h"
-#include "case/CaseRestArea.h"
+#include "game/case/Case.h"
+#include "game/case/CaseRestArea.h"
 
 #include "card.h"
 #include "game/player.h"
-#include "item_snapable/ItemSnapable.h"
+#include "game/item_snapable/ItemSnapable.h"
 #include "map/mapinfo.h"
 #include "map/map.h"
 #include "map/maptypes.h"
-#include "map/mapfilemanager.h"
-#include "tools/undoredomanager.h"
+#include "map/undoredomanager.h"
 
 
 class Game : public QObject

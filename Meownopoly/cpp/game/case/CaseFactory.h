@@ -1,7 +1,7 @@
 #ifndef CASEFACTORY_H
 #define CASEFACTORY_H
 
-#include "case/Case.h"
+#include "Case.h"
 
 class CaseFactory : public Case
 {
