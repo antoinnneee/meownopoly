@@ -83,14 +83,11 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
         connect(map, &Map::foundItemSnapableTile, this, &Game::foundItemSnapableTile);
         connect(map, &Map::mapLoaded, this, &Game::mapLoaded);
         
-        // Emettre les signaux immédiatement car Map ne les émet plus
+        // Emettre les signaux immediatement car Map ne les emet plus
         for (ItemSnapable *tile : map->tiles()) {
             emit foundItemSnapableTile(tile);
         }
         emit mapLoaded(map);
-        //ici
-        // settings.setValue("NomDeLaValeur", "MaValeur");
-
     }
     
     return map;

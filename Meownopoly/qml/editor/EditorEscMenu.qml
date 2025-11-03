@@ -542,7 +542,7 @@ Rectangle {
                                              case 1 :
                                              default: "Pas de sauvegarde automatique"; break;
                                              case 2 : "Sauvegarde toute les "; break;
-                                             case 3 : "Sauvegarde sur modification"; break;
+                                             case 3 : "Sauvegarde en continu"; break;
                                              }
                                         wrapMode: Text.WordWrap
                                         color: "white"

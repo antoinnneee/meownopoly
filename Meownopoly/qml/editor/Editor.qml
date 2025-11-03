@@ -70,17 +70,15 @@ Rectangle {
     }
 
     onUpdateSettings: {
-    tmpSaver.repeat = stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
-    tmpSaver.running = stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
+        interval =  stEnableAutoSave.value("saveEvent", "0") === 2 ? stEnableAutoSave.value("saveInterval", "0") : 500
+        running = stEnableAutoSave.value("saveEvent", "0") === 0 ? false : true
     }
 
     Timer {
         id: tmpSaver
-        // interval: stEnableAutoSave.value("saveInterval", "1")
-        interval: 1000*10
-
-        repeat: stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
-        running: stEnableAutoSave.value("saveEvent", "0") === 2 ? true : false
+        repeat: true
+        interval : stEnableAutoSave.value("saveEvent", "0") === 2 ? stEnableAutoSave.value("saveInterval", "0") : 500
+        running: stEnableAutoSave.value("saveEvent", "0") === 0 ? false : true
         property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
         onTriggered: {
             console.log("Auto-saving map:", mapInfo.mapName)
@@ -100,7 +98,7 @@ Rectangle {
         running: false
         triggeredOnStart: true
         onTriggered: {
-            savingIndicator.running = savingIndicator.running ? false : true
+            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running = savingIndicator.running ? false : true) : null
         }
     }
 
