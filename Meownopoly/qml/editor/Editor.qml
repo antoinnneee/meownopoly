@@ -123,12 +123,28 @@ Rectangle {
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Delete) {
             var selectItem = logic.mouseLogic.selectedElements
-            for (var i = 0; i < selectItem.length; i++) {
-                selectItem[i].deleteRequest(false)
+            if (selectItem.length === 0) {
+                event.accepted = true
+                return
             }
-            // Sauvegarder une seule fois après toutes les suppressions
-            if (selectItem.length > 0) {
-                logic.saveMap(MapTypes.UNDOREDO)
+            
+            // Attendre que toutes les animations de suppression soient terminées avant de sauvegarder
+            var pendingDeletions = selectItem.length
+            
+            // Handler appelé quand chaque animation de suppression est terminée
+            var deletionHandler = function() {
+                pendingDeletions--
+                if (pendingDeletions === 0) {
+                    // Toutes les animations sont terminées, sauvegarder maintenant
+                    logic.saveMap(MapTypes.UNDOREDO)
+                }
+            }
+            
+            // Connecter au signal elementDeleted de chaque élément et déclencher la suppression
+            for (var i = 0; i < selectItem.length; i++) {
+                var element = selectItem[i]
+                element.elementDeleted.connect(deletionHandler)
+                element.deleteRequest(false)
             }
             event.accepted = true
         }
