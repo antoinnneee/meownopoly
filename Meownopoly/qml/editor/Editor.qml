@@ -353,6 +353,7 @@ Rectangle {
     // Rectangle de sélection
     SelectionRect {
         id: selectionRect
+        z: 100
     }
 
     SelectionPanel{

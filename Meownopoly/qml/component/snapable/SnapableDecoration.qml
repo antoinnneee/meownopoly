@@ -24,7 +24,9 @@ SnapableElement {
     property bool assetAvailable : (snapableParameters.decorationParameter.decorationCategory != ""
                                     && snapableParameters.decorationParameter.decorationType  != ""
                                     && snapableParameters.decorationParameter.decorationId  != "")
-    property var asset: (assetAvailable) ? AssetManager.getAssetById(snapableParameters.decorationParameter.decorationCategory, snapableParameters.decorationParameter.decorationType, snapableParameters.decorationParameter.decorationId) : null
+    property var asset: (assetAvailable) ? AssetManager.getAssetById(snapableParameters.decorationParameter.decorationCategory, snapableParameters.decorationParameter.decorationType, snapableParameters.decorationParameter.decorationId) : ""
+
+
     property string imagePath: (asset && asset.id) ? asset.path : ""
     property string extension: (asset && asset.id) ? asset.extension : ""
 

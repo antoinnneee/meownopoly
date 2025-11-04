@@ -53,6 +53,7 @@
         <file>qml/editor/panel/editorBottomPanel/EBP_Content.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_SearchBar.qml</file>
         <file>qml/editor/panel/MenuSelector_Button.qml</file>
+        <file>qml/editor/panel/MenuSelector_SizeControl.qml</file>
         <file>qml/editor/logic/PlanLogic.qml</file>
         <file>qml/editor/logic/ScrollLogic.qml</file>
         <file>qml/editor/logic/TileLogic.qml</file>

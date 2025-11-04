@@ -43,6 +43,8 @@ Rectangle {
     property alias casePanel: casePanel
     property alias connectionsPanel: casePanel.connectionsConfigSection  // Exposer le panneau de connexions
 
+    property alias topToolbar:topToolbar
+
     // Signals to propagate from child panels
     // Signaux pour propager les événements vers l'Editor
     signal assetSelected(string category, string type, string id)
@@ -78,7 +80,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.top
-        height: 35
+        height: Screen.pixelDensity * 12.5
         z: 10
 
         logic: root.logic
