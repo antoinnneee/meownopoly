@@ -59,6 +59,7 @@ Rectangle {
     signal updateSettings()
 
     Component.onCompleted: {
+        stEnableAutoSave.sync()
         initializeEditor()
     }
 
@@ -70,15 +71,17 @@ Rectangle {
     }
 
     onUpdateSettings: {
-        interval =  stEnableAutoSave.value("saveEvent", "0") === 2 ? stEnableAutoSave.value("saveInterval", "0") : 500
-        running = stEnableAutoSave.value("saveEvent", "0") === 0 ? false : true
+        console.log("Update setting - stEnableAutoSave.value('saveEvent', '0') " + stEnableAutoSave.value('saveEvent', '0'))
+
+        interval =  stEnableAutoSave.value("saveEvent", "0") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60: 500
+        running = stEnableAutoSave.value("saveEvent", "0") === 1 ? false : true
     }
 
     Timer {
         id: tmpSaver
         repeat: true
-        interval : stEnableAutoSave.value("saveEvent", "0") === 2 ? stEnableAutoSave.value("saveInterval", "0") : 500
-        running: stEnableAutoSave.value("saveEvent", "0") === 0 ? false : true
+        interval : stEnableAutoSave.value("saveEvent", "0") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60 : 500
+        running: stEnableAutoSave.value("saveEvent", "0") === 1 ? false : true
         property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
         onTriggered: {
             console.log("Auto-saving map:", mapInfo.mapName)

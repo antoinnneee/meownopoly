@@ -638,7 +638,7 @@ Rectangle {
                                         
                                         onValueChanged: {
                                             if (visible) {
-                                                stEnableAutoSave.setValue("saveInterval", value.toString())
+                                                stEnableAutoSave.setValue("saveInterval", value)
                                                 stEnableAutoSave.sync()
                                             }
                                         }
