@@ -25,7 +25,7 @@ GroupBox {
     // Settings pour la persistance des presets
     Settings {
         id: colorPresetSettings
-        category: "ColorPresets"
+        category: "Editor/ColorPresets"
         
         // Propriétés pour sauvegarder les presets
         property string presetsData: ""

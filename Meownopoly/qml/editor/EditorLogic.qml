@@ -1,4 +1,6 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
+import QtCore
+
 import Game
 import Case
 import ItemSnapable
@@ -8,10 +10,11 @@ import "../component/snapable"
 import "../component/grid"
 import MapInfo
 import EditorEnum
-import "logic"
 import Logger
-import UndoRedoManager 1.0
+import UndoRedoManager
 import MapTypes
+
+import "logic"
 
 Item {
     id: logic
@@ -95,14 +98,13 @@ Item {
             }
         }
 
-
     function saveMap(isAutoSave){
         // Ne pas sauvegarder si on est en mode restauration
         if (isAutoSave === MapTypes.UNDOREDO && !UndoRedoManager.canSave()) {
             console.log("[SAVE] Blocked during restoration")
             return
         }
-        
+
         var itemSnapableList = [];
 
         for (var i = 0; i < snapableTilesList.length; i++) {
@@ -114,5 +116,15 @@ Item {
         }
         Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
     }
+    Settings {
+        id: stEnableAutoSave
+        category: "Editor/SaveConfig"
+        property var currentMap : value("currentMap", mapInfo.autosaveMapName)
+        property int saveEvent: value("saveEvent", "0")
+        // onCurrentMapChanged: console.log("currentMap :", currentMap, " saveEvent:", saveEvent)
+    }
 }
+
+
+
 

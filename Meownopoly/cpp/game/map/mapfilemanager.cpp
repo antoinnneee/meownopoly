@@ -149,8 +149,8 @@ bool MapFileManager::saveMap(const QJsonObject &mapData, const QString &mapName,
         return false;
     }
     
-    qDebug() << "Map saved successfully to:" << filePath;
-    qDebug().noquote() << QString::fromUtf8(jsonData);
+    // qDebug() << "Map saved successfully to:" << filePath;
+    // qDebug().noquote() << QString::fromUtf8(jsonData);
     return true;
 }
 

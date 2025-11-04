@@ -93,6 +93,11 @@ Item {
                     width: parent.width
                     checked: logic.mapInfo.isBackgroundOnGrill
 
+                    onCheckedChanged: {
+                            logic.mapInfo.isBackgroundOnGrill = checked
+                            logic.saveMap(MapTypes.UNDOREDO)
+                    }
+
                     indicator: Rectangle {
                         implicitWidth: 20
                         implicitHeight: 20
@@ -118,11 +123,6 @@ Item {
                         color: "#FFFFFF"
                         verticalAlignment: Text.AlignVCenter
                         leftPadding: commonSnapToGridCheckBox.indicator.width + commonSnapToGridCheckBox.spacing
-                    }
-
-                    onCheckedChanged: {
-                            logic.mapInfo.isBackgroundOnGrill = checked
-                            logic.saveMap(MapTypes.UNDOREDO)
                     }
                 }
 
@@ -392,7 +392,6 @@ Item {
                                     anchors.fill: parent
                                     onClicked: {
                                         logic.mapInfo.backgroundPath = bgImage.source
-                                        logic.mapInfo.backgroundScaling = "Fit" // Valeur par défaut
                                         backgroundView.currentThemeMode = "default"
                                         logic.saveMap(MapTypes.UNDOREDO)
                                     }

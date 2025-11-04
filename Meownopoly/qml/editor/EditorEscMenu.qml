@@ -9,8 +9,8 @@ import MapTypes
 
 Rectangle {
     id: escMenu
-    width: 400
-    height: 500
+    width: Screen.pixelDensity * 150
+    height: Screen.pixelDensity * 125
     anchors.centerIn: parent
     color: "#2C2C2C"
     radius: 10
@@ -19,7 +19,7 @@ Rectangle {
     onVisibleChanged: isVisble(visible)
 
     signal isVisble(bool visible)
-    
+    signal indexSaveEvent(int index)
     ParticleSystem {
         id: particleSystem
         anchors.fill: parent
@@ -463,45 +463,197 @@ Rectangle {
                     ScrollView {
                         anchors.fill: parent
                         anchors.margins: 15
-                        
-                        Button {
-                            id: displayMenuBtn
-                            height: 50
-                            background: Rectangle {
-                                color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
-                                radius: 8
-                                border.width: 1
-                                border.color: displayMenuBtn.checked ? "#FFFFFF" : "#555555"
-                            }
-                            contentItem: Text {
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                                text: displayMenuBtn.checked ? "Afficher la modification de carte au lancement de l'éditeur ?" :
-                                                               "Ne pas afficher la modification de carte au lancement de l'éditeur ?"
-                                color: "white"
-                                font.pixelSize: 13
-                            }
-                            onVisibleChanged: {
-                                state = stBackGroundEditor.value("showBackground", "true")
-                            }
-                            onClicked:{
-                                checked = !checked
-                                stBackGroundEditor.setValue("showBackground", checked)
-                                stBackGroundEditor.sync()
-                            }
-                            Settings {
-                                id: stBackGroundEditor
-                                category: "showBackgroundEditor"
-                                property bool showBackground: value("showBackground", "true")
-                            }
-                        }
 
                         Column {
                             width: parent.width
-                            anchors.top: displayMenuBtn.bottom
+                            // anchors.top: displayMenuBtn.bottom
                             anchors.topMargin: 10
                             spacing: 20
-                            
+
+                            Button {
+                                id: displayMenuBtn
+                                height: 50
+                                width: escMenu.width * 0.82
+                                background: Rectangle {
+                                    color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
+                                    radius: 8
+                                    border.width: 1
+                                    border.color: displayMenuBtn.checked ? "#FFFFFF" : "#555555"
+                                }
+                                contentItem: Text {
+                                    id: txt
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: displayMenuBtn.checked ? "Afficher la modification de carte au lancement de l'éditeur ?" :
+                                                                   "Ne pas afficher la modification de carte au lancement de l'éditeur ?"
+                                    wrapMode: Text.WordWrap
+                                    color: "white"
+                                    font.pixelSize: 13
+                                }
+                                onVisibleChanged: {
+                                    state = stBackGroundEditor.value("selectBackgroundAtStart", "true")
+                                }
+                                onClicked:{
+                                    checked = !checked
+                                    stBackGroundEditor.setValue("selectBackgroundAtStart", checked)
+                                    stBackGroundEditor.sync()
+                                }
+                                Settings {
+                                    id: stBackGroundEditor
+                                    property bool selectBackgroundAtStart: value("selectBackgroundAtStart", "true")
+                                    category: "Editor"
+                                }
+                            }
+                            Row {
+                                id: rowSave
+                                height: 50
+                                width: escMenu.width
+                                spacing: 10
+                                Button {
+                                    id: enableAutoSaveBtn
+                                    height: 50
+                                    width: escMenu.width * 0.5
+                                    property int indexBt : stEnableAutoSave.value("saveEvent", "0")
+                                    background: Rectangle {
+                                        color: {
+                                            switch (enableAutoSaveBtn.indexBt){
+                                            case 1 :
+                                            default: "#333333"; break;
+                                            case 2 : "#4A90E2"; break;
+                                            case 3 : "#63C76F"; break;
+                                            }
+                                        }
+                                        border.color: {
+                                            switch (enableAutoSaveBtn.indexBt){
+                                            case 1 :
+                                            default: "#555555"; break;
+                                            case 2 :
+                                            case 3 : "#FFFFFF"; break;
+                                            }
+                                        }
+
+                                        border.width: 1
+                                        radius: 8
+                                    }
+                                    contentItem: Text {
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        text:switch (enableAutoSaveBtn.indexBt){
+                                             case 1 :
+                                             default: "Pas de sauvegarde automatique"; break;
+                                             case 2 : "Sauvegarde toute les "; break;
+                                             case 3 : "Sauvegarde en continu"; break;
+                                             }
+                                        wrapMode: Text.WordWrap
+                                        color: "white"
+                                        font.pixelSize: 13
+                                    }
+                                    onVisibleChanged: {
+                                        enableAutoSaveBtn.indexBt = parseInt(stEnableAutoSave.value("saveEvent", "0"))
+                                        if (enableAutoSaveBtn.indexBt == 2) {
+                                            saveIntervalSpinBox.value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
+                                        }
+                                    }
+                                    onClicked:{
+                                        enableAutoSaveBtn.indexBt % 3 ? enableAutoSaveBtn.indexBt += 1 : enableAutoSaveBtn.indexBt = 1
+                                        stEnableAutoSave.setValue("saveEvent", enableAutoSaveBtn.indexBt)
+                                        stEnableAutoSave.sync()
+                                        escMenu.indexSaveEvent(enableAutoSaveBtn.indexBt)
+                                        if (enableAutoSaveBtn.indexBt == 2) {
+                                            saveIntervalSpinBox.value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
+                                        }
+                                    }
+                                    Settings {
+                                        id: stEnableAutoSave
+                                        category: "Editor/SaveConfig"
+                                    }
+                                }
+                                
+                                // Conteneur discret pour l'intervalle de sauvegarde
+                                Row {
+                                    id: intervalRow
+                                    height: 50
+                                    visible: enableAutoSaveBtn.indexBt == 2
+                                    spacing: 8
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    
+                                    // SpinBox discret
+                                    SpinBox {
+                                        id: saveIntervalSpinBox
+                                        height: 35
+                                        width: 50
+                                        from: 1
+                                        to: 5
+                                        value: parseInt(stEnableAutoSave.value("saveInterval", "1"))
+                                        
+                                        contentItem: TextInput {
+                                            text: saveIntervalSpinBox.textFromValue(saveIntervalSpinBox.value, saveIntervalSpinBox.locale)
+                                            font.pixelSize: 12
+                                            color: "#CCCCCC"
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            readOnly: true
+                                            selectByMouse: false
+                                        }
+                                        
+                                        background: Rectangle {
+                                            color: "#2A2A2A"
+                                            radius: 4
+                                            border.color: "#555555"
+                                            border.width: 1
+                                        }
+                                        
+                                        up.indicator: Rectangle {
+                                            x: saveIntervalSpinBox.mirrored ? 0 : parent.width - width
+                                            height: parent.height / 2
+                                            implicitWidth: 18
+                                            color: saveIntervalSpinBox.up.pressed ? "#3A3A3A" : "#2A2A2A"
+                                            border.color: "#555555"
+                                            border.width: 1
+                                            radius: 4
+                                            Text {
+                                                text: "+"
+                                                color: "#CCCCCC"
+                                                font.pixelSize: 11
+                                                anchors.centerIn: parent
+                                            }
+                                        }
+                                        
+                                        down.indicator: Rectangle {
+                                            x: saveIntervalSpinBox.mirrored ? 0 : parent.width - width
+                                            y: parent.height / 2
+                                            height: parent.height / 2
+                                            implicitWidth: 18
+                                            color: saveIntervalSpinBox.down.pressed ? "#3A3A3A" : "#2A2A2A"
+                                            border.color: "#555555"
+                                            border.width: 1
+                                            radius: 4
+                                            Text {
+                                                text: "−"
+                                                color: "#CCCCCC"
+                                                font.pixelSize: 11
+                                                anchors.centerIn: parent
+                                            }
+                                        }
+                                        
+                                        onValueChanged: {
+                                            if (visible) {
+                                                stEnableAutoSave.setValue("saveInterval", value)
+                                                stEnableAutoSave.sync()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Texte "minutes"
+                                    Text {
+                                        text: "minutes"
+                                        color: "#CCCCCC"
+                                        font.pixelSize: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                            }
+
                             // Section Graphiques
                             Column {
                                 width: parent.width

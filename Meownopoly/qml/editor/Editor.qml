@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
-import Game
+import QtCore
 import Case
 import ItemSnapable
 import "../component"
@@ -13,6 +13,8 @@ import "../component/preview"
 import "../component/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
+
+import Game
 import MapFileManager
 import MapTypes
 import MapInfo
@@ -65,18 +67,62 @@ Rectangle {
 
     Component.onCompleted: {
         editorGrid.mmSize = 8
-        if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
-            console.log("Creating autosave map")
-            MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
-            logic.saveMap(MapTypes.AUTOSAVE)
-        }
-        else {
-            console.log("Autosave map already exists")
-        }
-
-        Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+        stEnableAutoSave.sync()
+        initializeEditor()
     }
 
+    signal updateSettings()
+
+    Settings {
+        id: stEnableAutoSave
+        category: "Editor/SaveConfig"
+        property var currentMap : value("currentMap", mapInfo.autosaveMapName)
+        property int saveEvent: value("saveEvent", "1")
+    }
+
+    onUpdateSettings: {
+        console.log("Update setting - stEnableAutoSave.value('saveEvent', '0') " + stEnableAutoSave.value('saveEvent', "1"))
+
+        tmpSaver.interval =  stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60: 500
+        tmpSaver.running = stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
+    }
+
+    Timer {
+        id: tmpSaver
+        repeat: true
+        interval : stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60 : 500
+        running: stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
+        property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
+        onTriggered: {
+            console.log("Auto-saving map:", mapInfo.mapName)
+            if (isMapCustom)
+                logic.saveMap(MapTypes.CUSTOM)
+            else
+                logic.saveMap(MapTypes.AUTOSAVE)
+
+            busyTimer.start()
+        }
+    }
+
+    Timer {
+        id: busyTimer
+        interval: 1500
+        repeat: false
+        running: false
+        triggeredOnStart: true
+        onTriggered: {
+            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running = savingIndicator.running ? false : true) : null
+        }
+    }
+
+    BusyIndicator {
+        id: savingIndicator
+        anchors.right: parent.right
+        anchors.top: parent.top
+        width: Screen.pixelDensity * 10
+        height: width
+        running: false
+    }
 
     // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
     focus: true
@@ -89,12 +135,28 @@ Rectangle {
         console.log("event", event.key)
         if (event.key === Qt.Key_Delete) {
             var selectItem = logic.mouseLogic.selectedElements
-            for (var i = 0; i < selectItem.length; i++) {
-                selectItem[i].deleteRequest(false)
+            if (selectItem.length === 0) {
+                event.accepted = true
+                return
             }
-            // Sauvegarder une seule fois après toutes les suppressions
-            if (selectItem.length > 0) {
-                logic.saveMap(MapTypes.UNDOREDO)
+            
+            // Attendre que toutes les animations de suppression soient terminées avant de sauvegarder
+            var pendingDeletions = selectItem.length
+            
+            // Handler appelé quand chaque animation de suppression est terminée
+            var deletionHandler = function() {
+                pendingDeletions--
+                if (pendingDeletions === 0) {
+                    // Toutes les animations sont terminées, sauvegarder maintenant
+                    logic.saveMap(MapTypes.UNDOREDO)
+                }
+            }
+            
+            // Connecter au signal elementDeleted de chaque élément et déclencher la suppression
+            for (var i = 0; i < selectItem.length; i++) {
+                var element = selectItem[i]
+                element.elementDeleted.connect(deletionHandler)
+                element.deleteRequest(false)
             }
             event.accepted = true
         }
@@ -118,12 +180,12 @@ Rectangle {
         else if (event.key === Qt.Key_Y) {
             if (logic.mouseLogic.isControlPressed)
                 console.log("Redo requested via Ctrl+Y")
-                Game.askNext()
+            Game.askNext()
         }
         else if (event.key === Qt.Key_Z) {
             if (logic.mouseLogic.isControlPressed)
                 console.log("Undo requested via Ctrl+Z")
-                Game.askPreview()
+            Game.askPreview()
         }
         else if (event.key == 178)
         {
@@ -142,7 +204,7 @@ Rectangle {
     Connections {
         target: UndoRedoManager
         function onForceUnSelectAllElement() {
-                logic.mouseLogic.unselectSelectedElements()
+            logic.mouseLogic.unselectSelectedElements()
         }
     }
     Connections{
@@ -171,7 +233,10 @@ Rectangle {
                 mapInfo.isBackgroundOnGrill = map.mapInfo.isBackgroundOnGrill
                 mapInfo.musicPath = map.mapInfo.musicPath
             }
-            
+
+            if (mapInfo.mapName !== stEnableAutoSave.currentMap)
+                stEnableAutoSave.setValue("currentMap", mapInfo.mapName)
+
             // Sauvegarder l'état initial pour undo/redo
             logic.saveMap(MapTypes.UNDOREDO)
         }
@@ -362,6 +427,36 @@ Rectangle {
         }
     }
 
+    function initializeEditor() {
+        if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
+            console.log("Creating autosave map")
+            MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
+            logic.saveMap(MapTypes.AUTOSAVE)
+        }
+        else {
+            console.log("Autosave map already exists")
+        }
+        if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
+            console.log("Loading custom map:", stEnableAutoSave.currentMap)
+            if (MapFileManager.mapExists(stEnableAutoSave.currentMap, MapTypes.CUSTOM)){
+                Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)
+                mapInfo.mapName = stEnableAutoSave.currentMap
+            }
+            else {
+                stEnableAutoSave.setValue("currentMap", mapInfo.autosaveMapName)
+                mapInfo.mapName = mapInfo.autosaveMapName
+                Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+            }
+        }
+        else  {
+            console.log("Loading autosave map")
+            Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+        }
+        if (stEnableAutoSave.value("saveEvent", "1") !== 1) {
+            tmpSaver.start()
+        }
+    }
+
     // Function to place the selected asset
     function placeSelectedAsset(gridX, gridY) {
         var snapableParameters
@@ -398,12 +493,16 @@ Rectangle {
 
     // Menu d'échappement
     EditorEscMenu {
-        id: escMenu        
+        id: escMenu
         onVisibleChanged: {
             if (!visible) {
                 // Redonner le focus à l'éditeur quand le menu se ferme
                 root.forceActiveFocus()
             }
+        }
+        onIndexSaveEvent: {
+            stEnableAutoSave.sync()
+            root.updateSettings()
         }
     }
 }

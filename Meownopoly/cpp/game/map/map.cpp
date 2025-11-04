@@ -13,9 +13,9 @@ Map::Map(QObject *parent) : QObject(parent)
 Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 {
     QJsonArray snapableTilesArray = jsonObject["snapableTiles"].toArray();
-    qDebug() << "Snapable tiles:" << snapableTilesArray.size();
-    qDebug() << "--------------------------------";
-    qDebug() << "Start loading snapable tiles";
+    // qDebug() << "Snapable tiles:" << snapableTilesArray.size();
+    // qDebug() << "--------------------------------";
+    // qDebug() << "Start loading snapable tiles";
 
     for (const QJsonValueRef value : snapableTilesArray) {
         const QJsonObject tileObject = value.toObject();
@@ -31,9 +31,9 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 */
     }
 
-    qDebug() << "Snapable tiles loaded successfully";
-    qDebug() << "--------------------------------";
-    qDebug() << "building links between snapable tiles";
+    // qDebug() << "Snapable tiles loaded successfully";
+    // qDebug() << "--------------------------------";
+    // qDebug() << "building links between snapable tiles";
 
     for (ItemSnapable *is : std::as_const(m_tiles)) {
         QJsonObject originalJson = is->getOriginalJson();
@@ -45,14 +45,14 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
                 if (targetTile->uniqueId().toString() == nextId) {
                     is->addNext(targetTile);
                     targetTile->addPrev(is);
-                    qDebug() << "Link built between" << is->uniqueId() << "and" << targetTile->uniqueId();
+                    // qDebug() << "Link built between" << is->uniqueId() << "and" << targetTile->uniqueId();
                 }
             }
         }
     }
-    qDebug() << "Links built successfully";
+    // qDebug() << "Links built successfully";
 
-    qDebug() << "--------------------------------";
+    // qDebug() << "--------------------------------";
 
 }
 

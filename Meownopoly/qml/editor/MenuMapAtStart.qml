@@ -96,19 +96,19 @@ MouseArea {
                     }
                     onClicked:{
                         displayMenuBtn.checked = !displayMenuBtn.checked
-                        stBackGroundEditor.setValue("showBackground", checked)
+                        stBackGroundEditor.setValue("selectBackgroundAtStart", checked)
                         stBackGroundEditor.sync()
                     }
                     Component.onCompleted: {
-                        displayMenuBtn.checked = stBackGroundEditor.value("showBackground", "true")
+                        displayMenuBtn.checked = stBackGroundEditor.value("selectBackgroundAtStart", "true")
                     }
                     Settings {
                         id: stBackGroundEditor
-                        category: "showBackgroundEditor"
-                        property bool showBackground: stBackGroundEditor.value("showBackground", "true")
+                        category: "Editor"
+                        property bool selectBackgroundAtStart: stBackGroundEditor.value("selectBackgroundAtStart", "true")
                         Component.onCompleted: {
-                            root.visible = showBackground
-                            root.enabled = showBackground
+                            root.visible = selectBackgroundAtStart
+                            root.enabled = selectBackgroundAtStart
                         }
                     }
                 }

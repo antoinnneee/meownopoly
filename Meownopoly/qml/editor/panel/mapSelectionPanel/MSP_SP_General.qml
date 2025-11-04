@@ -2,6 +2,7 @@
 import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
+import QtCore
 import "../editorBottomPanel"
 import "../../../ui_item"
 
@@ -123,7 +124,7 @@ Item {
 
                                 contentItem: Text {
                                     text: if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == ""){
-                                              "Sauvegarde automatique"
+                                              "Sauvegarde par défaut"
                                           }
                                           else if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM)){
                                               "Mettre a jour la carte"
@@ -147,10 +148,21 @@ Item {
                                         mapInfo.mapLastModified = dateOfLastModification
                                         logic.saveMap(mapName === mapInfo.autosaveMapName || mapName == "" ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
                                         newMap()
+
+                                        stEnableAutoSave.setValue("currentMap", mapInfo.mapName)
+
+
                                     } else {
                                         console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")
                                     }
                                 }
+                                Settings {
+                                    id: stEnableAutoSave
+                                    category: "Editor/SaveConfig"
+                                    property var currentMap : value("currentMap", mapInfo.autosaveMapName)
+                                    property var enableAutoSave: value("enableAutoSave", 0)
+                                }
+
                             }
                         }
                     }
@@ -351,10 +363,6 @@ Item {
                 border.color: "#444444"
                 border.width: 1
                 height:  controlColumnLeft.height > controlColumnRight.height ? controlColumnLeft.height + 20 : controlColumnRight.height + 20
-                Component.onCompleted: {
-                    controlColumnLeft.height > controlColumnRight.height ? console.log ("Left column is taller") : console.log ("Right column is taller")
-                }
-
 
                 // Main details column
                 Column {
@@ -390,7 +398,6 @@ Item {
                                     font.pixelSize: 16
                                 }
                             }
-
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Description"

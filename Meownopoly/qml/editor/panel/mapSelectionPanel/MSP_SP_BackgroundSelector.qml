@@ -100,7 +100,6 @@ Item {
                 hoverEnabled: true
                 onClicked: {
                     logic.mapInfo.backgroundPath = "";
-                    logic.mapInfo.backgroundScaling = "Fit";
                     logic.saveMap(MapTypes.UNDOREDO)
                 }
             }

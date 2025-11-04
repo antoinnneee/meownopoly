@@ -1,6 +1,7 @@
 
 #include <QQmlEngine>
 #include "undoredomanager.h"
+#include "qjsonarray.h"
 
 UndoRedoManager *UndoRedoManager::m_instance = nullptr;
 
@@ -34,6 +35,8 @@ void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit){
         qDebug() << "[UNDO] Ignoring save during state restoration";
         return;
     }
+
+    // compareJsonObject(newEdit);
     
     // Si on n'est pas Ã  la fin, supprimer toutes les entrÃ©es futures
     if (m_currentEditIndex < m_listEdits.size() - 1) {
@@ -100,3 +103,105 @@ void UndoRedoManager::setIsRestoringState(bool newIsRestoringState)
     m_isRestoringState = newIsRestoringState;
     emit isRestoringStateChanged();
 }
+
+
+// void UndoRedoManager::compareJsonObject(QJsonObject newEdit)
+// {
+//     QProcess diffProcess;
+
+//     QTemporaryFile file;
+
+//     QJsonDocument oldE = m_listEdits.isEmpty() ? QJsonDocument() : (QJsonDocument)m_listEdits.last();
+//     QJsonDocument newE = QJsonDocument(newEdit);
+//     QStringList arg;
+//     arg << oldE.toJson(QJsonDocument::Indented) << newE.toJson(QJsonDocument::Indented);
+
+//     // qDebug() << "Old E " << oldE;
+//     // qDebug() << "New E " << newE;
+
+//     diffProcess.start("fc.exe", arg);
+//     // diffProcess.start("fc.exe", QStringList{"test", "test"});
+
+//     qDebug() << "diffProcess.errorString() " << diffProcess.errorString();
+//     qDebug() << " diffProcess.readAllStandardOutput " << diffProcess.readAllStandardOutput();
+// }
+
+
+
+
+
+
+// void UndoRedoManager::compareJsonObject(QJsonObject newEdit)
+// {
+//     if (m_listEdits.isEmpty()) {
+//         qDebug() << "[UNDO] First state, nothing to compare";
+//         return;
+//     }
+
+//     QJsonObject oldEdit = m_listEdits.last();
+
+//     // Comparaison rapide : si identiques, pas besoin d'aller plus loin
+//     if (oldEdit == newEdit) {
+//         qDebug() << "[UNDO] No changes detected, skipping save";
+//         // Vous pourriez même retourner ici pour ne PAS ajouter l'état dupliqué
+//         return;
+//     }
+
+//     // Comparaison détaillée pour le debug/logging
+//     qDebug() << "[UNDO] Changes detected:";
+//     compareJsonFields(oldEdit, newEdit, "");
+// }
+
+// void UndoRedoManager::compareJsonFields(const QJsonObject& oldObj, const QJsonObject& newObj, const QString& path)
+// {
+//     // Récupérer toutes les clés uniques
+//     QSet<QString> allKeys;
+//     for (const QString& key : oldObj.keys()) allKeys.insert(key);
+//     for (const QString& key : newObj.keys()) allKeys.insert(key);
+
+//     for (const QString& key : allKeys) {
+//         QString currentPath = path.isEmpty() ? key : path + "." + key;
+
+//         bool oldHasKey = oldObj.contains(key);
+//         bool newHasKey = newObj.contains(key);
+
+//         if (!oldHasKey && newHasKey) {
+//             qDebug() << "  [+]" << currentPath << "=" << newObj[key];
+//         }
+//         else if (oldHasKey && !newHasKey) {
+//             qDebug() << "  [-]" << currentPath;
+//         }
+//         else if (oldHasKey && newHasKey) {
+//             QJsonValue oldVal = oldObj[key];
+//             QJsonValue newVal = newObj[key];
+
+//             if (oldVal != newVal) {
+//                 if (oldVal.isObject() && newVal.isObject()) {
+//                     // Comparaison récursive pour les objets imbriqués
+//                     compareJsonFields(oldVal.toObject(), newVal.toObject(), currentPath);
+//                 }
+//                 else if (oldVal.isArray() && newVal.isArray()) {
+//                     qDebug() << "  [~]" << currentPath << ": array changed (old size:"
+//                              << oldVal.toArray().size() << ", new size:" << newVal.toArray().size() << ")";
+//                 }
+//                 else {
+//                     qDebug() << "  [~]" << currentPath << ": " << oldVal << "->" << newVal;
+//                 }
+//             }
+//         }
+//     }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

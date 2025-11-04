@@ -12,6 +12,7 @@
 #include "map/maptypes.h"
 #include "map/map.h"
 #include "game/map/undoredomanager.h"
+#include "qsettings.h"
 
 QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray)
 {
@@ -28,6 +29,7 @@ QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTiles
 
 bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType)
 {
+    qDebug() << "Game::saveMap called " << mapInfo->getMapName() << " Type: " << mapType;
     bool flag = false;
     QJsonArray snapableTilesArray;
 
@@ -47,14 +49,15 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
     }
 
     jsonObject["snapableTiles"] = snapableTilesArray;
+    QSettings settings;
     switch (mapType) {
     case MapTypes::AUTOSAVE:
     case MapTypes::CUSTOM:
         flag = MapFileManager::saveMap(jsonObject, mapInfo->getMapName(), mapType);
         break;
     case MapTypes::UNDOREDO:
-        emit updateListEdits(jsonObject);
         flag = true;
+        emit updateListEdits(jsonObject);
         break;
     default:
         break;
@@ -80,7 +83,7 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
         connect(map, &Map::foundItemSnapableTile, this, &Game::foundItemSnapableTile);
         connect(map, &Map::mapLoaded, this, &Game::mapLoaded);
         
-        // Emettre les signaux immédiatement car Map ne les émet plus
+        // Emettre les signaux immediatement car Map ne les emet plus
         for (ItemSnapable *tile : map->tiles()) {
             emit foundItemSnapableTile(tile);
         }
@@ -102,7 +105,7 @@ void Game::onReturnEdit(QJsonObject newEdit)
         connect(map, &Map::foundItemSnapableTile, this, &Game::foundItemSnapableTile);
         connect(map, &Map::mapLoaded, this, &Game::mapLoaded);
 
-        // Emettre les signaux immédiatement car Map ne les émet plus
+        // Emettre les signaux immediatement car Map ne les émet plus
         for (ItemSnapable *tile : map->tiles()) {
             emit foundItemSnapableTile(tile);
         }
