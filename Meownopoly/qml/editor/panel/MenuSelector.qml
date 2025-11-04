@@ -5,7 +5,9 @@ import "../../ui_item"
 import ".."
 
 Item {
-    id: root    
+    id: root
+    height: Screen.pixelDensity * 12.5
+    width: 800
     required property EditorLogic logic
     property bool isExpanded: false
     
@@ -99,34 +101,10 @@ Item {
                 }
             }
         }
-        ColumnLayout
-        {
-            height: parent.height
-            width: Screen.pixelDensity * 35
-            spacing: 0
-            Layout.fillHeight: true
-            SizeSelector{
-                text: "W:"
-                // @disable-check M16
-                topLeftRadius: 3
-                // @disable-check M16
-                topRightRadius: 3
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                widthSpinBox.value: logic.tileLogic.currentElementWidth
-                onValueChanged: function(value) { logic.tileLogic.currentElementWidth = value }
-            }
-            SizeSelector{
-                text: "H:"
-                // @disable-check M16
-                bottomLeftRadius: 3
-                // @disable-check M16
-                bottomRightRadius: 3
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-                widthSpinBox.value: logic.tileLogic.currentElementHeight
-                onValueChanged: function(value) { logic.tileLogic.currentElementHeight = value }
-            }
+        MenuSelector_SizeControl {
+            tileLogic: logic.tileLogic
+
+            height: Screen.pixelDensity * 12.5
         }
         
         // Boutons d'onglets dynamiques (Assets Panel)
