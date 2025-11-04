@@ -31,6 +31,9 @@ public:
     
     // Nouvelle methode pour vérifier si on peut sauvegarder
     Q_INVOKABLE bool canSave() const { return !m_isRestoringState; }
+    
+    // Method to clear restoration flag from QML after map loading completes
+    Q_INVOKABLE void clearRestorationFlag();
 
     bool isRestoringState() const;
     void setIsRestoringState(bool newIsRestoringState);

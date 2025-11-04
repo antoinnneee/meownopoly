@@ -101,7 +101,7 @@ Item {
     function saveMap(isAutoSave){
         // Ne pas sauvegarder si on est en mode restauration
         if (isAutoSave === MapTypes.UNDOREDO && !UndoRedoManager.canSave()) {
-            console.log("[SAVE] Blocked during restoration")
+            console.log("[UNDO][SAVE] Blocked during restoration - canSave() returned false")
             return
         }
 
@@ -114,6 +114,11 @@ Item {
                 itemSnapableList.push(tile.snapableParameters)
             }
         }
+        
+        if (isAutoSave === MapTypes.UNDOREDO) {
+            console.log("[UNDO][SAVE] Saving new state with", snapableTilesList.length, "elements")
+        }
+        
         Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
     }
     Settings {

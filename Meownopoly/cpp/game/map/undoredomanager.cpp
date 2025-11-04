@@ -32,7 +32,7 @@ QObject *UndoRedoManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngin
 void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit){
     // Si on est en train de restaurer un etat, ignorer completement
     if (m_isRestoringState) {
-        qDebug() << "[UNDO] Ignoring save during state restoration";
+        qDebug() << "[UNDO][SAVE] BLOCKED - Save attempted during state restoration (flag is true)";
         return;
     }
 
@@ -42,47 +42,50 @@ void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit){
     if (m_currentEditIndex < m_listEdits.size() - 1) {
         int removed = m_listEdits.size() - m_currentEditIndex - 1;
         m_listEdits = m_listEdits.mid(0, m_currentEditIndex + 1);
-        qDebug() << "[UNDO] Removed" << removed << "future states";
+        qDebug() << "[UNDO][SAVE] Cleared" << removed << "future states (redo history)";
     }
     
     // Ajouter le nouvel etat
     m_listEdits.append(newEdit);
     m_currentEditIndex = m_listEdits.size() - 1;
     
-    qDebug() << "[UNDO] State saved at index:" << m_currentEditIndex << "/ Total:" << m_listEdits.size();
+    qDebug() << "[UNDO][SAVE] State saved successfully at index:" << m_currentEditIndex << "/ Total states:" << m_listEdits.size();
 }
 
 void UndoRedoManager::onAskEdit(EditAction editAction)
 {
     if (m_listEdits.isEmpty()) {
-        qDebug() << "[UNDO] No states available";
+        qDebug() << "[UNDO][REQUEST] No states available - history is empty";
         return;
     }
 
+    qDebug() << "[UNDO][REQUEST] Current index:" << m_currentEditIndex << "/ Total:" << m_listEdits.size();
     emit forceUnSelectAllElement();
 
     switch (editAction) {
     case Preview:  // Undo
         if (m_currentEditIndex > 0) {
             m_currentEditIndex--;
-            m_isRestoringState = true;  // Bloquer les sauvegardes
-            qDebug() << "[UNDO] Restoring state:" << m_currentEditIndex << "/" << m_listEdits.size();
+            // Set flag BEFORE emitting to prevent any saves during restoration
+            m_isRestoringState = true;
+            qDebug() << "[UNDO][RESTORE] Moving to index:" << m_currentEditIndex << "/" << m_listEdits.size() << "- Restoration flag SET";
             emit returnEdit(m_listEdits.at(m_currentEditIndex));
-            m_isRestoringState = false;  // Debloquer
+            // Flag will be cleared by QML after map loading completes
         } else {
-            qDebug() << "[UNDO] Already at oldest state";
+            qDebug() << "[UNDO][RESTORE] Cannot undo - already at oldest state (index 0)";
         }
         break;
         
     case Next:  // Redo
         if (m_currentEditIndex < m_listEdits.size() - 1) {
             m_currentEditIndex++;
-            m_isRestoringState = true;  // Bloquer les sauvegardes
-            qDebug() << "[REDO] Restoring state:" << m_currentEditIndex << "/" << m_listEdits.size();
+            // Set flag BEFORE emitting to prevent any saves during restoration
+            m_isRestoringState = true;
+            qDebug() << "[REDO][RESTORE] Moving to index:" << m_currentEditIndex << "/" << m_listEdits.size() << "- Restoration flag SET";
             emit returnEdit(m_listEdits.at(m_currentEditIndex));
-            m_isRestoringState = false;  // DÃ©bloquer
+            // Flag will be cleared by QML after map loading completes
         } else {
-            qDebug() << "[REDO] Already at newest state";
+            qDebug() << "[REDO][RESTORE] Cannot redo - already at newest state (index" << m_currentEditIndex << ")";
         }
         break;
         
@@ -102,6 +105,17 @@ void UndoRedoManager::setIsRestoringState(bool newIsRestoringState)
         return;
     m_isRestoringState = newIsRestoringState;
     emit isRestoringStateChanged();
+}
+
+void UndoRedoManager::clearRestorationFlag()
+{
+    if (m_isRestoringState) {
+        qDebug() << "[UNDO][RESTORE] Restoration complete - Flag CLEARED, saves now allowed";
+        m_isRestoringState = false;
+        emit isRestoringStateChanged();
+    } else {
+        qDebug() << "[UNDO][RESTORE] Warning: clearRestorationFlag() called but flag was already false";
+    }
 }
 
 
@@ -143,18 +157,18 @@ void UndoRedoManager::setIsRestoringState(bool newIsRestoringState)
 //     // Comparaison rapide : si identiques, pas besoin d'aller plus loin
 //     if (oldEdit == newEdit) {
 //         qDebug() << "[UNDO] No changes detected, skipping save";
-//         // Vous pourriez même retourner ici pour ne PAS ajouter l'état dupliqué
+//         // Vous pourriez mï¿½me retourner ici pour ne PAS ajouter l'ï¿½tat dupliquï¿½
 //         return;
 //     }
 
-//     // Comparaison détaillée pour le debug/logging
+//     // Comparaison dï¿½taillï¿½e pour le debug/logging
 //     qDebug() << "[UNDO] Changes detected:";
 //     compareJsonFields(oldEdit, newEdit, "");
 // }
 
 // void UndoRedoManager::compareJsonFields(const QJsonObject& oldObj, const QJsonObject& newObj, const QString& path)
 // {
-//     // Récupérer toutes les clés uniques
+//     // Rï¿½cupï¿½rer toutes les clï¿½s uniques
 //     QSet<QString> allKeys;
 //     for (const QString& key : oldObj.keys()) allKeys.insert(key);
 //     for (const QString& key : newObj.keys()) allKeys.insert(key);
@@ -177,7 +191,7 @@ void UndoRedoManager::setIsRestoringState(bool newIsRestoringState)
 
 //             if (oldVal != newVal) {
 //                 if (oldVal.isObject() && newVal.isObject()) {
-//                     // Comparaison récursive pour les objets imbriqués
+//                     // Comparaison rï¿½cursive pour les objets imbriquï¿½s
 //                     compareJsonFields(oldVal.toObject(), newVal.toObject(), currentPath);
 //                 }
 //                 else if (oldVal.isArray() && newVal.isArray()) {

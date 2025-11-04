@@ -87,11 +87,21 @@ MouseLogic_Base {
         
         if (isDragging)
         {
+            // IMPORTANT: Update positions of all selected elements BEFORE saving
+            // The visual positions (x, y) have changed via bindings, but the data positions
+            // (gridRelativePositionX/Y) need to be explicitly updated
+            if (drag.target == groupeSelection) {
+                console.log("[UNDO][DRAG] Updating positions for", selectedElements.length, "element(s) before save")
+                for (var i = 0; i < selectedElements.length; i++) {
+                    if (selectedElements[i] && selectedElements[i].updateRelativePosition) {
+                        selectedElements[i].updateRelativePosition()
+                    }
+                }
+                // Now save with the updated positions
+                logic.saveMap(MapTypes.UNDOREDO)
+            }
             clickElement = []
-            //unselectAllElements()
-            // Sauvegarder après déplacement d'éléments
         }
-        logic.saveMap(MapTypes.UNDOREDO)
     }
 
     function clickedLeft(mouse, drag)

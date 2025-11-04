@@ -237,8 +237,16 @@ Rectangle {
             if (mapInfo.mapName !== stEnableAutoSave.currentMap)
                 stEnableAutoSave.setValue("currentMap", mapInfo.mapName)
 
-            // Sauvegarder l'état initial pour undo/redo
-            logic.saveMap(MapTypes.UNDOREDO)
+            // Check if we're restoring from undo/redo
+            if (UndoRedoManager.isRestoringState) {
+                console.log("[UNDO][RESTORE] Map loaded during restoration - NOT saving")
+                // Clear the restoration flag now that loading is complete
+                UndoRedoManager.clearRestorationFlag()
+            } else {
+                // Only save initial state if not restoring
+                console.log("[UNDO][SAVE] Map loaded normally - saving initial state")
+                logic.saveMap(MapTypes.UNDOREDO)
+            }
         }
 
         function onClearCurrentMap() {
