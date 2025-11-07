@@ -18,20 +18,6 @@ Item {
     width: boardSize
     height: boardSize
 
-
-
-    onGridSizeChanged: {
-       var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(croisillons / mmSize) + 1
-                                                            : 0
-       var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(croisillons / mmSize) + 1
-                                                            : 0
-        if (newVerticalLinesCount > gridContainer.verticalLinesCount
-                || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
-            gridContainer.verticalLinesCount = newVerticalLinesCount
-            gridContainer.horizontalLinesCount = newHorizontalLinesCount
-        }
-    }
-
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5
     property bool showGrid: true
@@ -95,10 +81,8 @@ Item {
 
         property color lightColor:  Qt.lighter(gridManager.gridColor, 1.2)
 
-        property int verticalLinesCount: (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
-                                                                : 0
-        property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
-                                                                  :0
+        property int verticalLinesCount:(gridManager.showGrid) ? croisillons + 1 : 0
+        property int horizontalLinesCount:(gridManager.showGrid) ? croisillons + 1 : 0
 
         property int totalLineCount:verticalLinesCount+horizontalLinesCount
 
