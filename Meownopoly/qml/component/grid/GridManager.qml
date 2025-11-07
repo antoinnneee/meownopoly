@@ -10,20 +10,23 @@ import ".."
 Item {
     id: gridManager
 
+    property int croisillons: 600
     property int mmSize: 12
     property int gridSize: Screen.pixelDensity * mmSize
-    property int boardSize:  gridSize * 600 // 600 croisillons
+    property int boardSize:  gridSize * croisillons // 600 croisillons
     // Propriétés configurables
     width: boardSize
     height: boardSize
 
 
+
     onGridSizeChanged: {
-       var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
+       var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(croisillons / mmSize) + 1
                                                             : 0
-       var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
+       var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(croisillons / mmSize) + 1
                                                             : 0
-        if (newVerticalLinesCount > gridContainer.verticalLinesCount || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
+        if (newVerticalLinesCount > gridContainer.verticalLinesCount
+                || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
             gridContainer.verticalLinesCount = newVerticalLinesCount
             gridContainer.horizontalLinesCount = newHorizontalLinesCount
         }
@@ -111,8 +114,8 @@ Item {
 
                 // Déterminer si c'est une ligne verticale ou horizontale
                 readonly property bool isVertical: index < gridContainer.verticalLinesCount
-                readonly property int verticalIndex: isVertical ? index : -1
-                readonly property int horizontalIndex: isVertical ? -1 : index - gridContainer.verticalLinesCount
+                readonly property int verticalIndex: isVertical ? index : 0
+                readonly property int horizontalIndex: isVertical ? 0 : index - gridContainer.verticalLinesCount
 
                 // Position et taille selon le type de ligne
                 x: isVertical ? verticalIndex * gridManager.gridSize : 0

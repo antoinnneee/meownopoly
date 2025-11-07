@@ -9,7 +9,7 @@ QtObject {
     function scrollGrid(wheel, deltaSize) {
         if (wheel.modifiers & Qt.ControlModifier) {
             // Sauvegarder les valeurs actuelles
-            var oldMmSize = logic.mmSize;
+            var oldMmSize = editorGrid.mmSize;
             var oldWidth = logic.tileLogic.currentElementWidth;
             var oldHeight = logic.tileLogic.currentElementHeight;
             
@@ -23,7 +23,8 @@ QtObject {
             
             // Mettre à jour mmSize
             var newMmSize = oldMmSize + deltaSize;
-            logic.updateSize(newMmSize);
+            editorGrid.mmSize = newMmSize
+            // logic.updateSize(newMmSize);
             
             // Ajuster les dimensions inversement proportionnelles pour garder le ratio visuel
             if (newMmSize > 0) {

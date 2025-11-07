@@ -44,7 +44,7 @@ Rectangle {
         visible: false
 
         height: Screen.pixelDensity * 100
-        z: 120
+        z: 12000
         
     }
 
@@ -73,7 +73,6 @@ Rectangle {
     property alias escMenu:escMenu
 
     Component.onCompleted: {
-        editorGrid.mmSize = 8
         stEnableAutoSave.sync()
         initializeEditor()
     }
