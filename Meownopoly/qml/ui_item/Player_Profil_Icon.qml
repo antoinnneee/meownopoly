@@ -18,7 +18,6 @@ Item {
     // Propriétés configurables
     property DecorationParameter decorationParameter: DecorationParameter {}
     property real iconSize: Screen.pixelDensity * 30
-    property real cornerRadius: 10
     property color frameColor: "#FFFFFF"
     property real frameWidth: Screen.pixelDensity*1
     property real fadeIntensity: 1 // Intensité de l'estompage (0.0 à 1.0)
@@ -26,6 +25,7 @@ Item {
     property real firstStopGrad:  1 - lastStopGrad
 
     property real radStopGrad: firstStopGrad * (fadeOverlay.height/topLeftFade.height)
+    property real cornerRadius: root.frameWidth // Calculé pour correspondre au radStopGrad
 
     Component.onCompleted: {
         if (decorationParameter.decorationId == "")
@@ -63,16 +63,14 @@ Item {
     Rectangle {
         id: container
         anchors.fill: parent
-        radius: root.cornerRadius
+        radius: width
         color: "transparent"
-        clip: true
         
         // Rectangle contenant l'image avec coins arrondis
         Rectangle {
             id: imageContainer
             anchors.fill: parent
             anchors.margins: root.frameWidth+1
-            radius: root.cornerRadius
             color: "transparent"
             clip: true
             
@@ -111,7 +109,7 @@ Item {
                         Rectangle {
                             width: profileImage.width
                             height: profileImage.height
-                            radius: root.cornerRadius
+                            radius: width
                             color: root.frameColor
                         }
                     }
@@ -240,7 +238,6 @@ Item {
                     y: 0
                     width: topLeftFade.width
                     height: topLeftFade.height
-                    radius: parent.radius
                 }
             }
         }
@@ -278,7 +275,6 @@ Item {
                     y: 0
                     width: topRightFade.width
                     height: topRightFade.height
-                    radius: parent.radius
                 }
             }
         }
@@ -316,7 +312,6 @@ Item {
                     y: 0
                     width: bottomLeftFade.width
                     height: bottomLeftFade.height
-                    radius: parent.radius
                 }
             }
         }
@@ -354,7 +349,6 @@ Item {
                     y: 0
                     width: bottomRightFade.width
                     height: bottomRightFade.height
-                    radius: parent.radius
                 }
             }
         }

@@ -48,13 +48,20 @@ Rectangle {
         
     }
 
-    Player_Profil_Icon{
+    InteractiveUiElement{
+        z:10000
         x:10
         y:10
-        decorationParameter.decorationCategory: "ui"
-        decorationParameter.decorationType: "cat"
-        decorationParameter.decorationId: ""
+        width: Screen.pixelDensity * 30
+        height: Screen.pixelDensity * 30
+        contentItem : Player_Profil_Icon{
+            decorationParameter.decorationCategory: "ui"
+            decorationParameter.decorationType: "cat"
+            decorationParameter.decorationId: ""
+            anchors.fill: parent
+        }
     }
+
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
