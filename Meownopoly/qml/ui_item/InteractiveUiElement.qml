@@ -220,7 +220,7 @@ Item {
             
             width: modelData.isHorizontal ? root.handleSize : undefined
             height: !modelData.isHorizontal ? root.handleSize : undefined
-            
+
             cursorShape: enabled ? modelData.cursor : Qt.ArrowCursor
             
             property bool isHorizontal: modelData.isHorizontal
@@ -245,8 +245,8 @@ Item {
                     var globalPos = mapToItem(root.parent, mouse.x, mouse.y)
                     
                     // Calculer le delta depuis le début
-                    var delta = isHorizontal ? 
-                        (globalPos.x - startGlobalPos.x) : 
+                    var delta = isHorizontal ?
+                        (globalPos.x - startGlobalPos.x) :
                         (globalPos.y - startGlobalPos.y)
                     
                     var newSize = isStart ? startSize - delta : startSize + delta
