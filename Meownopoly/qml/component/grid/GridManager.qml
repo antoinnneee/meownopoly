@@ -10,44 +10,44 @@ import ".."
 Item {
     id: gridManager
 
+    property int nbrCroisillons: 600
     property int mmSize: 12
     property int gridSize: Screen.pixelDensity * mmSize
-    property int boardSize:  gridSize * 600 // 600 croisillons
+    property int boardSize:  gridSize * nbrCroisillons // 600 croisillons
     // Propriétés configurables
     width: boardSize
     height: boardSize
-
-
-    onGridSizeChanged: {
-       var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
-                                                            : 0
-       var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
-                                                            : 0
-        if (newVerticalLinesCount > gridContainer.verticalLinesCount || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
-            gridContainer.verticalLinesCount = newVerticalLinesCount
-            gridContainer.horizontalLinesCount = newHorizontalLinesCount
-        }
-    }
 
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5
     property bool showGrid: true
     property bool snapToGrid: true
     property int lineWidth: 1
-    
+
     // Propriété pour intensifier la grille pendant le redimensionnement
     property bool resizeMode: false
-    
+
     // Propriétés en lecture seule pour accès externe
     readonly property int snapSize: gridSize
 
     property bool isEdit: false
-    
+
     // Signal émis quand les paramètres changent
     signal gridSettingsChanged()
     signal gridPressed(var position)
     signal gridClicked(var position)
     signal gridRightClicked(var position)
+
+    onGridSizeChanged: {
+           var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(nbrCroisillons / mmSize) + 1
+                                                                : 0
+           var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(nbrCroisillons / mmSize) + 1
+                                                                : 0
+            if (newVerticalLinesCount > gridContainer.verticalLinesCount || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
+                gridContainer.verticalLinesCount = newVerticalLinesCount
+                gridContainer.horizontalLinesCount = newHorizontalLinesCount
+            }
+        }
 
 
     // Fonction alternative qui snap directement un élément (plus pratique)
@@ -90,11 +90,12 @@ Item {
         id: gridContainer
         anchors.fill: parent
 
+
         property color lightColor:  Qt.lighter(gridManager.gridColor, 1.2)
 
-        property int verticalLinesCount: (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
+        property int verticalLinesCount: (gridManager.showGrid) ? Math.ceil(nbrCroisillons / mmSize) + 1
                                                                 : 0
-        property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
+        property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(nbrCroisillons / mmSize) + 1
                                                                   :0
 
         Repeater {
@@ -106,11 +107,12 @@ Item {
                 color: gridManager.resizeMode ? gridContainer.lightColor: gridManager.gridColor
                 opacity: gridManager.resizeMode ? 1 : gridManager.gridOpacity
                 visible: gridManager.showGrid
-
+                border.width: 0
+                border.color: "transparent"
                 // Déterminer si c'est une ligne verticale ou horizontale
                 readonly property bool isVertical: index < gridContainer.verticalLinesCount
-                readonly property int verticalIndex: isVertical ? index : -1
-                readonly property int horizontalIndex: isVertical ? -1 : index - gridContainer.verticalLinesCount
+                readonly property int verticalIndex: isVertical ? index : 0
+                readonly property int horizontalIndex: isVertical ? 0 : index - gridContainer.verticalLinesCount
 
                 // Position et taille selon le type de ligne
                 x: isVertical ? verticalIndex * gridManager.gridSize : 0

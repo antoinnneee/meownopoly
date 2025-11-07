@@ -66,7 +66,6 @@ Rectangle {
     property alias escMenu:escMenu
 
     Component.onCompleted: {
-        editorGrid.mmSize = 8
         stEnableAutoSave.sync()
         initializeEditor()
     }
