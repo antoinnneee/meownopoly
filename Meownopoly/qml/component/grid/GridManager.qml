@@ -10,10 +10,10 @@ import ".."
 Item {
     id: gridManager
 
-    property int nbrCroisillons: 600
+    property int croisillons: 600
     property int mmSize: 12
     property int gridSize: Screen.pixelDensity * mmSize
-    property int boardSize:  gridSize * nbrCroisillons // 600 croisillons
+    property int boardSize:  gridSize * croisillons // 600 croisillons
     // Propriétés configurables
     width: boardSize
     height: boardSize
@@ -93,14 +93,14 @@ Item {
 
         property color lightColor:  Qt.lighter(gridManager.gridColor, 1.2)
 
-        property int verticalLinesCount: (gridManager.showGrid) ? Math.ceil(nbrCroisillons / mmSize) + 1
-                                                                : 0
-        property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(nbrCroisillons / mmSize) + 1
-                                                                  :0
+        property int verticalLinesCount:(gridManager.showGrid) ? croisillons + 1 : 0
+        property int horizontalLinesCount:(gridManager.showGrid) ? croisillons + 1 : 0
+
+        property int totalLineCount:verticalLinesCount+horizontalLinesCount
 
         Repeater {
             id: gridLinesRepeater
-            model:  parent.verticalLinesCount + parent.horizontalLinesCount
+            model:  gridContainer.totalLineCount
 
             Rectangle {
                 // Propriétés communes
