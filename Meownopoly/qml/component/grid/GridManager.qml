@@ -97,9 +97,11 @@ Item {
         property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
                                                                   :0
 
+        property int totalLineCount:verticalLinesCount+horizontalLinesCount
+
         Repeater {
             id: gridLinesRepeater
-            model:  parent.verticalLinesCount + parent.horizontalLinesCount
+            model:  gridContainer.totalLineCount
 
             Rectangle {
                 // Propriétés communes

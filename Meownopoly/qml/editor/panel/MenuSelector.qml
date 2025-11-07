@@ -15,6 +15,7 @@ Item {
     property int currentPanelIndex: 0 // 0=Assets, 1=Cases, 2=Map
     property int assetTabIndex: 0 // 0=Visual Effects, 1=Transform
     property int caseTabIndex: 0 // 0=Case, 1=Connexions
+    property int activeTabIndex: 0 // 0-3 pour les 4 boutons d'onglets
 
     // Signal émis quand un bouton est cliqué
 
@@ -101,173 +102,77 @@ Item {
                 }
             }
         }
-        MenuSelector_SizeControl {
-            tileLogic: logic.tileLogic
+        // Sélecteur avec 4 boutons d'onglets (1 actif sur 4)
+        RowLayout {
+            id: tabSelector
+            visible: root.isExpanded
+            Layout.fillHeight: true
+            Layout.preferredHeight: parent.height
+            Layout.leftMargin: 10
+            spacing: 2
+            
+            Repeater {
+                model: [
+                    { icon: "✨", tooltip: "Visual Effects", tabIndex: 0 },
+                    { icon: "🔧", tooltip: "Transform", tabIndex: 1 },
+                    { icon: "⚙️", tooltip: "Case Configuration", tabIndex: 2 },
+                    { icon: "🔗", tooltip: "Connections", tabIndex: 3 }
+                ]
+                
+                Button {
+                    required property var modelData
+                    required property int index
+                    
+                    text: modelData.icon
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 70
+                    Layout.minimumHeight: 32
+                    
+                    background: Rectangle {
+                        color: root.activeTabIndex === index ? "#4a90e2" : "#333333"
+                        border.color: root.activeTabIndex === index ? "#5a9fe8" : "#444444"
+                        border.width: 2
+                        radius: 6
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
+                    }
+                    
+                    contentItem: Text {
+                        text: parent.text
+                        color: root.activeTabIndex === index ? "#ffffff" : "#888888"
+                        font.pixelSize: 20
+                        font.bold: root.activeTabIndex === index
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    
+                    ToolTip.visible: hovered
+                    ToolTip.text: modelData.tooltip
+                    ToolTip.delay: 500
+                    
+                    onClicked: {
+                        root.activeTabIndex = index
+                        
+                        // Synchroniser avec les anciennes propriétés
+                        if (index === 0) {
+                            root.assetTabChanged(0)
+                        } else if (index === 1) {
+                            root.assetTabChanged(1)
+                        } else if (index === 2) {
+                            root.caseTabChanged(0)
+                        } else if (index === 3) {
+                            root.caseTabChanged(1)
+                        }
+                    }
+                }
 
-            height: Screen.pixelDensity * 12.5
-        }
-        
-        // Boutons d'onglets dynamiques (Assets Panel)
-        RowLayout {
-            id: assetTabButtons
-            visible: root.isExpanded && root.currentPanelIndex === 0
-            Layout.fillHeight: true
-            Layout.preferredHeight: parent.height
-            Layout.leftMargin: 10
-            spacing: -1
-            
-            Button {
-                id: visualEffectsTabButton
-                text: "✨"
-                Layout.fillHeight: true
-                Layout.preferredWidth: 70
-                Layout.minimumHeight: 32
-                
-                background: Rectangle {
-                    color: root.assetTabIndex === 0 ? "#4a90e2" : "#333333"
-                    border.color: root.assetTabIndex === 0 ? "#5a9fe8" : "#444444"
-                    border.width: 2
-                    radius: 6
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: root.assetTabIndex === 0 ? "#ffffff" : "#888888"
-                    font.pixelSize: 20
-                    font.bold: root.assetTabIndex === 0
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
-                ToolTip.visible: hovered
-                ToolTip.text: "Visual Effects"
-                ToolTip.delay: 500
-                
-                onClicked: {
-                    root.assetTabChanged(0)
-                }
             }
-            
-            Button {
-                id: transformTabButton
-                text: "🔧"
-                Layout.fillHeight: true
-                Layout.preferredWidth: 70
-                Layout.minimumHeight: 32
-                
-                background: Rectangle {
-                    color: root.assetTabIndex === 1 ? "#4a90e2" : "#333333"
-                    border.color: root.assetTabIndex === 1 ? "#5a9fe8" : "#444444"
-                    border.width: 2
-                    radius: 6
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: root.assetTabIndex === 1 ? "#ffffff" : "#888888"
-                    font.pixelSize: 20
-                    font.bold: root.assetTabIndex === 1
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
-                ToolTip.visible: hovered
-                ToolTip.text: "Transform"
-                ToolTip.delay: 500
-                
-                onClicked: {
-                    root.assetTabChanged(1)
-                }
-            }
-        }
-        
-        // Boutons d'onglets dynamiques (Case Panel)
-        RowLayout {
-            id: caseTabButtons
-            visible: root.isExpanded && root.currentPanelIndex === 1
-            Layout.fillHeight: true
-            Layout.preferredHeight: parent.height
-            Layout.leftMargin: 10
-            spacing: -1
-            
-            Button {
-                id: caseConfigTabButton
-                text: "⚙️"
-                Layout.fillHeight: true
-                Layout.preferredWidth: 70
-                Layout.minimumHeight: 32
-                
-                background: Rectangle {
-                    color: root.caseTabIndex === 0 ? "#4a90e2" : "#333333"
-                    border.color: root.caseTabIndex === 0 ? "#5a9fe8" : "#444444"
-                    border.width: 2
-                    radius: 6
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: root.caseTabIndex === 0 ? "#ffffff" : "#888888"
-                    font.pixelSize: 20
-                    font.bold: root.caseTabIndex === 0
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
-                ToolTip.visible: hovered
-                ToolTip.text: "Case Configuration"
-                ToolTip.delay: 500
-                
-                onClicked: {
-                    root.caseTabChanged(0)
-                }
-            }
-            
-            Button {
-                id: connectionsTabButton
-                text: "🔗"
-                Layout.fillHeight: true
-                Layout.preferredWidth: 70
-                Layout.minimumHeight: 32
-                
-                background: Rectangle {
-                    color: root.caseTabIndex === 1 ? "#4a90e2" : "#333333"
-                    border.color: root.caseTabIndex === 1 ? "#5a9fe8" : "#444444"
-                    border.width: 2
-                    radius: 6
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: root.caseTabIndex === 1 ? "#ffffff" : "#888888"
-                    font.pixelSize: 20
-                    font.bold: root.caseTabIndex === 1
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
-                ToolTip.visible: hovered
-                ToolTip.text: "Connections"
-                ToolTip.delay: 500
-                
-                onClicked: {
-                    root.caseTabChanged(1)
-                }
+
+            MenuSelector_SizeControl {
+                tileLogic: logic.tileLogic
+                height: Screen.pixelDensity * 12.5
             }
         }
     }
