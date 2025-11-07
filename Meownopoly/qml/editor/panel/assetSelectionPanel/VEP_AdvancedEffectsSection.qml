@@ -17,6 +17,7 @@ GroupBox {
 
     property bool isCollapsed: false
     height: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
+    implicitHeight: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
 
     signal effectChanged()
 
@@ -50,32 +51,6 @@ GroupBox {
             text: control.title
             elide: Text.ElideRight
             Layout.fillWidth: true
-        }
-        
-        Button {
-            id: collapseButton
-            Layout.preferredWidth: Screen.pixelDensity * 8
-            Layout.preferredHeight: Screen.pixelDensity * 8
-            flat: true
-            
-            background: Rectangle {
-                color: "transparent"
-                border.color: "#666666"
-                border.width: 1
-                radius: 2
-            }
-            
-            contentItem: Text {
-                text: control.isCollapsed ? "▼" : "▲"
-                color: "#cccccc"
-                font.pixelSize: 10
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            
-            onClicked: {
-                control.isCollapsed = !control.isCollapsed
-            }
         }
     }
     

@@ -5,94 +5,87 @@ import QtQuick.Effects
 import QtQuick.Dialogs
 
 
-GroupBox {
+Rectangle {
     id: root
-    title: "Visual Effects"
     
     // Properties for the target decoration element
     property bool effectsLocked: false
-    property bool isCollapsed: false
     
+    // Visual properties
+    color: "#2a2a2a"
+    radius: 8
+    border.color: "#444444"
+    border.width: 1
     // Dimensions
-    height: (isCollapsed ? Screen.pixelDensity * 12 : mainLayout.implicitHeight +  Screen.pixelDensity * 12)
+    height: mainLayout.implicitHeight + 12
+    width: mainLayout.implicitWidth
     
     // Signals
     signal effectChanged()
     
-    padding: 4
-    spacing: 2
-    
-    background: Rectangle {
-        color: "#2a2a2a"
-        radius: 8
-        border.color: "#444444"
-        border.width: 1
-    }
-    
-    label: RowLayout {
-        x: root.leftPadding
-        width: root.availableWidth
-        spacing: 8
-        
-        Text {
-            text: root.title
-            color: "#ffffff"
-            font.pixelSize: 16
-            font.bold: true
-            elide: Text.ElideRight
-            Layout.fillWidth: true
-        }
-        
-        Button {
-            id: collapseButton
-            Layout.preferredWidth: Screen.pixelDensity * 8
-            Layout.preferredHeight: Screen.pixelDensity * 8
-            flat: true
-            
-            background: Rectangle {
-                color: "transparent"
-                border.color: "#666666"
-                border.width: 1
-                radius: 2
-            }
-            
-            contentItem: Text {
-                text: root.isCollapsed ? "▼" : "▲"
-                color: "#cccccc"
-                font.pixelSize: 10
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            
-            onClicked: {
-                root.isCollapsed = !root.isCollapsed
-            }
-        }
-    }
-    
     // Main layout
-    ColumnLayout {
+    Column {
         id: mainLayout
-        anchors.fill: parent
-        anchors.topMargin: -4
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 10
         spacing: 10
-        visible: !root.isCollapsed
+        
+        // Title with mirror buttons and lock button
+        RowLayout {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: 10
+
+            Text {
+                id: title
+                text: "Visual Effects"
+                color: "#ffffff"
+                font.pixelSize: 16
+                font.bold: true
+                Layout.fillWidth: true
+            }
+            
+            VEP_ButtonMirror {
+                id: horizontalMirrorButton
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: 30
+                isHorizontal: true
+                isMirrored: transformSection.horizontalMirrorCheck.checked
+                onClicked: {
+                    transformSection.horizontalMirrorCheck.checked = !transformSection.horizontalMirrorCheck.checked
+                }
+            }
+            
+            VEP_ButtonMirror {
+                id: verticalMirrorButton
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: 30
+                isHorizontal: false
+                isMirrored: transformSection.verticalMirrorCheck.checked
+                onClicked: {
+                    transformSection.verticalMirrorCheck.checked = !transformSection.verticalMirrorCheck.checked
+                }
+            }
+            
+            VEP_ButtonLock {
+                id: lockButton
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: 30
+                effectsLocked: root.effectsLocked
+                onClicked: root.effectsLocked = !root.effectsLocked
+            }
+        }
         
         VEP_ColorEffectsSection {
             id: colorEffectsSection
-            Layout.fillWidth: true
+            anchors.left: parent.left
+            anchors.right: parent.right
 
             onEffectChanged: {
                 root.effectChanged()
             }
-        }
-
-        VEP_AdvancedEffectsSection{
-            Layout.fillWidth: true
-            onEffectChanged: {
-                root.effectChanged()
-            }
-
         }
 
     }

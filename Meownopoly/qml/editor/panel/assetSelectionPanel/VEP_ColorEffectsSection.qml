@@ -14,6 +14,7 @@ GroupBox {
     property alias colorizationSlider: colorizationSlider
     property bool isCollapsed: false
     height: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
+    implicitHeight: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
 
     // Preset management properties
     property var colorPresets: []
@@ -59,42 +60,23 @@ GroupBox {
         border.color: "#555555"
         border.width: 1
     }
-    
-    label: RowLayout {
+
+    label: MouseArea {
         x: control.leftPadding
         width: control.availableWidth
-        spacing: 8
-        
-        Text {
-            color: "#cccccc"
-            text: control.title
-            elide: Text.ElideRight
-            Layout.fillWidth: true
+        height: Screen.pixelDensity * 8
+        onClicked: {
+            control.isCollapsed = !control.isCollapsed
         }
-        
-        Button {
-            id: collapseButton
-            Layout.preferredWidth: Screen.pixelDensity * 8
-            Layout.preferredHeight: Screen.pixelDensity * 8
-            flat: true
-            
-            background: Rectangle {
-                color: "transparent"
-                border.color: "#666666"
-                border.width: 1
-                radius: 2
-            }
-            
-            contentItem: Text {
-                text: control.isCollapsed ? "▼" : "▲"
+        RowLayout {
+            spacing: 8
+            anchors.fill: parent
+
+            Text {
                 color: "#cccccc"
-                font.pixelSize: 10
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            
-            onClicked: {
-                control.isCollapsed = !control.isCollapsed
+                text: control.title
+                elide: Text.ElideRight
+                Layout.fillWidth: true
             }
         }
     }
@@ -102,7 +84,6 @@ GroupBox {
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
-        anchors.topMargin: -4
         spacing: 1
         visible: !control.isCollapsed
         
