@@ -173,5 +173,6 @@
         <file>qml/editor/panel/caseSelectionPanel/side/ConnectionListSection.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/side/ConnectionsConfigurationSection.qml</file>
         <file>qml/ui_item/InteractiveUiElement.qml</file>
+        <file>qml/editor/panel/EditorSidePanel.qml</file>
     </qresource>
 </RCC>

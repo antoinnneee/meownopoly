@@ -27,7 +27,8 @@ EBP_Content {
     // Propriété pour gérer l'onglet actif (0=Visual Effects, 1=Transform)
     property int currentTabIndex: 0
 
-    sidePanelRatio: 0.5
+    sidePanelRatio: /*0.5*/ 0
+
     function updateFromDisplayParameter(dispParam) {
         if (effectLocked){
             effectChanged()

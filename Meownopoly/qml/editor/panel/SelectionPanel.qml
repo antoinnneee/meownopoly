@@ -13,7 +13,8 @@ Rectangle {
     id: root
 
     // Properties
-    property bool isExpanded: true
+    property alias isExpanded : topToolbar.isExpanded
+    property alias isSidePanelExpanded : topToolbar.isSidePanelExpanded
     // property string currentView: "categories" // "categories" or "assets"
     property int currentPanelIndex: 0 // 0 = Asset Selection, 1 = Case Selection
     onCurrentPanelIndexChanged: {
@@ -72,10 +73,10 @@ Rectangle {
 
     MenuSelector {
         id: topToolbar
-        isExpanded: root.isExpanded
-        onIsExpandedChanged: {
-            root.isExpanded = isExpanded
-        }
+        // isExpanded: root.isExpanded
+        // onIsExpandedChanged: {
+        //     root.isExpanded = isExpanded
+        // }
 
         anchors.left: parent.left
         anchors.right: parent.right

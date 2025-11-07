@@ -38,8 +38,6 @@ public:
     Case(const QJsonObject &json, QObject *parent = nullptr);
 
 
-
-
     CaseType getType() const;
     void setType(CaseType newType);
 

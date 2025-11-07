@@ -26,7 +26,7 @@ EBP_Content {
     signal caseTypeSelected(int type, string typeName)
     signal caseTypeCleared()
     signal connectionRequested(string kind)  // Propager les demandes de connexion
-    sidePanelRatio: 0.5
+    sidePanelRatio: /*0.5*/ 0
 
     property int titleHeight
     // Main content (categories/assets)

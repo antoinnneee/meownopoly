@@ -9,8 +9,10 @@ Item {
     height: Screen.pixelDensity * 12.5
     width: 800
     required property EditorLogic logic
-    property bool isExpanded: false
-    
+
+    property bool isExpanded : true
+    property bool isSidePanelExpanded: false
+
     // Propriétés pour gérer les onglets dynamiques
     property int currentPanelIndex: 0 // 0=Assets, 1=Cases, 2=Map
     property int assetTabIndex: 0 // 0=Visual Effects, 1=Transform
@@ -59,7 +61,7 @@ Item {
 
             onClicked: {
                 console.log("Expand button clicked");
-                isExpanded = !isExpanded;
+                root.isExpanded = !root.isExpanded;
             }
         }
 
@@ -167,13 +169,40 @@ Item {
                         }
                     }
                 }
-
             }
 
-            MenuSelector_SizeControl {
-                tileLogic: logic.tileLogic
-                height: Screen.pixelDensity * 12.5
+            Button {
+                id : expendSidePanelBt
+
+                width: 30
+                Layout.fillHeight: true
+                background: Rectangle {
+                    anchors.fill: parent
+                    color: parent.pressed ? "#555555" : "#444444"
+                    border.color: "#666666"
+                    border.width: 1
+                    radius: 4
+                }
+
+                contentItem: Text {
+                    text: root.isSidePanelExpanded ? "◀" : "▶"
+                    color: "white"
+                    font.pixelSize: 12
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    anchors.fill:expendSidePanelBt
+                }
+
+                onClicked: {
+                    console.log("Side panel expand button clicked, " + root.isSidePanelExpanded);
+                    root.isSidePanelExpanded = !root.isSidePanelExpanded;
+                }
             }
+
+            // MenuSelector_SizeControl {
+            //     tileLogic: logic.tileLogic
+            //     height: Screen.pixelDensity * 12.5
+            // }
         }
     }
 }

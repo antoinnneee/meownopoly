@@ -18,6 +18,20 @@ Item {
     width: boardSize
     height: boardSize
 
+
+
+    onGridSizeChanged: {
+       var newVerticalLinesCount = (gridManager.showGrid) ? croisillons + 1
+                                                            : 0
+       var newHorizontalLinesCount = (gridManager.showGrid) ? croisillons + 1
+                                                            : 0
+        if (newVerticalLinesCount > gridContainer.verticalLinesCount
+                || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
+            gridContainer.verticalLinesCount = newVerticalLinesCount
+            gridContainer.horizontalLinesCount = newHorizontalLinesCount
+        }
+    }
+
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5
     property bool showGrid: true
@@ -37,17 +51,6 @@ Item {
     signal gridPressed(var position)
     signal gridClicked(var position)
     signal gridRightClicked(var position)
-
-    onGridSizeChanged: {
-           var newVerticalLinesCount = (gridManager.showGrid) ? Math.ceil(nbrCroisillons / mmSize) + 1
-                                                                : 0
-           var newHorizontalLinesCount = (gridManager.showGrid) ? Math.ceil(nbrCroisillons / mmSize) + 1
-                                                                : 0
-            if (newVerticalLinesCount > gridContainer.verticalLinesCount || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
-                gridContainer.verticalLinesCount = newVerticalLinesCount
-                gridContainer.horizontalLinesCount = newHorizontalLinesCount
-            }
-        }
 
 
     // Fonction alternative qui snap directement un élément (plus pratique)
@@ -75,12 +78,12 @@ Item {
             y / gridSize
         )
     }
-    
+
     // Fonctions pour activer/désactiver le mode redimensionnement
     function enterResizeMode() {
         resizeMode = true
     }
-    
+
     function exitResizeMode() {
         resizeMode = false
     }
@@ -90,11 +93,12 @@ Item {
         id: gridContainer
         anchors.fill: parent
 
-
         property color lightColor:  Qt.lighter(gridManager.gridColor, 1.2)
 
-        property int verticalLinesCount:(gridManager.showGrid) ? croisillons + 1 : 0
-        property int horizontalLinesCount:(gridManager.showGrid) ? croisillons + 1 : 0
+        property int verticalLinesCount: (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
+                                                                : 0
+        property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
+                                                                  :0
 
         property int totalLineCount:verticalLinesCount+horizontalLinesCount
 
@@ -107,8 +111,7 @@ Item {
                 color: gridManager.resizeMode ? gridContainer.lightColor: gridManager.gridColor
                 opacity: gridManager.resizeMode ? 1 : gridManager.gridOpacity
                 visible: gridManager.showGrid
-                border.width: 0
-                border.color: "transparent"
+
                 // Déterminer si c'est une ligne verticale ou horizontale
                 readonly property bool isVertical: index < gridContainer.verticalLinesCount
                 readonly property int verticalIndex: isVertical ? index : 0

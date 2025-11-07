@@ -88,7 +88,6 @@ Rectangle {
 
     onUpdateSettings: {
         console.log("Update setting - stEnableAutoSave.value('saveEvent', '0') " + stEnableAutoSave.value('saveEvent', "1"))
-
         tmpSaver.interval =  stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60: 500
         tmpSaver.running = stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
     }
@@ -367,13 +366,36 @@ Rectangle {
 
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        anchors.right: parent.right
+        // anchors.right: parent.right
+        anchors.right: sidePanel.left
+
 
         // Connexion à la logique
         logic: logic
 
         // Définir la valeur d'expansion par défaut
         isExpanded: true
+
+        onIsSidePanelExpandedChanged: {
+            console.log("SelectionPanel: Side panel expanded state changed to", isSidePanelExpanded, " x ", sidePanel.x)
+            if (isSidePanelExpanded) {
+                sidePanel.x = parent.width - sidePanel.width
+            } else {
+                sidePanel.x = parent.width
+            }
+        }
+
+
+        onIsExpandedChanged: {
+            console.log("SelectionPanel: Side panel expanded state changed to", isSidePanelExpanded, " x ", sidePanel.x)
+            if (isExpanded) {
+                sidePanel.height = Qt.binding(function() {
+                                       return selectionPanel.height
+                                   })
+            } else {
+                sidePanel.height = 0
+            }
+        }
 
         //Connect the selected decoration element for effects
         Timer {
@@ -425,8 +447,28 @@ Rectangle {
                 logic.mouseLogic.showLinkPreview()
             }
         }
-
     }
+
+    EditorSidePanel {
+        id: sidePanel
+        anchors.bottom: parent.bottom
+        x: parent.width
+        // height: selectionPanel.height
+        Behavior on height {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.InOutQuad
+            }
+        }
+        Behavior on x {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.InOutQuad
+            }
+        }
+    }
+
+
 
     MenuMapAtStart {
         onBackgroundSelected: function() {

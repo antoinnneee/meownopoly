@@ -24,7 +24,7 @@ Item {
     visible: isExpanded
     opacity: isExpanded ? 1.0 : 0.0
 
-    property real sidePanelRatio: 0.42
+    property real sidePanelRatio : 0.42
     property alias mainContent : mainContentHolder.children
     property alias sidePanel : sidePanel.children
 

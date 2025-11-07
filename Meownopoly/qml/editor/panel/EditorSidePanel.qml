@@ -1,0 +1,181 @@
+import QtQuick 2.15
+import QtQuick.Particles
+import AssetManager
+
+import "../"
+
+Rectangle {
+    id: root
+
+    property bool isExpanded: true
+    // required property EditorLogic logic
+
+    width : Screen.pixelDensity * 70
+    height: Screen.pixelDensity * 75
+    // property alias contentArea: contentPlaceHolder.children
+
+    // property alias titleBar: titlePlaceHolder.children
+
+    // Filter Properties
+    property string currentView: "categories" // "categories" or "assets"
+    property string searchText: ""
+
+    // Dimensions
+    property int collapsedHeight: 0
+    property int expandedHeight: 400
+
+    // State management
+    // height: isExpanded ? expandedHeight : collapsedHeight
+
+    color: "#E63399FF" // Bleu clair semi-transparent
+    border.color: "#333333"
+    border.width: 1
+
+
+    // Zone de redimensionnement
+    Rectangle {
+        id: resizeHandle
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 10
+        color: root.isResizing ? "#E6333333" : "#E6000000"
+        z: 15
+
+        // Indicateur visuel subtil
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width * 0.3
+            height: 2
+            color: resizeMouseArea.containsMouse || root.isResizing ? "#4A90E2" : "#CCCCCC"
+            radius: 1
+        }
+
+        MouseArea {
+            id: resizeMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.SizeVerCursor
+            enabled: root.isExpanded
+
+            property real startY: 0
+            property real startHeight: 0
+
+
+            property bool isHorizontal: true
+            // property bool isStart: modelData.isStart
+            property bool isStart: true
+
+            property real startSize: 0
+            property real startRootPos: 0
+            property point startGlobalPos: Qt.point(0, 0)
+
+
+            onPressed: function(mouse) {
+                // Capturer les valeurs initiales
+                startSize = isHorizontal ? root.width : root.height
+                startRootPos = isHorizontal ? root.x : root.y
+
+                // Utiliser les coordonnées globales (par rapport au parent de root)
+                var globalPos = mapToItem(root.parent, mouse.x, mouse.y)
+                startGlobalPos = Qt.point(globalPos.x, globalPos.y)
+            }
+
+
+            onPositionChanged: function(mouse) {
+                if (pressed) {
+                    // Coordonnées globales actuelles
+                    var globalPos = mapToItem(root.parent, mouse.x, mouse.y)
+
+                    // Calculer le delta depuis le début
+                    var delta = isHorizontal ?
+                        (globalPos.x - startGlobalPos.x) :
+                        (globalPos.y - startGlobalPos.y)
+
+                    var newSize = isStart ? startSize - delta : startSize + delta
+                    var minSize = isHorizontal ? root.minWidth : root.minHeight
+
+                    if (newSize >= minSize) {
+                        if (isHorizontal) {
+                            root.width = newSize
+                            if (isStart) {
+                                root.x = startRootPos + delta
+                            }
+                        } else {
+                            root.height = newSize
+                            if (isStart) {
+                                root.y = startRootPos + delta
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Animation de couleur au survol
+        Behavior on color { ColorAnimation { duration: 150 }}
+    }
+
+
+
+    ParticleSystem {
+        id: particleSystem
+        anchors.fill: parent
+        clip: true
+        // Emitter for the initial burst
+        Emitter {
+            id: burstEmitter
+            enabled: true
+            anchors.fill: parent
+            lifeSpan: 2000
+            size: 50
+            emitRate: 15
+            velocity: AngleDirection {
+                angle: 270
+                angleVariation: 15
+                magnitude: 200
+                magnitudeVariation: 50
+            }
+        }
+
+        // Particle image for the initial burst
+        ImageParticle {
+            id: firework
+            // source: "qrc:///particleresources/glowdot.png"
+            source : AssetManager.getAssetPath("ui","particules","pawn1")
+            color: Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
+            colorVariation: 0.5
+            alpha: 0.75
+            rotationVariation: 360
+        }
+    }
+
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: {
+            burstEmitter.burst(1);
+            firework.color = Qt.rgba(Math.random(), Math.random(), Math.random(), 1);
+        }
+    }
+
+
+    // Item{
+    //     id: titlePlaceHolder
+    //     anchors.left: parent.left
+    //     anchors.right: parent.right
+    //     anchors.top: parent.top
+    //     height: {
+    //         return (children.length > 0) ? children[0].height + 10 : 0
+    //     }
+    // }
+
+    // Item{
+    //     id: contentPlaceHolder
+    //     anchors.left: parent.left
+    //     anchors.right: parent.right
+    //     anchors.top: titlePlaceHolder.bottom
+    //     anchors.bottom: parent.bottom
+    // }
+}
