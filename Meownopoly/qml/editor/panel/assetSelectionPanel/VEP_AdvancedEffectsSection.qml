@@ -65,6 +65,7 @@ GroupBox {
         id: mainLayout
         anchors.fill: parent
         spacing: 1
+        anchors.topMargin: Screen.pixelDensity * 2
         visible: !control.isCollapsed
         
         // Blur effect

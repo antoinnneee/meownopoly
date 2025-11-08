@@ -174,5 +174,7 @@
         <file>qml/editor/panel/caseSelectionPanel/side/ConnectionsConfigurationSection.qml</file>
         <file>qml/ui_item/InteractiveUiElement.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VisualEffectsPanel_old.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/TransformPanel.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/VEP_Rotation.qml</file>
     </qresource>
 </RCC>

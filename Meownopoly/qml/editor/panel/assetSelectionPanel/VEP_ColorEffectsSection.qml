@@ -84,6 +84,7 @@ GroupBox {
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
+        anchors.topMargin: Screen.pixelDensity * 2
         spacing: 1
         visible: !control.isCollapsed
         

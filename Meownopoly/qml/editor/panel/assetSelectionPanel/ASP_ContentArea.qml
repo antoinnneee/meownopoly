@@ -170,7 +170,7 @@ EBP_Content {
                                 contentArea.effectChanged()
                             }
                         }
-                        
+                        /*
                         // Advanced Effects Section
                         VEP_AdvancedEffectsSection {
                             id: advancedEffectsSection
@@ -196,6 +196,7 @@ EBP_Content {
                                 contentArea.effectChanged()
                             }
                         }
+                        */
                     }
                 }
             }

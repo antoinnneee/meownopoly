@@ -92,7 +92,13 @@ GroupBox {
             onEffectChanged: {
                 root.effectChanged()
             }
+        }
 
+        VEP_Rotation{
+            Layout.fillWidth: true
+            onEffectChanged: {
+                root.effectChanged()
+            }
         }
 
     }
