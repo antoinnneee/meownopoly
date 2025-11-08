@@ -513,7 +513,7 @@ Rectangle {
                                     id: enableAutoSaveBtn
                                     height: 50
                                     width: escMenu.width * 0.5
-                                    property int indexBt : stEnableAutoSave.value("saveEvent", "0")
+                                    property int indexBt
                                     background: Rectangle {
                                         color: {
                                             switch (enableAutoSaveBtn.indexBt){
@@ -548,6 +548,9 @@ Rectangle {
                                         color: "white"
                                         font.pixelSize: 13
                                     }
+
+                                    Component.onCompleted: indexBt = stEnableAutoSave.value("saveEvent", "0")
+
                                     onVisibleChanged: {
                                         enableAutoSaveBtn.indexBt = parseInt(stEnableAutoSave.value("saveEvent", "0"))
                                         if (enableAutoSaveBtn.indexBt == 2) {
@@ -584,8 +587,9 @@ Rectangle {
                                         width: 50
                                         from: 1
                                         to: 5
-                                        value: parseInt(stEnableAutoSave.value("saveInterval", "1"))
-                                        
+
+                                        Component.onCompleted: value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
+
                                         contentItem: TextInput {
                                             text: saveIntervalSpinBox.textFromValue(saveIntervalSpinBox.value, saveIntervalSpinBox.locale)
                                             font.pixelSize: 12

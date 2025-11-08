@@ -453,19 +453,6 @@ Rectangle {
         id: sidePanel
         anchors.bottom: parent.bottom
         x: parent.width
-        // height: selectionPanel.height
-        Behavior on height {
-            NumberAnimation {
-                duration: 300
-                easing.type: Easing.InOutQuad
-            }
-        }
-        Behavior on x {
-            NumberAnimation {
-                duration: 300
-                easing.type: Easing.InOutQuad
-            }
-        }
     }
 
 

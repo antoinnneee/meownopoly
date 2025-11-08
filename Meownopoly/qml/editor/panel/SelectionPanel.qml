@@ -176,7 +176,6 @@ Rectangle {
                 if (Math.abs(newHeight - root.customHeight) > 1) {
                     root.customHeight = newHeight
                 }
-                
                 mouse.accepted = true
             }
             

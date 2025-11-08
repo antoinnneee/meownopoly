@@ -8,6 +8,7 @@ Rectangle {
     id: root
 
     property bool isExpanded: true
+    property bool isResizing : false
     // required property EditorLogic logic
 
     width : Screen.pixelDensity * 70
@@ -31,6 +32,20 @@ Rectangle {
     border.color: "#333333"
     border.width: 1
 
+    Behavior on height {
+        NumberAnimation {
+            duration: isResizing ? 0 : 50
+            easing.type: Easing.InOutQuad
+        }
+    }
+    Behavior on x {
+        NumberAnimation {
+            duration: 300
+            easing.type: Easing.InOutQuad
+        }
+    }
+
+
 
     // Zone de redimensionnement
     Rectangle {
@@ -39,7 +54,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: parent.top
         height: 10
-        color: root.isResizing ? "#E6333333" : "#E6000000"
+        color: resizeMouseArea.pressed ? "#E6333333" : "#E6000000"
         z: 15
 
         // Indicateur visuel subtil
@@ -61,8 +76,9 @@ Rectangle {
             property real startY: 0
             property real startHeight: 0
 
+            property int minSize : 100
 
-            property bool isHorizontal: true
+            property bool isHorizontal: false
             // property bool isStart: modelData.isStart
             property bool isStart: true
 
@@ -72,6 +88,7 @@ Rectangle {
 
 
             onPressed: function(mouse) {
+                isResizing = true
                 // Capturer les valeurs initiales
                 startSize = isHorizontal ? root.width : root.height
                 startRootPos = isHorizontal ? root.x : root.y
@@ -84,6 +101,7 @@ Rectangle {
 
             onPositionChanged: function(mouse) {
                 if (pressed) {
+                    isResizing = true
                     // Coordonnées globales actuelles
                     var globalPos = mapToItem(root.parent, mouse.x, mouse.y)
 
@@ -93,7 +111,7 @@ Rectangle {
                         (globalPos.y - startGlobalPos.y)
 
                     var newSize = isStart ? startSize - delta : startSize + delta
-                    var minSize = isHorizontal ? root.minWidth : root.minHeight
+                    var minSize = resizeMouseArea.minSize
 
                     if (newSize >= minSize) {
                         if (isHorizontal) {
@@ -109,6 +127,7 @@ Rectangle {
                         }
                     }
                 }
+                isResizing = false
             }
         }
 
