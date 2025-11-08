@@ -41,10 +41,16 @@ GroupBox {
         border.width: 1
         topLeftRadius: 0
     }
-    label: RowLayout {
+    label: MouseArea {
         x: control.leftPadding
         width: control.availableWidth
-        spacing: 8
+        height: Screen.pixelDensity * 8
+        onClicked: {
+            control.isCollapsed = !control.isCollapsed
+        }
+        RowLayout {
+            spacing: 8
+            anchors.fill: parent
         
         Text {
             color: "#cccccc"
@@ -52,12 +58,12 @@ GroupBox {
             elide: Text.ElideRight
             Layout.fillWidth: true
         }
+        }
     }
     
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
-        anchors.topMargin: -4
         spacing: 1
         visible: !control.isCollapsed
         
