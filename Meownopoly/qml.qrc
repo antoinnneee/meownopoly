@@ -41,7 +41,7 @@
         <file>qml/editor/panel/assetSelectionPanel/VEP_ResetButtonsPanel.qml</file>
         <file>qml/editor/panel/MenuSelector.qml</file>
         <file>qml/editor/panel/SelectionPanel.qml</file>
-        <file>qml/editor/panel/assetSelectionPanel/VEP_TransformSection.qml</file>
+        <file>qml/editor/panel/assetSelectionPanel/VisualTransformPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_TitleBar.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_TitleBar.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_FilterButton.qml</file>
@@ -176,5 +176,7 @@
         <file>qml/editor/panel/assetSelectionPanel/VisualEffectsPanel_old.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/TransformPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/VEP_Rotation.qml</file>
+        <file>qml/editor/panel/caseSelectionPanel/side/ConnectionsPanel.qml</file>
+        <file>qml/ui_item/CollapsableGroupBox.qml</file>
     </qresource>
 </RCC>

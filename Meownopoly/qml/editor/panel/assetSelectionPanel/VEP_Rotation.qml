@@ -2,16 +2,11 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import "../../../ui_item"
 
-
-GroupBox {
-    title: "Rotation"
+CollapsableGroupBox {
     id: control
-    property bool isCollapsed: false
-
-
-    height: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
-    implicitHeight: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
+    title: "Rotation"
 
     // Preset management properties
     property var colorPresets: []
@@ -20,53 +15,14 @@ GroupBox {
     signal effectChanged()
     // signal colorPresetsChanged()
 
-
-    padding:4
-    spacing: 2
-
-    background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
-        border.width: 1
-    }
-
-    label: MouseArea {
-        id: titleLabel
-        x: control.leftPadding
-        width: control.availableWidth
-        height: Screen.pixelDensity * 8
-        onClicked: {
-            control.isCollapsed = !control.isCollapsed
-        }
-        RowLayout {
-            spacing: 8
-            anchors.fill: parent
-
-            Text {
-                color: "#cccccc"
-                text: control.title
-
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-            }
-        }
-    }
-
     // Main layout
-    ColumnLayout {
-        id: mainLayout
-        anchors.fill: parent
-        anchors.topMargin: titleLabel.height/2
-        spacing: 1
-        visible: !control.isCollapsed
-
-        RowLayout {
+    content: RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             Text {
                 text: "Angle:"
+                verticalAlignment: Text.AlignVCenter
                 color: "#cccccc"
                 font.pointSize: 9
                 Layout.fillHeight: true
@@ -93,7 +49,9 @@ GroupBox {
                 font.pointSize: 9
                 width: 30
                 horizontalAlignment: Text.AlignRight
+                verticalAlignment: Text.AlignVCenter
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
             }
-        }
+
     }
 }

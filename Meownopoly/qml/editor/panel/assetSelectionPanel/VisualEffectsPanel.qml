@@ -3,81 +3,32 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import QtQuick.Dialogs
+import "../../../ui_item"
 
 
-GroupBox {
+CollapsableGroupBox {
     id: root
     title: "Visual Effects"
     
     // Properties for the target decoration element
     property bool effectsLocked: false
-    property bool isCollapsed: false
-    
-    // Dimensions
-    height: (isCollapsed ? Screen.pixelDensity * 12 : mainLayout.implicitHeight +  Screen.pixelDensity * 12)
     
     // Signals
     signal effectChanged()
-    
-    padding: 4
-    spacing: 2
-    
-    background: Rectangle {
-        color: "#2a2a2a"
-        radius: 8
-        border.color: "#444444"
-        border.width: 1
-    }
-    
-    label: RowLayout {
-        x: root.leftPadding
-        width: root.availableWidth
-        spacing: 8
-        
-        Text {
-            text: root.title
-            color: "#ffffff"
-            font.pixelSize: 16
-            font.bold: true
-            elide: Text.ElideRight
-            Layout.fillWidth: true
-        }
-        
-        Button {
-            id: collapseButton
-            Layout.preferredWidth: Screen.pixelDensity * 8
-            Layout.preferredHeight: Screen.pixelDensity * 8
-            flat: true
-            
-            background: Rectangle {
-                color: "transparent"
-                border.color: "#666666"
-                border.width: 1
-                radius: 2
-            }
-            
-            contentItem: Text {
-                text: root.isCollapsed ? "▼" : "▲"
-                color: "#cccccc"
-                font.pixelSize: 10
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            
-            onClicked: {
-                root.isCollapsed = !root.isCollapsed
-            }
+    font.pointSize: 18
+    Timer{
+        running: true
+        repeat: true
+        interval: 1000
+        onTriggered: {
+            console.log(root.font.pixelSize)
+
         }
     }
+
     
     // Main layout
-    ColumnLayout {
-        id: mainLayout
-        anchors.fill: parent
-        anchors.topMargin: -4
-        spacing: 10
-        visible: !root.isCollapsed
-        
+    content: [
         VEP_ColorEffectsSection {
             id: colorEffectsSection
             Layout.fillWidth: true
@@ -85,14 +36,14 @@ GroupBox {
             onEffectChanged: {
                 root.effectChanged()
             }
-        }
+        },
 
         VEP_AdvancedEffectsSection{
             Layout.fillWidth: true
             onEffectChanged: {
                 root.effectChanged()
             }
-        }
+        },
 
         VEP_Rotation{
             Layout.fillWidth: true
@@ -100,8 +51,7 @@ GroupBox {
                 root.effectChanged()
             }
         }
-
-    }
+    ]
 
 
     function getCurrentEffects() {

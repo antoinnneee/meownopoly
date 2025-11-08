@@ -5,8 +5,9 @@ import QtQuick.Effects
 import QtQuick.Dialogs
 
 import QtQuick.Controls.impl
+import "../../../ui_item"
 
-GroupBox {
+CollapsableGroupBox {
     id: control
     title: "Advanced Effects"
     
@@ -15,14 +16,9 @@ GroupBox {
     property alias shadowBlurSlider: shadowBlurSlider
     property alias shadowEnabledCheck: shadowEnabledCheck
 
-    property bool isCollapsed: false
-    height: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
-    implicitHeight: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
 
     signal effectChanged()
 
-    padding:4
-    spacing: 2
 
     function updateFromDisplayParameter(dispParam) {
         // // Update checkboxes
@@ -34,41 +30,8 @@ GroupBox {
         shadowBlurSlider.value = dispParam.effectShadowBlur
     }
 
-    background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
-        border.width: 1
-        topLeftRadius: 0
-    }
-    label: MouseArea {
-        x: control.leftPadding
-        width: control.availableWidth
-        height: Screen.pixelDensity * 8
-        onClicked: {
-            control.isCollapsed = !control.isCollapsed
-        }
-        RowLayout {
-            spacing: 8
-            anchors.fill: parent
-        
-        Text {
-            color: "#cccccc"
-            text: control.title
-            elide: Text.ElideRight
-            Layout.fillWidth: true
-        }
-        }
-    }
-    
-    ColumnLayout {
-        id: mainLayout
-        anchors.fill: parent
-        spacing: 1
-        anchors.topMargin: Screen.pixelDensity * 2
-        visible: !control.isCollapsed
-        
-        // Blur effect
+
+    content: [
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -115,8 +78,7 @@ GroupBox {
                 }
             }
 
-        }
-        
+        },
         // Shadow effect
         RowLayout {
             Layout.fillHeight: true
@@ -166,5 +128,5 @@ GroupBox {
                 }
             }
         }
-    }
+    ]
 }

@@ -11,6 +11,8 @@ RowLayout {
 
     property color accentColor: "#569c58"
     signal effectChanged(var value)
+
+
     clip: true
 
     Label {
@@ -39,7 +41,7 @@ RowLayout {
                 control.effectChanged(value)
         }
 
-    background: Rectangle {
+        background: Rectangle {
         x: slider.leftPadding + (slider.horizontal ? 0 : (slider.availableWidth - width) / 2)
         y: slider.topPadding + (slider.horizontal ? (slider.availableHeight - height) / 2 : 0)
         implicitWidth: slider.horizontal ? 200 : 6
@@ -82,9 +84,10 @@ RowLayout {
     Button {
         text: "Reset"
         onClicked: slider.value = 0.0
-        Layout.fillHeight: true
-        Layout.minimumWidth: Screen.pixelDensity*7
-        Layout.preferredWidth: Screen.pixelDensity*14
+        // Layout.fillHeight: true
+        Layout.minimumWidth: Screen.pixelDensity * 7
+        Layout.preferredWidth: Screen.pixelDensity * 14
+        Layout.preferredHeight: Screen.pixelDensity * 8
         
         background: Rectangle {
             color: parent.pressed ? "#666666" : "#555555"

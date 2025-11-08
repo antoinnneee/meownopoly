@@ -159,7 +159,7 @@ EBP_Content {
                         spacing: 10
                         
                         // Transform Section
-                        VEP_TransformSection {
+                        VisualTransformPanel {
                             id: transformSection
                             width: parent.width
                             

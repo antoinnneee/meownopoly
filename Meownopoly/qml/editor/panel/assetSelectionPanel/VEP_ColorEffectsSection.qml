@@ -3,18 +3,16 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtCore
+import "../../../ui_item"
 
-GroupBox {
-    title: "Color Effects"
+CollapsableGroupBox {
     id: control
+    title: "Color Effects"
 
     property alias brightnessSlider: brightnessSlider
     property alias contrastSlider: contrastSlider
     property alias saturationSlider: saturationSlider
     property alias colorizationSlider: colorizationSlider
-    property bool isCollapsed: false
-    height: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
-    implicitHeight: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
 
     // Preset management properties
     property var colorPresets: []
@@ -51,54 +49,18 @@ GroupBox {
         }
     }
 
-    padding:4
-    spacing: 2
-
-    background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
-        border.width: 1
-    }
-
-    label: MouseArea {
-        x: control.leftPadding
-        width: control.availableWidth
-        height: Screen.pixelDensity * 8
-        onClicked: {
-            control.isCollapsed = !control.isCollapsed
-        }
-        RowLayout {
-            spacing: 8
-            anchors.fill: parent
-
-            Text {
-                color: "#cccccc"
-                text: control.title
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-            }
-        }
-    }
-
-    ColumnLayout {
-        id: mainLayout
-        anchors.fill: parent
-        anchors.topMargin: Screen.pixelDensity * 2
-        spacing: 1
-        visible: !control.isCollapsed
+    content : [
         
         // Brightness control
         VEP_Slider {
             id: brightnessSlider
-
             Layout.topMargin: 0
             Layout.fillWidth: true
             sliderText: "Brightness:"
             onEffectChanged: function(value) {
                 control.effectChanged()
             }
-        }
+        },
 
         // Contrast control
         VEP_Slider {
@@ -109,7 +71,7 @@ GroupBox {
             onEffectChanged: function(value) {
                 control.effectChanged()
             }
-        }
+        },
         
         // Saturation control
         VEP_Slider {
@@ -120,7 +82,7 @@ GroupBox {
             onEffectChanged: function(value) {
                 control.effectChanged()
             }
-        }
+        },
         
         // Colorization control
         VEP_Slider {
@@ -134,7 +96,7 @@ GroupBox {
             onEffectChanged: function(value) {
                 control.effectChanged()
             }
-        }
+        },
         
         // Preset management section
         GroupBox {
@@ -147,6 +109,7 @@ GroupBox {
                 radius: 3
                 border.color: "#444444"
                 border.width: 1
+                opacity: 0.1
             }
             
             label: Text {
@@ -298,8 +261,8 @@ GroupBox {
                 }
             }
         }
+    ]
 
-    }
     
     // Functions pour la persistance des presets
     function saveColorPresets() {
