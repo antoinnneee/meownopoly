@@ -13,6 +13,7 @@ CollapsableGroupBox {
     property int activePresetIndex: -1
 
     signal effectChanged()
+    property alias rotationSlider: rotationSlider
     // signal colorPresetsChanged()
 
     // Main layout

@@ -29,6 +29,7 @@ CollapsableGroupBox {
         },
 
         VEP_AdvancedEffectsSection{
+            id: advancedEffectsSection
             Layout.fillWidth: true
             onEffectChanged: {
                 root.effectChanged()

@@ -218,12 +218,17 @@ import UndoRedoManager
         zLayer: snapableParameters.displayParameter.zLayer
         onLayerChanged: function(newLayer) {snapableParameters.displayParameter.zLayer = newLayer}
 
+        anchors.left: snapableElement.right
+        anchors.top: snapableElement.top
+        parent: snapableElement.parent
+
     }
 
     // Poignées de redimensionnement
     SnapableElementResizeHandles {
         id: resizeHandles
-        anchors.fill: parent
+        anchors.fill: snapableElement
+        parent: snapableElement.parent
         z: 100
     }
     

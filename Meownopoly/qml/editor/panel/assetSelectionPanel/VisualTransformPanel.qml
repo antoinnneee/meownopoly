@@ -8,7 +8,7 @@ GroupBox {
     title: "Transform"
     
     // Properties for the target decoration element
-//    property alias rotationSlider: rotationSlider
+    property alias rotationSlider: rotationSection.rotationSlider
     property alias horizontalMirrorCheck: horizontalMirrorCheck
     property alias verticalMirrorCheck: verticalMirrorCheck
     property bool isCollapsed: false
@@ -79,6 +79,7 @@ GroupBox {
         spacing: 10
         visible: !control.isCollapsed
         VEP_Rotation{
+            id: rotationSection
             Layout.fillWidth: true
             onEffectChanged: {
                 control.effectChanged()
@@ -109,7 +110,7 @@ GroupBox {
 
 
     function updateFromDisplayParameter(dispParam) {
-      rotationSlider.value = dispParam.rotationAngle
+      rotationSection.rotationSlider.value = dispParam.rotationAngle
 
       // Update mirror checkboxes
       horizontalMirrorCheck.checked = dispParam.mirrorHorizontal

@@ -37,7 +37,7 @@ EBP_Content {
             blockEffectChangedSignal = true
             effectsPanel.updateFromDisplayParameter(dispParam)
             transformSection.updateFromDisplayParameter(dispParam)
-            advancedEffectsSection.updateFromDisplayParameter(dispParam)
+            //advancedEffectsSection.updateFromDisplayParameter(dispParam)
             blockEffectChangedSignal = false
         }
     }
