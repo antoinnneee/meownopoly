@@ -72,6 +72,8 @@ Rectangle {
 
     property alias escMenu:escMenu
 
+    property alias entity:entity
+
     Component.onCompleted: {
         stEnableAutoSave.sync()
         initializeEditor()
@@ -303,6 +305,18 @@ Rectangle {
             property int gridYPosition:  0
         }
 
+        Rectangle{
+            id: entity
+            color: "purple"
+            width: 50
+            height: 50
+            radius: width
+            z: 1000
+            visible: false
+            Behavior on x { SmoothedAnimation { velocity: 200 } }
+            Behavior on y { SmoothedAnimation { velocity: 200 } }
+        }
+
         // MouseArea to track cursor position for asset preview
         MouseArea {
             id: cursorTracker
@@ -383,6 +397,7 @@ Rectangle {
                 logic.saveMap(MapTypes.UNDOREDO)
             }
         }
+
         onAssetSelected: function(category, type, id) {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
         }

@@ -17,6 +17,7 @@ MouseArea{
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     pressAndHoldInterval: 300
+    hoverEnabled: true
 
     drag.onActiveChanged: {
         mouseLogic.dragChanged(mouseX, mouseY, drag)

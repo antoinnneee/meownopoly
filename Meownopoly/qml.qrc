@@ -178,5 +178,6 @@
         <file>qml/editor/panel/assetSelectionPanel/VEP_Rotation.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/side/ConnectionsPanel.qml</file>
         <file>qml/ui_item/CollapsableGroupBox.qml</file>
+        <file>qml/editor/logic/MouseLogic_Game.qml</file>
     </qresource>
 </RCC>

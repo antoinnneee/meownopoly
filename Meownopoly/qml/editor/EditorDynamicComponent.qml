@@ -14,6 +14,7 @@ Item{
     property alias snapableDecorationComponent: snapableDecorationComponent
     property alias mouseLogic_selection_comp: mouseLogic_selection_comp
     property alias mouseLogic_pose_comp: mouseLogic_pose_comp
+    property alias mouseLogic_game_comp: mouseLogic_game_comp
     property alias mouseLogic_selectionLink_comp: mouseLogic_selectionLink_comp
     property alias scrollLogic_normal_comp: scrollLogic_normal_comp
     property alias scrollLogic_pose_comp: scrollLogic_pose_comp
@@ -75,6 +76,18 @@ Item{
             grid: _grid
             Component.onCompleted: {
                 logic.mouseLogic = mouseLogic_pose
+            }
+        }
+    }
+
+    Component {
+        id: mouseLogic_game_comp
+        MouseLogic_Game {
+            id: mouseLogic_game
+            logic: _logic
+            grid: _grid
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_game
             }
         }
     }
