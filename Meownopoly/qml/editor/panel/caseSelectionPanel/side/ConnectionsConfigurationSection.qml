@@ -2,11 +2,13 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import MapTypes
+import "../../../../ui_item"
 
 pragma ComponentBehavior: Bound
 
-Rectangle {
+CollapsableGroupBox {
     id: root
+    title: "Connexions"
     
     // Properties
     property var targetSnapableElement: null
@@ -14,22 +16,14 @@ Rectangle {
     property var hoveredConnectionElement: null
     property var logic: null  // Référence au logic pour sauvegarder
     
-    // Visual properties
-    color: "#2a2a2a"
-    radius: 8
-    border.color: "#444444"
-    border.width: 1
-
-    topLeftRadius: 0
-    topRightRadius: 0
     // Signals
     signal requestAddConnection(string kind)
     signal configurationChanged()
     
     // Main scrollable content
-    ScrollView {
-        anchors.fill: parent
-        anchors.margins: 10
+    content: ScrollView {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
         contentWidth: availableWidth
         clip: true
         

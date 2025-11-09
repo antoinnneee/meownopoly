@@ -3,8 +3,9 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Case
 import MapTypes
+import "../../../../ui_item"
 
-GroupBox {
+CollapsableGroupBox {
     id: control
     title: "Configuration Kibble Dispenser"
     
@@ -21,22 +22,7 @@ GroupBox {
             logic.saveMap(MapTypes.UNDOREDO)
         }
     }
-    
-    // Visual styling
-    background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
-        border.width: 1
-    }
-    
-    label: Text {
-        x: control.leftPadding
-        width: control.availableWidth
-        text: control.title
-        color: "#cccccc"
-        elide: Text.ElideRight
-    }
+
     
     // Mise à jour quand targetCase change
     Connections {
@@ -49,10 +35,7 @@ GroupBox {
         }
     }
     
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 8
-        
+    content: [
         // Note explicative
         Text {
             text: "🥫 Configuration du distributeur de croquettes - récompense donnée au joueur"
@@ -61,7 +44,7 @@ GroupBox {
             color: "#888888"
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-        }
+        },
         
         // Configuration de la récompense
         RowLayout {
@@ -115,41 +98,9 @@ GroupBox {
                 font.pixelSize: 10
                 color: "#888888"
             }
-            
-            Item { Layout.fillWidth: true }
         }
-        
-        // Informations supplémentaires
-        Rectangle {
-            Layout.fillWidth: true
-            height: 55
-            color: "#2a2a2a"
-            radius: 3
-            border.color: "#444444"
-            border.width: 1
-            
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 4
-                
-                Text {
-                    text: "ℹ️ Information"
-                    font.bold: true
-                    font.pixelSize: 10
-                    color: "#cccccc"
-                }
-                
-                Text {
-                    text: "Quand un joueur atterrit sur cette case, il reçoit le nombre de kibbles spécifié."
-                    font.pixelSize: 9
-                    color: "#888888"
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                }
-            }
-        }
-    }
+
+    ]
     
     // Functions
     function updateControls() {

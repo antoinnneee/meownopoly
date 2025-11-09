@@ -16,16 +16,6 @@ CollapsableGroupBox {
     // Signals
     signal effectChanged()
     font.pointSize: 18
-    Timer{
-        running: true
-        repeat: true
-        interval: 1000
-        onTriggered: {
-            console.log(root.font.pixelSize)
-
-        }
-    }
-
     
     // Main layout
     content: [
