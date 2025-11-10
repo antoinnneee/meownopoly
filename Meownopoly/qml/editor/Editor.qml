@@ -313,8 +313,8 @@ Rectangle {
             radius: width
             z: 1000
             visible: false
-            Behavior on x { SmoothedAnimation { velocity: 200 } }
-            Behavior on y { SmoothedAnimation { velocity: 200 } }
+            Behavior on x  { SmoothedAnimation { velocity: 350 } }
+            Behavior on y { SmoothedAnimation { velocity: 350 } }
         }
 
         // MouseArea to track cursor position for asset preview
