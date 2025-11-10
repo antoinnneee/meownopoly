@@ -13,7 +13,6 @@
         <file>qml/test/TEST_BOARD.qml</file>
         <file>qml/editor/Editor.qml</file>
         <file>qml/test/TEST_3D.qml</file>
-        <file>qml/editor/CreationPanel.qml</file>
         <file>qml/editor/panel/PlayerSelector.qml</file>
         <file>qml/launcher/Launcher.qml</file>
         <file>qml/launcher/LauncherHeader.qml</file>

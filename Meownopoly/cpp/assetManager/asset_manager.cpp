@@ -316,6 +316,7 @@ QVariantMap AssetManager::getRandomAsset(const QString &category, const QString 
 QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
 {
     ASSET_DEBUG("Requesting" << category << type << id);
+    qDebug() << "Building asset path for category:" << category << "type:" << type << "id:" << id;
 
     
     AssetModel *model = getAssetModel(category, type);
@@ -494,7 +495,6 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
 QString AssetManager::buildAssetPath(const QString &category, const QString &type, const QString &filename) const
 {
     QDir assetsDir(m_assetsBasePath);
-
     if (type.isEmpty()) {
         // For categories without types (like player_icons)
         return "file:///" + assetsDir.absoluteFilePath(category + "/" + filename);

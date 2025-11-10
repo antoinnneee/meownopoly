@@ -24,6 +24,7 @@ import DisplayParameter
 import DecorationParameter
 import ItemSnapableFactory
 import UndoRedoManager
+import AssetManager
 import "../ui_item"
 
 Rectangle {
@@ -31,109 +32,44 @@ Rectangle {
 
     color: "lightblue"
     border.width: 0
+    focus: true
     property int appPositionX: 0
     property int appPositionY: 0
     property int availableHeight: height - selectionPanel.height
 
-    AdminCommandPanel{
-        id: adminCommandPanel
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 10
-        visible: false
 
-        height: Screen.pixelDensity * 100
-        z: 12000
-        
+    property real z_CONFIG_PANEL: 10000
+    property real z_HUD: 9000
+    property real z_SELECTION_RECT: 8000
+    property real z_CURSOR_TRACKER: 7000
+    property real z_LINK_TRACKER: 6000
+
+
+
+
+    property MapInfo mapInfo: MapInfo{
+        mapName: autosaveMapName
     }
-
-    InteractiveUiElement{
-        z:10000
-        x:10
-        y:10
-        width: Screen.pixelDensity * 30
-        height: Screen.pixelDensity * 30
-        contentItem : Player_Profil_Icon{
-            decorationParameter.decorationCategory: "ui"
-            decorationParameter.decorationType: "cat"
-            decorationParameter.decorationId: ""
-            anchors.fill: parent
-        }
-    }
-
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
 
     // Asset selection properties
-
     property alias isAssetSelected: selectionPanel.isAssetSelected
 
     property alias escMenu:escMenu
+
+    signal updateSettings()
 
     Component.onCompleted: {
         stEnableAutoSave.sync()
         initializeEditor()
     }
 
-    signal updateSettings()
-
-    Settings {
-        id: stEnableAutoSave
-        category: "Editor/SaveConfig"
-        property var currentMap : value("currentMap", mapInfo.autosaveMapName)
-        property int saveEvent: value("saveEvent", "1")
-    }
-
     onUpdateSettings: {
         console.log("Update setting - stEnableAutoSave.value('saveEvent', '0') " + stEnableAutoSave.value('saveEvent', "1"))
         tmpSaver.interval =  stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60: 500
         tmpSaver.running = stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
-    }
-
-    Timer {
-        id: tmpSaver
-        repeat: true
-        interval : stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60 : 500
-        running: stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
-        property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
-        onTriggered: {
-            console.log("Auto-saving map:", mapInfo.mapName)
-            if (isMapCustom)
-                logic.saveMap(MapTypes.CUSTOM)
-            else
-                logic.saveMap(MapTypes.AUTOSAVE)
-
-            busyTimer.start()
-        }
-    }
-
-    Timer {
-        id: busyTimer
-        interval: 1500
-        repeat: false
-        running: false
-        triggeredOnStart: true
-        onTriggered: {
-            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running = savingIndicator.running ? false : true) : null
-        }
-    }
-
-    BusyIndicator {
-        id: savingIndicator
-        anchors.right: parent.right
-        anchors.top: parent.top
-        width: Screen.pixelDensity * 10
-        height: width
-        running: false
-    }
-
-    // Assurer que l'éditeur peut recevoir le focus pour les raccourcis clavier
-    focus: true
-
-    function regainFocus() {
-        forceActiveFocus()
     }
 
     Keys.onPressed: function(event) {
@@ -144,10 +80,10 @@ Rectangle {
                 event.accepted = true
                 return
             }
-            
+
             // Attendre que toutes les animations de suppression soient terminées avant de sauvegarder
             var pendingDeletions = selectItem.length
-            
+
             // Handler appelé quand chaque animation de suppression est terminée
             var deletionHandler = function() {
                 pendingDeletions--
@@ -156,7 +92,7 @@ Rectangle {
                     logic.saveMap(MapTypes.UNDOREDO)
                 }
             }
-            
+
             // Connecter au signal elementDeleted de chaque élément et déclencher la suppression
             for (var i = 0; i < selectItem.length; i++) {
                 var element = selectItem[i]
@@ -192,20 +128,131 @@ Rectangle {
                 console.log("Undo requested via Ctrl+Z")
             Game.askPreview()
         }
-        else if (event.key == 178)
+        else if (event.key === 178)
         {
             adminCommandPanel.visible = !adminCommandPanel.visible
-
         }
     }
     Keys.onReleased:{
         logic.mouseLogic.isControlPressed = false
     }
 
+    AnimatedImage {
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: 10
+        z: z_HUD
+        id: aIGlobalSettings
+        // text: "⚙️"
+        fillMode: Image.PreserveAspectFit
+        source: AssetManager.getAssetPath("ui", "hud", "0")
+        width: 16
+        height: 16
+        // font.pointSize: 12
+        // MouseArea {
+        //     anchors.fill:  parent
+        //     onHoveredChanged: console.log("Settings button hovered:", hovered)
+        //     onClicked: {
+        //         console.log("onClicked Opening global settings")
+        //         escMenu.show()
+        //     }
+        //     onReleased: {
+        //         console.log("onReleased Opening global settings")
+        //         escMenu.show()
+        //     }
 
-    property MapInfo mapInfo: MapInfo{
-        mapName: autosaveMapName
+        //     onPressed : {
+        //         console.log("onPressed Opening global settings")
+        //         escMenu.show()
+        //     }
+        // }
     }
+
+    // Button {
+    //     anchors.top: parent.top
+    //     anchors.right: parent.right
+    //     anchors.margins: 10
+    //     z: z_HUD
+    //     id: btGlobalSettings
+    //     enabled: true
+    //     text: "⚙️"
+    //     width: Screen.pixelDensity * 30
+    //     height: Screen.pixelDensity * 30
+    //     font.pointSize: 12
+    //     onHoveredChanged: console.log("Settings button hovered:", hovered)
+    //     onClicked: {
+    //         console.log("onClicked Opening global settings")
+    //         escMenu.show()
+    //     }
+    //     onReleased: {
+    //         console.log("onReleased Opening global settings")
+    //         escMenu.show()
+    //     }
+
+    //     onPressed : {
+    //         console.log("onPressed Opening global settings")
+    //         escMenu.show()
+    //     }
+    // }
+
+    AdminCommandPanel{
+        id: adminCommandPanel
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 10
+        visible: false
+        enabled: visible
+
+        height: Screen.pixelDensity * 100
+        z: z_CONFIG_PANEL
+    }
+
+    Settings {
+        id: stEnableAutoSave
+        category: "Editor/SaveConfig"
+        property var currentMap : value("currentMap", mapInfo.autosaveMapName)
+        property int saveEvent: value("saveEvent", "1")
+    }
+
+    Timer {
+        id: tmpSaver
+        repeat: true
+        interval : stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60 : 500
+        running: stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
+        property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
+        onTriggered: {
+            console.log("Auto-saving map:", mapInfo.mapName)
+            if (isMapCustom)
+                logic.saveMap(MapTypes.CUSTOM)
+            else
+                logic.saveMap(MapTypes.AUTOSAVE)
+
+            busyTimer.start()
+        }
+    }
+
+    Timer {
+        id: busyTimer
+        interval: 1500
+        repeat: false
+        running: false
+        triggeredOnStart: true
+        onTriggered: {
+            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running = savingIndicator.running ? false : true) : null
+        }
+    }
+
+    BusyIndicator {
+        id: savingIndicator
+        z: z_HUD
+        anchors.right: parent.right
+        anchors.top: parent.top
+        width: Screen.pixelDensity * 10
+        height: width
+        running: false
+    }
+
     Connections {
         target: UndoRedoManager
         function onForceUnSelectAllElement() {
@@ -270,7 +317,6 @@ Rectangle {
         selectionPanel: selectionPanel
     }
 
-
     // Grille de l'éditeur
     GridManager {
         id: editorGrid
@@ -319,18 +365,18 @@ Rectangle {
             }
         }
 
-        
+
         // MouseArea to track cursor position for link preview
         MouseArea {
             id: linkTracker
+            z: z_LINK_TRACKER
             anchors.fill: parent
             hoverEnabled: true
             enabled: logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
             acceptedButtons: Qt.NoButton // Don't interfere with clicks
             propagateComposedEvents: true
             preventStealing: true
-            z: 50
-            
+
 
             onPositionChanged: function(mouse) {
                 if (logic.mouseLogic && logic.mouseLogic.updateMousePosition) {
@@ -355,10 +401,25 @@ Rectangle {
         }
     }
 
+    InteractiveUiElement{
+        z: z_HUD
+        x:10
+        y:10
+        width: Screen.pixelDensity * 30
+        height: Screen.pixelDensity * 30
+        contentItem : Player_Profil_Icon{
+            decorationParameter.decorationCategory: "ui"
+            decorationParameter.decorationType: "cat"
+            decorationParameter.decorationId: ""
+            anchors.fill: parent
+        }
+    }
+
+
     // Rectangle de sélection
     SelectionRect {
         id: selectionRect
-        z: 100
+        z: z_SELECTION_RECT
     }
 
     SelectionPanel{
@@ -368,6 +429,8 @@ Rectangle {
         anchors.left: parent.left
         // anchors.right: parent.right
         anchors.right: sidePanel.left
+
+        z: z_HUD
 
 
         // Connexion à la logique
@@ -390,8 +453,8 @@ Rectangle {
             console.log("SelectionPanel: Side panel expanded state changed to", isSidePanelExpanded, " x ", sidePanel.x)
             if (isExpanded) {
                 sidePanel.height = Qt.binding(function() {
-                                       return selectionPanel.height
-                                   })
+                    return selectionPanel.height
+                })
             } else {
                 sidePanel.height = 0
             }
@@ -451,24 +514,36 @@ Rectangle {
 
     EditorSidePanel {
         id: sidePanel
+        z: z_HUD
         anchors.bottom: parent.bottom
         x: parent.width
     }
 
-
-
     MenuMapAtStart {
+        z: z_CONFIG_PANEL
         onBackgroundSelected: function() {
         }
     }
 
-
-    
-    // Fonction pour nettoyer les ressources lors de la fermeture
-    Component.onDestruction: {
-        if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
-            logic.mouseLogic.hideLinkPreview()
+    // Menu d'échappement
+    EditorEscMenu {
+        id: escMenu
+        z: z_CONFIG_PANEL
+        onVisibleChanged: {
+            console.log("EscMenu visibility changed:", visible)
+            if (!visible) {
+                // Redonner le focus à l'éditeur quand le menu se ferme
+                root.forceActiveFocus()
+            }
         }
+        onIndexSaveEvent: {
+            stEnableAutoSave.sync()
+            root.updateSettings()
+        }
+    }
+
+    function regainFocus() {
+        forceActiveFocus()
     }
 
     function initializeEditor() {
@@ -535,19 +610,11 @@ Rectangle {
         mainMa.elementClicked(newTile)
     }
 
-    // Menu d'échappement
-    EditorEscMenu {
-        id: escMenu
-        onVisibleChanged: {
-            if (!visible) {
-                // Redonner le focus à l'éditeur quand le menu se ferme
-                root.forceActiveFocus()
-            }
-        }
-        onIndexSaveEvent: {
-            stEnableAutoSave.sync()
-            root.updateSettings()
+    Component.onDestruction: {
+        if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
+            logic.mouseLogic.hideLinkPreview()
         }
     }
+
 }
 
