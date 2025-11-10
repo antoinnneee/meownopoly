@@ -4,8 +4,9 @@ import QtQuick.Layouts 1.15
 import Case
 import "caseConfigPanel"
 import MapTypes
+import "../../../../ui_item"
 
-GroupBox {
+CollapsableGroupBox {
     id: control
     title: "Configuration Cat Device"
     
@@ -22,23 +23,6 @@ GroupBox {
             logic.saveMap(MapTypes.UNDOREDO)
         }
     }
-    
-    // Visual styling
-    background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
-        border.width: 1
-    }
-    
-    label: Text {
-        x: control.leftPadding
-        width: control.availableWidth
-        text: control.title
-        color: "#cccccc"
-        elide: Text.ElideRight
-    }
-    
     // Mise à jour quand targetCase change
     Connections {
         target: targetCase
@@ -50,10 +34,7 @@ GroupBox {
         }
     }
     
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 8
-        
+    content: [
         // Note explicative
         Text {
             text: "🔌 Configuration de l'Appareil Électronique - Service public achetable"
@@ -62,14 +43,14 @@ GroupBox {
             color: "#888888"
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-        }
+        },
         
         // Configuration des prix CaseCatPerks (héritée)
         CCP_CatPerksConfig {
             id: caseCatPerksConfig
             targetCase: control.targetCase
             Layout.fillWidth: true
-        }
+        },
         
         // Configuration spécifique au Device - Taxe d'utilisation
         Rectangle {
@@ -166,8 +147,7 @@ GroupBox {
                     Item { Layout.fillWidth: true }
                 }
             }
-        }
-        
+        },
         // Section d'information sur le fonctionnement
         Rectangle {
             Layout.fillWidth: true
@@ -197,7 +177,7 @@ GroupBox {
                     wrapMode: Text.WordWrap
                 }
             }
-        }
+        },
         
         // Section de conseils économiques
         Rectangle {
@@ -229,7 +209,7 @@ GroupBox {
                 }
             }
         }
-    }
+    ]
     
     // Functions
     function updateControls() {

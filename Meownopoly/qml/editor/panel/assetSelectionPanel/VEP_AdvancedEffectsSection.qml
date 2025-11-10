@@ -5,8 +5,9 @@ import QtQuick.Effects
 import QtQuick.Dialogs
 
 import QtQuick.Controls.impl
+import "../../../ui_item"
 
-GroupBox {
+CollapsableGroupBox {
     id: control
     title: "Advanced Effects"
     
@@ -15,13 +16,9 @@ GroupBox {
     property alias shadowBlurSlider: shadowBlurSlider
     property alias shadowEnabledCheck: shadowEnabledCheck
 
-    property bool isCollapsed: false
-    height: (isCollapsed ? Screen.pixelDensity * 9 : mainLayout.implicitHeight)
 
     signal effectChanged()
 
-    padding:4
-    spacing: 2
 
     function updateFromDisplayParameter(dispParam) {
         // // Update checkboxes
@@ -33,60 +30,8 @@ GroupBox {
         shadowBlurSlider.value = dispParam.effectShadowBlur
     }
 
-    background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
-        border.width: 1
-        topLeftRadius: 0
-    }
-    label: RowLayout {
-        x: control.leftPadding
-        width: control.availableWidth
-        spacing: 8
-        
-        Text {
-            color: "#cccccc"
-            text: control.title
-            elide: Text.ElideRight
-            Layout.fillWidth: true
-        }
-        
-        Button {
-            id: collapseButton
-            Layout.preferredWidth: Screen.pixelDensity * 8
-            Layout.preferredHeight: Screen.pixelDensity * 8
-            flat: true
-            
-            background: Rectangle {
-                color: "transparent"
-                border.color: "#666666"
-                border.width: 1
-                radius: 2
-            }
-            
-            contentItem: Text {
-                text: control.isCollapsed ? "▼" : "▲"
-                color: "#cccccc"
-                font.pixelSize: 10
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            
-            onClicked: {
-                control.isCollapsed = !control.isCollapsed
-            }
-        }
-    }
-    
-    ColumnLayout {
-        id: mainLayout
-        anchors.fill: parent
-        anchors.topMargin: -4
-        spacing: 1
-        visible: !control.isCollapsed
-        
-        // Blur effect
+
+    content: [
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -133,8 +78,7 @@ GroupBox {
                 }
             }
 
-        }
-        
+        },
         // Shadow effect
         RowLayout {
             Layout.fillHeight: true
@@ -184,5 +128,5 @@ GroupBox {
                 }
             }
         }
-    }
+    ]
 }

@@ -38,7 +38,7 @@ EBP_Content {
             blockEffectChangedSignal = true
             effectsPanel.updateFromDisplayParameter(dispParam)
             transformSection.updateFromDisplayParameter(dispParam)
-            advancedEffectsSection.updateFromDisplayParameter(dispParam)
+            //advancedEffectsSection.updateFromDisplayParameter(dispParam)
             blockEffectChangedSignal = false
         }
     }
@@ -160,7 +160,7 @@ EBP_Content {
                         spacing: 10
                         
                         // Transform Section
-                        VEP_TransformSection {
+                        VisualTransformPanel {
                             id: transformSection
                             width: parent.width
                             
@@ -171,7 +171,7 @@ EBP_Content {
                                 contentArea.effectChanged()
                             }
                         }
-                        
+                        /*
                         // Advanced Effects Section
                         VEP_AdvancedEffectsSection {
                             id: advancedEffectsSection
@@ -197,6 +197,7 @@ EBP_Content {
                                 contentArea.effectChanged()
                             }
                         }
+                        */
                     }
                 }
             }

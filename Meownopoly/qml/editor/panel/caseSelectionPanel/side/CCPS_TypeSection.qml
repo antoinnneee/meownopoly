@@ -3,8 +3,9 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Case
 import MeowStyle
+import "../../../../ui_item"
 
-GroupBox {
+CollapsableGroupBox {
     id: control
     title: "Type de Case"
     
@@ -16,23 +17,7 @@ GroupBox {
 
     // Signals
     signal typeChanged(int newType)
-    
-    // Visual styling
-    background: Rectangle {
-        color: "#333333"
-        radius: 8
-        border.color: "#555555"
-        border.width: 1
-    }
-    
-    label: Text {
-        x: control.leftPadding
-        width: control.availableWidth
-        text: control.title
-        color: "#cccccc"
-        elide: Text.ElideRight
-    }
-    
+
     // Types de cases disponibles (excluant CS_Unknow et CS_Count)
     property var availableTypes: [
         Case.CS_KibbleDispenser,
@@ -55,15 +40,14 @@ GroupBox {
         return index >= 0 ? index : 0
     }
     
-    ColumnLayout {
-        anchors.fill: parent
+    content: [
         Text {
             text: "Sélectionnez le type de case :"
             font.pixelSize: 10
             color: "#888888"
             font.italic: true
             Layout.fillWidth: true
-        }
+        },
         
         // Type selector
         Rectangle {
@@ -216,7 +200,7 @@ GroupBox {
                 }
             }
         }
-    }
+    ]
     
     // Functions
     function getTypeColor(type) {

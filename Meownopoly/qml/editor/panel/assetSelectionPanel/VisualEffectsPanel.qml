@@ -3,92 +3,46 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import QtQuick.Dialogs
+import "../../../ui_item"
 
 
-Rectangle {
+CollapsableGroupBox {
     id: root
+    title: "Visual Effects"
     
     // Properties for the target decoration element
     property bool effectsLocked: false
     
-    // Visual properties
-    color: "#2a2a2a"
-    radius: 8
-    border.color: "#444444"
-    border.width: 1
-    // Dimensions
-    height: mainLayout.implicitHeight + 12
-    width: mainLayout.implicitWidth
-    
     // Signals
     signal effectChanged()
+    font.pointSize: 18
     
     // Main layout
-    Column {
-        id: mainLayout
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: 10
-        spacing: 10
-        
-        // Title with mirror buttons and lock button
-        RowLayout {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            spacing: 10
-
-            Text {
-                id: title
-                text: "Visual Effects"
-                color: "#ffffff"
-                font.pixelSize: 16
-                font.bold: true
-                Layout.fillWidth: true
-            }
-            
-            VEP_ButtonMirror {
-                id: horizontalMirrorButton
-                Layout.preferredHeight: 30
-                Layout.preferredWidth: 30
-                isHorizontal: true
-                isMirrored: transformSection.horizontalMirrorCheck.checked
-                onClicked: {
-                    transformSection.horizontalMirrorCheck.checked = !transformSection.horizontalMirrorCheck.checked
-                }
-            }
-            
-            VEP_ButtonMirror {
-                id: verticalMirrorButton
-                Layout.preferredHeight: 30
-                Layout.preferredWidth: 30
-                isHorizontal: false
-                isMirrored: transformSection.verticalMirrorCheck.checked
-                onClicked: {
-                    transformSection.verticalMirrorCheck.checked = !transformSection.verticalMirrorCheck.checked
-                }
-            }
-            
-            VEP_ButtonLock {
-                id: lockButton
-                Layout.preferredHeight: 30
-                Layout.preferredWidth: 30
-                effectsLocked: root.effectsLocked
-                onClicked: root.effectsLocked = !root.effectsLocked
-            }
-        }
-        
+    content: [
         VEP_ColorEffectsSection {
             id: colorEffectsSection
-            anchors.left: parent.left
-            anchors.right: parent.right
+            Layout.fillWidth: true
 
             onEffectChanged: {
                 root.effectChanged()
             }
-        }
+        },
 
-    }
+        VEP_AdvancedEffectsSection{
+            id: advancedEffectsSection
+            Layout.fillWidth: true
+            onEffectChanged: {
+                root.effectChanged()
+            }
+        },
+
+        VEP_Rotation{
+            Layout.fillWidth: true
+            onEffectChanged: {
+                root.effectChanged()
+            }
+        }
+    ]
 
 
     function getCurrentEffects() {

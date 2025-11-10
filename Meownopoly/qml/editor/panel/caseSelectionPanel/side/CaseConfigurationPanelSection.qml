@@ -3,9 +3,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Case
 import CaseRestArea
+import "../../../../ui_item"
 
-Rectangle {
+CollapsableGroupBox {
     id: root
+    title: "Configuration de case"
     
     // Properties
     property var targetSnapableCase: null
@@ -13,23 +15,15 @@ Rectangle {
     property bool updatingValues: false
     property var logic: null  // Référence au logic pour sauvegarder
 
-    topLeftRadius: 0
-    topRightRadius: 0
-    // Visual properties
-    color: "#2a2a2a"
-    radius: 8
-    border.color: "#444444"
-    border.width: 1
-    
     // Signals
     signal requestChangeType(var newType)
     signal configurationChanged()
 
     
     // Main scrollable content
-    ScrollView {
-        anchors.fill: parent
-        anchors.margins: 10
+     content: ScrollView {
+         Layout.fillWidth: true
+         Layout.fillHeight: true
         contentWidth: availableWidth
         clip: true
         

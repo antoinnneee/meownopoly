@@ -3,8 +3,9 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Case
 import MapTypes
+import "../../../../ui_item"
 
-GroupBox {
+CollapsableGroupBox {
     id: control
     title: "Configuration CardBoard Box"
     
@@ -21,27 +22,9 @@ GroupBox {
             logic.saveMap(MapTypes.UNDOREDO)
         }
     }
+
     
-    // Visual styling
-    background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
-        border.width: 1
-    }
-    
-    label: Text {
-        x: control.leftPadding
-        width: control.availableWidth
-        text: control.title
-        color: "#cccccc"
-        elide: Text.ElideRight
-    }
-    
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 8
-        
+    content: [
         // Note explicative
         Text {
             text: "📦 Configuration de la Boîte en Carton - Case Caisse de Communauté"
@@ -50,7 +33,7 @@ GroupBox {
             color: "#888888"
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-        }
+        },
         
         // Section d'information sur le fonctionnement
         Rectangle {
@@ -81,7 +64,7 @@ GroupBox {
                     wrapMode: Text.WordWrap
                 }
             }
-        }
+        },
         
         // Section de statistiques/informations
         Rectangle {
@@ -121,7 +104,7 @@ GroupBox {
                     }
                 }
             }
-        }
+        },
         
         // Section de conseils de design
         Rectangle {
@@ -153,7 +136,7 @@ GroupBox {
                 }
             }
         }
-    }
+    ]
     
     // Functions
     function updateControls() {

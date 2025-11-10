@@ -23,8 +23,6 @@ Item {
     z: 200  // Au-dessus de tout
     
     // Positionner à droite de l'élément parent
-    anchors.left: parent.right
-    anchors.top: parent.top
     anchors.leftMargin: 10
     width: 40
     height: controlsColumn.height

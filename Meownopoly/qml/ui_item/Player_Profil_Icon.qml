@@ -109,7 +109,7 @@ Item {
                         Rectangle {
                             width: profileImage.width
                             height: profileImage.height
-                            radius: width
+                            radius: root.cornerRadius
                             color: root.frameColor
                         }
                     }
@@ -209,9 +209,6 @@ Item {
             ShapePath {
                 strokeColor: "transparent"
                 fillGradient: RadialGradient {
-                    Component.onCompleted: {
-                        console.log("aaaaaaaaaaa", root.width,  root.height)
-                    }
 
                     centerX: topLeftFade.width; centerY: topLeftFade.height
                     centerRadius: topLeftFade.height

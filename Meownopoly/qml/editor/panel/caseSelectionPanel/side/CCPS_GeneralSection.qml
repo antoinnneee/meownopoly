@@ -2,8 +2,10 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import MapTypes
+import "../../../../ui_item"
 
-GroupBox {
+
+CollapsableGroupBox  {
     id: control
     title: "Configuration Générale"
     
@@ -20,23 +22,6 @@ GroupBox {
             logic.saveMap(MapTypes.UNDOREDO)
         }
     }
-    
-    // Visual styling
-    background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
-        border.width: 1
-    }
-    
-    label: Text {
-        x: control.leftPadding
-        width: control.availableWidth
-        text: control.title
-        color: "#cccccc"
-        elide: Text.ElideRight
-    }
-    
     // Mise à jour quand targetCase change
     Connections {
         target: targetCase
@@ -46,8 +31,9 @@ GroupBox {
         }
     }
     
-    GridLayout {
-        anchors.fill: parent
+    content : GridLayout {
+        Layout.fillHeight: true
+        Layout.fillWidth: true
         columns: 2
         rowSpacing: 8
         columnSpacing: 10

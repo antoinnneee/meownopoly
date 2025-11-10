@@ -28,7 +28,6 @@ Case::CaseType Case::getType() const
 
 void Case::setType(CaseType newType)
 {
-    qDebug()<<"void Case::setType(CaseType newType)";
     type = newType;
     emit typeChanged();
 }
