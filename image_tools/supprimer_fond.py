@@ -21,8 +21,9 @@ from transformers import AutoModelForImageSegmentation
 from torchvision import transforms
 import huggingface_hub
 
-huggingface_token = ""
-huggingface_hub.login(huggingface_token)
+# Token HuggingFace - pas nécessaire si déjà connecté via CLI
+# huggingface_token = ""
+# huggingface_hub.login(huggingface_token)
 
 # Verrou pour synchroniser l'affichage des messages
 print_lock = threading.Lock()
