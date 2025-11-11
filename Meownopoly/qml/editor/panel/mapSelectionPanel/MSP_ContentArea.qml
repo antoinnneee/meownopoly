@@ -9,9 +9,9 @@ EBP_Content {
 
     property bool showEffectsPanel: true
     
-    property string mapName: "New Map"
-    property string mapVersion: "1.0"
-    property string backgroundPath: ""
+    // property string mapName: "New Map"
+    // property string mapVersion: "1.0"
+    // property string backgroundPath: ""
     
     property int titleHeight
     property int currentTabIndex: 0  // 0=General, 1=Load, 2=Background

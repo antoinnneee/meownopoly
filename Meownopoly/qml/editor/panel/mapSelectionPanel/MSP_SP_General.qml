@@ -141,7 +141,7 @@ Item {
                                 onClicked: {
                                     if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                                         var mapInfo = logic.mapInfo
-                                        mapInfo.mapName = mapName
+                                        logic.mapInfo.mapName = mapName
                                         mapInfo.version = mapVersion
                                         mapInfo.mapDescription = description
                                         mapInfo.mapCreationDate = dateOfCreation
