@@ -56,7 +56,7 @@ Item {
     required property GridManager gridManager
     property var snapablePreview
 
-    required property SelectionPanel selectionPanel
+    required property EditorSidePanel editorSidePanel
 
     
     // Fonction pour obtenir l'icône selon le type de case
@@ -78,11 +78,11 @@ Item {
     }
     
     Connections{
-        target: selectionPanel.assetPanel.visualEffectsPanel
+        target: editorSidePanel.visualEffectsPanel
         function onEffectChanged(){
             var newTile = snapablePreview
 
-            var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
+            var visualEffectsPanel = editorSidePanel.visualEffectsPanel
             if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
 
             var currentEffects = visualEffectsPanel.getCurrentEffects()

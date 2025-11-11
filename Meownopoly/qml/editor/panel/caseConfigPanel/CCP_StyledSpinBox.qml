@@ -46,7 +46,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: "−"
-                    font.pixelSize: 16
+                    font.pointSize: 10
                     font.bold: true
                     color: root.value > root.from ? "#cccccc" : "#555555"
                 }
@@ -96,7 +96,7 @@ Item {
                 verticalAlignment: Text.AlignVCenter
                 
                 color: "#ffffff"
-                font.pixelSize: 12
+                font.pointSize: 9
                 font.bold: true
                 
                 readOnly: !root.editable
@@ -164,7 +164,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: "+"
-                    font.pixelSize: 16
+                    font.pointSize: 10
                     font.bold: true
                     color: root.value < root.to ? "#cccccc" : "#555555"
                 }

@@ -37,6 +37,7 @@ CollapsableGroupBox {
         },
 
         VEP_Rotation{
+            id: rotationSection
             Layout.fillWidth: true
             onEffectChanged: {
                 root.effectChanged()
@@ -63,9 +64,9 @@ CollapsableGroupBox {
             shadowBlur: advancedEffectsSection.shadowBlurSlider.value,
 
             // Transform effects
-            rotationAngle: transformSection.rotationSlider.value,
-            mirrorHorizontal: transformSection.horizontalMirrorCheck.checked,
-            mirrorVertical: transformSection.verticalMirrorCheck.checked
+            rotationAngle: rotationSection.rotationSlider.value,
+            mirrorHorizontal: false, //rotationSection.horizontalMirrorCheck.checked,
+            mirrorVertical: false //rotationSection.verticalMirrorCheck.checked
         }
 
         return effects

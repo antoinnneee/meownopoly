@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import MapTypes
-import "../../../../ui_item"
+import "../../../ui_item"
 
 pragma ComponentBehavior: Bound
 

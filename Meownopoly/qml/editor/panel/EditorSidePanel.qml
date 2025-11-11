@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Particles
+import QtQuick.Controls
 import AssetManager
 
 import "../"
@@ -7,11 +8,34 @@ import "../"
 Rectangle {
     id: root
 
+    property alias visualEffectsPanel : content.effectsPanel
+    property alias caseConfigurationPanel: content.caseConfigurationPanel
+    property alias connectionsConfigurationPanel: content.connectionsConfigurationPanel
+
+    property bool blockEffectChangedSignal: false
+    signal effectChanged()
+    property bool effectLocked  // prevent set effect on panel
+    signal connectionRequested(string kind)  // Propager les demandes de connexion
+
+    function updateFromDisplayParameter(dispParam) {
+        if (effectLocked){
+            effectChanged()
+        }
+        else
+        {
+            blockEffectChangedSignal = true
+            visualEffectsPanel.updateFromDisplayParameter(dispParam)
+            blockEffectChangedSignal = false
+        }
+    }
+
+
     property bool isExpanded: true
     property bool isResizing : false
+    property var logic
     // required property EditorLogic logic
 
-    width : Screen.pixelDensity * 70
+    width : Screen.pixelDensity * 120
     height: Screen.pixelDensity * 75
     // property alias contentArea: contentPlaceHolder.children
 
@@ -44,8 +68,6 @@ Rectangle {
             easing.type: Easing.InOutQuad
         }
     }
-
-
 
     // Zone de redimensionnement
     Rectangle {
@@ -135,8 +157,6 @@ Rectangle {
         Behavior on color { ColorAnimation { duration: 150 }}
     }
 
-
-
     ParticleSystem {
         id: particleSystem
         anchors.fill: parent
@@ -179,22 +199,24 @@ Rectangle {
         }
     }
 
+    ScrollView {
+        id: scrollView
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: resizeHandle.bottom
+        anchors.bottom: parent.bottom
+        clip: true
 
-    // Item{
-    //     id: titlePlaceHolder
-    //     anchors.left: parent.left
-    //     anchors.right: parent.right
-    //     anchors.top: parent.top
-    //     height: {
-    //         return (children.length > 0) ? children[0].height + 10 : 0
-    //     }
-    // }
+        EditorSidePanel_Content {
+            id: content
+            logic: root.logic
+            width: scrollView.width
+            onEffectChanged: root.effectChanged()
 
-    // Item{
-    //     id: contentPlaceHolder
-    //     anchors.left: parent.left
-    //     anchors.right: parent.right
-    //     anchors.top: titlePlaceHolder.bottom
-    //     anchors.bottom: parent.bottom
-    // }
+            onConnectionRequested: function(kind) {
+                root.connectionRequested(kind)
+            }
+        }
+    }
+
 }
