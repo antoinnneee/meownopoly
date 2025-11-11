@@ -179,22 +179,4 @@ Rectangle {
         }
     }
 
-
-    // Item{
-    //     id: titlePlaceHolder
-    //     anchors.left: parent.left
-    //     anchors.right: parent.right
-    //     anchors.top: parent.top
-    //     height: {
-    //         return (children.length > 0) ? children[0].height + 10 : 0
-    //     }
-    // }
-
-    // Item{
-    //     id: contentPlaceHolder
-    //     anchors.left: parent.left
-    //     anchors.right: parent.right
-    //     anchors.top: titlePlaceHolder.bottom
-    //     anchors.bottom: parent.bottom
-    // }
 }

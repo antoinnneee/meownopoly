@@ -179,5 +179,6 @@
         <file>qml/editor/panel/caseSelectionPanel/side/ConnectionsPanel.qml</file>
         <file>qml/ui_item/CollapsableGroupBox.qml</file>
         <file>qml/editor/logic/MouseLogic_Game.qml</file>
+        <file>qml/editor/panel/PanelInfoMap.qml</file>
     </qresource>
 </RCC>
