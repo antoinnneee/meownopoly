@@ -137,22 +137,26 @@ Rectangle {
     }
 
     AnimatedImage {
+        id: aIGlobalSettings
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: 10
         z: z_HUD
-        id: aIGlobalSettings
-        // text: "⚙️"
-        fillMode: Image.PreserveAspectFit
         source: AssetManager.getAssetPath("ui", "hud", "0")
-        width: 16
-        height: 16
-        // font.pointSize: 12
+        width: Screen.pixelDensity * 100
+        height: Screen.pixelDensity * 60
+        speed: 1.2
         MouseArea {
+            hoverEnabled: true
             anchors.fill:  parent
+            onEntered: {
+                aIGlobalSettings.playing = true
+                if (!aIGlobalSettings.playing) aIGlobalSettings.playing = true
+            }
+            onExited: aIGlobalSettings.playing = false
             onClicked: {
                 console.log("onClicked Opening global settings")
-                panelInfoMap.isOpen = !panelInfoMap.isOpen
+                panelInfoMap.isOpening = !panelInfoMap.isOpening
             }
         }
     }
@@ -160,8 +164,8 @@ Rectangle {
     PanelInfoMap {
         id: panelInfoMap
         anchors.fill: parent
-        visible: false
         z: root.z_CONFIG_PANEL
+        visible: panelInfoMap.mapsContainer.x < parent.width
     }
 
     AdminCommandPanel{

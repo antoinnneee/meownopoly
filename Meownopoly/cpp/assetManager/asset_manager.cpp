@@ -332,6 +332,9 @@ QString AssetManager::getAssetPath(const QString &category, const QString &type,
 
 QString AssetManager::getAnimatedGifPath(const QString &category, const QString &type, const QString &id)
 {
+    qDebug() << "Getting animated GIF path for category:" << category << "type:" << type << "id:" << id;
+    qDebug() << buildAssetPath(category, type, id + "-animated.webp");
+
     return buildAssetPath(category, type, id + "-animated.webp");
 }
 

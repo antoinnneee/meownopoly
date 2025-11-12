@@ -33,12 +33,15 @@ Item {
     property int currentView: 0 // 0 = maps, 1 = background
     x: parent.width
 
-    property bool isOpen: false
+    property bool isOpening: false
     // Conteneur principal
 
-    onIsOpenChanged: {
-        if (isOpen) {
-            panelInfoMap.visible = true
+
+
+
+    onIsOpeningChanged: {
+        if (isOpening) {
+            // panelInfoMap.visible = true
             mapsContainer.x = panelInfoMap.width - mapsContainer.width - 10
         } else {
             mapsContainer.x = panelInfoMap.width
@@ -140,7 +143,7 @@ Item {
                 }
 
                 onClicked: {
-                    panelInfoMap.visible = false
+                    isOpening = false
                 }
             }
         }
