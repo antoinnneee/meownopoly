@@ -20,6 +20,7 @@ CollapsableGroupBox {
     // Main layout
     content: [
         VEP_ColorEffectsSection {
+            isCollapsed : true
             id: colorEffectsSection
             Layout.fillWidth: true
 
@@ -30,6 +31,7 @@ CollapsableGroupBox {
 
         VEP_AdvancedEffectsSection{
             id: advancedEffectsSection
+            isCollapsed : true
             Layout.fillWidth: true
             onEffectChanged: {
                 root.effectChanged()
@@ -38,6 +40,7 @@ CollapsableGroupBox {
 
         VEP_Rotation{
             id: rotationSection
+            isCollapsed : true
             Layout.fillWidth: true
             onEffectChanged: {
                 root.effectChanged()

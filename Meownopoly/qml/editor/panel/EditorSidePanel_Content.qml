@@ -19,6 +19,7 @@ ColumnLayout {
 
     VisualEffectsPanel {
         id: effectsPanel
+        isCollapsed : true
         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
         Layout.fillWidth: true
 
@@ -33,6 +34,7 @@ ColumnLayout {
     // Onglet Configuration Case
     CaseConfigurationPanelSection {
         id: caseConfigurationPanelSection
+        isCollapsed : true
         logic: panelContent.logic
         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
         Layout.fillWidth: true
@@ -51,6 +53,7 @@ ColumnLayout {
 
     ConnectionsConfigurationSection {
         id: connectionsConfigSection
+        isCollapsed : true
         logic: panelContent.logic
         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
         Layout.fillWidth: true

@@ -47,10 +47,10 @@ SOURCES += \
     game/case/CaseKibbleDispenser.cpp \
     game/case/CaseRestArea.cpp \
     game/case/CaseToJail.cpp \
-    cpp/game/card.cpp \
-    cpp/game/game.cpp \
-    cpp/game/game_loader.cpp \
-    cpp/game/player.cpp \
+    game/card.cpp \
+    game/game.cpp \
+    game/game_loader.cpp \
+    game/player.cpp \
     experiment/animation_manager.cpp \
     experiment/animationprovider.cpp \
     experiment/liveimage.cpp \

@@ -139,27 +139,27 @@ Rectangle {
         logic.mouseLogic.isControlPressed = false
     }
 
-    AnimatedImage {
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.margins: 10
-        z: z_HUD
-        id: aIGlobalSettings
-        // text: "⚙️"
-        fillMode: Image.PreserveAspectFit
-        source: AssetManager.getAssetPath("ui", "hud", "0")
-        width: 16
-        height: 16
-        // font.pointSize: 12
-        MouseArea {
-            anchors.fill:  parent
-            onClicked: {
-                console.log("onClicked Opening global settings")
-                panelInfoMap.visible = !panelInfoMap.visible
-                selectionPanel.visible = false
-            }
-        }
-    }
+    // AnimatedImage {
+    //     anchors.top: parent.top
+    //     anchors.right: parent.right
+    //     anchors.margins: 10
+    //     z: z_HUD
+    //     id: aIGlobalSettings
+    //     // text: "⚙️"
+    //     fillMode: Image.PreserveAspectFit
+    //     source: AssetManager.getAssetPath("ui", "hud", "0")
+    //     width: 16
+    //     height: 16
+    //     // font.pointSize: 12
+    //     MouseArea {
+    //         anchors.fill:  parent
+    //         onClicked: {
+    //             console.log("onClicked Opening global settings")
+    //             panelInfoMap.visible = !panelInfoMap.visible
+    //             selectionPanel.visible = false
+    //         }
+    //     }
+    // }
     Item {
         id: panelInfoMap
         anchors.fill: parent

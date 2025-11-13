@@ -88,7 +88,6 @@ Rectangle {
         
         // Synchroniser les onglets des panels
         assetTabIndex: assetPanel.currentTabIndex
-        caseTabIndex: casePanel.currentTabIndex
 
         onButtonClicked: function(index) {
             console.log("Bouton cliqué avec index : " + index + " et currentPanelIndex : " + root.currentPanelIndex);
@@ -112,14 +111,8 @@ Rectangle {
             root.currentPanelIndex = index;
         }
         
-        // Gérer les changements d'onglets
-        onAssetTabChanged: function(tabIndex) {
-            assetPanel.currentTabIndex = tabIndex
-        }
         
-        onCaseTabChanged: function(tabIndex) {
-            casePanel.currentTabIndex = tabIndex
-        }
+
     }
 
     // Zone de redimensionnement
