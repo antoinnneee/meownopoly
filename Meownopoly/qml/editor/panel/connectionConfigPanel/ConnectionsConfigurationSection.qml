@@ -16,6 +16,9 @@ CollapsableGroupBox {
     property var hoveredConnectionElement: null
     property var logic: null  // Référence au logic pour sauvegarder
     property bool showConnections: false
+    onShowConnectionsChanged: {
+        logic.tileLogic.displayLinkEnable = showConnections
+    }
     
     // Signals
     signal requestAddConnection(string kind)
@@ -119,6 +122,8 @@ CollapsableGroupBox {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
+                                if (!showConnections)
+                                    showConnections = true
                                 if (root.targetSnapableElement) {
                                     root.requestAddConnection("previous")
                                 }
@@ -168,6 +173,8 @@ CollapsableGroupBox {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
+                                if (!showConnections)
+                                    showConnections = true
                                 console.log("next button clicked")
                                 if (root.targetSnapableElement) {
                                     console.log("add next request")
