@@ -199,24 +199,4 @@ Rectangle {
         }
     }
 
-    ScrollView {
-        id: scrollView
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: resizeHandle.bottom
-        anchors.bottom: parent.bottom
-        clip: true
-
-        EditorSidePanel_Content {
-            id: content
-            logic: root.logic
-            width: scrollView.width
-            onEffectChanged: root.effectChanged()
-
-            onConnectionRequested: function(kind) {
-                root.connectionRequested(kind)
-            }
-        }
-    }
-
 }

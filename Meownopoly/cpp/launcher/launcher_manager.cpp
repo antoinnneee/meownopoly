@@ -1,6 +1,6 @@
 #include "launcher_manager.h"
-#include <QDebug>
 #include <QDir>
+#include <QDebug>
 #include <QFileInfo>
 #include <QStandardPaths>
 #include <QRegularExpression>
@@ -406,6 +406,8 @@ void LauncherManager::onVersionCheckFinished()
         }
     } else {
         emit logMessage("❌ Erreur de vérification: " + m_versionCheckReply->errorString());
+        qDebug() << "ENUM ERROR " <<  m_versionCheckReply->error();
+
         setDownloadStatus("Erreur de vérification");
     }
     
