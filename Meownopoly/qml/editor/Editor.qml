@@ -137,26 +137,30 @@ Rectangle {
     }
 
     AnimatedImage {
-        id: aIGlobalSettings
+        id: animBtInfoMap
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: 10
         z: z_HUD
         source: AssetManager.getAssetPath("ui", "hud", "0")
-        width: Screen.pixelDensity * 100
-        height: Screen.pixelDensity * 60
+        width: Screen.pixelDensity * 35
+        height: Screen.pixelDensity * 35
         speed: 1.2
         MouseArea {
             hoverEnabled: true
             anchors.fill:  parent
             onEntered: {
-                aIGlobalSettings.playing = true
-                if (!aIGlobalSettings.playing) aIGlobalSettings.playing = true
+                if (!animBtInfoMap.playing) animBtInfoMap.playing = true
             }
-            onExited: aIGlobalSettings.playing = false
+            onExited: {
+                animBtInfoMap.playing = false
+            }
+
             onClicked: {
                 console.log("onClicked Opening global settings")
                 panelInfoMap.isOpening = !panelInfoMap.isOpening
+                selectionPanel.visible =  selectionPanel.visible ? false: true
+
             }
         }
     }
@@ -164,8 +168,9 @@ Rectangle {
     PanelInfoMap {
         id: panelInfoMap
         anchors.fill: parent
+        property alias selectionPanel: selectionPanel
+        logic: logic
         z: root.z_CONFIG_PANEL
-        visible: panelInfoMap.mapsContainer.x < parent.width
     }
 
     AdminCommandPanel{
