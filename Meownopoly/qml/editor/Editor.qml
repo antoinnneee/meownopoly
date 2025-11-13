@@ -171,8 +171,10 @@ Rectangle {
 
     PanelInfoMap {
         id: panelInfoMap
-        anchors.fill: parent
-
+        anchors.top: btInfoMap.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
         logic: logic
         selectionPanel: selectionPanel
 

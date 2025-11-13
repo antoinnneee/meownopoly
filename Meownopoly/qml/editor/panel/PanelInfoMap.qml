@@ -55,9 +55,8 @@ Item {
     Rectangle {
         id: mapsContainer
         anchors.top: parent.top
-        anchors.topMargin: 50
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 70
+        anchors.topMargin: 25
+        height: Screen.pixelDensity * 150
         width: Screen.pixelDensity * 75
         color: "#333333"
         radius: 6
@@ -77,8 +76,6 @@ Item {
                 }
             }
         }
-
-
 
         // Header avec titre
         Rectangle {
@@ -238,10 +235,9 @@ Item {
             anchors.top: navigationButtons.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.bottom: parent.bottom
             anchors.margins: 8
             anchors.topMargin: 6
-            anchors.bottomMargin: 70
+            height: parent.height - headerSection.height - navigationButtons.height - 16 - 6 - 8 // parent.height - headerSection - navigationButtons - marges
             clip: true
             visible: panelInfoMap.currentView === 0
             contentHeight: generalInfoColumn.height
@@ -681,7 +677,7 @@ Item {
                                 anchors.bottom: parent.bottom
                                 anchors.rightMargin: 4
                                 anchors.topMargin: 3
-                                anchors.bottomMargin: 3
+                                anchors.bottomMargin: 0
                                 width: 6
                                 policy: ScrollBar.AsNeeded
                                 active: true
@@ -993,7 +989,7 @@ Item {
             anchors.right: parent.right
             anchors.margins: 10
             anchors.topMargin: 5
-            height: Math.max(150, Math.min(contentHeight, Screen.pixelDensity * 60))
+            height: Math.max(150, Math.min(contentHeight, parent.height - customBackgroundSelectorContainer.height - separatorWithText.height - defaultBackgroundsTitle.height - 40))
             model: []
             spacing: 10
             clip: true
