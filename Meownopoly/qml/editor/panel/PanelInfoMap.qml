@@ -37,6 +37,7 @@ Item {
     
     required property var logic
     // Conteneur principal
+    required property var selectionPanel
 
 
     visible: mapsContainer.x < parent.width

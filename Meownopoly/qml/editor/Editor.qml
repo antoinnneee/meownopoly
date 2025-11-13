@@ -137,14 +137,14 @@ Rectangle {
     }
 
     Image {
-        id: animBtInfoMap
+        id: btInfoMap
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: 10
         z: z_HUD
         source: AssetManager.getAssetPath("ui", "hud", "0")
-        width: Screen.pixelDensity * 30
-        height: Screen.pixelDensity * 30
+        width: Screen.pixelDensity * 24
+        height: Screen.pixelDensity * 24
         MouseArea {
             hoverEnabled: true
             anchors.fill:  parent
@@ -159,12 +159,12 @@ Rectangle {
             id: btInfoMapAnim
             running: false
             ParallelAnimation {
-            NumberAnimation {duration: 300; from: Screen.pixelDensity * 30; to: Screen.pixelDensity * 25; target: animBtInfoMap; property: "height"; easing.type: Easing.InOutQuad }
-            NumberAnimation {duration: 300; from: Screen.pixelDensity * 30; to: Screen.pixelDensity * 25; target: animBtInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
+                NumberAnimation {duration: 300; from: Screen.pixelDensity * 30; to: Screen.pixelDensity * 25; target: btInfoMap; property: "height"; easing.type: Easing.InOutQuad }
+                NumberAnimation {duration: 300; from: Screen.pixelDensity * 30; to: Screen.pixelDensity * 25; target: btInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
             }
             ParallelAnimation {
-            NumberAnimation {duration: 300; from: Screen.pixelDensity * 25; to: Screen.pixelDensity * 30; target: animBtInfoMap; property: "height"; easing.type: Easing.OutIntQuad }
-            NumberAnimation {duration: 300; from: Screen.pixelDensity * 25; to: Screen.pixelDensity * 30; target: animBtInfoMap; property: "width"; easing.type: Easing.OutIntQuad  }
+                NumberAnimation {duration: 300; from: Screen.pixelDensity * 25; to: Screen.pixelDensity * 30; target: btInfoMap; property: "height"; easing.type: Easing.InOutQuad }
+                NumberAnimation {duration: 300; from: Screen.pixelDensity * 25; to: Screen.pixelDensity * 30; target: btInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
             }
         }
     }
@@ -172,8 +172,10 @@ Rectangle {
     PanelInfoMap {
         id: panelInfoMap
         anchors.fill: parent
-        property alias selectionPanel: selectionPanel
+
         logic: logic
+        selectionPanel: selectionPanel
+
         z: root.z_CONFIG_PANEL
     }
 
@@ -396,19 +398,19 @@ Rectangle {
         }
     }
 
-    InteractiveUiElement{
-        z: z_HUD
-        x:10
-        y:10
-        width: Screen.pixelDensity * 30
-        height: Screen.pixelDensity * 30
-        contentItem : Player_Profil_Icon{
-            decorationParameter.decorationCategory: "ui"
-            decorationParameter.decorationType: "cat"
-            decorationParameter.decorationId: ""
-            anchors.fill: parent
-        }
-    }
+    // InteractiveUiElement{
+    //     z: z_HUD
+    //     x:10
+    //     y:10
+    //     width: Screen.pixelDensity * 30
+    //     height: Screen.pixelDensity * 30
+    //     contentItem : Player_Profil_Icon{
+    //         decorationParameter.decorationCategory: "ui"
+    //         decorationParameter.decorationType: "cat"
+    //         decorationParameter.decorationId: ""
+    //         anchors.fill: parent
+    //     }
+    // }
 
 
     // Rectangle de sélection
@@ -567,7 +569,7 @@ Rectangle {
             console.log("Loading autosave map")
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         }
-        if (stEnableAutoSave.value("saveEvent", "1") !== 1) {
+        if (stEnableAutoSave.value("saveEvent", "1") === 2) {
             tmpSaver.start()
         }
     }
