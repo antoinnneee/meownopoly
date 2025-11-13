@@ -136,31 +136,35 @@ Rectangle {
         logic.mouseLogic.isControlPressed = false
     }
 
-    AnimatedImage {
+    Image {
         id: animBtInfoMap
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: 10
         z: z_HUD
         source: AssetManager.getAssetPath("ui", "hud", "0")
-        width: Screen.pixelDensity * 35
-        height: Screen.pixelDensity * 35
-        speed: 1.2
+        width: Screen.pixelDensity * 30
+        height: Screen.pixelDensity * 30
         MouseArea {
             hoverEnabled: true
             anchors.fill:  parent
-            onEntered: {
-                if (!animBtInfoMap.playing) animBtInfoMap.playing = true
-            }
-            onExited: {
-                animBtInfoMap.playing = false
-            }
-
             onClicked: {
+                btInfoMapAnim.start()
                 console.log("onClicked Opening global settings")
                 panelInfoMap.isOpening = !panelInfoMap.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
-
+            }
+        }
+        SequentialAnimation {
+            id: btInfoMapAnim
+            running: false
+            ParallelAnimation {
+            NumberAnimation {duration: 300; from: Screen.pixelDensity * 30; to: Screen.pixelDensity * 25; target: animBtInfoMap; property: "height"; easing.type: Easing.InOutQuad }
+            NumberAnimation {duration: 300; from: Screen.pixelDensity * 30; to: Screen.pixelDensity * 25; target: animBtInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
+            }
+            ParallelAnimation {
+            NumberAnimation {duration: 300; from: Screen.pixelDensity * 25; to: Screen.pixelDensity * 30; target: animBtInfoMap; property: "height"; easing.type: Easing.OutIntQuad }
+            NumberAnimation {duration: 300; from: Screen.pixelDensity * 25; to: Screen.pixelDensity * 30; target: animBtInfoMap; property: "width"; easing.type: Easing.OutIntQuad  }
             }
         }
     }

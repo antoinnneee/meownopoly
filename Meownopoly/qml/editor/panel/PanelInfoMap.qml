@@ -51,13 +51,12 @@ Item {
         }
     }
 
-
     Rectangle {
         id: mapsContainer
         anchors.top: parent.top
         anchors.topMargin: 50
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 100
+        anchors.bottomMargin: 70
         width: Screen.pixelDensity * 75
         color: "#333333"
         radius: 6
@@ -66,7 +65,6 @@ Item {
         x: parent.width
 
 
-        
         Behavior on x {
             NumberAnimation {
                 duration: 500
