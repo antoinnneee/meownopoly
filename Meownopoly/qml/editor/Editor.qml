@@ -143,8 +143,8 @@ Rectangle {
         anchors.margins: 10
         z: z_HUD
         source: AssetManager.getAssetPath("ui", "hud", "0")
-        width: Screen.pixelDensity * 24
-        height: Screen.pixelDensity * 24
+        width: Screen.pixelDensity * 20
+        height: Screen.pixelDensity * 20
         MouseArea {
             hoverEnabled: true
             anchors.fill:  parent
@@ -159,12 +159,12 @@ Rectangle {
             id: btInfoMapAnim
             running: false
             ParallelAnimation {
-                NumberAnimation {duration: 300; from: Screen.pixelDensity * 30; to: Screen.pixelDensity * 25; target: btInfoMap; property: "height"; easing.type: Easing.InOutQuad }
-                NumberAnimation {duration: 300; from: Screen.pixelDensity * 30; to: Screen.pixelDensity * 25; target: btInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
+                NumberAnimation {duration: 300; from: Screen.pixelDensity * 20; to: Screen.pixelDensity * 24; target: btInfoMap; property: "height"; easing.type: Easing.InOutQuad }
+                NumberAnimation {duration: 300; from: Screen.pixelDensity * 20; to: Screen.pixelDensity * 24; target: btInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
             }
             ParallelAnimation {
-                NumberAnimation {duration: 300; from: Screen.pixelDensity * 25; to: Screen.pixelDensity * 30; target: btInfoMap; property: "height"; easing.type: Easing.InOutQuad }
-                NumberAnimation {duration: 300; from: Screen.pixelDensity * 25; to: Screen.pixelDensity * 30; target: btInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
+                NumberAnimation {duration: 300; from: Screen.pixelDensity * 24; to: Screen.pixelDensity * 20; target: btInfoMap; property: "height"; easing.type: Easing.InOutQuad }
+                NumberAnimation {duration: 300; from: Screen.pixelDensity * 24; to: Screen.pixelDensity * 20; target: btInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
             }
         }
     }
@@ -322,7 +322,7 @@ Rectangle {
     GlobalMa {
         id: mainMa
         mouseLogic: logic.mouseLogic
-        anchors.bottom: selectionPanel.top
+        anchors.bottom: panelInfoMap.x < parent.width ? parent.bottom : selectionPanel.top
     }
     // Zone de travail de l'éditeur (par-dessus la grille)
     Item {
@@ -404,8 +404,8 @@ Rectangle {
     //     z: z_HUD
     //     x:10
     //     y:10
-    //     width: Screen.pixelDensity * 30
-    //     height: Screen.pixelDensity * 30
+    //     width: Screen.pixelDensity * 24
+    //     height: Screen.pixelDensity * 24
     //     contentItem : Player_Profil_Icon{
     //         decorationParameter.decorationCategory: "ui"
     //         decorationParameter.decorationType: "cat"

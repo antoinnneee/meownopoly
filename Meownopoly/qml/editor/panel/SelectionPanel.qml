@@ -17,6 +17,7 @@ Rectangle {
     property alias isSidePanelExpanded : topToolbar.isSidePanelExpanded
     // property string currentView: "categories" // "categories" or "assets"
     property int currentPanelIndex: 0 // 0 = Asset Selection, 1 = Case Selection
+
     onCurrentPanelIndexChanged: {
         clearAssetSelection()
     }
