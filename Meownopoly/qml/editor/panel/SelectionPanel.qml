@@ -43,7 +43,6 @@ Rectangle {
 
     property alias caseTypeSelected: casePanel.selectedCaseType
     property alias casePanel: casePanel
-    property alias connectionsPanel: casePanel.connectionsConfigSection  // Exposer le panneau de connexions
 
     property alias topToolbar:topToolbar
 
@@ -60,8 +59,6 @@ Rectangle {
     signal resizeStarted()
     signal resizeFinished(int finalHeight)
 
-    signal effectChanged()
-    signal connectionRequested(string kind)  // Propager les demandes de connexion
 
     required property EditorLogic logic
 
@@ -92,7 +89,6 @@ Rectangle {
         
         // Synchroniser les onglets des panels
         assetTabIndex: assetPanel.currentTabIndex
-        caseTabIndex: casePanel.currentTabIndex
 
         onButtonClicked: function(index) {
             console.log("Bouton cliqué avec index : " + index + " et currentPanelIndex : " + root.currentPanelIndex);
@@ -116,14 +112,8 @@ Rectangle {
             root.currentPanelIndex = index;
         }
         
-        // Gérer les changements d'onglets
-        onAssetTabChanged: function(tabIndex) {
-            assetPanel.currentTabIndex = tabIndex
-        }
         
-        onCaseTabChanged: function(tabIndex) {
-            casePanel.currentTabIndex = tabIndex
-        }
+
     }
 
     // Zone de redimensionnement
@@ -234,11 +224,6 @@ Rectangle {
             onAssetCleared: {
                 root.clearAssetSelection()
             }
-
-
-            onEffectChanged: {
-                root.effectChanged()
-            }
         }
 
         // Case Selection Panel
@@ -252,10 +237,7 @@ Rectangle {
             expandedHeight: root.expandedHeight
             Layout.preferredWidth: parent.width
             isExpanded: true
-            
-            onConnectionRequested: function(kind) {
-                root.connectionRequested(kind)
-            }
+
 
         }
 

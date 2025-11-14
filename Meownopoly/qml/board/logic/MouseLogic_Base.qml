@@ -172,23 +172,18 @@ QtObject {
         console.log("main MA clicked : ", clickElement.length, " elements")
     }
 
-    function updateAssetPanelEffectConfiguration(dispParam)
+    function updateVisualEffectPanel(dispParam)
     {
         if (!logic.selectionPanel) {
             console.log("[LOGIC] selectionPanel not available")
             return
         }
-        var assetPanel = logic.selectionPanel.assetPanel
-        if (!assetPanel) {
-            console.log("[LOGIC] assetPanel not available")
+        var editorSidePanel = logic.editorSidePanel
+        if (!editorSidePanel) {
+            console.log("[LOGIC] editorSidePanel not available")
             return
         }
-        var contentArea = assetPanel.asp_contentArea
-        if (!contentArea) {
-            console.log("[LOGIC] contentArea not available")
-            return
-        }
-        contentArea.updateFromDisplayParameter(dispParam)
+        editorSidePanel.updateFromDisplayParameter(dispParam)
     }
     // Fonction pour mettre à jour la configuration de case dans le panneau
     function updateCaseConfiguration() {

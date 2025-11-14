@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Case
 import CaseRestArea
-import "../../../../ui_item"
+import "../../../ui_item"
 
 CollapsableGroupBox {
     id: root
@@ -21,21 +21,12 @@ CollapsableGroupBox {
 
     
     // Main scrollable content
-     content: ScrollView {
-         Layout.fillWidth: true
-         Layout.fillHeight: true
-        contentWidth: availableWidth
-        clip: true
-        
-        Column {
-            id: mainLayout
-            width: parent.width
-            spacing: 10
-            
+     content: [
             // Type Selector Section
             CCPS_TypeSection {
                 id: typeSection
-                width: parent.width
+                Layout.fillWidth: true
+
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
                 
@@ -44,56 +35,56 @@ CollapsableGroupBox {
                         requestChangeType(newType);
                     }
                 }
-            }
+            },
             
             // General Configuration Section
             CCPS_GeneralSection {
                 id: generalSection
-                width: parent.width
+                Layout.fillWidth: true
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
                 logic: root.logic
                 
                 onConfigurationChanged: root.configurationChanged()
-            }
+            },
             
             // Specific Configuration Sections (visible according to case type)
             CCPS_RestAreaSection {
                 id: restAreaSection
-                width: parent.width
+                Layout.fillWidth: true
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
                 logic: root.logic
                 visible: targetCase && targetCase.type === Case.CS_RestArea
                 
                 onConfigurationChanged: root.configurationChanged()
-            }
+            },
             
             CCPS_KibbleDispenserSection {
                 id: kibbleDispenserSection
-                width: parent.width
+                Layout.fillWidth: true
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
                 logic: root.logic
                 visible: targetCase && targetCase.type === Case.CS_KibbleDispenser
                 
                 onConfigurationChanged: root.configurationChanged()
-            }
+            },
             
             CCPS_CardBoardBoxSection {
                 id: cardBoardBoxSection
-                width: parent.width
+                Layout.fillWidth: true
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
                 logic: root.logic
                 visible: targetCase && targetCase.type === Case.CS_CardBoardBox
                 
                 onConfigurationChanged: root.configurationChanged()
-            }
+            },
             
             CCPS_CatDeviceSection {
                 id: catDeviceSection
-                width: parent.width
+                Layout.fillWidth: true
                 targetCase: root.targetCase
                 updatingValues: root.updatingValues
                 logic: root.logic
@@ -101,8 +92,7 @@ CollapsableGroupBox {
                 
                 onConfigurationChanged: root.configurationChanged()
             }
-        }
-    }
+        ]
     
     // Functions
     function setTargetCase(snapableCase) {

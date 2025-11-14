@@ -44,21 +44,10 @@ CCP_PanelElement {
         width: parent.width
         spacing: 10
         
-        // Note explicative
-        Text {
-            text: "💡 Configuration des prix pour les propriétés achetables"
-            font.italic: true
-            font.pixelSize: 12
-            color: "#888888"
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            Layout.bottomMargin: 5
-        }
-        
         // Les trois prix côte à côte
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: 4
             
             // Prix d'achat
             ColumnLayout {

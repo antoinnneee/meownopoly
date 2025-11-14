@@ -45,6 +45,7 @@ CollapsableGroupBox {
 
             Text {
                 Layout.fillHeight: true
+                Layout.maximumWidth: font.pixelSize
                 text: Math.round(rotationSlider.value) + "°"
                 color: "#cccccc"
                 font.pointSize: 9

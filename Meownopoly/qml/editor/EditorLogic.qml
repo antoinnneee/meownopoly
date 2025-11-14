@@ -1,4 +1,4 @@
-﻿import QtQuick
+﻿import QtQuick 2.15
 import QtCore
 
 import Game
@@ -31,7 +31,7 @@ Item {
     }
 
     property var selectionPanel: null  // Référence au SelectionPanel pour la configuration des cases
-
+    property var editorSidePanel: null
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
     property ScrollLogic scrollLogic

@@ -10,6 +10,7 @@ GroupBox {
     property bool isCollapsed: false
     property alias titleLabel: titleLabel
     font.pointSize: 12
+    clip: true
 
 
     width:200
@@ -27,6 +28,7 @@ GroupBox {
         radius: 4
         border.color: "#555555"
         border.width: 1
+
     }
 
     label: MouseArea {

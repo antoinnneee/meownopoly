@@ -31,52 +31,8 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
-        
-        // En-tête de section
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 32
-            color: root.headerColor
-            radius: 6
-            
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 6
-                
-                Text {
-                    text: root.directionIcon
-                    font.pixelSize: 14
-                    color: "#ffffff"
-                }
-                
-                Label {
-                    text: root.title
-                    font.pixelSize: 14
-                    font.bold: true
-                    color: "#ffffff"
-                    Layout.fillWidth: true
-                }
-                
-                Rectangle {
-                    implicitWidth: 20
-                    implicitHeight: 18
-                    radius: 9
-                    color: "#ffffff"
-                    opacity: 0.3
-                    
-                    Label {
-                        anchors.centerIn: parent
-                        text: connectionList.count
-                        color: "#ffffff"
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
-                }
-            }
-        }
+        anchors.margins: 5
+
         
         // Placeholder quand vide
         Rectangle {

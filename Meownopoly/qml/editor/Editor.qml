@@ -54,6 +54,7 @@ Rectangle {
 
     // Asset selection properties
     property alias isAssetSelected: selectionPanel.isAssetSelected
+    property alias editorSidePanel: sidePanel
 
     property alias escMenu:escMenu
 
@@ -301,6 +302,7 @@ Rectangle {
         selectionRect:  selectionRect
         mapInfo: root.mapInfo
         selectionPanel: selectionPanel
+        editorSidePanel: sidePanel
     }
 
     // Grille de l'éditeur
@@ -396,7 +398,7 @@ Rectangle {
             unitSizeWidth: logic.tileLogic.currentElementWidth
             unitSizeHeight: logic.tileLogic.currentElementHeight
             gridManager: editorGrid
-            selectionPanel: selectionPanel
+            editorSidePanel: sidePanel
         }
     }
 
@@ -474,8 +476,23 @@ Rectangle {
         onAssetCleared: function() {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
+        onCaseTypeSelectedChanged: {
+            if (selectionPanel.caseTypeSelected !== -1)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+            else
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+        }
+    }
+
+    EditorSidePanel {
+        id: sidePanel
+        z: z_HUD
+        anchors.bottom: parent.bottom
+        x: parent.width
+        logic: logic
+
         onEffectChanged: {
-            var effects = selectionPanel.assetPanel.visualEffectsPanel.getCurrentEffects()
+            var effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
@@ -484,14 +501,9 @@ Rectangle {
             else
                 saveMapTimer.start()
         }
-        onCaseTypeSelectedChanged: {
-            if (selectionPanel.caseTypeSelected !== -1)
-                logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
-            else
-                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
-        }
+
         onConnectionRequested:  function (kind) {
-            var targetElement = selectionPanel.connectionsPanel.targetSnapableElement
+            var targetElement = connectionsConfigurationPanel.targetSnapableElement
 
             /* save selected element to reasign it */
             var selectedElements = []
@@ -510,13 +522,6 @@ Rectangle {
                 logic.mouseLogic.showLinkPreview()
             }
         }
-    }
-
-    EditorSidePanel {
-        id: sidePanel
-        z: z_HUD
-        anchors.bottom: parent.bottom
-        x: parent.width
     }
 
     MenuMapAtStart {
@@ -602,7 +607,7 @@ Rectangle {
 
         var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
 
-        var visualEffectsPanel = selectionPanel.assetPanel.visualEffectsPanel
+        var visualEffectsPanel = editorSidePanel.visualEffectsPanel
         if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
 
         var currentEffects = visualEffectsPanel.getCurrentEffects()

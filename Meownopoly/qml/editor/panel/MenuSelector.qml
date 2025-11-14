@@ -29,7 +29,6 @@ Item {
     
     signal buttonClicked(int index)
     signal assetTabChanged(int tabIndex)
-    signal caseTabChanged(int tabIndex)
 
     // Boutons de menu
     RowLayout {
@@ -104,105 +103,37 @@ Item {
                 }
             }
         }
-        // Sélecteur avec 4 boutons d'onglets (1 actif sur 4)
-        RowLayout {
-            id: tabSelector
-            visible: root.isExpanded
-            Layout.fillHeight: true
-            Layout.preferredHeight: parent.height
-            Layout.leftMargin: 10
-            spacing: 2
-            
-            Repeater {
-                model: [
-                    { icon: "✨", tooltip: "Visual Effects", tabIndex: 0 },
-                    { icon: "🔧", tooltip: "Transform", tabIndex: 1 },
-                    { icon: "⚙️", tooltip: "Case Configuration", tabIndex: 2 },
-                    { icon: "🔗", tooltip: "Connections", tabIndex: 3 }
-                ]
-                
-                Button {
-                    required property var modelData
-                    required property int index
-                    
-                    text: modelData.icon
-                    Layout.fillHeight: true
-                    Layout.preferredWidth: 70
-                    Layout.minimumHeight: 32
-                    
-                    background: Rectangle {
-                        color: root.activeTabIndex === index ? "#4a90e2" : "#333333"
-                        border.color: root.activeTabIndex === index ? "#5a9fe8" : "#444444"
-                        border.width: 2
-                        radius: 6
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 150 }
-                        }
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: root.activeTabIndex === index ? "#ffffff" : "#888888"
-                        font.pixelSize: 20
-                        font.bold: root.activeTabIndex === index
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    
-                    ToolTip.visible: hovered
-                    ToolTip.text: modelData.tooltip
-                    ToolTip.delay: 500
-                    
-                    onClicked: {
-                        root.activeTabIndex = index
-                        
-                        // Synchroniser avec les anciennes propriétés
-                        if (index === 0) {
-                            root.assetTabChanged(0)
-                        } else if (index === 1) {
-                            root.assetTabChanged(1)
-                        } else if (index === 2) {
-                            root.caseTabChanged(0)
-                        } else if (index === 3) {
-                            root.caseTabChanged(1)
-                        }
-                    }
-                }
-            }
+    }
 
-            Button {
-                id : expendSidePanelBt
+    Button {
+        id : expendSidePanelBt
 
-                width: 30
-                Layout.fillHeight: true
-                background: Rectangle {
-                    anchors.fill: parent
-                    color: parent.pressed ? "#555555" : "#444444"
-                    border.color: "#666666"
-                    border.width: 1
-                    radius: 4
-                }
+        height: parent.height
+        anchors.right: parent.right
+        anchors.top: parent.bottom
+        anchors.rightMargin: 0
+        anchors.topMargin: 0
+        anchors.bottomMargin: 0
+        background: Rectangle {
+            anchors.fill: parent
+            color: parent.pressed ? "#555555" : "#444444"
+            border.color: "#666666"
+            border.width: 1
+            radius: 4
+        }
 
-                contentItem: Text {
-                    text: root.isSidePanelExpanded ? "◀" : "▶"
-                    color: "white"
-                    font.pixelSize: 12
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    anchors.fill:expendSidePanelBt
-                }
+        contentItem: Text {
+            text: root.isSidePanelExpanded ? "◀" : "▶"
+            color: "white"
+            font.pixelSize: 12
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            anchors.fill:expendSidePanelBt
+        }
 
-                onClicked: {
-                    console.log("Side panel expand button clicked, " + root.isSidePanelExpanded);
-                    root.isSidePanelExpanded = !root.isSidePanelExpanded;
-                }
-            }
-
-            // MenuSelector_SizeControl {
-            //     tileLogic: logic.tileLogic
-            //     height: Screen.pixelDensity * 12.5
-            // }
+        onClicked: {
+            console.log("Side panel expand button clicked, " + root.isSidePanelExpanded);
+            root.isSidePanelExpanded = !root.isSidePanelExpanded;
         }
     }
 }

@@ -74,26 +74,14 @@ QtObject {
 
     // Fonction pour effacer la configuration de case
     function clearCaseConfiguration() {
-        if (!logic.selectionPanel) {
+        // Accéder au CaseConfigurationPanelSection via le SelectionPanel
+        var caseConfigPanel = logic.editorSidePanel.caseConfigurationPanel
+        if (!caseConfigPanel) {
+            console.log("[LOGIC] caseConfigPanel not available")
             return
         }
 
-        var casePanel = logic.selectionPanel.casePanel
-        if (!casePanel) {
-            return
-        }
-
-        var contentArea = casePanel.contentArea
-        if (!contentArea) {
-            return
-        }
-
-        var configPanel = contentArea.caseConfigurationPanelSection
-        if (!configPanel) {
-            return
-        }
-
-        configPanel.clearTarget()
+        caseConfigPanel.clearTarget()
     }
     function changeMouseMode(mode)
     {
@@ -173,50 +161,30 @@ QtObject {
         console.log("main MA clicked : ", clickElement.length, " elements")
     }
 
-    function updateAssetPanelEffectConfiguration(dispParam)
+    function updateVisualEffectPanel(dispParam)
     {
         if (!logic.selectionPanel) {
             console.log("[LOGIC] selectionPanel not available")
             return
         }
-        var assetPanel = logic.selectionPanel.assetPanel
-        if (!assetPanel) {
-            console.log("[LOGIC] assetPanel not available")
+        var editorSidePanel = logic.editorSidePanel
+        if (!editorSidePanel) {
+            console.log("[LOGIC] editorSidePanel not available")
             return
         }
-        var contentArea = assetPanel.asp_contentArea
-        if (!contentArea) {
-            console.log("[LOGIC] contentArea not available")
-            return
-        }
-        contentArea.updateFromDisplayParameter(dispParam)
+        editorSidePanel.updateFromDisplayParameter(dispParam)
     }
     // Fonction pour mettre à jour la configuration de case dans le panneau
     function updateCaseConfiguration() {
-        if (!logic.selectionPanel) {
-            console.log("[LOGIC] selectionPanel not available")
-            return
-        }
 
         // Accéder au CaseConfigurationPanelSection via le SelectionPanel
-        var casePanel = logic.selectionPanel.casePanel
-        if (!casePanel) {
-            console.log("[LOGIC] casePanel not available")
+        var caseConfigPanel = logic.editorSidePanel.caseConfigurationPanel
+        if (!caseConfigPanel) {
+            console.log("[LOGIC] caseConfigPanel not available")
             return
         }
 
-        var contentArea = casePanel.csp_contentArea
-        if (!contentArea) {
-            console.log("[LOGIC] contentArea not available")
-            return
-        }
-
-        var configPanel = contentArea.caseConfigurationPanelSection
-        if (!configPanel) {
-            console.log("[LOGIC] caseConfigurationPanelSection not available")
-            return
-        }
-        var configLinkPanel = contentArea.connectionsConfigSection
+        var configLinkPanel = logic.editorSidePanel.connectionsConfigurationPanel
         if (!configLinkPanel) {
             console.log("[LOGIC] connectionConfigurationPanel not available")
             return
@@ -231,18 +199,18 @@ QtObject {
             }
             if (element.snapableParameters.caseData) {
                 console.log("[LOGIC] Updating case configuration for:", element.snapableParameters.caseData.name)
-                if (configPanel)
+                if (caseConfigPanel)
                 {
-                    configPanel.setTargetCase(element)
+                    caseConfigPanel.setTargetCase(element)
                 }
 
             } else {
                 // Ce n'est pas une case, effacer la configuration
-                configPanel.clearTarget()
+                caseConfigPanel.clearTarget()
             }
         } else {
             // Plusieurs éléments sélectionnés ou aucun, effacer la configuration
-            configPanel.clearTarget()
+            caseConfigPanel.clearTarget()
         }
     }
 

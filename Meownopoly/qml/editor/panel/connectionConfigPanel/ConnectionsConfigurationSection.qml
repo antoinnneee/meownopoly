@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import MapTypes
-import "../../../../ui_item"
+import "../../../ui_item"
 
 pragma ComponentBehavior: Bound
 
@@ -15,26 +15,78 @@ CollapsableGroupBox {
     property bool updatingValues: false
     property var hoveredConnectionElement: null
     property var logic: null  // Référence au logic pour sauvegarder
+    property bool showConnections: false
+    onShowConnectionsChanged: {
+        logic.tileLogic.displayLinkEnable = showConnections
+    }
     
     // Signals
     signal requestAddConnection(string kind)
     signal configurationChanged()
     
     // Main scrollable content
-    content: ScrollView {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        contentWidth: availableWidth
-        clip: true
-        
-        Column {
-            id: mainLayout
-            width: parent.width
-            spacing: 10
+    content:  [
+            
+            // Checkbox afficher les connexions
+            Rectangle {
+                Layout.fillWidth: true
+                height: 50
+                color: "#2a2a2a"
+                radius: 8
+                border.color: "#555555"
+                border.width: 1
+                
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 10
+                    
+                    CheckBox {
+                        id: showConnectionsCheckbox
+                        checked: root.showConnections
+
+                        text: "Afficher les connexions"
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        
+                        onCheckedChanged: {
+                            root.showConnections = checked
+                        }
+                        contentItem: Text {
+                            text: showConnectionsCheckbox.text
+                            anchors.verticalCenter: parent.verticalCenter
+                        font: showConnectionsCheckbox.font
+                        opacity: showConnectionsCheckbox.enabled ? 1.0 : 0.3
+                        color: showConnectionsCheckbox.checked ? "#ffffff" : "#cccccc"
+                        verticalAlignment: Text.AlignVCenter
+                        leftPadding: showConnectionsCheckbox.indicator.width + showConnectionsCheckbox.spacing
+                        }
+                        indicator: Rectangle {
+                            implicitWidth: 20
+                            implicitHeight: 20
+                            radius: 4
+                            border.color: showConnectionsCheckbox.checked ? "#667eea" : "#888888"
+                            border.width: 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: showConnectionsCheckbox.checked ? "#667eea" : "#3a3a3a"
+                            
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✓"
+                                color: "white"
+                                font.pixelSize: 14
+                                font.bold: true
+                                visible: showConnectionsCheckbox.checked
+                            }
+                        }
+                    }
+
+                }
+            },
             
             // Section des actions
             Rectangle {
-                width: parent.width
+                Layout.fillWidth: true
                 height: 60
                 color: "#333333"
                 radius: 8
@@ -70,6 +122,8 @@ CollapsableGroupBox {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
+                                if (!showConnections)
+                                    showConnections = true
                                 if (root.targetSnapableElement) {
                                     root.requestAddConnection("previous")
                                 }
@@ -119,6 +173,8 @@ CollapsableGroupBox {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
+                                if (!showConnections)
+                                    showConnections = true
                                 console.log("next button clicked")
                                 if (root.targetSnapableElement) {
                                     console.log("add next request")
@@ -146,10 +202,10 @@ CollapsableGroupBox {
                     }
                 }
             }
-            
+            ,
             // Sections des éléments côte à côte
             RowLayout {
-                width: parent.width
+                Layout.fillWidth: true
                 height: 300
                 spacing: 10
                 
@@ -241,8 +297,8 @@ CollapsableGroupBox {
                     }
                 }
             }
-        }
-    }
+        ]
+
     
     // Functions
     function setTargetElement(snapableElement) {

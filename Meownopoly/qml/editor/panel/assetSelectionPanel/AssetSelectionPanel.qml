@@ -22,7 +22,6 @@ EditorBottomPanel {
     }
     
     property alias assetManagerSettings: assetManagerSettings
-    property alias visualEffectsPanel: asp_contentArea.visualEffectsPanel
     property alias currentTabIndex: asp_contentArea.currentTabIndex
     property alias asp_contentArea: asp_contentArea
     // Current selection state (from parent)
@@ -53,11 +52,7 @@ EditorBottomPanel {
     signal assetSelected(string category, string type, string id)
     signal assetCleared()
 
-    signal effectChanged()
 
-    function getCurrentEffects() {
-        return visualEffectsPanel.getCurrentEffects()
-    }
 
     function updateSelectedAsset(category, type, id)
     {
@@ -164,9 +159,6 @@ EditorBottomPanel {
                 root.updateSelectedAsset(category, type, id)
             }
             isExpanded: true
-            onEffectChanged: {
-                root.effectChanged()
-            }
             titleHeight: titleBar.height
     }
 
