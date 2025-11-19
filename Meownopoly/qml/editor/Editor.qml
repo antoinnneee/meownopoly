@@ -154,6 +154,7 @@ Rectangle {
                 console.log("onClicked Opening global settings")
                 panelInfoMap.isOpening = !panelInfoMap.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
+                sidePanel.visible = sidePanel.visible ? false: true
             }
         }
         SequentialAnimation {
@@ -178,6 +179,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         logic: logic
         selectionPanel: selectionPanel
+        sidePanel: sidePanel
 
         z: root.z_CONFIG_PANEL
     }

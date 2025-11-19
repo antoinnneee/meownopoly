@@ -38,7 +38,7 @@ Item {
     required property var logic
     // Conteneur principal
     required property var selectionPanel
-
+    required property var sidePanel
 
     visible: mapsContainer.x < parent.width
 
@@ -141,6 +141,7 @@ Item {
                 onClicked: {
                     isOpening = false
                     selectionPanel.visible =  selectionPanel.visible ? false: true
+                    sidePanel.visible = sidePanel.visible ? false: true
                 }
             }
         }
