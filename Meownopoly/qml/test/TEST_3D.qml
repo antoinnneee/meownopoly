@@ -4,7 +4,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick3D
 import QtQuick3D.Helpers
-import "../case"
 import Case
 import CaseRestArea
 
@@ -37,40 +36,11 @@ Rectangle {
                     brightness: 1.0
                     eulerRotation.x: -25
                 }
+                PrincessV2{
+                    x: 36.227
+                    y: -15.472
+                    z: 13.55649
 
-                // Tree2{
-                //     scale: Qt.vector3d(0.1, 0.1, 0.1)
-                // }
-                Model {
-                    x: 0
-                    y: -10.43
-                    source: "#Cylinder"
-                    z: 0
-                    scale: Qt.vector3d(3, 0.1, 3)
-                    materials: [
-                        SpecularGlossyMaterial {
-                            id: ground
-                            emissiveFactor.z: 1
-                            emissiveFactor.y: 1
-                            emissiveFactor.x: 1
-                            specularColor: "#ffffff"
-                            albedoColor: "#9e56361d"
-                            objectName: "ground"
-                            emissiveMap: Texture {
-                                sourceItem: CaseTile{
-                                    width: 100
-                                    height: 100
-                                    // color: "white"
-                                    caseData: CaseRestArea{
-
-                                    }
-                                }
-
-                                scaleU: 4.0
-                                scaleV: 4.0
-                            }
-                        }
-                    ]
                 }
 
                 // Stationary orthographic camera viewing from the top
@@ -250,8 +220,4 @@ Rectangle {
     }
 }
 
-/*##^##
-Designer {
-    D{i:0}D{i:3;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}
-}
-##^##*/
+

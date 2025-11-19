@@ -26,6 +26,11 @@ import ItemSnapableFactory
 import UndoRedoManager
 import AssetManager
 import "../ui_item"
+import "../test"
+
+
+import QtQuick3D
+import QtQuick3D.Helpers
 
 Rectangle {
     id: root
@@ -38,11 +43,16 @@ Rectangle {
     property int availableHeight: height - selectionPanel.height
 
 
+    property real z_BACKGROUND: 3000
+    property real z_GRID: 4000
+    property real z_3D: 4500
+    property real z_WORKAREA: 5000
     property real z_CONFIG_PANEL: 10000
     property real z_HUD: 9000
     property real z_SELECTION_RECT: 8000
     property real z_CURSOR_TRACKER: 7000
     property real z_LINK_TRACKER: 6000
+    property real z_GLOBAL_MA: 4750
 
 
     property MapInfo mapInfo: MapInfo{
@@ -313,23 +323,73 @@ Rectangle {
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
+        z: z_GRID
     }
 
     Background {
         id: background
         grid: editorGrid
+        visible: false
+        z: z_BACKGROUND
         anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
     }
 
+    Node {
+        id: scene
+
+        DirectionalLight {
+            x: 0
+            y: 264.806
+            z: 335.38977
+            ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
+            brightness: 1.0
+            eulerRotation.x: -25
+        }
+        PrincessV2{
+            id: entity
+            x: 0
+            y: 0
+            z: 0
+
+        }
+
+        // Stationary orthographic camera viewing from the top
+        OrthographicCamera {
+            id: cameraOrthographic
+            x: 0
+            y: 1000
+            eulerRotation.z: 0
+            eulerRotation.y: 0
+            pivot.x: 0
+            z: 600
+            eulerRotation.x: -55
+        }
+    }
+
+    View3D {
+        anchors.fill: root
+        z: z_3D
+        camera: cameraOrthographic
+        importScene: scene
+
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Transparent
+        }
+
+    }
     GlobalMa {
         id: mainMa
         mouseLogic: logic.mouseLogic
         anchors.bottom: selectionPanel.top
+        z: z_GLOBAL_MA
     }
     // Zone de travail de l'éditeur (par-dessus la grille)
     Item {
         id: workArea
+        z: z_WORKAREA
         anchors.fill: editorGrid
+
+
         Item {
             id: groupeSelection
             property int gridXPosition:  0
@@ -337,7 +397,7 @@ Rectangle {
         }
 
         Rectangle{
-            id: entity
+            id: entityRect
             color: "purple"
             width: 50
             height: 50
@@ -547,6 +607,10 @@ Rectangle {
         }
     }
 
+    Item {
+        id: __materialLibrary__
+    }
+
     function regainFocus() {
         forceActiveFocus()
     }
@@ -623,3 +687,10 @@ Rectangle {
 
 }
 
+
+/*##^##
+Designer {
+    D{i:0}D{i:12;invisible:true}D{i:23;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}D{i:27;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}
+D{i:44;invisible:true}D{i:45;invisible:true}
+}
+##^##*/

@@ -181,5 +181,8 @@
         <file>qml/editor/panel/connectionConfigPanel/ConnectionsConfigurationSection.qml</file>
         <file>qml/editor/panel/connectionConfigPanel/ConnectionsPanel.qml</file>
         <file>qml/editor/panel/PanelInfoMap.qml</file>
+        <file>qml/test/PrincessV2.qml</file>
+        <file>qml/test/maps/textureData6.fbm</file>
+        <file>qml/test/meshes/textured_mesh_obj_001_mesh4.mesh</file>
     </qresource>
 </RCC>

@@ -13,8 +13,8 @@ MouseLogic_Base {
 
     function positionChanged(mouse, drag)
     {
-        console.log("positionChanged")
         var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+        console.log("positionChanged", workAreaPos.x, workAreaPos.y)
         targetEntity.x = workAreaPos.x
         targetEntity.y = workAreaPos.y
 
