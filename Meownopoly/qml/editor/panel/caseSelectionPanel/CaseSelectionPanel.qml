@@ -11,6 +11,7 @@ EditorBottomPanel {
     id: root
 
     property alias activeFilter: titleBar.activeFilter
+
     property int selectedCaseType: -1
     property string selectedCaseTypeName: ""
     property string currentView: "categories"
@@ -83,12 +84,5 @@ EditorBottomPanel {
                 root.selectedCaseTypeName = ""
                 root.caseTypeCleared()
             }
-
-    }
-
-    
-    // Fonction pour effacer la sélection
-    function clearSelection() {
-        csp_contentArea.clearCaseSelection()
     }
 }

@@ -6,21 +6,33 @@ import AssetManager
 
 import "../"
 import "../editorBottomPanel"
-
+import "../caseSelectionPanel"
 EditorBottomPanel {
     id: root
 
     property alias activeFilter: titleBar.activeFilter
 
+    property int selectedCaseType: -1
+    property string selectedCaseTypeName: ""
+    property string searchText: ""
+    property alias csp_contentArea: csp_contentArea
+//    isExpanded: true
+
+    // Signaux
+    signal caseTypeSelected(int type, string typeName)
+    signal caseTypeCleared()
+
+
     property string selectedCategory: ""
     property string selectedType: ""
     property bool comingFromOtherMenu: false // Track if we're coming from another menu
-    property string currentView: "categories" // "categories" or "assets"
-    
+
+    property string currentView: "categories"
+
     onComingFromOtherMenuChanged: {
         console.log("AssetSelectionPanel: comingFromOtherMenu changed to", comingFromOtherMenu)
     }
-    
+
     property alias assetManagerSettings: assetManagerSettings
     property alias currentTabIndex: asp_contentArea.currentTabIndex
     property alias asp_contentArea: asp_contentArea
@@ -56,31 +68,31 @@ EditorBottomPanel {
 
     function updateSelectedAsset(category, type, id)
     {
-         if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
-             root.assetCleared()
-             return
-         }
-         root.currentSelectedCategory = category
-         root.currentSelectedType = type
-         root.currentSelectedId = id
-         
-         // Ajuster les dimensions au ratio natif de l'asset
-         var asset = AssetManager.getAssetById(category, type, id)
-         if (asset && asset.id && logic && logic.tileLogic) {
-             var ratioWidth = asset.ratioWidth || 1
-             var ratioHeight = asset.ratioHeight || 1
-             console.log("AssetSelectionPanel: Asset sélectionné avec ratio", ratioWidth + ":" + ratioHeight)
-             logic.tileLogic.adjustToNativeRatio(ratioWidth, ratioHeight)
-         }
-         
-         root.assetSelected(category, type, id)
+        if (root.isAssetSelected && root.currentSelectedCategory === category && root.currentSelectedType === type && root.currentSelectedId === id) {
+            root.assetCleared()
+            return
+        }
+        root.currentSelectedCategory = category
+        root.currentSelectedType = type
+        root.currentSelectedId = id
+
+        // Ajuster les dimensions au ratio natif de l'asset
+        var asset = AssetManager.getAssetById(category, type, id)
+        if (asset && asset.id && logic && logic.tileLogic) {
+            var ratioWidth = asset.ratioWidth || 1
+            var ratioHeight = asset.ratioHeight || 1
+            console.log("AssetSelectionPanel: Asset sélectionné avec ratio", ratioWidth + ":" + ratioHeight)
+            logic.tileLogic.adjustToNativeRatio(ratioWidth, ratioHeight)
+        }
+
+        root.assetSelected(category, type, id)
 
     }
 
     // Function to handle coming from another menu
     function setComingFromOtherMenu(value) {
         root.comingFromOtherMenu = value
-        
+
         // Si on vient d'un autre menu, on ne change pas l'état, on laisse l'état actuel
         if (value) {
             console.log("AssetSelectionPanel: Coming from other menu, keeping current state:", root.currentView)
@@ -88,13 +100,15 @@ EditorBottomPanel {
         }
     }
 
-
+    function clearCaseSelection() {
+        csp_contentArea.clearCaseSelection()
+    }
 
 
     // Title bar
-     titleBar: ASP_TitleBar {
+    titleBar: ASP_TitleBar {
         id: titleBar
-        activeFilter: "All"
+        activeFilter: "Decoration"
         anchors.left: parent.left
         anchors.right: parent.horizontalCenter
         anchors.top: parent.top
@@ -127,7 +141,8 @@ EditorBottomPanel {
         }
         onButtonClicked: function(text, index)  {
             titleBar.activeFilter = text
-            root.currentView = "categories"
+            stackView.currentIndex = index
+            // root.currentView = "categories"
         }
 
 
@@ -140,14 +155,22 @@ EditorBottomPanel {
 
     }
 
-     contentArea: ASP_ContentArea {
+    contentArea: StackLayout {
+        id: stackView
+        anchors.fill: parent
+//        anchors.topMargin: resizeHandle.height // Prendre en compte la zone de redimensionnement
+        currentIndex: 0
+        visible: true // Assurer que le StackLayout est visible
+
+        // Asset Selection Panel
+        ASP_ContentArea {
             id: asp_contentArea
-            anchors.fill: parent
+
             currentSelectedCategory: root.currentSelectedCategory
             currentSelectedType: root.currentSelectedType
             currentSelectedId: root.currentSelectedId
             currentView: root.currentView
-            activeFilter: titleBar.activeFilter
+            activeFilter: "All"
             searchText: root.searchText
             onCategorieSelected: {
                 root.currentView = "assets"
@@ -160,15 +183,39 @@ EditorBottomPanel {
             }
             isExpanded: true
             titleHeight: titleBar.height
+
+            Layout.preferredWidth: parent.width
+            Layout.preferredHeight: parent.height
+
+        }
+
+        // Case Selection Panel
+        CSP_ContentArea {
+            id: csp_contentArea
+            visible: true
+            currentView: root.currentView
+            searchText: root.searchText
+            isExpanded: true
+            titleHeight: titleBar.height
+            logic: root.logic
+            activeFilter: "All"
+
+            Layout.preferredWidth: parent.width
+            Layout.preferredHeight: parent.height
+
+            onCaseTypeSelected: function(type, typeName) {
+                console.log("CaseSelectionPanel - case type selected:", type, typeName)
+                root.selectedCaseType = type
+                root.selectedCaseTypeName = typeName
+                root.caseTypeSelected(type, typeName)
+            }
+            onCaseTypeCleared: function() {
+                console.log("CaseSelectionPanel - case type cleared")
+                root.selectedCaseType = -1
+                root.selectedCaseTypeName = ""
+                root.caseTypeCleared()
+            }
+        }
     }
 
-    // Status indicator
-    ASP_StatusIndicator {
-        anchors.bottom: parent.bottom
-        anchors.margins: 5
-        anchors.right: parent.right
-        visible: root.isExpanded
-        currentSelectedCategory: root.currentSelectedCategory
-        currentView: root.currentView
-    }
 }

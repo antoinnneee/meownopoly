@@ -21,19 +21,19 @@ Rectangle {
     onCurrentPanelIndexChanged: {
         clearAssetSelection()
     }
-    
+
     // Propriétés de redimensionnement
     property int customHeight: Screen.pixelDensity * 75// Hauteur personnalisée de l'utilisateur
     property int minHeight: 100 // Hauteur minimale configurable
     property int maxHeight: parent.height * 0.7 // Hauteur maximale dynamique
     property bool isResizing: false // État de redimensionnement actif
     property real resizeSensitivity: 1.5 // Sensibilité du redimensionnement (évite les micro-mouvements)
-    
+
     // Dimensions à propager vers les panels enfants
     readonly property int collapsedHeight: 0
     readonly property int expandedHeight: customHeight
     height: isExpanded ? expandedHeight : collapsedHeight // Hauteur explicite
-    
+
     // Alias pour propager les propriétés de AssetSelectionPanel
     property alias assetPanel: assetPanel
     property alias currentSelectedAssetCategory: assetPanel.currentSelectedCategory
@@ -41,8 +41,7 @@ Rectangle {
     property alias currentSelectedAssetId: assetPanel.currentSelectedId
     property alias isAssetSelected: assetPanel.isAssetSelected
 
-    property alias caseTypeSelected: casePanel.selectedCaseType
-    property alias casePanel: casePanel
+    property alias caseTypeSelected: assetPanel.selectedCaseType
 
     property alias topToolbar:topToolbar
 
@@ -54,7 +53,7 @@ Rectangle {
     // signal selectionModeChanged(bool isActive)
 
     signal visualEffectChanged()
-    
+
     // Signaux de redimensionnement
     signal resizeStarted()
     signal resizeFinished(int finalHeight)
@@ -83,16 +82,16 @@ Rectangle {
         z: 10
 
         logic: root.logic
-        
+
         // Synchroniser l'index du panel actif
         currentPanelIndex: root.currentPanelIndex
-        
+
         // Synchroniser les onglets des panels
         assetTabIndex: assetPanel.currentTabIndex
 
         onButtonClicked: function(index) {
             console.log("Bouton cliqué avec index : " + index + " et currentPanelIndex : " + root.currentPanelIndex);
-            
+
             // Si on clique sur le menu Assets (index 0)
             if (index === 0) {
                 if (root.currentPanelIndex !== 0) {
@@ -107,12 +106,12 @@ Rectangle {
                 // Si on va vers un autre menu, réinitialiser le flag
                 assetPanel.setComingFromOtherMenu(false)
             }
-            
+
             // Changer le panneau affiché en fonction de l'index du bouton
             root.currentPanelIndex = index;
         }
-        
-        
+
+
 
     }
 
@@ -125,7 +124,7 @@ Rectangle {
         height: 10
         color: root.isResizing ? "#E6333333" : "#E6000000"
         z: 15
-        
+
         // Indicateur visuel subtil
         Rectangle {
             anchors.centerIn: parent
@@ -134,17 +133,17 @@ Rectangle {
             color: resizeMouseArea.containsMouse || root.isResizing ? "#4A90E2" : "#CCCCCC"
             radius: 1
         }
-        
+
         MouseArea {
             id: resizeMouseArea
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.SizeVerCursor
             enabled: root.isExpanded
-            
+
             property real startY: 0
             property real startHeight: 0
-            
+
             onPressed: function(mouse) {
                 if (!root.isExpanded) return
                 startY = mouse.y
@@ -153,23 +152,23 @@ Rectangle {
                 root.resizeStarted()
                 mouse.accepted = true
             }
-            
+
             onPositionChanged: function(mouse) {
                 if (!root.isResizing) return
-                
+
                 var deltaY = mouse.y - startY
                 var newHeight = startHeight - (deltaY * root.resizeSensitivity)
-                
+
                 // Appliquer les limites
                 newHeight = Math.max(root.minHeight, Math.min(newHeight, root.maxHeight))
-                
+
                 // Éviter les mises à jour inutiles pour réduire le tremblement
                 if (Math.abs(newHeight - root.customHeight) > 1) {
                     root.customHeight = newHeight
                 }
                 mouse.accepted = true
             }
-            
+
             onReleased: function(mouse) {
                 if (root.isResizing) {
                     root.isResizing = false
@@ -177,7 +176,7 @@ Rectangle {
                 }
                 mouse.accepted = true
             }
-            
+
             onCanceled: {
                 if (root.isResizing) {
                     root.isResizing = false
@@ -185,7 +184,7 @@ Rectangle {
                 }
             }
         }
-        
+
         // Animation de couleur au survol
         Behavior on color { ColorAnimation { duration: 150 }}
     }
@@ -210,6 +209,7 @@ Rectangle {
             Layout.preferredWidth: parent.width
             isExpanded: root.isExpanded
 
+
             Layout.preferredHeight: root.expandedHeight
 
             onAssetSelected: function(category, type, id) {
@@ -226,22 +226,7 @@ Rectangle {
             }
         }
 
-        // Case Selection Panel
-        CaseSelectionPanel {
-            id: casePanel
-            logic: root.logic
-
-            Layout.preferredHeight: root.expandedHeight
-
-            collapsedHeight: root.collapsedHeight
-            expandedHeight: root.expandedHeight
-            Layout.preferredWidth: parent.width
-            isExpanded: true
-
-
-        }
-
-        // Case Selection Panel
+       // Case Selection Panel
         MapSelectionPanel {
             id: mapPanel
             logic: root.logic
@@ -252,15 +237,13 @@ Rectangle {
             expandedHeight: root.expandedHeight
             Layout.preferredWidth: parent.width
             isExpanded: root.isExpanded
-
         }
     }
 
     // Fonction pour effacer la sélection d'asset
     function clearAssetSelection() {
         assetPanel.assetManagerSettings.clearAssetSelection()
-        casePanel.clearSelection()
+        assetPanel.clearCaseSelection()
         assetCleared()
     }
-
 }
