@@ -79,6 +79,14 @@ Item {
         )
     }
 
+    // Fonction pour obtenir la position de grille la plus proche
+    function getGridPixelPosition(x, y) {
+        return Qt.point(
+            x * gridSize,
+            y * gridSize
+        )
+    }
+
     // Fonctions pour activer/désactiver le mode redimensionnement
     function enterResizeMode() {
         resizeMode = true

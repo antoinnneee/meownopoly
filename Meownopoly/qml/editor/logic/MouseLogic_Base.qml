@@ -23,6 +23,43 @@ QtObject {
     property point dragStartPos: Qt.point(0, 0)
     property point targetStartPos: Qt.point(0, 0)
 
+    // Reference to View3D for camera synchronization
+    property var view3D: logic && logic.parent ? logic.parent.view3D : null
+    property point lastGridPos: Qt.point(0,0)
+
+    Component.onCompleted: {
+        if (grid) {
+            lastGridPos = Qt.point(grid.x, grid.y)
+        }
+    }
+
+    function updateCameraPosition() {
+        if (!view3D || !grid) return
+
+        var dx = grid.x - lastGridPos.x
+        var dy = grid.y - lastGridPos.y
+
+        if (dx === 0 && dy === 0) return
+
+        // Calculate world delta corresponding to screen pixel delta
+        var center = Qt.point(view3D.width / 2, view3D.height / 2)
+        var pCenter = view3D.mapTo3DScene(center)
+        var pMoved = view3D.mapTo3DScene(Qt.point(center.x + dx, center.y + dy))
+        
+        // This vector represents the displacement in World Space that corresponds to (dx, dy) on screen
+        var worldDelta = pMoved.minus(pCenter)
+        
+        // Move camera in opposite direction to shift the view
+        var cam = view3D.camera
+        if (cam) {
+            cam.x -= worldDelta.x
+            cam.y -= worldDelta.y
+            cam.z -= worldDelta.z
+        }
+
+        lastGridPos = Qt.point(grid.x, grid.y)
+    }
+
     function dragChanged(mouseX, mouseY, drag) {
         isDragging = drag.active
         if (drag.active && drag.target) {
@@ -30,10 +67,17 @@ QtObject {
             dragStartPos = Qt.point(mouseX, mouseY)
             targetStartPos = Qt.point(drag.target.x, drag.target.y)
         }
-
+        // Mettre à jour la position de référence au début du drag
+        if (grid) {
+             lastGridPos = Qt.point(grid.x, grid.y)
+        }
     }
+    
     function positionChanged(mouse, drag)
     {
+        // Mettre à jour la caméra si la grille a bougé
+        updateCameraPosition()
+
         // Mettre à jour la sélection par rectangle si active
         if (mouseLogic.isRectangleSelecting) {
             mouseLogic.updateRectangleSelection(mouse.x, mouse.y)

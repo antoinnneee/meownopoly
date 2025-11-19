@@ -67,6 +67,7 @@ Rectangle {
     property alias editorSidePanel: sidePanel
 
     property alias escMenu:escMenu
+    property alias view3D: view3D
 
     signal updateSettings()
     property alias entity:entity
@@ -340,7 +341,7 @@ Rectangle {
         DirectionalLight {
             x: 0
             y: 264.806
-            z: 335.38977
+            z: 1111.39001
             ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
             brightness: 1.0
             eulerRotation.x: -25
@@ -358,6 +359,8 @@ Rectangle {
             id: cameraOrthographic
             x: 0
             y: 1000
+            clipNear: 0
+            clipFar: 1000055
             eulerRotation.z: 0
             eulerRotation.y: 0
             pivot.x: 0
@@ -367,6 +370,7 @@ Rectangle {
     }
 
     View3D {
+        id: view3D
         anchors.fill: root
         z: z_3D
         camera: cameraOrthographic
@@ -690,7 +694,7 @@ Rectangle {
 
 /*##^##
 Designer {
-    D{i:0}D{i:12;invisible:true}D{i:23;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}D{i:27;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}
-D{i:44;invisible:true}D{i:45;invisible:true}
+    D{i:0}D{i:12;invisible:true}D{i:23;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}D{i:44;invisible:true}
+D{i:45;invisible:true}
 }
 ##^##*/
