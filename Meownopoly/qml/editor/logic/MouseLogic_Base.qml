@@ -55,6 +55,7 @@ QtObject {
             cam.x -= worldDelta.x
             cam.y -= worldDelta.y
             cam.z -= worldDelta.z
+            console.log(cam.x, cam.z, cam.y)
         }
 
         lastGridPos = Qt.point(grid.x, grid.y)
