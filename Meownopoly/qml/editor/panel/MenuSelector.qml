@@ -66,21 +66,21 @@ Item {
 
         ListModel {
             id: menuSelectorModel
-            ListElement {
-                menuText: "Menu Assets"
-                menuColor: "#b05758"
-                menuBorderColor: "#862a2a"
-            }
-            ListElement {
-                menuText: "Menu Cases"
-                menuColor: "#b3ab48"
-                menuBorderColor: "#8a8224"
-            }
-            ListElement {
-                menuText: "Menu Carte"
-                menuColor: "#4a90e2"
-                menuBorderColor: "#306aa8"
-            }
+            // ListElement {
+            //     menuText: "Séléction d'assets"
+            //     menuColor: "#b05758"
+            //     menuBorderColor: "#862a2a"
+            // }
+            // ListElement {
+            //     menuText: "Menu Cases"
+            //     menuColor: "#b3ab48"
+            //     menuBorderColor: "#8a8224"
+            // }
+            // ListElement {
+            //     menuText: "Menu Carte"
+            //     menuColor: "#4a90e2"
+            //     menuBorderColor: "#306aa8"
+            // }
         }
 
         Repeater {
