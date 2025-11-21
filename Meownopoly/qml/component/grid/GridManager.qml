@@ -12,6 +12,8 @@ Item {
 
     property int croisillons: 600
     property int mmSize: 12
+    property real defaultMmSize: 12.0
+    property real scaleLevel: mmSize / defaultMmSize
     property int gridSize: Screen.pixelDensity * mmSize
     property int boardSize:  gridSize * croisillons // 600 croisillons
     // Propriétés configurables

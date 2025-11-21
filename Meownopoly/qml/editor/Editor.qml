@@ -351,7 +351,6 @@ Rectangle {
             x: 0
             y: 0
             z: 0
-
         }
 
         // Stationary orthographic camera viewing from the top
@@ -359,13 +358,15 @@ Rectangle {
             id: cameraOrthographic
             x: 0
             y: 1000
-            clipNear: -10000  // Changez 0 par une valeur négative (ex: -10000)
+            clipNear: -10000
             clipFar: 1000055
             eulerRotation.z: 0
             eulerRotation.y: 0
             pivot.x: 0
             z: 600
             eulerRotation.x: -55
+            horizontalMagnification: editorGrid.scaleLevel
+            verticalMagnification: editorGrid.scaleLevel
         }
     }
 

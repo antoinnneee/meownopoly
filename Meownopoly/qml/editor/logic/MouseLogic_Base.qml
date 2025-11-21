@@ -45,10 +45,38 @@ QtObject {
         var center = Qt.point(view3D.width / 2, view3D.height / 2)
         var pCenter = view3D.mapTo3DScene(center)
         var pMoved = view3D.mapTo3DScene(Qt.point(center.x + dx, center.y + dy))
-        
+
         // This vector represents the displacement in World Space that corresponds to (dx, dy) on screen
         var worldDelta = pMoved.minus(pCenter)
-        
+
+        // Move camera in opposite direction to shift the view
+        var cam = view3D.camera
+        if (cam) {
+            cam.x -= worldDelta.x
+            cam.y -= worldDelta.y
+            cam.z -= worldDelta.z
+            console.log(cam.x, cam.z, cam.y)
+        }
+
+        lastGridPos = Qt.point(grid.x, grid.y)
+    }
+
+    function updateCameraPositionDelta(deltaX, deltaY) {
+        if (!view3D || !grid) return
+
+        var dx = deltaX
+        var dy = deltaY
+
+        if (dx === 0 && dy === 0) return
+
+        // Calculate world delta corresponding to screen pixel delta
+        var center = Qt.point(view3D.width / 2, view3D.height / 2)
+        var pCenter = view3D.mapTo3DScene(center)
+        var pMoved = view3D.mapTo3DScene(Qt.point(center.x + dx, center.y + dy))
+
+        // This vector represents the displacement in World Space that corresponds to (dx, dy) on screen
+        var worldDelta = pMoved.minus(pCenter)
+
         // Move camera in opposite direction to shift the view
         var cam = view3D.camera
         if (cam) {

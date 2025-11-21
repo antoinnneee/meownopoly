@@ -10,6 +10,7 @@ QtObject {
     function scrollGrid(wheel, deltaSize) {
         if (wheel.modifiers & Qt.ControlModifier) {
             // Sauvegarder les valeurs actuelles
+            logic.mouseLogic.lastGridPos = Qt.point(editorGrid.x, editorGrid.y)
             var oldMmSize = logic.mmSize;
             var oldWidth = logic.tileLogic.currentElementWidth;
             var oldHeight = logic.tileLogic.currentElementHeight;
@@ -53,10 +54,11 @@ QtObject {
                 // Calculer le décalage nécessaire pour maintenir la même position de grille
                 var deltaX = (gridPosition.x - newGridPosition.x) * editorGrid.gridSize
                 var deltaY = (gridPosition.y - newGridPosition.y) * editorGrid.gridSize
-                
                 // Appliquer le décalage à la grille
                 editorGrid.x -= deltaX
                 editorGrid.y -= deltaY
+                logic.mouseLogic.updateCameraPosition()
+
 
             }
         }
