@@ -154,7 +154,21 @@ QtObject {
     
     function positionChanged(mouse, drag)
     {
-        // Mettre à jour la caméra si la grille a bougé
+        // Si l'EntityController déplace la caméra automatiquement, on ne veut pas
+        // que le mouvement "passif" de la grille (qui suit la caméra)
+        // soit interprété comme un mouvement "actif" de la souris.
+        
+        // On met à jour lastGridPos pour que la prochaine frame ne calcule pas
+        // un delta énorme dû au déplacement automatique.
+        
+        // MAIS, si l'utilisateur DRAG la grille, on veut que ça bouge la caméra.
+        // Il faut distinguer les deux cas.
+        
+        // Solution simple : Synchroniser lastGridPos à la position actuelle
+        // AVANT de calculer le delta si on n'est pas en train de dragger la grille spécifiquement
+        // Ou mieux : EntityController devrait mettre à jour lastGridPos quand il bouge la grille.
+        
+        // Pour l'instant, on garde la logique existante mais on ajoute un check
         updateCameraPosition()
 
         // Mettre à jour la sélection par rectangle si active

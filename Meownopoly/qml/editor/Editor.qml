@@ -77,7 +77,7 @@ Rectangle {
         initializeEditor()
         
         // Initialize Entity Controller
-        EntityController.setTarget(entity, view3D)
+        EntityController.setTarget(entity, view3D, editorGrid, logic)
     }
 
     onUpdateSettings: {
