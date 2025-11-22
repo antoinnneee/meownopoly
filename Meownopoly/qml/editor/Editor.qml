@@ -361,11 +361,27 @@ Rectangle {
             brightness: 1.0
             eulerRotation.x: -25
         }
-        PrincessV2{
+        Node{
             id: entity
             x: 0
             y: 0
             z: 0
+
+            Loader3D {
+                id: modelLoader
+                property string modelName: "Princess" // Nom du modèle par défaut
+                
+                // Construction du chemin vers AppData/models/Nom/Nom.qml
+                source: "file:///" + AssetManager.getAppDataPath() + "/models/" + modelName + "/" + modelName + ".qml"
+                
+                onStatusChanged: {
+                    if (status === Loader3D.Error) {
+                        console.error("Erreur chargement modèle 3D:", sourceComponent.errorString())
+                    } else if (status === Loader3D.Ready) {
+                        console.log("Modèle 3D chargé:", source)
+                    }
+                }
+            }
         }
 
         // Stationary orthographic camera viewing from the top

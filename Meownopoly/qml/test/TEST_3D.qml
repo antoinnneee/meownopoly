@@ -36,12 +36,12 @@ Rectangle {
                     brightness: 1.0
                     eulerRotation.x: -25
                 }
-                PrincessV2{
-                    x: 36.227
-                    y: -15.472
-                    z: 13.55649
+                // PrincessV2{
+                //     x: 36.227
+                //     y: -15.472
+                //     z: 13.55649
 
-                }
+                // }
 
                 // Stationary orthographic camera viewing from the top
                 OrthographicCamera {

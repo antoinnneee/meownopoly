@@ -46,20 +46,42 @@ Rectangle {
     property alias packageVersion: packageVersionField.text
     property alias selectedFolder: selectedFolderLabel.text
     property string currentVersion: "0.0.0"  // Version actuelle du système
+    property bool isModelMode: typeSwitch.checked
+    property alias modelName: modelNameField.text
     
     signal createPackageRequested(string folderPath, string version)
+    signal createModelPackageRequested(string folderPath, string name, string version)
     signal uploadPackageRequested()
+    signal uploadModelRequested(string name, string version)
     
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 15
         spacing: 10
         
-        Text {
-            text: "📦 Création de paquets"
-            font.pixelSize: 16
-            font.bold: true
-            color: "#ffffff"
+        RowLayout {
+            Layout.fillWidth: true
+            Text {
+                text: "📦 Création de paquets"
+                font.pixelSize: 16
+                font.bold: true
+                color: "#ffffff"
+            }
+            
+            Item { Layout.fillWidth: true }
+            
+            Text {
+                text: "Assets Jeu"
+                color: !typeSwitch.checked ? "white" : "#888"
+            }
+            Switch {
+                id: typeSwitch
+                text: ""
+            }
+            Text {
+                text: "Modèle 3D"
+                color: typeSwitch.checked ? "white" : "#888"
+            }
         }
         
         RowLayout {
@@ -69,11 +91,27 @@ Rectangle {
                 spacing: 5
                 Layout.fillWidth: true
                 
+                // Champ Nom du Modèle (visible seulement en mode modèle)
+                TextField {
+                    id: modelNameField
+                    visible: root.isModelMode
+                    Layout.preferredWidth: 150
+                    placeholderText: "Nom du modèle (ex: PionChat)"
+                    color: "#ffffff"
+                    background: Rectangle {
+                        color: "#2a2a2a"
+                        border.color: "#555555"
+                        border.width: 1
+                        radius: 4
+                    }
+                }
+
                 TextField {
                     id: packageVersionField
                     Layout.fillWidth: true
                     placeholderText: "Version du paquet (ex: 1.0.1)"
-                    text: logic.getNextVersion(root.currentVersion)
+                    // En mode modèle, on ne pré-remplit pas forcément avec la version du jeu
+                    text: root.isModelMode ? "1.0.0" : logic.getNextVersion(root.currentVersion)
                     color: "#ffffff"
                     
                     background: Rectangle {
@@ -117,9 +155,16 @@ Rectangle {
             
             Button {
                 text: "Créer le paquet"
-                enabled: selectedFolderLabel.text !== "Aucun dossier sélectionné" && packageVersionField.text.length > 0
+                enabled: selectedFolderLabel.text !== "Aucun dossier sélectionné" && 
+                         packageVersionField.text.length > 0 && 
+                         (!root.isModelMode || modelNameField.text.length > 0)
+                         
                 onClicked: {
-                    root.createPackageRequested(selectedFolderLabel.text, packageVersionField.text)
+                    if (root.isModelMode) {
+                        root.createModelPackageRequested(selectedFolderLabel.text, modelNameField.text, packageVersionField.text)
+                    } else {
+                        root.createPackageRequested(selectedFolderLabel.text, packageVersionField.text)
+                    }
                 }
                 
                 background: Rectangle {
@@ -139,7 +184,13 @@ Rectangle {
             Button {
                 text: "Uploader vers serveur"
                 enabled: root.packageCreated && !root.isDownloading
-                onClicked: root.uploadPackageRequested()
+                onClicked: {
+                    if (root.isModelMode) {
+                        root.uploadModelRequested(modelNameField.text, packageVersionField.text)
+                    } else {
+                        root.uploadPackageRequested()
+                    }
+                }
                 
                 background: Rectangle {
                     color: parent.enabled ? (parent.pressed ? "#1976d2" : "#2196f3") : "#666666"

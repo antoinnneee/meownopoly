@@ -24,6 +24,7 @@ class LauncherManager : public QObject
     Q_PROPERTY(double downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
     Q_PROPERTY(QString downloadStatus READ downloadStatus NOTIFY downloadStatusChanged)
     Q_PROPERTY(bool packageCreated READ packageCreated NOTIFY packageCreatedChanged)
+    Q_PROPERTY(QVariantList modelsList READ modelsList NOTIFY modelsListChanged)
 
 public:
     static void registerQml();
@@ -37,6 +38,7 @@ public:
     double downloadProgress() const { return m_downloadProgress; }
     QString downloadStatus() const { return m_downloadStatus; }
     bool packageCreated() const { return m_packageCreated; }
+    QVariantList modelsList() const { return m_modelsList; }
     
     // Launcher methods invokable from QML
     Q_INVOKABLE void testServerConnection(const QString &serverUrl);
@@ -47,6 +49,12 @@ public:
     Q_INVOKABLE void uploadPackageToServer(const QString &serverUrl);
     Q_INVOKABLE void resetDownloadState();
 
+    // New methods for Models
+    Q_INVOKABLE void fetchModelsList(const QString &serverUrl);
+    Q_INVOKABLE void downloadModel(const QString &serverUrl, const QString &name, const QString &version);
+    Q_INVOKABLE void createModelPackage(const QString &folderPath, const QString &name, const QString &version);
+    Q_INVOKABLE void uploadModelPackage(const QString &serverUrl, const QString &name, const QString &version);
+
 signals:
     void currentVersionChanged();
     void latestVersionChanged();
@@ -54,6 +62,7 @@ signals:
     void downloadProgressChanged();
     void downloadStatusChanged();
     void packageCreatedChanged();
+    void modelsListChanged();
     void connectionTestResult(bool success, const QString &message);
     void logMessage(const QString &message);
     void updateAvailable();
@@ -64,6 +73,7 @@ private slots:
     void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void onVersionCheckFinished();
     void onConnectionTestFinished();
+    void onModelsListFinished(); // New slot
 
 private:
     explicit LauncherManager(QObject *parent = nullptr);
@@ -74,6 +84,7 @@ private:
     QNetworkReply *m_currentDownload = nullptr;
     QNetworkReply *m_versionCheckReply = nullptr;
     QNetworkReply *m_connectionTestReply = nullptr;
+    QNetworkReply *m_modelsListReply = nullptr; // New reply
     QFile *m_downloadFile = nullptr;
     
     // FolderCompressor instance
@@ -87,7 +98,8 @@ private:
     QString m_downloadStatus = "Prêt";
     bool m_packageCreated = false;
     QString m_lastCreatedPackage;
-    
+    QVariantList m_modelsList; // New property data
+
     // Helper methods
     QString getCurrentVersionFromFile();
     void saveVersionInfo(const QString &version);
@@ -99,8 +111,13 @@ private:
     void setDownloadProgress(double progress);
     void setDownloadStatus(const QString &status);
     void setPackageCreated(bool created);
+    void setModelsList(const QVariantList &list); // New helper
+    QString getLocalModelVersion(const QString &modelName); // Helper for checking installed models
 
     QString m_basePath;
+    bool m_isModelDownload = false; // Flag to distinguish asset vs model download
+    QString m_currentModelName;     // To track which model is being downloaded
+    QString m_currentModelVersion;
 };
 
 #endif // LAUNCHER_MANAGER_H
