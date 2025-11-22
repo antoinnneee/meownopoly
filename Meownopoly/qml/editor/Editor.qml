@@ -26,6 +26,11 @@ import ItemSnapableFactory
 import UndoRedoManager
 import AssetManager
 import "../ui_item"
+import "../test"
+import "../utils"
+
+import QtQuick3D
+import QtQuick3D.Helpers
 
 Rectangle {
     id: root
@@ -38,11 +43,16 @@ Rectangle {
     property int availableHeight: height - selectionPanel.height
 
 
+    property real z_BACKGROUND: 3000
+    property real z_GRID: 4000
+    property real z_3D: 4500
+    property real z_WORKAREA: 5000
     property real z_CONFIG_PANEL: 10000
     property real z_HUD: 9000
     property real z_SELECTION_RECT: 8000
     property real z_CURSOR_TRACKER: 7000
     property real z_LINK_TRACKER: 6000
+    property real z_GLOBAL_MA: 4750
 
 
     property MapInfo mapInfo: MapInfo{
@@ -57,6 +67,7 @@ Rectangle {
     property alias editorSidePanel: sidePanel
 
     property alias escMenu:escMenu
+    property alias view3D: view3D
 
     signal updateSettings()
     property alias entity:entity
@@ -64,6 +75,9 @@ Rectangle {
     Component.onCompleted: {
         stEnableAutoSave.sync()
         initializeEditor()
+        
+        // Initialize Entity Controller
+        EntityController.setTarget(entity, view3D)
     }
 
     onUpdateSettings: {
@@ -73,6 +87,13 @@ Rectangle {
     }
 
     Keys.onPressed: function(event) {
+        // Check if we should pass input to EntityController
+        // For now, let's map arrow keys and WASD to it if no other modifier is pressed
+        // or if we are in a specific mode.
+        
+        // Pass to EntityController
+        EntityController.keysHandler.Keys.pressed(event)
+        
         console.log("event", event.key)
         if (event.key === Qt.Key_Delete) {
             var selectItem = logic.mouseLogic.selectedElements
@@ -120,20 +141,25 @@ Rectangle {
         }
         else if (event.key === Qt.Key_Y) {
             if (logic.mouseLogic.isControlPressed)
+            {
                 console.log("Redo requested via Ctrl+Y")
-            Game.askNext()
+                Game.askNext()
+            }
         }
         else if (event.key === Qt.Key_Z) {
             if (logic.mouseLogic.isControlPressed)
+            {
                 console.log("Undo requested via Ctrl+Z")
-            Game.askPreview()
+                Game.askPreview()
+            }
         }
         else if (event.key === 178)
         {
             adminCommandPanel.visible = !adminCommandPanel.visible
         }
     }
-    Keys.onReleased:{
+    Keys.onReleased: function(event) {
+        EntityController.keysHandler.Keys.released(event)
         logic.mouseLogic.isControlPressed = false
     }
 
@@ -315,23 +341,93 @@ Rectangle {
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
+        z: z_GRID
     }
 
     Background {
         id: background
         grid: editorGrid
+        visible: false
+        z: z_BACKGROUND
         anchors.fill: mapInfo.isBackgroundOnGrill ? editorGrid : parent
     }
 
+    Node {
+        id: scene
+
+        DirectionalLight {
+            x: 0
+            y: 264.806
+            z: 1111.39001
+            ambientColor: Qt.rgba(0.5, 0.5, 0.5, 1.0)
+            brightness: 1.0
+            eulerRotation.x: -25
+        }
+        Node{
+            id: entity
+            x: 0
+            y: 0
+            z: 0
+
+            Loader3D {
+                id: modelLoader
+                property string modelName: "Princess" // Nom du modèle par défaut
+                
+                // Construction du chemin vers AppData/models/Nom/Nom.qml
+                source: "file:///" + AssetManager.getAppDataPath() + "/models/" + modelName + "/" + modelName + ".qml"
+                
+                onStatusChanged: {
+                    if (status === Loader3D.Error) {
+                        console.error("Erreur chargement modèle 3D:", sourceComponent.errorString())
+                    } else if (status === Loader3D.Ready) {
+                        console.log("Modèle 3D chargé:", source)
+                    }
+                }
+            }
+        }
+
+        // Stationary orthographic camera viewing from the top
+        OrthographicCamera {
+            id: cameraOrthographic
+            x: 0
+            y: 1000
+            clipNear: -10000
+            clipFar: 1000055
+            eulerRotation.z: 0
+            eulerRotation.y: 0
+            pivot.x: 0
+            z: 600
+            eulerRotation.x: -55
+            horizontalMagnification: editorGrid.scaleLevel
+            verticalMagnification: editorGrid.scaleLevel
+        }
+    }
+
+    View3D {
+        id: view3D
+        anchors.fill: root
+        z: z_3D
+        camera: cameraOrthographic
+        importScene: scene
+
+        environment: SceneEnvironment {
+            backgroundMode: SceneEnvironment.Transparent
+        }
+
+    }
     GlobalMa {
         id: mainMa
         mouseLogic: logic.mouseLogic
         anchors.bottom: panelInfoMap.x < parent.width ? parent.bottom : selectionPanel.top
+        z: z_GLOBAL_MA
     }
     // Zone de travail de l'éditeur (par-dessus la grille)
     Item {
         id: workArea
+        z: z_WORKAREA
         anchors.fill: editorGrid
+
+
         Item {
             id: groupeSelection
             property int gridXPosition:  0
@@ -339,7 +435,7 @@ Rectangle {
         }
 
         Rectangle{
-            id: entity
+            id: entityRect
             color: "purple"
             width: 50
             height: 50
@@ -549,6 +645,10 @@ Rectangle {
         }
     }
 
+    Item {
+        id: __materialLibrary__
+    }
+
     function regainFocus() {
         forceActiveFocus()
     }
@@ -625,3 +725,10 @@ Rectangle {
 
 }
 
+
+/*##^##
+Designer {
+    D{i:0}D{i:12;invisible:true}D{i:23;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}D{i:44;invisible:true}
+D{i:45;invisible:true}
+}
+##^##*/

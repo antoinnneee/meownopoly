@@ -1,0 +1,3 @@
+module qml.utils
+singleton EntityController 1.0 EntityController.qml
+

@@ -9,7 +9,9 @@ QtObject {
 
     function scrollGrid(wheel, deltaSize) {
         if (wheel.modifiers & Qt.ControlModifier) {
-            // Sauvegarder les valeurs actuelles
+            // Sauvegarder les valeurs actuelles pour la caméra
+            logic.mouseLogic.lastGridPos = Qt.point(editorGrid.x, editorGrid.y)
+            
             var oldMmSize = logic.mmSize;
             var oldWidth = logic.tileLogic.currentElementWidth;
             var oldHeight = logic.tileLogic.currentElementHeight;
@@ -17,16 +19,31 @@ QtObject {
             // Sauvegarder le ratio largeur/hauteur
             var aspectRatio = oldWidth / oldHeight;
             
-            // Calculer la position de grille avant le zoom
-            var realPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
-            var gridPosition = editorGrid.getGridRealPosition(realPos.x, realPos.y)
-            
             // Mettre à jour mmSize
             var newMmSize = oldMmSize + deltaSize;
             
-            // Ajuster les dimensions inversement proportionnelles pour garder le ratio visuel
             if (newMmSize > 0) {
+                // 0. Capturer l'état 3D AVANT le zoom
+                logic.mouseLogic.prepareZoom(wheel.x, wheel.y)
+                
+                // Calcul du ratio de zoom
+                var ratio = newMmSize / oldMmSize;
+
+                // Position de la souris (centre du zoom)
+                var mouseX = wheel.x
+                var mouseY = wheel.y
+
+                // Calculer la nouvelle position de la grille pour garder le point sous la souris fixe
+                // Formule: NewGridPos = MousePos - (MousePos - OldGridPos) * Ratio
+                var newGridX = mouseX - (mouseX - editorGrid.x) * ratio
+                var newGridY = mouseY - (mouseY - editorGrid.y) * ratio
+
+                // Appliquer les changements (ceci met à jour mmSize, donc scaleLevel, donc magnification caméra)
                 editorGrid.mmSize = newMmSize
+                editorGrid.x = newGridX
+                editorGrid.y = newGridY
+
+                // Ajuster les dimensions inversement proportionnelles pour garder le ratio visuel
                 // On calcule d'abord la largeur, puis on dérive la hauteur pour maintenir le ratio
                 var newWidth = oldWidth * oldMmSize / newMmSize;
                 var newHeight = newWidth / aspectRatio;
@@ -35,29 +52,9 @@ QtObject {
                 logic.tileLogic.currentElementWidth = Math.max(1, Math.round(newWidth));
                 logic.tileLogic.currentElementHeight = Math.max(1, Math.round(newHeight));
                 
-                // Calculer la nouvelle position de grille après le zoom
-
-                var rootEditor = logic.parent
-
-                var centerViewX = rootEditor.width / 2
-                var centerViewY = (rootEditor.availableHeight) / 2
-
-                var centerViewGlobalX = centerViewX + rootEditor.appPositionX
-                var centerViewGlobalY = centerViewY + rootEditor.appPositionY
-
-//                var newRealPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
-                var newRealPos = parent.mapToItem(editorGrid, centerViewX, centerViewY)
-                var newGridPosition = editorGrid.getGridRealPosition(newRealPos.x, newRealPos.y)
-                CursorManager.setPos(centerViewGlobalX, centerViewGlobalY)
-                
-                // Calculer le décalage nécessaire pour maintenir la même position de grille
-                var deltaX = (gridPosition.x - newGridPosition.x) * editorGrid.gridSize
-                var deltaY = (gridPosition.y - newGridPosition.y) * editorGrid.gridSize
-                
-                // Appliquer le décalage à la grille
-                editorGrid.x -= deltaX
-                editorGrid.y -= deltaY
-
+                // Appliquer la correction 3D et synchroniser la position "lastGridPos"
+                // pour éviter que updateCameraPosition ne soit appelé inutilement par la suite
+                logic.mouseLogic.applyZoom(wheel.x, wheel.y)
             }
         }
     }

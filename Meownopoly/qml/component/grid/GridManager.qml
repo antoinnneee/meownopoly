@@ -12,6 +12,8 @@ Item {
 
     property int croisillons: 600
     property int mmSize: 12
+    property real defaultMmSize: 12.0
+    property real scaleLevel: mmSize / defaultMmSize
     property int gridSize: Screen.pixelDensity * mmSize
     property int boardSize:  gridSize * croisillons // 600 croisillons
     // Propriétés configurables
@@ -76,6 +78,14 @@ Item {
         return Qt.point(
             x / gridSize,
             y / gridSize
+        )
+    }
+
+    // Fonction pour obtenir la position de grille la plus proche
+    function getGridPixelPosition(x, y) {
+        return Qt.point(
+            x * gridSize,
+            y * gridSize
         )
     }
 

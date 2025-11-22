@@ -112,6 +112,7 @@ Rectangle {
             console.log("LauncherLogic completed")
             logic.testConnection()
             logic.checkForUpdates()
+            logic.fetchModelsList()
         }
     }
     
@@ -184,6 +185,25 @@ Rectangle {
                     logic.createResourcePackage(folderPath, version)
                 }
                 onUploadPackageRequested: logic.uploadPackage()
+                
+                onCreateModelPackageRequested: function(folderPath, name, version) {
+                    logic.createModelPackage(folderPath, name, version)
+                }
+                onUploadModelRequested: function(name, version) {
+                    logic.uploadModelPackage(name, version)
+                }
+            }
+
+            // Section Modèles (Nouveau)
+            ModelsSection {
+                id: modelsSection
+                modelsList: logic.modelsList
+                isDownloading: logic.isDownloading
+                
+                onRefreshRequested: logic.fetchModelsList()
+                onDownloadRequested: function(name, version) {
+                    logic.downloadModel(name, version)
+                }
             }
             
             // Section 5: Logs

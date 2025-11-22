@@ -739,6 +739,11 @@ bool AssetManager::isTransparent(float px, float py, QString path)
     return (color.alpha() == 0);
 }
 
+QString AssetManager::getAppDataPath() const
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+}
+
 QStringList AssetManager::getAvailableTypes(const QString &category) const
 {
     QStringList types;

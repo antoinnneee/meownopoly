@@ -86,7 +86,7 @@ ApplicationWindow {
     }
     Component{
         id: test_view
-        TEST_PARTICLE_BUTTON_SIMPLE{
+        TEST_3D{
             width:root.width
             height:root.height
             visible: false
