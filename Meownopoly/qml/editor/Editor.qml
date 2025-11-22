@@ -27,7 +27,7 @@ import UndoRedoManager
 import AssetManager
 import "../ui_item"
 import "../test"
-
+import "../utils"
 
 import QtQuick3D
 import QtQuick3D.Helpers
@@ -75,6 +75,9 @@ Rectangle {
     Component.onCompleted: {
         stEnableAutoSave.sync()
         initializeEditor()
+        
+        // Initialize Entity Controller
+        EntityController.setTarget(entity, view3D)
     }
 
     onUpdateSettings: {
@@ -84,6 +87,13 @@ Rectangle {
     }
 
     Keys.onPressed: function(event) {
+        // Check if we should pass input to EntityController
+        // For now, let's map arrow keys and WASD to it if no other modifier is pressed
+        // or if we are in a specific mode.
+        
+        // Pass to EntityController
+        EntityController.keysHandler.Keys.pressed(event)
+        
         console.log("event", event.key)
         if (event.key === Qt.Key_Delete) {
             var selectItem = logic.mouseLogic.selectedElements
@@ -131,20 +141,25 @@ Rectangle {
         }
         else if (event.key === Qt.Key_Y) {
             if (logic.mouseLogic.isControlPressed)
+            {
                 console.log("Redo requested via Ctrl+Y")
-            Game.askNext()
+                Game.askNext()
+            }
         }
         else if (event.key === Qt.Key_Z) {
             if (logic.mouseLogic.isControlPressed)
+            {
                 console.log("Undo requested via Ctrl+Z")
-            Game.askPreview()
+                Game.askPreview()
+            }
         }
         else if (event.key === 178)
         {
             adminCommandPanel.visible = !adminCommandPanel.visible
         }
     }
-    Keys.onReleased:{
+    Keys.onReleased: function(event) {
+        EntityController.keysHandler.Keys.released(event)
         logic.mouseLogic.isControlPressed = false
     }
 

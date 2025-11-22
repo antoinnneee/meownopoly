@@ -184,5 +184,7 @@
         <file>qml/test/PrincessV2.qml</file>
         <file>qml/test/maps/textureData6.fbm</file>
         <file>qml/test/meshes/textured_mesh_obj_001_mesh4.mesh</file>
+        <file>qml/utils/EntityController.qml</file>
+        <file>qml/utils/qmldir</file>
     </qresource>
 </RCC>
