@@ -18,7 +18,11 @@ import EditorEnum
 
 Rectangle {
     id: root
-    
+
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.margins: 10
     color: "#1e1e1e"
     border.color: "#3a3a3a"
     border.width: 1

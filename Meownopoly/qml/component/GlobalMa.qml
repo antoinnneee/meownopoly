@@ -7,10 +7,6 @@ MouseArea{
 
     required property var mouseLogic
 
-    anchors.top: parent.top
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.bottom: parent.bottom
 
     drag.target: null
     drag.axis: Drag.XAndYAxis

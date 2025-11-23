@@ -1,4 +1,4 @@
-import QtQuick 2.15
+﻿import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
@@ -22,9 +22,9 @@ import EditorEnum
 import Logger
 import DisplayParameter
 import DecorationParameter
-import ItemSnapableFactory
 import UndoRedoManager
 import AssetManager
+import ItemSnapableFactory
 import "../ui_item"
 import "../test"
 import "../utils"
@@ -41,20 +41,8 @@ Base_Board {
     property int appPositionX: 0
     property int appPositionY: 0
     property int availableHeight: height - selectionPanel.height
+    property alias groupeSelection: workArea.groupeSelection
 
-
-    // property real z_BACKGROUND: 3000
-    // property real z_GRID: 4000
-    property real z_3D: 4500
-    property real z_WORKAREA: 5000
-    property real z_CONFIG_PANEL: 10000
-    property real z_HUD: 9000
-    property real z_SELECTION_RECT: 8000
-    property real z_CURSOR_TRACKER: 7000
-    property real z_LINK_TRACKER: 6000
-    property real z_GLOBAL_MA: 4750
-
-    mapInfo.mapName: autosaveMapName
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
@@ -69,13 +57,24 @@ Base_Board {
     signal updateSettings()
     property alias entity:gameScene.entity
 
+    property real z_WORKAREA: 5000
+    property real z_CONFIG_PANEL: 10000
+    property real z_HUD: 9000
+    property real z_SELECTION_RECT: 8000
+    property real z_CURSOR_TRACKER: 7000
+    property real z_LINK_TRACKER: 6000
+
+    // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
         stEnableAutoSave.sync()
         initializeEditor()
-        
+
         // Initialize Entity Controller
         EntityController.setTarget(entity, view3D, gameGrid, logic)
+        EditorController.init(logic, selectionPanel)
     }
+
+    mapInfo.mapName: autosaveMapName
 
     onUpdateSettings: {
         console.log("Update setting - stEnableAutoSave.value('saveEvent', '0') " + stEnableAutoSave.value('saveEvent', "1"))
@@ -84,79 +83,13 @@ Base_Board {
     }
 
     Keys.onPressed: function(event) {
-        // Check if we should pass input to EntityController
-        // For now, let's map arrow keys and WASD to it if no other modifier is pressed
-        // or if we are in a specific mode.
-        
         // Pass to EntityController
         EntityController.keysHandler.Keys.pressed(event)
-        
-        console.log("event", event.key)
-        if (event.key === Qt.Key_Delete) {
-            var selectItem = logic.mouseLogic.selectedElements
-            if (selectItem.length === 0) {
-                event.accepted = true
-                return
-            }
-
-            // Attendre que toutes les animations de suppression soient terminées avant de sauvegarder
-            var pendingDeletions = selectItem.length
-
-            // Handler appelé quand chaque animation de suppression est terminée
-            var deletionHandler = function() {
-                pendingDeletions--
-                if (pendingDeletions === 0) {
-                    // Toutes les animations sont terminées, sauvegarder maintenant
-                    logic.saveMap(MapTypes.UNDOREDO)
-                }
-            }
-
-            // Connecter au signal elementDeleted de chaque élément et déclencher la suppression
-            for (var i = 0; i < selectItem.length; i++) {
-                var element = selectItem[i]
-                element.elementDeleted.connect(deletionHandler)
-                element.deleteRequest(false)
-            }
-            event.accepted = true
-        }
-        else if (event.key === Qt.Key_Escape) {
-            if (root.isAssetSelected) {
-                selectionPanel.clearAssetSelection()
-                event.accepted = true
-            } else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
-                logic.mouseLogic.unSelectSelectedElements()
-                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
-                event.accepted = true
-            } else {
-                // Afficher le menu d'échappement
-                escMenu.show()
-                event.accepted = true
-            }
-        }
-        else if (event.key === Qt.Key_Control) {
-            logic.mouseLogic.isControlPressed = true
-        }
-        else if (event.key === Qt.Key_Y) {
-            if (logic.mouseLogic.isControlPressed)
-            {
-                console.log("Redo requested via Ctrl+Y")
-                Game.askNext()
-            }
-        }
-        else if (event.key === Qt.Key_Z) {
-            if (logic.mouseLogic.isControlPressed)
-            {
-                console.log("Undo requested via Ctrl+Z")
-                Game.askPreview()
-            }
-        }
-        else if (event.key === 178)
-        {
-            adminCommandPanel.visible = !adminCommandPanel.visible
-        }
+        EditorController.keysHandler.Keys.pressed(event)
     }
     Keys.onReleased: function(event) {
         EntityController.keysHandler.Keys.released(event)
+        EditorController.keysHandler.Keys.released(event)
         logic.mouseLogic.isControlPressed = false
     }
 
@@ -209,10 +142,6 @@ Base_Board {
 
     AdminCommandPanel{
         id: adminCommandPanel
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 10
         visible: false
         enabled: visible
 
@@ -227,33 +156,6 @@ Base_Board {
         property int saveEvent: value("saveEvent", "1")
     }
 
-    Timer {
-        id: tmpSaver
-        repeat: true
-        interval : stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60 : 500
-        running: stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
-        property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
-        onTriggered: {
-            console.log("Auto-saving map:", mapInfo.mapName)
-            if (isMapCustom)
-                logic.saveMap(MapTypes.CUSTOM)
-            else
-                logic.saveMap(MapTypes.AUTOSAVE)
-
-            busyTimer.start()
-        }
-    }
-
-    Timer {
-        id: busyTimer
-        interval: 1500
-        repeat: false
-        running: false
-        triggeredOnStart: true
-        onTriggered: {
-            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running = savingIndicator.running ? false : true) : null
-        }
-    }
 
     BusyIndicator {
         id: savingIndicator
@@ -322,7 +224,7 @@ Base_Board {
         logic: root.logic
     }
 
-    property EditorLogic logic : EditorLogic {
+    logic : EditorLogic {
         id: logic
         parent: root
         workArea: workArea
@@ -334,87 +236,45 @@ Base_Board {
     }
 
 
+    mainMa.anchors.bottom:  panelInfoMap.x < parent.width ? parent.bottom : selectionPanel.top
 
-    GameScene {
-        id: gameScene
-        anchors.fill: root
-        z: z_3D
-        
-        // Bind camera magnification to grid scale level
-        cameraMagnification: gameGrid.scaleLevel
-    }
-    
-    GlobalMa {
-        id: mainMa
-        // drag.target: gameGrid
-        mouseLogic: logic.mouseLogic
-        anchors.bottom: panelInfoMap.x < parent.width ? parent.bottom : selectionPanel.top
-        z: z_GLOBAL_MA
-    }
+
+
     // Zone de travail de l'éditeur (par-dessus la grille)
-    Item {
+    Base_WorkArea {
         id: workArea
         z: z_WORKAREA
         anchors.fill: gameGrid
+        GameScene {
+            id: gameScene
+            x: -gameGrid.x
+            y: -gameGrid.y
+            width: root.width
+            height: root.height
+            z: 5.5 // Z-index relatif à workArea (au milieu des plans 2D)
 
-        Item {
-            id: groupeSelection
-        }
-
-        // MouseArea to track cursor position for asset preview
-        MouseArea {
-            id: cursorTracker
-            anchors.fill: parent
-            hoverEnabled: true
-            enabled: logic.editorMouseMode === EditorEnum.EM_POSE
-            acceptedButtons: Qt.NoButton // Don't interfere with clicks
-            propagateComposedEvents: true
-            preventStealing: true
-            z: 50
-
-            onPositionChanged: function(mouse) {
-                assetPreview.mouseX = mouse.x
-                assetPreview.mouseY = mouse.y
-            }
-        }
-
-
-        // MouseArea to track cursor position for link preview
-        MouseArea {
-            id: linkTracker
-            z: z_LINK_TRACKER
-            anchors.fill: parent
-            hoverEnabled: true
-            enabled: logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK
-            acceptedButtons: Qt.NoButton // Don't interfere with clicks
-            propagateComposedEvents: true
-            preventStealing: true
-
-
-            onPositionChanged: function(mouse) {
-                if (logic.mouseLogic && logic.mouseLogic.updateMousePosition) {
-                    logic.mouseLogic.updateMousePosition(mouse.x, mouse.y)
-                }
-            }
-        }
-
-        // Asset preview cursor
-        AssetPreviewCursor {
-            id: assetPreview
-            parent: workArea
-            assetCategory: selectionPanel.currentSelectedAssetCategory
-            assetType: selectionPanel.currentSelectedAssetType
-            assetId: selectionPanel.currentSelectedAssetId
-            caseType: selectionPanel.caseTypeSelected
-            isCasePreview: selectionPanel.caseTypeSelected !== -1
-            unitSizeWidth: logic.tileLogic.currentElementWidth
-            unitSizeHeight: logic.tileLogic.currentElementHeight
-            gridManager: gameGrid
-            editorSidePanel: sidePanel
+            // Bind camera magnification to grid scale level
+            cameraMagnification: gameGrid.scaleLevel
         }
     }
 
+    // cursor and link trakers
+    Trackers{}
 
+    // Asset preview cursor
+    AssetPreviewCursor {
+        id: assetPreview
+        parent: workArea
+        assetCategory: selectionPanel.currentSelectedAssetCategory
+        assetType: selectionPanel.currentSelectedAssetType
+        assetId: selectionPanel.currentSelectedAssetId
+        caseType: selectionPanel.caseTypeSelected
+        isCasePreview: selectionPanel.caseTypeSelected !== -1
+        unitSizeWidth: logic.tileLogic.currentElementWidth
+        unitSizeHeight: logic.tileLogic.currentElementHeight
+        gridManager: gameGrid
+        editorSidePanel: sidePanel
+    }
 
     // Rectangle de sélection
     SelectionRect {
@@ -431,7 +291,6 @@ Base_Board {
         anchors.right: sidePanel.left
 
         z: z_HUD
-
 
         // Connexion à la logique
         logic: logic
@@ -460,15 +319,6 @@ Base_Board {
             }
         }
 
-        //Connect the selected decoration element for effects
-        Timer {
-            id: saveMapTimer
-            interval: 100
-            onTriggered: {
-                logic.saveMap(MapTypes.UNDOREDO)
-            }
-        }
-
         onAssetSelected: function(category, type, id) {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
         }
@@ -489,16 +339,24 @@ Base_Board {
         anchors.bottom: parent.bottom
         x: parent.width
         logic: logic
+        //Connect the selected decoration element for effects
+        Timer {
+            id: saveMapDelayer
+            interval: 200
+            onTriggered: {
+                logic.saveMap(MapTypes.UNDOREDO)
+            }
+        }
 
         onEffectChanged: {
             var effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
-            if (saveMapTimer.running)
-                saveMapTimer.restart()
+            if (saveMapDelayer.running)
+                saveMapDelayer.restart()
             else
-                saveMapTimer.start()
+                saveMapDelayer.start()
         }
 
         onConnectionRequested:  function (kind) {
@@ -546,8 +404,32 @@ Base_Board {
         }
     }
 
-    Item {
-        id: __materialLibrary__
+    Timer {
+        id: tmpSaver
+        repeat: true
+        interval : stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60 : 500
+        running: stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
+        property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
+        onTriggered: {
+            console.log("Auto-saving map:", mapInfo.mapName)
+            if (isMapCustom)
+                logic.saveMap(MapTypes.CUSTOM)
+            else
+                logic.saveMap(MapTypes.AUTOSAVE)
+
+            busyTimer.start()
+        }
+    }
+
+    Timer {
+        id: busyTimer
+        interval: 1500
+        repeat: false
+        running: false
+        triggeredOnStart: true
+        onTriggered: {
+            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running = savingIndicator.running ? false : true) : null
+        }
     }
 
     function regainFocus() {
@@ -584,39 +466,6 @@ Base_Board {
         }
     }
 
-    // Function to place the selected asset
-    function placeSelectedAsset(gridX, gridY) {
-        var snapableParameters
-        gridX = gridX - Math.trunc(logic.tileLogic.currentElementWidth/2)
-        gridY = gridY - Math.trunc(logic.tileLogic.currentElementHeight/2)
-        if (!root.isAssetSelected) {    // place case
-            if (selectionPanel.caseTypeSelected == -1){ //no type selected
-                return
-            }
-            snapableParameters = ItemSnapableFactory.createItemSnapable(selectionPanel.caseTypeSelected)
-        }
-        else    // place decoration
-        {
-            snapableParameters = ItemSnapableFactory.createItemSnapable()
-        }
-        snapableParameters.displayParameter.gridRelativePositionX = gridX
-        snapableParameters.displayParameter.gridRelativePositionY = gridY
-        snapableParameters.displayParameter.unitSizeWidth = logic.tileLogic.currentElementWidth
-        snapableParameters.displayParameter.unitSizeHeight = logic.tileLogic.currentElementHeight
-        snapableParameters.displayParameter.zLayer = 5
-        snapableParameters.decorationParameter.decorationCategory = selectionPanel.currentSelectedAssetCategory
-        snapableParameters.decorationParameter.decorationType = selectionPanel.currentSelectedAssetType
-        snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
-
-        var newTile = logic.tileLogic.createItemSnapable(snapableParameters)
-
-        var visualEffectsPanel = editorSidePanel.visualEffectsPanel
-        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
-
-        var currentEffects = visualEffectsPanel.getCurrentEffects()
-        newTile.applyVisualEffects(currentEffects)
-        mainMa.elementClicked(newTile)
-    }
 
     Component.onDestruction: {
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {

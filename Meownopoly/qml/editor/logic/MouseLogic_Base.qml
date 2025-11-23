@@ -31,7 +31,7 @@ QtObject {
         if (grid) {
             lastGridPos = Qt.point(grid.x, grid.y)
         }
-        view3D = logic.parent.view3D
+        // view3D = logic.parent.view3D
     }
 
     // Propriété pour stocker le point 3D sous la souris avant le zoom

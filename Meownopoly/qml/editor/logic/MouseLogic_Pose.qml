@@ -31,7 +31,7 @@ MouseLogic_Base {
         var realPos = mainMa.mapToItem(grid, mouse.x, mouse.y)
         var gridPos = grid.getGridPosition(realPos.x, realPos.y)
         console.log("Placing selected asset at:", gridPos)
-        placeSelectedAsset(gridPos.x, gridPos.y)
+        logic.tileLogic.placeSelectedAsset(gridPos.x, gridPos.y)
         mouse.accepted = true
         // Sauvegarder APRÈS la création de l'élément
         logic.saveMap(MapTypes.UNDOREDO)

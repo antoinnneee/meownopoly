@@ -5,12 +5,17 @@ import "./grid"
 Rectangle {
     id: board
 
+    property real z_WORKAREA: 5000
 
     property real z_BACKGROUND: 3000
     property real z_GRID: 4000
+    property real z_GLOBAL_MA: 4750
 
 
     property Base_logic logic
+    onLogicChanged: {
+        console.log("logic changed")
+    }
 
     property MapInfo mapInfo: MapInfo{
         function setMapInfo(info){
@@ -47,4 +52,17 @@ Rectangle {
         anchors.fill: mapInfo.isBackgroundOnGrill ? gameGrid : parent
         z: z_BACKGROUND
     }
+
+    property alias mainMa: mainMa
+    GlobalMa {
+        id: mainMa
+        drag.target: gameGrid
+        mouseLogic: logic.mouseLogic
+        anchors.fill: parent
+        z: z_GLOBAL_MA
+    }
+
+
+
+
 }

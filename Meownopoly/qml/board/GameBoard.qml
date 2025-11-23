@@ -47,11 +47,6 @@ Base_Board {
         Item {
             id: groupeSelection
         }
-
-    }
-    GlobalMa{
-        id: mainMa
-        mouseLogic: logic.mouseLogic
     }
 
     Connections{

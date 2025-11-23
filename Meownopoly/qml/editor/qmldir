@@ -1,0 +1,2 @@
+module qml.editor
+singleton EditorController 1.0 EditorController.qml

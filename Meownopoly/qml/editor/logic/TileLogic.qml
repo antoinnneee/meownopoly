@@ -7,6 +7,7 @@ import "../../component/grid"
 import "../../component/preview"
 import ".."
 import MapTypes
+import ItemSnapableFactory
 
 QtObject {
     required property var snapableTilesList
@@ -22,6 +23,39 @@ QtObject {
 
     property bool displayLinkEnable :false
     
+    function placeSelectedAsset(gridX, gridY) {
+        var snapableParameters
+        gridX = gridX - Math.trunc(currentElementWidth/2)
+        gridY = gridY - Math.trunc(currentElementHeight/2)
+        if (!root.isAssetSelected) {    // place case
+            if (selectionPanel.caseTypeSelected == -1){ //no type selected
+                return
+            }
+            snapableParameters = ItemSnapableFactory.createItemSnapable(selectionPanel.caseTypeSelected)
+        }
+        else    // place decoration
+        {
+            snapableParameters = ItemSnapableFactory.createItemSnapable()
+        }
+        snapableParameters.displayParameter.gridRelativePositionX = gridX
+        snapableParameters.displayParameter.gridRelativePositionY = gridY
+        snapableParameters.displayParameter.unitSizeWidth = currentElementWidth
+        snapableParameters.displayParameter.unitSizeHeight = currentElementHeight
+        snapableParameters.displayParameter.zLayer = 5
+        snapableParameters.decorationParameter.decorationCategory = selectionPanel.currentSelectedAssetCategory
+        snapableParameters.decorationParameter.decorationType = selectionPanel.currentSelectedAssetType
+        snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
+
+        var newTile = createItemSnapable(snapableParameters)
+
+        var visualEffectsPanel = editorSidePanel.visualEffectsPanel
+        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
+
+        var currentEffects = visualEffectsPanel.getCurrentEffects()
+        newTile.applyVisualEffects(currentEffects)
+        mainMa.elementClicked(newTile)
+    }
+
     /**
      * @brief Ajuste les dimensions de l'élément pour respecter le ratio natif de l'image
      * @param ratioWidth Largeur du ratio natif (ex: 4 pour 4:3)
