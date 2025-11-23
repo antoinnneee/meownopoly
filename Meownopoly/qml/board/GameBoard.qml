@@ -20,6 +20,7 @@ import "logic"
 import "../component"
 import "../component/snapable"
 import "../component/grid"
+import "../utils"
 
 Base_Board {
     id: gameBoard
@@ -30,22 +31,42 @@ Base_Board {
     Component.onCompleted: {
         Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         gameGrid.mmSize = 8
+        EntityController.setTarget(entity, view3D, gameGrid, logic)
+    }
+
+    Keys.onPressed: function(event) {
+        // Pass to EntityController
+        EntityController.keysHandler.Keys.pressed(event)
+    }
+    Keys.onReleased: function(event) {
+        EntityController.keysHandler.Keys.released(event)
+        logic.mouseLogic.isControlPressed = false
     }
 
     property alias snapableTilesList: logic.snapableTilesList
 
-    property GameLogic logic : GameLogic {
+    logic : GameLogic {
         parent: gameBoard
         id: logic
         grid: gameGrid
     }
     wheelHandler: Game_WheelHandler {}
     // Grille de l'éditeur
-    Item{
+    // Zone de travail de l'éditeur (par-dessus la grille)
+    Base_WorkArea {
         id: workArea
+        z: z_WORKAREA
         anchors.fill: gameGrid
-        Item {
-            id: groupeSelection
+        GameScene {
+            id: gameScene
+            x: -gameGrid.x
+            y: -gameGrid.y
+            width: gameBoard.width
+            height: gameBoard.height
+            z: 5.5 // Z-index relatif à workArea (au milieu des plans 2D)
+
+            // Bind camera magnification to grid scale level
+            cameraMagnification: gameGrid.scaleLevel
         }
     }
 

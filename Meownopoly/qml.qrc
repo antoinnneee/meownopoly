@@ -184,7 +184,6 @@
         <file>qml/utils/EntityController.qml</file>
         <file>qml/utils/qmldir</file>
         <file>qml/launcher/ModelsSection.qml</file>
-        <file>qml/editor/GameScene.qml</file>
         <file>qml/component/Base_Board.qml</file>
         <file>qml/component/Base_WheelHandler.qml</file>
         <file>qml/component/Base_logic.qml</file>
@@ -192,5 +191,6 @@
         <file>qml/editor/Trackers.qml</file>
         <file>qml/editor/EditorController.qml</file>
         <file>qml/editor/qmldir</file>
+        <file>qml/component/GameScene.qml</file>
     </qresource>
 </RCC>
