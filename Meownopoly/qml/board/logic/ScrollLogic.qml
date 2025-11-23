@@ -3,13 +3,13 @@ import "../../component"
 import "../../component/grid"
 
 QtObject {
-    property GridManager editorGrid
+    property GridManager gameGrid
     property var logic
 
     function scrollGrid(wheel, deltaSize) {
         if (wheel.modifiers & Qt.ControlModifier) {
             // Sauvegarder les valeurs actuelles
-            var oldMmSize = editorGrid.mmSize;
+            var oldMmSize = gameGrid.mmSize;
             var oldWidth = logic.tileLogic.currentElementWidth;
             var oldHeight = logic.tileLogic.currentElementHeight;
             
@@ -17,13 +17,13 @@ QtObject {
             var aspectRatio = oldWidth / oldHeight;
             
             // Calculer la position de grille avant le zoom
-            var realPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
-            var gridPosition = editorGrid.getGridPosition(realPos.x, realPos.y)
+            var realPos = parent.mapToItem(gameGrid, wheel.x, wheel.y)
+            var gridPosition = gameGrid.getGridPosition(realPos.x, realPos.y)
             console.log("Position avant zoom:", gridPosition)
             
             // Mettre à jour mmSize
             var newMmSize = oldMmSize + deltaSize;
-            editorGrid.mmSize = newMmSize
+            gameGrid.mmSize = newMmSize
             // logic.updateSize(newMmSize);
             
             // Ajuster les dimensions inversement proportionnelles pour garder le ratio visuel
@@ -37,17 +37,17 @@ QtObject {
                 logic.tileLogic.currentElementHeight = Math.max(1, Math.round(newHeight));
                 
                 // Calculer la nouvelle position de grille après le zoom
-                var newRealPos = parent.mapToItem(editorGrid, wheel.x, wheel.y)
-                var newGridPosition = editorGrid.getGridPosition(newRealPos.x, newRealPos.y)
+                var newRealPos = parent.mapToItem(gameGrid, wheel.x, wheel.y)
+                var newGridPosition = gameGrid.getGridPosition(newRealPos.x, newRealPos.y)
                 console.log("Position après zoom:", newGridPosition)
                 
                 // Calculer le décalage nécessaire pour maintenir la même position de grille
-                var deltaX = (gridPosition.x - newGridPosition.x) * editorGrid.gridSize
-                var deltaY = (gridPosition.y - newGridPosition.y) * editorGrid.gridSize
+                var deltaX = (gridPosition.x - newGridPosition.x) * gameGrid.gridSize
+                var deltaY = (gridPosition.y - newGridPosition.y) * gameGrid.gridSize
                 
                 // Appliquer le décalage à la grille
-                editorGrid.x -= deltaX
-                editorGrid.y -= deltaY
+                gameGrid.x -= deltaX
+                gameGrid.y -= deltaY
                 
                 console.log("Décalage appliqué:", deltaX, deltaY)
             }

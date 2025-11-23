@@ -98,7 +98,7 @@ MouseLogic_Selection {
                     "sourceElement": linkSourceCase,
                     "mouseX": currentMouseX,
                     "mouseY": currentMouseY,
-                    "gridManager": editorGrid
+                    "gridManager": gameGrid
                 })
             }
         }

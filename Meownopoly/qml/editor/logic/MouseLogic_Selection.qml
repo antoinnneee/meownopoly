@@ -67,7 +67,7 @@ MouseLogic_Base {
 
     function pressedRight(mouse, drag)
     {
-        drag.target = editorGrid
+        drag.target = grid
         mouse.accepted = true
     }
 

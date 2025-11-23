@@ -12,6 +12,10 @@ Item {
 
     property int croisillons: 600
     property int mmSize: 12
+    onMmSizeChanged: {
+        console.log("mmSize changed :", mmSize)
+    }
+
     property real defaultMmSize: 12.0
     property real scaleLevel: mmSize / defaultMmSize
     property int gridSize: Screen.pixelDensity * mmSize
@@ -19,20 +23,6 @@ Item {
     // Propriétés configurables
     width: boardSize
     height: boardSize
-
-
-
-    onGridSizeChanged: {
-       var newVerticalLinesCount = (gridManager.showGrid) ? croisillons + 1
-                                                            : 0
-       var newHorizontalLinesCount = (gridManager.showGrid) ? croisillons + 1
-                                                            : 0
-        if (newVerticalLinesCount > gridContainer.verticalLinesCount
-                || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
-            gridContainer.verticalLinesCount = newVerticalLinesCount
-            gridContainer.horizontalLinesCount = newHorizontalLinesCount
-        }
-    }
 
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5

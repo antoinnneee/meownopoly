@@ -8,7 +8,7 @@ import "../component/grid"
 
 Item{
     id: editorDynamicComponent
-    required property GridManager editorGrid
+    required property GridManager gameGrid
     required property var logic
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
@@ -25,7 +25,7 @@ Item{
     Component {
         id: snapableCaseTileComponent
         SnapableCaseTile {
-            gridManager: editorGrid
+            gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
 
             // Gestion de la suppression
@@ -42,7 +42,7 @@ Item{
     Component {
         id: snapableDecorationComponent
         SnapableDecoration {
-            gridManager: editorGrid
+            gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
 
             // Gestion de la suppression
@@ -64,6 +64,8 @@ Item{
             grid: _grid
             Component.onCompleted: {
                 logic.mouseLogic = mouseLogic_selection
+                console.log("logic : ", logic)
+                console.log("logic parent : ", logic.parent)
             }
         }
     }
@@ -97,6 +99,7 @@ Item{
         MouseLogic_Selection_link {
             id: mouseLogic_selectionLink
             logic: _logic
+            grid: _grid
             Component.onCompleted: {
                 logic.mouseLogic = mouseLogic_selectionLink
             }

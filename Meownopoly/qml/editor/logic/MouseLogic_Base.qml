@@ -31,6 +31,7 @@ QtObject {
         if (grid) {
             lastGridPos = Qt.point(grid.x, grid.y)
         }
+        view3D = logic.parent.view3D
     }
 
     // Propriété pour stocker le point 3D sous la souris avant le zoom
@@ -71,6 +72,7 @@ QtObject {
     function updateCameraPosition(zoomRatio) {
         if (!view3D || !grid) return
         if (zoomRatio === undefined) zoomRatio = 1.0
+
 
         var dx = grid.x - lastGridPos.x
         var dy = grid.y - lastGridPos.y
@@ -236,7 +238,7 @@ QtObject {
     function elementClicked(tile)
     {
         clickElement.push(tile)
-        var realPos = mainMa.mapToItem(editorGrid, tile.x, tile.y)
+        var realPos = mainMa.mapToItem(grid, tile.x, tile.y)
         var pos = Qt.point(realPos.x, realPos.y)
         elementInitialPosition.push(pos)
         console.log("Add element to list")

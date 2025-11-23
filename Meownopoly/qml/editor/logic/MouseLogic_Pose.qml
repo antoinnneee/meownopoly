@@ -11,7 +11,7 @@ MouseLogic_Base {
     function pressedRight(mouse, drag)
     {
         selectionPanel.clearAssetSelection()
-        drag.target = editorGrid
+        drag.target = grid
         mouse.accepted = false  // to cancel right click on other mode
     }
 
@@ -28,8 +28,8 @@ MouseLogic_Base {
     }
     function clickedLeft(mouse, drag)
     {
-        var realPos = mainMa.mapToItem(editorGrid, mouse.x, mouse.y)
-        var gridPos = editorGrid.getGridPosition(realPos.x, realPos.y)
+        var realPos = mainMa.mapToItem(grid, mouse.x, mouse.y)
+        var gridPos = grid.getGridPosition(realPos.x, realPos.y)
         console.log("Placing selected asset at:", gridPos)
         placeSelectedAsset(gridPos.x, gridPos.y)
         mouse.accepted = true

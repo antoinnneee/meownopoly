@@ -12,7 +12,7 @@ QtObject {
             // Sauvegarder les valeurs actuelles pour la caméra
             logic.mouseLogic.lastGridPos = Qt.point(editorGrid.x, editorGrid.y)
             
-            var oldMmSize = logic.mmSize;
+            var oldMmSize = editorGrid.mmSize;
             var oldWidth = logic.tileLogic.currentElementWidth;
             var oldHeight = logic.tileLogic.currentElementHeight;
             

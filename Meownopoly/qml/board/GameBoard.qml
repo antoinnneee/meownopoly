@@ -21,65 +21,31 @@ import "../component"
 import "../component/snapable"
 import "../component/grid"
 
-Rectangle {
+Base_Board {
     id: gameBoard
 
     color: "lightblue"
     border.width: 0
 
     Component.onCompleted: {
-
         Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         gameGrid.mmSize = 8
     }
 
     property alias snapableTilesList: logic.snapableTilesList
-    property MapInfo mapInfo: MapInfo {
-        function setMapInfo(info){
-            this.mapName = info.mapName
-            this.mapDescription = info.mapDescription
-            this.mapCreationDate = info.mapCreationDate
-            this.mapLastModified = info.mapLastModified
-            this.version = info.version
-            this.backgroundPath = info.backgroundPath
-            this.backgroundScaling = info.backgroundScaling
-            this.backgroundTileSize = info.backgroundTileSize
-            this.isBackgroundOnGrill = info.isBackgroundOnGrill
-            this.musicPath = info.musicPath
-        }
-    }
 
-    GameLogic {
+    property GameLogic logic : GameLogic {
+        parent: gameBoard
         id: logic
-        anchors.fill: parent
         grid: gameGrid
     }
-    Game_WheelHandler {}
+    wheelHandler: Game_WheelHandler {}
     // Grille de l'éditeur
-    GridManager {
-        id: gameGrid
-        mmSize: logic.mmSize
-        gridColor: "#80000000"
-        gridOpacity: 0.3
-        showGrid: true
-        snapToGrid: true
-        anchors.fill: parent
-        z: 1
-    }
-
-    Background {
-        id: background
-        grid: gameGrid
-        anchors.fill: mapInfo.isBackgroundOnGrill ? gameGrid : parent
-        z: 0
-    }
     Item{
         id: workArea
         anchors.fill: gameGrid
         Item {
             id: groupeSelection
-            property int gridXPosition:  0
-            property int gridYPosition:  0
         }
 
     }

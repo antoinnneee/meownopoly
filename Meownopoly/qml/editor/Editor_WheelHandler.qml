@@ -17,6 +17,7 @@ import MapInfo
 import EditorEnum
 
 WheelHandler {
+                 property Base_logic logic
     onWheel: (wheel)=> {
                  if (wheel.angleDelta.y > 0)
                  {
