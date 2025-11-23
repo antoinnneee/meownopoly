@@ -12,7 +12,7 @@ CaseContent_Base {
     required property CaseCatDevice caseData
     tileColor: "lightblue"
     // Icons for different tile types
-    tileIcons: AssetManager.getAssetPath("ui", "case", "laser")
+    tileIcons: AssetManager.getAssetById("ui", "case", "laser").path
 
     fallbackIcons: "💧"
 

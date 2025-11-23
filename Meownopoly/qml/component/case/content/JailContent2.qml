@@ -14,7 +14,7 @@ CaseContent_Base {
     property bool catInJail: true
     tileColor: "darkred"
     // Icons for different tile types
-    tileIcons: (catInJail) ?  AssetManager.getAssetPath("ui", "case", "jail") : AssetManager.getAssetPath("ui", "case", "jail_noCat")
+    tileIcons: (catInJail) ?  AssetManager.getAssetById("ui", "case", "jail").path : AssetManager.getAssetById("ui", "case", "jail_noCat").path
 
     fallbackIcons: "🔒"
     nameText.text:  root.caseData.name

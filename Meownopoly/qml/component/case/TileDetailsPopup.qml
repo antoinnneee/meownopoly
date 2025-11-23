@@ -59,7 +59,7 @@ Popup {
                 
                 Image {
                     anchors.fill: parent
-                    source: root.tileType >= 0 ? AssetManager.getAssetPath("ui", "case", getTileIconName())  : ""
+                    source: root.tileType >= 0 ? AssetManager.getAssetById("ui", "case", getTileIconName()).path  : ""
                     sourceSize {
                         width: width * 2
                         height: height * 2

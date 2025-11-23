@@ -12,7 +12,7 @@ Item {
     required property CaseCatDevice caseData
 
     // Icons for different tile types
-    property var tileIcons: AssetManager.getAssetPath("ui", "case", "laser")
+    property var tileIcons: AssetManager.getAssetById("ui", "case", "laser").path
 
     property var fallbackIcons: "💧"
 

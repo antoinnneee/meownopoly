@@ -14,7 +14,7 @@ CaseContent_Base {
 
     tileColor: "lightgrey"
     // Icons for different tile types
-    tileIcons: AssetManager.getAssetPath("ui", "case", "cardboard")
+    tileIcons: AssetManager.getAssetById("ui", "case", "cardboard").path
 
     fallbackIcons: "📦❓"
 

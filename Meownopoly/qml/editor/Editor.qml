@@ -71,7 +71,7 @@ Base_Board {
 
         // Initialize Entity Controller
         EntityController.setTarget(entity, view3D, gameGrid, logic)
-        EditorController.init(logic, selectionPanel)
+        EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
     }
 
     mapInfo.mapName: autosaveMapName
@@ -99,13 +99,14 @@ Base_Board {
         anchors.right: parent.right
         anchors.margins: 10
         z: z_HUD
-        source: AssetManager.getAssetPath("ui", "hud", "0")
+        source: AssetManager.getAssetById("ui", "hud", "0").path
         width: Screen.pixelDensity * 20
         height: Screen.pixelDensity * 20
         MouseArea {
             hoverEnabled: true
             anchors.fill:  parent
             onClicked: {
+                btInfoMapAnim.stop()
                 btInfoMapAnim.start()
                 console.log("onClicked Opening global settings")
                 panelInfoMap.isOpening = !panelInfoMap.isOpening
@@ -116,14 +117,8 @@ Base_Board {
         SequentialAnimation {
             id: btInfoMapAnim
             running: false
-            ParallelAnimation {
-                NumberAnimation {duration: 300; from: Screen.pixelDensity * 20; to: Screen.pixelDensity * 24; target: btInfoMap; property: "height"; easing.type: Easing.InOutQuad }
-                NumberAnimation {duration: 300; from: Screen.pixelDensity * 20; to: Screen.pixelDensity * 24; target: btInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
-            }
-            ParallelAnimation {
-                NumberAnimation {duration: 300; from: Screen.pixelDensity * 24; to: Screen.pixelDensity * 20; target: btInfoMap; property: "height"; easing.type: Easing.InOutQuad }
-                NumberAnimation {duration: 300; from: Screen.pixelDensity * 24; to: Screen.pixelDensity * 20; target: btInfoMap; property: "width"; easing.type: Easing.InOutQuad  }
-            }
+            SmoothedAnimation {velocity: 0.9; to: 1.2; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
+            SmoothedAnimation {velocity: 1.1; to: 1; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
         }
     }
 
@@ -242,7 +237,7 @@ Base_Board {
             y: -gameGrid.y
             width: root.width
             height: root.height
-            z: 5.5 // Z-index relatif à workArea (au milieu des plans 2D)
+            z: 5.99 // Z-index relatif à workArea (au milieu des plans 2D)
 
             // Bind camera magnification to grid scale level
             cameraMagnification: gameGrid.scaleLevel
@@ -278,7 +273,6 @@ Base_Board {
 
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        // anchors.right: parent.right
         anchors.right: sidePanel.left
 
         z: z_HUD
@@ -297,8 +291,6 @@ Base_Board {
                 sidePanel.x = parent.width
             }
         }
-
-
         onIsExpandedChanged: {
             console.log("SelectionPanel: Side panel expanded state changed to", isSidePanelExpanded, " x ", sidePanel.x)
             if (isExpanded) {
@@ -313,9 +305,11 @@ Base_Board {
         onAssetSelected: function(category, type, id) {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
         }
+
         onAssetCleared: function() {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
+
         onCaseTypeSelectedChanged: {
             if (selectionPanel.caseTypeSelected !== -1)
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
@@ -419,7 +413,7 @@ Base_Board {
         running: false
         triggeredOnStart: true
         onTriggered: {
-            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running = savingIndicator.running ? false : true) : null
+            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running == savingIndicator.running ? false : true) : null
         }
     }
 

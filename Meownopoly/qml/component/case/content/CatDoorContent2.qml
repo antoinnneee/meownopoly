@@ -13,7 +13,7 @@ CaseContent_Base {
     required property CaseCatDoor caseData
     tileColor: "lightgrey"
     // Icons for different tile types
-    tileIcons: AssetManager.getAssetPath("ui", "case", "catdoor")
+    tileIcons: AssetManager.getAssetById("ui", "case", "catdoor").path
 
     fallbackIcons: "🚪"
     nameText.text:  root.caseData.name

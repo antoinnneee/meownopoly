@@ -19,7 +19,7 @@ Item {
 
 
     // Icons for different tile types
-    property var tileIcons: AssetManager.getAssetPath("ui", "case", "bed")          // 1: Rest Area
+    property var tileIcons: AssetManager.getAssetById("ui", "case", "bed").path          // 1: Rest Area
 
     property var fallbackIcons: "🛌"          // 1: Rest Area
 

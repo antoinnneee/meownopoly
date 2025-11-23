@@ -13,7 +13,7 @@ Item {
     required property CaseKibbleDispenser caseData
 
     // Icons for different tile types
-    property var tileIcons: AssetManager.getAssetPath("ui", "case", "kibble")
+    property var tileIcons: AssetManager.getAssetById("ui", "case", "kibble").path
 
     property var fallbackIcons: "🐱💰"
 

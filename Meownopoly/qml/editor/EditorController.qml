@@ -9,6 +9,8 @@ Item {
 
     property var logic: null
     property var selectionPanel: null
+    property var escMenu: null
+    property var adminCommandPanel: null
     // --- Gestion Clavier ---
     // Cette propriété doit recevoir le focus ou être appelée depuis un Item focusable
     property Item keysHandler: Item {
@@ -16,10 +18,12 @@ Item {
         Keys.onPressed: (event) => { keyController.handleKeyPress(event) }
         Keys.onReleased: (event) => { keyController.handleKeyRelease(event) }
     }
-    function init(logic, selectionPanel)
+    function init(logic, selectionPanel, escMenu, adminCommandPanel)
     {
         keyController.logic = logic
         keyController.selectionPanel = selectionPanel
+        keyController.escMenu = escMenu
+        keyController.adminCommandPanel = adminCommandPanel
         console.log("key Controller init")
     }
 
@@ -53,7 +57,7 @@ Item {
             event.accepted = true
         }
         else if (event.key === Qt.Key_Escape) {
-            if (root.isAssetSelected) {
+            if (selectionPanel.isAssetSelected) {
                 selectionPanel.clearAssetSelection()
                 event.accepted = true
             } else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {

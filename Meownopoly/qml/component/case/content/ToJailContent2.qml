@@ -13,7 +13,7 @@ CaseContent_Base {
     required property CaseToJail caseData
     tileColor: "darkred"
     // Icons for different tile types
-    tileIcons:AssetManager.getAssetPath("ui", "case", "tojail")
+    tileIcons:AssetManager.getAssetById("ui", "case", "tojail").path
     nameText.text:  root.caseData.name
     
     nameText.anchors.horizontalCenter: root.horizontalCenter

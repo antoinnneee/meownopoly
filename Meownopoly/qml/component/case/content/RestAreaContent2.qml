@@ -18,7 +18,7 @@ CaseContent_Base {
 
     icon.anchors.verticalCenterOffset: colorBar.height/3
     // Icons for different tile types
-    tileIcons: AssetManager.getAssetPath("ui", "case", "bed2")          // 1: Rest Area
+    tileIcons: AssetManager.getAssetById("ui", "case", "bed2").path          // 1: Rest Area
     fallbackIcons: "🛌"          // 1: Rest Area
 
     nameText.text:  root.caseData.name

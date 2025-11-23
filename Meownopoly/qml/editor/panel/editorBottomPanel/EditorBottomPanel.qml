@@ -52,8 +52,7 @@ Rectangle {
         // Particle image for the initial burst
         ImageParticle {
             id: firework
-            // source: "qrc:///particleresources/glowdot.png"
-            source : AssetManager.getAssetPath("ui","particules","pawn1")
+            source : AssetManager.getAssetById("ui","particules","pawn1").path
             color: Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
             colorVariation: 0.5
             alpha: 0.75

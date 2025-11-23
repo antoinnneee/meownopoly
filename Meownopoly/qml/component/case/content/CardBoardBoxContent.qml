@@ -13,7 +13,7 @@ Item {
     required property CaseCardBoardBox caseData
 
     // Icons for different tile types
-    property var tileIcons: AssetManager.getAssetPath("ui", "case", "cardboard")
+    property var tileIcons: AssetManager.getAssetById("ui", "case", "cardboard").path
 
     property var fallbackIcons: "📦❓"
 
