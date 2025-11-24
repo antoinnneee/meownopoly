@@ -232,6 +232,7 @@ public:
 
     Q_INVOKABLE bool isTransparent(float px, float py, QString path);
 
+    Q_INVOKABLE QString getAppDataPath() const;
 
 public slots:
 

@@ -13,7 +13,7 @@ Item {
     required property CaseCatDoor caseData
 
     // Icons for different tile types
-    property var tileIcons: AssetManager.getAssetPath("ui", "case","catdoor")
+    property var tileIcons: AssetManager.getAssetById("ui", "case","catdoor").path
 
     property var fallbackIcons: "🚪"
 

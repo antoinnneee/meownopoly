@@ -12,25 +12,14 @@ Item {
 
     property int croisillons: 600
     property int mmSize: 12
+    property real defaultMmSize: 12.0
+    property real scaleLevel: mmSize / defaultMmSize
     property int gridSize: Screen.pixelDensity * mmSize
+
     property int boardSize:  gridSize * croisillons // 600 croisillons
     // Propriétés configurables
     width: boardSize
     height: boardSize
-
-
-
-    onGridSizeChanged: {
-       var newVerticalLinesCount = (gridManager.showGrid) ? croisillons + 1
-                                                            : 0
-       var newHorizontalLinesCount = (gridManager.showGrid) ? croisillons + 1
-                                                            : 0
-        if (newVerticalLinesCount > gridContainer.verticalLinesCount
-                || newHorizontalLinesCount > gridContainer.horizontalLinesCount) {
-            gridContainer.verticalLinesCount = newVerticalLinesCount
-            gridContainer.horizontalLinesCount = newHorizontalLinesCount
-        }
-    }
 
     property color gridColor: "#40808080"
     property real gridOpacity: 0.5
@@ -79,6 +68,14 @@ Item {
         )
     }
 
+    // Fonction pour obtenir la position de grille la plus proche
+    function getGridPixelPosition(x, y) {
+        return Qt.point(
+            x * gridSize,
+            y * gridSize
+        )
+    }
+
     // Fonctions pour activer/désactiver le mode redimensionnement
     function enterResizeMode() {
         resizeMode = true
@@ -95,9 +92,9 @@ Item {
 
         property color lightColor:  Qt.lighter(gridManager.gridColor, 1.2)
 
-        property int verticalLinesCount: (gridManager.showGrid) ? Math.ceil(width / gridManager.gridSize) + 1
+        property int verticalLinesCount: (gridManager.showGrid) ? croisillons + 1
                                                                 : 0
-        property int horizontalLinesCount: (gridManager.showGrid) ? Math.ceil(height / gridManager.gridSize) + 1
+        property int horizontalLinesCount: (gridManager.showGrid) ? croisillons + 1
                                                                   :0
 
         property int totalLineCount:verticalLinesCount+horizontalLinesCount

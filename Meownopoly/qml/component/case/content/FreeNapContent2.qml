@@ -15,7 +15,7 @@ CaseContent_Base {
     required property CaseFreeNap caseData
     tileColor: "#ecd160"
     // Icons for different tile types
-    tileIcons:AssetManager.getAssetPath("ui", "case", "nap2")
+    tileIcons:AssetManager.getAssetById("ui", "case", "nap2").path
 
     fallbackIcons: "😴"
     nameText.text:  root.caseData.name

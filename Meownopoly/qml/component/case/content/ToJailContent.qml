@@ -13,7 +13,7 @@ Item {
     required property CaseToJail caseData
 
     // Icons for different tile types
-    property var tileIcons:AssetManager.getAssetPath("ui", "case", "tojail")
+    property var tileIcons: AssetManager.getAssetById("ui", "case", "tojail").path
 
     property var fallbackIcons: "➡️🔒"
 

@@ -64,7 +64,7 @@ Item{
         id: scrollLogic_normal_comp
         ScrollLogic {
             id: scrollLogic_normal
-            editorGrid: _grid
+            gameGrid: _grid
             logic: _logic
             Component.onCompleted: {
                 logic.scrollLogic = scrollLogic_normal

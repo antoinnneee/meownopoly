@@ -15,7 +15,7 @@ Item {
     required property CaseFreeNap caseData
 
     // Icons for different tile types
-    property string tileIcons:AssetManager.getAssetPath("ui", "case", "nap2")
+    property string tileIcons:AssetManager.getAssetById("ui", "case", "nap2").path
 
     property string fallbackIcons: "😴"
 

@@ -14,7 +14,7 @@ CaseContent_Base {
 
     tileColor: "lightgrey"
     // Icons for different tile types
-    tileIcons:AssetManager.getAssetPath("ui", "case", "catnip")
+    tileIcons:AssetManager.getAssetById("ui", "case", "catnip").path
 
     iconSource: tileIcons
     icon.width: root.width * 0.70

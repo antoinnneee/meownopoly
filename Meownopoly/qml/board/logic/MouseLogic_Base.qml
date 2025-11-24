@@ -110,7 +110,7 @@ QtObject {
     function elementClicked(tile)
     {
         clickElement.push(tile)
-        var realPos = mainMa.mapToItem(editorGrid, tile.x, tile.y)
+        var realPos = mainMa.mapToItem(grid, tile.x, tile.y)
         var pos = Qt.point(realPos.x, realPos.y)
         elementInitialPosition.push(pos)
         console.log("Add element to list")

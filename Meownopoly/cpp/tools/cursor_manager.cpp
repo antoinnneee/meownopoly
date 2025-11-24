@@ -36,12 +36,10 @@ QObject *CursorManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 void CursorManager::setPos(int x, int y)
 {
     QCursor::setPos(x, y);
-    qDebug() << "[CURSOR_MANAGER] Curseur déplacé à (" << x << ", " << y << ")";
 }
 
 void CursorManager::setPosPoint(const QPoint &point)
 {
     QCursor::setPos(point);
-    qDebug() << "[CURSOR_MANAGER] Curseur déplacé à" << point;
 }
 

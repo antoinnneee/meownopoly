@@ -21,23 +21,17 @@ import "../component"
 import "../component/snapable"
 import "../component/grid"
 
-Item {
+Base_logic {
     id: logic
 
     required property GridManager grid
 
     property alias tileLogic: tileLogic
 
-    
-    property int mmSize : 12
-    function updateSize(mm) {
-        if (mm > 0)
-            mmSize = mm
-    }
+
     property list<SnapableElement> snapableTilesList
     property MouseLogic_Base mouseLogic
     property ScrollLogic scrollLogic
-
     
     
     Loader {

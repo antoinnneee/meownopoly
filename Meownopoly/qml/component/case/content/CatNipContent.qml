@@ -13,7 +13,7 @@ Item {
     required property CaseCatNip caseData
 
     // Icons for different tile types
-    property var tileIcons:AssetManager.getAssetPath("ui", "case", "catnip")
+    property var tileIcons:AssetManager.getAssetById("ui", "case", "catnip").path
 
     property var fallbackIcons: "🌿"
 

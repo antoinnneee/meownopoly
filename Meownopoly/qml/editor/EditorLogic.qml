@@ -16,7 +16,7 @@ import MapTypes
 
 import "logic"
 
-Item {
+Base_logic {
     id: logic
     property list<SnapableElement> snapableTilesList
     required property GridManager editorGrid
@@ -24,18 +24,10 @@ Item {
     required property MapInfo mapInfo
     required property var workArea
 
-    property int mmSize : editorGrid.mmSize
-    function updateSize(mm) {
-        if (mm > 0)
-            mmSize = mm
-    }
-
     property var selectionPanel: null  // Référence au SelectionPanel pour la configuration des cases
     property var editorSidePanel: null
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
-    property ScrollLogic scrollLogic
-    property MouseLogic_Base mouseLogic
 
     property alias planLogic: planLogic
     property alias tileLogic: tileLogic
@@ -80,7 +72,7 @@ Item {
 
     EditorDynamicComponent {
         id: editorDynamicComponent
-        editorGrid: logic.editorGrid
+        gameGrid: logic.editorGrid
         logic: logic
     }
 

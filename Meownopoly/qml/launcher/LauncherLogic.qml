@@ -44,6 +44,7 @@ QtObject {
     property real downloadProgress: LauncherManager.downloadProgress
     property string downloadStatus: LauncherManager.downloadStatus
     property bool packageCreated: LauncherManager.packageCreated
+    property var modelsList: LauncherManager.modelsList
     
     // Settings
     property Settings settings: Settings {
@@ -59,7 +60,8 @@ QtObject {
     signal packageCreationCompleted(bool success)
     signal updateAvailable();
     signal downloadSucess();
-    
+    signal modelsListUpdated();
+
     // Helper pour calculer la version suivante
     function getNextVersion(currentVersion) {
         let parts = currentVersion.split('.')
@@ -101,6 +103,23 @@ QtObject {
         LauncherManager.uploadPackageToServer(root.serverUrl)
     }
     
+    // Fonctions Modèles
+    function fetchModelsList() {
+        LauncherManager.fetchModelsList(root.serverUrl)
+    }
+
+    function downloadModel(name, version) {
+        LauncherManager.downloadModel(root.serverUrl, name, version)
+    }
+
+    function createModelPackage(folderPath, name, version) {
+        LauncherManager.createModelPackage(folderPath, name, version)
+    }
+
+    function uploadModelPackage(name, version) {
+        LauncherManager.uploadModelPackage(root.serverUrl, name, version)
+    }
+
     function updateServerUrl(newUrl) {
         root.serverUrl = newUrl
         root.settings.serverUrl = newUrl
@@ -146,6 +165,10 @@ QtObject {
             root.packageCreationCompleted(LauncherManager.packageCreated)
         }
         
+        function onModelsListChanged() {
+            root.modelsListUpdated()
+        }
+
         function onLogMessage(message) {
             root.logMessage(message)
         }
