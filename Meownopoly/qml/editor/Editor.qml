@@ -119,12 +119,12 @@ Rectangle {
             logic.mouseLogic.isControlPressed = true
         }
         else if (event.key === Qt.Key_Y) {
-            if (logic.mouseLogic.isControlPressed)
+            if (logic.mouseLogic.isControlPressed === true)
                 console.log("Redo requested via Ctrl+Y")
             Game.askNext()
         }
         else if (event.key === Qt.Key_Z) {
-            if (logic.mouseLogic.isControlPressed)
+            if (logic.mouseLogic.isControlPressed === true)
                 console.log("Undo requested via Ctrl+Z")
             Game.askPreview()
         }
@@ -132,9 +132,25 @@ Rectangle {
         {
             adminCommandPanel.visible = !adminCommandPanel.visible
         }
+        logic.mouseLogic.isControlPressed = false
+
     }
     Keys.onReleased:{
         logic.mouseLogic.isControlPressed = false
+    }
+
+    Button {
+        z: z_HUD
+        width: 30
+        height: 30
+        anchors.top: parent.top
+        anchors.right: btInfoMap.left
+        anchors.margins: 30
+        onClicked : logic.editorMouseMode = EditorEnum.EM_TEMPLATE
+        Rectangle {
+            anchors.fill: parent
+            color: "red"
+        }
     }
 
     Image {

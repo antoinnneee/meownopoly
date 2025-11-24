@@ -30,8 +30,8 @@ QtObject {
             dragStartPos = Qt.point(mouseX, mouseY)
             targetStartPos = Qt.point(drag.target.x, drag.target.y)
         }
-
     }
+
     function positionChanged(mouse, drag)
     {
         // Mettre à jour la sélection par rectangle si active

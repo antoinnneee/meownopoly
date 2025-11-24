@@ -50,10 +50,14 @@ Item {
 
     Loader {
         id: mouseLogicLoader
+        onSourceComponentChanged: {
+            console.log("MouseLogicLoader - Loaded component for mode:", logic.editorMouseMode)
+        }
         sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? editorDynamicComponent.mouseLogic_selection_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_POSE) ? editorDynamicComponent.mouseLogic_pose_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_GAME) ? editorDynamicComponent.mouseLogic_game_comp
-                        : editorDynamicComponent.mouseLogic_selectionLink_comp
+                                    : (logic.editorMouseMode === EditorEnum.EM_TEMPLATE) ? editorDynamicComponent.mouseLogic_temp_comp
+                                    : editorDynamicComponent.mouseLogic_selectionLink_comp
         property var _logic : parent
         property var _grid: editorGrid
     }
