@@ -46,3 +46,10 @@ ItemSnapable *ItemSnapableFactory::createItemSnapable(Case::CaseType caseType)
     ItemSnapable *snap = new ItemSnapable(caseType);
     return snap;
 }
+
+ItemSnapable *ItemSnapableFactory::createExclusionZone()
+{
+    ItemSnapable *snap = new ItemSnapable();
+    snap->setTileType(ItemSnapable::ExclusionZone);
+    return snap;
+}

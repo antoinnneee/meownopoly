@@ -20,7 +20,7 @@ EBP_TitleBar {
                       "Selected: " + titleBar.currentSelectedType + " #" + titleBar.currentSelectedId :
                       "Click to select an asset"
     subTitleColor: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
-    buttonModel: ["Decoration", "Case"]
+    buttonModel: ["Decoration", "Case", "Zones"]
 
     onButtonClicked: function(text, index) {
     }

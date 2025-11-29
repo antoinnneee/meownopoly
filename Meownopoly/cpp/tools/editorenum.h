@@ -18,6 +18,7 @@ public:
         EM_POSE,
         EM_SELECTION_LINK,
         EM_GAME,
+        EM_DRAW_POLYGON,
     };
     Q_ENUM(EditorMouseMode)
 

@@ -13,6 +13,7 @@
 
 #include "Displayparameter.h"
 #include "Decorationparameter.h"
+#include "exclusionparameter.h"
 
 class ItemSnapable : public QObject
 {
@@ -22,6 +23,7 @@ class ItemSnapable : public QObject
     Q_PROPERTY(Case* caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
+    Q_PROPERTY(ExclusionParameter * exclusionParameter READ exclusionParameter WRITE setExclusionParameter NOTIFY exclusionParameterChanged FINAL)
     Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(TileType tileType READ tileType WRITE setTileType NOTIFY tileTypeChanged FINAL)
 
@@ -36,6 +38,7 @@ public:
     enum TileType {
         CaseTile,
         DecorationTile,
+        ExclusionZone,
     };
     Q_ENUM(TileType)
 
@@ -45,6 +48,8 @@ public:
     void setDisplayParameter(DisplayParameter * displayParameter);
     DecorationParameter * decorationParameter() const;
     void setDecorationParameter(DecorationParameter * decorationParameter);
+    ExclusionParameter * exclusionParameter() const;
+    void setExclusionParameter(ExclusionParameter * exclusionParameter);
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
 
@@ -81,6 +86,7 @@ signals:
     void caseDataChanged();
     void displayParameterChanged();
     void decorationParameterChanged();
+    void exclusionParameterChanged();
 
     void uniqueIdChanged();
 
@@ -90,6 +96,7 @@ private :
     Case * m_caseData = nullptr;
     DisplayParameter * m_displayParameter = new DisplayParameter;
     DecorationParameter * m_decorationParameter = new DecorationParameter;
+    ExclusionParameter * m_exclusionParameter = new ExclusionParameter;
     QJsonObject m_json;
     QUuid m_uniqueId;
     TileType m_tileType;

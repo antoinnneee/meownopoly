@@ -216,6 +216,15 @@ EditorBottomPanel {
                 root.caseTypeCleared()
             }
         }
+
+        // Exclusion Zone Panel
+        ExclusionZonePanel {
+            id: exclusionZonePanel
+            logic: root.logic
+
+            Layout.preferredWidth: parent.width
+            Layout.preferredHeight: parent.height
+        }
     }
 
 }

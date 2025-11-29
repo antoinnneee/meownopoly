@@ -1,4 +1,5 @@
 #include "ItemSnapable.h"
+#include "exclusionparameter.h"
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include "game/case/CaseFactory.h"
@@ -17,6 +18,7 @@ void ItemSnapable::registerQml()
     qmlRegisterType<TileType>("TileType", 1, 0, "TileType");
     qmlRegisterType<DisplayParameter>("DisplayParameter", 1, 0, "DisplayParameter"); // Register DisplayParameter class
     qmlRegisterType<DecorationParameter>("DecorationParameter", 1, 0, "DecorationParameter"); // Register DecorationParameter class
+    qmlRegisterType<ExclusionParameter>("ExclusionParameter", 1, 0, "ExclusionParameter"); // Register ExclusionParameter class
 }
 
 ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent)
@@ -48,6 +50,9 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
     }
     if (m_json.contains("decorationParameter")) {
         m_decorationParameter = new DecorationParameter(m_json["decorationParameter"].toObject(), this);
+    }
+    if (m_json.contains("exclusionParameter")) {
+        m_exclusionParameter = new ExclusionParameter(m_json["exclusionParameter"].toObject(), this);
     }
     m_uniqueId = QUuid(m_json["uniqueId"].toString());
     m_tileType = TileType(m_json["tileType"].toInt());
@@ -101,6 +106,16 @@ void ItemSnapable::setDecorationParameter(DecorationParameter * decorationParame
         delete m_decorationParameter;
     m_decorationParameter = decorationParameter; emit decorationParameterChanged();
 }
+
+ExclusionParameter *ItemSnapable::exclusionParameter() const {
+    return m_exclusionParameter;
+}
+
+void ItemSnapable::setExclusionParameter(ExclusionParameter * exclusionParameter) {
+    if (m_exclusionParameter)
+        delete m_exclusionParameter;
+    m_exclusionParameter = exclusionParameter; emit exclusionParameterChanged();
+}
 QString ItemSnapable::toJSON()
 {
     QString json;
@@ -112,6 +127,9 @@ QString ItemSnapable::toJSON()
     }
     if (m_decorationParameter != nullptr) {
         json += "    \"decorationParameter\": " + m_decorationParameter->toJSON() + ",\n";
+    }
+    if (m_exclusionParameter != nullptr && m_tileType == ExclusionZone) {
+        json += "    \"exclusionParameter\": " + m_exclusionParameter->toJSON() + ",\n";
     }
     json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
     json += "    \"next\": [ ";
@@ -251,6 +269,14 @@ void ItemSnapable::copyFrom(ItemSnapable* source)
         m_decorationParameter->setDecorationType(source->decorationParameter()->decorationType());
         m_decorationParameter->setDecorationId(source->decorationParameter()->decorationId());
         emit decorationParameterChanged();
+    }
+    
+    // Copier les exclusion parameters si c'est une ExclusionZone
+    if (source->tileType() == ExclusionZone && source->exclusionParameter()) {
+        m_exclusionParameter->setPolygonPoints(source->exclusionParameter()->polygonPoints());
+        m_exclusionParameter->setZoneColor(source->exclusionParameter()->zoneColor());
+        m_exclusionParameter->setZoneName(source->exclusionParameter()->zoneName());
+        emit exclusionParameterChanged();
     }
     
     // Copier l'UUID

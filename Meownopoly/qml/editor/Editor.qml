@@ -72,6 +72,9 @@ Base_Board {
         // Initialize Entity Controller
         EntityController.setTarget(entity, view3D, gameGrid, logic)
         EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
+        
+        // Activer le mode édition pour les zones d'exclusion
+        gameGrid.isEdit = true
     }
 
     mapInfo.mapName: autosaveMapName
@@ -260,6 +263,20 @@ Base_Board {
         unitSizeHeight: logic.tileLogic.currentElementHeight
         gridManager: gameGrid
         editorSidePanel: sidePanel
+    }
+
+    // Prévisualisation du polygone pendant le dessin
+    PolygonPreviewCursor {
+        id: polygonPreview
+        parent: workArea
+        gridManager: gameGrid
+        visible: logic.editorMouseMode === EditorEnum.EM_DRAW_POLYGON && points.length > 0
+        zoneColor: logic.mouseLogic && logic.mouseLogic.currentZoneColor ? 
+                   logic.mouseLogic.currentZoneColor : "#FF5722"
+        
+        Component.onCompleted: {
+            logic.polygonPreview = polygonPreview
+        }
     }
 
     // Rectangle de sélection

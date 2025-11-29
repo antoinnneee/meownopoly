@@ -57,6 +57,7 @@ SOURCES += \
     game/item_snapable/Displayparameter.cpp \
     game/item_snapable/ItemSnapable.cpp \
     game/item_snapable/decorationparameter.cpp \
+    game/item_snapable/exclusionparameter.cpp \
     game/item_snapable/itemsnapablefactory.cpp \
     launcher/launcher_manager.cpp \
     main.cpp \
@@ -96,6 +97,7 @@ HEADERS += \
     game/item_snapable/Displayparameter.h \
     game/item_snapable/ItemSnapable.h \
     game/item_snapable/decorationparameter.h \
+    game/item_snapable/exclusionparameter.h \
     game/item_snapable/itemsnapablefactory.h \
     launcher/launcher_manager.h \
     game/map/map.h \
