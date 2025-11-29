@@ -70,7 +70,7 @@ Base_Board {
         initializeEditor()
 
         // Initialize Entity Controller
-        EntityController.setTarget(entity, view3D, gameGrid, logic)
+        // EntityController.setTarget(entity, view3D, gameGrid, logic)
         EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
     }
 

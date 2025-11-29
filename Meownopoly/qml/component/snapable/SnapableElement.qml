@@ -14,19 +14,23 @@ import ItemSnapableFactory
 import MapTypes
 import UndoRedoManager
 
- Rectangle {
+Rectangle {
     id: snapableElement
 
-    // Propriétés configurables
+    // --- Required Properties ---
     // Connexion au GridManager du parent (Editor)
     required property GridManager gridManager
+    required property ItemSnapable snapableParameters
+
+    // --- Properties ---
+    // Propriétés configurables
     property bool isResizable: true
     property bool blockConnections: false
     property bool autoSnap: true
     property color elementColor: "transparent"
     property color borderColor: "gray"
     property int borderWidth: 0
-    
+
     // Propriétés d'état
     property bool isDragging: false
     property bool isResizing: false
@@ -34,12 +38,57 @@ import UndoRedoManager
 
     property var generalMA: null
     property bool displayLinkEnable: false
+
+    property bool shouldSaveOnDelete: true
+
+    // Calcul des coordonnées globales du centre dans le référentiel workArea
+    // Si on est dans groupeSelection, on ajoute sa position pour obtenir les coordonnées dans workArea
+    property point globalCenter: {
+        var centerX = x + width / 2
+        var centerY = y + height / 2
+        return Qt.point(centerX, centerY)
+    }
+
+    readonly property int globalCenterX: globalCenter.x
+    readonly property int globalCenterY: globalCenter.y
+
+    // --- Aliases ---
     property alias dragArea: dragArea
+    property alias connectionManager: connectionManager
 
-    // Propriété pour stocker la valeur z originale
+    // --- Signals ---
+    signal elementClicked()
+    signal elementPressed()
+    onElementPressed: {
+        isDragging = true
+        isSelected = true
+    }
 
-    required property ItemSnapable snapableParameters
+    signal elementReleased()
+    onElementReleased: {
+        isDragging = false
+        
+        // Mettre à jour les positions relatives après le drag
+        updateRelativePosition()
+        
+        // Auto-snap si activé et gridManager disponible
+        if (autoSnap && gridManager && gridManager.snapToGrid) {
+            snapToGrid()
+        }
+    }
 
+    signal elementUnselected()
+    onElementUnselected: {
+        isSelected = false
+        elementReleased()
+    }
+
+    signal elementResized(var element, real newWidth, real newHeight)
+    signal snapCompleted(var element)
+
+    signal elementDeleted(var element)  // sent after delete
+
+    // --- Component.onCompleted ---
     Component.onCompleted: {
         // Si snapableParameters n'a pas été fourni, créer une instance par défaut
         if (!snapableParameters) {
@@ -56,6 +105,8 @@ import UndoRedoManager
         snapableParameters.displayParameterChanged()
     }
 
+    // --- Bindings ---
+    // Propriété pour stocker la valeur z originale
     z:  (isSelected && !isDragging) ? snapableParameters.displayParameter.zOrder + 11 : snapableParameters.displayParameter.zOrder + snapableParameters.displayParameter.zLayer
 
     // Positions calculées à partir des coordonnées relatives
@@ -65,19 +116,14 @@ import UndoRedoManager
     width:  gridManager.gridSize * snapableParameters.displayParameter.unitSizeWidth
     height:  gridManager.gridSize * snapableParameters.displayParameter.unitSizeHeight
 
-    // Calcul des coordonnées globales du centre dans le référentiel workArea
-    // Si on est dans groupeSelection, on ajoute sa position pour obtenir les coordonnées dans workArea
-    property point globalCenter: {
-        var centerX = x + width / 2
-        var centerY = y + height / 2
-        return Qt.point(centerX, centerY)
-    }
-    
-    readonly property int globalCenterX: globalCenter.x
-    readonly property int globalCenterY: globalCenter.y
+    color: elementColor
+    border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
+    border.width: isSelected ? borderWidth + 2 : borderWidth
 
-    property alias connectionManager: connectionManager
+    // Effet de survol avec transition optimisée
+    scale: 1.0
 
+    // --- Items ---
     SnapableElementConnections {
         id: connectionManager
         parentElement: snapableElement
@@ -124,44 +170,6 @@ import UndoRedoManager
         }
     }
     
-    // Signaux
-    signal elementClicked()
-    signal elementPressed()
-    onElementPressed: {
-        isDragging = true
-        isSelected = true
-    }
-
-    signal elementReleased()
-    onElementReleased: {
-        isDragging = false
-        
-        // Mettre à jour les positions relatives après le drag
-        updateRelativePosition()
-        
-        // Auto-snap si activé et gridManager disponible
-        if (autoSnap && gridManager && gridManager.snapToGrid) {
-            snapToGrid()
-        }
-    }
-    signal elementUnselected()
-    onElementUnselected: {
-        isSelected = false
-        elementReleased()
-    }
-
-    signal elementResized(var element, real newWidth, real newHeight)
-    signal snapCompleted(var element)
-
-    signal elementDeleted(var element)  // sent after delete
-    property bool shouldSaveOnDelete: true
-    
-    function deleteRequest(saveAfter)
-    {
-        shouldSaveOnDelete = (saveAfter === undefined || saveAfter === true)
-        deleteAnimation.start()
-    }
-    
     SnapableElementDeleteAnimation {
         id: deleteAnimation
         onFinished: {
@@ -174,13 +182,6 @@ import UndoRedoManager
     SnapableElementCreateAnimation {
         id: createAnimation
     }
-
-    color: elementColor
-    border.color: isSelected ? Qt.lighter(borderColor, 1.5) : borderColor
-    border.width: isSelected ? borderWidth + 2 : borderWidth
-
-    // Effet de survol avec transition optimisée
-    scale: 1.0
 
     // Zone de drag & drop
     MouseArea {
@@ -230,6 +231,13 @@ import UndoRedoManager
         anchors.fill: snapableElement
         parent: snapableElement.parent
         z: 100
+    }
+    
+    // --- Functions ---
+    function deleteRequest(saveAfter)
+    {
+        shouldSaveOnDelete = (saveAfter === undefined || saveAfter === true)
+        deleteAnimation.start()
     }
     
     function isTransparent(mouse){
