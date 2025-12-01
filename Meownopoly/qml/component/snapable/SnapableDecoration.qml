@@ -11,16 +11,12 @@ import TileType
 
 SnapableElement {
     id: root
+
+    // --- Properties ---
     // Configuration du redimensionnement
     isResizable: true
     autoSnap: true
 
-    Component.onCompleted: {
-    }
-
-    // Fonction pour synchroniser les connexions depuis les données C++ vers l'interface QML
-    function syncConnectionsFromCaseData() {
-    }
     property bool assetAvailable : (snapableParameters.decorationParameter.decorationCategory != ""
                                     && snapableParameters.decorationParameter.decorationType  != ""
                                     && snapableParameters.decorationParameter.decorationId  != "")
@@ -46,7 +42,11 @@ SnapableElement {
     // Performance optimization: only create MultiEffect when needed
     readonly property bool shouldCreateEffect: hasActiveEffects
 
+    // --- Component.onCompleted ---
+    Component.onCompleted: {
+    }
 
+    // --- Items ---
     AnimatedImage {
         id: tileImage
         anchors.fill: parent
@@ -133,6 +133,11 @@ SnapableElement {
         autoPaddingEnabled: false//displayParameter.effectBlurEnabled || displayParameter.effectShadowEnabled
     }
 
+    // --- Functions ---
+    // Fonction pour synchroniser les connexions depuis les données C++ vers l'interface QML
+    function syncConnectionsFromCaseData() {
+    }
+
     function isTransparent(mouse){
 
         var deltaHeight = tileImage.height - tileImage.paintedHeight
@@ -145,5 +150,4 @@ SnapableElement {
 
         return flag;
     }
-
 }

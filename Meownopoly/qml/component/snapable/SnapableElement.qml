@@ -35,6 +35,7 @@ Rectangle {
     property bool isDragging: false
     property bool isResizing: false
     property bool isSelected: false
+    property bool isTemplateSelected: false
 
     property var generalMA: null
     property bool displayLinkEnable: false
@@ -59,6 +60,17 @@ Rectangle {
     // --- Signals ---
     signal elementClicked()
     signal elementPressed()
+
+    signal elementTemplateSelected()
+    signal elementTemplateUnselected()
+
+    onElementTemplateSelected: {
+        isTemplateSelected = true
+    }
+    onElementTemplateUnselected: {
+        isTemplateSelected = false
+    }
+
     onElementPressed: {
         isDragging = true
         isSelected = true
@@ -67,10 +79,10 @@ Rectangle {
     signal elementReleased()
     onElementReleased: {
         isDragging = false
-        
+
         // Mettre à jour les positions relatives après le drag
         updateRelativePosition()
-        
+
         // Auto-snap si activé et gridManager disponible
         if (autoSnap && gridManager && gridManager.snapToGrid) {
             snapToGrid()
@@ -95,7 +107,7 @@ Rectangle {
             console.log("null snapable")
             snapableParameters = ItemSnapableFactory.createItemSnapable()
         }
-        
+
         snapToGrid()
 
         //Check if we are restoring state from undo/redo
@@ -169,7 +181,7 @@ Rectangle {
             }
         }
     }
-    
+
     SnapableElementDeleteAnimation {
         id: deleteAnimation
         onFinished: {
@@ -193,7 +205,7 @@ Rectangle {
         preventStealing: true
 
         z: 50  // Au-dessus du contenu mais sous les poignées
-        
+
         onPressed: function(mouse) {
             if (generalMA)
             {
@@ -203,14 +215,14 @@ Rectangle {
             }
             mouse.accepted = false
         }
-        
+
         onReleased: function(mouse) {
             console.log("snap release");
         }
-        
+
         onPositionChanged: function(mouse) { }
     }
-    
+
     // Contrôles de l'élément (boutons de plan et suppression)
     SnapableElementControl {
         id: elementControls
@@ -232,14 +244,22 @@ Rectangle {
         parent: snapableElement.parent
         z: 100
     }
-    
+
+    Rectangle {
+        id: isTemplate
+        anchors.fill: parent
+        color: "red"
+        opacity: 0.2
+        visible : isTemplateSelected ? true : false
+    }
+
     // --- Functions ---
     function deleteRequest(saveAfter)
     {
         shouldSaveOnDelete = (saveAfter === undefined || saveAfter === true)
         deleteAnimation.start()
     }
-    
+
     function isTransparent(mouse){
         return false
     }
@@ -349,4 +369,4 @@ Rectangle {
         snapableParameters.displayParameter.mirrorHorizontal = effects.mirrorHorizontal
         snapableParameters.displayParameter.mirrorVertical = effects.mirrorVertical
     }
-} 
+}

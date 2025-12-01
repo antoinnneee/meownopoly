@@ -90,7 +90,7 @@ MouseLogic_Base {
             // IMPORTANT: Update positions of all selected elements BEFORE saving
             // The visual positions (x, y) have changed via bindings, but the data positions
             // (gridRelativePositionX/Y) need to be explicitly updated
-            if (drag.target == groupeSelection) {
+            if (drag.target === groupeSelection) {
                 console.log("[UNDO][DRAG] Updating positions for", selectedElements.length, "element(s) before save")
                 for (var i = 0; i < selectedElements.length; i++) {
                     if (selectedElements[i] && selectedElements[i].updateRelativePosition) {
@@ -252,7 +252,7 @@ MouseLogic_Base {
             var elementBottom = element.y + element.height
             
             // Vérifier l'intersection
-            if (!(elementRight < rectLeft || elementLeft > rectRight || 
+            if (!(elementRight < rectLeft || elementLeft > rectRight ||
                   elementBottom < rectTop || elementTop > rectBottom)) {
                 elementsInRect.push(element)
             } else {

@@ -11,20 +11,12 @@ import "../case"
 SnapableElement {
     id: root
 
-
+    // --- Properties ---
     // Configuration du redimensionnement
     isResizable: true
     autoSnap: true
 
-
-    CaseTile {
-        id: caseTile
-        anchors.fill: parent
-        caseData: root.snapableParameters.caseData
-        mouseArea.enabled: false
-        z: 1  // Assurer que le contenu est sous les poignées
-    }
-    
+    // --- Signals ---
     // Gestion simplifiée des signaux de redimensionnement
     onElementResized: function(element, newWidth, newHeight) {
     }
@@ -32,5 +24,12 @@ SnapableElement {
     onSnapCompleted: function(element) {
     }
 
-
+    // --- Items ---
+    CaseTile {
+        id: caseTile
+        anchors.fill: parent
+        caseData: root.snapableParameters.caseData
+        mouseArea.enabled: false
+        z: 1  // Assurer que le contenu est sous les poignées
+    }
 }
