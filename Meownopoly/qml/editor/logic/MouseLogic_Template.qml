@@ -123,222 +123,113 @@ MouseLogic_Selection {
     }
 
     function clickedLeft(mouse, drag)
-      {
-          console.log("clickedLeft")
-          mouse.accepted = true
-          // Calculer la distance parcourue entre press et release
-          var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
-          var deltaX = Math.abs(workAreaPos.x - pressPosition.x)
-          var deltaY = Math.abs(workAreaPos.y - pressPosition.y)
-          var hasMoved = (deltaX > 5 || deltaY > 5)  // Seuil de 5 pixels
+    {
+        console.log("clickedLeft")
+        mouse.accepted = true
+        // Calculer la distance parcourue entre press et release
+        var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+        var deltaX = Math.abs(workAreaPos.x - pressPosition.x)
+        var deltaY = Math.abs(workAreaPos.y - pressPosition.y)
+        var hasMoved = (deltaX > 5 || deltaY > 5)  // Seuil de 5 pixels
 
-          // Si on a appuyé sans élément et qu'on a bougé, c'est une sélection rectangle
-          if (hadPressWithoutElement && hasMoved) {
-              // console.log("Détection de sélection rectangle via clic rapide")
-              rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
-              finalizeRectangleSelection()
+        // Si on a appuyé sans élément et qu'on a bougé, c'est une sélection rectangle
+        if (hadPressWithoutElement && hasMoved) {
+            // console.log("Détection de sélection rectangle via clic rapide")
+            rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
+            finalizeRectangleSelection()
 
-              if (logic.selectionRect) {
-                  logic.selectionRect.hide()
-              }
+            if (logic.selectionRect) {
+                logic.selectionRect.hide()
+            }
 
-              isRectangleSelecting = false
-              hadPressWithoutElement = false
-              clickElement = []
-              return
-          }
+            isRectangleSelecting = false
+            hadPressWithoutElement = false
+            clickElement = []
+            return
+        }
 
-          // Réinitialiser les flags
-          isRectangleSelecting = false
-          hadPressWithoutElement = false
+        // Réinitialiser les flags
+        isRectangleSelecting = false
+        hadPressWithoutElement = false
 
-          if (logic.selectionRect) {
-              logic.selectionRect.hide()
-          }
+        if (logic.selectionRect) {
+            logic.selectionRect.hide()
+        }
 
-          if (clickElement.length === 0) {
-              unselectSelectedElements()
-              return
-          }
+        if (clickElement.length === 0) {
+            unselectSelectedElements()
+            return
+        }
 
-          // Si on a fait un drag (hasMoved), ne pas traiter comme un clic de sélection
-          // Cela évite d'appeler elementTemplateReversed() après un déplacement
-          if (hasMoved) {
-              clickElement = []
-              return
-          }
+        // Si on a fait un drag (hasMoved), ne pas traiter comme un clic de sélection
+        // Cela évite d'appeler elementTemplateReversed() après un déplacement
+        if (hasMoved) {
+            clickElement = []
+            return
+        }
 
-          if (!(mouse.modifiers & Qt.ControlModifier))    // CTRL is not pressed => normal selection mode
-          {
-              // CORRECTION: Vérifier si l'élément fait partie de la sélection actuelle
-              var isAlreadyInSelection = selectedElements.indexOf(clickElement[0]) !== -1
+        if (!(mouse.modifiers & Qt.ControlModifier))    // CTRL is not pressed => normal selection mode
+        {
+            // CORRECTION: Vérifier si l'élément fait partie de la sélection actuelle
+            var isAlreadyInSelection = selectedElements.indexOf(clickElement[0]) !== -1
 
-              if (isAlreadyInSelection) {
-                  // L'élément fait déjà partie de la sélection
-                  // Désélectionner tout sans appeler elementTemplateReversed()
-                  unselectSelectedElements()
-              }
-              else { // L'élément n'est PAS dans la sélection actuelle -> nouvelle sélection
-                  unselectSelectedElements()
-                  clickElement[0].elementPressed()
+            if (isAlreadyInSelection) {
+                // L'élément fait déjà partie de la sélection
+                // Désélectionner tout sans appeler elementTemplateReversed()
+                unselectSelectedElements()
+            }
+            else { // L'élément n'est PAS dans la sélection actuelle -> nouvelle sélection
+                unselectSelectedElements()
+                clickElement[0].elementPressed()
 
-                  if (clickElement[0] && editorMouseMode === EditorEnum.EM_TEMPLATE)
-                      clickElement[0].elementTemplateReversed()
+                if (clickElement[0])
+                    clickElement[0].elementTemplateReversed()
 
-                  createBindingsForElement(clickElement[0])
-                  drag.target = groupeSelection
-                  selectedElements.push(clickElement[0])
+                createBindingsForElement(clickElement[0])
+                drag.target = groupeSelection
+                selectedElements.push(clickElement[0])
 
-                  // Mettre à jour la configuration de case si applicable
-                  updateCaseConfiguration()
-                  updateVisualEffectPanel(selectedElements[0].snapableParameters.displayParameter)
-              }
-          }
-          else    // CTRL is pressed => add to selection
-          {
-              if (!clickElement[0].isSelected)
-              {
-                  clickElement[0].elementPressed()
+                // Mettre à jour la configuration de case si applicable
+                updateCaseConfiguration()
+                updateVisualEffectPanel(selectedElements[0].snapableParameters.displayParameter)
+            }
+        }
+        else    // CTRL is pressed => add to selection
+        {
+            if (!clickElement[0].isSelected)
+            {
+                clickElement[0].elementPressed()
 
-                  if (clickElement[0] && editorMouseMode === EditorEnum.EM_TEMPLATE)
-                      clickElement[0].elementTemplateReversed()
+                if (clickElement[0])
+                    clickElement[0].elementTemplateReversed()
 
-                  if (editorMouseMode === EditorEnum.EM_TEMPLATE)
-                      clickElement[0].elementTemplateSelected()
+                createBindingsForElement(clickElement[0])
+                selectedElements.push(clickElement[0])
 
-                  createBindingsForElement(clickElement[0])
-                  selectedElements.push(clickElement[0])
+                // Mettre à jour la configuration de case si applicable
+                updateCaseConfiguration()
+                updateVisualEffectPanel(clickElement[0].snapableParameters.displayParameter)
+            }
+            else
+            {
+                // unselect element
+                for (var i = 0; i < selectedElements.length; i++) {
+                    if (selectedElements[i] === clickElement[0]) {
+                        selectedElements[i].isSelected = false
+                        selectedElements[i].elementReleased()
+                        // Détruire les bindings au lieu de changer le parent
+                        destroyBindingsForElement(selectedElements[i])
+                        selectedElements.splice(i,1)
+                        break
+                    }
+                }
 
-                  // Mettre à jour la configuration de case si applicable
-                  updateCaseConfiguration()
-                  updateVisualEffectPanel(clickElement[0].snapableParameters.displayParameter)
-              }
-              else
-              {
-                  // unselect element
-                  for (var i = 0; i < selectedElements.length; i++) {
-                      if (selectedElements[i] === clickElement[0]) {
-                          selectedElements[i].isSelected = false
-                          selectedElements[i].elementReleased()
-                          // Détruire les bindings au lieu de changer le parent
-                          destroyBindingsForElement(selectedElements[i])
-                          selectedElements.splice(i,1)
-                          break
-                      }
-                  }
-
-                  // Mettre à jour la configuration de case si applicable
-                  updateCaseConfiguration()
-              }
-
-          }
-          clickElement = []
-      }
-
-    // function clickedLeft(mouse, drag)
-    // {
-    //     console.log("clickedLeft")
-    //     mouse.accepted = true
-    //     // Calculer la distance parcourue entre press et release
-    //     var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
-    //     var deltaX = Math.abs(workAreaPos.x - pressPosition.x)
-    //     var deltaY = Math.abs(workAreaPos.y - pressPosition.y)
-    //     var hasMoved = (deltaX > 5 || deltaY > 5)  // Seuil de 5 pixels
-
-    //     // Si on a appuyé sans élément et qu'on a bougé, c'est une sélection rectangle
-    //     if (hadPressWithoutElement && hasMoved) {
-    //         // console.log("Détection de sélection rectangle via clic rapide")
-    //         rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
-    //         finalizeRectangleSelection()
-
-    //         if (logic.selectionRect) {
-    //             logic.selectionRect.hide()
-    //         }
-
-    //         isRectangleSelecting = false
-    //         hadPressWithoutElement = false
-    //         clickElement = []
-    //         return
-    //     }
-
-    //     // Réinitialiser les flags
-    //     isRectangleSelecting = false
-    //     hadPressWithoutElement = false
-
-    //     if (logic.selectionRect) {
-    //         logic.selectionRect.hide()
-    //     }
-
-    //     if (clickElement.length === 0) {
-    //             unselectSelectedElements()
-    //         return
-    //     }
-
-    //     if (!(mouse.modifiers & Qt.ControlModifier))    // CTRL is not pressed => normal selection mode
-    //     {
-    //         if (clickElement[0] === selectedElements[0]) {
-    //             unselectSelectedElements()
-    //             // if (clickElement[0] && editorMouseMode === EditorEnum.EM_TEMPLATE)
-    //             //     clickElement[0].elementTemplateUnSelected()
-
-    //         }
-    //         else if (clickElement[0] !== selectedElements[0]) { // unselect all and select clicked
-    //             // console.log("[LOGIC] unselect all and select clicked", clickElement[0])
-    //             unselectSelectedElements()
-    //             clickElement[0].elementPressed()
-
-    //             if (clickElement[0] && editorMouseMode === EditorEnum.EM_TEMPLATE)
-    //             clickElement[0].elementTemplateReversed()
-
-    //             createBindingsForElement(clickElement[0])
-    //             drag.target = groupeSelection
-    //             selectedElements.push(clickElement[0])
-
-    //             // Mettre à jour la configuration de case si applicable
-    //             updateCaseConfiguration()
-    //             updateVisualEffectPanel(selectedElements[0].snapableParameters.displayParameter)
-    //         }
-    //     }
-    //     else    // CTRL is pressed => add to selection
-    //     {
-    //         if (!clickElement[0].isSelected)
-    //         {
-    //             clickElement[0].elementPressed()
-
-    //             if (clickElement[0] && editorMouseMode === EditorEnum.EM_TEMPLATE)
-    //             clickElement[0].elementTemplateReversed()
-
-    //             if (editorMouseMode === EditorEnum.EM_TEMPLATE)
-    //                 clickElement[0].elementTemplateSelected()
-
-    //             createBindingsForElement(clickElement[0])
-    //             selectedElements.push(clickElement[0])
-
-    //             // Mettre à jour la configuration de case si applicable
-    //             updateCaseConfiguration()
-    //             updateVisualEffectPanel(clickElement[0].snapableParameters.displayParameter)
-    //         }
-    //         else
-    //         {
-    //             // unselect element
-    //             for (var i = 0; i < selectedElements.length; i++) {
-    //                 if (selectedElements[i] === clickElement[0]) {
-    //                     selectedElements[i].isSelected = false
-    //                     selectedElements[i].elementReleased()
-    //                     // Détruire les bindings au lieu de changer le parent
-    //                     destroyBindingsForElement(selectedElements[i])
-    //                     selectedElements.splice(i,1)
-    //                     break
-    //                 }
-    //             }
-
-    //             // Mettre à jour la configuration de case si applicable
-    //             updateCaseConfiguration()
-    //         }
-
-    //     }
-    //     clickElement = []
-    // }
+                // Mettre à jour la configuration de case si applicable
+                updateCaseConfiguration()
+            }
+        }
+        clickElement = []
+    }
 
     function clickedRight(mouse, drag) {
         // Menu contextuel supprimé - pas d'action sur clic droit
@@ -434,9 +325,8 @@ MouseLogic_Selection {
             if (!elementIn.isSelected)
             {
                 elementIn.elementPressed()
+                elementIn.elementTemplateSelected()
 
-                if (editorMouseMode === EditorEnum.EM_TEMPLATE)
-                    elementIn.elementTemplateSelected()
                 // Ne plus changer le parent, créer les bindings à la place
                 createBindingsForElement(elementIn)
                 selectedElements.push(elementIn)
