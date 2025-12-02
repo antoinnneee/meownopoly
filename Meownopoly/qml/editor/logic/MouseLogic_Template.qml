@@ -5,6 +5,8 @@ import "../../component"
 import "../../component/snapable"
 
 import EditorEnum
+import MapTypes
+
 
 MouseLogic_Selection {
     id: mouseLogic
@@ -201,7 +203,7 @@ MouseLogic_Selection {
                 clickElement[0].elementPressed()
 
                 if (clickElement[0])
-                    clickElement[0].elementTemplateReversed()
+                    clickElement[0].elementTemplateSelected()
 
                 createBindingsForElement(clickElement[0])
                 selectedElements.push(clickElement[0])
