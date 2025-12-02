@@ -62,12 +62,16 @@ Rectangle {
     signal elementPressed()
 
     signal elementTemplateSelected()
-    signal elementTemplateUnselected()
+    signal elementTemplateUnSelected()
+    signal elementTemplateReversed()
 
+    onElementTemplateReversed: {
+        isTemplateSelected = !isTemplateSelected
+    }
     onElementTemplateSelected: {
         isTemplateSelected = true
     }
-    onElementTemplateUnselected: {
+    onElementTemplateUnSelected: {
         isTemplateSelected = false
     }
 
