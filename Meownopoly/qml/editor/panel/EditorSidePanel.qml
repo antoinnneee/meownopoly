@@ -52,7 +52,7 @@ Rectangle {
     // State management
     // height: isExpanded ? expandedHeight : collapsedHeight
 
-    color: "#E63399FF" // Bleu clair semi-transparent
+    color: "#E6100000" // Bleu clair semi-transparent
     border.color: "#333333"
     border.width: 1
 
