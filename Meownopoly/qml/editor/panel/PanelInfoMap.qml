@@ -10,11 +10,7 @@ import Case
 import ItemSnapable
 import "../../ui_item"
 import "../../component"
-// import "../component/grid"
-// import "../component/preview"
-// import "../component/snapable"
 import "../panel"
-// import "panel/assetSelectionPanel"
 
 import Game
 import MapFileManager
@@ -1364,7 +1360,7 @@ Item {
         border.color: "#6AB0F2"
         border.width: 2
         z: 9000
-        visible: parent.visible
+        visible: selectionPanel.visible ? false : true
 
         property var availableMaps: []
         property int currentIndex: -1
@@ -1422,7 +1418,7 @@ Item {
         border.color: "#4A90E2"
         border.width: 2
         z: 9000
-        visible: parent.visible
+        visible: selectionPanel.visible ? false : true
 
         Text {
             id: mapNameText
@@ -1448,7 +1444,7 @@ Item {
         border.color: "#6AB0F2"
         border.width: 2
         z: 9000
-        visible: parent.visible
+        visible: selectionPanel.visible ? false : true
 
         Text {
             anchors.centerIn: parent
