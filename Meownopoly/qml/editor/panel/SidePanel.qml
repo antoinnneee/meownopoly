@@ -8,38 +8,14 @@ import "../"
 Rectangle {
     id: root
 
-    property alias visualEffectsPanel : content.effectsPanel
-    property alias caseConfigurationPanel: content.caseConfigurationPanel
-    property alias connectionsConfigurationPanel: content.connectionsConfigurationPanel
-
+    // --- Properties ---
     property bool blockEffectChangedSignal: false
-    signal effectChanged()
     property bool effectLocked  // prevent set effect on panel
-    signal connectionRequested(string kind)  // Propager les demandes de connexion
-
-    function updateFromDisplayParameter(dispParam) {
-        if (effectLocked){
-            effectChanged()
-        }
-        else
-        {
-            blockEffectChangedSignal = true
-            visualEffectsPanel.updateFromDisplayParameter(dispParam)
-            blockEffectChangedSignal = false
-        }
-    }
-
 
     property bool isExpanded: true
     property bool isResizing : false
     property var logic
     // required property EditorLogic logic
-
-    width : Screen.pixelDensity * 120
-    height: Screen.pixelDensity * 75
-    // property alias contentArea: contentPlaceHolder.children
-
-    // property alias titleBar: titlePlaceHolder.children
 
     // Filter Properties
     property string currentView: "categories" // "categories" or "assets"
@@ -49,10 +25,21 @@ Rectangle {
     property int collapsedHeight: 0
     property int expandedHeight: 400
 
-    // State management
+    // --- Aliases ---
+    property alias visualEffectsPanel : content.effectsPanel
+    property alias caseConfigurationPanel: content.caseConfigurationPanel
+    property alias connectionsConfigurationPanel: content.connectionsConfigurationPanel
+
+    // --- Signals ---
+    signal effectChanged()
+    signal connectionRequested(string kind)  // Propager les demandes de connexion
+
+    // --- Bindings ---
+    width : Screen.pixelDensity * 120
+    height: Screen.pixelDensity * 75
     // height: isExpanded ? expandedHeight : collapsedHeight
 
-    color: "#E6100000" // Bleu clair semi-transparent
+    color: "#E6002200"
     border.color: "#333333"
     border.width: 1
 
@@ -69,6 +56,7 @@ Rectangle {
         }
     }
 
+    // --- Items ---
     // Zone de redimensionnement
     Rectangle {
         id: resizeHandle
@@ -206,7 +194,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         clip: true
 
-        EditorSidePanel_Content {
+        SidePanel_Content {
             id: content
             logic: root.logic
             width: scrollView.width
@@ -218,4 +206,16 @@ Rectangle {
         }
     }
 
+    // --- Functions ---
+    function updateFromDisplayParameter(dispParam) {
+        if (effectLocked){
+            effectChanged()
+        }
+        else
+        {
+            blockEffectChangedSignal = true
+            visualEffectsPanel.updateFromDisplayParameter(dispParam)
+            blockEffectChangedSignal = false
+        }
+    }
 }

@@ -124,19 +124,20 @@ Item {
                 anchors.rightMargin: 6
                 width: 24
                 height: 24
-
+                text: "✕"
                 background: Rectangle {
                     color: parent.hovered ? "#555555" : "transparent"
                     radius: 3
                 }
 
-                contentItem: Text {
-                    text: "✕"
-                    color: "white"
-                    font.pixelSize: 12
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                // contentItem: Text {
+                //     color: "white"
+                //     font.pixelSize: 12
+                //     anchors.fill: parent
+                //     // anchors.centerIn: parent
+                //     // horizontalAlignment: Text.AlignHCenter
+                //     // verticalAlignment: Text.AlignVCenter
+                // }
 
                 onClicked: {
                     isOpening = false

@@ -141,10 +141,10 @@
         <file>qml/editor/panel/caseSelectionPanel/main/CSP_CaseTypeCell.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/main/CSP_CaseTypeSelector.qml</file>
         <file>qml/ui_item/InteractiveUiElement.qml</file>
-        <file>qml/editor/panel/EditorSidePanel.qml</file>
+        <file>qml/editor/panel/SidePanel.qml</file>
         <file>qml/ui_item/CollapsableGroupBox.qml</file>
         <file>qml/editor/logic/MouseLogic_Game.qml</file>
-        <file>qml/editor/panel/EditorSidePanel_Content.qml</file>
+        <file>qml/editor/panel/SidePanel_Content.qml</file>
         <file>qml/editor/panel/VisualEffectPanel/TransformPanel.qml</file>
         <file>qml/editor/panel/VisualEffectPanel/VEP_AdvancedEffectsSection.qml</file>
         <file>qml/editor/panel/VisualEffectPanel/VEP_ButtonLock.qml</file>

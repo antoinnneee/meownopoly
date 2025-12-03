@@ -273,7 +273,7 @@ Base_Board {
         unitSizeWidth: logic.tileLogic.currentElementWidth
         unitSizeHeight: logic.tileLogic.currentElementHeight
         gridManager: gameGrid
-        editorSidePanel: sidePanel
+        sidePanel: sidePanel
     }
 
     // Rectangle de sélection
@@ -332,7 +332,7 @@ Base_Board {
         }
     }
 
-    EditorSidePanel {
+    SidePanel {
         id: sidePanel
         z: z_HUD
         anchors.bottom: parent.bottom

@@ -11,7 +11,7 @@ import ItemSnapableFactory
 
 Item {
     id: root
-    
+
     // Properties
     property string assetCategory: ""
     onAssetCategoryChanged: {
@@ -56,9 +56,9 @@ Item {
     required property GridManager gridManager
     property var snapablePreview
 
-    required property EditorSidePanel editorSidePanel
+    required property SidePanel sidePanel
 
-    
+
     // Fonction pour obtenir l'icône selon le type de case
     function getCaseTypeIcon(caseType) {
         return ""
@@ -76,13 +76,13 @@ Item {
         default: return "qrc:/assets/icons/unknown_case.png"
         }
     }
-    
+
     Connections{
-        target: editorSidePanel.visualEffectsPanel
+        target: sidePanel.visualEffectsPanel
         function onEffectChanged(){
             var newTile = snapablePreview
 
-            var visualEffectsPanel = editorSidePanel.visualEffectsPanel
+            var visualEffectsPanel = sidePanel.visualEffectsPanel
             if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
 
             var currentEffects = visualEffectsPanel.getCurrentEffects()
@@ -135,7 +135,7 @@ Item {
     width: 40
     height: 40
     z: 1000 // Make sure it's on top
-    
+
     // Make it non-interactive
     enabled: false
     Component {
