@@ -3,6 +3,8 @@ import QtQuick.Controls 2.15
 import AssetManager
 import DecorationParameter
 import "../../editor/panel"
+import "../../editor/panel/sidePanel"
+
 import "../snapable"
 import "../grid"
 import Game

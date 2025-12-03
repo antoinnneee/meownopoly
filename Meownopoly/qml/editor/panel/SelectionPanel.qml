@@ -9,6 +9,8 @@ import ".."
 import "./assetSelectionPanel"
 import "./caseSelectionPanel"
 import "./mapSelectionPanel"
+import "./menuSelectionPanel"
+
 Rectangle {
     id: root
 
@@ -70,10 +72,6 @@ Rectangle {
 
     MenuSelector {
         id: topToolbar
-        // isExpanded: root.isExpanded
-        // onIsExpandedChanged: {
-        //     root.isExpanded = isExpanded
-        // }
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -110,9 +108,6 @@ Rectangle {
             // Changer le panneau affiché en fonction de l'index du bouton
             root.currentPanelIndex = index;
         }
-
-
-
     }
 
     // Zone de redimensionnement
@@ -199,7 +194,7 @@ Rectangle {
         currentIndex: root.currentPanelIndex
         visible: true // Assurer que le StackLayout est visible
 
-        // Asset Selection Panel
+        // Asset & Case Selection Panel
         AssetSelectionPanel {
             id: assetPanel
             logic: root.logic

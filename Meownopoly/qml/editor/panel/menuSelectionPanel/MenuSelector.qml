@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../../ui_item"
-import ".."
+import "../../../ui_item"
+import "../../."
 
 Item {
     id: root

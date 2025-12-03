@@ -13,6 +13,8 @@ import "../component/preview"
 import "../component/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
+import "panel/sidePanel"
+
 
 import Game
 import MapFileManager
