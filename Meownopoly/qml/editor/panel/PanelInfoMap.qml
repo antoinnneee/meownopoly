@@ -1404,29 +1404,54 @@ Item {
             }
         }
     }
-
-    // Nom de la carte courante au centre
-    Rectangle {
-        id: currentMapName
+    RowLayout {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 20
-        width: Math.max(200, mapNameText.contentWidth + 40)
-        height: 50
-        radius: 8
-        color: "#333333"
-        border.color: "#4A90E2"
-        border.width: 2
-        z: 9000
-        visible: selectionPanel.visible ? false : true
 
-        Text {
-            id: mapNameText
-            anchors.centerIn: parent
-            text: mapInfo.mapName === mapInfo.autosaveMapName ? "Autosave" : mapInfo.mapName
-            font.pixelSize: 16
-            font.bold: true
-            color: "white"
+        // Nom de la carte courante au centre & suppresion de la carte 🗑️
+        Rectangle {
+            id: currentMapName
+            width: Math.max(200, mapNameText.contentWidth + 40)
+            height: 50
+            radius: 8
+            color: "#333333"
+            border.color: "#4A90E2"
+            border.width: 2
+            z: 9000
+            visible: selectionPanel.visible ? false : true
+
+            Text {
+                id: mapNameText
+                anchors.centerIn: parent
+                text: mapInfo.mapName === mapInfo.autosaveMapName ? "Autosave" : mapInfo.mapName
+                font.pixelSize: 16
+                font.bold: true
+                color: "white"
+            }
+        }
+        Button {
+            id: mapSupprBt
+            width: Math.max(200, mapSupprText.contentWidth + 30)
+            height: 350
+            z: 9000
+            visible: selectionPanel.visible ? false : true
+
+            background: Rectangle {
+                anchors.fill: parent
+                radius: 8
+                color: "#CC2222"
+                border.color: "black"
+                border.width: 1.4
+            }
+            Text {
+                id: mapSupprText
+                anchors.centerIn: parent
+                text: "🗑️"
+                font.pixelSize: 24
+                font.bold: true
+                color: "black"
+            }
         }
     }
 
