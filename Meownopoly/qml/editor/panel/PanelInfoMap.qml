@@ -1408,47 +1408,71 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 20
+        layoutDirection: Qt.RightToLeft
 
         // Nom de la carte courante au centre & suppresion de la carte 🗑️
         Rectangle {
             id: currentMapName
-            width: Math.max(200, mapNameText.contentWidth + 40)
             height: 50
-            radius: 8
+            radius: 0
             color: "#333333"
-            border.color: "#4A90E2"
-            border.width: 2
             z: 9000
             visible: selectionPanel.visible ? false : true
+            Component.onCompleted:{
+                width = Math.max(200, mapNameText.contentWidth + 40)
+                console.log("From parent currentMapName width = ", width)
+                console.log("From parent mapNameText width = ", mapNameText.width)
+
+            }
+            signal mapNameSet()
+            onMapNameSet: width = Math.max(200, mapNameText.contentWidth + 40)
 
             Text {
                 id: mapNameText
                 anchors.centerIn: parent
                 text: mapInfo.mapName === mapInfo.autosaveMapName ? "Autosave" : mapInfo.mapName
+                onTextChanged: currentMapName.mapNameSet()
                 font.pixelSize: 16
                 font.bold: true
                 color: "white"
+                Component.onCompleted: {
+                    currentMapName.mapNameSet()
+                    console.log("From child currentMapName width = ", currentMapName.width)
+                    console.log("From child mapNameText width = ", mapNameText.width)
+
+                }
             }
         }
         Button {
             id: mapSupprBt
-            width: Math.max(200, mapSupprText.contentWidth + 30)
-            height: 350
+            width: mapSupprText.contentWidth
+            height: mapSupprText.contentHeight
+            Layout.margins: 10
             z: 9000
             visible: selectionPanel.visible ? false : true
+            onClicked: {
+                console.log("Delete map:", mapInfo.mapName)
+                console.log("1 currentMapName width " + currentMapName.width)
+                currentMapName.width = Math.max(200, mapNameText.contentWidth + 40)
+                console.log("2 currentMapName width " + currentMapName.width)
+
+            }
+            onHoveredChanged: {
+                mapSupprBt.scale === 1.1 ? mapSupprBt.scale = 1.0 : mapSupprBt.scale = 1.1
+            }
 
             background: Rectangle {
-                anchors.fill: parent
+                anchors.fill: mapSupprText
                 radius: 8
                 color: "#CC2222"
                 border.color: "black"
                 border.width: 1.4
             }
-            Text {
+            contentItem: Text {
                 id: mapSupprText
                 anchors.centerIn: parent
                 text: "🗑️"
-                font.pixelSize: 24
+                font.pointSize: 28
                 font.bold: true
                 color: "black"
             }
