@@ -75,6 +75,7 @@ public:
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
     Q_INVOKABLE bool saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType);
+    Q_INVOKABLE bool deleteMap(QString mapName, MapTypes::MapType mapType);
     Q_INVOKABLE Map *loadMap(QString mapName, MapTypes::MapType mapType);
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
 

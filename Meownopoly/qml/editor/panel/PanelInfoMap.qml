@@ -435,7 +435,7 @@ Item {
                                         verticalAlignment: Text.AlignVCenter
                                         placeholderTextColor: "#666666"
                                         placeholderText: text === "" ? "Name of the map" : ""
-                                        text: logic.mapInfo.mapName === logic.mapInfo.autosaveMapName ? "" : logic.mapInfo.mapName
+                                        text: (logic.mapInfo.mapName === logic.mapInfo.autosaveMapName || logic.mapInfo.mapName === "") ? "" : logic.mapInfo.mapName
                                         onTextChanged: {
                                             logic.mapInfo.mapName = text
                                         }
@@ -1404,11 +1404,12 @@ Item {
             }
         }
     }
-    RowLayout {
+    Row {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 20
-        layoutDirection: Qt.RightToLeft
+        anchors.rightMargin: width/2
+        spacing: 10
 
         // Nom de la carte courante au centre & suppresion de la carte 🗑️
         Rectangle {
@@ -1430,7 +1431,7 @@ Item {
             Text {
                 id: mapNameText
                 anchors.centerIn: parent
-                text: mapInfo.mapName === mapInfo.autosaveMapName ? "Autosave" : mapInfo.mapName
+                text: (mapInfo.mapName === mapInfo.autosaveMapName || mapInfo.mapName === "") ? "Autosave" : mapInfo.mapName
                 onTextChanged: currentMapName.mapNameSet()
                 font.pixelSize: 16
                 font.bold: true
@@ -1443,39 +1444,47 @@ Item {
                 }
             }
         }
+
         Button {
             id: mapSupprBt
             width: mapSupprText.contentWidth
             height: mapSupprText.contentHeight
-            Layout.margins: 10
             z: 9000
             visible: selectionPanel.visible ? false : true
-            onClicked: {
-                console.log("Delete map:", mapInfo.mapName)
-                console.log("1 currentMapName width " + currentMapName.width)
-                currentMapName.width = Math.max(200, mapNameText.contentWidth + 40)
-                console.log("2 currentMapName width " + currentMapName.width)
-
-            }
             onHoveredChanged: {
-                mapSupprBt.scale === 1.1 ? mapSupprBt.scale = 1.0 : mapSupprBt.scale = 1.1
+                if (mapSupprBt.scale === 1.1){
+                    mapSupprBt.scale = 1.0
+                    confirmationStep = 0
+                }
+                else
+                    mapSupprBt.scale = 1.1
             }
-
+            property int confirmationStep: 0
+            onClicked: {
+                confirmationStep += 1
+                if (confirmationStep >= 2) {
+                    console.log("Deleting map:", mapInfo.mapName)
+                    logic.deleteMap(mapInfo.mapName)
+                    logic.removeCurrentMap()
+                    confirmationStep = 0
+                }
+            }
+            Text {
+                id: mapSupprText
+                text: mapSupprBt.confirmationStep == 0 ? "🗑️" : "🗑️? "
+                font.pointSize: 28
+                font.bold: true
+                color: "black"
+            }
             background: Rectangle {
-                anchors.fill: mapSupprText
+                id: bkRectSupprMap
+                anchors.fill : mapSupprBt
                 radius: 8
                 color: "#CC2222"
                 border.color: "black"
                 border.width: 1.4
             }
-            contentItem: Text {
-                id: mapSupprText
-                anchors.centerIn: parent
-                text: "🗑️"
-                font.pointSize: 28
-                font.bold: true
-                color: "black"
-            }
+
         }
     }
 

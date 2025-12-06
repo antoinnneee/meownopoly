@@ -13,6 +13,7 @@ import EditorEnum
 import Logger
 import UndoRedoManager
 import MapTypes
+import MapFileManager
 
 import "logic"
 
@@ -114,10 +115,19 @@ Base_logic {
         
         if (isAutoSave === MapTypes.UNDOREDO) {
             console.log("[UNDO][SAVE] Saving new state with", snapableTilesList.length, "elements")
-        }
-        
+        }        
         Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
     }
+    function deleteMap(mapName){
+        if (mapName === mapInfo.autosaveMapName){
+            if (Game.deleteMap(mapName, MapTypes.AUTOSAVE))
+                MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
+        }
+        else {
+            Game.deleteMap(mapName, MapTypes.CUSTOM)
+        }
+    }
+
     Settings {
         id: stEnableAutoSave
         category: "Editor/SaveConfig"
