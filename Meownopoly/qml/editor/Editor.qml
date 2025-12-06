@@ -125,7 +125,7 @@ Base_Board {
                 btInfoMapAnim.stop()
                 btInfoMapAnim.start()
                 console.log("onClicked Opening global settings")
-                panelInfoMap.isOpening = !panelInfoMap.isOpening
+                infoMap.isOpening = !infoMap.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
             }
@@ -138,8 +138,8 @@ Base_Board {
         }
     }
 
-    PanelInfoMap {
-        id: panelInfoMap
+    InfoMapPanel {
+        id: infoMap
         anchors.top: btInfoMap.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -238,7 +238,7 @@ Base_Board {
     }
 
 
-    mainMa.anchors.bottom:  panelInfoMap.x < parent.width ? parent.bottom : selectionPanel.top
+    mainMa.anchors.bottom:  infoMap.x < parent.width ? parent.bottom : selectionPanel.top
 
 
 

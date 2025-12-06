@@ -25,31 +25,31 @@ import UndoRedoManager
 import AssetManager
 
 Item {
-    id: panelInfoMap
+    id: infoMapPanel
     property int currentView: 0 // 0 = maps, 1 = background
     x: parent.width
 
     property bool isOpening: false
-    
+
     required property var logic
     // Conteneur principal
     required property var selectionPanel
     required property var sidePanel
 
-    visible: mapsContainer.x < parent.width
+    visible: mapSidePanel.x < parent.width
 
 
     onIsOpeningChanged: {
         if (isOpening) {
-            // panelInfoMap.visible = true
-            mapsContainer.x = panelInfoMap.width - mapsContainer.width - 10
+            // infoMapPanel.visible = true
+            mapSidePanel.x = infoMapPanel.width - mapSidePanel.width - 10
         } else {
-            mapsContainer.x = panelInfoMap.width
+            mapSidePanel.x = infoMapPanel.width
         }
     }
 
     Rectangle {
-        id: mapsContainer
+        id: mapSidePanel
         anchors.top: parent.top
         anchors.topMargin: 25
         height: Screen.pixelDensity * 150
@@ -66,8 +66,8 @@ Item {
                 duration: 500
                 easing.type: Easing.InOutQuad
                 onFinished: {
-                    if (mapsContainer.x >= parent.width) {
-                        panelInfoMap.visible = false
+                    if (mapSidePanel.x >= parent.width) {
+                        infoMapPanel.visible = false
                     }
                 }
             }
@@ -99,14 +99,14 @@ Item {
 
                     Text {
                         anchors.centerIn: parent
-                        text: panelInfoMap.currentView === 0 ? "🗺️" : "🖼️"
+                        text: infoMapPanel.currentView === 0 ? "🗺️" : "🖼️"
                         font.pixelSize: 10
                     }
                 }
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: panelInfoMap.currentView === 0 ? "Infos carte" : "Fond d'écran"
+                    text: infoMapPanel.currentView === 0 ? "Infos carte" : "Fond d'écran"
                     color: "white"
                     font.pixelSize: 10
                     font.bold: true
@@ -159,9 +159,9 @@ Item {
                 height: parent.height
 
                 background: Rectangle {
-                    color: panelInfoMap.currentView === 0 ? "#4A90E2" : "#444444"
+                    color: infoMapPanel.currentView === 0 ? "#4A90E2" : "#444444"
                     radius: 3
-                    border.color: panelInfoMap.currentView === 0 ? "#6AB0F2" : "#555555"
+                    border.color: infoMapPanel.currentView === 0 ? "#6AB0F2" : "#555555"
                     border.width: 1
                 }
 
@@ -181,11 +181,11 @@ Item {
                         text: "Cartes"
                         color: "white"
                         font.pixelSize: 11
-                        font.bold: panelInfoMap.currentView === 0
+                        font.bold: infoMapPanel.currentView === 0
                     }
                 }
                 onClicked: {
-                    panelInfoMap.currentView = 0
+                    infoMapPanel.currentView = 0
                 }
             }
 
@@ -194,9 +194,9 @@ Item {
                 height: parent.height
 
                 background: Rectangle {
-                    color: panelInfoMap.currentView === 1 ? "#4A90E2" : "#444444"
+                    color: infoMapPanel.currentView === 1 ? "#4A90E2" : "#444444"
                     radius: 3
-                    border.color: panelInfoMap.currentView === 1 ? "#6AB0F2" : "#555555"
+                    border.color: infoMapPanel.currentView === 1 ? "#6AB0F2" : "#555555"
                     border.width: 1
                 }
 
@@ -217,12 +217,12 @@ Item {
 
                         color: "white"
                         font.pixelSize: 11
-                        font.bold: panelInfoMap.currentView === 1
+                        font.bold: infoMapPanel.currentView === 1
                     }
                 }
 
                 onClicked: {
-                    panelInfoMap.currentView = 1
+                    infoMapPanel.currentView = 1
                 }
             }
         }
@@ -237,7 +237,7 @@ Item {
             anchors.topMargin: 6
             height: parent.height - headerSection.height - navigationButtons.height - 16 - 6 - 8 // parent.height - headerSection - navigationButtons - marges
             clip: true
-            visible: panelInfoMap.currentView === 0
+            visible: infoMapPanel.currentView === 0
             contentHeight: generalInfoColumn.height
             contentWidth: width
             boundsBehavior: Flickable.StopAtBounds
@@ -374,9 +374,9 @@ Item {
                                 if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                                     var mapInfoLocal = logic.mapInfo
                                     logic.saveMap(logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == "" ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
-                                    
+
                                     stEnableAutoSave.setValue("currentMap", mapInfoLocal.mapName)
-                                    
+
                                     // Rafraîchir la liste des cartes disponibles
                                     leftArrow.availableMaps = MapFileManager.getAvailableMaps()
                                     // Trouver l'index de la nouvelle carte
@@ -811,7 +811,7 @@ Item {
             anchors.topMargin: 6
             height: parent.height - headerSection.height - navigationButtons.height - 16 - 6 - 8
             clip: true
-            visible: panelInfoMap.currentView === 1
+            visible: infoMapPanel.currentView === 1
             contentHeight: backgroundColumn.height
             contentWidth: width
             boundsBehavior: Flickable.StopAtBounds
@@ -1281,7 +1281,7 @@ Item {
 
                             Repeater {
                                 id: backgroundsList
-                                model: []
+                                model: AssetManager.getAvailableBackgrounds()
 
                                 Item {
                                     width: parent.width
@@ -1557,7 +1557,6 @@ Item {
 
     onVisibleChanged: {
         if (visible) {
-            backgroundsList.model = AssetManager.getAvailableBackgrounds()
 
             // Initialiser la liste des maps et l'index courant
             leftArrow.availableMaps = MapFileManager.getAvailableMaps()

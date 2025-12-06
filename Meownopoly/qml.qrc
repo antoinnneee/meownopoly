@@ -175,7 +175,7 @@
         <file>qml/editor/panel/connectionConfigPanel/ConnectionListSection.qml</file>
         <file>qml/editor/panel/connectionConfigPanel/ConnectionsConfigurationSection.qml</file>
         <file>qml/editor/panel/connectionConfigPanel/ConnectionsPanel.qml</file>
-        <file>qml/editor/panel/PanelInfoMap.qml</file>
+        <file>qml/editor/panel/InfoMapPanel.qml</file>
         <file>qml/editor/logic/MouseLogic_Template.qml</file>
         <file>qml/utils/EntityController.qml</file>
         <file>qml/utils/qmldir</file>
