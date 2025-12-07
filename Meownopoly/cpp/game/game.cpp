@@ -139,33 +139,6 @@ Player *Game::getPlayer()
     return m_players;
 }
 
-
-
-QVariantList Game::assetPath() const
-{
-    return m_assetPath;
-}
-
-QVariant Game::getAssetPath(int index) const
-{
-    QString path = m_assetPath.value(index).toString();
-
-    if (index <= m_assetPath.size() && !path.isEmpty()) {
-        return QUrl::fromLocalFile(path).toString();
-    }
-    else
-        return "";
-}
-
-
-void Game::setAssetPath(const QVariantList &newAssetPath)
-{
-    if (m_assetPath == newAssetPath)
-        return;
-    m_assetPath = newAssetPath;
-    emit assetPathChanged();
-}
-
 QList<Case*> Game::getPurchasableCases() const
 {
     QList<Case*> purchasableCases;
