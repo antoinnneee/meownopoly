@@ -95,19 +95,20 @@ Base_Board {
         logic.mouseLogic.isControlPressed = false
     }
 
-    Button {
-        z: z_HUD
-        width: 30
-        height: 30
-        anchors.top: parent.top
-        anchors.right: btInfoMap.left
-        anchors.margins: 30
-        onClicked : logic.editorMouseMode = EditorEnum.EM_TEMPLATE
-        Rectangle {
-            anchors.fill: parent
-            color: "red"
-        }
-    }
+    // Button {
+    //     id: btTestTemplate
+    //     z: z_HUD
+    //     width: 30
+    //     height: 30
+    //     anchors.top: parent.top
+    //     anchors.right: btInfoMap.left
+    //     anchors.margins: 30
+    //     onClicked : logic.editorMouseMode = EditorEnum.EM_TEMPLATE
+    //     Rectangle {
+    //         anchors.fill: parent
+    //         color: "red"
+    //     }
+    // }
 
     Image {
         id: btInfoMap
@@ -118,6 +119,7 @@ Base_Board {
         source: AssetManager.getAssetById("ui", "hud", "0").path
         width: Screen.pixelDensity * 20
         height: Screen.pixelDensity * 20
+
         MouseArea {
             hoverEnabled: true
             anchors.fill:  parent
@@ -128,8 +130,10 @@ Base_Board {
                 infoMap.isOpening = !infoMap.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
+                addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 2) : btInfoMap.x
             }
         }
+
         SequentialAnimation {
             id: btInfoMapAnim
             running: false
@@ -137,6 +141,65 @@ Base_Board {
             SmoothedAnimation {velocity: 1.1; to: 1; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
         }
     }
+
+    Button {
+        id: addMapButton
+        x: btInfoMap.x
+        y: btInfoMap.y
+
+        z: z_HUD
+
+        width: btInfoMap.width * 0.8
+        height: btInfoMap.height * 0.8
+
+        enabled: x == btInfoMap.x ? false : true
+        visible: enabled
+
+        onClicked: console.log("CLicked")
+        onHoveredChanged: {
+            if (hover){
+                bkRect.color = "#88CCFF"
+            }
+            else{
+                bkRect.color = "transparent"
+            }
+        }
+
+        Text {
+            text: "+"
+            anchors.centerIn: parent
+            font.pixelSize: 24
+            font.bold: true
+            color: "blue"
+        }
+        background: Rectangle {
+            id: bkRect
+            anchors.fill: parent
+            color: "transparent"
+            radius: 30
+            border.color: "blue"
+            border.width: 1
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 300
+                    easing.type: Easing.InOutQuad
+                }
+            }
+
+        }
+
+        Behavior on x {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.InOutQuad
+                onFinished: {
+                }
+            }
+        }
+
+    }
+
 
     InfoMapPanel {
         id: infoMap

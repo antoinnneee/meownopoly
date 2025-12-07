@@ -194,5 +194,6 @@
         <file>qml/editor/panel/menuSelectionPanel/MenuSelector_Button.qml</file>
         <file>qml/editor/panel/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
         <file>qml/editor/panel/MapSidePanel.qml</file>
+        <file>qml/editor/panel/MapNavigationBar.qml</file>
     </qresource>
 </RCC>
