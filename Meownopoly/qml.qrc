@@ -175,7 +175,6 @@
         <file>qml/editor/panel/connectionConfigPanel/ConnectionListSection.qml</file>
         <file>qml/editor/panel/connectionConfigPanel/ConnectionsConfigurationSection.qml</file>
         <file>qml/editor/panel/connectionConfigPanel/ConnectionsPanel.qml</file>
-        <file>qml/editor/panel/InfoMapPanel.qml</file>
         <file>qml/editor/logic/MouseLogic_Template.qml</file>
         <file>qml/utils/EntityController.qml</file>
         <file>qml/utils/qmldir</file>
@@ -193,7 +192,8 @@
         <file>qml/editor/panel/menuSelectionPanel/MenuSelector.qml</file>
         <file>qml/editor/panel/menuSelectionPanel/MenuSelector_Button.qml</file>
         <file>qml/editor/panel/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
-        <file>qml/editor/panel/MapSidePanel.qml</file>
-        <file>qml/editor/panel/MapNavigationBar.qml</file>
+        <file>qml/editor/panel/mapInfoPanel/MapInfoPanel.qml</file>
+        <file>qml/editor/panel/mapInfoPanel/MapNavigationBar.qml</file>
+        <file>qml/editor/panel/mapInfoPanel/MapSidePanel.qml</file>
     </qresource>
 </RCC>

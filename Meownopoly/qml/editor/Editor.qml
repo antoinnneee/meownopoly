@@ -14,6 +14,7 @@ import "../component/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
 import "panel/sidePanel"
+import "panel/mapInfoPanel"
 
 
 import Game
@@ -127,7 +128,7 @@ Base_Board {
                 btInfoMapAnim.stop()
                 btInfoMapAnim.start()
                 console.log("onClicked Opening global settings")
-                infoMap.isOpening = !infoMap.isOpening
+                mapInfoPanel.isOpening = !mapInfoPanel.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
                 addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 2) : btInfoMap.x
@@ -149,25 +150,23 @@ Base_Board {
 
         z: z_HUD
 
-        width: btInfoMap.width * 0.8
-        height: btInfoMap.height * 0.8
+        width: btInfoMap.width * 0.5
+        height: btInfoMap.height * 0.5
 
         enabled: x == btInfoMap.x ? false : true
         visible: enabled
 
-        onClicked: console.log("CLicked")
+        onClicked: console.log("Clicked")
         onHoveredChanged: {
-            if (hover){
+            if (hovered)
+                bkRect.color = "#413be3"
+            else
                 bkRect.color = "#88CCFF"
-            }
-            else{
-                bkRect.color = "transparent"
-            }
         }
 
         Text {
             text: "+"
-            anchors.centerIn: parent
+            anchors.centerIn: bkRect
             font.pixelSize: 24
             font.bold: true
             color: "blue"
@@ -175,7 +174,8 @@ Base_Board {
         background: Rectangle {
             id: bkRect
             anchors.fill: parent
-            color: "transparent"
+            color: "#88CCFF"
+
             radius: 30
             border.color: "blue"
             border.width: 1
@@ -186,7 +186,6 @@ Base_Board {
                     easing.type: Easing.InOutQuad
                 }
             }
-
         }
 
         Behavior on x {
@@ -200,9 +199,8 @@ Base_Board {
 
     }
 
-
-    InfoMapPanel {
-        id: infoMap
+    MapInfoPanel {
+        id: mapInfoPanel
         anchors.top: btInfoMap.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -301,7 +299,7 @@ Base_Board {
     }
 
 
-    mainMa.anchors.bottom:  infoMap.x < parent.width ? parent.bottom : selectionPanel.top
+    mainMa.anchors.bottom:  mapInfoPanel.x < parent.width ? parent.bottom : selectionPanel.top
 
 
 

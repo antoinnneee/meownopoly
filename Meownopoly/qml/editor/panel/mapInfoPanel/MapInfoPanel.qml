@@ -8,9 +8,9 @@ import QtCore
 import QtQuick.Dialogs
 import Case
 import ItemSnapable
-import "../../ui_item"
-import "../../component"
-import "../panel"
+import "../../../ui_item"
+import "../../../component"
+import "../../panel"
 
 import Game
 import MapFileManager
@@ -25,7 +25,7 @@ import UndoRedoManager
 import AssetManager
 
 Item {
-    id: infoMapPanel
+    id: mapInfoPanel
     property int currentView: 0 // 0 = maps, 1 = background
     x: parent.width
 
@@ -41,16 +41,16 @@ Item {
 
     onIsOpeningChanged: {
         if (isOpening) {
-            // infoMapPanel.visible = true
-            mapSidePanel.x = infoMapPanel.width - mapSidePanel.width - 10
+            // mapInfoPanel.visible = true
+            mapSidePanel.x = mapInfoPanel.width - mapSidePanel.width - 10
         } else {
-            mapSidePanel.x = infoMapPanel.width
+            mapSidePanel.x = mapInfoPanel.width
         }
     }
 
     MapSidePanel {
         id: mapSidePanel
-        property alias infoMapPanel: infoMapPanel
+        property alias mapInfoPanel: mapInfoPanel
     }
 
     // Barre de navigation des cartes

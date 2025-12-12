@@ -8,9 +8,9 @@ import QtCore
 import QtQuick.Dialogs
 import Case
 import ItemSnapable
-import "../../ui_item"
-import "../../component"
-import "../panel"
+import "../../../ui_item"
+import "../../../component"
+import "../../panel"
 
 import Game
 import MapFileManager
@@ -35,16 +35,16 @@ Rectangle {
     border.color: "#4A90E2"
     border.width: 1
     x: parent.width
-    
 
-    
+
+
     Behavior on x {
         NumberAnimation {
             duration: 500
             easing.type: Easing.InOutQuad
             onFinished: {
                 if (mapSidePanel.x >= parent.width) {
-                    infoMapPanel.visible = false
+                    mapInfoPanel.visible = false
                 }
             }
         }
@@ -75,14 +75,14 @@ Rectangle {
 
                 Text {
                     anchors.centerIn: parent
-                    text: infoMapPanel.currentView === 0 ? "🗺️" : "🖼️"
+                    text: mapInfoPanel.currentView === 0 ? "🗺️" : "🖼️"
                     font.pixelSize: 10
                 }
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: infoMapPanel.currentView === 0 ? "Infos carte" : "Fond d'écran"
+                text: mapInfoPanel.currentView === 0 ? "Infos carte" : "Fond d'écran"
                 color: "white"
                 font.pixelSize: 10
                 font.bold: true
@@ -135,9 +135,9 @@ Rectangle {
             height: parent.height
 
             background: Rectangle {
-                color: infoMapPanel.currentView === 0 ? "#4A90E2" : "#444444"
+                color: mapInfoPanel.currentView === 0 ? "#4A90E2" : "#444444"
                 radius: 3
-                border.color: infoMapPanel.currentView === 0 ? "#6AB0F2" : "#555555"
+                border.color: mapInfoPanel.currentView === 0 ? "#6AB0F2" : "#555555"
                 border.width: 1
             }
 
@@ -157,11 +157,11 @@ Rectangle {
                     text: "Cartes"
                     color: "white"
                     font.pixelSize: 11
-                    font.bold: infoMapPanel.currentView === 0
+                    font.bold: mapInfoPanel.currentView === 0
                 }
             }
             onClicked: {
-                infoMapPanel.currentView = 0
+                mapInfoPanel.currentView = 0
             }
         }
 
@@ -170,9 +170,9 @@ Rectangle {
             height: parent.height
 
             background: Rectangle {
-                color: infoMapPanel.currentView === 1 ? "#4A90E2" : "#444444"
+                color: mapInfoPanel.currentView === 1 ? "#4A90E2" : "#444444"
                 radius: 3
-                border.color: infoMapPanel.currentView === 1 ? "#6AB0F2" : "#555555"
+                border.color: mapInfoPanel.currentView === 1 ? "#6AB0F2" : "#555555"
                 border.width: 1
             }
 
@@ -193,12 +193,12 @@ Rectangle {
 
                     color: "white"
                     font.pixelSize: 11
-                    font.bold: infoMapPanel.currentView === 1
+                    font.bold: mapInfoPanel.currentView === 1
                 }
             }
 
             onClicked: {
-                infoMapPanel.currentView = 1
+                mapInfoPanel.currentView = 1
             }
         }
     }
@@ -213,7 +213,7 @@ Rectangle {
         anchors.topMargin: 6
         height: parent.height - headerSection.height - navigationButtons.height - 16 - 6 - 8 // parent.height - headerSection - navigationButtons - marges
         clip: true
-        visible: infoMapPanel.currentView === 0
+        visible: mapInfoPanel.currentView === 0
         contentHeight: generalInfoColumn.height
         contentWidth: width
         boundsBehavior: Flickable.StopAtBounds
@@ -787,7 +787,7 @@ Rectangle {
         anchors.topMargin: 6
         height: parent.height - headerSection.height - navigationButtons.height - 16 - 6 - 8
         clip: true
-        visible: infoMapPanel.currentView === 1
+        visible: mapInfoPanel.currentView === 1
         contentHeight: backgroundColumn.height
         contentWidth: width
         boundsBehavior: Flickable.StopAtBounds

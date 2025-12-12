@@ -8,9 +8,9 @@ import QtCore
 import QtQuick.Dialogs
 import Case
 import ItemSnapable
-import "../../ui_item"
-import "../../component"
-import "../panel"
+import "../../../ui_item"
+import "../../../component"
+import "../../panel"
 
 import Game
 import MapFileManager
