@@ -121,13 +121,13 @@ MouseArea {
             // Map name text field
             TextField {
                 id: mapNameField
+                property bool mapnameExists: false
                 Layout.fillWidth: true
                 Layout.preferredHeight: 42
-                placeholderText: "Nom de la nouvelle carte"
-                placeholderTextColor: "#888888"
+                placeholderText: mapnameExists ? "Nom de carte deja utilise" : "Nom de la nouvelle carte"
+                placeholderTextColor: mapnameExists ? "lightred" : "#888888"
                 color: "#FFFFFF"
                 font.pixelSize: 16
-                property bool mapnameExists: false
                 background: Rectangle {
                     color: "#333333"
                     radius: 8
@@ -260,6 +260,7 @@ MouseArea {
                                 enabled: menuMapAtStart.selectedDisplayMode === "Tile"
 
                                 onValueChanged: {
+                                    logic.mapInfo.backgroundTileSize = value
                                     newMapInfo.backgroundTileSize = value
                                 }
 
@@ -409,77 +410,75 @@ MouseArea {
                         newMapInfo.isBackgroundOnGrill = checked
                         logic.mapInfo.isBackgroundOnGrill = checked
                     }
-                }
-            }
-        }
 
-        // Bottom action buttons
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 44
-            spacing: 12
-
-            Button {
-                text: "Confirmer"
-                Layout.fillWidth: true
-
-                background: Rectangle {
-                    color: "#4CAF50"  // Green color
-                    radius: 8
-                    border.width: 1
-                    border.color: "#FFFFFF"
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    font.pixelSize: 14
-                    font.bold: true
-                    color: "#FFFFFF"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: {
-                    if (newMapInfo.mapName === "" || MapFileManager.mapExist(newMapInfo.mapName, MapTypes.CUSTOM))
-                        return
-
-                    root.visible = false
-                    root.backgroundSelected()
-                    root.newMapSet()
                 }
             }
 
-            Button {
-                text: "Annuler"
+            // Bottom action buttons
+            RowLayout {
                 Layout.fillWidth: true
+                Layout.preferredHeight: 44
+                spacing: 12
 
-                background: Rectangle {
-                    color: "#F44336"  // Red color
-                    radius: 8
-                    border.width: 1
-                    border.color: "#FFFFFF"
+                Button {
+                    text: "Confirmer"
+                    Layout.fillWidth: true
+
+                    background: Rectangle {
+                        color: "#4CAF50"  // Green color
+                        radius: 8
+                        border.width: 1
+                        border.color: "#FFFFFF"
+                    }
+
+                    contentItem: Text {
+                        text: parent.text
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: "#FFFFFF"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    onClicked: {
+                        if (newMapInfo.mapName === "" || MapFileManager.mapExists(newMapInfo.mapName, MapTypes.CUSTOM))
+                            return
+
+                        root.visible = false
+                        root.backgroundSelected()
+                        root.newMapSet()
+                    }
                 }
 
-                contentItem: Text {
-                    text: parent.text
-                    font.pixelSize: 14
-                    font.bold: true
-                    color: "#FFFFFF"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                Button {
+                    text: "Annuler"
+                    Layout.fillWidth: true
 
-                onClicked: {
-                    root.visible = false
-                    mapInfo.backgroundPath = ""
-                    mapInfo.backgroundScaling = "Fit"
+                    background: Rectangle {
+                        color: "#F44336"  // Red color
+                        radius: 8
+                        border.width: 1
+                        border.color: "#FFFFFF"
+                    }
+
+                    contentItem: Text {
+                        text: parent.text
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: "#FFFFFF"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        root.visible = false
+                        mapInfo.backgroundPath = ""
+                        mapInfo.backgroundScaling = "Fit"
+                    }
                 }
             }
         }
     }
-
-    Component.onCompleted: {
-        visible = true
-    }
+        Component.onCompleted: {
+            visible = true
+        }
 }
-
