@@ -118,6 +118,7 @@ Base_logic {
         }        
         Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
     }
+
     function deleteMap(mapName){
         if (mapName === mapInfo.autosaveMapName){
             if (Game.deleteMap(mapName, MapTypes.AUTOSAVE))
@@ -127,6 +128,11 @@ Base_logic {
             Game.deleteMap(mapName, MapTypes.CUSTOM)
         }
     }
+
+    function createMap(mapName, mapType){
+        MapFileManager.createMapFile(mapName, mapType)
+    }
+
 
     Settings {
         id: stEnableAutoSave

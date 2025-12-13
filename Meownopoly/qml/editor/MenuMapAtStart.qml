@@ -16,14 +16,21 @@ import QtQml
 import Case
 import ItemSnapable
 import MapInfo
+import MapFileManager
+import MapTypes
 import EditorEnum
 import AssetManager 1.0
 
 MouseArea {
     anchors.fill: parent
     id: root
-    signal backgroundSelected()
 
+    signal backgroundSelected()
+    signal newMapSet()
+
+    property var newMapInfo: MapInfo {
+        id: mapInfo
+    }
 
     onClicked: {
         var mappedPoint = root.mapToItem(menuMapAtStart, mouseX, mouseY)
@@ -120,19 +127,22 @@ MouseArea {
                 placeholderTextColor: "#888888"
                 color: "#FFFFFF"
                 font.pixelSize: 16
-
+                property bool mapnameExists: false
                 background: Rectangle {
                     color: "#333333"
                     radius: 8
                     border.width: mapNameField.activeFocus ? 2 : 1
-                    border.color: mapNameField.activeFocus ? "#4A90E2" : "#555555"
+                    border.color: !mapNameField.activeFocus ? "#555555" : mapNameField.mapnameExists ? "red" : "#4A90E2"
                 }
 
                 onTextChanged: {
-                    menuMapAtStart.mapName = text
-                    if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
-                        logic.mapInfo.mapName = text
-                    }
+                    if (MapFileManager.mapExists(text, MapTypes.CUSTOM))
+                        mapNameField.mapnameExists = true
+
+                    else
+                        mapNameField.mapnameExists = false
+
+                    newMapInfo.mapName = text
                 }
             }
 
@@ -250,9 +260,7 @@ MouseArea {
                                 enabled: menuMapAtStart.selectedDisplayMode === "Tile"
 
                                 onValueChanged: {
-                                    if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
-                                        logic.mapInfo.backgroundTileSize = value
-                                    }
+                                    newMapInfo.backgroundTileSize = value
                                 }
 
                                 background: Rectangle {
@@ -339,140 +347,139 @@ MouseArea {
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    menuMapAtStart.selectedBackground = index
+                                    logic.mapInfo.backgroundPath = bgImage.source
 
-                                    // Mettre à jour les propriétés de mapInfo si logic est disponible
-                                    if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
-                                        // Définir le chemin de l'image de fond
-                                        logic.mapInfo.backgroundPath = bgImage.source
-
-                                        // Définir le mode de mise à l'échelle en fonction du mode sélectionné
-                                        var scaling;
-                                        switch(menuMapAtStart.selectedDisplayMode) {
-                                        case "Stretch":
-                                            scaling = "Stretch";
-                                            break;
-                                        case "Fit":
-                                            scaling = "Fit";
-                                            break;
-                                        case "Tile":
-                                            scaling = "Tile";
-                                            break;
-                                        default:
-                                            scaling = "Fit"; // Valeur par défaut
-                                        }
-                                        logic.mapInfo.backgroundScaling = scaling;
+                                    // Définir le mode de mise à l'échelle en fonction du mode sélectionné
+                                    var scaling;
+                                    switch(menuMapAtStart.selectedDisplayMode) {
+                                    case "Stretch":
+                                        scaling = "Stretch";
+                                        break;
+                                    case "Fit":
+                                        scaling = "Fit";
+                                        break;
+                                    case "Tile":
+                                        scaling = "Tile";
+                                        break;
+                                    default:
+                                        scaling = "Fit"; // Valeur par défaut
                                     }
+                                    newMapInfo.backgroundScaling = scaling;
                                 }
                             }
                         }
                     }
+                }
 
-                    // Snap to grid checkbox
-                    CheckBox {
-                        id: snapToGridCheckBox
-                        text: "Fixé à la grille ?"
-                        Layout.fillWidth: true
-                        checked: menuMapAtStart.snapToGrid
+                // Snap to grid checkbox
+                CheckBox {
+                    id: snapToGridCheckBox
+                    text: "Fixé à la grille ?"
+                    Layout.fillWidth: true
+                    checked: menuMapAtStart.snapToGrid
 
-                        indicator: Rectangle {
-                            implicitWidth: 20
-                            implicitHeight: 20
-                            x: snapToGridCheckBox.leftPadding
-                            y: parent.height / 2 - height / 2
-                            radius: 3
-                            border.color: "#4A90E2"
-                            border.width: 1
-                            color: snapToGridCheckBox.checked ? "#4A90E2" : "transparent"
+                    indicator: Rectangle {
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        x: snapToGridCheckBox.leftPadding
+                        y: parent.height / 2 - height / 2
+                        radius: 3
+                        border.color: "#4A90E2"
+                        border.width: 1
+                        color: snapToGridCheckBox.checked ? "#4A90E2" : "transparent"
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "✓"
-                                font.pixelSize: 14
-                                color: "white"
-                                visible: snapToGridCheckBox.checked
-                            }
-                        }
-
-                        contentItem: Text {
-                            text: snapToGridCheckBox.text
+                        Text {
+                            anchors.centerIn: parent
+                            text: "✓"
                             font.pixelSize: 14
-                            color: "#FFFFFF"
-                            verticalAlignment: Text.AlignVCenter
-                            leftPadding: snapToGridCheckBox.indicator.width + snapToGridCheckBox.spacing
+                            color: "white"
+                            visible: snapToGridCheckBox.checked
                         }
-
-                        onCheckedChanged: {
-                            menuMapAtStart.snapToGrid = checked
-                            logic.mapInfo.isBackgroundOnGrill = checked
-                        }
-                    }
-                }
-            }
-
-            // Bottom action buttons
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 44
-                spacing: 12
-
-                Button {
-                    text: "Confirmer"
-                    Layout.fillWidth: true
-
-                    background: Rectangle {
-                        color: "#4CAF50"  // Green color
-                        radius: 8
-                        border.width: 1
-                        border.color: "#FFFFFF"
                     }
 
                     contentItem: Text {
-                        text: parent.text
+                        text: snapToGridCheckBox.text
                         font.pixelSize: 14
-                        font.bold: true
                         color: "#FFFFFF"
-                        horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
+                        leftPadding: snapToGridCheckBox.indicator.width + snapToGridCheckBox.spacing
                     }
 
-                    onClicked: {
-                        root.visible = false
-                        root.backgroundSelected()
-                    }
-                }
-
-                Button {
-                    text: "Annuler"
-                    Layout.fillWidth: true
-
-                    background: Rectangle {
-                        color: "#F44336"  // Red color
-                        radius: 8
-                        border.width: 1
-                        border.color: "#FFFFFF"
-                    }
-
-                    contentItem: Text {
-                        text: parent.text
-                        font.pixelSize: 14
-                        font.bold: true
-                        color: "#FFFFFF"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    onClicked: {
-                        root.visible = false
-                        mapInfo.backgroundPath = ""
-                        mapInfo.backgroundScaling = "Fit"
+                    onCheckedChanged: {
+                        newMapInfo.isBackgroundOnGrill = checked
+                        logic.mapInfo.isBackgroundOnGrill = checked
                     }
                 }
             }
         }
 
-        Component.onCompleted: {
-            visible = true
+        // Bottom action buttons
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 44
+            spacing: 12
+
+            Button {
+                text: "Confirmer"
+                Layout.fillWidth: true
+
+                background: Rectangle {
+                    color: "#4CAF50"  // Green color
+                    radius: 8
+                    border.width: 1
+                    border.color: "#FFFFFF"
+                }
+
+                contentItem: Text {
+                    text: parent.text
+                    font.pixelSize: 14
+                    font.bold: true
+                    color: "#FFFFFF"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                onClicked: {
+                    if (newMapInfo.mapName === "" || MapFileManager.mapExist(newMapInfo.mapName, MapTypes.CUSTOM))
+                        return
+
+                    root.visible = false
+                    root.backgroundSelected()
+                    root.newMapSet()
+                }
+            }
+
+            Button {
+                text: "Annuler"
+                Layout.fillWidth: true
+
+                background: Rectangle {
+                    color: "#F44336"  // Red color
+                    radius: 8
+                    border.width: 1
+                    border.color: "#FFFFFF"
+                }
+
+                contentItem: Text {
+                    text: parent.text
+                    font.pixelSize: 14
+                    font.bold: true
+                    color: "#FFFFFF"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                onClicked: {
+                    root.visible = false
+                    mapInfo.backgroundPath = ""
+                    mapInfo.backgroundScaling = "Fit"
+                }
+            }
         }
     }
+
+    Component.onCompleted: {
+        visible = true
+    }
 }
+

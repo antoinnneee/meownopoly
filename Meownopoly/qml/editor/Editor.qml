@@ -454,6 +454,12 @@ Base_Board {
 
     MenuMapAtStart {
         z: z_HUD
+        onNewMapSet: {
+            logic.createMap(newMapInfo.mapName, MapTypes.CUSTOM)
+            mapInfo.setMapInfo(newMapInfo)
+            logic.saveMap(false)
+            Game.loadMap(newMapInfo.mapName, MapTypes.CUSTOM)
+        }
     }
 
 
