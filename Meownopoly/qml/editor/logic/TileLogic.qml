@@ -146,7 +146,8 @@ QtObject {
         if (index !== -1) {
             // Supprimer l'élément de la liste
             snapableTilesList.splice(index, 1)
-            
+            logic.mouseLogic.unselectSelectedElements()
+
             // Détruire l'objet QML
             element.destroy()
             
