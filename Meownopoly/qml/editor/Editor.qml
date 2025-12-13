@@ -60,12 +60,12 @@ Base_Board {
     signal updateSettings()
     property alias entity:gameScene.entity
 
-    property real z_WORKAREA: 5000
     property real z_CONFIG_PANEL: 10000
     property real z_HUD: 9000
     property real z_SELECTION_RECT: 8000
     property real z_CURSOR_TRACKER: 7000
     property real z_LINK_TRACKER: 6000
+    property real z_WORKAREA: 5000
 
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
@@ -96,20 +96,25 @@ Base_Board {
         logic.mouseLogic.isControlPressed = false
     }
 
-    // Button {
-    //     id: btTestTemplate
-    //     z: z_HUD
-    //     width: 30
-    //     height: 30
-    //     anchors.top: parent.top
-    //     anchors.right: btInfoMap.left
-    //     anchors.margins: 30
-    //     onClicked : logic.editorMouseMode = EditorEnum.EM_TEMPLATE
-    //     Rectangle {
-    //         anchors.fill: parent
-    //         color: "red"
-    //     }
-    // }
+
+
+    // Menu d'échappement
+    EditorEscMenu {
+        id: escMenu
+        z: z_CONFIG_PANEL
+        onVisibleChanged: {
+            console.log("EscMenu visibility changed:", visible)
+            if (!visible) {
+                // Redonner le focus à l'éditeur quand le menu se ferme
+                root.forceActiveFocus()
+            }
+        }
+        onIndexSaveEvent: {
+            stEnableAutoSave.sync()
+            root.updateSettings()
+        }
+    }
+
 
     Image {
         id: btInfoMap
@@ -131,7 +136,7 @@ Base_Board {
                 mapInfoPanel.isOpening = !mapInfoPanel.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
-                addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 2) : btInfoMap.x
+                addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 1.5) : btInfoMap.x
             }
         }
 
@@ -146,7 +151,7 @@ Base_Board {
     Button {
         id: addMapButton
         x: btInfoMap.x
-        y: btInfoMap.y
+        y: btInfoMap.y + addMapButton.height/2
 
         z: z_HUD
 
@@ -168,7 +173,8 @@ Base_Board {
 
         Text {
             text: "+"
-            anchors.centerIn: bkRect
+            horizontalAlignment: Text.AlignHCenter
+            width: parent.width
             font.pixelSize: 24
             font.bold: true
             color: "blue"
@@ -199,6 +205,8 @@ Base_Board {
             }
         }
     }
+
+
 
     MapInfoPanel {
         id: mapInfoPanel
@@ -445,27 +453,9 @@ Base_Board {
     }
 
     MenuMapAtStart {
-        z: z_CONFIG_PANEL
-        onBackgroundSelected: function() {
-        }
+        z: z_HUD
     }
 
-    // Menu d'échappement
-    EditorEscMenu {
-        id: escMenu
-        z: z_CONFIG_PANEL
-        onVisibleChanged: {
-            console.log("EscMenu visibility changed:", visible)
-            if (!visible) {
-                // Redonner le focus à l'éditeur quand le menu se ferme
-                root.forceActiveFocus()
-            }
-        }
-        onIndexSaveEvent: {
-            stEnableAutoSave.sync()
-            root.updateSettings()
-        }
-    }
 
     Timer {
         id: tmpSaver
