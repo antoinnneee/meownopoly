@@ -34,7 +34,6 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_Item.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/AssetSelectionPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ExclusionZonePanel.qml</file>
-        <file>qml/editor/panel/MenuSelector.qml</file>
         <file>qml/editor/panel/SelectionPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_TitleBar.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_TitleBar.qml</file>
