@@ -1,7 +1,9 @@
 ﻿#include "mapfilemanager.h"
+#include "game/map/mapinfo.h"
 #include "maptypes.h"
 
 #include <QFile>
+#include <QTemporaryFile>
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -9,6 +11,9 @@
 #include <QDebug>
 #include <QStandardPaths>
 #include <QCoreApplication>
+
+#include "tools/logger.h"
+
 
 // Static member initialization
 MapFileManager *MapFileManager::m_instance = nullptr;
@@ -117,6 +122,30 @@ bool MapFileManager::mapExists(const QString &mapName, MapTypes::MapType mapType
 {
     QString filePath = getMapFilePath(mapName, mapType);
     return QFile::exists(filePath);
+}
+
+bool MapFileManager::renameMap(QString oldMapName, QString newMapName)
+{
+    bool flag = false;
+
+    if (!mapExists(oldMapName, MapTypes::CUSTOM)){
+        Logger::instance()->error("Old map name doesen't exist ", Q_FUNC_INFO);
+        return flag;
+    }
+    if (mapExists(newMapName, MapTypes::CUSTOM)){
+        Logger::instance()->error("New map name already exist ", Q_FUNC_INFO);
+        return flag;
+    }
+    if (newMapName.isEmpty() || oldMapName.isEmpty()){
+        Logger::instance()->error("Map name empty", Q_FUNC_INFO);
+        return flag;
+    }
+    QFile newMap(oldMapName);
+    if (!newMap.rename(newMapName)){
+        Logger::instance()->error("Can't rename map", Q_FUNC_INFO);
+        return flag;
+    }
+    return flag;
 }
 
 bool MapFileManager::saveMap(const QJsonObject &mapData, const QString &mapName, MapTypes::MapType mapType)

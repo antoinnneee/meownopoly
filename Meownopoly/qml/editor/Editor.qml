@@ -156,7 +156,9 @@ Base_Board {
         enabled: x == btInfoMap.x ? false : true
         visible: enabled
 
-        onClicked: console.log("Clicked")
+        onClicked: {
+            logic.createNewMap()
+        }
         onHoveredChanged: {
             if (hovered)
                 bkRect.color = "#413be3"
@@ -196,7 +198,6 @@ Base_Board {
                 }
             }
         }
-
     }
 
     MapInfoPanel {

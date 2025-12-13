@@ -53,7 +53,6 @@ public:
     // Case library functions for UI
     Q_INVOKABLE QList<Case*> getPurchasableCases() const;
 
-
     QList<Player*> players() const { return m_listPlayers; }
     int boardSize() const { return 40; }  // Standard Monopoly board size
     int currentPlayerIndex() const;
@@ -78,6 +77,7 @@ public:
     Q_INVOKABLE Map *loadMap(QString mapName, MapTypes::MapType mapType);
 
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
+
 
     Q_INVOKABLE void askPreview();
     Q_INVOKABLE void askNext();
