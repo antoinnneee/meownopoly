@@ -69,9 +69,10 @@ Base_Board {
         stEnableAutoSave.sync()
         initializeEditor()
 
-        // Initialize Entity Controller
-        EntityController.setTarget(entity, view3D, gameGrid, logic)
-        EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
+        // Initialize Entity Controller (avec la liste des tiles pour la collision)
+        EntityController.snapableTilesList = snapableTilesList
+        // EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        // EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
         
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
@@ -244,6 +245,16 @@ Base_Board {
 
             // Bind camera magnification to grid scale level
             cameraMagnification: gameGrid.scaleLevel
+            gridManager: gameGrid
+        }
+        Component.onCompleted: {
+            var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")           
+            gameScene.moveEntityToGridPosition(sphere, 0, 0)
+            EntityController.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
+            EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
+
+            sphere = gameScene.generateSphere(0, 0, 0, 10, "blue")
+            gameScene.moveEntityToGridPosition(sphere, 2, 2)
         }
     }
 

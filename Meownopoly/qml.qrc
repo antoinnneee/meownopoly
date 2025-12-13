@@ -196,5 +196,6 @@
         <file>qml/editor/EditorController.qml</file>
         <file>qml/editor/qmldir</file>
         <file>qml/component/GameScene.qml</file>
+        <file>qml/utils/CameraController.qml</file>
     </qresource>
 </RCC>

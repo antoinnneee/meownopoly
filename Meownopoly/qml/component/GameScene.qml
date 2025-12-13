@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick3D
 import QtQuick3D.Helpers
 import AssetManager
+import "../component/grid"
 
 Item {
     id: root
@@ -12,9 +13,145 @@ Item {
     property alias camera: cameraOrthographic
     property alias entity: entityNode
     property alias environment: sceneEnvironment
+    required property GridManager gridManager
     
     // Properties for camera control
     property real cameraMagnification: 1.0
+
+    // Component pour créer des sphères dynamiquement
+    Component {
+        id: sphereComponent
+        Model {
+            source: "#Sphere"
+            materials: PrincipledMaterial {
+                baseColor: "white"
+            }
+        }
+    }
+
+    function generateSphere(x, y, z, radius, color) {
+        // Créer une nouvelle instance de sphère dans sceneNode
+        var sphere = sphereComponent.createObject(sceneNode, {
+            "x": x,
+            "y": y,
+            "z": z,
+            // Le scale de la sphère primitive #Sphere est de 100 unités de diamètre par défaut
+            // Donc pour un rayon donné, on divise par 50 (diamètre/100)
+            "scale": Qt.vector3d(radius / 50, radius / 50, radius / 50)
+        });
+
+        if (sphere === null) {
+            console.error("Erreur lors de la création de la sphère");
+            return null;
+        }
+
+        // Appliquer la couleur au matériau
+        sphere.materials[0].baseColor = color;
+
+        return sphere;
+    }
+
+    // Déplace un node/model à une position de grille (en coordonnées pixel de la vue)
+    function moveEntityToGridPixelPosition(node, gridPixelX, gridPixelY) {
+        if (!view3D || !node) {
+            console.error("moveEntityToGridPixelPosition: view3D ou node non défini");
+            return;
+        }
+
+        // Calculer la position 3D correspondante aux coordonnées pixel
+        var pos3D = getGroundIntersection(gridPixelX, gridPixelY);
+
+        // Appliquer la position au node
+        node.x = pos3D.x;
+        node.y = pos3D.y;
+        node.z = pos3D.z;
+    }
+
+    function moveEntityToGridPosition(node, gridX, gridY) {
+        if (!view3D || !node) {
+            console.error("moveEntityToGridPosition: view3D ou node non défini");
+            return;
+        }
+
+        var gridPos = gridManager.getGridPixelPosition(gridX, gridY);
+        var pos3D = getGroundIntersection(gridPos.x, gridPos.y);
+        node.x = pos3D.x;
+        node.y = pos3D.y;
+        node.z = pos3D.z;
+    }
+
+    // Retourne la position d'une entity en coordonnées pixel de la grille
+    // Inverse de moveEntityToGridPixelPosition: coordonnées 3D -> coordonnées 2D grille
+    function getEntityGridPixelPosition(node) {
+        if (!view3D || !node || !gridManager) {
+            console.error("getEntityGridPixelPosition: view3D, node ou gridManager non défini");
+            return Qt.point(0, 0);
+        }
+
+        // 1. Projeter la position 3D du node vers les coordonnées 2D de la View3D
+        var viewPos = view3D.mapFrom3DScene(Qt.vector3d(node.x, node.y, node.z));
+
+        // 2. Convertir les coordonnées View3D vers les coordonnées de la grille
+        var gridPos = view3D.mapToItem(gridManager, viewPos.x, viewPos.y);
+
+        return Qt.point(gridPos.x, gridPos.y);
+    }
+
+    function position3dToGridRealPosition(xPos, yPos, zPos)
+    {
+        if (!view3D || !gridManager) {
+            console.error("position3dToGridRealPosition: view3D, ou gridManager non défini");
+            return Qt.point(0, 0);
+        }
+        var viewPos = view3D.mapFrom3DScene(Qt.vector3d(xPos, yPos, zPos));
+        var gridPos = view3D.mapToItem(gridManager, viewPos.x, viewPos.y);
+
+        return Qt.point(gridPos.x / gridManager.gridSize, gridPos.y / gridManager.gridSize);
+    }
+
+    // Retourne la position d'une entity en coordonnées pixel de la grille
+    // Inverse de moveEntityToGridPixelPosition: coordonnées 3D -> coordonnées 2D grille
+    function getEntityGridRealPosition(node) {
+        if (!view3D || !node || !gridManager) {
+            console.error("getEntityGridPixelPosition: view3D, node ou gridManager non défini");
+            return Qt.point(0, 0);
+        }
+
+        // 1. Projeter la position 3D du node vers les coordonnées 2D de la View3D
+        var viewPos = view3D.mapFrom3DScene(Qt.vector3d(node.x, node.y, node.z));
+
+        // 2. Convertir les coordonnées View3D vers les coordonnées de la grille
+        var gridPos = view3D.mapToItem(gridManager, viewPos.x, viewPos.y);
+
+        return Qt.point(gridPos.x/gridManager.gridSize, gridPos.y/gridManager.gridSize);
+    }
+
+    // Calcule l'intersection avec le sol (Y=0) depuis un point de la vue
+    // Inspiré de MouseLogic_Game.qml
+    function getGroundIntersection(viewX, viewY) {
+        // Obtenir le point dans l'espace 3D de la scène
+        var scenePos = view3D.mapTo3DScene(Qt.point(viewX, viewY));
+
+        // Angle de la caméra (eulerRotation.x = -55 degrés)
+        var angleDeg = cameraOrthographic.eulerRotation.x; // -55
+        var rad = angleDeg * Math.PI / 180;
+
+        // Direction du rayon de la caméra
+        var rayDirY = Math.sin(rad); // Composante Y du vecteur vue
+        var rayDirZ = -Math.cos(rad); // Composante Z du vecteur vue
+
+        var targetX = scenePos.x;
+        var targetZ = scenePos.z;
+
+        // Calculer l'intersection avec le plan Y=0
+        if (Math.abs(rayDirY) > 0.0001) {
+            var t = -scenePos.y / rayDirY;
+            targetX = scenePos.x; // X ne change pas (pas de rotation Y ni Z)
+            targetZ = scenePos.z + t * rayDirZ;
+        }
+
+        return Qt.vector3d(targetX, 0, targetZ);
+    }
 
     // Internal scene structure
     Node {
@@ -34,6 +171,7 @@ Item {
             x: 0
             y: 0
             z: 0
+
 
             Loader3D {
                 id: modelLoader
