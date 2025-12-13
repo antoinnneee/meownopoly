@@ -323,7 +323,7 @@ Item {
         }
     }
 
-    function rotateEntity(dx, dz, dt) {
+    function rotateEntity(dx, dz) {
         // 1. Calcul de l'angle cible en degrés
         // atan2(x, z) donne l'angle par rapport au Nord (Z)
         var targetAngle = Math.atan2(dx, dz) * 180 / Math.PI
@@ -356,7 +356,6 @@ Item {
         // --- 1. Déplacement ---
         if (inputVector.length() > 0) {
             // Vitesse actuelle
-            var speed = root.moveSpeed * (root.isSprinting ? root.sprintMultiplier : 1.0)
 
         var dx = inputVector.x * speed * dt
         var dz = -inputVector.y * speed * dt // Avancer (Y+) = aller vers Z négatif
@@ -390,11 +389,12 @@ Item {
         } else if (!canMoveX && !canMoveZ) {
             if (debugCollision) console.log("[Collision] Bloqué complètement!")
         }
+        var speed = root.moveSpeed * (root.isSprinting ? root.sprintMultiplier : 1.0)
 
-            // Rotation du personnage vers la direction du mouvement (optionnel mais cool)
-            if (dx !== 0 || dz !== 0){
-                rotateEntity(dx, dz, dt)
-            }
+        // Rotation du personnage vers la direction du mouvement (optionnel mais cool)
+        if (dx !== 0 || dz !== 0){
+            rotateEntity(dx, dz)
+        }
 
         }
     }
@@ -411,7 +411,8 @@ Item {
             var dt = frameTime
 
             if (root.freeCamMode) {
-                CameraController.moveManual(inputVector.x, inputVector.y, speed * 1.5, dt)
+                if ( inputVector.length() > 0)
+                    CameraController.moveManual(inputVector.x, inputVector.y, speed * 1.5, dt)
             }
             else
             {

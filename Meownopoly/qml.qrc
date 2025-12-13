@@ -200,5 +200,6 @@
         <file>qml/editor/panel/mapInfoPanel/MapInfoPanel.qml</file>
         <file>qml/editor/panel/mapInfoPanel/MapNavigationBar.qml</file>
         <file>qml/editor/panel/mapInfoPanel/MapSidePanel.qml</file>
+        <file>qml/utils/EntityController_copy.qml</file>
     </qresource>
 </RCC>
