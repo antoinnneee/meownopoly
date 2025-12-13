@@ -29,8 +29,6 @@ class Game : public QObject
     Q_PROPERTY(QList<Player *> listPlayers READ listPlayers CONSTANT FINAL)
     Q_PROPERTY(QList<Card *> listCards READ listCards CONSTANT FINAL)
 
-    Q_PROPERTY(QVariantList assetPath READ assetPath WRITE setAssetPath NOTIFY assetPathChanged FINAL)
-
 public:
 
     enum GAME_CONDITION {
@@ -55,7 +53,6 @@ public:
     // Case library functions for UI
     Q_INVOKABLE QList<Case*> getPurchasableCases() const;
 
-
     QList<Player*> players() const { return m_listPlayers; }
     int boardSize() const { return 40; }  // Standard Monopoly board size
     int currentPlayerIndex() const;
@@ -74,21 +71,19 @@ public:
 
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
+
     Q_INVOKABLE bool saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType);
+    Q_INVOKABLE bool deleteMap(QString mapName, MapTypes::MapType mapType);
     Q_INVOKABLE Map *loadMap(QString mapName, MapTypes::MapType mapType);
+
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
+
 
     Q_INVOKABLE void askPreview();
     Q_INVOKABLE void askNext();
 
 
-
     ~Game();
-
-    QVariantList assetPath() const;
-    Q_INVOKABLE QVariant getAssetPath(int index) const;
-
-    void setAssetPath(const QVariantList &newAssetPath);
 
 public slots:
     void onReturnEdit(QJsonObject newEdit);
@@ -102,9 +97,6 @@ signals:
     void currentPlayerIndexChanged();
     void propertyPurchased(int position, Player* newOwner);
 
-    void assetNumberChanged();
-    void assetPathChanged();
-    
     void mapLoaded(Map *map);
     void foundItemSnapableTile(ItemSnapable *itemSnapable);
     void updateListEdits(QJsonObject newEdit);
@@ -118,7 +110,6 @@ private:
     QList<Case*> m_board;
     QList<Player*> m_listPlayers;
     Player* m_players;
-    // QList<Case*> m_listCases;
     QList<Card*>  m_listCards;
     QList<CaseRestArea*>    m_family[CaseRestArea::FT_COUNT];
 
@@ -128,7 +119,6 @@ private:
     int m_currentPlayerIndex = 0;
 
 
-    QVariantList m_assetPath;
 };
 
 #endif // GAME_H

@@ -46,8 +46,6 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_ContentArea.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_Content.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_SearchBar.qml</file>
-        <file>qml/editor/panel/MenuSelector_Button.qml</file>
-        <file>qml/editor/panel/MenuSelector_SizeControl.qml</file>
         <file>qml/editor/logic/PlanLogic.qml</file>
         <file>qml/editor/logic/ScrollLogic.qml</file>
         <file>qml/editor/logic/TileLogic.qml</file>
@@ -145,10 +143,8 @@
         <file>qml/editor/panel/caseSelectionPanel/main/CSP_CaseTypeCell.qml</file>
         <file>qml/editor/panel/caseSelectionPanel/main/CSP_CaseTypeSelector.qml</file>
         <file>qml/ui_item/InteractiveUiElement.qml</file>
-        <file>qml/editor/panel/EditorSidePanel.qml</file>
         <file>qml/ui_item/CollapsableGroupBox.qml</file>
         <file>qml/editor/logic/MouseLogic_Game.qml</file>
-        <file>qml/editor/panel/EditorSidePanel_Content.qml</file>
         <file>qml/editor/panel/VisualEffectPanel/TransformPanel.qml</file>
         <file>qml/editor/panel/VisualEffectPanel/VEP_AdvancedEffectsSection.qml</file>
         <file>qml/editor/panel/VisualEffectPanel/VEP_ButtonLock.qml</file>
@@ -184,7 +180,7 @@
         <file>qml/editor/panel/connectionConfigPanel/ConnectionListSection.qml</file>
         <file>qml/editor/panel/connectionConfigPanel/ConnectionsConfigurationSection.qml</file>
         <file>qml/editor/panel/connectionConfigPanel/ConnectionsPanel.qml</file>
-        <file>qml/editor/panel/PanelInfoMap.qml</file>
+        <file>qml/editor/logic/MouseLogic_Template.qml</file>
         <file>qml/utils/EntityController.qml</file>
         <file>qml/utils/qmldir</file>
         <file>qml/launcher/ModelsSection.qml</file>
@@ -197,5 +193,13 @@
         <file>qml/editor/qmldir</file>
         <file>qml/component/GameScene.qml</file>
         <file>qml/utils/CameraController.qml</file>
+        <file>qml/editor/panel/sidePanel/SidePanel.qml</file>
+        <file>qml/editor/panel/sidePanel/SidePanel_Content.qml</file>
+        <file>qml/editor/panel/menuSelectionPanel/MenuSelector.qml</file>
+        <file>qml/editor/panel/menuSelectionPanel/MenuSelector_Button.qml</file>
+        <file>qml/editor/panel/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
+        <file>qml/editor/panel/mapInfoPanel/MapInfoPanel.qml</file>
+        <file>qml/editor/panel/mapInfoPanel/MapNavigationBar.qml</file>
+        <file>qml/editor/panel/mapInfoPanel/MapSidePanel.qml</file>
     </qresource>
 </RCC>

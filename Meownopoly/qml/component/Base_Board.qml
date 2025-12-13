@@ -56,13 +56,9 @@ Rectangle {
     property alias mainMa: mainMa
     GlobalMa {
         id: mainMa
-        drag.target: gameGrid
         mouseLogic: logic.mouseLogic
         anchors.fill: parent
         z: z_GLOBAL_MA
+        Component.onCompleted: drag.target = gameGrid
     }
-
-
-
-
 }

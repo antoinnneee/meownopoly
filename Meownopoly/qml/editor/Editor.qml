@@ -13,6 +13,9 @@ import "../component/preview"
 import "../component/snapable"
 import "panel"
 import "panel/assetSelectionPanel"
+import "panel/sidePanel"
+import "panel/mapInfoPanel"
+
 
 import Game
 import MapFileManager
@@ -57,12 +60,12 @@ Base_Board {
     signal updateSettings()
     property alias entity:gameScene.entity
 
-    property real z_WORKAREA: 5000
     property real z_CONFIG_PANEL: 10000
     property real z_HUD: 9000
     property real z_SELECTION_RECT: 8000
     property real z_CURSOR_TRACKER: 7000
     property real z_LINK_TRACKER: 6000
+    property real z_WORKAREA: 5000
 
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
@@ -97,6 +100,26 @@ Base_Board {
         logic.mouseLogic.isControlPressed = false
     }
 
+
+
+    // Menu d'échappement
+    EditorEscMenu {
+        id: escMenu
+        z: z_CONFIG_PANEL
+        onVisibleChanged: {
+            console.log("EscMenu visibility changed:", visible)
+            if (!visible) {
+                // Redonner le focus à l'éditeur quand le menu se ferme
+                root.forceActiveFocus()
+            }
+        }
+        onIndexSaveEvent: {
+            stEnableAutoSave.sync()
+            root.updateSettings()
+        }
+    }
+
+
     Image {
         id: btInfoMap
         anchors.top: parent.top
@@ -106,6 +129,7 @@ Base_Board {
         source: AssetManager.getAssetById("ui", "hud", "0").path
         width: Screen.pixelDensity * 20
         height: Screen.pixelDensity * 20
+
         MouseArea {
             hoverEnabled: true
             anchors.fill:  parent
@@ -113,11 +137,13 @@ Base_Board {
                 btInfoMapAnim.stop()
                 btInfoMapAnim.start()
                 console.log("onClicked Opening global settings")
-                panelInfoMap.isOpening = !panelInfoMap.isOpening
+                mapInfoPanel.isOpening = !mapInfoPanel.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
+                addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 1.5) : btInfoMap.x
             }
         }
+
         SequentialAnimation {
             id: btInfoMapAnim
             running: false
@@ -126,8 +152,68 @@ Base_Board {
         }
     }
 
-    PanelInfoMap {
-        id: panelInfoMap
+    Button {
+        id: addMapButton
+        x: btInfoMap.x
+        y: btInfoMap.y + addMapButton.height/2
+
+        z: z_HUD
+
+        width: btInfoMap.width * 0.5
+        height: btInfoMap.height * 0.5
+
+        enabled: x == btInfoMap.x ? false : true
+        visible: enabled
+
+        onClicked: {
+            logic.createNewMap()
+        }
+        onHoveredChanged: {
+            if (hovered)
+                bkRect.color = "#413be3"
+            else
+                bkRect.color = "#88CCFF"
+        }
+
+        Text {
+            text: "+"
+            horizontalAlignment: Text.AlignHCenter
+            width: parent.width
+            font.pixelSize: 24
+            font.bold: true
+            color: "blue"
+        }
+        background: Rectangle {
+            id: bkRect
+            anchors.fill: parent
+            color: "#88CCFF"
+
+            radius: 30
+            border.color: "blue"
+            border.width: 1
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 300
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
+        Behavior on x {
+            NumberAnimation {
+                duration: 500
+                easing.type: Easing.InOutQuad
+                onFinished: {
+                }
+            }
+        }
+    }
+
+
+
+    MapInfoPanel {
+        id: mapInfoPanel
         anchors.top: btInfoMap.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -226,7 +312,7 @@ Base_Board {
     }
 
 
-    mainMa.anchors.bottom:  panelInfoMap.x < parent.width ? parent.bottom : selectionPanel.top
+    mainMa.anchors.bottom:  mapInfoPanel.x < parent.width ? parent.bottom : selectionPanel.top
 
 
 
@@ -273,7 +359,7 @@ Base_Board {
         unitSizeWidth: logic.tileLogic.currentElementWidth
         unitSizeHeight: logic.tileLogic.currentElementHeight
         gridManager: gameGrid
-        editorSidePanel: sidePanel
+        sidePanel: sidePanel
     }
 
     // Prévisualisation du polygone pendant le dessin
@@ -346,7 +432,7 @@ Base_Board {
         }
     }
 
-    EditorSidePanel {
+    SidePanel {
         id: sidePanel
         z: z_HUD
         anchors.bottom: parent.bottom
@@ -395,27 +481,9 @@ Base_Board {
     }
 
     MenuMapAtStart {
-        z: z_CONFIG_PANEL
-        onBackgroundSelected: function() {
-        }
+        z: z_HUD
     }
 
-    // Menu d'échappement
-    EditorEscMenu {
-        id: escMenu
-        z: z_CONFIG_PANEL
-        onVisibleChanged: {
-            console.log("EscMenu visibility changed:", visible)
-            if (!visible) {
-                // Redonner le focus à l'éditeur quand le menu se ferme
-                root.forceActiveFocus()
-            }
-        }
-        onIndexSaveEvent: {
-            stEnableAutoSave.sync()
-            root.updateSettings()
-        }
-    }
 
     Timer {
         id: tmpSaver

@@ -65,6 +65,13 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
     return flag;
 }
 
+bool Game::deleteMap(QString mapName, MapTypes::MapType mapType)
+{
+    bool flag = false;
+    flag = MapFileManager::removeMapFile(mapName, mapType);
+    return flag;
+}
+
 Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 {
     Map *map = nullptr;

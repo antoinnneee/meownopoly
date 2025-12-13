@@ -13,6 +13,7 @@ import EditorEnum
 import Logger
 import UndoRedoManager
 import MapTypes
+import MapFileManager
 
 import "logic"
 
@@ -43,11 +44,15 @@ Base_logic {
 
     Loader {
         id: mouseLogicLoader
+        onSourceComponentChanged: {
+            console.log("MouseLogicLoader - Loaded component for mode:", logic.editorMouseMode)
+        }
         sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? editorDynamicComponent.mouseLogic_selection_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_POSE) ? editorDynamicComponent.mouseLogic_pose_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_GAME) ? editorDynamicComponent.mouseLogic_game_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_DRAW_POLYGON) ? editorDynamicComponent.mouseLogic_drawPolygon_comp
-                        : editorDynamicComponent.mouseLogic_selectionLink_comp
+                                    : (logic.editorMouseMode === EditorEnum.EM_TEMPLATE) ? editorDynamicComponent.mouseLogic_temp_comp
+                                    : editorDynamicComponent.mouseLogic_selectionLink_comp
         property var _logic : parent
         property var _grid: editorGrid
         property var _polygonPreview: logic.polygonPreview
@@ -113,10 +118,19 @@ Base_logic {
         
         if (isAutoSave === MapTypes.UNDOREDO) {
             console.log("[UNDO][SAVE] Saving new state with", snapableTilesList.length, "elements")
-        }
-        
+        }        
         Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
     }
+    function deleteMap(mapName){
+        if (mapName === mapInfo.autosaveMapName){
+            if (Game.deleteMap(mapName, MapTypes.AUTOSAVE))
+                MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
+        }
+        else {
+            Game.deleteMap(mapName, MapTypes.CUSTOM)
+        }
+    }
+
     Settings {
         id: stEnableAutoSave
         category: "Editor/SaveConfig"

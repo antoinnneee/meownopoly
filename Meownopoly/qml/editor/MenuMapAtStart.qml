@@ -13,11 +13,8 @@ import "panel"
 import "panel/assetSelectionPanel"
 
 import QtQml
-import Game
 import Case
 import ItemSnapable
-import MapFileManager 1.0
-import MapTypes
 import MapInfo
 import EditorEnum
 import AssetManager 1.0
@@ -51,7 +48,7 @@ MouseArea {
 
         property int selectedBackground: -1
         property string selectedDisplayMode: "Fit"
-        property string selectedMap: ""
+        property string mapName: ""
         property bool snapToGrid: true
 
         ColumnLayout {
@@ -114,74 +111,27 @@ MouseArea {
                 }
             }
 
-            // Header buttons
-            Row {
+            // Map name text field
+            TextField {
+                id: mapNameField
                 Layout.fillWidth: true
                 Layout.preferredHeight: 42
-                spacing: 10
+                placeholderText: "Nom de la nouvelle carte"
+                placeholderTextColor: "#888888"
+                color: "#FFFFFF"
+                font.pixelSize: 16
 
-                Button {
-                    id: chooseBackgroundBtn
-                    text: "Nouvelle Carte"
-
-                    width: parent.width / 2 - 5
-                    height: parent.height
-                    checked: true
-
-                    background: Rectangle {
-                        color: chooseBackgroundBtn.checked ? "#4A90E2" : "#333333"
-                        radius: 8
-                        border.width: 1
-                        border.color: chooseBackgroundBtn.checked ? "#FFFFFF" : "#555555"
-                    }
-
-                    contentItem: Text {
-                        text: chooseBackgroundBtn.text
-                        color: "white"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 17
-                    }
-
-                    onClicked: {
-                        chooseBackgroundBtn.checked = true
-                        loadMapBtn.checked = false
-                        backgroundContent.visible = true
-                        loadMapContent.visible = false
-                    }
+                background: Rectangle {
+                    color: "#333333"
+                    radius: 8
+                    border.width: mapNameField.activeFocus ? 2 : 1
+                    border.color: mapNameField.activeFocus ? "#4A90E2" : "#555555"
                 }
 
-                Button {
-                    id: loadMapBtn
-                    text: "Charger une carte"
-                    font.bold: true
-
-                    width: parent.width / 2 - 5
-                    height: parent.height
-                    checked: false
-
-                    enabled : MapFileManager.getAvailableMaps().length > 0
-                    opacity : enabled ? 1.0 : 0.5
-                    background: Rectangle {
-                        color: loadMapBtn.checked ? "#4A90E2" : "#333333"
-                        radius: 8
-                        border.width: 1
-                        border.color: loadMapBtn.checked ? "#FFFFFF" : "#555555"
-                    }
-
-                    contentItem: Text {
-                        text: loadMapBtn.text
-                        color: "white"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 17
-                    }
-
-                    onClicked: {
-                        chooseBackgroundBtn.checked = false
-                        loadMapBtn.checked = true
-                        backgroundContent.visible = false
-                        loadMapContent.visible = true
+                onTextChanged: {
+                    menuMapAtStart.mapName = text
+                    if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
+                        logic.mapInfo.mapName = text
                     }
                 }
             }
@@ -264,7 +214,7 @@ MouseArea {
                         ColumnLayout {
                             width: (parent.width - 20) / 3
                             spacing: 4
-                            
+
                             Button {
                                 text: "Tile"
                                 font.pixelSize: 14
@@ -298,7 +248,7 @@ MouseArea {
                                 value: 100
                                 visible : enabled
                                 enabled: menuMapAtStart.selectedDisplayMode === "Tile"
-                                
+
                                 onValueChanged: {
                                     if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
                                         logic.mapInfo.backgroundTileSize = value
@@ -460,151 +410,6 @@ MouseArea {
                 }
             }
 
-            // Load map content
-            Rectangle {
-                id: loadMapContent
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                color: "transparent"
-                visible: false
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: 10
-
-                    // Maps container
-                    Rectangle {
-                        id: mapsContainer
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        color: "#2A2A2A"
-                        radius: 8
-                        border.color: "#4A90E2"
-                        border.width: 1
-
-                        // Header avec titre
-                        Rectangle {
-                            id: headerSection
-                            width: parent.width
-                            height: 42
-                            color: "#383838"
-                            radius: 8
-                            anchors.top: parent.top
-                            anchors.topMargin: 1
-                            anchors.horizontalCenter: parent.horizontalCenter
-
-                            Row {
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.left: parent.left
-                                anchors.leftMargin: 12
-                                spacing: 10
-
-                                Rectangle {
-                                    width: 28
-                                    height: 28
-                                    radius: 14
-                                    color: "#4A90E2"
-                                    opacity: 0.3
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "🗺️"
-                                        font.pixelSize: 16
-                                    }
-                                }
-
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "Cartes disponibles"
-                                    color: "white"
-                                    font.pixelSize: 14
-                                    font.bold: true
-                                }
-                            }
-                        }
-
-                        // Liste des maps
-                        ListView {
-                            id: mapsList
-                            anchors.top: headerSection.bottom
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            anchors.margins: 10
-                            model: []
-                            spacing: 8
-                            clip: true
-                            focus: true
-                            interactive: true
-                            boundsBehavior: Flickable.StopAtBounds
-
-                            Component.onCompleted: {
-                                model = MapFileManager.getAvailableMaps()
-                            }
-
-                            ScrollBar.vertical: ScrollBar {
-                                id: scrollBar
-                                active: mapsList.contentHeight > mapsList.height
-                                policy: ScrollBar.AsNeeded
-                                visible: mapsList.contentHeight > mapsList.height
-                                interactive: true
-
-                                contentItem: Rectangle {
-                                    implicitWidth: 8
-                                    radius: width / 2
-                                    color: "#4A90E2"
-                                    opacity: scrollBar.pressed ? 0.8 : 0.5
-                                }
-                            }
-
-                            delegate: Rectangle {
-                                width: mapsList.width
-                                height: 40
-                                color: menuMapAtStart.selectedMap === modelData ? "#3A5998" : "#333333"
-                                radius: 4
-
-                                Row {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 10
-                                    spacing: 10
-
-                                    Rectangle {
-                                        width: 24
-                                        height: 24
-                                        radius: 4
-                                        color: "#4A90E2"
-                                        opacity: 0.2
-                                        anchors.verticalCenter: parent.verticalCenter
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "📄"
-                                            font.pixelSize: 14
-                                        }
-                                    }
-
-                                    Text {
-                                        text: modelData
-                                        color: "white"
-                                        font.pixelSize: 14
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: {
-                                        console.log("Selected map: " + modelData)
-                                        menuMapAtStart.selectedMap = modelData
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-
             // Bottom action buttons
             RowLayout {
                 Layout.fillWidth: true
@@ -632,23 +437,8 @@ MouseArea {
                     }
 
                     onClicked: {
-                        if (backgroundContent.visible /*&& menuMapAtStart.selectedBackground !== -1*/) {
-                            root.visible = false
-                            root.backgroundSelected()
-                        }
-                        else if (loadMapContent.visible && menuMapAtStart.selectedMap !== "") {
-                            console.log("Loading map: " + menuMapAtStart.selectedMap)
-                            if (typeof logic !== 'undefined') {
-                                logic.removeCurrentMap()
-                                var normalizedMapName = MapFileManager.findMapFileByName(menuMapAtStart.selectedMap)
-                                if (normalizedMapName !== "") {
-                                    Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
-                                } else {
-                                    console.error("Could not find map file for: " + menuMapAtStart.selectedMap)
-                                }
-                            }
-                            root.visible = false
-                        }
+                        root.visible = false
+                        root.backgroundSelected()
                     }
                 }
 
@@ -686,4 +476,3 @@ MouseArea {
         }
     }
 }
-

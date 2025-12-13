@@ -175,6 +175,7 @@ QtObject {
     function changeMouseMode(mode)
     {
         unselectSelectedElements()
+        console.log("Changing mouse mode to:", mode)
 
         // Masquer la prévisualisation du lien si on change de mode
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
