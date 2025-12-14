@@ -72,7 +72,6 @@ Item {
         
         // Obtenir le point dans l'espace 3D de la scène
         var scenePos = view3D.mapTo3DScene(Qt.point(viewX, viewY));
-        console.log("[getGroundIntersection] viewPos:", viewX.toFixed(2), viewY.toFixed(2), "-> scenePos:", scenePos)
 
         // Angle de la caméra (eulerRotation.x = -55 degrés typiquement)
         var angleDeg = cameraOrthographic.eulerRotation.x;
@@ -93,7 +92,6 @@ Item {
             targetZ = scenePos.z + t * rayDirZ;
         }
         
-        console.log("[getGroundIntersection] result:", targetX.toFixed(2), "0", targetZ.toFixed(2))
 
         return Qt.vector3d(targetX, 0, targetZ);
     }

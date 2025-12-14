@@ -18,7 +18,7 @@ Item {
     property real baseSpeedMultiplier: isSprinting ? sprintMultiplier : 1.0
 
     // --- Physique 2D du mouvement ---
-    property real acceleration: 50.0  // Accélération en unités de grille par seconde²
+    property real acceleration: 40.0  // Accélération en unités de grille par seconde²
     property real friction: 12.0       // Friction au sol (force de décélération)
     
     // Position et vitesse en coordonnées de grille 2D
@@ -27,7 +27,7 @@ Item {
     
     // Paramètres de collision
     property real collisionRadius2D: 0.25  // Rayon de collision en unités de grille
-    property real bounceFactor: 0.1        // Coefficient de rebond (0 = pas de rebond, 1 = rebond parfait)
+    property real bounceFactor: 0.6        // Coefficient de rebond (0 = pas de rebond, 1 = rebond parfait)
     property real slideFactor: 0.85        // Conservation du glissement le long du mur
     
     // Référence aux zones d'exclusion (polygones de collision)
@@ -442,7 +442,7 @@ Item {
             var dt = frameTime
 
             if (root.freeCamMode) {
-                CameraController.moveManual(inputVector.x, inputVector.y, baseSpeed * 1.5, dt)
+                CameraController.moveManual(inputVector.x, inputVector.y, baseSpeed * 10, dt)
             }
             else
             {
