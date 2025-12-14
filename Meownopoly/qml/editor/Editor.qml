@@ -74,6 +74,7 @@ Base_Board {
 
         // Initialize Entity Controller (avec la liste des tiles pour la collision)
         EntityController.snapableTilesList = snapableTilesList
+        World3DTools.init(view3D, gameGrid)
         // EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
         // EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
         

@@ -107,7 +107,7 @@ Item {
             return false
         }
         //position3dToGridRealPosition
-        var gridCoords = view3D.parent.position3dToGridRealPosition(worldX, 0, worldZ)
+        var gridCoords = World3DTools.position3dToGridRealPosition(worldX, 0, worldZ)
         var exclusionZoneCount = 0
 
         // Parcourir toutes les tiles pour trouver les zones d'exclusion

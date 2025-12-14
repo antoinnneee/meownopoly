@@ -97,18 +97,6 @@ Item {
         return Qt.point(gridPos.x, gridPos.y);
     }
 
-    function position3dToGridRealPosition(xPos, yPos, zPos)
-    {
-        if (!view3D || !gridManager) {
-            console.error("position3dToGridRealPosition: view3D, ou gridManager non défini");
-            return Qt.point(0, 0);
-        }
-        var viewPos = view3D.mapFrom3DScene(Qt.vector3d(xPos, yPos, zPos));
-        var gridPos = view3D.mapToItem(gridManager, viewPos.x, viewPos.y);
-
-        return Qt.point(gridPos.x / gridManager.gridSize, gridPos.y / gridManager.gridSize);
-    }
-
     // Retourne la position d'une entity en coordonnées pixel de la grille
     // Inverse de moveEntityToGridPixelPosition: coordonnées 3D -> coordonnées 2D grille
     function getEntityGridRealPosition(node) {
