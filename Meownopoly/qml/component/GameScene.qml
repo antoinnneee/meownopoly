@@ -3,6 +3,7 @@ import QtQuick3D
 import QtQuick3D.Helpers
 import AssetManager
 import "../component/grid"
+import "../utils"
 
 Item {
     id: root
@@ -59,7 +60,7 @@ Item {
         }
 
         // Calculer la position 3D correspondante aux coordonnées pixel
-        var pos3D = getGroundIntersection(gridPixelX, gridPixelY);
+        var pos3D = World3DTools.getGroundIntersection(gridPixelX, gridPixelY);
 
         // Appliquer la position au node
         node.x = pos3D.x;
@@ -74,7 +75,7 @@ Item {
         }
 
         var gridPos = gridManager.getGridPixelPosition(gridX, gridY);
-        var pos3D = getGroundIntersection(gridPos.x, gridPos.y);
+        var pos3D = World3DTools.getGroundIntersection(gridPos.x, gridPos.y);
         node.x = pos3D.x;
         node.y = pos3D.y;
         node.z = pos3D.z;
@@ -112,33 +113,6 @@ Item {
         var gridPos = view3D.mapToItem(gridManager, viewPos.x, viewPos.y);
 
         return Qt.point(gridPos.x/gridManager.gridSize, gridPos.y/gridManager.gridSize);
-    }
-
-    // Calcule l'intersection avec le sol (Y=0) depuis un point de la vue
-    // Inspiré de MouseLogic_Game.qml
-    function getGroundIntersection(viewX, viewY) {
-        // Obtenir le point dans l'espace 3D de la scène
-        var scenePos = view3D.mapTo3DScene(Qt.point(viewX, viewY));
-
-        // Angle de la caméra (eulerRotation.x = -55 degrés)
-        var angleDeg = cameraOrthographic.eulerRotation.x; // -55
-        var rad = angleDeg * Math.PI / 180;
-
-        // Direction du rayon de la caméra
-        var rayDirY = Math.sin(rad); // Composante Y du vecteur vue
-        var rayDirZ = -Math.cos(rad); // Composante Z du vecteur vue
-
-        var targetX = scenePos.x;
-        var targetZ = scenePos.z;
-
-        // Calculer l'intersection avec le plan Y=0
-        if (Math.abs(rayDirY) > 0.0001) {
-            var t = -scenePos.y / rayDirY;
-            targetX = scenePos.x; // X ne change pas (pas de rotation Y ni Z)
-            targetZ = scenePos.z + t * rayDirZ;
-        }
-
-        return Qt.vector3d(targetX, 0, targetZ);
     }
 
     // Internal scene structure

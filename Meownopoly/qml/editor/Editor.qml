@@ -74,8 +74,8 @@ Base_Board {
 
         // Initialize Entity Controller (avec la liste des tiles pour la collision)
         EntityController.snapableTilesList = snapableTilesList
-        World3DTools.init(view3D, gameGrid)
-        // EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        World3DTools.init(view3D, gameGrid, gameScene.camera)
+        EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
         // EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
         
         // Activer le mode édition pour les zones d'exclusion
@@ -337,7 +337,7 @@ Base_Board {
         Component.onCompleted: {
             var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")           
             gameScene.moveEntityToGridPosition(sphere, 0, 0)
-            EntityController.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
+            // EntityController.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
 
             sphere = gameScene.generateSphere(0, 0, 0, 10, "blue")

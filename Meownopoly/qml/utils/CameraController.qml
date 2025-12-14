@@ -15,7 +15,7 @@ Item {
     // --- Configuration ---
     property real smoothSpeed: 2.0
     property vector3d offset: Qt.vector3d(0, 0, 0)
-    property bool isFollowing: true
+    property bool isFollowing: false
 
     // --- Initialization ---
     function setTarget(newTarget, newView3D, newGrid2D, newLogic) {
