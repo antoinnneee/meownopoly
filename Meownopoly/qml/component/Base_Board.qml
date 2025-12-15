@@ -19,6 +19,8 @@ Rectangle {
 
     property MapInfo mapInfo: MapInfo{
         function setMapInfo(info){
+            console.log("Setting map info:", info.mapName)
+            console.log("this.backgroundPath " + this.backgroundPath)
             this.mapName = info.mapName
             this.mapDescription = info.mapDescription
             this.mapCreationDate = info.mapCreationDate

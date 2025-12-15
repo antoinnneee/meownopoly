@@ -457,8 +457,13 @@ Base_Board {
         logic: logic
         onNewMapSet: {
             logic.createMap(newMapInfo.mapName, MapTypes.CUSTOM)
+            console.log("newmapinfo size" + newMapInfo)
+            console.log("newmapinfo size" + newMapInfo.mapName)
+            console.log("newmapinfo size" + newMapInfo.backgroundPath)
+            console.log("newmapinfo size" + newMapInfo.backgroundScaling)
+
             mapInfo.setMapInfo(newMapInfo)
-            logic.saveMap(false)
+            logic.saveMap(MapTypes.CUSTOM)
             Game.loadMap(newMapInfo.mapName, MapTypes.CUSTOM)
         }
     }

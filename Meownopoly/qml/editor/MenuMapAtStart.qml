@@ -22,8 +22,8 @@ import EditorEnum
 import AssetManager 1.0
 
 MouseArea {
-    anchors.fill: parent
     id: root
+    anchors.fill: parent
 
     required property var logic
 
@@ -352,6 +352,10 @@ MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
                                     logic.mapInfo.backgroundPath = bgImage.source
+                                    newMapInfo.backgroundPath = bgImage.source
+                                    console.log("Background path set to: " + newMapInfo.backgroundPath);
+
+
 
                                     // Définir le mode de mise à l'échelle en fonction du mode sélectionné
                                     var scaling;
@@ -370,6 +374,7 @@ MouseArea {
                                     }
                                     logic.mapInfo.backgroundScaling = scaling
                                     newMapInfo.backgroundScaling = scaling;
+                                    console.log("Background scaling set to: " + newMapInfo.backgroundScaling);
                                 }
                             }
                         }
@@ -445,8 +450,10 @@ MouseArea {
                     }
 
                     onClicked: {
-                        if (newMapInfo.mapName === "" || MapFileManager.mapExists(newMapInfo.mapName, MapTypes.CUSTOM))
+                        if (newMapInfo.mapName === "" || MapFileManager.mapExists(newMapInfo.mapName, MapTypes.CUSTOM)){
+                            console.log("Map name is invalid or already exists.")
                             return
+                        }
 
                         root.visible = false
                         root.backgroundSelected()

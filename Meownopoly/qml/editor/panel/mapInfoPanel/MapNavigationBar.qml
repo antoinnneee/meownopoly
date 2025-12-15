@@ -195,6 +195,7 @@ Item {
                         mapInfo.mapName = normalizedMapName
                         stEnableAutoSave.setValue("currentMap", normalizedMapName)
                     }
+                    refeshListMap()
                 }
             }
             Text {

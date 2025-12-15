@@ -84,10 +84,10 @@ Base_logic {
             for (var i = 0; i < snapableTilesList.length; i++) {
                 elementsToRemove.push(snapableTilesList[i])
             }
-            
+
             // Vider la liste principale d'abord
             snapableTilesList = []
-            
+
             // Détruire les éléments directement sans animation ni sauvegarde
             for (var i = 0; i < elementsToRemove.length; i++) {
                 if (elementsToRemove[i]) {
@@ -96,9 +96,9 @@ Base_logic {
             }
         }
 
-    function saveMap(isAutoSave){
+    function saveMap(saveType){
         // Ne pas sauvegarder si on est en mode restauration
-        if (isAutoSave === MapTypes.UNDOREDO && !UndoRedoManager.canSave()) {
+        if (saveType === MapTypes.UNDOREDO && !UndoRedoManager.canSave()) {
             console.log("[UNDO][SAVE] Blocked during restoration - canSave() returned false")
             return
         }
@@ -112,11 +112,11 @@ Base_logic {
                 itemSnapableList.push(tile.snapableParameters)
             }
         }
-        
-        if (isAutoSave === MapTypes.UNDOREDO) {
+
+        if (saveType === MapTypes.UNDOREDO) {
             console.log("[UNDO][SAVE] Saving new state with", snapableTilesList.length, "elements")
-        }        
-        Game.saveMap(mapInfo, itemSnapableList, isAutoSave)
+        }
+        Game.saveMap(mapInfo, itemSnapableList, saveType)
     }
 
     function deleteMap(mapName){
