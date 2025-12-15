@@ -454,6 +454,7 @@ Base_Board {
 
     MenuMapAtStart {
         z: z_HUD
+        logic: logic
         onNewMapSet: {
             logic.createMap(newMapInfo.mapName, MapTypes.CUSTOM)
             mapInfo.setMapInfo(newMapInfo)

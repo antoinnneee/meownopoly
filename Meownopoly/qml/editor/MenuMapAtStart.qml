@@ -25,6 +25,8 @@ MouseArea {
     anchors.fill: parent
     id: root
 
+    required property var logic
+
     signal backgroundSelected()
     signal newMapSet()
 
@@ -261,6 +263,7 @@ MouseArea {
 
                                 onValueChanged: {
                                     logic.mapInfo.backgroundTileSize = value
+                                    console.log("Tile Size changed to: " + value)
                                     newMapInfo.backgroundTileSize = value
                                 }
 
@@ -365,6 +368,7 @@ MouseArea {
                                     default:
                                         scaling = "Fit"; // Valeur par défaut
                                     }
+                                    logic.mapInfo.backgroundScaling = scaling
                                     newMapInfo.backgroundScaling = scaling;
                                 }
                             }

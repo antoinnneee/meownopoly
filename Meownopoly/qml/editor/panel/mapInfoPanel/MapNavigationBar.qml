@@ -179,6 +179,22 @@ Item {
                     logic.deleteMap(mapInfo.mapName)
                     logic.removeCurrentMap()
                     confirmationStep = 0
+
+                    if (leftArrow.availableMaps.length === 0) return
+
+                    leftArrow.currentIndex++
+                    if (leftArrow.currentIndex >= leftArrow.availableMaps.length) {
+                        leftArrow.currentIndex = 0
+                    }
+
+                    var selectedMap = leftArrow.availableMaps[leftArrow.currentIndex]
+                    logic.removeCurrentMap()
+                    var normalizedMapName = MapFileManager.findMapFileByName(selectedMap)
+                    if (normalizedMapName !== "") {
+                        Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
+                        mapInfo.mapName = normalizedMapName
+                        stEnableAutoSave.setValue("currentMap", normalizedMapName)
+                    }
                 }
             }
             Text {
