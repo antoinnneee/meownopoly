@@ -1,0 +1,8 @@
+module EditorBottomPanel
+EditorBottomPanel 1.0 EditorBottomPanel.qml
+EBP_BackButton 1.0 EBP_BackButton.qml
+EBP_Content 1.0 EBP_Content.qml
+EBP_FilterButton 1.0 EBP_FilterButton.qml
+EBP_SearchBar 1.0 EBP_SearchBar.qml
+EBP_TitleBar 1.0 EBP_TitleBar.qml
+

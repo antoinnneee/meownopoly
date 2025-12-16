@@ -195,5 +195,14 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualEffectsPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualEffectsPanel_old.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualTransformPanel.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/main/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomSidePanel/sidePanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/qmldir</file>
     </qresource>
 </RCC>

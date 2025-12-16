@@ -1,0 +1,5 @@
+module MapInfoPanel
+MapInfoPanel 1.0 MapInfoPanel.qml
+MapNavigationBar 1.0 MapNavigationBar.qml
+MapSidePanel 1.0 MapSidePanel.qml
+

@@ -1,0 +1,6 @@
+module CaseSelectionPanel
+CaseSelectionPanel 1.0 CaseSelectionPanel.qml
+CSP_ClearButton 1.0 CSP_ClearButton.qml
+CSP_ContentArea 1.0 CSP_ContentArea.qml
+CSP_TitleBar 1.0 CSP_TitleBar.qml
+

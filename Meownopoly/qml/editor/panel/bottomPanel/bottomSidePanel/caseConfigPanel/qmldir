@@ -1,0 +1,23 @@
+module CaseConfigPanel
+CaseConfigurationPanel 1.0 CaseConfigurationPanel.qml
+CaseConfigurationPanelSection 1.0 CaseConfigurationPanelSection.qml
+CCP_CardBoardBoxSpecificConfig 1.0 CCP_CardBoardBoxSpecificConfig.qml
+CCP_CatDeviceSpecificConfig 1.0 CCP_CatDeviceSpecificConfig.qml
+CCP_CatPerksConfig 1.0 CCP_CatPerksConfig.qml
+CCP_GeneralConfig 1.0 CCP_GeneralConfig.qml
+CCP_Header 1.0 CCP_Header.qml
+CCP_HouseHotelPriceConfig 1.0 CCP_HouseHotelPriceConfig.qml
+CCP_KibbleDispenserSpecificConfig 1.0 CCP_KibbleDispenserSpecificConfig.qml
+CCP_PanelElement 1.0 CCP_PanelElement.qml
+CCP_RentConfig 1.0 CCP_RentConfig.qml
+CCP_RestAreaFamilyConfig 1.0 CCP_RestAreaFamilyConfig.qml
+CCP_RestAreaSpecificConfig 1.0 CCP_RestAreaSpecificConfig.qml
+CCP_StyledSpinBox 1.0 CCP_StyledSpinBox.qml
+CCP_TypeSelector 1.0 CCP_TypeSelector.qml
+CCPS_CardBoardBoxSection 1.0 CCPS_CardBoardBoxSection.qml
+CCPS_CatDeviceSection 1.0 CCPS_CatDeviceSection.qml
+CCPS_GeneralSection 1.0 CCPS_GeneralSection.qml
+CCPS_KibbleDispenserSection 1.0 CCPS_KibbleDispenserSection.qml
+CCPS_RestAreaSection 1.0 CCPS_RestAreaSection.qml
+CCPS_TypeSection 1.0 CCPS_TypeSection.qml
+
