@@ -27,7 +27,7 @@ Item {
     
     // Paramètres de collision
     property real collisionRadius2D: 0.25  // Rayon de collision en unités de grille
-    property real bounceFactor: 0.6        // Coefficient de rebond (0 = pas de rebond, 1 = rebond parfait)
+    property real bounceFactor: 4          // Coefficient de rebond (0 = pas de rebond, 1 = rebond parfait)
     property real slideFactor: 0.85        // Conservation du glissement le long du mur
     
     // Référence aux zones d'exclusion (polygones de collision)
@@ -250,7 +250,7 @@ Item {
             colliding: true,
             distance: minDist,
             normalX: normalX,
-            normalY: normalY,
+            normalY: -normalY,
             closestX: closestX,
             closestY: closestY,
             penetration: radius - minDist
