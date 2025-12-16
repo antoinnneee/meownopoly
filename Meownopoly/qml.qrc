@@ -33,7 +33,6 @@
         <file>qml/editor/panel/assetSelectionPanel/ASP_Grid.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_Item.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/AssetSelectionPanel.qml</file>
-        <file>qml/editor/panel/assetSelectionPanel/ExclusionZonePanel.qml</file>
         <file>qml/editor/panel/SelectionPanel.qml</file>
         <file>qml/editor/panel/assetSelectionPanel/ASP_TitleBar.qml</file>
         <file>qml/editor/panel/editorBottomPanel/EBP_TitleBar.qml</file>
@@ -201,5 +200,6 @@
         <file>qml/editor/panel/mapInfoPanel/MapNavigationBar.qml</file>
         <file>qml/editor/panel/mapInfoPanel/MapSidePanel.qml</file>
         <file>qml/utils/World3DTools.qml</file>
+        <file>qml/editor/panel/zonePanel/ExclusionZonePanel.qml</file>
     </qresource>
 </RCC>

@@ -7,6 +7,7 @@ import AssetManager
 import ".."
 
 import "./assetSelectionPanel"
+import "./zonePanel"
 import "./caseSelectionPanel"
 import "./mapSelectionPanel"
 import "./menuSelectionPanel"

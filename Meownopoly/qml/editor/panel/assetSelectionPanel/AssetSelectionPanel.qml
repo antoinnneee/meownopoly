@@ -5,6 +5,7 @@ import QtQuick.Effects
 import AssetManager
 
 import "../"
+import "../zonePanel"
 import "../editorBottomPanel"
 import "../caseSelectionPanel"
 EditorBottomPanel {
@@ -220,8 +221,12 @@ EditorBottomPanel {
         // Exclusion Zone Panel
         ExclusionZonePanel {
             id: exclusionZonePanel
-            logic: root.logic
 
+            logic: root.logic
+            isExpanded: true
+
+            currentView: root.currentView
+            activeFilter: "All"
             Layout.preferredWidth: parent.width
             Layout.preferredHeight: parent.height
         }

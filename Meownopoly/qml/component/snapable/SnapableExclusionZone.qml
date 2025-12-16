@@ -85,9 +85,9 @@ SnapableElement {
     
     // Forcer le redraw au chargement
     Component.onCompleted: {
-        polygonBounds = calculateBounds()
-        previousGridPosX = gridPosX
-        previousGridPosY = gridPosY
+        //polygonBounds = calculateBounds()
+        // previousGridPosX = gridPosX
+        // previousGridPosY = gridPosY
         hatchCanvas.requestPaint()
     }
     
