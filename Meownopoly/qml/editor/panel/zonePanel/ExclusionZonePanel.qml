@@ -31,9 +31,12 @@ EBP_Content {
         id: mainContent
         anchors.fill: parent
         anchors.margins: 10
+        clip: true
+        contentHeight: contentLayout.height
 
         // Layout horizontal principal avec 2 colonnes
         RowLayout {
+            id: contentLayout
             width: mainContent.width - 20
             spacing: 20
 
@@ -88,9 +91,9 @@ EBP_Content {
                         font.bold: true
                     }
 
-                    ColumnLayout {
+                    RowLayout {
                         Layout.fillWidth: true
-                        spacing: 4
+                        spacing: 10
 
                         RadioButton {
                             id: exclusionRadio
@@ -146,6 +149,7 @@ EBP_Content {
 
                 // --- Sélection de l'effet ---
                 ColumnLayout {
+                    id: effectSection
                     Layout.fillWidth: true
                     visible: root.currentZoneType === "effect"
                     spacing: 6
@@ -240,13 +244,12 @@ EBP_Content {
                             }
                             root.drawModeDeactivated()
                         } else {
-                            // Activer le mode dessin
-                            updateBackendConfiguration()
 
                             if (logic && logic.mouseLogic) {
                                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_DRAW_POLYGON)
                             }
                             root.drawModeActivated()
+                            updateBackendConfiguration()
                         }
                     }
                 }
