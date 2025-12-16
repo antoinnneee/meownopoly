@@ -204,5 +204,6 @@
         <file>qml/Editor/MenuMapAtStart.qml</file>
         <file>qml/Editor/qmldir</file>
         <file>qml/Editor/Trackers.qml</file>
+        <file>qml/Editor/Editor.qml</file>
     </qresource>
 </RCC>
