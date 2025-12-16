@@ -53,3 +53,10 @@ ItemSnapable *ItemSnapableFactory::createExclusionZone()
     snap->setTileType(ItemSnapable::ExclusionZone);
     return snap;
 }
+
+ItemSnapable *ItemSnapableFactory::createEffectZone()
+{
+    ItemSnapable *snap = new ItemSnapable();
+    snap->setTileType(ItemSnapable::EffectZone);
+    return snap;
+}

@@ -33,6 +33,7 @@ VPATH += cpp
 INCLUDEPATH += cpp
 
 SOURCES += \
+    cpp/game/item_snapable/polygonParameter.cpp \
     tools/QtFolderCompressor/FolderCompressor.cpp \
     assetManager/asset_manager.cpp \
     game/case/Case.cpp \
@@ -57,7 +58,6 @@ SOURCES += \
     game/item_snapable/Displayparameter.cpp \
     game/item_snapable/ItemSnapable.cpp \
     game/item_snapable/decorationparameter.cpp \
-    game/item_snapable/exclusionparameter.cpp \
     game/item_snapable/itemsnapablefactory.cpp \
     launcher/launcher_manager.cpp \
     main.cpp \
@@ -74,6 +74,7 @@ SOURCES += \
 
 
 HEADERS += \
+    cpp/game/item_snapable/polygonParameter.h \
     tools/QtFolderCompressor/FolderCompressor.h \
     assetManager/asset_manager.h \
     game/case/Case.h \
@@ -97,7 +98,6 @@ HEADERS += \
     game/item_snapable/Displayparameter.h \
     game/item_snapable/ItemSnapable.h \
     game/item_snapable/decorationparameter.h \
-    game/item_snapable/exclusionparameter.h \
     game/item_snapable/itemsnapablefactory.h \
     launcher/launcher_manager.h \
     game/map/map.h \

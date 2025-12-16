@@ -113,16 +113,16 @@ MouseLogic_Base {
         // Créer l'ItemSnapable pour la zone d'exclusion
         var snapableParameters = ItemSnapableFactory.createExclusionZone()
         
-        // Copier les points dans l'exclusionParameter
+        // Copier les points dans l'polygonParameter
         for (var i = 0; i < currentPolygonPoints.length; i++) {
-            snapableParameters.exclusionParameter.addPoint(
+            snapableParameters.polygonParameter.addPoint(
                 currentPolygonPoints[i].x, 
                 currentPolygonPoints[i].y
             )
         }
         
         // Définir la couleur (utiliser l'assignation de propriété, pas le setter)
-        snapableParameters.exclusionParameter.zoneColor = currentZoneColor
+        snapableParameters.polygonParameter.zoneColor = currentZoneColor
         
         // Calculer les bounds pour le displayParameter
         var bounds = calculateBounds(currentPolygonPoints)

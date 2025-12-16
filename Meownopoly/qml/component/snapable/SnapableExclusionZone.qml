@@ -4,7 +4,7 @@ import QtQuick.Shapes
 import "../grid"
 
 import ItemSnapable
-import ExclusionParameter
+import PolygonParameter
 
 /**
  * Zone d'exclusion polygonale avec hachures
@@ -27,8 +27,8 @@ SnapableElement {
     borderWidth: 0
     
     // Propriétés de style
-    property color zoneColor: snapableParameters.exclusionParameter ? 
-                              snapableParameters.exclusionParameter.zoneColor : "#FF5722"
+    property color zoneColor: snapableParameters.polygonParameter ?
+                              snapableParameters.polygonParameter.zoneColor : "#FF5722"
     property color strokeColor: Qt.darker(zoneColor, 1.3)
     property int zoneStrokeWidth: isSelected ? 3 : 2
     property real hatchSpacing: 12
@@ -61,7 +61,7 @@ SnapableElement {
     
     // Mettre à jour les points du polygone quand l'élément est déplacé
     function updatePolygonPointsAfterMove() {
-        if (!snapableParameters.exclusionParameter) return
+        if (!snapableParameters.polygonParameter) return
         
         // Delta en coordonnées de grille (pas en pixels)
         var deltaGridX = gridPosX - previousGridPosX
@@ -69,7 +69,7 @@ SnapableElement {
         
         if (Math.abs(deltaGridX) < 0.001 && Math.abs(deltaGridY) < 0.001) return
         
-        var points = snapableParameters.exclusionParameter.polygonPoints
+        var points = snapableParameters.polygonParameter.polygonPoints
         var newPoints = []
         for (var i = 0; i < points.length; i++) {
             newPoints.push({
@@ -77,7 +77,7 @@ SnapableElement {
                 y: points[i].y + deltaGridY
             })
         }
-        snapableParameters.exclusionParameter.polygonPoints = newPoints
+        snapableParameters.polygonParameter.polygonPoints = newPoints
     }
     
     // Calcul des bounds du polygone (en coordonnées locales)
@@ -111,9 +111,9 @@ SnapableElement {
     // Convertir les points de grille en pixels LOCAUX (relatifs à l'élément)
     function getPolygonPointsLocal() {
         var points = []
-        if (!snapableParameters.exclusionParameter) return points
+        if (!snapableParameters.polygonParameter) return points
         
-        var gridPoints = snapableParameters.exclusionParameter.polygonPoints
+        var gridPoints = snapableParameters.polygonParameter.polygonPoints
         for (var i = 0; i < gridPoints.length; i++) {
             var pt = gridPoints[i]
             // Convertir en pixels et soustraire l'offset de l'élément
@@ -251,7 +251,7 @@ SnapableElement {
         
         // Redessiner quand les points changent
         Connections {
-            target: root.snapableParameters.exclusionParameter
+            target: root.snapableParameters.polygonParameter
             function onPolygonPointsChanged() {
                 root.polygonBounds = root.calculateBounds()
                 root.shapeUpdateTrigger++
@@ -261,7 +261,7 @@ SnapableElement {
         
         // Redessiner quand la couleur change
         Connections {
-            target: root.snapableParameters.exclusionParameter
+            target: root.snapableParameters.polygonParameter
             function onZoneColorChanged() {
                 hatchCanvas.requestPaint()
             }
@@ -372,13 +372,13 @@ SnapableElement {
     
     // Fonctions helper pour accéder aux points sans déclencher de binding loops
     function getPointCount() {
-        if (!snapableParameters.exclusionParameter) return 0
-        return snapableParameters.exclusionParameter.polygonPoints.length
+        if (!snapableParameters.polygonParameter) return 0
+        return snapableParameters.polygonParameter.polygonPoints.length
     }
     
     function getPointX(idx) {
-        if (!snapableParameters.exclusionParameter) return 0
-        var points = snapableParameters.exclusionParameter.polygonPoints
+        if (!snapableParameters.polygonParameter) return 0
+        var points = snapableParameters.polygonParameter.polygonPoints
         if (idx >= 0 && idx < points.length) {
             return points[idx].x
         }
@@ -386,8 +386,8 @@ SnapableElement {
     }
     
     function getPointY(idx) {
-        if (!snapableParameters.exclusionParameter) return 0
-        var points = snapableParameters.exclusionParameter.polygonPoints
+        if (!snapableParameters.polygonParameter) return 0
+        var points = snapableParameters.polygonParameter.polygonPoints
         if (idx >= 0 && idx < points.length) {
             return points[idx].y
         }
@@ -395,8 +395,8 @@ SnapableElement {
     }
     
     function updatePointPosition(idx, newX, newY) {
-        if (!snapableParameters.exclusionParameter) return
-        var points = snapableParameters.exclusionParameter.polygonPoints
+        if (!snapableParameters.polygonParameter) return
+        var points = snapableParameters.polygonParameter.polygonPoints
         if (idx >= 0 && idx < points.length) {
             var newPoints = []
             for (var i = 0; i < points.length; i++) {
@@ -406,7 +406,7 @@ SnapableElement {
                     newPoints.push({ x: points[i].x, y: points[i].y })
                 }
             }
-            snapableParameters.exclusionParameter.polygonPoints = newPoints
+            snapableParameters.polygonParameter.polygonPoints = newPoints
             
             // Recalculer la bounding box de l'élément
             updateDisplayBounds()
@@ -415,8 +415,8 @@ SnapableElement {
     
     // Mettre à jour les bounds du displayParameter après modification des points
     function updateDisplayBounds() {
-        if (!snapableParameters.exclusionParameter) return
-        var points = snapableParameters.exclusionParameter.polygonPoints
+        if (!snapableParameters.polygonParameter) return
+        var points = snapableParameters.polygonParameter.polygonPoints
         if (points.length === 0) return
         
         var minX = points[0].x, maxX = points[0].x
@@ -446,9 +446,9 @@ SnapableElement {
     // Indicateur de nom de zone (optionnel)
     Text {
         id: zoneLabel
-        visible: root.isSelected && root.snapableParameters.exclusionParameter && 
-                 root.snapableParameters.exclusionParameter.zoneName !== ""
-        text: root.snapableParameters.exclusionParameter ? root.snapableParameters.exclusionParameter.zoneName : ""
+        visible: root.isSelected && root.snapableParameters.polygonParameter &&
+                 root.snapableParameters.polygonParameter.zoneName !== ""
+        text: root.snapableParameters.polygonParameter ? root.snapableParameters.polygonParameter.zoneName : ""
         color: "white"
         font.pixelSize: 14
         font.bold: true

@@ -270,7 +270,7 @@ Item {
             if (!zone || !zone.snapableParameters) continue
             
             if (zone.snapableParameters.tileType === ItemSnapable.ExclusionZone) {
-                var exclusionParam = zone.snapableParameters.exclusionParameter
+                var exclusionParam = zone.snapableParameters.polygonParameter
                 if (exclusionParam && exclusionParam.polygonPoints) {
                     var collision = checkCirclePolygonCollision(
                         pos2D.x, pos2D.y, 

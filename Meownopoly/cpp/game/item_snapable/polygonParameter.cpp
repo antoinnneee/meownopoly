@@ -1,14 +1,14 @@
-#include "exclusionparameter.h"
+#include "polygonParameter.h"
 #include <QJsonDocument>
 
-ExclusionParameter::ExclusionParameter(QObject *parent)
+PolygonParameter::PolygonParameter(QObject *parent)
     : QObject(parent)
     , m_zoneColor("#FF5722")  // Orange par défaut
     , m_zoneName("")
 {
 }
 
-ExclusionParameter::ExclusionParameter(const QJsonObject &json, QObject *parent)
+PolygonParameter::PolygonParameter(const QJsonObject &json, QObject *parent)
     : QObject(parent)
 {
     if (json.contains("polygonPoints")) {
@@ -26,7 +26,7 @@ ExclusionParameter::ExclusionParameter(const QJsonObject &json, QObject *parent)
     m_zoneName = json.value("zoneName").toString("");
 }
 
-QString ExclusionParameter::toJSON()
+QString PolygonParameter::toJSON()
 {
     QString json;
     json += "{\n";
@@ -50,12 +50,12 @@ QString ExclusionParameter::toJSON()
     return json;
 }
 
-QVariantList ExclusionParameter::polygonPoints() const
+QVariantList PolygonParameter::polygonPoints() const
 {
     return m_polygonPoints;
 }
 
-void ExclusionParameter::setPolygonPoints(const QVariantList &points)
+void PolygonParameter::setPolygonPoints(const QVariantList &points)
 {
     if (m_polygonPoints != points) {
         m_polygonPoints = points;
@@ -63,7 +63,7 @@ void ExclusionParameter::setPolygonPoints(const QVariantList &points)
     }
 }
 
-void ExclusionParameter::addPoint(qreal x, qreal y)
+void PolygonParameter::addPoint(qreal x, qreal y)
 {
     QVariantMap point;
     point["x"] = x;
@@ -72,7 +72,7 @@ void ExclusionParameter::addPoint(qreal x, qreal y)
     emit polygonPointsChanged();
 }
 
-void ExclusionParameter::removeLastPoint()
+void PolygonParameter::removeLastPoint()
 {
     if (!m_polygonPoints.isEmpty()) {
         m_polygonPoints.removeLast();
@@ -80,7 +80,7 @@ void ExclusionParameter::removeLastPoint()
     }
 }
 
-void ExclusionParameter::clearPoints()
+void PolygonParameter::clearPoints()
 {
     if (!m_polygonPoints.isEmpty()) {
         m_polygonPoints.clear();
@@ -88,17 +88,17 @@ void ExclusionParameter::clearPoints()
     }
 }
 
-int ExclusionParameter::pointCount() const
+int PolygonParameter::pointCount() const
 {
     return m_polygonPoints.size();
 }
 
-QString ExclusionParameter::zoneColor() const
+QString PolygonParameter::zoneColor() const
 {
     return m_zoneColor;
 }
 
-void ExclusionParameter::setZoneColor(const QString &color)
+void PolygonParameter::setZoneColor(const QString &color)
 {
     if (m_zoneColor != color) {
         m_zoneColor = color;
@@ -106,12 +106,12 @@ void ExclusionParameter::setZoneColor(const QString &color)
     }
 }
 
-QString ExclusionParameter::zoneName() const
+QString PolygonParameter::zoneName() const
 {
     return m_zoneName;
 }
 
-void ExclusionParameter::setZoneName(const QString &name)
+void PolygonParameter::setZoneName(const QString &name)
 {
     if (m_zoneName != name) {
         m_zoneName = name;
