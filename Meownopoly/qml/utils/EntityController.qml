@@ -18,7 +18,7 @@ Item {
     property real baseSpeedMultiplier: isSprinting ? sprintMultiplier : 1.0
 
     // --- Physique 2D du mouvement ---
-    property real acceleration: 40.0  // Accélération en unités de grille par seconde²
+    property real acceleration: 30.0  // Accélération en unités de grille par seconde²
     property real friction: 12.0       // Friction au sol (force de décélération)
     
     // Position et vitesse en coordonnées de grille 2D
@@ -27,8 +27,8 @@ Item {
     
     // Paramètres de collision
     property real collisionRadius2D: 0.25  // Rayon de collision en unités de grille
-    property real bounceFactor: 4          // Coefficient de rebond (0 = pas de rebond, 1 = rebond parfait)
-    property real slideFactor: 0.85        // Conservation du glissement le long du mur
+    property real bounceFactor: 0.1          // Coefficient de rebond (0 = pas de rebond, 1 = rebond parfait)
+    property real slideFactor: 1        // Conservation du glissement le long du mur
     
     // Référence aux zones d'exclusion (polygones de collision)
     property var exclusionZones: null
@@ -144,7 +144,7 @@ Item {
 
         // 4. Appliquer le lissage (Lerp)
         // Le facteur 10.0 * dt donne une rotation rapide mais fluide
-        var rotationSpeed = 15.0 * dt
+        var rotationSpeed = 25.0 * dt
 
         // Si on est très proche, on finit le mouvement pour éviter le jitter
         if (Math.abs(diff) < 1) {
@@ -351,7 +351,7 @@ Item {
             // Recalculer la position avec la nouvelle vitesse
             newPos = Qt.vector2d(
                 position2D.x + velocity.x * dt,
-                position2D.y + velocity.y * dt
+                position2D.y + -velocity.y * dt
             )
             
             // Vérifier si toujours en collision après correction
