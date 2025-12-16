@@ -26,7 +26,7 @@ Item {
             return Qt.point(0, 0);
         }
         var viewPos = view3D.mapFrom3DScene(Qt.vector3d(xPos, yPos, zPos));
-        console.log("[position3dToGridRealPosition] viewPos", viewPos)
+        // console.log("[position3dToGridRealPosition] viewPos", viewPos)
         var gridPos = view3D.mapToItem(gridManager, viewPos.x, viewPos.y);
 
         return Qt.point(gridPos.x / gridManager.gridSize, gridPos.y / gridManager.gridSize);
@@ -49,9 +49,9 @@ Item {
         
         // 2. Convertir les coordonnées du gridManager vers les coordonnées de la view3D
         var viewPos = gridManager.mapToItem(view3D, gridPixelX, gridPixelY)
-        console.log("[gridPositionTo3D] grid:", gridX.toFixed(2), gridY.toFixed(2), 
-                    "-> gridPixel:", gridPixelX.toFixed(2), gridPixelY.toFixed(2),
-                    "-> viewPos:", viewPos.x.toFixed(2), viewPos.y.toFixed(2))
+        // console.log("[gridPositionTo3D] grid:", gridX.toFixed(2), gridY.toFixed(2),
+        //             "-> gridPixel:", gridPixelX.toFixed(2), gridPixelY.toFixed(2),
+        //             "-> viewPos:", viewPos.x.toFixed(2), viewPos.y.toFixed(2))
         
         // 3. Projeter sur le sol (Y=0) dans la scène 3D
         var pos3D = getGroundIntersection(viewPos.x, viewPos.y);

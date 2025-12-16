@@ -336,7 +336,7 @@ Item {
         // Détecter les collisions
         var collision = detectCollision(newPos)
         if (collision) {
-            console.log("[updatePhysics2D] COLILDE!")
+            // console.log("[updatePhysics2D] COLILDE!")
             // Appliquer le rebond
             velocity = applyBounce(velocity, collision.normalX, collision.normalY)
             
@@ -364,7 +364,7 @@ Item {
         
         // Convertir la position 2D en 3D et appliquer (conversion directe)
         var pos3D = World3DTools.gridPositionTo3D(newPos.x, newPos.y)
-        console.log("[updatePhysics2D] pos3D (x, y, z)", pos3D.x.toFixed(2), pos3D.y.toFixed(2), pos3D.z.toFixed(2));
+        // console.log("[updatePhysics2D] pos3D (x, y, z)", pos3D.x.toFixed(2), pos3D.y.toFixed(2), pos3D.z.toFixed(2));
 
         targetEntity.x = pos3D.x
         targetEntity.z = pos3D.z
@@ -383,7 +383,7 @@ Item {
     {
         if (!targetEntity) return
 
-        console.log("======= NEW FRAME =========")
+        // console.log("======= NEW FRAME =========")
         // 1. Calculer la vitesse cible basée sur l'input
         var targetSpeed = baseSpeed * baseSpeedMultiplier
         var targetVelocity = Qt.vector2d(0, 0)
@@ -392,7 +392,6 @@ Item {
         if (inputForce.length() > 0) {
             var inputDir = inputForce.normalized()
             targetVelocity = Qt.vector2d(inputDir.x * targetSpeed, inputDir.y * targetSpeed)
-            console.log("targetVelocity", targetVelocity)
         }
 
         // 2. Appliquer l'accélération vers la vitesse cible
@@ -409,7 +408,6 @@ Item {
             var velLen = velocity.length()
             if (velLen > 0) {
                 var reduction = Math.min(frictionForce, velLen)
-                console.log("reduction", reduction)
                 var factor = (velLen - reduction) / velLen
                 velocity = Qt.vector2d(velocity.x * factor, velocity.y * factor)
             }

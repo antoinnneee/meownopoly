@@ -61,6 +61,10 @@ MouseLogic_Base {
         
         // Mettre à jour la prévisualisation
         updatePolygonPreview()
+        if (polygonPreviewComponent) {
+            polygonPreviewComponent.mouseGridX = gridPos.x
+            polygonPreviewComponent.mouseGridY = gridPos.y
+        }
         
         mouse.accepted = true
     }
