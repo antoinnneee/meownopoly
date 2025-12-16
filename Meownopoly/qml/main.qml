@@ -4,13 +4,15 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "titleScreen/"
 import "test/"
-import "editor/"
 import "launcher/"
 import "board"
+import "Editor"
+
 import QtQuick.Window
+import Qt.labs.platform
+
 import Game
 
-import Qt.labs.platform
 
 ApplicationWindow {
     id: root

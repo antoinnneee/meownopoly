@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Case
 import MeowStyle
-import "../../../ui_item"
+import ui_item 1.0
 
 CollapsableGroupBox {
     id: control

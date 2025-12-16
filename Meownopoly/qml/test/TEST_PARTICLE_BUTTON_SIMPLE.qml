@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import "../ui_item"
+import ui_item 1.0
 
 /**
  * Exemple simple d'intégration du ParticleButton

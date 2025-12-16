@@ -2,8 +2,6 @@ import QtQuick 2.15
 import QtQuick.Particles
 import AssetManager
 
-import "../.."
-
 Rectangle {
     id: root
 

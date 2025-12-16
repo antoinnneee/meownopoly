@@ -10,7 +10,7 @@ import "../component"
 import "../component/snapable"
 import "../component/grid"
 import "panel"
-import "panel/assetSelectionPanel"
+import AssetSelectionPanel 1.0
 
 import QtQml
 import Case

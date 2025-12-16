@@ -92,6 +92,16 @@ QmlApp::QmlApp(QWindow *parent)
 //    AnimationProvider * provider = AnimationProvider::instance();
 //    provider->loadImagesFromFolder("C:/Users/Antoine/Documents/GitHub/meownopoly/Meownopoly/anim");
 
+    // Add QML module import paths for custom modules
+    // The path should be the PARENT directory of the module folder
+    // Module folder name must match the module name declared in qmldir
+    addImportPath("qrc:/qml");  // Contains: ui_item, Editor
+    addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomMainPanel");  // Contains: AssetSelectionPanel, CaseSelectionPanel, EditorBottomPanel, MapSelectionPanel, MenuSelectionPanel
+    addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel");  // Contains: CaseSelectionPanelMain
+    addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomSidePanel");  // Contains: CaseConfigPanel, ConnectionConfigPanel, SidePanel, VisualEffectPanel
+    addImportPath("qrc:/qml/Editor/panel");  // Contains: MapInfoPanel
+    addImportPath("qrc:/qml/Editor");  // Contains: EditorPanel (panel folder)
+
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
 

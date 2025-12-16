@@ -3,8 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import AssetManager
 
-import "../"
-import "../editorBottomPanel"
+import EditorBottomPanel 1.0
 
 EBP_TitleBar {
     id: titleBar

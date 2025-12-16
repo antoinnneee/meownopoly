@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import "../../../ui_item"
+import ui_item 1.0
 
 CollapsableGroupBox {
     id: control

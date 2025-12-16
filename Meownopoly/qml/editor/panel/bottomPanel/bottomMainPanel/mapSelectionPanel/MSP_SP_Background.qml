@@ -2,8 +2,8 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
-import "../editorBottomPanel"
-import "."
+import EditorBottomPanel 1.0
+import MapSelectionPanel 1.0
 
 import MapInfo
 import AssetManager 1.0

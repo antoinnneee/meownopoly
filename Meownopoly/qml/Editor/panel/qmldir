@@ -1,0 +1,4 @@
+module EditorPanel
+SelectionPanel 1.0 SelectionPanel.qml
+PlayerSelector 1.0 PlayerSelector.qml
+

@@ -3,8 +3,6 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
 
-import "../"
-
 Button {
     visible: true
     text: "← Back"

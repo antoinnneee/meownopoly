@@ -1,9 +1,9 @@
 import QtQuick 2.15
 import QtQuick.Layouts
 import QtQuick.Controls
-import "../VisualEffectPanel"
-import "../connectionConfigPanel"
-import "../caseConfigPanel"
+import VisualEffectPanel 1.0
+import ConnectionConfigPanel 1.0
+import CaseConfigPanel 1.0
 
 ColumnLayout {
     id: panelContent

@@ -12,9 +12,9 @@ import "../component/grid"
 import "../component/preview"
 import "../component/snapable"
 import "panel"
-import "panel/assetSelectionPanel"
-import "panel/sidePanel"
-import "panel/mapInfoPanel"
+import AssetSelectionPanel 1.0
+import SidePanel 1.0
+import MapInfoPanel 1.0
 
 
 import Game
@@ -28,7 +28,7 @@ import DecorationParameter
 import UndoRedoManager
 import AssetManager
 import ItemSnapableFactory
-import "../ui_item"
+import ui_item 1.0
 import "../test"
 import "../utils"
 

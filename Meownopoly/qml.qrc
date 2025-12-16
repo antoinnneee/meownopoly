@@ -11,9 +11,7 @@
         <file>qml/test/TEST_VIEW_3.qml</file>
         <file>qml/test/TEST_ASSET_MANAGER.qml</file>
         <file>qml/test/TEST_BOARD.qml</file>
-        <file>qml/editor/Editor.qml</file>
         <file>qml/test/TEST_3D.qml</file>
-        <file>qml/editor/panel/PlayerSelector.qml</file>
         <file>qml/launcher/Launcher.qml</file>
         <file>qml/launcher/LauncherHeader.qml</file>
         <file>qml/launcher/ServerConfigSection.qml</file>
@@ -27,21 +25,7 @@
         <file>qml/test/TEST_PAW_MENU.qml</file>
         <file>qml/menu/PawMainPad.qml</file>
         <file>qml/menu/pawTools.js</file>
-        <file>qml/editor/EditorLogic.qml</file>
-        <file>qml/editor/EditorDynamicComponent.qml</file>
-        <file>qml/editor/panel/SelectionPanel.qml</file>
-        <file>qml/editor/logic/PlanLogic.qml</file>
-        <file>qml/editor/logic/ScrollLogic.qml</file>
-        <file>qml/editor/logic/TileLogic.qml</file>
-        <file>qml/editor/logic/ScrollLogic_POSE.qml</file>
-        <file>qml/editor/Editor_WheelHandler.qml</file>
-        <file>qml/editor/logic/MouseLogic_Base.qml</file>
-        <file>qml/editor/logic/MouseLogic_Selection.qml</file>
-        <file>qml/editor/logic/MouseLogic_Pose.qml</file>
-        <file>qml/editor/MenuMapAtStart.qml</file>
         <file>qml/test/Test_Comp.qml</file>
-        <file>qml/editor/EditorEscMenu.qml</file>
-        <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/ui_item/ParticleButton.qml</file>
         <file>qml/ui_item/qmldir</file>
         <file>qml/ui_item/Player_Profil_Icon.qml</file>
@@ -109,8 +93,6 @@
         <file>qml/component/AdminCommandPanel.qml</file>
         <file>qml/ui_item/InteractiveUiElement.qml</file>
         <file>qml/ui_item/CollapsableGroupBox.qml</file>
-        <file>qml/editor/logic/MouseLogic_Game.qml</file>
-        <file>qml/editor/logic/MouseLogic_Template.qml</file>
         <file>qml/utils/EntityController.qml</file>
         <file>qml/utils/qmldir</file>
         <file>qml/launcher/ModelsSection.qml</file>
@@ -118,91 +100,109 @@
         <file>qml/component/Base_WheelHandler.qml</file>
         <file>qml/component/Base_logic.qml</file>
         <file>qml/component/Base_WorkArea.qml</file>
-        <file>qml/editor/Trackers.qml</file>
-        <file>qml/editor/EditorController.qml</file>
-        <file>qml/editor/qmldir</file>
         <file>qml/component/GameScene.qml</file>
-        <file>qml/editor/panel/mapInfoPanel/MapInfoPanel.qml</file>
-        <file>qml/editor/panel/mapInfoPanel/MapNavigationBar.qml</file>
-        <file>qml/editor/panel/mapInfoPanel/MapSidePanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_CategoryGrid.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_ClearButton.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_ContentArea.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_Grid.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_Item.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_StatusIndicator.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_TitleBar.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/AssetSelectionPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/main/CSP_CaseTypeCell.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/main/CSP_CaseTypeSelector.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CaseSelectionPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CSP_ClearButton.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CSP_ContentArea.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CSP_TitleBar.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EBP_BackButton.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EBP_Content.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EBP_FilterButton.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EBP_SearchBar.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EBP_TitleBar.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EditorBottomPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MapSelectionPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_ContentArea.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SettingPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SettingSelection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SP_Background.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SP_General.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SP_SaveLoad.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_TitleBar.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector_Button.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CaseConfigurationPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CaseConfigurationPanelSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_GeneralConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_Header.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_PanelElement.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RentConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_StyledSpinBox.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_TypeSelector.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_CardBoardBoxSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_CatDeviceSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_GeneralSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_KibbleDispenserSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_RestAreaSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_TypeSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionListSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionsConfigurationSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionsPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/sidePanel/SidePanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/sidePanel/SidePanel_Content.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/TransformPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_AdvancedEffectsSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_ButtonLock.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_ButtonMirror.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_ColorEffectsSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_ResetButtonsPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_Rotation.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_Slider.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualEffectsPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualEffectsPanel_old.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualTransformPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/main/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/sidePanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/qmldir</file>
+        <file>qml/Editor/logic/MouseLogic_Base.qml</file>
+        <file>qml/Editor/logic/MouseLogic_Game.qml</file>
+        <file>qml/Editor/logic/MouseLogic_Pose.qml</file>
+        <file>qml/Editor/logic/MouseLogic_Selection.qml</file>
+        <file>qml/Editor/logic/MouseLogic_Selection_link.qml</file>
+        <file>qml/Editor/logic/MouseLogic_Template.qml</file>
+        <file>qml/Editor/logic/PlanLogic.qml</file>
+        <file>qml/Editor/logic/ScrollLogic.qml</file>
+        <file>qml/Editor/logic/ScrollLogic_POSE.qml</file>
+        <file>qml/Editor/logic/TileLogic.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/ASP_CategoryGrid.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/ASP_ClearButton.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/ASP_ContentArea.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/ASP_Grid.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/ASP_Item.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/ASP_StatusIndicator.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/ASP_TitleBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/AssetSelectionPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel/CaseSelectionPanelMain/CSP_CaseTypeCell.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel/CaseSelectionPanelMain/CSP_CaseTypeSelector.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel/CaseSelectionPanelMain/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel/CaseSelectionPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel/CSP_ClearButton.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel/CSP_ContentArea.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel/CSP_TitleBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/EditorBottomPanel/EBP_BackButton.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/EditorBottomPanel/EBP_Content.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/EditorBottomPanel/EBP_FilterButton.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/EditorBottomPanel/EBP_SearchBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/EditorBottomPanel/EBP_TitleBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/EditorBottomPanel/EditorBottomPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/EditorBottomPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MapSelectionPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MSP_ContentArea.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MSP_SettingPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MSP_SettingSelection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MSP_SP_Background.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MSP_SP_General.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MSP_SP_SaveLoad.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/MSP_TitleBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MenuSelectionPanel/MenuSelector.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MenuSelectionPanel/MenuSelector_Button.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MenuSelectionPanel/MenuSelector_SizeControl.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomMainPanel/MenuSelectionPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CaseConfigurationPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CaseConfigurationPanelSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_CatPerksConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_GeneralConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_Header.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_PanelElement.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_RentConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_StyledSpinBox.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCP_TypeSelector.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCPS_CardBoardBoxSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCPS_CatDeviceSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCPS_GeneralSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCPS_KibbleDispenserSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCPS_RestAreaSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/CCPS_TypeSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/CaseConfigPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/ConnectionConfigPanel/ConnectionListSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/ConnectionConfigPanel/ConnectionsConfigurationSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/ConnectionConfigPanel/ConnectionsPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/ConnectionConfigPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/SidePanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/SidePanel/SidePanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/SidePanel/SidePanel_Content.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/TransformPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_AdvancedEffectsSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_ButtonLock.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_ButtonMirror.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_ColorEffectsSection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_ResetButtonsPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_Rotation.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VEP_Slider.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualEffectsPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualEffectsPanel_old.qml</file>
+        <file>qml/Editor/panel/bottomPanel/bottomSidePanel/VisualEffectPanel/VisualTransformPanel.qml</file>
+        <file>qml/Editor/panel/MapInfoPanel/MapInfoPanel.qml</file>
+        <file>qml/Editor/panel/MapInfoPanel/MapNavigationBar.qml</file>
+        <file>qml/Editor/panel/MapInfoPanel/MapSidePanel.qml</file>
+        <file>qml/Editor/panel/MapInfoPanel/qmldir</file>
+        <file>qml/Editor/panel/PlayerSelector.qml</file>
+        <file>qml/Editor/panel/SelectionPanel.qml</file>
+        <file>qml/Editor/Editor_WheelHandler.qml</file>
+        <file>qml/Editor/EditorController.qml</file>
+        <file>qml/Editor/EditorDynamicComponent.qml</file>
+        <file>qml/Editor/EditorEscMenu.qml</file>
+        <file>qml/Editor/EditorLogic.qml</file>
+        <file>qml/Editor/MenuMapAtStart.qml</file>
+        <file>qml/Editor/qmldir</file>
+        <file>qml/Editor/Trackers.qml</file>
     </qresource>
 </RCC>

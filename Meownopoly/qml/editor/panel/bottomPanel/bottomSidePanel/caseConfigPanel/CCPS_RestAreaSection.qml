@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.15
 import Case
 import MapTypes
 
-import "../../../ui_item"
+import ui_item 1.0
 
 CollapsableGroupBox {
     id: control

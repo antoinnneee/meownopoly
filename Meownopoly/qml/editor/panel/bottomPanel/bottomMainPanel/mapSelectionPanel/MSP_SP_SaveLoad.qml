@@ -2,7 +2,7 @@
 import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
-import "../editorBottomPanel"
+import EditorBottomPanel 1.0
 import Game
 import MapFileManager
 import MapTypes

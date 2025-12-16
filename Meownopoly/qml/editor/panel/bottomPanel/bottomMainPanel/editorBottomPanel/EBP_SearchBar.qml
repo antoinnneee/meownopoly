@@ -3,9 +3,6 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import AssetManager
 
-import "../"
-import "../editorBottomPanel"
-
 TextField {
     placeholderText: "Search assets..."
     background: Rectangle {

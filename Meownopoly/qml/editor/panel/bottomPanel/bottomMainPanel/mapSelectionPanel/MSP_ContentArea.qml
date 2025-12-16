@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts
-import "../editorBottomPanel"
+import EditorBottomPanel 1.0
 
 EBP_Content {
     id: contentArea

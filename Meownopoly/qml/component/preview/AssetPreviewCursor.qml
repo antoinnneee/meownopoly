@@ -2,8 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import AssetManager
 import DecorationParameter
-import "../../editor/panel"
-import "../../editor/panel/sidePanel"
+import SidePanel 1.0
 
 import "../snapable"
 import "../grid"

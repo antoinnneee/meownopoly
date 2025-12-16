@@ -4,12 +4,11 @@ import QtQuick.Layouts 1.15
 import QtCore
 import QtQuick.Effects
 import AssetManager
-import ".."
-
-import "./assetSelectionPanel"
-import "./caseSelectionPanel"
-import "./mapSelectionPanel"
-import "./menuSelectionPanel"
+import AssetSelectionPanel 1.0
+import CaseSelectionPanel 1.0
+import MapSelectionPanel 1.0
+import MenuSelectionPanel 1.0
+import editorLogic 1.0
 
 Rectangle {
     id: root
