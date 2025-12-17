@@ -16,7 +16,6 @@ import AssetSelectionPanel 1.0
 import SidePanel 1.0
 import MapInfoPanel 1.0
 
-
 import Game
 import MapFileManager
 import MapTypes
