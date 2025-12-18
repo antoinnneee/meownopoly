@@ -96,10 +96,10 @@ QmlApp::QmlApp(QWindow *parent)
     // The path should be the PARENT directory of the module folder
     // Module folder name must match the module name declared in qmldir
     addImportPath("qrc:/qml");  // Contains: ui_item, Editor
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomMainPanel");  // Contains: AssetSelectionPanel, CaseSelectionPanel, EditorBottomPanel, MapSelectionPanel, MenuSelectionPanel
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomMainPanel/CaseSelectionPanel");  // Contains: CaseSelectionPanelMain
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomMainPanel/MapSelectionPanel");  // Contains: MapSelectionPanelMain
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomMainPanel/AssetSelectionPanel");  // Contains: AssetSelectionPanelMain
+    addImportPath("qrc:/qml/Editor/panel/bottomPanel/BottomMainPanel");  // Contains: AssetSelectionPanel, CaseSelectionPanel, EditorBottomPanel, MapSelectionPanel, MenuSelectionPanel
+    addImportPath("qrc:/qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel");  // Contains: CaseSelectionPanelMain
+    addImportPath("qrc:/qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel");  // Contains: MapSelectionPanelMain
+    addImportPath("qrc:/qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel");  // Contains: AssetSelectionPanelMain
     addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomSidePanel");  // Contains: CaseConfigPanel, ConnectionConfigPanel, SidePanel, VisualEffectPanel
     addImportPath("qrc:/qml/Editor/panel");  // Contains: MapInfoPanel
     addImportPath("qrc:/qml/Editor");  // Contains: EditorPanel (panel folder)

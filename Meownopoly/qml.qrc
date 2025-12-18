@@ -165,45 +165,45 @@
         <file>qml/Editor/qmldir</file>
         <file>qml/Editor/Trackers.qml</file>
         <file>qml/Editor/Editor.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/ASP_CategoryGrid.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/ASP_ClearButton.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/ASP_ContentArea.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/ASP_Grid.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/ASP_Item.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/ASP_StatusIndicator.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/ASP_TitleBar.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/AssetSelectionPanel.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/assetSelectionPanel/qmldir</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/caseSelectionPanel/CaseSelectionPanelMain/CSP_CaseTypeCell.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/caseSelectionPanel/CaseSelectionPanelMain/CSP_CaseTypeSelector.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/caseSelectionPanel/CaseSelectionPanelMain/qmldir</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/caseSelectionPanel/CaseSelectionPanel.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/caseSelectionPanel/CSP_ClearButton.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/caseSelectionPanel/CSP_ContentArea.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/caseSelectionPanel/CSP_TitleBar.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/caseSelectionPanel/qmldir</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/editorBottomPanel/EBP_BackButton.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/editorBottomPanel/EBP_Content.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/editorBottomPanel/EBP_FilterButton.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/editorBottomPanel/EBP_SearchBar.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/editorBottomPanel/EBP_TitleBar.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/editorBottomPanel/EditorBottomPanel.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/editorBottomPanel/qmldir</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MapSelectionPanel.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MSP_ContentArea.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MSP_SettingPanel.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MSP_SettingSelection.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MSP_SP_Background.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MSP_SP_General.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MSP_SP_SaveLoad.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/MSP_TitleBar.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/mapSelectionPanel/qmldir</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/menuSelectionPanel/MenuSelector.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/menuSelectionPanel/MenuSelector_Button.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
-        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/menuSelectionPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel/CaseSelectionPanelMain/CSP_CaseTypeCell.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel/CaseSelectionPanelMain/CSP_CaseTypeSelector.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel/CaseSelectionPanelMain/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel/CaseSelectionPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel/CSP_ClearButton.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel/CSP_ContentArea.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel/CSP_TitleBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/EditorBottomPanel/EBP_BackButton.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/EditorBottomPanel/EBP_Content.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/EditorBottomPanel/EBP_FilterButton.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/EditorBottomPanel/EBP_SearchBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/EditorBottomPanel/EBP_TitleBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/EditorBottomPanel/EditorBottomPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/EditorBottomPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MapSelectionPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MSP_ContentArea.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MSP_SettingPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MSP_SettingSelection.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MSP_SP_Background.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MSP_SP_General.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MSP_SP_SaveLoad.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/MSP_TitleBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel/qmldir</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MenuSelectionPanel/MenuSelector.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MenuSelectionPanel/MenuSelector_Button.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MenuSelectionPanel/MenuSelector_SizeControl.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/MenuSelectionPanel/qmldir</file>
         <file>qml/Editor/panel/bottomPanel/BottomMainPanel/qmldir</file>
         <file>qml/Editor/panel/bottomPanel/BottomMainPanel/SelectionPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/ASP_CategoryGrid.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/ASP_ClearButton.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/ASP_ContentArea.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/ASP_Grid.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/ASP_Item.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/ASP_StatusIndicator.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/ASP_TitleBar.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/AssetSelectionPanel.qml</file>
+        <file>qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel/qmldir</file>
     </qresource>
 </RCC>

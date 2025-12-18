@@ -11,7 +11,8 @@ import "../component"
 import "../component/grid"
 import "../component/preview"
 import "../component/snapable"
-import "panel"
+
+import BottomMainPanel
 import AssetSelectionPanel 1.0
 import SidePanel 1.0
 import MapInfoPanel 1.0
@@ -28,6 +29,7 @@ import UndoRedoManager
 import AssetManager
 import ItemSnapableFactory
 import ui_item 1.0
+
 import "../test"
 import "../utils"
 
