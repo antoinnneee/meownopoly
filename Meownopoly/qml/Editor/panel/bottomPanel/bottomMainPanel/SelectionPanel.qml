@@ -5,11 +5,12 @@ import QtCore
 import QtQuick.Effects
 import AssetManager
 
-import AssetSelectionPanel
-import CaseSelectionPanel 1.0
-import MapSelectionPanel 1.0
-import MenuSelectionPanel 1.0
-import Editor
+import assetSelectionPanel
+import caseSelectionPanel
+import mapSelectionPanel
+import menuSelectionPanel
+
+import editor
 
 Rectangle {
     id: root
