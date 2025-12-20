@@ -33,6 +33,8 @@
 
 #include "tools/editorenum.h"
 
+#include "game/physics/physics2d_engine.h"
+
 #include "game/map/map.h"
 #include "game/map/maptypes.h"
 #include "game/map/undoredomanager.h"
@@ -64,6 +66,7 @@ QmlApp::QmlApp(QWindow *parent)
     Logger::registerQml();
     CursorManager::registerQml();
     UndoRedoManager::registerQml();
+    PhysicsEngine2D::registerQml();
     
     // Register MapTypes namespace for QML
     qmlRegisterUncreatableMetaObject(MapTypes::staticMetaObject, "MapTypes", 1, 0, "MapTypes", "Error: only enums");
