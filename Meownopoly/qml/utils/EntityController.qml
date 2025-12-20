@@ -19,14 +19,14 @@ Item {
 
     // --- Physique 2D du mouvement ---
     property real acceleration: 30.0  // Accélération en unités de grille par seconde²
-    property real friction: 12.0       // Friction au sol (force de décélération)
+    property real friction:  0.0       // Friction au sol (force de décélération)
     
     // Position et vitesse en coordonnées de grille 2D
     property vector2d position2D: Qt.vector2d(0, 0)  // Position en unités de grille
     property vector2d velocity: Qt.vector2d(0, 0)    // Vitesse en unités de grille/s
     
     // Paramètres de collision
-    property real collisionRadius2D: 0.25  // Rayon de collision en unités de grille
+    property real collisionRadius2D: 0.2  // Rayon de collision en unités de grille
     property real bounceFactor: 0.1          // Coefficient de rebond (0 = pas de rebond, 1 = rebond parfait)
     property real slideFactor: 1        // Conservation du glissement le long du mur
     
@@ -144,7 +144,7 @@ Item {
 
         // 4. Appliquer le lissage (Lerp)
         // Le facteur 10.0 * dt donne une rotation rapide mais fluide
-        var rotationSpeed = 25.0 * dt
+        var rotationSpeed = 50.0 * dt
 
         // Si on est très proche, on finit le mouvement pour éviter le jitter
         if (Math.abs(diff) < 1) {
@@ -159,8 +159,8 @@ Item {
         var y = 0
         if (keyLeft) x -= 1
         if (keyRight) x += 1
-        if (keyUp) y += 1
-        if (keyDown) y -= 1
+        if (keyUp) y -= 1
+        if (keyDown) y += 1
 
         inputVector = Qt.vector2d(x, y)
         if (inputVector.length() > 1) {
@@ -178,17 +178,17 @@ Item {
         var dx = x2 - x1
         var dy = y2 - y1
         var lengthSq = dx * dx + dy * dy
-        
+
         if (lengthSq < 0.0001) {
             var dist = Math.sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1))
             return { distance: dist, closestX: x1, closestY: y1, t: 0 }
         }
-        
+
         var t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lengthSq))
         var closestX = x1 + t * dx
         var closestY = y1 + t * dy
         var dist = Math.sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY))
-        
+
         return { distance: dist, closestX: closestX, closestY: closestY, t: t }
     }
 
@@ -201,21 +201,21 @@ Item {
      */
     function checkCirclePolygonCollision(cx, cy, radius, polygon) {
         if (!polygon || polygon.length < 3) return null
-        
+
         var minDist = Infinity
         var closestX = 0, closestY = 0
         var segmentNormalX = 0, segmentNormalY = 0
-        
+
         // Trouver le segment le plus proche
         for (var i = 0; i < polygon.length; i++) {
             var j = (i + 1) % polygon.length
             var result = pointToSegment(cx, cy, polygon[i].x, polygon[i].y, polygon[j].x, polygon[j].y)
-            
+
             if (result.distance < minDist) {
                 minDist = result.distance
                 closestX = result.closestX
                 closestY = result.closestY
-                
+
                 // Calculer la normale du segment (perpendiculaire)
                 var segDx = polygon[j].x - polygon[i].x
                 var segDy = polygon[j].y - polygon[i].y
@@ -227,15 +227,15 @@ Item {
                 }
             }
         }
-        
+
         // Pas de collision si la distance est supérieure au rayon
         if (minDist >= radius) return null
-        
+
         // Calculer la normale qui pointe du mur vers le cercle
         var toCenterX = cx - closestX
         var toCenterY = cy - closestY
         var toCenterLen = Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY)
-        
+
         var normalX, normalY
         if (toCenterLen > 0.0001) {
             normalX = toCenterX / toCenterLen
@@ -245,12 +245,12 @@ Item {
             normalX = segmentNormalX
             normalY = segmentNormalY
         }
-        
+
         return {
             colliding: true,
             distance: minDist,
             normalX: normalX,
-            normalY: -normalY,
+            normalY: normalY,
             closestX: closestX,
             closestY: closestY,
             penetration: radius - minDist
@@ -317,7 +317,7 @@ Item {
 
     /**
      * Met à jour la physique 2D : position, collision, rebond
-     * Utilise les fonctions symétriques world3DToGrid2D / grid2DToWorld3D
+     * Utilise les fonctions symétriques position3dToGridRealPosition / gridPositionTo3D
      * @param dt Delta time en secondes
      */
     function updatePhysics2D(dt) {
@@ -330,36 +330,27 @@ Item {
         // Calculer la nouvelle position proposée
         var newPos = Qt.vector2d(
             position2D.x + velocity.x * dt,
-            position2D.y + -velocity.y * dt
+            position2D.y + velocity.y * dt
         )
         
         // Détecter les collisions
         var collision = detectCollision(newPos)
         if (collision) {
-            // console.log("[updatePhysics2D] COLILDE!")
+            console.log("[updatePhysics2D] NORMAL :", collision.normalX, collision.normalY)
             // Appliquer le rebond
             velocity = applyBounce(velocity, collision.normalX, collision.normalY)
             
             // Repousser hors de la collision (correction de pénétration)
             if (collision.penetration > 0) {
-                newPos = Qt.vector2d(
-                    newPos.x + collision.normalX * collision.penetration,
-                    newPos.y + collision.normalY * collision.penetration
-                )
+                console.log("bounce", collision.penetration, velocity)
             }
             
-            // Recalculer la position avec la nouvelle vitesse
+            // // Recalculer la position avec la nouvelle vitesse
             newPos = Qt.vector2d(
                 position2D.x + velocity.x * dt,
-                position2D.y + -velocity.y * dt
+                position2D.y + velocity.y * dt
             )
-            
-            // Vérifier si toujours en collision après correction
-            var stillColliding = detectCollision(newPos)
-            if (stillColliding) {
-                // Bloquer le mouvement, garder la position actuelle
-                newPos = position2D
-            }
+
         }
         
         // Convertir la position 2D en 3D et appliquer (conversion directe)
@@ -416,15 +407,15 @@ Item {
         // 4. Mettre à jour la physique 2D (position, collision, rebond)
         updatePhysics2D(dt)
 
-        
-
         // 5. Faire tourner l'entité dans la direction du mouvement
         if (velocity.length() > 0.1) {
             var gridSize = World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
             var dx = velocity.x * gridSize * dt
-            var dz = -velocity.y * gridSize * dt
-            rotateEntity(dx, dz, dt)
+            var dz = velocity.y * gridSize * dt
+            // rotateEntity(dx, dz, dt)
         }
+        
+
     }
 
 
