@@ -1,4 +1,4 @@
-module CaseConfigPanel
+module caseConfigPanel
 CaseConfigurationPanel 1.0 CaseConfigurationPanel.qml
 CaseConfigurationPanelSection 1.0 CaseConfigurationPanelSection.qml
 CCP_CardBoardBoxSpecificConfig 1.0 CCP_CardBoardBoxSpecificConfig.qml

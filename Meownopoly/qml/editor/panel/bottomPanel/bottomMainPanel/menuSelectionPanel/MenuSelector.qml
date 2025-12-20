@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Editor
+import editor
 Item {
     id: root
     height: Screen.pixelDensity * 12.5

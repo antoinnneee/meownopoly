@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import AssetManager
 
-import EditorBottomPanel 1.0
+import editorBottomPanel
 
 Button {
     text: "✕ Clear"

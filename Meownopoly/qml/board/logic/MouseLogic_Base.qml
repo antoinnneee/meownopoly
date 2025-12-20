@@ -7,6 +7,9 @@ import QtQml
 import UndoRedoManager
 import "../../component/snapable"
 import "../../component/grid"
+
+import bottomMainPanel
+
 QtObject {
     id: mouseLogic
     property bool isDragging: false

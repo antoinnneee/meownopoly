@@ -5,8 +5,9 @@ import QtQuick.Effects
 import AssetManager
 
 import "../"
-import EditorBottomPanel 1.0
-import CaseSelectionPanel 1.0
+import editorBottomPanel 1.0
+import caseSelectionPanel 1.0
+
 EditorBottomPanel {
     id: root
 

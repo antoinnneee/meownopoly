@@ -1,4 +1,4 @@
-module CaseSelectionPanel
+module caseSelectionPanel
 CaseSelectionPanel 1.0 CaseSelectionPanel.qml
 CSP_ClearButton 1.0 CSP_ClearButton.qml
 CSP_ContentArea 1.0 CSP_ContentArea.qml

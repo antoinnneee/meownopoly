@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Dialogs
 import QtQuick.Layouts 1.15
 import QtCore
-import EditorBottomPanel 1.0
+import editorBottomPanel
 import ui_item 1.0
 
 import Game

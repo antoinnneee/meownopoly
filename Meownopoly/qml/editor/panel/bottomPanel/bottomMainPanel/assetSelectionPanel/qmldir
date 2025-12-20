@@ -1,4 +1,4 @@
-module AssetSelectionPanel
+module assetSelectionPanel
 AssetSelectionPanel 1.0 AssetSelectionPanel.qml
 ASP_CategoryGrid 1.0 ASP_CategoryGrid.qml
 ASP_ClearButton 1.0 ASP_ClearButton.qml

@@ -92,18 +92,32 @@ QmlApp::QmlApp(QWindow *parent)
 //    AnimationProvider * provider = AnimationProvider::instance();
 //    provider->loadImagesFromFolder("C:/Users/Antoine/Documents/GitHub/meownopoly/Meownopoly/anim");
 
-    // Add QML module import paths for custom modules
-    // The path should be the PARENT directory of the module folder
-    // Module folder name must match the module name declared in qmldir
-    addImportPath("qrc:/qml");  // Contains: ui_item, Editor
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/BottomMainPanel");  // Contains: AssetSelectionPanel, CaseSelectionPanel, EditorBottomPanel, MapSelectionPanel, MenuSelectionPanel
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/BottomMainPanel/CaseSelectionPanel");  // Contains: CaseSelectionPanelMain
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/BottomMainPanel/MapSelectionPanel");  // Contains: MapSelectionPanelMain
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/BottomMainPanel/AssetSelectionPanel");  // Contains: AssetSelectionPanelMain
-    addImportPath("qrc:/qml/Editor/panel/bottomPanel/bottomSidePanel");  // Contains: CaseConfigPanel, ConnectionConfigPanel, SidePanel, VisualEffectPanel
-    addImportPath("qrc:/qml/Editor/panel");  // Contains: MapInfoPanel
-    addImportPath("qrc:/qml/Editor");  // Contains: EditorPanel (panel folder)
 
+
+
+
+    //To declare module in QML
+
+    //1) Create a qmldir file in the resource folder. The qmldir is wrote like this:
+    //  module name_of_the_folder
+    //  TypeName 1.0 TypeFileName.qml
+    //  TypeName2 1.0 TypeFileName2.qml
+
+    //2) Add the path of the parent's module/folder below with addImportPath()
+
+    //3) In QML, import the module with <import name_of_the_folder>
+
+    // ** In order to respect the current typo, folder/module has to be named with lowercase letters, and the file's name with uppercase letters **
+    // ** the module-system of Qt IS case sensitive **
+
+    addImportPath("qrc:/qml");  // Contains: ui_item, utils
+    addImportPath("qrc:/qml/editor");  // Contains: editor qmldir
+    addImportPath("qrc:/qml/editor/panel");  // Contains: mapInfoPanel
+    addImportPath("qrc:/qml/editor/panel/bottomPanel");  // Contains: bottomMainPanel, bottomSidePanel
+    addImportPath("qrc:/qml/editor/panel/mapInfoPanel");  // Contains: mapInfoPanelMain
+    addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomMainPanel");  // Contains: assetSelectionPanel, caseSelectionPanel, editorBottomPanel, mapSelectionPanel, menuSelectionPanel
+    addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomSidePanel");  // Contains: caseConfigPanel, connectionConfigPanel, sidePanel, visualEffectPanel
+    addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel");  // Contains: caseSelectionPanelMain
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
 

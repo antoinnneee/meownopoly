@@ -12,10 +12,9 @@ import "../component/grid"
 import "../component/preview"
 import "../component/snapable"
 
-import BottomMainPanel
-import AssetSelectionPanel 1.0
-import SidePanel 1.0
-import MapInfoPanel 1.0
+import bottomMainPanel
+import bottomSidePanel
+import mapInfoPanel
 
 import Game
 import MapFileManager
@@ -405,7 +404,7 @@ Base_Board {
         }
     }
 
-    SidePanel {
+    BottomSidePanel {
         id: sidePanel
         z: z_HUD
         anchors.bottom: parent.bottom

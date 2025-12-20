@@ -1,4 +1,4 @@
-module VisualEffectPanel
+module visualEffectPanel
 VisualEffectsPanel 1.0 VisualEffectsPanel.qml
 VisualEffectsPanel_old 1.0 VisualEffectsPanel_old.qml
 VisualTransformPanel 1.0 VisualTransformPanel.qml

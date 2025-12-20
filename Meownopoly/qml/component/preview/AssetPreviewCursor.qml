@@ -2,7 +2,8 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import AssetManager
 import DecorationParameter
-import SidePanel 1.0
+
+import bottomSidePanel
 
 import "../snapable"
 import "../grid"
@@ -57,7 +58,7 @@ Item {
     required property GridManager gridManager
     property var snapablePreview
 
-    required property SidePanel sidePanel
+    required property BottomSidePanel sidePanel
 
 
     // Fonction pour obtenir l'icône selon le type de case

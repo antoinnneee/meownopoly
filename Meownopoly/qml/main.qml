@@ -6,7 +6,7 @@ import "titleScreen/"
 import "test/"
 import "launcher/"
 import "board"
-import "Editor"
+import "editor"
 
 import QtQuick.Window
 import Qt.labs.platform

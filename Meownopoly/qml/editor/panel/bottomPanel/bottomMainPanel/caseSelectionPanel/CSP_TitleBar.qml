@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import EditorBottomPanel 1.0
+import editorBottomPanel
 
 EBP_TitleBar {
     id: titleBar

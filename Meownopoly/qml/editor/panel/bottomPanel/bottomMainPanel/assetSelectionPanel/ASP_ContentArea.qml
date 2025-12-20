@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import EditorBottomPanel 1.0
-import VisualEffectPanel 1.0
+import editorBottomPanel
+import visualEffectPanel
 
 
 EBP_Content {
