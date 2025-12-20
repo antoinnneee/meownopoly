@@ -136,7 +136,7 @@ Base_Board {
                 mapInfoPanel.isOpening = !mapInfoPanel.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
-                addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 1.5) : btInfoMap.x
+                addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 0.9) : btInfoMap.x
             }
         }
 
@@ -151,12 +151,12 @@ Base_Board {
     Button {
         id: addMapButton
         x: btInfoMap.x
-        y: btInfoMap.y + addMapButton.height/2
+        y: btInfoMap.y + (btInfoMap.height - addMapButton.height)/2
 
         z: z_HUD
 
-        width: btInfoMap.width * 0.5
-        height: btInfoMap.height * 0.5
+        width: btInfoMap.width * 0.65
+        height: btInfoMap.height * 0.65
 
         enabled: x == btInfoMap.x ? false : true
         visible: enabled

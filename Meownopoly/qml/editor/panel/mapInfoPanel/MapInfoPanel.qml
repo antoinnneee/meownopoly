@@ -8,9 +8,8 @@ import QtCore
 import QtQuick.Dialogs
 import Case
 import ItemSnapable
-import "../../../ui_item"
+import ui_item 1.0
 import "../../../component"
-import "../../panel"
 
 import Game
 import MapFileManager
@@ -60,7 +59,7 @@ Item {
 
     onVisibleChanged: {
         if (visible) {
-            mapNavigationBar.isVisible()
+            mapNavigationBar.refreshMapList()
         }
     }
 

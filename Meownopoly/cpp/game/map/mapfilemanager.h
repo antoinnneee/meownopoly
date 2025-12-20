@@ -25,6 +25,8 @@ public:
     Q_INVOKABLE QStringList getAvailableMaps();
     Q_INVOKABLE QString findMapFileByName(const QString &displayName);
     Q_INVOKABLE QString createMapFile(const QString &mapName, MapTypes::MapType mapType);
+    Q_INVOKABLE bool isAutosaveMap(const QString &mapName);
+    Q_INVOKABLE MapTypes::MapType getMapType(const QString &mapName);
 
 
     // Méthodes C++ internes (static)

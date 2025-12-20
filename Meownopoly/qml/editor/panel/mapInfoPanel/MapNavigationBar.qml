@@ -85,9 +85,10 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             enabled: leftArrow.availableMaps.length > 0
+            hoverEnabled: enabled
+
             onEntered: {
                 parent.color = "#6AB0F2"
             }
@@ -244,9 +245,9 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             enabled: leftArrow.availableMaps.length > 0
+            hoverEnabled: enabled
 
             onEntered: {
                 parent.color = "#6AB0F2"

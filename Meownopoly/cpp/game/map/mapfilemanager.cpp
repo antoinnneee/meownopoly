@@ -109,13 +109,35 @@ QStringList MapFileManager::getAvailableMaps()
 QString MapFileManager::findMapFileByName(const QString &displayName)
 {
     QString normalizedName = normalizeMapName(displayName);
-    QString filePath = getMapFilePath(normalizedName, MapTypes::CUSTOM);
     
+    // Check if it's the autosave map
+    if (normalizedName == AUTOSAVE_MAP_NAME) {
+        QString autosavePath = getMapFilePath(normalizedName, MapTypes::AUTOSAVE);
+        if (QFile::exists(autosavePath)) {
+            return normalizedName;
+        }
+    }
+    
+    // Check for custom map
+    QString filePath = getMapFilePath(normalizedName, MapTypes::CUSTOM);
     if (QFile::exists(filePath)) {
-        return normalizedName;  // Retourner le nom normalisé, pas le chemin complet
+        return normalizedName;
     }
     
     return QString();
+}
+
+bool MapFileManager::isAutosaveMap(const QString &mapName)
+{
+    return normalizeMapName(mapName) == AUTOSAVE_MAP_NAME;
+}
+
+MapTypes::MapType MapFileManager::getMapType(const QString &mapName)
+{
+    if (isAutosaveMap(mapName)) {
+        return MapTypes::AUTOSAVE;
+    }
+    return MapTypes::CUSTOM;
 }
 
 bool MapFileManager::mapExists(const QString &mapName, MapTypes::MapType mapType)
