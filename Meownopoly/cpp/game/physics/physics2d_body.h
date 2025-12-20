@@ -33,7 +33,7 @@ class PhysicsBody2D : public QObject
     Q_PROPERTY(bool collisionEnabled READ collisionEnabled WRITE setCollisionEnabled NOTIFY collisionEnabledChanged)
     
     // État de lecture seule
-    Q_PROPERTY(bool isGrounded READ isGrounded NOTIFY isGroundedChanged)
+    Q_PROPERTY(bool isColliding READ isColliding NOTIFY isCollidingChanged)
     Q_PROPERTY(QVector2D lastCollisionNormal READ lastCollisionNormal NOTIFY lastCollisionNormalChanged)
 
 public:
@@ -52,7 +52,7 @@ public:
     qreal mass() const { return m_mass; }
     bool isStatic() const { return m_isStatic; }
     bool collisionEnabled() const { return m_collisionEnabled; }
-    bool isGrounded() const { return m_isGrounded; }
+    bool isColliding() const { return m_isColliding; }
     QVector2D lastCollisionNormal() const { return m_lastCollisionNormal; }
     
     // --- Setters ---
@@ -81,22 +81,7 @@ public:
      * @param impulse Vecteur d'impulsion
      */
     Q_INVOKABLE void applyImpulse(const QVector2D& impulse);
-    
-    /**
-     * @brief Définit la position depuis des coordonnées 3D
-     * @param x Position X dans le monde 3D
-     * @param z Position Z dans le monde 3D
-     * @param gridSize Taille de la grille
-     */
-    Q_INVOKABLE void setPosition3D(qreal x, qreal z, qreal gridSize);
-    
-    /**
-     * @brief Retourne la position en coordonnées 3D
-     * @param gridSize Taille de la grille
-     * @return Position 3D (Y = 0)
-     */
-    Q_INVOKABLE QVector3D getPosition3D(qreal gridSize) const;
-    
+
     /**
      * @brief Arrête le mouvement
      */
@@ -127,7 +112,7 @@ public:
     /**
      * @brief Met à jour l'état de collision
      */
-    void setGroundedState(bool grounded, const QVector2D& normal);
+    void setCollidingState(bool colliding, const QVector2D& normal);
     
     /**
      * @brief Référence vers le moteur physique parent
@@ -146,7 +131,7 @@ signals:
     void massChanged();
     void isStaticChanged();
     void collisionEnabledChanged();
-    void isGroundedChanged();
+    void isCollidingChanged();
     void lastCollisionNormalChanged();
     
     // Événements
@@ -168,7 +153,7 @@ private:
     bool m_collisionEnabled = true;
     
     // État
-    bool m_isGrounded = false;
+    bool m_isColliding = false;
     QVector2D m_lastCollisionNormal;
     
     // Modificateurs temporaires (réinitialisés chaque frame)

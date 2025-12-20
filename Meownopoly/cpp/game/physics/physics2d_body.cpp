@@ -155,29 +155,6 @@ void PhysicsBody2D::applyImpulse(const QVector2D& impulse)
     m_velocity += impulse / m_mass;
     emit velocityChanged();
 }
-
-void PhysicsBody2D::setPosition3D(qreal x, qreal z, qreal gridSize)
-{
-    // Conversion 3D -> 2D grille
-    // X3D -> X2D (même direction)
-    // Z3D -> Y2D (inversé : Z+ 3D = Y- 2D)
-    qreal x2D = x / gridSize;
-    qreal y2D = -z / gridSize;
-    
-    setPosition(QVector2D(x2D, y2D));
-}
-
-QVector3D PhysicsBody2D::getPosition3D(qreal gridSize) const
-{
-    // Conversion 2D grille -> 3D
-    // X2D -> X3D (même direction)
-    // Y2D -> Z3D (inversé : Y+ 2D = Z- 3D)
-    qreal x3D = m_position.x() * gridSize;
-    qreal z3D = -m_position.y() * gridSize;
-    
-    return QVector3D(x3D, 0, z3D);
-}
-
 void PhysicsBody2D::stop()
 {
     m_velocity = QVector2D(0, 0);
@@ -187,13 +164,13 @@ void PhysicsBody2D::stop()
 void PhysicsBody2D::reset()
 {
     m_velocity = QVector2D(0, 0);
-    m_isGrounded = false;
+    m_isColliding = false;
     m_lastCollisionNormal = QVector2D(0, 0);
     m_currentSpeedModifier = 1.0;
     m_currentFrictionModifier = 1.0;
     
     emit velocityChanged();
-    emit isGroundedChanged();
+    emit isCollidingChanged();
     emit lastCollisionNormalChanged();
 }
 
@@ -218,15 +195,15 @@ void PhysicsBody2D::applyDirectionalForce(const QVector2D& force, qreal dt)
     emit velocityChanged();
 }
 
-void PhysicsBody2D::setGroundedState(bool grounded, const QVector2D& normal)
+void PhysicsBody2D::setCollidingState(bool colliding, const QVector2D& normal)
 {
-    bool groundedChanged = (m_isGrounded != grounded);
+    bool groundedChanged = (m_isColliding != colliding);
     bool normalChanged = (m_lastCollisionNormal != normal);
     
-    m_isGrounded = grounded;
+    m_isColliding = colliding;
     m_lastCollisionNormal = normal;
     
-    if (groundedChanged) emit isGroundedChanged();
+    if (groundedChanged) emit isCollidingChanged();
     if (normalChanged) emit lastCollisionNormalChanged();
 }
 

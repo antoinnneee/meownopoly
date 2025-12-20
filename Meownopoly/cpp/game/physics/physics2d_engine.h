@@ -20,7 +20,6 @@ class PhysicsEngine2D : public QObject
 {
     Q_OBJECT
     
-    Q_PROPERTY(qreal gridSize READ gridSize WRITE setGridSize NOTIFY gridSizeChanged)
     Q_PROPERTY(int bodyCount READ bodyCount NOTIFY bodyCountChanged)
     Q_PROPERTY(int zoneCount READ zoneCount NOTIFY zoneCountChanged)
     Q_PROPERTY(qreal friction READ friction WRITE setFriction NOTIFY frictionChanged)
@@ -37,7 +36,6 @@ public:
     static void registerQml();
     
     // --- Getters ---
-    qreal gridSize() const { return m_gridSize; }
     int bodyCount() const { return m_bodies.size(); }
     int zoneCount() const { return m_zones.size(); }
     qreal friction() const { return m_friction; }
@@ -45,7 +43,6 @@ public:
     bool debugMode() const { return m_debugMode; }
     
     // --- Setters ---
-    void setGridSize(qreal size);
     void setFriction(qreal friction);
     void setEnabled(bool enabled);
     void setDebugMode(bool debug);
@@ -155,7 +152,6 @@ public:
     Q_INVOKABLE bool checkCollisionAt(const QVector2D& center, qreal radius) const;
 
 signals:
-    void gridSizeChanged();
     void bodyCountChanged();
     void zoneCountChanged();
     void frictionChanged();
@@ -176,7 +172,7 @@ private:
     /**
      * @brief Détecte et résout les collisions pour un body
      */
-    void resolveCollisions(PhysicsBody2D* body, qreal dt);
+    void resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D newPos);
     
     /**
      * @brief Met à jour la position du body après les calculs de physique
@@ -191,7 +187,6 @@ private:
     QHash<PhysicsBody2D*, QSet<PhysicsZone2D*>> m_activeZonesPerBody;
     
     // Configuration
-    qreal m_gridSize = 1.0;
     qreal m_friction = 0.0;
     bool m_enabled = true;
     bool m_debugMode = false;

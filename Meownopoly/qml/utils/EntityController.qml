@@ -49,7 +49,6 @@ Item {
     // --- Moteur Physique C++ ---
     PhysicsEngine2D {
         id: physicsEngine
-        gridSize: World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
         friction: root.friction
         debugMode: true
     }
@@ -105,7 +104,8 @@ Item {
         // Initialiser la position depuis l'entité 3D
         if (targetEntity) {
             var gridSize = World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
-            playerBody.setPosition3D(targetEntity.x, targetEntity.z, gridSize)
+            var pos = World3DTools.position3dToGridRealPosition(targetEntity.x, 0, targetEntity.z)
+            playerBody.position = pos
             console.log("[EntityController] Player initial position:", playerBody.position)
         }
         
@@ -264,7 +264,7 @@ Item {
         
         // Synchroniser avec l'entité 3D
         var gridSize = World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
-        var pos3D = playerBody.getPosition3D(gridSize)
+        var pos3D =  World3DTools.gridPositionTo3D(playerBody.position.x, playerBody.position.y)//playerBody.getPosition3D(gridSize)
         targetEntity.x = pos3D.x
         targetEntity.z = pos3D.z
         

@@ -32,14 +32,6 @@ PhysicsEngine2D::~PhysicsEngine2D()
 
 // --- Setters ---
 
-void PhysicsEngine2D::setGridSize(qreal size)
-{
-    if (!qFuzzyCompare(m_gridSize, size) && size > 0) {
-        m_gridSize = size;
-        emit gridSizeChanged();
-    }
-}
-
 void PhysicsEngine2D::setFriction(qreal friction)
 {
     if (!qFuzzyCompare(m_friction, friction)) {
@@ -253,10 +245,14 @@ void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
     
     // 2. Calculer la nouvelle position proposée
     QVector2D newPos = body->position() + body->velocity() * dt;
+
     
     // 3. Détecter et résoudre les collisions
     if (body->collisionEnabled()) {
-        resolveCollisions(body, dt);
+        resolveCollisions(body, dt, newPos);
+    }
+    else {
+        body->setPosition(newPos);
     }
     
     // 4. Mettre à jour la position finale
@@ -311,6 +307,7 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
     // Zones entrées
     for (PhysicsZone2D* zone : currentZones) {
         if (!previousZones.contains(zone)) {
+            qDebug() << "[PhysicsEngine2D] Body entered zone:" << body->bodyId() << "zone:" << zone->zoneId();
             emit bodyEnteredZone(body, zone);
             emit body->enteredZone(zone);
         }
@@ -319,6 +316,7 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
     // Zones sorties
     for (PhysicsZone2D* zone : previousZones) {
         if (!currentZones.contains(zone)) {
+            qDebug() << "[PhysicsEngine2D] Body exited zone:" << body->bodyId() << "zone:" << zone->zoneId();
             emit bodyExitedZone(body, zone);
             emit body->exitedZone(zone);
         }
@@ -327,15 +325,15 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
     previousZones = currentZones;
 }
 
-void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt)
+void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D newPos)
 {
     QVector2D velocity = body->velocity();
-    QVector2D newPos = body->position() + velocity * dt;
+//    QVector2D newPos = body->position() + velocity * dt;
     bool collisionOccurred = false;
     QVector2D collisionNormal;
     
     // Tester contre toutes les zones d'exclusion
-    for (PhysicsZone2D* zone : m_zones) {
+    for (PhysicsZone2D* zone : std::as_const(m_zones)) {
         if (!zone->isActive() || zone->zoneType() != PhysicsZone2D::Exclusion) {
             continue;
         }
@@ -375,7 +373,7 @@ void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt)
     }
     
     // Mettre à jour l'état de collision
-    body->setGroundedState(collisionOccurred, collisionNormal);
+    body->setCollidingState(collisionOccurred, collisionNormal);
 }
 
 void PhysicsEngine2D::updateBodyPosition(PhysicsBody2D* body, qreal dt)
