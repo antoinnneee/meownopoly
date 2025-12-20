@@ -11,8 +11,8 @@ import "../component"
 import "../component/grid"
 import "../component/snapable"
 import "panel"
-import CaseSelectionPanel 1.0
-import AssetSelectionPanel 1.0
+import caseSelectionPanel
+import assetSelectionPanel
 import MapInfo
 import EditorEnum
 

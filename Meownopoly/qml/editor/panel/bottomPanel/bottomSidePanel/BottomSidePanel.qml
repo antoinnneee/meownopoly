@@ -192,7 +192,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         clip: true
 
-        SidePanel_Content {
+        BottomSidePanel_Content {
             id: content
             logic: root.logic
             width: scrollView.width

@@ -2,10 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
-import EditorBottomPanel 1.0
-import AssetSelectionPanel 1.0
-import CaseConfigPanel 1.0
-import CaseSelectionPanelMain 1.0
+import editorBottomPanel
+import assetSelectionPanel
+import caseConfigPanel
+import caseSelectionPanelMain
 
 EBP_Content {
     id: contentArea

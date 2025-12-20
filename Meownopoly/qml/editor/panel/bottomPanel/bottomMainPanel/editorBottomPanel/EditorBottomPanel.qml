@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Particles
 import AssetManager
-import Editor
+import editor
 Rectangle {
     id: root
 

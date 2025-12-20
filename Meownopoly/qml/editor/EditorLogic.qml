@@ -8,6 +8,9 @@ import TileType
 import "../component"
 import "../component/snapable"
 import "../component/grid"
+
+import bottomMainPanel
+
 import MapInfo
 import EditorEnum
 import Logger

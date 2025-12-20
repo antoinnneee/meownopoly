@@ -1,6 +1,7 @@
-module MenuSelectionPanel
+module menuSelectionPanel
 MenuSelector 1.0 MenuSelector.qml
 MenuSelector_Button 1.0 MenuSelector_Button.qml
 MenuSelector_SizeControl 1.0 MenuSelector_SizeControl.qml
+
 
 

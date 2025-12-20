@@ -1,4 +1,4 @@
-module AssetSelectionPanel
+module assetSelectionPanel
 AssetSelectionPanel 1.0 AssetSelectionPanel.qml
 ASP_CategoryGrid 1.0 ASP_CategoryGrid.qml
 ASP_ClearButton 1.0 ASP_ClearButton.qml
@@ -7,4 +7,3 @@ ASP_Grid 1.0 ASP_Grid.qml
 ASP_Item 1.0 ASP_Item.qml
 ASP_StatusIndicator 1.0 ASP_StatusIndicator.qml
 ASP_TitleBar 1.0 ASP_TitleBar.qml
-<

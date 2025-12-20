@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import AssetManager
 
-import EditorBottomPanel 1.0
+import editorBottomPanel
 
 EditorBottomPanel {
     id: root
