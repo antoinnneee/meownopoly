@@ -87,7 +87,7 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-
+            enabled: leftArrow.availableMaps.length > 0
             onEntered: {
                 parent.color = "#6AB0F2"
             }
@@ -163,6 +163,8 @@ Item {
             height: mapSupprText.contentHeight
             z: 9000
             visible: selectionPanel.visible ? false : true
+            enabled: mapInfo.mapName !== "Autosave" && mapInfo.mapName !== ""
+            hoverEnabled: enabled
             onHoveredChanged: {
                 if (mapSupprBt.scale === 1.1){
                     mapSupprBt.scale = 1.0
@@ -244,6 +246,7 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
+            enabled: leftArrow.availableMaps.length > 0
 
             onEntered: {
                 parent.color = "#6AB0F2"

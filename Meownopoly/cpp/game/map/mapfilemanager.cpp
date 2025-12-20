@@ -90,11 +90,11 @@ QStringList MapFileManager::getAvailableMaps()
     for (const QFileInfo &fileInfo : fileList) {
         QString fileName = fileInfo.baseName();
         
-        // Skip autosave files
-        if (fileName == AUTOSAVE_MAP_NAME) {
-            continue;
-        }
-        
+        // // Skip autosave files
+        // if (fileName == AUTOSAVE_MAP_NAME) {
+        //     continue;
+        // }
+
         // Remove "_map" suffix if present
         if (fileName.endsWith("_map")) {
             fileName = fileName.left(fileName.length() - 4);

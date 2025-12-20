@@ -164,37 +164,116 @@ Base_Board {
         onClicked: {
             logic.createNewMap()
         }
-        onHoveredChanged: {
-            if (hovered)
-                bkRect.color = "#413be3"
-            else
-                bkRect.color = "#88CCFF"
+    Text {
+        text: "+"
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        anchors.centerIn: parent
+        width: parent.width
+        font.pixelSize: 24
+        font.bold: true
+        color: addMapButton.hovered ? "#ffffff" : "#1a3a8a"
+        
+        Behavior on color {
+            ColorAnimation { duration: 200; easing.type: Easing.InOutQuad }
         }
-
-        Text {
-            text: "+"
-            horizontalAlignment: Text.AlignHCenter
-            width: parent.width
-            font.pixelSize: 24
-            font.bold: true
-            color: "blue"
+    }
+    
+    background: Item {
+        id: bkContainer
+        
+        // Glow effect (visible on hover)
+        Rectangle {
+            id: glowEffect
+            anchors.centerIn: parent
+            width: parent.width + 12
+            height: parent.height + 12
+            radius: 35
+            opacity: addMapButton.hovered ? 0.6 : 0
+            
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#00d4ff" }
+                GradientStop { position: 0.5; color: "#4a90d9" }
+                GradientStop { position: 1.0; color: "#667eea" }
+            }
+            
+            Behavior on opacity {
+                NumberAnimation { duration: 250; easing.type: Easing.InOutQuad }
+            }
         }
-        background: Rectangle {
+        
+        // Main button background with gradient
+        Rectangle {
             id: bkRect
             anchors.fill: parent
-            color: "#88CCFF"
-
             radius: 30
-            border.color: "blue"
-            border.width: 1
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: 300
-                    easing.type: Easing.InOutQuad
+            
+            gradient: Gradient {
+                orientation: Gradient.Vertical
+                GradientStop { 
+                    position: 0.0
+                    color: addMapButton.hovered ? "#667eea" : "#7dd3fc"
+                    Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
+                }
+                GradientStop { 
+                    position: 0.5
+                    color: addMapButton.hovered ? "#5a67d8" : "#38bdf8"
+                    Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
+                }
+                GradientStop { 
+                    position: 1.0
+                    color: addMapButton.hovered ? "#4c51bf" : "#0ea5e9"
+                    Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
+                }
+            }
+            
+            border.color: addMapButton.hovered ? "#818cf8" : "#0284c7"
+            border.width: addMapButton.hovered ? 2 : 1
+            
+            Behavior on border.color {
+                ColorAnimation { duration: 250; easing.type: Easing.InOutQuad }
+            }
+            Behavior on border.width {
+                NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
+            }
+            
+            // Inner highlight shine
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 2
+                height: parent.height * 0.4
+                radius: 28
+                opacity: addMapButton.hovered ? 0.4 : 0.25
+                
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "#ffffff" }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+                
+                Behavior on opacity {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                 }
             }
         }
+        
+        // Scale animation on hover
+        transform: Scale {
+            id: hoverScale
+            origin.x: bkContainer.width / 2
+            origin.y: bkContainer.height / 2
+            xScale: addMapButton.hovered ? 1.08 : 1.0
+            yScale: addMapButton.hovered ? 1.08 : 1.0
+            
+            Behavior on xScale {
+                NumberAnimation { duration: 200; easing.type: Easing.OutBack }
+            }
+            Behavior on yScale {
+                NumberAnimation { duration: 200; easing.type: Easing.OutBack }
+            }
+        }
+    }
 
         Behavior on x {
             NumberAnimation {
