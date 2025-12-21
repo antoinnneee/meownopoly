@@ -212,17 +212,17 @@ Base_Board {
                 
                 gradient: Gradient {
                     orientation: Gradient.Vertical
-                    GradientStop { 
+                    GradientStop {
                         position: 0.0
                         color: addMapButton.hovered ? "#667eea" : "#7dd3fc"
                         Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
                     }
-                    GradientStop { 
+                    GradientStop {
                         position: 0.5
                         color: addMapButton.hovered ? "#5a67d8" : "#38bdf8"
                         Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
                     }
-                    GradientStop { 
+                    GradientStop {
                         position: 1.0
                         color: addMapButton.hovered ? "#4c51bf" : "#0ea5e9"
                         Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
@@ -610,6 +610,7 @@ Base_Board {
         }
         else  {
             console.log("Loading autosave map")
+            mapInfo.mapName = mapInfo.autosaveMapName
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         }
         if (stEnableAutoSave.value("saveEvent", "1") === 2) {

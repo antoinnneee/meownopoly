@@ -1,277 +1,373 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import QtQuick.Shapes
 import QtQml
 import QtCore
-import QtQuick.Dialogs
-import Case
-import ItemSnapable
-import "../../../ui_item"
-import "../../../component"
-import "../../panel"
 
 import Game
 import MapFileManager
 import MapTypes
 import MapInfo
-import EditorEnum
-import Logger
-import DisplayParameter
-import DecorationParameter
-import ItemSnapableFactory
-import UndoRedoManager
-import AssetManager
 
-
-// Barre de navigation des cartes
+// Barre de navigation des cartes - Version refactorisée
 Item {
     id: mapNavigationBar
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.bottom: parent.bottom
 
-    signal isVisible()
-    signal refeshListMap()
+    // Properties
+    property var availableMaps: []
+    property int currentIndex: 0
+    property string currentMapName: ""
+    property bool isCurrentMapAutosave: false
 
-    onRefeshListMap: {
-        leftArrow.availableMaps = MapFileManager.getAvailableMaps()
-        findCurrentMap()
+    // Settings pour persister la carte courante
+    Settings {
+        id: mapSettings
+        category: "Editor/SaveConfig"
+        property string currentMap: value("currentMap", mapInfo.autosaveMapName)
     }
 
-    onIsVisible: {
-        if (isVisible)
-            findCurrentMap()
+    // Signals
+    signal mapListRefreshed()
+
+    Component.onCompleted: {
+        refreshMapList()
     }
 
-    function findCurrentMap(){
-        // Trouver l'index de la carte courante
-        for (var i = 0; i < leftArrow.availableMaps.length; i++) {
-            var normalizedName = MapFileManager.findMapFileByName(leftArrow.availableMaps[i])
+    // === CORE FUNCTIONS ===
+
+    function refreshMapList() {
+        availableMaps = MapFileManager.getAvailableMaps()
+        syncCurrentIndex()
+        mapListRefreshed()
+    }
+
+    function syncCurrentIndex() {
+        if (availableMaps.length === 0) {
+            currentIndex = -1
+            return
+        }
+
+        // Trouver l'index de la carte actuellement chargée
+        for (var i = 0; i < availableMaps.length; i++) {
+            var mapDisplayName = availableMaps[i]
+            var normalizedName = MapFileManager.findMapFileByName(mapDisplayName)
+            
             if (normalizedName === mapInfo.mapName) {
-                leftArrow.currentIndex = i
-                break
+                currentIndex = i
+                updateCurrentMapInfo()
+                return
             }
+        }
+        
+        // Si la carte courante n'est pas trouvée, sélectionner la première
+        currentIndex = 0
+        updateCurrentMapInfo()
+    }
+
+    function updateCurrentMapInfo() {
+        if (currentIndex >= 0 && currentIndex < availableMaps.length) {
+            var mapDisplayName = availableMaps[currentIndex]
+            currentMapName = MapFileManager.findMapFileByName(mapDisplayName)
+            isCurrentMapAutosave = MapFileManager.isAutosaveMap(currentMapName)
         }
     }
 
+    function navigateToMap(index) {
+        if (availableMaps.length === 0) return
 
-    // Flèche gauche pour navigation de cartes
-    Rectangle {
+        // Wrap around
+        if (index < 0) {
+            index = availableMaps.length - 1
+        } else if (index >= availableMaps.length) {
+            index = 0
+        }
+
+        currentIndex = index
+        var mapDisplayName = availableMaps[currentIndex]
+        var normalizedName = MapFileManager.findMapFileByName(mapDisplayName)
+        
+        if (normalizedName === "") {
+            console.warn("Map not found:", mapDisplayName)
+            return
+        }
+
+        // Déterminer le type de carte
+        var mapType = MapFileManager.getMapType(normalizedName)
+        
+        // Nettoyer et charger la nouvelle carte
+        logic.removeCurrentMap()
+        Game.loadMap(normalizedName, mapType)
+        mapInfo.mapName = normalizedName
+        mapSettings.setValue("currentMap", normalizedName)
+        
+        updateCurrentMapInfo()
+    }
+
+    function navigatePrevious() {
+        navigateToMap(currentIndex - 1)
+    }
+
+    function navigateNext() {
+        navigateToMap(currentIndex + 1)
+    }
+
+    function deleteCurrentMap() {
+        if (availableMaps.length === 0) return
+        if (currentIndex < 0 || currentIndex >= availableMaps.length) return
+
+        var mapToDelete = currentMapName
+        var indexToDelete = currentIndex
+        
+        console.log("Deleting map:", mapToDelete)
+        
+        // Supprimer la carte
+        logic.deleteMap(mapToDelete)
+        logic.removeCurrentMap()
+        
+        // Rafraîchir la liste AVANT de naviguer
+        refreshMapList()
+        
+        // Naviguer vers la carte suivante (ou précédente si c'était la dernière)
+        if (availableMaps.length > 0) {
+            // Ajuster l'index si nécessaire
+            var newIndex = indexToDelete
+            if (newIndex >= availableMaps.length) {
+                newIndex = availableMaps.length - 1
+            }
+            navigateToMap(newIndex)
+        }
+    }
+
+    // === UI COMPONENTS ===
+
+    // Style commun pour les boutons de navigation
+    component NavArrowButton: Rectangle {
+        id: navButton
+        width: 50
+        height: 50
+        radius: 25
+        z: 9000
+        visible: !selectionPanel.visible
+        
+        property string arrowText: ""
+        property bool isLeft: true
+        signal clicked()
+        
+        // Gradient de base
+        gradient: Gradient {
+            orientation: Gradient.Vertical
+            GradientStop { 
+                position: 0.0
+                color: navButtonMa.containsMouse ? "#7dd3fc" : "#4A90E2"
+            }
+            GradientStop { 
+                position: 1.0
+                color: navButtonMa.containsMouse ? "#38bdf8" : "#2563eb"
+            }
+        }
+        
+        border.color: navButtonMa.containsMouse ? "#0ea5e9" : "#6AB0F2"
+        border.width: 2
+
+        Text {
+            anchors.centerIn: parent
+            text: navButton.arrowText
+            font.pixelSize: 24
+            color: "white"
+        }
+
+        MouseArea {
+            id: navButtonMa
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            enabled: mapNavigationBar.availableMaps.length > 0
+            hoverEnabled: enabled
+            onClicked: navButton.clicked()
+        }
+        
+        // Animation de scale au hover
+        scale: navButtonMa.containsMouse ? 1.1 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+        }
+    }
+
+    // Flèche gauche
+    NavArrowButton {
         id: leftArrow
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.leftMargin: 20
         anchors.bottomMargin: 20
-        width: 50
-        height: 50
-        radius: 25
-        color: "#4A90E2"
-        border.color: "#6AB0F2"
-        border.width: 2
-        z: 9000
-        visible: selectionPanel.visible ? false : true
-
-        property var availableMaps: MapFileManager.getAvailableMaps()
-        property int currentIndex: -1
-
-        Text {
-            anchors.centerIn: parent
-            text: "◀"
-            font.pixelSize: 24
-            color: "white"
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            enabled: leftArrow.availableMaps.length > 0
-            hoverEnabled: enabled
-
-            onEntered: {
-                parent.color = "#6AB0F2"
-            }
-
-            onExited: {
-                parent.color = "#4A90E2"
-            }
-
-            onClicked: {
-                if (leftArrow.availableMaps.length === 0) return
-
-                leftArrow.currentIndex--
-                if (leftArrow.currentIndex < 0) {
-                    leftArrow.currentIndex = leftArrow.availableMaps.length - 1
-                }
-
-                var selectedMap = leftArrow.availableMaps[leftArrow.currentIndex]
-                logic.removeCurrentMap()
-                var normalizedMapName = MapFileManager.findMapFileByName(selectedMap)
-                if (normalizedMapName !== "") {
-                    Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
-                    mapInfo.mapName = normalizedMapName
-                    stEnableAutoSave.setValue("currentMap", normalizedMapName)
-                }
-            }
-        }
+        arrowText: "◀"
+        isLeft: true
+        onClicked: mapNavigationBar.navigatePrevious()
     }
 
+    // Zone centrale avec nom de carte et bouton de suppression
     Row {
+        id: centerRow
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 20
-        anchors.rightMargin: width/2
         spacing: 10
+        z: 9000
+        visible: !selectionPanel.visible
 
-        // Nom de la carte courante au centre & suppresion de la carte 🗑️
+        // Affichage du nom de la carte
         Rectangle {
-            id: currentMapName
+            id: mapNameContainer
+            width: Math.max(200, mapNameText.contentWidth + 40)
             height: 50
-            radius: 0
-            color: "#333333"
+            radius: 8
             z: 9000
-            visible: selectionPanel.visible ? false : true
-            Component.onCompleted:{
-                width = Math.max(200, mapNameText.contentWidth + 40)
-                console.log("From parent currentMapName width = ", width)
-                console.log("From parent mapNameText width = ", mapNameText.width)
+            
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "#1e293b" }
+                GradientStop { position: 0.5; color: "#334155" }
+                GradientStop { position: 1.0; color: "#1e293b" }
             }
-            signal mapNameSet()
-            onMapNameSet: width = Math.max(200, mapNameText.contentWidth + 40)
+            
+            border.color: isCurrentMapAutosave ? "#f59e0b" : "#64748b"
+            border.width: 1
 
-            Text {
-                id: mapNameText
+            Row {
                 anchors.centerIn: parent
-                text: /*(mapInfo.mapName === mapInfo.autosaveMapName || mapInfo.mapName === "") ? "Autosave" : */mapInfo.mapName
-                onTextChanged: currentMapName.mapNameSet()
-                font.pixelSize: 16
-                font.bold: true
-                color: "white"
-                Component.onCompleted: {
-                    currentMapName.mapNameSet()
-                    console.log("From child currentMapName width = ", currentMapName.width)
-                    console.log("From child mapNameText width = ", mapNameText.width)
-
+                spacing: 8
+                
+                // Indicateur autosave
+                Rectangle {
+                    visible: isCurrentMapAutosave
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: "#f59e0b"
+                    anchors.verticalCenter: parent.verticalCenter
+                    
+                    SequentialAnimation on opacity {
+                        running: isCurrentMapAutosave
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0.4; duration: 800 }
+                        NumberAnimation { to: 1.0; duration: 800 }
+                    }
                 }
+                
+                Text {
+                    id: mapNameText
+                    text: {
+                        if (mapInfo.mapName === "" || mapInfo.mapName === mapInfo.autosaveMapName) {
+                            return "Autosave"
+                        }
+                        return mapInfo.mapName
+                    }
+                    font.pixelSize: 16
+                    font.bold: true
+                    color: "white"
+                }
+            }
+            
+            // Indicateur de position dans la liste
+            Text {
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: 4
+                text: availableMaps.length > 0 ? (currentIndex + 1) + "/" + availableMaps.length : "0/0"
+                font.pixelSize: 10
+                color: "#94a3b8"
             }
         }
 
+        // Bouton de suppression
         Button {
-            id: mapSupprBt
-            width: mapSupprText.contentWidth
-            height: mapSupprText.contentHeight
+            id: deleteButton
+            width: 50
+            height: 50
             z: 9000
-            visible: selectionPanel.visible ? false : true
-            enabled: mapInfo.mapName !== "Autosave" && mapInfo.mapName !== ""
-            hoverEnabled: enabled
-            onHoveredChanged: {
-                if (mapSupprBt.scale === 1.1){
-                    mapSupprBt.scale = 1.0
-                    confirmationStep = 0
-                }
-                else
-                    mapSupprBt.scale = 1.1
-            }
+            enabled: !isCurrentMapAutosave && mapInfo.mapName !== ""
+            visible: enabled
+            
             property int confirmationStep: 0
-            onClicked: {
-                confirmationStep += 1
-                if (confirmationStep >= 2) {
-                    console.log("Deleting map:", mapInfo.mapName)
-                    logic.deleteMap(mapInfo.mapName)
-                    logic.removeCurrentMap()
+
+            onHoveredChanged: {
+                if (!hovered) {
                     confirmationStep = 0
-
-                    if (leftArrow.availableMaps.length === 0) return
-
-                    leftArrow.currentIndex++
-                    if (leftArrow.currentIndex >= leftArrow.availableMaps.length) {
-                        leftArrow.currentIndex = 0
-                    }
-
-                    var selectedMap = leftArrow.availableMaps[leftArrow.currentIndex]
-                    logic.removeCurrentMap()
-                    var normalizedMapName = MapFileManager.findMapFileByName(selectedMap)
-                    if (normalizedMapName !== "") {
-                        Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
-                        mapInfo.mapName = normalizedMapName
-                        stEnableAutoSave.setValue("currentMap", normalizedMapName)
-                    }
-                    refeshListMap()
                 }
             }
-            Text {
-                id: mapSupprText
-                text: mapSupprBt.confirmationStep == 0 ? "🗑️" : "🗑️? "
-                font.pointSize: 28
-                font.bold: true
-                color: "black"
-            }
-            background: Rectangle {
-                id: bkRectSupprMap
-                anchors.fill : mapSupprBt
-                radius: 8
-                color: "#CC2222"
-                border.color: "black"
-                border.width: 1.4
+
+            onClicked: {
+                confirmationStep++
+                if (confirmationStep >= 2) {
+                    mapNavigationBar.deleteCurrentMap()
+                    confirmationStep = 0
+                }
             }
 
+            contentItem: Text {
+                text: deleteButton.confirmationStep === 0 ? "🗑️" : "❓"
+                font.pixelSize: 24
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            background: Rectangle {
+                radius: 8
+                
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { 
+                        position: 0.0
+                        color: deleteButton.confirmationStep > 0 ? "#ef4444" : 
+                               deleteButton.hovered ? "#f87171" : "#dc2626"
+                    }
+                    GradientStop { 
+                        position: 1.0
+                        color: deleteButton.confirmationStep > 0 ? "#b91c1c" : 
+                               deleteButton.hovered ? "#ef4444" : "#991b1b"
+                    }
+                }
+                
+                border.color: deleteButton.confirmationStep > 0 ? "#fca5a5" : "#f87171"
+                border.width: deleteButton.confirmationStep > 0 ? 2 : 1
+                
+                // Animation pulsation lors de la confirmation
+                SequentialAnimation on scale {
+                    running: deleteButton.confirmationStep > 0
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 1.05; duration: 300 }
+                    NumberAnimation { to: 1.0; duration: 300 }
+                }
+            }
+            
+            scale: hovered ? 1.1 : 1.0
+            Behavior on scale {
+                NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+            }
         }
     }
 
-    // Flèche droite pour navigation de cartes
-    Rectangle {
+    // Flèche droite
+    NavArrowButton {
         id: rightArrow
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.rightMargin: 20
         anchors.bottomMargin: 20
-        width: 50
-        height: 50
-        radius: 25
-        color: "#4A90E2"
-        border.color: "#6AB0F2"
-        border.width: 2
-        z: 9000
-        visible: selectionPanel.visible ? false : true
+        arrowText: "▶"
+        isLeft: false
+        onClicked: mapNavigationBar.navigateNext()
+    }
 
-        Text {
-            anchors.centerIn: parent
-            text: "▶"
-            font.pixelSize: 24
-            color: "white"
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            enabled: leftArrow.availableMaps.length > 0
-            hoverEnabled: enabled
-
-            onEntered: {
-                parent.color = "#6AB0F2"
-            }
-
-            onExited: {
-                parent.color = "#4A90E2"
-            }
-
-            onClicked: {
-                if (leftArrow.availableMaps.length === 0) return
-
-                leftArrow.currentIndex++
-                if (leftArrow.currentIndex >= leftArrow.availableMaps.length) {
-                    leftArrow.currentIndex = 0
-                }
-
-                var selectedMap = leftArrow.availableMaps[leftArrow.currentIndex]
-                logic.removeCurrentMap()
-                var normalizedMapName = MapFileManager.findMapFileByName(selectedMap)
-                if (normalizedMapName !== "") {
-                    Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
-                    mapInfo.mapName = normalizedMapName
-                    stEnableAutoSave.setValue("currentMap", normalizedMapName)
-                }
+    // Connexion pour rafraîchir la liste quand le panneau devient visible
+    Connections {
+        target: mapNavigationBar.parent
+        function onVisibleChanged() {
+            if (mapNavigationBar.parent.visible) {
+                mapNavigationBar.refreshMapList()
             }
         }
     }
