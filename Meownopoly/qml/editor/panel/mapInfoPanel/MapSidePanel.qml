@@ -352,17 +352,6 @@ Rectangle {
                                 logic.saveMap(logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == "" ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
 
                                 stEnableAutoSave.setValue("currentMap", mapInfoLocal.mapName)
-
-                                // Rafraîchir la liste des cartes disponibles
-                                leftArrow.availableMaps = MapFileManager.getAvailableMaps()
-                                // Trouver l'index de la nouvelle carte
-                                for (var i = 0; i < leftArrow.availableMaps.length; i++) {
-                                    var normalizedName = MapFileManager.findMapFileByName(leftArrow.availableMaps[i])
-                                    if (normalizedName === mapInfo.mapName) {
-                                        leftArrow.currentIndex = i
-                                        break
-                                    }
-                                }
                             } else {
                                 console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")
                             }

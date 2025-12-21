@@ -13,6 +13,7 @@
 #include "map/map.h"
 #include "game/map/undoredomanager.h"
 #include "qsettings.h"
+#include "tools/logger.h"
 
 QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray)
 {
@@ -22,7 +23,10 @@ QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTiles
     if (parseError.error == QJsonParseError::NoError && tileDoc.isObject()) {
         snapableTilesArray.append(tileDoc.object());
     } else {
-        qDebug().noquote() << "Error parsing ItemSnapable JSON:" << parseError.errorString()<< "\n" << ISjsonDoc;
+        QString errorString = "Error parsing ItemSnapable JSON:" ;
+        errorString.append(parseError.errorString()).append("\n").append(ISjsonDoc);
+        // Logger:: <<
+        Logger::instance()->error(errorString);
     }
     return snapableTilesArray;
 }
