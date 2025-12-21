@@ -401,6 +401,7 @@ Rectangle {
                                     placeholderText: text === "" ? "Name of the map" : ""
                                     // text: (logic.mapInfo.mapName === logic.mapInfo.autosaveMapName || logic.mapInfo.mapName === "") ? "" : logic.mapInfo.mapName
                                     Component.onCompleted: text = logic.mapInfo.mapName
+                                    enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
                                     onTextChanged: {
                                         logic.mapInfo.mapName = text
                                     }
@@ -448,6 +449,7 @@ Rectangle {
                                     placeholderText: text === "" ? "1.0" : ""
                                     // text: logic.mapInfo.version.toString()
                                     Component.onCompleted: text = logic.mapInfo.version.toString()
+                                    enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
                                     onEditingFinished: {
                                         logic.mapInfo.version = parseInt(text) || 1
                                         logic.saveMap(MapTypes.UNDOREDO)
@@ -493,6 +495,7 @@ Rectangle {
                                     placeholderText: text === "" ? "2023-09-15" : ""
                                     // text: logic.mapInfo.mapCreationDate
                                     Component.onCompleted: text = logic.mapInfo.mapCreationDate
+                                    enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
                                     onEditingFinished: {
                                         logic.mapInfo.mapCreationDate = text
                                         logic.saveMap(MapTypes.UNDOREDO)
@@ -540,6 +543,7 @@ Rectangle {
                                     placeholderText: text === "" ? "2023-09-18" : ""
                                     // text: logic.mapInfo.mapLastModified
                                     Component.onCompleted: text = logic.mapInfo.mapLastModified
+                                    enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
                                     onEditingFinished: {
                                         logic.mapInfo.mapLastModified = text
                                         logic.saveMap(MapTypes.UNDOREDO)
@@ -628,9 +632,9 @@ Rectangle {
                                 font.pixelSize: 12
                                 wrapMode: TextEdit.Wrap
                                 placeholderText: text === "" ? "Enter map description here..." : ""
-                                // text : logic.mapInfo.mapDescription
-                                Component.onCompleted: text = logic.mapInfo.mapDescription
+                                enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
                                 placeholderTextColor: "#666666"
+                                Component.onCompleted: text = logic.mapInfo.mapDescription
                                 background: null
                                 onEditingFinished: {
                                     logic.mapInfo.mapDescription = text
