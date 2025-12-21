@@ -21,6 +21,10 @@ MouseLogic_Selection {
     // Couleur du rectangle englobant
     property color boundingColor: "#4A90E2"
     
+    // Positions initiales pour le déplacement du rectangle englobant
+    property point boundingRectStartPos: Qt.point(0, 0)
+    property point groupeSelectionStartPos: Qt.point(0, 0)
+    
     Component.onCompleted: console.log("MouseLogic_Template loaded")
     
     function addToList(selectedTiles) {
@@ -46,6 +50,12 @@ MouseLogic_Selection {
         if (drag.active && drag.target) {
             dragStartPos = Qt.point(mouseX, mouseY)
             targetStartPos = Qt.point(drag.target.x, drag.target.y)
+            
+            // Stocker les positions initiales pour le déplacement du rectangle englobant
+            if (boundingRectVisual) {
+                boundingRectStartPos = Qt.point(boundingRectVisual.x, boundingRectVisual.y)
+            }
+            groupeSelectionStartPos = Qt.point(groupeSelection.x, groupeSelection.y)
         }
         if (isRectangleSelecting) {
             drag.target = null
@@ -193,6 +203,42 @@ MouseLogic_Selection {
         if (drag.active === true) {
             return
         }
+    }
+
+    // Override de positionChanged pour mettre à jour le rectangle englobant pendant le drag
+    function positionChanged(mouse, drag) {
+        // Appeler la logique de base pour la sélection rectangle et le snap
+        if (mouseLogic.isRectangleSelecting) {
+            mouseLogic.updateRectangleSelection(mouse.x, mouse.y)
+        }
+        
+        // Gérer le snap pendant le drag
+        if (drag.active && drag.target && grid.snapToGrid) {
+            var deltaX = mouse.x - dragStartPos.x
+            var deltaY = mouse.y - dragStartPos.y
+            
+            var newX = targetStartPos.x + deltaX
+            var newY = targetStartPos.y + deltaY
+            if (drag.target == groupeSelection) {
+                // Snapper aux positions de la grille
+                var snappedX = Math.round(newX / grid.gridSize) * grid.gridSize
+                var snappedY = Math.round(newY / grid.gridSize) * grid.gridSize
+
+                drag.target.x = snappedX
+                drag.target.y = snappedY
+            }
+        }
+        
+        // Mettre à jour la position du rectangle englobant pendant le drag
+        if (isDragging && boundingRectVisual && drag.target === groupeSelection) {
+            var deltaXRect = groupeSelection.x - groupeSelectionStartPos.x
+            var deltaYRect = groupeSelection.y - groupeSelectionStartPos.y
+            
+            boundingRectVisual.x = boundingRectStartPos.x + deltaXRect
+            boundingRectVisual.y = boundingRectStartPos.y + deltaYRect
+        }
+        
+        updateCameraPosition()
     }
 
     // ==================== FONCTIONS DE SÉLECTION ====================
