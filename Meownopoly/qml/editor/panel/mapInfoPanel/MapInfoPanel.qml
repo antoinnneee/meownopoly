@@ -57,13 +57,6 @@ Item {
         id: mapNavigationBar
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            mapNavigationBar.isVisible()
-        }
-    }
-
-
     // FileDialog pour la sélection d'image personnalisée
     FileDialog {
         id: customFileDialog

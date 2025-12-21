@@ -270,7 +270,6 @@ Item {
                     color: "white"
                 }
             }
-            
             // Indicateur de position dans la liste
             Text {
                 anchors.right: parent.right
