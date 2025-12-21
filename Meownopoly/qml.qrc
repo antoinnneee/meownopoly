@@ -139,7 +139,6 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/caseSelectionPanelMain/CSP_CaseTypeCell.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/caseSelectionPanelMain/CSP_CaseTypeSelector.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CaseSelectionPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CSP_ClearButton.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CSP_ContentArea.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CSP_TitleBar.qml</file>
@@ -201,7 +200,7 @@
         <file>qml/editor/panel/mapInfoPanel/NavArrowButton.qml</file>
         <file>qml/utils/CameraController.qml</file>
         <file>qml/utils/World3DTools.qml</file>
-        <file>qml/editor/panel/zonePanel/ExclusionZonePanel.qml</file>
-        <file>qml/editor/panel/zonePanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/zonePanel/ZP_Content.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/zonePanel/qmldir</file>
     </qresource>
 </RCC>

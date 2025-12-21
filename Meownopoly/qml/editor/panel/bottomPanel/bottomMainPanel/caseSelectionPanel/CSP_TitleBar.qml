@@ -16,7 +16,7 @@ EBP_TitleBar {
     titleText: "Case Library"
     subTitleText: titleBar.currentSelectedId !== "" ?
                       "Selected: " + titleBar.currentSelectedType + " #" + titleBar.currentSelectedId :
-                      "Click to select an asset"
+                      "Click to select an case"
     subTitleColor: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
 
     buttonModel: ["All", "Property", "Event"]

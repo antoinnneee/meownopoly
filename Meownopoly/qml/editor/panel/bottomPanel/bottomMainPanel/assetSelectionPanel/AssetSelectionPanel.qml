@@ -5,8 +5,8 @@ import QtQuick.Effects
 import AssetManager
 
 import "../"
-import editorBottomPanel 1.0
-import caseSelectionPanel 1.0
+import editorBottomPanel
+import caseSelectionPanel
 import zonePanel
 
 EditorBottomPanel {
@@ -218,9 +218,8 @@ EditorBottomPanel {
                 root.caseTypeCleared()
             }
         }
-
         // Exclusion Zone Panel
-        ExclusionZonePanel {
+        ZP_Content {
             id: exclusionZonePanel
 
             logic: root.logic
