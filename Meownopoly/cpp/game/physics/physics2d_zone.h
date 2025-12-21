@@ -31,19 +31,15 @@ public:
      * @brief Types de zones physiques
      */
     enum ZoneType {
-        Exclusion = 0,      ///< Zone solide avec collision et rebond
-        SpeedBoost,         ///< Zone augmentant la vitesse
-        SpeedSlow,          ///< Zone ralentissant le mouvement
-        IceZone,            ///< Zone glissante (friction réduite)
-        ConveyorBelt,       ///< Zone avec force directionnelle
-        JumpPad,            ///< Zone de saut (impulsion verticale)
-        DamageZone,         ///< Zone infligeant des dégâts
-        HealZone            ///< Zone de soin
+        Zone_Exclusion = 0,      ///< Zone solide avec collision et rebond
+        Zone_Speed,          ///< Zone ralentissant le mouvement
+        Zone_Friction            ///< Zone glissante (friction réduite)
     };
     Q_ENUM(ZoneType)
     
     explicit PhysicsZone2D(QObject* parent = nullptr);
-    explicit PhysicsZone2D(const QString& id, ZoneType type = Exclusion, QObject* parent = nullptr);
+    explicit PhysicsZone2D(const QString& id, ZoneType type = Zone_Exclusion, QObject* parent = nullptr);
+    explicit PhysicsZone2D(const QString& id, const QVariantList& polygon, ZoneType type = Zone_Exclusion, qreal effectStrength = 1.0, const QVector2D& effectDirection = QVector2D(0, 0), QObject* parent = nullptr);
     
     // --- Getters ---
     QString zoneId() const { return m_zoneId; }
@@ -92,6 +88,15 @@ public:
      * @return Résultat de collision
      */
     CollisionResult checkCollision(const QVector2D& center, qreal radius) const;
+
+    /**
+     * @brief Vérifie collision continue cercle-zone (sweep test)
+     * @param startPos Position de départ du cercle
+     * @param endPos Position d'arrivée du cercle
+     * @param radius Rayon du cercle
+     * @return Résultat de collision avec paramètre t
+     */
+    CollisionResult checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const;
     
     /**
      * @brief Accès direct au polygone optimisé (usage interne)
@@ -109,7 +114,7 @@ signals:
 
 private:
     QString m_zoneId;
-    ZoneType m_zoneType = Exclusion;
+    ZoneType m_zoneType = Zone_Exclusion;
     QVariantList m_polygonVariant;  // Pour QML
     Polygon2D m_polygon;            // Version optimisée
     qreal m_effectStrength = 1.0;

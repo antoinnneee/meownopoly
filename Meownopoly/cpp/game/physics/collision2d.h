@@ -44,6 +44,7 @@ struct CollisionResult {
     QVector2D normal;               // Normale de collision (pointe vers l'extérieur)
     QVector2D closestPoint;         // Point le plus proche sur le polygone
     qreal penetration = 0.0;        // Profondeur de pénétration
+    qreal t = 1.0;                  // Paramètre d'intersection [0,1] pour sweep tests
     PhysicsZone2D* zone = nullptr;  // Zone touchée (si applicable)
 };
 
@@ -87,6 +88,24 @@ public:
      */
     static CollisionResult checkCirclePolygon(
         const QVector2D& center,
+        qreal radius,
+        const Polygon2D& polygon
+    );
+
+    /**
+     * @brief Vérifie la collision d'un cercle en mouvement avec un polygone (sweep test)
+     * @param startPos Position de départ du cercle
+     * @param endPos Position d'arrivée du cercle
+     * @param radius Rayon du cercle
+     * @param polygon Polygone à tester
+     * @return CollisionResult avec t indiquant le moment de collision [0,1]
+     *
+     * Cette fonction effectue une détection de collision continue le long
+     * du segment de mouvement, évitant le problème de tunneling à haute vitesse.
+     */
+    static CollisionResult checkCirclePolygonSweep(
+        const QVector2D& startPos,
+        const QVector2D& endPos,
         qreal radius,
         const Polygon2D& polygon
     );

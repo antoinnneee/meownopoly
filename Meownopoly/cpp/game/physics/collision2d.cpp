@@ -203,6 +203,93 @@ bool Collision2D::pointInPolygon(
     return inside;
 }
 
+CollisionResult Collision2D::checkCirclePolygonSweep(
+    const QVector2D& startPos,
+    const QVector2D& endPos,
+    qreal radius,
+    const Polygon2D& polygon)
+{
+    CollisionResult result;
+
+    if (!polygon.isValid()) {
+        return result;
+    }
+
+    // Vecteur de mouvement
+    QVector2D movement = endPos - startPos;
+    qreal movementLength = movement.length();
+
+    // Si pas de mouvement, utiliser le test statique
+    if (movementLength < EPSILON) {
+        return checkCirclePolygon(startPos, radius, polygon);
+    }
+
+    // Test rapide avec bounding box étendue
+    QRectF extendedBox = polygon.boundingBox;
+    extendedBox.adjust(-radius, -radius, radius, radius);
+
+    // Créer la bounding box du segment de mouvement
+    QRectF movementBox(
+        std::min(startPos.x(), endPos.x()) - radius,
+        std::min(startPos.y(), endPos.y()) - radius,
+        std::abs(endPos.x() - startPos.x()) + 2 * radius,
+        std::abs(endPos.y() - startPos.y()) + 2 * radius
+    );
+
+    if (!movementBox.intersects(extendedBox)) {
+        return result;
+    }
+
+    // Nombre d'étapes adaptatif basé sur la longueur du mouvement et le rayon
+    // Plus le mouvement est long ou le rayon petit, plus d'étapes pour éviter le tunneling
+    const int MIN_STEPS = 4;
+    const int MAX_STEPS = 50;
+    const qreal BASE_STEPS_PER_UNIT = 8.0; // étapes de base par unité de longueur
+    const qreal RADIUS_FACTOR = 1.0 / radius; // plus le rayon est petit, plus d'étapes
+
+    qreal adaptiveStepsPerUnit = BASE_STEPS_PER_UNIT * std::max(1.0, RADIUS_FACTOR * 0.5);
+    int steps = std::clamp(static_cast<int>(movementLength * adaptiveStepsPerUnit),
+                          MIN_STEPS, MAX_STEPS);
+
+    qreal earliestT = 2.0; // > 1.0 pour indiquer pas de collision trouvée
+    QVector2D earliestNormal;
+    QVector2D earliestPoint;
+    qreal earliestPenetration = 0.0;
+
+    // Tester les positions intermédiaires (exclure le point de départ)
+    for (int step = 1; step <= steps; ++step) {
+        qreal t = static_cast<qreal>(step) / steps;
+        QVector2D testPos = startPos + t * movement;
+
+        // Tester la collision statique à cette position
+        CollisionResult staticResult = checkCirclePolygon(testPos, radius, polygon);
+
+        if (staticResult.colliding && t < earliestT) {
+            qDebug() << "[Collision2D]  staticResult t : " << t << testPos << staticResult.colliding;
+            earliestT = t;
+            earliestNormal = staticResult.normal;
+            earliestPoint = staticResult.closestPoint;
+            earliestPenetration = staticResult.penetration;
+        }
+    }
+
+    // Si on a trouvé une collision
+    if (earliestT <= 1.0) {
+        qDebug() << "[Collision2D]  collision t : "<< earliestT;
+        result.colliding = true;
+        result.t = std::clamp(earliestT, 0.0, 1.0); // S'assurer que t est dans [0,1]
+        result.closestPoint = earliestPoint;
+        result.normal = earliestNormal;
+        result.penetration = earliestPenetration;
+
+        // Calculer la distance correcte à la position d'impact
+        QVector2D impactPos = startPos + result.t * movement;
+        result.distance = (impactPos - earliestPoint).length();
+    }
+
+    return result;
+}
+
 QVector2D Collision2D::applyBounce(
     const QVector2D& velocity,
     const QVector2D& normal,
@@ -211,21 +298,21 @@ QVector2D Collision2D::applyBounce(
 {
     // Produit scalaire vitesse . normale
     qreal dot = QVector2D::dotProduct(velocity, normal);
-    
+
     // Si la vitesse va déjà vers l'extérieur, pas de rebond
     if (dot >= 0) {
         return velocity;
     }
-    
+
     // Composante perpendiculaire (vers le mur)
     QVector2D perpendicular = dot * normal;
-    
+
     // Composante parallèle (le long du mur)
     QVector2D parallel = velocity - perpendicular;
-    
+
     // Nouvelle vitesse : rebond de la composante perpendiculaire + glissement
     QVector2D newVelocity = -perpendicular * bounceFactor + parallel * slideFactor;
-    
+
     return newVelocity;
 }
 

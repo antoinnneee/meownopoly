@@ -3,7 +3,7 @@
 PhysicsZone2D::PhysicsZone2D(QObject* parent)
     : QObject(parent)
     , m_zoneId("")
-    , m_zoneType(Exclusion)
+    , m_zoneType(Zone_Exclusion)
     , m_effectStrength(1.0)
     , m_effectDirection(0, 0)
     , m_isActive(true)
@@ -20,39 +20,30 @@ PhysicsZone2D::PhysicsZone2D(const QString& id, ZoneType type, QObject* parent)
 {
     // Valeurs par défaut selon le type
     switch (type) {
-        case SpeedBoost:
+        case Zone_Speed:
             m_effectStrength = 2.0;  // Vitesse x2
             m_zoneColor = "#4CAF50"; // Vert
             break;
-        case SpeedSlow:
+        case Zone_Friction:
             m_effectStrength = 0.5;  // Vitesse /2
             m_zoneColor = "#9C27B0"; // Violet
-            break;
-        case IceZone:
-            m_effectStrength = 0.1;  // Friction très basse
-            m_zoneColor = "#00BCD4"; // Cyan
-            break;
-        case ConveyorBelt:
-            m_effectStrength = 5.0;  // Force du tapis
-            m_effectDirection = QVector2D(1, 0); // Vers la droite par défaut
-            m_zoneColor = "#795548"; // Marron
-            break;
-        case JumpPad:
-            m_effectStrength = 15.0; // Force d'impulsion
-            m_zoneColor = "#FFEB3B"; // Jaune
-            break;
-        case DamageZone:
-            m_effectStrength = 10.0; // Dégâts par seconde
-            m_zoneColor = "#F44336"; // Rouge
-            break;
-        case HealZone:
-            m_effectStrength = 5.0;  // Soin par seconde
-            m_zoneColor = "#E91E63"; // Rose
             break;
         default:
             m_zoneColor = "#FF5722"; // Orange (exclusion)
             break;
     }
+}
+
+PhysicsZone2D::PhysicsZone2D(const QString& id, const QVariantList& polygon, ZoneType type, qreal effectStrength, const QVector2D& effectDirection, QObject* parent)
+    : QObject(parent)
+    , m_zoneId(id)
+    , m_zoneType(type)
+    , m_polygonVariant(polygon)
+    , m_effectStrength(effectStrength)
+    , m_effectDirection(effectDirection)
+    , m_isActive(true)
+{
+
 }
 
 void PhysicsZone2D::setZoneType(ZoneType type)
@@ -125,8 +116,8 @@ qreal PhysicsZone2D::getEffectMultiplier() const
     if (!m_isActive) return 1.0;
     
     switch (m_zoneType) {
-        case SpeedBoost:
-        case SpeedSlow:
+        case Zone_Speed:
+        case Zone_Friction:
             return m_effectStrength;
         default:
             return 1.0;
@@ -138,7 +129,7 @@ qreal PhysicsZone2D::getFrictionModifier() const
     if (!m_isActive) return 1.0;
     
     switch (m_zoneType) {
-        case IceZone:
+        case Zone_Friction:
             return m_effectStrength; // Valeur basse = glissant
         default:
             return 1.0;
@@ -148,19 +139,38 @@ qreal PhysicsZone2D::getFrictionModifier() const
 CollisionResult PhysicsZone2D::checkCollision(const QVector2D& center, qreal radius) const
 {
     CollisionResult result;
-    
+
     if (!m_isActive || !m_polygon.isValid()) {
         return result;
     }
-    
+
     // Seules les zones d'exclusion génèrent des collisions physiques
-    if (m_zoneType == Exclusion) {
+    if (m_zoneType == Zone_Exclusion) {
         result = Collision2D::checkCirclePolygon(center, radius, m_polygon);
         if (result.colliding) {
             result.zone = const_cast<PhysicsZone2D*>(this);
         }
     }
-    
+
+    return result;
+}
+
+CollisionResult PhysicsZone2D::checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const
+{
+    CollisionResult result;
+
+    if (!m_isActive || !m_polygon.isValid()) {
+        return result;
+    }
+
+    // Seules les zones d'exclusion génèrent des collisions physiques
+    if (m_zoneType == Zone_Exclusion) {
+        result = Collision2D::checkCirclePolygonSweep(startPos, endPos, radius, m_polygon);
+        if (result.colliding) {
+            result.zone = const_cast<PhysicsZone2D*>(this);
+        }
+    }
+
     return result;
 }
 
