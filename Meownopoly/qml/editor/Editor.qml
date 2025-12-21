@@ -58,6 +58,7 @@ Base_Board {
     property alias view3D: gameScene.view3D
 
     signal updateSettings()
+    signal openNewMapMenu()
     property alias entity:gameScene.entity
 
     property real z_CONFIG_PANEL: 10000
@@ -136,7 +137,7 @@ Base_Board {
                 mapInfoPanel.isOpening = !mapInfoPanel.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
-                addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 0.9) : btInfoMap.x
+                addMapButton.x = (addMapButton.x ===  btInfoMap.x) ? btInfoMap.x - (btInfoMap.width * 1.5) : btInfoMap.x
             }
         }
 
@@ -151,129 +152,130 @@ Base_Board {
     Button {
         id: addMapButton
         x: btInfoMap.x
-        y: btInfoMap.y + (btInfoMap.height - addMapButton.height)/2
+        y: btInfoMap.y + addMapButton.height/2
 
         z: z_HUD
 
-        width: btInfoMap.width * 0.65
-        height: btInfoMap.height * 0.65
+        width: btInfoMap.width * 0.5
+        height: btInfoMap.height * 0.5
 
         enabled: x == btInfoMap.x ? false : true
         visible: enabled
 
         onClicked: {
-            logic.createNewMap()
+            root.openNewMapMenu()
         }
-    Text {
-        text: "+"
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        anchors.centerIn: parent
-        width: parent.width
-        font.pixelSize: 24
-        font.bold: true
-        color: addMapButton.hovered ? "#ffffff" : "#1a3a8a"
-        
-        Behavior on color {
-            ColorAnimation { duration: 200; easing.type: Easing.InOutQuad }
-        }
-    }
-    
-    background: Item {
-        id: bkContainer
-        
-        // Glow effect (visible on hover)
-        Rectangle {
-            id: glowEffect
+
+        Text {
+            text: "+"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
             anchors.centerIn: parent
-            width: parent.width + 12
-            height: parent.height + 12
-            radius: 35
-            opacity: addMapButton.hovered ? 0.6 : 0
+            width: parent.width
+            font.pixelSize: 24
+            font.bold: true
+            color: addMapButton.hovered ? "#ffffff" : "#1a3a8a"
             
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: "#00d4ff" }
-                GradientStop { position: 0.5; color: "#4a90d9" }
-                GradientStop { position: 1.0; color: "#667eea" }
-            }
-            
-            Behavior on opacity {
-                NumberAnimation { duration: 250; easing.type: Easing.InOutQuad }
+            Behavior on color {
+                ColorAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
         }
         
-        // Main button background with gradient
-        Rectangle {
-            id: bkRect
-            anchors.fill: parent
-            radius: 30
+        background: Item {
+            id: bkContainer
             
-            gradient: Gradient {
-                orientation: Gradient.Vertical
-                GradientStop { 
-                    position: 0.0
-                    color: addMapButton.hovered ? "#667eea" : "#7dd3fc"
-                    Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
-                }
-                GradientStop { 
-                    position: 0.5
-                    color: addMapButton.hovered ? "#5a67d8" : "#38bdf8"
-                    Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
-                }
-                GradientStop { 
-                    position: 1.0
-                    color: addMapButton.hovered ? "#4c51bf" : "#0ea5e9"
-                    Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
-                }
-            }
-            
-            border.color: addMapButton.hovered ? "#818cf8" : "#0284c7"
-            border.width: addMapButton.hovered ? 2 : 1
-            
-            Behavior on border.color {
-                ColorAnimation { duration: 250; easing.type: Easing.InOutQuad }
-            }
-            Behavior on border.width {
-                NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
-            }
-            
-            // Inner highlight shine
+            // Glow effect (visible on hover)
             Rectangle {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: 2
-                height: parent.height * 0.4
-                radius: 28
-                opacity: addMapButton.hovered ? 0.4 : 0.25
+                id: glowEffect
+                anchors.centerIn: parent
+                width: parent.width + 12
+                height: parent.height + 12
+                radius: 35
+                opacity: addMapButton.hovered ? 0.6 : 0
                 
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: "#ffffff" }
-                    GradientStop { position: 1.0; color: "transparent" }
+                    GradientStop { position: 0.0; color: "#00d4ff" }
+                    GradientStop { position: 0.5; color: "#4a90d9" }
+                    GradientStop { position: 1.0; color: "#667eea" }
                 }
                 
                 Behavior on opacity {
-                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                    NumberAnimation { duration: 250; easing.type: Easing.InOutQuad }
+                }
+            }
+            
+            // Main button background with gradient
+            Rectangle {
+                id: bkRect
+                anchors.fill: parent
+                radius: 30
+                
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { 
+                        position: 0.0
+                        color: addMapButton.hovered ? "#667eea" : "#7dd3fc"
+                        Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
+                    }
+                    GradientStop { 
+                        position: 0.5
+                        color: addMapButton.hovered ? "#5a67d8" : "#38bdf8"
+                        Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
+                    }
+                    GradientStop { 
+                        position: 1.0
+                        color: addMapButton.hovered ? "#4c51bf" : "#0ea5e9"
+                        Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.InOutQuad } }
+                    }
+                }
+                
+                border.color: addMapButton.hovered ? "#818cf8" : "#0284c7"
+                border.width: addMapButton.hovered ? 2 : 1
+                
+                Behavior on border.color {
+                    ColorAnimation { duration: 250; easing.type: Easing.InOutQuad }
+                }
+                Behavior on border.width {
+                    NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
+                }
+                
+                // Inner highlight shine
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.margins: 2
+                    height: parent.height * 0.4
+                    radius: 28
+                    opacity: addMapButton.hovered ? 0.4 : 0.25
+                    
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: "#ffffff" }
+                        GradientStop { position: 1.0; color: "transparent" }
+                    }
+                    
+                    Behavior on opacity {
+                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                    }
+                }
+            }
+            
+            // Scale animation on hover
+            transform: Scale {
+                id: hoverScale
+                origin.x: bkContainer.width / 2
+                origin.y: bkContainer.height / 2
+                xScale: addMapButton.hovered ? 1.08 : 1.0
+                yScale: addMapButton.hovered ? 1.08 : 1.0
+                
+                Behavior on xScale {
+                    NumberAnimation { duration: 200; easing.type: Easing.OutBack }
+                }
+                Behavior on yScale {
+                    NumberAnimation { duration: 200; easing.type: Easing.OutBack }
                 }
             }
         }
-        
-        // Scale animation on hover
-        transform: Scale {
-            id: hoverScale
-            origin.x: bkContainer.width / 2
-            origin.y: bkContainer.height / 2
-            xScale: addMapButton.hovered ? 1.08 : 1.0
-            yScale: addMapButton.hovered ? 1.08 : 1.0
-            
-            Behavior on xScale {
-                NumberAnimation { duration: 200; easing.type: Easing.OutBack }
-            }
-            Behavior on yScale {
-                NumberAnimation { duration: 200; easing.type: Easing.OutBack }
-            }
-        }
-    }
 
         Behavior on x {
             NumberAnimation {
@@ -532,19 +534,24 @@ Base_Board {
     }
 
     MenuMapAtStart {
-        z: z_HUD
+        id: newMapMenu
+        z: z_CONFIG_PANEL
+        visible: false
         logic: logic
+        
         onNewMapSet: {
             logic.createMap(newMapInfo.mapName, MapTypes.CUSTOM)
-            console.log("newmapinfo size" + newMapInfo)
-            console.log("newmapinfo size" + newMapInfo.mapName)
-            console.log("newmapinfo size" + newMapInfo.backgroundPath)
-            console.log("newmapinfo size" + newMapInfo.backgroundScaling)
-
+            console.log("New map created:", newMapInfo.mapName)
             mapInfo.setMapInfo(newMapInfo)
             logic.saveMap(MapTypes.CUSTOM)
             Game.loadMap(newMapInfo.mapName, MapTypes.CUSTOM)
         }
+    }
+    
+    // Connexion du signal pour ouvrir le menu de création de carte
+    onOpenNewMapMenu: {
+        newMapMenu.visible = true
+        newMapMenu.enabled = true
     }
 
 

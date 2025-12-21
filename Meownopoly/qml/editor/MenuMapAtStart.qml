@@ -37,9 +37,9 @@ MouseArea {
     onClicked: {
         var mappedPoint = root.mapToItem(menuMapAtStart, mouseX, mouseY)
         if (!menuMapAtStart.contains(mappedPoint)) {
-            menuMapAtStart.opacity = 0.15
-        } else {
-            menuMapAtStart.opacity = 1.0
+            // Fermer le menu si on clique en dehors
+            root.visible = false
+            root.enabled = false
         }
     }
 
@@ -83,41 +83,6 @@ MouseArea {
                     Layout.fillWidth: true
                 }
 
-                Button {
-                    id: displayMenuBtn
-                    Layout.alignment: Qt.AlignRight
-                    Layout.rightMargin: 0
-                    background: Rectangle {
-                        color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
-                        radius: 8
-                        border.width: 1
-                        border.color: displayMenuBtn.checked ? "#FFFFFF" : "#555555"
-                    }
-                    contentItem: Text {
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        text: displayMenuBtn.checked ? "Afficher la prochaine fois" : "Ne plus afficher"
-                        color: "white"
-                        font.pixelSize: 13
-                    }
-                    onClicked:{
-                        displayMenuBtn.checked = !displayMenuBtn.checked
-                        stBackGroundEditor.setValue("selectBackgroundAtStart", checked)
-                        stBackGroundEditor.sync()
-                    }
-                    Component.onCompleted: {
-                        displayMenuBtn.checked = stBackGroundEditor.value("selectBackgroundAtStart", "true")
-                    }
-                    Settings {
-                        id: stBackGroundEditor
-                        category: "Editor"
-                        property bool selectBackgroundAtStart: stBackGroundEditor.value("selectBackgroundAtStart", "true")
-                        Component.onCompleted: {
-                            root.visible = selectBackgroundAtStart
-                            root.enabled = selectBackgroundAtStart
-                        }
-                    }
-                }
             }
 
             // Map name text field
@@ -456,6 +421,7 @@ MouseArea {
                         }
 
                         root.visible = false
+                        root.enabled = false
                         root.backgroundSelected()
                         root.newMapSet()
                     }
@@ -482,6 +448,7 @@ MouseArea {
                     }
                     onClicked: {
                         root.visible = false
+                        root.enabled = false
                         mapInfo.backgroundPath = ""
                         mapInfo.backgroundScaling = "Fit"
                     }
@@ -489,7 +456,4 @@ MouseArea {
             }
         }
     }
-        Component.onCompleted: {
-            visible = true
-        }
 }
