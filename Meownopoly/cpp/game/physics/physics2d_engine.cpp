@@ -330,9 +330,7 @@ void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D
     qreal movementLength = movement.length();
     qreal colRad = body->collisionRadius();
 
-
-
-    qDebug() << "[PhysicsEngine2D] Movement length:" << movementLength << "collision radius:" << body->collisionRadius() << velocity;
+    // qDebug() << "[PhysicsEngine2D] Movement length:" << movementLength << "collision radius:" << body->collisionRadius() << velocity;
 
     QVector2D bestCollisionPos = newPos;
     CollisionResult bestResult;
@@ -351,6 +349,7 @@ void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D
             bestResult = result;
             bestResult.zone = zone;
             collisionOccurred = true;
+            break;
         }
     }
     
@@ -379,7 +378,7 @@ void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D
         body->setVelocity(newVelocity);
 
         // Positionner le body à l'extérieur de la zone en utilisant la normale et la pénétration
-        QVector2D correctedPosition = bestCollisionPos + bestResult.normal * bestResult.penetration;
+        QVector2D correctedPosition = currentPos + bestResult.normal * bestResult.penetration;
         body->setPosition(correctedPosition);
 
         // Émettre les signaux

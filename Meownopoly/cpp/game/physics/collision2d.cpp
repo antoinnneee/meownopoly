@@ -257,7 +257,7 @@ CollisionResult Collision2D::checkCirclePolygonSweep(
     qreal earliestPenetration = 0.0;
 
     // Tester les positions intermédiaires (exclure le point de départ)
-    for (int step = 1; step <= steps; ++step) {
+    for (int step = 0; step <= steps; ++step) {
         qreal t = static_cast<qreal>(step) / steps;
         QVector2D testPos = startPos + t * movement;
 
