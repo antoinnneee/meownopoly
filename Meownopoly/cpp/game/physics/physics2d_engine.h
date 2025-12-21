@@ -109,7 +109,7 @@ public:
      * @param snapables Liste de QVariant contenant des ItemSnapable*
      * 
      * Cette méthode extrait les zones d'exclusion et d'effet depuis
-     * les ItemSnapable qui ont un tileType ExclusionZone ou EffectZone.
+     * les ItemSnapable qui ont un tileType PhysicZone
      */
     Q_INVOKABLE void setZonesFromSnapables(const QVariantList& snapables);
     

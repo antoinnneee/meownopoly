@@ -47,16 +47,10 @@ ItemSnapable *ItemSnapableFactory::createItemSnapable(Case::CaseType caseType)
     return snap;
 }
 
-ItemSnapable *ItemSnapableFactory::createExclusionZone()
+ItemSnapable *ItemSnapableFactory::createPhysicZone()
 {
     ItemSnapable *snap = new ItemSnapable();
-    snap->setTileType(ItemSnapable::ExclusionZone);
+    snap->setTileType(ItemSnapable::PhysicZoneTile);
     return snap;
 }
 
-ItemSnapable *ItemSnapableFactory::createEffectZone()
-{
-    ItemSnapable *snap = new ItemSnapable();
-    snap->setTileType(ItemSnapable::EffectZone);
-    return snap;
-}

@@ -33,7 +33,7 @@ VPATH += cpp
 INCLUDEPATH += cpp
 
 SOURCES += \
-    cpp/game/item_snapable/polygonParameter.cpp \
+    cpp/game/item_snapable/ZoneParameter.cpp \
     cpp/game/physics/collision2d.cpp \
     cpp/game/physics/physics2d_body.cpp \
     cpp/game/physics/physics2d_zone.cpp \
@@ -78,7 +78,7 @@ SOURCES += \
 
 
 HEADERS += \
-    cpp/game/item_snapable/polygonParameter.h \
+    cpp/game/item_snapable/ZoneParameter.h \
     cpp/game/physics/collision2d.h \
     cpp/game/physics/physics2d_body.h \
     cpp/game/physics/physics2d_zone.h \

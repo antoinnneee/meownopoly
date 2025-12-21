@@ -32,7 +32,7 @@ Item {
     property real slideFactor: 1        // Conservation du glissement le long du mur
     
     // Référence aux zones d'exclusion (polygones de collision)
-    property var exclusionZones: null
+    property var physicZones: null
 
     // --- Camera Follow Configuration ---
     // Delegated to CameraController
@@ -63,7 +63,7 @@ Item {
         targetEntity = entity
         view3D = view
         root.logic = logic
-        exclusionZones = zones || null
+        physicZones = zones || null
 
         console.log("=== EntityController.setTarget ===")
 
@@ -357,14 +357,14 @@ Item {
     }
 
     function detectCollisionJS(pos2D) {
-        if (!exclusionZones) return null
+        if (!physicZones) return null
         
-        for (var i = 0; i < exclusionZones.length; i++) {
-            var zone = exclusionZones[i]
+        for (var i = 0; i < physicZones.length; i++) {
+            var zone = physicZones[i]
             if (!zone || !zone.snapableParameters) continue
             
-            if (zone.snapableParameters.tileType === ItemSnapable.ExclusionZone) {
-                var exclusionParam = zone.snapableParameters.polygonParameter
+            if (zone.snapableParameters.tileType === ItemSnapable.PhysicZoneTile) {
+                var exclusionParam = zone.snapableParameters.zoneParameter
                 if (exclusionParam && exclusionParam.polygonPoints) {
                     var collision = checkCirclePolygonCollision(
                         pos2D.x, pos2D.y, 

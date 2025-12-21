@@ -1,5 +1,5 @@
-#ifndef POLYGONPARAMETER_H
-#define POLYGONPARAMETER_H
+#ifndef ZONEPARAMETER_H
+#define ZONEPARAMETER_H
 
 #include <QObject>
 #include <QPointF>
@@ -7,15 +7,15 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-class PolygonParameter : public QObject
+class ZoneParameter : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString zoneColor READ zoneColor WRITE setZoneColor NOTIFY zoneColorChanged)
     Q_PROPERTY(QString zoneName READ zoneName WRITE setZoneName NOTIFY zoneNameChanged)
     Q_PROPERTY(QVariantList polygonPoints READ polygonPoints WRITE setPolygonPoints NOTIFY polygonPointsChanged)
 public:
-    explicit PolygonParameter(QObject *parent = nullptr);
-    explicit PolygonParameter(const QJsonObject &json, QObject *parent = nullptr);
+    explicit ZoneParameter(QObject *parent = nullptr);
+    explicit ZoneParameter(const QJsonObject &json, QObject *parent = nullptr);
     QString toJSON();
     
     // Liste des points du polygone (en coordonnées de grille)
@@ -52,5 +52,5 @@ private:
     QString m_zoneName;
 };
 
-#endif // POLYGONPARAMETER_H
+#endif // ZONEPARAMETER_H
 

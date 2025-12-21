@@ -1,14 +1,14 @@
-#include "polygonParameter.h"
+#include "ZoneParameter.h"
 #include <QJsonDocument>
 
-PolygonParameter::PolygonParameter(QObject *parent)
+ZoneParameter::ZoneParameter(QObject *parent)
     : QObject(parent)
     , m_zoneColor("#FF5722")  // Orange par défaut
     , m_zoneName("")
 {
 }
 
-PolygonParameter::PolygonParameter(const QJsonObject &json, QObject *parent)
+ZoneParameter::ZoneParameter(const QJsonObject &json, QObject *parent)
     : QObject(parent)
 {
     if (json.contains("polygonPoints")) {
@@ -26,7 +26,7 @@ PolygonParameter::PolygonParameter(const QJsonObject &json, QObject *parent)
     m_zoneName = json.value("zoneName").toString("");
 }
 
-QString PolygonParameter::toJSON()
+QString ZoneParameter::toJSON()
 {
     QString json;
     json += "{\n";
@@ -50,12 +50,12 @@ QString PolygonParameter::toJSON()
     return json;
 }
 
-QVariantList PolygonParameter::polygonPoints() const
+QVariantList ZoneParameter::polygonPoints() const
 {
     return m_polygonPoints;
 }
 
-void PolygonParameter::setPolygonPoints(const QVariantList &points)
+void ZoneParameter::setPolygonPoints(const QVariantList &points)
 {
     if (m_polygonPoints != points) {
         m_polygonPoints = points;
@@ -63,7 +63,7 @@ void PolygonParameter::setPolygonPoints(const QVariantList &points)
     }
 }
 
-void PolygonParameter::addPoint(qreal x, qreal y)
+void ZoneParameter::addPoint(qreal x, qreal y)
 {
     QVariantMap point;
     point["x"] = x;
@@ -72,7 +72,7 @@ void PolygonParameter::addPoint(qreal x, qreal y)
     emit polygonPointsChanged();
 }
 
-void PolygonParameter::removeLastPoint()
+void ZoneParameter::removeLastPoint()
 {
     if (!m_polygonPoints.isEmpty()) {
         m_polygonPoints.removeLast();
@@ -80,7 +80,7 @@ void PolygonParameter::removeLastPoint()
     }
 }
 
-void PolygonParameter::clearPoints()
+void ZoneParameter::clearPoints()
 {
     if (!m_polygonPoints.isEmpty()) {
         m_polygonPoints.clear();
@@ -88,17 +88,17 @@ void PolygonParameter::clearPoints()
     }
 }
 
-int PolygonParameter::pointCount() const
+int ZoneParameter::pointCount() const
 {
     return m_polygonPoints.size();
 }
 
-QString PolygonParameter::zoneColor() const
+QString ZoneParameter::zoneColor() const
 {
     return m_zoneColor;
 }
 
-void PolygonParameter::setZoneColor(const QString &color)
+void ZoneParameter::setZoneColor(const QString &color)
 {
     if (m_zoneColor != color) {
         m_zoneColor = color;
@@ -106,12 +106,12 @@ void PolygonParameter::setZoneColor(const QString &color)
     }
 }
 
-QString PolygonParameter::zoneName() const
+QString ZoneParameter::zoneName() const
 {
     return m_zoneName;
 }
 
-void PolygonParameter::setZoneName(const QString &name)
+void ZoneParameter::setZoneName(const QString &name)
 {
     if (m_zoneName != name) {
         m_zoneName = name;

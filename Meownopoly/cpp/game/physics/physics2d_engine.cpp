@@ -1,6 +1,6 @@
 #include "physics2d_engine.h"
 #include "game/item_snapable/ItemSnapable.h"
-#include "game/item_snapable/polygonParameter.h"
+#include "game/item_snapable/ZoneParameter.h"
 #include <QDebug>
 #include <QtQml>
 
@@ -187,18 +187,18 @@ void PhysicsEngine2D::setZonesFromSnapables(const QVariantList& snapables)
         if (!snapable) continue;
         
         ItemSnapable::TileType tileType = snapable->tileType();
-        PolygonParameter* polygonParam = snapable->polygonParameter();
+        ZoneParameter* zoneParam = snapable->zoneParameter();
         
-        if (!polygonParam || polygonParam->pointCount() < 3) continue;
+        if (!zoneParam || zoneParam->pointCount() < 3) continue;
         
         // Déterminer le type de zone
         PhysicsZone2D::ZoneType zoneType = PhysicsZone2D::Zone_Exclusion;
         
-        if (tileType == ItemSnapable::ExclusionZone) {
+        if (tileType == ItemSnapable::PhysicZoneTile) {
             zoneType = PhysicsZone2D::Zone_Exclusion;
-        } else if (tileType == ItemSnapable::EffectZone) {
+        } else if (tileType == ItemSnapable::PhysicZoneTile) {
             // Pour l'instant, EffectZone par défaut est SpeedBoost
-            // On pourrait étendre PolygonParameter pour stocker le type d'effet
+            // On pourrait étendre ZoneParameter pour stocker le type d'effet
             zoneType = PhysicsZone2D::Zone_Speed;
         } else {
             continue; // Ignorer les autres types
@@ -209,14 +209,14 @@ void PhysicsEngine2D::setZonesFromSnapables(const QVariantList& snapables)
         PhysicsZone2D* zone = createZone(zoneId, static_cast<int>(zoneType));
         
         // Copier les propriétés
-        zone->setPolygon(polygonParam->polygonPoints());
-        zone->setZoneName(polygonParam->zoneName());
-        zone->setZoneColor(polygonParam->zoneColor());
+        zone->setPolygon(zoneParam->polygonPoints());
+        zone->setZoneName(zoneParam->zoneName());
+        zone->setZoneColor(zoneParam->zoneColor());
         
         if (m_debugMode) {
             qDebug() << "[PhysicsEngine2D] Loaded zone from snapable:"
                      << zoneId << "type:" << zoneType
-                     << "points:" << polygonParam->pointCount();
+                     << "points:" << zoneParam->pointCount();
         }
     }
     
