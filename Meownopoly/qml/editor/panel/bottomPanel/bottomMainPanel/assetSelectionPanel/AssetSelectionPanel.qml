@@ -231,5 +231,4 @@ EditorBottomPanel {
             Layout.preferredHeight: parent.height
         }
     }
-
 }

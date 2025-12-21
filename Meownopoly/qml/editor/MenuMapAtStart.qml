@@ -48,17 +48,28 @@ MouseArea {
         width: parent.width * 0.5
         height: width
         radius: 15
-        color: "#212121" // Darker background
+        color: "#212121"
         border.color: "#4A90E2"
         border.width: 2
         anchors.centerIn: parent
-
-        // Signal to show InfoPanel when confirmed - will be connected in Editor.qml
 
         property int selectedBackground: -1
         property string selectedDisplayMode: "Fit"
         property string mapName: ""
         property bool snapToGrid: true
+
+        // FileDialog pour image personnalisée
+        FileDialog {
+            id: customBackgroundDialog
+            title: qsTr("Sélectionner une image personnalisée")
+            nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.bmp)"]
+            onAccepted: {
+                newMapInfo.backgroundPath = customBackgroundDialog.selectedFile
+                logic.mapInfo.backgroundPath = customBackgroundDialog.selectedFile
+                menuMapAtStart.selectedBackground = -2
+                console.log("Custom background set to: " + customBackgroundDialog.selectedFile)
+            }
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -69,11 +80,9 @@ MouseArea {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
-                // color: "transparent"
                 Text {
                     Layout.alignment: Qt.AlignLeft
                     horizontalAlignment: Text.AlignLeft
-                    // anchors.centerIn: parent
                     text: "Configuration de la carte"
                     color: "#FFFFFF"
                     font.pixelSize: 20
@@ -82,7 +91,6 @@ MouseArea {
                 Item {
                     Layout.fillWidth: true
                 }
-
             }
 
             // Map name text field
@@ -105,11 +113,33 @@ MouseArea {
                 onTextChanged: {
                     if (MapFileManager.mapExists(text, MapTypes.CUSTOM))
                         mapNameField.mapnameExists = true
-
                     else
                         mapNameField.mapnameExists = false
 
                     newMapInfo.mapName = text
+                }
+            }
+
+            // Map description text field
+            TextField {
+                id: mapDescriptionField
+                Layout.fillWidth: true
+                Layout.preferredHeight: 60
+                placeholderText: "Description de la carte (optionnel)"
+                placeholderTextColor: "#888888"
+                color: "#FFFFFF"
+                font.pixelSize: 14
+                wrapMode: TextInput.Wrap
+
+                background: Rectangle {
+                    color: "#333333"
+                    radius: 8
+                    border.width: mapDescriptionField.activeFocus ? 2 : 1
+                    border.color: mapDescriptionField.activeFocus ? "#4A90E2" : "#555555"
+                }
+
+                onTextChanged: {
+                    newMapInfo.mapDescription = text
                 }
             }
 
@@ -122,14 +152,55 @@ MouseArea {
                 visible: true
 
                 ColumnLayout {
+                    id: backgroundSelectionLayout
                     anchors.fill: parent
-                    spacing: 20
+                    spacing: 15
 
                     // Display mode label
                     Text {
                         text: "Mode d'affichage:"
                         color: "#FFFFFF"
                         font.pixelSize: 16
+                    }
+
+                    // Snap to grid checkbox - EN PREMIER
+                    CheckBox {
+                        id: snapToGridCheckBox
+                        text: "Fixé à la grille ?"
+                        Layout.fillWidth: true
+                        checked: menuMapAtStart.snapToGrid
+
+                        indicator: Rectangle {
+                            implicitWidth: 20
+                            implicitHeight: 20
+                            x: snapToGridCheckBox.leftPadding
+                            y: parent.height / 2 - height / 2
+                            radius: 3
+                            border.color: "#4A90E2"
+                            border.width: 1
+                            color: snapToGridCheckBox.checked ? "#4A90E2" : "transparent"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✓"
+                                font.pixelSize: 14
+                                color: "white"
+                                visible: snapToGridCheckBox.checked
+                            }
+                        }
+
+                        contentItem: Text {
+                            text: snapToGridCheckBox.text
+                            font.pixelSize: 14
+                            color: "#FFFFFF"
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: snapToGridCheckBox.indicator.width + snapToGridCheckBox.spacing
+                        }
+
+                        onCheckedChanged: {
+                            newMapInfo.isBackgroundOnGrill = checked
+                            logic.mapInfo.isBackgroundOnGrill = checked
+                        }
                     }
 
                     // Display mode buttons
@@ -158,7 +229,7 @@ MouseArea {
 
                             onClicked: {
                                 menuMapAtStart.selectedDisplayMode = "Stretch"
-                                mapInfo.backgroundScaling = "Stretch"
+                                newMapInfo.backgroundScaling = "Stretch"
                             }
                         }
 
@@ -183,8 +254,7 @@ MouseArea {
 
                             onClicked: {
                                 menuMapAtStart.selectedDisplayMode = "Fit"
-                                mapInfo.backgroundScaling = "Fit"
-
+                                newMapInfo.backgroundScaling = "Fit"
                             }
                         }
 
@@ -212,7 +282,7 @@ MouseArea {
 
                                 onClicked: {
                                     menuMapAtStart.selectedDisplayMode = "Tile"
-                                    mapInfo.backgroundScaling = "Tile"
+                                    newMapInfo.backgroundScaling = "Tile"
                                 }
                             }
 
@@ -223,12 +293,11 @@ MouseArea {
                                 to: 400
                                 stepSize: 20
                                 value: 100
-                                visible : enabled
+                                visible: enabled
                                 enabled: menuMapAtStart.selectedDisplayMode === "Tile"
 
                                 onValueChanged: {
                                     logic.mapInfo.backgroundTileSize = value
-                                    console.log("Tile Size changed to: " + value)
                                     newMapInfo.backgroundTileSize = value
                                 }
 
@@ -260,131 +329,248 @@ MouseArea {
                         }
                     }
 
-                    // Background selection label
-                    Text {
-                        text: "Sélectionner un arrière-plan:"
-                        color: "#FFFFFF"
-                        font.pixelSize: 14
-                    }
-
-                    // Background ListView
-                    ListView {
-                        id: listBackGround
+                    // Zone scrollable pour la sélection d'arrière-plan
+                    Flickable {
+                        id: backgroundFlickable
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        spacing: 10
+                        contentHeight: scrollableContent.height
                         clip: true
+                        boundsBehavior: Flickable.StopAtBounds
 
-                        model: AssetManager.getAvailableBackgrounds()
+                        // ScrollBar verticale
+                        ScrollBar.vertical: ScrollBar {
+                            id: backgroundScrollBar
+                            policy: ScrollBar.AsNeeded
+                            active: true
+                            interactive: true
 
-                        delegate: Rectangle {
-                            width: listBackGround.width
-                            height: 90
-                            radius: 8
-                            border.width: menuMapAtStart.selectedBackground === index ? 3 : 1
-                            border.color: menuMapAtStart.selectedBackground === index ? "#4A90E2" : "#555555"
+                            contentItem: Rectangle {
+                                implicitWidth: 6
+                                radius: width / 2
+                                color: backgroundScrollBar.pressed ? "#888888" : "#666666"
+                                opacity: backgroundScrollBar.active ? 1.0 : 0.5
+                            }
+                        }
 
-                            Image {
-                                id: bgImage
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                source: modelData
-                                fillMode: Image.PreserveAspectCrop
+                        Column {
+                            id: scrollableContent
+                            width: backgroundFlickable.width - 10
+                            spacing: 15
+
+                            // Background selection label
+                            Text {
+                                text: "Sélectionner un arrière-plan:"
+                                color: "#FFFFFF"
+                                font.pixelSize: 14
                             }
 
-                            // Caption overlay
+                            // Option image personnalisée
                             Rectangle {
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.bottom: parent.bottom
-                                height: 26
-                                color: "#80000000"
+                                width: parent.width
+                                height: 80
+                                radius: 8
+                                color: "#2a2a2a"
+                                border.width: menuMapAtStart.selectedBackground === -2 ? 3 : 1
+                                border.color: menuMapAtStart.selectedBackground === -2 ? "#E91E63" : "#555555"
 
+                                Row {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    spacing: 12
+
+                                    // Zone d'aperçu / sélection
+                                    Rectangle {
+                                        width: 64
+                                        height: 64
+                                        radius: 6
+                                        color: "#333333"
+                                        border.color: customImageMouseArea.containsMouse ? "#E91E63" : "#444444"
+                                        border.width: customImageMouseArea.containsMouse ? 2 : 1
+
+                                        // Icône caméra
+                                        Column {
+                                            anchors.centerIn: parent
+                                            spacing: 2
+                                            visible: menuMapAtStart.selectedBackground !== -2
+
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: "📷"
+                                                font.pixelSize: 24
+                                                color: "#AAAAAA"
+                                            }
+
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: "Parcourir"
+                                                font.pixelSize: 9
+                                                color: "#888888"
+                                            }
+                                        }
+
+                                        // Aperçu de l'image sélectionnée
+                                        Image {
+                                            anchors.fill: parent
+                                            anchors.margins: 2
+                                            visible: menuMapAtStart.selectedBackground === -2 && newMapInfo.backgroundPath !== ""
+                                            source: newMapInfo.backgroundPath
+                                            fillMode: Image.PreserveAspectCrop
+                                        }
+
+                                        MouseArea {
+                                            id: customImageMouseArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: customBackgroundDialog.open()
+                                        }
+                                    }
+
+                                    // Texte descriptif
+                                    Column {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 4
+                                        width: parent.width - 76 - 40 - parent.spacing * 2
+
+                                        Text {
+                                            text: "Image personnalisée"
+                                            color: "#FFFFFF"
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                        }
+
+                                        Text {
+                                            text: menuMapAtStart.selectedBackground === -2 && newMapInfo.backgroundPath !== ""
+                                                  ? newMapInfo.backgroundPath.toString().substring(newMapInfo.backgroundPath.toString().lastIndexOf("/") + 1)
+                                                  : "Cliquez pour choisir une image"
+                                            color: "#AAAAAA"
+                                            font.pixelSize: 11
+                                            width: parent.width
+                                            elide: Text.ElideMiddle
+                                        }
+                                    }
+
+                                    // Bouton de suppression
+                                    Rectangle {
+                                        width: 24
+                                        height: 24
+                                        radius: 12
+                                        color: "#CC2222"
+                                        visible: menuMapAtStart.selectedBackground === -2 && newMapInfo.backgroundPath !== ""
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        opacity: removeCustomMouseArea.containsMouse ? 1.0 : 0.7
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "×"
+                                            font.pixelSize: 16
+                                            font.bold: true
+                                            color: "white"
+                                        }
+
+                                        MouseArea {
+                                            id: removeCustomMouseArea
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                newMapInfo.backgroundPath = ""
+                                                logic.mapInfo.backgroundPath = ""
+                                                menuMapAtStart.selectedBackground = -1
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Séparateur
+                            Row {
+                                width: parent.width
+                                spacing: 10
+
+                                Rectangle {
+                                    width: (parent.width - orText.width - 20) / 2
+                                    height: 1
+                                    color: "#444444"
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                                 Text {
-                                    anchors.centerIn: parent
-                                    // Extraire le nom du fichier à partir du chemin complet et enlever l'extension
-                                    text: {
-                                        var path = modelData;
-                                        var fileName = path.substring(path.lastIndexOf("/") + 1);
-                                        return fileName.replace(/\.[^/.]+$/, ""); // Enlever l'extension
-                                    }
-                                    color: "white"
-                                    font.pixelSize: 14
+                                    id: orText
+                                    text: "ou"
+                                    color: "#666666"
+                                    font.pixelSize: 11
+                                }
+                                Rectangle {
+                                    width: (parent.width - orText.width - 20) / 2
+                                    height: 1
+                                    color: "#444444"
+                                    anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    logic.mapInfo.backgroundPath = bgImage.source
-                                    newMapInfo.backgroundPath = bgImage.source
-                                    console.log("Background path set to: " + newMapInfo.backgroundPath);
+                            // Liste des thèmes par défaut
+                            Repeater {
+                                id: backgroundRepeater
+                                model: AssetManager.getAvailableBackgrounds()
 
+                                Rectangle {
+                                    width: scrollableContent.width
+                                    height: 90
+                                    radius: 8
+                                    border.width: menuMapAtStart.selectedBackground === index ? 3 : 1
+                                    border.color: menuMapAtStart.selectedBackground === index ? "#4A90E2" : "#555555"
 
-
-                                    // Définir le mode de mise à l'échelle en fonction du mode sélectionné
-                                    var scaling;
-                                    switch(menuMapAtStart.selectedDisplayMode) {
-                                    case "Stretch":
-                                        scaling = "Stretch";
-                                        break;
-                                    case "Fit":
-                                        scaling = "Fit";
-                                        break;
-                                    case "Tile":
-                                        scaling = "Tile";
-                                        break;
-                                    default:
-                                        scaling = "Fit"; // Valeur par défaut
+                                    Image {
+                                        id: bgImage
+                                        anchors.fill: parent
+                                        anchors.margins: 2
+                                        source: modelData
+                                        fillMode: Image.PreserveAspectCrop
                                     }
-                                    logic.mapInfo.backgroundScaling = scaling
-                                    newMapInfo.backgroundScaling = scaling;
-                                    console.log("Background scaling set to: " + newMapInfo.backgroundScaling);
+
+                                    // Caption overlay
+                                    Rectangle {
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.bottom: parent.bottom
+                                        height: 26
+                                        color: "#80000000"
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: {
+                                                var path = modelData;
+                                                var fileName = path.substring(path.lastIndexOf("/") + 1);
+                                                return fileName.replace(/\.[^/.]+$/, "");
+                                            }
+                                            color: "white"
+                                            font.pixelSize: 14
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            menuMapAtStart.selectedBackground = index
+                                            logic.mapInfo.backgroundPath = bgImage.source
+                                            newMapInfo.backgroundPath = bgImage.source
+                                            newMapInfo.backgroundScaling = menuMapAtStart.selectedDisplayMode
+                                            logic.mapInfo.backgroundScaling = menuMapAtStart.selectedDisplayMode
+                                            console.log("Background path set to: " + newMapInfo.backgroundPath)
+                                        }
+                                    }
                                 }
+                            }
+
+                            // Espace en bas pour le scroll
+                            Item {
+                                width: parent.width
+                                height: 10
                             }
                         }
                     }
-                }
-
-                // Snap to grid checkbox
-                CheckBox {
-                    id: snapToGridCheckBox
-                    text: "Fixé à la grille ?"
-                    Layout.fillWidth: true
-                    checked: menuMapAtStart.snapToGrid
-
-                    indicator: Rectangle {
-                        implicitWidth: 20
-                        implicitHeight: 20
-                        x: snapToGridCheckBox.leftPadding
-                        y: parent.height / 2 - height / 2
-                        radius: 3
-                        border.color: "#4A90E2"
-                        border.width: 1
-                        color: snapToGridCheckBox.checked ? "#4A90E2" : "transparent"
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "✓"
-                            font.pixelSize: 14
-                            color: "white"
-                            visible: snapToGridCheckBox.checked
-                        }
-                    }
-
-                    contentItem: Text {
-                        text: snapToGridCheckBox.text
-                        font.pixelSize: 14
-                        color: "#FFFFFF"
-                        verticalAlignment: Text.AlignVCenter
-                        leftPadding: snapToGridCheckBox.indicator.width + snapToGridCheckBox.spacing
-                    }
-
-                    onCheckedChanged: {
-                        newMapInfo.isBackgroundOnGrill = checked
-                        logic.mapInfo.isBackgroundOnGrill = checked
-                    }
-
                 }
             }
 
@@ -399,7 +585,7 @@ MouseArea {
                     Layout.fillWidth: true
 
                     background: Rectangle {
-                        color: "#4CAF50"  // Green color
+                        color: "#4CAF50"
                         radius: 8
                         border.width: 1
                         border.color: "#FFFFFF"
@@ -432,7 +618,7 @@ MouseArea {
                     Layout.fillWidth: true
 
                     background: Rectangle {
-                        color: "#F44336"  // Red color
+                        color: "#F44336"
                         radius: 8
                         border.width: 1
                         border.color: "#FFFFFF"
