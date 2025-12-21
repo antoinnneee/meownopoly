@@ -146,15 +146,6 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EBP_SearchBar.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EBP_TitleBar.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/EditorBottomPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MapSelectionPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_ContentArea.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SettingPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SettingSelection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SP_Background.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SP_BackgroundSelector.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SP_General.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_SP_SaveLoad.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/MSP_TitleBar.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector_Button.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
@@ -198,7 +189,6 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/caseSelectionPanelMain/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/mapSelectionPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/qmldir</file>

@@ -7,7 +7,6 @@ import AssetManager
 
 import assetSelectionPanel
 import caseSelectionPanel
-import mapSelectionPanel
 import menuSelectionPanel
 
 import editor
@@ -220,19 +219,6 @@ Rectangle {
             onAssetCleared: {
                 root.clearAssetSelection()
             }
-        }
-
-       // Case Selection Panel
-        MapSelectionPanel {
-            id: mapPanel
-            logic: root.logic
-
-            Layout.preferredHeight: root.expandedHeight
-
-            collapsedHeight: root.collapsedHeight
-            expandedHeight: root.expandedHeight
-            Layout.preferredWidth: parent.width
-            isExpanded: root.isExpanded
         }
     }
 
