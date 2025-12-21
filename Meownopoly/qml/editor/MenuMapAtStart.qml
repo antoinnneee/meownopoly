@@ -605,7 +605,6 @@ MouseArea {
                             console.log("Map name is invalid or already exists.")
                             return
                         }
-
                         root.visible = false
                         root.enabled = false
                         root.backgroundSelected()

@@ -16,7 +16,7 @@ EBP_Content {
     
     // Propriétés supplémentaires
     searchText: ""
-    isExpanded: true
+    height: isExpanded ? expandedHeight : collapsedHeight // Hauteur explicite
 
     property var logic: null  // Référence au logic pour sauvegarder
     
