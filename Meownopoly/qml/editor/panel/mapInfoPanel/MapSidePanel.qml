@@ -8,7 +8,7 @@ import QtCore
 import QtQuick.Dialogs
 import Case
 import ItemSnapable
-import ui_item 1.0
+import ui_item
 import "../../../component"
 
 import Game
@@ -40,6 +40,10 @@ Rectangle {
     onRefreshPanel: {
             console.log("Refreshing Map Side Panel with map name: " + logic.mapInfo.mapName)
             mapNameInput.text = logic.mapInfo.mapName
+            versionInput.text = logic.mapInfo.version.toString()
+            creationDateInput.text = logic.mapInfo.mapCreationDate
+            lastModifiedInput.text = logic.mapInfo.mapLastModified
+            descriptionInput.text = logic.mapInfo.mapDescription
     }
 
     Behavior on x {
@@ -434,6 +438,7 @@ Rectangle {
                                 }
 
                                 TextField {
+                                    id: versionInput
                                     width: parent.width - 24
                                     height: parent.height
                                     color: "white"
@@ -479,6 +484,7 @@ Rectangle {
                                 }
 
                                 TextField {
+                                    id: creationDateInput
                                     width: parent.width - 24
                                     height: parent.height
                                     color: "white"
@@ -524,6 +530,7 @@ Rectangle {
                                 }
 
                                 TextField {
+                                    id: lastModifiedInput
                                     width: parent.width - 24
                                     height: parent.height
                                     color: "#4CAF50"
