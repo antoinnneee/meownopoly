@@ -136,7 +136,6 @@ Item {
                 width = Math.max(200, mapNameText.contentWidth + 40)
                 console.log("From parent currentMapName width = ", width)
                 console.log("From parent mapNameText width = ", mapNameText.width)
-
             }
             signal mapNameSet()
             onMapNameSet: width = Math.max(200, mapNameText.contentWidth + 40)
@@ -144,7 +143,7 @@ Item {
             Text {
                 id: mapNameText
                 anchors.centerIn: parent
-                text: (mapInfo.mapName === mapInfo.autosaveMapName || mapInfo.mapName === "") ? "Autosave" : mapInfo.mapName
+                text: /*(mapInfo.mapName === mapInfo.autosaveMapName || mapInfo.mapName === "") ? "Autosave" : */mapInfo.mapName
                 onTextChanged: currentMapName.mapNameSet()
                 font.pixelSize: 16
                 font.bold: true

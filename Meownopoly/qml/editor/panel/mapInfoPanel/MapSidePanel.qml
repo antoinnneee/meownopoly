@@ -399,7 +399,7 @@ Rectangle {
                                     verticalAlignment: Text.AlignVCenter
                                     placeholderTextColor: "#666666"
                                     placeholderText: text === "" ? "Name of the map" : ""
-                                    text: (logic.mapInfo.mapName === logic.mapInfo.autosaveMapName || logic.mapInfo.mapName === "") ? "" : logic.mapInfo.mapName
+                                    Component.onCompleted: text = logic.mapInfo.mapName
                                     onTextChanged: {
                                         logic.mapInfo.mapName = text
                                     }
@@ -444,7 +444,7 @@ Rectangle {
                                     verticalAlignment: TextInput.AlignVCenter
                                     placeholderTextColor: "#666666"
                                     placeholderText: text === "" ? "1.0" : ""
-                                    text: logic.mapInfo.version.toString()
+                                    Component.onCompleted: text = logic.mapInfo.version.toString()
                                     onEditingFinished: {
                                         logic.mapInfo.version = parseInt(text) || 1
                                         logic.saveMap(MapTypes.UNDOREDO)
@@ -487,7 +487,7 @@ Rectangle {
                                     font.pixelSize: 12
                                     placeholderTextColor: "#666666"
                                     placeholderText: text === "" ? "2023-09-15" : ""
-                                    text: logic.mapInfo.mapCreationDate
+                                    Component.onCompleted: text = logic.mapInfo.mapCreationDate
                                     onEditingFinished: {
                                         logic.mapInfo.mapCreationDate = text
                                         logic.saveMap(MapTypes.UNDOREDO)
@@ -532,7 +532,7 @@ Rectangle {
                                     verticalAlignment: Text.AlignVCenter
                                     placeholderTextColor: "#666666"
                                     placeholderText: text === "" ? "2023-09-18" : ""
-                                    text: logic.mapInfo.mapLastModified
+                                    Component.onCompleted: text = logic.mapInfo.mapLastModified
                                     onEditingFinished: {
                                         logic.mapInfo.mapLastModified = text
                                         logic.saveMap(MapTypes.UNDOREDO)
@@ -621,7 +621,7 @@ Rectangle {
                                 font.pixelSize: 12
                                 wrapMode: TextEdit.Wrap
                                 placeholderText: text === "" ? "Enter map description here..." : ""
-                                text : logic.mapInfo.mapDescription
+                                Component.onCompleted: text = logic.mapInfo.mapDescription
                                 placeholderTextColor: "#666666"
                                 background: null
                                 onEditingFinished: {

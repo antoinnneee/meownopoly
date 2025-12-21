@@ -59,7 +59,7 @@ Item {
 
     onVisibleChanged: {
         if (visible) {
-            mapNavigationBar.refreshMapList()
+            mapNavigationBar.isVisible()
         }
     }
 
