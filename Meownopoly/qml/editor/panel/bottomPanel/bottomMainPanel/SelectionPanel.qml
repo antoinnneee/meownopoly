@@ -10,6 +10,7 @@ import caseSelectionPanel
 import menuSelectionPanel
 
 import editor
+import "./zonePanel"
 
 Rectangle {
     id: root

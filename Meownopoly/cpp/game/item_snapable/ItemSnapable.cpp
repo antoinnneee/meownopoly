@@ -1,4 +1,5 @@
 #include "ItemSnapable.h"
+#include "polygonParameter.h"
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include "game/case/CaseFactory.h"
@@ -17,6 +18,7 @@ void ItemSnapable::registerQml()
     qmlRegisterType<TileType>("TileType", 1, 0, "TileType");
     qmlRegisterType<DisplayParameter>("DisplayParameter", 1, 0, "DisplayParameter"); // Register DisplayParameter class
     qmlRegisterType<DecorationParameter>("DecorationParameter", 1, 0, "DecorationParameter"); // Register DecorationParameter class
+    qmlRegisterType<PolygonParameter>("PolygonParameter", 1, 0, "PolygonParameter"); // Register PolygonParameter class
 }
 
 ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent)
@@ -48,6 +50,9 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
     }
     if (m_json.contains("decorationParameter")) {
         m_decorationParameter = new DecorationParameter(m_json["decorationParameter"].toObject(), this);
+    }
+    if (m_json.contains("polygonParameter")) {
+        m_polygonParameter = new PolygonParameter(m_json["polygonParameter"].toObject(), this);
     }
     m_uniqueId = QUuid(m_json["uniqueId"].toString());
     m_tileType = TileType(m_json["tileType"].toInt());
@@ -101,6 +106,16 @@ void ItemSnapable::setDecorationParameter(DecorationParameter * decorationParame
         delete m_decorationParameter;
     m_decorationParameter = decorationParameter; emit decorationParameterChanged();
 }
+
+PolygonParameter *ItemSnapable::polygonParameter() const {
+    return m_polygonParameter;
+}
+
+void ItemSnapable::setPolygonParameter(PolygonParameter * polygonParameter) {
+    if (m_polygonParameter)
+        delete m_polygonParameter;
+    m_polygonParameter = polygonParameter; emit polygonParameterChanged();
+}
 QString ItemSnapable::toJSON()
 {
     QString json;
@@ -112,6 +127,9 @@ QString ItemSnapable::toJSON()
     }
     if (m_decorationParameter != nullptr) {
         json += "    \"decorationParameter\": " + m_decorationParameter->toJSON() + ",\n";
+    }
+    if (m_polygonParameter != nullptr && m_tileType == ExclusionZone) {
+        json += "    \"polygonParameter\": " + m_polygonParameter->toJSON() + ",\n";
     }
     json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
     json += "    \"next\": [ ";
@@ -251,6 +269,14 @@ void ItemSnapable::copyFrom(ItemSnapable* source)
         m_decorationParameter->setDecorationType(source->decorationParameter()->decorationType());
         m_decorationParameter->setDecorationId(source->decorationParameter()->decorationId());
         emit decorationParameterChanged();
+    }
+    
+    // Copier les exclusion parameters si c'est une ExclusionZone
+    if (source->tileType() == ExclusionZone && source->polygonParameter()) {
+        m_polygonParameter->setPolygonPoints(source->polygonParameter()->polygonPoints());
+        m_polygonParameter->setZoneColor(source->polygonParameter()->zoneColor());
+        m_polygonParameter->setZoneName(source->polygonParameter()->zoneName());
+        emit polygonParameterChanged();
     }
     
     // Copier l'UUID

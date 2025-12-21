@@ -73,9 +73,14 @@ Base_Board {
         stEnableAutoSave.sync()
         initializeEditor()
 
-        // Initialize Entity Controller
-        // EntityController.setTarget(entity, view3D, gameGrid, logic)
-        EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
+        // Initialize Entity Controller (avec la liste des tiles pour la collision)
+        EntityController.snapableTilesList = snapableTilesList
+        World3DTools.init(view3D, gameGrid, gameScene.camera)
+        EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        // EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
+        
+        // Activer le mode édition pour les zones d'exclusion
+        gameGrid.isEdit = true
     }
 
     mapInfo.mapName: autosaveMapName
@@ -408,6 +413,16 @@ Base_Board {
 
             // Bind camera magnification to grid scale level
             cameraMagnification: gameGrid.scaleLevel
+            gridManager: gameGrid
+        }
+        Component.onCompleted: {
+            var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")           
+            gameScene.moveEntityToGridPosition(sphere, 0, 0)
+            // EntityController.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
+            EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
+
+            sphere = gameScene.generateSphere(0, 0, 0, 10, "blue")
+            gameScene.moveEntityToGridPosition(sphere, 2, 2)
         }
     }
 
@@ -427,6 +442,20 @@ Base_Board {
         unitSizeHeight: logic.tileLogic.currentElementHeight
         gridManager: gameGrid
         sidePanel: sidePanel
+    }
+
+    // Prévisualisation du polygone pendant le dessin
+    PolygonPreviewCursor {
+        id: polygonPreview
+        parent: workArea
+        gridManager: gameGrid
+        visible: logic.editorMouseMode === EditorEnum.EM_DRAW_POLYGON && points.length > 0
+        zoneColor: logic.mouseLogic && logic.mouseLogic.currentZoneColor ? 
+                   logic.mouseLogic.currentZoneColor : "#FF5722"
+        
+        Component.onCompleted: {
+            logic.polygonPreview = polygonPreview
+        }
     }
 
     // Rectangle de sélection

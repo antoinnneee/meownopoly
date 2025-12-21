@@ -30,6 +30,7 @@ Base_logic {
 
     property var selectionPanel: null  // Référence au SelectionPanel pour la configuration des cases
     property var editorSidePanel: null
+    property var polygonPreview: null  // Référence au composant de prévisualisation du polygone
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
 
@@ -52,10 +53,12 @@ Base_logic {
         sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? editorDynamicComponent.mouseLogic_selection_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_POSE) ? editorDynamicComponent.mouseLogic_pose_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_GAME) ? editorDynamicComponent.mouseLogic_game_comp
+                                    : (logic.editorMouseMode === EditorEnum.EM_DRAW_POLYGON) ? editorDynamicComponent.mouseLogic_drawPolygon_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_TEMPLATE) ? editorDynamicComponent.mouseLogic_temp_comp
                                     : editorDynamicComponent.mouseLogic_selectionLink_comp
         property var _logic : parent
         property var _grid: editorGrid
+        property var _polygonPreview: logic.polygonPreview
     }
 
     Loader {

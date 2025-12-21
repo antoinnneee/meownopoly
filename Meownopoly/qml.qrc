@@ -42,12 +42,14 @@
         <file>qml/test/Test_Comp.qml</file>
         <file>qml/editor/EditorEscMenu.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
+        <file>qml/editor/logic/MouseLogic_DrawPolygon.qml</file>
         <file>qml/ui_item/ParticleButton.qml</file>
         <file>qml/ui_item/qmldir</file>
         <file>qml/ui_item/Player_Profil_Icon.qml</file>
         <file>qml/component/grid/GridManager.qml</file>
         <file>qml/component/preview/AssetPreviewCursor.qml</file>
         <file>qml/component/preview/LinkPreviewCursor.qml</file>
+        <file>qml/component/preview/PolygonPreviewCursor.qml</file>
         <file>qml/component/snapable/ConnectionOverlay.qml</file>
         <file>qml/component/snapable/ConnectionOverlay2.qml</file>
         <file>qml/component/snapable/ResizeHandle.qml</file>
@@ -59,6 +61,7 @@
         <file>qml/component/snapable/SnapableElementCreateAnimation.qml</file>
         <file>qml/component/snapable/SnapableElementDeleteAnimation.qml</file>
         <file>qml/component/snapable/SnapableElementResizeHandles.qml</file>
+        <file>qml/component/snapable/SnapableExclusionZone.qml</file>
         <file>qml/component/SelectionRect.qml</file>
         <file>qml/ui_item/LayerVisualizer.qml</file>
         <file>qml/ui_item/SizeSelector.qml</file>
@@ -196,5 +199,8 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/qmldir</file>
         <file>qml/editor/panel/mapInfoPanel/qmldir</file>
         <file>qml/editor/panel/mapInfoPanel/NavArrowButton.qml</file>
+        <file>qml/utils/CameraController.qml</file>
+        <file>qml/utils/World3DTools.qml</file>
+        <file>qml/editor/panel/zonePanel/ExclusionZonePanel.qml</file>
     </qresource>
 </RCC>

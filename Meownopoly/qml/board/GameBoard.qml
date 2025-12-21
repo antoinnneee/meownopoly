@@ -31,7 +31,8 @@ Base_Board {
     Component.onCompleted: {
         Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         gameGrid.mmSize = 8
-        EntityController.setTarget(entity, view3D, gameGrid, logic)
+        // Passer la liste des tiles pour la collision avec les zones d'exclusion
+        EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
     }
 
     Keys.onPressed: function(event) {
@@ -87,4 +88,5 @@ Base_Board {
             }
         }
     }
+    
 }

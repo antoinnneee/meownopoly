@@ -76,69 +76,34 @@ QtObject {
         if (!view3D || !grid) return
         if (zoomRatio === undefined) zoomRatio = 1.0
 
-
+        // 1. Calculer le déplacement en pixels à l'écran
         var dx = grid.x - lastGridPos.x
         var dy = grid.y - lastGridPos.y
 
         if (dx === 0 && dy === 0) return
 
-        // 1. Calculer le déplacement en pixels à l'écran (View3D space)
-        // Le déplacement de la grille en 2D correspond à un déplacement opposé nécessaire de la caméra
-        // Si la grille va à droite (+dx), la caméra doit aller à gauche (-dx) pour suivre
-        
         // 2. Convertir ce vecteur 2D (écran) en vecteur 3D (monde)
-        // On prend deux points proches du centre pour avoir le vecteur "droit" et "haut" de la caméra projeté au sol
+        // On prend deux points pour avoir le vecteur "droit" et "haut" de la caméra projeté au sol
+        // Note: mapTo3DScene renvoie un point sur le plan proche ou loin, ou sur un plan spécifique ?
+        // Par défaut c'est une projection rayon -> monde.
+        
         var center = Qt.point(view3D.width / 2, view3D.height / 2)
         var target = Qt.point(center.x - dx, center.y - dy) // On veut déplacer la vue vers (x-dx, y-dy)
         
+        // On utilise mapTo3DScene pour projeter ces points 2D dans l'espace 3D
+        // Cela prend en compte AUTOMATIQUEMENT la rotation de la caméra
         var pCenter = view3D.mapTo3DScene(center)
         var pTarget = view3D.mapTo3DScene(target)
         
         // 3. Calculer le delta monde
         var worldDelta = pTarget.minus(pCenter)
         
-        // Si on est en train de zoomer, le déplacement de la grille est calculé "après zoom"
-        // Mais mapTo3DScene utilise la position actuelle de la caméra (avant déplacement Z si on le faisait)
-        // Avec la caméra orthographique, le zoom est géré par magnification
-        
         // Appliquer le déplacement
         var cam = view3D.camera
         if (cam) {
             cam.x += worldDelta.x
             cam.y += worldDelta.y
-            cam.z += worldDelta.z // En ortho top-down, Z ne devrait pas changer sauf si la caméra est inclinée
-        }
-
-        lastGridPos = Qt.point(grid.x, grid.y)
-    }
-
-    function updateCameraZoom(pivotX, pivotY, newZoomLevel, oldZoomLevel) {
-        // Deprecated in favor of prepareZoom / applyZoom
-    }
-
-    function updateCameraPositionDelta(deltaX, deltaY) {
-        if (!view3D || !grid) return
-
-        var dx = deltaX
-        var dy = deltaY
-
-        if (dx === 0 && dy === 0) return
-
-        // Calculate world delta corresponding to screen pixel delta
-        var center = Qt.point(view3D.width / 2, view3D.height / 2)
-        var pCenter = view3D.mapTo3DScene(center)
-        var pMoved = view3D.mapTo3DScene(Qt.point(center.x + dx, center.y + dy))
-
-        // This vector represents the displacement in World Space that corresponds to (dx, dy) on screen
-        var worldDelta = pMoved.minus(pCenter)
-
-        // Move camera in opposite direction to shift the view
-        var cam = view3D.camera
-        if (cam) {
-            cam.x -= worldDelta.x
-            cam.y -= worldDelta.y
-            cam.z -= worldDelta.z
-            console.log(cam.x, cam.z, cam.y)
+            cam.z += worldDelta.z
         }
 
         lastGridPos = Qt.point(grid.x, grid.y)
@@ -159,22 +124,6 @@ QtObject {
     
     function positionChanged(mouse, drag)
     {
-        // Si l'EntityController déplace la caméra automatiquement, on ne veut pas
-        // que le mouvement "passif" de la grille (qui suit la caméra)
-        // soit interprété comme un mouvement "actif" de la souris.
-        
-        // On met à jour lastGridPos pour que la prochaine frame ne calcule pas
-        // un delta énorme dû au déplacement automatique.
-        
-        // MAIS, si l'utilisateur DRAG la grille, on veut que ça bouge la caméra.
-        // Il faut distinguer les deux cas.
-        
-        // Solution simple : Synchroniser lastGridPos à la position actuelle
-        // AVANT de calculer le delta si on n'est pas en train de dragger la grille spécifiquement
-        // Ou mieux : EntityController devrait mettre à jour lastGridPos quand il bouge la grille.
-        
-        // Pour l'instant, on garde la logique existante mais on ajoute un check
-        updateCameraPosition()
 
         // Mettre à jour la sélection par rectangle si active
         if (mouseLogic.isRectangleSelecting) {
@@ -198,6 +147,7 @@ QtObject {
                 drag.target.y = snappedY
             }
         }
+        updateCameraPosition()
     }
 
     function unselectSelectedElements()

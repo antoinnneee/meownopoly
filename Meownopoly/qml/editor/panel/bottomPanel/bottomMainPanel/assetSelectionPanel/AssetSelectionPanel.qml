@@ -7,6 +7,7 @@ import AssetManager
 import "../"
 import editorBottomPanel 1.0
 import caseSelectionPanel 1.0
+import "../zonePanel"
 
 EditorBottomPanel {
     id: root
@@ -216,6 +217,19 @@ EditorBottomPanel {
                 root.selectedCaseTypeName = ""
                 root.caseTypeCleared()
             }
+        }
+
+        // Exclusion Zone Panel
+        ExclusionZonePanel {
+            id: exclusionZonePanel
+
+            logic: root.logic
+            isExpanded: true
+
+            currentView: root.currentView
+            activeFilter: "All"
+            Layout.preferredWidth: parent.width
+            Layout.preferredHeight: parent.height
         }
     }
 

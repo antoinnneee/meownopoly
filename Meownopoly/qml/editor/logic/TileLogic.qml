@@ -105,6 +105,11 @@ QtObject {
                 "generalMA": mainMa,
                 "snapableParameters": itemSnapableData
             })
+        } else if (itemSnapableData.tileType === ItemSnapable.ExclusionZone) {
+            newTile = dynamicComponent.snapableExclusionZoneComponent.createObject(workArea, {
+                "generalMA": mainMa,
+                "snapableParameters": itemSnapableData
+            })
         }
         
         if (newTile) {
@@ -112,9 +117,45 @@ QtObject {
             // newTile.snapableParameters.print()
             
             snapableTilesList.push(newTile)
-            newTile.snapToGridFromGridPos()
+            if (newTile.snapToGridFromGridPos) {
+                newTile.snapToGridFromGridPos()
+            }
         }
         return newTile
+    }
+
+    // Fonction pour créer une zone d'exclusion
+    function createExclusionZone(snapableParameters) {
+        console.log("TileLogic: Création d'une zone d'exclusion")
+        return createItemSnapable(snapableParameters)
+    }
+
+    // Fonction pour supprimer une zone d'exclusion
+    function deleteExclusionZone(element) {
+        console.log("TileLogic: Suppression d'une zone d'exclusion")
+        
+        // Trouver l'index de l'élément dans la liste
+        var index = -1
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            if (snapableTilesList[i] === element) {
+                index = i
+                break
+            }
+        }
+
+        if (index !== -1) {
+            // Supprimer l'élément de la liste
+            snapableTilesList.splice(index, 1)
+            logic.mouseLogic.unselectSelectedElements()
+
+            // Détruire l'objet QML
+            element.destroy()
+            
+            // Sauvegarder après suppression
+            logic.saveMap(MapTypes.UNDOREDO)
+        } else {
+            console.log("Erreur: Zone d'exclusion non trouvée dans la liste")
+        }
     }
 
     // Fonction pour supprimer un élément

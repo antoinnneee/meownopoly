@@ -12,10 +12,12 @@ Item{
     required property var logic
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
+    property alias snapableExclusionZoneComponent: snapableExclusionZoneComponent
     property alias mouseLogic_selection_comp: mouseLogic_selection_comp
     property alias mouseLogic_pose_comp: mouseLogic_pose_comp
     property alias mouseLogic_game_comp: mouseLogic_game_comp
     property alias mouseLogic_selectionLink_comp: mouseLogic_selectionLink_comp
+    property alias mouseLogic_drawPolygon_comp: mouseLogic_drawPolygon_comp
     property alias mouseLogic_temp_comp: mouseLogic_temp_comp
     property alias scrollLogic_normal_comp: scrollLogic_normal_comp
     property alias scrollLogic_pose_comp: scrollLogic_pose_comp
@@ -53,6 +55,20 @@ Item{
                 logic.tileLogic.deleteElement(element)
             }
 
+        }
+    }
+
+    // Composant dynamique pour créer des zones d'exclusion
+    Component {
+        id: snapableExclusionZoneComponent
+        SnapableExclusionZone {
+            gridManager: gameGrid
+            displayLinkEnable: false  // Les zones d'exclusion n'utilisent pas les liens
+
+            // Gestion de la suppression
+            onElementDeleted: function(element) {
+                logic.tileLogic.deleteExclusionZone(element)
+            }
         }
     }
 
@@ -116,6 +132,19 @@ Item{
             grid: _grid
             Component.onCompleted: {
                 logic.mouseLogic = mouseLogic_selectionLink
+            }
+        }
+    }
+
+    Component {
+        id: mouseLogic_drawPolygon_comp
+        MouseLogic_DrawPolygon {
+            id: mouseLogic_drawPolygon
+            logic: _logic
+            grid: _grid
+            polygonPreviewComponent: _polygonPreview
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_drawPolygon
             }
         }
     }

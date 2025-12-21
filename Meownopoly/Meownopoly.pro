@@ -33,6 +33,7 @@ VPATH += cpp
 INCLUDEPATH += cpp
 
 SOURCES += \
+    cpp/game/item_snapable/polygonParameter.cpp \
     tools/QtFolderCompressor/FolderCompressor.cpp \
     assetManager/asset_manager.cpp \
     game/case/Case.cpp \
@@ -73,6 +74,7 @@ SOURCES += \
 
 
 HEADERS += \
+    cpp/game/item_snapable/polygonParameter.h \
     tools/QtFolderCompressor/FolderCompressor.h \
     assetManager/asset_manager.h \
     game/case/Case.h \
