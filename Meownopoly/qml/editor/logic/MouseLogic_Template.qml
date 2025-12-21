@@ -15,11 +15,11 @@ MouseLogic_Selection {
     // Signal émis quand les éléments sélectionnés changent (pour le template)
     signal templateSelectionChanged()
     
-    // Couleur de sélection pour le template
-    property color selectionColor: "#4A90E2"
-    
-    // Rectangle englobant visuel (optionnel)
+    // Rectangle englobant visuel
     property var boundingRectVisual: null
+    
+    // Couleur du rectangle englobant
+    property color boundingColor: "#4A90E2"
     
     Component.onCompleted: console.log("MouseLogic_Template loaded")
     
@@ -37,34 +37,25 @@ MouseLogic_Selection {
     property point rectangleStart: Qt.point(0, 0)
     property point rectangleCurrent: Qt.point(0, 0)
 
-    // Nouvelles propriétés pour détecter le mouvement même lors d'un "clic"
+    // Nouvelles propriétés pour détecter le mouvement
     property point pressPosition: Qt.point(0, 0)
     property bool hadPressWithoutElement: false
 
     function dragChanged(mouseX, mouseY, drag) {
-        console.log("drag changed")
-
         isDragging = drag.active
         if (drag.active && drag.target) {
-            // Sauvegarder les positions de départ
             dragStartPos = Qt.point(mouseX, mouseY)
             targetStartPos = Qt.point(drag.target.x, drag.target.y)
         }
-        // Si on est en mode sélection rectangle, empêcher le drag
         if (isRectangleSelecting) {
             drag.target = null
         }
     }
 
     function pressedLeft(mouse, drag) {
-        console.log("press left")
-
         mouse.accepted = true
 
-        // Convertir les coordonnées de mainMa vers workArea
         var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
-
-        // Stocker la position de presse pour détecter le mouvement plus tard
         pressPosition = Qt.point(workAreaPos.x, workAreaPos.y)
 
         // Si aucun élément n'est cliqué, commencer la sélection par rectangle
@@ -75,7 +66,6 @@ MouseLogic_Selection {
             rectangleStart = Qt.point(workAreaPos.x, workAreaPos.y)
             rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
 
-            // Activer le rectangle de sélection
             if (logic.selectionRect) {
                 logic.selectionRect.show()
                 logic.selectionRect.updateGeometry(rectangleStart, rectangleCurrent)
@@ -85,12 +75,9 @@ MouseLogic_Selection {
         }
 
         hadPressWithoutElement = false
-
-        // Si un élément est cliqué, utiliser la logique normale
-        var deltaX = groupeSelection.x
-        var deltaY = groupeSelection.y
+        
+        // Permettre le déplacement groupé des éléments sélectionnés
         drag.target = groupeSelection
-        return
     }
 
     function pressedRight(mouse, drag) {
@@ -99,7 +86,6 @@ MouseLogic_Selection {
     }
 
     function release(mouse, drag) {
-        console.log("release")
         // Finaliser la sélection par rectangle si active
         if (isRectangleSelecting) {
             finalizeRectangleSelection()
@@ -107,39 +93,43 @@ MouseLogic_Selection {
             if (logic.selectionRect) {
                 logic.selectionRect.hide()
             }
-            // Réinitialiser le drag pour les prochaines interactions
             drag.target = null
             
-            // Émettre le signal de changement
+            // Mettre à jour le rectangle englobant
+            updateBoundingRectangle()
             templateSelectionChanged()
+            return
         }
-
+        
+        // Gérer la fin du déplacement
         if (isDragging) {
-            // IMPORTANT: Update positions of all selected elements BEFORE saving
+            // Mettre à jour les positions de tous les éléments sélectionnés AVANT la sauvegarde
             if (drag.target === groupeSelection) {
-                console.log("[UNDO][DRAG] Updating positions for", selectedElements.length, "element(s) before save")
+                console.log("[TEMPLATE][DRAG] Updating positions for", selectedElements.length, "element(s) before save")
                 for (var i = 0; i < selectedElements.length; i++) {
                     if (selectedElements[i] && selectedElements[i].updateRelativePosition) {
                         selectedElements[i].updateRelativePosition()
                     }
                 }
-                // Now save with the updated positions
+                // Sauvegarder avec les positions mises à jour
                 logic.saveMap(MapTypes.UNDOREDO)
+                
+                // Mettre à jour le rectangle englobant après le déplacement
+                updateBoundingRectangle()
             }
             clickElement = []
         }
     }
 
     function clickedLeft(mouse, drag) {
-        console.log("clickedLeft")
         mouse.accepted = true
-        // Calculer la distance parcourue entre press et release
+        
         var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
         var deltaX = Math.abs(workAreaPos.x - pressPosition.x)
         var deltaY = Math.abs(workAreaPos.y - pressPosition.y)
-        var hasMoved = (deltaX > 5 || deltaY > 5)  // Seuil de 5 pixels
+        var hasMoved = (deltaX > 5 || deltaY > 5)
 
-        // Si on a appuyé sans élément et qu'on a bougé, c'est une sélection rectangle
+        // Sélection par rectangle (clic sans élément + mouvement)
         if (hadPressWithoutElement && hasMoved) {
             rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
             finalizeRectangleSelection()
@@ -152,12 +142,11 @@ MouseLogic_Selection {
             hadPressWithoutElement = false
             clickElement = []
             
-            // Émettre le signal de changement
+            updateBoundingRectangle()
             templateSelectionChanged()
             return
         }
 
-        // Réinitialiser les flags
         isRectangleSelecting = false
         hadPressWithoutElement = false
 
@@ -165,132 +154,129 @@ MouseLogic_Selection {
             logic.selectionRect.hide()
         }
 
+        // Clic sur espace vide = désélectionner tout
         if (clickElement.length === 0) {
             unselectSelectedElements()
-            templateSelectionChanged()
             return
         }
 
-        // Si on a fait un drag (hasMoved), ne pas traiter comme un clic de sélection
+        // Si on a bougé (déplacement), ne pas toggle la sélection
         if (hasMoved) {
             clickElement = []
             return
         }
 
-        if (!(mouse.modifiers & Qt.ControlModifier)) {
-            // CTRL is not pressed => normal selection mode
-            var isAlreadyInSelection = selectedElements.indexOf(clickElement[0]) !== -1
+        // Toggle selection: clic sur un élément = sélectionner/désélectionner
+        var element = clickElement[0]
+        var isAlreadySelected = selectedElements.indexOf(element) !== -1
 
-            if (isAlreadyInSelection) {
-                // L'élément fait déjà partie de la sélection - désélectionner tout
-                unselectSelectedElements()
-            } else {
-                // L'élément n'est PAS dans la sélection actuelle -> nouvelle sélection
-                unselectSelectedElements()
-                clickElement[0].elementPressed()
-
-                if (clickElement[0])
-                    clickElement[0].elementTemplateReversed()
-
-                createBindingsForElement(clickElement[0])
-                drag.target = groupeSelection
-                selectedElements.push(clickElement[0])
-
-                // Mettre à jour la configuration de case si applicable
-                updateCaseConfiguration()
-                updateVisualEffectPanel(selectedElements[0].snapableParameters.displayParameter)
-            }
+        if (isAlreadySelected) {
+            // Désélectionner cet élément
+            deselectElement(element)
         } else {
-            // CTRL is pressed => add to selection
-            if (!clickElement[0].isSelected) {
-                clickElement[0].elementPressed()
-
-                if (clickElement[0])
-                    clickElement[0].elementTemplateSelected()
-
-                createBindingsForElement(clickElement[0])
-                selectedElements.push(clickElement[0])
-
-                // Mettre à jour la configuration de case si applicable
-                updateCaseConfiguration()
-                updateVisualEffectPanel(clickElement[0].snapableParameters.displayParameter)
-            } else {
-                // unselect element
-                for (var i = 0; i < selectedElements.length; i++) {
-                    if (selectedElements[i] === clickElement[0]) {
-                        selectedElements[i].isSelected = false
-                        selectedElements[i].elementReleased()
-                        destroyBindingsForElement(selectedElements[i])
-                        selectedElements.splice(i, 1)
-                        break
-                    }
-                }
-
-                // Mettre à jour la configuration de case si applicable
-                updateCaseConfiguration()
-            }
+            // Sélectionner cet élément (SANS désélectionner les autres)
+            selectElement(element)
         }
-        
+
         clickElement = []
         
-        // Émettre le signal de changement
+        // Mettre à jour le rectangle englobant automatiquement
+        updateBoundingRectangle()
         templateSelectionChanged()
     }
 
     function clickedRight(mouse, drag) {
-        // Menu contextuel supprimé - pas d'action sur clic droit
         mouse.accepted = true
     }
 
     function pressAndHold(mouse, drag) {
-        console.log("press and hold")
-
         if (drag.active === true) {
             return
         }
     }
 
-    // Fonction pour mettre à jour la sélection par rectangle
+    // ==================== FONCTIONS DE SÉLECTION ====================
+
+    // Sélectionne un élément
+    function selectElement(element) {
+        if (!element) return
+        if (element.isSelected) return
+        
+        element.elementPressed()
+        element.elementTemplateSelected()
+        createBindingsForElement(element)
+        selectedElements.push(element)
+        
+        console.log("Element sélectionné, total:", selectedElements.length)
+    }
+
+    // Désélectionne un élément
+    function deselectElement(element) {
+        if (!element) return
+        
+        var index = selectedElements.indexOf(element)
+        if (index === -1) return
+        
+        element.isSelected = false
+        element.elementReleased()
+        destroyBindingsForElement(element)
+        selectedElements.splice(index, 1)
+        
+        console.log("Element désélectionné, total:", selectedElements.length)
+    }
+
+    // Désélectionne tous les éléments
+    function unselectSelectedElements() {
+        for (var i = 0; i < selectedElements.length; i++) {
+            if (selectedElements[i]) {
+                selectedElements[i].isSelected = false
+                selectedElements[i].elementReleased()
+                destroyBindingsForElement(selectedElements[i])
+            }
+        }
+        selectedElements = []
+        
+        // Supprimer le rectangle englobant
+        clearBoundingRectangle()
+        templateSelectionChanged()
+        
+        console.log("Tous les éléments désélectionnés")
+    }
+
+    // ==================== FONCTIONS RECTANGLE ====================
+
     function updateRectangleSelection(mouseX, mouseY) {
         if (!isRectangleSelecting) return
 
-        // Convertir les coordonnées de mainMa vers workArea
         var workAreaPos = mainMa.mapToItem(workArea, mouseX, mouseY)
         rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
 
-        // Mettre à jour le rectangle visuel
         if (logic.selectionRect) {
             logic.selectionRect.updateGeometry(rectangleStart, rectangleCurrent)
         }
 
-        // Détecter les éléments dans le rectangle et les sélectionner
         var elementsResult = getElementsInRectangle(rectangleStart, rectangleCurrent)
         selectElementsInRectangle(elementsResult)
     }
 
-    // Fonction pour détecter les éléments dans le rectangle
     function getElementsInRectangle(start, current) {
         var elementsInRect = []
         var elementsOutRect = []
 
-        // Calculer les limites du rectangle
         var rectLeft = Math.min(start.x, current.x)
         var rectRight = Math.max(start.x, current.x)
         var rectTop = Math.min(start.y, current.y)
         var rectBottom = Math.max(start.y, current.y)
 
-        // Parcourir tous les éléments snapables
         for (var i = 0; i < logic.snapableTilesList.length; i++) {
             var element = logic.snapableTilesList[i]
             if (!element) continue
 
-            // Calculer les limites de l'élément
             var elementLeft = element.x
             var elementRight = element.x + element.width
             var elementTop = element.y
             var elementBottom = element.y + element.height
 
-            // Vérifier l'intersection
             if (!(elementRight < rectLeft || elementLeft > rectRight ||
                   elementBottom < rectTop || elementTop > rectBottom)) {
                 elementsInRect.push(element)
@@ -305,7 +291,6 @@ MouseLogic_Selection {
         }
     }
 
-    // Fonction pour sélectionner les éléments dans le rectangle
     function selectElementsInRectangle(elements) {
         var elementsIn = elements.inRectangle
         var elementsOut = elements.outRectangle
@@ -313,38 +298,24 @@ MouseLogic_Selection {
         for (var j = 0; j < elementsOut.length; j++) {
             var elementOut = elementsOut[j]
             if (elementOut.isSelected) {
-                elementOut.elementUnselected()
-                destroyBindingsForElement(elementOut)
-                var selectElementIndex = selectedElements.indexOf(elementOut)
-                if (selectElementIndex !== -1) {
-                    selectedElements.splice(selectElementIndex, 1)
-                }
+                deselectElement(elementOut)
             }
         }
         
-        // Sélectionner les nouveaux éléments
         for (var i = 0; i < elementsIn.length; i++) {
             var elementIn = elementsIn[i]
             if (!elementIn.isSelected) {
-                elementIn.elementPressed()
-                elementIn.elementTemplateSelected()
-
-                createBindingsForElement(elementIn)
-                selectedElements.push(elementIn)
+                selectElement(elementIn)
             }
         }
     }
 
-    // Fonction pour finaliser la sélection par rectangle
     function finalizeRectangleSelection() {
         var elementsResult = getElementsInRectangle(rectangleStart, rectangleCurrent)
         selectElementsInRectangle(elementsResult)
-
-        // Mettre à jour la configuration de case si applicable
-        updateCaseConfiguration()
     }
 
-    // ==================== NOUVELLES FONCTIONS POUR TEMPLATE ====================
+    // ==================== RECTANGLE ENGLOBANT ====================
 
     // Calcule le rectangle englobant tous les éléments sélectionnés
     function calculateBoundingRectangle() {
@@ -354,8 +325,8 @@ MouseLogic_Selection {
 
         var minX = Number.MAX_VALUE
         var minY = Number.MAX_VALUE
-        var maxX = Number.MIN_VALUE
-        var maxY = Number.MIN_VALUE
+        var maxX = -Number.MAX_VALUE
+        var maxY = -Number.MAX_VALUE
 
         for (var i = 0; i < selectedElements.length; i++) {
             var element = selectedElements[i]
@@ -382,68 +353,76 @@ MouseLogic_Selection {
         }
     }
 
-    // Génère et affiche le rectangle englobant visuellement
-    function generateBoundingRectangle(color) {
-        if (selectedElements.length < 2) {
-            console.log("Besoin d'au moins 2 éléments pour générer un rectangle englobant")
-            return null
+    // Met à jour le rectangle englobant visuel automatiquement
+    function updateBoundingRectangle() {
+        // Supprimer l'ancien rectangle
+        clearBoundingRectangle()
+        
+        // Ne rien afficher si moins de 1 élément
+        if (selectedElements.length < 1) {
+            return
         }
 
         var boundingRect = calculateBoundingRectangle()
         
-        console.log("Rectangle englobant calculé:")
-        console.log("  Position: (" + boundingRect.x + ", " + boundingRect.y + ")")
-        console.log("  Taille: " + boundingRect.width + " x " + boundingRect.height)
-        console.log("  Centre: (" + boundingRect.centerX + ", " + boundingRect.centerY + ")")
-
-        // Créer le rectangle visuel si nécessaire
-        if (boundingRectVisual) {
-            boundingRectVisual.destroy()
-        }
-
-        var component = Qt.createComponent("qrc:/qml/component/BoundingRectangle.qml")
-        if (component.status === Component.Ready) {
-            boundingRectVisual = component.createObject(workArea, {
-                x: boundingRect.x - 5,
-                y: boundingRect.y - 5,
-                width: boundingRect.width + 10,
-                height: boundingRect.height + 10,
-                borderColor: color || selectionColor,
-                borderWidth: 3
-            })
-        } else {
-            // Fallback: créer un rectangle simple
-            createSimpleBoundingRect(boundingRect, color)
-        }
-
-        return boundingRect
+        // Créer le nouveau rectangle visuel
+        createBoundingRectVisual(boundingRect)
     }
 
-    // Crée un rectangle simple comme fallback
-    function createSimpleBoundingRect(boundingRect, color) {
-        // Créer dynamiquement un rectangle
+    // Crée le rectangle englobant visuel
+    function createBoundingRectVisual(boundingRect) {
+        var padding = 8
+        
         var rectComponent = Qt.createQmlObject('
             import QtQuick 2.15
             Rectangle {
                 color: "transparent"
-                border.color: "' + (color || selectionColor) + '"
+                border.color: "#4A90E2"
                 border.width: 3
                 radius: 8
+                z: 1000
                 
-                // Animation de pulsation
-                SequentialAnimation on opacity {
-                    loops: Animation.Infinite
-                    NumberAnimation { to: 0.5; duration: 800 }
-                    NumberAnimation { to: 1.0; duration: 800 }
+                // Coins décoratifs
+                Rectangle {
+                    width: 12; height: 12
+                    color: "#4A90E2"
+                    radius: 2
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.margins: -3
+                }
+                Rectangle {
+                    width: 12; height: 12
+                    color: "#4A90E2"
+                    radius: 2
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: -3
+                }
+                Rectangle {
+                    width: 12; height: 12
+                    color: "#4A90E2"
+                    radius: 2
+                    anchors.left: parent.left
+                    anchors.bottom: parent.bottom
+                    anchors.margins: -3
+                }
+                Rectangle {
+                    width: 12; height: 12
+                    color: "#4A90E2"
+                    radius: 2
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: -3
                 }
             }
         ', workArea, "boundingRect")
 
         if (rectComponent) {
-            rectComponent.x = boundingRect.x - 5
-            rectComponent.y = boundingRect.y - 5
-            rectComponent.width = boundingRect.width + 10
-            rectComponent.height = boundingRect.height + 10
+            rectComponent.x = boundingRect.x - padding
+            rectComponent.y = boundingRect.y - padding
+            rectComponent.width = boundingRect.width + padding * 2
+            rectComponent.height = boundingRect.height + padding * 2
             boundingRectVisual = rectComponent
         }
     }
@@ -454,59 +433,6 @@ MouseLogic_Selection {
             boundingRectVisual.destroy()
             boundingRectVisual = null
         }
-    }
-
-    // Met à jour la couleur de sélection
-    function updateSelectionColor(color) {
-        selectionColor = color
-        
-        // Mettre à jour le rectangle englobant s'il existe
-        if (boundingRectVisual) {
-            boundingRectVisual.border.color = color
-        }
-    }
-
-    // Relie les éléments sélectionnés (crée des connexions entre eux)
-    function linkSelectedElements() {
-        if (selectedElements.length < 2) {
-            console.log("Besoin d'au moins 2 éléments pour créer des liens")
-            return []
-        }
-
-        var links = []
-        
-        // Créer des liens entre chaque paire d'éléments adjacents
-        for (var i = 0; i < selectedElements.length - 1; i++) {
-            var element1 = selectedElements[i]
-            var element2 = selectedElements[i + 1]
-            
-            if (element1 && element2) {
-                var link = {
-                    from: element1.uniqueId,
-                    to: element2.uniqueId,
-                    fromCenter: {
-                        x: element1.x + element1.width / 2,
-                        y: element1.y + element1.height / 2
-                    },
-                    toCenter: {
-                        x: element2.x + element2.width / 2,
-                        y: element2.y + element2.height / 2
-                    }
-                }
-                links.push(link)
-                
-                // Ajouter les liens aux éléments si la méthode existe
-                if (element1.addNext) {
-                    element1.addNext(element2)
-                }
-                if (element2.addPrev) {
-                    element2.addPrev(element1)
-                }
-            }
-        }
-
-        console.log("Créé", links.length, "liens entre les éléments")
-        return links
     }
 
     // Obtient les informations de tous les éléments sélectionnés
@@ -530,23 +456,5 @@ MouseLogic_Selection {
         }
         
         return infos
-    }
-
-    // Désélectionne tous les éléments et nettoie
-    function unselectSelectedElements() {
-        for (var i = 0; i < selectedElements.length; i++) {
-            if (selectedElements[i]) {
-                selectedElements[i].isSelected = false
-                selectedElements[i].elementReleased()
-                destroyBindingsForElement(selectedElements[i])
-            }
-        }
-        selectedElements = []
-        
-        // Nettoyer le rectangle englobant
-        clearBoundingRectangle()
-        
-        // Émettre le signal de changement
-        templateSelectionChanged()
     }
 }
