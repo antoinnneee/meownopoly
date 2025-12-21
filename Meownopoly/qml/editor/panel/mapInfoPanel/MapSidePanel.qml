@@ -39,11 +39,8 @@ Rectangle {
 
     onRefreshPanel: {
             console.log("Refreshing Map Side Panel with map name: " + logic.mapInfo.mapName)
-            mapNameInput.text = logic.mapInfo.mapName
-            versionInput.text = logic.mapInfo.version.toString()
-            creationDateInput.text = logic.mapInfo.mapCreationDate
-            lastModifiedInput.text = logic.mapInfo.mapLastModified
-            descriptionInput.text = logic.mapInfo.mapDescription
+            // Les champs Text se mettent à jour automatiquement via les bindings
+            // Pas besoin de mise à jour manuelle
     }
 
     Behavior on x {
@@ -363,19 +360,22 @@ Rectangle {
                         columnSpacing: 6
                         rowSpacing: 8
 
-                        // Map name
+                        // ============ CHAMPS NON-ÉDITABLES (lecture seule) ============
+
+                        // Map name (lecture seule)
                         Text {
                             text: "Map Name"
-                            color: "#999999"
+                            color: "#666666"
                             font.pixelSize: 12
+                            font.italic: true
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "transparent"
-                            border.color: "#4A90E2"
+                            color: "#2a2a2a"
+                            border.color: "#444444"
                             border.width: 1
                             radius: 3
 
@@ -388,43 +388,37 @@ Rectangle {
                                     text: "📁"
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.pixelSize: 14
+                                    opacity: 0.6
                                 }
 
-                                TextField {
+                                Text {
                                     id: mapNameInput
                                     width: parent.width - 24
                                     height: parent.height
-                                    color: "#4CAF50"
+                                    color: "#888888"
                                     font.pixelSize: 12
                                     verticalAlignment: Text.AlignVCenter
-                                    placeholderTextColor: "#666666"
-                                    placeholderText: text === "" ? "Name of the map" : ""
-                                    // text: (logic.mapInfo.mapName === logic.mapInfo.autosaveMapName || logic.mapInfo.mapName === "") ? "" : logic.mapInfo.mapName
-                                    Component.onCompleted: text = logic.mapInfo.mapName
-                                    enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
-                                    onTextChanged: {
-                                        logic.mapInfo.mapName = text
-                                    }
-                                    onEditingFinished: {
-                                        logic.saveMap(MapTypes.UNDOREDO)
-                                    }
+                                    elide: Text.ElideRight
+                                    text: logic.mapInfo.mapName !== "" ? logic.mapInfo.mapName : "—"
                                 }
                             }
+
                         }
 
-                        // Version
+                        // Version (lecture seule)
                         Text {
                             text: "Version"
-                            color: "#999999"
+                            color: "#666666"
                             font.pixelSize: 12
+                            font.italic: true
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "transparent"
-                            border.color: "#4A90E2"
+                            color: "#2a2a2a"
+                            border.color: "#444444"
                             border.width: 1
                             radius: 3
 
@@ -432,45 +426,41 @@ Rectangle {
                                 anchors.fill: parent
                                 anchors.margins: 4
                                 spacing: 4
+
                                 Text {
                                     text: "📈"
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.pixelSize: 14
+                                    opacity: 0.6
                                 }
 
-                                TextField {
+                                Text {
                                     id: versionInput
                                     width: parent.width - 24
                                     height: parent.height
-                                    color: "white"
+                                    color: "#888888"
                                     font.pixelSize: 12
-                                    verticalAlignment: TextInput.AlignVCenter
-                                    placeholderTextColor: "#666666"
-                                    placeholderText: text === "" ? "1.0" : ""
-                                    // text: logic.mapInfo.version.toString()
-                                    Component.onCompleted: text = logic.mapInfo.version.toString()
-                                    enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
-                                    onEditingFinished: {
-                                        logic.mapInfo.version = parseInt(text) || 1
-                                        logic.saveMap(MapTypes.UNDOREDO)
-                                    }
+                                    verticalAlignment: Text.AlignVCenter
+                                    elide: Text.ElideRight
+                                    text: logic.mapInfo.version.toString()
                                 }
                             }
                         }
 
-                        // Creation date
+                        // Creation date (lecture seule)
                         Text {
                             text: "Created"
-                            color: "#999999"
+                            color: "#666666"
                             font.pixelSize: 12
+                            font.italic: true
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "transparent"
-                            border.color: "#4A90E2"
+                            color: "#2a2a2a"
+                            border.color: "#444444"
                             border.width: 1
                             radius: 3
 
@@ -483,41 +473,37 @@ Rectangle {
                                     text: "📅"
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.pixelSize: 14
+                                    opacity: 0.6
                                 }
 
-                                TextField {
+                                Text {
                                     id: creationDateInput
                                     width: parent.width - 24
                                     height: parent.height
-                                    color: "white"
+                                    color: "#888888"
                                     font.pixelSize: 12
-                                    placeholderTextColor: "#666666"
-                                    placeholderText: text === "" ? "2023-09-15" : ""
-                                    // text: logic.mapInfo.mapCreationDate
-                                    Component.onCompleted: text = logic.mapInfo.mapCreationDate
-                                    enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
-                                    onEditingFinished: {
-                                        logic.mapInfo.mapCreationDate = text
-                                        logic.saveMap(MapTypes.UNDOREDO)
-                                    }
-                                    verticalAlignment: TextInput.AlignVCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    elide: Text.ElideRight
+                                    text: logic.mapInfo.mapCreationDate !== "" ? logic.mapInfo.mapCreationDate : "—"
                                 }
                             }
+
                         }
 
-                        // Last modification
+                        // Last modification (lecture seule)
                         Text {
                             text: "Modified"
-                            color: "#999999"
+                            color: "#666666"
                             font.pixelSize: 12
+                            font.italic: true
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "transparent"
-                            border.color: "#4A90E2"
+                            color: "#2a2a2a"
+                            border.color: "#444444"
                             border.width: 1
                             radius: 3
 
@@ -530,26 +516,21 @@ Rectangle {
                                     text: "🕒"
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.pixelSize: 14
+                                    opacity: 0.6
                                 }
 
-                                TextField {
+                                Text {
                                     id: lastModifiedInput
                                     width: parent.width - 24
                                     height: parent.height
-                                    color: "#4CAF50"
+                                    color: "#888888"
                                     font.pixelSize: 12
                                     verticalAlignment: Text.AlignVCenter
-                                    placeholderTextColor: "#666666"
-                                    placeholderText: text === "" ? "2023-09-18" : ""
-                                    // text: logic.mapInfo.mapLastModified
-                                    Component.onCompleted: text = logic.mapInfo.mapLastModified
-                                    enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
-                                    onEditingFinished: {
-                                        logic.mapInfo.mapLastModified = text
-                                        logic.saveMap(MapTypes.UNDOREDO)
-                                    }
+                                    elide: Text.ElideRight
+                                    text: logic.mapInfo.mapLastModified !== "" ? logic.mapInfo.mapLastModified : "—"
                                 }
                             }
+
                         }
                     }
                 }
@@ -600,46 +581,37 @@ Rectangle {
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Description"
-                                color: "white"
+                                color: "#666666"
                                 font.pixelSize: 13
-                                font.bold: true
+                                font.italic: true
                             }
                         }
                     }
 
-                    // Description text area
+                    // Description text (lecture seule)
                     Rectangle {
                         width: parent.width
-                        height: 80
-                        color: "transparent"
-                        border.color: "#4A90E2"
+                        height: Math.max(80, descriptionInput.height + 8)
+                        color: "#2a2a2a"
+                        border.color: "#444444"
                         border.width: 1
                         radius: 3
 
                         Flickable {
                             id: descriptionFlickable
                             anchors.fill: parent
-                            anchors.margins: 3
+                            anchors.margins: 4
                             contentWidth: descriptionInput.paintedWidth
                             contentHeight: descriptionInput.paintedHeight
                             clip: true
 
-                            TextArea {
+                            Text {
                                 id: descriptionInput
                                 width: descriptionFlickable.width
-                                height: Math.max(descriptionFlickable.height, paintedHeight)
-                                color: "white"
+                                color: "#888888"
                                 font.pixelSize: 12
-                                wrapMode: TextEdit.Wrap
-                                placeholderText: text === "" ? "Enter map description here..." : ""
-                                enabled : (logic.mapInfo.mapName === mapInfo.autosaveMapName) ? false : true
-                                placeholderTextColor: "#666666"
-                                Component.onCompleted: text = logic.mapInfo.mapDescription
-                                background: null
-                                onEditingFinished: {
-                                    logic.mapInfo.mapDescription = text
-                                    logic.saveMap(MapTypes.UNDOREDO)
-                                }
+                                wrapMode: Text.Wrap
+                                text: logic.mapInfo.mapDescription !== "" ? logic.mapInfo.mapDescription : "—"
                             }
                         }
 
