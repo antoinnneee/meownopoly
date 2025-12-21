@@ -440,7 +440,7 @@ MouseLogic_Selection {
                 }
                 Rectangle {
                     width: 12; height: 12
-                    color: "#4A90E2"
+                    color: "lightgreen"
                     radius: 2
                     anchors.right: parent.right
                     anchors.top: parent.top
