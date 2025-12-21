@@ -94,8 +94,6 @@ QmlApp::QmlApp(QWindow *parent)
 
 
 
-
-
     //To declare module in QML
 
     //1) Create a qmldir file in the resource folder. The qmldir is wrote like this:
