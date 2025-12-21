@@ -329,6 +329,7 @@ Rectangle {
                             radius: 3
                         }
 
+
                         contentItem: Text {
                             text: if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == ""){
                                       "Sauvegarde par défaut"
