@@ -8,7 +8,7 @@ import QtCore
 import QtQuick.Dialogs
 import Case
 import ItemSnapable
-import ui_item 1.0
+import ui_item
 import "../../../component"
 
 import Game
@@ -55,6 +55,7 @@ Item {
     // Barre de navigation des cartes
     MapNavigationBar {
         id: mapNavigationBar
+        onMapChanged: mapSidePanel.refreshPanel()
     }
 
     // FileDialog pour la sélection d'image personnalisée

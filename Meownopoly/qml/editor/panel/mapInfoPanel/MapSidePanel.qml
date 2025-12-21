@@ -35,7 +35,12 @@ Rectangle {
     border.width: 1
     x: parent.width
 
+    signal refreshPanel()
 
+    onRefreshPanel: {
+            console.log("Refreshing Map Side Panel with map name: " + logic.mapInfo.mapName)
+            mapNameInput.text = logic.mapInfo.mapName
+    }
 
     Behavior on x {
         NumberAnimation {
@@ -100,15 +105,6 @@ Rectangle {
                 color: parent.hovered ? "#555555" : "transparent"
                 radius: 3
             }
-
-            // contentItem: Text {
-            //     color: "white"
-            //     font.pixelSize: 12
-            //     anchors.fill: parent
-            //     // anchors.centerIn: parent
-            //     // horizontalAlignment: Text.AlignHCenter
-            //     // verticalAlignment: Text.AlignVCenter
-            // }
 
             onClicked: {
                 isOpening = false
@@ -391,6 +387,7 @@ Rectangle {
                                 }
 
                                 TextField {
+                                    id: mapNameInput
                                     width: parent.width - 24
                                     height: parent.height
                                     color: "#4CAF50"

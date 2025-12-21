@@ -208,7 +208,7 @@ Base_Board {
             Rectangle {
                 id: bkRect
                 anchors.fill: parent
-                radius: 30
+                radius: width
                 
                 gradient: Gradient {
                     orientation: Gradient.Vertical

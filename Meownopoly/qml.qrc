@@ -195,5 +195,6 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/qmldir</file>
         <file>qml/editor/panel/mapInfoPanel/qmldir</file>
+        <file>qml/editor/panel/mapInfoPanel/NavArrowButton.qml</file>
     </qresource>
 </RCC>

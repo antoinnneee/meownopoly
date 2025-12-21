@@ -23,6 +23,9 @@ Item {
     property string currentMapName: ""
     property bool isCurrentMapAutosave: false
 
+
+    signal mapChanged()
+
     // Settings pour persister la carte courante
     Settings {
         id: mapSettings
@@ -144,58 +147,6 @@ Item {
 
     // === UI COMPONENTS ===
 
-    // Style commun pour les boutons de navigation
-    component NavArrowButton: Rectangle {
-        id: navButton
-        width: 50
-        height: 50
-        radius: 25
-        z: 9000
-        visible: !selectionPanel.visible
-        
-        property string arrowText: ""
-        property bool isLeft: true
-        signal clicked()
-        
-        // Gradient de base
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop { 
-                position: 0.0
-                color: navButtonMa.containsMouse ? "#7dd3fc" : "#4A90E2"
-            }
-            GradientStop { 
-                position: 1.0
-                color: navButtonMa.containsMouse ? "#38bdf8" : "#2563eb"
-            }
-        }
-        
-        border.color: navButtonMa.containsMouse ? "#0ea5e9" : "#6AB0F2"
-        border.width: 2
-
-        Text {
-            anchors.centerIn: parent
-            text: navButton.arrowText
-            font.pixelSize: 24
-            color: "white"
-        }
-
-        MouseArea {
-            id: navButtonMa
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            enabled: mapNavigationBar.availableMaps.length > 0
-            hoverEnabled: enabled
-            onClicked: navButton.clicked()
-        }
-        
-        // Animation de scale au hover
-        scale: navButtonMa.containsMouse ? 1.1 : 1.0
-        Behavior on scale {
-            NumberAnimation { duration: 150; easing.type: Easing.OutBack }
-        }
-    }
-
     // Flèche gauche
     NavArrowButton {
         id: leftArrow
@@ -205,7 +156,11 @@ Item {
         anchors.bottomMargin: 20
         arrowText: "◀"
         isLeft: true
-        onClicked: mapNavigationBar.navigatePrevious()
+        onClicked: {
+            mapNavigationBar.navigatePrevious()
+            mapChanged()
+        }
+
     }
 
     // Zone centrale avec nom de carte et bouton de suppression
@@ -303,6 +258,7 @@ Item {
                 if (confirmationStep >= 2) {
                     mapNavigationBar.deleteCurrentMap()
                     confirmationStep = 0
+                    mapChanged()
                 }
             }
 
@@ -318,15 +274,15 @@ Item {
                 
                 gradient: Gradient {
                     orientation: Gradient.Vertical
-                    GradientStop { 
+                    GradientStop {
                         position: 0.0
-                        color: deleteButton.confirmationStep > 0 ? "#ef4444" : 
-                               deleteButton.hovered ? "#f87171" : "#dc2626"
+                        color: deleteButton.confirmationStep > 0 ? "#ef4444" :
+                                                                   deleteButton.hovered ? "#f87171" : "#dc2626"
                     }
-                    GradientStop { 
+                    GradientStop {
                         position: 1.0
-                        color: deleteButton.confirmationStep > 0 ? "#b91c1c" : 
-                               deleteButton.hovered ? "#ef4444" : "#991b1b"
+                        color: deleteButton.confirmationStep > 0 ? "#b91c1c" :
+                                                                   deleteButton.hovered ? "#ef4444" : "#991b1b"
                     }
                 }
                 
@@ -358,7 +314,11 @@ Item {
         anchors.bottomMargin: 20
         arrowText: "▶"
         isLeft: false
-        onClicked: mapNavigationBar.navigateNext()
+        onClicked:{
+            mapNavigationBar.navigateNext()
+            mapChanged()
+        }
+
     }
 
     // Connexion pour rafraîchir la liste quand le panneau devient visible
