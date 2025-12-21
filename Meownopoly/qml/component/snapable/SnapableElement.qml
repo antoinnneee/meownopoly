@@ -249,14 +249,6 @@ Rectangle {
         z: 100
     }
 
-    Rectangle {
-        id: isTemplate
-        anchors.fill: parent
-        color: "red"
-        opacity: 0.2
-        visible : isTemplateSelected ? true : false
-    }
-
     // --- Functions ---
     function deleteRequest(saveAfter)
     {
