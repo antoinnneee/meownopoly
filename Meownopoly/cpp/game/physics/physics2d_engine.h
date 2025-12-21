@@ -9,6 +9,7 @@
 #include "physics2d_body.h"
 #include "physics2d_zone.h"
 #include "collision2d.h"
+#include "game/item_snapable/ZoneParameter.h"
 
 /**
  * @brief Moteur physique 2D principal
@@ -84,7 +85,8 @@ public:
      * @return Pointeur vers la nouvelle zone (gérée par le moteur)
      */
     Q_INVOKABLE PhysicsZone2D* createZone(const QString& id, int zoneType = 0);
-    
+    PhysicsZone2D* createZone(const QString& id, ZoneParameter *zoneParam);
+
     /**
      * @brief Supprime une zone physique
      * @param id Identifiant de la zone
@@ -173,11 +175,6 @@ private:
      * @brief Détecte et résout les collisions pour un body
      */
     void resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D newPos);
-    
-    /**
-     * @brief Met à jour la position du body après les calculs de physique
-     */
-    void updateBodyPosition(PhysicsBody2D* body, qreal dt);
 
     // Données
     QHash<QString, PhysicsBody2D*> m_bodies;

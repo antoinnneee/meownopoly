@@ -6,6 +6,7 @@
 #include <QVariantList>
 #include <QString>
 #include "collision2d.h"
+#include "game/item_snapable/ZoneParameter.h"
 
 /**
  * @brief Zone physique 2D avec effets
@@ -18,14 +19,8 @@ class PhysicsZone2D : public QObject
     Q_OBJECT
     
     Q_PROPERTY(QString zoneId READ zoneId CONSTANT)
-    Q_PROPERTY(ZoneType zoneType READ zoneType WRITE setZoneType NOTIFY zoneTypeChanged)
-    Q_PROPERTY(QVariantList polygon READ polygon WRITE setPolygon NOTIFY polygonChanged)
-    Q_PROPERTY(qreal effectStrength READ effectStrength WRITE setEffectStrength NOTIFY effectStrengthChanged)
-    Q_PROPERTY(QVector2D effectDirection READ effectDirection WRITE setEffectDirection NOTIFY effectDirectionChanged)
-    Q_PROPERTY(bool isActive READ isActive WRITE setIsActive NOTIFY isActiveChanged)
-    Q_PROPERTY(QString zoneName READ zoneName WRITE setZoneName NOTIFY zoneNameChanged)
-    Q_PROPERTY(QString zoneColor READ zoneColor WRITE setZoneColor NOTIFY zoneColorChanged)
-
+    Q_PROPERTY(bool isActive READ isActive  NOTIFY isActiveChanged FINAL)
+ 
 public:
     /**
      * @brief Types de zones physiques
@@ -37,28 +32,14 @@ public:
     };
     Q_ENUM(ZoneType)
     
-    explicit PhysicsZone2D(QObject* parent = nullptr);
-    explicit PhysicsZone2D(const QString& id, ZoneType type = Zone_Exclusion, QObject* parent = nullptr);
-    explicit PhysicsZone2D(const QString& id, const QVariantList& polygon, ZoneType type = Zone_Exclusion, qreal effectStrength = 1.0, const QVector2D& effectDirection = QVector2D(0, 0), QObject* parent = nullptr);
+    explicit PhysicsZone2D(const QString& id, QObject* parent = nullptr);
+    explicit PhysicsZone2D(const QString& id,  ZoneParameter& zoneParameter, QObject* parent = nullptr);
     
     // --- Getters ---
     QString zoneId() const { return m_zoneId; }
-    ZoneType zoneType() const { return m_zoneType; }
-    QVariantList polygon() const { return m_polygonVariant; }
-    qreal effectStrength() const { return m_effectStrength; }
-    QVector2D effectDirection() const { return m_effectDirection; }
     bool isActive() const { return m_isActive; }
-    QString zoneName() const { return m_zoneName; }
-    QString zoneColor() const { return m_zoneColor; }
-    
-    // --- Setters ---
-    void setZoneType(ZoneType type);
-    void setPolygon(const QVariantList& points);
-    void setEffectStrength(qreal strength);
-    void setEffectDirection(const QVector2D& direction);
-    void setIsActive(bool active);
-    void setZoneName(const QString& name);
-    void setZoneColor(const QString& color);
+    bool exclusion() const { return m_zoneParameter.exclusion();};
+
     
     // --- API Publique ---
     
@@ -68,19 +49,7 @@ public:
      * @return true si le point est dans la zone
      */
     Q_INVOKABLE bool containsPoint(const QVector2D& point) const;
-    
-    /**
-     * @brief Retourne le multiplicateur d'effet selon le type de zone
-     * @return Multiplicateur (1.0 = pas d'effet)
-     */
-    Q_INVOKABLE qreal getEffectMultiplier() const;
-    
-    /**
-     * @brief Retourne le modificateur de friction selon le type de zone
-     * @return Multiplicateur de friction (1.0 = normal, <1 = glissant)
-     */
-    Q_INVOKABLE qreal getFrictionModifier() const;
-    
+
     /**
      * @brief Vérifie collision cercle-zone
      * @param center Centre du cercle
@@ -97,31 +66,17 @@ public:
      * @return Résultat de collision avec paramètre t
      */
     CollisionResult checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const;
-    
-    /**
-     * @brief Accès direct au polygone optimisé (usage interne)
-     */
-    const Polygon2D& getPolygon2D() const { return m_polygon; }
 
 signals:
-    void zoneTypeChanged();
-    void polygonChanged();
-    void effectStrengthChanged();
-    void effectDirectionChanged();
+
     void isActiveChanged();
-    void zoneNameChanged();
-    void zoneColorChanged();
 
 private:
     QString m_zoneId;
-    ZoneType m_zoneType = Zone_Exclusion;
-    QVariantList m_polygonVariant;  // Pour QML
+    ZoneParameter m_zoneParameter;
+
     Polygon2D m_polygon;            // Version optimisée
-    qreal m_effectStrength = 1.0;
-    QVector2D m_effectDirection;
     bool m_isActive = true;
-    QString m_zoneName;
-    QString m_zoneColor = "#FF5722";
 };
 
 #endif // PHYSICS2D_ZONE_H

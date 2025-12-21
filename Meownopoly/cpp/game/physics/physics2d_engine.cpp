@@ -1,6 +1,7 @@
 #include "physics2d_engine.h"
 #include "game/item_snapable/ItemSnapable.h"
 #include "game/item_snapable/ZoneParameter.h"
+#include "game/item_snapable/ZoneParameter.h"
 #include <QDebug>
 #include <QtQml>
 
@@ -118,15 +119,33 @@ PhysicsZone2D* PhysicsEngine2D::createZone(const QString& id, int zoneType)
         qWarning() << "[PhysicsEngine2D] Zone with id" << id << "already exists";
         return m_zones[id];
     }
-    
+
     PhysicsZone2D::ZoneType type = static_cast<PhysicsZone2D::ZoneType>(zoneType);
-    PhysicsZone2D* zone = new PhysicsZone2D(id, type, this);
+    PhysicsZone2D* zone = new PhysicsZone2D(id, this);
     m_zones[id] = zone;
-    
+
     if (m_debugMode) {
         qDebug() << "[PhysicsEngine2D] Created zone:" << id << "type:" << type;
     }
-    
+
+    emit zoneCountChanged();
+    return zone;
+}
+
+PhysicsZone2D* PhysicsEngine2D::createZone(const QString& id, ZoneParameter *zoneParam)
+{
+    if (m_zones.contains(id)) {
+        qWarning() << "[PhysicsEngine2D] Zone with id" << id << "already exists";
+        return m_zones[id];
+    }
+
+    PhysicsZone2D* zone = new PhysicsZone2D(id, *zoneParam, this);
+    m_zones[id] = zone;
+
+    if (m_debugMode) {
+        qDebug() << "[PhysicsEngine2D] Created zone:" << id;
+    }
+
     emit zoneCountChanged();
     return zone;
 }
@@ -206,13 +225,13 @@ void PhysicsEngine2D::setZonesFromSnapables(const QVariantList& snapables)
         
         // Créer la zone
         QString zoneId = QString("zone_%1").arg(zoneIndex++);
-        PhysicsZone2D* zone = createZone(zoneId, static_cast<int>(zoneType));
-        
-        // Copier les propriétés
-        zone->setPolygon(zoneParam->polygonPoints());
-        zone->setZoneName(zoneParam->zoneName());
-        zone->setZoneColor(zoneParam->zoneColor());
-        
+        PhysicsZone2D* zone = createZone(zoneId, zoneParam);
+
+        // // Copier les propriétés
+        // zone->setPolygon(zoneParam->polygonPoints());
+        // zone->setZoneName(zoneParam->zoneName());
+        // zone->setZoneColor(zoneParam->zoneColor());
+
         if (m_debugMode) {
             qDebug() << "[PhysicsEngine2D] Loaded zone from snapable:"
                      << zoneId << "type:" << zoneType
@@ -255,9 +274,7 @@ void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
     else {
         body->setPosition(newPos);
     }
-    
-    // 4. Mettre à jour la position finale
-    updateBodyPosition(body, dt);
+
 }
 
 void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
@@ -275,6 +292,7 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
             currentZones.insert(zone);
             
             // Appliquer l'effet selon le type
+            /*
             switch (zone->zoneType()) {
                 case PhysicsZone2D::Zone_Speed:
                     body->applySpeedModifier(zone->getEffectMultiplier());
@@ -286,7 +304,7 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
                     
                 default:
                     break;
-            }
+            }*/
         }
     }
     
@@ -337,7 +355,7 @@ void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D
 
         // Tester contre toutes les zones d'exclusion
     for (PhysicsZone2D* zone : std::as_const(m_zones)) {
-        if (!zone->isActive() || zone->zoneType() != PhysicsZone2D::Zone_Exclusion) {
+        if (!zone->isActive() || !zone->exclusion()) {
             continue;
         }
 
@@ -393,11 +411,6 @@ void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D
     body->setCollidingState(collisionOccurred, collisionNormal);
 }
 
-void PhysicsEngine2D::updateBodyPosition(PhysicsBody2D* body, qreal dt)
-{
-    QVector2D newPos = body->position() + body->velocity() * dt;
-    body->setPosition(newPos);
-}
 
 // --- Requêtes ---
 
@@ -417,7 +430,7 @@ QVariantList PhysicsEngine2D::getZonesAtPoint(const QVector2D& point) const
 bool PhysicsEngine2D::checkCollisionAt(const QVector2D& center, qreal radius) const
 {
     for (PhysicsZone2D* zone : m_zones) {
-        if (!zone->isActive() || zone->zoneType() != PhysicsZone2D::Zone_Exclusion) {
+        if (!zone->isActive() || !zone->exclusion()) {
             continue;
         }
         

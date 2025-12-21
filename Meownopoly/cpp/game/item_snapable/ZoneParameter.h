@@ -83,7 +83,7 @@ private:
     QVector2D m_frictionDirection = QVector2D(0, 0);
     qreal m_frictionStrenght = 0;
     bool m_exclusion = true;
-    qreal m_speedMultiplier = 0;
+    qreal m_speedMultiplier = 1;
 };
 
 #endif // ZONEPARAMETER_H
