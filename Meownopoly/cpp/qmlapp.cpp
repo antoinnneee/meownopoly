@@ -110,7 +110,7 @@ QmlApp::QmlApp(QWindow *parent)
 
     addImportPath("qrc:/qml");  // Contains: ui_item, utils
     addImportPath("qrc:/qml/editor");  // Contains: editor qmldir
-    addImportPath("qrc:/qml/editor/panel");  // Contains: mapInfoPanel
+    addImportPath("qrc:/qml/editor/panel");  // Contains: mapInfoPanel qmldir, bottomPanel qmldir, zonePanel qmldir
     addImportPath("qrc:/qml/editor/panel/bottomPanel");  // Contains: bottomMainPanel, bottomSidePanel
     addImportPath("qrc:/qml/editor/panel/mapInfoPanel");  // Contains: mapInfoPanelMain
     addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomMainPanel");  // Contains: assetSelectionPanel, caseSelectionPanel, editorBottomPanel, mapSelectionPanel, menuSelectionPanel

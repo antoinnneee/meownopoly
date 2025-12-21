@@ -7,7 +7,7 @@ import AssetManager
 import "../"
 import editorBottomPanel 1.0
 import caseSelectionPanel 1.0
-import "../zonePanel"
+import zonePanel
 
 EditorBottomPanel {
     id: root

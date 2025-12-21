@@ -4,7 +4,9 @@ import QtQuick.Layouts 1.15
 import EditorEnum
 
 import "../"
-import "../editorBottomPanel"
+import editorBottomPanel
+
+
 
 /**
  * Panneau pour gérer les zones d'exclusion et les zones d'effet

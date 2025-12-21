@@ -202,5 +202,6 @@
         <file>qml/utils/CameraController.qml</file>
         <file>qml/utils/World3DTools.qml</file>
         <file>qml/editor/panel/zonePanel/ExclusionZonePanel.qml</file>
+        <file>qml/editor/panel/zonePanel/qmldir</file>
     </qresource>
 </RCC>
