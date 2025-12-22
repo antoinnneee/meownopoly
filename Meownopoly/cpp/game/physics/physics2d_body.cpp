@@ -99,61 +99,13 @@ void PhysicsBody2D::setCollisionEnabled(bool enabled)
 
 // --- API Publique ---
 
-void PhysicsBody2D::applyForce(const QVector2D& inputForce, qreal dt)
+void PhysicsBody2D::applyForce(const QVector2D& inputVector, qreal inputForce)
 {
-    if (m_isStatic) return;
-    
-    // Calculer la vitesse cible basée sur l'input
-    qreal targetSpeed = m_maxSpeed * m_currentSpeedModifier;
-    QVector2D targetVelocity(0, 0);
-    
-    if (inputForce.length() > 0.0001f) {
-        QVector2D inputDir = inputForce.normalized();
-        targetVelocity = inputDir * targetSpeed;
-    }
-    
-    // Appliquer l'accélération vers la vitesse cible
-    QVector2D velocityDiff = targetVelocity - m_velocity;
-    qreal accelThisFrame = m_acceleration * dt;
-    
-    // Cast explicite en qreal pour éviter les conflits float/double avec std::min
-    qreal diffX = static_cast<qreal>(std::abs(velocityDiff.x()));
-    qreal diffY = static_cast<qreal>(std::abs(velocityDiff.y()));
-    
-    QVector2D accelForce(
-        std::copysign(std::min(diffX, accelThisFrame), static_cast<qreal>(velocityDiff.x())),
-        std::copysign(std::min(diffY, accelThisFrame), static_cast<qreal>(velocityDiff.y()))
-    );
-    
-    m_velocity += accelForce;
-
-    // Appliquer les forces continues des zones
-    m_velocity += m_totalZoneForce * dt;
-
-    // Appliquer la friction quand pas d'input
-    if (inputForce.length() < 0.0001f && m_engine) {
-        qreal friction = m_engine->friction() * m_currentFrictionModifier;
-        qreal frictionForce = friction * dt;
-        qreal velLen = m_velocity.length();
-
-        if (velLen > 0.0001f) {
-            qreal reduction = std::min(frictionForce, velLen);
-            qreal factor = (velLen - reduction) / velLen;
-            m_velocity *= factor;
-        }
-    }
-
-    // Nettoyer les forces de zones qui ne sont plus appliquées
-    // (elles seront réappliquées par applyZoneEffects si nécessaire)
-    m_zoneForces.clear();
-    m_totalZoneForce = QVector2D(0, 0);
-    m_zoneSpeedMultipliers.clear();
-
-    // Réinitialiser les modificateurs pour le prochain frame
-    m_currentSpeedModifier = 1.0;
-    m_currentFrictionModifier = 1.0;
-
-    emit velocityChanged();
+    m_velocity *= inputVector * inputForce;
+}
+void PhysicsBody2D::addForce(const QVector2D& inputVector, qreal inputForce)
+{
+    m_velocity += inputVector * inputForce;
 }
 
 void PhysicsBody2D::applyImpulse(const QVector2D& impulse)
@@ -178,10 +130,6 @@ void PhysicsBody2D::reset()
     m_currentSpeedModifier = 1.0;
     m_currentFrictionModifier = 1.0;
 
-    // Réinitialiser les forces de zones
-    m_zoneForces.clear();
-    m_totalZoneForce = QVector2D(0, 0);
-    m_zoneSpeedMultipliers.clear();
 
     emit velocityChanged();
     emit isCollidingChanged();
@@ -190,42 +138,10 @@ void PhysicsBody2D::reset()
 
 // --- Usage interne ---
 
-void PhysicsBody2D::applySpeedModifier(qreal modifier)
-{
-    m_currentSpeedModifier *= modifier;
-}
-
-void PhysicsBody2D::applyFrictionModifier(qreal modifier)
-{
-    m_currentFrictionModifier *= modifier;
-}
-
 void PhysicsBody2D::applyDirectionalForce(const QVector2D& force, qreal dt)
 {
-    if (m_isStatic) return;
-
     // Ajouter directement à la vitesse (tapis roulant)
     m_velocity += force * dt;
-    emit velocityChanged();
-}
-
-void PhysicsBody2D::applyZoneForce(const QVector2D& force, qreal dt, const QString& zoneId)
-{
-    if (m_isStatic) return;
-
-    // Si un ID de zone est fourni, stocker la force pour cette zone
-    if (!zoneId.isEmpty()) {
-        m_zoneForces[zoneId] = force;
-    }
-
-    // Recalculer la force totale des zones
-    m_totalZoneForce = QVector2D(0, 0);
-    for (const QVector2D& zoneForce : m_zoneForces) {
-        m_totalZoneForce += zoneForce;
-    }
-
-    // Appliquer la force totale
-    m_velocity += m_totalZoneForce * dt;
     emit velocityChanged();
 }
 
@@ -248,18 +164,6 @@ void PhysicsBody2D::applyDirectionalFriction(const QVector2D& frictionDirection,
     }
 }
 
-void PhysicsBody2D::applyZoneSpeedMultiplier(qreal multiplier, const QString& zoneId)
-{
-    if (!zoneId.isEmpty()) {
-        m_zoneSpeedMultipliers[zoneId] = multiplier;
-    }
-
-    // Recalculer le modificateur total
-    m_currentSpeedModifier = 1.0;
-    for (qreal zoneMultiplier : m_zoneSpeedMultipliers) {
-        m_currentSpeedModifier *= zoneMultiplier;
-    }
-}
 
 void PhysicsBody2D::setCollidingState(bool colliding, const QVector2D& normal)
 {
@@ -273,3 +177,29 @@ void PhysicsBody2D::setCollidingState(bool colliding, const QVector2D& normal)
     if (normalChanged) emit lastCollisionNormalChanged();
 }
 
+
+QVector2D PhysicsBody2D::inputVector() const
+{
+    return m_inputVector;
+}
+
+void PhysicsBody2D::setInputVector(const QVector2D &newInputVector)
+{
+    if (m_inputVector == newInputVector)
+        return;
+    m_inputVector = newInputVector;
+    emit inputVectorChanged();
+}
+
+qreal PhysicsBody2D::inputStrenght() const
+{
+    return m_inputStrenght;
+}
+
+void PhysicsBody2D::setInputStrenght(qreal newInputStrenght)
+{
+    if (qFuzzyCompare(m_inputStrenght, newInputStrenght))
+        return;
+    m_inputStrenght = newInputStrenght;
+    emit inputStrenghtChanged();
+}

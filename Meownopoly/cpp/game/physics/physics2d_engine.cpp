@@ -257,7 +257,10 @@ void PhysicsEngine2D::updateAll(qreal dt)
 void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
 {
     if (!body || body->isStatic()) return;
-    
+
+    // 1. Appliquer les effets des du monde (frication, acceleration, input)
+    applyWorldEffect(body, dt);
+
     // 1. Appliquer les effets des zones
     applyZoneEffects(body, dt);
     
@@ -273,6 +276,16 @@ void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
     else {
         body->setPosition(newPos);
     }
+
+}
+
+void  PhysicsEngine2D::applyWorldEffect(PhysicsBody2D* body, qreal dt)
+{
+
+    // Appliquer l'input du body
+    body->addForce(body->inputVector(), body->inputStrenght());
+
+    body->applyForce(QVector2D(1,1), (1.-m_friction));
 
 }
 
@@ -293,21 +306,21 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
             // Appliquer les effets basés sur les paramètres de la zone
             const ZoneParameter& params = zone->getZoneParameters();
 
-            // Appliquer la force directionnelle si définie
-            if (params.velocityStrenght() > 0) {
-                QVector2D force = params.velocityDirection().normalized() * params.velocityStrenght();
-                body->applyZoneForce(force, dt, zone->zoneId());
-            }
+            // // Appliquer la force directionnelle si définie
+            // if (params.velocityStrenght() > 0) {
+            //     QVector2D force = params.velocityDirection().normalized() * params.velocityStrenght();
+            //     body->applyZoneForce(force, dt, zone->zoneId());
+            // }
 
-            // Appliquer le multiplicateur de vitesse
-            if (params.speedMultiplier() != 1.0) {
-                body->applyZoneSpeedMultiplier(params.speedMultiplier(), zone->zoneId());
-            }
+            // // Appliquer le multiplicateur de vitesse
+            // if (params.speedMultiplier() != 1.0) {
+            //     body->applyZoneSpeedMultiplier(params.speedMultiplier(), zone->zoneId());
+            // }
 
-            // Appliquer la friction directionnelle si définie
-            if (params.frictionStrenght() > 0) {
-                body->applyDirectionalFriction(params.frictionDirection(), params.frictionStrenght(), dt);
-            }
+            // // Appliquer la friction directionnelle si définie
+            // if (params.frictionStrenght() > 0) {
+            //     body->applyDirectionalFriction(params.frictionDirection(), params.frictionStrenght(), dt);
+            // }
         }
     }
     

@@ -170,6 +170,11 @@ private:
      * @brief Applique les effets des zones sur un body
      */
     void applyZoneEffects(PhysicsBody2D* body, qreal dt);
+
+    /**
+     * @brief Applique les effets d'input et friction sur un body
+     */
+    void applyWorldEffect(PhysicsBody2D *body, qreal dt);
     
     /**
      * @brief Détecte et résout les collisions pour un body
@@ -184,7 +189,7 @@ private:
     QHash<PhysicsBody2D*, QSet<PhysicsZone2D*>> m_activeZonesPerBody;
     
     // Configuration
-    qreal m_friction = 0.0;
+    qreal m_friction = 0.1;
     bool m_enabled = true;
     bool m_debugMode = false;
 };

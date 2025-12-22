@@ -87,6 +87,7 @@ Item {
         playerBody.slideFactor = slideFactor
         playerBody.acceleration = acceleration
         playerBody.maxSpeed = moveSpeed * sprintMultiplier
+        playerBody.inputStrenght = 1
         
         // Configurer les zones depuis les snapables
         if (zones && zones.length > 0) {
@@ -242,6 +243,7 @@ Item {
         if (inputVector.length() > 1) {
             inputVector = inputVector.normalized()
         }
+        playerBody.inputVector = inputVector
     }
 
     // ==================== PHYSIQUE C++ ====================
@@ -257,7 +259,7 @@ Item {
         playerBody.maxSpeed = baseSpeed * baseSpeedMultiplier
         
         // Appliquer les forces d'entrée
-        playerBody.applyForce(inputVector, dt)
+        // playerBody.applyForce(inputVector, dt)
         
         // Mettre à jour toute la physique (collision, zones, etc.)
         physicsEngine.updateAll(dt)
@@ -273,192 +275,6 @@ Item {
         if (vel.length() > 0.1) {
             var dx = vel.x * gridSize * dt
             var dz = vel.y * gridSize * dt
-            // rotateEntity(dx, dz, dt)
-        }
-    }
-
-    // ==================== PHYSIQUE 2D JS (FALLBACK) ====================
-
-    /**
-     * Calcule la distance d'un point à un segment
-     * @returns {distance, closestPoint, t}
-     */
-    function pointToSegment(px, py, x1, y1, x2, y2) {
-        var dx = x2 - x1
-        var dy = y2 - y1
-        var lengthSq = dx * dx + dy * dy
-
-        if (lengthSq < 0.0001) {
-            var dist = Math.sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1))
-            return { distance: dist, closestX: x1, closestY: y1, t: 0 }
-        }
-
-        var t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lengthSq))
-        var closestX = x1 + t * dx
-        var closestY = y1 + t * dy
-        var dist = Math.sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY))
-
-        return { distance: dist, closestX: closestX, closestY: closestY, t: t }
-    }
-
-    /**
-     * Vérifie si un cercle est en collision avec un polygone
-     */
-    function checkCirclePolygonCollision(cx, cy, radius, polygon) {
-        if (!polygon || polygon.length < 3) return null
-
-        var minDist = Infinity
-        var closestX = 0, closestY = 0
-        var segmentNormalX = 0, segmentNormalY = 0
-
-        for (var i = 0; i < polygon.length; i++) {
-            var j = (i + 1) % polygon.length
-            var result = pointToSegment(cx, cy, polygon[i].x, polygon[i].y, polygon[j].x, polygon[j].y)
-
-            if (result.distance < minDist) {
-                minDist = result.distance
-                closestX = result.closestX
-                closestY = result.closestY
-
-                var segDx = polygon[j].x - polygon[i].x
-                var segDy = polygon[j].y - polygon[i].y
-                var segLen = Math.sqrt(segDx * segDx + segDy * segDy)
-                if (segLen > 0.0001) {
-                    segmentNormalX = -segDy / segLen
-                    segmentNormalY = segDx / segLen
-                }
-            }
-        }
-
-        if (minDist >= radius) return null
-
-        var toCenterX = cx - closestX
-        var toCenterY = cy - closestY
-        var toCenterLen = Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY)
-
-        var normalX, normalY
-        if (toCenterLen > 0.0001) {
-            normalX = toCenterX / toCenterLen
-            normalY = toCenterY / toCenterLen
-        } else {
-            normalX = segmentNormalX
-            normalY = segmentNormalY
-        }
-
-        return {
-            colliding: true,
-            distance: minDist,
-            normalX: normalX,
-            normalY: normalY,
-            closestX: closestX,
-            closestY: closestY,
-            penetration: radius - minDist
-        }
-    }
-
-    function detectCollisionJS(pos2D) {
-        if (!physicZones) return null
-        
-        for (var i = 0; i < physicZones.length; i++) {
-            var zone = physicZones[i]
-            if (!zone || !zone.snapableParameters) continue
-            
-            if (zone.snapableParameters.tileType === ItemSnapable.PhysicZoneTile) {
-                var exclusionParam = zone.snapableParameters.zoneParameter
-                if (exclusionParam && exclusionParam.polygonPoints) {
-                    var collision = checkCirclePolygonCollision(
-                        pos2D.x, pos2D.y, 
-                        collisionRadius2D, 
-                        exclusionParam.polygonPoints
-                    )
-                    if (collision) {
-                        collision.zone = zone
-                        return collision
-                    }
-                }
-            }
-        }
-        return null
-    }
-
-    function applyBounceJS(vel, normalX, normalY) {
-        var dot = vel.x * normalX + vel.y * normalY
-        if (dot >= 0) return vel
-        
-        var perpX = dot * normalX
-        var perpY = dot * normalY
-        var paraX = vel.x - perpX
-        var paraY = vel.y - perpY
-        
-        var newVelX = -perpX * bounceFactor + paraX * slideFactor
-        var newVelY = -perpY * bounceFactor + paraY * slideFactor
-        
-        return Qt.vector2d(newVelX, newVelY)
-    }
-
-    // Propriété interne pour le moteur JS
-    property vector2d velocityJS: Qt.vector2d(0, 0)
-    property vector2d position2DJS: Qt.vector2d(0, 0)
-
-    function updatePhysics2DJS(dt) {
-        if (!targetEntity) return
-        
-        position2DJS = World3DTools.position3dToGridRealPosition(targetEntity.x, 0, targetEntity.z)
-        
-        var newPos = Qt.vector2d(
-            position2DJS.x + velocityJS.x * dt,
-            position2DJS.y + velocityJS.y * dt
-        )
-        
-        var collision = detectCollisionJS(newPos)
-        if (collision) {
-            velocityJS = applyBounceJS(velocityJS, collision.normalX, collision.normalY)
-            newPos = Qt.vector2d(
-                position2DJS.x + velocityJS.x * dt,
-                position2DJS.y + velocityJS.y * dt
-            )
-        }
-        
-        var pos3D = World3DTools.gridPositionTo3D(newPos.x, newPos.y)
-        targetEntity.x = pos3D.x
-        targetEntity.z = pos3D.z
-        position2DJS = newPos
-    }
-
-    function applyForceJS(inputForce, dt) {
-        if (!targetEntity) return
-
-        var targetSpeed = baseSpeed * baseSpeedMultiplier
-        var targetVelocity = Qt.vector2d(0, 0)
-
-        if (inputForce.length() > 0) {
-            var inputDir = inputForce.normalized()
-            targetVelocity = Qt.vector2d(inputDir.x * targetSpeed, inputDir.y * targetSpeed)
-        }
-
-        var velocityDiff = Qt.vector2d(targetVelocity.x - velocityJS.x, targetVelocity.y - velocityJS.y)
-        var accelForce = Qt.vector2d(
-            Math.sign(velocityDiff.x) * Math.min(Math.abs(velocityDiff.x), acceleration * dt),
-            Math.sign(velocityDiff.y) * Math.min(Math.abs(velocityDiff.y), acceleration * dt)
-        )
-        velocityJS = Qt.vector2d(velocityJS.x + accelForce.x, velocityJS.y + accelForce.y)
-
-        if (inputForce.length() == 0) {
-            var frictionForce = friction * dt
-            var velLen = velocityJS.length()
-            if (velLen > 0) {
-                var reduction = Math.min(frictionForce, velLen)
-                var factor = (velLen - reduction) / velLen
-                velocityJS = Qt.vector2d(velocityJS.x * factor, velocityJS.y * factor)
-            }
-        }
-
-        updatePhysics2DJS(dt)
-
-        if (velocityJS.length() > 0.1) {
-            var gridSize = World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
-            var dx = velocityJS.x * gridSize * dt
-            var dz = velocityJS.y * gridSize * dt
             // rotateEntity(dx, dz, dt)
         }
     }
@@ -480,11 +296,8 @@ Item {
             }
             else {
                 // Utiliser le moteur C++ ou JS selon le flag
-                if (useCppPhysics && playerBody) {
+               if (playerBody)
                     updatePhysicsCpp(dt)
-                } else {
-                    applyForceJS(inputVector, dt)
-                }
             }
         }
     }
