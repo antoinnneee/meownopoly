@@ -5,6 +5,7 @@
 #include <QVector2D>
 #include <QVector3D>
 #include <QString>
+#include <QHash>
 
 // Forward declarations
 class PhysicsEngine2D;
@@ -108,6 +109,29 @@ public:
      * @brief Applique une force directionnelle (tapis roulant)
      */
     void applyDirectionalForce(const QVector2D& force, qreal dt);
+
+    /**
+     * @brief Applique une force continue depuis une zone
+     * @param force Vecteur de force à appliquer
+     * @param dt Delta time en secondes
+     * @param zoneId ID de la zone appliquant la force (pour suivi)
+     */
+    void applyZoneForce(const QVector2D& force, qreal dt, const QString& zoneId = QString());
+
+    /**
+     * @brief Applique une force de friction directionnelle
+     * @param frictionDirection Direction de la friction
+     * @param frictionStrength Intensité de la friction (0-1)
+     * @param dt Delta time en secondes
+     */
+    void applyDirectionalFriction(const QVector2D& frictionDirection, qreal frictionStrength, qreal dt);
+
+    /**
+     * @brief Applique un multiplicateur de vitesse depuis une zone
+     * @param multiplier Multiplicateur de vitesse (> 0)
+     * @param zoneId ID de la zone appliquant le modificateur
+     */
+    void applyZoneSpeedMultiplier(qreal multiplier, const QString& zoneId = QString());
     
     /**
      * @brief Met à jour l'état de collision
@@ -159,6 +183,13 @@ private:
     // Modificateurs temporaires (réinitialisés chaque frame)
     qreal m_currentSpeedModifier = 1.0;
     qreal m_currentFrictionModifier = 1.0;
+
+    // Forces continues appliquées par les zones
+    QHash<QString, QVector2D> m_zoneForces;  // force par zone
+    QVector2D m_totalZoneForce;              // somme des forces de zones
+
+    // Modificateurs de vitesse par zone
+    QHash<QString, qreal> m_zoneSpeedMultipliers;
     
     // Référence au moteur
     PhysicsEngine2D* m_engine = nullptr;

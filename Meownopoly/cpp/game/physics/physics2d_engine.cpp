@@ -1,7 +1,6 @@
 #include "physics2d_engine.h"
 #include "game/item_snapable/ItemSnapable.h"
 #include "game/item_snapable/ZoneParameter.h"
-#include "game/item_snapable/ZoneParameter.h"
 #include <QDebug>
 #include <QtQml>
 
@@ -281,7 +280,7 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
 {
     QVector2D pos = body->position();
     QSet<PhysicsZone2D*> currentZones;
-    
+
     for (PhysicsZone2D* zone : m_zones) {
         if (!zone->isActive()) continue;
         
@@ -290,21 +289,25 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
         
         if (zone->containsPoint(pos)) {
             currentZones.insert(zone);
-            
-            // Appliquer l'effet selon le type
-            /*
-            switch (zone->zoneType()) {
-                case PhysicsZone2D::Zone_Speed:
-                    body->applySpeedModifier(zone->getEffectMultiplier());
-                    break;
-                    
-                case PhysicsZone2D::Zone_Friction:
-                    body->applyFrictionModifier(zone->getFrictionModifier());
-                    break;
-                    
-                default:
-                    break;
-            }*/
+
+            // Appliquer les effets basés sur les paramètres de la zone
+            const ZoneParameter& params = zone->getZoneParameters();
+
+            // Appliquer la force directionnelle si définie
+            if (params.velocityStrenght() > 0) {
+                QVector2D force = params.velocityDirection().normalized() * params.velocityStrenght();
+                body->applyZoneForce(force, dt, zone->zoneId());
+            }
+
+            // Appliquer le multiplicateur de vitesse
+            if (params.speedMultiplier() != 1.0) {
+                body->applyZoneSpeedMultiplier(params.speedMultiplier(), zone->zoneId());
+            }
+
+            // Appliquer la friction directionnelle si définie
+            if (params.frictionStrenght() > 0) {
+                body->applyDirectionalFriction(params.frictionDirection(), params.frictionStrenght(), dt);
+            }
         }
     }
     

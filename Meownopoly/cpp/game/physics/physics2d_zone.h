@@ -67,6 +67,12 @@ public:
      */
     CollisionResult checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const;
 
+    /**
+     * @brief Accès aux paramètres de la zone
+     * @return Référence constante vers les paramètres
+     */
+    const ZoneParameter& getZoneParameters() const { return m_zoneParameter; }
+
 signals:
 
     void isActiveChanged();
