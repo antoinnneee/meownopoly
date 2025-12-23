@@ -1,4 +1,4 @@
-module CaseSelectionPanelMain
+module caseSelectionPanelMain
 CSP_CaseTypeCell 1.0 CSP_CaseTypeCell.qml
 CSP_CaseTypeSelector 1.0 CSP_CaseTypeSelector.qml
 

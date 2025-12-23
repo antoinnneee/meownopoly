@@ -12,7 +12,7 @@
 #include <QJsonValueRef>
 
 #include "Displayparameter.h"
-#include "Decorationparameter.h"
+#include "decorationparameter.h"
 #include "polygonParameter.h"
 
 class ItemSnapable : public QObject
