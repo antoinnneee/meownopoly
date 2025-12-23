@@ -1,4 +1,4 @@
-module Editor
+module editor
 singleton EditorController 1.0 EditorController.qml
 EditorLogic 1.0 EditorLogic.qml
 Editor 1.0 Editor.qml
