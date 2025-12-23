@@ -6,8 +6,17 @@ import EditorEnum
 import "../"
 import editorBottomPanel
 
+// Import des modules Template
+import TemplateManager
+import TemplateModel
+
 /**
  * Panneau pour gérer les templates (groupes d'éléments réutilisables)
+ * 
+ * Ce panneau permet:
+ * - De créer de nouveaux templates à partir d'éléments sélectionnés
+ * - De visualiser et sélectionner des templates existants
+ * - De poser des templates sur la carte
  */
 EBP_Content {
     id: root
@@ -19,10 +28,17 @@ EBP_Content {
     
     // Propriété pour suivre le nombre d'éléments sélectionnés
     property int selectedElementsCount: 0
+    
+    // Mode actuel: "create" pour créer, "select" pour sélectionner un template existant
+    property string currentMode: "select"
+    
+    // Template actuellement sélectionné pour placement
+    property string selectedTemplateName: ""
 
     // Signaux
     signal templateCreated(string name, var elements)
     signal templateCancelled()
+    signal templateSelectedForPlacement(string name)
 
     sidePanelRatio: 0
 
@@ -30,6 +46,7 @@ EBP_Content {
     onVisibleChanged: {
         if (visible) {
             activateTemplateMode()
+            TemplateModel.refresh()
         } else {
             deactivateTemplateMode()
         }
@@ -38,6 +55,7 @@ EBP_Content {
     Component.onCompleted: {
         if (visible) {
             activateTemplateMode()
+            TemplateModel.refresh()
         }
     }
 
@@ -58,28 +76,72 @@ EBP_Content {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
-        spacing: 10
+        spacing: 8
 
-        // --- En-tête ---
-        ColumnLayout {
+        // --- En-tête avec tabs ---
+        RowLayout {
             Layout.fillWidth: true
-            spacing: 3
+            spacing: 5
 
-            Text {
-                text: "Création de Template"
-                font.pointSize: 13
-                font.bold: true
-                color: "white"
-                Layout.alignment: Qt.AlignHCenter
+            // Tab: Sélection de template
+            Button {
+                id: selectTabBtn
+                Layout.fillWidth: true
+                Layout.preferredHeight: 36
+                text: "📋 Templates"
+                
+                background: Rectangle {
+                    radius: 6
+                    color: root.currentMode === "select" ? "#4A90E2" : "#333333"
+                    border.color: Qt.lighter(color, 1.2)
+                    border.width: 1
+                }
+                
+                contentItem: Text {
+                    text: selectTabBtn.text
+                    font.pointSize: 10
+                    font.bold: root.currentMode === "select"
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                
+                onClicked: {
+                    root.currentMode = "select"
+                    if (logic && logic.mouseLogic) {
+                        logic.mouseLogic.unselectSelectedElements()
+                    }
+                }
             }
 
-            Text {
-                text: "Cliquez sur les éléments pour les sélectionner/désélectionner."
-                font.pointSize: 8
-                color: "#aaaaaa"
-                wrapMode: Text.WordWrap
+            // Tab: Création de template
+            Button {
+                id: createTabBtn
                 Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
+                Layout.preferredHeight: 36
+                text: "✨ Créer"
+                
+                background: Rectangle {
+                    radius: 6
+                    color: root.currentMode === "create" ? "#4CAF50" : "#333333"
+                    border.color: Qt.lighter(color, 1.2)
+                    border.width: 1
+                }
+                
+                contentItem: Text {
+                    text: createTabBtn.text
+                    font.pointSize: 10
+                    font.bold: root.currentMode === "create"
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                
+                onClicked: {
+                    root.currentMode = "create"
+                    TemplateManager.clearSelection()
+                    root.selectedTemplateName = ""
+                }
             }
         }
 
@@ -90,127 +152,313 @@ EBP_Content {
             color: "#444444"
         }
 
-        // Layout horizontal principal
-        RowLayout {
+        // === MODE SÉLECTION DE TEMPLATE ===
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 15
+            visible: root.currentMode === "select"
+            spacing: 8
 
-            // ==================== COLONNE GAUCHE ====================
-            ColumnLayout {
+            // Titre
+            Text {
+                text: "Sélectionnez un template à placer"
+                font.pointSize: 10
+                color: "#aaaaaa"
+                Layout.alignment: Qt.AlignHCenter
+            }
+
+            // Liste des templates
+            Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignTop
-                spacing: 8
+                Layout.fillHeight: true
+                color: "#1a1a2e"
+                radius: 8
+                border.color: "#333333"
+                border.width: 1
 
-                // --- Nom du template ---
-                Text {
-                    text: "Nom du template"
-                    color: "white"
-                    font.pointSize: 10
-                    font.bold: true
-                }
-
-                TextField {
-                    id: templateNameField
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 36
-                    placeholderText: "Entrez le nom du template..."
-                    placeholderTextColor: "#888888"
-                    color: "white"
-                    font.pointSize: 10
-
-                    background: Rectangle {
-                        color: "#333333"
+                ListView {
+                    id: templateListView
+                    anchors.fill: parent
+                    anchors.margins: 5
+                    clip: true
+                    spacing: 4
+                    
+                    model: TemplateModel
+                    
+                    delegate: Rectangle {
+                        width: templateListView.width
+                        height: 60
                         radius: 6
-                        border.color: templateNameField.activeFocus ? "#4A90E2" : "#555555"
-                        border.width: templateNameField.activeFocus ? 2 : 1
-                    }
+                        color: root.selectedTemplateName === model.name ? "#3A5F8A" : (mouseArea.containsMouse ? "#2c3e50" : "#252540")
+                        border.color: model.isDefault ? "#FFD700" : (root.selectedTemplateName === model.name ? "#4A90E2" : "#333333")
+                        border.width: root.selectedTemplateName === model.name ? 2 : 1
 
-                    onTextChanged: {
-                        root.templateName = text
-                    }
-                }
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            spacing: 10
 
-                // --- Indicateur de sélection compact ---
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 40
-                    color: "#2c3e50"
-                    radius: 6
-                    border.color: root.selectedElementsCount > 0 ? "#4CAF50" : "#555555"
-                    border.width: 1
+                            // Icône/Preview
+                            Rectangle {
+                                Layout.preferredWidth: 44
+                                Layout.preferredHeight: 44
+                                radius: 6
+                                color: model.isDefault ? "#2d4a2d" : "#1e3a5f"
+                                border.color: model.isDefault ? "#4CAF50" : "#4A90E2"
+                                border.width: 1
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 8
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: model.isDefault ? "📦" : "🎨"
+                                    font.pointSize: 18
+                                }
+                            }
 
-                        Text {
-                            text: "Éléments sélectionnés :"
-                            font.pointSize: 9
-                            color: "#aaaaaa"
+                            // Informations
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+
+                                Text {
+                                    text: model.name
+                                    font.pointSize: 10
+                                    font.bold: true
+                                    color: "white"
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+
+                                RowLayout {
+                                    spacing: 10
+                                    
+                                    Text {
+                                        text: model.elementCount + " éléments"
+                                        font.pointSize: 8
+                                        color: "#888888"
+                                    }
+                                    
+                                    Text {
+                                        text: model.boundingBoxWidth + "×" + model.boundingBoxHeight
+                                        font.pointSize: 8
+                                        color: "#666666"
+                                    }
+                                    
+                                    Text {
+                                        visible: model.isDefault
+                                        text: "Par défaut"
+                                        font.pointSize: 8
+                                        color: "#FFD700"
+                                    }
+                                }
+                            }
+
+                            // Bouton supprimer (seulement pour les templates utilisateur)
+                            Button {
+                                visible: !model.isDefault
+                                Layout.preferredWidth: 32
+                                Layout.preferredHeight: 32
+                                text: "🗑️"
+                                
+                                background: Rectangle {
+                                    radius: 4
+                                    color: parent.hovered ? "#c0392b" : "transparent"
+                                }
+                                
+                                onClicked: {
+                                    deleteConfirmDialog.templateToDelete = model.name
+                                    deleteConfirmDialog.open()
+                                }
+                            }
                         }
 
-                        Text {
-                            text: root.selectedElementsCount.toString()
-                            font.pointSize: 12
-                            font.bold: true
-                            color: root.selectedElementsCount > 0 ? "#4CAF50" : "#888888"
+                        MouseArea {
+                            id: mouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            
+                            onClicked: {
+                                root.selectedTemplateName = model.name
+                                TemplateManager.selectTemplate(model.name)
+                                root.templateSelectedForPlacement(model.name)
+                                console.log("Template selected for placement:", model.name)
+                            }
                         }
-
-                        Item { Layout.fillWidth: true }
                     }
-                }
 
-                // Spacer
-                Item {
-                    Layout.fillHeight: true
+                    // Message si liste vide
+                    Text {
+                        anchors.centerIn: parent
+                        visible: templateListView.count === 0
+                        text: "Aucun template disponible.\nCréez-en un nouveau !"
+                        font.pointSize: 10
+                        color: "#666666"
+                        horizontalAlignment: Text.AlignHCenter
+                    }
                 }
             }
 
-            // ==================== COLONNE DROITE ====================
-            ColumnLayout {
+            // Bouton rafraîchir
+            Button {
                 Layout.fillWidth: true
-                Layout.preferredWidth: parent.width / 2
-                Layout.alignment: Qt.AlignTop
-                spacing: 8
-
-                // --- Instructions ---
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: instructionsText.height + 12
-                    color: "#2c3e50"
+                Layout.preferredHeight: 32
+                text: "🔄 Rafraîchir la liste"
+                
+                background: Rectangle {
                     radius: 6
+                    color: parent.hovered ? "#3A5F8A" : "#2c3e50"
                     border.color: "#4A90E2"
                     border.width: 1
+                }
+                
+                contentItem: Text {
+                    text: parent.text
+                    font.pointSize: 9
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                
+                onClicked: {
+                    TemplateModel.refresh()
+                }
+            }
 
+            // Info sur le template sélectionné
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 50
+                visible: root.selectedTemplateName !== ""
+                color: "#2c3e50"
+                radius: 6
+                border.color: "#4A90E2"
+                border.width: 1
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    
                     Text {
-                        id: instructionsText
-                        anchors.centerIn: parent
-                        width: parent.width - 12
-                        text: "• Clic : sélectionner/désélectionner\n• Le rectangle s'adapte automatiquement"
-                        font.pointSize: 8
+                        text: "🎯 Cliquez sur la grille pour placer: "
+                        font.pointSize: 9
+                        color: "#aaaaaa"
+                    }
+                    
+                    Text {
+                        text: root.selectedTemplateName
+                        font.pointSize: 10
+                        font.bold: true
                         color: "#4A90E2"
-                        wrapMode: Text.WordWrap
-                        horizontalAlignment: Text.AlignLeft
-                        lineHeight: 1.2
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+        }
+
+        // === MODE CRÉATION DE TEMPLATE ===
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: root.currentMode === "create"
+            spacing: 8
+
+            // Instructions
+            Text {
+                text: "Cliquez sur les éléments pour les sélectionner/désélectionner"
+                font.pointSize: 9
+                color: "#aaaaaa"
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            // Layout horizontal principal
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 10
+
+                // Colonne gauche: Nom et compteur
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: parent.width / 2
+                    Layout.alignment: Qt.AlignTop
+                    spacing: 8
+
+                    // Nom du template
+                    Text {
+                        text: "Nom du template"
+                        color: "white"
+                        font.pointSize: 10
+                        font.bold: true
+                    }
+
+                    TextField {
+                        id: templateNameField
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 36
+                        placeholderText: "Entrez le nom..."
+                        placeholderTextColor: "#888888"
+                        color: "white"
+                        font.pointSize: 10
+
+                        background: Rectangle {
+                            color: "#333333"
+                            radius: 6
+                            border.color: templateNameField.activeFocus ? "#4A90E2" : "#555555"
+                            border.width: templateNameField.activeFocus ? 2 : 1
+                        }
+
+                        onTextChanged: {
+                            root.templateName = text
+                        }
+                    }
+
+                    // Indicateur de sélection
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        color: "#2c3e50"
+                        radius: 6
+                        border.color: root.selectedElementsCount > 0 ? "#4CAF50" : "#555555"
+                        border.width: 1
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            spacing: 2
+
+                            Text {
+                                text: "Éléments sélectionnés"
+                                font.pointSize: 8
+                                color: "#aaaaaa"
+                            }
+
+                            Text {
+                                text: root.selectedElementsCount.toString()
+                                font.pointSize: 16
+                                font.bold: true
+                                color: root.selectedElementsCount > 0 ? "#4CAF50" : "#888888"
+                            }
+                        }
                     }
                 }
 
-                // --- Boutons d'action ---
-                RowLayout {
+                // Colonne droite: Boutons
+                ColumnLayout {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: parent.width / 2
+                    Layout.alignment: Qt.AlignTop
                     spacing: 8
 
-                    // Bouton Créer Template
+                    // Bouton Créer
                     Button {
                         id: createTemplateButton
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 40
+                        Layout.preferredHeight: 44
                         enabled: root.selectedElementsCount > 0 && root.templateName.length > 0
 
-                        text: "✅ Créer"
+                        text: "✅ Créer Template"
 
                         background: Rectangle {
                             radius: 6
@@ -222,7 +470,7 @@ EBP_Content {
 
                         contentItem: Text {
                             text: createTemplateButton.text
-                            font.pointSize: 10
+                            font.pointSize: 11
                             font.bold: true
                             color: createTemplateButton.enabled ? "white" : "#888888"
                             horizontalAlignment: Text.AlignHCenter
@@ -234,13 +482,13 @@ EBP_Content {
                         }
                     }
 
-                    // Bouton Annuler
+                    // Bouton Annuler sélection
                     Button {
                         id: cancelButton
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 40
+                        Layout.preferredHeight: 36
 
-                        text: "🗑️ Annuler"
+                        text: "🗑️ Annuler sélection"
 
                         background: Rectangle {
                             radius: 6
@@ -252,7 +500,7 @@ EBP_Content {
 
                         contentItem: Text {
                             text: cancelButton.text
-                            font.pointSize: 10
+                            font.pointSize: 9
                             color: "white"
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -262,11 +510,82 @@ EBP_Content {
                             cancelTemplateCreation()
                         }
                     }
+
+                    Item { Layout.fillHeight: true }
+                }
+            }
+        }
+    }
+
+    // --- Dialog de confirmation de suppression ---
+    Dialog {
+        id: deleteConfirmDialog
+        title: "Confirmer la suppression"
+        modal: true
+        anchors.centerIn: parent
+        
+        property string templateToDelete: ""
+
+        background: Rectangle {
+            color: "#2c2c3e"
+            radius: 10
+            border.color: "#c0392b"
+            border.width: 2
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 15
+            
+            Text {
+                text: "Voulez-vous vraiment supprimer le template\n\"" + deleteConfirmDialog.templateToDelete + "\" ?"
+                color: "white"
+                font.pointSize: 10
+                horizontalAlignment: Text.AlignHCenter
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+
+                Button {
+                    Layout.fillWidth: true
+                    text: "Annuler"
+                    onClicked: deleteConfirmDialog.close()
+                    
+                    background: Rectangle {
+                        radius: 6
+                        color: "#555555"
+                    }
+                    
+                    contentItem: Text {
+                        text: parent.text
+                        color: "white"
+                        horizontalAlignment: Text.AlignHCenter
+                    }
                 }
 
-                // Spacer
-                Item {
-                    Layout.fillHeight: true
+                Button {
+                    Layout.fillWidth: true
+                    text: "Supprimer"
+                    onClicked: {
+                        TemplateManager.deleteTemplate(deleteConfirmDialog.templateToDelete)
+                        if (root.selectedTemplateName === deleteConfirmDialog.templateToDelete) {
+                            root.selectedTemplateName = ""
+                        }
+                        deleteConfirmDialog.close()
+                    }
+                    
+                    background: Rectangle {
+                        radius: 6
+                        color: "#c0392b"
+                    }
+                    
+                    contentItem: Text {
+                        text: parent.text
+                        color: "white"
+                        horizontalAlignment: Text.AlignHCenter
+                    }
                 }
             }
         }
@@ -277,21 +596,40 @@ EBP_Content {
     function createTemplate() {
         if (logic && logic.mouseLogic) {
             var selectedElements = logic.mouseLogic.selectedElements
-            if (selectedElements.length > 0) {
-                // Générer le rectangle englobant
-                var boundingRect = logic.mouseLogic.calculateBoundingRectangle()
+            if (selectedElements.length > 0 && root.templateName.length > 0) {
+                // Convertir les éléments en JSON pour le TemplateManager
+                var elementsJson = []
+                for (var i = 0; i < selectedElements.length; i++) {
+                    var element = selectedElements[i]
+                    if (element && element.snapableParameters) {
+                        var jsonStr = element.snapableParameters.toJSON()
+                        try {
+                            elementsJson.push(JSON.parse(jsonStr))
+                        } catch (e) {
+                            console.error("Failed to parse element JSON:", e)
+                        }
+                    }
+                }
                 
-                // Émettre le signal avec les informations du template
-                root.templateCreated(root.templateName, {
-                    name: root.templateName,
-                    elements: selectedElements,
-                    boundingRect: boundingRect
-                })
-                
-                console.log("Template créé:", root.templateName, "avec", selectedElements.length, "éléments")
-                
-                // Réinitialiser l'interface
-                resetInterface()
+                // Créer le template via TemplateManager
+                if (TemplateManager.createTemplateFromJson(root.templateName, elementsJson)) {
+                    console.log("Template créé avec succès:", root.templateName)
+                    
+                    // Émettre le signal
+                    root.templateCreated(root.templateName, {
+                        name: root.templateName,
+                        elements: selectedElements,
+                        elementCount: selectedElements.length
+                    })
+                    
+                    // Réinitialiser l'interface
+                    resetInterface()
+                    
+                    // Retourner au mode sélection
+                    root.currentMode = "select"
+                } else {
+                    console.error("Échec de la création du template")
+                }
             }
         }
     }
@@ -322,7 +660,7 @@ EBP_Content {
         when: logic && logic.mouseLogic
     }
     
-    // Connexion au signal templateSelectionChanged (seulement quand mouseLogic est disponible)
+    // Connexion au signal templateSelectionChanged
     Connections {
         id: templateConnections
         enabled: logic && logic.mouseLogic
@@ -333,15 +671,19 @@ EBP_Content {
             }
         }
     }
+    
+    // Connexion aux signaux du TemplateManager
+    Connections {
+        target: TemplateManager
+        
+        function onTemplateCreated(templateName) {
+            console.log("Template créé signal reçu:", templateName)
+            TemplateModel.refresh()
+        }
+        
+        function onTemplateDeleted(templateName) {
+            console.log("Template supprimé signal reçu:", templateName)
+            TemplateModel.refresh()
+        }
+    }
 }
-
-
-
-
-
-
-
-
-
-
-

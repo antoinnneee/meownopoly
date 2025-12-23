@@ -71,6 +71,10 @@ SOURCES += \
     tools/editorenum.cpp \
     tools/logger.cpp \
     game/map/undoredomanager.cpp \
+    game/template/templateinfo.cpp \
+    game/template/templatefilemanager.cpp \
+    game/template/templatemodel.cpp \
+    game/template/templatemanager.cpp \
 
 
 HEADERS += \
@@ -112,6 +116,10 @@ HEADERS += \
     tools/editorenum.h \
     tools/logger.h \
     game/map/undoredomanager.h \
+    game/template/templateinfo.h \
+    game/template/templatefilemanager.h \
+    game/template/templatemodel.h \
+    game/template/templatemanager.h \
 
 RESOURCES += qml.qrc
 

@@ -7,6 +7,9 @@ import "../../component/snapable"
 import EditorEnum
 import MapTypes
 
+// Template system imports
+import TemplateManager
+
 
 MouseLogic_Selection {
     id: mouseLogic
@@ -14,6 +17,9 @@ MouseLogic_Selection {
     
     // Signal émis quand les éléments sélectionnés changent (pour le template)
     signal templateSelectionChanged()
+    
+    // Mode de placement de template (true = on place un template existant, false = on sélectionne des éléments)
+    property bool isPlacingTemplate: TemplateManager.hasCurrentTemplate
     
     // Rectangle englobant visuel
     property var boundingRectVisual: null
@@ -165,7 +171,26 @@ MouseLogic_Selection {
             logic.selectionRect.hide()
         }
 
-        // Clic sur espace vide = désélectionner tout
+        // MODE PLACEMENT DE TEMPLATE: clic sur espace vide = placer le template
+        if (clickElement.length === 0 && isPlacingTemplate && !hasMoved) {
+            // Calculer la position sur la grille
+            var gridPos = grid.getGridPosition(workAreaPos.x, workAreaPos.y)
+            
+            console.log("[TEMPLATE] Placement du template à la position grille:", gridPos.x, ",", gridPos.y)
+            
+            // Placer le template via TileLogic
+            if (logic.tileLogic && logic.tileLogic.placeSelectedTemplate) {
+                var success = logic.tileLogic.placeSelectedTemplate(gridPos.x, gridPos.y)
+                if (success) {
+                    console.log("[TEMPLATE] Template placé avec succès")
+                } else {
+                    console.log("[TEMPLATE] Échec du placement du template")
+                }
+            }
+            return
+        }
+
+        // Clic sur espace vide = désélectionner tout (si pas en mode placement)
         if (clickElement.length === 0) {
             unselectSelectedElements()
             return

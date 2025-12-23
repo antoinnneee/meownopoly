@@ -41,6 +41,12 @@
 
 #include "game/item_snapable/itemsnapablefactory.h"
 
+// Template system
+#include "game/template/templateinfo.h"
+#include "game/template/templatefilemanager.h"
+#include "game/template/templatemodel.h"
+#include "game/template/templatemanager.h"
+
 //#include "animationprovider.h"
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
@@ -64,6 +70,12 @@ QmlApp::QmlApp(QWindow *parent)
     Logger::registerQml();
     CursorManager::registerQml();
     UndoRedoManager::registerQml();
+    
+    // Template system registration
+    TemplateInfo::registerQml();
+    TemplateFileManager::registerQml();
+    TemplateModel::registerQml();
+    TemplateManager::registerQml();
     
     // Register MapTypes namespace for QML
     qmlRegisterUncreatableMetaObject(MapTypes::staticMetaObject, "MapTypes", 1, 0, "MapTypes", "Error: only enums");
