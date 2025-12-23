@@ -20,7 +20,7 @@ MouseLogic_Selection {
     
     // Couleur du rectangle englobant
     // property color boundingColor: "#4A90E2"
-    property color boundingColor: "lightgreen"
+    property color boundingColor: "lime"
 
     // Positions initiales pour le déplacement du rectangle englobant
     property point boundingRectStartPos: Qt.point(0, 0)
@@ -424,7 +424,7 @@ MouseLogic_Selection {
             import QtQuick 2.15
             Rectangle {
                 color: "transparent"
-                border.color: "lightgreen"
+                border.color: "lime"
                 border.width: 3
                 radius: 8
                 z: 1000
@@ -432,7 +432,7 @@ MouseLogic_Selection {
                 // Coins décoratifs
                 Rectangle {
                     width: 12; height: 12
-                    color: "lightgreen"
+                    color: "lime"
                     radius: 2
                     anchors.left: parent.left
                     anchors.top: parent.top
@@ -440,7 +440,7 @@ MouseLogic_Selection {
                 }
                 Rectangle {
                     width: 12; height: 12
-                    color: "lightgreen"
+                    color: "lime"
                     radius: 2
                     anchors.right: parent.right
                     anchors.top: parent.top
@@ -448,7 +448,7 @@ MouseLogic_Selection {
                 }
                 Rectangle {
                     width: 12; height: 12
-                    color: "lightgreen"
+                    color: "lime"
                     radius: 2
                     anchors.left: parent.left
                     anchors.bottom: parent.bottom
@@ -456,7 +456,7 @@ MouseLogic_Selection {
                 }
                 Rectangle {
                     width: 12; height: 12
-                    color: "lightgreen"
+                    color: "lime"
                     radius: 2
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
