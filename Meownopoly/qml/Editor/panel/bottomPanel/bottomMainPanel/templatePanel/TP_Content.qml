@@ -312,11 +312,25 @@ EBP_Content {
         }
     }
 
-    // Connexion pour mettre à jour le compteur d'éléments sélectionnés
+    // Mise à jour automatique du compteur d'éléments sélectionnés
+    Binding {
+        target: root
+        property: "selectedElementsCount"
+        value: (logic && logic.mouseLogic && logic.mouseLogic.selectedElements) 
+               ? logic.mouseLogic.selectedElements.length 
+               : 0
+        when: logic && logic.mouseLogic
+    }
+    
+    // Connexion au signal templateSelectionChanged (seulement quand mouseLogic est disponible)
     Connections {
-        target: logic && logic.mouseLogic ? logic.mouseLogic : null
+        id: templateConnections
+        enabled: logic && logic.mouseLogic
+        target: enabled ? logic.mouseLogic : null
         function onTemplateSelectionChanged() {
-            root.selectedElementsCount = logic.mouseLogic.selectedElements.length
+            if (logic && logic.mouseLogic && logic.mouseLogic.selectedElements) {
+                root.selectedElementsCount = logic.mouseLogic.selectedElements.length
+            }
         }
     }
 }
