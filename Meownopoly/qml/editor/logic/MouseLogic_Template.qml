@@ -237,7 +237,7 @@ MouseLogic_Selection {
         if (mouseLogic.isRectangleSelecting) {
             mouseLogic.updateRectangleSelection(mouse.x, mouse.y)
         }
-        
+
         // Gérer le snap pendant le drag
         if (drag.active && drag.target && grid.snapToGrid) {
             var deltaX = mouse.x - dragStartPos.x

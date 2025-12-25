@@ -27,7 +27,7 @@ import DecorationParameter
 import UndoRedoManager
 import AssetManager
 import ItemSnapableFactory
-import ui_item 1.0
+import ui_item
 
 import "../test"
 import "../utils"
@@ -70,7 +70,6 @@ Base_Board {
 
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
-        stEnableAutoSave.sync()
         initializeEditor()
 
         // Initialize Entity Controller (avec la liste des tiles pour la collision)
@@ -81,14 +80,13 @@ Base_Board {
         
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
+        //
     }
 
     mapInfo.mapName: autosaveMapName
 
     onUpdateSettings: {
-        console.log("Update setting - stEnableAutoSave.value('saveEvent', '0') " + stEnableAutoSave.value('saveEvent', "1"))
-        tmpSaver.interval =  stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60: 500
-        tmpSaver.running = stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
+        tmpSaver.setSaveTimer()
     }
 
     Keys.onPressed: function(event) {
@@ -321,6 +319,7 @@ Base_Board {
         category: "Editor/SaveConfig"
         property var currentMap : value("currentMap", mapInfo.autosaveMapName)
         property int saveEvent: value("saveEvent", "1")
+        Component.onCompleted: sync()
     }
 
 
@@ -587,9 +586,12 @@ Base_Board {
     Timer {
         id: tmpSaver
         repeat: true
-        interval : stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60 : 500
-        running: stEnableAutoSave.value("saveEvent", "1") === 1 ? false : true
         property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
+        function setSaveTimer(){
+            stEnableAutoSave.sync()
+            tmpSaver.interval =  stEnableAutoSave.value("saveEvent", "1") == 3 ? 500 : stEnableAutoSave.value("saveInterval", "0") * 1000 * 60
+            tmpSaver.running = stEnableAutoSave.value("saveEvent", "1") == 1 ? false : true
+        }
         onTriggered: {
             console.log("Auto-saving map:", mapInfo.mapName)
             if (isMapCustom)
@@ -615,7 +617,6 @@ Base_Board {
     function regainFocus() {
         forceActiveFocus()
     }
-
     function initializeEditor() {
         if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
             console.log("Creating autosave map")
@@ -642,9 +643,7 @@ Base_Board {
             mapInfo.mapName = mapInfo.autosaveMapName
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         }
-        if (stEnableAutoSave.value("saveEvent", "1") === 2) {
-            tmpSaver.start()
-        }
+        tmpSaver.setSaveTimer()
     }
 
 

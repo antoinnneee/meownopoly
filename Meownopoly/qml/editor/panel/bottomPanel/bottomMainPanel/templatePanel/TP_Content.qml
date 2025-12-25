@@ -5,7 +5,6 @@ import EditorEnum
 
 import "../"
 import editorBottomPanel
-
 // Import des modules Template
 import TemplateManager
 import TemplateModel

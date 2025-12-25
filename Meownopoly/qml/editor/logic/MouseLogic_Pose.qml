@@ -47,6 +47,4 @@ MouseLogic_Base {
         unselectSelectedElements()
         logic.editorMouseMode = mode
     }
-
-
 }

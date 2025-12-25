@@ -97,6 +97,12 @@ void Game::startGame() {
     emit gameStarted();
 }
 
+//Very, very, veryyyy specific function that checks the saved value for the "saveEvent"
+void Game::checkSaveSettings()
+{
+
+}
+
 int Game::currentPlayerIndex() const { return m_currentPlayerIndex; }
 
 Case *Game::getNewCaseType(Case::CaseType type)

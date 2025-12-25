@@ -60,7 +60,11 @@ Item {
             if (selectionPanel.isAssetSelected) {
                 selectionPanel.clearAssetSelection()
                 event.accepted = true
-            } else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
+            }
+            else if (selectionPanel){
+
+            }
+            else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
                 logic.mouseLogic.unselectSelectedElements()
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
                 event.accepted = true
