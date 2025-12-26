@@ -160,9 +160,13 @@ private:
     qreal m_slideFactor = 1.0;
     qreal m_acceleration = 30.0;
     qreal m_maxSpeed = 36.0;  // moveSpeed * sprintMultiplier
+    
     qreal m_mass = 1.0;
+    qreal m_invMass = 1.0;
     bool m_isStatic = false;
     bool m_collisionEnabled = true;
+
+    QVector2D m_forceAccumulator; // Pour accumuler les forces sur une frame
     
     // État
     bool m_isColliding = false;
