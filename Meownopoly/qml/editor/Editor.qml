@@ -313,7 +313,8 @@ Base_Board {
     }
 
 
-    mainMa.anchors.bottom:  mapInfoPanel.x < parent.width ? parent.bottom : selectionPanel.top
+    mainMa.anchors.bottomMargin: mapInfoPanel.x < parent.width ? 0 : selectionPanel.height
+
 
 
 

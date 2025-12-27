@@ -81,16 +81,25 @@ SnapableElement {
     }
     
     // Calcul des bounds du polygone (en coordonnées locales)
-    property var polygonBounds: calculateBounds()
+    property var polygonBounds: ({ minX: 0, minY: 0, maxX: 100, maxY: 100 })
+    
+    // Bounds en coordonnées de grille (caching pour éviter de recalculer à chaque zoom/scroll)
+    property var gridBounds: ({ minX: 0, minY: 0, maxX: 0, maxY: 0 })
+    
+    // Cache pour les points locaux en pixels
+    property var localPointsCache: []
     
     // Forcer le redraw au chargement
     Component.onCompleted: {
+        root.gridBounds = root.calculateGridBounds()
+        root.updateRecalculate()
         hatchCanvas.requestPaint()
     }
     
-    function calculateBounds() {
-        var points = getPolygonPointsLocal()
-        if (points.length === 0) return { minX: 0, minY: 0, maxX: 100, maxY: 100 }
+    function calculateGridBounds() {
+        if (!snapableParameters.zoneParameter) return { minX: 0, minY: 0, maxX: 0, maxY: 0 }
+        var points = snapableParameters.zoneParameter.polygonPoints
+        if (points.length === 0) return { minX: 0, minY: 0, maxX: 0, maxY: 0 }
         
         var minX = points[0].x, maxX = points[0].x
         var minY = points[0].y, maxY = points[0].y
@@ -103,6 +112,18 @@ SnapableElement {
         }
         
         return { minX: minX, minY: minY, maxX: maxX, maxY: maxY }
+    }
+    
+    function updatePixelBounds() {
+        var gs = gridManager.gridSize
+        var ox = offsetX
+        var oy = offsetY
+        root.polygonBounds = {
+            minX: gridBounds.minX * gs - ox,
+            minY: gridBounds.minY * gs - oy,
+            maxX: gridBounds.maxX * gs - ox,
+            maxY: gridBounds.maxY * gs - oy
+        }
     }
     
     // Convertir les points de grille en pixels LOCAUX (relatifs à l'élément)
@@ -123,9 +144,12 @@ SnapableElement {
     
     // Obtenir les points pour le ShapePath (fermé)
     function getClosedPolygonPoints() {
-        var points = getPolygonPointsLocal()
+        var points = localPointsCache
         if (points.length > 0) {
-            points.push(points[0]) // Fermer le polygone
+            // Créer une copie pour ne pas corrompre le cache si on ajoute un point
+            var closed = points.slice()
+            closed.push(points[0]) 
+            return closed
         }
         return points
     }
@@ -137,7 +161,7 @@ SnapableElement {
     
     // Fonction pour vérifier si un point est dans le polygone (ray casting)
     function isPointInPolygon(px, py) {
-        var points = getPolygonPointsLocal()
+        var points = localPointsCache
         if (points.length < 3) return false
         
         var inside = false
@@ -162,7 +186,9 @@ SnapableElement {
     
     // Fonction pour regrouper le recalcul et le trigger de mise à jour
     function updateRecalculate() {
-        root.polygonBounds = root.calculateBounds()
+        // Mettre à jour les points locaux et les pixel bounds (O(1) transformation)
+        root.localPointsCache = root.getPolygonPointsLocal()
+        root.updatePixelBounds()
         root.shapeUpdateTrigger++
     }
 
@@ -250,7 +276,7 @@ SnapableElement {
             ctx.save()
             ctx.clip()
             
-            // Dessiner les hachures diagonales
+            // Dessiner les hachures diagonales (batching)
             ctx.strokeStyle = root.zoneColor
             ctx.lineWidth = 1.5
             ctx.globalAlpha = 0.6
@@ -260,13 +286,13 @@ SnapableElement {
                                     Math.pow(bounds.maxY - bounds.minY, 2))
             var spacing = root.hatchSpacing
             
+            ctx.beginPath()
             // Hachures de gauche à droite (/)
             for (var offset = -diagonal; offset < diagonal * 2; offset += spacing) {
-                ctx.beginPath()
                 ctx.moveTo(bounds.minX + offset, bounds.minY)
                 ctx.lineTo(bounds.minX + offset - diagonal, bounds.minY + diagonal)
-                ctx.stroke()
             }
+            ctx.stroke()
             
             ctx.restore()
         }
@@ -275,8 +301,8 @@ SnapableElement {
         Connections {
             target: root.snapableParameters.zoneParameter
             function onPolygonPointsChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
+                root.gridBounds = root.calculateGridBounds()
+                root.updateRecalculate()
                 hatchCanvas.requestPaint()
             }
         }
@@ -421,6 +447,9 @@ SnapableElement {
                 }
             }
             snapableParameters.zoneParameter.polygonPoints = newPoints
+            
+            // Recalculer les grid bounds
+            root.gridBounds = root.calculateGridBounds()
             
             // Recalculer la bounding box de l'élément
             updateDisplayBounds()
