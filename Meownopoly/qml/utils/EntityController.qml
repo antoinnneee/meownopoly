@@ -250,8 +250,8 @@ Item {
         if (inputVector.length() > 1) {
             inputVector = inputVector.normalized()
         }
-        inputVector.x = inputVector.x * 10
-        inputVector.y = inputVector.y * 10
+        inputVector.x = inputVector.x * 4
+        inputVector.y = inputVector.y * 4
         playerBody.inputVector = inputVector
     }
 

@@ -261,12 +261,22 @@ void PhysicsEngine2D::updateAll(qreal dt)
         for (PhysicsZone2D* zone : m_zones) {
             if (!zone->isActive() || !zone->exclusion()) continue;
 
-            // Utilisation collision discrete simple (plus stable pour les solvers itératifs)
-            CollisionResult result = zone->checkCollision(body->position(), body->collisionRadius());
+            // Utilisation collision sweep pour éviter le tunneling
+            CollisionResult result = zone->checkCollisionSweep(body->previousPosition(), body->position(), body->collisionRadius());
 
             if (result.colliding) {
                 result.body = body;
                 result.zone = zone;
+                
+                // Si c'est une collision par balayage (t < 1.0), la pénétration à la fin de la frame
+                // est bien plus grande que la pénétration au moment de l'impact (result.penetration).
+                if (result.t < 1.0) {
+                    QVector2D movement = body->position() - body->previousPosition();
+                    qreal depthAtEnd = QVector2D::dotProduct(movement, -result.normal);
+                    // On cumule la pénétration initiale et la distance parcourue "dans" le mur
+                    result.penetration = std::max(result.penetration, depthAtEnd + 0.01); 
+                }
+                
                 contacts.append(result);
             }
         }
@@ -446,9 +456,9 @@ void PhysicsEngine2D::correctPositions(const QVector<CollisionResult>& contacts)
     for (const CollisionResult& m : contacts) {
         PhysicsBody2D* A = m.body;
 
-        // Correction = Normal * max(penetration - slop, 0) / invMass * percent
-        qreal correctionMag = std::max(m.penetration - slop, 0.0) / A->invMass() * percent;
-        QVector2D correction = m.normal * correctionMag * A->invMass();
+        // La pénétration a été ajustée dans updateAll pour les sweeps
+        qreal correctionMag = std::max(m.penetration - slop, 0.0) * percent;
+        QVector2D correction = m.normal * correctionMag;
 
         A->setPosition(A->position() + correction);
     }

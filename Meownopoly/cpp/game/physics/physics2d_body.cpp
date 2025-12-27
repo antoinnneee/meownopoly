@@ -21,6 +21,7 @@ void PhysicsBody2D::setPosition(const QVector2D& pos)
 {
     if (m_position != pos) {
         m_position = pos;
+        m_previousPosition = pos; // Reset previous position to avoid artifact sweeps
         emit positionChanged();
     }
 }
@@ -135,6 +136,8 @@ void PhysicsBody2D::reset() {
 
 void PhysicsBody2D::integrate(qreal dt) {
     if (m_isStatic || dt <= 0) return;
+
+    m_previousPosition = m_position;
 
     applyForce(m_inputVector * 10);
     // 1. Calcul de l'accélération (a = F / m)

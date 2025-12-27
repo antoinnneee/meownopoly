@@ -61,6 +61,7 @@ public:
     bool collisionEnabled() const { return m_collisionEnabled; }
     bool isColliding() const { return m_isColliding; }
     QVector2D lastCollisionNormal() const { return m_lastCollisionNormal; }
+    QVector2D previousPosition() const { return m_previousPosition; }
     
     // --- Setters ---
     void setPosition(const QVector2D& pos);
@@ -163,6 +164,7 @@ signals:
 private:
     QString m_bodyId;
     QVector2D m_position;
+    QVector2D m_previousPosition;
     QVector2D m_velocity;
     qreal m_collisionRadius = 0.2;
     qreal m_bounceFactor = 0.1;
