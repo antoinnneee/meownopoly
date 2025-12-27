@@ -118,17 +118,24 @@ Item {
         console.log("[EntityController] C++ physics engine ready")
     }
     
+    // Helper pour le timestamp
+    function getTimestamp() {
+        var now = new Date();
+        var ms = now.getMilliseconds().toString().padStart(3, '0');
+        return "[" + now.toLocaleTimeString(Qt.locale(), "HH:mm:ss") + "." + ms + "]";
+    }
+    
     // Callbacks de collision
     function onPlayerCollision(zone) {
-        console.log("[EntityController] Collision with zone:", zone.zoneId)
+        console.log(getTimestamp(), "[EntityController] Collision with zone:", zone.zoneId)
     }
     
     function onPlayerEnteredZone(zone) {
-        console.log("[EntityController] Entered zone:", zone.zoneId, "type:", zone.zoneType)
+        console.log(getTimestamp(), "[EntityController] Entered zone:", zone.zoneId, "type:", zone.zoneType)
     }
     
     function onPlayerExitedZone(zone) {
-        console.log("[EntityController] Exited zone:", zone.zoneId)
+        console.log(getTimestamp(), "[EntityController] Exited zone:", zone.zoneId)
     }
 
     // --- Gestion Clavier ---
@@ -243,6 +250,8 @@ Item {
         if (inputVector.length() > 1) {
             inputVector = inputVector.normalized()
         }
+        inputVector.x = inputVector.x * 10
+        inputVector.y = inputVector.y * 10
         playerBody.inputVector = inputVector
     }
 

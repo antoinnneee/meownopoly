@@ -151,7 +151,7 @@ void PhysicsBody2D::integrate(qreal dt) {
     // 3. LE SOL RALENTIT LA VITESSE (Damping)
     //m_velocity *= std::pow(1.0 - m_linearDamping, dt * 60.0); // en cas de probleme 
     qreal frictionFactor = 1.0 - (m_linearDamping * dt * 60.0);
-    if (frictionFactor < 0) frictionFactor = 0; // Sécurité
+    if (frictionFactor < 0) frictionFactor = 0;
     m_velocity *= frictionFactor;
 
     // 4. Mise à jour de la position (P = P + V*dt)
@@ -190,4 +190,24 @@ void PhysicsBody2D::setInputVector(const QVector2D &newInputVector)
         return;
     m_inputVector = newInputVector;
     emit inputVectorChanged();
+}
+
+qreal PhysicsBody2D::invMass() const
+{
+    return m_invMass;
+}
+
+qreal PhysicsBody2D::restitution() const
+{
+    return m_restitution;
+}
+
+qreal PhysicsBody2D::staticFriction() const
+{
+    return m_staticFriction;
+}
+
+qreal PhysicsBody2D::dynamicFriction() const
+{
+    return m_dynamicFriction;
 }

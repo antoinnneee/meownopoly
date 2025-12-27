@@ -30,6 +30,11 @@ class PhysicsBody2D : public QObject
     Q_PROPERTY(qreal acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
     Q_PROPERTY(qreal maxSpeed READ maxSpeed WRITE setMaxSpeed NOTIFY maxSpeedChanged)
     Q_PROPERTY(qreal mass READ mass WRITE setMass NOTIFY massChanged)
+    Q_PROPERTY(qreal invMass READ invMass NOTIFY invMassChanged)
+    Q_PROPERTY(qreal restitution READ restitution NOTIFY restitutionChanged)
+    Q_PROPERTY(qreal staticFriction READ staticFriction NOTIFY staticFrictionChanged)
+    Q_PROPERTY(qreal dynamicFriction READ dynamicFriction NOTIFY dynamicFrictionChanged)
+    Q_PROPERTY(qreal linearDamping READ linearDamping WRITE setLinearDamping NOTIFY linearDampingChanged)
     Q_PROPERTY(bool isStatic READ isStatic WRITE setIsStatic NOTIFY isStaticChanged)
     Q_PROPERTY(bool collisionEnabled READ collisionEnabled WRITE setCollisionEnabled NOTIFY collisionEnabledChanged)
     
@@ -115,6 +120,14 @@ public:
 
     void setLinearDamping(qreal damping);
     qreal linearDamping() const { return m_linearDamping; }
+    qreal invMass() const;
+
+    qreal restitution() const;
+
+    qreal staticFriction() const;
+
+    qreal dynamicFriction() const;
+
 signals:
     void positionChanged();
     void velocityChanged();
@@ -136,6 +149,16 @@ signals:
 
     void inputVectorChanged();
 
+
+    void invMassChanged();
+
+    void restitutionChanged();
+
+    void staticFrictionChanged();
+
+    void dynamicFrictionChanged();
+
+    void linearDampingChanged();
 
 private:
     QString m_bodyId;
@@ -168,6 +191,9 @@ private:
     // Référence au moteur
     PhysicsEngine2D* m_engine = nullptr;
     QVector2D m_inputVector;
+    qreal m_restitution;
+    qreal m_staticFriction;
+    qreal m_dynamicFriction;
 };
 
 #endif // PHYSICS2D_BODY_H

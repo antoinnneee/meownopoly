@@ -247,11 +247,38 @@ void PhysicsEngine2D::setZonesFromSnapables(const QVariantList& snapables)
 
 void PhysicsEngine2D::updateAll(qreal dt)
 {
+    uint8_t velocityIterations = 4;
     if (!m_enabled || dt <= 0) return;
     
     for (PhysicsBody2D* body : m_bodies) {
         updateBody(body, dt);
     }
+    // 2. Détection des collisions (Broadphase + Narrowphase simplifiés)
+    QVector<CollisionResult> contacts;
+    for (PhysicsBody2D* body : m_bodies) {
+        if (!body->collisionEnabled() || body->isStatic()) continue;
+
+        for (PhysicsZone2D* zone : m_zones) {
+            if (!zone->isActive() || !zone->exclusion()) continue;
+
+            // Utilisation collision discrete simple (plus stable pour les solvers itératifs)
+            CollisionResult result = zone->checkCollision(body->position(), body->collisionRadius());
+
+            if (result.colliding) {
+                result.body = body;
+                result.zone = zone;
+                contacts.append(result);
+            }
+        }
+    }
+
+    // 3. Résolution des collisions (Solver Itératif)
+    // On répète plusieurs fois pour stabiliser les empilements ou coins
+    for (int i = 0; i < velocityIterations; ++i) {
+        resolveCollisions(contacts, dt);
+    }
+    // 4. Correction de position (Anti-pénétration / Anti-jitter)
+    correctPositions(contacts);
 }
 
 void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
@@ -344,7 +371,90 @@ void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
     previousZones = currentZones;
 }
 
-void PhysicsEngine2D::resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D newPos)
+void PhysicsEngine2D::resolveCollisions(const QVector<CollisionResult>& contacts, qreal dt)
+{
+    for (const CollisionResult& m : contacts) {
+        PhysicsBody2D* A = m.body;
+        // B est la zone (Mur), masse infinie, vitesse nulle.
+
+        QVector2D rv = A->velocity(); // Vitesse relative (V_body - 0)
+        QVector2D normal = m.normal;
+
+        // --- 1. Vitesse le long de la normale ---
+        qreal velAlongNormal = QVector2D::dotProduct(rv, normal);
+
+        // Ne pas résoudre si les objets s'éloignent déjà
+        if (velAlongNormal > 0) continue;
+
+        // --- 2. Impulsion Normale (Rebond) ---
+        qreal e = A->restitution(); // Coefficient de restitution
+
+        // Formule : j = -(1+e)*V_rel_norm / invMass
+        qreal j = -(1.0 + e) * velAlongNormal;
+        j /= A->invMass(); // + 0 pour le mur
+
+        QVector2D impulse = j * normal;
+
+        // Appliquer l'impulsion normale
+        A->setVelocity(A->velocity() + impulse * A->invMass());
+
+        // --- 3. Friction (Impulsion Tangente) ---
+        // Recalculer la vitesse relative après le rebond
+        rv = A->velocity();
+
+        // Trouver la tangente : V_t = V - (V . n) * n
+        QVector2D tangent = rv - QVector2D::dotProduct(rv, normal) * normal;
+
+        // Normaliser la tangente
+        if (tangent.lengthSquared() > 0.00001) {
+            tangent.normalize();
+        } else {
+            continue; // Pas de friction si pas de mouvement tangentiel
+        }
+
+        // Calculer magnitude friction (jt) - Même formule que normale, sans restitution
+        qreal jt = -QVector2D::dotProduct(rv, tangent);
+        jt /= A->invMass();
+
+        // Loi de Coulomb : Clamper la friction
+        // On utilise l'impulsion normale 'j' comme force de pression
+        qreal mu = std::sqrt(std::pow(A->staticFriction(), 2) + 0.5*0.5); // 0.5 pour le mur par défaut
+
+        QVector2D frictionImpulse;
+        if (std::abs(jt) < j * mu) {
+            // Friction Statique (Assez fort pour arrêter)
+            frictionImpulse = jt * tangent;
+        } else {
+            // Friction Dynamique (Glissement)
+            qreal dynamicMu = std::sqrt(std::pow(A->dynamicFriction(), 2) + 0.3*0.3);
+            frictionImpulse = -j * tangent * dynamicMu;
+        }
+
+        // Appliquer la friction
+        A->setVelocity(A->velocity() + frictionImpulse * A->invMass());
+
+        // Signaux de collision
+        emit bodyCollided(A, m.zone);
+        emit A->collisionOccurred(m.zone);
+    }
+}
+void PhysicsEngine2D::correctPositions(const QVector<CollisionResult>& contacts)
+{
+    const qreal percent = 0.6; // Pourcentage de correction (0.2 - 0.8)
+    const qreal slop = 0.01;   // Tolérance de pénétration
+
+    for (const CollisionResult& m : contacts) {
+        PhysicsBody2D* A = m.body;
+
+        // Correction = Normal * max(penetration - slop, 0) / invMass * percent
+        qreal correctionMag = std::max(m.penetration - slop, 0.0) / A->invMass() * percent;
+        QVector2D correction = m.normal * correctionMag * A->invMass();
+
+        A->setPosition(A->position() + correction);
+    }
+}
+
+void PhysicsEngine2D::resolveCollisions_old(PhysicsBody2D* body, qreal dt, QVector2D newPos)
 {
     QVector2D velocity = body->velocity();
     QVector2D currentPos = body->position();

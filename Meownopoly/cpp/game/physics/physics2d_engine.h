@@ -183,8 +183,13 @@ private:
     /**
      * @brief Détecte et résout les collisions pour un body
      */
-    void resolveCollisions(PhysicsBody2D* body, qreal dt, QVector2D newPos);
+    void resolveCollisions_old(PhysicsBody2D* body, qreal dt, QVector2D newPos);
+    void resolveCollisions(const QVector<CollisionResult> &contacts, qreal dt);
 
+    /**
+     * @brief Corrige les positions des corps après résolution des collisions
+     */
+    void correctPositions(const QVector<CollisionResult> &contacts);
     // Données
     QHash<QString, PhysicsBody2D*> m_bodies;
     QHash<QString, PhysicsZone2D*> m_zones;
