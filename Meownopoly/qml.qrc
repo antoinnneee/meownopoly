@@ -201,5 +201,6 @@
         <file>qml/editor/panel/mapInfoPanel/MapSidePanel.qml</file>
         <file>qml/utils/World3DTools.qml</file>
         <file>qml/editor/panel/zonePanel/ExclusionZonePanel.qml</file>
+        <file>qml/editor/panel/ModelSelectionPanel.qml</file>
     </qresource>
 </RCC>

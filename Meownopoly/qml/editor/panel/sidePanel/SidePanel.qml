@@ -33,6 +33,7 @@ Rectangle {
     // --- Signals ---
     signal effectChanged()
     signal connectionRequested(string kind)  // Propager les demandes de connexion
+    signal modelSelected(string name)
 
     // --- Bindings ---
     width : Screen.pixelDensity * 120
@@ -202,6 +203,9 @@ Rectangle {
 
             onConnectionRequested: function(kind) {
                 root.connectionRequested(kind)
+            }
+            onModelSelected: function(name) {
+                root.modelSelected(name)
             }
         }
     }

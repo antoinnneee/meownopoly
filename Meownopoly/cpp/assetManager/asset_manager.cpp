@@ -739,6 +739,22 @@ bool AssetManager::isTransparent(float px, float py, QString path)
     return (color.alpha() == 0);
 }
 
+QStringList AssetManager::getAvailableModels() const
+{
+    QStringList models;
+    QString modelsPath = getAppDataPath() + "/models";
+    QDir modelsDir(modelsPath);
+
+    if (!modelsDir.exists()) {
+        ASSET_ERROR("Models directory does not exist: " + modelsPath);
+        return models;
+    }
+
+    // On liste les sous-répertoires, chacun représentant un modèle
+    QStringList subDirs = modelsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    return subDirs;
+}
+
 QString AssetManager::getAppDataPath() const
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);

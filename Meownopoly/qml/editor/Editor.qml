@@ -312,11 +312,7 @@ Base_Board {
         editorSidePanel: sidePanel
     }
 
-
     mainMa.anchors.bottomMargin: mapInfoPanel.x < parent.width ? 0 : selectionPanel.height
-
-
-
 
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {
@@ -479,6 +475,10 @@ Base_Board {
             if (logic.mouseLogic && logic.mouseLogic.showLinkPreview) {
                 logic.mouseLogic.showLinkPreview()
             }
+        }
+
+        onModelSelected: function(name) {
+            gameScene.modelName = name
         }
     }
 
