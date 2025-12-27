@@ -280,7 +280,6 @@ void  PhysicsEngine2D::applyWorldEffect(PhysicsBody2D* body, qreal dt)
 {
 
     // Appliquer l'input du body
-    body->addForce(body->inputVector(), body->inputStrenght());
 
     body->applyForce(QVector2D(1,1), (1.-m_friction));
 

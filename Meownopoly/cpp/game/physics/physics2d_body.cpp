@@ -98,6 +98,9 @@ void PhysicsBody2D::setCollisionEnabled(bool enabled)
 }
 
 // --- API Publique ---
+void PhysicsBody2D::applyForce(const QVector2D& inputVector, qreal inputForce) {
+    applyForce(inputVector * inputForce);
+}
 
 void PhysicsBody2D::applyForce(const QVector2D& force)
 {
@@ -105,6 +108,7 @@ void PhysicsBody2D::applyForce(const QVector2D& force)
     if (m_isStatic) return;
         m_forceAccumulator += force;
 }
+
 
 void PhysicsBody2D::applyImpulse(const QVector2D& impulse)
 {
@@ -129,7 +133,7 @@ void PhysicsBody2D::reset() {
 }
 // --- Usage intern
 
-void PhysicsBody2D::integrate(qreal dt, qreal worldFriction) {
+void PhysicsBody2D::integrate(qreal dt) {
     if (m_isStatic || dt <= 0) return;
 
     // 1. Calcul de l'accélération (a = F / m)

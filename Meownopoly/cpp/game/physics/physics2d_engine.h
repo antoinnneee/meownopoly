@@ -176,7 +176,10 @@ private:
      * @brief Applique les effets d'input et friction sur un body
      */
     void applyWorldEffect(PhysicsBody2D *body, qreal dt);
-    
+
+
+    void applyGroundFrictionAndZones(PhysicsBody2D *body, qreal dt);
+
     /**
      * @brief Détecte et résout les collisions pour un body
      */

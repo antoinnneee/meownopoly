@@ -14,7 +14,7 @@
  * Représente une zone polygonale qui peut avoir différents effets
  * sur les entités physiques qui la traversent.
  */
-class PhysicsZone2D : public QObject
+class PhysicsZone2D : public ZoneParameter
 {
     Q_OBJECT
     
@@ -38,7 +38,7 @@ public:
     // --- Getters ---
     QString zoneId() const { return m_zoneId; }
     bool isActive() const { return m_isActive; }
-    bool exclusion() const { return m_zoneParameter.exclusion();};
+    bool exclusion() const { return ZoneParameter::exclusion();};
 
     
     // --- API Publique ---
@@ -71,7 +71,7 @@ public:
      * @brief Accès aux paramètres de la zone
      * @return Référence constante vers les paramètres
      */
-    const ZoneParameter& getZoneParameters() const { return m_zoneParameter; }
+    const ZoneParameter& getZoneParameters() const { return *this; }
 
 signals:
 
@@ -79,7 +79,6 @@ signals:
 
 private:
     QString m_zoneId;
-    ZoneParameter m_zoneParameter;
 
     Polygon2D m_polygon;            // Version optimisée
     

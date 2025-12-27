@@ -77,6 +77,7 @@ public:
      * @param dt Delta time en secondes
      */
     Q_INVOKABLE void applyForce(const QVector2D& inputVector, qreal inputForce);
+    Q_INVOKABLE void applyForce(const QVector2D& inputVector);
     
     /**
      * @brief Applique une impulsion instantanée
@@ -107,9 +108,8 @@ public:
     PhysicsEngine2D* engine() const { return m_engine; }
 
     QVector2D inputVector() const;
-    void setInputVector(const QVector2D &newInputVector)
+    void setInputVector(const QVector2D &newInputVector);
 
-    void applyForce(const QVector2D &force);
 
     void integrate(qreal dt);
 
