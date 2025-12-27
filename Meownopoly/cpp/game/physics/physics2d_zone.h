@@ -82,6 +82,7 @@ private:
     ZoneParameter m_zoneParameter;
 
     Polygon2D m_polygon;            // Version optimisée
+    
     bool m_isActive = true;
 };
 

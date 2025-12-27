@@ -153,6 +153,7 @@ public:
      */
     Q_INVOKABLE bool checkCollisionAt(const QVector2D& center, qreal radius) const;
 
+
 signals:
     void bodyCountChanged();
     void zoneCountChanged();

@@ -37,7 +37,6 @@ class PhysicsBody2D : public QObject
     Q_PROPERTY(bool isColliding READ isColliding NOTIFY isCollidingChanged)
     Q_PROPERTY(QVector2D lastCollisionNormal READ lastCollisionNormal NOTIFY lastCollisionNormalChanged)
     Q_PROPERTY(QVector2D inputVector READ inputVector WRITE setInputVector NOTIFY inputVectorChanged)
-    Q_PROPERTY(qreal inputStrenght READ inputStrenght WRITE setInputStrenght NOTIFY inputStrenghtChanged FINAL)
 
 public:
     explicit PhysicsBody2D(QObject* parent = nullptr);
@@ -96,20 +95,6 @@ public:
     Q_INVOKABLE void reset();
     
     // --- Usage interne par PhysicsEngine2D ---
-
-    /**
-     * @brief Applique une force directionnelle (tapis roulant)
-     */
-    void applyDirectionalForce(const QVector2D& force, qreal dt);
-
-    /**
-     * @brief Applique une force de friction directionnelle
-     * @param frictionDirection Direction de la friction
-     * @param frictionStrength Intensité de la friction (0-1)
-     * @param dt Delta time en secondes
-     */
-    void applyDirectionalFriction(const QVector2D& frictionDirection, qreal frictionStrength, qreal dt);
-
     /**
      * @brief Met à jour l'état de collision
      */
@@ -122,12 +107,14 @@ public:
     PhysicsEngine2D* engine() const { return m_engine; }
 
     QVector2D inputVector() const;
-    void setInputVector(const QVector2D &newInputVector);
+    void setInputVector(const QVector2D &newInputVector)
 
-    qreal inputStrenght() const;
-    void setInputStrenght(qreal newInputStrenght);
+    void applyForce(const QVector2D &force);
 
-    void addForce(const QVector2D &inputVector, qreal inputForce);
+    void integrate(qreal dt);
+
+    void setLinearDamping(qreal damping);
+    qreal linearDamping() const { return m_linearDamping; }
 signals:
     void positionChanged();
     void velocityChanged();
@@ -149,7 +136,6 @@ signals:
 
     void inputVectorChanged();
 
-    void inputStrenghtChanged();
 
 private:
     QString m_bodyId;
@@ -160,7 +146,7 @@ private:
     qreal m_slideFactor = 1.0;
     qreal m_acceleration = 30.0;
     qreal m_maxSpeed = 36.0;  // moveSpeed * sprintMultiplier
-    
+    qreal m_linearDamping = 0.1;
     qreal m_mass = 1.0;
     qreal m_invMass = 1.0;
     bool m_isStatic = false;
@@ -182,7 +168,6 @@ private:
     // Référence au moteur
     PhysicsEngine2D* m_engine = nullptr;
     QVector2D m_inputVector;
-    qreal m_inputStrenght = 1;
 };
 
 #endif // PHYSICS2D_BODY_H

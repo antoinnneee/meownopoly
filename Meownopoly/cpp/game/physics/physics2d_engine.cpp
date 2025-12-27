@@ -257,17 +257,13 @@ void PhysicsEngine2D::updateAll(qreal dt)
 void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
 {
     if (!body || body->isStatic()) return;
+        // Gérer les zones (glace, boue, boosts) AVANT l'intégration
 
-    // 1. Appliquer les effets des du monde (frication, acceleration, input)
-    applyWorldEffect(body, dt);
+    applyGroundFrictionAndZones(body, dt);
+    // Intégrer (Vitesse += Force; Pos += Vitesse)
+    body->integrate(dt);
 
-    // 1. Appliquer les effets des zones
-    applyZoneEffects(body, dt);
-    
-    // 2. Calculer la nouvelle position proposée
-    QVector2D newPos = body->position() + body->velocity() * dt;
-
-    
+    /*
     // 3. Détecter et résoudre les collisions
     if (body->collisionEnabled()) {
         // body->setPosition(newPos);
@@ -276,6 +272,7 @@ void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
     else {
         body->setPosition(newPos);
     }
+    */
 
 }
 
@@ -459,3 +456,46 @@ bool PhysicsEngine2D::checkCollisionAt(const QVector2D& center, qreal radius) co
     return false;
 }
 
+void PhysicsEngine2D::applyGroundFrictionAndZones(PhysicsBody2D* body, qreal dt)
+{
+    QSet<PhysicsZone2D*> currentZones;
+    qreal defaultDamping = 0.05; // Sol standard (Terre)
+    qreal currentDamping = defaultDamping; 
+
+    QVector2D pos = body->position();
+
+    for (PhysicsZone2D* zone : m_zones) {
+        if (!zone->isActive()) continue;
+        
+        // Optimisation possible : AABB check avant containsPoint
+        if (zone->containsPoint(pos)) {
+            currentZones.insert(zone);
+            
+            // Appliquer les paramètres de la zone
+            const ZoneParameter& params = zone->getZoneParameters();
+            
+            // Modifier le damping (Glace = damping faible, Boue = damping fort)
+            // On pourrait stocker le damping dans ZoneParameter (ex: frictionStrength)
+            if (params.frictionStrenght() > 0) {
+                 // Si c'est une zone de friction (ex: boue), on remplace le damping
+                 // Si frictionStrength = 0 (Glace), damping proche de 0
+                 currentDamping = params.frictionStrenght(); 
+            }
+            
+            // Boost de vitesse (Tapis roulant)
+            if (params.velocityStrenght() > 0) {
+                QVector2D force = params.velocityDirection().normalized() * params.velocityStrenght();
+                body->applyForce(force);
+            }
+        }
+    }
+
+    // Appliquer le damping calculé
+    body->setLinearDamping(currentDamping);
+
+    // Gérer les signaux Entered/Exited
+    QSet<PhysicsZone2D*>& prevZones = m_activeZonesPerBody[body];
+    for(auto z : currentZones) { if(!prevZones.contains(z)) { emit bodyEnteredZone(body, z); emit body->enteredZone(z); } }
+    for(auto z : prevZones) { if(!currentZones.contains(z)) { emit bodyExitedZone(body, z); emit body->exitedZone(z); } }
+    m_activeZonesPerBody[body] = currentZones;
+}

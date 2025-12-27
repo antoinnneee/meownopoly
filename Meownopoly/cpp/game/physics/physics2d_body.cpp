@@ -99,69 +99,65 @@ void PhysicsBody2D::setCollisionEnabled(bool enabled)
 
 // --- API Publique ---
 
-void PhysicsBody2D::applyForce(const QVector2D& inputVector, qreal inputForce)
+void PhysicsBody2D::applyForce(const QVector2D& force)
 {
-    m_velocity *= inputVector * inputForce;
-}
-void PhysicsBody2D::addForce(const QVector2D& inputVector, qreal inputForce)
-{
-    m_velocity += inputVector * inputForce;
+    // On ajoute directement à l'accumulateur ou à la vitesse si intégration Euler simple
+    if (m_isStatic) return;
+        m_forceAccumulator += force;
 }
 
 void PhysicsBody2D::applyImpulse(const QVector2D& impulse)
 {
     if (m_isStatic) return;
+        m_velocity += impulse * m_invMass;
+    emit velocityChanged();
+}
+
+void PhysicsBody2D::setLinearDamping(qreal damping)
+{
+    m_linearDamping = damping;
+}
+
+void PhysicsBody2D::stop() {
+    m_velocity = QVector2D(0,0);
+    m_forceAccumulator = QVector2D(0,0);
+    emit velocityChanged();
+}
+
+void PhysicsBody2D::reset() {
+    stop();
+}
+// --- Usage intern
+
+void PhysicsBody2D::integrate(qreal dt, qreal worldFriction) {
+    if (m_isStatic || dt <= 0) return;
+
+    // 1. Calcul de l'accélération (a = F / m)
+    QVector2D acceleration = m_forceAccumulator * m_invMass;
+
+    // 2. Mise à jour de la vitesse (V = V + a*dt)
+    m_velocity += acceleration * dt;
+
+    // 3. Application de la friction globale (Damping)
+    // On combine la friction du monde et le damping propre au body
+//    m_velocity *= std::pow(m_linearDamping * (1.0 - worldFriction), dt);
     
-    // Impulsion = changement instantané de vitesse (divisé par masse)
-    m_velocity += impulse / m_mass;
+    
+    // 3. LE SOL RALENTIT LA VITESSE (Damping)
+    //m_velocity *= std::pow(1.0 - m_linearDamping, dt * 60.0); // en cas de probleme 
+    qreal frictionFactor = 1.0 - (m_linearDamping * dt * 60.0);
+    if (frictionFactor < 0) frictionFactor = 0; // Sécurité
+    m_velocity *= frictionFactor;
+
+    // 4. Mise à jour de la position (P = P + V*dt)
+    m_position += m_velocity * dt;
+
+    // On ne notifie les changements qu'une fois le calcul fini
+    emit positionChanged();
     emit velocityChanged();
-}
-void PhysicsBody2D::stop()
-{
-    m_velocity = QVector2D(0, 0);
-    emit velocityChanged();
-}
-
-void PhysicsBody2D::reset()
-{
-    m_velocity = QVector2D(0, 0);
-    m_isColliding = false;
-    m_lastCollisionNormal = QVector2D(0, 0);
-    m_currentSpeedModifier = 1.0;
-    m_currentFrictionModifier = 1.0;
-
-
-    emit velocityChanged();
-    emit isCollidingChanged();
-    emit lastCollisionNormalChanged();
-}
-
-// --- Usage interne ---
-
-void PhysicsBody2D::applyDirectionalForce(const QVector2D& force, qreal dt)
-{
-    // Ajouter directement à la vitesse (tapis roulant)
-    m_velocity += force * dt;
-    emit velocityChanged();
-}
-
-void PhysicsBody2D::applyDirectionalFriction(const QVector2D& frictionDirection, qreal frictionStrength, qreal dt)
-{
-    if (m_isStatic) return;
-
-    // Normaliser la direction de friction
-    QVector2D normalizedDir = frictionDirection.normalized();
-
-    // Calculer la composante de vitesse dans la direction de friction
-    qreal velocityAlongFriction = QVector2D::dotProduct(m_velocity, normalizedDir);
-
-    // Appliquer la friction seulement si on se déplace dans cette direction
-    if (velocityAlongFriction > 0) {
-        qreal frictionForce = frictionStrength * dt;
-        qreal reduction = std::min(frictionForce, velocityAlongFriction);
-        m_velocity -= normalizedDir * reduction;
-        emit velocityChanged();
-    }
+    
+    // On nettoie pour la frame suivante
+    m_forceAccumulator = QVector2D(0,0);
 }
 
 
@@ -189,17 +185,4 @@ void PhysicsBody2D::setInputVector(const QVector2D &newInputVector)
         return;
     m_inputVector = newInputVector;
     emit inputVectorChanged();
-}
-
-qreal PhysicsBody2D::inputStrenght() const
-{
-    return m_inputStrenght;
-}
-
-void PhysicsBody2D::setInputStrenght(qreal newInputStrenght)
-{
-    if (qFuzzyCompare(m_inputStrenght, newInputStrenght))
-        return;
-    m_inputStrenght = newInputStrenght;
-    emit inputStrenghtChanged();
 }
