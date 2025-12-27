@@ -64,3 +64,23 @@ CollisionResult PhysicsZone2D::checkCollisionSweep(const QVector2D& startPos, co
     return result;
 }
 
+QVector<CollisionResult> PhysicsZone2D::checkCollisionAll(const QVector2D& center, qreal radius) const
+{
+    QVector<CollisionResult> results;
+    if (!m_isActive || !m_polygon.isValid() || !exclusion()) return results;
+    
+    results = Collision2D::checkCirclePolygonAll(center, radius, m_polygon);
+    for (auto& res : results) res.zone = const_cast<PhysicsZone2D*>(this);
+    return results;
+}
+
+QVector<CollisionResult> PhysicsZone2D::checkCollisionSweepAll(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const
+{
+    QVector<CollisionResult> results;
+    if (!m_isActive || !m_polygon.isValid() || !exclusion()) return results;
+    
+    results = Collision2D::checkCirclePolygonSweepAll(startPos, endPos, radius, m_polygon);
+    for (auto& res : results) res.zone = const_cast<PhysicsZone2D*>(this);
+    return results;
+}
+

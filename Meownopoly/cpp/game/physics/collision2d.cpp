@@ -203,32 +203,82 @@ bool Collision2D::pointInPolygon(
     return inside;
 }
 
+QVector<CollisionResult> Collision2D::checkCirclePolygonAll(
+    const QVector2D& center,
+    qreal radius,
+    const Polygon2D& polygon)
+{
+    QVector<CollisionResult> results;
+    
+    if (!polygon.isValid() || !checkCircleAABB(center, radius, polygon.boundingBox)) {
+        return results;
+    }
+    
+    for (int i = 0; i < polygon.points.size(); ++i) {
+        int j = (i + 1) % polygon.points.size();
+        
+        SegmentResult segResult = pointToSegmentDistance(
+            center,
+            polygon.points[i],
+            polygon.points[j]
+        );
+        
+        if (segResult.distance < radius) {
+            CollisionResult result;
+            result.colliding = true;
+            result.distance = segResult.distance;
+            result.closestPoint = segResult.closestPoint;
+            result.penetration = radius - segResult.distance;
+            
+            QVector2D toCenter = center - segResult.closestPoint;
+            if (toCenter.lengthSquared() > EPSILON * EPSILON) {
+                result.normal = toCenter.normalized();
+            } else {
+                result.normal = polygon.normals[i];
+            }
+            results.append(result);
+        }
+    }
+    
+    return results;
+}
+
 CollisionResult Collision2D::checkCirclePolygonSweep(
     const QVector2D& startPos,
     const QVector2D& endPos,
     qreal radius,
     const Polygon2D& polygon)
 {
-    CollisionResult result;
-
-    if (!polygon.isValid()) {
-        return result;
+    QVector<CollisionResult> all = checkCirclePolygonSweepAll(startPos, endPos, radius, polygon);
+    if (all.isEmpty()) return CollisionResult();
+    
+    // Retourner la plus proche (t minimal)
+    CollisionResult best = all[0];
+    for (const auto& res : all) {
+        if (res.t < best.t) best = res;
     }
+    return best;
+}
 
-    // Vecteur de mouvement
+QVector<CollisionResult> Collision2D::checkCirclePolygonSweepAll(
+    const QVector2D& startPos,
+    const QVector2D& endPos,
+    qreal radius,
+    const Polygon2D& polygon)
+{
+    QVector<CollisionResult> results;
+
+    if (!polygon.isValid()) return results;
+
     QVector2D movement = endPos - startPos;
     qreal movementLength = movement.length();
 
-    // Si pas de mouvement, utiliser le test statique
     if (movementLength < EPSILON) {
-        return checkCirclePolygon(startPos, radius, polygon);
+        return checkCirclePolygonAll(startPos, radius, polygon);
     }
 
-    // Test rapide avec bounding box étendue
-    QRectF extendedBox = polygon.boundingBox;
-    extendedBox.adjust(-radius, -radius, radius, radius);
-
-    // Créer la bounding box du segment de mouvement
+    // Test AABB étendu
+    QRectF extendedBox = polygon.boundingBox.adjusted(-radius, -radius, radius, radius);
     QRectF movementBox(
         std::min(startPos.x(), endPos.x()) - radius,
         std::min(startPos.y(), endPos.y()) - radius,
@@ -236,58 +286,55 @@ CollisionResult Collision2D::checkCirclePolygonSweep(
         std::abs(endPos.y() - startPos.y()) + 2 * radius
     );
 
-    if (!movementBox.intersects(extendedBox)) {
-        return result;
-    }
+    if (!movementBox.intersects(extendedBox)) return results;
 
-    // Nombre d'étapes adaptatif basé sur la longueur du mouvement et le rayon
-    // Plus le mouvement est long ou le rayon petit, plus d'étapes pour éviter le tunneling
-    const int MIN_STEPS = 4;
-    const int MAX_STEPS = 50;
-    const qreal BASE_STEPS_PER_UNIT = 8.0; // étapes de base par unité de longueur
-    const qreal RADIUS_FACTOR = 1.0 / radius; // plus le rayon est petit, plus d'étapes
+    const int MIN_STEPS = 8;
+    const int MAX_STEPS = 64;
+    int steps = std::clamp(static_cast<int>(movementLength * 10.0 / radius), MIN_STEPS, MAX_STEPS);
 
-    qreal adaptiveStepsPerUnit = BASE_STEPS_PER_UNIT * std::max(1.0, RADIUS_FACTOR * 0.5);
-    int steps = std::clamp(static_cast<int>(movementLength * adaptiveStepsPerUnit),
-                          MIN_STEPS, MAX_STEPS);
+    // Pour chaque segment, on cherche le premier impact
+    for (int i = 0; i < polygon.points.size(); ++i) {
+        int j = (i + 1) % polygon.points.size();
+        const QVector2D& pA = polygon.points[i];
+        const QVector2D& pB = polygon.points[j];
+        
+        bool segmentHit = false;
+        CollisionResult earliestSegmentResult;
+        earliestSegmentResult.t = 2.0;
 
-    qreal earliestT = 2.0; // > 1.0 pour indiquer pas de collision trouvée
-    QVector2D earliestNormal;
-    QVector2D earliestPoint;
-    qreal earliestPenetration = 0.0;
+        for (int step = 0; step <= steps; ++step) {
+            qreal t = static_cast<qreal>(step) / steps;
+            QVector2D testPos = startPos + t * movement;
 
-    // Tester les positions intermédiaires (exclure le point de départ)
-    for (int step = 0; step <= steps; ++step) {
-        qreal t = static_cast<qreal>(step) / steps;
-        QVector2D testPos = startPos + t * movement;
-
-        // Tester la collision statique à cette position
-        CollisionResult staticResult = checkCirclePolygon(testPos, radius, polygon);
-
-        if (staticResult.colliding && t < earliestT) {
-            qDebug() << "[Collision2D]  staticResult t : " << t << testPos << staticResult.colliding;
-            earliestT = t;
-            earliestNormal = staticResult.normal;
-            earliestPoint = staticResult.closestPoint;
-            earliestPenetration = staticResult.penetration;
+            SegmentResult segRes = pointToSegmentDistance(testPos, pA, pB);
+            if (segRes.distance < radius) {
+                if (t < earliestSegmentResult.t) {
+                    segmentHit = true;
+                    earliestSegmentResult.colliding = true;
+                    earliestSegmentResult.t = t;
+                    earliestSegmentResult.distance = segRes.distance;
+                    earliestSegmentResult.closestPoint = segRes.closestPoint;
+                    earliestSegmentResult.penetration = radius - segRes.distance;
+                    
+                    QVector2D toCenter = testPos - segRes.closestPoint;
+                    if (toCenter.lengthSquared() > EPSILON * EPSILON) {
+                        earliestSegmentResult.normal = toCenter.normalized();
+                    } else {
+                        earliestSegmentResult.normal = polygon.normals[i];
+                    }
+                }
+                // Une fois qu'on a un impact sur CE segment, on passe au segment suivant
+                // pour garantir qu'on a le PREMIER impact de chaque segment.
+                break; 
+            }
+        }
+        
+        if (segmentHit) {
+            results.append(earliestSegmentResult);
         }
     }
 
-    // Si on a trouvé une collision
-    if (earliestT <= 1.0) {
-        qDebug() << "[Collision2D]  collision t : "<< earliestT;
-        result.colliding = true;
-        result.t = std::clamp(earliestT, 0.0, 1.0); // S'assurer que t est dans [0,1]
-        result.closestPoint = earliestPoint;
-        result.normal = earliestNormal;
-        result.penetration = earliestPenetration;
-
-        // Calculer la distance correcte à la position d'impact
-        QVector2D impactPos = startPos + result.t * movement;
-        result.distance = (impactPos - earliestPoint).length();
-    }
-
-    return result;
+    return results;
 }
 
 QVector2D Collision2D::applyBounce(

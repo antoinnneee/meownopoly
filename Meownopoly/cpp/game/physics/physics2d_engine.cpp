@@ -253,7 +253,7 @@ void PhysicsEngine2D::updateAll(qreal dt)
     for (PhysicsBody2D* body : m_bodies) {
         updateBody(body, dt);
     }
-    // 2. Détection des collisions (Broadphase + Narrowphase simplifiés)
+    // 2. Détection des collisions (Broadphase + Narrowphase CCD)
     QVector<CollisionResult> contacts;
     for (PhysicsBody2D* body : m_bodies) {
         if (!body->collisionEnabled() || body->isStatic()) continue;
@@ -261,20 +261,21 @@ void PhysicsEngine2D::updateAll(qreal dt)
         for (PhysicsZone2D* zone : m_zones) {
             if (!zone->isActive() || !zone->exclusion()) continue;
 
-            // Utilisation collision sweep pour éviter le tunneling
-            CollisionResult result = zone->checkCollisionSweep(body->previousPosition(), body->position(), body->collisionRadius());
+            // Utilisation collision sweep pour détecter TOUS les segments impactés
+            QVector<CollisionResult> results = zone->checkCollisionSweepAll(body->previousPosition(), body->position(), body->collisionRadius());
 
-            if (result.colliding) {
+            for (CollisionResult& result : results) {
                 result.body = body;
-                result.zone = zone;
                 
-                // Si c'est une collision par balayage (t < 1.0), la pénétration à la fin de la frame
-                // est bien plus grande que la pénétration au moment de l'impact (result.penetration).
+                // Si c'est une collision par balayage (t < 1.0), on calcule la pénétration totale
+                // La pénétration doit pousser le body à l'extérieur de la surface d'impact
                 if (result.t < 1.0) {
-                    QVector2D movement = body->position() - body->previousPosition();
-                    qreal depthAtEnd = QVector2D::dotProduct(movement, -result.normal);
-                    // On cumule la pénétration initiale et la distance parcourue "dans" le mur
-                    result.penetration = std::max(result.penetration, depthAtEnd + 0.01); 
+                    QVector2D impactPos = body->previousPosition() + result.t * (body->position() - body->previousPosition());
+                    QVector2D penetrationVec = body->position() - impactPos;
+                    qreal depth = QVector2D::dotProduct(penetrationVec, -result.normal);
+                    
+                    // La pénétration totale est la profondeur de tunneling + un petit buffer
+                    result.penetration = std::max(result.penetration, depth + 0.02);
                 }
                 
                 contacts.append(result);

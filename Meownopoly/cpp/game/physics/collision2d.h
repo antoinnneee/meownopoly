@@ -110,6 +110,22 @@ public:
         qreal radius,
         const Polygon2D& polygon
     );
+
+    /**
+     * @brief Version retournant toutes les collisions trouvées sur le polygone
+     */
+    static QVector<CollisionResult> checkCirclePolygonAll(
+        const QVector2D& center,
+        qreal radius,
+        const Polygon2D& polygon
+    );
+
+    static QVector<CollisionResult> checkCirclePolygonSweepAll(
+        const QVector2D& startPos,
+        const QVector2D& endPos,
+        qreal radius,
+        const Polygon2D& polygon
+    );
     
     /**
      * @brief Test rapide de collision cercle-AABB

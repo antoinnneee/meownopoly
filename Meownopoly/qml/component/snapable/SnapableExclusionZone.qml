@@ -85,9 +85,6 @@ SnapableElement {
     
     // Forcer le redraw au chargement
     Component.onCompleted: {
-        //polygonBounds = calculateBounds()
-        // previousGridPosX = gridPosX
-        // previousGridPosY = gridPosY
         hatchCanvas.requestPaint()
     }
     
@@ -163,6 +160,24 @@ SnapableElement {
     // Compteur pour forcer la mise à jour de la Shape
     property int shapeUpdateTrigger: 0
     
+    // Fonction pour regrouper le recalcul et le trigger de mise à jour
+    function updateRecalculate() {
+        root.polygonBounds = root.calculateBounds()
+        root.shapeUpdateTrigger++
+    }
+
+    // Timer pour débouncer le recalcul et le repaint
+    Timer {
+        id: redrawTimer
+        interval: 10
+        repeat: false
+        
+        onTriggered: {
+            root.updateRecalculate()
+            hatchCanvas.requestPaint()
+        }
+    }
+    
     // Shape pour le polygone
     Shape {
         id: polygonShape
@@ -201,6 +216,13 @@ SnapableElement {
         z: 0
         
         onPaint: {
+            // Si le timer est en cours, on le stoppe et on fait le calcul maintenant
+            // car on est déjà en train de peindre (probablement dû à un resize système)
+            if (redrawTimer.running) {
+                root.updateRecalculate()
+                redrawTimer.stop()
+            }
+            
             var ctx = getContext("2d")
             ctx.reset()
             
@@ -271,14 +293,10 @@ SnapableElement {
         Connections {
             target: root.gridManager
             function onGridSizeChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
-                hatchCanvas.requestPaint()
+                redrawTimer.restart()
             }
             function onScaleLevelChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
-                hatchCanvas.requestPaint()
+                redrawTimer.restart()
             }
         }
         
@@ -286,14 +304,10 @@ SnapableElement {
         Connections {
             target: root
             function onOffsetXChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
-                hatchCanvas.requestPaint()
+                redrawTimer.restart()
             }
             function onOffsetYChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
-                hatchCanvas.requestPaint()
+                redrawTimer.restart()
             }
         }
     }

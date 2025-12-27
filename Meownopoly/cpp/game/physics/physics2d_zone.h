@@ -67,6 +67,9 @@ public:
      */
     CollisionResult checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const;
 
+    QVector<CollisionResult> checkCollisionAll(const QVector2D& center, qreal radius) const;
+    QVector<CollisionResult> checkCollisionSweepAll(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const;
+
     /**
      * @brief Accès aux paramètres de la zone
      * @return Référence constante vers les paramètres
