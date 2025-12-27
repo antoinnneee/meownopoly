@@ -136,6 +136,7 @@ void PhysicsBody2D::reset() {
 void PhysicsBody2D::integrate(qreal dt) {
     if (m_isStatic || dt <= 0) return;
 
+    applyForce(m_inputVector * 10);
     // 1. Calcul de l'accélération (a = F / m)
     QVector2D acceleration = m_forceAccumulator * m_invMass;
 

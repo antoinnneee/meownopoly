@@ -10,18 +10,9 @@ PhysicsZone2D::PhysicsZone2D(const QString& id, QObject* parent)
 }
 
 PhysicsZone2D::PhysicsZone2D(const QString& id, ZoneParameter &zoneParameter, QObject* parent)
-    : ZoneParameter(parent)
+    : ZoneParameter(zoneParameter, parent)
     , m_zoneId(id)
 {
-    setZoneColor(zoneParameter.zoneColor());
-    setZoneName(zoneParameter.zoneName());
-    setPolygonPoints(zoneParameter.polygonPoints());
-    setVelocityDirection(zoneParameter.velocityDirection());
-    setVelocityStrenght(zoneParameter.velocityStrenght());
-    setFrictionDirection(zoneParameter.frictionDirection());
-    setFrictionStrenght(zoneParameter.frictionStrenght());
-    setExclusion(zoneParameter.exclusion());
-    setSpeedMultiplier(zoneParameter.speedMultiplier());
     m_polygon = Polygon2D::fromVariantList(zoneParameter.polygonPoints());
 }
 

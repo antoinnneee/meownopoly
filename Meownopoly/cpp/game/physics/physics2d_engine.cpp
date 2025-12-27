@@ -474,10 +474,9 @@ void PhysicsEngine2D::applyGroundFrictionAndZones(PhysicsBody2D* body, qreal dt)
             const ZoneParameter& params = zone->getZoneParameters();
             
             // Modifier le damping (Glace = damping faible, Boue = damping fort)
-            // On pourrait stocker le damping dans ZoneParameter (ex: frictionStrength)
             if (params.frictionStrenght() > 0) {
-                 // Si c'est une zone de friction (ex: boue), on remplace le damping
-                 // Si frictionStrength = 0 (Glace), damping proche de 0
+                 // Si c'est une zone de friction (ex: boue)
+                 // Si frictionStrength = 0 (Glace)
                  currentDamping = params.frictionStrenght(); 
             }
             

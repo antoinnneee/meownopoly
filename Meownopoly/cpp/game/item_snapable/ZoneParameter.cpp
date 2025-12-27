@@ -32,6 +32,20 @@ ZoneParameter::ZoneParameter(const QJsonObject &json, QObject *parent)
     m_speedMultiplier = json.value("speedMultiplier").toDouble(0);
 }
 
+ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
+    : QObject(parent)
+    , m_polygonPoints(other.m_polygonPoints)
+    , m_zoneColor(other.m_zoneColor)
+    , m_zoneName(other.m_zoneName)
+    , m_velocityDirection(other.m_velocityDirection)
+    , m_velocityStrenght(other.m_velocityStrenght)
+    , m_frictionDirection(other.m_frictionDirection)
+    , m_frictionStrenght(other.m_frictionStrenght)
+    , m_exclusion(other.m_exclusion)
+    , m_speedMultiplier(other.m_speedMultiplier)
+{
+}
+
 QString ZoneParameter::toJSON()
 {
     QString json;

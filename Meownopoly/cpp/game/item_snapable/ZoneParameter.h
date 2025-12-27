@@ -23,6 +23,7 @@ class ZoneParameter : public QObject
 public:
     explicit ZoneParameter(QObject *parent = nullptr);
     explicit ZoneParameter(const QJsonObject &json, QObject *parent = nullptr);
+    explicit ZoneParameter(const ZoneParameter &other, QObject *parent = nullptr);
     QString toJSON();
     
     QVariantList polygonPoints() const;
