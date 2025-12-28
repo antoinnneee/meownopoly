@@ -204,7 +204,6 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/zonePanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/TP_Content.qml</file>
-        <file>qml/editor/panel/zonePanel/ExclusionZonePanel.qml</file>
-        <file>qml/editor/panel/ModelSelectionPanel.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomSidePanel/ModelSelectionPanel.qml</file>
     </qresource>
 </RCC>
