@@ -10,6 +10,7 @@ Item {
     property var targetEntity: null
     property var logic: null
     property var view3D: null
+    property var grid: null
 
     // Vitesse de déplacement en unités par seconde
     property real moveSpeed: 18.0
@@ -43,9 +44,6 @@ Item {
     property bool freeCamMode: true // Nouveau mode FreeCam
     property real lastTimestamp: 0
     
-    // --- Mode du moteur physique ---
-    property bool useCppPhysics: true  // Basculer entre C++ et JS
-    
     // --- Moteur Physique C++ ---
     PhysicsEngine2D {
         id: physicsEngine
@@ -58,6 +56,21 @@ Item {
 
     // --- API Publique ---
 
+    // Fonction pour définir le context
+    function setContext(view3D, grid, logic) {
+        root.view3D = view3D
+        root.logic = logic
+
+    }
+
+    // Fonction pour définir la zone
+    function setZone(zones) {
+        root.physicZones = zones || null
+
+        // Initialiser le moteur physique C++
+        initPhysicsEngine(physicZones)
+    }
+
     // Fonction pour définir la cible
     function setTarget(entity, view, grid, logic, zones) {
         targetEntity = entity
@@ -65,20 +78,30 @@ Item {
         root.logic = logic
         physicZones = zones || null
 
-        console.log("=== EntityController.setTarget ===")
+        console.log("=== EntityEngine.setTarget ===")
 
         // Initialiser le CameraController
-        CameraController.setTarget(entity, view, grid, logic)
-        
+        CameraController.setTarget(entity, view3D, World3DTools.gridManager, logic)
+
         // Initialiser le moteur physique C++
-        if (useCppPhysics) {
             initPhysicsEngine(zones)
+    }
+    // Fonction pour définir la cible
+    function setCameraTarget(entity) {
+        targetEntity = entity
+        CameraController.setTarget(entity, view3D, World3DTools.gridManager, logic)
+        // Initialiser la position depuis l'entité 3D
+        if (targetEntity) {
+            var gridSize = World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
+            var pos = World3DTools.position3dToGridRealPosition(targetEntity.x, 0, targetEntity.z)
+            playerBody.position = pos
+            console.log("[EntityEngine] Player initial position:", playerBody.position)
         }
     }
-    
+
     // Initialisation du moteur physique C++
     function initPhysicsEngine(zones) {
-        console.log("[EntityController] Initializing C++ physics engine...")
+        console.log("[EntityEngine] Initializing C++ physics engine...")
         
         // Créer le corps physique pour le joueur
         playerBody = physicsEngine.createBody("player")
@@ -87,7 +110,6 @@ Item {
         playerBody.slideFactor = slideFactor
         playerBody.acceleration = acceleration
         playerBody.maxSpeed = moveSpeed * sprintMultiplier
-        playerBody.inputStrenght = 1
         
         // Configurer les zones depuis les snapables
         if (zones && zones.length > 0) {
@@ -99,7 +121,7 @@ Item {
                 }
             }
             physicsEngine.setZonesFromSnapables(snapablesList)
-            console.log("[EntityController] Loaded", physicsEngine.zoneCount, "zones")
+            console.log("[EntityEngine] Loaded", physicsEngine.zoneCount, "zones")
         }
         
         // Initialiser la position depuis l'entité 3D
@@ -107,7 +129,7 @@ Item {
             var gridSize = World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
             var pos = World3DTools.position3dToGridRealPosition(targetEntity.x, 0, targetEntity.z)
             playerBody.position = pos
-            console.log("[EntityController] Player initial position:", playerBody.position)
+            console.log("[EntityEngine] Player initial position:", playerBody.position)
         }
         
         // Connecter les signaux
@@ -115,7 +137,7 @@ Item {
         playerBody.enteredZone.connect(onPlayerEnteredZone)
         playerBody.exitedZone.connect(onPlayerExitedZone)
         
-        console.log("[EntityController] C++ physics engine ready")
+        console.log("[EntityEngine] C++ physics engine ready")
     }
     
     // Helper pour le timestamp
@@ -127,15 +149,15 @@ Item {
     
     // Callbacks de collision
     function onPlayerCollision(zone) {
-        console.log(getTimestamp(), "[EntityController] Collision with zone:", zone.zoneId)
+        console.log(getTimestamp(), "[EntityEngine] Collision with zone:", zone.zoneId)
     }
     
     function onPlayerEnteredZone(zone) {
-        console.log(getTimestamp(), "[EntityController] Entered zone:", zone.zoneId, "type:", zone.zoneType)
+        console.log(getTimestamp(), "[EntityEngine] Entered zone:", zone.zoneId, "type:", zone.zoneType)
     }
     
     function onPlayerExitedZone(zone) {
-        console.log(getTimestamp(), "[EntityController] Exited zone:", zone.zoneId)
+        console.log(getTimestamp(), "[EntityEngine] Exited zone:", zone.zoneId)
     }
 
     // --- Gestion Clavier ---
@@ -175,15 +197,10 @@ Item {
                 freeCamMode = !freeCamMode
                 CameraController.isFollowing = !freeCamMode // Si freeCam, on arrête de suivre
                 if (!freeCamMode) {
-                    console.log("[EntityController] FreeCam OFF")
+                    console.log("[EntityEngine] FreeCam OFF")
                 } else {
-                    console.log("[EntityController] FreeCam ON")
+                    console.log("[EntityEngine] FreeCam ON")
                 }
-                break;
-            case Qt.Key_P:
-                // Basculer entre moteur C++ et JS (pour debug)
-                useCppPhysics = !useCppPhysics
-                console.log("[EntityController] Physics engine:", useCppPhysics ? "C++" : "JavaScript")
                 break;
         }
         updateInputVector()
@@ -284,7 +301,7 @@ Item {
         if (vel.length() > 0.1) {
             var dx = vel.x * gridSize * dt
             var dz = vel.y * gridSize * dt
-            // rotateEntity(dx, dz, dt)
+            rotateEntity(dx, dz, dt)
         }
     }
 
