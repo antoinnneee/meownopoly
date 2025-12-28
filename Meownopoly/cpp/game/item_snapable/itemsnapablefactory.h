@@ -16,8 +16,7 @@ public:
 
     Q_INVOKABLE ItemSnapable *createItemSnapable();
     Q_INVOKABLE ItemSnapable *createItemSnapable(Case::CaseType caseType);
-    Q_INVOKABLE ItemSnapable *createExclusionZone();
-    Q_INVOKABLE ItemSnapable *createEffectZone();
+    Q_INVOKABLE ItemSnapable *createPhysicZone();
 public slots:
 
 signals:

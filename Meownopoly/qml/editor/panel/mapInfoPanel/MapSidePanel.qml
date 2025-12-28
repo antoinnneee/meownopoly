@@ -351,7 +351,8 @@ Rectangle {
                                 logic.saveMap(logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == "" ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
 
                                 stEnableAutoSave.setValue("currentMap", mapInfoLocal.mapName)
-
+                            } else {
+                                console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")
                             }
                         }
                     }

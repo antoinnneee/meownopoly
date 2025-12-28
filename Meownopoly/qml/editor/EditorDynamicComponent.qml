@@ -12,7 +12,7 @@ Item{
     required property var logic
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
-    property alias snapableExclusionZoneComponent: snapableExclusionZoneComponent
+    property alias snapablePhysicZoneComponent: snapablePhysicZoneComponent
     property alias mouseLogic_selection_comp: mouseLogic_selection_comp
     property alias mouseLogic_pose_comp: mouseLogic_pose_comp
     property alias mouseLogic_game_comp: mouseLogic_game_comp
@@ -60,14 +60,14 @@ Item{
 
     // Composant dynamique pour créer des zones d'exclusion
     Component {
-        id: snapableExclusionZoneComponent
+        id: snapablePhysicZoneComponent
         SnapableExclusionZone {
             gridManager: gameGrid
             displayLinkEnable: false  // Les zones d'exclusion n'utilisent pas les liens
 
             // Gestion de la suppression
             onElementDeleted: function(element) {
-                logic.tileLogic.deleteExclusionZone(element)
+                logic.tileLogic.deletePhysicZone(element)
             }
         }
     }

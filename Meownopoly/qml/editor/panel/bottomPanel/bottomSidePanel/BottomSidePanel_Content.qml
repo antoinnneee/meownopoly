@@ -10,6 +10,7 @@ ColumnLayout {
     id: panelContent
     signal effectChanged()
     signal connectionRequested(string kind)  // Propager les demandes de connexion
+    signal modelSelected(string name)
 
     property var logic
     property alias effectsPanel: effectsPanel
@@ -29,6 +30,15 @@ ColumnLayout {
                 return
             }
             panelContent.effectChanged()
+        }
+    }
+
+    ModelSelectionPanel {
+        id: modelSelectionPanel
+        isCollapsed: true
+        Layout.fillWidth: true
+        onModelSelected: function(name) {
+            panelContent.modelSelected(name)
         }
     }
 

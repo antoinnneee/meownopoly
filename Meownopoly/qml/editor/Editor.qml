@@ -74,9 +74,11 @@ Base_Board {
         initializeEditor()
 
         // Initialize Entity Controller (avec la liste des tiles pour la collision)
-        EntityController.snapableTilesList = snapableTilesList
         World3DTools.init(view3D, gameGrid, gameScene.camera)
-        EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        // EntityEngine.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        EntityEngine.setContext(view3D, gameGrid, logic)
+        EntityEngine.setZone(snapableTilesList)
+        EntityEngine.setCameraTarget(entity)
         // EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
         
         // Activer le mode édition pour les zones d'exclusion
@@ -92,13 +94,11 @@ Base_Board {
     }
 
     Keys.onPressed: function(event) {
-        // Pass to EntityController
-        EntityController.keysHandler.Keys.pressed(event)
-        EditorController.keysHandler.Keys.pressed(event)
+        // Pass to EntityEngine
+        EntityEngine.keysHandler.Keys.pressed(event)
     }
     Keys.onReleased: function(event) {
-        EntityController.keysHandler.Keys.released(event)
-        EditorController.keysHandler.Keys.released(event)
+        EntityEngine.keysHandler.Keys.released(event)
         logic.mouseLogic.isControlPressed = false
     }
 
@@ -393,10 +393,7 @@ Base_Board {
         editorSidePanel: sidePanel
     }
 
-
-    mainMa.anchors.bottom:  mapInfoPanel.x < parent.width ? parent.bottom : selectionPanel.top
-
-
+    mainMa.anchors.bottomMargin: mapInfoPanel.x < parent.width ? 0 : selectionPanel.height
 
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {
@@ -418,7 +415,7 @@ Base_Board {
         Component.onCompleted: {
             var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")           
             gameScene.moveEntityToGridPosition(sphere, 0, 0)
-            // EntityController.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
+            // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
 
             sphere = gameScene.generateSphere(0, 0, 0, 10, "blue")
@@ -559,6 +556,10 @@ Base_Board {
             if (logic.mouseLogic && logic.mouseLogic.showLinkPreview) {
                 logic.mouseLogic.showLinkPreview()
             }
+        }
+
+        onModelSelected: function(name) {
+            gameScene.modelName = name
         }
     }
 

@@ -72,7 +72,7 @@ MouseLogic_Base {
     function clickedRight(mouse, drag) {
         // Fermer le polygone si on a au moins 3 points
         if (currentPolygonPoints.length >= 3) {
-            createExclusionZone()
+            createPhysicZone()
         } else {
             // Annuler le dessin
             cancelDrawing()
@@ -83,7 +83,7 @@ MouseLogic_Base {
     // Double-clic pour fermer le polygone
     function doubleClicked(mouse, drag) {
         if (currentPolygonPoints.length >= 3) {
-            createExclusionZone()
+            createPhysicZone()
         }
         mouse.accepted = true
     }
@@ -106,7 +106,7 @@ MouseLogic_Base {
     }
 
     // Créer la zone d'exclusion avec les points actuels
-    function createExclusionZone() {
+    function createPhysicZone() {
         if (currentPolygonPoints.length < 3) {
             console.log("Pas assez de points pour créer une zone d'exclusion")
             return
@@ -115,18 +115,18 @@ MouseLogic_Base {
         console.log("Création de la zone d'exclusion avec", currentPolygonPoints.length, "points")
         
         // Créer l'ItemSnapable pour la zone d'exclusion
-        var snapableParameters = ItemSnapableFactory.createExclusionZone()
+        var snapableParameters = ItemSnapableFactory.createPhysicZone()
         
-        // Copier les points dans l'polygonParameter
+        // Copier les points dans l'zoneParameter
         for (var i = 0; i < currentPolygonPoints.length; i++) {
-            snapableParameters.polygonParameter.addPoint(
+            snapableParameters.zoneParameter.addPoint(
                 currentPolygonPoints[i].x, 
                 currentPolygonPoints[i].y
             )
         }
         
         // Définir la couleur (utiliser l'assignation de propriété, pas le setter)
-        snapableParameters.polygonParameter.zoneColor = currentZoneColor
+        snapableParameters.zoneParameter.zoneColor = currentZoneColor
         
         // Calculer les bounds pour le displayParameter
         var bounds = calculateBounds(currentPolygonPoints)
@@ -137,7 +137,7 @@ MouseLogic_Base {
         snapableParameters.displayParameter.zLayer = 1  // Sous les décorations et cases
         
         // Créer l'élément via TileLogic
-        logic.tileLogic.createExclusionZone(snapableParameters)
+        logic.tileLogic.createPhysicZone(snapableParameters)
         
         // Réinitialiser le dessin
         resetDrawing()

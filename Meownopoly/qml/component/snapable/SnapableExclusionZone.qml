@@ -4,7 +4,7 @@ import QtQuick.Shapes
 import "../grid"
 
 import ItemSnapable
-import PolygonParameter
+import ZoneParameter
 
 /**
  * Zone d'exclusion polygonale avec hachures
@@ -27,8 +27,8 @@ SnapableElement {
     borderWidth: 0
     
     // Propriétés de style
-    property color zoneColor: snapableParameters.polygonParameter ?
-                              snapableParameters.polygonParameter.zoneColor : "#FF5722"
+    property color zoneColor: snapableParameters.zoneParameter ?
+                              snapableParameters.zoneParameter.zoneColor : "#FF5722"
     property color strokeColor: Qt.darker(zoneColor, 1.3)
     property int zoneStrokeWidth: isSelected ? 3 : 2
     property real hatchSpacing: 12
@@ -61,7 +61,7 @@ SnapableElement {
     
     // Mettre à jour les points du polygone quand l'élément est déplacé
     function updatePolygonPointsAfterMove() {
-        if (!snapableParameters.polygonParameter) return
+        if (!snapableParameters.zoneParameter) return
         
         // Delta en coordonnées de grille (pas en pixels)
         var deltaGridX = gridPosX - previousGridPosX
@@ -69,7 +69,7 @@ SnapableElement {
         
         if (Math.abs(deltaGridX) < 0.001 && Math.abs(deltaGridY) < 0.001) return
         
-        var points = snapableParameters.polygonParameter.polygonPoints
+        var points = snapableParameters.zoneParameter.polygonPoints
         var newPoints = []
         for (var i = 0; i < points.length; i++) {
             newPoints.push({
@@ -77,23 +77,29 @@ SnapableElement {
                 y: points[i].y + deltaGridY
             })
         }
-        snapableParameters.polygonParameter.polygonPoints = newPoints
+        snapableParameters.zoneParameter.polygonPoints = newPoints
     }
     
     // Calcul des bounds du polygone (en coordonnées locales)
-    property var polygonBounds: calculateBounds()
+    property var polygonBounds: ({ minX: 0, minY: 0, maxX: 100, maxY: 100 })
+    
+    // Bounds en coordonnées de grille (caching pour éviter de recalculer à chaque zoom/scroll)
+    property var gridBounds: ({ minX: 0, minY: 0, maxX: 0, maxY: 0 })
+    
+    // Cache pour les points locaux en pixels
+    property var localPointsCache: []
     
     // Forcer le redraw au chargement
     Component.onCompleted: {
-        //polygonBounds = calculateBounds()
-        // previousGridPosX = gridPosX
-        // previousGridPosY = gridPosY
+        root.gridBounds = root.calculateGridBounds()
+        root.updateRecalculate()
         hatchCanvas.requestPaint()
     }
     
-    function calculateBounds() {
-        var points = getPolygonPointsLocal()
-        if (points.length === 0) return { minX: 0, minY: 0, maxX: 100, maxY: 100 }
+    function calculateGridBounds() {
+        if (!snapableParameters.zoneParameter) return { minX: 0, minY: 0, maxX: 0, maxY: 0 }
+        var points = snapableParameters.zoneParameter.polygonPoints
+        if (points.length === 0) return { minX: 0, minY: 0, maxX: 0, maxY: 0 }
         
         var minX = points[0].x, maxX = points[0].x
         var minY = points[0].y, maxY = points[0].y
@@ -108,12 +114,24 @@ SnapableElement {
         return { minX: minX, minY: minY, maxX: maxX, maxY: maxY }
     }
     
+    function updatePixelBounds() {
+        var gs = gridManager.gridSize
+        var ox = offsetX
+        var oy = offsetY
+        root.polygonBounds = {
+            minX: gridBounds.minX * gs - ox,
+            minY: gridBounds.minY * gs - oy,
+            maxX: gridBounds.maxX * gs - ox,
+            maxY: gridBounds.maxY * gs - oy
+        }
+    }
+    
     // Convertir les points de grille en pixels LOCAUX (relatifs à l'élément)
     function getPolygonPointsLocal() {
         var points = []
-        if (!snapableParameters.polygonParameter) return points
+        if (!snapableParameters.zoneParameter) return points
         
-        var gridPoints = snapableParameters.polygonParameter.polygonPoints
+        var gridPoints = snapableParameters.zoneParameter.polygonPoints
         for (var i = 0; i < gridPoints.length; i++) {
             var pt = gridPoints[i]
             // Convertir en pixels et soustraire l'offset de l'élément
@@ -126,9 +144,12 @@ SnapableElement {
     
     // Obtenir les points pour le ShapePath (fermé)
     function getClosedPolygonPoints() {
-        var points = getPolygonPointsLocal()
+        var points = localPointsCache
         if (points.length > 0) {
-            points.push(points[0]) // Fermer le polygone
+            // Créer une copie pour ne pas corrompre le cache si on ajoute un point
+            var closed = points.slice()
+            closed.push(points[0]) 
+            return closed
         }
         return points
     }
@@ -140,7 +161,7 @@ SnapableElement {
     
     // Fonction pour vérifier si un point est dans le polygone (ray casting)
     function isPointInPolygon(px, py) {
-        var points = getPolygonPointsLocal()
+        var points = localPointsCache
         if (points.length < 3) return false
         
         var inside = false
@@ -162,6 +183,26 @@ SnapableElement {
     
     // Compteur pour forcer la mise à jour de la Shape
     property int shapeUpdateTrigger: 0
+    
+    // Fonction pour regrouper le recalcul et le trigger de mise à jour
+    function updateRecalculate() {
+        // Mettre à jour les points locaux et les pixel bounds (O(1) transformation)
+        root.localPointsCache = root.getPolygonPointsLocal()
+        root.updatePixelBounds()
+        root.shapeUpdateTrigger++
+    }
+
+    // Timer pour débouncer le recalcul et le repaint
+    Timer {
+        id: redrawTimer
+        interval: 10
+        repeat: false
+        
+        onTriggered: {
+            root.updateRecalculate()
+            hatchCanvas.requestPaint()
+        }
+    }
     
     // Shape pour le polygone
     Shape {
@@ -201,6 +242,13 @@ SnapableElement {
         z: 0
         
         onPaint: {
+            // Si le timer est en cours, on le stoppe et on fait le calcul maintenant
+            // car on est déjà en train de peindre (probablement dû à un resize système)
+            if (redrawTimer.running) {
+                root.updateRecalculate()
+                redrawTimer.stop()
+            }
+            
             var ctx = getContext("2d")
             ctx.reset()
             
@@ -228,7 +276,7 @@ SnapableElement {
             ctx.save()
             ctx.clip()
             
-            // Dessiner les hachures diagonales
+            // Dessiner les hachures diagonales (batching)
             ctx.strokeStyle = root.zoneColor
             ctx.lineWidth = 1.5
             ctx.globalAlpha = 0.6
@@ -238,30 +286,30 @@ SnapableElement {
                                     Math.pow(bounds.maxY - bounds.minY, 2))
             var spacing = root.hatchSpacing
             
+            ctx.beginPath()
             // Hachures de gauche à droite (/)
             for (var offset = -diagonal; offset < diagonal * 2; offset += spacing) {
-                ctx.beginPath()
                 ctx.moveTo(bounds.minX + offset, bounds.minY)
                 ctx.lineTo(bounds.minX + offset - diagonal, bounds.minY + diagonal)
-                ctx.stroke()
             }
+            ctx.stroke()
             
             ctx.restore()
         }
         
         // Redessiner quand les points changent
         Connections {
-            target: root.snapableParameters.polygonParameter
+            target: root.snapableParameters.zoneParameter
             function onPolygonPointsChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
+                root.gridBounds = root.calculateGridBounds()
+                root.updateRecalculate()
                 hatchCanvas.requestPaint()
             }
         }
         
         // Redessiner quand la couleur change
         Connections {
-            target: root.snapableParameters.polygonParameter
+            target: root.snapableParameters.zoneParameter
             function onZoneColorChanged() {
                 hatchCanvas.requestPaint()
             }
@@ -271,14 +319,10 @@ SnapableElement {
         Connections {
             target: root.gridManager
             function onGridSizeChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
-                hatchCanvas.requestPaint()
+                redrawTimer.restart()
             }
             function onScaleLevelChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
-                hatchCanvas.requestPaint()
+                redrawTimer.restart()
             }
         }
         
@@ -286,14 +330,10 @@ SnapableElement {
         Connections {
             target: root
             function onOffsetXChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
-                hatchCanvas.requestPaint()
+                redrawTimer.restart()
             }
             function onOffsetYChanged() {
-                root.polygonBounds = root.calculateBounds()
-                root.shapeUpdateTrigger++
-                hatchCanvas.requestPaint()
+                redrawTimer.restart()
             }
         }
     }
@@ -372,13 +412,13 @@ SnapableElement {
     
     // Fonctions helper pour accéder aux points sans déclencher de binding loops
     function getPointCount() {
-        if (!snapableParameters.polygonParameter) return 0
-        return snapableParameters.polygonParameter.polygonPoints.length
+        if (!snapableParameters.zoneParameter) return 0
+        return snapableParameters.zoneParameter.polygonPoints.length
     }
     
     function getPointX(idx) {
-        if (!snapableParameters.polygonParameter) return 0
-        var points = snapableParameters.polygonParameter.polygonPoints
+        if (!snapableParameters.zoneParameter) return 0
+        var points = snapableParameters.zoneParameter.polygonPoints
         if (idx >= 0 && idx < points.length) {
             return points[idx].x
         }
@@ -386,8 +426,8 @@ SnapableElement {
     }
     
     function getPointY(idx) {
-        if (!snapableParameters.polygonParameter) return 0
-        var points = snapableParameters.polygonParameter.polygonPoints
+        if (!snapableParameters.zoneParameter) return 0
+        var points = snapableParameters.zoneParameter.polygonPoints
         if (idx >= 0 && idx < points.length) {
             return points[idx].y
         }
@@ -395,8 +435,8 @@ SnapableElement {
     }
     
     function updatePointPosition(idx, newX, newY) {
-        if (!snapableParameters.polygonParameter) return
-        var points = snapableParameters.polygonParameter.polygonPoints
+        if (!snapableParameters.zoneParameter) return
+        var points = snapableParameters.zoneParameter.polygonPoints
         if (idx >= 0 && idx < points.length) {
             var newPoints = []
             for (var i = 0; i < points.length; i++) {
@@ -406,7 +446,10 @@ SnapableElement {
                     newPoints.push({ x: points[i].x, y: points[i].y })
                 }
             }
-            snapableParameters.polygonParameter.polygonPoints = newPoints
+            snapableParameters.zoneParameter.polygonPoints = newPoints
+            
+            // Recalculer les grid bounds
+            root.gridBounds = root.calculateGridBounds()
             
             // Recalculer la bounding box de l'élément
             updateDisplayBounds()
@@ -415,8 +458,8 @@ SnapableElement {
     
     // Mettre à jour les bounds du displayParameter après modification des points
     function updateDisplayBounds() {
-        if (!snapableParameters.polygonParameter) return
-        var points = snapableParameters.polygonParameter.polygonPoints
+        if (!snapableParameters.zoneParameter) return
+        var points = snapableParameters.zoneParameter.polygonPoints
         if (points.length === 0) return
         
         var minX = points[0].x, maxX = points[0].x
@@ -446,9 +489,9 @@ SnapableElement {
     // Indicateur de nom de zone (optionnel)
     Text {
         id: zoneLabel
-        visible: root.isSelected && root.snapableParameters.polygonParameter &&
-                 root.snapableParameters.polygonParameter.zoneName !== ""
-        text: root.snapableParameters.polygonParameter ? root.snapableParameters.polygonParameter.zoneName : ""
+        visible: root.isSelected && root.snapableParameters.zoneParameter &&
+                 root.snapableParameters.zoneParameter.zoneName !== ""
+        text: root.snapableParameters.zoneParameter ? root.snapableParameters.zoneParameter.zoneName : ""
         color: "white"
         font.pixelSize: 14
         font.bold: true

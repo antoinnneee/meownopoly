@@ -168,8 +168,8 @@ EBP_Content {
                         Layout.fillWidth: true
 
                         model: ListModel {
-                            ListElement { text: "🐌 Ralentissement (Boue)"; value: "slow"; colorCode: "#f1c40f" }
-                            ListElement { text: "💨 Vitesse (Vent)"; value: "speed"; colorCode: "#3498db" }
+                            ListElement { text: "Vitesse"; value: "speed"; colorCode: "#3498db" }
+                            ListElement { text: "Friction "; value: "friction"; colorCode: "#f1c40f" }
                         }
 
                         textRole: "text"

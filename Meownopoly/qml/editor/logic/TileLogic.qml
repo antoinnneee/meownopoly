@@ -105,8 +105,8 @@ QtObject {
                 "generalMA": mainMa,
                 "snapableParameters": itemSnapableData
             })
-        } else if (itemSnapableData.tileType === ItemSnapable.ExclusionZone) {
-            newTile = dynamicComponent.snapableExclusionZoneComponent.createObject(workArea, {
+        } else if (itemSnapableData.tileType === ItemSnapable.PhysicZoneTile) {
+            newTile = dynamicComponent.snapablePhysicZoneComponent.createObject(workArea, {
                 "generalMA": mainMa,
                 "snapableParameters": itemSnapableData
             })
@@ -125,13 +125,13 @@ QtObject {
     }
 
     // Fonction pour créer une zone d'exclusion
-    function createExclusionZone(snapableParameters) {
+    function createPhysicZone(snapableParameters) {
         console.log("TileLogic: Création d'une zone d'exclusion")
         return createItemSnapable(snapableParameters)
     }
 
     // Fonction pour supprimer une zone d'exclusion
-    function deleteExclusionZone(element) {
+    function deletePhysicZone(element) {
         console.log("TileLogic: Suppression d'une zone d'exclusion")
         
         // Trouver l'index de l'élément dans la liste

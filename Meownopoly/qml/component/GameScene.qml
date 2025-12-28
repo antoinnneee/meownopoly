@@ -18,6 +18,7 @@ Item {
     
     // Properties for camera control
     property real cameraMagnification: 1.0
+    property string modelName: "Princess"
 
     // Component pour créer des sphères dynamiquement
     Component {
@@ -135,12 +136,21 @@ Item {
             z: 0
 
 
+            Model {
+                id: primitiveModel
+                visible: root.modelName === "Cube" || root.modelName === "Sphere"
+                source: root.modelName === "Cube" ? "#Cube" : "#Sphere"
+                materials: PrincipledMaterial {
+                    baseColor: "white"
+                }
+            }
+
             Loader3D {
                 id: modelLoader
-                property string modelName: "Princess" // Nom du modèle par défaut
+                visible: root.modelName !== "Cube" && root.modelName !== "Sphere"
                 
                 // Construction du chemin vers AppData/models/Nom/Nom.qml
-                source: "file:///" + AssetManager.getAppDataPath() + "/models/" + modelName + "/" + modelName + ".qml"
+                source: visible ? ("file:///" + AssetManager.getAppDataPath() + "/models/" + root.modelName + "/" + root.modelName + ".qml") : ""
                 
                 onStatusChanged: {
                     if (status === Loader3D.Error) {
