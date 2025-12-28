@@ -1,15 +1,88 @@
 import QtQuick 2.15
 import QtQuick.Controls
 
-Rectangle {
+Item {
     id: selectionRect
     parent: workArea
     visible: false
-    color: "#C7E8FF" // Bleu semi-transparent
-    border.width: 2
-    border.color: "#3498db"
-    opacity: 0.7
     z: 100 // S'assurer qu'il est au-dessus des autres éléments
+    
+    // Canvas pour le fond hachuré
+    Canvas {
+        id: hatchCanvas
+        anchors.fill: parent
+        opacity: 0.5
+        
+        onPaint: {
+            var ctx = getContext("2d")
+            ctx.reset()
+            
+            var w = width
+            var h = height
+            
+            if (w <= 0 || h <= 0) return
+            
+            // Fond semi-transparent
+            ctx.fillStyle = "#C7E8FF"
+            ctx.fillRect(0, 0, w, h)
+            
+            // Hachures diagonales
+            ctx.strokeStyle = "#3498db"
+            ctx.lineWidth = 1.5
+            
+            var spacing = 12 // Espacement entre les lignes
+            var maxDist = w + h
+            
+            ctx.beginPath()
+            for (var i = -h; i < maxDist; i += spacing) {
+                ctx.moveTo(i, 0)
+                ctx.lineTo(i + h, h)
+            }
+            ctx.stroke()
+        }
+        
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+    }
+    
+    // Canvas pour la bordure en pointillés larges
+    Canvas {
+        id: borderCanvas
+        anchors.fill: parent
+        
+        property real dashOffset: 0
+        
+        onPaint: {
+            var ctx = getContext("2d")
+            ctx.reset()
+            
+            var w = width
+            var h = height
+            
+            if (w <= 0 || h <= 0) return
+            
+            ctx.strokeStyle = "#2980b9"
+            ctx.lineWidth = 3
+            ctx.setLineDash([12, 6]) // Larges pointillés
+            ctx.lineDashOffset = dashOffset
+            
+            ctx.beginPath()
+            ctx.rect(1.5, 1.5, w - 3, h - 3)
+            ctx.stroke()
+        }
+        
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        
+        // Animation des pointillés (effet "marching ants")
+        NumberAnimation on dashOffset {
+            from: 0
+            to: 18
+            duration: 400
+            loops: Animation.Infinite
+            running: selectionRect.visible
+        }
+    }
     
     // Propriétés pour la logique
     property point startPoint: Qt.point(0, 0)
