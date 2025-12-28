@@ -174,7 +174,7 @@ void PhysicsBody2D::integrate(qreal dt) {
     // On ne notifie les changements qu'une fois le calcul fini
     emit positionChanged();
     emit velocityChanged();
-    qDebug() << m_velocity.length() <<  "/" << m_maxSpeed;
+    // qDebug() << m_velocity.length() <<  "/" << m_maxSpeed;
     
     // On nettoie pour la frame suivante
     m_forceAccumulator = QVector2D(0,0);
