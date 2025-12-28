@@ -11,7 +11,7 @@ Item {
     Canvas {
         id: hatchCanvas
         anchors.fill: parent
-        opacity: 0.5
+        opacity: 0.4
         
         onPaint: {
             var ctx = getContext("2d")
@@ -23,14 +23,15 @@ Item {
             if (w <= 0 || h <= 0) return
             
             // Fond semi-transparent
-            ctx.fillStyle = "#C7E8FF"
+            ctx.fillStyle = '#cfe8fa'
             ctx.fillRect(0, 0, w, h)
             
             // Hachures diagonales
             ctx.strokeStyle = "#3498db"
             ctx.lineWidth = 1.5
+            ctx.setLineDash([Screen.pixelDensity * 2, Screen.pixelDensity * 4]);
             
-            var spacing = 12 // Espacement entre les lignes
+            var spacing = Screen.pixelDensity * 8 // Espacement entre les lignes
             var maxDist = w + h
             
             ctx.beginPath()
@@ -45,12 +46,10 @@ Item {
         onHeightChanged: requestPaint()
     }
     
-    // Canvas pour la bordure en pointillés larges
+    // Canvas pour la bordure bleue avec liseré blanc
     Canvas {
         id: borderCanvas
         anchors.fill: parent
-        
-        property real dashOffset: 0
         
         onPaint: {
             var ctx = getContext("2d")
@@ -61,27 +60,25 @@ Item {
             
             if (w <= 0 || h <= 0) return
             
-            ctx.strokeStyle = "#2980b9"
-            ctx.lineWidth = 3
-            ctx.setLineDash([12, 6]) // Larges pointillés
-            ctx.lineDashOffset = dashOffset
-            
+            // Liseré blanc (extérieur)
+            ctx.strokeStyle = "#ffffff"
+            ctx.lineWidth = 4
+            ctx.setLineDash([])
             ctx.beginPath()
-            ctx.rect(1.5, 1.5, w - 3, h - 3)
+            ctx.rect(2, 2, w - 4, h - 4)
+            ctx.stroke()
+            
+            // Bordure bleue principale
+            ctx.strokeStyle = '#309ce4'
+            ctx.lineWidth = 2.5
+            ctx.setLineDash([])
+            ctx.beginPath()
+            ctx.rect(2, 2, w - 4, h - 4)
             ctx.stroke()
         }
         
         onWidthChanged: requestPaint()
         onHeightChanged: requestPaint()
-        
-        // Animation des pointillés (effet "marching ants")
-        NumberAnimation on dashOffset {
-            from: 0
-            to: 18
-            duration: 400
-            loops: Animation.Infinite
-            running: selectionRect.visible
-        }
     }
     
     // Propriétés pour la logique
