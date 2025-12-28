@@ -139,30 +139,42 @@ void PhysicsBody2D::integrate(qreal dt) {
 
     m_previousPosition = m_position;
 
-    applyForce(m_inputVector * 10);
-    // 1. Calcul de l'accélération (a = F / m)
-    QVector2D acceleration = m_forceAccumulator * m_invMass;
+    if (m_inputVector.length() > 0.01) {
+        // 1. Calcul de la vitesse cible
+        QVector2D targetVelocity = m_inputVector * m_maxSpeed;
+        
+        // 2. On tend vers cette vitesse selon l'accélération
+        m_velocity += (targetVelocity - m_velocity) * std::min(1.0, m_acceleration * dt);
+    } else {
+        // 3. Pas d'input : on applique la friction classique pour s'arrêter
+        qreal frictionFactor = 1.0 - (m_linearDamping * dt * 60.0);
+        if (frictionFactor < 0) frictionFactor = 0;
+        m_velocity *= frictionFactor;
+    }
 
-    // 2. Mise à jour de la vitesse (V = V + a*dt)
-    m_velocity += acceleration * dt;
+    // 4. On traite les autres forces accumulées (ex: boosts, chocs extérieurs)
+    QVector2D externalAccel = m_forceAccumulator * m_invMass;
+    m_velocity += externalAccel * dt;
 
-    // 3. Application de la friction globale (Damping)
-    // On combine la friction du monde et le damping propre au body
-//    m_velocity *= std::pow(m_linearDamping * (1.0 - worldFriction), dt);
-    
-    
-    // 3. LE SOL RALENTIT LA VITESSE (Damping)
-    //m_velocity *= std::pow(1.0 - m_linearDamping, dt * 60.0); // en cas de probleme 
-    qreal frictionFactor = 1.0 - (m_linearDamping * dt * 60.0);
-    if (frictionFactor < 0) frictionFactor = 0;
-    m_velocity *= frictionFactor;
+    // 5. Freinage progressif si on dépasse maxSpeed (ex: fin de sprint)
+    if (m_velocity.length() > m_maxSpeed + 0.01) {
+        qreal decelerationFactor = 1.0 - (m_linearDamping * dt * 60.0);
+        if (decelerationFactor < 0) decelerationFactor = 0;
+        m_velocity *= decelerationFactor;
+        
+        // On s'assure de ne pas descendre trop bas d'un coup
+        if (m_velocity.length() < m_maxSpeed) {
+            m_velocity = m_velocity.normalized() * m_maxSpeed;
+        }
+    }
 
-    // 4. Mise à jour de la position (P = P + V*dt)
+    // 6. Mise à jour de la position (P = P + V*dt)
     m_position += m_velocity * dt;
 
     // On ne notifie les changements qu'une fois le calcul fini
     emit positionChanged();
     emit velocityChanged();
+    qDebug() << m_velocity.length() <<  "/" << m_maxSpeed;
     
     // On nettoie pour la frame suivante
     m_forceAccumulator = QVector2D(0,0);

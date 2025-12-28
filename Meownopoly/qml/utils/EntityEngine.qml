@@ -13,14 +13,14 @@ Item {
     property var grid: null
 
     // Vitesse de déplacement en unités par seconde
-    property real moveSpeed: 18.0
+    property real moveSpeed: 30.0
     property real sprintMultiplier: 2.0
 
     property real baseSpeed: moveSpeed
     property real baseSpeedMultiplier: isSprinting ? sprintMultiplier : 1.0
 
     // --- Physique 2D du mouvement ---
-    property real acceleration: 10.0  // Accélération en unités de grille par seconde²
+    property real acceleration: 2.0  // Accélération en unités de grille par seconde²
     property real friction:  0.0       // Friction au sol (force de décélération)
     
     // Position et vitesse en coordonnées de grille 2D (lecture depuis le moteur C++)
@@ -267,8 +267,6 @@ Item {
         if (inputVector.length() > 1) {
             inputVector = inputVector.normalized()
         }
-        inputVector.x = inputVector.x * 4
-        inputVector.y = inputVector.y * 4
         playerBody.inputVector = inputVector
     }
 
