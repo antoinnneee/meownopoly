@@ -18,9 +18,9 @@ CollapsableGroupBox {
     
     // Main content
     content: [
-        // Friction Section
-        ZCP_FrictionSection {
-            id: frictionSection
+        // Directions & Velocity Strength Section
+        ZCP_DirectionsSection {
+            id: directionsSection
             Layout.fillWidth: true
             targetZoneParameter: root.targetZoneParameter
             updatingValues: root.updatingValues
@@ -43,7 +43,7 @@ CollapsableGroupBox {
         if (!targetZoneParameter) return
         
         updatingValues = true
-        frictionSection.updateControls()
+        directionsSection.updateControls()
         updatingValues = false
     }
     
