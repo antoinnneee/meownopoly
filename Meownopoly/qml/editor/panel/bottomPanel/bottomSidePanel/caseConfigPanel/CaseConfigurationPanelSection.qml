@@ -3,7 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Case
 import CaseRestArea
-import ui_item 1.0
+import ui_item
+
 
 CollapsableGroupBox {
     id: root

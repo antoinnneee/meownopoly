@@ -9,7 +9,7 @@ import QtQuick.Dialogs
 import Case
 import ItemSnapable
 import ui_item
-import "../../../component"
+import "../../../meowComponent"
 
 import Game
 import MapFileManager

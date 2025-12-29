@@ -1,10 +1,8 @@
 import QtQuick 2.15
 import TileType
 import EditorEnum
-import "../component"
 import "logic"
-import "../component/snapable"
-import "../component/grid"
+import meowComponent
 
 Item{
     id: editorDynamicComponent

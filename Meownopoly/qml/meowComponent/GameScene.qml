@@ -2,8 +2,8 @@ import QtQuick 2.15
 import QtQuick3D
 import QtQuick3D.Helpers
 import AssetManager
-import "../component/grid"
-import "../utils"
+import meowComponent
+import utils
 
 Item {
     id: root

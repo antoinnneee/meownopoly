@@ -7,9 +7,7 @@ import QtQml
 import Game
 import Case
 import ItemSnapable
-import "../component"
-import "../component/grid"
-import "../component/snapable"
+import meowComponent
 import "panel"
 import caseSelectionPanel
 import assetSelectionPanel

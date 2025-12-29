@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
-import ui_item 1.0
+import ui_item
 
 import MapTypes
 

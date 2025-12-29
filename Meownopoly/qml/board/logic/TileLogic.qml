@@ -1,10 +1,10 @@
 import QtQuick 2.15
 import ItemSnapable
 import Game
-import "../../component"
-import "../../component/snapable"
-import "../../component/grid"
-import "../../component/preview"
+import "../../meowComponent"
+import "../../meowComponent/snapable"
+import "../../meowComponent/grid"
+import "../../meowComponent/preview"
 import ".."
 
 QtObject {

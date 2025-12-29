@@ -5,8 +5,7 @@ import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
 import UndoRedoManager
-import "../../component/snapable"
-import "../../component/grid"
+import meowComponent
 
 import bottomMainPanel
 

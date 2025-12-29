@@ -2,8 +2,8 @@ import QtQuick 2.15
 import TileType
 import EditorEnum
 
-import "../component/snapable"
-import "../component/grid"
+import "../meowComponent/snapable"
+import "../meowComponent/grid"
 import "logic"
 
 Item{

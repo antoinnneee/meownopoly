@@ -1,0 +1,3 @@
+module zoneConfigPanel
+ZoneConfigurationPanelSection 1.0 ZoneConfigurationPanelSection.qml
+ZCP_FrictionSection 1.0 ZCP_FrictionSection.qml

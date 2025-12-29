@@ -5,6 +5,7 @@ import QtQuick.Controls
 import visualEffectPanel
 import connectionConfigPanel
 import caseConfigPanel
+import zoneConfigPanel
 
 ColumnLayout {
     id: panelContent
@@ -16,6 +17,7 @@ ColumnLayout {
     property alias effectsPanel: effectsPanel
     property alias caseConfigurationPanel: caseConfigurationPanelSection
     property alias connectionsConfigurationPanel: connectionsConfigSection
+    property alias zoneConfigurationPanel: zoneConfigurationPanelSection
    // property alias transformSection: transformSection
     property bool blockEffectChangedSignal: false
 
@@ -73,6 +75,15 @@ ColumnLayout {
             panelContent.connectionRequested(kind)
         }
 
+    }
+
+    // Onglet Configuration Zone
+    ZoneConfigurationPanelSection {
+        id: zoneConfigurationPanelSection
+        isCollapsed: true
+        logic: panelContent.logic
+        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+        Layout.fillWidth: true
     }
 
 

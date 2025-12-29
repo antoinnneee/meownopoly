@@ -7,14 +7,15 @@ import QtQml
 import QtCore
 import Case
 import ItemSnapable
-import "../component"
-import "../component/grid"
-import "../component/preview"
-import "../component/snapable"
+import "../meowComponent"
+import "../meowComponent/preview"
+import "../meowComponent/snapable"
 
 import bottomMainPanel
 import bottomSidePanel
 import mapInfoPanel
+
+import meowComponent
 
 import Game
 import MapFileManager
@@ -27,10 +28,9 @@ import DecorationParameter
 import UndoRedoManager
 import AssetManager
 import ItemSnapableFactory
-import ui_item 1.0
+import ui_item
 
-import "../test"
-import "../utils"
+import utils
 
 import QtQuick3D
 import QtQuick3D.Helpers

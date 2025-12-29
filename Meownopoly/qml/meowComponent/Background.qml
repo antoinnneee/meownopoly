@@ -1,14 +1,10 @@
 import QtQuick 2.15
-import QtQuick.Controls
-import QtQuick.Layouts
-import QtQuick.Window
-import QtQuick.Shapes
 import QtQml
 import ItemSnapable
-import "../component/snapable"
-import "../component/grid"
 import MapInfo
 import EditorEnum
+
+import meowComponent
 
 Image {
     required property GridManager grid

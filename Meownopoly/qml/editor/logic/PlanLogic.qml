@@ -1,6 +1,6 @@
 import QtQuick 2.15
-import "../../component/grid"
-import "../../component/snapable"
+import "../../meowComponent/grid"
+import "../../meowComponent/snapable"
 
 QtObject {
     required property list<SnapableElement> snapableTilesList

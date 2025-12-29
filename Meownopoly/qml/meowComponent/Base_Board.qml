@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import MapInfo
-import "./grid"
+import meowComponent
 
 Rectangle {
     id: board

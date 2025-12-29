@@ -17,10 +17,10 @@ import DisplayParameter
 import DecorationParameter
 import ItemSnapable
 import "logic"
-import "../component"
-import "../component/snapable"
-import "../component/grid"
-import "../utils"
+import "../meowComponent"
+import "../meowComponent/snapable"
+import "../meowComponent/grid"
+import utils
 
 Base_Board {
     id: gameBoard

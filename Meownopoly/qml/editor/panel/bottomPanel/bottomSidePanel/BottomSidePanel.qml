@@ -27,6 +27,7 @@ Rectangle {
     property alias visualEffectsPanel : content.effectsPanel
     property alias caseConfigurationPanel: content.caseConfigurationPanel
     property alias connectionsConfigurationPanel: content.connectionsConfigurationPanel
+    property alias zoneConfigurationPanel: content.zoneConfigurationPanel
 
     // --- Signals ---
     signal effectChanged()
