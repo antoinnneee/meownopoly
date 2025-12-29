@@ -32,6 +32,7 @@
 #include "assetManager/asset_manager.h"
 
 #include "tools/editorenum.h"
+#include "tools/uistyle.h"
 
 #include "game/map/map.h"
 #include "game/map/maptypes.h"
@@ -52,10 +53,10 @@
 #include "tools/cursor_manager.h"
 
 
-QmlApp::QmlApp(QWindow *parent)
-    : QQmlApplicationEngine(parent)
+QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
 {
     QQuickStyle::setStyle("Material");
+    UiStyle::registerQml();
     Game::registerQml();
     MeowStyle::registerQml();
     ItemSnapable::registerQml();

@@ -14,33 +14,57 @@ import ItemSnapableFactory
 Item {
     id: root
 
-    // Properties
+    // Postion the preview at mouse cursor
+    x: mouseX - width / 2
+    y: mouseY - height / 2
+
+    width: 40
+    height: 40
+    z: 1000 // Make sure it's on top
+
+    required property GridManager gridManager
+    required property BottomSidePanel sidePanel
+
+    property var snapablePreview
+
+
+
     property string assetCategory: ""
+    property string assetType: ""
+    property string assetId: ""
+
+    property int caseType: -1  // Pour les SnapableCaseTile
+
+    property bool isCasePreview: false  // Distingue entre décorations et cases
+
+    property real mouseX: 0
+    property real mouseY: 0
+
+    property int unitSizeWidth: 4
+    property int unitSizeHeight: 6
+
+    visible: (assetCategory !== "" && assetType !== "" && assetId !== "") || (isCasePreview && caseType !== -1)
+
+
+    // Properties
     onAssetCategoryChanged: {
         snapablePreview.snapableParameters.decorationParameter.decorationCategory = assetCategory
     }
 
-    property string assetType: ""
     onAssetTypeChanged: {
         snapablePreview.snapableParameters.decorationParameter.decorationType = assetType
     }
-    property string assetId: ""
     onAssetIdChanged: {
         snapablePreview.snapableParameters.decorationParameter.decorationId = assetId
     }
-    property int caseType: -1  // Pour les SnapableCaseTile
     onCaseTypeChanged: {
         if ( snapablePreview.snapableParameters != caseType)
             snapablePreview.snapableParameters = ItemSnapableFactory.createItemSnapable(caseType)
         snapablePreview.snapableParameters.displayParameter.unitSizeWidth = root.unitSizeWidth
         snapablePreview.snapableParameters.displayParameter.unitSizeHeight = root.unitSizeHeight
     }
-    property bool isCasePreview: false  // Distingue entre décorations et cases
-    visible: (assetCategory !== "" && assetType !== "" && assetId !== "") || (isCasePreview && caseType !== -1)
-    property real mouseX: 0
-    property real mouseY: 0
 
-    property int unitSizeWidth: 4
+
     onUnitSizeWidthChanged: {
         if (typeof snapablePreview !== 'undefined'){
             snapablePreview.snapableParameters.displayParameter.unitSizeWidth = unitSizeWidth
@@ -48,17 +72,13 @@ Item {
         }
     }
 
-    property int unitSizeHeight: 6
     onUnitSizeHeightChanged: {
         if (typeof snapablePreview !== 'undefined'){
             snapablePreview.snapableParameters.displayParameter.unitSizeHeight = unitSizeHeight
             updateGridPosition()
         }
     }
-    required property GridManager gridManager
-    property var snapablePreview
 
-    required property BottomSidePanel sidePanel
 
 
     // Fonction pour obtenir l'icône selon le type de case
@@ -109,9 +129,6 @@ Item {
         }
     }
 
-    // Position the preview at mouse cursor
-    x: mouseX - width / 2
-    y: mouseY - height / 2
 
     property int gridXPosition:  0
     property int gridYPosition:  0
@@ -131,12 +148,8 @@ Item {
             snapablePreview.y = gridYPosition * gridManager.gridSize
             snapablePreview.x = gridXPosition * gridManager.gridSize
         }
-
     }
 
-    width: 40
-    height: 40
-    z: 1000 // Make sure it's on top
 
     // Make it non-interactive
     enabled: false

@@ -1,15 +1,10 @@
 import QtQuick 2.15
+import UiStyle
 import MapInfo
 import "./grid"
 
 Rectangle {
     id: board
-
-    property real z_WORKAREA: 5000
-
-    property real z_BACKGROUND: 3000
-    property real z_GRID: 4000
-    property real z_GLOBAL_MA: 4750
 
 
     property Base_logic logic
@@ -44,7 +39,7 @@ Rectangle {
         gridOpacity: 0.3
         showGrid: true
         snapToGrid: true
-        z: z_GRID
+        z: UiStyle.z_GRID
     }
 
     property alias background:background
@@ -52,7 +47,7 @@ Rectangle {
         id: background
         grid: gameGrid
         anchors.fill: mapInfo.isBackgroundOnGrill ? gameGrid : parent
-        z: z_BACKGROUND
+        z: UiStyle.z_BACKGROUND
     }
 
     property alias mainMa: mainMa
@@ -60,7 +55,7 @@ Rectangle {
         id: mainMa
         mouseLogic: logic.mouseLogic
         anchors.fill: parent
-        z: z_GLOBAL_MA
+        z: UiStyle.z_GLOBAL_MA
         Component.onCompleted: drag.target = gameGrid
     }
 }

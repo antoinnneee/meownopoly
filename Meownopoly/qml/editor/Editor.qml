@@ -5,6 +5,9 @@ import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
 import QtCore
+
+import UiStyle
+
 import Case
 import ItemSnapable
 import "../component"
@@ -15,6 +18,7 @@ import "../component/snapable"
 import bottomMainPanel
 import bottomSidePanel
 import mapInfoPanel
+
 
 import Game
 import MapFileManager
@@ -61,12 +65,6 @@ Base_Board {
     signal openNewMapMenu()
     property alias entity:gameScene.entity
 
-    property real z_CONFIG_PANEL: 10000
-    property real z_HUD: 9000
-    property real z_SELECTION_RECT: 8000
-    property real z_CURSOR_TRACKER: 7000
-    property real z_LINK_TRACKER: 6000
-    property real z_WORKAREA: 5000
 
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
@@ -80,7 +78,9 @@ Base_Board {
         
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
-        //
+
+
+        console.log("UiStyle.z_CONFIG_PANEL !!! ", UiStyle.z_CONFIG_PANEL )
     }
 
     mapInfo.mapName: autosaveMapName
@@ -88,6 +88,8 @@ Base_Board {
     onUpdateSettings: {
         tmpSaver.setSaveTimer()
     }
+
+
 
     Keys.onPressed: function(event) {
         // Pass to EntityController
@@ -105,7 +107,7 @@ Base_Board {
     // Menu d'échappement
     EditorEscMenu {
         id: escMenu
-        z: z_CONFIG_PANEL
+        z: UiStyle.z_CONFIG_PANEL
         onVisibleChanged: {
             console.log("EscMenu visibility changed:", visible)
             if (!visible) {
@@ -125,7 +127,7 @@ Base_Board {
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: 10
-        z: z_HUD
+        z: UiStyle.z_HUD
         source: AssetManager.getAssetById("ui", "hud", "0").path
         width: Screen.pixelDensity * 20
         height: Screen.pixelDensity * 20
@@ -157,7 +159,7 @@ Base_Board {
         x: btInfoMap.x
         y: btInfoMap.y + addMapButton.height/2
 
-        z: z_HUD
+        z: UiStyle.z_HUD
 
         width: btInfoMap.width * 0.5
         height: btInfoMap.height * 0.5
@@ -302,7 +304,7 @@ Base_Board {
         selectionPanel: selectionPanel
         sidePanel: sidePanel
 
-        z: root.z_CONFIG_PANEL
+        z: UiStyle.z_CONFIG_PANEL
     }
 
     AdminCommandPanel{
@@ -311,7 +313,7 @@ Base_Board {
         enabled: visible
 
         height: Screen.pixelDensity * 100
-        z: z_CONFIG_PANEL
+        z: UiStyle.z_CONFIG_PANEL
     }
 
     Settings {
@@ -325,7 +327,7 @@ Base_Board {
 
     BusyIndicator {
         id: savingIndicator
-        z: z_HUD
+        z: UiStyle.z_HUD
         anchors.right: parent.right
         anchors.top: parent.top
         width: Screen.pixelDensity * 10
@@ -400,7 +402,7 @@ Base_Board {
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {
         id: workArea
-        z: z_WORKAREA
+        z: UiStyle.z_WORKAREA
         anchors.fill: gameGrid
         GameScene {
             id: gameScene
@@ -460,7 +462,7 @@ Base_Board {
     // Rectangle de sélection
     SelectionRect {
         id: selectionRect
-        z: z_SELECTION_RECT
+        z: UiStyle.z_SELECTION_RECT
     }
 
     SelectionPanel{
@@ -470,7 +472,7 @@ Base_Board {
         anchors.left: parent.left
         anchors.right: sidePanel.left
 
-        z: z_HUD
+        z: UiStyle.z_HUD
 
         // Connexion à la logique
         logic: logic
@@ -515,7 +517,7 @@ Base_Board {
 
     BottomSidePanel {
         id: sidePanel
-        z: z_HUD
+        z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         x: parent.width
         logic: logic
@@ -563,7 +565,7 @@ Base_Board {
 
     MenuMapAtStart {
         id: newMapMenu
-        z: z_CONFIG_PANEL
+        z: UiStyle.z_CONFIG_PANEL
         visible: false
         logic: logic
         

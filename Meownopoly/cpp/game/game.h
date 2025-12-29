@@ -41,7 +41,6 @@ public:
     static Game *instance();
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
-    Q_INVOKABLE void init();    // create a new game, load caseFile
     Q_INVOKABLE void startGame();
     Q_INVOKABLE void checkSaveSettings();
 

@@ -23,7 +23,6 @@
 Game *Game::m_pThis = nullptr;
 
 Game::Game(QObject *parent) : QObject(parent) {
-    init();
 }
 
 Game::~Game()
@@ -60,9 +59,6 @@ QObject *Game::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine) {
     Q_UNUSED(scriptEngine);
     // C++ and QML instance they are the same instance
     return Game::instance();
-}
-
-void Game::init() {
 }
 
 

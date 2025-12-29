@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import UiStyle
 import EditorEnum
 Item {
 
@@ -24,7 +25,7 @@ Item {
     // MouseArea to track cursor position for link preview
     MouseArea {
         id: linkTracker
-        z: z_LINK_TRACKER
+        z: UiStyle.z_LINK_TRACKER
         parent: workArea
         anchors.fill: parent
         hoverEnabled: true
