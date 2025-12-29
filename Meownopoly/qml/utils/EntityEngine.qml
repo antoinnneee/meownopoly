@@ -41,7 +41,7 @@ Item {
     property vector2d inputVector: Qt.vector2d(0, 0)
     property bool isSprinting: false
     property bool freeCamMode: true // Nouveau mode FreeCam
-    property real lastTimestamp: 0
+
     
     // --- Moteur Physique C++ ---
     PhysicsEngine2D {
@@ -279,9 +279,6 @@ Item {
         
         // Mettre à jour la vitesse max selon le sprint
         playerBody.maxSpeed = baseSpeed * baseSpeedMultiplier
-        
-        // Appliquer les forces d'entrée
-        // playerBody.applyForce(inputVector, dt)
         
         // Mettre à jour toute la physique (collision, zones, etc.)
         physicsEngine.updateAll(dt)

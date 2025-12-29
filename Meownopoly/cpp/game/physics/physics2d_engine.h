@@ -167,7 +167,6 @@ private:
     /**
      * @brief Détecte et résout les collisions pour un body
      */
-    void resolveCollisions_old(PhysicsBody2D* body, qreal dt, QVector2D newPos);
     void resolveCollisions(const QVector<CollisionResult> &contacts, qreal dt);
 
     /**
@@ -184,6 +183,13 @@ private:
     // Configuration
     bool m_enabled = true;
     bool m_debugMode = false;
+
+    // Constantes physiques
+    static constexpr uint8_t VELOCITY_ITERATIONS = 4;
+    static constexpr qreal PENETRATION_SLOP = 0.01;
+    static constexpr qreal POSITION_CORRECTION_PERCENT = 0.6;
+    static constexpr qreal TUNNELING_BUFFER = 0.02;
+    static constexpr qreal DEFAULT_GROUND_DAMPING = 0.05;
 };
 
 #endif // PHYSICS2D_ENGINE_H

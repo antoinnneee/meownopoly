@@ -205,23 +205,15 @@ void PhysicsEngine2D::setZonesFromSnapables(const QVariantList& snapables)
         PhysicsZone2D::ZoneType zoneType = PhysicsZone2D::Zone_Exclusion;
         
         if (tileType == ItemSnapable::PhysicZoneTile) {
+            // physics zone (exclusion)
             zoneType = PhysicsZone2D::Zone_Exclusion;
-        } else if (tileType == ItemSnapable::PhysicZoneTile) {
-            // Pour l'instant, EffectZone par défaut est SpeedBoost
-            // On pourrait étendre ZoneParameter pour stocker le type d'effet
-            zoneType = PhysicsZone2D::Zone_Speed;
         } else {
-            continue; // Ignorer les autres types
+            continue; // Ignore other types for now
         }
         
         // Créer la zone
         QString zoneId = QString("zone_%1").arg(zoneIndex++);
         PhysicsZone2D* zone = createZone(zoneId, zoneParam);
-
-        // // Copier les propriétés
-        // zone->setPolygon(zoneParam->polygonPoints());
-        // zone->setZoneName(zoneParam->zoneName());
-        // zone->setZoneColor(zoneParam->zoneColor());
 
         if (m_debugMode) {
             qDebug() << "[PhysicsEngine2D] Loaded zone from snapable:"
@@ -239,7 +231,6 @@ void PhysicsEngine2D::setZonesFromSnapables(const QVariantList& snapables)
 
 void PhysicsEngine2D::updateAll(qreal dt)
 {
-    uint8_t velocityIterations = 4;
     if (!m_enabled || dt <= 0) return;
     
     for (PhysicsBody2D* body : m_bodies) {
@@ -267,7 +258,7 @@ void PhysicsEngine2D::updateAll(qreal dt)
                     qreal depth = QVector2D::dotProduct(penetrationVec, -result.normal);
                     
                     // La pénétration totale est la profondeur de tunneling + un petit buffer
-                    result.penetration = std::max(result.penetration, depth + 0.02);
+                    result.penetration = std::max(result.penetration, depth + TUNNELING_BUFFER);
                 }
                 
                 contacts.append(result);
@@ -277,7 +268,7 @@ void PhysicsEngine2D::updateAll(qreal dt)
 
     // 3. Résolution des collisions (Solver Itératif)
     // On répète plusieurs fois pour stabiliser les empilements ou coins
-    for (int i = 0; i < velocityIterations; ++i) {
+    for (int i = 0; i < VELOCITY_ITERATIONS; ++i) {
         resolveCollisions(contacts, dt);
     }
     // 4. Correction de position (Anti-pénétration / Anti-jitter)
@@ -287,83 +278,14 @@ void PhysicsEngine2D::updateAll(qreal dt)
 void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
 {
     if (!body || body->isStatic()) return;
-        // Gérer les zones (glace, boue, boosts) AVANT l'intégration
 
     applyGroundFrictionAndZones(body, dt);
+
     // Intégrer (Vitesse += Force; Pos += Vitesse)
     body->integrate(dt);
-
-    /*
-    // 3. Détecter et résoudre les collisions
-    if (body->collisionEnabled()) {
-        // body->setPosition(newPos);
-        resolveCollisions(body, dt, newPos);
-    }
-    else {
-        body->setPosition(newPos);
-    }
-    */
-
 }
 
-void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
-{
-    QVector2D pos = body->position();
-    QSet<PhysicsZone2D*> currentZones;
-
-    for (PhysicsZone2D* zone : m_zones) {
-        if (!zone->isActive()) continue;
-        
-        // Ignorer les zones d'exclusion pour les effets (elles sont gérées par collision)
-        // if (zone->zoneType() == PhysicsZone2D::Exclusion) continue;
-        
-        if (zone->containsPoint(pos)) {
-            currentZones.insert(zone);
-
-            // Appliquer les effets basés sur les paramètres de la zone
-            const ZoneParameter& params = zone->getZoneParameters();
-
-            // // Appliquer la force directionnelle si définie
-            // if (params.velocityStrenght() > 0) {
-            //     QVector2D force = params.velocityDirection().normalized() * params.velocityStrenght();
-            //     body->applyZoneForce(force, dt, zone->zoneId());
-            // }
-
-            // // Appliquer le multiplicateur de vitesse
-            // if (params.speedMultiplier() != 1.0) {
-            //     body->applyZoneSpeedMultiplier(params.speedMultiplier(), zone->zoneId());
-            // }
-
-            // // Appliquer la friction directionnelle si définie
-            // if (params.frictionStrenght() > 0) {
-            //     body->applyDirectionalFriction(params.frictionDirection(), params.frictionStrenght(), dt);
-            // }
-        }
-    }
-    
-    // Détecter entrées/sorties de zones
-    QSet<PhysicsZone2D*>& previousZones = m_activeZonesPerBody[body];
-    
-    // Zones entrées
-    for (PhysicsZone2D* zone : currentZones) {
-        if (!previousZones.contains(zone)) {
-            qDebug() << "[PhysicsEngine2D] Body entered zone:" << body->bodyId() << "zone:" << zone->zoneId();
-            emit bodyEnteredZone(body, zone);
-            emit body->enteredZone(zone);
-        }
-    }
-    
-    // Zones sorties
-    for (PhysicsZone2D* zone : previousZones) {
-        if (!currentZones.contains(zone)) {
-            qDebug() << "[PhysicsEngine2D] Body exited zone:" << body->bodyId() << "zone:" << zone->zoneId();
-            emit bodyExitedZone(body, zone);
-            emit body->exitedZone(zone);
-        }
-    }
-    
-    previousZones = currentZones;
-}
+// applyZoneEffects was merged into applyGroundFrictionAndZones
 
 void PhysicsEngine2D::resolveCollisions(const QVector<CollisionResult>& contacts, qreal dt)
 {
@@ -434,98 +356,19 @@ void PhysicsEngine2D::resolveCollisions(const QVector<CollisionResult>& contacts
 }
 void PhysicsEngine2D::correctPositions(const QVector<CollisionResult>& contacts)
 {
-    const qreal percent = 0.6; // Pourcentage de correction (0.2 - 0.8)
-    const qreal slop = 0.01;   // Tolérance de pénétration
 
     for (const CollisionResult& m : contacts) {
         PhysicsBody2D* A = m.body;
 
         // La pénétration a été ajustée dans updateAll pour les sweeps
-        qreal correctionMag = std::max(m.penetration - slop, 0.0) * percent;
+        qreal correctionMag = std::max(m.penetration - PENETRATION_SLOP, 0.0) * POSITION_CORRECTION_PERCENT;
         QVector2D correction = m.normal * correctionMag;
 
         A->setPosition(A->position() + correction);
     }
 }
 
-void PhysicsEngine2D::resolveCollisions_old(PhysicsBody2D* body, qreal dt, QVector2D newPos)
-{
-    QVector2D velocity = body->velocity();
-    QVector2D currentPos = body->position();
-    bool collisionOccurred = false;
-    QVector2D collisionNormal;
-
-    // Approche hybride : tester plusieurs positions intermédiaires pour éviter le tunneling
-    // tout en gardant la logique simple de collision discrète
-
-    // Calculer le nombre d'étapes d'interpolation basé sur la longueur du mouvement
-    // Plus le mouvement est long (vitesse élevée), plus d'étapes pour éviter le tunneling
-    QVector2D movement = newPos - currentPos;
-    qreal movementLength = movement.length();
-    qreal colRad = body->collisionRadius();
-
-    // qDebug() << "[PhysicsEngine2D] Movement length:" << movementLength << "collision radius:" << body->collisionRadius() << velocity;
-
-    QVector2D bestCollisionPos = newPos;
-    CollisionResult bestResult;
-
-        // Tester contre toutes les zones d'exclusion
-    for (PhysicsZone2D* zone : std::as_const(m_zones)) {
-        if (!zone->isActive() || !zone->exclusion()) {
-            continue;
-        }
-
-        CollisionResult result = zone->checkCollisionSweep(currentPos, newPos, body->collisionRadius());
-
-        if (result.colliding) {
-            qDebug() << "collision occured = true";
-            bestCollisionPos = newPos;
-            bestResult = result;
-            bestResult.zone = zone;
-            collisionOccurred = true;
-            break;
-        }
-    }
-    
-
-    // Si collision trouvée, appliquer le rebond
-    if (collisionOccurred) {
-        collisionNormal = bestResult.normal;
-
-        // Appliquer le rebond
-        QVector2D newVelocity = Collision2D::applyBounce(
-            velocity,
-            bestResult.normal,
-            body->bounceFactor(),
-            body->slideFactor()
-        );
-
-        if (m_debugMode) {
-            qDebug() << "[PhysicsEngine2D] Collision detected at t:"
-                     << "body:" << body->bodyId()
-                     << "zone:" << bestResult.zone->zoneId()
-                     << "normal:" << bestResult.normal
-                     << "penetration:" << bestResult.penetration
-                    << "new velocity:" << newVelocity;
-        }
-
-        body->setVelocity(newVelocity);
-
-        // Positionner le body à l'extérieur de la zone en utilisant la normale et la pénétration
-        QVector2D correctedPosition = currentPos + bestResult.normal * bestResult.penetration;
-        body->setPosition(correctedPosition);
-
-        // Émettre les signaux
-        emit bodyCollided(body, bestResult.zone);
-        emit body->collisionOccurred(bestResult.zone);
-    } else {
-        // Pas de collision, mettre à jour normalement
-        body->setPosition(newPos);
-    }
-
-    // Mettre à jour l'état de collision
-    body->setCollidingState(collisionOccurred, collisionNormal);
-}
+// resolveCollisions_old removed in favor of iterative solver
 
 
 // --- Requêtes ---
@@ -546,8 +389,7 @@ QVariantList PhysicsEngine2D::getZonesAtPoint(const QVector2D& point) const
 void PhysicsEngine2D::applyGroundFrictionAndZones(PhysicsBody2D* body, qreal dt)
 {
     QSet<PhysicsZone2D*> currentZones;
-    qreal defaultDamping = 0.05; // Sol standard (Terre)
-    qreal currentDamping = defaultDamping; 
+    qreal currentDamping = DEFAULT_GROUND_DAMPING; 
 
     QVector2D pos = body->position();
 
