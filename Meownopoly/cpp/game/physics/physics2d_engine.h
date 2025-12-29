@@ -23,7 +23,6 @@ class PhysicsEngine2D : public QObject
     
     Q_PROPERTY(int bodyCount READ bodyCount NOTIFY bodyCountChanged)
     Q_PROPERTY(int zoneCount READ zoneCount NOTIFY zoneCountChanged)
-    Q_PROPERTY(qreal friction READ friction WRITE setFriction NOTIFY frictionChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool debugMode READ debugMode WRITE setDebugMode NOTIFY debugModeChanged)
 
@@ -39,7 +38,6 @@ public:
     // --- Getters ---
     int bodyCount() const { return m_bodies.size(); }
     int zoneCount() const { return m_zones.size(); }
-    qreal friction() const { return m_friction; }
     bool enabled() const { return m_enabled; }
     bool debugMode() const { return m_debugMode; }
     
@@ -144,14 +142,6 @@ public:
      * @return Liste des zones actives contenant le point
      */
     Q_INVOKABLE QVariantList getZonesAtPoint(const QVector2D& point) const;
-    
-    /**
-     * @brief Vérifie s'il y a collision à une position
-     * @param center Centre du cercle
-     * @param radius Rayon du cercle
-     * @return true si collision avec une zone d'exclusion
-     */
-    Q_INVOKABLE bool checkCollisionAt(const QVector2D& center, qreal radius) const;
 
 
 signals:
@@ -171,12 +161,6 @@ private:
      * @brief Applique les effets des zones sur un body
      */
     void applyZoneEffects(PhysicsBody2D* body, qreal dt);
-
-    /**
-     * @brief Applique les effets d'input et friction sur un body
-     */
-    void applyWorldEffect(PhysicsBody2D *body, qreal dt);
-
 
     void applyGroundFrictionAndZones(PhysicsBody2D *body, qreal dt);
 
@@ -198,7 +182,6 @@ private:
     QHash<PhysicsBody2D*, QSet<PhysicsZone2D*>> m_activeZonesPerBody;
     
     // Configuration
-    qreal m_friction = 0.1;
     bool m_enabled = true;
     bool m_debugMode = false;
 };

@@ -32,14 +32,6 @@ PhysicsEngine2D::~PhysicsEngine2D()
 
 // --- Setters ---
 
-void PhysicsEngine2D::setFriction(qreal friction)
-{
-    if (!qFuzzyCompare(m_friction, friction)) {
-        m_friction = std::max(0.0, friction);
-        emit frictionChanged();
-    }
-}
-
 void PhysicsEngine2D::setEnabled(bool enabled)
 {
     if (m_enabled != enabled) {
@@ -314,15 +306,6 @@ void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
 
 }
 
-void  PhysicsEngine2D::applyWorldEffect(PhysicsBody2D* body, qreal dt)
-{
-
-    // Appliquer l'input du body
-
-    body->applyForce(QVector2D(1,1), (1.-m_friction));
-
-}
-
 void PhysicsEngine2D::applyZoneEffects(PhysicsBody2D* body, qreal dt)
 {
     QVector2D pos = body->position();
@@ -560,22 +543,6 @@ QVariantList PhysicsEngine2D::getZonesAtPoint(const QVector2D& point) const
     return result;
 }
 
-bool PhysicsEngine2D::checkCollisionAt(const QVector2D& center, qreal radius) const
-{
-    for (PhysicsZone2D* zone : m_zones) {
-        if (!zone->isActive() || !zone->exclusion()) {
-            continue;
-        }
-        
-        CollisionResult result = zone->checkCollision(center, radius);
-        if (result.colliding) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
 void PhysicsEngine2D::applyGroundFrictionAndZones(PhysicsBody2D* body, qreal dt)
 {
     QSet<PhysicsZone2D*> currentZones;
@@ -601,7 +568,7 @@ void PhysicsEngine2D::applyGroundFrictionAndZones(PhysicsBody2D* body, qreal dt)
                  currentDamping = params.frictionStrenght(); 
             }
             
-            // Boost de vitesse (Tapis roulant)
+            // Boost de vitesse
             if (params.velocityStrenght() > 0) {
                 QVector2D force = params.velocityDirection().normalized() * params.velocityStrenght();
                 body->applyForce(force);

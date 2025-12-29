@@ -21,7 +21,6 @@ Item {
 
     // --- Physique 2D du mouvement ---
     property real acceleration: 2.0  // Accélération en unités de grille par seconde²
-    property real friction:  0.0       // Friction au sol (force de décélération)
     
     // Position et vitesse en coordonnées de grille 2D (lecture depuis le moteur C++)
     property vector2d position2D: playerBody ? playerBody.position : Qt.vector2d(0, 0)
@@ -47,7 +46,6 @@ Item {
     // --- Moteur Physique C++ ---
     PhysicsEngine2D {
         id: physicsEngine
-        friction: root.friction
         debugMode: true
     }
     
