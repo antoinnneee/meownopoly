@@ -2,10 +2,8 @@ import QtQuick 2.15
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import visualEffectPanel
-import connectionConfigPanel
-import caseConfigPanel
-import zoneConfigPanel
+import meowComponent
+import editor
 
 ColumnLayout {
     id: panelContent
@@ -39,6 +37,7 @@ ColumnLayout {
         id: modelSelectionPanel
         isCollapsed: true
         Layout.fillWidth: true
+        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
         onModelSelected: function(name) {
             panelContent.modelSelected(name)
         }

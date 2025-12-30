@@ -192,12 +192,14 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: resizeHandle.bottom
         anchors.bottom: parent.bottom
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        ScrollBar.vertical.width: content.effectsPanel.rightPadding
         clip: true
-
         BottomSidePanel_Content {
             id: content
             logic: root.logic
             width: scrollView.width
+
             onEffectChanged: root.effectChanged()
 
             onConnectionRequested: function(kind) {

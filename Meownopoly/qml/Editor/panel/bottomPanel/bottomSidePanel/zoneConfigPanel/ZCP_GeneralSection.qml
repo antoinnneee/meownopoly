@@ -61,7 +61,7 @@ GroupBox {
             padding: 6
             
             onEditingFinished: {
-                if (!root.updatingValues && root.targetZoneParameter) {
+                if (root.targetZoneParameter) {
                     root.targetZoneParameter.zoneName = text
                     root.configurationChanged()
                 }
@@ -104,15 +104,14 @@ GroupBox {
             }
             
             onToggled: {
-                if (!root.updatingValues && root.targetZoneParameter) {
+                if (root.targetZoneParameter) {
                     root.targetZoneParameter.exclusion = checked
                     root.configurationChanged()
                 }
             }
         }
 
-        // Speed Multiplier (seulement si pas en mode exclusion ?)
-        // On le met tout de même pour l'instant
+        // Speed Multiplier
         Label {
             text: "Multiplicateur Vitesse:"
             color: "#ffffff"
@@ -136,7 +135,7 @@ GroupBox {
                 value: root.targetZoneParameter ? root.targetZoneParameter.speedMultiplier : 1.0
                 
                 onMoved: {
-                    if (!root.updatingValues && root.targetZoneParameter) {
+                    if (root.targetZoneParameter) {
                         root.targetZoneParameter.speedMultiplier = value
                         root.configurationChanged()
                     }
@@ -153,12 +152,6 @@ GroupBox {
     }
     
     function updateControls() {
-        if (!root.targetZoneParameter) return
-        
-        updatingValues = true
-        nameField.text = root.targetZoneParameter.zoneName || ""
-        exclusionSwitch.checked = root.targetZoneParameter.exclusion
-        speedSlider.value = root.targetZoneParameter.speedMultiplier
-        updatingValues = false
+        // Pure property bindings handle synchronization with targetZoneParameter
     }
 }
