@@ -26,7 +26,6 @@ ZoneParameter::ZoneParameter(const QJsonObject &json, QObject *parent)
     m_zoneName = json.value("zoneName").toString("");
     m_velocityDirection = QVector2D(json.value("velocityDirection").toObject().value("x").toDouble(), json.value("velocityDirection").toObject().value("y").toDouble());
     m_velocityStrenght = json.value("velocityStrenght").toDouble(0);
-    m_frictionDirection = QVector2D(json.value("frictionDirection").toObject().value("x").toDouble(), json.value("frictionDirection").toObject().value("y").toDouble());
     m_frictionStrenght = json.value("frictionStrenght").toDouble(0);
     m_exclusion = json.value("exclusion").toBool(true);
     m_speedMultiplier = json.value("speedMultiplier").toDouble(0);
@@ -39,7 +38,6 @@ ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
     , m_zoneName(other.m_zoneName)
     , m_velocityDirection(other.m_velocityDirection)
     , m_velocityStrenght(other.m_velocityStrenght)
-    , m_frictionDirection(other.m_frictionDirection)
     , m_frictionStrenght(other.m_frictionStrenght)
     , m_exclusion(other.m_exclusion)
     , m_speedMultiplier(other.m_speedMultiplier)
@@ -69,7 +67,6 @@ QString ZoneParameter::toJSON()
     json += "    \"zoneName\": \"" + m_zoneName + "\",\n";
     json += "    \"velocityDirection\": { \"x\": " + QString::number(m_velocityDirection.x()) + ", \"y\": " + QString::number(m_velocityDirection.y()) + " },\n";
     json += "    \"velocityStrenght\": " + QString::number(m_velocityStrenght) + ",\n";
-    json += "    \"frictionDirection\": { \"x\": " + QString::number(m_frictionDirection.x()) + ", \"y\": " + QString::number(m_frictionDirection.y()) + " },\n";
     json += "    \"frictionStrenght\": " + QString::number(m_frictionStrenght) + ",\n";
     json += "    \"exclusion\": " + exclusionStr + ",\n";
     json += "    \"speedMultiplier\": " + QString::number(m_speedMultiplier) + "\n";
@@ -174,18 +171,7 @@ void ZoneParameter::setVelocityStrenght(qreal newVelocityStrenght)
     emit velocityStrenghtChanged();
 }
 
-QVector2D ZoneParameter::frictionDirection() const
-{
-    return m_frictionDirection;
-}
-
-void ZoneParameter::setFrictionDirection(const QVector2D &newFrictionDirection)
-{
-    if (m_frictionDirection == newFrictionDirection)
-        return;
-    m_frictionDirection = newFrictionDirection;
-    emit frictionDirectionChanged();
-}
+// frictionDirection removed
 
 qreal ZoneParameter::frictionStrenght() const
 {

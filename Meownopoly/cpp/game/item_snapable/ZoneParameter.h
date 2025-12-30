@@ -15,7 +15,6 @@ class ZoneParameter : public QObject
     Q_PROPERTY(QString zoneName READ zoneName WRITE setZoneName NOTIFY zoneNameChanged)
     Q_PROPERTY(QVariantList polygonPoints READ polygonPoints WRITE setPolygonPoints NOTIFY polygonPointsChanged)
     Q_PROPERTY(QVector2D velocityDirection READ velocityDirection WRITE setVelocityDirection NOTIFY velocityDirectionChanged FINAL)
-    Q_PROPERTY(QVector2D frictionDirection READ frictionDirection WRITE setFrictionDirection NOTIFY frictionDirectionChanged FINAL)
     Q_PROPERTY(qreal velocityStrenght READ velocityStrenght WRITE setVelocityStrenght NOTIFY velocityStrenghtChanged FINAL)
     Q_PROPERTY(qreal frictionStrenght READ frictionStrenght WRITE setFrictionStrenght NOTIFY frictionStrenghtChanged FINAL)
     Q_PROPERTY(qreal speedMultiplier READ speedMultiplier WRITE setSpeedMultiplier NOTIFY speedMultiplierChanged FINAL)
@@ -46,8 +45,7 @@ public:
     qreal velocityStrenght() const;
     void setVelocityStrenght(qreal newVelocityStrenght);
 
-    QVector2D frictionDirection() const;
-    void setFrictionDirection(const QVector2D &newFrictionDirection);
+
 
     qreal frictionStrenght() const;
     void setFrictionStrenght(qreal newFrictionStrenght);
@@ -67,7 +65,7 @@ signals:
 
     void velocityStrenghtChanged();
 
-    void frictionDirectionChanged();
+
 
     void frictionStrenghtChanged();
 
@@ -81,7 +79,6 @@ private:
     QString m_zoneName;
     QVector2D m_velocityDirection = QVector2D(0, 0);
     qreal m_velocityStrenght = 0;
-    QVector2D m_frictionDirection = QVector2D(0, 0);
     qreal m_frictionStrenght = 0;
     bool m_exclusion = true;
     qreal m_speedMultiplier = 1;

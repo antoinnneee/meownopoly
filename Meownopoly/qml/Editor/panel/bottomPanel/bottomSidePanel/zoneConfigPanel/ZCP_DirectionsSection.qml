@@ -259,19 +259,6 @@ GroupBox {
                                 selectByMouse: true
 
                                 onEditingFinished: {
-                                    focus = false
-                                    var val = parseFloat(text)
-                                    if (!isNaN(val)) {
-                                        val = Math.max(velocityStrengthSlider.from, Math.min(velocityStrengthSlider.to, val))
-                                        velocityStrengthSlider.value = val
-                                        velocityField.text = Qt.binding(function() { return velocityStrengthSlider.value.toFixed(0) })
-                                        if (root.targetZoneParameter) {
-                                            root.targetZoneParameter.velocityStrenght = val
-                                            root.configurationChanged()
-                                        }
-                                    }
-                                }
-                                onEditingFinished: {
                                     var val = parseFloat(text)
                                     if (!isNaN(val)) {
                                         val = Math.max(frictionStrengthSlider.from, Math.min(frictionStrengthSlider.to, val))
