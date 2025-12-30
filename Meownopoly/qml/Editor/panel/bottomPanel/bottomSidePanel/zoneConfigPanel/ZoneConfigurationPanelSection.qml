@@ -18,6 +18,16 @@ CollapsableGroupBox {
     
     // Main content
     content: [
+        // General Section (Name, Exclusion)
+        ZCP_GeneralSection {
+            id: generalSection
+            Layout.fillWidth: true
+            targetZoneParameter: root.targetZoneParameter
+            updatingValues: root.updatingValues
+            
+            onConfigurationChanged: root.configurationChanged()
+        },
+
         // Directions & Velocity Strength Section
         ZCP_DirectionsSection {
             id: directionsSection
@@ -43,6 +53,7 @@ CollapsableGroupBox {
         if (!targetZoneParameter) return
         
         updatingValues = true
+        generalSection.updateControls()
         directionsSection.updateControls()
         updatingValues = false
     }

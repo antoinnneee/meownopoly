@@ -173,10 +173,21 @@ Item {
                     
                     // Normaliser le vecteur
                     var mag = Math.sqrt(dx * dx + dy * dy)
-                    if (mag > 5) {  // Seuil pour éviter les mouvements trop petits
-                        root.directionX = dx / mag
-                        root.directionY = dy / mag
+                    if (mag > width/6) {  // Seuil pour définir une direction
+                        var rawX = dx / mag
+                        var rawY = dy / mag
+                        
+                        // Appliquer un step de 0.05
+                        var step = 0.05
+                        root.directionX = Math.round(rawX / step) * step
+                        root.directionY = Math.round(rawY / step) * step
+                        
                         root.directionChanged(root.directionX, root.directionY)
+                    } else {
+                        // Reset si clic/drag au centre
+                        root.directionX = 0
+                        root.directionY = 0
+                        root.directionChanged(0, 0)
                     }
                 }
                 
