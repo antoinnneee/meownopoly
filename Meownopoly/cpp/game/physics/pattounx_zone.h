@@ -1,5 +1,5 @@
-#ifndef PHYSICS2D_ZONE_H
-#define PHYSICS2D_ZONE_H
+#ifndef PATTOUNX_ZONE_H
+#define PATTOUNX_ZONE_H
 
 #include <QObject>
 #include <QVector2D>
@@ -14,7 +14,7 @@
  * Représente une zone polygonale qui peut avoir différents effets
  * sur les entités physiques qui la traversent.
  */
-class PhysicsZone2D : public ZoneParameter
+class PattounX_zone : public ZoneParameter
 {
     Q_OBJECT
     
@@ -32,8 +32,8 @@ public:
     };
     Q_ENUM(ZoneType)
     
-    explicit PhysicsZone2D(const QString& id, QObject* parent = nullptr);
-    explicit PhysicsZone2D(const QString& id,  ZoneParameter& zoneParameter, QObject* parent = nullptr);
+    explicit PattounX_zone(const QString& id, QObject* parent = nullptr);
+    explicit PattounX_zone(const QString& id,  ZoneParameter& zoneParameter, QObject* parent = nullptr);
     
     // --- Getters ---
     QString zoneId() const { return m_zoneId; }
@@ -88,5 +88,5 @@ private:
     bool m_isActive = true;
 };
 
-#endif // PHYSICS2D_ZONE_H
+#endif // PATTOUNX_ZONE_H
 

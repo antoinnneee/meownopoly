@@ -9,8 +9,8 @@
 #include <cmath>
 
 // Forward declaration
-class PhysicsZone2D;
-class PhysicsBody2D;
+class PattounX_zone;
+class PattounX_body;
 /**
  * @brief Structure représentant un polygone optimisé pour la collision
  */
@@ -45,8 +45,8 @@ struct CollisionResult {
     QVector2D closestPoint;         // Point le plus proche sur le polygone
     qreal penetration = 0.0;        // Profondeur de pénétration
     qreal t = 1.0;                  // Paramètre d'intersection [0,1] pour sweep tests
-    PhysicsZone2D* zone = nullptr;  // Zone touchée (si applicable)
-    PhysicsBody2D* body = nullptr;  // Body touché (si applicable)
+    PattounX_zone* zone = nullptr;  // Zone touchée (si applicable)
+    PattounX_body* body = nullptr;  // Body touché (si applicable)
 };
 
 /**

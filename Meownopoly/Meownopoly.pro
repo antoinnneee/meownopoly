@@ -35,9 +35,9 @@ INCLUDEPATH += cpp
 SOURCES += \
     cpp/game/item_snapable/ZoneParameter.cpp \
     cpp/game/physics/collision2d.cpp \
-    cpp/game/physics/physics2d_body.cpp \
-    cpp/game/physics/physics2d_zone.cpp \
-    cpp/game/physics/physics2d_engine.cpp \
+    cpp/game/physics/pattounx_body.cpp \
+    cpp/game/physics/pattounx_zone.cpp \
+    cpp/game/physics/pattounx_engine.cpp \
     tools/QtFolderCompressor/FolderCompressor.cpp \
     assetManager/asset_manager.cpp \
     game/case/Case.cpp \
@@ -80,9 +80,9 @@ SOURCES += \
 HEADERS += \
     cpp/game/item_snapable/ZoneParameter.h \
     cpp/game/physics/collision2d.h \
-    cpp/game/physics/physics2d_body.h \
-    cpp/game/physics/physics2d_zone.h \
-    cpp/game/physics/physics2d_engine.h \
+    cpp/game/physics/pattounx_body.h \
+    cpp/game/physics/pattounx_zone.h \
+    cpp/game/physics/pattounx_engine.h \
     tools/QtFolderCompressor/FolderCompressor.h \
     assetManager/asset_manager.h \
     game/case/Case.h \

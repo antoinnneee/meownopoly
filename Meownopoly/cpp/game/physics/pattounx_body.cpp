@@ -1,15 +1,15 @@
-#include "physics2d_body.h"
-#include "physics2d_engine.h"
+#include "pattounx_body.h"
+#include "pattounx_engine.h"
 #include <cmath>
 #include <algorithm>
 
-PhysicsBody2D::PhysicsBody2D(QObject* parent)
+PattounX_body::PattounX_body(QObject* parent)
     : QObject(parent)
     , m_bodyId("")
 {
 }
 
-PhysicsBody2D::PhysicsBody2D(const QString& id, QObject* parent)
+PattounX_body::PattounX_body(const QString& id, QObject* parent)
     : QObject(parent)
     , m_bodyId(id)
 {
@@ -17,7 +17,7 @@ PhysicsBody2D::PhysicsBody2D(const QString& id, QObject* parent)
 
 // --- Setters ---
 
-void PhysicsBody2D::setPosition(const QVector2D& pos)
+void PattounX_body::setPosition(const QVector2D& pos)
 {
     if (m_position != pos) {
         m_position = pos;
@@ -26,7 +26,7 @@ void PhysicsBody2D::setPosition(const QVector2D& pos)
     }
 }
 
-void PhysicsBody2D::setVelocity(const QVector2D& vel)
+void PattounX_body::setVelocity(const QVector2D& vel)
 {
     if (m_velocity != vel) {
         m_velocity = vel;
@@ -34,7 +34,7 @@ void PhysicsBody2D::setVelocity(const QVector2D& vel)
     }
 }
 
-void PhysicsBody2D::setCollisionRadius(qreal radius)
+void PattounX_body::setCollisionRadius(qreal radius)
 {
     if (!qFuzzyCompare(m_collisionRadius, radius)) {
         m_collisionRadius = radius;
@@ -42,7 +42,7 @@ void PhysicsBody2D::setCollisionRadius(qreal radius)
     }
 }
 
-void PhysicsBody2D::setBounceFactor(qreal factor)
+void PattounX_body::setBounceFactor(qreal factor)
 {
     if (!qFuzzyCompare(m_bounceFactor, factor)) {
         m_bounceFactor = std::clamp(factor, 0.0, 1.0);
@@ -50,7 +50,7 @@ void PhysicsBody2D::setBounceFactor(qreal factor)
     }
 }
 
-void PhysicsBody2D::setSlideFactor(qreal factor)
+void PattounX_body::setSlideFactor(qreal factor)
 {
     if (!qFuzzyCompare(m_slideFactor, factor)) {
         m_slideFactor = std::clamp(factor, 0.0, 1.0);
@@ -58,7 +58,7 @@ void PhysicsBody2D::setSlideFactor(qreal factor)
     }
 }
 
-void PhysicsBody2D::setAcceleration(qreal accel)
+void PattounX_body::setAcceleration(qreal accel)
 {
     if (!qFuzzyCompare(m_acceleration, accel)) {
         m_acceleration = accel;
@@ -66,7 +66,7 @@ void PhysicsBody2D::setAcceleration(qreal accel)
     }
 }
 
-void PhysicsBody2D::setMaxSpeed(qreal speed)
+void PattounX_body::setMaxSpeed(qreal speed)
 {
     if (!qFuzzyCompare(m_maxSpeed, speed)) {
         m_maxSpeed = speed;
@@ -74,7 +74,7 @@ void PhysicsBody2D::setMaxSpeed(qreal speed)
     }
 }
 
-void PhysicsBody2D::setMass(qreal mass)
+void PattounX_body::setMass(qreal mass)
 {
     if (!qFuzzyCompare(m_mass, mass)) {
         m_mass = std::max(0.01, mass);
@@ -82,7 +82,7 @@ void PhysicsBody2D::setMass(qreal mass)
     }
 }
 
-void PhysicsBody2D::setIsStatic(bool isStatic)
+void PattounX_body::setIsStatic(bool isStatic)
 {
     if (m_isStatic != isStatic) {
         m_isStatic = isStatic;
@@ -90,7 +90,7 @@ void PhysicsBody2D::setIsStatic(bool isStatic)
     }
 }
 
-void PhysicsBody2D::setCollisionEnabled(bool enabled)
+void PattounX_body::setCollisionEnabled(bool enabled)
 {
     if (m_collisionEnabled != enabled) {
         m_collisionEnabled = enabled;
@@ -99,11 +99,11 @@ void PhysicsBody2D::setCollisionEnabled(bool enabled)
 }
 
 // --- API Publique ---
-void PhysicsBody2D::applyForce(const QVector2D& inputVector, qreal inputForce) {
+void PattounX_body::applyForce(const QVector2D& inputVector, qreal inputForce) {
     applyForce(inputVector * inputForce);
 }
 
-void PhysicsBody2D::applyForce(const QVector2D& force)
+void PattounX_body::applyForce(const QVector2D& force)
 {
     // On ajoute directement à l'accumulateur ou à la vitesse si intégration Euler simple
     if (m_isStatic) return;
@@ -111,30 +111,30 @@ void PhysicsBody2D::applyForce(const QVector2D& force)
 }
 
 
-void PhysicsBody2D::applyImpulse(const QVector2D& impulse)
+void PattounX_body::applyImpulse(const QVector2D& impulse)
 {
     if (m_isStatic) return;
         m_velocity += impulse * m_invMass;
     emit velocityChanged();
 }
 
-void PhysicsBody2D::setLinearDamping(qreal damping)
+void PattounX_body::setLinearDamping(qreal damping)
 {
     m_linearDamping = damping;
 }
 
-void PhysicsBody2D::stop() {
+void PattounX_body::stop() {
     m_velocity = QVector2D(0,0);
     m_forceAccumulator = QVector2D(0,0);
     emit velocityChanged();
 }
 
-void PhysicsBody2D::reset() {
+void PattounX_body::reset() {
     stop();
 }
 // --- Usage intern
 
-void PhysicsBody2D::integrate(qreal dt) {
+void PattounX_body::integrate(qreal dt) {
     if (m_isStatic || dt <= 0) return;
 
     m_previousPosition = m_position;
@@ -181,7 +181,7 @@ void PhysicsBody2D::integrate(qreal dt) {
 }
 
 
-void PhysicsBody2D::setCollidingState(bool colliding, const QVector2D& normal)
+void PattounX_body::setCollidingState(bool colliding, const QVector2D& normal)
 {
     bool groundedChanged = (m_isColliding != colliding);
     bool normalChanged = (m_lastCollisionNormal != normal);
@@ -194,12 +194,12 @@ void PhysicsBody2D::setCollidingState(bool colliding, const QVector2D& normal)
 }
 
 
-QVector2D PhysicsBody2D::inputVector() const
+QVector2D PattounX_body::inputVector() const
 {
     return m_inputVector;
 }
 
-void PhysicsBody2D::setInputVector(const QVector2D &newInputVector)
+void PattounX_body::setInputVector(const QVector2D &newInputVector)
 {
     if (m_inputVector == newInputVector)
         return;
@@ -207,22 +207,22 @@ void PhysicsBody2D::setInputVector(const QVector2D &newInputVector)
     emit inputVectorChanged();
 }
 
-qreal PhysicsBody2D::invMass() const
+qreal PattounX_body::invMass() const
 {
     return m_invMass;
 }
 
-qreal PhysicsBody2D::restitution() const
+qreal PattounX_body::restitution() const
 {
     return m_restitution;
 }
 
-qreal PhysicsBody2D::staticFriction() const
+qreal PattounX_body::staticFriction() const
 {
     return m_staticFriction;
 }
 
-qreal PhysicsBody2D::dynamicFriction() const
+qreal PattounX_body::dynamicFriction() const
 {
     return m_dynamicFriction;
 }

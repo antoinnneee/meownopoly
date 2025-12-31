@@ -1,15 +1,15 @@
-#include "physics2d_zone.h"
+#include "pattounx_zone.h"
 
 #include "game/item_snapable/ZoneParameter.h"
 
-PhysicsZone2D::PhysicsZone2D(const QString& id, QObject* parent)
+PattounX_zone::PattounX_zone(const QString& id, QObject* parent)
     : ZoneParameter(parent)
     , m_zoneId(id)
 {
 
 }
 
-PhysicsZone2D::PhysicsZone2D(const QString& id, ZoneParameter &zoneParameter, QObject* parent)
+PattounX_zone::PattounX_zone(const QString& id, ZoneParameter &zoneParameter, QObject* parent)
     : ZoneParameter(zoneParameter, parent)
     , m_zoneId(id)
 {
@@ -17,7 +17,7 @@ PhysicsZone2D::PhysicsZone2D(const QString& id, ZoneParameter &zoneParameter, QO
 }
 
 
-bool PhysicsZone2D::containsPoint(const QVector2D& point) const
+bool PattounX_zone::containsPoint(const QVector2D& point) const
 {
     if (!m_isActive || !m_polygon.isValid()) {
         return false;
@@ -26,7 +26,7 @@ bool PhysicsZone2D::containsPoint(const QVector2D& point) const
 }
 
 
-CollisionResult PhysicsZone2D::checkCollision(const QVector2D& center, qreal radius) const
+CollisionResult PattounX_zone::checkCollision(const QVector2D& center, qreal radius) const
 {
     CollisionResult result;
 
@@ -38,14 +38,14 @@ CollisionResult PhysicsZone2D::checkCollision(const QVector2D& center, qreal rad
     if (exclusion() == true) {
         result = Collision2D::checkCirclePolygon(center, radius, m_polygon);
         if (result.colliding) {
-            result.zone = const_cast<PhysicsZone2D*>(this);
+            result.zone = const_cast<PattounX_zone*>(this);
         }
     }
 
     return result;
 }
 
-CollisionResult PhysicsZone2D::checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const
+CollisionResult PattounX_zone::checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const
 {
     CollisionResult result;
 
@@ -57,30 +57,30 @@ CollisionResult PhysicsZone2D::checkCollisionSweep(const QVector2D& startPos, co
     if (exclusion() == true) {
         result = Collision2D::checkCirclePolygonSweep(startPos, endPos, radius, m_polygon);
         if (result.colliding) {
-            result.zone = const_cast<PhysicsZone2D*>(this);
+            result.zone = const_cast<PattounX_zone*>(this);
         }
     }
 
     return result;
 }
 
-QVector<CollisionResult> PhysicsZone2D::checkCollisionAll(const QVector2D& center, qreal radius) const
+QVector<CollisionResult> PattounX_zone::checkCollisionAll(const QVector2D& center, qreal radius) const
 {
     QVector<CollisionResult> results;
     if (!m_isActive || !m_polygon.isValid() || !exclusion()) return results;
     
     results = Collision2D::checkCirclePolygonAll(center, radius, m_polygon);
-    for (auto& res : results) res.zone = const_cast<PhysicsZone2D*>(this);
+    for (auto& res : results) res.zone = const_cast<PattounX_zone*>(this);
     return results;
 }
 
-QVector<CollisionResult> PhysicsZone2D::checkCollisionSweepAll(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const
+QVector<CollisionResult> PattounX_zone::checkCollisionSweepAll(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const
 {
     QVector<CollisionResult> results;
     if (!m_isActive || !m_polygon.isValid() || !exclusion()) return results;
     
     results = Collision2D::checkCirclePolygonSweepAll(startPos, endPos, radius, m_polygon);
-    for (auto& res : results) res.zone = const_cast<PhysicsZone2D*>(this);
+    for (auto& res : results) res.zone = const_cast<PattounX_zone*>(this);
     return results;
 }
 

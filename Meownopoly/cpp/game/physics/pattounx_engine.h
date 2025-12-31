@@ -1,13 +1,17 @@
-#ifndef PHYSICS2D_ENGINE_H
-#define PHYSICS2D_ENGINE_H
+/*
+ *      PattounX
+ *          -- The Feline Physics Solver --
+ * */
+#ifndef PATTOUNX_ENGINE_H
+#define PATTOUNX_ENGINE_H
 
 #include <QObject>
 #include <QHash>
 #include <QVector>
 #include <QVariantList>
 #include <QString>
-#include "physics2d_body.h"
-#include "physics2d_zone.h"
+#include "pattounx_body.h"
+#include "pattounx_zone.h"
 #include "collision2d.h"
 #include "game/item_snapable/ZoneParameter.h"
 
@@ -17,7 +21,7 @@
  * Gère toutes les entités physiques (bodies) et zones de la scène.
  * Effectue la détection de collision et applique les effets de zones.
  */
-class PhysicsEngine2D : public QObject
+class PattounX_engine : public QObject
 {
     Q_OBJECT
     
@@ -27,8 +31,8 @@ class PhysicsEngine2D : public QObject
     Q_PROPERTY(bool debugMode READ debugMode WRITE setDebugMode NOTIFY debugModeChanged)
 
 public:
-    explicit PhysicsEngine2D(QObject* parent = nullptr);
-    ~PhysicsEngine2D();
+    explicit PattounX_engine(QObject* parent = nullptr);
+    ~PattounX_engine();
     
     /**
      * @brief Enregistre les types du moteur physique pour QML
@@ -53,7 +57,7 @@ public:
      * @param id Identifiant unique
      * @return Pointeur vers le nouveau body (géré par le moteur)
      */
-    Q_INVOKABLE PhysicsBody2D* createBody(const QString& id);
+    Q_INVOKABLE PattounX_body* createBody(const QString& id);
     
     /**
      * @brief Supprime un corps physique
@@ -67,7 +71,7 @@ public:
      * @param id Identifiant du body
      * @return Pointeur vers le body ou nullptr
      */
-    Q_INVOKABLE PhysicsBody2D* getBody(const QString& id) const;
+    Q_INVOKABLE PattounX_body* getBody(const QString& id) const;
     
     /**
      * @brief Supprime tous les corps physiques
@@ -79,11 +83,11 @@ public:
     /**
      * @brief Crée une nouvelle zone physique
      * @param id Identifiant unique
-     * @param zoneType Type de zone (enum PhysicsZone2D::ZoneType)
+     * @param zoneType Type de zone (enum PattounX_zone::ZoneType)
      * @return Pointeur vers la nouvelle zone (gérée par le moteur)
      */
-    Q_INVOKABLE PhysicsZone2D* createZone(const QString& id, int zoneType = 0);
-    PhysicsZone2D* createZone(const QString& id, ZoneParameter *zoneParam);
+    Q_INVOKABLE PattounX_zone* createZone(const QString& id, int zoneType = 0);
+    PattounX_zone* createZone(const QString& id, ZoneParameter *zoneParam);
 
     /**
      * @brief Supprime une zone physique
@@ -97,7 +101,7 @@ public:
      * @param id Identifiant de la zone
      * @return Pointeur vers la zone ou nullptr
      */
-    Q_INVOKABLE PhysicsZone2D* getZone(const QString& id) const;
+    Q_INVOKABLE PattounX_zone* getZone(const QString& id) const;
     
     /**
      * @brief Supprime toutes les zones
@@ -132,7 +136,7 @@ public:
      * @param body Corps à mettre à jour
      * @param dt Delta time en secondes
      */
-    Q_INVOKABLE void updateBody(PhysicsBody2D* body, qreal dt);
+    Q_INVOKABLE void updateBody(PattounX_body* body, qreal dt);
     
     // --- Requêtes ---
     
@@ -152,17 +156,17 @@ signals:
     void debugModeChanged();
     
     // Événements globaux
-    void bodyCollided(PhysicsBody2D* body, PhysicsZone2D* zone);
-    void bodyEnteredZone(PhysicsBody2D* body, PhysicsZone2D* zone);
-    void bodyExitedZone(PhysicsBody2D* body, PhysicsZone2D* zone);
+    void bodyCollided(PattounX_body* body, PattounX_zone* zone);
+    void bodyEnteredZone(PattounX_body* body, PattounX_zone* zone);
+    void bodyExitedZone(PattounX_body* body, PattounX_zone* zone);
 
 private:
     /**
      * @brief Applique les effets des zones sur un body
      */
-    void applyZoneEffects(PhysicsBody2D* body, qreal dt);
+    void applyZoneEffects(PattounX_body* body, qreal dt);
 
-    void applyGroundFrictionAndZones(PhysicsBody2D *body, qreal dt);
+    void applyGroundFrictionAndZones(PattounX_body *body, qreal dt);
 
     /**
      * @brief Détecte et résout les collisions pour un body
@@ -174,11 +178,11 @@ private:
      */
     void correctPositions(const QVector<CollisionResult> &contacts);
     // Données
-    QHash<QString, PhysicsBody2D*> m_bodies;
-    QHash<QString, PhysicsZone2D*> m_zones;
+    QHash<QString, PattounX_body*> m_bodies;
+    QHash<QString, PattounX_zone*> m_zones;
     
     // Suivi des zones actives par body (pour détecter entrées/sorties)
-    QHash<PhysicsBody2D*, QSet<PhysicsZone2D*>> m_activeZonesPerBody;
+    QHash<PattounX_body*, QSet<PattounX_zone*>> m_activeZonesPerBody;
     
     // Configuration
     bool m_enabled = true;
@@ -192,5 +196,5 @@ private:
     static constexpr qreal DEFAULT_GROUND_DAMPING = 0.05;
 };
 
-#endif // PHYSICS2D_ENGINE_H
+#endif // PATTOUNX_ENGINE_H
 

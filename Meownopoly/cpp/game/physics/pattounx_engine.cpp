@@ -1,30 +1,30 @@
-#include "physics2d_engine.h"
+#include "pattounx_engine.h"
 #include "game/item_snapable/ItemSnapable.h"
 #include "game/item_snapable/ZoneParameter.h"
 #include <QDebug>
 #include <QtQml>
 
-void PhysicsEngine2D::registerQml()
+void PattounX_engine::registerQml()
 {
-    qmlRegisterType<PhysicsEngine2D>("PhysicsEngine", 1, 0, "PhysicsEngine2D");
-    qmlRegisterType<PhysicsBody2D>("PhysicsEngine", 1, 0, "PhysicsBody2D");
-    qmlRegisterType<PhysicsZone2D>("PhysicsEngine", 1, 0, "PhysicsZone2D");
+    qmlRegisterType<PattounX_engine>("PattounX", 1, 0, "PattounX_engine");
+    qmlRegisterType<PattounX_body>("PattounX", 1, 0, "PattounX_body");
+    qmlRegisterType<PattounX_zone>("PattounX", 1, 0, "PattounX_zone");
     
     // Enregistrer l'enum ZoneType pour QML
     qmlRegisterUncreatableMetaObject(
-        PhysicsZone2D::staticMetaObject,
-        "PhysicsEngine", 1, 0,
+        PattounX_zone::staticMetaObject,
+        "PattounX", 1, 0,
         "ZoneType",
         "Error: ZoneType is an enum"
     );
 }
 
-PhysicsEngine2D::PhysicsEngine2D(QObject* parent)
+PattounX_engine::PattounX_engine(QObject* parent)
     : QObject(parent)
 {
 }
 
-PhysicsEngine2D::~PhysicsEngine2D()
+PattounX_engine::~PattounX_engine()
 {
     clearBodies();
     clearZones();
@@ -32,7 +32,7 @@ PhysicsEngine2D::~PhysicsEngine2D()
 
 // --- Setters ---
 
-void PhysicsEngine2D::setEnabled(bool enabled)
+void PattounX_engine::setEnabled(bool enabled)
 {
     if (m_enabled != enabled) {
         m_enabled = enabled;
@@ -40,7 +40,7 @@ void PhysicsEngine2D::setEnabled(bool enabled)
     }
 }
 
-void PhysicsEngine2D::setDebugMode(bool debug)
+void PattounX_engine::setDebugMode(bool debug)
 {
     if (m_debugMode != debug) {
         m_debugMode = debug;
@@ -50,51 +50,51 @@ void PhysicsEngine2D::setDebugMode(bool debug)
 
 // --- Gestion des Bodies ---
 
-PhysicsBody2D* PhysicsEngine2D::createBody(const QString& id)
+PattounX_body* PattounX_engine::createBody(const QString& id)
 {
     if (m_bodies.contains(id)) {
-        qWarning() << "[PhysicsEngine2D] Body with id" << id << "already exists";
+        qWarning() << "[PattounX_engine] Body with id" << id << "already exists";
         return m_bodies[id];
     }
     
-    PhysicsBody2D* body = new PhysicsBody2D(id, this);
+    PattounX_body* body = new PattounX_body(id, this);
     body->setEngine(this);
     m_bodies[id] = body;
     
     if (m_debugMode) {
-        qDebug() << "[PhysicsEngine2D] Created body:" << id;
+        qDebug() << "[PattounX_engine] Created body:" << id;
     }
     
     emit bodyCountChanged();
     return body;
 }
 
-bool PhysicsEngine2D::removeBody(const QString& id)
+bool PattounX_engine::removeBody(const QString& id)
 {
     if (!m_bodies.contains(id)) {
         return false;
     }
     
-    PhysicsBody2D* body = m_bodies.take(id);
+    PattounX_body* body = m_bodies.take(id);
     m_activeZonesPerBody.remove(body);
     body->deleteLater();
     
     if (m_debugMode) {
-        qDebug() << "[PhysicsEngine2D] Removed body:" << id;
+        qDebug() << "[PattounX_engine] Removed body:" << id;
     }
     
     emit bodyCountChanged();
     return true;
 }
 
-PhysicsBody2D* PhysicsEngine2D::getBody(const QString& id) const
+PattounX_body* PattounX_engine::getBody(const QString& id) const
 {
     return m_bodies.value(id, nullptr);
 }
 
-void PhysicsEngine2D::clearBodies()
+void PattounX_engine::clearBodies()
 {
-    for (PhysicsBody2D* body : m_bodies) {
+    for (PattounX_body* body : m_bodies) {
         body->deleteLater();
     }
     m_bodies.clear();
@@ -104,50 +104,50 @@ void PhysicsEngine2D::clearBodies()
 
 // --- Gestion des Zones ---
 
-PhysicsZone2D* PhysicsEngine2D::createZone(const QString& id, int zoneType)
+PattounX_zone* PattounX_engine::createZone(const QString& id, int zoneType)
 {
     if (m_zones.contains(id)) {
-        qWarning() << "[PhysicsEngine2D] Zone with id" << id << "already exists";
+        qWarning() << "[PattounX_engine] Zone with id" << id << "already exists";
         return m_zones[id];
     }
 
-    PhysicsZone2D::ZoneType type = static_cast<PhysicsZone2D::ZoneType>(zoneType);
-    PhysicsZone2D* zone = new PhysicsZone2D(id, this);
+    PattounX_zone::ZoneType type = static_cast<PattounX_zone::ZoneType>(zoneType);
+    PattounX_zone* zone = new PattounX_zone(id, this);
     m_zones[id] = zone;
 
     if (m_debugMode) {
-        qDebug() << "[PhysicsEngine2D] Created zone:" << id << "type:" << type;
+        qDebug() << "[PattounX_engine] Created zone:" << id << "type:" << type;
     }
 
     emit zoneCountChanged();
     return zone;
 }
 
-PhysicsZone2D* PhysicsEngine2D::createZone(const QString& id, ZoneParameter *zoneParam)
+PattounX_zone* PattounX_engine::createZone(const QString& id, ZoneParameter *zoneParam)
 {
     if (m_zones.contains(id)) {
-        qWarning() << "[PhysicsEngine2D] Zone with id" << id << "already exists";
+        qWarning() << "[PattounX_engine] Zone with id" << id << "already exists";
         return m_zones[id];
     }
 
-    PhysicsZone2D* zone = new PhysicsZone2D(id, *zoneParam, this);
+    PattounX_zone* zone = new PattounX_zone(id, *zoneParam, this);
     m_zones[id] = zone;
 
     if (m_debugMode) {
-        qDebug() << "[PhysicsEngine2D] Created zone:" << id;
+        qDebug() << "[PattounX_engine] Created zone:" << id;
     }
 
     emit zoneCountChanged();
     return zone;
 }
 
-bool PhysicsEngine2D::removeZone(const QString& id)
+bool PattounX_engine::removeZone(const QString& id)
 {
     if (!m_zones.contains(id)) {
         return false;
     }
     
-    PhysicsZone2D* zone = m_zones.take(id);
+    PattounX_zone* zone = m_zones.take(id);
     
     // Nettoyer les références dans activeZonesPerBody
     for (auto& activeZones : m_activeZonesPerBody) {
@@ -157,21 +157,21 @@ bool PhysicsEngine2D::removeZone(const QString& id)
     zone->deleteLater();
     
     if (m_debugMode) {
-        qDebug() << "[PhysicsEngine2D] Removed zone:" << id;
+        qDebug() << "[PattounX_engine] Removed zone:" << id;
     }
     
     emit zoneCountChanged();
     return true;
 }
 
-PhysicsZone2D* PhysicsEngine2D::getZone(const QString& id) const
+PattounX_zone* PattounX_engine::getZone(const QString& id) const
 {
     return m_zones.value(id, nullptr);
 }
 
-void PhysicsEngine2D::clearZones()
+void PattounX_engine::clearZones()
 {
-    for (PhysicsZone2D* zone : m_zones) {
+    for (PattounX_zone* zone : m_zones) {
         zone->deleteLater();
     }
     m_zones.clear();
@@ -184,7 +184,7 @@ void PhysicsEngine2D::clearZones()
     emit zoneCountChanged();
 }
 
-void PhysicsEngine2D::setZonesFromSnapables(const QVariantList& snapables)
+void PattounX_engine::setZonesFromSnapables(const QVariantList& snapables)
 {
     clearZones();
     
@@ -202,46 +202,46 @@ void PhysicsEngine2D::setZonesFromSnapables(const QVariantList& snapables)
         if (!zoneParam || zoneParam->pointCount() < 3) continue;
         
         // Déterminer le type de zone
-        PhysicsZone2D::ZoneType zoneType = PhysicsZone2D::Zone_Exclusion;
+        PattounX_zone::ZoneType zoneType = PattounX_zone::Zone_Exclusion;
         
         if (tileType == ItemSnapable::PhysicZoneTile) {
             // physics zone (exclusion)
-            zoneType = PhysicsZone2D::Zone_Exclusion;
+            zoneType = PattounX_zone::Zone_Exclusion;
         } else {
             continue; // Ignore other types for now
         }
         
         // Créer la zone
         QString zoneId = QString("zone_%1").arg(zoneIndex++);
-        PhysicsZone2D* zone = createZone(zoneId, zoneParam);
+        PattounX_zone* zone = createZone(zoneId, zoneParam);
 
         if (m_debugMode) {
-            qDebug() << "[PhysicsEngine2D] Loaded zone from snapable:"
+            qDebug() << "[PattounX_engine] Loaded zone from snapable:"
                      << zoneId << "type:" << zoneType
                      << "points:" << zoneParam->pointCount();
         }
     }
     
     if (m_debugMode) {
-        qDebug() << "[PhysicsEngine2D] Loaded" << m_zones.size() << "zones from snapables";
+        qDebug() << "[PattounX_engine] Loaded" << m_zones.size() << "zones from snapables";
     }
 }
 
 // --- Simulation ---
 
-void PhysicsEngine2D::updateAll(qreal dt)
+void PattounX_engine::updateAll(qreal dt)
 {
     if (!m_enabled || dt <= 0) return;
     
-    for (PhysicsBody2D* body : m_bodies) {
+    for (PattounX_body* body : m_bodies) {
         updateBody(body, dt);
     }
     // 2. Détection des collisions (Broadphase + Narrowphase CCD)
     QVector<CollisionResult> contacts;
-    for (PhysicsBody2D* body : m_bodies) {
+    for (PattounX_body* body : m_bodies) {
         if (!body->collisionEnabled() || body->isStatic()) continue;
 
-        for (PhysicsZone2D* zone : m_zones) {
+        for (PattounX_zone* zone : m_zones) {
             if (!zone->isActive() || !zone->exclusion()) continue;
 
             // Utilisation collision sweep pour détecter TOUS les segments impactés
@@ -275,7 +275,7 @@ void PhysicsEngine2D::updateAll(qreal dt)
     correctPositions(contacts);
 }
 
-void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
+void PattounX_engine::updateBody(PattounX_body* body, qreal dt)
 {
     if (!body || body->isStatic()) return;
 
@@ -287,10 +287,10 @@ void PhysicsEngine2D::updateBody(PhysicsBody2D* body, qreal dt)
 
 // applyZoneEffects was merged into applyGroundFrictionAndZones
 
-void PhysicsEngine2D::resolveCollisions(const QVector<CollisionResult>& contacts, qreal dt)
+void PattounX_engine::resolveCollisions(const QVector<CollisionResult>& contacts, qreal dt)
 {
     for (const CollisionResult& m : contacts) {
-        PhysicsBody2D* A = m.body;
+        PattounX_body* A = m.body;
         // B est la zone (Mur), masse infinie, vitesse nulle.
 
         QVector2D rv = A->velocity(); // Vitesse relative (V_body - 0)
@@ -354,11 +354,11 @@ void PhysicsEngine2D::resolveCollisions(const QVector<CollisionResult>& contacts
         emit A->collisionOccurred(m.zone);
     }
 }
-void PhysicsEngine2D::correctPositions(const QVector<CollisionResult>& contacts)
+void PattounX_engine::correctPositions(const QVector<CollisionResult>& contacts)
 {
 
     for (const CollisionResult& m : contacts) {
-        PhysicsBody2D* A = m.body;
+        PattounX_body* A = m.body;
 
         // La pénétration a été ajustée dans updateAll pour les sweeps
         qreal correctionMag = std::max(m.penetration - PENETRATION_SLOP, 0.0) * POSITION_CORRECTION_PERCENT;
@@ -373,11 +373,11 @@ void PhysicsEngine2D::correctPositions(const QVector<CollisionResult>& contacts)
 
 // --- Requêtes ---
 
-QVariantList PhysicsEngine2D::getZonesAtPoint(const QVector2D& point) const
+QVariantList PattounX_engine::getZonesAtPoint(const QVector2D& point) const
 {
     QVariantList result;
     
-    for (PhysicsZone2D* zone : m_zones) {
+    for (PattounX_zone* zone : m_zones) {
         if (zone->isActive() && zone->containsPoint(point)) {
             result.append(QVariant::fromValue(zone));
         }
@@ -386,14 +386,14 @@ QVariantList PhysicsEngine2D::getZonesAtPoint(const QVector2D& point) const
     return result;
 }
 
-void PhysicsEngine2D::applyGroundFrictionAndZones(PhysicsBody2D* body, qreal dt)
+void PattounX_engine::applyGroundFrictionAndZones(PattounX_body* body, qreal dt)
 {
-    QSet<PhysicsZone2D*> currentZones;
+    QSet<PattounX_zone*> currentZones;
     qreal currentDamping = DEFAULT_GROUND_DAMPING; 
 
     QVector2D pos = body->position();
 
-    for (PhysicsZone2D* zone : m_zones) {
+    for (PattounX_zone* zone : m_zones) {
         if (!zone->isActive()) continue;
         
         // Optimisation possible : AABB check avant containsPoint
@@ -422,7 +422,7 @@ void PhysicsEngine2D::applyGroundFrictionAndZones(PhysicsBody2D* body, qreal dt)
     body->setLinearDamping(currentDamping);
 
     // Gérer les signaux Entered/Exited
-    QSet<PhysicsZone2D*>& prevZones = m_activeZonesPerBody[body];
+    QSet<PattounX_zone*>& prevZones = m_activeZonesPerBody[body];
     for(auto z : currentZones) { if(!prevZones.contains(z)) { emit bodyEnteredZone(body, z); emit body->enteredZone(z); } }
     for(auto z : prevZones) { if(!currentZones.contains(z)) { emit bodyExitedZone(body, z); emit body->exitedZone(z); } }
     m_activeZonesPerBody[body] = currentZones;

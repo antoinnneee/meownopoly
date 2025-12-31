@@ -1,5 +1,5 @@
-#ifndef PHYSICS2D_BODY_H
-#define PHYSICS2D_BODY_H
+#ifndef PATTOUNX_BODY_H
+#define PATTOUNX_BODY_H
 
 #include <QObject>
 #include <QVector2D>
@@ -8,8 +8,8 @@
 #include <QHash>
 
 // Forward declarations
-class PhysicsEngine2D;
-class PhysicsZone2D;
+class PattounX_engine;
+class PattounX_zone;
 
 /**
  * @brief Corps physique 2D
@@ -17,7 +17,7 @@ class PhysicsZone2D;
  * Représente une entité avec position, vitesse et paramètres
  * de collision dans le système de coordonnées de grille 2D.
  */
-class PhysicsBody2D : public QObject
+class PattounX_body : public QObject
 {
     Q_OBJECT
     
@@ -44,8 +44,8 @@ class PhysicsBody2D : public QObject
     Q_PROPERTY(QVector2D inputVector READ inputVector WRITE setInputVector NOTIFY inputVectorChanged)
 
 public:
-    explicit PhysicsBody2D(QObject* parent = nullptr);
-    explicit PhysicsBody2D(const QString& id, QObject* parent = nullptr);
+    explicit PattounX_body(QObject* parent = nullptr);
+    explicit PattounX_body(const QString& id, QObject* parent = nullptr);
     
     // --- Getters ---
     QString bodyId() const { return m_bodyId; }
@@ -101,7 +101,7 @@ public:
      */
     Q_INVOKABLE void reset();
     
-    // --- Usage interne par PhysicsEngine2D ---
+    // --- Usage interne par PattounX_engine ---
     /**
      * @brief Met à jour l'état de collision
      */
@@ -110,8 +110,8 @@ public:
     /**
      * @brief Référence vers le moteur physique parent
      */
-    void setEngine(PhysicsEngine2D* engine) { m_engine = engine; }
-    PhysicsEngine2D* engine() const { return m_engine; }
+    void setEngine(PattounX_engine* engine) { m_engine = engine; }
+    PattounX_engine* engine() const { return m_engine; }
 
     QVector2D inputVector() const;
     void setInputVector(const QVector2D &newInputVector);
@@ -144,9 +144,9 @@ signals:
     void lastCollisionNormalChanged();
     
     // Événements
-    void collisionOccurred(PhysicsZone2D* zone);
-    void enteredZone(PhysicsZone2D* zone);
-    void exitedZone(PhysicsZone2D* zone);
+    void collisionOccurred(PattounX_zone* zone);
+    void enteredZone(PattounX_zone* zone);
+    void exitedZone(PattounX_zone* zone);
 
     void inputVectorChanged();
 
@@ -191,12 +191,12 @@ private:
 
 
     // Référence au moteur
-    PhysicsEngine2D* m_engine = nullptr;
+    PattounX_engine* m_engine = nullptr;
     QVector2D m_inputVector;
     qreal m_restitution;
     qreal m_staticFriction;
     qreal m_dynamicFriction;
 };
 
-#endif // PHYSICS2D_BODY_H
+#endif // PATTOUNX_BODY_H
 

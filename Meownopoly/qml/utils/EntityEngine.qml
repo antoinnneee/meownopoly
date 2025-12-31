@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 import ItemSnapable
-import PhysicsEngine 1.0
+import PattounX 1.0
 
 Item {
     id: root
@@ -44,16 +44,15 @@ Item {
 
     
     // --- Moteur Physique C++ ---
-    PhysicsEngine2D {
+    PattounX_engine {
         id: physicsEngine
         debugMode: true
     }
     
     // Corps physique du joueur
-    property PhysicsBody2D playerBody: null
+    property PattounX_body playerBody: null
 
     // --- API Publique ---
-
     // Fonction pour définir le context
     function setContext(view3D, grid, logic) {
         root.view3D = view3D
