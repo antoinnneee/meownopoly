@@ -580,6 +580,7 @@ Drawer {
                                 chatClient.sendMessage(inputField.text)
                                 inputField.text = ""
                             }
+                            inputField.focus = false
                         }
                     }
                 }
@@ -618,6 +619,7 @@ Drawer {
                                 chatClient.sendMessage(inputField.text)
                                 inputField.text = ""
                             }
+                            inputField.focus = false
                         }
                     }
                 }
@@ -692,8 +694,8 @@ Drawer {
 
     onOpened: {
         if (!chatClient.connected) {
-            chatClient.connectToServer("ws://localhost:3000", playerId)
+            chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId)
         }
-        inputField.forceActiveFocus()
+        // inputField.forceActiveFocus()
     }
 }
