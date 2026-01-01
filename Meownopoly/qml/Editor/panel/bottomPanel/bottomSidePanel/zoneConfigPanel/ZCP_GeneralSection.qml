@@ -7,8 +7,11 @@ GroupBox {
     title: "Général"
     
     // Properties
-    property var targetZoneParameter: null
     property bool updatingValues: false
+
+    property alias zoneName: nameField.text
+    property alias exclusion: exclusionSwitch.checked
+    property alias speedMultiplier: speedSlider.value
     
     // Signal
     signal configurationChanged()
@@ -56,7 +59,7 @@ GroupBox {
             id: nameField
             Layout.fillWidth: true
             placeholderText: "Nom de la zone"
-            text: root.targetZoneParameter ? root.targetZoneParameter.zoneName : ""
+            text: ""
             
             background: Rectangle {
                 color: "#1a1a1a"
@@ -71,10 +74,7 @@ GroupBox {
             padding: 6
             
             onEditingFinished: {
-                if (root.targetZoneParameter) {
-                    root.targetZoneParameter.zoneName = text
-                    root.configurationChanged()
-                }
+                root.configurationChanged()
             }
         }
         
@@ -88,7 +88,7 @@ GroupBox {
         
         Switch {
             id: exclusionSwitch
-            checked: root.targetZoneParameter ? root.targetZoneParameter.exclusion : true
+            checked: true
             
             indicator: Rectangle {
                 implicitWidth: 36
@@ -114,10 +114,7 @@ GroupBox {
             }
             
             onToggled: {
-                if (root.targetZoneParameter) {
-                    root.targetZoneParameter.exclusion = checked
-                    root.configurationChanged()
-                }
+                root.configurationChanged()
             }
         }
 
@@ -142,13 +139,10 @@ GroupBox {
                 from: 0.1
                 to: 3.0
                 stepSize: 0.1
-                value: root.targetZoneParameter ? root.targetZoneParameter.speedMultiplier : 1.0
+                value: 1.0
                 
                 onMoved: {
-                    if (root.targetZoneParameter) {
-                        root.targetZoneParameter.speedMultiplier = value
                         root.configurationChanged()
-                    }
                 }
             }
             
@@ -160,9 +154,4 @@ GroupBox {
             }
         }
     }
-    
-    function updateControls() {
-        // Pure property bindings handle synchronization with targetZoneParameter
-    }
-
 }

@@ -7,8 +7,11 @@ GroupBox {
     title: "Directions & Forces"
     
     // Properties
-    property var targetZoneParameter: null
     property bool updatingValues: false
+    property alias velocityDirectionX: velocityPicker.directionX
+    property alias velocityDirectionY: velocityPicker.directionY
+    property alias velocityStrength: velocityStrengthSlider.value
+    property alias frictionStrength: frictionStrengthSlider.value
     
     // Signal
     signal configurationChanged()
@@ -74,14 +77,11 @@ GroupBox {
                     arrowColor: "#5cb85c"
                     highlightColor: "#7bd97f"
                     
-                    directionX: root.targetZoneParameter ? root.targetZoneParameter.velocityDirection.x : 0
-                    directionY: root.targetZoneParameter ? root.targetZoneParameter.velocityDirection.y : 0
+                    directionX: 0
+                    directionY: 0
                     
                     onDirectionChanged: function(x, y) {
-                        if (!root.updatingValues && root.targetZoneParameter) {
-                            root.targetZoneParameter.velocityDirection = Qt.vector2d(x, y)
-                            root.configurationChanged()
-                        }
+                        root.configurationChanged()
                     }
                 }
             }
@@ -111,7 +111,7 @@ GroupBox {
                             from: 0.0
                             to: 100.0
                             stepSize: 1.0
-                            value: root.targetZoneParameter ? root.targetZoneParameter.velocityStrenght : 0.0
+                            value: 0.0
                             
                             background: Rectangle {
                                 x: velocityStrengthSlider.leftPadding
@@ -145,10 +145,7 @@ GroupBox {
                             }
                             
                             onMoved: {
-                                if (root.targetZoneParameter) {
-                                    root.targetZoneParameter.velocityStrenght = value
-                                    root.configurationChanged()
-                                }
+                                root.configurationChanged()
                             }
                         }
                         
@@ -178,10 +175,7 @@ GroupBox {
                                         val = Math.max(velocityStrengthSlider.from, Math.min(velocityStrengthSlider.to, val))
                                         velocityStrengthSlider.value = val
                                         velocityField.text = Qt.binding(function() { return velocityStrengthSlider.value.toFixed(0) })
-                                        if (root.targetZoneParameter) {
-                                            root.targetZoneParameter.velocityStrenght = val
-                                            root.configurationChanged()
-                                        }
+                                        root.configurationChanged()
                                     }
                                 }
                             }
@@ -209,7 +203,7 @@ GroupBox {
                             from: 0.0
                             to: 1.0
                             stepSize: 0.01
-                            value: root.targetZoneParameter ? root.targetZoneParameter.frictionStrenght : 0.0
+                            value: 0.0
                             
                             background: Rectangle {
                                 x: frictionStrengthSlider.leftPadding
@@ -243,10 +237,7 @@ GroupBox {
                             }
                             
                             onMoved: {
-                                if (root.targetZoneParameter) {
-                                    root.targetZoneParameter.frictionStrenght = value
-                                    root.configurationChanged()
-                                }
+                                root.configurationChanged()
                             }
                         }
                         
@@ -275,10 +266,7 @@ GroupBox {
                                         val = Math.max(frictionStrengthSlider.from, Math.min(frictionStrengthSlider.to, val))
                                         frictionStrengthSlider.value = val
                                         frictionStrengthSlider.text = Qt.binding(function() { return frictionStrengthSlider.value.toFixed(2) })
-                                        if (root.targetZoneParameter) {
-                                            root.targetZoneParameter.frictionStrenght = val
-                                            root.configurationChanged()
-                                        }
+                                        root.configurationChanged()
                                     }
                                 }
                             }
@@ -289,9 +277,4 @@ GroupBox {
         }
     }
     
-    // Function to update controls from the target
-    // We keep it empty or remove it as pure bindings handle everything now
-    function updateControls() {
-        // Pure property bindings handle synchronization with targetZoneParameter
-    }
 }

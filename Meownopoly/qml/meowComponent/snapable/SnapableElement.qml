@@ -373,4 +373,13 @@ Rectangle {
         snapableParameters.displayParameter.mirrorHorizontal = effects.mirrorHorizontal
         snapableParameters.displayParameter.mirrorVertical = effects.mirrorVertical
     }
+
+    function applyPhysicSettings(physicSettings) {
+        snapableParameters.zoneParameter.zoneName = physicSettings.zoneName
+        snapableParameters.zoneParameter.exclusion = physicSettings.exclusion
+        snapableParameters.zoneParameter.speedMultiplier = physicSettings.speedMultiplier
+        snapableParameters.zoneParameter.velocityDirection = Qt.vector2d(physicSettings.velocityDirectionX, physicSettings.velocityDirectionY)
+        snapableParameters.zoneParameter.velocityStrenght = physicSettings.velocityStrength
+        snapableParameters.zoneParameter.frictionStrenght = physicSettings.frictionStrength
+    }
 }

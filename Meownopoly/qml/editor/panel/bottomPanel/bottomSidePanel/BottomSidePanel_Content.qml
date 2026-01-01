@@ -7,6 +7,7 @@ import editor
 
 ColumnLayout {
     id: panelContent
+    signal configurationChanged()
     signal effectChanged()
     signal connectionRequested(string kind)  // Propager les demandes de connexion
     signal modelSelected(string name)
@@ -83,6 +84,9 @@ ColumnLayout {
         logic: panelContent.logic
         Layout.alignment: Qt.AlignLeft | Qt.AlignTop
         Layout.fillWidth: true
+        onConfigurationChanged: {
+            panelContent.configurationChanged()
+        }
     }
 
 

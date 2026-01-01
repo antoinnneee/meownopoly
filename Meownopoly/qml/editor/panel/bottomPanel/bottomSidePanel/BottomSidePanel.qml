@@ -33,6 +33,7 @@ Rectangle {
     signal effectChanged()
     signal connectionRequested(string kind)  // Propager les demandes de connexion
     signal modelSelected(string name)
+    signal configurationChanged()
 
     // --- Bindings ---
     width : Screen.pixelDensity * 120
@@ -208,6 +209,9 @@ Rectangle {
             onModelSelected: function(name) {
                 root.modelSelected(name)
             }
+            onConfigurationChanged: {
+                root.configurationChanged()
+            }
         }
     }
 
@@ -222,5 +226,11 @@ Rectangle {
             visualEffectsPanel.updateFromDisplayParameter(dispParam)
             blockEffectChangedSignal = false
         }
+    }
+
+    // --- Functions ---
+    function updateSidePanel(snapableParameter) {
+        visualEffectsPanel.updateFromDisplayParameter(snapableParameter.displayParameter)
+        zoneConfigurationPanel.updateFromZoneParameter(snapableParameter.zoneParameter)
     }
 }

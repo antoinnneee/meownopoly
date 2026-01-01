@@ -8,10 +8,11 @@ CollapsableGroupBox {
     title: "Configuration de Zone"
     
     // Properties
-    property var targetSnapableZone: null
-    property var targetZoneParameter: null
     property bool updatingValues: false
     property var logic: null
+    property alias zoneName: generalSection.zoneName
+    property alias exclusion: generalSection.exclusion
+    property alias speedMultiplier: generalSection.speedMultiplier
     
     // Signals
     signal configurationChanged()
@@ -22,7 +23,6 @@ CollapsableGroupBox {
         ZCP_GeneralSection {
             id: generalSection
             Layout.fillWidth: true
-            targetZoneParameter: root.targetZoneParameter
             updatingValues: root.updatingValues
             
             onConfigurationChanged: root.configurationChanged()
@@ -32,37 +32,23 @@ CollapsableGroupBox {
         ZCP_DirectionsSection {
             id: directionsSection
             Layout.fillWidth: true
-            targetZoneParameter: root.targetZoneParameter
             updatingValues: root.updatingValues
             
             onConfigurationChanged: root.configurationChanged()
         }
     ]
     
-    // Functions
-    function setTargetZone(snapableZone) {
-        if (snapableZone && snapableZone.snapableParameters && 
-            snapableZone.snapableParameters.zoneParameter !== undefined) {
-            targetSnapableZone = snapableZone
-            targetZoneParameter = snapableZone.snapableParameters.zoneParameter
-            updateControls()
+    function getCurrentPhysicSettings() {
+        return {
+            zoneName: generalSection.zoneName,
+            exclusion: generalSection.exclusion,
+            speedMultiplier: generalSection.speedMultiplier,
+            velocityDirectionX: directionsSection.velocityDirectionX,
+            velocityDirectionY: directionsSection.velocityDirectionY,
+            velocityStrength: directionsSection.velocityStrength,
+            frictionStrength: directionsSection.frictionStrength
         }
     }
-    
-    function updateControls() {
-        if (!targetZoneParameter) return
-        
-        updatingValues = true
-        generalSection.updateControls()
-        directionsSection.updateControls()
-        updatingValues = false
-    }
-    
-    function clearTarget() {
-        targetSnapableZone = null
-        targetZoneParameter = null
-    }
-    
     function updateFromZoneParameter(zoneParam) {
       if (root.effectsLocked) return
         

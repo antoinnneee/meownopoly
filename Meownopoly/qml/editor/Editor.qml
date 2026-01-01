@@ -597,6 +597,16 @@ Base_Board {
         onModelSelected: function(name) {
             gameScene.modelName = name
         }
+        onConfigurationChanged: {
+            var physicSettings = root.editorSidePanel.zoneConfigurationPanel.getCurrentPhysicSettings()
+            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                logic.mouseLogic.selectedElements[i].applyPhysicSettings(physicSettings)
+            }
+            if (saveMapDelayer.running)
+                saveMapDelayer.restart()
+            else
+                saveMapDelayer.start()
+        }
     }
 
     MenuMapAtStart {

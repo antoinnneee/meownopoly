@@ -267,6 +267,15 @@ QtObject {
         }
         editorSidePanel.updateFromDisplayParameter(dispParam)
     }
+    function updateSidePanel(snapableParameter)
+    {
+        var editorSidePanel = logic.editorSidePanel
+        if (!editorSidePanel) {
+            console.log("[LOGIC] editorSidePanel not available")
+            return
+        }
+        editorSidePanel.updateSidePanel(snapableParameter)
+    }
     // Fonction pour mettre à jour la configuration de case dans le panneau
     function updateCaseConfiguration() {
 
