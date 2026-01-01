@@ -85,8 +85,8 @@ Rectangle {
         while (editor && !editor.hasOwnProperty('regainFocus')) {
             editor = editor.parent
         }
-        if (editor && editor.regainFocus) {
-            editor.regainFocus()
+        if (editor) {
+            editor.forceActiveFocus()()
         }
     }
     

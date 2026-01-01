@@ -7,13 +7,6 @@ import QtQml
 import QtCore
 import Case
 import ItemSnapable
-import "../meowComponent"
-import "../meowComponent/preview"
-import "../meowComponent/snapable"
-
-import bottomMainPanel
-import bottomSidePanel
-import mapInfoPanel
 
 import meowComponent
 
@@ -34,6 +27,8 @@ import utils
 
 import QtQuick3D
 import QtQuick3D.Helpers
+
+import editor
 
 Base_Board {
     id: root
@@ -611,10 +606,6 @@ Base_Board {
         onTriggered: {
             stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running == savingIndicator.running ? false : true) : null
         }
-    }
-
-    function regainFocus() {
-        forceActiveFocus()
     }
 
     function initializeEditor() {
