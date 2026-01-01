@@ -24,11 +24,13 @@ import ItemSnapableFactory
 import ui_item
 
 import utils
+import chat
 
 import QtQuick3D
 import QtQuick3D.Helpers
 
 import editor
+import "."
 
 Base_Board {
     id: root
@@ -147,6 +149,43 @@ Base_Board {
             SmoothedAnimation {velocity: 0.9; to: 1.2; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
             SmoothedAnimation {velocity: 1.1; to: 1; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
         }
+    }
+
+    Image {
+        id: btChat
+        anchors.top: btInfoMap.bottom
+        anchors.right: parent.right
+        anchors.margins: 10
+        z: z_HUD
+        source: AssetManager.getAssetById("ui", "hud", "0").path
+        width: Screen.pixelDensity * 20
+        height: Screen.pixelDensity * 20
+        
+        Rectangle {
+            anchors.fill: parent
+            color: "#2ecc71"
+            opacity: 0.4
+            radius: width/2
+        }
+
+        Text {
+            text: "💬"
+            anchors.centerIn: parent
+            font.pixelSize: 20
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                chatDrawer.open()
+            }
+        }
+    }
+
+    ChatDrawer {
+        id: chatDrawer
+        gameId: root.mapInfo.mapName
+        z: z_CONFIG_PANEL + 100
     }
 
     Button {

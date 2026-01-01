@@ -212,5 +212,7 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_DirectionsSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_VectorDirectionPicker.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_GeneralSection.qml</file>
+        <file>qml/chat/ChatDrawer.qml</file>
+        <file>qml/chat/qmldir</file>
     </qresource>
 </RCC>

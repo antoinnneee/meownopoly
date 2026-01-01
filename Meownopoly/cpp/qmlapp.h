@@ -40,6 +40,7 @@ private:
     FolderCompressor *folderCompressor = nullptr;
     AssetManager *assetManager = nullptr;
     QNetworkAccessManager *networkManager = nullptr;
+    static void registerQml();
 };
 
 #endif // __QMLAPP_H

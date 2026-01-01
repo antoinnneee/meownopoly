@@ -1,4 +1,4 @@
-QT += quick core qml widgets core-private quickcontrols2 network quick3d
+QT += quick core qml widgets core-private quickcontrols2 network quick3d sql websockets
 
 android:{
     QT += core-private
@@ -75,6 +75,9 @@ SOURCES += \
     tools/editorenum.cpp \
     tools/logger.cpp \
     game/map/undoredomanager.cpp \
+    chat/chat_client.cpp \
+    chat/chat_crypto.cpp \
+    chat/chat_database.cpp \
 
 
 HEADERS += \
@@ -120,6 +123,9 @@ HEADERS += \
     tools/editorenum.h \
     tools/logger.h \
     game/map/undoredomanager.h \
+    chat/chat_client.h \
+    chat/chat_crypto.h \
+    chat/chat_database.h \
 
 RESOURCES += qml.qrc
 

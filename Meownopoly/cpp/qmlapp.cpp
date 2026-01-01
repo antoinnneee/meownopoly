@@ -46,6 +46,7 @@
 //#include "animationprovider.h"
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
+#include "chat/chat_client.h"
 
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
@@ -66,6 +67,7 @@ QmlApp::QmlApp(QWindow *parent)
     CursorManager::registerQml();
     UndoRedoManager::registerQml();
     PattounX_engine::registerQml();
+    ChatClient::registerQml();
 
 
     // Register MapTypes namespace for QML
