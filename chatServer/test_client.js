@@ -28,15 +28,16 @@ async function testServer() {
                 payload: { session_id: sessionId, blob: 'encrypted-key-package', nonce: 'key-nonce' }
             }));
 
-            // 3. Send Message
+            // 3. Send Message (Simulating a small image/large payload)
             setTimeout(() => {
-                console.log('[Test] Sending message...');
+                console.log('[Test] Sending large payload (1MB)...');
+                const largePayload = 'A'.repeat(1024 * 1024); // 1MB of data
                 ws.send(JSON.stringify({
                     type: 'SEND_MSG',
                     payload: {
                         session_id: sessionId,
                         sender_id: playerId,
-                        payload: 'encrypted-message-payload',
+                        payload: largePayload,
                         nonce: 'msg-nonce',
                         key_v: 1
                     }

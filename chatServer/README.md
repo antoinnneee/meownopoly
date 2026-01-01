@@ -13,10 +13,11 @@ Ce serveur est un relais "aveugle" (Blind Relay) conçu pour faciliter la commun
 - **Runtime** : Node.js (v18+)
 - **Communication** : WebSockets via `ws`.
 - **Base de Données** : SQLite (`better-sqlite3`) pour une performance optimale et une gestion simplifiée.
-- **Sécurité** : 
-  - Validation de la taille des messages (max 128 Ko).
+- **Sécurité & Gestion des Ressources** : 
+  - Validation de la taille des messages (max **10 Mo**).
   - Atomicité du Key Package (le premier arrivé définit la clé de session).
-  - TTL (Time To Live) : Suppression automatique des messages et sessions après 24 heures.
+  - **Gestion de la Taille DB** : Si la base de données dépasse **500 Mo**, les 50 messages les plus anciens sont automatiquement supprimés.
+  - **Nettoyage Temporel (TTL)** : Suppression automatique des messages et sessions inactives après 24 heures (désactivable via `ENABLE_TTL=false`).
 
 ## Protocoles WebSocket
 

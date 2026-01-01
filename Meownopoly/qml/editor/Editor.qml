@@ -184,7 +184,7 @@ Base_Board {
 
     ChatDrawer {
         id: chatDrawer
-        gameId: root.mapInfo.mapName
+        gameId: "Pattoune"/*root.mapInfo.mapName*/
         z: z_CONFIG_PANEL + 100
     }
 

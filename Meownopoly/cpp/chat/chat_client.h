@@ -33,6 +33,7 @@ public:
 
     Q_INVOKABLE void connectToServer(const QString &url, const QString &playerId);
     Q_INVOKABLE void sendMessage(const QString &text);
+    Q_INVOKABLE void sendImage(const QString &filePath);
     Q_INVOKABLE void loadHistory();
 
     static void registerQml() {

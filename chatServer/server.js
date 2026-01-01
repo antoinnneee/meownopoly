@@ -1,13 +1,31 @@
+require('dotenv').config();
 const WebSocket = require('ws');
 const http = require('http');
 const db = require('./database');
 const cleanup = require('./cleanup');
 
-// Initialize TTL cleanup (every hour)
-cleanup.init(60 * 60 * 1000);
+// Initialize TTL cleanup (every hour) - Optional
+const enableTtl = process.env.ENABLE_TTL !== 'false';
+if (enableTtl) {
+    const ttlInterval = process.env.TTL_INTERVAL_MS || 60 * 60 * 1000;
+    cleanup.init(ttlInterval);
+} else {
+    console.log('[Cleanup] TTL cleanup is DISABLED by environment variable.');
+}
 
 const PORT = process.env.PORT || 3000;
-const MAX_PAYLOAD_SIZE = 128 * 1024; // 128 KB
+const MAX_PAYLOAD_SIZE = parseInt(process.env.MAX_PAYLOAD_SIZE) || 10 * 1024 * 1024; // 10 MB
+const MAX_DB_SIZE = parseInt(process.env.MAX_DB_SIZE) || 500 * 1024 * 1024; // 500 MB
+const DEBUG_MODE = process.env.DEBUG_MODE === 'true';
+
+function debug(...args) {
+    if (DEBUG_MODE) {
+        const timestamp = new Date().toISOString();
+        console.log(`[DEBUG] ${timestamp}:`, ...args);
+    }
+}
+
+debug('Server starting in DEBUG mode...');
 
 const server = http.createServer((req, res) => {
     res.writeHead(200);
@@ -20,16 +38,21 @@ const wss = new WebSocket.Server({ server });
 const rooms = new Map();
 
 wss.on('connection', (ws) => {
-    console.log('New client connected');
+    debug('New client connected');
 
     ws.on('message', (data) => {
         try {
+            debug(`Received raw data: ${data.length} bytes`);
             if (data.length > MAX_PAYLOAD_SIZE) {
-                return sendError(ws, 'PAYLOAD_TOO_LARGE', 'Message exceeds 128KB limit');
+                return sendError(ws, 'PAYLOAD_TOO_LARGE', `Message exceeds ${MAX_PAYLOAD_SIZE / (1024 * 1024)}MB limit`);
             }
 
             const message = JSON.parse(data);
+            debug(`Received command: ${message.type}`, message.payload);
             handleCommand(ws, message);
+
+            // Periodic check of DB size after a message is processed
+            checkDbSize();
         } catch (err) {
             console.error('Error processing message:', err);
             sendError(ws, 'INVALID_FORMAT', 'Message must be valid JSON');
@@ -37,13 +60,14 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
-        console.log('Client disconnected');
+        debug('Client disconnected');
         removeFromRooms(ws);
     });
 });
 
 function handleCommand(ws, msg) {
     const { type, payload } = msg;
+    debug(`Processing command: ${type}`, payload);
 
     switch (type) {
         case 'JOIN_SESSION':
@@ -99,9 +123,9 @@ function handlePublishKey(ws, payload) {
 
     if (result.changes === 0) {
         // Key already exists, we don't overwrite
-        console.log(`Key package already exists for session ${session_id}`);
+        debug(`Key package already exists for session ${session_id}`);
     } else {
-        console.log(`Key package published for session ${session_id}`);
+        debug(`Key package published for session ${session_id}`);
     }
 }
 
@@ -151,6 +175,14 @@ function sendError(ws, code, message) {
         type: 'ERROR',
         payload: { code, message }
     }));
+}
+
+function checkDbSize() {
+    const size = db.getDbSize();
+    if (size > MAX_DB_SIZE) {
+        console.log(`[Database] Size limit reached (${(size / 1024 / 1024).toFixed(2)}MB > ${(MAX_DB_SIZE / 1024 / 1024).toFixed(2)}MB). Cleaning up...`);
+        db.deleteOldestMessages(50);
+    }
 }
 
 function removeFromRooms(ws) {
