@@ -62,4 +62,12 @@ CollapsableGroupBox {
         targetSnapableZone = null
         targetZoneParameter = null
     }
+    
+    function updateFromZoneParameter(zoneParam) {
+      if (root.effectsLocked) return
+        
+        // Update sliders from target values
+        generalSection.updateFromZoneParameter(zoneParam)
+        directionsSection.updateFromZoneParameter(zoneParam)
+    }
 }

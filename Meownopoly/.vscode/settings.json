@@ -2,5 +2,16 @@
     "cmake.options.statusBarVisibility": "visible",
     "cmake.buildDirectory": "${workspaceFolder}\\builds\\${buildKit}\\${buildType}",
     "cmake.useCMakePresets": "never",
+    "qt-core.additionalQtPaths": [
+        {
+            "name": "Qt-6.10.0-win32-g++",
+            "path": "c:\\Qt\\6.10.0\\mingw_64\\bin\\qmake.exe"
+        },
+        {
+            "name": "Qt-6.10.0-win32-g++",
+            "path": "c:\\Qt\\6.10.0\\mingw_64\\bin\\qtpaths.exe"
+        }
+    ],
+    "qt-qml.qmlls.customExePath": "C:\\Qt\\6.10.0\\mingw_64\\bin\\qmlls.exe",
     "qt-qml.qmlls.useQmlImportPathEnvVar": true
 }

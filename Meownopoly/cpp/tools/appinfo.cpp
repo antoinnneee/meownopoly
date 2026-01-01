@@ -2,7 +2,6 @@
 
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
-
 #ifdef Q_OS_ANDROID
 const QString appVersionName(APP_VERSION_NAME);
 const QString appVersionCode(APP_VERSION_CODE);

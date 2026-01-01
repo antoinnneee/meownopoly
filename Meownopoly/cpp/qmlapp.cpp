@@ -47,7 +47,6 @@
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
 
-
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
 {
@@ -67,7 +66,8 @@ QmlApp::QmlApp(QWindow *parent)
     CursorManager::registerQml();
     UndoRedoManager::registerQml();
     PattounX_engine::registerQml();
-    
+
+
     // Register MapTypes namespace for QML
     qmlRegisterUncreatableMetaObject(MapTypes::staticMetaObject, "MapTypes", 1, 0, "MapTypes", "Error: only enums");
     

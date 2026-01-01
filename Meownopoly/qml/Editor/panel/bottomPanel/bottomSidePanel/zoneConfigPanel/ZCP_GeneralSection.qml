@@ -13,6 +13,16 @@ GroupBox {
     // Signal
     signal configurationChanged()
     
+    // Functions
+    function updateFromZoneParameter(zoneParam) {
+      if (root.updatingValues) return
+        
+        // Update sliders from target values
+        nameField.text = zoneParam.zoneName
+        exclusionSwitch.checked = zoneParam.exclusion
+        speedSlider.value = zoneParam.speedMultiplier
+    }
+    
     background: Rectangle {
         color: "#2a2a2a"
         radius: 4
@@ -154,4 +164,5 @@ GroupBox {
     function updateControls() {
         // Pure property bindings handle synchronization with targetZoneParameter
     }
+
 }

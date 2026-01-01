@@ -12,6 +12,17 @@ GroupBox {
     
     // Signal
     signal configurationChanged()
+
+    // Functions
+    function updateFromZoneParameter(zoneParam) {
+      if (root.updatingValues) return
+        
+      // Update sliders from target values
+      velocityPicker.directionX = zoneParam.velocityDirection.x
+      velocityPicker.directionY = zoneParam.velocityDirection.y
+      velocityStrengthSlider.value = zoneParam.velocityStrenght
+      frictionStrengthSlider.value = zoneParam.frictionStrenght
+    }
     
     background: Rectangle {
         color: "#2a2a2a"
@@ -34,7 +45,7 @@ GroupBox {
         
         // Note explicative
         Text {
-            text: "🧭 Configurez la direction de vélocité et les forces de friction/vélocité"
+            text: qsTr("🧭 Configurez la direction de vélocité et les forces de friction/vélocité")
             font.italic: true
             font.pixelSize: 11
             color: "#8a8a8a"
@@ -50,7 +61,7 @@ GroupBox {
             ColumnLayout {
                 spacing: 4
                 Text {
-                    text: "Direction"
+                    text: qsTr("Direction")
                     color: "#5cb85c"
                     font.pixelSize: 11
                     font.bold: true
@@ -86,7 +97,7 @@ GroupBox {
                     spacing: 4
                     
                     Text {
-                        text: "Force Vélocité"
+                        text: qsTr("Force Vélocité")
                         color: "#5cb85c"
                         font.pixelSize: 11
                         font.bold: true
@@ -184,7 +195,7 @@ GroupBox {
                     spacing: 4
                     
                     Text {
-                        text: "Force Friction"
+                        text: qsTr("Force Friction")
                         color: "#e67e22"
                         font.pixelSize: 11
                         font.bold: true
