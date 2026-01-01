@@ -50,6 +50,22 @@ Ce serveur est un relais "aveugle" (Blind Relay) conçu pour faciliter la commun
    node test_client.js
    ```
 
+## Déploiement (Linux / Nginx)
+
+Un script de configuration automatique est disponible pour déployer le serveur sur Linux avec Nginx en tant que proxy inverse et SSL (Let's Encrypt).
+
+1. **Rendre le script exécutable** :
+   ```bash
+   chmod +x setup-domain.sh
+   ```
+
+2. **Lancer la configuration** :
+   ```bash
+   sudo ./setup-domain.sh votre-domaine.com
+   ```
+
+Le script s'occupera d'installer Nginx, Certbot, de configurer les règles de redirection WebSocket et de créer un service systemd pour que le serveur redémarre automatiquement.
+
 ## Structure des Fichiers
 
 - `server.js` : Point d'entrée, gestion des WebSockets et de la logique métier.

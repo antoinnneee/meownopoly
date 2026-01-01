@@ -35,6 +35,7 @@ public:
     Q_INVOKABLE void sendMessage(const QString &text);
     Q_INVOKABLE void sendImage(const QString &filePath);
     Q_INVOKABLE void loadHistory();
+    Q_INVOKABLE void requestHistory(int beforeId = -1);
 
     static void registerQml() {
         qmlRegisterType<ChatClient>("Meownopoly.Chat", 1, 0, "ChatClient");
@@ -54,6 +55,7 @@ private slots:
 private:
     void handleInitSession(const QJsonObject &payload);
     void handleNewMessage(const QJsonObject &payload);
+    void handleHistoryResult(const QJsonObject &payload);
     
     QWebSocket m_webSocket;
     bool m_connected = false;

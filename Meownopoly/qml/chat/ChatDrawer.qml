@@ -29,6 +29,9 @@ Drawer {
         onConnectedChanged: {
             if (connected) {
                 console.log("Chat connected!")
+                chatClient.requestHistory()
+            } else {
+                console.log("Chat disconnected!")
             }
         }
     }
@@ -79,6 +82,7 @@ Drawer {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.SizeHorCursor
+                    preventStealing: true
 
                     property real startX: 0
                     property real startWidth: 0

@@ -1,6 +1,10 @@
 #include "chat_client.h"
 #include <QJsonDocument>
 #include <QDebug>
+#include <QImage>
+#include <QBuffer>
+#include <QFileInfo>
+#include <QUrl>
 
 ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     connect(&m_webSocket, &QWebSocket::connected, this, &ChatClient::onConnected);
@@ -57,6 +61,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleInitSession(payload);
     } else if (type == "NEW_MESSAGE") {
         handleNewMessage(payload);
+    } else if (type == "HISTORY_RESULT") {
+        handleHistoryResult(payload);
     }
 }
 
@@ -87,8 +93,36 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
         m_webSocket.sendTextMessage(QJsonDocument(publish).toJson(QJsonDocument::Compact));
     }
 
-    // Load local history
-    loadHistory();
+    // Process server history if provided
+    QJsonArray historyArray = payload["history"].toArray();
+    if (!historyArray.isEmpty()) {
+        m_messages.clear();
+        for (const QJsonValue &val : historyArray) {
+            QJsonObject msg = val.toObject();
+            QString senderId = msg["sender_id"].toString();
+            QByteArray cipher = QByteArray::fromBase64(msg["payload"].toString().toUtf8());
+            QByteArray nonce = QByteArray::fromBase64(msg["nonce"].toString().toUtf8());
+            QString ts = msg["server_timestamp"].toString();
+            
+            // Save locally
+            m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts);
+            
+            // Decrypt for UI
+            QByteArray plain = ChatCrypto::decrypt(cipher, m_sessionKey, nonce);
+            QString text = QString::fromUtf8(plain);
+            
+            QVariantMap message;
+            message["sender"] = senderId;
+            message["text"] = text;
+            message["isImage"] = text.startsWith("data:image/");
+            message["timestamp"] = ts;
+            m_messages.append(message);
+        }
+        emit messagesChanged();
+    } else {
+        // Load local history if no server history
+        loadHistory();
+    }
 }
 
 void ChatClient::handleNewMessage(const QJsonObject &payload) {
@@ -134,26 +168,30 @@ void ChatClient::sendMessage(const QString &text) {
 }
 
 void ChatClient::sendImage(const QString &filePath) {
-    qDebug() << "Sending image:" << filePath;
+    qDebug() << "Sending image (compressing...):" << filePath;
     if (!m_connected || m_sessionKey.isEmpty()) return;
 
     QUrl url(filePath);
     QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
-    QFile file(localPath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Could not open image file:" << localPath;
+    
+    QImage img(localPath);
+    if (img.isNull()) {
+        qWarning() << "Could not load image:" << localPath;
         return;
     }
 
-    QByteArray data = file.readAll();
-    QFileInfo fileInfo(localPath);
-    QString ext = fileInfo.suffix().toLower();
-    QString mimeType = "image/png"; // Default
-    if (ext == "jpg" || ext == "jpeg") mimeType = "image/jpeg";
-    else if (ext == "gif") mimeType = "image/gif";
-    else if (ext == "webp") mimeType = "image/webp";
+    // Resize if too large (max 1200px)
+    if (img.width() > 1200 || img.height() > 1200) {
+        img = img.scaled(1200, 1200, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
 
-    QString base64 = QString("data:%1;base64,%2").arg(mimeType).arg(QString(data.toBase64()));
+    // Compress to JPEG
+    QByteArray compressedData;
+    QBuffer buffer(&compressedData);
+    buffer.open(QIODevice::WriteOnly);
+    img.save(&buffer, "JPG", 90); // 90% quality
+
+    QString base64 = QString("data:image/jpeg;base64,%1").arg(QString(compressedData.toBase64()));
     
     QByteArray nonce = ChatCrypto::generateNonce();
     QByteArray cipher = ChatCrypto::encrypt(base64.toUtf8(), m_sessionKey, nonce);
@@ -168,6 +206,7 @@ void ChatClient::sendImage(const QString &filePath) {
     send["payload"] = p;
 
     m_webSocket.sendTextMessage(QJsonDocument(send).toJson(QJsonDocument::Compact));
+    qDebug() << "Compressed image sent (Size:" << compressedData.size() / 1024 << "KB)";
 }
 
 void ChatClient::loadHistory() {
@@ -190,4 +229,66 @@ void ChatClient::loadHistory() {
         m_messages.append(msg);
     }
     emit messagesChanged();
+}
+
+void ChatClient::requestHistory(int beforeId) {
+    if (!m_connected) {
+        qWarning() << "Cannot request history: not connected to server";
+        return;
+    }
+
+    qDebug() << "Requesting history from server (beforeId:" << beforeId << ")";
+    
+    QJsonObject request;
+    request["type"] = "GET_HISTORY";
+    QJsonObject payload;
+    payload["session_id"] = m_sessionId;
+    if (beforeId > 0) {
+        payload["before_id"] = beforeId;
+    }
+    request["payload"] = payload;
+
+    m_webSocket.sendTextMessage(QJsonDocument(request).toJson(QJsonDocument::Compact));
+}
+
+void ChatClient::handleHistoryResult(const QJsonObject &payload) {
+    qDebug() << "Received history result from server";
+    QJsonArray historyArray = payload["history"].toArray();
+    
+    if (historyArray.isEmpty()) {
+        qDebug() << "No history messages received";
+        return;
+    }
+
+    // Process history messages (prepend older messages)
+    QVariantList olderMessages;
+    for (const QJsonValue &val : historyArray) {
+        QJsonObject msg = val.toObject();
+        QString senderId = msg["sender_id"].toString();
+        QByteArray cipher = QByteArray::fromBase64(msg["payload"].toString().toUtf8());
+        QByteArray nonce = QByteArray::fromBase64(msg["nonce"].toString().toUtf8());
+        QString ts = msg["server_timestamp"].toString();
+        
+        // Save locally
+        m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts);
+        
+        // Decrypt for UI
+        QByteArray plain = ChatCrypto::decrypt(cipher, m_sessionKey, nonce);
+        QString text = QString::fromUtf8(plain);
+        
+        QVariantMap message;
+        message["sender"] = senderId;
+        message["text"] = text;
+        message["isImage"] = text.startsWith("data:image/");
+        message["timestamp"] = ts;
+        olderMessages.append(message);
+    }
+    
+    // Prepend older messages to the current list
+    for (int i = olderMessages.size() - 1; i >= 0; --i) {
+        m_messages.prepend(olderMessages[i]);
+    }
+    
+    emit messagesChanged();
+    qDebug() << "Loaded" << historyArray.size() << "messages from server history";
 }

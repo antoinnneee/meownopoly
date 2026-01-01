@@ -72,12 +72,14 @@ Item {
         }
         else if (event.key === Qt.Key_Control) {
             logic.mouseLogic.isControlPressed = true
+            event.accepted = true
         }
         else if (event.key === Qt.Key_Y) {
             if (logic.mouseLogic.isControlPressed)
             {
                 console.log("Redo requested via Ctrl+Y")
                 Game.askNext()
+                event.accepted = true
             }
         }
         else if (event.key === Qt.Key_Z) {
@@ -85,11 +87,13 @@ Item {
             {
                 console.log("Undo requested via Ctrl+Z")
                 Game.askPreview()
+                event.accepted = true
             }
         }
         else if (event.key === 178)
         {
             adminCommandPanel.visible = !adminCommandPanel.visible
+            event.accepted = true
         }
     }
 

@@ -93,10 +93,12 @@ Base_Board {
     Keys.onPressed: function(event) {
         // Pass to EntityEngine
         EntityEngine.keysHandler.Keys.pressed(event)
+        // Pass to EditorController
+        EditorController.keysHandler.Keys.pressed(event)
     }
     Keys.onReleased: function(event) {
         EntityEngine.keysHandler.Keys.released(event)
-        logic.mouseLogic.isControlPressed = false
+        EditorController.keysHandler.Keys.released(event)
     }
 
 
