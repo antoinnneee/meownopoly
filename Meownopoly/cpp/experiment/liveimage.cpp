@@ -1,4 +1,4 @@
-#include "LiveImage.h"
+#include "liveimage.h"
 #include "animationprovider.h"
 
 LiveImage::LiveImage(QQuickItem *parent) : QQuickPaintedItem(parent), m_image{}

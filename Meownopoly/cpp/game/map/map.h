@@ -2,7 +2,7 @@
 #define MAP_H
 
 #include <QObject>
-#include "MapInfo.h"
+#include "mapinfo.h"
 #include "game/item_snapable/ItemSnapable.h"
 #include "maptypes.h"
 
