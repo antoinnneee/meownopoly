@@ -298,7 +298,7 @@ Drawer {
                 
                 // Optimisations de performance
                 highlightFollowsCurrentItem: false
-                reuseItems: true  // Réutiliser les delegates pour économiser la mémoire
+                // reuseItems: true  // Réutiliser les delegates pour économiser la mémoire
                 
                 // Animation de défilement fluide mais moins coûteuse
                 Behavior on contentY {
@@ -343,8 +343,7 @@ Drawer {
                     border.color: isOwnMessage ? "#4a8a4a" : "#444444"
                     border.width: 1
                     
-                    // Optimisation : pas d'antialiasing sur les bordures
-                    antialiasing: false
+                    antialiasing: true
 
                     // Animation d'apparition simplifiée (uniquement pour les nouveaux messages)
                     opacity: 0
@@ -424,9 +423,10 @@ Drawer {
                             // Optimisations de performance
                             smooth: false  // Désactiver l'antialiasing pendant le scroll
                             mipmap: true   // Utiliser le mipmapping pour les redimensionnements
-                            autoTransform: true
+                            // autoTransform: true
                             
-
+                            sourceSize.height:height
+                            sourceSize.width: width
                             Rectangle {
                                 anchors.fill: parent
                                 color: "transparent"

@@ -78,6 +78,7 @@ SOURCES += \
     chat/chat_client.cpp \
     chat/chat_crypto.cpp \
     chat/chat_database.cpp \
+    chat/chat_worker.cpp \
 
 
 HEADERS += \
@@ -126,6 +127,7 @@ HEADERS += \
     chat/chat_client.h \
     chat/chat_crypto.h \
     chat/chat_database.h \
+    chat/chat_worker.h \
 
 RESOURCES += qml.qrc
 

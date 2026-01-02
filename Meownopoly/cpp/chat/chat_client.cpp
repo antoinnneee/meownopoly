@@ -7,11 +7,43 @@
 #include <QUrl>
 
 ChatClient::ChatClient(QObject *parent) : QObject(parent) {
-    connect(&m_webSocket, &QWebSocket::connected, this, &ChatClient::onConnected);
-    connect(&m_webSocket, &QWebSocket::disconnected, this, &ChatClient::onDisconnected);
-    connect(&m_webSocket, &QWebSocket::textMessageReceived, this, &ChatClient::onTextMessageReceived);
-    
+    // Initialize database
     m_db.init();
+    
+    // Create worker thread
+    m_workerThread = new QThread(this);
+    m_worker = new ChatWorker();
+    m_worker->moveToThread(m_workerThread);
+    
+    // Connect worker signals to client slots
+    connect(m_worker, &ChatWorker::connected, this, &ChatClient::onConnected);
+    connect(m_worker, &ChatWorker::disconnected, this, &ChatClient::onDisconnected);
+    connect(m_worker, &ChatWorker::textMessageReceived, this, &ChatClient::onTextMessageReceived);
+    connect(m_worker, &ChatWorker::errorOccurred, this, &ChatClient::errorOccurred);
+    
+    // Connect client signals to worker slots (cross-thread)
+    connect(this, &ChatClient::destroyed, m_worker, &ChatWorker::deleteLater);
+    
+    // Start the worker thread
+    m_workerThread->start();
+    
+    qDebug() << "[ChatClient] Initialized with worker thread";
+}
+
+ChatClient::~ChatClient() {
+    qDebug() << "[ChatClient] Destructor called";
+    
+    // Stop the worker thread
+    if (m_workerThread) {
+        m_workerThread->quit();
+        if (!m_workerThread->wait(3000)) {
+            qWarning() << "[ChatClient] Worker thread did not finish in time, terminating";
+            m_workerThread->terminate();
+            m_workerThread->wait();
+        }
+    }
+    
+    qDebug() << "[ChatClient] Destroyed";
 }
 
 void ChatClient::setSessionId(const QString &id) {
@@ -23,13 +55,16 @@ void ChatClient::setSessionId(const QString &id) {
 }
 
 void ChatClient::connectToServer(const QString &url, const QString &playerId) {
-    qDebug() << "Connecting to server:" << url;
+    qDebug() << "[ChatClient] Connecting to server:" << url;
     m_playerId = playerId;
-    m_webSocket.open(QUrl(url));
+    
+    // Use queued connection to call worker method in worker thread
+    QMetaObject::invokeMethod(m_worker, "connectToServer", Qt::QueuedConnection,
+                              Q_ARG(QString, url));
 }
 
 void ChatClient::onConnected() {
-    qDebug() << "Connected to server";
+    qDebug() << "[ChatClient] Connected to server";
     m_connected = true;
     emit connectedChanged();
 
@@ -41,13 +76,19 @@ void ChatClient::onConnected() {
     payload["player_id"] = m_playerId;
     join["payload"] = payload;
 
-    m_webSocket.sendTextMessage(QJsonDocument(join).toJson(QJsonDocument::Compact));
+    sendWebSocketMessage(join);
 }
 
 void ChatClient::onDisconnected() {
-    qDebug() << "Disconnected from server";
+    qDebug() << "[ChatClient] Disconnected from server";
     m_connected = false;
     emit connectedChanged();
+}
+
+void ChatClient::sendWebSocketMessage(const QJsonObject &message) {
+    QString jsonString = QJsonDocument(message).toJson(QJsonDocument::Compact);
+    QMetaObject::invokeMethod(m_worker, "sendTextMessage", Qt::QueuedConnection,
+                              Q_ARG(QString, jsonString));
 }
 
 void ChatClient::onTextMessageReceived(const QString &message) {
@@ -67,7 +108,7 @@ void ChatClient::onTextMessageReceived(const QString &message) {
 }
 
 void ChatClient::handleInitSession(const QJsonObject &payload) {
-    qDebug() << "Received init session:";
+    qDebug() << "[ChatClient] Received init session:";
     QString keyPkgBase64 = payload["key_package"].toString();
     QString nonceBase64 = payload["nonce"].toString();
 
@@ -90,7 +131,7 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
         p["blob"] = QString(encryptedPkg.toBase64());
         p["nonce"] = QString(nonce.toBase64());
         publish["payload"] = p;
-        m_webSocket.sendTextMessage(QJsonDocument(publish).toJson(QJsonDocument::Compact));
+        sendWebSocketMessage(publish);
     }
 
     // Process server history if provided
@@ -150,7 +191,7 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
 
 void ChatClient::sendMessage(const QString &text) {
     if (!m_connected || m_sessionKey.isEmpty()) return;
-    qDebug() << "Sending message:";
+    qDebug() << "[ChatClient] Sending message:";
     QByteArray nonce = ChatCrypto::generateNonce();
     QByteArray cipher = ChatCrypto::encrypt(text.toUtf8(), m_sessionKey, nonce);
 
@@ -163,12 +204,12 @@ void ChatClient::sendMessage(const QString &text) {
     p["nonce"] = QString(nonce.toBase64());
     send["payload"] = p;
 
-    m_webSocket.sendTextMessage(QJsonDocument(send).toJson(QJsonDocument::Compact));
-    qDebug() << "Message sent:" << QJsonDocument(send).toJson(QJsonDocument::Compact);
+    sendWebSocketMessage(send);
+    qDebug() << "[ChatClient] Message sent";
 }
 
 void ChatClient::sendImage(const QString &filePath) {
-    qDebug() << "Sending image (compressing...):" << filePath;
+    qDebug() << "[ChatClient] Sending image (compressing...):" << filePath;
     if (!m_connected || m_sessionKey.isEmpty()) return;
 
     QUrl url(filePath);
@@ -205,12 +246,12 @@ void ChatClient::sendImage(const QString &filePath) {
     p["nonce"] = QString(nonce.toBase64());
     send["payload"] = p;
 
-    m_webSocket.sendTextMessage(QJsonDocument(send).toJson(QJsonDocument::Compact));
-    qDebug() << "Compressed image sent (Size:" << compressedData.size() / 1024 << "KB)";
+    sendWebSocketMessage(send);
+    qDebug() << "[ChatClient] Compressed image sent (Size:" << compressedData.size() / 1024 << "KB)";
 }
 
 void ChatClient::loadHistory() {
-    qDebug() << "Loading history for session" << m_sessionId;
+    qDebug() << "[ChatClient] Loading history for session" << m_sessionId;
     m_messages.clear();
     QVariantList history = m_db.getMessages(m_sessionId);
     for (const QVariant &v : history) {
@@ -233,11 +274,11 @@ void ChatClient::loadHistory() {
 
 void ChatClient::requestHistory(int beforeId) {
     if (!m_connected) {
-        qWarning() << "Cannot request history: not connected to server";
+        qWarning() << "[ChatClient] Cannot request history: not connected to server";
         return;
     }
 
-    qDebug() << "Requesting history from server (beforeId:" << beforeId << ")";
+    qDebug() << "[ChatClient] Requesting history from server (beforeId:" << beforeId << ")";
     
     QJsonObject request;
     request["type"] = "GET_HISTORY";
@@ -248,15 +289,15 @@ void ChatClient::requestHistory(int beforeId) {
     }
     request["payload"] = payload;
 
-    m_webSocket.sendTextMessage(QJsonDocument(request).toJson(QJsonDocument::Compact));
+    sendWebSocketMessage(request);
 }
 
 void ChatClient::handleHistoryResult(const QJsonObject &payload) {
-    qDebug() << "Received history result from server";
+    qDebug() << "[ChatClient] Received history result from server";
     QJsonArray historyArray = payload["history"].toArray();
     
     if (historyArray.isEmpty()) {
-        qDebug() << "No history messages received";
+        qDebug() << "[ChatClient] No history messages received";
         return;
     }
 
@@ -290,5 +331,5 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
     }
     
     emit messagesChanged();
-    qDebug() << "Loaded" << historyArray.size() << "messages from server history";
+    qDebug() << "[ChatClient] Loaded" << historyArray.size() << "messages from server history";
 }

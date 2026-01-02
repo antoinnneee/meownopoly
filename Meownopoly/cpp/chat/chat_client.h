@@ -3,18 +3,13 @@
 
 #include <QObject>
 #include <QtQml>
-
-class ChatClient; // Forward decl
-
-// ... (rest of ChatClient defined elsewhere)
-
-#include <QObject>
-#include <QWebSocket>
+#include <QThread>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
 #include "chat_crypto.h"
 #include "chat_database.h"
+#include "chat_worker.h"
 
 class ChatClient : public QObject
 {
@@ -25,6 +20,7 @@ class ChatClient : public QObject
 
 public:
     explicit ChatClient(QObject *parent = nullptr);
+    ~ChatClient();
 
     bool isConnected() const { return m_connected; }
     QString sessionId() const { return m_sessionId; }
@@ -56,8 +52,12 @@ private:
     void handleInitSession(const QJsonObject &payload);
     void handleNewMessage(const QJsonObject &payload);
     void handleHistoryResult(const QJsonObject &payload);
+    void sendWebSocketMessage(const QJsonObject &message);
     
-    QWebSocket m_webSocket;
+    // Worker thread for WebSocket
+    QThread *m_workerThread;
+    ChatWorker *m_worker;
+    
     bool m_connected = false;
     QString m_sessionId;
     QString m_playerId;
