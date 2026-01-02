@@ -25,6 +25,11 @@ if ! command -v certbot &> /dev/null; then
     sudo apt install -y certbot python3-certbot-nginx
 fi
 
+# Créer le dossier pour le challenge ACME
+echo "📂 Création du dossier webroot pour Let's Encrypt..."
+sudo mkdir -p /var/www/certbot
+sudo chown -R www-data:www-data /var/www/certbot
+
 # Créer la configuration nginx
 echo "⚙️  Création de la configuration nginx..."
 sudo tee /etc/nginx/sites-available/meownopoly << EOF
@@ -34,6 +39,11 @@ server {
     
     # Taille max des uploads
     client_max_body_size 500M;
+    
+    # Challenge Let's Encrypt
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
     
     # Proxy vers l'application Node.js
     location / {
@@ -60,13 +70,28 @@ server {
 EOF
 
 # Activer le site
+# Activer le site
 echo "🔗 Activation du site nginx..."
-sudo ln -sf /etc/nginx/sites-available/meownopoly /etc/nginx/sites-enabled/
+
+# Supprimer la configuration par défaut qui peut créer des conflits (port 80)
+if [ -f /etc/nginx/sites-enabled/default ]; then
+    echo "🗑️  Suppression du site 'default' pour éviter les conflits..."
+    sudo rm /etc/nginx/sites-enabled/default
+fi
+
+# Supprimer l'ancien lien s'il existe pour être sûr
+sudo rm -f /etc/nginx/sites-enabled/meownopoly
+
+# Créer le nouveau lien
+sudo ln -s /etc/nginx/sites-available/meownopoly /etc/nginx/sites-enabled/
+
+# Tester la configuration
 sudo nginx -t
 
 if [ $? -eq 0 ]; then
-    sudo systemctl reload nginx
-    echo "✅ Configuration nginx activée"
+    # Il est important de redémarrer complètement nginx en cas de conflit de noms précédent
+    sudo systemctl restart nginx
+    echo "✅ Configuration nginx activée et redémarrée"
 else
     echo "❌ Erreur dans la configuration nginx"
     exit 1
@@ -79,7 +104,8 @@ read -p "Voulez-vous configurer SSL maintenant ? (y/N): " -n 1 -r
 echo
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN
+    # Utilisation de webroot pour l'authentification et nginx pour l'installation
+    sudo certbot certonly --webroot -w ./public -d $DOMAIN -d www.$DOMAIN 
     
     if [ $? -eq 0 ]; then
         echo "✅ Certificat SSL configuré avec succès"
@@ -93,6 +119,10 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "❌ Erreur lors de la configuration SSL"
     fi
 fi
+# fix pour l'acces au port 443 et l'acces au dossier /etc/letsencrypt
+sudo setcap 'cap_net_bind_service=+ep' $(eval readlink -f $(which node))
+sudo chown -R $USER:$USER /etc/letsencrypt/live/
+sudo chown -R $USER:$USER /etc/letsencrypt/archive/
 
 # Créer un service systemd pour l'application
 echo "🔧 Création du service systemd..."

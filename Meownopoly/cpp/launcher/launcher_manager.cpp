@@ -57,9 +57,9 @@ QObject *LauncherManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngin
 
 QString reformat_server_url(const QString &serverUrl)
 {
-    if (!serverUrl.startsWith("http://"))
+    if (!serverUrl.startsWith("https://"))
     {
-        return QString("http://") + serverUrl;
+        return QString("https://") + serverUrl;
     }
     return serverUrl;
 }
@@ -70,7 +70,7 @@ void LauncherManager::testServerConnection(const QString &serverUrl)
         m_connectionTestReply->deleteLater();
         m_connectionTestReply = nullptr;
     }
-    
+
     emit logMessage("Test de connexion vers: " + serverUrl);
     
     QNetworkRequest request;

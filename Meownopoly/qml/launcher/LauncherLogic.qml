@@ -48,7 +48,7 @@ QtObject {
     
     // Settings
     property Settings settings: Settings {
-        property string serverUrl: "http://pattounecorp.ovh"
+        property string serverUrl: "https://pattounecorp.ovh"
         property string lastVersion: "0.0.0"
     }
     
