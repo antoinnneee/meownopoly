@@ -12,6 +12,7 @@ GroupBox {
     property alias zoneName: nameField.text
     property alias exclusion: exclusionSwitch.checked
     property alias speedMultiplier: speedSlider.value
+    property alias accelerationMultiplier: accelerationSlider.value
     
     // Signal
     signal configurationChanged()
@@ -24,6 +25,7 @@ GroupBox {
         nameField.text = zoneParam.zoneName
         exclusionSwitch.checked = zoneParam.exclusion
         speedSlider.value = zoneParam.speedMultiplier
+        accelerationSlider.value = zoneParam.accelerationMultiplier
     }
     
     background: Rectangle {
@@ -148,6 +150,42 @@ GroupBox {
             
             Text {
                 text: speedSlider.value.toFixed(1) + "x"
+                color: "#ffffff"
+                font.pixelSize: 11
+                Layout.preferredWidth: 30
+            }
+        }
+
+        // Acceleration Multiplier
+        Label {
+            text: "Multiplicateur Accélération:"
+            color: "#ffffff"
+            font.pixelSize: 11
+            font.bold: true
+            opacity: exclusionSwitch.checked ? 0.5 : 1.0
+        }
+        
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+            opacity: exclusionSwitch.checked ? 0.5 : 1.0
+            enabled: !exclusionSwitch.checked
+
+            Slider {
+                id: accelerationSlider
+                Layout.fillWidth: true
+                from: 0.0
+                to: 10.0
+                stepSize: 0.05
+                value: 1.0
+                
+                onMoved: {
+                        root.configurationChanged()
+                }
+            }
+            
+            Text {
+                text: accelerationSlider.value.toFixed(2) + "x"
                 color: "#ffffff"
                 font.pixelSize: 11
                 Layout.preferredWidth: 30

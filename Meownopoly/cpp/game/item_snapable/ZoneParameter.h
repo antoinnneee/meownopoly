@@ -19,6 +19,8 @@ class ZoneParameter : public QObject
     Q_PROPERTY(qreal frictionStrenght READ frictionStrenght WRITE setFrictionStrenght NOTIFY frictionStrenghtChanged FINAL)
     Q_PROPERTY(qreal speedMultiplier READ speedMultiplier WRITE setSpeedMultiplier NOTIFY speedMultiplierChanged FINAL)
     Q_PROPERTY(bool exclusion READ exclusion WRITE setExclusion NOTIFY exclusionChanged FINAL)
+    Q_PROPERTY(qreal accelerationMultiplier READ accelerationMultiplier WRITE setAccelerationMultiplier NOTIFY accelerationMultiplierChanged FINAL)
+
 public:
     explicit ZoneParameter(QObject *parent = nullptr);
     explicit ZoneParameter(const QJsonObject &json, QObject *parent = nullptr);
@@ -56,6 +58,9 @@ public:
     qreal speedMultiplier() const;
     void setSpeedMultiplier(qreal newSpeedMultiplier);
 
+    qreal accelerationMultiplier() const;
+    void setAccelerationMultiplier(qreal newAccelerationMultiplier);
+
 signals:
     void polygonPointsChanged();
     void zoneColorChanged();
@@ -73,6 +78,8 @@ signals:
 
     void speedMultiplierChanged();
 
+    void accelerationMultiplierChanged();
+
 private:
     QVariantList m_polygonPoints;
     QString m_zoneColor;
@@ -82,6 +89,7 @@ private:
     qreal m_frictionStrenght = 0;
     bool m_exclusion = true;
     qreal m_speedMultiplier = 1;
+    qreal m_accelerationMultiplier = 1;
 };
 
 #endif // ZONEPARAMETER_H

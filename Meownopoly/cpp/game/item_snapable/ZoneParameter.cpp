@@ -26,9 +26,10 @@ ZoneParameter::ZoneParameter(const QJsonObject &json, QObject *parent)
     m_zoneName = json.value("zoneName").toString("");
     m_velocityDirection = QVector2D(json.value("velocityDirection").toObject().value("x").toDouble(), json.value("velocityDirection").toObject().value("y").toDouble());
     m_velocityStrenght = json.value("velocityStrenght").toDouble(0);
-    m_frictionStrenght = json.value("frictionStrenght").toDouble(0);
+    m_frictionStrenght = json.value("frictionStrenght").toDouble(0.5);
     m_exclusion = json.value("exclusion").toBool(true);
-    m_speedMultiplier = json.value("speedMultiplier").toDouble(0);
+    m_speedMultiplier = json.value("speedMultiplier").toDouble(1);
+    m_accelerationMultiplier = json.value("accelerationMultiplier").toDouble(1);
 }
 
 ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
@@ -41,6 +42,7 @@ ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
     , m_frictionStrenght(other.m_frictionStrenght)
     , m_exclusion(other.m_exclusion)
     , m_speedMultiplier(other.m_speedMultiplier)
+    , m_accelerationMultiplier(other.m_accelerationMultiplier)
 {
 }
 
@@ -69,7 +71,8 @@ QString ZoneParameter::toJSON()
     json += "    \"velocityStrenght\": " + QString::number(m_velocityStrenght) + ",\n";
     json += "    \"frictionStrenght\": " + QString::number(m_frictionStrenght) + ",\n";
     json += "    \"exclusion\": " + exclusionStr + ",\n";
-    json += "    \"speedMultiplier\": " + QString::number(m_speedMultiplier) + "\n";
+    json += "    \"speedMultiplier\": " + QString::number(m_speedMultiplier) + ",\n";
+    json += "    \"accelerationMultiplier\": " + QString::number(m_accelerationMultiplier) + "\n";
     json += "}";
     
     return json;
@@ -210,4 +213,17 @@ void ZoneParameter::setSpeedMultiplier(qreal newSpeedMultiplier)
         return;
     m_speedMultiplier = newSpeedMultiplier;
     emit speedMultiplierChanged();
+}
+
+qreal ZoneParameter::accelerationMultiplier() const
+{
+    return m_accelerationMultiplier;
+}
+
+void ZoneParameter::setAccelerationMultiplier(qreal newAccelerationMultiplier)
+{
+    if (qFuzzyCompare(m_accelerationMultiplier, newAccelerationMultiplier))
+        return;
+    m_accelerationMultiplier = newAccelerationMultiplier;
+    emit accelerationMultiplierChanged();
 }

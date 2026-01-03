@@ -381,5 +381,6 @@ Rectangle {
         snapableParameters.zoneParameter.velocityDirection = Qt.vector2d(physicSettings.velocityDirectionX, physicSettings.velocityDirectionY)
         snapableParameters.zoneParameter.velocityStrenght = physicSettings.velocityStrength
         snapableParameters.zoneParameter.frictionStrenght = physicSettings.frictionStrength
+        snapableParameters.zoneParameter.accelerationMultiplier = physicSettings.accelerationMultiplier
     }
 }

@@ -390,6 +390,7 @@ void PattounX_engine::applyGroundFrictionAndZones(PattounX_body* body, qreal dt)
 {
     QSet<PattounX_zone*> currentZones;
     qreal currentDamping = DEFAULT_GROUND_DAMPING; 
+    qreal currentAccelerationMultiplier = 1.0; 
 
     QVector2D pos = body->position();
 
@@ -404,22 +405,26 @@ void PattounX_engine::applyGroundFrictionAndZones(PattounX_body* body, qreal dt)
             const ZoneParameter& params = zone->getZoneParameters();
             
             // Modifier le damping (Glace = damping faible, Boue = damping fort)
-            if (params.frictionStrenght() > 0) {
+            // if (params.frictionStrenght() > 0) {
                  // Si c'est une zone de friction (ex: boue)
                  // Si frictionStrength = 0 (Glace)
                  currentDamping = params.frictionStrenght(); 
-            }
+            // }
             
             // Boost de vitesse
             if (params.velocityStrenght() > 0) {
                 QVector2D force = params.velocityDirection().normalized() * params.velocityStrenght();
                 body->applyForce(force);
             }
+
+            // Accumulate acceleration multiplier
+            currentAccelerationMultiplier *= params.accelerationMultiplier();
         }
     }
 
     // Appliquer le damping calculé
     body->setLinearDamping(currentDamping);
+    body->setZoneAccelerationMultiplier(currentAccelerationMultiplier);
 
     // Gérer les signaux Entered/Exited
     QSet<PattounX_zone*>& prevZones = m_activeZonesPerBody[body];

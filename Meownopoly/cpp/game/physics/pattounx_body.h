@@ -121,6 +121,8 @@ public:
 
     void setLinearDamping(qreal damping);
     qreal linearDamping() const { return m_linearDamping; }
+    
+    void setZoneAccelerationMultiplier(qreal multiplier) { m_zoneAccelerationMultiplier = multiplier; }
     qreal invMass() const;
 
     qreal restitution() const;
@@ -186,6 +188,7 @@ private:
     // Modificateurs temporaires (réinitialisés chaque frame)
     qreal m_currentSpeedModifier = 1.0;
     qreal m_currentFrictionModifier = 1.0;
+    qreal m_zoneAccelerationMultiplier = 1.0;
 
 
 

@@ -13,6 +13,7 @@ CollapsableGroupBox {
     property alias zoneName: generalSection.zoneName
     property alias exclusion: generalSection.exclusion
     property alias speedMultiplier: generalSection.speedMultiplier
+    property alias accelerationMultiplier: generalSection.accelerationMultiplier
     
     // Signals
     signal configurationChanged()
@@ -46,7 +47,8 @@ CollapsableGroupBox {
             velocityDirectionX: directionsSection.velocityDirectionX,
             velocityDirectionY: directionsSection.velocityDirectionY,
             velocityStrength: directionsSection.velocityStrength,
-            frictionStrength: directionsSection.frictionStrength
+            frictionStrength: directionsSection.frictionStrength,
+            accelerationMultiplier: generalSection.accelerationMultiplier
         }
     }
     function updateFromZoneParameter(zoneParam) {

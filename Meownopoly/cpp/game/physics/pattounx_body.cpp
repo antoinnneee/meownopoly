@@ -144,7 +144,7 @@ void PattounX_body::integrate(qreal dt) {
         QVector2D targetVelocity = m_inputVector * m_maxSpeed;
         
         // 2. On tend vers cette vitesse selon l'accélération
-        m_velocity += (targetVelocity - m_velocity) * std::min(1.0, m_acceleration * dt);
+        m_velocity += (targetVelocity - m_velocity) * std::min(1.0, m_acceleration * m_zoneAccelerationMultiplier * dt);
     } else {
         // 3. Pas d'input : on applique la friction classique pour s'arrêter
         qreal frictionFactor = 1.0 - (m_linearDamping * dt * 60.0);
