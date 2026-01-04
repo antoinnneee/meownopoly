@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+    <file>qml/launcher/Launcher.qml</file>
+    <file>qml/launcher/LauncherHeader.qml</file>
+    <file>qml/launcher/ServerConfigSection.qml</file>
+    <file>qml/launcher/VersionInfoSection.qml</file>
+    <file>qml/launcher/ActionsSection.qml</file>
+    <file>qml/launcher/PackagingSection.qml</file>
+    <file>qml/launcher/LogsSection.qml</file>
+    <file>qml/launcher/LauncherLogic.qml</file>
+    <file>qml/launcher/ModelsSection.qml</file>
+    </qresource>
+</RCC>

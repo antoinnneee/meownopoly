@@ -57,7 +57,7 @@ QObject *LauncherManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngin
 
 QString reformat_server_url(const QString &serverUrl)
 {
-    if (!serverUrl.startsWith("https://"))
+    if (!serverUrl.startsWith("https://") && !serverUrl.startsWith("http://"))
     {
         return QString("https://") + serverUrl;
     }

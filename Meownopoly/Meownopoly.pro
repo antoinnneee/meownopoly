@@ -129,7 +129,11 @@ HEADERS += \
     chat/chat_database.h \
     chat/chat_worker.h \
 
-RESOURCES += qml.qrc
+RESOURCES += qml.qrc \
+    base_comp.qrc \
+    chat.qrc \
+    launcher.qrc \
+    other.qrc
 
 # CONFIG += qmlcache  # Désactivé car nécessite TARGETPATH pour Qt 6.10+
 

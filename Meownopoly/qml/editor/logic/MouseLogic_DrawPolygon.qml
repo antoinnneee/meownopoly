@@ -20,6 +20,16 @@ MouseLogic_Base {
     
     // Couleur de la zone en cours
     property string currentZoneColor: "#FF5722"
+
+    // Paramètres de la zone
+    property bool zoneExclusion: true
+    property string zoneName: ""
+    property real velocityX: 0.0
+    property real velocityY: 0.0
+    property real velocityStrength: 0.0
+    property real frictionStrength: 0.0
+    property real speedMultiplier: 1.0
+    property real accelerationMultiplier: 1.0
     
     // Référence au composant de prévisualisation (défini dans Editor.qml)
     property var polygonPreviewComponent: null
@@ -127,6 +137,15 @@ MouseLogic_Base {
         
         // Définir la couleur (utiliser l'assignation de propriété, pas le setter)
         snapableParameters.zoneParameter.zoneColor = currentZoneColor
+
+        // Appliquer les nouveaux paramètres
+        snapableParameters.zoneParameter.zoneName = zoneName
+        snapableParameters.zoneParameter.exclusion = zoneExclusion
+        snapableParameters.zoneParameter.velocityDirection = Qt.vector2d(velocityX, velocityY)
+        snapableParameters.zoneParameter.velocityStrenght = velocityStrength
+        snapableParameters.zoneParameter.frictionStrenght = frictionStrength
+        snapableParameters.zoneParameter.speedMultiplier = speedMultiplier
+        snapableParameters.zoneParameter.accelerationMultiplier = accelerationMultiplier
         
         // Calculer les bounds pour le displayParameter
         var bounds = calculateBounds(currentPolygonPoints)
@@ -218,6 +237,17 @@ MouseLogic_Base {
     // Définir la couleur de la zone
     function setZoneColor(color) {
         currentZoneColor = color
+    }
+    
+    function setZoneProperties(params) {
+        if (params.name !== undefined) zoneName = params.name
+        if (params.exclusion !== undefined) zoneExclusion = params.exclusion
+        if (params.velocityX !== undefined) velocityX = params.velocityX
+        if (params.velocityY !== undefined) velocityY = params.velocityY
+        if (params.velocityStrength !== undefined) velocityStrength = params.velocityStrength
+        if (params.frictionStrength !== undefined) frictionStrength = params.frictionStrength
+        if (params.speedMultiplier !== undefined) speedMultiplier = params.speedMultiplier
+        if (params.accelerationMultiplier !== undefined) accelerationMultiplier = params.accelerationMultiplier
     }
 }
 
