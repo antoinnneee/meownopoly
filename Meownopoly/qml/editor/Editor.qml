@@ -446,7 +446,7 @@ Base_Board {
             gridManager: gameGrid
         }
         Component.onCompleted: {
-            var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")           
+            var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")
             gameScene.moveEntityToGridPosition(sphere, 0, 0)
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)

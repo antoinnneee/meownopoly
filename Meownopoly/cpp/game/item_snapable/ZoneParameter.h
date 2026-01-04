@@ -61,6 +61,7 @@ public:
     qreal accelerationMultiplier() const;
     void setAccelerationMultiplier(qreal newAccelerationMultiplier);
 
+
 signals:
     void polygonPointsChanged();
     void zoneColorChanged();
