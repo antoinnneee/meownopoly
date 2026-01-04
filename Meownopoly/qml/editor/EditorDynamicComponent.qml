@@ -79,8 +79,6 @@ Item{
             grid: _grid
             Component.onCompleted: {
                 logic.mouseLogic = mouseLogic_selection
-                console.log("logic : ", logic)
-                console.log("logic parent : ", logic.parent)
             }
         }
     }

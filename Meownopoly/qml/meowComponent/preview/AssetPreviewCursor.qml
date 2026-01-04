@@ -162,7 +162,6 @@ Item {
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
-                console.log("preview load complete")
                 root.snapablePreview = snapableDecoration
 
                 snapableParameters.decorationParameter.decorationCategory = root.assetCategory
@@ -196,7 +195,6 @@ Item {
             z: 5.01
             gridManager: root.gridManager
             Component.onCompleted: {
-                console.log("preview load complete", root.caseType)
                 root.snapablePreview = snapableCaseTile
                 if (snapableParameters.caseData.type != root.caseType)
                     snapableParameters = ItemSnapableFactory.createItemSnapable(root.caseType)

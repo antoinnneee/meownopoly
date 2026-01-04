@@ -13,9 +13,6 @@ Item {
     clip: true
     required property CaseRestArea caseData
     property var familyColors: []
-    onFamilyColorsChanged:{
-        console.log(" fam color change :", familyColors)
-    }
 
 
     // Icons for different tile types

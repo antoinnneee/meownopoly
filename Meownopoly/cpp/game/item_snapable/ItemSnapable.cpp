@@ -5,7 +5,6 @@
 #include "game/case/CaseFactory.h"
 
 ItemSnapable::ItemSnapable() {
-    qDebug() << "New ItemSnapable created";
     m_uniqueId = QUuid::createUuid();
     m_caseData = new Case();
     m_tileType = DecorationTile;

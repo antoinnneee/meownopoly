@@ -34,6 +34,7 @@ QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTiles
 bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType)
 {
     qDebug() << "Game::saveMap called " << mapInfo->getMapName() << " Type: " << mapType;
+    Logger::instance()->info(QString("saveMap called %1, Type %2").arg(mapInfo->getMapName()).arg(mapType), "Game");
     bool flag = false;
     QJsonArray snapableTilesArray;
 

@@ -156,7 +156,7 @@ Item {
                     if (status === Loader3D.Error) {
                         console.error("Erreur chargement modèle 3D:", sourceComponent.errorString())
                     } else if (status === Loader3D.Ready) {
-                        console.log("Modèle 3D chargé:", source)
+                        // console.log("Modèle 3D chargé:", source)
                     }
                 }
             }

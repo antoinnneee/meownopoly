@@ -5,6 +5,7 @@ import EditorEnum
 
 import "../"
 import editorBottomPanel
+import "../../bottomSidePanel/zoneConfigPanel/"
 
 /**
  * Panneau moderne pour gérer les zones d'exclusion et les zones d'effet
@@ -27,6 +28,17 @@ EBP_Content {
             colorPicker.selectedColor = "#3F51B5"
         }
         updateBackendConfiguration()
+        // Synchroniser le sélecteur de direction
+        syncDirectionPicker()
+    }
+
+    // Fonction pour synchroniser le sélecteur vectoriel avec les champs texte
+    function syncDirectionPicker() {
+        if (root.currentZoneType === "effect") {
+            var x = parseFloat(velXInput.text) || 0
+            var y = parseFloat(velYInput.text) || 0
+            directionPicker.setDirection(x, y)
+        }
     }
 
     // Signaux
@@ -55,7 +67,7 @@ EBP_Content {
 
             // ==================== COLONNE 1: TYPE DE ZONE ====================
             ColumnLayout {
-                Layout.preferredWidth: 120
+                Layout.preferredWidth: 110
                 Layout.fillHeight: true
                 spacing: 8
 
@@ -157,7 +169,7 @@ EBP_Content {
 
             // ==================== COLONNE 2: NOM + COULEURS ====================
             ColumnLayout {
-                Layout.preferredWidth: 280
+                Layout.preferredWidth: 250
                 Layout.fillHeight: true
                 spacing: 8
 
@@ -197,7 +209,10 @@ EBP_Content {
                         }
 
                         color: "#ffffff"
-                        onEditingFinished: updateBackendConfiguration()
+                        onEditingFinished: {
+                            updateBackendConfiguration()
+                            syncDirectionPicker()
+                        }
                     }
                 }
 
@@ -306,7 +321,7 @@ EBP_Content {
 
             // ==================== COLONNE 3: PARAMÈTRES (EFFET UNIQUEMENT) ====================
             ColumnLayout {
-                Layout.preferredWidth: 320
+                Layout.preferredWidth: 280
                 Layout.fillHeight: true
                 spacing: 8
                 visible: root.currentZoneType === "effect"
@@ -349,7 +364,10 @@ EBP_Content {
                         }
 
                         color: "#ffffff"
-                        onEditingFinished: updateBackendConfiguration()
+                        onEditingFinished: {
+                            updateBackendConfiguration()
+                            syncDirectionPicker()
+                        }
                     }
 
                     TextField {
@@ -370,7 +388,10 @@ EBP_Content {
                         }
 
                         color: "#ffffff"
-                        onEditingFinished: updateBackendConfiguration()
+                        onEditingFinished: {
+                            updateBackendConfiguration()
+                            syncDirectionPicker()
+                        }
                     }
 
                     TextField {
@@ -391,7 +412,10 @@ EBP_Content {
                         }
 
                         color: "#ffffff"
-                        onEditingFinished: updateBackendConfiguration()
+                        onEditingFinished: {
+                            updateBackendConfiguration()
+                            syncDirectionPicker()
+                        }
                     }
                 }
 
@@ -614,9 +638,60 @@ EBP_Content {
                 visible: root.currentZoneType === "effect"
             }
 
-            // ==================== COLONNE 4: BOUTON DESSINER + INSTRUCTIONS ====================
+            // ==================== COLONNE 4: SÉLECTEUR DE DIRECTION ====================
             ColumnLayout {
-                Layout.preferredWidth: 160
+                Layout.preferredWidth: 200
+                Layout.fillHeight: true
+                spacing: 8
+                visible: root.currentZoneType === "effect"
+
+                Text {
+                    text: "Direction"
+                    font.pointSize: 9
+                    font.bold: true
+                    color: "#ffffff"
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                // Sélecteur de direction vectorielle
+                ZCP_VectorDirectionPicker {
+                    id: directionPicker
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.alignment: Qt.AlignHCenter
+
+                    backgroundColor: "#1a1a1a"
+                    circleColor: "#333333"
+                    arrowColor: "#5DADE2"
+                    gridColor: "#444444"
+                    highlightColor: "#7bd97f"
+                    circleSize: 140
+
+                    onDirectionChanged: function(x, y) {
+                        velXInput.text = x.toFixed(2)
+                        velYInput.text = y.toFixed(2)
+                        updateBackendConfiguration()
+                    }
+
+                    Component.onCompleted: {
+                        // Synchroniser au démarrage
+                        root.syncDirectionPicker()
+                    }
+                }
+
+            }
+
+            // Séparateur vertical
+            Rectangle {
+                Layout.fillHeight: true
+                width: 1
+                color: "#3a3a3a"
+                visible: root.currentZoneType === "effect"
+            }
+
+            // ==================== COLONNE 5: BOUTON DESSINER + INSTRUCTIONS ====================
+            ColumnLayout {
+                Layout.preferredWidth: 140
                 Layout.fillHeight: true
                 spacing: 8
 

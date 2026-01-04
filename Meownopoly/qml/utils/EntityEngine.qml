@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import ItemSnapable
 import PattounX 1.0
+import Logger
 
 Item {
     id: root
@@ -46,7 +47,7 @@ Item {
     // --- Moteur Physique C++ ---
     PattounX_engine {
         id: physicsEngine
-        debugMode: true
+        debugMode: false
     }
     
     // Corps physique du joueur
@@ -92,13 +93,12 @@ Item {
             var gridSize = World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
             var pos = World3DTools.position3dToGridRealPosition(targetEntity.x, 0, targetEntity.z)
             playerBody.position = pos
-            console.log("[EntityEngine] Player initial position:", playerBody.position)
         }
     }
 
     // Initialisation du moteur physique C++
     function initPhysicsEngine(zones) {
-        console.log("[EntityEngine] Initializing C++ physics engine...")
+        Logger.info("[EntityEngine] Initializing C++ physics engine...", "EntityEngine")
         
         // Créer le corps physique pour le joueur
         playerBody = physicsEngine.createBody("player")
@@ -118,7 +118,7 @@ Item {
                 }
             }
             physicsEngine.setZonesFromSnapables(snapablesList)
-            console.log("[EntityEngine] Loaded", physicsEngine.zoneCount, "zones")
+            Logger.info("Loaded " + physicsEngine.zoneCount + " zones", "EntityEngine")
         }
         
         // Initialiser la position depuis l'entité 3D
@@ -126,7 +126,6 @@ Item {
             var gridSize = World3DTools.gridManager ? World3DTools.gridManager.gridSize : 1.0
             var pos = World3DTools.position3dToGridRealPosition(targetEntity.x, 0, targetEntity.z)
             playerBody.position = pos
-            console.log("[EntityEngine] Player initial position:", playerBody.position)
         }
         
         // Connecter les signaux
@@ -134,7 +133,7 @@ Item {
         playerBody.enteredZone.connect(onPlayerEnteredZone)
         playerBody.exitedZone.connect(onPlayerExitedZone)
         
-        console.log("[EntityEngine] C++ physics engine ready")
+        Logger.success("[EntityEngine] C++ physics engine ready")
     }
     
     // Helper pour le timestamp

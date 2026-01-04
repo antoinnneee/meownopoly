@@ -11,9 +11,6 @@ CaseContent_Base {
     required property CaseRestArea caseData
     property var familyColors: []
 
-    onFamilyColorsChanged:{
-        console.log(" fam color change :", familyColors)
-    }
     tileColor: root.familyColors[caseData.family]
 
     icon.anchors.verticalCenterOffset: colorBar.height/3

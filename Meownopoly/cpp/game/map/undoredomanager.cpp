@@ -1,6 +1,7 @@
 
 #include <QQmlEngine>
 #include "undoredomanager.h"
+#include <cpp/tools/logger.h>
 #include "qjsonarray.h"
 
 UndoRedoManager *UndoRedoManager::m_instance = nullptr;
@@ -32,7 +33,7 @@ QObject *UndoRedoManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngin
 void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit){
     // Si on est en train de restaurer un etat, ignorer completement
     if (m_isRestoringState) {
-        qDebug() << "[UNDO][SAVE] BLOCKED - Save attempted during state restoration (flag is true)";
+        Logger::instance()->warn( "BLOCKED - Save attempted during state restoration (flag is true)", "UNDO - SAVE");
         return;
     }
 
@@ -49,7 +50,7 @@ void UndoRedoManager::onUpdateListEdits(QJsonObject newEdit){
     m_listEdits.append(newEdit);
     m_currentEditIndex = m_listEdits.size() - 1;
     
-    qDebug() << "[UNDO][SAVE] State saved successfully at index:" << m_currentEditIndex << "/ Total states:" << m_listEdits.size();
+    Logger::instance()->info(QString("State saved successfully at index: %1 / %2").arg(m_currentEditIndex).arg(m_listEdits.size()), "UNDO - SAVE");
 }
 
 void UndoRedoManager::onAskEdit(EditAction editAction)

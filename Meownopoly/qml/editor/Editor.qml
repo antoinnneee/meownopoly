@@ -82,8 +82,6 @@ Base_Board {
         gameGrid.isEdit = true
     }
 
-    mapInfo.mapName: autosaveMapName
-
     onUpdateSettings: {
         console.log("Update setting - stEnableAutoSave.value('saveEvent', '0') " + stEnableAutoSave.value('saveEvent', "1"))
         tmpSaver.interval =  stEnableAutoSave.value("saveEvent", "1") === 2 ? stEnableAutoSave.value("saveInterval", "0") * 1000 * 60: 500
@@ -108,7 +106,6 @@ Base_Board {
         id: escMenu
         z: z_CONFIG_PANEL
         onVisibleChanged: {
-            console.log("EscMenu visibility changed:", visible)
             if (!visible) {
                 // Redonner le focus à l'éditeur quand le menu se ferme
                 root.forceActiveFocus()
@@ -380,7 +377,7 @@ Base_Board {
         target: Game
 
         function onFoundItemSnapableTile(itemSnapableData){
-            Logger.info("Found itemSnapableData tile:" + itemSnapableData, "MAP_LOADING")
+            Logger.info("Found itemSnapable tile:" + itemSnapableData, "MAP_LOADING")
             logic.tileLogic.createItemSnapable(itemSnapableData);
         }
 
@@ -399,12 +396,12 @@ Base_Board {
 
             // Check if we're restoring from undo/redo
             if (UndoRedoManager.isRestoringState) {
-                console.log("[UNDO][RESTORE] Map loaded during restoration - NOT saving")
+                Logger.info("Map loaded during restoration - NOT saving", "UNDO - RESTORE")
                 // Clear the restoration flag now that loading is complete
                 UndoRedoManager.clearRestorationFlag()
             } else {
                 // Only save initial state if not restoring
-                console.log("[UNDO][SAVE] Map loaded normally - saving initial state")
+                Logger.info("Map loaded normally - saving initial state", "UNDO - SAVE")
                 logic.saveMap(MapTypes.UNDOREDO)
             }
         }
@@ -661,15 +658,16 @@ Base_Board {
 
     function initializeEditor() {
         if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
-            console.log("Creating autosave map")
+            Logger.info("Creating autosave map", "MAP FILE MANAGER")
             MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
             logic.saveMap(MapTypes.AUTOSAVE)
         }
         else {
-            console.log("Autosave map already exists")
+            Logger.info("Autosave map already exists", "MAP FILE MANAGER")
         }
+
         if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
-            console.log("Loading custom map:", stEnableAutoSave.currentMap)
+            Logger.info("Loading custom map:" + stEnableAutoSave.currentMap, "MAP FILE MANAGER")
             if (MapFileManager.mapExists(stEnableAutoSave.currentMap, MapTypes.CUSTOM)){
                 Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)
                 mapInfo.mapName = stEnableAutoSave.currentMap

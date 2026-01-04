@@ -7,7 +7,7 @@
 
 // Définitions pour contrôler les niveaux de log
 #ifndef LOG_LEVEL_INFO
-#define LOG_LEVEL_INFO 0
+#define LOG_LEVEL_INFO 1
 #endif
 
 #ifndef LOG_LEVEL_DEBUG

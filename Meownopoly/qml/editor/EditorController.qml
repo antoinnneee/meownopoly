@@ -3,6 +3,7 @@ import QtQuick
 import EditorEnum
 import MapTypes
 import Game
+import Logger
 
 Item {
     id: keyController
@@ -24,7 +25,7 @@ Item {
         keyController.selectionPanel = selectionPanel
         keyController.escMenu = escMenu
         keyController.adminCommandPanel = adminCommandPanel
-        console.log("key Controller init")
+        Logger.info("key Controller init", "EditorController")
     }
 
     function handleKeyPress(event){

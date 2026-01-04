@@ -25,7 +25,7 @@ WheelHandler {
                  {
                      logic.scrollLogic.scrollDown(wheel)
                  }
-                 if (wheel.angleDelta.x > 0)
+                 else if (wheel.angleDelta.x > 0)
                  {
                      logic.scrollLogic.scrollRight(wheel)
                  }
