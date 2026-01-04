@@ -53,16 +53,24 @@ EBP_Content {
             height: mainContent.height - 20
             spacing: 10
 
-            // ==================== COLONNE 1: TYPE + COULEUR ====================
+            // ==================== COLONNE 1: TYPE DE ZONE ====================
             ColumnLayout {
-                Layout.preferredWidth: 180
+                Layout.preferredWidth: 120
                 Layout.fillHeight: true
                 spacing: 8
+
+                Text {
+                    text: "Type"
+                    font.pointSize: 9
+                    font.bold: true
+                    color: "#ffffff"
+                    Layout.alignment: Qt.AlignHCenter
+                }
 
                 // Type de zone
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 50
+                    Layout.fillHeight: true
                     radius: 6
                     color: root.currentZoneType === "exclusion" ? "#8B0000" : "#2a2a2a"
                     border.color: root.currentZoneType === "exclusion" ? "#FF6B6B" : "#3a3a3a"
@@ -71,29 +79,25 @@ EBP_Content {
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on border.color { ColorAnimation { duration: 150 } }
 
-                    RowLayout {
+                    ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 8
-                        spacing: 6
+                        spacing: 4
 
                         Text {
                             text: "🚫"
                             font.pointSize: 16
+                            Layout.alignment: Qt.AlignHCenter
                         }
 
                         Text {
                             text: "Exclusion"
-                            font.pointSize: 9
+                            font.pointSize: 8
                             font.bold: true
                             color: "#ffffff"
-                            Layout.fillWidth: true
-                        }
-
-                        Text {
-                            text: root.currentZoneType === "exclusion" ? "✓" : ""
-                            font.pointSize: 12
-                            font.bold: true
-                            color: "#ffffff"
+                            Layout.alignment: Qt.AlignHCenter
+                            wrapMode: Text.WordWrap
+                            horizontalAlignment: Text.AlignHCenter
                         }
                     }
 
@@ -106,7 +110,7 @@ EBP_Content {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 50
+                    Layout.fillHeight: true
                     radius: 6
                     color: root.currentZoneType === "effect" ? "#1B4F72" : "#2a2a2a"
                     border.color: root.currentZoneType === "effect" ? "#5DADE2" : "#3a3a3a"
@@ -115,30 +119,25 @@ EBP_Content {
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on border.color { ColorAnimation { duration: 150 } }
 
-                    RowLayout {
+                    ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 8
-                        spacing: 6
+                        spacing: 4
 
                         Text {
                             text: "⚡"
                             font.pointSize: 16
+                            Layout.alignment: Qt.AlignHCenter
                         }
 
                         Text {
                             text: "Effet"
-                            font.pointSize: 9
+                            font.pointSize: 8
                             font.bold: true
                             color: "#ffffff"
-                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignHCenter
                         }
 
-                        Text {
-                            text: root.currentZoneType === "effect" ? "✓" : ""
-                            font.pointSize: 12
-                            font.bold: true
-                            color: "#ffffff"
-                        }
                     }
 
                     MouseArea {
@@ -147,81 +146,6 @@ EBP_Content {
                         onClicked: root.switchZoneType("effect")
                     }
                 }
-
-                // Séparateur
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 1
-                    color: "#3a3a3a"
-                }
-
-                // Couleur sélectionnée
-                Text {
-                    text: "🎨 Couleur"
-                    font.pointSize: 9
-                    font.bold: true
-                    color: "#ffffff"
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 35
-                    radius: 6
-                    color: colorPicker.selectedColor
-                    border.color: Qt.lighter(colorPicker.selectedColor, 1.5)
-                    border.width: 2
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: colorPicker.selectedColor.toUpperCase()
-                        font.pointSize: 8
-                        font.bold: true
-                        color: "#ffffff"
-                        style: Text.Outline
-                        styleColor: "#000000"
-                    }
-                }
-
-                // Grille de couleurs
-                Grid {
-                    Layout.fillWidth: true
-                    columns: 4
-                    spacing: 4
-
-                    Repeater {
-                        model: ["#FF5722", "#E91E63", "#9C27B0", "#673AB7",
-                                "#3F51B5", "#2196F3", "#00BCD4", "#009688",
-                                "#4CAF50", "#8BC34A", "#FFEB3B", "#FF9800"]
-
-                        Rectangle {
-                            width: 28
-                            height: 28
-                            radius: 6
-                            color: modelData
-                            border.color: colorPicker.selectedColor === modelData ? "#ffffff" : "transparent"
-                            border.width: 2
-
-                            Behavior on border.color { ColorAnimation { duration: 100 } }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                hoverEnabled: true
-
-                                onEntered: parent.scale = 1.1
-                                onExited: parent.scale = 1.0
-                                onClicked: {
-                                    colorPicker.selectedColor = modelData
-                                    updateBackendConfiguration()
-                                }
-                            }
-
-                            Behavior on scale { NumberAnimation { duration: 100 } }
-                        }
-                    }
-                }
-
-                Item { Layout.fillHeight: true }
             }
 
             // Séparateur vertical
@@ -231,11 +155,159 @@ EBP_Content {
                 color: "#3a3a3a"
             }
 
-            // ==================== COLONNE 2: PARAMÈTRES ====================
+            // ==================== COLONNE 2: NOM + COULEURS ====================
             ColumnLayout {
-                Layout.fillWidth: true
+                Layout.preferredWidth: 280
                 Layout.fillHeight: true
-                Layout.minimumWidth: 300
+                spacing: 8
+
+                Text {
+                    text: "Nom & Couleur"
+                    font.pointSize: 9
+                    font.bold: true
+                    color: "#ffffff"
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                // Nom de la zone (toujours visible)
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Text {
+                        text: "📝"
+                        font.pointSize: 12
+                        color: "#b0b0b0"
+                    }
+
+                    TextField {
+                        id: nameInput
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 32
+                        placeholderText: "Nom de la zone..."
+                        placeholderTextColor: "#666666"
+                        selectByMouse: true
+                        font.pointSize: 9
+
+                        background: Rectangle {
+                            radius: 6
+                            color: "#2a2a2a"
+                            border.color: nameInput.activeFocus ? "#5DADE2" : "#3a3a3a"
+                            border.width: 2
+                        }
+
+                        color: "#ffffff"
+                        onEditingFinished: updateBackendConfiguration()
+                    }
+                }
+
+                // Aperçu couleur + Palette
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 12
+
+                    // Aperçu de la couleur sélectionnée
+                    ColumnLayout {
+                        Layout.preferredWidth: 60
+                        Layout.preferredHeight: 50
+                        spacing: 6
+
+                        Text {
+                            text: "Aperçu"
+                            font.pointSize: 7
+                            color: "#b0b0b0"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            radius: 8
+                            color: colorPicker.selectedColor
+                            border.color: Qt.lighter(colorPicker.selectedColor, 1.5)
+                            border.width: 2
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: colorPicker.selectedColor.toUpperCase()
+                                font.pointSize: 7
+                                font.bold: true
+                                color: "#ffffff"
+                                style: Text.Outline
+                                styleColor: "#000000"
+                                wrapMode: Text.Wrap
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+                    }
+
+                    // Grille de couleurs
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        spacing: 6
+
+                        Text {
+                            text: "🎨 Palette"
+                            font.pointSize: 7
+                            color: "#b0b0b0"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
+                        Grid {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            columns: 6
+                            spacing: 4
+
+                            Repeater {
+                                model: ["#FF5722", "#E91E63", "#9C27B0", "#673AB7",
+                                        "#3F51B5", "#2196F3", "#00BCD4", "#009688",
+                                        "#4CAF50", "#8BC34A", "#FFEB3B", "#FF9800"]
+
+                                Rectangle {
+                                    width: (parent.width - 20) / 6
+                                    height: width
+                                    radius: 6
+                                    color: modelData
+                                    border.color: colorPicker.selectedColor === modelData ? "#ffffff" : "transparent"
+                                    border.width: 2
+
+                                    Behavior on border.color { ColorAnimation { duration: 100 } }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true
+
+                                        onEntered: parent.scale = 1.1
+                                        onExited: parent.scale = 1.0
+                                        onClicked: {
+                                            colorPicker.selectedColor = modelData
+                                            updateBackendConfiguration()
+                                        }
+                                    }
+
+                                    Behavior on scale { NumberAnimation { duration: 100 } }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Séparateur vertical
+            Rectangle {
+                Layout.fillHeight: true
+                width: 1
+                color: "#3a3a3a"
+            }
+
+            // ==================== COLONNE 3: PARAMÈTRES (EFFET UNIQUEMENT) ====================
+            ColumnLayout {
+                Layout.preferredWidth: 320
+                Layout.fillHeight: true
                 spacing: 8
                 visible: root.currentZoneType === "effect"
 
@@ -244,39 +316,7 @@ EBP_Content {
                     font.pointSize: 9
                     font.bold: true
                     color: "#ffffff"
-                }
-
-                // Nom
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 6
-
-                    Text {
-                        text: "Nom:"
-                        color: "#b0b0b0"
-                        font.pointSize: 8
-                        Layout.preferredWidth: 60
-                    }
-
-                    TextField {
-                        id: nameInput
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 28
-                        placeholderText: "Nom de la zone..."
-                        placeholderTextColor: "#666666"
-                        selectByMouse: true
-                        font.pointSize: 8
-
-                        background: Rectangle {
-                            radius: 4
-                            color: "#2a2a2a"
-                            border.color: nameInput.activeFocus ? "#5DADE2" : "#3a3a3a"
-                            border.width: 1
-                        }
-
-                        color: "#ffffff"
-                        onEditingFinished: updateBackendConfiguration()
-                    }
+                    Layout.alignment: Qt.AlignHCenter
                 }
 
                 // Vélocité
@@ -285,10 +325,10 @@ EBP_Content {
                     spacing: 6
 
                     Text {
-                        text: "Vélocité:"
+                        text: "💨 Vélocité:"
                         color: "#b0b0b0"
                         font.pointSize: 8
-                        Layout.preferredWidth: 60
+                        Layout.preferredWidth: 70
                     }
 
                     TextField {
@@ -361,10 +401,10 @@ EBP_Content {
                     spacing: 6
 
                     Text {
-                        text: "Friction:"
+                        text: "🧊 Friction:"
                         color: "#b0b0b0"
                         font.pointSize: 8
-                        Layout.preferredWidth: 60
+                        Layout.preferredWidth: 70
                     }
 
                     Slider {
@@ -408,8 +448,8 @@ EBP_Content {
                     }
 
                     Rectangle {
-                        Layout.preferredWidth: 40
-                        height: 24
+                        Layout.preferredWidth: 45
+                        height: 26
                         radius: 4
                         color: "#2a2a2a"
                         border.color: "#5DADE2"
@@ -419,7 +459,7 @@ EBP_Content {
                             anchors.centerIn: parent
                             text: frictionSlider.value.toFixed(2)
                             color: "#ffffff"
-                            font.pointSize: 7
+                            font.pointSize: 8
                             font.bold: true
                         }
                     }
@@ -431,10 +471,10 @@ EBP_Content {
                     spacing: 6
 
                     Text {
-                        text: "Mult. Vit:"
+                        text: "🏃 Mult. Vit:"
                         color: "#b0b0b0"
                         font.pointSize: 8
-                        Layout.preferredWidth: 60
+                        Layout.preferredWidth: 70
                     }
 
                     Slider {
@@ -478,8 +518,8 @@ EBP_Content {
                     }
 
                     Rectangle {
-                        Layout.preferredWidth: 40
-                        height: 24
+                        Layout.preferredWidth: 45
+                        height: 26
                         radius: 4
                         color: "#2a2a2a"
                         border.color: "#4CAF50"
@@ -489,7 +529,7 @@ EBP_Content {
                             anchors.centerIn: parent
                             text: "×" + speedMultSlider.value.toFixed(1)
                             color: "#ffffff"
-                            font.pointSize: 7
+                            font.pointSize: 8
                             font.bold: true
                         }
                     }
@@ -501,10 +541,10 @@ EBP_Content {
                     spacing: 6
 
                     Text {
-                        text: "Mult. Acc:"
+                        text: "⚡ Mult. Acc:"
                         color: "#b0b0b0"
                         font.pointSize: 8
-                        Layout.preferredWidth: 60
+                        Layout.preferredWidth: 70
                     }
 
                     Slider {
@@ -548,8 +588,8 @@ EBP_Content {
                     }
 
                     Rectangle {
-                        Layout.preferredWidth: 40
-                        height: 24
+                        Layout.preferredWidth: 45
+                        height: 26
                         radius: 4
                         color: "#2a2a2a"
                         border.color: "#FF9800"
@@ -559,16 +599,14 @@ EBP_Content {
                             anchors.centerIn: parent
                             text: "×" + accelMultSlider.value.toFixed(2)
                             color: "#ffffff"
-                            font.pointSize: 7
+                            font.pointSize: 8
                             font.bold: true
                         }
                     }
                 }
-
-                Item { Layout.fillHeight: true }
             }
 
-            // Séparateur vertical
+            // Séparateur vertical (visible seulement si paramètres visibles)
             Rectangle {
                 Layout.fillHeight: true
                 width: 1
@@ -576,16 +614,24 @@ EBP_Content {
                 visible: root.currentZoneType === "effect"
             }
 
-            // ==================== COLONNE 3: BOUTON DESSINER + INSTRUCTIONS ====================
+            // ==================== COLONNE 4: BOUTON DESSINER + INSTRUCTIONS ====================
             ColumnLayout {
-                Layout.preferredWidth: 180
+                Layout.preferredWidth: 160
                 Layout.fillHeight: true
                 spacing: 8
+
+                Text {
+                    text: "Action"
+                    font.pointSize: 9
+                    font.bold: true
+                    color: "#ffffff"
+                    Layout.alignment: Qt.AlignHCenter
+                }
 
                 // Bouton Dessiner
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 70
                     radius: 8
                     color: root.isDrawModeActive ? "#8B0000" : colorPicker.selectedColor
                     border.color: Qt.lighter(colorPicker.selectedColor, 1.5)
@@ -599,16 +645,14 @@ EBP_Content {
 
                         Text {
                             text: root.isDrawModeActive ? "❌" : "✏️"
-                            font.pointSize: 18
-                            Layout.alignment: Qt.AlignHCenter
+                            font.pointSize: 20
                         }
 
                         Text {
                             text: root.isDrawModeActive ? "Annuler" : "Dessiner"
-                            font.pointSize: 9
+                            font.pointSize: 10
                             font.bold: true
                             color: "#ffffff"
-                            Layout.alignment: Qt.AlignHCenter
                         }
                     }
 

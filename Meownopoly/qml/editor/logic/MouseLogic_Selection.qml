@@ -175,7 +175,7 @@ MouseLogic_Base {
                 // Mettre à jour la configuration de case si applicable
                 updateCaseConfiguration()
 
-                updateSidePanel(clickElement[0].snapableParameters.displayParameter)
+                updateSidePanel(clickElement[0].snapableParameters)
             }
             else
             {

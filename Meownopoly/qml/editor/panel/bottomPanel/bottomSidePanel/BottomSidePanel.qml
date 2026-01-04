@@ -222,6 +222,7 @@ Rectangle {
         }
         else
         {
+
             blockEffectChangedSignal = true
             visualEffectsPanel.updateFromDisplayParameter(dispParam)
             blockEffectChangedSignal = false
@@ -230,7 +231,9 @@ Rectangle {
 
     // --- Functions ---
     function updateSidePanel(snapableParameter) {
+        console.log("updateSidePanel : ", snapableParameter)
         visualEffectsPanel.updateFromDisplayParameter(snapableParameter.displayParameter)
         zoneConfigurationPanel.updateFromZoneParameter(snapableParameter.zoneParameter)
+        console.log("updateSideEnded : ", snapableParameter)
     }
 }

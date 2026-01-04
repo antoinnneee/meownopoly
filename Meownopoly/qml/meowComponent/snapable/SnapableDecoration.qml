@@ -130,7 +130,7 @@ SnapableElement {
 
 
         // Performance optimization: auto-padding management
-        autoPaddingEnabled: false//displayParameter.effectBlurEnabled || displayParameter.effectShadowEnabled
+        autoPaddingEnabled:false // snapableParameters.displayParameter.effectShadowEnabled
     }
 
     // --- Functions ---

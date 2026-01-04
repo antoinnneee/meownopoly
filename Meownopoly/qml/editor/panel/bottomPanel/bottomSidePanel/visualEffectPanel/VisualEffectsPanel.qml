@@ -12,6 +12,7 @@ CollapsableGroupBox {
     
     // Properties for the target decoration element
     property bool effectsLocked: false
+    property alias colorEffectsSection: colorEffectsSection
     
     // Signals
     signal effectChanged()
@@ -78,6 +79,7 @@ CollapsableGroupBox {
     function updateFromDisplayParameter(dispParam) {
       if (root.effectsLocked) return
         
+      console.log("updateFromDisplayParameter", dispParam)
         // Update sliders from target values
         colorEffectsSection.brightnessSlider.value = dispParam.effectBrightness
         colorEffectsSection.contrastSlider.value = dispParam.effectContrast
