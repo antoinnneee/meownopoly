@@ -25,8 +25,6 @@ CollapsableGroupBox {
          blurEnabledCheck.checked = dispParam.effectBlurEnabled
          shadowEnabledCheck.checked = dispParam.effectShadowEnabled
 
-        console.log("Advanced Effects blur : ", dispParam.effectBlur)
-        console.log("Advanced Effects effectShadowBlur : ", dispParam.effectShadowBlur)
         // // Update blur/shadow sliders
         blurSlider.value = dispParam.effectBlur
         shadowBlurSlider.value = dispParam.effectShadowBlur

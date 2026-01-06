@@ -18,7 +18,6 @@ ColumnLayout {
     property alias connectionsConfigurationPanel: connectionsConfigSection
     property alias zoneConfigurationPanel: zoneConfigurationPanelSection
    // property alias transformSection: transformSection
-    property bool blockEffectChangedSignal: false
 
     VisualEffectsPanel {
         id: effectsPanel
@@ -27,9 +26,6 @@ ColumnLayout {
         Layout.fillWidth: true
 
         onEffectChanged: {
-            if (panelContent.blockEffectChangedSignal) {
-                return
-            }
             panelContent.effectChanged()
         }
     }

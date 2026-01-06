@@ -8,6 +8,10 @@ Rectangle {
 
     // --- Properties ---
     property bool blockEffectChangedSignal: false
+    onBlockEffectChangedSignalChanged: {
+        console.log("blockEffectChangedSignal changed for", blockEffectChangedSignal)
+    }
+
     property bool effectLocked  // prevent set effect on panel
 
     property bool isExpanded: true
@@ -201,8 +205,16 @@ Rectangle {
             logic: root.logic
             width: scrollView.width
 
-            onEffectChanged: root.effectChanged()
-
+            onEffectChanged: {
+                console.log("effect changed")
+                if(root.blockEffectChangedSignal)
+                {
+                    console.log("apply effect cancel")
+                    return;
+                }
+                console.log("apply effect changed")
+                root.effectChanged()
+            }
             onConnectionRequested: function(kind) {
                 root.connectionRequested(kind)
             }
@@ -217,23 +229,25 @@ Rectangle {
 
     // --- Functions ---
     function updateFromDisplayParameter(dispParam) {
+        console.log("updateFromDisplayParameter")
         if (effectLocked){
             effectChanged()
         }
         else
         {
 
-            blockEffectChangedSignal = true
+            root.blockEffectChangedSignal = true
             visualEffectsPanel.updateFromDisplayParameter(dispParam)
-            blockEffectChangedSignal = false
+            root.blockEffectChangedSignal = false
         }
     }
 
     // --- Functions ---
     function updateSidePanel(snapableParameter) {
-        console.log("updateSidePanel : ", snapableParameter)
+        root.blockEffectChangedSignal = true
+
         visualEffectsPanel.updateFromDisplayParameter(snapableParameter.displayParameter)
         zoneConfigurationPanel.updateFromZoneParameter(snapableParameter.zoneParameter)
-        console.log("updateSideEnded : ", snapableParameter)
+       root. blockEffectChangedSignal = false
     }
 }

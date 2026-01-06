@@ -79,7 +79,7 @@ CollapsableGroupBox {
     function updateFromDisplayParameter(dispParam) {
       if (root.effectsLocked) return
 
-      console.log("VEP updateFromDisplayParameter", dispParam)
+
         // Update sliders from target values
         colorEffectsSection.brightnessSlider.value = dispParam.effectBrightness
         colorEffectsSection.contrastSlider.value = dispParam.effectContrast
