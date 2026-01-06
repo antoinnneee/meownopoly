@@ -83,10 +83,9 @@ public:
     /**
      * @brief Crée une nouvelle zone physique
      * @param id Identifiant unique
-     * @param zoneType Type de zone (enum PattounX_zone::ZoneType)
      * @return Pointeur vers la nouvelle zone (gérée par le moteur)
      */
-    Q_INVOKABLE PattounX_zone* createZone(const QString& id, int zoneType = 0);
+    Q_INVOKABLE PattounX_zone* createZone(const QString& id);
     PattounX_zone* createZone(const QString& id, ZoneParameter *zoneParam);
 
     /**

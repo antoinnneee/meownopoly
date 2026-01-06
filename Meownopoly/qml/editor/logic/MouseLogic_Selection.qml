@@ -159,7 +159,6 @@ MouseLogic_Base {
                 
                 // Mettre à jour la configuration de case si applicable
                 updateCaseConfiguration()
-                //updateVisualEffectPanel(selectedElements[0].snapableParameters.displayParameter)
                 updateSidePanel(selectedElements[0].snapableParameters)
             }
         }

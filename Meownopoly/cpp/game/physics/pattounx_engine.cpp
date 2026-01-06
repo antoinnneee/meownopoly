@@ -9,14 +9,7 @@ void PattounX_engine::registerQml()
     qmlRegisterType<PattounX_engine>("PattounX", 1, 0, "PattounX_engine");
     qmlRegisterType<PattounX_body>("PattounX", 1, 0, "PattounX_body");
     qmlRegisterType<PattounX_zone>("PattounX", 1, 0, "PattounX_zone");
-    
-    // Enregistrer l'enum ZoneType pour QML
-    qmlRegisterUncreatableMetaObject(
-        PattounX_zone::staticMetaObject,
-        "PattounX", 1, 0,
-        "ZoneType",
-        "Error: ZoneType is an enum"
-    );
+
 }
 
 PattounX_engine::PattounX_engine(QObject* parent)
@@ -104,19 +97,18 @@ void PattounX_engine::clearBodies()
 
 // --- Gestion des Zones ---
 
-PattounX_zone* PattounX_engine::createZone(const QString& id, int zoneType)
+PattounX_zone* PattounX_engine::createZone(const QString& id)
 {
     if (m_zones.contains(id)) {
         qWarning() << "[PattounX_engine] Zone with id" << id << "already exists";
         return m_zones[id];
     }
 
-    PattounX_zone::ZoneType type = static_cast<PattounX_zone::ZoneType>(zoneType);
     PattounX_zone* zone = new PattounX_zone(id, this);
     m_zones[id] = zone;
 
     if (m_debugMode) {
-        qDebug() << "[PattounX_engine] Created zone:" << id << "type:" << type;
+        qDebug() << "[PattounX_engine] Created zone:" << id;
     }
 
     emit zoneCountChanged();
@@ -202,11 +194,9 @@ void PattounX_engine::setZonesFromSnapables(const QVariantList& snapables)
         if (!zoneParam || zoneParam->pointCount() < 3) continue;
         
         // Déterminer le type de zone
-        PattounX_zone::ZoneType zoneType = PattounX_zone::Zone_Exclusion;
         
         if (tileType == ItemSnapable::PhysicZoneTile) {
             // physics zone (exclusion)
-            zoneType = PattounX_zone::Zone_Exclusion;
         } else {
             continue; // Ignore other types for now
         }
@@ -217,7 +207,6 @@ void PattounX_engine::setZonesFromSnapables(const QVariantList& snapables)
 
         if (m_debugMode) {
             qDebug() << "[PattounX_engine] Loaded zone from snapable:"
-                     << zoneId << "type:" << zoneType
                      << "points:" << zoneParam->pointCount();
         }
     }

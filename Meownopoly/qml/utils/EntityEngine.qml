@@ -149,7 +149,7 @@ Item {
     }
     
     function onPlayerEnteredZone(zone) {
-        console.log(getTimestamp(), "[EntityEngine] Entered zone:", zone.zoneId, "type:", zone.zoneType)
+        console.log(getTimestamp(), "[EntityEngine] Entered zone:", zone.zoneId)
     }
     
     function onPlayerExitedZone(zone) {

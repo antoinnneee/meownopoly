@@ -25,12 +25,6 @@ public:
     /**
      * @brief Types de zones physiques
      */
-    enum ZoneType {
-        Zone_Exclusion = 0,      ///< Zone solide avec collision et rebond
-        Zone_Speed,          ///< Zone ralentissant le mouvement
-        Zone_Friction            ///< Zone glissante (friction réduite)
-    };
-    Q_ENUM(ZoneType)
     
     explicit PattounX_zone(const QString& id, QObject* parent = nullptr);
     explicit PattounX_zone(const QString& id,  ZoneParameter& zoneParameter, QObject* parent = nullptr);

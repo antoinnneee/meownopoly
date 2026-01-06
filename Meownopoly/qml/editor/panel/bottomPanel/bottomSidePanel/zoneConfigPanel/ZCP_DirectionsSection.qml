@@ -20,6 +20,7 @@ GroupBox {
     function updateFromZoneParameter(zoneParam) {
       if (root.updatingValues) return
         
+      console.log("update velocity picker")
       // Update sliders from target values
       velocityPicker.directionX = zoneParam.velocityDirection.x
       velocityPicker.directionY = zoneParam.velocityDirection.y
