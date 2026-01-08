@@ -7,9 +7,7 @@ import QtQml
 import Game
 import Case
 import ItemSnapable
-import "../component"
-import "../component/grid"
-import "../component/snapable"
+import meowComponent
 import "panel"
 import caseSelectionPanel
 import assetSelectionPanel
@@ -27,7 +25,7 @@ WheelHandler {
                  {
                      logic.scrollLogic.scrollDown(wheel)
                  }
-                 if (wheel.angleDelta.x > 0)
+                 else if (wheel.angleDelta.x > 0)
                  {
                      logic.scrollLogic.scrollRight(wheel)
                  }

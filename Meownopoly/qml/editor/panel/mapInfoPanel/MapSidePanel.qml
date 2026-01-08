@@ -9,7 +9,7 @@ import QtQuick.Dialogs
 import Case
 import ItemSnapable
 import ui_item
-import "../../../component"
+import "../../../meowComponent"
 
 import Game
 import MapFileManager
@@ -348,7 +348,8 @@ Rectangle {
                                 logic.saveMap(logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == "" ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
 
                                 stEnableAutoSave.setValue("currentMap", mapInfoLocal.mapName)
-
+                            } else {
+                                console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")
                             }
                         }
                     }

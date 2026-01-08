@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QObject>
 #include <QDir>
-#include <QtQml/qqml.h>
+#include <QtQml>
 
 // Enum for deletion options using bit flags
 enum FolderCompressorDeleteOptions {

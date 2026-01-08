@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import EditorEnum
-import "../../component/snapable"
+import "../../meowComponent/snapable"
 
 MouseLogic_Selection {
     id: mouseLogic
@@ -92,7 +92,7 @@ MouseLogic_Selection {
             currentMouseY = linkSourceCase.globalCenterY
             
             // Créer le composant LinkPreviewCursor
-            var component = Qt.createComponent("../../component/preview/LinkPreviewCursor.qml")
+            var component = Qt.createComponent("../../meowComponent/preview/LinkPreviewCursor.qml")
             if (component.status === Component.Ready) {
                 linkPreviewCursor = component.createObject(workArea, {
                     "sourceElement": linkSourceCase,

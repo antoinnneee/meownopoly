@@ -1,5 +1,5 @@
-module qml.utils
-singleton EntityController 1.0 EntityController.qml
+module utils
+singleton EntityEngine 1.0 EntityEngine.qml
 singleton CameraController 1.0 CameraController.qml
 singleton World3DTools 1.0 World3DTools.qml
 

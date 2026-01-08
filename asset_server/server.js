@@ -4,8 +4,11 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const https = require('https'); // Ajoute ce module natif
+const http = require('http');   // Pour la redirection optionnelle
 
 const app = express();
+app.set('trust proxy', 1); // Trust first key proxy (Nginx)
 const port = 8080;
 
 // Configuration
@@ -48,6 +51,8 @@ app.use(cors({
     ],
     credentials: true
 }));
+
+app.use(express.static(path.join(__dirname, 'public'), { dotfiles: 'allow' }));
 
 // Logger middleware
 app.use((req, res, next) => {
@@ -420,17 +425,32 @@ app.use((req, res) => {
     });
 });
 
-// Démarrage du serveur
-app.listen(port, '0.0.0.0', () => {
+app.get('/', (req, res) => {
+    res.send('Serveur en ligne !');
+  });
+
+// ... (Garde tout le reste de ton code : routes, multer, express, etc.)
+
+// --- CONFIGURATION SSL ---
+const domain = 'pattounecorp.ovh';
+const sslOptions = {
+    key: fs.readFileSync(`/etc/letsencrypt/live/${domain}/privkey.pem`),
+    cert: fs.readFileSync(`/etc/letsencrypt/live/${domain}/fullchain.pem`)
+};
+
+// --- DÉMARRAGE DES SERVEURS ---
+
+// 1. Serveur HTTPS (Le serveur principal sur le port 443 ou ton port personnalisé)
+const httpsPort = 443; 
+https.createServer(sslOptions, app).listen(httpsPort, '0.0.0.0', () => {
     console.log('='.repeat(50));
-    console.log('🚀 Serveur Meownopoly démarré');
-    console.log(`📡 URL: http://localhost:${port}`);
+    console.log('🚀 Serveur Meownopoly SÉCURISÉ (HTTPS) démarré');
+    console.log(`📡 URL: https://${domain}`);
     console.log(`📁 Assets: ${ASSETS_DIR}`);
     console.log(`📦 Models: ${MODELS_DIR}`);
     console.log(`📋 Versions: ${VERSIONS_DIR}`);
     console.log(`⬆️  Uploads: ${UPLOADS_DIR}`);
     console.log('='.repeat(50));
-    
     // Afficher la version actuelle
     try {
         const latest = getLatestVersion();
@@ -439,6 +459,32 @@ app.listen(port, '0.0.0.0', () => {
         console.log('⚠️  Aucune version disponible');
     }
 });
+
+// 2. Optionnel : Serveur HTTP (Port 80) pour rediriger automatiquement vers le HTTPS
+// Très utile pour que les utilisateurs n'aient pas à taper "https://"
+// http.createServer((req, res) => {
+//     res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+//     res.end();
+// }).listen(80);
+// // Démarrage du serveur
+// app.listen(port, '0.0.0.0', () => {
+//     console.log('='.repeat(50));
+//     console.log('🚀 Serveur Meownopoly démarré');
+//     console.log(`📡 URL: http://localhost:${port}`);
+//     console.log(`📁 Assets: ${ASSETS_DIR}`);
+//     console.log(`📦 Models: ${MODELS_DIR}`);
+//     console.log(`📋 Versions: ${VERSIONS_DIR}`);
+//     console.log(`⬆️  Uploads: ${UPLOADS_DIR}`);
+//     console.log('='.repeat(50));
+    
+//     // Afficher la version actuelle
+//     try {
+//         const latest = getLatestVersion();
+//         console.log(`📦 Version actuelle: ${latest.version}`);
+//     } catch (error) {
+//         console.log('⚠️  Aucune version disponible');
+//     }
+// });
 
 // Gestion propre de l'arrêt
 process.on('SIGINT', () => {

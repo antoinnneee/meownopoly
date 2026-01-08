@@ -1,0 +1,6 @@
+module zoneConfigPanel
+ZoneConfigurationPanelSection 1.0 ZoneConfigurationPanelSection.qml
+ZCP_FrictionSection 1.0 ZCP_FrictionSection.qml
+ZCP_VectorDirectionPicker 1.0 ZCP_VectorDirectionPicker.qml
+ZCP_DirectionsSection 1.0 ZCP_DirectionsSection.qml
+ZCP_GeneralSection 1.0 ZCP_GeneralSection.qml

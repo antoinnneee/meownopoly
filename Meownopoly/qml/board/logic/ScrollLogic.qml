@@ -1,6 +1,5 @@
 import QtQuick 2.15
-import "../../component"
-import "../../component/grid"
+import meowComponent
 
 QtObject {
     property GridManager gameGrid

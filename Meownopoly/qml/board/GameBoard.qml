@@ -17,10 +17,10 @@ import DisplayParameter
 import DecorationParameter
 import ItemSnapable
 import "logic"
-import "../component"
-import "../component/snapable"
-import "../component/grid"
-import "../utils"
+import "../meowComponent"
+import "../meowComponent/snapable"
+import "../meowComponent/grid"
+import utils
 
 Base_Board {
     id: gameBoard
@@ -32,15 +32,17 @@ Base_Board {
         Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         gameGrid.mmSize = 8
         // Passer la liste des tiles pour la collision avec les zones d'exclusion
-        EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        //EntityEngine.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        EntityEngine.setContext(view3D, gameGrid, logic)
+        EntityEngine.setZone(snapableTilesList)
     }
 
     Keys.onPressed: function(event) {
-        // Pass to EntityController
-        EntityController.keysHandler.Keys.pressed(event)
+        // Pass to EntityEngine
+        EntityEngine.keysHandler.Keys.pressed(event)
     }
     Keys.onReleased: function(event) {
-        EntityController.keysHandler.Keys.released(event)
+        EntityEngine.keysHandler.Keys.released(event)
         logic.mouseLogic.isControlPressed = false
     }
 

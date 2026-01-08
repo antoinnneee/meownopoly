@@ -47,22 +47,10 @@ ItemSnapable *ItemSnapableFactory::createItemSnapable(Case::CaseType caseType)
     return snap;
 }
 
-ItemSnapable *ItemSnapableFactory::createItemSnapableFromJson(const QJsonObject &json)
+ItemSnapable *ItemSnapableFactory::createPhysicZone()
 {
-    ItemSnapable *snap = new ItemSnapable(json);
+    ItemSnapable *snap = new ItemSnapable();
+    snap->setTileType(ItemSnapable::PhysicZoneTile);
     return snap;
 }
 
-ItemSnapable *ItemSnapableFactory::createExclusionZone()
-{
-    ItemSnapable *snap = new ItemSnapable();
-    snap->setTileType(ItemSnapable::ExclusionZone);
-    return snap;
-}
-
-ItemSnapable *ItemSnapableFactory::createEffectZone()
-{
-    ItemSnapable *snap = new ItemSnapable();
-    snap->setTileType(ItemSnapable::EffectZone);
-    return snap;
-}

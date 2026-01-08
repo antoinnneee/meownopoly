@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/chat/ChatDrawer.qml</file>
+        <file>qml/chat/qmldir</file>
+    </qresource>
+</RCC>

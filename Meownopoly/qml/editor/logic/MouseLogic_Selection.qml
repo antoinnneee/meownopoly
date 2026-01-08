@@ -1,5 +1,5 @@
 import QtQuick 2.15
-import "../../component/snapable"
+import "../../meowComponent/snapable"
 
 import MapTypes
 
@@ -159,7 +159,7 @@ MouseLogic_Base {
                 
                 // Mettre à jour la configuration de case si applicable
                 updateCaseConfiguration()
-                updateVisualEffectPanel(selectedElements[0].snapableParameters.displayParameter)
+                updateSidePanel(selectedElements[0].snapableParameters)
             }
         }
         else    // CTRL is pressed => add to selection
@@ -173,7 +173,8 @@ MouseLogic_Base {
                 
                 // Mettre à jour la configuration de case si applicable
                 updateCaseConfiguration()
-                updateVisualEffectPanel(clickElement[0].snapableParameters.displayParameter)
+
+                updateSidePanel(clickElement[0].snapableParameters)
             }
             else
             {

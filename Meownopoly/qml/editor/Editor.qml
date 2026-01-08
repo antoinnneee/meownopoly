@@ -10,14 +10,8 @@ import UiStyle
 
 import Case
 import ItemSnapable
-import "../component"
-import "../component/grid"
-import "../component/preview"
-import "../component/snapable"
 
-import bottomMainPanel
-import bottomSidePanel
-import mapInfoPanel
+import meowComponent
 
 
 import Game
@@ -33,11 +27,14 @@ import AssetManager
 import ItemSnapableFactory
 import ui_item
 
-import "../test"
-import "../utils"
+import utils
+import chat
 
 import QtQuick3D
 import QtQuick3D.Helpers
+
+import editor
+import "."
 
 Base_Board {
     id: root
@@ -71,9 +68,11 @@ Base_Board {
         initializeEditor()
 
         // Initialize Entity Controller (avec la liste des tiles pour la collision)
-        EntityController.snapableTilesList = snapableTilesList
         World3DTools.init(view3D, gameGrid, gameScene.camera)
-        EntityController.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        // EntityEngine.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
+        EntityEngine.setContext(view3D, gameGrid, logic)
+        EntityEngine.setZone(snapableTilesList)
+        EntityEngine.setCameraTarget(entity)
         // EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
         
         // Activer le mode édition pour les zones d'exclusion
@@ -83,8 +82,6 @@ Base_Board {
         console.log("UiStyle.z_CONFIG_PANEL !!! ", UiStyle.z_CONFIG_PANEL )
     }
 
-    mapInfo.mapName: autosaveMapName
-
     onUpdateSettings: {
         tmpSaver.setSaveTimer()
     }
@@ -92,14 +89,14 @@ Base_Board {
 
 
     Keys.onPressed: function(event) {
-        // Pass to EntityController
-        EntityController.keysHandler.Keys.pressed(event)
+        // Pass to EntityEngine
+        EntityEngine.keysHandler.Keys.pressed(event)
+        // Pass to EditorController
         EditorController.keysHandler.Keys.pressed(event)
     }
     Keys.onReleased: function(event) {
-        EntityController.keysHandler.Keys.released(event)
+        EntityEngine.keysHandler.Keys.released(event)
         EditorController.keysHandler.Keys.released(event)
-        logic.mouseLogic.isControlPressed = false
     }
 
 
@@ -109,7 +106,6 @@ Base_Board {
         id: escMenu
         z: UiStyle.z_CONFIG_PANEL
         onVisibleChanged: {
-            console.log("EscMenu visibility changed:", visible)
             if (!visible) {
                 // Redonner le focus à l'éditeur quand le menu se ferme
                 root.forceActiveFocus()
@@ -152,6 +148,43 @@ Base_Board {
             SmoothedAnimation {velocity: 0.9; to: 1.2; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
             SmoothedAnimation {velocity: 1.1; to: 1; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
         }
+    }
+
+    Image {
+        id: btChat
+        anchors.top: btInfoMap.bottom
+        anchors.right: parent.right
+        anchors.margins: 10
+        z: z_HUD
+        source: AssetManager.getAssetById("ui", "hud", "0").path
+        width: Screen.pixelDensity * 20
+        height: Screen.pixelDensity * 20
+        
+        Rectangle {
+            anchors.fill: parent
+            color: "#2ecc71"
+            opacity: 0.4
+            radius: width/2
+        }
+
+        Text {
+            text: "💬"
+            anchors.centerIn: parent
+            font.pixelSize: 20
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                chatDrawer.open()
+            }
+        }
+    }
+
+    ChatDrawer {
+        id: chatDrawer
+        gameId: "Pattoune"/*root.mapInfo.mapName*/
+        z: z_CONFIG_PANEL + 100
     }
 
     Button {
@@ -345,7 +378,7 @@ Base_Board {
         target: Game
 
         function onFoundItemSnapableTile(itemSnapableData){
-            Logger.info("Found itemSnapableData tile:" + itemSnapableData, "MAP_LOADING")
+            Logger.info("Found itemSnapable tile:" + itemSnapableData, "MAP_LOADING")
             logic.tileLogic.createItemSnapable(itemSnapableData);
         }
 
@@ -364,12 +397,12 @@ Base_Board {
 
             // Check if we're restoring from undo/redo
             if (UndoRedoManager.isRestoringState) {
-                console.log("[UNDO][RESTORE] Map loaded during restoration - NOT saving")
+                Logger.info("Map loaded during restoration - NOT saving", "UNDO - RESTORE")
                 // Clear the restoration flag now that loading is complete
                 UndoRedoManager.clearRestorationFlag()
             } else {
                 // Only save initial state if not restoring
-                console.log("[UNDO][SAVE] Map loaded normally - saving initial state")
+                Logger.info("Map loaded normally - saving initial state", "UNDO - SAVE")
                 logic.saveMap(MapTypes.UNDOREDO)
             }
         }
@@ -394,10 +427,7 @@ Base_Board {
         editorSidePanel: sidePanel
     }
 
-
-    mainMa.anchors.bottom:  mapInfoPanel.x < parent.width ? parent.bottom : selectionPanel.top
-
-
+    mainMa.anchors.bottomMargin: mapInfoPanel.x < parent.width ? 0 : selectionPanel.height
 
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {
@@ -417,9 +447,9 @@ Base_Board {
             gridManager: gameGrid
         }
         Component.onCompleted: {
-            var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")           
+            var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")
             gameScene.moveEntityToGridPosition(sphere, 0, 0)
-            // EntityController.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
+            // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
 
             sphere = gameScene.generateSphere(0, 0, 0, 10, "blue")
@@ -561,6 +591,20 @@ Base_Board {
                 logic.mouseLogic.showLinkPreview()
             }
         }
+
+        onModelSelected: function(name) {
+            gameScene.modelName = name
+        }
+        onConfigurationChanged: {
+            var physicSettings = root.editorSidePanel.zoneConfigurationPanel.getCurrentPhysicSettings()
+            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                logic.mouseLogic.selectedElements[i].applyPhysicSettings(physicSettings)
+            }
+            if (saveMapDelayer.running)
+                saveMapDelayer.restart()
+            else
+                saveMapDelayer.start()
+        }
     }
 
     MenuMapAtStart {
@@ -616,20 +660,18 @@ Base_Board {
         }
     }
 
-    function regainFocus() {
-        forceActiveFocus()
-    }
     function initializeEditor() {
         if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
-            console.log("Creating autosave map")
+            Logger.info("Creating autosave map", "MAP FILE MANAGER")
             MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
             logic.saveMap(MapTypes.AUTOSAVE)
         }
         else {
-            console.log("Autosave map already exists")
+            Logger.info("Autosave map already exists", "MAP FILE MANAGER")
         }
+
         if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
-            console.log("Loading custom map:", stEnableAutoSave.currentMap)
+            Logger.info("Loading custom map:" + stEnableAutoSave.currentMap, "MAP FILE MANAGER")
             if (MapFileManager.mapExists(stEnableAutoSave.currentMap, MapTypes.CUSTOM)){
                 Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)
                 mapInfo.mapName = stEnableAutoSave.currentMap

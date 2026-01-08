@@ -1,8 +1,8 @@
 import QtQuick 2.15
 import QtCore
 
-import "../../component"
-import "../../component/snapable"
+import "../../meowComponent"
+import "../../meowComponent/snapable"
 
 import EditorEnum
 import MapTypes

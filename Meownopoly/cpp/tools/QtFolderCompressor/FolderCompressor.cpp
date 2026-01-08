@@ -1,5 +1,5 @@
 #include "FolderCompressor.h"
-#include <QtQml/qqml.h>
+#include <QtQml>
 
 FolderCompressor::FolderCompressor(QObject *parent) :
     QObject(parent)

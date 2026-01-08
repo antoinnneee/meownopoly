@@ -72,7 +72,7 @@ Item {
         
         // Calcul du déplacement monde (input Y -> -Z)
         var dx = inputX * speed * dt
-        var dz = -inputY * speed * dt 
+        var dz = inputY * speed * dt
         
         if (dx === 0 && dz === 0) return
 

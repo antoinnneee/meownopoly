@@ -34,6 +34,8 @@
 #include "tools/editorenum.h"
 #include "tools/uistyle.h"
 
+#include "game/physics/pattounx_engine.h"
+
 #include "game/map/map.h"
 #include "game/map/maptypes.h"
 #include "game/map/undoredomanager.h"
@@ -51,7 +53,7 @@
 //#include "animationprovider.h"
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
-
+#include "chat/chat_client.h"
 
 QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
 {
@@ -78,6 +80,10 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     TemplateModel::registerQml();
     TemplateManager::registerQml();
     
+    PattounX_engine::registerQml();
+    ChatClient::registerQml();
+
+
     // Register MapTypes namespace for QML
     qmlRegisterUncreatableMetaObject(MapTypes::staticMetaObject, "MapTypes", 1, 0, "MapTypes", "Error: only enums");
     

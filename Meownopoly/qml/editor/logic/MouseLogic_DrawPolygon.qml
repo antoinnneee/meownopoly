@@ -20,6 +20,16 @@ MouseLogic_Base {
     
     // Couleur de la zone en cours
     property string currentZoneColor: "#FF5722"
+
+    // Paramètres de la zone
+    property bool zoneExclusion: true
+    property string zoneName: ""
+    property real velocityX: 0.0
+    property real velocityY: 0.0
+    property real velocityStrength: 0.0
+    property real frictionStrength: 0.0
+    property real speedMultiplier: 1.0
+    property real accelerationMultiplier: 1.0
     
     // Référence au composant de prévisualisation (défini dans Editor.qml)
     property var polygonPreviewComponent: null
@@ -72,7 +82,7 @@ MouseLogic_Base {
     function clickedRight(mouse, drag) {
         // Fermer le polygone si on a au moins 3 points
         if (currentPolygonPoints.length >= 3) {
-            createExclusionZone()
+            createPhysicZone()
         } else {
             // Annuler le dessin
             cancelDrawing()
@@ -83,7 +93,7 @@ MouseLogic_Base {
     // Double-clic pour fermer le polygone
     function doubleClicked(mouse, drag) {
         if (currentPolygonPoints.length >= 3) {
-            createExclusionZone()
+            createPhysicZone()
         }
         mouse.accepted = true
     }
@@ -106,7 +116,7 @@ MouseLogic_Base {
     }
 
     // Créer la zone d'exclusion avec les points actuels
-    function createExclusionZone() {
+    function createPhysicZone() {
         if (currentPolygonPoints.length < 3) {
             console.log("Pas assez de points pour créer une zone d'exclusion")
             return
@@ -115,18 +125,27 @@ MouseLogic_Base {
         console.log("Création de la zone d'exclusion avec", currentPolygonPoints.length, "points")
         
         // Créer l'ItemSnapable pour la zone d'exclusion
-        var snapableParameters = ItemSnapableFactory.createExclusionZone()
+        var snapableParameters = ItemSnapableFactory.createPhysicZone()
         
-        // Copier les points dans l'polygonParameter
+        // Copier les points dans l'zoneParameter
         for (var i = 0; i < currentPolygonPoints.length; i++) {
-            snapableParameters.polygonParameter.addPoint(
+            snapableParameters.zoneParameter.addPoint(
                 currentPolygonPoints[i].x, 
                 currentPolygonPoints[i].y
             )
         }
         
         // Définir la couleur (utiliser l'assignation de propriété, pas le setter)
-        snapableParameters.polygonParameter.zoneColor = currentZoneColor
+        snapableParameters.zoneParameter.zoneColor = currentZoneColor
+
+        // Appliquer les nouveaux paramètres
+        snapableParameters.zoneParameter.zoneName = zoneName
+        snapableParameters.zoneParameter.exclusion = zoneExclusion
+        snapableParameters.zoneParameter.velocityDirection = Qt.vector2d(velocityX, velocityY)
+        snapableParameters.zoneParameter.velocityStrenght = velocityStrength
+        snapableParameters.zoneParameter.frictionStrenght = frictionStrength
+        snapableParameters.zoneParameter.speedMultiplier = speedMultiplier
+        snapableParameters.zoneParameter.accelerationMultiplier = accelerationMultiplier
         
         // Calculer les bounds pour le displayParameter
         var bounds = calculateBounds(currentPolygonPoints)
@@ -137,7 +156,7 @@ MouseLogic_Base {
         snapableParameters.displayParameter.zLayer = 1  // Sous les décorations et cases
         
         // Créer l'élément via TileLogic
-        logic.tileLogic.createExclusionZone(snapableParameters)
+        logic.tileLogic.createPhysicZone(snapableParameters)
         
         // Réinitialiser le dessin
         resetDrawing()
@@ -218,6 +237,17 @@ MouseLogic_Base {
     // Définir la couleur de la zone
     function setZoneColor(color) {
         currentZoneColor = color
+    }
+    
+    function setZoneProperties(params) {
+        if (params.name !== undefined) zoneName = params.name
+        if (params.exclusion !== undefined) zoneExclusion = params.exclusion
+        if (params.velocityX !== undefined) velocityX = params.velocityX
+        if (params.velocityY !== undefined) velocityY = params.velocityY
+        if (params.velocityStrength !== undefined) velocityStrength = params.velocityStrength
+        if (params.frictionStrength !== undefined) frictionStrength = params.frictionStrength
+        if (params.speedMultiplier !== undefined) speedMultiplier = params.speedMultiplier
+        if (params.accelerationMultiplier !== undefined) accelerationMultiplier = params.accelerationMultiplier
     }
 }
 

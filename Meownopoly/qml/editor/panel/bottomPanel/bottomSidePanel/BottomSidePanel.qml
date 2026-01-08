@@ -8,6 +8,10 @@ Rectangle {
 
     // --- Properties ---
     property bool blockEffectChangedSignal: false
+    onBlockEffectChangedSignalChanged: {
+        console.log("blockEffectChangedSignal changed for", blockEffectChangedSignal)
+    }
+
     property bool effectLocked  // prevent set effect on panel
 
     property bool isExpanded: true
@@ -27,10 +31,13 @@ Rectangle {
     property alias visualEffectsPanel : content.effectsPanel
     property alias caseConfigurationPanel: content.caseConfigurationPanel
     property alias connectionsConfigurationPanel: content.connectionsConfigurationPanel
+    property alias zoneConfigurationPanel: content.zoneConfigurationPanel
 
     // --- Signals ---
     signal effectChanged()
     signal connectionRequested(string kind)  // Propager les demandes de connexion
+    signal modelSelected(string name)
+    signal configurationChanged()
 
     // --- Bindings ---
     width : Screen.pixelDensity * 120
@@ -190,30 +197,57 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: resizeHandle.bottom
         anchors.bottom: parent.bottom
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        ScrollBar.vertical.width: content.effectsPanel.rightPadding
         clip: true
-
         BottomSidePanel_Content {
             id: content
             logic: root.logic
             width: scrollView.width
-            onEffectChanged: root.effectChanged()
 
+            onEffectChanged: {
+                console.log("effect changed")
+                if(root.blockEffectChangedSignal)
+                {
+                    console.log("apply effect cancel")
+                    return;
+                }
+                console.log("apply effect changed")
+                root.effectChanged()
+            }
             onConnectionRequested: function(kind) {
                 root.connectionRequested(kind)
+            }
+            onModelSelected: function(name) {
+                root.modelSelected(name)
+            }
+            onConfigurationChanged: {
+                root.configurationChanged()
             }
         }
     }
 
     // --- Functions ---
     function updateFromDisplayParameter(dispParam) {
+        console.log("updateFromDisplayParameter")
         if (effectLocked){
             effectChanged()
         }
         else
         {
-            blockEffectChangedSignal = true
+
+            root.blockEffectChangedSignal = true
             visualEffectsPanel.updateFromDisplayParameter(dispParam)
-            blockEffectChangedSignal = false
+            root.blockEffectChangedSignal = false
         }
+    }
+
+    // --- Functions ---
+    function updateSidePanel(snapableParameter) {
+        root.blockEffectChangedSignal = true
+
+        visualEffectsPanel.updateFromDisplayParameter(snapableParameter.displayParameter)
+        zoneConfigurationPanel.updateFromZoneParameter(snapableParameter.zoneParameter)
+       root. blockEffectChangedSignal = false
     }
 }

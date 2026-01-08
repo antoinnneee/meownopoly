@@ -63,7 +63,7 @@ Rectangle {
             TextField {
                 id: serverUrlField
                 Layout.fillWidth: true
-                placeholderText: "http://localhost:8080"
+                placeholderText: "https://localhost:8080"
                 color: "#ffffff"
                 
                 background: Rectangle {

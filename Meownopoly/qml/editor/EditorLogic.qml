@@ -5,9 +5,7 @@ import Game
 import Case
 import ItemSnapable
 import TileType
-import "../component"
-import "../component/snapable"
-import "../component/grid"
+import meowComponent
 
 import bottomMainPanel
 

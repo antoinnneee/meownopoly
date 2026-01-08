@@ -3,6 +3,7 @@ import QtQuick
 import EditorEnum
 import MapTypes
 import Game
+import Logger
 
 Item {
     id: keyController
@@ -24,82 +25,92 @@ Item {
         keyController.selectionPanel = selectionPanel
         keyController.escMenu = escMenu
         keyController.adminCommandPanel = adminCommandPanel
-        console.log("key Controller init")
+        Logger.info("key Controller init", "EditorController")
     }
 
     function handleKeyPress(event){
 
-        if (event.key === Qt.Key_Delete) {
-            var selectItem = logic.mouseLogic.selectedElements
-            if (selectItem.length === 0) {
+        switch(event.key) {
+            case (Qt.Key_Control) :
+                logic.mouseLogic.isControlPressed = true
                 event.accepted = true
-                return
-            }
-
-            // Attendre que toutes les animations de suppression soient terminées avant de sauvegarder
-            var pendingDeletions = selectItem.length
-
-            // Handler appelé quand chaque animation de suppression est terminée
-            var deletionHandler = function() {
-                pendingDeletions--
-                if (pendingDeletions === 0) {
-                    // Toutes les animations sont terminées, sauvegarder maintenant
-                    logic.saveMap(MapTypes.UNDOREDO)
+                break;
+            case (Qt.Key_Delete) :
+                var selectItem = logic.mouseLogic.selectedElements
+                if (selectItem.length === 0) {
+                    event.accepted = true
+                    return
                 }
-            }
 
-            // Connecter au signal elementDeleted de chaque élément et déclencher la suppression
-            for (var i = 0; i < selectItem.length; i++) {
-                var element = selectItem[i]
-                element.elementDeleted.connect(deletionHandler)
-                element.deleteRequest(false)
-            }
-            event.accepted = true
-        }
-        else if (event.key === Qt.Key_Escape) {
-            if (selectionPanel.isAssetSelected) {
-                selectionPanel.clearAssetSelection()
-                event.accepted = true
-            }
-            else if (selectionPanel){
+                // Attendre que toutes les animations de suppression soient terminées avant de sauvegarder
+                var pendingDeletions = selectItem.length
 
-            }
-            else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
-                logic.mouseLogic.unselectSelectedElements()
-                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+                // Handler appelé quand chaque animation de suppression est terminée
+                var deletionHandler = function() {
+                    pendingDeletions--
+                    if (pendingDeletions === 0) {
+                        // Toutes les animations sont terminées, sauvegarder maintenant
+                        logic.saveMap(MapTypes.UNDOREDO)
+                    }
+                }
+
+                // Connecter au signal elementDeleted de chaque élément et déclencher la suppression
+                for (var i = 0; i < selectItem.length; i++) {
+                    var element = selectItem[i]
+                    element.elementDeleted.connect(deletionHandler)
+                    element.deleteRequest(false)
+                }
                 event.accepted = true
-            } else {
-                // Afficher le menu d'échappement
-                escMenu.show()
+            break;
+
+            case (Qt.Key_Escape) :
+                if (selectionPanel.isAssetSelected) {
+                   selectionPanel.clearAssetSelection()
+                   event.accepted = true
+                } else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
+                   logic.mouseLogic.unselectSelectedElements()
+                   logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+                   event.accepted = true
+                } else {
+                   // Afficher le menu d'échappement
+                   escMenu.show()
+                   event.accepted = true
+                }
+            break;
+
+            case (Qt.Key_Y) :
+                if (logic.mouseLogic.isControlPressed)
+                {
+                   console.log("Redo requested via Ctrl+Y")
+                   Game.askNext()
+                   event.accepted = true
+                }
+            break;
+
+            case (Qt.Key_Z) :
+                if (logic.mouseLogic.isControlPressed)
+                {
+                   console.log("Undo requested via Ctrl+Z")
+                   Game.askPreview()
+                   event.accepted = true
+                }
+            break;
+            case (178):
+                adminCommandPanel.visible = !adminCommandPanel.visible
                 event.accepted = true
-            }
+            break;
         }
-        else if (event.key === Qt.Key_Control) {
-            logic.mouseLogic.isControlPressed = true
-        }
-        else if (event.key === Qt.Key_Y) {
-            if (logic.mouseLogic.isControlPressed)
-            {
-                console.log("Redo requested via Ctrl+Y")
-                Game.askNext()
-            }
-        }
-        else if (event.key === Qt.Key_Z) {
-            if (logic.mouseLogic.isControlPressed)
-            {
-                console.log("Undo requested via Ctrl+Z")
-                Game.askPreview()
-            }
-        }
-        else if (event.key === 178)
-        {
-            adminCommandPanel.visible = !adminCommandPanel.visible
-        }
+
     }
 
 
-    function handleKeyRelease(event){
-        logic.mouseLogic.isControlPressed = false
+    function handleKeyRelease(event) {
+
+        switch(event.key) {
+            case (Qt.Key_Control) :
+                logic.mouseLogic.isControlPressed = false
+                break;
+        }
 
     }
 }

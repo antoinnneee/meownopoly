@@ -25,3 +25,11 @@ Meownopoly/bin/*
 image_tools/anim_tree_00001.webp
 image_tools/output.webp
 image_tools/anim_tree_00037.webp
+Meownopoly/.qmlls.ini
+Meownopoly/.vscode/cmake-kits.json
+Meownopoly/.vscode/settings.json
+Meownopoly/.vscode/settings.json
+Meownopoly/.vscode/settings.json
+Meownopoly/.vscode/settings.json
+/chatServer/node_modules
+chatServer/chat.db

@@ -1,6 +1,6 @@
 import QtQuick 2.15
-import "../../component"
-import "../../component/grid"
+import "../../meowComponent"
+import "../../meowComponent/grid"
 
 ScrollLogic {
     required property GridManager editorGrid

@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import QtQuick.Dialogs
-import ui_item 1.0
+import ui_item
 
 
 CollapsableGroupBox {
@@ -12,6 +12,7 @@ CollapsableGroupBox {
     
     // Properties for the target decoration element
     property bool effectsLocked: false
+    property alias colorEffectsSection: colorEffectsSection
     
     // Signals
     signal effectChanged()
@@ -77,12 +78,19 @@ CollapsableGroupBox {
 
     function updateFromDisplayParameter(dispParam) {
       if (root.effectsLocked) return
-        
+
+
         // Update sliders from target values
         colorEffectsSection.brightnessSlider.value = dispParam.effectBrightness
         colorEffectsSection.contrastSlider.value = dispParam.effectContrast
         colorEffectsSection.saturationSlider.value = dispParam.effectSaturation
         colorEffectsSection.colorizationSlider.value = dispParam.effectColorization
+
+        // Update advanced effects (blur and shadow)
+        advancedEffectsSection.updateFromDisplayParameter(dispParam)
+
+        // Update rotation
+        rotationSection.rotationSlider.value = dispParam.rotationAngle
 
     }
 

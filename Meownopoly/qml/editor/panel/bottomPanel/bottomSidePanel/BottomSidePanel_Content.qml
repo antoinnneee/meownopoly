@@ -2,21 +2,22 @@ import QtQuick 2.15
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import visualEffectPanel
-import connectionConfigPanel
-import caseConfigPanel
+import meowComponent
+import editor
 
 ColumnLayout {
     id: panelContent
+    signal configurationChanged()
     signal effectChanged()
     signal connectionRequested(string kind)  // Propager les demandes de connexion
+    signal modelSelected(string name)
 
     property var logic
     property alias effectsPanel: effectsPanel
     property alias caseConfigurationPanel: caseConfigurationPanelSection
     property alias connectionsConfigurationPanel: connectionsConfigSection
+    property alias zoneConfigurationPanel: zoneConfigurationPanelSection
    // property alias transformSection: transformSection
-    property bool blockEffectChangedSignal: false
 
     VisualEffectsPanel {
         id: effectsPanel
@@ -25,10 +26,17 @@ ColumnLayout {
         Layout.fillWidth: true
 
         onEffectChanged: {
-            if (panelContent.blockEffectChangedSignal) {
-                return
-            }
             panelContent.effectChanged()
+        }
+    }
+
+    ModelSelectionPanel {
+        id: modelSelectionPanel
+        isCollapsed: true
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+        onModelSelected: function(name) {
+            panelContent.modelSelected(name)
         }
     }
 
@@ -63,6 +71,18 @@ ColumnLayout {
             panelContent.connectionRequested(kind)
         }
 
+    }
+
+    // Onglet Configuration Zone
+    ZoneConfigurationPanelSection {
+        id: zoneConfigurationPanelSection
+        isCollapsed: true
+        logic: panelContent.logic
+        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+        Layout.fillWidth: true
+        onConfigurationChanged: {
+            panelContent.configurationChanged()
+        }
     }
 
 

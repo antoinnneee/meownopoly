@@ -14,7 +14,6 @@ import zonePanel
 
 Rectangle {
     id: root
-
     // Properties
     property alias isExpanded : topToolbar.isExpanded
     property alias isSidePanelExpanded : topToolbar.isSidePanelExpanded

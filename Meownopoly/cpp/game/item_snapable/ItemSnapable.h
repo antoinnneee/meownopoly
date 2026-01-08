@@ -13,7 +13,7 @@
 
 #include "Displayparameter.h"
 #include "decorationparameter.h"
-#include "polygonParameter.h"
+#include "ZoneParameter.h"
 
 class ItemSnapable : public QObject
 {
@@ -23,10 +23,9 @@ class ItemSnapable : public QObject
     Q_PROPERTY(Case* caseData READ caseData WRITE setCaseData NOTIFY caseDataChanged FINAL)
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
-    Q_PROPERTY(PolygonParameter * polygonParameter READ polygonParameter WRITE setPolygonParameter NOTIFY polygonParameterChanged FINAL)
+    Q_PROPERTY(ZoneParameter * zoneParameter READ zoneParameter WRITE setZoneParameter NOTIFY zoneParameterChanged FINAL)
     Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(TileType tileType READ tileType WRITE setTileType NOTIFY tileTypeChanged FINAL)
-
 
 
 public:
@@ -38,8 +37,7 @@ public:
     enum TileType {
         CaseTile,
         DecorationTile,
-        ExclusionZone,
-        EffectZone,
+        PhysicZoneTile,
     };
     Q_ENUM(TileType)
 
@@ -49,8 +47,8 @@ public:
     void setDisplayParameter(DisplayParameter * displayParameter);
     DecorationParameter * decorationParameter() const;
     void setDecorationParameter(DecorationParameter * decorationParameter);
-    PolygonParameter * polygonParameter() const;
-    void setPolygonParameter(PolygonParameter * polygonParameter);
+    ZoneParameter * zoneParameter() const;
+    void setZoneParameter(ZoneParameter * zoneParameter);
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
 
@@ -87,7 +85,7 @@ signals:
     void caseDataChanged();
     void displayParameterChanged();
     void decorationParameterChanged();
-    void polygonParameterChanged();
+    void zoneParameterChanged();
 
     void uniqueIdChanged();
 
@@ -97,7 +95,7 @@ private :
     Case * m_caseData = nullptr;
     DisplayParameter * m_displayParameter = new DisplayParameter;
     DecorationParameter * m_decorationParameter = new DecorationParameter;
-    PolygonParameter * m_polygonParameter = new PolygonParameter;
+    ZoneParameter * m_zoneParameter = new ZoneParameter;
     QJsonObject m_json;
     QUuid m_uniqueId;
     TileType m_tileType;

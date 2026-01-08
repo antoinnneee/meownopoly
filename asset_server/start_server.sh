@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/
 
 echo "==================================="
 echo "  Serveur Meownopoly Resources"

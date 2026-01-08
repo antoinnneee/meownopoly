@@ -230,6 +230,7 @@ public:
     Q_INVOKABLE QStringList getAvailableBackgrounds() const;
 
 
+    Q_INVOKABLE QStringList getAvailableModels() const;
     Q_INVOKABLE bool isTransparent(float px, float py, QString path);
 
     Q_INVOKABLE QString getAppDataPath() const;

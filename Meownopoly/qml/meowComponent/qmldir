@@ -1,0 +1,18 @@
+module meowComponent
+AdminCommandPanel 1.0 AdminCommandPanel.qml
+GlobalMa 1.0 GlobalMa.qml
+Background 1.0 Background.qml
+GameScene 1.0 GameScene.qml
+Base_Board 1.0 Base_Board.qml
+Base_logic 1.0 Base_logic.qml
+Base_WorkArea 1.0 Base_WorkArea.qml
+Base_WheelHandler 1.0 Base_WheelHandler.qml
+SelectionRect 1.0 SelectionRect.qml
+GridManager 1.0 grid/GridManager.qml
+SnapableElement 1.0 snapable/SnapableElement.qml
+SnapableDecoration 1.0 snapable/SnapableDecoration.qml
+SnapableExclusionZone 1.0 snapable/SnapableExclusionZone.qml
+SnapableCaseTile 1.0 snapable/SnapableCaseTile.qml
+AssetPreviewCursor 1.0 preview/AssetPreviewCursor.qml
+LinkPreviewCursor 1.0 preview/LinkPreviewCursor.qml
+PolygonPreviewCursor 1.0 preview/PolygonPreviewCursor.qml

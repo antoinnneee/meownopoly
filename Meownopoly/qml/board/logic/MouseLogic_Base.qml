@@ -5,8 +5,7 @@ import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
 import UndoRedoManager
-import "../../component/snapable"
-import "../../component/grid"
+import meowComponent
 
 import bottomMainPanel
 
@@ -175,19 +174,6 @@ QtObject {
         console.log("main MA clicked : ", clickElement.length, " elements")
     }
 
-    function updateVisualEffectPanel(dispParam)
-    {
-        if (!logic.selectionPanel) {
-            console.log("[LOGIC] selectionPanel not available")
-            return
-        }
-        var editorSidePanel = logic.editorSidePanel
-        if (!editorSidePanel) {
-            console.log("[LOGIC] editorSidePanel not available")
-            return
-        }
-        editorSidePanel.updateFromDisplayParameter(dispParam)
-    }
     // Fonction pour mettre à jour la configuration de case dans le panneau
     function updateCaseConfiguration() {
         if (!logic.selectionPanel) {

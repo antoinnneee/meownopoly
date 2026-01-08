@@ -17,9 +17,9 @@ import DisplayParameter
 import DecorationParameter
 import ItemSnapable
 import "logic"
-import "../component"
-import "../component/snapable"
-import "../component/grid"
+import "../meowComponent"
+import "../meowComponent/snapable"
+import "../meowComponent/grid"
 
 WheelHandler {
     onWheel: (wheel) => {

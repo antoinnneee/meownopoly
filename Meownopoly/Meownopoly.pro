@@ -1,4 +1,4 @@
-QT += quick core qml widgets core-private quickcontrols2 network quick3d
+QT += quick core qml widgets core-private quickcontrols2 network quick3d sql websockets
 
 android:{
     QT += core-private
@@ -33,8 +33,12 @@ VPATH += cpp
 INCLUDEPATH += cpp
 
 SOURCES += \
-    cpp/game/item_snapable/polygonParameter.cpp \
     cpp/tools/uistyle.cpp \
+    cpp/game/item_snapable/ZoneParameter.cpp \
+    cpp/game/physics/collision2d.cpp \
+    cpp/game/physics/pattounx_body.cpp \
+    cpp/game/physics/pattounx_zone.cpp \
+    cpp/game/physics/pattounx_engine.cpp \
     tools/QtFolderCompressor/FolderCompressor.cpp \
     assetManager/asset_manager.cpp \
     game/case/Case.cpp \
@@ -79,8 +83,19 @@ SOURCES += \
 
 
 HEADERS += \
-    cpp/game/item_snapable/polygonParameter.h \
     cpp/tools/uistyle.h \
+    chat/chat_client.cpp \
+    chat/chat_crypto.cpp \
+    chat/chat_database.cpp \
+    chat/chat_worker.cpp \
+
+
+HEADERS += \
+    cpp/game/item_snapable/ZoneParameter.h \
+    cpp/game/physics/collision2d.h \
+    cpp/game/physics/pattounx_body.h \
+    cpp/game/physics/pattounx_zone.h \
+    cpp/game/physics/pattounx_engine.h \
     tools/QtFolderCompressor/FolderCompressor.h \
     assetManager/asset_manager.h \
     game/case/Case.h \
@@ -122,13 +137,22 @@ HEADERS += \
     game/template/templatefilemanager.h \
     game/template/templatemodel.h \
     game/template/templatemanager.h \
+    chat/chat_client.h \
+    chat/chat_crypto.h \
+    chat/chat_database.h \
+    chat/chat_worker.h \
 
-RESOURCES += qml.qrc
+RESOURCES += qml.qrc \
+    base_comp.qrc \
+    chat.qrc \
+    launcher.qrc \
+    other.qrc
 
 # CONFIG += qmlcache  # Désactivé car nécessite TARGETPATH pour Qt 6.10+
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH = $$PWD
+QML_IMPORT_PATH += $$PWD/qml
 
 # Additional import path used to resolve QML modules just for Qt Quick Designer
 QML_DESIGNER_IMPORT_PATH = $$PWD/case/

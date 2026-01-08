@@ -6,9 +6,7 @@ import QtQuick.Shapes
 import QtQuick.Dialogs
 import QtCore
 
-import "../component"
-import "../component/snapable"
-import "../component/grid"
+import meowComponent
 import "panel"
 import assetSelectionPanel
 
