@@ -33,6 +33,10 @@ VPATH += cpp
 INCLUDEPATH += cpp
 
 SOURCES += \
+    chat/chat_client.cpp \
+    chat/chat_crypto.cpp \
+    chat/chat_database.cpp \
+    chat/chat_worker.cpp \
     cpp/tools/uistyle.cpp \
     cpp/game/item_snapable/ZoneParameter.cpp \
     cpp/game/physics/collision2d.cpp \
@@ -81,16 +85,8 @@ SOURCES += \
     game/template/templatemodel.cpp \
     game/template/templatemanager.cpp \
 
-
 HEADERS += \
     cpp/tools/uistyle.h \
-    chat/chat_client.cpp \
-    chat/chat_crypto.cpp \
-    chat/chat_database.cpp \
-    chat/chat_worker.cpp \
-
-
-HEADERS += \
     cpp/game/item_snapable/ZoneParameter.h \
     cpp/game/physics/collision2d.h \
     cpp/game/physics/pattounx_body.h \

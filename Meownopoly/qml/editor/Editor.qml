@@ -447,6 +447,9 @@ Base_Board {
             gridManager: gameGrid
         }
         Component.onCompleted: {
+            console.log("CHECK UiStyle.z_WORKAREA ", UiStyle.z_WORKAREA)
+            console.log("CHECK UiStyle.z_HUD ", UiStyle.z_HUD)
+
             var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")
             gameScene.moveEntityToGridPosition(sphere, 0, 0)
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)

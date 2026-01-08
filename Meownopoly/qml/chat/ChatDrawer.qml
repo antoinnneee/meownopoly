@@ -291,14 +291,14 @@ Drawer {
                 id: messageList
                 anchors.fill: parent
                 anchors.margins: 8
-                cacheBuffer: 500  // Réduit de 1000 pour économiser la mémoire
+                // cacheBuffer: 500  // Réduit de 1000 pour économiser la mémoire
                 model: chatClient.messages
                 clip: true
                 spacing: 8
                 
                 // Optimisations de performance
                 highlightFollowsCurrentItem: false
-                // reuseItems: true  // Réutiliser les delegates pour économiser la mémoire
+                reuseItems: true  // Réutiliser les delegates pour économiser la mémoire
                 
                 // Animation de défilement fluide mais moins coûteuse
                 Behavior on contentY {
