@@ -36,6 +36,34 @@ Drawer {
         }
     }
 
+    function formatTimestamp(ts) {
+        if (!ts) return "--:--"
+        
+        let date = new Date(ts)
+        if (isNaN(date.getTime())) {
+            // Tentative de parsing si format ISO non standard (ex: de SQLite)
+            // SQLite utilise souvent yyyy-MM-dd HH:mm:ss
+            date = new Date(ts.replace(" ", "T"))
+            if (isNaN(date.getTime())) return ts
+        }
+
+        let now = new Date()
+        let isToday = date.getDate() === now.getDate() &&
+                      date.getMonth() === now.getMonth() &&
+                      date.getFullYear() === now.getFullYear()
+
+        let hours = date.getHours().toString().padStart(2, '0')
+        let minutes = date.getMinutes().toString().padStart(2, '0')
+
+        if (isToday) {
+            return hours + ":" + minutes
+        } else {
+            let day = date.getDate().toString().padStart(2, '0')
+            let month = (date.getMonth() + 1).toString().padStart(2, '0')
+            return day + "/" + month + " " + hours + ":" + minutes
+        }
+    }
+
     FileDialog {
         id: imageDialog
         title: "Choose an image"
@@ -393,7 +421,7 @@ Drawer {
                             }
 
                             Text {
-                                text: "dd-mm:hh:mm"
+                                text: chatDrawer.formatTimestamp(messageDelegate.modelData.timestamp)
                                 font.pixelSize: 8
                                 color: "#666666"
                             }
