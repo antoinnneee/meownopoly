@@ -209,6 +209,25 @@ AssetModel* AssetManager::getAssetModel(const QString &category, const QString &
     return filteredModel;
 }
 
+// Helper function to create a fallback Asset
+Asset createFallbackAsset()
+{
+    Asset fallback;
+    fallback.path = QStringLiteral("qrc:/asset/nopic.webp");
+    fallback.type = QStringLiteral("fallback");
+    fallback.category = QStringLiteral("system");
+    fallback.ratioWidth = 1;
+    fallback.ratioHeight = 1;
+    fallback.width = 256;
+    fallback.height = 256;
+    fallback.id = QStringLiteral("nopic");
+    fallback.filename = QStringLiteral("nopic.webp");
+    fallback.extension = QStringLiteral("webp");
+    fallback.animated = false;
+    fallback.frameCount = 1;
+    return fallback;
+}
+
 // Implémentation des méthodes de AssetModel pour accéder directement aux assets
 Asset AssetModel::getAssetById(const QString &id) const
 {
@@ -218,7 +237,7 @@ Asset AssetModel::getAssetById(const QString &id) const
         }
     }
     ASSET_ERROR("Asset not found with id:" << id);
-    return Asset(); // Retourne un asset vide si non trouvé
+    return createFallbackAsset(); // Retourne l'asset fallback si non trouvé
 }
 
 Asset AssetModel::getAssetByFilename(const QString &filename) const
@@ -229,7 +248,7 @@ Asset AssetModel::getAssetByFilename(const QString &filename) const
         }
     }
     ASSET_ERROR("Asset not found with filename:" << filename);
-    return Asset(); // Retourne un asset vide si non trouvé
+    return createFallbackAsset(); // Retourne l'asset fallback si non trouvé
 }
 
 // Helper function to convert Asset to QVariantMap for QML
@@ -251,6 +270,25 @@ QVariantMap assetToVariantMap(const Asset &asset)
     return map;
 }
 
+// Helper function to create a fallback asset QVariantMap
+QVariantMap createFallbackAssetMap(const QString &defaultPath)
+{
+    QVariantMap map;
+    map["path"] = defaultPath;
+    map["type"] = "fallback";
+    map["category"] = "system";
+    map["ratioWidth"] = 1;
+    map["ratioHeight"] = 1;
+    map["width"] = 256;
+    map["height"] = 256;
+    map["id"] = "nopic";
+    map["filename"] = "nopic.webp";
+    map["extension"] = "webp";
+    map["animated"] = false;
+    map["frameCount"] = 1;
+    return map;
+}
+
 // Implémentation des méthodes de AssetManager
 QVariantMap AssetManager::getAssetByFilename(const QString &category, const QString &type, const QString &filename)
 {
@@ -258,11 +296,18 @@ QVariantMap AssetManager::getAssetByFilename(const QString &category, const QStr
     
     AssetModel *model = getAssetModel(category, type);
     if (model == nullptr) {
-        ASSET_ERROR("No model found for" << category << type);
-        return QVariantMap();
+        ASSET_ERROR("No model found for" << category << type << ", returning fallback");
+        return createFallbackAssetMap(getDefaultAssetPath());
     }
     
     Asset asset = model->getAssetByFilename(filename);
+    
+    // Si l'asset n'est pas trouvé (id vide), retourner le fallback
+    if (asset.id.isEmpty()) {
+        ASSET_ERROR("Asset not found with filename:" << filename << ", returning fallback");
+        return createFallbackAssetMap(getDefaultAssetPath());
+    }
+    
     return assetToVariantMap(asset);
 }
 
@@ -272,12 +317,18 @@ QVariantMap AssetManager::getAssetById(const QString &category, const QString &t
     
     AssetModel *model = getAssetModel(category, type);
     if (model == nullptr) {
-        ASSET_ERROR("No model found for" << category << type);
-        return QVariantMap();
+        ASSET_ERROR("No model found for" << category << type << ", returning fallback");
+        return createFallbackAssetMap(getDefaultAssetPath());
     }
     
     Asset asset = model->getAssetById(id);
-    //qDebug()<< asset.path;
+    
+    // Si l'asset n'est pas trouvé (id vide), retourner le fallback
+    if (asset.id.isEmpty()) {
+        ASSET_ERROR("Asset not found with id:" << id << ", returning fallback");
+        return createFallbackAssetMap(getDefaultAssetPath());
+    }
+    
     return assetToVariantMap(asset);
 }
 
@@ -287,14 +338,14 @@ QVariantMap AssetManager::getRandomAsset(const QString &category, const QString 
     
     AssetModel *model = getAssetModel(category, type);
     if (model == nullptr) {
-        ASSET_ERROR("No model found for" << category << type);
-        return QVariantMap();
+        ASSET_ERROR("No model found for" << category << type << ", returning fallback");
+        return createFallbackAssetMap(getDefaultAssetPath());
     }
     
     int rowCount = model->rowCount();
     if (rowCount == 0) {
-        ASSET_ERROR("Model is empty for" << category << type);
-        return QVariantMap();
+        ASSET_ERROR("Model is empty for" << category << type << ", returning fallback");
+        return createFallbackAssetMap(getDefaultAssetPath());
     }
     
     // Générer un index aléatoire entre 0 et rowCount - 1
@@ -309,8 +360,8 @@ QVariantMap AssetManager::getRandomAsset(const QString &category, const QString 
         return assetToVariantMap(asset);
     }
     
-    ASSET_ERROR("Failed to retrieve asset at index" << randomIndex);
-    return QVariantMap();
+    ASSET_ERROR("Failed to retrieve asset at index" << randomIndex << ", returning fallback");
+    return createFallbackAssetMap(getDefaultAssetPath());
 }
 
 QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
@@ -321,11 +372,17 @@ QString AssetManager::getAssetPath(const QString &category, const QString &type,
     
     AssetModel *model = getAssetModel(category, type);
     if (model == nullptr) {
-        ASSET_ERROR("Asset not valid, returning empty path for" << category << type << id);
-        return "";
+        ASSET_ERROR("Asset not valid, returning fallback for" << category << type << id);
+        return getDefaultAssetPath();
     }
     
     Asset asset = model->getAssetById(id);
+    
+    // Si l'asset n'est pas trouvé (id vide), retourner le fallback
+    if (asset.id.isEmpty()) {
+        ASSET_ERROR("Asset not found, returning fallback for" << category << type << id);
+        return getDefaultAssetPath();
+    }
 
     return asset.path;
 }
@@ -333,15 +390,34 @@ QString AssetManager::getAssetPath(const QString &category, const QString &type,
 QString AssetManager::getAnimatedGifPath(const QString &category, const QString &type, const QString &id)
 {
     qDebug() << "Getting animated GIF path for category:" << category << "type:" << type << "id:" << id;
-    qDebug() << buildAssetPath(category, type, id + "-animated.webp");
-
-    return buildAssetPath(category, type, id + "-animated.webp");
+    
+    QString animatedPath = buildAssetPath(category, type, id + "-animated.webp");
+    
+    // Vérifier si le fichier animé existe
+    QString localPath = animatedPath;
+    if (localPath.startsWith("file:///")) {
+        localPath = localPath.mid(8);
+    }
+    
+    QFile animatedFile(localPath);
+    if (!animatedFile.exists()) {
+        ASSET_ERROR("Animated asset not found:" << animatedPath << ", returning fallback");
+        return getDefaultAssetPath();
+    }
+    
+    qDebug() << animatedPath;
+    return animatedPath;
 }
 
 void AssetManager::reloadAssets()
 {
     ASSET_DEBUG("Forcing asset reload...");
     loadAssets();
+}
+
+QString AssetManager::getDefaultAssetPath() const
+{
+    return QStringLiteral("qrc:/asset/nopic.webp");
 }
 
 
@@ -457,6 +533,18 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         int frameCount = assetObj["frameCount"].toInt(1);
 
         QString fullPath = buildAssetPath(categoryName, typeName, filename);
+        
+        // Vérifier que le fichier existe, sinon utiliser l'asset par défaut
+        QString localPath = fullPath;
+        if (localPath.startsWith("file:///")) {
+            localPath = localPath.mid(8);
+        }
+        
+        QFile assetFile(localPath);
+        if (!assetFile.exists()) {
+            ASSET_ERROR("Asset file not found:" << localPath << ", using fallback");
+            fullPath = getDefaultAssetPath();
+        }
 
         // Add to appropriate model
         // todo: select model from variable, list with type and model
@@ -489,6 +577,7 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
 
 
         if (targetModel) {
+
             targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename, extension, animated, frameCount);
         }
     }

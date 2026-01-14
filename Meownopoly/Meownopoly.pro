@@ -130,6 +130,7 @@ HEADERS += \
     chat/chat_worker.h \
 
 RESOURCES += qml.qrc \
+    asset.qrc \
     base_comp.qrc \
     chat.qrc \
     launcher.qrc \

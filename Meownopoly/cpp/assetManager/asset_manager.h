@@ -14,7 +14,7 @@
 #include <QJsonDocument>
 
 // Debug defines
-#define ENABLE_ASSET_DEBUG 0
+#define ENABLE_ASSET_DEBUG 1
 
 #if ENABLE_ASSET_DEBUG
     #define ASSET_DEBUG(msg) qDebug() << "[ASSET_DEBUG]" << msg
@@ -203,6 +203,13 @@ public:
     Q_INVOKABLE bool isAssetValid(const QString &category, const QString &type, const QString &id);
     
     Q_INVOKABLE void reloadAssets();
+    
+    /**
+     * @brief Retourne le chemin de l'image par défaut (nopic.webp)
+     * @return Chemin vers l'asset de fallback dans les ressources Qt
+     * @note Utilisé automatiquement quand un asset n'est pas trouvé
+     */
+    Q_INVOKABLE QString getDefaultAssetPath() const;
 
     // ==================== GÉNÉRATION DE MÉTADONNÉES ====================
     

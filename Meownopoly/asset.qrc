@@ -1,3 +1,5 @@
 <RCC>
-    <qresource prefix="/"/>
+    <qresource prefix="/">
+        <file>asset/nopic.webp</file>
+    </qresource>
 </RCC>
