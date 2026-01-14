@@ -48,9 +48,12 @@
 #include "tools/cursor_manager.h"
 #include "chat/chat_client.h"
 
+#include <QImageWriter>
+
 QmlApp::QmlApp(QWindow *parent)
     : QQmlApplicationEngine(parent)
 {
+    // qDebug() << QImageWriter::supportedImageFormats();
     QQuickStyle::setStyle("Material");
     Game::registerQml();
     MeowStyle::registerQml();
@@ -67,7 +70,7 @@ QmlApp::QmlApp(QWindow *parent)
     CursorManager::registerQml();
     UndoRedoManager::registerQml();
     PattounX_engine::registerQml();
-    ChatClient::registerQml();
+    ChatClient::registerQml(this);
 
 
     // Register MapTypes namespace for QML

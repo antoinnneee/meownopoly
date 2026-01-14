@@ -10,6 +10,8 @@
 #include "chat_crypto.h"
 #include "chat_database.h"
 #include "chat_worker.h"
+#include "chat_image_provider.h"
+#include <QQmlEngine>
 
 class ChatClient : public QObject
 {
@@ -33,8 +35,11 @@ public:
     Q_INVOKABLE void loadHistory();
     Q_INVOKABLE void requestHistory(int beforeId = -1);
 
-    static void registerQml() {
+    static void registerQml(QQmlEngine *engine = nullptr) {
         qmlRegisterType<ChatClient>("Meownopoly.Chat", 1, 0, "ChatClient");
+        if (engine) {
+            engine->addImageProvider(QLatin1String("chat_images"), new ChatImageProvider());
+        }
     }
 
 signals:
@@ -53,6 +58,7 @@ private:
     void handleNewMessage(const QJsonObject &payload);
     void handleHistoryResult(const QJsonObject &payload);
     void sendWebSocketMessage(const QJsonObject &message);
+    QString processMessageText(const QString &text);
     
     // Worker thread for WebSocket
     QThread *m_workerThread;

@@ -1,4 +1,5 @@
 #include "chat_client.h"
+#include "chat_image_provider.h"
 #include <QJsonDocument>
 #include <QDebug>
 #include <QImage>
@@ -151,11 +152,12 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
             // Decrypt for UI
             QByteArray plain = ChatCrypto::decrypt(cipher, m_sessionKey, nonce);
             QString text = QString::fromUtf8(plain);
+            QString processedText = processMessageText(text);
             
             QVariantMap message;
             message["sender"] = senderId;
-            message["text"] = text;
-            message["isImage"] = text.startsWith("data:image/");
+            message["text"] = processedText;
+            message["isImage"] = processedText.startsWith("image://");
             message["timestamp"] = ts;
             m_messages.append(message);
         }
@@ -179,11 +181,12 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
     // Decrypt for UI
     QByteArray plain = ChatCrypto::decrypt(cipher, m_sessionKey, nonce);
     QString text = QString::fromUtf8(plain);
+    QString processedText = processMessageText(text);
     
     QVariantMap msg;
     msg["sender"] = senderId;
-    msg["text"] = text;
-    msg["isImage"] = text.startsWith("data:image/");
+    msg["text"] = processedText;
+    msg["isImage"] = processedText.startsWith("image://");
     msg["timestamp"] = ts;
     m_messages.append(msg);
     emit messagesChanged();
@@ -230,9 +233,9 @@ void ChatClient::sendImage(const QString &filePath) {
     QByteArray compressedData;
     QBuffer buffer(&compressedData);
     buffer.open(QIODevice::WriteOnly);
-    img.save(&buffer, "JPG", 90); // 90% quality
+    img.save(&buffer, "WEBP", 90); // 90% quality
 
-    QString base64 = QString("data:image/jpeg;base64,%1").arg(QString(compressedData.toBase64()));
+    QString base64 = QString("data:image/WEBP;base64,%1").arg(QString(compressedData.toBase64()));
     
     QByteArray nonce = ChatCrypto::generateNonce();
     QByteArray cipher = ChatCrypto::encrypt(base64.toUtf8(), m_sessionKey, nonce);
@@ -261,11 +264,12 @@ void ChatClient::loadHistory() {
         
         QByteArray plain = ChatCrypto::decrypt(cipher, m_sessionKey, nonce);
         QString text = QString::fromUtf8(plain);
+        QString processedText = processMessageText(text);
         
         QVariantMap msg;
         msg["sender"] = m["sender_id"];
-        msg["text"] = text;
-        msg["isImage"] = text.startsWith("data:image/");
+        msg["text"] = processedText;
+        msg["isImage"] = processedText.startsWith("image://");
         msg["timestamp"] = m["timestamp"];
         m_messages.append(msg);
     }
@@ -316,11 +320,12 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
         // Decrypt for UI
         QByteArray plain = ChatCrypto::decrypt(cipher, m_sessionKey, nonce);
         QString text = QString::fromUtf8(plain);
+        QString processedText = processMessageText(text);
         
         QVariantMap message;
         message["sender"] = senderId;
-        message["text"] = text;
-        message["isImage"] = text.startsWith("data:image/");
+        message["text"] = processedText;
+        message["isImage"] = processedText.startsWith("image://");
         message["timestamp"] = ts;
         olderMessages.append(message);
     }
@@ -332,4 +337,20 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
     
     emit messagesChanged();
     qDebug() << "[ChatClient] Loaded" << historyArray.size() << "messages from server history";
+}
+
+QString ChatClient::processMessageText(const QString &text) {
+    if (text.startsWith("data:image/")) {
+        int commaIndex = text.indexOf(',');
+        if (commaIndex != -1) {
+            QString base64Data = text.mid(commaIndex + 1);
+            QByteArray data = QByteArray::fromBase64(base64Data.toUtf8());
+            QImage img = QImage::fromData(data);
+            if (!img.isNull()) {
+                QString id = ChatImageProvider::addImage(img);
+                return QString("image://chat_images/%1").arg(id);
+            }
+        }
+    }
+    return text;
 }

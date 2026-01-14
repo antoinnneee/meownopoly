@@ -425,7 +425,6 @@ Drawer {
                             mipmap: true   // Utiliser le mipmapping pour les redimensionnements
                             // autoTransform: true
                             
-                            sourceSize.height:height
                             sourceSize.width: width
                             Rectangle {
                                 anchors.fill: parent
