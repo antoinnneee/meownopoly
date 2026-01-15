@@ -97,32 +97,17 @@ void PattounX_engine::clearBodies()
 
 // --- Gestion des Zones ---
 
-PattounX_zone* PattounX_engine::createZone(const QString& id)
+PattounX_zone* PattounX_engine::createZone(ItemSnapable* snapable)
 {
+    if (!snapable) return nullptr;
+    QString id = snapable->uniqueId().toString();
+
     if (m_zones.contains(id)) {
         qWarning() << "[PattounX_engine] Zone with id" << id << "already exists";
         return m_zones[id];
     }
 
-    PattounX_zone* zone = new PattounX_zone(id, this);
-    m_zones[id] = zone;
-
-    if (m_debugMode) {
-        qDebug() << "[PattounX_engine] Created zone:" << id;
-    }
-
-    emit zoneCountChanged();
-    return zone;
-}
-
-PattounX_zone* PattounX_engine::createZone(const QString& id, ZoneParameter *zoneParam)
-{
-    if (m_zones.contains(id)) {
-        qWarning() << "[PattounX_engine] Zone with id" << id << "already exists";
-        return m_zones[id];
-    }
-
-    PattounX_zone* zone = new PattounX_zone(id, *zoneParam, this);
+    PattounX_zone* zone = new PattounX_zone(snapable, this);
     m_zones[id] = zone;
 
     if (m_debugMode) {
@@ -202,10 +187,9 @@ void PattounX_engine::setZonesFromSnapables(const QVariantList& snapables)
         }
         
         // Créer la zone
-        QString zoneId = QString("zone_%1").arg(zoneIndex++);
-        PattounX_zone* zone = createZone(zoneId, zoneParam);
+        PattounX_zone* zone = createZone(snapable);
 
-        if (m_debugMode) {
+        if (m_debugMode && zone) {
             qDebug() << "[PattounX_engine] Loaded zone from snapable:"
                      << "points:" << zoneParam->pointCount();
         }

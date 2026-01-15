@@ -85,8 +85,7 @@ public:
      * @param id Identifiant unique
      * @return Pointeur vers la nouvelle zone (gérée par le moteur)
      */
-    Q_INVOKABLE PattounX_zone* createZone(const QString& id);
-    PattounX_zone* createZone(const QString& id, ZoneParameter *zoneParam);
+    Q_INVOKABLE PattounX_zone* createZone(ItemSnapable* snapable);
 
     /**
      * @brief Supprime une zone physique
