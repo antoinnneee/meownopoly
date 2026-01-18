@@ -399,6 +399,22 @@ SnapableElement {
                         var newLocalY = controlPoint.y + controlPoint.height / 2
                         var newGridX = (newLocalX + root.offsetX) / root.gridManager.gridSize
                         var newGridY = (newLocalY + root.offsetY) / root.gridManager.gridSize
+                        /*
+                        if (newLocalX < 0) {
+                            var xoffset = Math.floor(-newLocalX / root.gridManager.gridSize) +1
+                            newGridX = newGridX - xoffset
+                            console.log("xoffset : " + xoffset + "gridSize : " + root.gridManager.gridSize)
+                        }
+                        if (newLocalY < 0) {
+                            var yoffset = Math.floor(-newLocalY / root.gridManager.gridSize) +1
+                            newGridY = newGridY - yoffset
+                            console.log("yoffset : " + yoffset)
+                        }
+                        */
+                        
+                        console.log("newLocalX : " + newLocalX + " : " + newLocalY)
+                        console.log("newGridX : " + newGridX + " : " + newGridY)
+
                         
                         // Mettre à jour le point dans les données
                         root.updatePointPosition(controlPoint.pointIndex, newGridX, newGridY)
@@ -435,6 +451,7 @@ SnapableElement {
     }
     
     function updatePointPosition(idx, newX, newY) {
+        console.log("updatePointPosition : " + idx + " : " + newX + ", " + newY)
         if (!snapableParameters.zoneParameter) return
         var points = snapableParameters.zoneParameter.polygonPoints
         if (idx >= 0 && idx < points.length) {
@@ -471,7 +488,8 @@ SnapableElement {
             minY = Math.min(minY, points[i].y)
             maxY = Math.max(maxY, points[i].y)
         }
-        
+        console.log("updateDisplayBounds : " + minX + ", " + minY + " : " + maxX + ", " + maxY)
+        console.log("ceil x : " + Math.ceil(maxX - minX) + " y : " + Math.ceil(maxY - minY))
         // Mettre à jour les previous positions de grille AVANT de changer le displayParameter
         // pour éviter que onGridPosXChanged/onGridPosYChanged ne déplace les points
         var newGridPosX = Math.floor(minX)
@@ -482,8 +500,8 @@ SnapableElement {
         // Mettre à jour le displayParameter
         snapableParameters.displayParameter.gridRelativePositionX = newGridPosX
         snapableParameters.displayParameter.gridRelativePositionY = newGridPosY
-        snapableParameters.displayParameter.unitSizeWidth = Math.ceil(maxX - minX) + 1
-        snapableParameters.displayParameter.unitSizeHeight = Math.ceil(maxY - minY) + 1
+        snapableParameters.displayParameter.unitSizeWidth = Math.ceil(maxX) - newGridPosX
+        snapableParameters.displayParameter.unitSizeHeight = Math.ceil(maxY) - newGridPosY
     }
     
     // Indicateur de nom de zone (optionnel)
