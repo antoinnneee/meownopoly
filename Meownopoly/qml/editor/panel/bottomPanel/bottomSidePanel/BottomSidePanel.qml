@@ -92,6 +92,7 @@ Rectangle {
             property real startHeight: 0
 
             property int minSize : 100
+            property int maxSize : root.parent.height
 
             property bool isHorizontal: false
             // property bool isStart: modelData.isStart
@@ -127,8 +128,9 @@ Rectangle {
 
                     var newSize = isStart ? startSize - delta : startSize + delta
                     var minSize = resizeMouseArea.minSize
+                    var maxSize = resizeMouseArea.maxSize
 
-                    if (newSize >= minSize) {
+                    if (newSize >= minSize && newSize <= maxSize) {
                         if (isHorizontal) {
                             root.width = newSize
                             if (isStart) {
