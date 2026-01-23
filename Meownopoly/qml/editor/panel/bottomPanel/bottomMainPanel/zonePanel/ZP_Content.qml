@@ -81,8 +81,9 @@ EBP_Content {
 
                 // Type de zone
                 Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredWidth: 100
+                    Layout.preferredHeight: Screen.pixelDensity * 20
+                    Layout.alignment: Qt.AlignHCenter
                     radius: 6
                     color: root.currentZoneType === "exclusion" ? "#8B0000" : "#2a2a2a"
                     border.color: root.currentZoneType === "exclusion" ? "#FF6B6B" : "#3a3a3a"
@@ -121,8 +122,9 @@ EBP_Content {
                 }
 
                 Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredWidth: 100
+                    Layout.preferredHeight: Screen.pixelDensity * 20
+                    Layout.alignment: Qt.AlignHCenter
                     radius: 6
                     color: root.currentZoneType === "effect" ? "#1B4F72" : "#2a2a2a"
                     border.color: root.currentZoneType === "effect" ? "#5DADE2" : "#3a3a3a"
@@ -705,8 +707,9 @@ EBP_Content {
 
                 // Bouton Dessiner
                 Rectangle {
-                    Layout.fillWidth: true
+                    Layout.preferredWidth: 120
                     Layout.preferredHeight: 70
+                    Layout.alignment: Qt.AlignHCenter
                     radius: 8
                     color: root.isDrawModeActive ? "#8B0000" : colorPicker.selectedColor
                     border.color: Qt.lighter(colorPicker.selectedColor, 1.5)
