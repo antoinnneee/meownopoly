@@ -9,36 +9,34 @@ import Case
 import ItemSnapable
 import meowComponent
 import "panel"
-import caseSelectionPanel
-import assetSelectionPanel
 import MapInfo
 import EditorEnum
 
 WheelHandler {
                  property Base_logic logic
-    onWheel: (wheel)=> {
-                 if (wheel.angleDelta.y > 0)
-                 {
-                     logic.scrollLogic.scrollUp(wheel)
-                 }
-                 else if (wheel.angleDelta.y < 0)
-                 {
-                     logic.scrollLogic.scrollDown(wheel)
-                 }
-                 else if (wheel.angleDelta.x > 0)
-                 {
-                     logic.scrollLogic.scrollRight(wheel)
-                 }
-                 else if (wheel.angleDelta.x < 0)
-                 {
-                     logic.scrollLogic.scrollLeft(wheel)
-                 }
-                 for (var i = 0; i < logic.snapableTilesList.length; i++) {
-                     if (logic.snapableTilesList[i]) {
-                         logic.snapableTilesList[i].isSelected = false
-                         logic.snapableTilesList[i].snapToGridFromGridPos()
-                     }
-                 }
+                 onWheel: (wheel)=> {
+                                  if (wheel.angleDelta.y > 0)
+                                  {
+                                      logic.scrollLogic.scrollUp(wheel)
+                                  }
+                                  else if (wheel.angleDelta.y < 0)
+                                  {
+                                      logic.scrollLogic.scrollDown(wheel)
+                                  }
+                                  else if (wheel.angleDelta.x > 0)
+                                  {
+                                      logic.scrollLogic.scrollRight(wheel)
+                                  }
+                                  else if (wheel.angleDelta.x < 0)
+                                  {
+                                      logic.scrollLogic.scrollLeft(wheel)
+                                  }
+                                  for (var i = 0; i < logic.snapableTilesList.length; i++) {
+                                      if (logic.snapableTilesList[i]) {
+                                          // logic.snapableTilesList[i].isSelected = false
+                                          logic.snapableTilesList[i].snapToGridFromGridPos()
+                                      }
+                                  }
                  
-             }
+                 }
 }

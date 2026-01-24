@@ -134,10 +134,6 @@ SnapableElement {
     }
 
     // --- Functions ---
-    // Fonction pour synchroniser les connexions depuis les données C++ vers l'interface QML
-    function syncConnectionsFromCaseData() {
-    }
-
     function isTransparent(mouse){
 
         var deltaHeight = tileImage.height - tileImage.paintedHeight
