@@ -40,17 +40,29 @@ Item {
     signal gridPressed(var position)
     signal gridClicked(var position)
     signal gridRightClicked(var position)
+    // Signal émis quand un élément sélectionné a été snappé (pour recréer les bindings)
+    signal selectedElementSnapped(var element)
 
 
     // Fonction alternative qui snap directement un élément (plus pratique)
     function snapElement2(element) {
         if (!snapToGrid) return
-        var posGridX = element.snapableParameters.displayParameter.gridRelativePositionX * gridSize
-        var posGridY = element.snapableParameters.displayParameter.gridRelativePositionY * gridSize
-        var elementWidth = element.snapableParameters.displayParameter.unitSizeWidth * gridSize
-        var elementHeight = element.snapableParameters.displayParameter.unitSizeHeight * gridSize
-        element.x = posGridX
-        element.y = posGridY
+        
+        // Calculer la position snappée en pixels
+        var snappedX = element.snapableParameters.displayParameter.gridRelativePositionX * gridSize
+        var snappedY = element.snapableParameters.displayParameter.gridRelativePositionY * gridSize
+        
+        if (element.isSelected) {
+            // Élément sélectionné : émettre un signal pour que MouseLogic recréée les bindings
+            // après avoir mis à jour la position directement
+            element.x = snappedX
+            element.y = snappedY
+            selectedElementSnapped(element)
+        } else {
+            // Élément non sélectionné : assigner directement
+            element.x = snappedX
+            element.y = snappedY
+        }
     }
 
     // Fonction pour obtenir la position de grille la plus proche
