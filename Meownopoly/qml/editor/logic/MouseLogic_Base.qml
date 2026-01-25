@@ -380,7 +380,6 @@ QtObject {
     // Fonction pour recréer les bindings d'un élément après un snap (appelée via signal)
     function rebindElement(element) {
         if (!element) return
-        console.log("Rebind element : ", element)
 
         // Vérifier que l'élément est bien dans la liste des éléments sélectionnés
         var found = false

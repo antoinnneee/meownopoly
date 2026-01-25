@@ -160,6 +160,11 @@ EBP_Content {
                         onClicked: root.switchZoneType("effect")
                     }
                 }
+
+                // Espaceur pour pousser vers le haut
+                Item {
+                    Layout.fillHeight: true
+                }
             }
 
             // Séparateur vertical
@@ -221,13 +226,11 @@ EBP_Content {
                 // Aperçu couleur + Palette
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
                     spacing: 12
 
                     // Aperçu de la couleur sélectionnée
                     ColumnLayout {
                         Layout.preferredWidth: 60
-                        Layout.preferredHeight: 50
                         spacing: 6
 
                         Text {
@@ -239,7 +242,7 @@ EBP_Content {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.fillHeight: true
+                            Layout.preferredHeight: colorPaletteGrid.height
                             radius: 8
                             color: colorPicker.selectedColor
                             border.color: Qt.lighter(colorPicker.selectedColor, 1.5)
@@ -262,7 +265,6 @@ EBP_Content {
                     // Grille de couleurs
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
                         spacing: 6
 
                         Text {
@@ -273,8 +275,8 @@ EBP_Content {
                         }
 
                         Grid {
+                            id: colorPaletteGrid
                             Layout.fillWidth: true
-                            Layout.fillHeight: true
                             columns: 6
                             spacing: 4
 
@@ -311,6 +313,11 @@ EBP_Content {
                             }
                         }
                     }
+                }
+
+                // Espaceur pour pousser tout vers le haut et éviter l'étirement
+                Item {
+                    Layout.fillHeight: true
                 }
             }
 
@@ -629,6 +636,11 @@ EBP_Content {
                             font.bold: true
                         }
                     }
+                }
+
+                // Espaceur pour pousser vers le haut
+                Item {
+                    Layout.fillHeight: true
                 }
             }
 

@@ -11,7 +11,6 @@ GroupBox {
     property alias velocityDirectionX: velocityPicker.directionX
     property alias velocityDirectionY: velocityPicker.directionY
     property alias velocityStrength: velocityStrengthSlider.value
-    property alias frictionStrength: frictionStrengthSlider.value
     
     // Signal
     signal configurationChanged()
@@ -25,7 +24,6 @@ GroupBox {
       velocityPicker.directionX = zoneParam.velocityDirection.x
       velocityPicker.directionY = zoneParam.velocityDirection.y
       velocityStrengthSlider.value = zoneParam.velocityStrenght
-      frictionStrengthSlider.value = zoneParam.frictionStrenght
     }
     
     background: Rectangle {
@@ -184,96 +182,6 @@ GroupBox {
                     }
                 }
                 
-                // Friction Strength
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-                    
-                    Text {
-                        text: qsTr("Force Friction")
-                        color: "#e67e22"
-                        font.pixelSize: 11
-                        font.bold: true
-                    }
-                    
-                    RowLayout {
-                        spacing: 8
-                        Slider {
-                            id: frictionStrengthSlider
-                            Layout.fillWidth: true
-                            from: 0.0
-                            to: 1.0
-                            stepSize: 0.01
-                            value: 0.0
-                            
-                            background: Rectangle {
-                                x: frictionStrengthSlider.leftPadding
-                                y: frictionStrengthSlider.topPadding + frictionStrengthSlider.availableHeight / 2 - height / 2
-                                width: frictionStrengthSlider.availableWidth
-                                height: 6
-                                radius: 3
-                                color: "#1a1a1a"
-                                
-                                Rectangle {
-                                    width: frictionStrengthSlider.visualPosition * parent.width
-                                    height: parent.height
-                                    radius: 3
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: "#d35400" }
-                                        GradientStop { position: 1.0; color: "#e67e22" }
-                                    }
-                                }
-                            }
-                            
-                            handle: Rectangle {
-                                x: frictionStrengthSlider.leftPadding + frictionStrengthSlider.visualPosition * (frictionStrengthSlider.availableWidth - width)
-                                y: frictionStrengthSlider.topPadding + frictionStrengthSlider.availableHeight / 2 - height / 2
-                                width: 16
-                                height: 16
-                                radius: 8
-                                color: frictionStrengthSlider.pressed ? "#f39c12" : "#e67e22"
-                                border.color: "#ffffff"
-                                border.width: 2
-                            }
-                            
-                            onMoved: {
-                                root.configurationChanged()
-                            }
-                        }
-                        
-                        Rectangle {
-                            Layout.preferredWidth: 50
-                            Layout.preferredHeight: 22
-                            color: "#1a1a1a"
-                            radius: 4
-                            border.color: frictionField.activeFocus ? "#e67e22" : "#444444"
-                            border.width: 1
-                            
-                            TextInput {
-                                id: frictionField
-                                anchors.fill: parent
-                                text: frictionStrengthSlider.value.toFixed(2)
-                                color: "#ffffff"
-                                font.pixelSize: 11
-                                font.bold: true
-                                verticalAlignment: TextInput.AlignVCenter
-                                horizontalAlignment: TextInput.AlignHCenter
-                                selectByMouse: true
-
-                                onEditingFinished: {
-                                    var val = parseFloat(text)
-                                    if (!isNaN(val)) {
-                                        val = Math.max(frictionStrengthSlider.from, Math.min(frictionStrengthSlider.to, val))
-                                        frictionStrengthSlider.value = val
-                                        frictionStrengthSlider.text = Qt.binding(function() { return frictionStrengthSlider.value.toFixed(2) })
-                                        root.configurationChanged()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
     }

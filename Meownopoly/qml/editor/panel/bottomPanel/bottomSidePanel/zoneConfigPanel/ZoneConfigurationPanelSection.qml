@@ -14,6 +14,7 @@ CollapsableGroupBox {
     property alias exclusion: generalSection.exclusion
     property alias speedMultiplier: generalSection.speedMultiplier
     property alias accelerationMultiplier: generalSection.accelerationMultiplier
+    property alias frictionStrength: generalSection.frictionStrength
     
     // Signals
     signal configurationChanged()
@@ -47,7 +48,7 @@ CollapsableGroupBox {
             velocityDirectionX: directionsSection.velocityDirectionX,
             velocityDirectionY: directionsSection.velocityDirectionY,
             velocityStrength: directionsSection.velocityStrength,
-            frictionStrength: directionsSection.frictionStrength,
+            frictionStrength: generalSection.frictionStrength,
             accelerationMultiplier: generalSection.accelerationMultiplier
         }
     }
