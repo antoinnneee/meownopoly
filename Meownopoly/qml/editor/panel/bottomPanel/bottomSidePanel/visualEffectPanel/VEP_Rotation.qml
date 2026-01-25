@@ -12,6 +12,9 @@ CollapsableGroupBox {
     property var colorPresets: []
     property int activePresetIndex: -1
 
+    property bool mirrorHorizontal: false
+    property bool mirrorVertical: false
+
     signal effectChanged()
     property alias rotationSlider: rotationSlider
     // signal colorPresetsChanged()
@@ -53,6 +56,28 @@ CollapsableGroupBox {
                 horizontalAlignment: Text.AlignRight
                 verticalAlignment: Text.AlignVCenter
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+            }
+
+            VEP_ButtonMirror {
+                Layout.preferredWidth: 30
+                Layout.fillHeight: true
+                isHorizontal: true
+                isMirrored: control.mirrorHorizontal
+                onClicked: {
+                    control.mirrorHorizontal = !control.mirrorHorizontal
+                    control.effectChanged()
+                }
+            }
+
+            VEP_ButtonMirror {
+                Layout.preferredWidth: 30
+                Layout.fillHeight: true
+                isHorizontal: false
+                isMirrored: control.mirrorVertical
+                onClicked: {
+                    control.mirrorVertical = !control.mirrorVertical
+                    control.effectChanged()
+                }
             }
 
     }

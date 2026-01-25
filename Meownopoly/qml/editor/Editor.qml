@@ -426,7 +426,7 @@ Base_Board {
         editorSidePanel: sidePanel
     }
 
-    mainMa.anchors.bottomMargin: mapInfoPanel.x < parent.width ? 0 : selectionPanel.height
+    mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
 
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {
