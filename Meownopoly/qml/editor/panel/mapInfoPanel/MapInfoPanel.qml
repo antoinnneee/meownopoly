@@ -35,7 +35,6 @@ Item {
     required property var selectionPanel
     required property var sidePanel
 
-    visible: mapSidePanel.x < parent.width
 
     property alias mapInfoDrawer: mapInfoDrawer
     property alias mapNavigationBar: mapNavigationBar
