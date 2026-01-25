@@ -134,7 +134,6 @@ Base_Board {
             onClicked: {
                 btInfoMapAnim.stop()
                 btInfoMapAnim.start()
-                console.log("onClicked Opening global settings")
                 mapInfoPanel.isOpening = !mapInfoPanel.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
