@@ -363,7 +363,8 @@ void PattounX_engine::applyGroundFrictionAndZones(PattounX_body* body, qreal dt)
 {
     QSet<PattounX_zone*> currentZones;
     qreal currentDamping = DEFAULT_GROUND_DAMPING; 
-    qreal currentAccelerationMultiplier = 1.0; 
+    qreal currentAccelerationMultiplier = 1.0;
+    qreal currentSpeedMultiplier = 1.0;
 
     QVector2D pos = body->position();
 
@@ -392,12 +393,16 @@ void PattounX_engine::applyGroundFrictionAndZones(PattounX_body* body, qreal dt)
 
             // Accumulate acceleration multiplier
             currentAccelerationMultiplier *= params.accelerationMultiplier();
+            
+            // Accumulate speed multiplier
+            currentSpeedMultiplier *= params.speedMultiplier();
         }
     }
 
     // Appliquer le damping calculé
     body->setLinearDamping(currentDamping);
     body->setZoneAccelerationMultiplier(currentAccelerationMultiplier);
+    body->setZoneSpeedMultiplier(currentSpeedMultiplier);
 
     // Gérer les signaux Entered/Exited
     QSet<PattounX_zone*>& prevZones = m_activeZonesPerBody[body];

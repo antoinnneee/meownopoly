@@ -123,6 +123,7 @@ public:
     qreal linearDamping() const { return m_linearDamping; }
     
     void setZoneAccelerationMultiplier(qreal multiplier) { m_zoneAccelerationMultiplier = multiplier; }
+    void setZoneSpeedMultiplier(qreal multiplier) { m_currentSpeedModifier = multiplier; }
     qreal invMass() const;
 
     qreal restitution() const;
