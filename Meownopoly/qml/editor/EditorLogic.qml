@@ -85,7 +85,6 @@ Base_logic {
     Connections {
         target: editorGrid
         function onSelectedElementSnapped(element) {
-            console.log("Selected element snapped : ", element, mouseLogicLoader.item, mouseLogicLoader.item.rebindElement)
             if (mouseLogicLoader.item && mouseLogicLoader.item.rebindElement) {
                 mouseLogicLoader.item.rebindElement(element)
             }
