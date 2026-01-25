@@ -47,6 +47,7 @@
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
 #include "chat/chat_client.h"
+#include "account/account_manager.h"
 
 #include <QImageWriter>
 
@@ -71,6 +72,7 @@ QmlApp::QmlApp(QWindow *parent)
     UndoRedoManager::registerQml();
     PattounX_engine::registerQml();
     ChatClient::registerQml(this);
+    AccountManager::registerQml();
 
 
     // Register MapTypes namespace for QML

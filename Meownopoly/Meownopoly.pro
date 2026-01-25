@@ -80,6 +80,7 @@ SOURCES += \
     chat/chat_database.cpp \
     chat/chat_worker.cpp \
     chat/chat_image_provider.cpp \
+    account/account_manager.cpp \
 
 
 HEADERS += \
@@ -130,6 +131,7 @@ HEADERS += \
     chat/chat_database.h \
     chat/chat_worker.h \
     chat/chat_image_provider.h \
+    account/account_manager.h \
 
 RESOURCES += qml.qrc \
     asset.qrc \

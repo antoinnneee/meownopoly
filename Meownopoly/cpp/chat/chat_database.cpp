@@ -37,9 +37,22 @@ bool ChatDatabase::init()
                          "timestamp TEXT"
                          ")");
     if (!ok) {
-        qCritical() << "Failed to create chat table:" << query.lastError().text();
+        qCritical() << "Failed to create chat table (local_history):" << query.lastError().text();
+        return false;
     }
-    return ok;
+
+    ok = query.exec("CREATE TABLE IF NOT EXISTS session_keys ("
+                    "session_id TEXT,"
+                    "version INTEGER,"
+                    "key_blob BLOB,"
+                    "nonce BLOB,"
+                    "PRIMARY KEY (session_id, version))");
+    if (!ok) {
+        qCritical() << "Failed to create chat table (session_keys):" << query.lastError().text();
+        return false;
+    }
+
+    return true;
 }
 
 bool ChatDatabase::saveMessage(const QString &sessionId, const QString &senderId, const QByteArray &payload, const QByteArray &nonce, const QString &timestamp)
@@ -78,4 +91,43 @@ QVariantList ChatDatabase::getMessages(const QString &sessionId)
         }
     }
     return messages;
+}
+
+bool ChatDatabase::saveSessionKey(const QString &sessionId, int version, const QByteArray &keyBlob, const QByteArray &keyNonce) {
+    QSqlQuery query(m_db);
+    query.prepare("INSERT OR REPLACE INTO session_keys (session_id, version, key_blob, nonce) VALUES (:sid, :ver, :blob, :nonce)");
+    query.bindValue(":sid", sessionId);
+    query.bindValue(":ver", version);
+    query.bindValue(":blob", keyBlob);
+    query.bindValue(":nonce", keyNonce);
+    
+    if (!query.exec()) {
+        qCritical() << "Failed to save session key:" << query.lastError().text();
+        return false;
+    }
+    return true;
+}
+
+QMap<int, QByteArray> ChatDatabase::getSessionKeys(const QString &sessionId) {
+    QMap<int, QByteArray> keys;
+    QSqlQuery query(m_db);
+    query.prepare("SELECT version, key_blob, nonce FROM session_keys WHERE session_id = :sid");
+    query.bindValue(":sid", sessionId);
+    
+    if (query.exec()) {
+        while (query.next()) {
+            // Pack blob + nonce together for the caller to decrypt
+            QByteArray blob = query.value("key_blob").toByteArray();
+            QByteArray nonce = query.value("nonce").toByteArray();
+            
+            QByteArray combined;
+            QDataStream stream(&combined, QIODevice::WriteOnly);
+            stream << blob << nonce;
+            
+            keys.insert(query.value("version").toInt(), combined);
+        }
+    } else {
+        qCritical() << "Failed to load session keys:" << query.lastError().text();
+    }
+    return keys;
 }

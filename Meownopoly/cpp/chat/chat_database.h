@@ -15,6 +15,10 @@ public:
     bool init();
     bool saveMessage(const QString &sessionId, const QString &senderId, const QByteArray &payload, const QByteArray &nonce, const QString &timestamp);
     QVariantList getMessages(const QString &sessionId);
+    
+    // Key Persistence
+    bool saveSessionKey(const QString &sessionId, int version, const QByteArray &keyBlob, const QByteArray &keyNonce);
+    QMap<int, QByteArray> getSessionKeys(const QString &sessionId);
 
 private:
     QSqlDatabase m_db;

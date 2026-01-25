@@ -10,9 +10,11 @@
 
 ChatCrypto::ChatCrypto(QObject *parent) : QObject(parent) {}
 
-QByteArray ChatCrypto::deriveLockKey(const QString &gameId)
+QByteArray ChatCrypto::deriveLockKey(const QString &gameId, const QString &password)
 {
-    return QCryptographicHash::hash(gameId.toUtf8(), QCryptographicHash::Sha256);
+    // Simple PBKDF2-like using concatenated string hash.
+    // Ideally use proper PBKDF2 with salt.
+    return QCryptographicHash::hash((gameId + password).toUtf8(), QCryptographicHash::Sha256);
 }
 
 QByteArray ChatCrypto::generateNonce()
@@ -20,6 +22,13 @@ QByteArray ChatCrypto::generateNonce()
     QByteArray nonce(12, 0);
     QRandomGenerator::global()->fillRange(reinterpret_cast<quint32*>(nonce.data()), 3);
     return nonce;
+}
+
+QByteArray ChatCrypto::generateRandomKey()
+{
+    QByteArray key(32, 0);
+    QRandomGenerator::global()->fillRange(reinterpret_cast<quint32*>(key.data()), 8);
+    return key;
 }
 
 // TODO: Integrate a lightweight AES-GCM implementation.

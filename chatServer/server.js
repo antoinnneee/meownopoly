@@ -103,13 +103,15 @@ function handleJoinSession(ws, payload) {
 
     // Fetch session metadata and history
     const session = db.getSession(session_id);
+    // Forward Secrecy: We DO NOT send past keys to new joiners.
+    // They must generate their own V(N) key and can only read future messages.
     const history = db.getHistory(session_id);
 
     ws.send(JSON.stringify({
         type: 'INIT_SESSION',
         payload: {
-            key_package: session ? session.key_package : null,
-            nonce: session ? session.key_nonce : null,
+            current_version: session ? session.version : 0,
+            keys: [], // Empty to enforce Forward Secrecy
             history: history || []
         }
     }));
@@ -119,13 +121,33 @@ function handlePublishKey(ws, payload) {
     const { session_id, blob, nonce } = payload;
     if (!session_id || !blob || !nonce) return;
 
-    const result = db.createSession(session_id, blob, nonce);
+    // We allow overwriting for key rotation
+    const result = db.updateSession(session_id, blob, nonce);
 
     if (result.changes === 0) {
-        // Key already exists, we don't overwrite
-        debug(`Key package already exists for session ${session_id}`);
+        // If update failed (session doesn't exist yet), create it
+        db.createSession(session_id, blob, nonce);
+        debug(`Key package created for session ${session_id}`);
     } else {
-        debug(`Key package published for session ${session_id}`);
+        debug(`Key package updated/rotated for session ${session_id} (Version ${result.version})`);
+
+        // Broadcast the update to all OTHER clients in the room
+        const room = rooms.get(session_id);
+        if (room) {
+            const updateMessage = JSON.stringify({
+                type: 'KEY_UPDATE',
+                payload: {
+                    version: result.version,
+                    key_package: blob,
+                    nonce: nonce
+                }
+            });
+            room.forEach(client => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                    client.send(updateMessage);
+                }
+            });
+        }
     }
 }
 
@@ -143,6 +165,7 @@ function handleSendMessage(ws, payload) {
             sender_id,
             payload: ciphertext,
             nonce,
+            key_version: key_v,
             timestamp: new Date().toISOString()
         }
     };

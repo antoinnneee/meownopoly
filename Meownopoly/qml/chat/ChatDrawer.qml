@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Particles
 import Meownopoly.Chat 1.0
+import Meownopoly.Account 1.0
 import QtQuick.Dialogs
 import "."
 
@@ -13,7 +14,11 @@ Drawer {
     edge: Qt.RightEdge
 
     property string gameId: ""
-    property string playerId: "Player_" + Math.floor(Math.random() * 1000)
+    // Use AccountManager for player identification
+    // uniqueId is used for server identification (permanent)
+    // nickname is used for display (can be changed)
+    property string playerId: AccountManager.uniqueId
+    property string playerNickname: AccountManager.nickname
     property bool isResizing: false
 
     background: Rectangle {
@@ -413,7 +418,8 @@ Drawer {
                             }
 
                             Text {
-                                text: messageDelegate.modelData.sender
+                                // Display nickname for own messages, sender ID for others
+                                text: messageDelegate.isOwnMessage ? chatDrawer.playerNickname : messageDelegate.modelData.sender
                                 font.pixelSize: 10
                                 font.bold: true
                                 color: messageDelegate.isOwnMessage ? "#569c58" : "#4A90E2"
@@ -692,7 +698,12 @@ Drawer {
                 }
 
                 Text {
-                    text: chatDrawer.playerId
+                    text: "🐱"
+                    font.pixelSize: 9
+                }
+
+                Text {
+                    text: chatDrawer.playerNickname
                     color: "#888888"
                     font.pixelSize: 9
                     elide: Text.ElideRight
@@ -725,7 +736,7 @@ Drawer {
 
     onOpened: {
         if (!chatClient.connected) {
-            chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId)
+            chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId, "123")
         }
         // inputField.forceActiveFocus()
     }

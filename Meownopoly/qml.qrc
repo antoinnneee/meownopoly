@@ -3,6 +3,9 @@
         <file>qml/textTools.js</file>
         <file>qml/main.qml</file>
         <file>qml/titleScreen/TitleScreen.qml</file>
+        <file>qml/account/AccountSetupPage.qml</file>
+        <file>qml/account/AccountSettingsPopup.qml</file>
+        <file>qml/account/qmldir</file>
         <file>qml/editor/Editor.qml</file>
         <file>qml/editor/EditorLogic.qml</file>
         <file>qml/editor/EditorDynamicComponent.qml</file>
