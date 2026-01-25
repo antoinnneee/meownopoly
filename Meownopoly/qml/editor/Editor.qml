@@ -155,7 +155,7 @@ Base_Board {
         anchors.top: btInfoMap.bottom
         anchors.right: parent.right
         anchors.margins: 10
-        z: z_HUD
+        z: UiStyle.z_HUD
         source: AssetManager.getAssetById("ui", "hud", "0").path
         width: Screen.pixelDensity * 20
         height: Screen.pixelDensity * 20
@@ -184,7 +184,7 @@ Base_Board {
     ChatDrawer {
         id: chatDrawer
         gameId: "Pattoune"/*root.mapInfo.mapName*/
-        z: z_CONFIG_PANEL + 100
+        z: UiStyle.z_CONFIG_PANEL + 100
     }
 
     Button {

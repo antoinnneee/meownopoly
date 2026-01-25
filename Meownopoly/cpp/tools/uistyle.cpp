@@ -1,9 +1,27 @@
 #include "uistyle.h"
 
+
+UiStyle *UiStyle::m_pThis = nullptr;
+
 UiStyle::UiStyle() {}
 
-void UiStyle::registerQml(){
-    qmlRegisterType<UiStyle>("UiStyle", 1, 0, "UiStyle");
+void UiStyle::registerQml() {
+    qmlRegisterSingletonType<UiStyle>("UiStyle", 1, 0, "UiStyle", &UiStyle::qmlInstance);
+}
+
+UiStyle *UiStyle::instance() {
+    if (m_pThis == nullptr) // avoid creation of new instances
+    {
+        m_pThis = new UiStyle;
+    }
+    return m_pThis;
+}
+
+QObject *UiStyle::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine) {
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+    // C++ and QML instance they are the same instance
+    return UiStyle::instance();
 }
 
 int UiStyle::z_CONFIG_PANEL() const

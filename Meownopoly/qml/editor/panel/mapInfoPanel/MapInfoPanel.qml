@@ -37,22 +37,23 @@ Item {
 
     visible: mapSidePanel.x < parent.width
 
+    property alias mapInfoDrawer: mapInfoDrawer
+    property alias mapNavigationBar: mapNavigationBar
 
     onIsOpeningChanged: {
         if (isOpening) {
             // mapInfoPanel.visible = true
             // mapSidePanel.x = mapInfoPanel.width - mapSidePanel.width - 10
-            mapInfoDrawer.open()
+            mapInfoDrawer.position = 1
         } else {
-            mapInfoDrawer.close()
             // mapSidePanel.x = mapInfoPanel.width
+            mapInfoDrawer.position = 0
+
         }
     }
 
     MapInfoDrawer {
         id: mapInfoDrawer
-        property alias mapInfoPanel: mapInfoPanel
-
     }
 
     // MapSidePanel {
