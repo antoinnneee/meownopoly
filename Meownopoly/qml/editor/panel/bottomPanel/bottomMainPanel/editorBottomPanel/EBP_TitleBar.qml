@@ -22,6 +22,7 @@ RowLayout {
     signal buttonClicked(string text, int index)
     signal backButtonClicked()
 
+    signal focusReleased()
 
     anchors.margins: 10
     anchors.rightMargin: 6
@@ -70,6 +71,9 @@ RowLayout {
         text: titleBar.searchText
         visible: titleBar.isExpanded
         onTextChanged: titleBar.searchText = text
+        onFocusReleased: {
+            titleBar.focusReleased()
+        }
     }
 
     // Back button (visible when in assets view)

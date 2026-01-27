@@ -97,32 +97,17 @@ void PattounX_engine::clearBodies()
 
 // --- Gestion des Zones ---
 
-PattounX_zone* PattounX_engine::createZone(const QString& id)
+PattounX_zone* PattounX_engine::createZone(ItemSnapable* snapable)
 {
+    if (!snapable) return nullptr;
+    QString id = snapable->uniqueId().toString();
+
     if (m_zones.contains(id)) {
         qWarning() << "[PattounX_engine] Zone with id" << id << "already exists";
         return m_zones[id];
     }
 
-    PattounX_zone* zone = new PattounX_zone(id, this);
-    m_zones[id] = zone;
-
-    if (m_debugMode) {
-        qDebug() << "[PattounX_engine] Created zone:" << id;
-    }
-
-    emit zoneCountChanged();
-    return zone;
-}
-
-PattounX_zone* PattounX_engine::createZone(const QString& id, ZoneParameter *zoneParam)
-{
-    if (m_zones.contains(id)) {
-        qWarning() << "[PattounX_engine] Zone with id" << id << "already exists";
-        return m_zones[id];
-    }
-
-    PattounX_zone* zone = new PattounX_zone(id, *zoneParam, this);
+    PattounX_zone* zone = new PattounX_zone(snapable, this);
     m_zones[id] = zone;
 
     if (m_debugMode) {
@@ -202,10 +187,9 @@ void PattounX_engine::setZonesFromSnapables(const QVariantList& snapables)
         }
         
         // Créer la zone
-        QString zoneId = QString("zone_%1").arg(zoneIndex++);
-        PattounX_zone* zone = createZone(zoneId, zoneParam);
+        PattounX_zone* zone = createZone(snapable);
 
-        if (m_debugMode) {
+        if (m_debugMode && zone) {
             qDebug() << "[PattounX_engine] Loaded zone from snapable:"
                      << "points:" << zoneParam->pointCount();
         }
@@ -379,7 +363,8 @@ void PattounX_engine::applyGroundFrictionAndZones(PattounX_body* body, qreal dt)
 {
     QSet<PattounX_zone*> currentZones;
     qreal currentDamping = DEFAULT_GROUND_DAMPING; 
-    qreal currentAccelerationMultiplier = 1.0; 
+    qreal currentAccelerationMultiplier = 1.0;
+    qreal currentSpeedMultiplier = 1.0;
 
     QVector2D pos = body->position();
 
@@ -408,12 +393,16 @@ void PattounX_engine::applyGroundFrictionAndZones(PattounX_body* body, qreal dt)
 
             // Accumulate acceleration multiplier
             currentAccelerationMultiplier *= params.accelerationMultiplier();
+            
+            // Accumulate speed multiplier
+            currentSpeedMultiplier *= params.speedMultiplier();
         }
     }
 
     // Appliquer le damping calculé
     body->setLinearDamping(currentDamping);
     body->setZoneAccelerationMultiplier(currentAccelerationMultiplier);
+    body->setZoneSpeedMultiplier(currentSpeedMultiplier);
 
     // Gérer les signaux Entered/Exited
     QSet<PattounX_zone*>& prevZones = m_activeZonesPerBody[body];

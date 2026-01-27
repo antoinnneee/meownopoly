@@ -44,6 +44,7 @@ EBP_Content {
     // Signaux
     signal drawModeActivated()
     signal drawModeDeactivated()
+    signal focusReleased()
 
     sidePanelRatio: 0
 
@@ -81,8 +82,9 @@ EBP_Content {
 
                 // Type de zone
                 Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredWidth: 100
+                    Layout.preferredHeight: Screen.pixelDensity * 20
+                    Layout.alignment: Qt.AlignHCenter
                     radius: 6
                     color: root.currentZoneType === "exclusion" ? "#8B0000" : "#2a2a2a"
                     border.color: root.currentZoneType === "exclusion" ? "#FF6B6B" : "#3a3a3a"
@@ -121,8 +123,9 @@ EBP_Content {
                 }
 
                 Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredWidth: 100
+                    Layout.preferredHeight: Screen.pixelDensity * 20
+                    Layout.alignment: Qt.AlignHCenter
                     radius: 6
                     color: root.currentZoneType === "effect" ? "#1B4F72" : "#2a2a2a"
                     border.color: root.currentZoneType === "effect" ? "#5DADE2" : "#3a3a3a"
@@ -157,6 +160,11 @@ EBP_Content {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.switchZoneType("effect")
                     }
+                }
+
+                // Espaceur pour pousser vers le haut
+                Item {
+                    Layout.fillHeight: true
                 }
             }
 
@@ -213,19 +221,21 @@ EBP_Content {
                             updateBackendConfiguration()
                             syncDirectionPicker()
                         }
+                        Keys.onReturnPressed: {
+                            focus = false
+                            root.focusReleased()
+                        }
                     }
                 }
 
                 // Aperçu couleur + Palette
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
                     spacing: 12
 
                     // Aperçu de la couleur sélectionnée
                     ColumnLayout {
                         Layout.preferredWidth: 60
-                        Layout.preferredHeight: 50
                         spacing: 6
 
                         Text {
@@ -237,7 +247,7 @@ EBP_Content {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.fillHeight: true
+                            Layout.preferredHeight: colorPaletteGrid.height
                             radius: 8
                             color: colorPicker.selectedColor
                             border.color: Qt.lighter(colorPicker.selectedColor, 1.5)
@@ -260,7 +270,6 @@ EBP_Content {
                     // Grille de couleurs
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
                         spacing: 6
 
                         Text {
@@ -271,8 +280,8 @@ EBP_Content {
                         }
 
                         Grid {
+                            id: colorPaletteGrid
                             Layout.fillWidth: true
-                            Layout.fillHeight: true
                             columns: 6
                             spacing: 4
 
@@ -309,6 +318,11 @@ EBP_Content {
                             }
                         }
                     }
+                }
+
+                // Espaceur pour pousser tout vers le haut et éviter l'étirement
+                Item {
+                    Layout.fillHeight: true
                 }
             }
 
@@ -368,6 +382,10 @@ EBP_Content {
                             updateBackendConfiguration()
                             syncDirectionPicker()
                         }
+                        Keys.onReturnPressed: {
+                            focus = false
+                            root.focusReleased()
+                        }
                     }
 
                     TextField {
@@ -392,6 +410,10 @@ EBP_Content {
                             updateBackendConfiguration()
                             syncDirectionPicker()
                         }
+                        Keys.onReturnPressed: {
+                            focus = false
+                            root.focusReleased()
+                        }
                     }
 
                     TextField {
@@ -415,6 +437,10 @@ EBP_Content {
                         onEditingFinished: {
                             updateBackendConfiguration()
                             syncDirectionPicker()
+                        }
+                        Keys.onReturnPressed: {
+                            focus = false
+                            root.focusReleased()
                         }
                     }
                 }
@@ -628,6 +654,11 @@ EBP_Content {
                         }
                     }
                 }
+
+                // Espaceur pour pousser vers le haut
+                Item {
+                    Layout.fillHeight: true
+                }
             }
 
             // Séparateur vertical (visible seulement si paramètres visibles)
@@ -667,6 +698,7 @@ EBP_Content {
                     highlightColor: "#7bd97f"
                     circleSize: 140
 
+
                     onDirectionChanged: function(x, y) {
                         velXInput.text = x.toFixed(2)
                         velYInput.text = y.toFixed(2)
@@ -705,8 +737,9 @@ EBP_Content {
 
                 // Bouton Dessiner
                 Rectangle {
-                    Layout.fillWidth: true
+                    Layout.preferredWidth: 120
                     Layout.preferredHeight: 70
+                    Layout.alignment: Qt.AlignHCenter
                     radius: 8
                     color: root.isDrawModeActive ? "#8B0000" : colorPicker.selectedColor
                     border.color: Qt.lighter(colorPicker.selectedColor, 1.5)

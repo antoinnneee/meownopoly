@@ -7,11 +7,13 @@ import "test/"
 import "launcher/"
 import "board"
 import "editor"
+import "account/"
 
 import QtQuick.Window
 import Qt.labs.platform
 
 import Game
+import Meownopoly.Account 1.0
 
 
 ApplicationWindow {
@@ -24,7 +26,17 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: titleScreen
+        initialItem: AccountManager.hasAccount ? titleScreen : accountSetup
+    }
+
+    // Account setup page for first launch
+    Component {
+        id: accountSetup
+        AccountSetupPage {
+            onAccountCreated: {
+                stackView.replace(titleScreen)
+            }
+        }
     }
 
     Component {

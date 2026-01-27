@@ -3,10 +3,17 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Particles
 import Game
+import Meownopoly.Account 1.0
+import "../account/"
 
 Rectangle {
     id: root
     color: "#1a1a1a"  // Dark background for modern look
+
+    // Account settings popup
+    AccountSettingsPopup {
+        id: accountSettingsPopup
+    }
 
     // Fireworks system
     ParticleSystem {
@@ -311,6 +318,66 @@ Rectangle {
             right: parent.right
             bottom: parent.bottom
             margins: 10
+        }
+    }
+
+    // Account info and settings button (top right corner)
+    Rectangle {
+        id: accountBar
+        anchors {
+            top: parent.top
+            right: parent.right
+            margins: 15
+        }
+        width: accountRow.width + 20
+        height: 40
+        color: "#2a2a2a"
+        radius: 20
+        border.color: "#444444"
+        border.width: 1
+
+        RowLayout {
+            id: accountRow
+            anchors.centerIn: parent
+            spacing: 10
+
+            // Cat avatar
+            Text {
+                text: "🐱"
+                font.pixelSize: 18
+            }
+
+            // Nickname
+            Text {
+                text: AccountManager.nickname
+                color: "#cccccc"
+                font.pixelSize: 14
+                font.bold: true
+            }
+
+            // Settings button
+            Rectangle {
+                width: 28
+                height: 28
+                radius: 14
+                color: settingsBtn.containsMouse ? "#444444" : "#333333"
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    text: "⚙️"
+                    font.pixelSize: 14
+                    anchors.centerIn: parent
+                }
+
+                MouseArea {
+                    id: settingsBtn
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: accountSettingsPopup.open()
+                }
+            }
         }
     }
 }

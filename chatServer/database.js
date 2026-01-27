@@ -11,7 +11,18 @@ db.exec(`
     session_id TEXT PRIMARY KEY,
     key_package TEXT,
     key_nonce TEXT,
+    version INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS session_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT,
+    version INTEGER,
+    key_package TEXT,
+    key_nonce TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(session_id) REFERENCES sessions(session_id)
   );
 
   CREATE TABLE IF NOT EXISTS messages (
@@ -33,9 +44,30 @@ module.exports = {
   getSession: (sessionId) => {
     return db.prepare('SELECT * FROM sessions WHERE session_id = ?').get(sessionId);
   },
+  getSessionKeys: (sessionId) => {
+    return db.prepare('SELECT version, key_package, key_nonce FROM session_keys WHERE session_id = ? ORDER BY version ASC').all(sessionId);
+  },
   createSession: (sessionId, keyPackage, keyNonce) => {
-    return db.prepare('INSERT OR IGNORE INTO sessions (session_id, key_package, key_nonce) VALUES (?, ?, ?)')
-      .run(sessionId, keyPackage, keyNonce);
+    db.transaction(() => {
+      db.prepare('INSERT OR IGNORE INTO sessions (session_id, key_package, key_nonce, version) VALUES (?, ?, ?, 1)')
+        .run(sessionId, keyPackage, keyNonce);
+      db.prepare('INSERT OR IGNORE INTO session_keys (session_id, version, key_package, key_nonce) VALUES (?, 1, ?, ?)')
+        .run(sessionId, keyPackage, keyNonce);
+    })();
+  },
+  updateSession: (sessionId, keyPackage, keyNonce) => {
+    return db.transaction(() => {
+      const session = db.prepare('SELECT version FROM sessions WHERE session_id = ?').get(sessionId);
+      if (!session) return { changes: 0 };
+
+      const newVersion = session.version + 1;
+      db.prepare('UPDATE sessions SET key_package = ?, key_nonce = ?, version = ? WHERE session_id = ?')
+        .run(keyPackage, keyNonce, newVersion, sessionId);
+      db.prepare('INSERT INTO session_keys (session_id, version, key_package, key_nonce) VALUES (?, ?, ?, ?)')
+        .run(sessionId, newVersion, keyPackage, keyNonce);
+
+      return { changes: 1, version: newVersion };
+    })();
   },
 
   // Message methods
@@ -98,5 +130,9 @@ module.exports = {
   },
   vacuum: () => {
     db.exec('VACUUM');
+  },
+
+  clearMessages: (sessionId) => {
+    return db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
   }
 };

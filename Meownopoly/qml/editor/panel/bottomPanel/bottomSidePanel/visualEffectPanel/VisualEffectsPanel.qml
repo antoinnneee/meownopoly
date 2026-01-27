@@ -69,8 +69,8 @@ CollapsableGroupBox {
 
             // Transform effects
             rotationAngle: rotationSection.rotationSlider.value,
-            mirrorHorizontal: false, //rotationSection.horizontalMirrorCheck.checked,
-            mirrorVertical: false //rotationSection.verticalMirrorCheck.checked
+            mirrorHorizontal: rotationSection.mirrorHorizontal,
+            mirrorVertical: rotationSection.mirrorVertical
         }
 
         return effects
@@ -91,6 +91,8 @@ CollapsableGroupBox {
 
         // Update rotation
         rotationSection.rotationSlider.value = dispParam.rotationAngle
+        rotationSection.mirrorHorizontal = dispParam.mirrorHorizontal
+        rotationSection.mirrorVertical = dispParam.mirrorVertical
 
     }
 

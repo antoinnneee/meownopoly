@@ -16,6 +16,7 @@
 CaseRestArea::CaseRestArea(QObject *parent)
     : CaseCatPerks("Unknown Rest Area")
 {
+    Q_UNUSED(parent)
     setType(Case::CS_RestArea);
 }
 

@@ -288,4 +288,44 @@ QtObject {
             delete elementInitialPositions[element]
     }
 
+    // Fonction pour recréer les bindings d'un élément après un snap (appelée via signal)
+    function rebindElement(element) {
+        if (!element) return
+        
+        // Vérifier que l'élément est bien dans la liste des éléments sélectionnés
+        var found = false
+        for (var i = 0; i < selectedElements.length; i++) {
+            if (selectedElements[i] === element) {
+                found = true
+                break
+            }
+        }
+        if (!found) return
+        
+        // Recalculer les offsets avec la nouvelle position
+        var newInitialX = element.x - groupeSelection.x
+        var newInitialY = element.y - groupeSelection.y
+        elementInitialPositions[element] = {x: newInitialX, y: newInitialY}
+        
+        // Recréer les bindings avec les nouveaux offsets
+        var bindingInitialX = newInitialX
+        var bindingInitialY = newInitialY
+        
+        element.x = Qt.binding(function() {
+            return groupeSelection.x + bindingInitialX
+        })
+        element.y = Qt.binding(function() {
+            return groupeSelection.y + bindingInitialY
+        })
+        
+        elementBindings[element] = true
+    }
+
+    // Fonction pour recréer les bindings de tous les éléments sélectionnés après un zoom
+    function rebindAllSelectedElements() {
+        for (var i = 0; i < selectedElements.length; i++) {
+            rebindElement(selectedElements[i])
+        }
+    }
+
 }

@@ -61,7 +61,7 @@ Item{
         id: snapablePhysicZoneComponent
         SnapableExclusionZone {
             gridManager: gameGrid
-            displayLinkEnable: false  // Les zones d'exclusion n'utilisent pas les liens
+            displayLinkEnable: logic.tileLogic.displayLinkEnable === true // Les zones d'exclusion utilisent maintenant les liens
 
             // Gestion de la suppression
             onElementDeleted: function(element) {

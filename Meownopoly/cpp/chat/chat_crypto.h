@@ -11,7 +11,7 @@ class ChatCrypto : public QObject
 public:
     explicit ChatCrypto(QObject *parent = nullptr);
 
-    static QByteArray deriveLockKey(const QString &gameId);
+    static QByteArray deriveLockKey(const QString &gameId, const QString &password);
     
     // AES-256-GCM Encryption/Decryption
     // Result is [payload + auth_tag] or just decrypted payload
@@ -19,6 +19,7 @@ public:
     static QByteArray decrypt(const QByteArray &encryptedData, const QByteArray &key, const QByteArray &nonce);
 
     static QByteArray generateNonce();
+    static QByteArray generateRandomKey();
 };
 
 #endif // CHAT_CRYPTO_H

@@ -13,10 +13,12 @@ GroupBox {
     property alias exclusion: exclusionSwitch.checked
     property alias speedMultiplier: speedSlider.value
     property alias accelerationMultiplier: accelerationSlider.value
+    property alias frictionStrength: frictionSlider.value
     
     // Signal
     signal configurationChanged()
-    
+    signal focusReleased()
+
     // Functions
     function updateFromZoneParameter(zoneParam) {
       if (root.updatingValues) return
@@ -26,6 +28,7 @@ GroupBox {
         exclusionSwitch.checked = zoneParam.exclusion
         speedSlider.value = zoneParam.speedMultiplier
         accelerationSlider.value = zoneParam.accelerationMultiplier
+        frictionSlider.value = zoneParam.frictionStrenght
     }
     
     background: Rectangle {
@@ -77,6 +80,10 @@ GroupBox {
             
             onEditingFinished: {
                 root.configurationChanged()
+            }
+            Keys.onReturnPressed: {
+                focus = false
+                root.focusReleased()
             }
         }
         
@@ -142,17 +149,131 @@ GroupBox {
                 to: 3.0
                 stepSize: 0.1
                 value: 1.0
+
+                background: Rectangle {
+                    x: speedSlider.leftPadding
+                    y: speedSlider.topPadding + speedSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 100
+                    implicitHeight: 4
+                    width: speedSlider.availableWidth
+                    height: implicitHeight
+                    radius: 2
+                    color: "#3a3a3a"
+
+                    Rectangle {
+                        width: speedSlider.visualPosition * parent.width
+                        height: parent.height
+                        color: "#4CAF50"
+                        radius: 2
+                    }
+                }
+
+                handle: Rectangle {
+                    x: speedSlider.leftPadding + speedSlider.visualPosition * (speedSlider.availableWidth - width)
+                    y: speedSlider.topPadding + speedSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 14
+                    implicitHeight: 14
+                    radius: 7
+                    color: "#ffffff"
+                    border.color: "#4CAF50"
+                    border.width: 2
+                }
                 
                 onMoved: {
                         root.configurationChanged()
                 }
             }
             
-            Text {
-                text: speedSlider.value.toFixed(1) + "x"
-                color: "#ffffff"
-                font.pixelSize: 11
-                Layout.preferredWidth: 30
+            Rectangle {
+                Layout.preferredWidth: 45
+                height: 26
+                radius: 4
+                color: "#2a2a2a"
+                border.color: "#4CAF50"
+                border.width: 1
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "×" + speedSlider.value.toFixed(1)
+                    color: "#ffffff"
+                    font.pointSize: 8
+                    font.bold: true
+                }
+            }
+        }
+
+        // Friction
+        Label {
+            text: "Friction:"
+            color: "#ffffff"
+            font.pixelSize: 11
+            font.bold: true
+            opacity: exclusionSwitch.checked ? 0.5 : 1.0
+        }
+        
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+            opacity: exclusionSwitch.checked ? 0.5 : 1.0
+            enabled: !exclusionSwitch.checked
+
+            Slider {
+                id: frictionSlider
+                Layout.fillWidth: true
+                from: 0.0
+                to: 1.0
+                stepSize: 0.01
+                value: 0.0
+
+                background: Rectangle {
+                    x: frictionSlider.leftPadding
+                    y: frictionSlider.topPadding + frictionSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 100
+                    implicitHeight: 4
+                    width: frictionSlider.availableWidth
+                    height: implicitHeight
+                    radius: 2
+                    color: "#3a3a3a"
+
+                    Rectangle {
+                        width: frictionSlider.visualPosition * parent.width
+                        height: parent.height
+                        color: "#5DADE2"
+                        radius: 2
+                    }
+                }
+
+                handle: Rectangle {
+                    x: frictionSlider.leftPadding + frictionSlider.visualPosition * (frictionSlider.availableWidth - width)
+                    y: frictionSlider.topPadding + frictionSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 14
+                    implicitHeight: 14
+                    radius: 7
+                    color: "#ffffff"
+                    border.color: "#5DADE2"
+                    border.width: 2
+                }
+                
+                onMoved: {
+                        root.configurationChanged()
+                }
+            }
+            
+            Rectangle {
+                Layout.preferredWidth: 45
+                height: 26
+                radius: 4
+                color: "#2a2a2a"
+                border.color: "#5DADE2"
+                border.width: 1
+
+                Text {
+                    anchors.centerIn: parent
+                    text: frictionSlider.value.toFixed(2)
+                    color: "#ffffff"
+                    font.pointSize: 8
+                    font.bold: true
+                }
             }
         }
 
@@ -178,17 +299,56 @@ GroupBox {
                 to: 10.0
                 stepSize: 0.05
                 value: 1.0
+
+                background: Rectangle {
+                    x: accelerationSlider.leftPadding
+                    y: accelerationSlider.topPadding + accelerationSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 100
+                    implicitHeight: 4
+                    width: accelerationSlider.availableWidth
+                    height: implicitHeight
+                    radius: 2
+                    color: "#3a3a3a"
+
+                    Rectangle {
+                        width: accelerationSlider.visualPosition * parent.width
+                        height: parent.height
+                        color: "#FF9800"
+                        radius: 2
+                    }
+                }
+
+                handle: Rectangle {
+                    x: accelerationSlider.leftPadding + accelerationSlider.visualPosition * (accelerationSlider.availableWidth - width)
+                    y: accelerationSlider.topPadding + accelerationSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 14
+                    implicitHeight: 14
+                    radius: 7
+                    color: "#ffffff"
+                    border.color: "#FF9800"
+                    border.width: 2
+                }
                 
                 onMoved: {
                         root.configurationChanged()
                 }
             }
             
-            Text {
-                text: accelerationSlider.value.toFixed(2) + "x"
-                color: "#ffffff"
-                font.pixelSize: 11
-                Layout.preferredWidth: 30
+            Rectangle {
+                Layout.preferredWidth: 45
+                height: 26
+                radius: 4
+                color: "#2a2a2a"
+                border.color: "#FF9800"
+                border.width: 1
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "×" + accelerationSlider.value.toFixed(2)
+                    color: "#ffffff"
+                    font.pointSize: 8
+                    font.bold: true
+                }
             }
         }
     }

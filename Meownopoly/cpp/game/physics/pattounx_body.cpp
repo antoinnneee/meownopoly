@@ -139,9 +139,12 @@ void PattounX_body::integrate(qreal dt) {
 
     m_previousPosition = m_position;
 
+    // Calculer la vitesse max effective avec le multiplicateur de zone
+    qreal effectiveMaxSpeed = m_maxSpeed * m_currentSpeedModifier;
+
     if (m_inputVector.length() > 0.01) {
-        // 1. Calcul de la vitesse cible
-        QVector2D targetVelocity = m_inputVector * m_maxSpeed;
+        // 1. Calcul de la vitesse cible avec le multiplicateur de zone
+        QVector2D targetVelocity = m_inputVector * effectiveMaxSpeed;
         
         // 2. On tend vers cette vitesse selon l'accélération
         m_velocity += (targetVelocity - m_velocity) * std::min(1.0, m_acceleration * m_zoneAccelerationMultiplier * dt);
@@ -156,15 +159,15 @@ void PattounX_body::integrate(qreal dt) {
     QVector2D externalAccel = m_forceAccumulator * m_invMass;
     m_velocity += externalAccel * dt;
 
-    // 5. Freinage progressif si on dépasse maxSpeed (ex: fin de sprint)
-    if (m_velocity.length() > m_maxSpeed + 0.01) {
+    // 5. Freinage progressif si on dépasse maxSpeed (ex: fin de sprint ou sortie de zone rapide)
+    if (m_velocity.length() > effectiveMaxSpeed + 0.01) {
         qreal decelerationFactor = 1.0 - (m_linearDamping * dt * 60.0);
         if (decelerationFactor < 0) decelerationFactor = 0;
         m_velocity *= decelerationFactor;
         
         // On s'assure de ne pas descendre trop bas d'un coup
-        if (m_velocity.length() < m_maxSpeed) {
-            m_velocity = m_velocity.normalized() * m_maxSpeed;
+        if (m_velocity.length() < effectiveMaxSpeed) {
+            m_velocity = m_velocity.normalized() * effectiveMaxSpeed;
         }
     }
 

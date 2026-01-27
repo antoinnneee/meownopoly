@@ -6,7 +6,7 @@
 #include <QVariantList>
 #include <QString>
 #include "collision2d.h"
-#include "game/item_snapable/ZoneParameter.h"
+#include "game/item_snapable/ItemSnapable.h"
 
 /**
  * @brief Zone physique 2D avec effets
@@ -14,7 +14,7 @@
  * Représente une zone polygonale qui peut avoir différents effets
  * sur les entités physiques qui la traversent.
  */
-class PattounX_zone : public ZoneParameter
+class PattounX_zone : public QObject
 {
     Q_OBJECT
     
@@ -22,17 +22,15 @@ class PattounX_zone : public ZoneParameter
     Q_PROPERTY(bool isActive READ isActive  NOTIFY isActiveChanged FINAL)
  
 public:
-    /**
-     * @brief Types de zones physiques
-     */
-    
-    explicit PattounX_zone(const QString& id, QObject* parent = nullptr);
-    explicit PattounX_zone(const QString& id,  ZoneParameter& zoneParameter, QObject* parent = nullptr);
+    explicit PattounX_zone(ItemSnapable* snapable, QObject* parent = nullptr);
     
     // --- Getters ---
-    QString zoneId() const { return m_zoneId; }
+    QString zoneId() const;
     bool isActive() const { return m_isActive; }
-    bool exclusion() const { return ZoneParameter::exclusion();};
+    bool exclusion() const;
+
+    ItemSnapable* snapable() const { return m_snapable; }
+    ZoneParameter* zoneParameter() const;
 
     
     // --- API Publique ---
@@ -68,14 +66,17 @@ public:
      * @brief Accès aux paramètres de la zone
      * @return Référence constante vers les paramètres
      */
-    const ZoneParameter& getZoneParameters() const { return *this; }
+    const ZoneParameter& getZoneParameters() const;
 
 signals:
 
     void isActiveChanged();
 
+private slots:
+    void updatePolygon();
+
 private:
-    QString m_zoneId;
+    ItemSnapable* m_snapable = nullptr;
 
     Polygon2D m_polygon;            // Version optimisée
     

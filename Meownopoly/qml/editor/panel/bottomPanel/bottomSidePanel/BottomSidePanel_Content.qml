@@ -11,6 +11,7 @@ ColumnLayout {
     signal effectChanged()
     signal connectionRequested(string kind)  // Propager les demandes de connexion
     signal modelSelected(string name)
+    signal focusReleased()
 
     property var logic
     property alias effectsPanel: effectsPanel
@@ -82,6 +83,9 @@ ColumnLayout {
         Layout.fillWidth: true
         onConfigurationChanged: {
             panelContent.configurationChanged()
+        }
+        onFocusReleased: {
+            panelContent.focusReleased()
         }
     }
 

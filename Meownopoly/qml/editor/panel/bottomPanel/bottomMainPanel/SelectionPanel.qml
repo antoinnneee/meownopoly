@@ -60,6 +60,7 @@ Rectangle {
     signal resizeStarted()
     signal resizeFinished(int finalHeight)
 
+    signal focusReleased()
 
     required property EditorLogic logic
 
@@ -206,6 +207,10 @@ Rectangle {
 
 
             Layout.preferredHeight: root.expandedHeight
+
+            onFocusReleased:{
+                root.focusReleased()
+            }
 
             onAssetSelected: function(category, type, id) {
                 if (category === "" && type === "" && id === "") {

@@ -42,6 +42,8 @@ Base_Board {
     color: "lightblue"
     border.width: 0
     focus: true
+
+
     property int appPositionX: 0
     property int appPositionY: 0
     property int availableHeight: height - selectionPanel.height
@@ -134,7 +136,6 @@ Base_Board {
             onClicked: {
                 btInfoMapAnim.stop()
                 btInfoMapAnim.start()
-                console.log("onClicked Opening global settings")
                 mapInfoPanel.isOpening = !mapInfoPanel.isOpening
                 selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = sidePanel.visible ? false: true
@@ -315,7 +316,7 @@ Base_Board {
         editorSidePanel: sidePanel
     }
 
-    mainMa.anchors.bottomMargin: mapInfoPanel.x < parent.width ? 0 : selectionPanel.height
+    mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
 
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {
@@ -335,16 +336,9 @@ Base_Board {
             gridManager: gameGrid
         }
         Component.onCompleted: {
-            console.log("CHECK UiStyle.z_WORKAREA ", UiStyle.z_WORKAREA)
-            console.log("CHECK UiStyle.z_HUD ", UiStyle.z_HUD)
-
-            var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")
-            gameScene.moveEntityToGridPosition(sphere, 0, 0)
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
 
-            sphere = gameScene.generateSphere(0, 0, 0, 10, "blue")
-            gameScene.moveEntityToGridPosition(sphere, 2, 2)
         }
     }
 
@@ -393,6 +387,9 @@ Base_Board {
         anchors.left: parent.left
         anchors.right: sidePanel.left
 
+        onFocusReleased: {
+            root.focus = true
+        }
         z: UiStyle.z_HUD
 
         // Connexion à la logique
@@ -450,6 +447,8 @@ Base_Board {
                 logic.saveMap(MapTypes.UNDOREDO)
             }
         }
+
+        onFocusReleased: root.focusReleased()
 
         onEffectChanged: {
             var effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()

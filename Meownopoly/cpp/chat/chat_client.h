@@ -10,6 +10,8 @@
 #include "chat_crypto.h"
 #include "chat_database.h"
 #include "chat_worker.h"
+#include "chat_image_provider.h"
+#include <QQmlEngine>
 
 class ChatClient : public QObject
 {
@@ -27,14 +29,18 @@ public:
     void setSessionId(const QString &id);
     QVariantList messages() const { return m_messages; }
 
-    Q_INVOKABLE void connectToServer(const QString &url, const QString &playerId);
+    Q_INVOKABLE void connectToServer(const QString &url, const QString &playerId, const QString &password);
     Q_INVOKABLE void sendMessage(const QString &text);
     Q_INVOKABLE void sendImage(const QString &filePath);
     Q_INVOKABLE void loadHistory();
     Q_INVOKABLE void requestHistory(int beforeId = -1);
+    Q_INVOKABLE void clearHistory();
 
-    static void registerQml() {
+    static void registerQml(QQmlEngine *engine = nullptr) {
         qmlRegisterType<ChatClient>("Meownopoly.Chat", 1, 0, "ChatClient");
+        if (engine) {
+            engine->addImageProvider(QLatin1String("chat_images"), new ChatImageProvider());
+        }
     }
 
 signals:
@@ -52,7 +58,10 @@ private:
     void handleInitSession(const QJsonObject &payload);
     void handleNewMessage(const QJsonObject &payload);
     void handleHistoryResult(const QJsonObject &payload);
+    void handleKeyUpdate(const QJsonObject &payload);
+    void handleHistoryCleared();
     void sendWebSocketMessage(const QJsonObject &message);
+    QString processMessageText(const QString &text);
     
     // Worker thread for WebSocket
     QThread *m_workerThread;
@@ -61,8 +70,10 @@ private:
     bool m_connected = false;
     QString m_sessionId;
     QString m_playerId;
+    QString m_password;
     QByteArray m_lockKey;
-    QByteArray m_sessionKey;
+    QMap<int, QByteArray> m_sessionKeys;
+    int m_currentKeyVersion = 0;
     QVariantList m_messages;
     
     ChatDatabase m_db;

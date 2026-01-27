@@ -1,21 +1,59 @@
 #include "pattounx_zone.h"
+#include <QUuid>
 
 #include "game/item_snapable/ZoneParameter.h"
 
-PattounX_zone::PattounX_zone(const QString& id, QObject* parent)
-    : ZoneParameter(parent)
-    , m_zoneId(id)
+PattounX_zone::PattounX_zone(ItemSnapable* snapable, QObject* parent)
+    : QObject(parent)
+    , m_snapable(snapable)
 {
-
+    if (m_snapable) {
+        if (m_snapable->zoneParameter()) {
+            connect(m_snapable->zoneParameter(), &ZoneParameter::polygonPointsChanged, this, &PattounX_zone::updatePolygon);
+            updatePolygon();
+        }
+    }
 }
 
-PattounX_zone::PattounX_zone(const QString& id, ZoneParameter &zoneParameter, QObject* parent)
-    : ZoneParameter(zoneParameter, parent)
-    , m_zoneId(id)
+QString PattounX_zone::zoneId() const
 {
-    m_polygon = Polygon2D::fromVariantList(zoneParameter.polygonPoints());
+    if (m_snapable) {
+        return m_snapable->uniqueId().toString();
+    }
+    return QString();
 }
 
+bool PattounX_zone::exclusion() const
+{
+    if (m_snapable && m_snapable->zoneParameter()) {
+        return m_snapable->zoneParameter()->exclusion();
+    }
+    return false;
+}
+
+ZoneParameter* PattounX_zone::zoneParameter() const
+{
+    if (m_snapable) {
+        return m_snapable->zoneParameter();
+    }
+    return nullptr;
+}
+
+void PattounX_zone::updatePolygon()
+{
+    if (m_snapable && m_snapable->zoneParameter()) {
+        m_polygon = Polygon2D::fromVariantList(m_snapable->zoneParameter()->polygonPoints());
+    }
+}
+
+const ZoneParameter& PattounX_zone::getZoneParameters() const
+{
+    static ZoneParameter empty;
+    if (m_snapable && m_snapable->zoneParameter()) {
+        return *m_snapable->zoneParameter();
+    }
+    return empty;
+}
 
 bool PattounX_zone::containsPoint(const QVector2D& point) const
 {

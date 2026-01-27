@@ -1,0 +1,3 @@
+module account
+AccountSetupPage 1.0 AccountSetupPage.qml
+AccountSettingsPopup 1.0 AccountSettingsPopup.qml

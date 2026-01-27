@@ -54,9 +54,13 @@
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
 #include "chat/chat_client.h"
+#include "account/account_manager.h"
+
+#include <QImageWriter>
 
 QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
 {
+    // qDebug() << QImageWriter::supportedImageFormats();
     QQuickStyle::setStyle("Material");
     UiStyle::registerQml();
     Game::registerQml();
@@ -81,7 +85,8 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     TemplateManager::registerQml();
     
     PattounX_engine::registerQml();
-    ChatClient::registerQml();
+    ChatClient::registerQml(this);
+    AccountManager::registerQml();
 
 
     // Register MapTypes namespace for QML

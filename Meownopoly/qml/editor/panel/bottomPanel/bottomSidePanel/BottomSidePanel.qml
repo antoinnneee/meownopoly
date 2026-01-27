@@ -38,6 +38,7 @@ Rectangle {
     signal connectionRequested(string kind)  // Propager les demandes de connexion
     signal modelSelected(string name)
     signal configurationChanged()
+    signal focusReleased()
 
     // --- Bindings ---
     width : Screen.pixelDensity * 120
@@ -92,6 +93,7 @@ Rectangle {
             property real startHeight: 0
 
             property int minSize : 100
+            property int maxSize : root.parent.height
 
             property bool isHorizontal: false
             // property bool isStart: modelData.isStart
@@ -127,8 +129,9 @@ Rectangle {
 
                     var newSize = isStart ? startSize - delta : startSize + delta
                     var minSize = resizeMouseArea.minSize
+                    var maxSize = resizeMouseArea.maxSize
 
-                    if (newSize >= minSize) {
+                    if (newSize >= minSize && newSize <= maxSize) {
                         if (isHorizontal) {
                             root.width = newSize
                             if (isStart) {
@@ -204,6 +207,7 @@ Rectangle {
             id: content
             logic: root.logic
             width: scrollView.width
+            onFocusReleased: root.focusReleased()
 
             onEffectChanged: {
                 console.log("effect changed")

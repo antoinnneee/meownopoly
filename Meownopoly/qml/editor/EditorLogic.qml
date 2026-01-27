@@ -81,6 +81,16 @@ Base_logic {
         logic: logic
     }
 
+    // Connexion au signal de snap pour recréer les bindings des éléments sélectionnés
+    Connections {
+        target: editorGrid
+        function onSelectedElementSnapped(element) {
+            if (mouseLogicLoader.item && mouseLogicLoader.item.rebindElement) {
+                mouseLogicLoader.item.rebindElement(element)
+            }
+        }
+    }
+
 
     function removeCurrentMap(){
             // Copier la liste car elle sera modifiée pendant la suppression
