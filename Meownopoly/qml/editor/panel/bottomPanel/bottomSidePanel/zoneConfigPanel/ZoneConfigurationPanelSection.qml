@@ -18,6 +18,7 @@ CollapsableGroupBox {
     
     // Signals
     signal configurationChanged()
+    signal focusReleased()
     
     // Main content
     content: [
@@ -28,6 +29,7 @@ CollapsableGroupBox {
             updatingValues: root.updatingValues
             
             onConfigurationChanged: root.configurationChanged()
+            onFocusReleased:root.focusReleased()
         },
 
         // Directions & Velocity Strength Section
@@ -37,6 +39,7 @@ CollapsableGroupBox {
             updatingValues: root.updatingValues
             
             onConfigurationChanged: root.configurationChanged()
+            onFocusReleased:root.focusReleased()
         }
     ]
     

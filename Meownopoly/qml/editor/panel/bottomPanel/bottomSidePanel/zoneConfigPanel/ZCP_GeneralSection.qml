@@ -17,7 +17,8 @@ GroupBox {
     
     // Signal
     signal configurationChanged()
-    
+    signal focusReleased()
+
     // Functions
     function updateFromZoneParameter(zoneParam) {
       if (root.updatingValues) return
@@ -79,6 +80,10 @@ GroupBox {
             
             onEditingFinished: {
                 root.configurationChanged()
+            }
+            Keys.onReturnPressed: {
+                focus = false
+                root.focusReleased()
             }
         }
         

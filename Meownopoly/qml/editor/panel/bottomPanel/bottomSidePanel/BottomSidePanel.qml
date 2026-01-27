@@ -38,6 +38,7 @@ Rectangle {
     signal connectionRequested(string kind)  // Propager les demandes de connexion
     signal modelSelected(string name)
     signal configurationChanged()
+    signal focusReleased()
 
     // --- Bindings ---
     width : Screen.pixelDensity * 120
@@ -206,6 +207,7 @@ Rectangle {
             id: content
             logic: root.logic
             width: scrollView.width
+            onFocusReleased: root.focusReleased()
 
             onEffectChanged: {
                 console.log("effect changed")

@@ -25,6 +25,9 @@ EditorBottomPanel {
     signal caseTypeSelected(int type, string typeName)
     signal caseTypeCleared()
 
+    signal focusReleased()
+
+
 
     property string selectedCategory: ""
     property string selectedType: ""
@@ -116,6 +119,10 @@ EditorBottomPanel {
         anchors.right: parent.horizontalCenter
         anchors.top: parent.top
         isExpanded: true
+
+        onFocusReleased: {
+            root.focusReleased()
+        }
 
         onAssetSelected: function(category, type, id) {
             root.assetSelected(category, type, id)
@@ -230,6 +237,9 @@ EditorBottomPanel {
             activeFilter: "All"
             Layout.preferredWidth: parent.width
             Layout.preferredHeight: parent.height
+            onFocusReleased:{
+                root.focusReleased()
+            }
         }
         // Exclusion Zone Panel
         TP_Content {

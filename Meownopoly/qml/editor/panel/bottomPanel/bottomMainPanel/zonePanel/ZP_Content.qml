@@ -44,6 +44,7 @@ EBP_Content {
     // Signaux
     signal drawModeActivated()
     signal drawModeDeactivated()
+    signal focusReleased()
 
     sidePanelRatio: 0
 
@@ -220,6 +221,10 @@ EBP_Content {
                             updateBackendConfiguration()
                             syncDirectionPicker()
                         }
+                        Keys.onReturnPressed: {
+                            focus = false
+                            root.focusReleased()
+                        }
                     }
                 }
 
@@ -377,6 +382,10 @@ EBP_Content {
                             updateBackendConfiguration()
                             syncDirectionPicker()
                         }
+                        Keys.onReturnPressed: {
+                            focus = false
+                            root.focusReleased()
+                        }
                     }
 
                     TextField {
@@ -401,6 +410,10 @@ EBP_Content {
                             updateBackendConfiguration()
                             syncDirectionPicker()
                         }
+                        Keys.onReturnPressed: {
+                            focus = false
+                            root.focusReleased()
+                        }
                     }
 
                     TextField {
@@ -424,6 +437,10 @@ EBP_Content {
                         onEditingFinished: {
                             updateBackendConfiguration()
                             syncDirectionPicker()
+                        }
+                        Keys.onReturnPressed: {
+                            focus = false
+                            root.focusReleased()
                         }
                     }
                 }
@@ -680,6 +697,7 @@ EBP_Content {
                     gridColor: "#444444"
                     highlightColor: "#7bd97f"
                     circleSize: 140
+
 
                     onDirectionChanged: function(x, y) {
                         velXInput.text = x.toFixed(2)

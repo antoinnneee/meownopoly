@@ -14,6 +14,7 @@ GroupBox {
     
     // Signal
     signal configurationChanged()
+    signal focusReleased()
 
     // Functions
     function updateFromZoneParameter(zoneParam) {
@@ -166,6 +167,10 @@ GroupBox {
                                 verticalAlignment: TextInput.AlignVCenter
                                 horizontalAlignment: TextInput.AlignHCenter
                                 selectByMouse: true
+                                Keys.onReturnPressed: {
+                                    focus = false
+                                    root.focusReleased()
+                                }
                                 
                                 onEditingFinished: {
                                     focus = false

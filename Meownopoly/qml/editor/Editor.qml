@@ -38,6 +38,8 @@ Base_Board {
     color: "lightblue"
     border.width: 0
     focus: true
+
+
     property int appPositionX: 0
     property int appPositionY: 0
     property int availableHeight: height - selectionPanel.height
@@ -445,13 +447,9 @@ Base_Board {
             gridManager: gameGrid
         }
         Component.onCompleted: {
-            var sphere = gameScene.generateSphere(0, 0, 0, 10, "red")
-            gameScene.moveEntityToGridPosition(sphere, 0, 0)
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
 
-            sphere = gameScene.generateSphere(0, 0, 0, 10, "blue")
-            gameScene.moveEntityToGridPosition(sphere, 2, 2)
         }
     }
 
@@ -499,6 +497,10 @@ Base_Board {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: sidePanel.left
+
+        onFocusReleased: {
+            root.focus = true
+        }
 
         z: z_HUD
 
@@ -557,6 +559,8 @@ Base_Board {
                 logic.saveMap(MapTypes.UNDOREDO)
             }
         }
+
+        onFocusReleased: root.focusReleased()
 
         onEffectChanged: {
             var effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()

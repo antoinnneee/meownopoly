@@ -5,6 +5,7 @@ import AssetManager
 
 TextField {
     placeholderText: "Search assets..."
+    signal focusReleased()
     background: Rectangle {
         color: "#444444"
         border.color: "#666666"
@@ -13,5 +14,10 @@ TextField {
     }
     
     color: "white"
+
+    Keys.onReturnPressed: {
+        focus = false
+        focusReleased()
+    }
 
 }
