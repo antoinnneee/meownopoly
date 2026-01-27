@@ -33,16 +33,16 @@ VPATH += cpp
 INCLUDEPATH += cpp
 
 SOURCES += \
-    chat/chat_client.cpp \
-    chat/chat_crypto.cpp \
-    chat/chat_database.cpp \
-    chat/chat_worker.cpp \
-    cpp/tools/uistyle.cpp \
     cpp/game/item_snapable/ZoneParameter.cpp \
     cpp/game/physics/collision2d.cpp \
     cpp/game/physics/pattounx_body.cpp \
     cpp/game/physics/pattounx_zone.cpp \
     cpp/game/physics/pattounx_engine.cpp \
+    cpp/game/template/templatefilemanager.cpp \
+    cpp/game/template/templateinfo.cpp \
+    cpp/game/template/templatemanager.cpp \
+    cpp/game/template/templatemodel.cpp \
+    cpp/tools/uistyle.cpp \
     tools/QtFolderCompressor/FolderCompressor.cpp \
     assetManager/asset_manager.cpp \
     game/case/Case.cpp \
@@ -80,10 +80,6 @@ SOURCES += \
     tools/editorenum.cpp \
     tools/logger.cpp \
     game/map/undoredomanager.cpp \
-    game/template/templateinfo.cpp \
-    game/template/templatefilemanager.cpp \
-    game/template/templatemodel.cpp \
-    game/template/templatemanager.cpp \
     chat/chat_client.cpp \
     chat/chat_crypto.cpp \
     chat/chat_database.cpp \
@@ -93,12 +89,16 @@ SOURCES += \
 
 
 HEADERS += \
-    cpp/tools/uistyle.h \
     cpp/game/item_snapable/ZoneParameter.h \
     cpp/game/physics/collision2d.h \
     cpp/game/physics/pattounx_body.h \
     cpp/game/physics/pattounx_zone.h \
     cpp/game/physics/pattounx_engine.h \
+    cpp/game/template/templatefilemanager.h \
+    cpp/game/template/templateinfo.h \
+    cpp/game/template/templatemanager.h \
+    cpp/game/template/templatemodel.h \
+    cpp/tools/uistyle.h \
     tools/QtFolderCompressor/FolderCompressor.h \
     assetManager/asset_manager.h \
     game/case/Case.h \
@@ -136,10 +136,6 @@ HEADERS += \
     tools/editorenum.h \
     tools/logger.h \
     game/map/undoredomanager.h \
-    game/template/templateinfo.h \
-    game/template/templatefilemanager.h \
-    game/template/templatemodel.h \
-    game/template/templatemanager.h \
     chat/chat_client.h \
     chat/chat_crypto.h \
     chat/chat_database.h \
@@ -154,7 +150,7 @@ RESOURCES += qml.qrc \
     launcher.qrc \
     other.qrc
 
-# CONFIG += qmlcache  # DÃ©sactivÃ© car nÃ©cessite TARGETPATH pour Qt 6.10+
+# CONFIG += qmlcache  # Désactivé car nécessite TARGETPATH pour Qt 6.10+
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH = $$PWD

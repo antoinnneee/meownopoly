@@ -1,4 +1,4 @@
-#ifndef TEMPLATEMANAGER_H
+ #ifndef TEMPLATEMANAGER_H
 #define TEMPLATEMANAGER_H
 
 #include <QObject>
