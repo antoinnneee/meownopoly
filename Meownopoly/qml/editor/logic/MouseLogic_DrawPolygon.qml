@@ -8,6 +8,7 @@ import ItemSnapableFactory
  * - Clic gauche : ajouter un point
  * - Clic droit ou double-clic : fermer le polygone et créer la zone
  * - Escape : annuler le dessin en cours
+ * - Shift : aligner les points avec la grille
  */
 MouseLogic_Base {
     id: mouseLogic
@@ -34,8 +35,19 @@ MouseLogic_Base {
     // Référence au composant de prévisualisation (défini dans Editor.qml)
     property var polygonPreviewComponent: null
     
+    // État de la touche Shift pour l'alignement sur la grille
+    property bool shiftPressed: false
+    
     // Signal pour notifier la création d'une zone
     signal exclusionZoneCreated(var snapableParameters)
+    
+    // Fonction pour aligner une position sur la grille si Shift est pressé
+    function snapToGridIfNeeded(gridPos) {
+        if (shiftPressed) {
+            return Qt.point(Math.round(gridPos.x), Math.round(gridPos.y))
+        }
+        return gridPos
+    }
 
     function pressedLeft(mouse, drag) {
         mouse.accepted = true
@@ -53,6 +65,12 @@ MouseLogic_Base {
         var realPos = mainMa.mapToItem(grid, mouse.x, mouse.y)
         var gridPos = grid.getGridRealPosition(realPos.x, realPos.y)
         
+        // Mettre à jour l'état de Shift
+        shiftPressed = (mouse.modifiers & Qt.ShiftModifier)
+        
+        // Aligner sur la grille si Shift est pressé
+        gridPos = snapToGridIfNeeded(gridPos)
+        
         if (polygonPreviewComponent) {
             polygonPreviewComponent.mouseGridX = gridPos.x
             polygonPreviewComponent.mouseGridY = gridPos.y
@@ -63,11 +81,17 @@ MouseLogic_Base {
         var realPos = mainMa.mapToItem(grid, mouse.x, mouse.y)
         var gridPos = grid.getGridRealPosition(realPos.x, realPos.y)
         
+        // Mettre à jour l'état de Shift
+        shiftPressed = (mouse.modifiers & Qt.ShiftModifier)
+        
+        // Aligner sur la grille si Shift est pressé
+        gridPos = snapToGridIfNeeded(gridPos)
+        
         // Ajouter le point au polygone
         currentPolygonPoints.push({ x: gridPos.x, y: gridPos.y })
         isDrawing = true
         
-        console.log("Point ajouté:", gridPos.x, gridPos.y, "Total points:", currentPolygonPoints.length)
+        console.log("Point ajouté:", gridPos.x, gridPos.y, "(Shift snap:", shiftPressed + ")", "Total points:", currentPolygonPoints.length)
         
         // Mettre à jour la prévisualisation
         updatePolygonPreview()

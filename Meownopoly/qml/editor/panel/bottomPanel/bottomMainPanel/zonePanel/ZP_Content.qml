@@ -18,6 +18,7 @@ EBP_Content {
     // Propriétés internes pour gérer l'état de l'interface
     property string currentZoneType: "exclusion"
     property bool isDrawModeActive: logic && logic.editorMouseMode === EditorEnum.EM_DRAW_POLYGON
+    property bool isGridSnapActive: logic && logic.mouseLogic && logic.mouseLogic.shiftPressed || false
 
     // Fonction pour changer le type de zone
     function switchZoneType(zoneType) {
@@ -808,11 +809,48 @@ EBP_Content {
                         anchors.margins: 8
                         spacing: 8
 
-                        Text {
-                            text: "📌 Instructions"
-                            font.pointSize: 9
-                            font.bold: true
-                            color: "#FFEB3B"
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            Text {
+                                text: "📌 Instructions"
+                                font.pointSize: 9
+                                font.bold: true
+                                color: "#FFEB3B"
+                            }
+
+                            // Badge indicateur d'alignement sur la grille
+                            Rectangle {
+                                Layout.preferredWidth: 50
+                                Layout.preferredHeight: 18
+                                radius: 4
+                                color: root.isGridSnapActive ? "#4CAF50" : "#555555"
+                                border.color: root.isGridSnapActive ? "#7bd97f" : "#666666"
+                                border.width: 1
+                                visible: root.isDrawModeActive
+
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                                RowLayout {
+                                    anchors.centerIn: parent
+                                    spacing: 2
+
+                                    Text {
+                                        text: "⊞"
+                                        font.pointSize: 8
+                                        color: root.isGridSnapActive ? "#ffffff" : "#999999"
+                                    }
+
+                                    Text {
+                                        text: root.isGridSnapActive ? "ON" : "OFF"
+                                        font.pointSize: 6
+                                        font.bold: true
+                                        color: root.isGridSnapActive ? "#ffffff" : "#999999"
+                                    }
+                                }
+                            }
                         }
 
                         ColumnLayout {
@@ -823,6 +861,7 @@ EBP_Content {
                                 model: [
                                     { icon: "🖱️", text: "Clic gauche: Point" },
                                     { icon: "🖱️", text: "Clic droit: Finir" },
+                                    { icon: "⇧", text: "Shift: Aligner grille" },
                                     { icon: "⌨️", text: "Échap: Annuler" }
                                 ]
 
