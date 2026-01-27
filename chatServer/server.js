@@ -82,6 +82,9 @@ function handleCommand(ws, msg) {
         case 'GET_HISTORY':
             handleGetHistory(ws, payload);
             break;
+        case 'CLEAR_HISTORY':
+            handleClearHistory(ws, payload);
+            break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
     }
@@ -209,6 +212,28 @@ function handleGetHistory(ws, payload) {
         type: 'HISTORY_RESULT',
         payload: { history }
     }));
+}
+
+function handleClearHistory(ws, payload) {
+    const { session_id } = payload;
+    if (!session_id) return;
+
+    // Delete from DB
+    db.clearMessages(session_id);
+
+    // Broadcast cleared event
+    const room = rooms.get(session_id);
+    if (room) {
+        const clearMsg = JSON.stringify({
+            type: 'HISTORY_CLEARED',
+            payload: { session_id }
+        });
+        room.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(clearMsg);
+            }
+        });
+    }
 }
 
 function sendError(ws, code, message) {

@@ -78,6 +78,19 @@ bool ChatDatabase::saveMessage(const QString &sessionId, const QString &senderId
     return true;
 }
 
+bool ChatDatabase::clearMessages(const QString &sessionId)
+{
+    QSqlQuery query(m_db);
+    query.prepare("DELETE FROM local_history WHERE session_id = :sid");
+    query.bindValue(":sid", sessionId);
+
+    if (!query.exec()) {
+        qCritical() << "Failed to clear messages:" << query.lastError().text();
+        return false;
+    }
+    return true;
+}
+
 QVariantList ChatDatabase::getMessages(const QString &sessionId)
 {
     QVariantList messages;

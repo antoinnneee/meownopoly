@@ -14,6 +14,7 @@ public:
 
     bool init();
     bool saveMessage(const QString &sessionId, const QString &senderId, const QByteArray &payload, const QByteArray &nonce, const QString &timestamp, int keyVersion);
+    bool clearMessages(const QString &sessionId);
     QVariantList getMessages(const QString &sessionId);
     
     // Key Persistence

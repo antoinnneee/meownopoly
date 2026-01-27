@@ -144,6 +144,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleHistoryResult(payload);
     } else if (type == "KEY_UPDATE") {
         handleKeyUpdate(payload);
+    } else if (type == "HISTORY_CLEARED") {
+        handleHistoryCleared();
     }
 }
 
@@ -398,6 +400,19 @@ void ChatClient::sendImage(const QString &filePath) {
     qDebug() << "[ChatClient] Compressed image sent (Size:" << compressedData.size() / 1024 << "KB)";
 }
 
+void ChatClient::clearHistory() {
+    if (!m_connected) return;
+    
+    QJsonObject clear;
+    clear["type"] = "CLEAR_HISTORY";
+    QJsonObject p;
+    p["session_id"] = m_sessionId;
+    clear["payload"] = p;
+
+    sendWebSocketMessage(clear);
+    qDebug() << "[ChatClient] Requesting history clear";
+}
+
 void ChatClient::loadHistory() {
     qDebug() << "[ChatClient] Loading history for session" << m_sessionId;
     m_messages.clear();
@@ -511,6 +526,18 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
     emit messagesChanged();
     qDebug() << "[ChatClient] Loaded" << historyArray.size() << "messages from server history";
 }
+
+void ChatClient::handleHistoryCleared() {
+    qDebug() << "[ChatClient] History cleared by server event";
+    
+    // Clear local DB
+    m_db.clearMessages(m_sessionId);
+    
+    // Clear UI model
+    m_messages.clear();
+    emit messagesChanged();
+}
+
 
 QString ChatClient::processMessageText(const QString &text) {
     if (text.startsWith("data:image/")) {

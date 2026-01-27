@@ -34,6 +34,7 @@ public:
     Q_INVOKABLE void sendImage(const QString &filePath);
     Q_INVOKABLE void loadHistory();
     Q_INVOKABLE void requestHistory(int beforeId = -1);
+    Q_INVOKABLE void clearHistory();
 
     static void registerQml(QQmlEngine *engine = nullptr) {
         qmlRegisterType<ChatClient>("Meownopoly.Chat", 1, 0, "ChatClient");
@@ -58,6 +59,7 @@ private:
     void handleNewMessage(const QJsonObject &payload);
     void handleHistoryResult(const QJsonObject &payload);
     void handleKeyUpdate(const QJsonObject &payload);
+    void handleHistoryCleared();
     void sendWebSocketMessage(const QJsonObject &message);
     QString processMessageText(const QString &text);
     

@@ -130,5 +130,9 @@ module.exports = {
   },
   vacuum: () => {
     db.exec('VACUUM');
+  },
+
+  clearMessages: (sessionId) => {
+    return db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
   }
 };

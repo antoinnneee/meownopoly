@@ -165,6 +165,31 @@ Drawer {
                     Layout.fillWidth: true
                 }
 
+                // Bouton Clear History
+                Rectangle {
+                    Layout.preferredWidth: 24
+                    Layout.preferredHeight: 24
+                    color: clearBtnArea.containsMouse ? "#444444" : "transparent"
+                    radius: 4
+                    visible: chatClient.connected
+
+                    Text {
+                        text: "🗑️"
+                        font.pixelSize: 14
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: clearBtnArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                           // Confirmation dialog? For now direct action as per plan
+                           chatClient.clearHistory()
+                        }
+                    }
+                }
+
                 // Indicateur de connexion
                 Rectangle {
                     Layout.preferredWidth: 10

@@ -8,6 +8,7 @@ if [ ! -f .deployEnv ]; then
 REMOTE_USER="votre-utilisateur"
 REMOTE_HOST="votre-ip-ou-domaine"
 REMOTE_DIR="/chemin/vers/destination"
+REMOTE_PASSWORD="mot-de-passe-distant"
 SERVICE_NAME="nom-du-service"
 EOF
     echo "❌ Un template .deployEnv a été créé. Veuillez le remplir avant de relancer le déploiement."
@@ -22,10 +23,11 @@ set +a
 REMOTE_USER=$(echo "$REMOTE_USER" | sed 's/[\"\r]//g')
 REMOTE_HOST=$(echo "$REMOTE_HOST" | sed 's/[\"\r]//g')
 REMOTE_DIR=$(echo "$REMOTE_DIR" | sed 's/[\"\r]//g')
+REMOTE_PASSWORD=$(echo "$REMOTE_PASSWORD" | sed 's/[\"\r]//g')
 SERVICE_NAME=$(echo "$SERVICE_NAME" | sed 's/[\"\r]//g')
 
 # Vérification des variables requises
-if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ] || [ -z "$REMOTE_DIR" ] || [ -z "$SERVICE_NAME" ]; then
+if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ] || [ -z "$REMOTE_DIR" ] || [ -z "$SERVICE_NAME" ] || [ -z "$REMOTE_PASSWORD" ]; then
     echo "❌ Erreur : Variables de déploiement manquantes dans .deployEnv."
     exit 1
 fi
@@ -73,6 +75,6 @@ done
 
 # Installation des dépendances et redémarrage du service
 echo "🔄 Mise à jour des dépendances et redémarrage du service..."
-ssh -o "ControlPath=$SSH_MUX_SOCKET" "$REMOTE_USER@$REMOTE_HOST" "cd $REMOTE_DIR && npm install --production && sudo systemctl restart $SERVICE_NAME"
+ssh -o "ControlPath=$SSH_MUX_SOCKET" "$REMOTE_USER@$REMOTE_HOST" "cd $REMOTE_DIR && npm install --production && echo '$REMOTE_PASSWORD' | sudo -S systemctl restart $SERVICE_NAME"
 
 echo "✅ Déploiement terminé !"
