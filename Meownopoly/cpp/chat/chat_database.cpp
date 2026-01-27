@@ -34,8 +34,12 @@ bool ChatDatabase::init()
                          "sender_id TEXT,"
                          "encrypted_payload BLOB,"
                          "nonce BLOB,"
-                         "timestamp TEXT"
+                         "timestamp TEXT,"
+                         "key_version INTEGER"
                          ")");
+    
+    // Migration for existing tables
+    query.exec("ALTER TABLE local_history ADD COLUMN key_version INTEGER DEFAULT 1");
     if (!ok) {
         qCritical() << "Failed to create chat table (local_history):" << query.lastError().text();
         return false;
@@ -55,16 +59,17 @@ bool ChatDatabase::init()
     return true;
 }
 
-bool ChatDatabase::saveMessage(const QString &sessionId, const QString &senderId, const QByteArray &payload, const QByteArray &nonce, const QString &timestamp)
+bool ChatDatabase::saveMessage(const QString &sessionId, const QString &senderId, const QByteArray &payload, const QByteArray &nonce, const QString &timestamp, int keyVersion)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO local_history (session_id, sender_id, encrypted_payload, nonce, timestamp) "
-                  "VALUES (:sid, :sender, :payload, :nonce, :ts)");
+    query.prepare("INSERT INTO local_history (session_id, sender_id, encrypted_payload, nonce, timestamp, key_version) "
+                  "VALUES (:sid, :sender, :payload, :nonce, :ts, :kv)");
     query.bindValue(":sid", sessionId);
     query.bindValue(":sender", senderId);
     query.bindValue(":payload", payload);
     query.bindValue(":nonce", nonce);
     query.bindValue(":ts", timestamp);
+    query.bindValue(":kv", keyVersion);
 
     if (!query.exec()) {
         qCritical() << "Failed to save message:" << query.lastError().text();
@@ -77,7 +82,7 @@ QVariantList ChatDatabase::getMessages(const QString &sessionId)
 {
     QVariantList messages;
     QSqlQuery query(m_db);
-    query.prepare("SELECT sender_id, encrypted_payload, nonce, timestamp FROM local_history WHERE session_id = :sid ORDER BY timestamp ASC");
+    query.prepare("SELECT sender_id, encrypted_payload, nonce, timestamp, key_version FROM local_history WHERE session_id = :sid ORDER BY timestamp ASC");
     query.bindValue(":sid", sessionId);
 
     if (query.exec()) {
@@ -87,6 +92,7 @@ QVariantList ChatDatabase::getMessages(const QString &sessionId)
             msg["payload"] = query.value(1).toByteArray();
             msg["nonce"] = query.value(2).toByteArray();
             msg["timestamp"] = query.value(3).toString();
+            msg["key_version"] = query.value(4).toInt();
             messages.append(msg);
         }
     }

@@ -13,7 +13,7 @@ public:
     ~ChatDatabase();
 
     bool init();
-    bool saveMessage(const QString &sessionId, const QString &senderId, const QByteArray &payload, const QByteArray &nonce, const QString &timestamp);
+    bool saveMessage(const QString &sessionId, const QString &senderId, const QByteArray &payload, const QByteArray &nonce, const QString &timestamp, int keyVersion);
     QVariantList getMessages(const QString &sessionId);
     
     // Key Persistence

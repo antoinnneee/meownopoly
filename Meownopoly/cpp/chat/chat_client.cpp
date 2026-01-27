@@ -64,8 +64,30 @@ void ChatClient::connectToServer(const QString &url, const QString &playerId, co
     m_lockKey = ChatCrypto::deriveLockKey(m_sessionId, m_password);
     
     // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
-    m_sessionKeys = m_db.getSessionKeys(m_sessionId);
-    qDebug() << "[ChatClient] Loaded" << m_sessionKeys.size() << "session keys from local storage";
+    // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
+    // Keys in DB are encrypted with lockKey. We must decrypt them for memory usage.
+    QMap<int, QByteArray> encryptedKeys = m_db.getSessionKeys(m_sessionId);
+    m_sessionKeys.clear();
+    
+    qDebug() << "[ChatClient] Loaded" << encryptedKeys.size() << "encrypted keys from local storage";
+
+    for (auto it = encryptedKeys.begin(); it != encryptedKeys.end(); ++it) {
+        int version = it.key();
+        QByteArray combined = it.value();
+        
+        QDataStream stream(combined);
+        QByteArray encryptedPkg, nonce;
+        stream >> encryptedPkg >> nonce;
+        
+        QByteArray plainKey = ChatCrypto::decrypt(encryptedPkg, m_lockKey, nonce);
+        if (!plainKey.isEmpty()) {
+            m_sessionKeys.insert(version, plainKey);
+        } else {
+            qWarning() << "[ChatClient] Failed to decrypt session key Version" << version;
+        }
+    }
+    
+    qDebug() << "[ChatClient] Decrypted" << m_sessionKeys.size() << "session keys into memory";
     
     // Determine current version (max version locally)
     if (!m_sessionKeys.isEmpty()) {
@@ -140,10 +162,22 @@ void ChatClient::handleKeyUpdate(const QJsonObject &payload) {
         QByteArray keyPkg = QByteArray::fromBase64(keyPkgBase64.toUtf8());
         QByteArray nonce = QByteArray::fromBase64(nonceBase64.toUtf8());
         
-        // Save to local persistence (encrypted blob)
+        // 1. Decrypt with LockKey to get the actual SessionKey
+        QByteArray sessionKey = ChatCrypto::decrypt(keyPkg, m_lockKey, nonce);
+        
+        if (sessionKey.isEmpty()) {
+             qCritical() << "[ChatClient] Failed to decrypt received key package! Wrong password?";
+             return;
+        }
+
+        // 2. Save encrypted blob to DB (for persistence)
         m_db.saveSessionKey(m_sessionId, version, keyPkg, nonce);
-        m_sessionKeys = m_db.getSessionKeys(m_sessionId); // Reload to ensure sync
+        
+        // 3. Store PLAIN key in memory
+        m_sessionKeys.insert(version, sessionKey);
         m_currentKeyVersion = version;
+        
+        emit messagesChanged(); // Reprocess messages if needed
     }
 }
 
@@ -151,20 +185,27 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
     qDebug() << "[ChatClient] Received init session.";
     
     // FORWARD SECRECY: Server does not send keys. We use local keys.
+    // FORWARD SECRECY: Server does not send keys. We use local keys.
     if (m_sessionKeys.isEmpty()) {
         qDebug() << "[ChatClient] No local keys found (New User). Generating V1 key.";
         
-        // New user or first time: Generate V1 key.
+        // New user: Generate key.
         QByteArray newKey = ChatCrypto::generateRandomKey();
         QByteArray nonce = ChatCrypto::generateNonce();
+        
+        // Encrypt with LockKey for DB storage and Server publishing
         QByteArray encryptedPkg = ChatCrypto::encrypt(newKey, m_lockKey, nonce);
         
-        // Save locally first (Version 1)
-        m_db.saveSessionKey(m_sessionId, 1, encryptedPkg, nonce);
-        m_sessionKeys = m_db.getSessionKeys(m_sessionId);
-        m_currentKeyVersion = 1;
+        // Publish to server first. DB save happens on KEY_UPDATE confirmation 
+        // OR we optimistically save as V1, but server might assign V2.
+        // Better: Optimistically save as V0 or temp, wait for KEY_UPDATE.
+        // Actually, for simplicity in this blind relay, we assume we are V1 if room is empty.
+        // But if room exists, we might become V(N).
+        // Since we blindly publish, let's just publish. The server will echo back a KEY_UPDATE.
+        // We will handle the save in handleKeyUpdate.
+        // WAIT: If we are the FIRST user, the echo might be skipped if we were filtered?
+        // NO, we fixed the server to echo to sender. So we can rely on KEY_UPDATE.
         
-        // Publish to server
         QJsonObject publish;
         publish["type"] = "PUBLISH_KEY";
         QJsonObject p;
@@ -173,21 +214,16 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
         p["nonce"] = QString(nonce.toBase64());
         publish["payload"] = p;
         sendWebSocketMessage(publish);
-        qDebug() << "[ChatClient] Published new V1 key.";
+        qDebug() << "[ChatClient] Published new key. Waiting for version assignment.";
     } else {
         qDebug() << "[ChatClient] Existing keys found. Using latest Version" << m_currentKeyVersion;
-        // Optionally: Trigger rotation? 
-        // For strict "Blind Relay", maybe we don't rotate on EVERY reconnect, only on new device/user.
-        // Let's stick to: If we have keys, we use them. 
-        // If the user wants to rotate, they can trigger it manually (future feature).
-        // Or if we want strict "New Key on Join" as requested before:
-        /*
-        m_currentKeyVersion++;
-        QByteArray newKey = ChatCrypto::generateRandomKey();
-        // ... publish ...
-        */
-        // But for persistence, reusing latest is fine unless we want to invalidate old sessions explicitly.
-        // Let's keep it simple: Reuse existing logic for now.
+        // Check if server version is higher? 
+        // session.version from server is payload["current_version"].
+        int serverVersion = payload["current_version"].toInt();
+        if (serverVersion > m_currentKeyVersion) {
+            qWarning() << "[ChatClient] Server has newer version (" << serverVersion << ") than local (" << m_currentKeyVersion << "). We might miss keys.";
+            // In a real app we might request missing keys if they weren't Forward Secrecy protected.
+        }
     }
 
     // Process server history if provided
@@ -202,7 +238,7 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
             QString ts = msg["server_timestamp"].toString();
             
             // Save locally
-            m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts);
+            m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts, msg["key_version"].toInt());
             
             // Decrypt for UI
             int keyVersion = msg["key_version"].toInt(); // Should be present
@@ -254,7 +290,7 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
     QString ts = payload["timestamp"].toString();
 
     // Persist encrypted
-    m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts);
+    m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts, payload["key_version"].toInt());
 
     // Decrypt for UI
     int keyVersion = payload["key_version"].toInt();
@@ -267,6 +303,7 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
     
     QByteArray plain;
     if (m_sessionKeys.contains(keyVersion)) {
+        // m_sessionKeys now contains PLAIN keys
         plain = ChatCrypto::decrypt(cipher, m_sessionKeys[keyVersion], nonce);
     } else {
         qWarning() << "[ChatClient] FAILED to decrypt message. Missing Key Version:" << keyVersion 
@@ -297,6 +334,7 @@ void ChatClient::sendMessage(const QString &text) {
     
     qDebug() << "[ChatClient] Sending message with Key Version" << m_currentKeyVersion;
     QByteArray nonce = ChatCrypto::generateNonce();
+    // Use the PLAIN key for encryption
     QByteArray cipher = ChatCrypto::encrypt(text.toUtf8(), m_sessionKeys[m_currentKeyVersion], nonce);
 
     QJsonObject send;
@@ -343,6 +381,7 @@ void ChatClient::sendImage(const QString &filePath) {
     if (!m_sessionKeys.contains(m_currentKeyVersion)) return;
 
     QByteArray nonce = ChatCrypto::generateNonce();
+    // Use PLAIN key
     QByteArray cipher = ChatCrypto::encrypt(base64.toUtf8(), m_sessionKeys[m_currentKeyVersion], nonce);
 
     QJsonObject send;
@@ -385,7 +424,7 @@ void ChatClient::loadHistory() {
         
         QByteArray plain;
         if (m_sessionKeys.contains(keyVersion)) {
-             plain = ChatCrypto::decrypt(cipher, m_sessionKeys[keyVersion], nonce);
+            plain = ChatCrypto::decrypt(cipher, m_sessionKeys[keyVersion], nonce);
         } else {
              plain = "[Encrypted (V" + QByteArray::number(keyVersion) + ")]";
         }
@@ -442,7 +481,7 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
         QString ts = msg["server_timestamp"].toString();
         
         // Save locally
-        m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts);
+        m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts, msg["key_version"].toInt());
         
         // Decrypt for UI
         int keyVersion = msg["key_version"].toInt();

@@ -128,6 +128,24 @@ function handlePublishKey(ws, payload) {
         // If update failed (session doesn't exist yet), create it
         db.createSession(session_id, blob, nonce);
         debug(`Key package created for session ${session_id}`);
+
+        // Notify everyone (including creator) of the new V1 key
+        const room = rooms.get(session_id);
+        if (room) {
+            const updateMessage = JSON.stringify({
+                type: 'KEY_UPDATE',
+                payload: {
+                    version: 1,
+                    key_package: blob,
+                    nonce: nonce
+                }
+            });
+            room.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(updateMessage);
+                }
+            });
+        }
     } else {
         debug(`Key package updated/rotated for session ${session_id} (Version ${result.version})`);
 
@@ -143,7 +161,7 @@ function handlePublishKey(ws, payload) {
                 }
             });
             room.forEach(client => {
-                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                if (client.readyState === WebSocket.OPEN) {
                     client.send(updateMessage);
                 }
             });

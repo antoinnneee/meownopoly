@@ -28,21 +28,24 @@ async function testServer() {
                 payload: { session_id: sessionId, blob: 'encrypted-key-package', nonce: 'key-nonce' }
             }));
 
-            // 3. Send Message (Simulating a small image/large payload)
-            setTimeout(() => {
-                console.log('[Test] Sending large payload (1MB)...');
-                const largePayload = 'A'.repeat(1024 * 1024); // 1MB of data
-                ws.send(JSON.stringify({
-                    type: 'SEND_MSG',
-                    payload: {
-                        session_id: sessionId,
-                        sender_id: playerId,
-                        payload: largePayload,
-                        nonce: 'msg-nonce',
-                        key_v: 1
-                    }
-                }));
-            }, 500);
+        }
+
+        if (msg.type === 'KEY_UPDATE') {
+            console.log('[Test] KEY_UPDATE received! Version:', msg.payload.version);
+
+            // 3. Send Message
+            console.log('[Test] Sending large payload (1MB)...');
+            const largePayload = 'A'.repeat(1024 * 1024); // 1MB of data
+            ws.send(JSON.stringify({
+                type: 'SEND_MSG',
+                payload: {
+                    session_id: sessionId,
+                    sender_id: playerId,
+                    payload: largePayload,
+                    nonce: 'msg-nonce',
+                    key_v: msg.payload.version // Use the version assigned by server
+                }
+            }));
         }
 
         if (msg.type === 'NEW_MESSAGE') {
