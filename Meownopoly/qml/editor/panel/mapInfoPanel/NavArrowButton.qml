@@ -10,7 +10,7 @@ import MapFileManager
 import MapTypes
 import MapInfo
 
-// Barre de navigation des cartes - Version refactorisée
+// Barre de navigation des cartes - Version refactorisï¿½e
 Rectangle {
     id: navButton
     width: 50

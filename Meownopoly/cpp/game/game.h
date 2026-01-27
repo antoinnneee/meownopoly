@@ -102,7 +102,7 @@ signals:
     void updateListEdits(QJsonObject newEdit);
     void askEdit(UndoRedoManager::EditAction editAction);
 
-private slots:
+
 
 private:
     explicit Game(QObject *parent = nullptr);

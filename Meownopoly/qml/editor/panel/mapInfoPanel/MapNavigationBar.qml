@@ -13,9 +13,6 @@ import MapInfo
 // Barre de navigation des cartes - Version refactorisée
 Item {
     id: mapNavigationBar
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.bottom: parent.bottom
 
     // Properties
     property var availableMaps: []
@@ -23,7 +20,6 @@ Item {
     property string currentMapName: ""
     property bool isCurrentMapAutosave: false
 
-    signal mapChanged()
 
     // Settings pour persister la carte courante
     Settings {
@@ -209,7 +205,6 @@ Item {
         isLeft: true
         onClicked: {
             mapNavigationBar.navigatePrevious()
-            mapChanged()
         }
     }
 
@@ -308,7 +303,6 @@ Item {
                 if (confirmationStep >= 2) {
                     mapNavigationBar.deleteCurrentMap()
                     confirmationStep = 0
-                    mapChanged()
                 }
             }
 
@@ -366,7 +360,6 @@ Item {
         isLeft: false
         onClicked:{
             mapNavigationBar.navigateNext()
-            mapChanged()
         }
     }
 
