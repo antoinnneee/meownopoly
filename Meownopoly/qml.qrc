@@ -32,7 +32,6 @@
         <file>qml/board/GameLogic.qml</file>
         <file>qml/board/Game_WheelHandler.qml</file>
         <file>qml/editor/logic/MouseLogic_Game.qml</file>
-        <file>qml/editor/logic/MouseLogic_Template.qml</file>
         <file>qml/utils/EntityEngine.qml</file>
         <file>qml/utils/qmldir</file>
         <file>qml/editor/Trackers.qml</file>
@@ -115,8 +114,6 @@
         <file>qml/utils/World3DTools.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/zonePanel/ZP_Content.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/zonePanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/TP_Content.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/ModelSelectionPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_FrictionSection.qml</file>

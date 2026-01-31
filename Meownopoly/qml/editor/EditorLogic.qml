@@ -52,7 +52,6 @@ Base_logic {
                                     : (logic.editorMouseMode === EditorEnum.EM_POSE) ? editorDynamicComponent.mouseLogic_pose_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_GAME) ? editorDynamicComponent.mouseLogic_game_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_DRAW_POLYGON) ? editorDynamicComponent.mouseLogic_drawPolygon_comp
-                                    : (logic.editorMouseMode === EditorEnum.EM_TEMPLATE) ? editorDynamicComponent.mouseLogic_temp_comp
                                     : editorDynamicComponent.mouseLogic_selectionLink_comp
         property var _logic : parent
         property var _grid: editorGrid

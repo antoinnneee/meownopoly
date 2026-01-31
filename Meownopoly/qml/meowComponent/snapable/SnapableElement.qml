@@ -35,7 +35,6 @@ Rectangle {
     property bool isDragging: false
     property bool isResizing: false
     property bool isSelected: false
-    property bool isTemplateSelected: false
 
     property var generalMA: null
     property bool displayLinkEnable: false
@@ -60,20 +59,6 @@ Rectangle {
     // --- Signals ---
     signal elementClicked()
     signal elementPressed()
-
-    signal elementTemplateSelected()
-    signal elementTemplateUnSelected()
-    signal elementTemplateReversed()
-
-    onElementTemplateReversed: {
-        isTemplateSelected = !isTemplateSelected
-    }
-    onElementTemplateSelected: {
-        isTemplateSelected = true
-    }
-    onElementTemplateUnSelected: {
-        isTemplateSelected = false
-    }
 
     onElementPressed: {
         isDragging = true

@@ -8,7 +8,6 @@ import "../"
 import editorBottomPanel
 import caseSelectionPanel
 import zonePanel
-import templatePanel
 
 EditorBottomPanel {
     id: root
@@ -240,18 +239,6 @@ EditorBottomPanel {
             onFocusReleased:{
                 root.focusReleased()
             }
-        }
-        // Exclusion Zone Panel
-        TP_Content {
-            id: templatePanel
-
-            logic: root.logic
-            isExpanded: true
-
-            currentView: root.currentView
-            activeFilter: "All"
-            Layout.preferredWidth: parent.width
-            Layout.preferredHeight: parent.height
         }
     }
 }

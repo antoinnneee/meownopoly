@@ -9,10 +9,6 @@ import ".."
 import MapTypes
 import ItemSnapableFactory
 
-// Template system imports
-import TemplateManager
-import TemplateFileManager
-
 QtObject {
     required property var snapableTilesList
     required property var logic
@@ -26,72 +22,7 @@ QtObject {
     property real currentZOrder: 0.00001
 
     property bool displayLinkEnable :false
-    
-    /**
-     * @brief Place un template à la position spécifiée sur la grille
-     * @param gridX Position X sur la grille (sera ajustée au centre)
-     * @param gridY Position Y sur la grille (sera ajustée au centre)
-     * @return true si le template a été placé avec succès
-     * 
-     * Cette fonction:
-     * 1. Vérifie qu'un template est sélectionné dans TemplateManager
-     * 2. Génère les éléments du template avec les positions ajustées
-     * 3. Crée chaque élément sur la carte
-     * 4. Sauvegarde la carte après le placement
-     */
-    function placeSelectedTemplate(gridX, gridY) {
-        // Vérifier qu'un template est sélectionné
-        if (!TemplateManager.hasCurrentTemplate) {
-            console.log("TileLogic: Aucun template sélectionné")
-            return false
-        }
         
-        // Obtenir les dimensions du template pour le centrage
-        var bounds = TemplateManager.getCurrentTemplateBounds()
-        var templateWidth = bounds.width || 0
-        var templateHeight = bounds.height || 0
-        
-        // Ajuster la position pour centrer le template
-        var adjustedX = gridX - Math.floor(templateWidth / 2)
-        var adjustedY = gridY - Math.floor(templateHeight / 2)
-        
-        console.log("TileLogic: Placement du template à", adjustedX, ",", adjustedY, 
-                    "- Dimensions:", templateWidth, "x", templateHeight)
-        
-        // Générer les éléments du template au format JSON
-        var elementsJson = TemplateManager.generateTemplateElementsJson(adjustedX, adjustedY)
-        
-        if (elementsJson.length === 0) {
-            console.log("TileLogic: Le template ne contient aucun élément")
-            return false
-        }
-        
-        // Créer chaque élément
-        var createdElements = []
-        for (var i = 0; i < elementsJson.length; i++) {
-            var elementData = elementsJson[i]
-            
-            // Créer l'ItemSnapable depuis le JSON
-            var snapableParameters = ItemSnapableFactory.createItemSnapableFromJson(elementData)
-            
-            if (snapableParameters) {
-                var newTile = createItemSnapable(snapableParameters)
-                if (newTile) {
-                    createdElements.push(newTile)
-                }
-            }
-        }
-        
-        console.log("TileLogic: Template placé avec", createdElements.length, "éléments")
-        
-        // Sauvegarder après le placement
-        if (createdElements.length > 0) {
-            logic.saveMap(MapTypes.UNDOREDO)
-        }
-        
-        return createdElements.length > 0
-    }
-    
     function placeSelectedAsset(gridX, gridY) {
         var snapableParameters
         gridX = gridX - Math.trunc(currentElementWidth/2)

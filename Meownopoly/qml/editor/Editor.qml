@@ -25,7 +25,6 @@ import DecorationParameter
 import UndoRedoManager
 import AssetManager
 import ItemSnapableFactory
-import TemplateManager
 import ui_item
 
 import utils
@@ -375,14 +374,6 @@ Base_Board {
         }
     }
 
-    // Template preview cursor - prévisualisation d'une scène/template
-    TemplatePreviewCursor {
-        id: templatePreview
-        parent: workArea
-        gridManager: gameGrid
-        workArea: workArea
-        visible: logic.editorMouseMode === EditorEnum.EM_TEMPLATE && TemplateManager.hasCurrentTemplate
-    }
 
     // Rectangle de sélection
     SelectionRect {
