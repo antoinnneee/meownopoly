@@ -47,6 +47,12 @@ ItemSnapable *ItemSnapableFactory::createItemSnapable(Case::CaseType caseType)
     return snap;
 }
 
+ItemSnapable *ItemSnapableFactory::createItemSnapableFromJson(const QJsonObject &json)
+{
+    ItemSnapable *snap = new ItemSnapable(json);
+    return snap;
+}
+
 ItemSnapable *ItemSnapableFactory::createPhysicZone()
 {
     ItemSnapable *snap = new ItemSnapable();

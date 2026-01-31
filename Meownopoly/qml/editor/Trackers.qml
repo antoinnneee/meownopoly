@@ -41,4 +41,22 @@ Item {
             }
         }
     }
+
+    // MouseArea to track cursor position for template preview
+    MouseArea {
+        id: templateTracker
+        z: 51
+        parent: workArea
+        anchors.fill: parent
+        hoverEnabled: true
+        enabled: logic.editorMouseMode === EditorEnum.EM_TEMPLATE
+        acceptedButtons: Qt.NoButton // Don't interfere with clicks
+        propagateComposedEvents: true
+        preventStealing: true
+
+        onPositionChanged: function(mouse) {
+            templatePreview.mouseX = mouse.x
+            templatePreview.mouseY = mouse.y
+        }
+    }
 }

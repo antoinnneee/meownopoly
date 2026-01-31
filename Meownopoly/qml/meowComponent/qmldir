@@ -16,3 +16,4 @@ SnapableCaseTile 1.0 snapable/SnapableCaseTile.qml
 AssetPreviewCursor 1.0 preview/AssetPreviewCursor.qml
 LinkPreviewCursor 1.0 preview/LinkPreviewCursor.qml
 PolygonPreviewCursor 1.0 preview/PolygonPreviewCursor.qml
+TemplatePreviewCursor 1.0 preview/TemplatePreviewCursor.qml
