@@ -17,6 +17,7 @@ public:
         EM_NORMAL,
         EM_POSE,
         EM_SELECTION_LINK,
+        EM_TEMPLATE,
         EM_GAME,
         EM_DRAW_POLYGON,
     };

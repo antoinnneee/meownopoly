@@ -67,5 +67,6 @@
         <file>qml/ui_item/SizeSelector.qml</file>
         <file>qml/ui_item/InteractiveUiElement.qml</file>
         <file>qml/ui_item/CollapsableGroupBox.qml</file>
+        <file>qml/meowComponent/TemplateBoundingRect.qml</file>
     </qresource>
 </RCC>

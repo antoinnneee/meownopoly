@@ -8,6 +8,7 @@ Base_logic 1.0 Base_logic.qml
 Base_WorkArea 1.0 Base_WorkArea.qml
 Base_WheelHandler 1.0 Base_WheelHandler.qml
 SelectionRect 1.0 SelectionRect.qml
+TemplateBoundingRect 1.0 TemplateBoundingRect.qml
 GridManager 1.0 grid/GridManager.qml
 SnapableElement 1.0 snapable/SnapableElement.qml
 SnapableDecoration 1.0 snapable/SnapableDecoration.qml

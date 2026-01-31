@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import UiStyle
 import EditorEnum
+import meowComponent
+
 Item {
 
     // MouseArea to track cursor position for asset preview
@@ -39,6 +41,24 @@ Item {
             if (logic.mouseLogic && logic.mouseLogic.updateMousePosition) {
                 logic.mouseLogic.updateMousePosition(mouse.x, mouse.y)
             }
+        }
+    }
+
+    // ==================== TEMPLATE MODE TRACKER ====================
+    
+    // Repeater pour afficher les rectangles verts de sélection template
+    Repeater {
+        id: templateBoundingBoxRepeater
+        
+        // Modèle : liste des bounding boxes depuis MouseLogic_Template
+        model: (logic.editorMouseMode === EditorEnum.EM_TEMPLATE && logic.mouseLogic && logic.mouseLogic.templateBoundingBoxes)
+               ? logic.mouseLogic.templateBoundingBoxes
+               : []
+        
+        delegate: TemplateBoundingRect {
+            parent: workArea
+            boundingData: modelData
+            z: UiStyle.z_SELECTION_RECT + 1
         }
     }
 }

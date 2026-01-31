@@ -122,5 +122,8 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_VectorDirectionPicker.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_GeneralSection.qml</file>
         <file>qml/editor/panel/mapInfoPanel/MapInfoDrawer.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/TP_Content.qml</file>
+        <file>qml/editor/logic/MouseLogic_Template.qml</file>
     </qresource>
 </RCC>

@@ -16,6 +16,7 @@ Item{
     property alias mouseLogic_game_comp: mouseLogic_game_comp
     property alias mouseLogic_selectionLink_comp: mouseLogic_selectionLink_comp
     property alias mouseLogic_drawPolygon_comp: mouseLogic_drawPolygon_comp
+    property alias mouseLogic_template_comp: mouseLogic_template_comp
     property alias scrollLogic_normal_comp: scrollLogic_normal_comp
     property alias scrollLogic_pose_comp: scrollLogic_pose_comp
 
@@ -128,6 +129,18 @@ Item{
             polygonPreviewComponent: _polygonPreview
             Component.onCompleted: {
                 logic.mouseLogic = mouseLogic_drawPolygon
+            }
+        }
+    }
+
+    Component {
+        id: mouseLogic_template_comp
+        MouseLogic_Template {
+            id: mouseLogic_template
+            logic: _logic
+            grid: _grid
+            Component.onCompleted: {
+                logic.mouseLogic = mouseLogic_template
             }
         }
     }
