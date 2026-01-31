@@ -41,6 +41,7 @@
 #include "game/map/undoredomanager.h"
 #include "game/map/mapinfo.h"
 #include "game/map/mapfilemanager.h"
+#include "game/map/templatefilemanager.h"
 
 #include "game/item_snapable/itemsnapablefactory.h"
 
@@ -64,6 +65,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     LauncherManager::registerQml();
     AssetManager::registerQml();
     MapFileManager::registerQml();
+    TemplateFileManager::registerQml();
     MapInfo::registerQml();
     EditorEnum::registerQml();
     ItemSnapableFactory::registerQml();

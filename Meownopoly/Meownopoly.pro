@@ -56,6 +56,7 @@ SOURCES += \
     game/card.cpp \
     game/game.cpp \
     game/game_loader.cpp \
+    game/game_template.cpp \
     game/player.cpp \
     experiment/animation_manager.cpp \
     experiment/animationprovider.cpp \
@@ -69,6 +70,7 @@ SOURCES += \
     game/map/map.cpp \
     game/map/mapinfo.cpp \
     game/map/mapfilemanager.cpp \
+    game/map/templatefilemanager.cpp \
     game/meowstyle.cpp \
     qmlapp.cpp \
     tools/appinfo.cpp \
@@ -119,6 +121,7 @@ HEADERS += \
     game/map/map.h \
     game/map/mapinfo.h \
     game/map/mapfilemanager.h \
+    game/map/templatefilemanager.h \
     game/map/maptypes.h \
     game/meowstyle.h \
     qmlapp.h \
@@ -142,7 +145,7 @@ RESOURCES += qml.qrc \
     launcher.qrc \
     other.qrc
 
-# CONFIG += qmlcache  # Désactivé car nécessite TARGETPATH pour Qt 6.10+
+# CONFIG += qmlcache  # D?sactiv? car n?cessite TARGETPATH pour Qt 6.10+
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH = $$PWD

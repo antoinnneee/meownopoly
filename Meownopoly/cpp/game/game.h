@@ -7,6 +7,8 @@
 #include <QList>
 #include <QVariant>
 #include <QDir>
+#include <QJsonArray>
+#include <QJsonObject>
 #include "game/case/Case.h"
 #include "game/case/CaseRestArea.h"
 
@@ -81,6 +83,12 @@ public:
 
     Q_INVOKABLE void askPreview();
     Q_INVOKABLE void askNext();
+
+    // Template saving/loading
+    Q_INVOKABLE bool saveTemplate(QString name, QJsonArray elementsJson);
+    Q_INVOKABLE bool deleteTemplate(QString name);
+    Q_INVOKABLE QJsonObject loadTemplate(QString name);
+    Q_INVOKABLE QJsonArray getTemplateElementsForPlacement(QString name, int targetX, int targetY);
 
 
     ~Game();
