@@ -24,7 +24,60 @@ MouseLogic_Selection {
     // Liste des bounding boxes à afficher (pour le Repeater dans Trackers)
     property var templateBoundingBoxes: []
     
+    // Flag pour savoir si on a cliqué dans la bounding box (pour le drag)
+    property bool pressedInsideBoundingBox: false
+    
     // ========== FONCTIONS SURCHARGÉES ==========
+    
+    /**
+     * Surcharge de pressedLeft : gérer le clic dans la bounding box pour drag
+     */
+    function pressedLeft(mouse, drag) {
+        mouse.accepted = true
+        
+        // Convertir les coordonnées de mainMa vers workArea
+        var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+        
+        // Stocker la position de presse pour détecter le mouvement plus tard
+        pressPosition = Qt.point(workAreaPos.x, workAreaPos.y)
+        
+        // Si un élément est cliqué directement, comportement normal
+        if (clickElement.length > 0) {
+            hadPressWithoutElement = false
+            pressedInsideBoundingBox = false
+            drag.target = groupeSelection
+            return
+        }
+        
+        // Aucun élément cliqué directement...
+        // Vérifier si le clic est dans la bounding box
+        if (isInsideBoundingBox(workAreaPos.x, workAreaPos.y)) {
+            console.log("[TEMPLATE] Pressed inside bounding box - enabling group drag")
+            hadPressWithoutElement = false
+            pressedInsideBoundingBox = true
+            drag.target = groupeSelection
+            
+            // Sauvegarder les positions de départ pour le drag
+            dragStartPos = Qt.point(mouse.x, mouse.y)
+            targetStartPos = Qt.point(groupeSelection.x, groupeSelection.y)
+            return
+        }
+        
+        // Clic dans le vide (hors bounding box) → démarrer sélection rectangle
+        hadPressWithoutElement = true
+        pressedInsideBoundingBox = false
+        isRectangleSelecting = true
+        
+        rectangleStart = Qt.point(workAreaPos.x, workAreaPos.y)
+        rectangleCurrent = Qt.point(workAreaPos.x, workAreaPos.y)
+        
+        // Activer le rectangle de sélection visuel
+        if (logic.selectionRect) {
+            logic.selectionRect.show()
+            logic.selectionRect.updateGeometry(rectangleStart, rectangleCurrent)
+        }
+        drag.target = null
+    }
     
     /**
      * Surcharge de clickedLeft : comportement toggle systématique
@@ -61,10 +114,19 @@ MouseLogic_Selection {
             logic.selectionRect.hide()
         }
         
-        // ===== CLIC DANS LE VIDE → Désélectionner tout =====
+        // ===== CLIC DANS LE VIDE =====
         if (clickElement.length === 0) {
+            // Si on a cliqué dans la bounding box sans bouger, ne rien faire (juste un clic, pas de drag)
+            if (pressedInsideBoundingBox && !hasMoved) {
+                console.log("[TEMPLATE] Clicked inside bounding box without moving - keeping selection")
+                pressedInsideBoundingBox = false
+                return
+            }
+            
+            // Clic vraiment dans le vide → Désélectionner tout
             unselectAllTemplateElements()
             clickElement = []
+            pressedInsideBoundingBox = false
             return
         }
         
@@ -108,7 +170,54 @@ MouseLogic_Selection {
         }
     }
     
+    /**
+     * Surcharge de positionChanged : mettre à jour la bounding box pendant le drag
+     */
+    function positionChanged(mouse, drag) {
+        // Mettre à jour la sélection par rectangle si active
+        if (mouseLogic.isRectangleSelecting) {
+            mouseLogic.updateRectangleSelection(mouse.x, mouse.y)
+        }
+        
+        // Gérer le snap pendant le drag (logique héritée du parent)
+        if (drag.active && drag.target && grid.snapToGrid) {
+            var deltaX = mouse.x - dragStartPos.x
+            var deltaY = mouse.y - dragStartPos.y
+            
+            var newX = targetStartPos.x + deltaX
+            var newY = targetStartPos.y + deltaY
+            
+            if (drag.target === groupeSelection) {
+                // Snapper aux positions de la grille
+                var snappedX = Math.round(newX / grid.gridSize) * grid.gridSize
+                var snappedY = Math.round(newY / grid.gridSize) * grid.gridSize
+                
+                drag.target.x = snappedX
+                drag.target.y = snappedY
+            }
+        }
+        
+        // Mettre à jour la position de la caméra 3D
+        updateCameraPosition()
+        
+        // ===== MISE À JOUR EN TEMPS RÉEL DE LA BOUNDING BOX =====
+        if (drag.active && drag.target === groupeSelection && templateSelectedElements.length > 0) {
+            updateTemplateBoundingBox()
+        }
+    }
+    
     // ========== NOUVELLES FONCTIONS ==========
+    
+    /**
+     * Vérifie si une position (x, y) est à l'intérieur de la bounding box actuelle
+     */
+    function isInsideBoundingBox(x, y) {
+        if (templateBoundingBoxes.length === 0) return false
+        
+        var box = templateBoundingBoxes[0]
+        return x >= box.x && x <= box.x + box.width &&
+               y >= box.y && y <= box.y + box.height
+    }
     
     /**
      * Toggle un élément dans la sélection template
