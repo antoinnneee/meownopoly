@@ -30,6 +30,7 @@ EBP_TitleBar {
     backButton.visible: titleBar.currentView === "assets"
 
 
+
     // Clear selection button (visible when asset is selected)
     ASP_ClearButton {
         id: clearButton
