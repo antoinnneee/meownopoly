@@ -2,6 +2,8 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import EditorEnum
+import Game
+import TemplateFileManager
 
 import "../"
 import editorBottomPanel
@@ -26,7 +28,92 @@ EBP_Content {
     // Template actuellement sélectionné
     property string selectedTemplateName: ""
 
+    // Liste des noms de templates (alimentée par TemplateFileManager)
+    property var templateNameList: []
+
     sidePanelRatio: 0
+
+    /** Rafraîchit la liste des templates depuis le disque */
+    function refreshTemplateList() {
+        var list = TemplateFileManager.getAvailableTemplates()
+        templateNameList = list || []
+    }
+
+    /** Éléments en attente d'enregistrement (après clic Enregistrer, avant saisie du nom) */
+    property var pendingSaveElementsJson: []
+
+    /**
+     * Construit un tableau d'objets JSON à partir des éléments sélectionnés.
+     * Chaque objet a gridRelativePositionX/Y en top-level pour le C++.
+     */
+    function buildElementsJsonFromSelection() {
+        if (!logic || !logic.mouseLogic || !logic.mouseLogic.getTemplateSelectedElements) return []
+        var elements = logic.mouseLogic.getTemplateSelectedElements()
+        var arr = []
+        for (var i = 0; i < elements.length; i++) {
+            var el = elements[i]
+            var isParam = el && el.snapableParameters
+            if (!isParam || typeof isParam.toJSON !== "function") continue
+            var jsonStr = isParam.toJSON()
+            var obj = {}
+            try {
+                obj = JSON.parse(jsonStr)
+            } catch (e) {
+                console.warn("[TP_Content] Failed to parse element JSON:", e)
+                continue
+            }
+            if (obj.displayParameter) {
+                obj.gridRelativePositionX = obj.displayParameter.gridRelativePositionX
+                obj.gridRelativePositionY = obj.displayParameter.gridRelativePositionY
+            }
+            arr.push(obj)
+        }
+        return arr
+    }
+
+    /** Déclenche l'enregistrement : vérifie la sélection puis ouvre le popup de nom */
+    function requestSaveTemplate() {
+        var elementsJson = buildElementsJsonFromSelection()
+        if (elementsJson.length === 0) {
+            console.warn("[TP_Content] Aucun élément sélectionné pour enregistrer le template.")
+            return
+        }
+        root.pendingSaveElementsJson = elementsJson
+        saveNameInput.text = ""
+        saveTemplatePopup.open()
+    }
+
+    /** Enregistre le template avec le nom saisi (appelé après OK dans le popup) */
+    function doSaveTemplate(templateName) {
+        var name = (templateName || "").trim()
+        if (!name) return
+        if (pendingSaveElementsJson.length === 0) return
+        var ok = Game.saveTemplate(name, pendingSaveElementsJson)
+        if (ok) {
+            refreshTemplateList()
+            root.selectedTemplateName = name
+            saveTemplatePopup.close()
+        }
+        root.pendingSaveElementsJson = []
+    }
+
+    /** Supprime le template actuellement sélectionné dans la liste */
+    function requestDeleteTemplate() {
+        var name = root.selectedTemplateName
+        if (!name || !name.length) {
+            console.warn("[TP_Content] Aucun template sélectionné pour suppression.")
+            return
+        }
+        var ok = Game.deleteTemplate(name)
+        if (ok) {
+            if (root.selectedTemplateName === name) root.selectedTemplateName = ""
+            refreshTemplateList()
+        }
+    }
+
+    Component.onCompleted: {
+        refreshTemplateList()
+    }
 
     // Activer le mode template quand le panneau devient visible
     onVisibleChanged: {
@@ -34,6 +121,7 @@ EBP_Content {
         
         if (visible) {
             console.log("[TP_Content] Activating TEMPLATE mode")
+            refreshTemplateList()
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_TEMPLATE)
         } else {
             console.log("[TP_Content] Deactivating TEMPLATE mode")
@@ -99,8 +187,7 @@ EBP_Content {
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     onClicked: {
-                        console.log("Enregistrer template")
-                        // TODO: Logique d'enregistrement
+                        root.requestSaveTemplate()
                     }
                 }
             }
@@ -140,8 +227,7 @@ EBP_Content {
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     onClicked: {
-                        console.log("Supprimer template: " + root.selectedTemplateName)
-                        // TODO: Logique de suppression
+                        root.requestDeleteTemplate()
                     }
                 }
             }
@@ -192,23 +278,20 @@ EBP_Content {
                     clip: true
                     spacing: 4
 
-                    model: ListModel {
-                        ListElement { name: "Village" }
-                        ListElement { name: "Foret" }
-                        ListElement { name: "Montagne" }
-                    }
+                    model: root.templateNameList
 
                     delegate: Rectangle {
                         width: templateListView.width
                         height: root.listItemHeight
                         radius: 6
+                        property string templateName: modelData
                         color: {
-                            if (root.selectedTemplateName === model.name) {
+                            if (root.selectedTemplateName === templateName) {
                                 return "#3d5a80"
                             }
                             return itemMouseArea.containsMouse ? "#353535" : "#2a2a2a"
                         }
-                        border.color: root.selectedTemplateName === model.name ? "#5DADE2" : "transparent"
+                        border.color: root.selectedTemplateName === templateName ? "#5DADE2" : "transparent"
                         border.width: 2
 
                         Behavior on color { ColorAnimation { duration: 100 } }
@@ -226,7 +309,7 @@ EBP_Content {
                             }
 
                             Text {
-                                text: model.name
+                                text: templateName
                                 font.pointSize: 9
                                 color: "#ffffff"
                                 Layout.fillWidth: true
@@ -234,7 +317,7 @@ EBP_Content {
                             }
 
                             Text {
-                                text: root.selectedTemplateName === model.name ? "✓" : ""
+                                text: root.selectedTemplateName === templateName ? "✓" : ""
                                 font.pointSize: 10
                                 color: "#5DADE2"
                             }
@@ -246,8 +329,8 @@ EBP_Content {
                             cursorShape: Qt.PointingHandCursor
                             hoverEnabled: true
                             onClicked: {
-                                root.selectedTemplateName = model.name
-                                console.log("Template sélectionné: " + model.name)
+                                root.selectedTemplateName = templateName
+                                console.log("Template sélectionné: " + templateName)
                             }
                         }
                     }
@@ -274,6 +357,61 @@ EBP_Content {
         // Espaceur pour ne pas utiliser toute la largeur
         Item {
             Layout.fillWidth: true
+        }
+    }
+
+    // Popup pour saisir le nom du template à enregistrer
+    Popup {
+        id: saveTemplatePopup
+        parent: root
+        anchors.centerIn: parent
+        width: Math.min(320, root.width * 0.9)
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        padding: 16
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 12
+
+            Text {
+                text: "Nom du template"
+                font.pointSize: 10
+                font.bold: true
+                color: "#ffffff"
+            }
+
+            TextField {
+                id: saveNameInput
+                Layout.fillWidth: true
+                placeholderText: "Ex: Village, Foret..."
+                font.pointSize: 9
+                onAccepted: root.doSaveTemplate(text)
+            }
+
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                spacing: 8
+
+                Button {
+                    text: "Annuler"
+                    font.pointSize: 9
+                    onClicked: saveTemplatePopup.close()
+                }
+                Button {
+                    text: "Enregistrer"
+                    font.pointSize: 9
+                    highlighted: true
+                    onClicked: root.doSaveTemplate(saveNameInput.text)
+                }
+            }
+        }
+
+        background: Rectangle {
+            color: "#2a2a2a"
+            border.color: "#4a4a4a"
+            radius: 8
         }
     }
 }
