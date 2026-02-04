@@ -44,6 +44,29 @@ Item {
         }
     }
 
+    // MouseArea to track cursor position for template placement preview
+    MouseArea {
+        id: templatePlacementTracker
+        parent: workArea
+        anchors.fill: parent
+        hoverEnabled: true
+        enabled: logic.editorMouseMode === EditorEnum.EM_TEMPLATE && 
+                 logic.mouseLogic && logic.mouseLogic.isPlacementMode
+        acceptedButtons: Qt.NoButton
+        propagateComposedEvents: true
+        preventStealing: true
+        z: 50
+        
+        onPositionChanged: function(mouse) {
+            if (logic.mouseLogic) {
+                logic.mouseLogic.previewMouseX = mouse.x
+                logic.mouseLogic.previewMouseY = mouse.y
+            }
+            templatePreview.mouseX = mouse.x
+            templatePreview.mouseY = mouse.y
+        }
+    }
+
     // ==================== TEMPLATE MODE TRACKER ====================
     
     // Repeater pour afficher les rectangles verts de sélection template

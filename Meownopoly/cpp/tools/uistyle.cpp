@@ -39,6 +39,11 @@ int UiStyle::z_SELECTION_RECT() const
     return m_z_SELECTION_RECT;
 }
 
+int UiStyle::z_TEMPLATE_PREVIEW() const
+{
+    return m_z_TEMPLATE_PREVIEW;
+}
+
 int UiStyle::z_CURSOR_TRACKER() const
 {
     return m_z_CURSOR_TRACKER;

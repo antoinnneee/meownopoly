@@ -125,6 +125,12 @@ EBP_Content {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_TEMPLATE)
         } else {
             console.log("[TP_Content] Deactivating TEMPLATE mode")
+            
+            // Sortir du mode placement si actif
+            if (logic.mouseLogic.isPlacementMode) {
+                logic.mouseLogic.exitPlacementMode()
+            }
+            
             // Nettoyer la sélection template si on quitte le mode
             if (logic.mouseLogic.clearTemplateSelection) {
                 logic.mouseLogic.clearTemplateSelection()
@@ -331,6 +337,15 @@ EBP_Content {
                             onClicked: {
                                 root.selectedTemplateName = templateName
                                 console.log("Template sélectionné: " + templateName)
+                                
+                                // Activer le mode placement
+                                if (logic && logic.mouseLogic && logic.mouseLogic.enterPlacementMode) {
+                                    var success = logic.mouseLogic.enterPlacementMode(templateName)
+                                    if (!success) {
+                                        console.warn("[TP_Content] Failed to enter placement mode for:", templateName)
+                                        root.selectedTemplateName = ""
+                                    }
+                                }
                             }
                         }
                     }

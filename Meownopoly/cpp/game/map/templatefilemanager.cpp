@@ -232,6 +232,14 @@ QJsonArray TemplateFileManager::convertToRelativePositions(const QJsonArray &ele
         element.remove("gridRelativePositionY");
         element.remove("uniqueId");
         
+        // IMPORTANT : Supprimer aussi les positions dans displayParameter pour éviter pollution
+        if (element.contains("displayParameter")) {
+            QJsonObject displayParam = element["displayParameter"].toObject();
+            displayParam.remove("gridRelativePositionX");
+            displayParam.remove("gridRelativePositionY");
+            element["displayParameter"] = displayParam;
+        }
+        
         // Note: on garde next/prev pour la structure, mais ils seront remappés au placement
         
         relativeArray.append(element);
@@ -251,8 +259,20 @@ QJsonArray TemplateFileManager::convertToAbsolutePositions(const QJsonArray &ele
         int relX = element["relativePositionX"].toInt(0);
         int relY = element["relativePositionY"].toInt(0);
         
-        element["gridRelativePositionX"] = targetX + relX;
-        element["gridRelativePositionY"] = targetY + relY;
+        int newAbsX = targetX + relX;
+        int newAbsY = targetY + relY;
+        
+        element["gridRelativePositionX"] = newAbsX;
+        element["gridRelativePositionY"] = newAbsY;
+        
+        // CRITIQUE : Mettre à jour AUSSI les positions dans displayParameter
+        // Car ItemSnapable lit les positions depuis displayParameter, pas du top-level !
+        if (element.contains("displayParameter")) {
+            QJsonObject displayParam = element["displayParameter"].toObject();
+            displayParam["gridRelativePositionX"] = newAbsX;
+            displayParam["gridRelativePositionY"] = newAbsY;
+            element["displayParameter"] = displayParam;
+        }
         
         // Supprimer les propriétés relatives
         element.remove("relativePositionX");

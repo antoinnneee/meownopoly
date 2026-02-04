@@ -360,6 +360,17 @@ Base_Board {
         sidePanel: sidePanel
     }
 
+    // Template preview cursor
+    TemplatePreviewCursor {
+        id: templatePreview
+        parent: workArea
+        gridManager: gameGrid
+        templateData: logic.mouseLogic && logic.mouseLogic.isPlacementMode ? 
+                      logic.mouseLogic.placementTemplateData : null
+        mouseX: 0
+        mouseY: 0
+    }
+
     // Prévisualisation du polygone pendant le dessin
     PolygonPreviewCursor {
         id: polygonPreview

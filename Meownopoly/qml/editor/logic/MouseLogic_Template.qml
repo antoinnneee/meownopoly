@@ -1,10 +1,11 @@
 import QtQuick 2.15
+import Game
 import MapTypes
 
 /**
  * MouseLogic pour le mode Template.
  * Permet de sélectionner des éléments pour créer un template.
- * 
+ *
  * Comportements :
  * - Clic gauche sur élément : Toggle (ajouter/retirer de la sélection)
  * - Clic gauche dans le vide : Désélectionner tout
@@ -27,12 +28,36 @@ MouseLogic_Selection {
     // Flag pour savoir si on a cliqué dans la bounding box (pour le drag)
     property bool pressedInsideBoundingBox: false
     
+    // ========== SOUS-MODE PLACEMENT ==========
+    
+    // Données du template en cours de placement
+    property var placementTemplateData: null  // QJsonObject du template chargé
+    property string placementTemplateName: ""
+    
+    // Flag de sous-mode
+    property bool isPlacementMode: false  // true si template sélectionné pour placement
+    
+    // Position de la souris (pour le preview)
+    property real previewMouseX: 0
+    property real previewMouseY: 0
+    
+    // Pour distinguer clic vs drag droit
+    property bool hadRightDrag: false
+    
     // ========== FONCTIONS SURCHARGÉES ==========
     
     /**
      * Surcharge de pressedLeft : gérer le clic dans la bounding box pour drag
      */
     function pressedLeft(mouse, drag) {
+        // ===== MODE PLACEMENT =====
+        if (isPlacementMode) {
+            // Rien à faire au pressed en mode placement (attendre clicked)
+            mouse.accepted = true
+            return
+        }
+        
+        // ===== MODE CRÉATION =====
         mouse.accepted = true
         
         // Convertir les coordonnées de mainMa vers workArea
@@ -83,6 +108,14 @@ MouseLogic_Selection {
      * Surcharge de clickedLeft : comportement toggle systématique
      */
     function clickedLeft(mouse, drag) {
+        // ===== MODE PLACEMENT =====
+        if (isPlacementMode) {
+            placeTemplateAtCursor()
+            mouse.accepted = true
+            return  // RESTE EN MODE PLACEMENT pour poser à nouveau
+        }
+        
+        // ===== MODE CRÉATION =====
         mouse.accepted = true
         
         // Calculer la distance parcourue entre press et release
@@ -141,6 +174,19 @@ MouseLogic_Selection {
      * Surcharge de release : mettre à jour la bounding box après un drag
      */
     function release(mouse, drag) {
+        // Détection d'un vrai drag de la grille (avec mouvement)
+        if (drag.target === grid && drag.active) {
+            hadRightDrag = true
+        }
+        
+        // ===== MODE PLACEMENT =====
+        if (isPlacementMode) {
+            drag.target = null
+            clickElement = []
+            return
+        }
+        
+        // ===== MODE CRÉATION =====
         // Finaliser la sélection par rectangle si active
         if (isRectangleSelecting) {
             finalizeTemplateRectangleSelection()
@@ -168,6 +214,35 @@ MouseLogic_Selection {
             // Mettre à jour la bounding box après le déplacement
             updateTemplateBoundingBox()
         }
+    }
+    
+    /**
+     * Surcharge de pressedRight : gestion du drag de la carte
+     */
+    function pressedRight(mouse, drag) {
+        hadRightDrag = false
+        
+        if (isPlacementMode) {
+            drag.target = grid
+            mouse.accepted = true
+            return
+        }
+        
+        // Mode création : déplacer la carte
+        drag.target = grid
+        mouse.accepted = true
+    }
+    
+    /**
+     * Surcharge de clickedRight : sortie du mode placement si clic sans drag
+     */
+    function clickedRight(mouse, drag) {
+        if (isPlacementMode && !hadRightDrag) {
+            console.log("[TEMPLATE] Right click without drag -> exiting placement mode")
+            exitPlacementMode()
+        }
+        hadRightDrag = false
+        mouse.accepted = true
     }
     
     /**
@@ -209,6 +284,17 @@ MouseLogic_Selection {
     // ========== NOUVELLES FONCTIONS ==========
     
     /**
+     * Surcharge de changeMouseMode : sortir du mode placement si on change de mode
+     */
+    function changeMouseMode(mode) {
+        if (isPlacementMode && mode !== EditorEnum.EM_TEMPLATE) {
+            exitPlacementMode()
+        }
+        unselectSelectedElements()
+        logic.editorMouseMode = mode
+    }
+    
+    /**
      * Vérifie si une position (x, y) est à l'intérieur de la bounding box actuelle
      */
     function isInsideBoundingBox(x, y) {
@@ -216,7 +302,7 @@ MouseLogic_Selection {
         
         var box = templateBoundingBoxes[0]
         return x >= box.x && x <= box.x + box.width &&
-               y >= box.y && y <= box.y + box.height
+                y >= box.y && y <= box.y + box.height
     }
     
     /**
@@ -256,8 +342,10 @@ MouseLogic_Selection {
         console.log("[TEMPLATE] Unselecting all", templateSelectedElements.length, "elements")
         
         for (var i = 0; i < templateSelectedElements.length; i++) {
-            templateSelectedElements[i].elementUnselected()
-            destroyBindingsForElement(templateSelectedElements[i])
+            if (templateSelectedElements[i] && templateSelectedElements[i].elementUnselected !== undefined){
+                templateSelectedElements[i].elementUnselected()
+                destroyBindingsForElement(templateSelectedElements[i])
+            }
         }
         
         templateSelectedElements = []
@@ -313,11 +401,11 @@ MouseLogic_Selection {
         }
         
         templateBoundingBoxes = [{
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY
-        }]
+                                     x: minX,
+                                     y: minY,
+                                     width: maxX - minX,
+                                     height: maxY - minY
+                                 }]
         
         console.log("[TEMPLATE] Bounding box updated:", JSON.stringify(templateBoundingBoxes[0]))
     }
@@ -334,5 +422,103 @@ MouseLogic_Selection {
      */
     function clearTemplateSelection() {
         unselectAllTemplateElements()
+    }
+    
+    // ========== FONCTIONS MODE PLACEMENT ==========
+    
+    /**
+     * Entrer en mode placement avec un template spécifique
+     */
+    function enterPlacementMode(templateName) {
+        console.log("[TEMPLATE] Entering PLACEMENT mode for:", templateName)
+        
+        // Nettoyer la sélection création
+        unselectAllTemplateElements()
+        
+        // Charger le template
+        var templateData = Game.loadTemplate(templateName)
+        if (!templateData || !templateData.elements) {
+            console.error("[TEMPLATE] Failed to load template:", templateName)
+            return false
+        }
+        
+        placementTemplateData = templateData
+        placementTemplateName = templateName
+        isPlacementMode = true
+        
+        return true
+    }
+    
+    /**
+     * Sortir du mode placement
+     */
+    function exitPlacementMode() {
+        console.log("[TEMPLATE] Exiting PLACEMENT mode")
+        isPlacementMode = false
+        placementTemplateData = null
+        placementTemplateName = ""
+    }
+    
+    /**
+     * Placer le template à la position actuelle du curseur
+     */
+    function placeTemplateAtCursor() {
+        if (!placementTemplateData || !placementTemplateName) return
+        
+        var workAreaPos = mainMa.mapToItem(workArea, previewMouseX, previewMouseY)
+        var gridPos = grid.getGridPosition(workAreaPos.x, workAreaPos.y)
+        
+        // Calculer le centre du template pour ajuster la position
+        var centerOffset = calculateTemplateCenterOffset()
+        var adjustedGridX = gridPos.x + centerOffset.x
+        var adjustedGridY = gridPos.y + centerOffset.y
+        
+        console.log("[TEMPLATE] Placing template at grid:", adjustedGridX, adjustedGridY, "(centered)")
+        
+        var elementsArray = Game.getTemplateElementsForPlacement(placementTemplateName, adjustedGridX, adjustedGridY)
+        if (!elementsArray || elementsArray.length === 0) {
+            console.error("[TEMPLATE] Failed to get elements for placement")
+            return
+        }
+        
+        var jsonObj = { "snapableTiles": elementsArray }
+        var itemSnapableList = Game.generateItems(jsonObj)
+        
+        for (var i = 0; i < itemSnapableList.length; i++) {
+            logic.tileLogic.createItemSnapable(itemSnapableList[i])
+        }
+        
+        logic.saveMap(MapTypes.UNDOREDO)
+        console.log("[TEMPLATE] Placed", itemSnapableList.length, "elements")
+    }
+    
+    /**
+     * Calcule l'offset du centre du template pour le centrage
+     */
+    function calculateTemplateCenterOffset() {
+        if (!placementTemplateData || !placementTemplateData.elements || placementTemplateData.elements.length === 0) {
+            return { x: 0, y: 0 }
+        }
+        
+        var minX = Infinity, minY = Infinity
+        var maxX = -Infinity, maxY = -Infinity
+        
+        for (var i = 0; i < placementTemplateData.elements.length; i++) {
+            var elem = placementTemplateData.elements[i]
+            var relX = elem.relativePositionX || 0
+            var relY = elem.relativePositionY || 0
+            var width = elem.displayParameter ? (elem.displayParameter.unitSizeWidth || 1) : 1
+            var height = elem.displayParameter ? (elem.displayParameter.unitSizeHeight || 1) : 1
+            
+            minX = Math.min(minX, relX)
+            minY = Math.min(minY, relY)
+            maxX = Math.max(maxX, relX + width)
+            maxY = Math.max(maxY, relY + height)
+        }
+        
+        var centerX = Math.round((minX + maxX) / 2)
+        var centerY = Math.round((minY + maxY) / 2)
+        
+        return { x: -centerX, y: -centerY }
     }
 }
