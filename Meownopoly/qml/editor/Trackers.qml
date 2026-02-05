@@ -50,8 +50,19 @@ Item {
         parent: workArea
         anchors.fill: parent
         hoverEnabled: true
-        enabled: logic.editorMouseMode === EditorEnum.EM_TEMPLATE && 
-                 logic.mouseLogic && logic.mouseLogic.isPlacementMode
+        onEnabledChanged: {
+            console.log("onEnabledChanged - logic.editorMouseMode ", logic.editorMouseMode)
+            console.log("onEnabledChanged - EditorEnum.EM_TEMPLATE ", EditorEnum.EM_TEMPLATE)
+            console.log("onEnabledChanged - logic.mouseLogic ", logic.mouseLogic)
+            console.log("onEnabledChanged - logic.mouseLogic.isPlacementMode ", logic.mouseLogic ? logic.mouseLogic.isPlacementMode : "N/A")
+        }
+
+        enabled: logic.editorMouseMode !== undefined &&
+                 logic.editorMouseMode === EditorEnum.EM_TEMPLATE &&
+                 logic.mouseLogic !== undefined &&
+                 logic.mouseLogic.isPlacementMode === true
+
+
         acceptedButtons: Qt.NoButton
         propagateComposedEvents: true
         preventStealing: true

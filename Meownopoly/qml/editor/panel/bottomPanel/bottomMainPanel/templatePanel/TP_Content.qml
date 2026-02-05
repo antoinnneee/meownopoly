@@ -47,7 +47,10 @@ EBP_Content {
      * Chaque objet a gridRelativePositionX/Y en top-level pour le C++.
      */
     function buildElementsJsonFromSelection() {
-        if (!logic || !logic.mouseLogic || !logic.mouseLogic.getTemplateSelectedElements) return []
+        if (!logic || !logic.mouseLogic || !logic.mouseLogic.getTemplateSelectedElements){
+            console.log("Error : buildElementsJsonFromSelection() Can't access logic or its content")
+            return []
+        }
         var elements = logic.mouseLogic.getTemplateSelectedElements()
         var arr = []
         for (var i = 0; i < elements.length; i++) {
