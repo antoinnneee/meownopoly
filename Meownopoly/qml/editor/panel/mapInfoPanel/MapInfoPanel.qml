@@ -48,6 +48,8 @@ Item {
     MapInfoDrawer {
         id: mapInfoDrawer
         property alias mapInfoPanel: mapInfoPanel
+        onOpened:selectionPanel.visible =  false
+        onClosed:selectionPanel.visible =  true
     }
 
     // Barre de navigation des cartes
@@ -58,7 +60,7 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: mapInfoDrawer.position === 0 ? 0 : mapInfoDrawer.width + 5
         anchors.bottom: parent.bottom
-
+        visible: mapInfoDrawer.position === 1
     }
 
     // FileDialog pour la sélection d'image personnalisée

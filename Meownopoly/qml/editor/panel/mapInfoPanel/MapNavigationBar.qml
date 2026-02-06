@@ -149,7 +149,7 @@ Item {
         height: 50
         radius: 25
         z: 9000
-        visible: !selectionPanel.visible
+        // visible: !selectionPanel.visible
         
         property string arrowText: ""
         property bool isLeft: true
@@ -216,7 +216,7 @@ Item {
         anchors.bottomMargin: 20
         spacing: 10
         z: 9000
-        visible: !selectionPanel.visible
+        // visible: !selectionPanel.visible
 
         // Affichage du nom de la carte
         Rectangle {

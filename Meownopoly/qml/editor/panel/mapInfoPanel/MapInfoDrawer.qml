@@ -44,6 +44,7 @@ Drawer {
 
     modal: false
 
+
     signal requestNewMap()
     background : Rectangle {
         anchors.fill: parent
