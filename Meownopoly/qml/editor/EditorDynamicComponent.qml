@@ -21,7 +21,6 @@ Item{
     property alias scrollLogic_pose_comp: scrollLogic_pose_comp
 
 
-
     // Composant dynamique pour créer des SnapableCaseTile
     Component {
         id: snapableCaseTileComponent
@@ -72,7 +71,6 @@ Item{
         }
     }
 
-
     Component {
         id: mouseLogic_selection_comp
         MouseLogic_Selection {
@@ -108,7 +106,6 @@ Item{
             }
         }
     }
-
 
     Component {
         id: mouseLogic_selectionLink_comp
@@ -147,7 +144,6 @@ Item{
         }
     }
 
-
     Component{
         id: scrollLogic_normal_comp
         ScrollLogic {
@@ -171,7 +167,5 @@ Item{
             }
         }
     }
-
-
 }
 

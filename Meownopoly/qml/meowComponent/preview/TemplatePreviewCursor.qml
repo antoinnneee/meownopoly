@@ -64,10 +64,21 @@ Item {
         }
     }
     
-    function updateGridPosition() {
+    // function updateGridPosition() {
+    //     var point = gridManager.getGridPosition(mouseX, mouseY)
+    //     gridXPosition = point.x
+    //     gridYPosition = point.y
+    // }
+
+    function updateGridPosition()
+    {
         var point = gridManager.getGridPosition(mouseX, mouseY)
-        gridXPosition = point.x
         gridYPosition = point.y
+        gridXPosition = point.x
+        if (templatePreview) {
+            templatePreview.y = gridYPosition * gridManager.gridSize
+            templatePreview.x = gridXPosition * gridManager.gridSize
+        }
     }
     
     Item {

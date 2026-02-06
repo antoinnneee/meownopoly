@@ -479,7 +479,7 @@ MouseLogic_Selection {
         
         var workAreaPos = mainMa.mapToItem(workArea, previewMouseX, previewMouseY)
         var gridPos = grid.getGridPosition(workAreaPos.x, workAreaPos.y)
-        
+
         // Calculer le centre du template pour ajuster la position
         var centerOffset = calculateTemplateCenterOffset()
         var adjustedGridX = gridPos.x + centerOffset.x
@@ -487,7 +487,7 @@ MouseLogic_Selection {
         
         console.log("[TEMPLATE] Placing template at grid:", adjustedGridX, adjustedGridY, "(centered)")
         
-        var elementsArray = Game.getTemplateElementsForPlacement(placementTemplateName, adjustedGridX, adjustedGridY)
+        var elementsArray = Game.getTemplateElementsForPlacement(placementTemplateName, gridPos.x, gridPos.y)
         if (!elementsArray || elementsArray.length === 0) {
             console.error("[TEMPLATE] Failed to get elements for placement")
             return
@@ -509,6 +509,7 @@ MouseLogic_Selection {
      */
     function calculateTemplateCenterOffset() {
         if (!placementTemplateData || !placementTemplateData.elements || placementTemplateData.elements.length === 0) {
+            console.warn("[TEMPLATE] No elements in template for center calculation")
             return { x: 0, y: 0 }
         }
         
