@@ -15,6 +15,8 @@ Item {
     property real mouseX: 0
     property real mouseY: 0
     property var templateData: null
+
+    property var snapablePreview
     
     visible: templateData !== null && templateData.elements
     enabled: false
@@ -70,15 +72,18 @@ Item {
     //     gridYPosition = point.y
     // }
 
+
+
     function updateGridPosition()
     {
         var point = gridManager.getGridPosition(mouseX, mouseY)
         gridYPosition = point.y
         gridXPosition = point.x
-        if (templatePreview) {
-            templatePreview.y = gridYPosition * gridManager.gridSize
-            templatePreview.x = gridXPosition * gridManager.gridSize
+        if (snapablePreview) {
+            snapablePreview.y = gridYPosition * gridManager.gridSize
+            snapablePreview.x = gridXPosition * gridManager.gridSize
         }
+
     }
     
     Item {
@@ -117,6 +122,7 @@ Item {
     Component {
         id: decorationPreviewComp
         SnapableDecoration {
+            id: snapableDecoration
             property var elementData: parent && parent.elementData ? parent.elementData : null
             snapableParameters: ItemSnapableFactory.createItemSnapable()
             gridManager: root.gridManager
@@ -132,6 +138,7 @@ Item {
             }
             
             Component.onCompleted: {
+                root.snapablePreview = snapableDecoration
                 if (!elementData) return
                 if (elementData.displayParameter) {
                     snapableParameters.displayParameter.unitSizeWidth = elementData.displayParameter.unitSizeWidth || 1
@@ -142,6 +149,7 @@ Item {
                     snapableParameters.decorationParameter.decorationType = elementData.decorationParameter.decorationType || ""
                     snapableParameters.decorationParameter.decorationId = elementData.decorationParameter.decorationId || ""
                 }
+
             }
         }
     }
@@ -149,6 +157,7 @@ Item {
     Component {
         id: casePreviewComp
         SnapableCaseTile {
+            id: snapableCaseTile
             property var elementData: parent && parent.elementData ? parent.elementData : null
             snapableParameters: ItemSnapableFactory.createItemSnapable(elementData && elementData.caseData ? elementData.caseData.type : 0)
             gridManager: root.gridManager
@@ -164,6 +173,7 @@ Item {
             }
             
             Component.onCompleted: {
+                root.snapablePreview = snapableCaseTile
                 if (!elementData || !elementData.displayParameter) return
                 snapableParameters.displayParameter.unitSizeWidth = elementData.displayParameter.unitSizeWidth || 1
                 snapableParameters.displayParameter.unitSizeHeight = elementData.displayParameter.unitSizeHeight || 1
@@ -174,6 +184,7 @@ Item {
     Component {
         id: zonePreviewComp
         SnapableExclusionZone {
+            id: snapableExclusion
             property var elementData: parent && parent.elementData ? parent.elementData : null
             snapableParameters: ItemSnapableFactory.createPhysicZone()
             gridManager: root.gridManager
@@ -181,10 +192,9 @@ Item {
             z: UiStyle.z_TEMPLATE_PREVIEW + 1
             
             Component.onCompleted: {
+                root.snapablePreview = snapableExclusion
                 if (!elementData) return
                 if (elementData.displayParameter) {
-                    snapableParameters.displayParameter.gridRelativePositionX = 0
-                    snapableParameters.displayParameter.gridRelativePositionY = 0
                     snapableParameters.displayParameter.unitSizeWidth = elementData.displayParameter.unitSizeWidth || 1
                     snapableParameters.displayParameter.unitSizeHeight = elementData.displayParameter.unitSizeHeight || 1
                 }
@@ -194,6 +204,10 @@ Item {
                         snapableParameters.zoneParameter.addPoint(points[i].x, points[i].y)
                     }
                 }
+                console.log(" item gridpos  :  ", gridPosX, gridPosY)
+                console.log(" item polygon  :  ", snapableParameters.zoneParameter.polygonPoints)
+                updatePolygonPointsAfterMove()
+                forceRedraw()
             }
         }
     }

@@ -58,16 +58,13 @@ EBP_Content {
             var isParam = el && el.snapableParameters
             if (!isParam || typeof isParam.toJSON !== "function") continue
             var jsonStr = isParam.toJSON()
+            console.log("===================", jsonStr)
             var obj = {}
             try {
                 obj = JSON.parse(jsonStr)
             } catch (e) {
                 console.warn("[TP_Content] Failed to parse element JSON:", e)
                 continue
-            }
-            if (obj.displayParameter) {
-                obj.gridRelativePositionX = obj.displayParameter.gridRelativePositionX
-                obj.gridRelativePositionY = obj.displayParameter.gridRelativePositionY
             }
             arr.push(obj)
         }

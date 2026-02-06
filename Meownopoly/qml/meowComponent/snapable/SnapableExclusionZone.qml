@@ -94,6 +94,14 @@ SnapableElement {
         root.gridBounds = root.calculateGridBounds()
         root.updateRecalculate()
         hatchCanvas.requestPaint()
+        console.log(" item gridpos  :  ", gridPosX, gridPosY)
+        console.log(" item polygon  :  ", snapableParameters.zoneParameter.polygonPoints)
+    }
+    function forceRedraw()
+    {
+        root.gridBounds = root.calculateGridBounds()
+        root.updateRecalculate()
+        hatchCanvas.requestPaint()
     }
     
     function calculateGridBounds() {

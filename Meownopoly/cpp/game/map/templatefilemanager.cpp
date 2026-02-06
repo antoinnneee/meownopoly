@@ -182,21 +182,20 @@ QVariantMap TemplateFileManager::calculateBoundingBox(const QJsonArray &elements
     
     for (const QJsonValue &value : elementsArray) {
         QJsonObject element = value.toObject();
+
+        QJsonObject displayParam = element["displayParameter"].toObject();
         
         // Récupérer la position (gridRelativePositionX/Y sont les positions sur la grille)
-        int posX = element["gridRelativePositionX"].toInt(0);
-        int posY = element["gridRelativePositionY"].toInt(0);
+        int posX = displayParam["gridRelativePositionX"].toInt(0);
+        int posY = displayParam["gridRelativePositionY"].toInt(0);
         
         // Récupérer les dimensions (approximation via les paramètres)
         int width = 1;  // Par défaut 1 unité de grille
         int height = 1;
         
         // Essayer de récupérer les vraies dimensions depuis displayParameter
-        if (element.contains("displayParameter")) {
-            QJsonObject displayParam = element["displayParameter"].toObject();
             width = displayParam["width"].toInt(1);
             height = displayParam["height"].toInt(1);
-        }
         
         minX = qMin(minX, posX);
         minY = qMin(minY, posY);
@@ -218,27 +217,41 @@ QJsonArray TemplateFileManager::convertToRelativePositions(const QJsonArray &ele
     
     for (const QJsonValue &value : elementsArray) {
         QJsonObject element = value.toObject();
+        QJsonObject displayParam = element["displayParameter"].toObject();
         
         // Convertir les positions absolues en relatives
-        int absX = element["gridRelativePositionX"].toInt(0);
-        int absY = element["gridRelativePositionY"].toInt(0);
+        int absX = displayParam["gridRelativePositionX"].toInt(0);
+        int absY = displayParam["gridRelativePositionY"].toInt(0);
         
         // Stocker la position relative (par rapport à l'origine du template)
         element["relativePositionX"] = absX - originX;
         element["relativePositionY"] = absY - originY;
         
+        // Soustraire gridRelativePositionX/Y des points du polygone (zoneParameter)
+        if (element.contains("zoneParameter")) {
+            QJsonObject zoneParam = element["zoneParameter"].toObject();
+            if (zoneParam.contains("polygonPoints")) {
+                QJsonArray polygonPoints = zoneParam["polygonPoints"].toArray();
+                QJsonArray adjustedPoints;
+                for (const QJsonValue &ptVal : polygonPoints) {
+                    QJsonObject pt = ptVal.toObject();
+                    pt["x"] = pt["x"].toDouble() - absX;
+                    pt["y"] = pt["y"].toDouble() - absY;
+                    adjustedPoints.append(pt);
+                }
+                zoneParam["polygonPoints"] = adjustedPoints;
+                element["zoneParameter"] = zoneParam;
+            }
+        }
+        
         // Supprimer les propriétés absolues et l'uniqueId (sera régénéré au placement)
-        element.remove("gridRelativePositionX");
-        element.remove("gridRelativePositionY");
         element.remove("uniqueId");
         
         // IMPORTANT : Supprimer aussi les positions dans displayParameter pour éviter pollution
-        if (element.contains("displayParameter")) {
-            QJsonObject displayParam = element["displayParameter"].toObject();
-            displayParam.remove("gridRelativePositionX");
-            displayParam.remove("gridRelativePositionY");
+            // displayParam.remove("gridRelativePositionX");
+            // displayParam.remove("gridRelativePositionY");
             element["displayParameter"] = displayParam;
-        }
+            
         
         // Note: on garde next/prev pour la structure, mais ils seront remappés au placement
         
@@ -254,6 +267,7 @@ QJsonArray TemplateFileManager::convertToAbsolutePositions(const QJsonArray &ele
     
     for (const QJsonValue &value : elementsArray) {
         QJsonObject element = value.toObject();
+        QJsonObject displayParam = element["displayParameter"].toObject();
         
         // Convertir les positions relatives en absolues
         int relX = element["relativePositionX"].toInt(0);
@@ -262,18 +276,32 @@ QJsonArray TemplateFileManager::convertToAbsolutePositions(const QJsonArray &ele
         int newAbsX = targetX + relX;
         int newAbsY = targetY + relY;
         
-        element["gridRelativePositionX"] = newAbsX;
-        element["gridRelativePositionY"] = newAbsY;
+        displayParam["gridRelativePositionX"] = newAbsX;
+        displayParam["gridRelativePositionY"] = newAbsY;
         
         // CRITIQUE : Mettre à jour AUSSI les positions dans displayParameter
         // Car ItemSnapable lit les positions depuis displayParameter, pas du top-level !
-        if (element.contains("displayParameter")) {
-            QJsonObject displayParam = element["displayParameter"].toObject();
-            displayParam["gridRelativePositionX"] = newAbsX;
-            displayParam["gridRelativePositionY"] = newAbsY;
-            element["displayParameter"] = displayParam;
+        displayParam["gridRelativePositionX"] = newAbsX;
+        displayParam["gridRelativePositionY"] = newAbsY;
+        element["displayParameter"] = displayParam;
+
+        // Ré-ajouter gridRelativePositionX/Y aux points du polygone (zoneParameter)
+        if (element.contains("zoneParameter")) {
+            QJsonObject zoneParam = element["zoneParameter"].toObject();
+            if (zoneParam.contains("polygonPoints")) {
+                QJsonArray polygonPoints = zoneParam["polygonPoints"].toArray();
+                QJsonArray adjustedPoints;
+                for (const QJsonValue &ptVal : polygonPoints) {
+                    QJsonObject pt = ptVal.toObject();
+                    pt["x"] = pt["x"].toDouble() + newAbsX;
+                    pt["y"] = pt["y"].toDouble() + newAbsY;
+                    adjustedPoints.append(pt);
+                }
+                zoneParam["polygonPoints"] = adjustedPoints;
+                element["zoneParameter"] = zoneParam;
+            }
         }
-        
+
         // Supprimer les propriétés relatives
         element.remove("relativePositionX");
         element.remove("relativePositionY");
