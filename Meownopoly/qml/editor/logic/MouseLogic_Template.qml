@@ -380,6 +380,18 @@ MouseLogic_Selection {
         updateTemplateBoundingBox()
     }
     
+    function removeElementFromTemplateSelection(element) {
+        var index = templateSelectedElements.indexOf(element)
+        var selIndex = selectedElements.indexOf(element)
+        if (index !== -1) {
+            templateSelectedElements.splice(index, 1)
+        }
+        if (selIndex !== -1) {
+            selectedElements.splice(selIndex, 1)
+        }
+        updateTemplateBoundingBox()
+    }
+
     /**
      * Calculer et mettre à jour la bounding box des éléments sélectionnés
      */
