@@ -151,11 +151,23 @@ MouseLogic_Base {
         // Créer l'ItemSnapable pour la zone d'exclusion
         var snapableParameters = ItemSnapableFactory.createPhysicZone()
         
-        // Copier les points dans l'zoneParameter
+        // Calculer les bounds et l'origine de la tile
+        var bounds = calculateBounds(currentPolygonPoints)
+        var gridOriginX = Math.floor(bounds.minX)
+        var gridOriginY = Math.floor(bounds.minY)
+        
+        // Définir le displayParameter en premier
+        snapableParameters.displayParameter.gridRelativePositionX = gridOriginX
+        snapableParameters.displayParameter.gridRelativePositionY = gridOriginY
+        snapableParameters.displayParameter.unitSizeWidth = Math.ceil(bounds.maxX - bounds.minX) + 1
+        snapableParameters.displayParameter.unitSizeHeight = Math.ceil(bounds.maxY - bounds.minY) + 1
+        snapableParameters.displayParameter.zLayer = 1  // Sous les décorations et cases
+        
+        // Ajouter les points RELATIFS à la tile (point_absolu - gridRelativePosition)
         for (var i = 0; i < currentPolygonPoints.length; i++) {
             snapableParameters.zoneParameter.addPoint(
-                currentPolygonPoints[i].x, 
-                currentPolygonPoints[i].y
+                currentPolygonPoints[i].x - gridOriginX,
+                currentPolygonPoints[i].y - gridOriginY
             )
         }
         
@@ -170,14 +182,6 @@ MouseLogic_Base {
         snapableParameters.zoneParameter.frictionStrenght = frictionStrength
         snapableParameters.zoneParameter.speedMultiplier = speedMultiplier
         snapableParameters.zoneParameter.accelerationMultiplier = accelerationMultiplier
-        
-        // Calculer les bounds pour le displayParameter
-        var bounds = calculateBounds(currentPolygonPoints)
-        snapableParameters.displayParameter.gridRelativePositionX = Math.floor(bounds.minX)
-        snapableParameters.displayParameter.gridRelativePositionY = Math.floor(bounds.minY)
-        snapableParameters.displayParameter.unitSizeWidth = Math.ceil(bounds.maxX - bounds.minX) + 1
-        snapableParameters.displayParameter.unitSizeHeight = Math.ceil(bounds.maxY - bounds.minY) + 1
-        snapableParameters.displayParameter.zLayer = 1  // Sous les décorations et cases
         
         // Créer l'élément via TileLogic
         logic.tileLogic.createPhysicZone(snapableParameters)

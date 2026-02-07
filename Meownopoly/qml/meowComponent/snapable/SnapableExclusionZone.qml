@@ -37,48 +37,9 @@ SnapableElement {
     property real offsetX: snapableParameters.displayParameter.gridRelativePositionX * gridManager.gridSize
     property real offsetY: snapableParameters.displayParameter.gridRelativePositionY * gridManager.gridSize
     
-    // Position de grille de l'élément (pour détecter les vrais déplacements, pas le zoom)
+    // Position de grille de l'élément
     property real gridPosX: snapableParameters.displayParameter.gridRelativePositionX
     property real gridPosY: snapableParameters.displayParameter.gridRelativePositionY
-    
-    // Stocker l'ancienne position de grille pour détecter les déplacements
-    property real previousGridPosX: gridPosX
-    property real previousGridPosY: gridPosY
-    
-    // Détecter les changements de position de grille (pas de zoom !)
-    onGridPosXChanged: {
-        if (Math.abs(gridPosX - previousGridPosX) > 0.001) {
-            updatePolygonPointsAfterMove()
-            previousGridPosX = gridPosX
-        }
-    }
-    onGridPosYChanged: {
-        if (Math.abs(gridPosY - previousGridPosY) > 0.001) {
-            updatePolygonPointsAfterMove()
-            previousGridPosY = gridPosY
-        }
-    }
-    
-    // Mettre à jour les points du polygone quand l'élément est déplacé
-    function updatePolygonPointsAfterMove() {
-        if (!snapableParameters.zoneParameter) return
-        
-        // Delta en coordonnées de grille (pas en pixels)
-        var deltaGridX = gridPosX - previousGridPosX
-        var deltaGridY = gridPosY - previousGridPosY
-        
-        if (Math.abs(deltaGridX) < 0.001 && Math.abs(deltaGridY) < 0.001) return
-        
-        var points = snapableParameters.zoneParameter.polygonPoints
-        var newPoints = []
-        for (var i = 0; i < points.length; i++) {
-            newPoints.push({
-                x: points[i].x + deltaGridX,
-                y: points[i].y + deltaGridY
-            })
-        }
-        snapableParameters.zoneParameter.polygonPoints = newPoints
-    }
     
     // Calcul des bounds du polygone (en coordonnées locales)
     property var polygonBounds: ({ minX: 0, minY: 0, maxX: 100, maxY: 100 })
@@ -124,28 +85,25 @@ SnapableElement {
     
     function updatePixelBounds() {
         var gs = gridManager.gridSize
-        var ox = offsetX
-        var oy = offsetY
+        // Points déjà relatifs à la tile : bounds en pixels locaux = gridBounds * gridSize
         root.polygonBounds = {
-            minX: gridBounds.minX * gs - ox,
-            minY: gridBounds.minY * gs - oy,
-            maxX: gridBounds.maxX * gs - ox,
-            maxY: gridBounds.maxY * gs - oy
+            minX: gridBounds.minX * gs,
+            minY: gridBounds.minY * gs,
+            maxX: gridBounds.maxX * gs,
+            maxY: gridBounds.maxY * gs
         }
     }
     
-    // Convertir les points de grille en pixels LOCAUX (relatifs à l'élément)
+    // Convertir les points de grille (relatifs à la tile) en pixels locaux
     function getPolygonPointsLocal() {
         var points = []
         if (!snapableParameters.zoneParameter) return points
         
         var gridPoints = snapableParameters.zoneParameter.polygonPoints
+        var gs = gridManager.gridSize
         for (var i = 0; i < gridPoints.length; i++) {
             var pt = gridPoints[i]
-            // Convertir en pixels et soustraire l'offset de l'élément
-            var px = pt.x * gridManager.gridSize - offsetX
-            var py = pt.y * gridManager.gridSize - offsetY
-            points.push(Qt.point(px, py))
+            points.push(Qt.point(pt.x * gs, pt.y * gs))
         }
         return points
     }
@@ -377,10 +335,9 @@ SnapableElement {
             border.width: 2
             z: 100
             
-            // Position en coordonnées locales (relative à l'élément)
-            // Pendant le drag, on utilise la position visuelle directe
-            x: isDragging ? x : (pointGridX * root.gridManager.gridSize - root.offsetX - width / 2)
-            y: isDragging ? y : (pointGridY * root.gridManager.gridSize - root.offsetY - height / 2)
+            // Position en coordonnées locales (points déjà relatifs à la tile)
+            x: isDragging ? x : (pointGridX * root.gridManager.gridSize - width / 2)
+            y: isDragging ? y : (pointGridY * root.gridManager.gridSize - height / 2)
             
             Drag.active: dragArea.drag.active
             
@@ -402,13 +359,12 @@ SnapableElement {
                 
                 onReleased: function(mouse) {
                     if (controlPoint.isDragging) {
-                        // Calculer la nouvelle position en coordonnées de grille
+                        // Nouvelle position en coordonnées relatives (local / gridSize)
                         var newLocalX = controlPoint.x + controlPoint.width / 2
                         var newLocalY = controlPoint.y + controlPoint.height / 2
-                        var newGridX = (newLocalX + root.offsetX) / root.gridManager.gridSize
-                        var newGridY = (newLocalY + root.offsetY) / root.gridManager.gridSize
+                        var newGridX = newLocalX / root.gridManager.gridSize
+                        var newGridY = newLocalY / root.gridManager.gridSize
                         
-                        // Mettre à jour le point dans les données
                         root.updatePointPosition(controlPoint.pointIndex, newGridX, newGridY)
                         
                         controlPoint.isDragging = false
@@ -465,7 +421,7 @@ SnapableElement {
         }
     }
     
-    // Mettre à jour les bounds du displayParameter après modification des points
+    // Mettre à jour les bounds du displayParameter après modification des points (relatifs)
     function updateDisplayBounds() {
         if (!snapableParameters.zoneParameter) return
         var points = snapableParameters.zoneParameter.polygonPoints
@@ -480,18 +436,25 @@ SnapableElement {
             minY = Math.min(minY, points[i].y)
             maxY = Math.max(maxY, points[i].y)
         }
-        // Mettre à jour les previous positions de grille AVANT de changer le displayParameter
-        // pour éviter que onGridPosXChanged/onGridPosYChanged ne déplace les points
-        var newGridPosX = Math.floor(minX)
-        var newGridPosY = Math.floor(minY)
-        previousGridPosX = newGridPosX
-        previousGridPosY = newGridPosY
         
-        // Mettre à jour le displayParameter
-        snapableParameters.displayParameter.gridRelativePositionX = newGridPosX
-        snapableParameters.displayParameter.gridRelativePositionY = newGridPosY
-        snapableParameters.displayParameter.unitSizeWidth = Math.ceil(maxX) - newGridPosX
-        snapableParameters.displayParameter.unitSizeHeight = Math.ceil(maxY) - newGridPosY
+        var shiftX = Math.floor(minX)
+        var shiftY = Math.floor(minY)
+        if (shiftX !== 0 || shiftY !== 0) {
+            snapableParameters.displayParameter.gridRelativePositionX += shiftX
+            snapableParameters.displayParameter.gridRelativePositionY += shiftY
+            var newPoints = []
+            for (var i = 0; i < points.length; i++) {
+                newPoints.push({ x: points[i].x - shiftX, y: points[i].y - shiftY })
+            }
+            snapableParameters.zoneParameter.polygonPoints = newPoints
+            minX -= shiftX
+            maxX -= shiftX
+            minY -= shiftY
+            maxY -= shiftY
+        }
+        
+        snapableParameters.displayParameter.unitSizeWidth = Math.ceil(maxX) - Math.floor(minX)
+        snapableParameters.displayParameter.unitSizeHeight = Math.ceil(maxY) - Math.floor(minY)
     }
     
     // Indicateur de nom de zone (optionnel)

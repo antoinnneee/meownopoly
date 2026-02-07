@@ -2,6 +2,7 @@
 #include <QUuid>
 
 #include "game/item_snapable/ZoneParameter.h"
+#include "game/item_snapable/Displayparameter.h"
 
 PattounX_zone::PattounX_zone(ItemSnapable* snapable, QObject* parent)
     : QObject(parent)
@@ -11,6 +12,12 @@ PattounX_zone::PattounX_zone(ItemSnapable* snapable, QObject* parent)
         if (m_snapable->zoneParameter()) {
             connect(m_snapable->zoneParameter(), &ZoneParameter::polygonPointsChanged, this, &PattounX_zone::updatePolygon);
             updatePolygon();
+        }
+        if (m_snapable->displayParameter()) {
+            connect(m_snapable->displayParameter(), &DisplayParameter::gridRelativePositionXChanged,
+                    this, &PattounX_zone::updatePolygon);
+            connect(m_snapable->displayParameter(), &DisplayParameter::gridRelativePositionYChanged,
+                    this, &PattounX_zone::updatePolygon);
         }
     }
 }
@@ -42,7 +49,20 @@ ZoneParameter* PattounX_zone::zoneParameter() const
 void PattounX_zone::updatePolygon()
 {
     if (m_snapable && m_snapable->zoneParameter()) {
-        m_polygon = Polygon2D::fromVariantList(m_snapable->zoneParameter()->polygonPoints());
+        QVariantList relativePoints = m_snapable->zoneParameter()->polygonPoints();
+        DisplayParameter* dp = m_snapable->displayParameter();
+        qreal offsetX = dp ? dp->gridRelativePositionX() : 0;
+        qreal offsetY = dp ? dp->gridRelativePositionY() : 0;
+
+        QVariantList absolutePoints;
+        for (const QVariant& var : relativePoints) {
+            QVariantMap pt = var.toMap();
+            QVariantMap absPt;
+            absPt["x"] = pt["x"].toDouble() + offsetX;
+            absPt["y"] = pt["y"].toDouble() + offsetY;
+            absolutePoints.append(absPt);
+        }
+        m_polygon = Polygon2D::fromVariantList(absolutePoints);
     }
 }
 

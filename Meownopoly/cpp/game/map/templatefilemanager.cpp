@@ -227,22 +227,7 @@ QJsonArray TemplateFileManager::convertToRelativePositions(const QJsonArray &ele
         element["relativePositionX"] = absX - originX;
         element["relativePositionY"] = absY - originY;
         
-        // Soustraire gridRelativePositionX/Y des points du polygone (zoneParameter)
-        if (element.contains("zoneParameter")) {
-            QJsonObject zoneParam = element["zoneParameter"].toObject();
-            if (zoneParam.contains("polygonPoints")) {
-                QJsonArray polygonPoints = zoneParam["polygonPoints"].toArray();
-                QJsonArray adjustedPoints;
-                for (const QJsonValue &ptVal : polygonPoints) {
-                    QJsonObject pt = ptVal.toObject();
-                    pt["x"] = pt["x"].toDouble() - absX;
-                    pt["y"] = pt["y"].toDouble() - absY;
-                    adjustedPoints.append(pt);
-                }
-                zoneParam["polygonPoints"] = adjustedPoints;
-                element["zoneParameter"] = zoneParam;
-            }
-        }
+        // Les points du polygone (zoneParameter) sont déjà relatifs à la tile, pas d'ajustement
         
         // Supprimer les propriétés absolues et l'uniqueId (sera régénéré au placement)
         element.remove("uniqueId");
@@ -285,22 +270,7 @@ QJsonArray TemplateFileManager::convertToAbsolutePositions(const QJsonArray &ele
         displayParam["gridRelativePositionY"] = newAbsY;
         element["displayParameter"] = displayParam;
 
-        // Ré-ajouter gridRelativePositionX/Y aux points du polygone (zoneParameter)
-        if (element.contains("zoneParameter")) {
-            QJsonObject zoneParam = element["zoneParameter"].toObject();
-            if (zoneParam.contains("polygonPoints")) {
-                QJsonArray polygonPoints = zoneParam["polygonPoints"].toArray();
-                QJsonArray adjustedPoints;
-                for (const QJsonValue &ptVal : polygonPoints) {
-                    QJsonObject pt = ptVal.toObject();
-                    pt["x"] = pt["x"].toDouble() + newAbsX;
-                    pt["y"] = pt["y"].toDouble() + newAbsY;
-                    adjustedPoints.append(pt);
-                }
-                zoneParam["polygonPoints"] = adjustedPoints;
-                element["zoneParameter"] = zoneParam;
-            }
-        }
+        // Les points du polygone (zoneParameter) restent relatifs à la tile, pas d'ajustement
 
         // Supprimer les propriétés relatives
         element.remove("relativePositionX");
