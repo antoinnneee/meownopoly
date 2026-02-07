@@ -94,10 +94,11 @@ function handleCommand(ws, msg) {
 }
 
 function handleJoinSession(ws, payload) {
-    const { session_id, player_id } = payload;
+    const { session_id, player_id, player_nickname } = payload;
     if (!session_id || !player_id) return;
 
     ws.player_id = player_id;
+    ws.player_nickname = player_nickname || '';
     ws.session_id = session_id;
 
     const room = rooms.has(session_id) ? rooms.get(session_id) : null;
@@ -183,21 +184,22 @@ function handlePublishKey(ws, payload) {
 }
 
 function handleSendMessage(ws, payload) {
-    const { session_id, sender_id, payload: ciphertext, nonce, key_v } = payload;
+    const { session_id, sender_id, sender_nickname, payload: ciphertext, nonce, key_v } = payload;
     if (!session_id || !sender_id || !ciphertext || !nonce) return;
 
     if (keyRotationRequired.has(session_id)) {
         return sendError(ws, 'KEY_ROTATION_REQUIRED', 'A new participant joined; a client must publish a new key before sending messages');
     }
 
-    // Persist message
-    const result = db.saveMessage(session_id, sender_id, ciphertext, nonce, key_v);
+    const nickname = sender_nickname || (ws.player_nickname || '');
+    const result = db.saveMessage(session_id, sender_id, nickname, ciphertext, nonce, key_v);
 
     const outboundMessage = {
         type: 'NEW_MESSAGE',
         payload: {
             msg_id: result.lastInsertRowid,
             sender_id,
+            sender_nickname: nickname,
             payload: ciphertext,
             nonce,
             key_version: key_v,

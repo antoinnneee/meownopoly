@@ -443,8 +443,7 @@ Drawer {
                             }
 
                             Text {
-                                // Display nickname for own messages, sender ID for others
-                                text: messageDelegate.isOwnMessage ? chatDrawer.playerNickname : messageDelegate.modelData.sender
+                                text: messageDelegate.isOwnMessage ? chatDrawer.playerNickname : (messageDelegate.modelData.senderNickname || messageDelegate.modelData.sender)
                                 font.pixelSize: 10
                                 font.bold: true
                                 color: messageDelegate.isOwnMessage ? "#569c58" : "#4A90E2"
@@ -761,7 +760,7 @@ Drawer {
 
     onOpened: {
         if (!chatClient.connected) {
-            chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId, "123")
+            chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId, "123", playerNickname)
         }
         // inputField.forceActiveFocus()
     }

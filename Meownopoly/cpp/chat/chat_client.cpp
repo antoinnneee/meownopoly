@@ -56,9 +56,10 @@ void ChatClient::setSessionId(const QString &id) {
     }
 }
 
-void ChatClient::connectToServer(const QString &url, const QString &playerId, const QString &password) {
+void ChatClient::connectToServer(const QString &url, const QString &playerId, const QString &password, const QString &nickname) {
     qDebug() << "[ChatClient] Connecting to server:" << url;
     m_playerId = playerId;
+    m_nickname = nickname.isEmpty() ? playerId : nickname;
     m_password = password;
 
     // Derive Lock Key from SessionID + Password
@@ -113,6 +114,7 @@ void ChatClient::onConnected() {
     QJsonObject payload;
     payload["session_id"] = m_sessionId;
     payload["player_id"] = m_playerId;
+    payload["player_nickname"] = m_nickname;
     join["payload"] = payload;
 
     sendWebSocketMessage(join);
@@ -273,12 +275,12 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
         for (const QJsonValue &val : historyArray) {
             QJsonObject msg = val.toObject();
             QString senderId = msg["sender_id"].toString();
+            QString senderNickname = msg["sender_nickname"].toString();
             QByteArray cipher = QByteArray::fromBase64(msg["payload"].toString().toUtf8());
             QByteArray nonce = QByteArray::fromBase64(msg["nonce"].toString().toUtf8());
             QString ts = msg["server_timestamp"].toString();
 
-            // Save locally
-            m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts, msg["key_version"].toInt());
+            m_db.saveMessage(m_sessionId, senderId, senderNickname, cipher, nonce, ts, msg["key_version"].toInt());
 
             // Decrypt for UI
             int keyVersion = msg["key_version"].toInt(); // Should be present
@@ -310,6 +312,7 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 
             QVariantMap message;
             message["sender"] = senderId;
+            message["senderNickname"] = senderNickname;
             message["text"] = processedText;
             message["isImage"] = processedText.startsWith("image://");
             message["timestamp"] = ts;
@@ -317,7 +320,6 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
         }
         emit messagesChanged();
     } else {
-        // Load local history if no server history
         loadHistory();
     }
 }
@@ -325,12 +327,12 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 void ChatClient::handleNewMessage(const QJsonObject &payload) {
     qDebug() << "handleNewMessage:";
     QString senderId = payload["sender_id"].toString();
+    QString senderNickname = payload["sender_nickname"].toString();
     QByteArray cipher = QByteArray::fromBase64(payload["payload"].toString().toUtf8());
     QByteArray nonce = QByteArray::fromBase64(payload["nonce"].toString().toUtf8());
     QString ts = payload["timestamp"].toString();
 
-    // Persist encrypted
-    m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts, payload["key_version"].toInt());
+    m_db.saveMessage(m_sessionId, senderId, senderNickname, cipher, nonce, ts, payload["key_version"].toInt());
 
     // Decrypt for UI
     int keyVersion = payload["key_version"].toInt();
@@ -354,6 +356,7 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
 
     QVariantMap msg;
     msg["sender"] = senderId;
+    msg["senderNickname"] = senderNickname;
     msg["text"] = processedText;
     msg["isImage"] = processedText.startsWith("image://");
     msg["timestamp"] = ts;
@@ -380,9 +383,10 @@ void ChatClient::sendMessage(const QString &text) {
     QJsonObject p;
     p["session_id"] = m_sessionId;
     p["sender_id"] = m_playerId;
+    p["sender_nickname"] = m_nickname;
     p["payload"] = QString(cipher.toBase64());
     p["nonce"] = QString(nonce.toBase64());
-    p["key_v"] = m_currentKeyVersion; // Send version
+    p["key_v"] = m_currentKeyVersion;
     send["payload"] = p;
 
     sendWebSocketMessage(send);
@@ -427,6 +431,7 @@ void ChatClient::sendImage(const QString &filePath) {
     QJsonObject p;
     p["session_id"] = m_sessionId;
     p["sender_id"] = m_playerId;
+    p["sender_nickname"] = m_nickname;
     p["payload"] = QString(cipher.toBase64());
     p["nonce"] = QString(nonce.toBase64());
     p["key_v"] = m_currentKeyVersion;
@@ -485,6 +490,7 @@ void ChatClient::loadHistory() {
 
         QVariantMap msg;
         msg["sender"] = m["sender_id"];
+        msg["senderNickname"] = m["sender_nickname"];
         msg["text"] = processedText;
         msg["isImage"] = processedText.startsWith("image://");
         msg["timestamp"] = m["timestamp"];
@@ -527,14 +533,13 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
     for (const QJsonValue &val : historyArray) {
         QJsonObject msg = val.toObject();
         QString senderId = msg["sender_id"].toString();
+        QString senderNickname = msg["sender_nickname"].toString();
         QByteArray cipher = QByteArray::fromBase64(msg["payload"].toString().toUtf8());
         QByteArray nonce = QByteArray::fromBase64(msg["nonce"].toString().toUtf8());
         QString ts = msg["server_timestamp"].toString();
 
-        // Save locally
-        m_db.saveMessage(m_sessionId, senderId, cipher, nonce, ts, msg["key_version"].toInt());
+        m_db.saveMessage(m_sessionId, senderId, senderNickname, cipher, nonce, ts, msg["key_version"].toInt());
 
-        // Decrypt for UI
         int keyVersion = msg["key_version"].toInt();
         QByteArray plain;
         if (m_sessionKeys.contains(keyVersion)) {
@@ -548,6 +553,7 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
 
         QVariantMap message;
         message["sender"] = senderId;
+        message["senderNickname"] = senderNickname;
         message["text"] = processedText;
         message["isImage"] = processedText.startsWith("image://");
         message["timestamp"] = ts;

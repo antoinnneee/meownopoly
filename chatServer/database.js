@@ -29,6 +29,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT,
     sender_id TEXT,
+    sender_nickname TEXT,
     payload TEXT,
     nonce TEXT,
     key_version INTEGER,
@@ -38,6 +39,13 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id);
 `);
+
+// Migration: add sender_nickname for existing DBs
+try {
+  db.prepare('ALTER TABLE messages ADD COLUMN sender_nickname TEXT').run();
+} catch (e) {
+  // Column already exists
+}
 
 module.exports = {
   // Session methods
@@ -71,11 +79,11 @@ module.exports = {
   },
 
   // Message methods
-  saveMessage: (sessionId, senderId, payload, nonce, keyVersion) => {
+  saveMessage: (sessionId, senderId, senderNickname, payload, nonce, keyVersion) => {
     return db.prepare(`
-      INSERT INTO messages (session_id, sender_id, payload, nonce, key_version)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(sessionId, senderId, payload, nonce, keyVersion);
+      INSERT INTO messages (session_id, sender_id, sender_nickname, payload, nonce, key_version)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(sessionId, senderId, senderNickname || '', payload, nonce, keyVersion);
   },
   getHistory: (sessionId, limit = 50, beforeId = null) => {
     if (beforeId) {

@@ -29,7 +29,7 @@ public:
     void setSessionId(const QString &id);
     QVariantList messages() const { return m_messages; }
 
-    Q_INVOKABLE void connectToServer(const QString &url, const QString &playerId, const QString &password);
+    Q_INVOKABLE void connectToServer(const QString &url, const QString &playerId, const QString &password, const QString &nickname = QString());
     Q_INVOKABLE void sendMessage(const QString &text);
     Q_INVOKABLE void sendImage(const QString &filePath);
     Q_INVOKABLE void loadHistory();
@@ -75,6 +75,7 @@ private:
     bool m_connected = false;
     QString m_sessionId;
     QString m_playerId;
+    QString m_nickname;
     QString m_password;
     QByteArray m_lockKey;
     QMap<int, QByteArray> m_sessionKeys;
