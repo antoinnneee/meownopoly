@@ -189,13 +189,9 @@ QVariantMap TemplateFileManager::calculateBoundingBox(const QJsonArray &elements
         int posX = displayParam["gridRelativePositionX"].toInt(0);
         int posY = displayParam["gridRelativePositionY"].toInt(0);
         
-        // Récupérer les dimensions (approximation via les paramètres)
-        int width = 1;  // Par défaut 1 unité de grille
-        int height = 1;
-        
-        // Essayer de récupérer les vraies dimensions depuis displayParameter
-            width = displayParam["width"].toInt(1);
-            height = displayParam["height"].toInt(1);
+        // Récupérer les dimensions réelles depuis displayParameter
+        int width = displayParam["unitSizeWidth"].toInt(1);
+        int height = displayParam["unitSizeHeight"].toInt(1);
         
         minX = qMin(minX, posX);
         minY = qMin(minY, posY);
