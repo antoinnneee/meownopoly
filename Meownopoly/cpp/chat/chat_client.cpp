@@ -390,7 +390,6 @@ void ChatClient::sendMessage(const QString &text) {
     send["payload"] = p;
 
     sendWebSocketMessage(send);
-    qDebug() << "[ChatClient] Message sent";
 }
 
 void ChatClient::sendImage(const QString &filePath) {
