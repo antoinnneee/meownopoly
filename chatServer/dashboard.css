@@ -674,3 +674,90 @@ h2 {
 .close-modal:hover {
     color: #ff4444;
 }
+
+/* Drag & drop sur la zone de chat */
+.chat-messages.drag-over {
+    border-color: #667eea;
+    border-style: dashed;
+    background: #f0f3ff;
+    position: relative;
+}
+
+.chat-messages.drag-over::after {
+    content: '📎 Déposez votre fichier ici';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    color: #667eea;
+    font-weight: bold;
+    pointer-events: none;
+    background: rgba(255,255,255,0.9);
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+/* Affichage fichier texte dans le dashboard */
+.text-file-display {
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.text-file-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #667eea;
+    color: white;
+    border-radius: 5px 5px 0 0;
+}
+
+.text-file-name {
+    font-weight: bold;
+    font-size: 0.95em;
+}
+
+.text-file-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.text-file-ext {
+    font-size: 0.8em;
+    opacity: 0.9;
+    background: rgba(255,255,255,0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.text-file-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.2s;
+}
+
+.text-file-btn:hover {
+    background: rgba(255,255,255,0.35);
+}
+
+.text-file-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    padding: 12px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.88em;
+    line-height: 1.5;
+    background: #f8f9fa;
+    max-height: 300px;
+    overflow-y: auto;
+}

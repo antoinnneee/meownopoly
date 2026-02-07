@@ -309,12 +309,25 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 
             QString text = QString::fromUtf8(plain);
             QString processedText = processMessageText(text);
+            
+            // Detect if it's a text file
+            bool isTextFile = processedText.startsWith("📄FILE:");
+            QString fileExtension;
+            if (isTextFile) {
+                // Extract extension from format: 📄FILE:ext:filename
+                int firstColon = processedText.indexOf(':', 7); // After "📄FILE:"
+                if (firstColon > 7) {
+                    fileExtension = processedText.mid(7, firstColon - 7);
+                }
+            }
 
             QVariantMap message;
             message["sender"] = senderId;
             message["senderNickname"] = senderNickname;
             message["text"] = processedText;
             message["isImage"] = processedText.startsWith("image://");
+            message["isTextFile"] = isTextFile;
+            message["fileExtension"] = fileExtension;
             message["timestamp"] = ts;
             m_messages.append(message);
         }
@@ -353,12 +366,24 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
 
     QString text = QString::fromUtf8(plain);
     QString processedText = processMessageText(text);
+    
+    // Detect if it's a text file
+    bool isTextFile = processedText.startsWith("📄FILE:");
+    QString fileExtension;
+    if (isTextFile) {
+        int firstColon = processedText.indexOf(':', 7);
+        if (firstColon > 7) {
+            fileExtension = processedText.mid(7, firstColon - 7);
+        }
+    }
 
     QVariantMap msg;
     msg["sender"] = senderId;
     msg["senderNickname"] = senderNickname;
     msg["text"] = processedText;
     msg["isImage"] = processedText.startsWith("image://");
+    msg["isTextFile"] = isTextFile;
+    msg["fileExtension"] = fileExtension;
     msg["timestamp"] = ts;
     m_messages.append(msg);
     emit messagesChanged();
@@ -440,6 +465,61 @@ void ChatClient::sendImage(const QString &filePath) {
     qDebug() << "[ChatClient] Compressed image sent (Size:" << compressedData.size() / 1024 << "KB)";
 }
 
+void ChatClient::sendTextFile(const QString &filePath) {
+    qDebug() << "[ChatClient] Sending text file:" << filePath;
+    if (!m_connected || m_sessionKeys.isEmpty()) return;
+
+    QUrl url(filePath);
+    QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
+
+    QFileInfo fileInfo(localPath);
+    if (!fileInfo.exists() || !fileInfo.isFile()) {
+        qWarning() << "[ChatClient] File not found:" << localPath;
+        return;
+    }
+
+    // Limit file size to 1MB
+    if (fileInfo.size() > 1024 * 1024) {
+        qWarning() << "[ChatClient] File too large:" << fileInfo.size() << "bytes (max 1MB)";
+        emit errorOccurred("Fichier trop volumineux (max 1MB)");
+        return;
+    }
+
+    QFile file(localPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "[ChatClient] Cannot open file:" << localPath;
+        return;
+    }
+
+    QString content = QString::fromUtf8(file.readAll());
+    file.close();
+
+    QString extension = fileInfo.suffix().toLower();
+    QString fileName = fileInfo.fileName();
+
+    // Format: 📄FILE:ext:filename\n\ncontenu
+    QString formattedMessage = QString::fromUtf8("\xF0\x9F\x93\x84") + "FILE:" + extension + ":" + fileName + "\n\n" + content;
+
+    // Encrypt and send using sendMessage
+    sendMessage(formattedMessage);
+    qDebug() << "[ChatClient] Text file sent:" << fileName << "(" << extension << "," << content.size() << "chars)";
+}
+
+void ChatClient::saveTextToFile(const QString &filePath, const QString &content) {
+    QUrl url(filePath);
+    QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
+
+    QFile file(localPath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        file.write(content.toUtf8());
+        file.close();
+        qDebug() << "[ChatClient] File saved to:" << localPath;
+    } else {
+        qWarning() << "[ChatClient] Failed to save file:" << localPath;
+        emit errorOccurred("Impossible de sauvegarder le fichier");
+    }
+}
+
 void ChatClient::clearHistory() {
     if (!m_connected) return;
 
@@ -486,12 +566,24 @@ void ChatClient::loadHistory() {
 
         QString text = QString::fromUtf8(plain);
         QString processedText = processMessageText(text);
+        
+        // Detect if it's a text file
+        bool isTextFile = processedText.startsWith("📄FILE:");
+        QString fileExtension;
+        if (isTextFile) {
+            int firstColon = processedText.indexOf(':', 7);
+            if (firstColon > 7) {
+                fileExtension = processedText.mid(7, firstColon - 7);
+            }
+        }
 
         QVariantMap msg;
         msg["sender"] = m["sender_id"];
         msg["senderNickname"] = m["sender_nickname"];
         msg["text"] = processedText;
         msg["isImage"] = processedText.startsWith("image://");
+        msg["isTextFile"] = isTextFile;
+        msg["fileExtension"] = fileExtension;
         msg["timestamp"] = m["timestamp"];
         m_messages.append(msg);
     }
@@ -549,12 +641,24 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
 
         QString text = QString::fromUtf8(plain);
         QString processedText = processMessageText(text);
+        
+        // Detect if it's a text file
+        bool isTextFile = processedText.startsWith("📄FILE:");
+        QString fileExtension;
+        if (isTextFile) {
+            int firstColon = processedText.indexOf(':', 7);
+            if (firstColon > 7) {
+                fileExtension = processedText.mid(7, firstColon - 7);
+            }
+        }
 
         QVariantMap message;
         message["sender"] = senderId;
         message["senderNickname"] = senderNickname;
         message["text"] = processedText;
         message["isImage"] = processedText.startsWith("image://");
+        message["isTextFile"] = isTextFile;
+        message["fileExtension"] = fileExtension;
         message["timestamp"] = ts;
         olderMessages.append(message);
     }
@@ -600,6 +704,7 @@ void ChatClient::loadAndDecryptSessionKeys() {
 }
 
 QString ChatClient::processMessageText(const QString &text) {
+    // Process images
     if (text.startsWith("data:image/")) {
         int commaIndex = text.indexOf(',');
         if (commaIndex != -1) {
@@ -612,5 +717,12 @@ QString ChatClient::processMessageText(const QString &text) {
             }
         }
     }
+    
+    // Process text files (format: 📄FILE:ext:filename\n\ncontenu)
+    if (text.startsWith("📄FILE:")) {
+        // Return as-is, will be handled by QML
+        return text;
+    }
+    
     return text;
 }

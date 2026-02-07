@@ -19,6 +19,28 @@ Rectangle {
     Behavior on border.color { ColorAnimation { duration: 150 } }
     Behavior on border.width { NumberAnimation { duration: 150 } }
 
+    // Extensions de fichiers texte acceptées
+    property var textFileExtensions: [
+        ".txt", ".md", ".json", ".xml", ".csv", ".log", ".yml", ".yaml", ".toml", ".ini", ".cfg",
+        ".js", ".ts", ".py", ".cpp", ".c", ".h", ".hpp", ".java", ".cs", ".go", ".rs", ".rb",
+        ".php", ".swift", ".kt", ".qml", ".html", ".css", ".sql", ".sh", ".bat"
+    ]
+
+    function isTextFileUrl(url) {
+        var lower = url.toString().toLowerCase()
+        for (var i = 0; i < textFileExtensions.length; i++) {
+            if (lower.endsWith(textFileExtensions[i])) return true
+        }
+        return false
+    }
+
+    function isImageUrl(url) {
+        var lower = url.toString().toLowerCase()
+        return lower.endsWith(".png") || lower.endsWith(".jpg") ||
+               lower.endsWith(".jpeg") || lower.endsWith(".gif") ||
+               lower.endsWith(".webp")
+    }
+
     DropArea {
         id: dropArea
         anchors.fill: parent
@@ -26,28 +48,24 @@ Rectangle {
 
         onEntered: function(drag) {
             if (drag.hasUrls) {
-                var validImage = false
+                var validFile = false
                 for (var i = 0; i < drag.urls.length; i++) {
-                    var url = drag.urls[i].toString().toLowerCase()
-                    if (url.endsWith(".png") || url.endsWith(".jpg") ||
-                        url.endsWith(".jpeg") || url.endsWith(".gif") ||
-                        url.endsWith(".webp")) {
-                        validImage = true
+                    if (isImageUrl(drag.urls[i]) || isTextFileUrl(drag.urls[i])) {
+                        validFile = true
                         break
                     }
                 }
-                drag.accepted = validImage
+                drag.accepted = validFile
             }
         }
 
         onDropped: function(drop) {
             if (drop.hasUrls && chatClient) {
                 for (var i = 0; i < drop.urls.length; i++) {
-                    var url = drop.urls[i].toString().toLowerCase()
-                    if (url.endsWith(".png") || url.endsWith(".jpg") ||
-                        url.endsWith(".jpeg") || url.endsWith(".gif") ||
-                        url.endsWith(".webp")) {
+                    if (isImageUrl(drop.urls[i])) {
                         chatClient.sendImage(drop.urls[i])
+                    } else if (isTextFileUrl(drop.urls[i])) {
+                        chatClient.sendTextFile(drop.urls[i])
                     }
                 }
             }
@@ -97,7 +115,7 @@ Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Text {
-                        text: "📷"
+                        text: "📎"
                         font.pixelSize: 28
                         anchors.centerIn: parent
                     }
@@ -111,7 +129,7 @@ Rectangle {
                 }
 
                 Text {
-                    text: "Déposez votre image ici"
+                    text: "Déposez votre fichier ici"
                     color: "#cccccc"
                     font.pixelSize: 14
                     font.bold: true
@@ -119,7 +137,7 @@ Rectangle {
                 }
 
                 Text {
-                    text: "PNG, JPG, GIF, WebP"
+                    text: "Images ou fichiers texte"
                     color: "#888888"
                     font.pixelSize: 10
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -174,6 +192,7 @@ Rectangle {
                 listView: messageList
                 modelData: parent.modelData
                 index: parent.index
+                chatClient: messagesContainer.chatClient
             }
         }
 

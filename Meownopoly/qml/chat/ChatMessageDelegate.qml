@@ -13,6 +13,7 @@ Rectangle {
     required property int index
     required property var drawer
     required property var listView
+    property var chatClient: null
 
     property bool hasData: !!modelData
     property bool isOwnMessage: hasData && drawer && (modelData.sender === drawer.playerId)
@@ -83,7 +84,7 @@ Rectangle {
             wrapMode: Text.Wrap
             color: "#cccccc"
             font.pixelSize: 12
-            visible: !(modelData && modelData.isImage)
+            visible: !(modelData && (modelData.isImage || modelData.isTextFile))
         }
 
         Image {
@@ -126,6 +127,14 @@ Rectangle {
                     font.pixelSize: 10
                 }
             }
+        }
+
+        TextFileDisplay {
+            visible: !!(modelData && modelData.isTextFile)
+            text: (modelData && modelData.isTextFile) ? modelData.text : ""
+            fileExtension: (modelData && modelData.fileExtension) ? modelData.fileExtension : "txt"
+            width: parent.width
+            chatClient: messageDelegate.chatClient
         }
     }
 }

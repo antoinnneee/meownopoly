@@ -11,6 +11,7 @@ Rectangle {
 
     property var chatClient
     signal openImageDialog()
+    signal openTextFileDialog()
 
     RowLayout {
         anchors.fill: parent
@@ -36,6 +37,30 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: openImageDialog()
+            }
+
+            Behavior on color { ColorAnimation { duration: 100 } }
+        }
+
+        Rectangle {
+            Layout.preferredWidth: 36
+            Layout.preferredHeight: 36
+            color: fileBtnArea.containsMouse ? "#444444" : "#3a3a3a"
+            radius: 6
+            border.color: fileBtnArea.pressed ? "#667eea" : "#555555"
+            border.width: 1
+
+            Text {
+                text: "📄"
+                anchors.centerIn: parent
+                font.pixelSize: 16
+            }
+
+            MouseArea {
+                id: fileBtnArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: openTextFileDialog()
             }
 
             Behavior on color { ColorAnimation { duration: 100 } }

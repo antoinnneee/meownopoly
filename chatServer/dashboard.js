@@ -362,13 +362,85 @@ function initChatClient() {
             document.getElementById('sessionInput').value = roomId;
         }
     });
+    
+    // Drag & drop de fichiers sur la zone de chat
+    const chatMessages = document.getElementById('chatMessages');
+    
+    chatMessages.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        chatMessages.classList.add('drag-over');
+    });
+    
+    chatMessages.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Ne retirer que si on quitte vraiment la zone
+        if (!chatMessages.contains(e.relatedTarget)) {
+            chatMessages.classList.remove('drag-over');
+        }
+    });
+    
+    chatMessages.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        chatMessages.classList.remove('drag-over');
+        
+        if (!currentSession) {
+            alert('Rejoignez une session avant de déposer un fichier');
+            return;
+        }
+        
+        const files = e.dataTransfer.files;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            // Vérifier si c'est un fichier texte (pas binaire)
+            if (file.type.startsWith('text/') || isTextExtension(file.name)) {
+                await handleFileUpload(file);
+            } else if (file.type.startsWith('image/')) {
+                // Aussi supporter le drop d'images
+                await handleImageDrop(file);
+            } else {
+                addLog(`⚠️ Type de fichier non supporté: ${file.name}`, 'warning');
+            }
+        }
+    });
+}
+
+function isTextExtension(filename) {
+    const textExts = [
+        'txt', 'md', 'json', 'xml', 'csv', 'log', 'yml', 'yaml', 'toml', 'ini', 'cfg',
+        'js', 'ts', 'py', 'cpp', 'c', 'h', 'hpp', 'java', 'cs', 'go', 'rs', 'rb',
+        'php', 'swift', 'kt', 'qml', 'html', 'css', 'sql', 'sh', 'bat', 'jsx', 'tsx',
+        'vue', 'svelte', 'scss', 'less', 'sass', 'env', 'gitignore', 'dockerfile'
+    ];
+    const ext = filename.split('.').pop().toLowerCase();
+    return textExts.includes(ext);
+}
+
+async function handleImageDrop(file) {
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Image trop volumineuse (max 5MB)');
+        return;
+    }
+    
+    try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            await sendRawMessage(e.target.result);
+            addLog(`📤 Image "${file.name}" envoyée`, 'success');
+        };
+        reader.readAsDataURL(file);
+    } catch (err) {
+        console.error('Erreur envoi image:', err);
+    }
 }
 
 async function handleFileUpload(event) {
-    const file = event.target.files[0];
+    const file = event.target.files ? event.target.files[0] : event;
     if (!file) return;
     
-    // Vérifier que c'est un fichier texte
+    // Vérifier la taille
     const maxSize = 1024 * 1024; // 1MB max
     if (file.size > maxSize) {
         alert('Le fichier est trop volumineux (max 1MB)');
@@ -377,19 +449,20 @@ async function handleFileUpload(event) {
     
     try {
         const text = await file.text();
-        const content = `📄 Fichier: ${file.name}\n\n${text}`;
         
-        // Envoyer comme message
-        const input = document.getElementById('messageInput');
-        const originalValue = input.value;
-        input.value = content;
-        await sendChatMessage();
-        input.value = originalValue;
+        // Format: 📄FILE:extension:nom_fichier\n\ncontenu
+        const extension = file.name.split('.').pop().toLowerCase();
+        const content = `📄FILE:${extension}:${file.name}\n\n${text}`;
         
-        // Réinitialiser l'input file
-        event.target.value = '';
+        // Envoyer directement (ne pas passer par l'input qui perd les \n)
+        await sendRawMessage(content);
         
-        addLog(`📤 Fichier "${file.name}" envoyé`, 'success');
+        // Réinitialiser l'input file si c'est un event
+        if (event.target && event.target.files) {
+            event.target.value = '';
+        }
+        
+        addLog(`📤 Fichier "${file.name}" envoyé (${extension.toUpperCase()})`, 'success');
     } catch (err) {
         console.error('Erreur lecture fichier:', err);
         alert('Erreur lors de la lecture du fichier');
@@ -586,6 +659,14 @@ async function sendChatMessage() {
     const input = document.getElementById('messageInput');
     const content = input.value.trim();
     
+    if (!content) return;
+    
+    await sendRawMessage(content);
+    input.value = '';
+}
+
+// Envoyer un message brut (sans passer par l'input field)
+async function sendRawMessage(content) {
     if (!content || !chatWs || chatWs.readyState !== WebSocket.OPEN) {
         return;
     }
@@ -615,8 +696,6 @@ async function sendChatMessage() {
                 key_v: currentKeyVersion
             }
         }));
-        
-        input.value = '';
     } catch (err) {
         console.error('Erreur envoi message:', err);
         addLog('❌ Échec d\'envoi du message', 'error');
@@ -702,8 +781,8 @@ function displayChatMessage({ sender, content, time, isOwn, isEncrypted }) {
     // Détecter si c'est une image (supporte WEBP, PNG, JPEG, GIF, etc.)
     const isImage = content.match(/^data:image\/(webp|png|jpeg|jpg|gif|bmp|svg\+xml);base64,/i);
     
-    // Détecter si c'est un fichier texte
-    const isTextFile = content.startsWith('📄 Fichier:');
+    // Détecter si c'est un fichier texte (nouveau format: 📄FILE:ext:filename)
+    const isTextFile = content.startsWith('📄FILE:');
     
     let contentClass = 'chat-message-content';
     let displayContent = content;
@@ -733,17 +812,42 @@ function displayChatMessage({ sender, content, time, isOwn, isEncrypted }) {
             </div>
         `;
     } else if (isTextFile && !isEncrypted) {
-        // Afficher le fichier texte avec formatage
-        const lines = content.split('\n');
-        const fileName = lines[0].replace('📄 Fichier: ', '');
-        const fileContent = lines.slice(2).join('\n'); // Skip les 2 premières lignes
+        // Parser le format: 📄FILE:ext:filename\n\ncontenu (robuste)
+        const firstLine = content.split('\n')[0];
+        const fileIdx = firstLine.indexOf('FILE:');
+        const afterPrefix = fileIdx !== -1 ? firstLine.substring(fileIdx + 5) : '';
+        const parts = afterPrefix.split(':');
+        const extension = parts[0] || 'txt';
+        const fileName = parts[1] || 'Unknown';
         
-        contentClass += ' long-message';
+        // Extraire le contenu via \n\n (robuste)
+        const sepIdx = content.indexOf('\n\n');
+        const fileContent = sepIdx !== -1 ? content.substring(sepIdx + 2) : content;
+        
+        // Icônes par extension
+        const extensionIcons = {
+            'txt': '📄', 'md': '📝', 'json': '📊', 'xml': '🏷️',
+            'js': '📜', 'ts': '📜', 'py': '🐍', 'cpp': '⚙️', 'c': '⚙️', 'h': '⚙️',
+            'java': '☕', 'html': '🌐', 'css': '🎨', 'log': '📋',
+            'csv': '📊', 'sql': '🗄️', 'sh': '🖥️', 'bat': '🖥️'
+        };
+        const icon = extensionIcons[extension.toLowerCase()] || '📄';
+        
+        // Stocker les données pour les boutons (compteur unique)
+        const fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        
+        contentClass += ' long-message text-file-display';
+        const escapedContent = fileContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         displayContent = `
-            <div style="margin-bottom: 8px; color: #666; font-weight: bold;">
-                📄 ${fileName}
+            <div class="text-file-header">
+                <span class="text-file-name">${icon} ${fileName}</span>
+                <div class="text-file-actions">
+                    <span class="text-file-ext">${extension.toUpperCase()}</span>
+                    <button class="text-file-btn" onclick="copyFileContent('${fileId}')" title="Copier le contenu">📋</button>
+                    <button class="text-file-btn" onclick="downloadFile('${fileId}')" title="Télécharger le fichier">💾</button>
+                </div>
             </div>
-            <pre style="white-space: pre-wrap; word-wrap: break-word; margin: 0; font-family: monospace; font-size: 0.9em;">${fileContent}</pre>
+            <pre id="${fileId}" class="text-file-content" data-filename="${fileName}">${escapedContent}</pre>
         `;
     } else if (isLongMessage) {
         // Message long non-image
@@ -789,4 +893,55 @@ document.addEventListener('keydown', (e) => {
         closeImageModal();
     }
 });
+
+// Copier le contenu d'un fichier texte
+function copyFileContent(fileId) {
+    const pre = document.getElementById(fileId);
+    if (!pre) return;
+    
+    const text = pre.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        // Feedback visuel
+        const btn = pre.parentElement.querySelector('.text-file-btn');
+        if (btn) {
+            const original = btn.textContent;
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = original; }, 1500);
+        }
+    }).catch(err => {
+        // Fallback pour les contextes non-sécurisés
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+    });
+}
+
+// Télécharger un fichier texte
+function downloadFile(fileId) {
+    const pre = document.getElementById(fileId);
+    if (!pre) return;
+    
+    const text = pre.textContent;
+    const fileName = pre.dataset.filename || 'file.txt';
+    
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
 

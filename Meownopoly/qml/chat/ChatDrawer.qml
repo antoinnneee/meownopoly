@@ -70,6 +70,19 @@ Drawer {
         }
     }
 
+    FileDialog {
+        id: textFileDialog
+        title: "Choose a text file"
+        nameFilters: [
+            "Text files (*.txt *.md *.json *.xml *.csv *.log *.yml *.yaml *.toml *.ini *.cfg)",
+            "Source code (*.js *.ts *.py *.cpp *.c *.h *.hpp *.java *.cs *.go *.rs *.rb *.php *.swift *.kt *.qml *.html *.css *.sql *.sh *.bat)",
+            "All files (*)"
+        ]
+        onAccepted: {
+            chatClient.sendTextFile(textFileDialog.selectedFile)
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -88,6 +101,7 @@ Drawer {
         ChatInputBar {
             chatClient: chatClient
             onOpenImageDialog: imageDialog.open()
+            onOpenTextFileDialog: textFileDialog.open()
         }
 
         ChatStatusBar {
