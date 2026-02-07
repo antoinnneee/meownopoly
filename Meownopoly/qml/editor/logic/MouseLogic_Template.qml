@@ -483,10 +483,9 @@ MouseLogic_Selection {
         var workAreaPos = Qt.point(previewMouseX, previewMouseY)
         var gridPos = grid.getGridPosition(workAreaPos.x, workAreaPos.y)
 
-        // Calculer le centre du template pour placer l'origine du template (aligné avec la preview)
-        var centerOffset = calculateTemplateCenterOffset()
-        var adjustedGridX = gridPos.x + centerOffset.x
-        var adjustedGridY = gridPos.y + centerOffset.y
+        // Utiliser le même calcul de centrage que TemplatePreviewCursor.updateGridPosition()
+        var adjustedGridX = gridPos.x - Math.trunc(placementTemplateData.templateInfo.boundingBoxWidth / 2)
+        var adjustedGridY = gridPos.y - Math.trunc(placementTemplateData.templateInfo.boundingBoxHeight / 2)
         
         console.log("[TEMPLATE] Placing template at grid:", adjustedGridX, adjustedGridY, "(centered)")
         
@@ -507,34 +506,4 @@ MouseLogic_Selection {
         console.log("[TEMPLATE] Placed", itemSnapableList.length, "elements")
     }
     
-    /**
-     * Calcule l'offset du centre du template pour le centrage
-     */
-    function calculateTemplateCenterOffset() {
-        if (!placementTemplateData || !placementTemplateData.elements || placementTemplateData.elements.length === 0) {
-            console.warn("[TEMPLATE] No elements in template for center calculation")
-            return { x: 0, y: 0 }
-        }
-        
-        var minX = Infinity, minY = Infinity
-        var maxX = -Infinity, maxY = -Infinity
-        
-        for (var i = 0; i < placementTemplateData.elements.length; i++) {
-            var elem = placementTemplateData.elements[i]
-            var relX = elem.relativePositionX || 0
-            var relY = elem.relativePositionY || 0
-            var width = elem.displayParameter ? (elem.displayParameter.unitSizeWidth || 1) : 1
-            var height = elem.displayParameter ? (elem.displayParameter.unitSizeHeight || 1) : 1
-            
-            minX = Math.min(minX, relX)
-            minY = Math.min(minY, relY)
-            maxX = Math.max(maxX, relX + width)
-            maxY = Math.max(maxY, relY + height)
-        }
-        
-        var centerX = Math.round((minX + maxX) / 2)
-        var centerY = Math.round((minY + maxY) / 2)
-        
-        return { x: -centerX, y: -centerY }
-    }
 }

@@ -71,6 +71,13 @@ Item {
             snapableDest.decorationParameter.decorationType = templateData.decorationParameter.decorationType || ""
             snapableDest.decorationParameter.decorationId = templateData.decorationParameter.decorationId || ""
         }
+
+        if (templateData.zoneParameter && templateData.zoneParameter.polygonPoints) {
+            var points = templateData.zoneParameter.polygonPoints
+            for (var i = 0; i < points.length; i++) {
+                snapableDest.zoneParameter.addPoint(points[i].x, points[i].y)
+            }
+        }
     }
     
     function calculateBoundingBox() {
@@ -110,8 +117,8 @@ Item {
         // Convertir (mouseX, mouseY) de workArea vers la grille pour un getGridPosition cohérent
         var p = gridManager.mapFromItem(root.parent, mouseX, mouseY)
         var point = gridManager.getGridPosition(p.x, p.y)
-        gridXPosition = point.x
-        gridYPosition = point.y
+        gridXPosition = point.x - Math.trunc(templateData.templateInfo.boundingBoxWidth/2)
+        gridYPosition = point.y - Math.trunc(templateData.templateInfo.boundingBoxHeight/2)
         console.log("x, ", gridXPosition, "  y, ", gridYPosition)
         previewContainer.x = gridXPosition * gridManager.gridSize
         previewContainer.y = gridYPosition * gridManager.gridSize
@@ -245,15 +252,8 @@ Item {
             }
             Component.onCompleted: {
                 if (!elementData) return
-                if (elementData.displayParameter) {
-                    copyDisplayParameterFromTemplateData(snapableParameters, elementData)
-                }
-                if (elementData.zoneParameter && elementData.zoneParameter.polygonPoints) {
-                    var points = elementData.zoneParameter.polygonPoints
-                    for (var i = 0; i < points.length; i++) {
-                        snapableParameters.zoneParameter.addPoint(points[i].x, points[i].y)
-                    }
-                }
+                copyDisplayParameterFromTemplateData(snapableParameters, elementData)
+
                 forceRedraw()
             }
         }
