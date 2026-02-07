@@ -1,6 +1,8 @@
 require('dotenv').config();
 const WebSocket = require('ws');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const db = require('./database');
 const cleanup = require('./cleanup');
 
@@ -17,6 +19,7 @@ const PORT = process.env.PORT || 3000;
 const MAX_PAYLOAD_SIZE = parseInt(process.env.MAX_PAYLOAD_SIZE) || 10 * 1024 * 1024; // 10 MB
 const MAX_DB_SIZE = parseInt(process.env.MAX_DB_SIZE) || 500 * 1024 * 1024; // 500 MB
 const DEBUG_MODE = process.env.DEBUG_MODE === 'true';
+const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD === 'true';
 
 function debug(...args) {
     if (DEBUG_MODE) {
@@ -28,8 +31,85 @@ function debug(...args) {
 debug('Server starting in DEBUG mode...');
 
 const server = http.createServer((req, res) => {
-    res.writeHead(200);
-    res.end('Blind Relay Chat Server is running.');
+    // API pour les statistiques du serveur
+    if (req.url === '/api/stats' && ENABLE_DASHBOARD) {
+        res.writeHead(200, { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        });
+        
+        const stats = {
+            connections: wss.clients.size,
+            rooms: rooms.size,
+            messages: getTotalMessages(),
+            sessions: Array.from(rooms.keys()).map(sessionId => ({
+                id: sessionId,
+                participants: rooms.get(sessionId).size,
+                messages: getSessionMessageCount(sessionId)
+            })),
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            dbSize: db.getDbSize()
+        };
+        
+        res.end(JSON.stringify(stats));
+        return;
+    }
+    
+    // Servir le dashboard si activé
+    if (ENABLE_DASHBOARD) {
+        const url = req.url === '/' ? '/dashboard.html' : req.url;
+        
+        const mimeTypes = {
+            '.html': 'text/html',
+            '.css': 'text/css',
+            '.js': 'text/javascript',
+            '.json': 'application/json',
+            '.png': 'image/png',
+            '.jpg': 'image/jpg',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.ico': 'image/x-icon'
+        };
+        
+        // Servir uniquement les fichiers du dashboard
+        const allowedFiles = ['/dashboard.html', '/dashboard.css', '/dashboard.js', '/chat_crypto.js'];
+        if (allowedFiles.includes(url)) {
+            // Construire le chemin complet du fichier
+            const fileName = url.substring(1); // Enlever le '/' initial
+            const filePath = path.join(__dirname, fileName);
+            const extname = path.extname(filePath);
+            const contentType = mimeTypes[extname] || 'text/plain';
+            
+            // Vérifier que le fichier existe
+            fs.access(filePath, fs.constants.F_OK, (err) => {
+                if (err) {
+                    console.error(`[Dashboard] Fichier introuvable: ${filePath}`);
+                    res.writeHead(404, { 'Content-Type': 'text/plain' });
+                    res.end(`Fichier non trouvé: ${fileName}\nChemin recherché: ${filePath}`);
+                    return;
+                }
+                
+                // Lire et servir le fichier
+                fs.readFile(filePath, (err, content) => {
+                    if (err) {
+                        console.error(`[Dashboard] Erreur de lecture: ${err.message}`);
+                        res.writeHead(500, { 'Content-Type': 'text/plain' });
+                        res.end(`Erreur serveur: ${err.code}\nFichier: ${fileName}`);
+                    } else {
+                        res.writeHead(200, { 'Content-Type': contentType });
+                        res.end(content, 'utf-8');
+                    }
+                });
+            });
+        } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end('<html><body><h1>Meownopoly Chat Server</h1><p>Dashboard disponible sur <a href="/dashboard.html">/dashboard.html</a></p></body></html>');
+        }
+    } else {
+        res.writeHead(200);
+        res.end('Blind Relay Chat Server is running.');
+    }
 });
 
 const wss = new WebSocket.Server({ server });
@@ -278,6 +358,28 @@ function removeFromRooms(ws) {
     }
 }
 
+function getTotalMessages() {
+    try {
+        const result = db.db.prepare('SELECT COUNT(*) as count FROM messages').get();
+        return result.count || 0;
+    } catch (err) {
+        return 0;
+    }
+}
+
+function getSessionMessageCount(sessionId) {
+    try {
+        const result = db.db.prepare('SELECT COUNT(*) as count FROM messages WHERE session_id = ?').get(sessionId);
+        return result.count || 0;
+    } catch (err) {
+        console.error('Error counting session messages:', err);
+        return 0;
+    }
+}
+
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
+    if (ENABLE_DASHBOARD) {
+        console.log(`Dashboard disponible sur http://localhost:${PORT}/dashboard.html`);
+    }
 });

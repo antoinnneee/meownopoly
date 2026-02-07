@@ -50,6 +50,19 @@ Ce serveur est un relais "aveugle" (Blind Relay) conçu pour faciliter la commun
    node test_client.js
    ```
 
+4. **Dashboard de visualisation (optionnel)** :
+   Pour activer l'interface web de monitoring, définissez la variable d'environnement `ENABLE_DASHBOARD=true` dans votre fichier `.env` :
+   ```env
+   ENABLE_DASHBOARD=true
+   ```
+   Le dashboard sera alors accessible sur `http://localhost:3000/dashboard.html`
+   
+   **Fonctionnalités du dashboard** :
+   - Visualisation en temps réel des connexions actives
+   - Monitoring des salons de chat
+   - Journal d'activité détaillé
+   - Statistiques du serveur (uptime, messages, etc.)
+
 ## Déploiement (Linux / Nginx)
 
 Un script de configuration automatique est disponible pour déployer le serveur sur Linux avec Nginx en tant que proxy inverse et SSL (Let's Encrypt).
@@ -72,3 +85,33 @@ Le script s'occupera d'installer Nginx, Certbot, de configurer les règles de re
 - `database.js` : Abstraction de la base de données SQLite.
 - `cleanup.js` : Script de nettoyage automatique (TTL).
 - `chat.db` : Fichier de base de données (généré automatiquement).
+- `dashboard.html` : Interface web de monitoring (optionnelle).
+- `dashboard.css` : Styles du dashboard.
+- `dashboard.js` : Logique client du dashboard.
+
+## Variables d'Environnement
+
+Créez un fichier `.env` à la racine du projet pour configurer le serveur :
+
+```env
+# Port du serveur
+PORT=3000
+
+# Taille maximale des messages (en octets)
+MAX_PAYLOAD_SIZE=10485760
+
+# Taille maximale de la base de données (en octets)
+MAX_DB_SIZE=524288000
+
+# Mode debug (true/false)
+DEBUG_MODE=false
+
+# Activer le nettoyage TTL (true/false)
+ENABLE_TTL=true
+
+# Intervalle de nettoyage TTL (en millisecondes)
+TTL_INTERVAL_MS=3600000
+
+# Activer le dashboard de monitoring (true/false)
+ENABLE_DASHBOARD=false
+```

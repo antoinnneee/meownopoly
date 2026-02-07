@@ -142,5 +142,8 @@ module.exports = {
 
   clearMessages: (sessionId) => {
     return db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
-  }
+  },
+
+  // Expose db pour stats
+  db: db
 };

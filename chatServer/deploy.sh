@@ -61,6 +61,10 @@ FILES=(
     ".env"
     "README.md"
     "setup-domain.sh"
+    "dashboard.html"
+    "dashboard.css"
+    "dashboard.js"
+    "chat_crypto.js"
 )
 
 # Copie des fichiers
