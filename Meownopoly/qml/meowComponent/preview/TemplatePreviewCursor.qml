@@ -6,11 +6,15 @@ import "../grid"
 
 Item {
     id: root
-    
-    x: mouseX
-    y: mouseY
+
+    x: mouseX - width / 2
+    y: mouseY - height / 2
+
+    width: 40
+    height: 40
+
     z: UiStyle.z_TEMPLATE_PREVIEW
-    
+
     required property GridManager gridManager
     property real mouseX: 0
     property real mouseY: 0
@@ -32,6 +36,42 @@ Item {
     onXChanged: updateGridPosition()
     onYChanged: updateGridPosition()
     onTemplateDataChanged: boundingBox = calculateBoundingBox()
+
+    function copyDisplayParameterFromTemplateData(snapableDest, templateData) {
+        if (templateData.displayParameter) {
+            snapableDest.displayParameter.unitSizeWidth = templateData.displayParameter.unitSizeWidth || 1
+            snapableDest.displayParameter.unitSizeHeight = templateData.displayParameter.unitSizeHeight || 1
+            snapableDest.displayParameter.gridRelativePositionX = templateData.displayParameter.gridRelativePositionX
+            snapableDest.displayParameter.gridRelativePositionY = templateData.displayParameter.gridRelativePositionY
+            snapableDest.displayParameter.effectBrightness = templateData.displayParameter.effectBrightness || 0
+            snapableDest.displayParameter.effectContrast = templateData.displayParameter.effectContrast || 0
+            snapableDest.displayParameter.effectSaturation = templateData.displayParameter.effectSaturation || 0
+            snapableDest.displayParameter.effectColorization = templateData.displayParameter.effectColorization || 0
+            snapableDest.displayParameter.effectColorizationColor = templateData.displayParameter.effectColorizationColor || "white"
+            snapableDest.displayParameter.effectBlurEnabled = templateData.displayParameter.effectBlurEnabled || false
+            snapableDest.displayParameter.effectBlur = templateData.displayParameter.effectBlur || 0
+            snapableDest.displayParameter.effectBlurMax = templateData.displayParameter.effectBlurMax || 32
+            snapableDest.displayParameter.effectBlurMultiplier = templateData.displayParameter.effectBlurMultiplier || 1
+            snapableDest.displayParameter.effectShadowEnabled = templateData.displayParameter.effectShadowEnabled || false
+            snapableDest.displayParameter.effectShadowBlur = templateData.displayParameter.effectShadowBlur || 1
+            snapableDest.displayParameter.effectShadowColor = templateData.displayParameter.effectShadowColor || "black"
+            snapableDest.displayParameter.effectShadowHorizontalOffset = templateData.displayParameter.effectShadowHorizontalOffset || 0
+            snapableDest.displayParameter.effectShadowVerticalOffset = templateData.displayParameter.effectShadowVerticalOffset || 0
+            snapableDest.displayParameter.effectShadowOpacity = templateData.displayParameter.effectShadowOpacity || 1
+            snapableDest.displayParameter.effectShadowScale = templateData.displayParameter.effectShadowScale || 1
+            snapableDest.displayParameter.rotationAngle = templateData.displayParameter.rotationAngle || 0
+            snapableDest.displayParameter.mirrorHorizontal = templateData.displayParameter.mirrorHorizontal || false
+            snapableDest.displayParameter.mirrorVertical = templateData.displayParameter.mirrorVertical || false
+
+            snapableDest.displayParameter.gridRelativePositionX = templateData.relativePositionX
+            snapableDest.displayParameter.gridRelativePositionY = templateData.relativePositionY
+        }
+        if (templateData.decorationParameter) { 
+            snapableDest.decorationParameter.decorationCategory = templateData.decorationParameter.decorationCategory || ""
+            snapableDest.decorationParameter.decorationType = templateData.decorationParameter.decorationType || ""
+            snapableDest.decorationParameter.decorationId = templateData.decorationParameter.decorationId || ""
+        }
+    }
     
     function calculateBoundingBox() {
         if (!templateData || !templateData.elements || templateData.elements.length === 0) {
@@ -65,33 +105,28 @@ Item {
             centerY: (minY + maxY) / 2
         }
     }
-    
-    // function updateGridPosition() {
-    //     var point = gridManager.getGridPosition(mouseX, mouseY)
-    //     gridXPosition = point.x
-    //     gridYPosition = point.y
-    // }
 
-
-
-    function updateGridPosition()
-    {
-        var point = gridManager.getGridPosition(mouseX, mouseY)
-        gridYPosition = point.y
+    function updateGridPosition() {
+        // Convertir (mouseX, mouseY) de workArea vers la grille pour un getGridPosition cohérent
+        var p = gridManager.mapFromItem(root.parent, mouseX, mouseY)
+        var point = gridManager.getGridPosition(p.x, p.y)
         gridXPosition = point.x
-        if (snapablePreview) {
-            snapablePreview.y = gridYPosition * gridManager.gridSize
-            snapablePreview.x = gridXPosition * gridManager.gridSize
-        }
-
+        gridYPosition = point.y
+        console.log("x, ", gridXPosition, "  y, ", gridYPosition)
+        previewContainer.x = gridXPosition * gridManager.gridSize
+        previewContainer.y = gridYPosition * gridManager.gridSize
     }
     
     Item {
         id: previewContainer
         parent: workArea
-        x: gridXPosition * gridManager.gridSize + centerOffsetX
-        y: gridYPosition * gridManager.gridSize + centerOffsetY
-        
+        Rectangle{
+            anchors.fill: parent
+            color: "red"
+            border.color: "red"
+            border.width: 3
+            radius: 4
+        }
         Repeater {
             id: elementRepeater
             model: root.templateData && root.templateData.elements ? 
@@ -100,10 +135,11 @@ Item {
             delegate: Loader {
                 id: elementLoader
                 
+                property int elementIndex: index
                 property var elementData: root.templateData.elements[index]
                 property int relX: elementData ? (elementData.relativePositionX || 0) : 0
                 property int relY: elementData ? (elementData.relativePositionY || 0) : 0
-                
+
                 x: relX * gridManager.gridSize
                 y: relY * gridManager.gridSize
                 
@@ -124,10 +160,19 @@ Item {
         SnapableDecoration {
             id: snapableDecoration
             property var elementData: parent && parent.elementData ? parent.elementData : null
+            property int elementIndex: parent && parent.elementIndex !== undefined ? parent.elementIndex : -1
             snapableParameters: ItemSnapableFactory.createItemSnapable()
             gridManager: root.gridManager
             opacity: 0.5
             z: UiStyle.z_TEMPLATE_PREVIEW + 1
+            Text{
+                text: snapableDecoration.elementIndex
+                anchors.centerIn: parent
+                color: "white"
+                font.pixelSize: 22
+                font.bold: true
+                z:100
+            }
             
             Rectangle {
                 anchors.fill: parent
@@ -138,18 +183,8 @@ Item {
             }
             
             Component.onCompleted: {
-                root.snapablePreview = snapableDecoration
                 if (!elementData) return
-                if (elementData.displayParameter) {
-                    snapableParameters.displayParameter.unitSizeWidth = elementData.displayParameter.unitSizeWidth || 1
-                    snapableParameters.displayParameter.unitSizeHeight = elementData.displayParameter.unitSizeHeight || 1
-                }
-                if (elementData.decorationParameter) {
-                    snapableParameters.decorationParameter.decorationCategory = elementData.decorationParameter.decorationCategory || ""
-                    snapableParameters.decorationParameter.decorationType = elementData.decorationParameter.decorationType || ""
-                    snapableParameters.decorationParameter.decorationId = elementData.decorationParameter.decorationId || ""
-                }
-
+                copyDisplayParameterFromTemplateData(snapableParameters, elementData)
             }
         }
     }
@@ -159,10 +194,20 @@ Item {
         SnapableCaseTile {
             id: snapableCaseTile
             property var elementData: parent && parent.elementData ? parent.elementData : null
+            property int elementIndex: parent && parent.elementIndex !== undefined ? parent.elementIndex : -1
             snapableParameters: ItemSnapableFactory.createItemSnapable(elementData && elementData.caseData ? elementData.caseData.type : 0)
             gridManager: root.gridManager
             opacity: 0.5
             z: UiStyle.z_TEMPLATE_PREVIEW + 1
+
+            Text{
+                text: snapableCaseTile.elementIndex
+                anchors.centerIn: parent
+                color: "white"
+                font.pixelSize: 22
+                font.bold: true
+                z:100
+            }
             
             Rectangle {
                 anchors.fill: parent
@@ -173,10 +218,8 @@ Item {
             }
             
             Component.onCompleted: {
-                root.snapablePreview = snapableCaseTile
                 if (!elementData || !elementData.displayParameter) return
-                snapableParameters.displayParameter.unitSizeWidth = elementData.displayParameter.unitSizeWidth || 1
-                snapableParameters.displayParameter.unitSizeHeight = elementData.displayParameter.unitSizeHeight || 1
+                copyDisplayParameterFromTemplateData(snapableParameters, elementData)
             }
         }
     }
@@ -186,17 +229,24 @@ Item {
         SnapableExclusionZone {
             id: snapableExclusion
             property var elementData: parent && parent.elementData ? parent.elementData : null
+            property int elementIndex: parent && parent.elementIndex !== undefined ? parent.elementIndex : -1
             snapableParameters: ItemSnapableFactory.createPhysicZone()
             gridManager: root.gridManager
             opacity: 0.5
             z: UiStyle.z_TEMPLATE_PREVIEW + 1
-            
+
+            Text{
+                text: snapableExclusion.elementIndex
+                anchors.centerIn: parent
+                color: "white"
+                font.pixelSize: 22
+                font.bold: true
+                z:100
+            }
             Component.onCompleted: {
-                root.snapablePreview = snapableExclusion
                 if (!elementData) return
                 if (elementData.displayParameter) {
-                    snapableParameters.displayParameter.unitSizeWidth = elementData.displayParameter.unitSizeWidth || 1
-                    snapableParameters.displayParameter.unitSizeHeight = elementData.displayParameter.unitSizeHeight || 1
+                    copyDisplayParameterFromTemplateData(snapableParameters, elementData)
                 }
                 if (elementData.zoneParameter && elementData.zoneParameter.polygonPoints) {
                     var points = elementData.zoneParameter.polygonPoints
@@ -204,9 +254,6 @@ Item {
                         snapableParameters.zoneParameter.addPoint(points[i].x, points[i].y)
                     }
                 }
-                console.log(" item gridpos  :  ", gridPosX, gridPosY)
-                console.log(" item polygon  :  ", snapableParameters.zoneParameter.polygonPoints)
-                updatePolygonPointsAfterMove()
                 forceRedraw()
             }
         }

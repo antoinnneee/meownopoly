@@ -447,6 +447,8 @@ MouseLogic_Selection {
         // Nettoyer la sélection création
         unselectAllTemplateElements()
         
+        // force reload model
+        placementTemplateData = []
         // Charger le template
         var templateData = Game.loadTemplate(templateName)
         if (!templateData || !templateData.elements) {
@@ -477,17 +479,18 @@ MouseLogic_Selection {
     function placeTemplateAtCursor() {
         if (!placementTemplateData || !placementTemplateName) return
         
-        var workAreaPos = mainMa.mapToItem(workArea, previewMouseX, previewMouseY)
+        // previewMouseX/Y sont déjà en coordonnées workArea (définis par le tracker parent: workArea)
+        var workAreaPos = Qt.point(previewMouseX, previewMouseY)
         var gridPos = grid.getGridPosition(workAreaPos.x, workAreaPos.y)
 
-        // Calculer le centre du template pour ajuster la position
+        // Calculer le centre du template pour placer l'origine du template (aligné avec la preview)
         var centerOffset = calculateTemplateCenterOffset()
         var adjustedGridX = gridPos.x + centerOffset.x
         var adjustedGridY = gridPos.y + centerOffset.y
         
         console.log("[TEMPLATE] Placing template at grid:", adjustedGridX, adjustedGridY, "(centered)")
         
-        var elementsArray = Game.getTemplateElementsForPlacement(placementTemplateName, gridPos.x, gridPos.y)
+        var elementsArray = Game.getTemplateElementsForPlacement(placementTemplateName, adjustedGridX, adjustedGridY)
         if (!elementsArray || elementsArray.length === 0) {
             console.error("[TEMPLATE] Failed to get elements for placement")
             return
