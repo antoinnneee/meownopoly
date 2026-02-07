@@ -400,25 +400,77 @@ EBP_Content {
             TextField {
                 id: saveNameInput
                 Layout.fillWidth: true
+                Layout.preferredHeight: 32
                 placeholderText: "Ex: Village, Foret..."
+                placeholderTextColor: "#666666"
+                selectByMouse: true
                 font.pointSize: 9
+                color: "#ffffff"
                 onAccepted: root.doSaveTemplate(text)
+
+                background: Rectangle {
+                    radius: 6
+                    color: "#2a2a2a"
+                    border.color: saveNameInput.activeFocus ? "#5DADE2" : "#3a3a3a"
+                    border.width: 2
+                }
             }
 
             RowLayout {
                 Layout.alignment: Qt.AlignRight
                 spacing: 8
 
-                Button {
-                    text: "Annuler"
-                    font.pointSize: 9
-                    onClicked: saveTemplatePopup.close()
+                Rectangle {
+                    Layout.preferredWidth: 90
+                    Layout.preferredHeight: 32
+                    radius: 6
+                    color: cancelBtnMouseArea.containsMouse ? "#3a3a3a" : "#2a2a2a"
+                    border.color: "#3a3a3a"
+                    border.width: 1
+
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Annuler"
+                        font.pointSize: 9
+                        color: "#b0b0b0"
+                    }
+
+                    MouseArea {
+                        id: cancelBtnMouseArea
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onClicked: saveTemplatePopup.close()
+                    }
                 }
-                Button {
-                    text: "Enregistrer"
-                    font.pointSize: 9
-                    highlighted: true
-                    onClicked: root.doSaveTemplate(saveNameInput.text)
+
+                Rectangle {
+                    Layout.preferredWidth: 110
+                    Layout.preferredHeight: 32
+                    radius: 6
+                    color: saveBtnMouseArea.containsMouse ? "#2d5a2d" : "#1e3d1e"
+                    border.color: "#4CAF50"
+                    border.width: 2
+
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Enregistrer"
+                        font.pointSize: 9
+                        font.bold: true
+                        color: "#ffffff"
+                    }
+
+                    MouseArea {
+                        id: saveBtnMouseArea
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onClicked: root.doSaveTemplate(saveNameInput.text)
+                    }
                 }
             }
         }
