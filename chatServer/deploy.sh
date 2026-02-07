@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo "Déploiement du chat server..."
 # Charger les variables depuis .deployEnv
 if [ ! -f .deployEnv ]; then
     echo "⚠️  Fichier .deployEnv introuvable. Création d'un template..."

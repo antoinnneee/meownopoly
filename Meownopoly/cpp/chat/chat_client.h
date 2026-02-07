@@ -59,9 +59,14 @@ private:
     void handleNewMessage(const QJsonObject &payload);
     void handleHistoryResult(const QJsonObject &payload);
     void handleKeyUpdate(const QJsonObject &payload);
+    void handleNewParticipant(const QJsonObject &payload);
+    void handleError(const QJsonObject &payload);
     void handleHistoryCleared();
     void sendWebSocketMessage(const QJsonObject &message);
+    void publishNewKey();
     QString processMessageText(const QString &text);
+    /** Charge les clés depuis la DB et les déchiffre avec m_lockKey. Met à jour m_sessionKeys. */
+    void loadAndDecryptSessionKeys();
     
     // Worker thread for WebSocket
     QThread *m_workerThread;

@@ -37,6 +37,9 @@ const wss = new WebSocket.Server({ server });
 // Room management: Map<SessionID, Set<Socket>>
 const rooms = new Map();
 
+// Sessions bloquées en attente d'une rotation de clé (nouveau participant)
+const keyRotationRequired = new Set();
+
 wss.on('connection', (ws) => {
     debug('New client connected');
 
@@ -94,87 +97,98 @@ function handleJoinSession(ws, payload) {
     const { session_id, player_id } = payload;
     if (!session_id || !player_id) return;
 
-    // Track player_id on ws object for management
     ws.player_id = player_id;
     ws.session_id = session_id;
 
-    // Add to in-memory room
+    const room = rooms.has(session_id) ? rooms.get(session_id) : null;
+    const isNewParticipant = room && room.size > 0;
+
     if (!rooms.has(session_id)) {
         rooms.set(session_id, new Set());
     }
     rooms.get(session_id).add(ws);
 
-    // Fetch session metadata and history
     const session = db.getSession(session_id);
-    // Forward Secrecy: We DO NOT send past keys to new joiners.
-    // They must generate their own V(N) key and can only read future messages.
-    const history = db.getHistory(session_id);
+    let keys = [];
+    let history = [];
+
+    if (!isNewParticipant) {
+        const sessionKeys = db.getSessionKeys(session_id);
+        keys = (sessionKeys || []).map(k => ({
+            version: k.version,
+            key_package: k.key_package,
+            nonce: k.key_nonce
+        }));
+        history = db.getHistory(session_id) || [];
+    }
 
     ws.send(JSON.stringify({
         type: 'INIT_SESSION',
         payload: {
             current_version: session ? session.version : 0,
-            keys: [], // Empty to enforce Forward Secrecy
-            history: history || []
+            keys,
+            history,
+            new_joiner: isNewParticipant
         }
     }));
+
+    if (isNewParticipant) {
+        keyRotationRequired.add(session_id);
+        const newParticipantMsg = JSON.stringify({
+            type: 'NEW_PARTICIPANT',
+            payload: { session_id, player_id }
+        });
+        const currentRoom = rooms.get(session_id);
+        currentRoom.forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(newParticipantMsg);
+            }
+        });
+        debug(`New participant ${player_id} in ${session_id}; key rotation required`);
+    }
 }
 
 function handlePublishKey(ws, payload) {
     const { session_id, blob, nonce } = payload;
     if (!session_id || !blob || !nonce) return;
 
-    // We allow overwriting for key rotation
     const result = db.updateSession(session_id, blob, nonce);
+    const version = result.changes === 0 ? 1 : result.version;
 
     if (result.changes === 0) {
-        // If update failed (session doesn't exist yet), create it
         db.createSession(session_id, blob, nonce);
         debug(`Key package created for session ${session_id}`);
-
-        // Notify everyone (including creator) of the new V1 key
-        const room = rooms.get(session_id);
-        if (room) {
-            const updateMessage = JSON.stringify({
-                type: 'KEY_UPDATE',
-                payload: {
-                    version: 1,
-                    key_package: blob,
-                    nonce: nonce
-                }
-            });
-            room.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(updateMessage);
-                }
-            });
-        }
     } else {
-        debug(`Key package updated/rotated for session ${session_id} (Version ${result.version})`);
+        debug(`Key package updated/rotated for session ${session_id} (Version ${version})`);
+    }
 
-        // Broadcast the update to all OTHER clients in the room
-        const room = rooms.get(session_id);
-        if (room) {
-            const updateMessage = JSON.stringify({
-                type: 'KEY_UPDATE',
-                payload: {
-                    version: result.version,
-                    key_package: blob,
-                    nonce: nonce
-                }
-            });
-            room.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(updateMessage);
-                }
-            });
-        }
+    keyRotationRequired.delete(session_id);
+
+    const room = rooms.get(session_id);
+    if (room) {
+        const updateMessage = JSON.stringify({
+            type: 'KEY_UPDATE',
+            payload: {
+                version,
+                key_package: blob,
+                nonce: nonce
+            }
+        });
+        room.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(updateMessage);
+            }
+        });
     }
 }
 
 function handleSendMessage(ws, payload) {
     const { session_id, sender_id, payload: ciphertext, nonce, key_v } = payload;
     if (!session_id || !sender_id || !ciphertext || !nonce) return;
+
+    if (keyRotationRequired.has(session_id)) {
+        return sendError(ws, 'KEY_ROTATION_REQUIRED', 'A new participant joined; a client must publish a new key before sending messages');
+    }
 
     // Persist message
     const result = db.saveMessage(session_id, sender_id, ciphertext, nonce, key_v);
@@ -257,6 +271,7 @@ function removeFromRooms(ws) {
         room.delete(ws);
         if (room.size === 0) {
             rooms.delete(ws.session_id);
+            keyRotationRequired.delete(ws.session_id);
         }
     }
 }

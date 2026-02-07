@@ -37,13 +37,13 @@ bool ChatDatabase::init()
                          "timestamp TEXT,"
                          "key_version INTEGER"
                          ")");
-    
-    // Migration for existing tables
-    query.exec("ALTER TABLE local_history ADD COLUMN key_version INTEGER DEFAULT 1");
     if (!ok) {
         qCritical() << "Failed to create chat table (local_history):" << query.lastError().text();
         return false;
     }
+
+    // Migration: add key_version to old DBs (ignore error if column already exists)
+    query.exec("ALTER TABLE local_history ADD COLUMN key_version INTEGER DEFAULT 1");
 
     ok = query.exec("CREATE TABLE IF NOT EXISTS session_keys ("
                     "session_id TEXT,"

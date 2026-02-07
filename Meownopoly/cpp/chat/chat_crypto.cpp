@@ -6,10 +6,11 @@
 
 ChatCrypto::ChatCrypto(QObject *parent) : QObject(parent) {}
 
+// Dérivation de la clé de verrouillage (session + mot de passe).
+// SHA256 salé : compatible avec les sessions existantes. Pour plus de résistance au bruteforce,
+// on pourrait passer à PBKDF2-HMAC-SHA256 avec un "key derivation version" dans le protocole.
 QByteArray ChatCrypto::deriveLockKey(const QString &gameId, const QString &password)
 {
-    // Use salt (gameId) and password. Iterating this would be better (PBKDF2), 
-    // but a simple salted SHA-256 is better than MD5.
     return QCryptographicHash::hash((gameId + password).toUtf8(), QCryptographicHash::Sha256);
 }
 
@@ -70,13 +71,13 @@ QByteArray ChatCrypto::decrypt(const QByteArray &encryptedData, const QByteArray
     QByteArray receivedTag = encryptedData.left(32);
     QByteArray cipherText = encryptedData.mid(32);
 
-    // 2. Verify Integrity
+    // 2. Verify Integrity (constant-time to avoid timing attacks)
     QByteArray expectedTag = QMessageAuthenticationCode::hash(nonce + cipherText, key, QCryptographicHash::Sha256);
-    
-    // Constant-time comparison logic is ideal, but standard opertor== is acceptable for this level.
-    if (receivedTag != expectedTag) {
-        return QByteArray(); // Integrity check failed
-    }
+    if (receivedTag.size() != expectedTag.size()) return QByteArray();
+    quint8 diff = 0;
+    for (int i = 0; i < receivedTag.size(); ++i)
+        diff |= static_cast<quint8>(receivedTag[i]) ^ static_cast<quint8>(expectedTag[i]);
+    if (diff != 0) return QByteArray();
 
     // 3. Decrypt
     QByteArray plainText;
