@@ -119,7 +119,6 @@ Item {
         var point = gridManager.getGridPosition(p.x, p.y)
         gridXPosition = point.x - Math.trunc(templateData.templateInfo.boundingBoxWidth/2)
         gridYPosition = point.y - Math.trunc(templateData.templateInfo.boundingBoxHeight/2)
-        console.log("x, ", gridXPosition, "  y, ", gridYPosition)
         previewContainer.x = gridXPosition * gridManager.gridSize
         previewContainer.y = gridYPosition * gridManager.gridSize
     }
