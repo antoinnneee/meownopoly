@@ -36,14 +36,8 @@ Item {
     required property var sidePanel
 
     property alias mapInfoDrawer: mapInfoDrawer
-
-    onIsOpeningChanged: {
-        if (isOpening) {
-            mapInfoDrawer.open()
-        } else {
-            mapInfoDrawer.close()
-        }
-    }
+    signal openDrawer()
+    onOpenDrawer: mapInfoDrawer.open()
 
     MapInfoDrawer {
         id: mapInfoDrawer

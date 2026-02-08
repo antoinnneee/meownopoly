@@ -120,65 +120,36 @@ Base_Board {
     }
 
 
-    Image {
+    BtSideMenu {
         id: btInfoMap
-        anchors.top: parent.top
-        anchors.right: parent.right
+
         anchors.margins: 10
-        z: UiStyle.z_HUD
-        source: AssetManager.getAssetById("ui", "hud", "0").path
-        width: Screen.pixelDensity * 20
-        height: Screen.pixelDensity * 20
+        anchors.right: parent.right
+        anchors.top: parent.top
 
-        MouseArea {
-            hoverEnabled: true
-            anchors.fill:  parent
-            onClicked: {
-                btInfoMapAnim.stop()
-                btInfoMapAnim.start()
-                mapInfoPanel.mapInfoDrawer.position === 0 ? mapInfoPanel.mapInfoDrawer.open() : mapInfoPanel.mapInfoDrawer.close()
-                sidePanel.visible = mapInfoPanel.mapInfoDrawer.position === 1
-            }
-        }
+        emojiBt: "ℹ️"
+        colorBt: "#3498db"
 
-        SequentialAnimation {
-            id: btInfoMapAnim
-            running: false
-            SmoothedAnimation {velocity: 0.9; to: 1.2; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
-            SmoothedAnimation {velocity: 1.1; to: 1; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
+        onBtClicked: {
+            sidePanel.visible = mapInfoPanel.mapInfoDrawer.position === 1
+            mapInfoPanel.openDrawer()
         }
     }
 
-    Image {
+    BtSideMenu {
         id: btChat
+
+        emojiBt: "💬"
+        colorBt: "#2ecc71"
         anchors.top: btInfoMap.bottom
         anchors.right: parent.right
         anchors.margins: 10
-        z: UiStyle.z_HUD
-        source: AssetManager.getAssetById("ui", "hud", "0").path
-        width: Screen.pixelDensity * 20
-        height: Screen.pixelDensity * 20
 
-        Rectangle {
-            anchors.fill: parent
-            color: "#2ecc71"
-            opacity: 0.4
-            radius: width/2
-        }
-
-        Text {
-            text: "💬"
-            anchors.centerIn: parent
-            font.pixelSize: 20
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                chatDrawer.open()
-            }
+        onBtClicked: {
+            chatDrawer.open()
         }
     }
+
 
     ChatDrawer {
         id: chatDrawer
