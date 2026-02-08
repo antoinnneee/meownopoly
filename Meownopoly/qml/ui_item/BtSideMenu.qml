@@ -43,8 +43,8 @@ Image {
     width: Screen.pixelDensity * 20
     height: Screen.pixelDensity * 20
     
-    property string colorBt : ""
-    property string emojiBt : "white"
+    property string colorBt : "transparent"
+    property string emojiBt : ""
 
     signal btClicked()
 
@@ -67,12 +67,11 @@ Image {
         onClicked: {
             btSideMenu.btClicked()
         }
-    }
-    
-    SequentialAnimation {
-        id: btInfoMapAnim
-        running: false
-        SmoothedAnimation {velocity: 0.9; to: 1.2; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
-        SmoothedAnimation {velocity: 1.1; to: 1; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
-    }
+    }    
+    // SequentialAnimation {
+    //     id: btInfoMapAnim
+    //     running: false
+    //     SmoothedAnimation {velocity: 0.9; to: 1.2; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
+    //     SmoothedAnimation {velocity: 1.1; to: 1; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
+    // }
 }

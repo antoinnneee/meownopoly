@@ -53,6 +53,7 @@ private:
 
     static UiStyle *m_pThis;
 
+
     int m_z_CONFIG_PANEL = 10000;
     int m_z_HUD = 9000;
     int m_z_SELECTION_RECT = 8000;
