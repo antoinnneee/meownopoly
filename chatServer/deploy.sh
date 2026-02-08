@@ -64,6 +64,7 @@ FILES=(
     "dashboard.html"
     "dashboard.css"
     "dashboard.js"
+    "labo.html"
     "chat_crypto.js"
 )
 

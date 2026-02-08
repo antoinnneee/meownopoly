@@ -7,16 +7,19 @@ const hasCryptoJS = typeof CryptoJS !== 'undefined';
 
 class ChatCrypto {
     // Dérive la clé de verrouillage (Lock Key) à partir de sessionId + password
+    // Toujours UTF-8 pour être compatible avec le client C++ (toUtf8) et cohérent entre Web Crypto et CryptoJS
     static async deriveLockKey(sessionId, password) {
         const data = sessionId + password;
-        
+        const buffer = new TextEncoder().encode(data);
+
         if (hasSubtleCrypto) {
-            const buffer = new TextEncoder().encode(data);
             const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
             return new Uint8Array(hashBuffer);
         } else if (hasCryptoJS) {
-            // Utiliser crypto-js pour SHA-256
-            const hash = CryptoJS.SHA256(data);
+            // Même entrée UTF-8 que Web Crypto : bytes → WordArray (Latin1 = octets bruts) → SHA-256
+            const binaryString = String.fromCharCode.apply(null, buffer);
+            const wordArray = CryptoJS.enc.Latin1.parse(binaryString);
+            const hash = CryptoJS.SHA256(wordArray);
             const words = hash.words;
             const result = new Uint8Array(32);
             for (let i = 0; i < 8; i++) {

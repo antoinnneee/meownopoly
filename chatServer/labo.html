@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meownopoly Protocol Lab</title>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- CryptoJS (Fallback pour HTTP et SHA-256) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script src="chat_crypto.js"></script>
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .packet-log {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .animate-flash {
+            animation: flash 1s;
+        }
+
+        @keyframes flash {
+            0% {
+                background-color: rgba(59, 130, 246, 0.5);
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // ChatCrypto est maintenant chargé depuis chat_crypto.js
+        const cryptoUtils = {
+            toBase64: bytes => ChatCrypto.bytesToBase64(bytes),
+            fromBase64: str => ChatCrypto.base64ToBytes(str),
+            stringToBytes: str => ChatCrypto.stringToBytes(str),
+            bytesToString: bytes => ChatCrypto.bytesToString(bytes)
+        };
+
+        // --- COMPOSANT CLIENT INDIVIDUEL ---
+
+        function ClientSimulator({ name, role, globalConfig, onLogPacket }) {
+            // État Connexion
+            const [ws, setWs] = useState(null);
+            const [status, setStatus] = useState('disconnected');
+            const [playerId] = useState(`user_${Math.floor(Math.random() * 9999)}`);
+
+            // État Crypto
+            const [masterKey, setMasterKey] = useState(null); // Lock Key
+            const [sessionKey, setSessionKey] = useState(null);
+            const [keyVersion, setKeyVersion] = useState(0);
+
+            // États UI
+            const [rotationNeeded, setRotationNeeded] = useState(false);
+            const [isRotating, setIsRotating] = useState(false);
+
+            const [messages, setMessages] = useState([]);
+            const [participants, setParticipants] = useState([]);
+            const [input, setInput] = useState("");
+
+            // Refs pour éviter les closures périmées dans les listeners WebSocket
+            const handleMessageRef = useRef();
+            const onLogPacketRef = useRef();
+            const wantedRejoinRef = useRef(false);
+
+            useEffect(() => {
+                handleMessageRef.current = handleMessage;
+                onLogPacketRef.current = onLogPacket;
+            });
+
+            // Connexion au serveur
+            const connect = () => {
+                const socket = new WebSocket(globalConfig.url);
+
+                socket.onopen = async () => {
+                    setStatus('connected');
+                    try {
+                        const mk = await ChatCrypto.deriveLockKey(globalConfig.sessionId, globalConfig.password);
+                        setMasterKey(mk);
+                    } catch (e) {
+                        console.error("Erreur Key Derivation", e);
+                    }
+                    if (wantedRejoinRef.current) {
+                        wantedRejoinRef.current = false;
+                        const payload = { type: 'JOIN_SESSION', payload: { session_id: globalConfig.sessionId, player_id: playerId, player_nickname: name } };
+                        if (onLogPacketRef.current) onLogPacketRef.current(role, 'TX', payload);
+                        socket.send(JSON.stringify(payload));
+                    }
+                };
+
+                socket.onclose = () => {
+                    setStatus('disconnected');
+                    setWs(null);
+                    setMessages([]);
+                    setParticipants([]);
+                    setRotationNeeded(false);
+                    setSessionKey(null); // Clear key on disconnect
+                    setKeyVersion(0);
+                };
+
+                socket.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    if (onLogPacketRef.current) onLogPacketRef.current(role, 'RX', msg);
+                    if (handleMessageRef.current) handleMessageRef.current(msg, socket);
+                };
+
+                setWs(socket);
+            };
+
+            const requestKeyAgain = () => {
+                if (!ws || status !== 'joined') return;
+                wantedRejoinRef.current = true;
+                ws.close();
+                setTimeout(() => connect(), 300);
+            };
+
+            const disconnect = () => {
+                if (ws) ws.close();
+            };
+
+            const importSessionKey = async (rawKeyBytes) => {
+                return rawKeyBytes;
+            };
+
+            // Gestionnaire de paquets entrants
+            const handleMessage = async (msg, socket) => {
+                switch (msg.type) {
+                    case 'INIT_SESSION':
+                        // On attend d'avoir la clé avant de passer en 'joined' et de décrypter
+                        const currentVersion = msg.payload.current_version;
+
+                        if (msg.payload.new_joiner) setRotationNeeded(true);
+
+                        let latestKey = null;
+                        if (msg.payload.keys && msg.payload.keys.length > 0) {
+                            const latest = msg.payload.keys[0];
+                            const pkg = latest.key_package || latest.blob;
+                            const nonce = latest.key_nonce || latest.nonce;
+
+                            if (pkg && nonce) {
+                                latestKey = await processKeyUpdate(pkg, nonce, currentVersion);
+                            }
+                        }
+
+                        // Décryptage de l'historique si on a la clé correspondante
+                        if (msg.payload.history) {
+                            const decodedHistory = await Promise.all(msg.payload.history.map(async (m) => {
+                                let text = "🔒 ...";
+                                // On ne peut décrypter que si on a la clé (version correspondante)
+                                if (latestKey && m.key_version === currentVersion) {
+                                    try {
+                                        const pBytes = cryptoUtils.fromBase64(m.payload);
+                                        const nBytes = cryptoUtils.fromBase64(m.nonce);
+                                        const dBytes = await ChatCrypto.decrypt(pBytes, latestKey, nBytes);
+                                        if (dBytes) text = cryptoUtils.bytesToString(dBytes);
+                                    } catch (e) { }
+                                }
+                                return {
+                                    id: m.id,
+                                    sender: m.sender_nickname,
+                                    text: text,
+                                    raw: m.payload
+                                };
+                            }));
+                            setMessages(decodedHistory);
+                        }
+
+                        setStatus('joined');
+                        setKeyVersion(currentVersion);
+                        socket.send(JSON.stringify({ type: 'GET_PARTICIPANTS', payload: { session_id: globalConfig.sessionId } }));
+                        break;
+
+                    case 'KEY_UPDATE':
+                        setIsRotating(false);
+                        setRotationNeeded(false);
+                        const pkg = msg.payload.key_package || msg.payload.blob;
+                        const nonce = msg.payload.key_nonce || msg.payload.nonce;
+                        if (pkg && nonce) {
+                            processKeyUpdate(pkg, nonce, msg.payload.version);
+                        }
+                        break;
+
+                    case 'NEW_MESSAGE':
+                        let text = "🔒 ...";
+                        if (sessionKey) {
+                            try {
+                                const payloadBytes = cryptoUtils.fromBase64(msg.payload.payload);
+                                const msgNonce = msg.payload.nonce ? cryptoUtils.fromBase64(msg.payload.nonce) : payloadBytes.slice(0, 12);
+
+                                const decryptedBytes = await ChatCrypto.decrypt(payloadBytes, sessionKey, msgNonce);
+                                if (decryptedBytes) {
+                                    text = cryptoUtils.bytesToString(decryptedBytes);
+                                }
+                            } catch (e) { console.error("Dec fail", e); }
+                        }
+                        setMessages(prev => [...prev, {
+                            id: msg.payload.msg_id,
+                            sender: msg.payload.sender_nickname,
+                            text: text,
+                            raw: msg.payload.payload
+                        }]);
+                        break;
+
+                    case 'NEW_PARTICIPANT':
+                        socket.send(JSON.stringify({ type: 'GET_PARTICIPANTS', payload: { session_id: globalConfig.sessionId } }));
+                        setRotationNeeded(true);
+                        break;
+
+                    case 'PARTICIPANTS_LIST':
+                        setParticipants(msg.payload.participants);
+                        break;
+
+                    case 'ERROR':
+                        if (msg.payload.code === 'KEY_ROTATION_REQUIRED') setRotationNeeded(true);
+                        setIsRotating(false);
+                        break;
+                }
+            };
+
+            const processKeyUpdate = async (pkgBase64, nonceBase64, version) => {
+                try {
+                    // Toujours dériver la Lock Key depuis le mot de passe actuel de l'interface
+                    const mk = await ChatCrypto.deriveLockKey(globalConfig.sessionId, globalConfig.password);
+                    setMasterKey(mk);
+
+                    const pkgBytes = cryptoUtils.fromBase64(pkgBase64);
+                    const nonceBytes = cryptoUtils.fromBase64(nonceBase64);
+
+                    // Déchiffrement du package pour obtenir la Clé de Session brute
+                    const rawSessionKey = await ChatCrypto.decrypt(pkgBytes, mk, nonceBytes);
+
+                    if (rawSessionKey) {
+                        const sk = await importSessionKey(rawSessionKey);
+                        setSessionKey(sk);
+                        setKeyVersion(version);
+                        return sk; // Retourner la clé pour usage immédiat
+                    }
+                } catch (e) {
+                    console.error("Failed to process key update", e);
+                }
+                return null;
+            };
+
+            const joinSession = () => {
+                if (!ws) return;
+                const payload = {
+                    type: 'JOIN_SESSION',
+                    payload: {
+                        session_id: globalConfig.sessionId,
+                        player_id: playerId,
+                        player_nickname: name
+                    }
+                };
+                onLogPacket(role, 'TX', payload);
+                ws.send(JSON.stringify(payload));
+            };
+
+            const doRotateKey = async () => {
+                if (!ws) return;
+                setIsRotating(true);
+
+                try {
+                    // Toujours dériver la Lock Key depuis le mot de passe actuel de l'interface
+                    const mk = await ChatCrypto.deriveLockKey(globalConfig.sessionId, globalConfig.password);
+                    setMasterKey(mk);
+
+                    // 1. Générer nouvelle clé de session
+                    const newSessionKey = ChatCrypto.generateSessionKey();
+
+                    // 2. Générer Nonce
+                    const nonce = ChatCrypto.generateNonce();
+
+                    // 3. Chiffrer la nouvelle clé avec la Lock Key (MasterKey)
+                    const encryptedPkg = await ChatCrypto.encrypt(newSessionKey, mk, nonce);
+
+                    const blobBase64 = cryptoUtils.toBase64(encryptedPkg);
+                    const nonceBase64 = cryptoUtils.toBase64(nonce);
+
+                    const payload = {
+                        type: 'PUBLISH_KEY',
+                        payload: {
+                            session_id: globalConfig.sessionId,
+                            blob: blobBase64,
+                            nonce: nonceBase64,
+                            key_package: blobBase64,
+                            key_nonce: nonceBase64
+                        }
+                    };
+
+                    onLogPacket(role, 'TX', payload);
+                    ws.send(JSON.stringify(payload));
+
+                } catch (e) {
+                    console.error(e);
+                    setIsRotating(false);
+                    alert("Erreur crypto rotation: " + e.message);
+                }
+            };
+
+            const sendMessage = async (e) => {
+                e.preventDefault();
+                if (!input || !ws || !sessionKey) return;
+
+                try {
+                    const nonce = ChatCrypto.generateNonce();
+                    const inputBytes = cryptoUtils.stringToBytes(input);
+                    const encryptedMsg = await ChatCrypto.encrypt(inputBytes, sessionKey, nonce);
+
+                    const payload = {
+                        type: 'SEND_MSG',
+                        payload: {
+                            session_id: globalConfig.sessionId,
+                            sender_id: playerId,
+                            sender_nickname: name,
+                            payload: cryptoUtils.toBase64(encryptedMsg), // [Tag] + [Ciphertext]
+                            nonce: cryptoUtils.toBase64(nonce),          // Nonce séparé
+                            key_v: keyVersion
+                        }
+                    };
+                    onLogPacket(role, 'TX', payload);
+                    ws.send(JSON.stringify(payload));
+                    setInput("");
+                } catch (e) {
+                    alert("Erreur chiffrement: " + e.message);
+                }
+            };
+
+            const isBlocked = rotationNeeded;
+
+            return (
+                <div className="flex flex-col h-full bg-slate-800 border-x border-slate-700 w-1/3 min-w-[300px]">
+                    <div className={`p-3 border-b-4 ${status === 'joined' ? 'border-green-500' : 'border-slate-600'} bg-slate-900`}>
+                        <div className="flex justify-between items-center mb-2">
+                            <h2 className="font-bold text-lg flex items-center gap-2">
+                                <i data-lucide="monitor" className="w-5 h-5"></i> {name}
+                            </h2>
+                            <div className="text-xs font-mono opacity-50">{playerId}</div>
+                        </div>
+
+                        <div className="flex gap-2 mb-2">
+                            {status === 'disconnected' && (
+                                <button onClick={connect} className="bg-blue-600 px-3 py-1 rounded text-xs hover:bg-blue-700 w-full transition">Connexion Socket</button>
+                            )}
+                            {status === 'connected' && (
+                                <button onClick={joinSession} className="bg-green-600 px-3 py-1 rounded text-xs hover:bg-green-700 w-full transition">Join Session</button>
+                            )}
+                            {status !== 'disconnected' && (
+                                <button onClick={disconnect} className="bg-red-900/50 px-3 py-1 rounded text-xs hover:bg-red-900 transition">X</button>
+                            )}
+                        </div>
+
+                        <div className="text-[10px] font-mono space-y-1 bg-black/30 p-2 rounded">
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Statut:</span>
+                                <span className={status === 'joined' ? 'text-green-400' : 'text-slate-500'}>{status}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Clé Session:</span>
+                                <span className={sessionKey ? 'text-yellow-400' : 'text-red-500'}>
+                                    {sessionKey ? `Chargée (v${keyVersion})` : 'Manquante'}
+                                </span>
+                            </div>
+
+                            {rotationNeeded && (
+                                <button
+                                    onClick={!isRotating ? doRotateKey : null}
+                                    className={`w-full mt-2 p-2 rounded text-center border transition-all duration-200 flex flex-col items-center justify-center gap-1 ${isRotating
+                                        ? 'bg-yellow-600/20 border-yellow-500/50 text-yellow-200 cursor-wait'
+                                        : 'bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-200 hover:text-white cursor-pointer animate-pulse'
+                                        }`}
+                                >
+                                    {isRotating ? (
+                                        <>
+                                            <i data-lucide="loader-2" className="w-4 h-4 animate-spin"></i>
+                                            <span>Envoi de la clé...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="font-bold text-xs uppercase">⚠️ Serveur Bloqué</span>
+                                            <span className="text-[10px] underline">Cliquer pour générer Clé v{keyVersion + 1}</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                            {status === 'joined' && (
+                                <button
+                                    onClick={requestKeyAgain}
+                                    className="w-full mt-2 p-1.5 rounded text-center border border-slate-500/50 bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 text-[10px] flex items-center justify-center gap-1"
+                                >
+                                    <i data-lucide="refresh-cw" className="w-3 h-3"></i>
+                                    Redemander la clé
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-slate-800/50">
+                        {status !== 'joined' && (
+                            <div className="text-center text-slate-500 text-sm mt-10">Non connecté à la session</div>
+                        )}
+                        {messages.map((m, i) => (
+                            <div key={i} className={`p-2 rounded text-sm ${m.sender === name ? 'bg-blue-900/30 ml-auto border border-blue-800' : 'bg-slate-700 mr-auto'}`}>
+                                <div className="text-[10px] opacity-50 mb-1">{m.sender}</div>
+                                <div className={m.text.startsWith('🔒') ? 'text-yellow-500/50 italic' : 'text-white'}>{m.text}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <form onSubmit={sendMessage} className="p-2 border-t border-slate-700 bg-slate-900">
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                disabled={status !== 'joined' || !sessionKey}
+                                placeholder={isBlocked ? "Rotation requise..." : "Message..."}
+                                className="flex-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                            />
+                            <button
+                                type="submit"
+                                disabled={status !== 'joined' || !sessionKey}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 rounded disabled:opacity-50"
+                            >
+                                <i data-lucide="send" className="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            );
+        }
+
+        // --- COMPOSANT LOG RESEAU ---
+        function NetworkLog({ logs }) {
+            const bottomRef = useRef(null);
+            useEffect(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), [logs]);
+
+            return (
+                <div className="flex-1 bg-black flex flex-col min-w-[300px] border-x-4 border-slate-900 z-10 shadow-2xl">
+                    <div className="bg-slate-900 p-2 border-b border-slate-800 flex justify-between items-center">
+                        <span className="font-bold text-slate-400 text-xs uppercase tracking-widest flex items-center gap-2">
+                            <i data-lucide="activity" className="w-4 h-4 text-purple-500"></i>
+                            Trafic Réseau (Chiffré)
+                        </span>
+                        <span className="text-[10px] text-slate-600">{logs.length} paquets</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-2 space-y-2 packet-log">
+                        {logs.length === 0 && (
+                            <div className="text-slate-700 text-center mt-20">En attente de trafic...</div>
+                        )}
+                        {logs.map((log, i) => (
+                            <div key={i} className={`p-2 rounded border-l-2 text-xs mb-1 ${log.role === 'ALICE' ? 'border-blue-500 bg-blue-900/10' : 'border-green-500 bg-green-900/10'
+                                } ${log.direction === 'TX' ? 'opacity-100' : 'opacity-70'}`}>
+                                <div className="flex justify-between mb-1 text-[10px] font-bold opacity-70">
+                                    <span>{log.role} {log.direction === 'TX' ? '→ SERVEUR' : '← SERVEUR'}</span>
+                                    <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                                </div>
+                                <div className="text-purple-300 font-bold">{log.data.type}</div>
+                                {log.data.payload && (
+                                    <div className="text-slate-500 truncate mt-1">
+                                        {log.data.type === 'SEND_MSG' && log.data.payload.payload ? (
+                                            <span className="text-red-400">Enc: {log.data.payload.payload.substring(0, 20)}...</span>
+                                        ) : (
+                                            JSON.stringify(log.data.payload).substring(0, 50) + "..."
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                        <div ref={bottomRef} />
+                    </div>
+                </div>
+            );
+        }
+
+        // --- APP PRINCIPALE ---
+        function App() {
+            const [logs, setLogs] = useState([]);
+            const [showBob, setShowBob] = useState(true);
+            useEffect(() => {
+                const t = setTimeout(() => { if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons(); }, 50);
+                return () => clearTimeout(t);
+            }, [showBob]);
+            const [config, setConfig] = useState({
+                url: 'ws://localhost:3000',
+                sessionId: 'lab-session-01',
+                password: 'secret-password-123'
+            });
+
+            const addLog = (role, direction, data) => {
+                setLogs(prev => [...prev, { role, direction, data, timestamp: Date.now() }]);
+            };
+
+            return (
+                <div className="h-screen flex flex-col">
+                    <div className="h-14 bg-slate-900 border-b border-slate-700 flex items-center px-4 gap-4 shadow-md z-20">
+                        <div className="flex items-center gap-2">
+                            <i data-lucide="flask-conical" className="text-purple-500"></i>
+                            <span className="font-bold text-white hidden md:inline">Protocol Lab</span>
+                        </div>
+
+                        <div className="h-6 w-px bg-slate-700 mx-2"></div>
+
+                        <div className="flex gap-4 text-sm flex-1">
+                            <div className="flex flex-col">
+                                <label className="text-[10px] text-slate-500 uppercase">Server URL</label>
+                                <input type="text" value={config.url} onChange={e => setConfig({ ...config, url: e.target.value })} className="bg-transparent border-none p-0 text-slate-200 focus:ring-0 w-32" />
+                            </div>
+                            <div className="flex flex-col">
+                                <label className="text-[10px] text-slate-500 uppercase">Session ID</label>
+                                <input type="text" value={config.sessionId} onChange={e => setConfig({ ...config, sessionId: e.target.value })} className="bg-transparent border-none p-0 text-yellow-400 font-mono focus:ring-0 w-32" />
+                            </div>
+                            <div className="flex flex-col">
+                                <label className="text-[10px] text-slate-500 uppercase">Shared Secret (Password)</label>
+                                <input type="text" value={config.password} onChange={e => setConfig({ ...config, password: e.target.value })} className="bg-transparent border-none p-0 text-green-400 font-mono focus:ring-0 w-32" />
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowBob(!showBob)}
+                            className={`text-xs flex items-center gap-1 px-2 py-1 rounded transition ${showBob ? 'bg-green-900/40 text-green-400 hover:bg-green-800/40' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+                            title={showBob ? 'Masquer Bob' : 'Voir Bob'}
+                        >
+                            <i data-lucide="user" className="w-3 h-3"></i>
+                            {showBob ? 'Bob visible' : 'Voir Bob'}
+                        </button>
+
+                        <button onClick={() => setLogs([])} className="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+                            <i data-lucide="trash-2" className="w-3 h-3"></i> Clear Logs
+                        </button>
+                    </div>
+
+                    <div className="flex-1 flex overflow-hidden">
+                        <ClientSimulator
+                            name="Alice"
+                            role="ALICE"
+                            globalConfig={config}
+                            onLogPacket={addLog}
+                        />
+
+                        <NetworkLog logs={logs} />
+
+                        {showBob ? (
+                            <ClientSimulator
+                                name="Bob"
+                                role="BOB"
+                                globalConfig={config}
+                                onLogPacket={addLog}
+                            />
+                        ) : (
+                            <div className="w-12 flex-shrink-0 bg-slate-800/80 border-l border-slate-700 flex flex-col items-center justify-center">
+                                <button
+                                    onClick={() => setShowBob(true)}
+                                    className="p-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-400 hover:text-white transition flex flex-col items-center gap-1"
+                                    title="Afficher Bob"
+                                >
+                                    <i data-lucide="user-plus" className="w-5 h-5"></i>
+                                    <span className="text-[10px]">Bob</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        function initIcons() {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        }
+        setTimeout(initIcons, 500);
+    </script>
+</body>
+
+</html>
