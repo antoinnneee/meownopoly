@@ -52,11 +52,7 @@ SnapableElement {
     
     // Forcer le redraw au chargement
     Component.onCompleted: {
-        root.gridBounds = root.calculateGridBounds()
-        root.updateRecalculate()
-        hatchCanvas.requestPaint()
-        console.log(" item gridpos  :  ", gridPosX, gridPosY)
-        console.log(" item polygon  :  ", snapableParameters.zoneParameter.polygonPoints)
+        forceRedraw()
     }
     function forceRedraw()
     {
