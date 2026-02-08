@@ -42,8 +42,15 @@ Item {
     MapInfoDrawer {
         id: mapInfoDrawer
         property alias mapInfoPanel: mapInfoPanel
-        onOpened:selectionPanel.visible =  false
-        onClosed:selectionPanel.visible =  true
+        property bool selPanelOriginalState : false
+        onOpened:{
+            selectionPanel.visible =  false
+            selPanelOriginalState = selectionPanel.isExpanded
+        }
+        onClosed:{
+            selectionPanel.visible =  true
+            selectionPanel.isExpanded = selPanelOriginalState
+        }
     }
 
     // Barre de navigation des cartes

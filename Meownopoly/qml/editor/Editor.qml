@@ -131,7 +131,6 @@ Base_Board {
         colorBt: "#3498db"
 
         onBtClicked: {
-            sidePanel.visible = mapInfoPanel.mapInfoDrawer.position === 1
             mapInfoPanel.openDrawer()
         }
     }
