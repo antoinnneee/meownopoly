@@ -13,7 +13,6 @@ import ItemSnapable
 
 import meowComponent
 
-
 import Game
 import MapFileManager
 import MapTypes
@@ -43,12 +42,10 @@ Base_Board {
     border.width: 0
     focus: true
 
-
     property int appPositionX: 0
     property int appPositionY: 0
     property int availableHeight: height - selectionPanel.height
     property alias groupeSelection: workArea.groupeSelection
-
 
     // Liste pour stocker tous les SnapableCaseTile créés
     property alias snapableTilesList: logic.snapableTilesList
@@ -57,13 +54,12 @@ Base_Board {
     property alias isAssetSelected: selectionPanel.isAssetSelected
     property alias editorSidePanel: sidePanel
 
-    property alias escMenu:escMenu
+    property alias escMenu: escMenu
     property alias view3D: gameScene.view3D
 
-    signal updateSettings()
-    signal openNewMapMenu()
-    property alias entity:gameScene.entity
-
+    signal updateSettings
+    signal openNewMapMenu
+    property alias entity: gameScene.entity
 
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
@@ -76,32 +72,27 @@ Base_Board {
         EntityEngine.setZone(snapableTilesList)
         EntityEngine.setCameraTarget(entity)
         // EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
-        
+
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
 
-
-        console.log("UiStyle.z_CONFIG_PANEL !!! ", UiStyle.z_CONFIG_PANEL )
+        console.log("UiStyle.z_CONFIG_PANEL !!! ", UiStyle.z_CONFIG_PANEL)
     }
 
     onUpdateSettings: {
         tmpSaver.setSaveTimer()
     }
 
-
-
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         // Pass to EntityEngine
         EntityEngine.keysHandler.Keys.pressed(event)
         // Pass to EditorController
         EditorController.keysHandler.Keys.pressed(event)
     }
-    Keys.onReleased: function(event) {
+    Keys.onReleased: function (event) {
         EntityEngine.keysHandler.Keys.released(event)
         EditorController.keysHandler.Keys.released(event)
     }
-
-
 
     // Menu d'échappement
     EditorEscMenu {
@@ -119,80 +110,63 @@ Base_Board {
         }
     }
 
-
-    Image {
-        id: btInfoMap
-        anchors.top: parent.top
+    BtSideMenu {
+        id: btSelection
         anchors.right: parent.right
-        anchors.margins: 10
-        z: UiStyle.z_HUD
-        source: AssetManager.getAssetById("ui", "hud", "0").path
-        width: Screen.pixelDensity * 20
-        height: Screen.pixelDensity * 20
+        anchors.rightMargin: 10
+        anchors.top: parent.top
+        anchors.topMargin: 10
+        z: UiStyle.z_HUD + 1
 
-        MouseArea {
-            hoverEnabled: true
-            anchors.fill:  parent
-            onClicked: {
-                btInfoMapAnim.stop()
-                btInfoMapAnim.start()
-                mapInfoPanel.isOpening = !mapInfoPanel.isOpening
-                selectionPanel.visible =  selectionPanel.visible ? false: true
-                sidePanel.visible = sidePanel.visible ? false: true
-            }
+        Component.onCompleted: {
+            btInfoMap.y = btSelection.y; btInfoMap.x = btSelection.x
+            btChat.y = btSelection.y; btChat.x = btSelection.x
         }
-
-        SequentialAnimation {
-            id: btInfoMapAnim
-            running: false
-            SmoothedAnimation {velocity: 0.9; to: 1.2; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
-            SmoothedAnimation {velocity: 1.1; to: 1; target: btInfoMap; property: "scale"; easing.type: Easing.InOutQuad }
+        MouseArea {
+            propagateComposedEvents: true
+            anchors.fill: parent
+            hoverEnabled: true
+            onEntered: {
+                console.log("Mouse entered selection button area, moving info and chat buttons")
+                btInfoMap.y += btSelection.height + 10
+                btChat.y += (btSelection.height * 2) + 10
+            }
+            onExited: {
+                console.log("Mouse exited selection button area, resetting info and chat buttons position")
+                btInfoMap.y = btSelection.y
+                btChat.y = btSelection.y
+            }
         }
     }
+    BtSideMenu {
+        id: btInfoMap
+        emojiBt: "ℹ️"
+        colorBt: "#3498db"
+        onBtClicked: mapInfoPanel.openDrawer()
+        Behavior on y {SmoothedAnimation { velocity : 500}}
+    }
 
-    Image {
+    BtSideMenu {
         id: btChat
-        anchors.top: btInfoMap.bottom
-        anchors.right: parent.right
-        anchors.margins: 10
-        z: UiStyle.z_HUD
-        source: AssetManager.getAssetById("ui", "hud", "0").path
-        width: Screen.pixelDensity * 20
-        height: Screen.pixelDensity * 20
+        emojiBt: "💬"
+        colorBt: "#2ecc71"
+        onBtClicked: chatDrawer.open()
+        Behavior on y {SmoothedAnimation { velocity : 500}}
 
-        Rectangle {
-            anchors.fill: parent
-            color: "#2ecc71"
-            opacity: 0.4
-            radius: width/2
-        }
-
-        Text {
-            text: "💬"
-            anchors.centerIn: parent
-            font.pixelSize: 20
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                chatDrawer.open()
-            }
-        }
     }
 
     ChatDrawer {
         id: chatDrawer
-        gameId: "Pattoune"/*root.mapInfo.mapName*/
-        z: UiStyle.z_CONFIG_PANEL + 100
+        gameId: "Pattoune" /*root.mapInfo.mapName*/
+        z: UiStyle.z_HUD
     }
 
     MenuMapAtStart {
         id: newMapMenu
-        z: UiStyle.z_CONFIG_PANEL + 200
+        z: UiStyle.z_HUD
         visible: false
         logic: logic
-        
+
         onNewMapSet: {
             logic.createMap(newMapInfo.mapName, MapTypes.CUSTOM)
             console.log("New map created:", newMapInfo.mapName)
@@ -210,15 +184,12 @@ Base_Board {
 
     MapInfoPanel {
         id: mapInfoPanel
-        anchors.top: btInfoMap.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.fill: parent
         logic: logic
         selectionPanel: selectionPanel
         sidePanel: sidePanel
 
-        z: UiStyle.z_CONFIG_PANEL
+        z: UiStyle.z_HUD
     }
 
     // Connexion pour écouter la demande de création de carte depuis le drawer
@@ -229,7 +200,7 @@ Base_Board {
         }
     }
 
-    AdminCommandPanel{
+    AdminCommandPanel {
         id: adminCommandPanel
         visible: false
         enabled: visible
@@ -241,11 +212,10 @@ Base_Board {
     Settings {
         id: stEnableAutoSave
         category: "Editor/SaveConfig"
-        property var currentMap : value("currentMap", mapInfo.autosaveMapName)
+        property var currentMap: value("currentMap", mapInfo.autosaveMapName)
         property int saveEvent: value("saveEvent", "1")
         Component.onCompleted: sync()
     }
-
 
     BusyIndicator {
         id: savingIndicator
@@ -263,18 +233,19 @@ Base_Board {
             logic.mouseLogic.unselectSelectedElements()
         }
     }
-    Connections{
+
+    Connections {
         target: Game
 
-        function onFoundItemSnapableTile(itemSnapableData){
-            Logger.info("Found itemSnapable tile:" + itemSnapableData, "MAP_LOADING")
-            logic.tileLogic.createItemSnapable(itemSnapableData);
+        function onFoundItemSnapableTile(itemSnapableData) {
+            Logger.info("Found itemSnapable tile:" + itemSnapableData,
+                        "MAP_LOADING")
+            logic.tileLogic.createItemSnapable(itemSnapableData)
         }
 
-        function onMapLoaded(map)
-        {
+        function onMapLoaded(map) {
             Logger.success("Map loaded", "MAP_LOADING")
-            logic.tileLogic.builtConnections();
+            logic.tileLogic.builtConnections()
 
             // Copy properties from loaded map to preserve bindings
             if (map.mapInfo) {
@@ -286,12 +257,14 @@ Base_Board {
 
             // Check if we're restoring from undo/redo
             if (UndoRedoManager.isRestoringState) {
-                Logger.info("Map loaded during restoration - NOT saving", "UNDO - RESTORE")
+                Logger.info("Map loaded during restoration - NOT saving",
+                            "UNDO - RESTORE")
                 // Clear the restoration flag now that loading is complete
                 UndoRedoManager.clearRestorationFlag()
             } else {
                 // Only save initial state if not restoring
-                Logger.info("Map loaded normally - saving initial state", "UNDO - SAVE")
+                Logger.info("Map loaded normally - saving initial state",
+                            "UNDO - SAVE")
                 logic.saveMap(MapTypes.UNDOREDO)
             }
         }
@@ -305,12 +278,12 @@ Base_Board {
         logic: root.logic
     }
 
-    logic : EditorLogic {
+    logic: EditorLogic {
         id: logic
         parent: root
         workArea: workArea
         editorGrid: gameGrid
-        selectionRect:  selectionRect
+        selectionRect: selectionRect
         mapInfo: root.mapInfo
         selectionPanel: selectionPanel
         editorSidePanel: sidePanel
@@ -337,13 +310,13 @@ Base_Board {
         }
         Component.onCompleted: {
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
-            EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
-
+            EditorController.init(logic, selectionPanel, escMenu,
+                                  adminCommandPanel)
         }
     }
 
     // cursor and link trakers
-    Trackers{}
+    Trackers {}
 
     // Asset preview cursor
     AssetPreviewCursor {
@@ -365,8 +338,8 @@ Base_Board {
         id: templatePreview
         parent: workArea
         gridManager: gameGrid
-        templateData: logic.mouseLogic && logic.mouseLogic.isPlacementMode ? 
-                      logic.mouseLogic.placementTemplateData : null
+        templateData: logic.mouseLogic
+                      && logic.mouseLogic.isPlacementMode ? logic.mouseLogic.placementTemplateData : null
         mouseX: 0
         mouseY: 0
     }
@@ -376,15 +349,15 @@ Base_Board {
         id: polygonPreview
         parent: workArea
         gridManager: gameGrid
-        visible: logic.editorMouseMode === EditorEnum.EM_DRAW_POLYGON && points.length > 0
-        zoneColor: logic.mouseLogic && logic.mouseLogic.currentZoneColor ? 
-                   logic.mouseLogic.currentZoneColor : "#FF5722"
-        
+        visible: logic.editorMouseMode === EditorEnum.EM_DRAW_POLYGON
+                 && points.length > 0
+        zoneColor: logic.mouseLogic
+                   && logic.mouseLogic.currentZoneColor ? logic.mouseLogic.currentZoneColor : "#FF5722"
+
         Component.onCompleted: {
             logic.polygonPreview = polygonPreview
         }
     }
-
 
     // Rectangle de sélection
     SelectionRect {
@@ -392,7 +365,7 @@ Base_Board {
         z: UiStyle.z_SELECTION_RECT
     }
 
-    SelectionPanel{
+    SelectionPanel {
         id: selectionPanel
 
         anchors.bottom: parent.bottom
@@ -411,7 +384,8 @@ Base_Board {
         isExpanded: true
 
         onIsSidePanelExpandedChanged: {
-            console.log("SelectionPanel: Side panel expanded state changed to", isSidePanelExpanded, " x ", sidePanel.x)
+            console.log("SelectionPanel: Side panel expanded state changed to",
+                        isSidePanelExpanded, " x ", sidePanel.x)
             if (isSidePanelExpanded) {
                 sidePanel.x = parent.width - sidePanel.width
             } else {
@@ -419,9 +393,10 @@ Base_Board {
             }
         }
         onIsExpandedChanged: {
-            console.log("SelectionPanel: Side panel expanded state changed to", isSidePanelExpanded, " x ", sidePanel.x)
+            console.log("SelectionPanel: Side panel expanded state changed to",
+                        isSidePanelExpanded, " x ", sidePanel.x)
             if (isExpanded) {
-                sidePanel.height = Qt.binding(function() {
+                sidePanel.height = Qt.binding(function () {
                     return selectionPanel.height
                 })
             } else {
@@ -429,11 +404,11 @@ Base_Board {
             }
         }
 
-        onAssetSelected: function(category, type, id) {
+        onAssetSelected: function (category, type, id) {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
         }
 
-        onAssetCleared: function() {
+        onAssetCleared: function () {
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
 
@@ -473,7 +448,7 @@ Base_Board {
                 saveMapDelayer.start()
         }
 
-        onConnectionRequested:  function (kind) {
+        onConnectionRequested: function (kind) {
             var targetElement = connectionsConfigurationPanel.targetSnapableElement
 
             /* save selected element to reasign it */
@@ -487,20 +462,20 @@ Base_Board {
             logic.mouseLogic.setSelectedElementList(selectedElements)
             logic.mouseLogic.linkSourceCase = targetElement
 
-
             // Afficher la prévisualisation du lien
             if (logic.mouseLogic && logic.mouseLogic.showLinkPreview) {
                 logic.mouseLogic.showLinkPreview()
             }
         }
 
-        onModelSelected: function(name) {
+        onModelSelected: function (name) {
             gameScene.modelName = name
         }
         onConfigurationChanged: {
             var physicSettings = root.editorSidePanel.zoneConfigurationPanel.getCurrentPhysicSettings()
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
-                logic.mouseLogic.selectedElements[i].applyPhysicSettings(physicSettings)
+                logic.mouseLogic.selectedElements[i].applyPhysicSettings(
+                            physicSettings)
             }
             if (saveMapDelayer.running)
                 saveMapDelayer.restart()
@@ -509,16 +484,18 @@ Base_Board {
         }
     }
 
-
-
     Timer {
         id: tmpSaver
         repeat: true
-        property bool isMapCustom : mapInfo.mapName !== mapInfo.autosaveMapName
-        function setSaveTimer(){
+        property bool isMapCustom: mapInfo.mapName !== mapInfo.autosaveMapName
+        function setSaveTimer() {
             stEnableAutoSave.sync()
-            tmpSaver.interval =  stEnableAutoSave.value("saveEvent", "1") == 3 ? 500 : stEnableAutoSave.value("saveInterval", "0") * 1000 * 60
-            tmpSaver.running = stEnableAutoSave.value("saveEvent", "1") == 1 ? false : true
+            tmpSaver.interval = stEnableAutoSave.value(
+                        "saveEvent", "1") == 3 ? 500 : stEnableAutoSave.value(
+                                                     "saveInterval",
+                                                     "0") * 1000 * 60
+            tmpSaver.running = stEnableAutoSave.value("saveEvent",
+                                                      "1") == 1 ? false : true
         }
         onTriggered: {
             console.log("Auto-saving map:", mapInfo.mapName)
@@ -538,33 +515,34 @@ Base_Board {
         running: false
         triggeredOnStart: true
         onTriggered: {
-            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running == savingIndicator.running ? false : true) : null
+            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running
+                                                == savingIndicator.running ? false : true) : null
         }
     }
 
     function initializeEditor() {
-        if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)){
+        if (!MapFileManager.mapExists(mapInfo.autosaveMapName,
+                                      MapTypes.AUTOSAVE)) {
             Logger.info("Creating autosave map", "MAP FILE MANAGER")
             MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
             logic.saveMap(MapTypes.AUTOSAVE)
-        }
-        else {
+        } else {
             Logger.info("Autosave map already exists", "MAP FILE MANAGER")
         }
 
         if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
-            Logger.info("Loading custom map:" + stEnableAutoSave.currentMap, "MAP FILE MANAGER")
-            if (MapFileManager.mapExists(stEnableAutoSave.currentMap, MapTypes.CUSTOM)){
+            Logger.info("Loading custom map:" + stEnableAutoSave.currentMap,
+                        "MAP FILE MANAGER")
+            if (MapFileManager.mapExists(stEnableAutoSave.currentMap,
+                                         MapTypes.CUSTOM)) {
                 Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)
                 mapInfo.mapName = stEnableAutoSave.currentMap
-            }
-            else {
+            } else {
                 stEnableAutoSave.setValue("currentMap", mapInfo.autosaveMapName)
                 mapInfo.mapName = mapInfo.autosaveMapName
                 Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
             }
-        }
-        else  {
+        } else {
             console.log("Loading autosave map")
             mapInfo.mapName = mapInfo.autosaveMapName
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
@@ -572,15 +550,12 @@ Base_Board {
         tmpSaver.setSaveTimer()
     }
 
-
     Component.onDestruction: {
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
             logic.mouseLogic.hideLinkPreview()
         }
     }
-
 }
-
 
 /*##^##
 Designer {

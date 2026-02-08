@@ -42,7 +42,7 @@ Drawer {
     width: Screen.pixelDensity * 75
     edge: Qt.RightEdge
 
-    modal: false
+    modal : false
 
     signal requestNewMap()
     background : Rectangle {

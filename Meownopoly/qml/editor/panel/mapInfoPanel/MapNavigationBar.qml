@@ -21,6 +21,8 @@ Item {
     property bool isCurrentMapAutosave: false
 
 
+    signal keyArrowPressed()
+
     // Settings pour persister la carte courante
     Settings {
         id: mapSettings
@@ -149,7 +151,7 @@ Item {
         height: 50
         radius: 25
         z: 9000
-        visible: !selectionPanel.visible
+        // visible: !selectionPanel.visible
         
         property string arrowText: ""
         property bool isLeft: true
@@ -205,6 +207,7 @@ Item {
         isLeft: true
         onClicked: {
             mapNavigationBar.navigatePrevious()
+            keyArrowPressed()
         }
     }
 
@@ -216,7 +219,7 @@ Item {
         anchors.bottomMargin: 20
         spacing: 10
         z: 9000
-        visible: !selectionPanel.visible
+        // visible: !selectionPanel.visible
 
         // Affichage du nom de la carte
         Rectangle {
@@ -360,6 +363,7 @@ Item {
         isLeft: false
         onClicked:{
             mapNavigationBar.navigateNext()
+            keyArrowPressed()
         }
     }
 

@@ -59,6 +59,7 @@ private:
 
     static UiStyle *m_pThis;
 
+
     int m_z_CONFIG_PANEL = 10000;
     int m_z_CHAT_DRAWER = m_z_CONFIG_PANEL + 100;
     int m_z_HUD = 9000;

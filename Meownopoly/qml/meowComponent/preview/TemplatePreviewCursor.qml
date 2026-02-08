@@ -117,8 +117,8 @@ Item {
         // Convertir (mouseX, mouseY) de workArea vers la grille pour un getGridPosition cohérent
         var p = gridManager.mapFromItem(root.parent, mouseX, mouseY)
         var point = gridManager.getGridPosition(p.x, p.y)
-        gridXPosition = point.x - Math.trunc(templateData.templateInfo.boundingBoxWidth/2)
-        gridYPosition = point.y - Math.trunc(templateData.templateInfo.boundingBoxHeight/2)
+        gridXPosition = templateData ? point.x - Math.trunc(templateData.templateInfo.boundingBoxWidth/2) : 0
+        gridYPosition = templateData ? point.y - Math.trunc(templateData.templateInfo.boundingBoxHeight/2) : 0
         previewContainer.x = gridXPosition * gridManager.gridSize
         previewContainer.y = gridYPosition * gridManager.gridSize
     }

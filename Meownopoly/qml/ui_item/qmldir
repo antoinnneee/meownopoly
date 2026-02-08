@@ -5,3 +5,4 @@ Player_Profil_Icon 1.0 Player_Profil_Icon.qml
 LayerVisualizer 1.0 LayerVisualizer.qml
 CollapsableGroupBox 1.0 CollapsableGroupBox.qml
 SizeSelector 1.0 SizeSelector.qml
+BtSideMenu 1.0 BtSideMenu.qml

@@ -36,18 +36,21 @@ Item {
     required property var sidePanel
 
     property alias mapInfoDrawer: mapInfoDrawer
-
-    onIsOpeningChanged: {
-        if (isOpening) {
-            mapInfoDrawer.open()
-        } else {
-            mapInfoDrawer.close()
-        }
-    }
+    signal openDrawer()
+    onOpenDrawer: mapInfoDrawer.open()
 
     MapInfoDrawer {
         id: mapInfoDrawer
         property alias mapInfoPanel: mapInfoPanel
+        property bool selPanelOriginalState : false
+        onOpened:{
+            selectionPanel.visible =  false
+            selPanelOriginalState = selectionPanel.isExpanded
+        }
+        onClosed:{
+            selectionPanel.visible =  true
+            selectionPanel.isExpanded = selPanelOriginalState
+        }
     }
 
     // Barre de navigation des cartes
@@ -58,7 +61,9 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: mapInfoDrawer.position === 0 ? 0 : mapInfoDrawer.width + 5
         anchors.bottom: parent.bottom
-
+        visible: mapInfoDrawer.position === 1
+        z: mapInfoDrawer+1
+        onKeyArrowPressed: mapInfoDrawer.open()
     }
 
     // FileDialog pour la sélection d'image personnalisée
