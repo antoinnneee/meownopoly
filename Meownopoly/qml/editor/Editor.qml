@@ -133,13 +133,10 @@ Base_Board {
             hoverEnabled: true
             onEntered: {
                 height = (btSelection.height * 3) + 10
-                console.log("Mouse entered selection button area, moving info and chat buttons")
                 btInfoMap.y += btSelection.height + 10
                 btChat.y += (btSelection.height * 2) + 10
             }
             onExited: {
-                console.log("Mouse exited selection button area, resetting info and chat buttons position")
-
                 btInfoMap.y = btSelection.y
                 btChat.y = btSelection.y
             }
