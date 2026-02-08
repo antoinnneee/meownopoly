@@ -174,6 +174,9 @@ function handleCommand(ws, msg) {
         case 'LEAVE_SESSION':
             handleLeaveSession(ws, payload);
             break;
+        case 'DELETE_SESSION':
+            handleDeleteSession(ws, payload);
+            break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
     }
@@ -440,6 +443,45 @@ function handleLeaveSession(ws, payload) {
     }));
 
     debug(`Participant ${player_id} explicitly left session ${session_id}`);
+}
+
+function handleDeleteSession(ws, payload) {
+    const { session_id } = payload;
+    if (!session_id) return;
+
+    // Optional: Check if user has rights to delete (e.g. is creator or admin)
+    // For now, any participant can delete (blind relay logic) or maybe just anyone who knows the ID.
+    // Let's assume anyone who can connect can delete for now, or check participation.
+    if (!db.isParticipant(session_id, ws.player_id)) {
+        return sendError(ws, 'FORBIDDEN', 'You must be a participant to delete the session');
+    }
+
+    // Delete from DB
+    db.deleteSession(session_id);
+
+    // Notify and disconnect all
+    const room = rooms.get(session_id);
+    if (room) {
+        const endedMsg = JSON.stringify({
+            type: 'SESSION_ENDED',
+            payload: { session_id, reason: 'Session deleted by user' }
+        });
+
+        // We iterate and send, then clear the room
+        for (const client of room) {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(endedMsg);
+            }
+            // clear session data from socket
+            client.session_id = null;
+            client.player_id = null;
+            // We might want to keep the connection open but they are no longer in "session"
+        }
+        rooms.delete(session_id);
+    }
+    keyRotationRequired.delete(session_id);
+
+    debug(`Session ${session_id} deleted by ${ws.player_id}`);
 }
 
 function sendError(ws, code, message) {

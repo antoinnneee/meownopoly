@@ -72,6 +72,13 @@ module.exports = {
       return { changes: 1, version: newVersion };
     })();
   },
+  deleteSession: (sessionId) => {
+    db.transaction(() => {
+      db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
+      db.prepare('DELETE FROM participants WHERE session_id = ?').run(sessionId);
+      db.prepare('DELETE FROM sessions WHERE session_id = ?').run(sessionId);
+    })();
+  },
 
   // Message methods
   saveMessage: (sessionId, senderId, senderNickname, payload, nonce, keyVersion) => {
