@@ -61,6 +61,8 @@ Item {
         anchors.rightMargin: mapInfoDrawer.position === 0 ? 0 : mapInfoDrawer.width + 5
         anchors.bottom: parent.bottom
         visible: mapInfoDrawer.position === 1
+        z: mapInfoDrawer+1
+        onKeyArrowPressed: mapInfoDrawer.open()
     }
 
     // FileDialog pour la sélection d'image personnalisée

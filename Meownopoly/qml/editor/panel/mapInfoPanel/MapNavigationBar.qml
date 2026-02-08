@@ -21,6 +21,8 @@ Item {
     property bool isCurrentMapAutosave: false
 
 
+    signal keyArrowPressed()
+
     // Settings pour persister la carte courante
     Settings {
         id: mapSettings
@@ -205,6 +207,7 @@ Item {
         isLeft: true
         onClicked: {
             mapNavigationBar.navigatePrevious()
+            keyArrowPressed()
         }
     }
 
@@ -360,6 +363,7 @@ Item {
         isLeft: false
         onClicked:{
             mapNavigationBar.navigateNext()
+            keyArrowPressed()
         }
     }
 

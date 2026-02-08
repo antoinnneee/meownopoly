@@ -137,8 +137,6 @@ Base_Board {
                 btInfoMapAnim.stop()
                 btInfoMapAnim.start()
                 mapInfoPanel.mapInfoDrawer.position === 0 ? mapInfoPanel.mapInfoDrawer.open() : mapInfoPanel.mapInfoDrawer.close()
-                // mapInfoPanel.isOpening = !mapInfoPanel.isOpening
-                // // selectionPanel.visible =  selectionPanel.visible ? false: true
                 sidePanel.visible = mapInfoPanel.mapInfoDrawer.position === 1
             }
         }
