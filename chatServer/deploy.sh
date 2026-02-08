@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo "Déploiement du chat server..."
 # Charger les variables depuis .deployEnv
 if [ ! -f .deployEnv ]; then
     echo "⚠️  Fichier .deployEnv introuvable. Création d'un template..."
@@ -61,6 +61,10 @@ FILES=(
     ".env"
     "README.md"
     "setup-domain.sh"
+    "dashboard.html"
+    "dashboard.css"
+    "dashboard.js"
+    "chat_crypto.js"
 )
 
 # Copie des fichiers

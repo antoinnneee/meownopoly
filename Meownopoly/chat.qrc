@@ -2,5 +2,12 @@
     <qresource prefix="/">
         <file>qml/chat/ChatDrawer.qml</file>
         <file>qml/chat/qmldir</file>
+        <file>qml/chat/ChatHeader.qml</file>
+        <file>qml/chat/ChatInputBar.qml</file>
+        <file>qml/chat/ChatMessageDelegate.qml</file>
+        <file>qml/chat/ChatMessagesList.qml</file>
+        <file>qml/chat/ChatStatusBar.qml</file>
+        <file>qml/chat/ChatToastPopup.qml</file>
+        <file>qml/chat/TextFileDisplay.qml</file>
     </qresource>
 </RCC>

@@ -14,12 +14,10 @@ Drawer {
     edge: Qt.RightEdge
 
     property string gameId: ""
-    // Use AccountManager for player identification
-    // uniqueId is used for server identification (permanent)
-    // nickname is used for display (can be changed)
     property string playerId: AccountManager.uniqueId
     property string playerNickname: AccountManager.nickname
     property bool isResizing: false
+    property int _prevMessageCount: 0
 
     background: Rectangle {
         color: "#E6222222"
@@ -43,23 +41,17 @@ Drawer {
 
     function formatTimestamp(ts) {
         if (!ts) return "--:--"
-        
         let date = new Date(ts)
         if (isNaN(date.getTime())) {
-            // Tentative de parsing si format ISO non standard (ex: de SQLite)
-            // SQLite utilise souvent yyyy-MM-dd HH:mm:ss
             date = new Date(ts.replace(" ", "T"))
             if (isNaN(date.getTime())) return ts
         }
-
         let now = new Date()
         let isToday = date.getDate() === now.getDate() &&
                       date.getMonth() === now.getMonth() &&
                       date.getFullYear() === now.getFullYear()
-
         let hours = date.getHours().toString().padStart(2, '0')
         let minutes = date.getMinutes().toString().padStart(2, '0')
-
         if (isToday) {
             return hours + ":" + minutes
         } else {
@@ -78,667 +70,204 @@ Drawer {
         }
     }
 
+    FileDialog {
+        id: textFileDialog
+        title: "Choose a text file"
+        nameFilters: [
+            "Text files (*.txt *.md *.json *.xml *.csv *.log *.yml *.yaml *.toml *.ini *.cfg)",
+            "Source code (*.js *.ts *.py *.cpp *.c *.h *.hpp *.java *.cs *.go *.rs *.rb *.php *.swift *.kt *.qml *.html *.css *.sql *.sh *.bat)",
+            "All files (*)"
+        ]
+        onAccepted: {
+            chatClient.sendTextFile(textFileDialog.selectedFile)
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        // --- Header avec zone de redimensionnement ---
-        Rectangle {
-            id: headerBar
-            Layout.fillWidth: true
-            Layout.preferredHeight: 50
-            color: "#333333"
-            border.color: "#444444"
-            border.width: 1
-
-            // Zone de redimensionnement sur le bord gauche
-            Rectangle {
-                id: resizeHandle
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 8
-                color: resizeMouseArea.pressed ? "#4A90E2" : (resizeMouseArea.containsMouse ? "#444444" : "transparent")
-                z: 15
-
-                // Indicateur visuel
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 2
-                    height: parent.height * 0.4
-                    color: resizeMouseArea.containsMouse || chatDrawer.isResizing ? "#4A90E2" : "#666666"
-                    radius: 1
-                }
-
-                MouseArea {
-                    id: resizeMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.SizeHorCursor
-                    preventStealing: true
-
-                    property real startX: 0
-                    property real startWidth: 0
-                    property int minWidth: 280
-                    property int maxWidth: 600
-
-                    onPressed: function(mouse) {
-                        chatDrawer.isResizing = true
-                        startX = mapToGlobal(mouse.x, mouse.y).x
-                        startWidth = chatDrawer.width
-                    }
-
-                    onPositionChanged: function(mouse) {
-                        if (pressed) {
-                            var globalX = mapToGlobal(mouse.x, mouse.y).x
-                            var delta = startX - globalX
-                            var newWidth = Math.max(minWidth, Math.min(maxWidth, startWidth + delta))
-                            chatDrawer.width = newWidth
-                        }
-                    }
-
-                    onReleased: {
-                        chatDrawer.isResizing = false
-                    }
-                }
-
-                Behavior on color { ColorAnimation { duration: 150 } }
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 12
-                spacing: 8
-
-                // Icône chat
-                Text {
-                    text: "💬"
-                    font.pixelSize: 20
-                }
-
-                Text {
-                    text: "Chat"
-                    color: "#cccccc"
-                    font.pixelSize: 14
-                    font.bold: true
-                    Layout.fillWidth: true
-                }
-
-                // Bouton Clear History
-                Rectangle {
-                    Layout.preferredWidth: 24
-                    Layout.preferredHeight: 24
-                    color: clearBtnArea.containsMouse ? "#444444" : "transparent"
-                    radius: 4
-                    visible: chatClient.connected
-
-                    Text {
-                        text: "🗑️"
-                        font.pixelSize: 14
-                        anchors.centerIn: parent
-                    }
-
-                    MouseArea {
-                        id: clearBtnArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                           // Confirmation dialog? For now direct action as per plan
-                           chatClient.clearHistory()
-                        }
-                    }
-                }
-
-                // Indicateur de connexion
-                Rectangle {
-                    Layout.preferredWidth: 10
-                    Layout.preferredHeight: 10
-                    radius: 5
-                    color: chatClient.connected ? "#4a8a4a" : "#aa4444"
-                    border.color: chatClient.connected ? "#569c58" : "#cc4444"
-                    border.width: 1
-
-                    SequentialAnimation on opacity {
-                        running: !chatClient.connected
-                        loops: Animation.Infinite
-                        NumberAnimation { to: 0.4; duration: 800 }
-                        NumberAnimation { to: 1.0; duration: 800 }
-                    }
-                }
-
-                Text {
-                    text: chatDrawer.gameId
-                    color: "#888888"
-                    font.pixelSize: 10
-                    elide: Text.ElideRight
-                    Layout.maximumWidth: 80
-                }
-            }
+        ChatHeader {
+            id: chatHeader
+            chatClient: chatClient
+            drawer: chatDrawer
+            onToggleParticipantsPanel: participantsPanel.visible = !participantsPanel.visible
         }
 
-
-        // --- Liste des messages ---
+        // Panneau dépliable des participants
         Rectangle {
-            id: messagesContainer
+            id: participantsPanel
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            color: "#2a2a2a"
-            border.color: dropArea.containsDrag ? "#4A90E2" : "#444444"
-            border.width: dropArea.containsDrag ? 2 : 1
+            Layout.preferredHeight: visible ? participantsPanelContent.implicitHeight + 16 : 0
+            color: "#2d2d2d"
+            border.color: "#3a3a3a"
+            border.width: 1
+            visible: false
+            clip: true
 
-            Behavior on border.color { ColorAnimation { duration: 150 } }
-            Behavior on border.width { NumberAnimation { duration: 150 } }
-
-            // --- DropArea pour les images ---
-            DropArea {
-                id: dropArea
-                anchors.fill: parent
-                keys: ["text/uri-list", "text/plain"]
-
-                onEntered: function(drag) {
-                    // Vérifier si c'est une image
-                    if (drag.hasUrls) {
-                        var validImage = false
-                        for (var i = 0; i < drag.urls.length; i++) {
-                            var url = drag.urls[i].toString().toLowerCase()
-                            if (url.endsWith(".png") || url.endsWith(".jpg") ||
-                                url.endsWith(".jpeg") || url.endsWith(".gif") ||
-                                url.endsWith(".webp")) {
-                                validImage = true
-                                break
-                            }
-                        }
-                        drag.accepted = validImage
-                    }
-                }
-
-                onDropped: function(drop) {
-                    if (drop.hasUrls) {
-                        for (var i = 0; i < drop.urls.length; i++) {
-                            var url = drop.urls[i].toString().toLowerCase()
-                            if (url.endsWith(".png") || url.endsWith(".jpg") ||
-                                url.endsWith(".jpeg") || url.endsWith(".gif") ||
-                                url.endsWith(".webp")) {
-                                chatClient.sendImage(drop.urls[i])
-                            }
-                        }
-                    }
-                }
+            Behavior on Layout.preferredHeight {
+                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
             }
 
-            // --- Overlay de drop ---
-            Rectangle {
-                id: dropOverlay
-                anchors.fill: parent
-                color: "#E6222222"
-                opacity: dropArea.containsDrag ? 1 : 0
-                visible: opacity > 0
-                z: 100
-
-                Behavior on opacity { NumberAnimation { duration: 200 } }
-
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: 20
-                    color: "transparent"
-                    border.color: "#4A90E2"
-                    border.width: 2
-                    border.pixelAligned: true
-                    radius: 12
-
-                    // Bordure en pointillés simulée
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: 4
-                        color: "transparent"
-                        border.color: "#4A90E2"
-                        border.width: 1
-                        radius: 10
-                        opacity: 0.5
-                    }
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 12
-
-                        // Icône
-                        Rectangle {
-                            width: 64
-                            height: 64
-                            radius: 32
-                            color: "#333333"
-                            border.color: "#4A90E2"
-                            border.width: 2
-                            anchors.horizontalCenter: parent.horizontalCenter
-
-                            Text {
-                                text: "📷"
-                                font.pixelSize: 28
-                                anchors.centerIn: parent
-                            }
-
-                            // Animation de pulsation
-                            SequentialAnimation on scale {
-                                running: dropArea.containsDrag
-                                loops: Animation.Infinite
-                                NumberAnimation { to: 1.1; duration: 600; easing.type: Easing.InOutQuad }
-                                NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
-                            }
-                        }
-
-                        Text {
-                            text: "Déposez votre image ici"
-                            color: "#cccccc"
-                            font.pixelSize: 14
-                            font.bold: true
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Text {
-                            text: "PNG, JPG, GIF, WebP"
-                            color: "#888888"
-                            font.pixelSize: 10
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-            }
-
-            ListView {
-                id: messageList
-                anchors.fill: parent
+            Column {
+                id: participantsPanelContent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
                 anchors.margins: 8
-                // cacheBuffer: 500  // Réduit de 1000 pour économiser la mémoire
-                model: chatClient.messages
-                clip: true
-                spacing: 8
-                
-                // Optimisations de performance
-                highlightFollowsCurrentItem: false
-                reuseItems: true  // Réutiliser les delegates pour économiser la mémoire
-                
-                // Animation de défilement fluide mais moins coûteuse
-                Behavior on contentY {
-                    SmoothedAnimation {
-                        velocity: 1500  // Plus rapide
-                        duration: 200   // Plus court
-                        easing.type: Easing.OutQuad  // Easing plus léger
-                    }
-                }
+                spacing: 4
 
-                ScrollBar.vertical: ScrollBar {
-                    id: messagesScrollBar
-                    active: true
-                    policy: ScrollBar.AsNeeded
+                // Titre du panneau
+                RowLayout {
+                    width: parent.width
+                    spacing: 6
 
-                    contentItem: Rectangle {
-                        implicitWidth: 6
-                        radius: 3
-                        color: parent.pressed ? "#4A90E2" : "#555555"
+                    Text {
+                        text: "👥"
+                        font.pixelSize: 12
                     }
 
-                    background: Rectangle {
-                        implicitWidth: 6
-                        color: "#333333"
-                        radius: 3
+                    Text {
+                        text: "Participants connectés"
+                        color: "#aaaaaa"
+                        font.pixelSize: 11
+                        font.bold: true
+                        Layout.fillWidth: true
                     }
-                }
 
-                delegate: Rectangle {
-                    id: messageDelegate
-                    width: messageList.width - 16
-                    height: contentCol.height + 12
-                    x: 8
+                    Text {
+                        text: chatClient ? chatClient.participantCount.toString() : "0"
+                        color: "#4A90E2"
+                        font.pixelSize: 11
+                        font.bold: true
+                    }
 
-                    required property var modelData
-                    required property int index
-                    
-                    property bool isOwnMessage: modelData.sender === chatDrawer.playerId
+                    // Bouton rafraîchir
+                    Rectangle {
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                        color: refreshBtnArea.containsMouse ? "#444444" : "transparent"
+                        radius: 4
 
-                    color: isOwnMessage ? "#3d4a3d" : "#333333"
-                    radius: 6
-                    border.color: isOwnMessage ? "#4a8a4a" : "#444444"
-                    border.width: 1
-                    
-                    antialiasing: true
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 10
+                            anchors.centerIn: parent
+                        }
 
-                    // Animation d'apparition simplifiée (uniquement pour les nouveaux messages)
-                    opacity: 0
-                    Component.onCompleted: {
-                        // Animer seulement si c'est le dernier message
-                        if (index === messageList.count - 1) {
-                            fadeInAnimation.start()
-                        } else {
-                            opacity = 1
+                        MouseArea {
+                            id: refreshBtnArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (chatClient) chatClient.requestParticipants()
+                            }
+                        }
+
+                        ToolTip {
+                            visible: refreshBtnArea.containsMouse
+                            text: "Rafraîchir la liste"
+                            delay: 400
                         }
                     }
+                }
 
-                    NumberAnimation {
-                        id: fadeInAnimation
-                        target: messageDelegate
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: 150
-                        easing.type: Easing.OutQuad
-                    }
+                // Séparateur
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#3a3a3a"
+                }
 
-                    Column {
-                        id: contentCol
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.margins: 8
-                        spacing: 4
+                // Liste des participants
+                Repeater {
+                    model: chatClient ? chatClient.participants : []
+
+                    Rectangle {
+                        width: participantsPanelContent.width
+                        height: 28
+                        color: participantHoverArea.containsMouse ? "#383838" : "transparent"
+                        radius: 4
+
+                        Behavior on color { ColorAnimation { duration: 100 } }
+
+                        MouseArea {
+                            id: participantHoverArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                        }
 
                         RowLayout {
-                            width: parent.width
-                            spacing: 6
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+                            spacing: 8
 
-                            Text {
-                                text: "🐱"
-                                font.pixelSize: 12
-                                visible: !messageDelegate.isOwnMessage
+                            // Indicateur en ligne
+                            Rectangle {
+                                Layout.preferredWidth: 8
+                                Layout.preferredHeight: 8
+                                radius: 4
+                                color: "#4a8a4a"
+                                border.color: "#569c58"
+                                border.width: 1
                             }
 
                             Text {
-                                // Display nickname for own messages, sender ID for others
-                                text: messageDelegate.isOwnMessage ? chatDrawer.playerNickname : messageDelegate.modelData.sender
-                                font.pixelSize: 10
-                                font.bold: true
-                                color: messageDelegate.isOwnMessage ? "#569c58" : "#4A90E2"
+                                text: modelData.player_nickname || modelData.player_id || "?"
+                                color: (modelData.player_id === chatDrawer.playerId) ? "#4A90E2" : "#cccccc"
+                                font.pixelSize: 11
+                                font.bold: modelData.player_id === chatDrawer.playerId
+                                elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
 
                             Text {
-                                text: chatDrawer.formatTimestamp(messageDelegate.modelData.timestamp)
-                                font.pixelSize: 8
-                                color: "#666666"
-                            }
-                        }
-
-                        Text {
-                            id: msgText
-                            text: messageDelegate.modelData.text
-                            width: parent.width
-                            wrapMode: Text.Wrap
-                            color: "#cccccc"
-                            font.pixelSize: 12
-                            visible: !messageDelegate.modelData.isImage
-                        }
-
-                        Image {
-                            id: messageImage
-                            source: messageDelegate.modelData.isImage ? messageDelegate.modelData.text : ""
-                            visible: messageDelegate.modelData.isImage
-                            asynchronous: true
-                            cache: true
-                            
-                            // Dimensions fixes pour éviter le redimensionnement coûteux
-                            width: parent.width
-                            fillMode: Image.PreserveAspectFit
-                            
-                            // Optimisations de performance
-                            smooth: false  // Désactiver l'antialiasing pendant le scroll
-                            mipmap: true   // Utiliser le mipmapping pour les redimensionnements
-                            // autoTransform: true
-                            
-                            sourceSize.width: width
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "transparent"
-                                border.color: "#444444"
-                                border.width: 1
-                                radius: 4
-                                visible: parent.status === Image.Ready
-                            }
-
-                            BusyIndicator {
-                                anchors.centerIn: parent
-                                running: parent.status === Image.Loading
-                                visible: running
-                                
-                                // Indicateur plus léger
-                                width: 32
-                                height: 32
-                            }
-                            
-                            // Message d'erreur si l'image ne charge pas
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#3a3a3a"
-                                radius: 4
-                                visible: parent.status === Image.Error
-                                
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "❌ Erreur de chargement"
-                                    color: "#aa4444"
-                                    font.pixelSize: 10
-                                }
+                                text: (modelData.player_id === chatDrawer.playerId) ? "(vous)" : ""
+                                color: "#888888"
+                                font.pixelSize: 9
+                                font.italic: true
+                                visible: modelData.player_id === chatDrawer.playerId
                             }
                         }
                     }
                 }
 
-                onCountChanged: {
-                    scrollToBottomTimer.restart()
-                }
-
-                // Timer pour scroll avec délai (permet l'animation de se terminer)
-                Timer {
-                    id: scrollToBottomTimer
-                    interval: 50
-                    repeat: false
-                    onTriggered: {
-                        messageList.positionViewAtEnd()
-                    }
-                }
-
-                // Message vide state
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 200
-                    height: 80
-                    color: "#333333"
-                    radius: 8
-                    border.color: "#444444"
-                    border.width: 1
-                    visible: messageList.count === 0
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 8
-
-                        Text {
-                            text: "🐾"
-                            font.pixelSize: 24
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Text {
-                            text: "Aucun message"
-                            color: "#888888"
-                            font.pixelSize: 11
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Text {
-                            text: "Commencez la conversation !"
-                            color: "#666666"
-                            font.pixelSize: 9
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- Zone de saisie ---
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 60
-            color: "#333333"
-            border.color: "#444444"
-            border.width: 1
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 8
-
-                // Bouton image
-                Rectangle {
-                    Layout.preferredWidth: 36
-                    Layout.preferredHeight: 36
-                    color: imgBtnArea.containsMouse ? "#444444" : "#3a3a3a"
-                    radius: 6
-                    border.color: imgBtnArea.pressed ? "#4A90E2" : "#555555"
-                    border.width: 1
-
-                    Text {
-                        text: "📷"
-                        anchors.centerIn: parent
-                        font.pixelSize: 16
-                    }
-
-                    MouseArea {
-                        id: imgBtnArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: imageDialog.open()
-                    }
-
-                    Behavior on color { ColorAnimation { duration: 100 } }
-                }
-
-                // Champ de texte
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: "#2a2a2a"
-                    radius: 6
-                    border.color: inputField.activeFocus ? "#4A90E2" : "#444444"
-                    border.width: 1
-
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                    TextField {
-                        id: inputField
-                        anchors.fill: parent
-                        anchors.margins: 4
-                        placeholderText: "Tapez un message..."
-                        placeholderTextColor: "#666666"
-                        color: "#cccccc"
-                        font.pixelSize: 12
-
-                        background: Rectangle {
-                            color: "transparent"
-                        }
-
-                        onAccepted:  {
-                            if (inputField.text !== "") {
-                                chatClient.sendMessage(inputField.text)
-                                inputField.text = ""
-                            }
-                            inputField.focus = false
-                        }
-                    }
-                }
-
-                // Bouton envoyer
-                Rectangle {
-                    Layout.preferredWidth: 60
-                    Layout.preferredHeight: 36
-                    color: sendBtnArea.pressed ? "#569c58" : (sendBtnArea.containsMouse ? "#4a8a4a" : "#3d6b3d")
-                    radius: 6
-                    border.color: "#569c58"
-                    border.width: 1
-                    opacity: inputField.text !== "" ? 1.0 : 0.5
-
-                    Behavior on color { ColorAnimation { duration: 100 } }
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-
-                    RowLayout {
-                        anchors.centerIn: parent
-                        spacing: 4
-
-                        Text {
-                            text: "Envoyer"
-                            color: "#ffffff"
-                            font.pixelSize: 10
-                            font.bold: true
-                        }
-                    }
-
-                    MouseArea {
-                        id: sendBtnArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            if (inputField.text !== "") {
-                                chatClient.sendMessage(inputField.text)
-                                inputField.text = ""
-                            }
-                            inputField.focus = false
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- Barre d'état ---
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 24
-            color: "#2a2a2a"
-            border.color: "#333333"
-            border.width: 1
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                spacing: 8
-
+                // Message si aucun participant
                 Text {
-                    text: chatClient.connected ? "● Connecté" : "○ Déconnecté"
-                    color: chatClient.connected ? "#4a8a4a" : "#888888"
-                    font.pixelSize: 9
-                }
-
-                Item { Layout.fillWidth: true }
-
-                Text {
-                    text: messageList.count + " messages"
+                    text: "Aucun participant connecté"
                     color: "#666666"
-                    font.pixelSize: 9
-                }
-
-                Text {
-                    text: "│"
-                    color: "#444444"
-                    font.pixelSize: 9
-                }
-
-                Text {
-                    text: "🐱"
-                    font.pixelSize: 9
-                }
-
-                Text {
-                    text: chatDrawer.playerNickname
-                    color: "#888888"
-                    font.pixelSize: 9
-                    elide: Text.ElideRight
-                    Layout.maximumWidth: 100
+                    font.pixelSize: 10
+                    font.italic: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: !chatClient || chatClient.participantCount === 0
+                    topPadding: 4
+                    bottomPadding: 4
                 }
             }
+        }
+
+        ChatMessagesList {
+            id: messagesList
+            chatClient: chatClient
+            drawer: chatDrawer
+        }
+
+        ChatInputBar {
+            chatClient: chatClient
+            onOpenImageDialog: imageDialog.open()
+            onOpenTextFileDialog: textFileDialog.open()
+        }
+
+        ChatStatusBar {
+            connected: chatClient.connected
+            messageCount: messagesList.messageList ? messagesList.messageList.count : 0
+            playerNickname: chatDrawer.playerNickname
+            participantCount: chatClient.participantCount
         }
     }
 
-    // Animation d'ouverture du drawer
     enter: Transition {
         NumberAnimation {
             property: "position"
@@ -759,10 +288,35 @@ Drawer {
         }
     }
 
+    ChatToastPopup {
+        id: messageToastPopup
+        parent: chatDrawer.parent
+    }
+
+    Connections {
+        target: messagesList
+        function onCountChanged(count) {
+            if (!chatDrawer.opened && count === _prevMessageCount + 1 && count > 0) {
+                var list = chatClient.messages
+                if (list && list.length > 0) {
+                    var last = list[list.length - 1]
+                    var msgText = (last && last.text) ? last.text : ""
+                    var senderName = (last && last.senderNickname) ? last.senderNickname : ((last && last.sender) ? last.sender : "?")
+                    if (last && last.isImage) msgText = "📷 Image"
+                    messageToastPopup.show(senderName, msgText)
+                }
+            }
+            _prevMessageCount = count
+        }
+    }
+
+    Component.onCompleted: {
+        chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId, "123", playerNickname)
+    }
+
     onOpened: {
         if (!chatClient.connected) {
-            chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId, "123")
+            chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId, "123", playerNickname)
         }
-        // inputField.forceActiveFocus()
     }
 }

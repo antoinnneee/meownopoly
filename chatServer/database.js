@@ -15,20 +15,13 @@ db.exec(`
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS session_keys (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id TEXT,
-    version INTEGER,
-    key_package TEXT,
-    key_nonce TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(session_id) REFERENCES sessions(session_id)
-  );
+  DROP TABLE IF EXISTS session_keys;
 
   CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT,
     sender_id TEXT,
+    sender_nickname TEXT,
     payload TEXT,
     nonce TEXT,
     key_version INTEGER,
@@ -37,7 +30,22 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id);
+
+  CREATE TABLE IF NOT EXISTS participants (
+    session_id TEXT,
+    player_id TEXT,
+    nickname TEXT,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (session_id, player_id)
+  );
 `);
+
+// Migration: add sender_nickname for existing DBs
+try {
+  db.prepare('ALTER TABLE messages ADD COLUMN sender_nickname TEXT').run();
+} catch (e) {
+  // Column already exists
+}
 
 module.exports = {
   // Session methods
@@ -45,15 +53,12 @@ module.exports = {
     return db.prepare('SELECT * FROM sessions WHERE session_id = ?').get(sessionId);
   },
   getSessionKeys: (sessionId) => {
-    return db.prepare('SELECT version, key_package, key_nonce FROM session_keys WHERE session_id = ? ORDER BY version ASC').all(sessionId);
+    const session = db.prepare('SELECT version, key_package, key_nonce FROM sessions WHERE session_id = ?').get(sessionId);
+    return session ? [session] : [];
   },
   createSession: (sessionId, keyPackage, keyNonce) => {
-    db.transaction(() => {
-      db.prepare('INSERT OR IGNORE INTO sessions (session_id, key_package, key_nonce, version) VALUES (?, ?, ?, 1)')
-        .run(sessionId, keyPackage, keyNonce);
-      db.prepare('INSERT OR IGNORE INTO session_keys (session_id, version, key_package, key_nonce) VALUES (?, 1, ?, ?)')
-        .run(sessionId, keyPackage, keyNonce);
-    })();
+    db.prepare('INSERT OR IGNORE INTO sessions (session_id, key_package, key_nonce, version) VALUES (?, ?, ?, 1)')
+      .run(sessionId, keyPackage, keyNonce);
   },
   updateSession: (sessionId, keyPackage, keyNonce) => {
     return db.transaction(() => {
@@ -63,19 +68,24 @@ module.exports = {
       const newVersion = session.version + 1;
       db.prepare('UPDATE sessions SET key_package = ?, key_nonce = ?, version = ? WHERE session_id = ?')
         .run(keyPackage, keyNonce, newVersion, sessionId);
-      db.prepare('INSERT INTO session_keys (session_id, version, key_package, key_nonce) VALUES (?, ?, ?, ?)')
-        .run(sessionId, newVersion, keyPackage, keyNonce);
 
       return { changes: 1, version: newVersion };
     })();
   },
+  deleteSession: (sessionId) => {
+    db.transaction(() => {
+      db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
+      db.prepare('DELETE FROM participants WHERE session_id = ?').run(sessionId);
+      db.prepare('DELETE FROM sessions WHERE session_id = ?').run(sessionId);
+    })();
+  },
 
   // Message methods
-  saveMessage: (sessionId, senderId, payload, nonce, keyVersion) => {
+  saveMessage: (sessionId, senderId, senderNickname, payload, nonce, keyVersion) => {
     return db.prepare(`
-      INSERT INTO messages (session_id, sender_id, payload, nonce, key_version)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(sessionId, senderId, payload, nonce, keyVersion);
+      INSERT INTO messages (session_id, sender_id, sender_nickname, payload, nonce, key_version)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(sessionId, senderId, senderNickname || '', payload, nonce, keyVersion);
   },
   getHistory: (sessionId, limit = 50, beforeId = null) => {
     if (beforeId) {
@@ -134,5 +144,25 @@ module.exports = {
 
   clearMessages: (sessionId) => {
     return db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
-  }
+  },
+
+  // Participant methods
+  addParticipant: (sessionId, playerId, nickname) => {
+    return db.prepare('INSERT OR IGNORE INTO participants (session_id, player_id, nickname) VALUES (?, ?, ?)')
+      .run(sessionId, playerId, nickname || '');
+  },
+  removeParticipant: (sessionId, playerId) => {
+    return db.prepare('DELETE FROM participants WHERE session_id = ? AND player_id = ?')
+      .run(sessionId, playerId);
+  },
+  isParticipant: (sessionId, playerId) => {
+    const res = db.prepare('SELECT 1 FROM participants WHERE session_id = ? AND player_id = ?').get(sessionId, playerId);
+    return !!res;
+  },
+  getParticipants: (sessionId) => {
+    return db.prepare('SELECT player_id, nickname FROM participants WHERE session_id = ?').all(sessionId);
+  },
+
+  // Expose db pour stats
+  db: db
 };

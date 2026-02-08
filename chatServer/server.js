@@ -1,6 +1,8 @@
 require('dotenv').config();
 const WebSocket = require('ws');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const db = require('./database');
 const cleanup = require('./cleanup');
 
@@ -17,6 +19,7 @@ const PORT = process.env.PORT || 3000;
 const MAX_PAYLOAD_SIZE = parseInt(process.env.MAX_PAYLOAD_SIZE) || 10 * 1024 * 1024; // 10 MB
 const MAX_DB_SIZE = parseInt(process.env.MAX_DB_SIZE) || 500 * 1024 * 1024; // 500 MB
 const DEBUG_MODE = process.env.DEBUG_MODE === 'true';
+const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD === 'true';
 
 function debug(...args) {
     if (DEBUG_MODE) {
@@ -28,14 +31,94 @@ function debug(...args) {
 debug('Server starting in DEBUG mode...');
 
 const server = http.createServer((req, res) => {
-    res.writeHead(200);
-    res.end('Blind Relay Chat Server is running.');
+    // API pour les statistiques du serveur
+    if (req.url === '/api/stats' && ENABLE_DASHBOARD) {
+        res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        });
+
+        const stats = {
+            connections: wss.clients.size,
+            rooms: rooms.size,
+            messages: getTotalMessages(),
+            sessions: Array.from(rooms.keys()).map(sessionId => ({
+                id: sessionId,
+                participants: rooms.get(sessionId).size,
+                messages: getSessionMessageCount(sessionId)
+            })),
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            dbSize: db.getDbSize()
+        };
+
+        res.end(JSON.stringify(stats));
+        return;
+    }
+
+    // Servir le dashboard si activé
+    if (ENABLE_DASHBOARD) {
+        const url = req.url === '/' ? '/dashboard.html' : req.url;
+
+        const mimeTypes = {
+            '.html': 'text/html',
+            '.css': 'text/css',
+            '.js': 'text/javascript',
+            '.json': 'application/json',
+            '.png': 'image/png',
+            '.jpg': 'image/jpg',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.ico': 'image/x-icon'
+        };
+
+        // Servir uniquement les fichiers du dashboard
+        const allowedFiles = ['/dashboard.html', '/dashboard.css', '/dashboard.js', '/chat_crypto.js'];
+        if (allowedFiles.includes(url)) {
+            // Construire le chemin complet du fichier
+            const fileName = url.substring(1); // Enlever le '/' initial
+            const filePath = path.join(__dirname, fileName);
+            const extname = path.extname(filePath);
+            const contentType = mimeTypes[extname] || 'text/plain';
+
+            // Vérifier que le fichier existe
+            fs.access(filePath, fs.constants.F_OK, (err) => {
+                if (err) {
+                    console.error(`[Dashboard] Fichier introuvable: ${filePath}`);
+                    res.writeHead(404, { 'Content-Type': 'text/plain' });
+                    res.end(`Fichier non trouvé: ${fileName}\nChemin recherché: ${filePath}`);
+                    return;
+                }
+
+                // Lire et servir le fichier
+                fs.readFile(filePath, (err, content) => {
+                    if (err) {
+                        console.error(`[Dashboard] Erreur de lecture: ${err.message}`);
+                        res.writeHead(500, { 'Content-Type': 'text/plain' });
+                        res.end(`Erreur serveur: ${err.code}\nFichier: ${fileName}`);
+                    } else {
+                        res.writeHead(200, { 'Content-Type': contentType });
+                        res.end(content, 'utf-8');
+                    }
+                });
+            });
+        } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end('<html><body><h1>Meownopoly Chat Server</h1><p>Dashboard disponible sur <a href="/dashboard.html">/dashboard.html</a></p></body></html>');
+        }
+    } else {
+        res.writeHead(200);
+        res.end('Blind Relay Chat Server is running.');
+    }
 });
 
 const wss = new WebSocket.Server({ server });
 
 // Room management: Map<SessionID, Set<Socket>>
 const rooms = new Map();
+
+// Sessions bloquées en attente d'une rotation de clé (nouveau participant)
+const keyRotationRequired = new Set();
 
 wss.on('connection', (ws) => {
     debug('New client connected');
@@ -85,105 +168,145 @@ function handleCommand(ws, msg) {
         case 'CLEAR_HISTORY':
             handleClearHistory(ws, payload);
             break;
+        case 'GET_PARTICIPANTS':
+            handleGetParticipants(ws, payload);
+            break;
+        case 'LEAVE_SESSION':
+            handleLeaveSession(ws, payload);
+            break;
+        case 'DELETE_SESSION':
+            handleDeleteSession(ws, payload);
+            break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
     }
 }
 
 function handleJoinSession(ws, payload) {
-    const { session_id, player_id } = payload;
+    const { session_id, player_id, player_nickname } = payload;
     if (!session_id || !player_id) return;
 
-    // Track player_id on ws object for management
     ws.player_id = player_id;
+    ws.player_nickname = player_nickname || '';
     ws.session_id = session_id;
 
-    // Add to in-memory room
+    // Check if participant is already known in DB
+    const isKnownParticipant = db.isParticipant(session_id, player_id);
+    const isNewParticipant = !isKnownParticipant;
+
     if (!rooms.has(session_id)) {
         rooms.set(session_id, new Set());
     }
     rooms.get(session_id).add(ws);
 
-    // Fetch session metadata and history
+    // If new, add to DB
+    if (isNewParticipant) {
+        db.addParticipant(session_id, player_id, player_nickname);
+    }
+
+    // Update nickname in case it changed or was missing
+    if (isKnownParticipant && player_nickname) {
+        // Optional: update nickname in DB if needed, but for now we trust the join payload
+    }
+
     const session = db.getSession(session_id);
-    // Forward Secrecy: We DO NOT send past keys to new joiners.
-    // They must generate their own V(N) key and can only read future messages.
-    const history = db.getHistory(session_id);
+    let keys = [];
+    let history = [];
+
+    // If they are a known participant (rejoining), they assume they can read history if they have the keys.
+    // If they are NEW, they get nothing until rotation (or if we changed that logic).
+    // Actually, "isNewParticipant" logic in original code was about "is there anyone else".
+    // We strictly follow: If you are NEW to the DB, you trigger rotation.
+
+    if (isKnownParticipant) {
+        // Send current key if available
+        const sessionKeys = db.getSessionKeys(session_id);
+        if (sessionKeys && sessionKeys.length > 0) {
+            keys = sessionKeys;
+        }
+        // Send history (enc)
+        history = db.getHistory(session_id) || [];
+    }
 
     ws.send(JSON.stringify({
         type: 'INIT_SESSION',
         payload: {
             current_version: session ? session.version : 0,
-            keys: [], // Empty to enforce Forward Secrecy
-            history: history || []
+            keys,
+            history,
+            new_joiner: isNewParticipant
         }
     }));
+
+    if (isNewParticipant) {
+        keyRotationRequired.add(session_id);
+        const newParticipantMsg = JSON.stringify({
+            type: 'NEW_PARTICIPANT',
+            payload: { session_id, player_id, nickname: player_nickname }
+        });
+        const currentRoom = rooms.get(session_id);
+        currentRoom.forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(newParticipantMsg);
+            }
+        });
+        debug(`New participant ${player_id} added to DB for session ${session_id}; key rotation required`);
+    } else {
+        debug(`Participant ${player_id} rejoined session ${session_id}`);
+    }
 }
 
 function handlePublishKey(ws, payload) {
     const { session_id, blob, nonce } = payload;
     if (!session_id || !blob || !nonce) return;
 
-    // We allow overwriting for key rotation
     const result = db.updateSession(session_id, blob, nonce);
+    const version = result.changes === 0 ? 1 : result.version;
 
     if (result.changes === 0) {
-        // If update failed (session doesn't exist yet), create it
         db.createSession(session_id, blob, nonce);
         debug(`Key package created for session ${session_id}`);
-
-        // Notify everyone (including creator) of the new V1 key
-        const room = rooms.get(session_id);
-        if (room) {
-            const updateMessage = JSON.stringify({
-                type: 'KEY_UPDATE',
-                payload: {
-                    version: 1,
-                    key_package: blob,
-                    nonce: nonce
-                }
-            });
-            room.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(updateMessage);
-                }
-            });
-        }
     } else {
-        debug(`Key package updated/rotated for session ${session_id} (Version ${result.version})`);
+        debug(`Key package updated/rotated for session ${session_id} (Version ${version})`);
+    }
 
-        // Broadcast the update to all OTHER clients in the room
-        const room = rooms.get(session_id);
-        if (room) {
-            const updateMessage = JSON.stringify({
-                type: 'KEY_UPDATE',
-                payload: {
-                    version: result.version,
-                    key_package: blob,
-                    nonce: nonce
-                }
-            });
-            room.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(updateMessage);
-                }
-            });
-        }
+    keyRotationRequired.delete(session_id);
+
+    const room = rooms.get(session_id);
+    if (room) {
+        const updateMessage = JSON.stringify({
+            type: 'KEY_UPDATE',
+            payload: {
+                version,
+                key_package: blob,
+                nonce: nonce
+            }
+        });
+        room.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(updateMessage);
+            }
+        });
     }
 }
 
 function handleSendMessage(ws, payload) {
-    const { session_id, sender_id, payload: ciphertext, nonce, key_v } = payload;
+    const { session_id, sender_id, sender_nickname, payload: ciphertext, nonce, key_v } = payload;
     if (!session_id || !sender_id || !ciphertext || !nonce) return;
 
-    // Persist message
-    const result = db.saveMessage(session_id, sender_id, ciphertext, nonce, key_v);
+    if (keyRotationRequired.has(session_id)) {
+        return sendError(ws, 'KEY_ROTATION_REQUIRED', 'A new participant joined; a client must publish a new key before sending messages');
+    }
+
+    const nickname = sender_nickname || (ws.player_nickname || '');
+    const result = db.saveMessage(session_id, sender_id, nickname, ciphertext, nonce, key_v);
 
     const outboundMessage = {
         type: 'NEW_MESSAGE',
         payload: {
             msg_id: result.lastInsertRowid,
             sender_id,
+            sender_nickname: nickname,
             payload: ciphertext,
             nonce,
             key_version: key_v,
@@ -236,6 +359,131 @@ function handleClearHistory(ws, payload) {
     }
 }
 
+function handleGetParticipants(ws, payload) {
+    const { session_id } = payload;
+    if (!session_id) return;
+
+    const dbParticipants = db.getParticipants(session_id);
+    const room = rooms.get(session_id);
+
+    const participants = dbParticipants.map(p => {
+        let isOnline = false;
+        if (room) {
+            for (const client of room) {
+                if (client.player_id === p.player_id && client.readyState === WebSocket.OPEN) {
+                    isOnline = true;
+                    break;
+                }
+            }
+        }
+        return {
+            player_id: p.player_id,
+            player_nickname: p.nickname,
+            status: isOnline ? 'online' : 'offline'
+        };
+    });
+
+    ws.send(JSON.stringify({
+        type: 'PARTICIPANTS_LIST',
+        payload: {
+            session_id,
+            count: participants.length,
+            participants
+        }
+    }));
+    debug(`Participants list sent for session ${session_id}: ${participants.length} participant(s)`);
+}
+
+function handleLeaveSession(ws, payload) {
+    const { session_id, player_id } = payload;
+    if (!session_id || !player_id) return;
+
+    // Verify identity (optional but good practice: ensure ws.player_id matches)
+    if (ws.player_id !== player_id) {
+        return sendError(ws, 'FORBIDDEN', 'Cannot leave session for another player');
+    }
+
+    db.removeParticipant(session_id, player_id);
+
+    // Broadcast leave logic
+    const room = rooms.get(session_id);
+    if (room) {
+        // Notify remaining participants
+        const leftMsg = JSON.stringify({
+            type: 'PARTICIPANT_LEFT',
+            payload: {
+                session_id,
+                player_id
+            }
+        });
+
+        room.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(leftMsg);
+            }
+        });
+
+        // Remove socket from room if present
+        if (room.has(ws)) {
+            room.delete(ws);
+        }
+
+        if (room.size === 0) {
+            rooms.delete(session_id);
+            keyRotationRequired.delete(session_id);
+        }
+    }
+
+    // Leaving triggers key rotation necessity for remaining members to secure future messages
+    keyRotationRequired.add(session_id);
+
+    ws.send(JSON.stringify({
+        type: 'LEFT_SESSION',
+        payload: { session_id }
+    }));
+
+    debug(`Participant ${player_id} explicitly left session ${session_id}`);
+}
+
+function handleDeleteSession(ws, payload) {
+    const { session_id } = payload;
+    if (!session_id) return;
+
+    // Optional: Check if user has rights to delete (e.g. is creator or admin)
+    // For now, any participant can delete (blind relay logic) or maybe just anyone who knows the ID.
+    // Let's assume anyone who can connect can delete for now, or check participation.
+    if (!db.isParticipant(session_id, ws.player_id)) {
+        return sendError(ws, 'FORBIDDEN', 'You must be a participant to delete the session');
+    }
+
+    // Delete from DB
+    db.deleteSession(session_id);
+
+    // Notify and disconnect all
+    const room = rooms.get(session_id);
+    if (room) {
+        const endedMsg = JSON.stringify({
+            type: 'SESSION_ENDED',
+            payload: { session_id, reason: 'Session deleted by user' }
+        });
+
+        // We iterate and send, then clear the room
+        for (const client of room) {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(endedMsg);
+            }
+            // clear session data from socket
+            client.session_id = null;
+            client.player_id = null;
+            // We might want to keep the connection open but they are no longer in "session"
+        }
+        rooms.delete(session_id);
+    }
+    keyRotationRequired.delete(session_id);
+
+    debug(`Session ${session_id} deleted by ${ws.player_id}`);
+}
+
 function sendError(ws, code, message) {
     ws.send(JSON.stringify({
         type: 'ERROR',
@@ -253,14 +501,46 @@ function checkDbSize() {
 
 function removeFromRooms(ws) {
     if (ws.session_id && rooms.has(ws.session_id)) {
-        const room = rooms.get(ws.session_id);
+        const sessionId = ws.session_id;
+        const playerId = ws.player_id;
+        const room = rooms.get(sessionId);
         room.delete(ws);
+
         if (room.size === 0) {
-            rooms.delete(ws.session_id);
+            rooms.delete(sessionId);
+            // We do NOT delete keyRotationRequired here immediately if we want persistent state, 
+            // but for now, if no one is online, no one can rotate. 
+            // When someone joins, they will see if they are new or known.
+        } else if (playerId) {
+            // Disconnection does NOT trigger PARTICIPANT_LEFT broadcast
+            // nor does it remove them from the DB.
+            debug(`Participant ${playerId} disconnected from session ${sessionId} (still in DB)`);
         }
+    }
+}
+
+function getTotalMessages() {
+    try {
+        const result = db.db.prepare('SELECT COUNT(*) as count FROM messages').get();
+        return result.count || 0;
+    } catch (err) {
+        return 0;
+    }
+}
+
+function getSessionMessageCount(sessionId) {
+    try {
+        const result = db.db.prepare('SELECT COUNT(*) as count FROM messages WHERE session_id = ?').get(sessionId);
+        return result.count || 0;
+    } catch (err) {
+        console.error('Error counting session messages:', err);
+        return 0;
     }
 }
 
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
+    if (ENABLE_DASHBOARD) {
+        console.log(`Dashboard disponible sur http://localhost:${PORT}/dashboard.html`);
+    }
 });

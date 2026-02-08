@@ -189,13 +189,9 @@ QVariantMap TemplateFileManager::calculateBoundingBox(const QJsonArray &elements
         int posX = displayParam["gridRelativePositionX"].toInt(0);
         int posY = displayParam["gridRelativePositionY"].toInt(0);
         
-        // Récupérer les dimensions (approximation via les paramètres)
-        int width = 1;  // Par défaut 1 unité de grille
-        int height = 1;
-        
-        // Essayer de récupérer les vraies dimensions depuis displayParameter
-            width = displayParam["width"].toInt(1);
-            height = displayParam["height"].toInt(1);
+        // Récupérer les dimensions réelles depuis displayParameter
+        int width = displayParam["unitSizeWidth"].toInt(1);
+        int height = displayParam["unitSizeHeight"].toInt(1);
         
         minX = qMin(minX, posX);
         minY = qMin(minY, posY);
@@ -227,22 +223,7 @@ QJsonArray TemplateFileManager::convertToRelativePositions(const QJsonArray &ele
         element["relativePositionX"] = absX - originX;
         element["relativePositionY"] = absY - originY;
         
-        // Soustraire gridRelativePositionX/Y des points du polygone (zoneParameter)
-        if (element.contains("zoneParameter")) {
-            QJsonObject zoneParam = element["zoneParameter"].toObject();
-            if (zoneParam.contains("polygonPoints")) {
-                QJsonArray polygonPoints = zoneParam["polygonPoints"].toArray();
-                QJsonArray adjustedPoints;
-                for (const QJsonValue &ptVal : polygonPoints) {
-                    QJsonObject pt = ptVal.toObject();
-                    pt["x"] = pt["x"].toDouble() - absX;
-                    pt["y"] = pt["y"].toDouble() - absY;
-                    adjustedPoints.append(pt);
-                }
-                zoneParam["polygonPoints"] = adjustedPoints;
-                element["zoneParameter"] = zoneParam;
-            }
-        }
+        // Les points du polygone (zoneParameter) sont déjà relatifs à la tile, pas d'ajustement
         
         // Supprimer les propriétés absolues et l'uniqueId (sera régénéré au placement)
         element.remove("uniqueId");
@@ -285,22 +266,7 @@ QJsonArray TemplateFileManager::convertToAbsolutePositions(const QJsonArray &ele
         displayParam["gridRelativePositionY"] = newAbsY;
         element["displayParameter"] = displayParam;
 
-        // Ré-ajouter gridRelativePositionX/Y aux points du polygone (zoneParameter)
-        if (element.contains("zoneParameter")) {
-            QJsonObject zoneParam = element["zoneParameter"].toObject();
-            if (zoneParam.contains("polygonPoints")) {
-                QJsonArray polygonPoints = zoneParam["polygonPoints"].toArray();
-                QJsonArray adjustedPoints;
-                for (const QJsonValue &ptVal : polygonPoints) {
-                    QJsonObject pt = ptVal.toObject();
-                    pt["x"] = pt["x"].toDouble() + newAbsX;
-                    pt["y"] = pt["y"].toDouble() + newAbsY;
-                    adjustedPoints.append(pt);
-                }
-                zoneParam["polygonPoints"] = adjustedPoints;
-                element["zoneParameter"] = zoneParam;
-            }
-        }
+        // Les points du polygone (zoneParameter) restent relatifs à la tile, pas d'ajustement
 
         // Supprimer les propriétés relatives
         element.remove("relativePositionX");

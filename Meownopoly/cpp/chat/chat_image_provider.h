@@ -14,6 +14,7 @@ public:
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
     
     static QString addImage(const QImage &image);
+    static QImage getImage(const QString &id);
     static void clear();
 
 private:

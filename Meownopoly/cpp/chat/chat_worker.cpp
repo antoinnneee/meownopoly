@@ -55,7 +55,6 @@ void ChatWorker::sendTextMessage(const QString &message)
         return;
     }
     
-    qDebug() << "[ChatWorker] Sending message in thread:" << QThread::currentThread();
     m_webSocket->sendTextMessage(message);
 }
 

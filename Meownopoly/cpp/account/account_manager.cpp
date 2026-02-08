@@ -1,8 +1,11 @@
 #include "account_manager.h"
 #include <QSettings>
-#include <QUuid>
+#include <QRandomGenerator>
 #include <QDebug>
-#include "../chat/chat_crypto.h"
+
+static const char s_idChars[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+static const int s_idCharsCount = 36;
+static const int s_idLength = 8;
 
 AccountManager* AccountManager::s_instance = nullptr;
 
@@ -31,18 +34,6 @@ void AccountManager::loadAccount()
     m_uniqueId = settings.value("account/uniqueId", "").toString();
     m_nickname = settings.value("account/nickname", "").toString();
     
-    // Load private key from base64
-    QString keyBase64 = settings.value("account/privateKey", "").toString();
-    if (!keyBase64.isEmpty()) {
-        m_privateKey = QByteArray::fromBase64(keyBase64.toUtf8());
-    }
-    
-    // Load key creation date
-    QString keyDateStr = settings.value("account/keyCreatedAt", "").toString();
-    if (!keyDateStr.isEmpty()) {
-        m_keyCreatedAt = QDateTime::fromString(keyDateStr, Qt::ISODate);
-    }
-    
     // Account exists if we have a unique ID
     bool hadAccount = m_hasAccount;
     m_hasAccount = !m_uniqueId.isEmpty();
@@ -63,9 +54,6 @@ void AccountManager::saveAccount()
     
     settings.setValue("account/uniqueId", m_uniqueId);
     settings.setValue("account/nickname", m_nickname);
-    settings.setValue("account/privateKey", QString::fromUtf8(m_privateKey.toBase64()));
-    settings.setValue("account/keyCreatedAt", m_keyCreatedAt.toString(Qt::ISODate));
-    
     settings.sync();
     
     qDebug() << "AccountManager: Saved account -"
@@ -90,14 +78,8 @@ void AccountManager::createAccount(const QString &nickname)
         return;
     }
     
-    // Generate unique ID
     generateUniqueId();
-    
-    // Set nickname
     m_nickname = nickname;
-    
-    // Generate cryptographic keys
-    generateKeys();
     
     // Mark as having an account
     m_hasAccount = true;
@@ -114,32 +96,26 @@ void AccountManager::createAccount(const QString &nickname)
              << "nickname:" << m_nickname;
 }
 
-bool AccountManager::regenerateKeys()
-{
-    if (!m_hasAccount) {
-        qWarning() << "AccountManager: No account exists, cannot regenerate keys";
-        return false;
-    }
-    
-    generateKeys();
-    saveAccount();
-    
-    emit privateKeyChanged();
-    emit keysRegenerated();
-    
-    qDebug() << "AccountManager: Keys regenerated at" << m_keyCreatedAt.toString(Qt::ISODate);
-    return true;
-}
-
 void AccountManager::generateUniqueId()
 {
-    // Generate a UUID v4 and remove the braces
-    m_uniqueId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    QString id;
+    id.reserve(s_idLength);
+    auto* rng = QRandomGenerator::global();
+    for (int i = 0; i < s_idLength; ++i) {
+        id.append(QChar(s_idChars[rng->bounded(s_idCharsCount)]));
+    }
+    m_uniqueId = id;
 }
 
-void AccountManager::generateKeys()
+bool AccountManager::regenerateUniqueId()
 {
-    // Use ChatCrypto to generate a random 256-bit key
-    m_privateKey = ChatCrypto::generateRandomKey();
-    m_keyCreatedAt = QDateTime::currentDateTime();
+    if (!m_hasAccount) {
+        qWarning() << "AccountManager: No account, cannot regenerate unique ID";
+        return false;
+    }
+    generateUniqueId();
+    saveAccount();
+    emit uniqueIdChanged();
+    qDebug() << "AccountManager: Unique ID regenerated:" << m_uniqueId;
+    return true;
 }

@@ -20,11 +20,11 @@ Popup {
         border.width: 1
     }
 
-    // Confirmation dialog for key regeneration
+    // Confirmation régénération identifiant
     Popup {
-        id: confirmKeyRegenPopup
-        width: 350
-        height: 200
+        id: confirmRegenIdPopup
+        width: 380
+        height: 320
         modal: true
         focus: true
         closePolicy: Popup.CloseOnEscape
@@ -40,10 +40,10 @@ Popup {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
-            spacing: 15
+            spacing: 16
 
             Text {
-                text: "⚠️ Attention"
+                text: "⚠️ Changer d'identifiant"
                 color: "#ff6b6b"
                 font.pixelSize: 18
                 font.bold: true
@@ -51,28 +51,27 @@ Popup {
             }
 
             Text {
-                text: "Êtes-vous sûr de vouloir renouveler vos clés de cryptage ?\n\nCette action est irréversible et peut affecter les messages chiffrés existants."
+                text: "Vous serez considéré comme un nouveau joueur dans le chat. Vos anciens messages resteront affichés avec l'ancien identifiant.\n\nToute donnée liée à cet ID (parties, sauvegardes) pourrait ne plus vous être associée.\n\nCette action est irréversible."
                 color: "#cccccc"
                 font.pixelSize: 12
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
                 Layout.fillWidth: true
+                Layout.fillHeight: true
             }
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 15
+                spacing: 12
 
                 Button {
                     text: "Annuler"
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
-
                     background: Rectangle {
                         color: parent.pressed ? "#444444" : "#555555"
                         radius: 6
                     }
-
                     contentItem: Text {
                         text: parent.text
                         color: "#cccccc"
@@ -80,20 +79,17 @@ Popup {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
-
-                    onClicked: confirmKeyRegenPopup.close()
+                    onClicked: confirmRegenIdPopup.close()
                 }
 
                 Button {
-                    text: "Confirmer"
+                    text: "Régénérer"
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
-
                     background: Rectangle {
                         color: parent.pressed ? "#c62828" : "#e53935"
                         radius: 6
                     }
-
                     contentItem: Text {
                         text: parent.text
                         color: "white"
@@ -102,11 +98,11 @@ Popup {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
-
                     onClicked: {
-                        AccountManager.regenerateKeys()
-                        confirmKeyRegenPopup.close()
-                        keyRegeneratedAnimation.start()
+                        if (AccountManager.regenerateUniqueId()) {
+                            confirmRegenIdPopup.close()
+                            idRegeneratedAnimation.start()
+                        }
                     }
                 }
             }
@@ -245,10 +241,56 @@ Popup {
             }
 
             Text {
-                text: "Cet identifiant est permanent et ne peut pas être modifié."
+                text: "Utilisé pour vous identifier (chat, etc.). Vous pouvez le régénérer ci-dessous."
                 color: "#666666"
                 font.pixelSize: 10
                 font.italic: true
+            }
+
+            Button {
+                text: "🔄 Régénérer l'identifiant"
+                Layout.fillWidth: true
+                Layout.preferredHeight: 38
+                background: Rectangle {
+                    color: parent.pressed ? "#555555" : (parent.hovered ? "#444444" : "#3a3a3a")
+                    radius: 8
+                    border.color: "#ff9800"
+                    border.width: 1
+                }
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ff9800"
+                    font.pixelSize: 12
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: confirmRegenIdPopup.open()
+            }
+
+            Rectangle {
+                id: idRegenOverlay
+                Layout.fillWidth: true
+                height: 44
+                color: "#4caf50"
+                radius: 8
+                opacity: 0
+                visible: opacity > 0
+                Text {
+                    text: "✓ Identifiant régénéré! Reconnectez le chat pour l'utiliser."
+                    color: "white"
+                    font.pixelSize: 11
+                    anchors.centerIn: parent
+                    width: parent.width - 16
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                SequentialAnimation {
+                    id: idRegeneratedAnimation
+                    running: false
+                    NumberAnimation { target: idRegenOverlay; property: "opacity"; to: 0.95; duration: 200 }
+                    PauseAnimation { duration: 2500 }
+                    NumberAnimation { target: idRegenOverlay; property: "opacity"; to: 0; duration: 300 }
+                }
             }
         }
 
@@ -342,117 +384,6 @@ Popup {
                     PauseAnimation { duration: 1500 }
                     NumberAnimation { target: savedText; property: "opacity"; to: 0; duration: 300 }
                 }
-            }
-        }
-
-        // Cryptographic keys section
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 8
-
-            Text {
-                text: "Clés de cryptage"
-                color: "#888888"
-                font.pixelSize: 12
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 80
-                color: "#333333"
-                radius: 8
-                border.color: "#444444"
-                border.width: 1
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 8
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        Text {
-                            text: "🔐"
-                            font.pixelSize: 14
-                        }
-
-                        Text {
-                            text: "Clé privée active"
-                            color: "#cccccc"
-                            font.pixelSize: 13
-                            Layout.fillWidth: true
-                        }
-
-                        Rectangle {
-                            width: 12
-                            height: 12
-                            radius: 6
-                            color: "#4caf50"
-                        }
-                    }
-
-                    Text {
-                        text: AccountManager.keyCreatedAt !== "" ? 
-                              "Créée le: " + new Date(AccountManager.keyCreatedAt).toLocaleDateString("fr-FR") :
-                              "Clé non générée"
-                        color: "#888888"
-                        font.pixelSize: 11
-                    }
-                }
-
-                // Key regenerated animation overlay
-                Rectangle {
-                    id: keyRegenOverlay
-                    anchors.fill: parent
-                    color: "#4caf50"
-                    radius: 8
-                    opacity: 0
-
-                    Text {
-                        text: "✓ Clés régénérées!"
-                        color: "white"
-                        font.pixelSize: 14
-                        font.bold: true
-                        anchors.centerIn: parent
-                    }
-
-                    SequentialAnimation {
-                        id: keyRegeneratedAnimation
-                        NumberAnimation { target: keyRegenOverlay; property: "opacity"; to: 0.9; duration: 200 }
-                        PauseAnimation { duration: 1500 }
-                        NumberAnimation { target: keyRegenOverlay; property: "opacity"; to: 0; duration: 300 }
-                    }
-                }
-            }
-
-            Button {
-                text: "🔄 Renouveler les clés"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 40
-
-                background: Rectangle {
-                    color: parent.pressed ? "#c62828" : (parent.hovered ? "#e53935" : "#d32f2f")
-                    radius: 8
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "white"
-                    font.pixelSize: 13
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: confirmKeyRegenPopup.open()
-            }
-
-            Text {
-                text: "⚠️ Attention: renouveler les clés peut affecter le déchiffrement des anciens messages."
-                color: "#ff9800"
-                font.pixelSize: 10
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
             }
         }
 
