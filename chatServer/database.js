@@ -30,6 +30,14 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id);
+
+  CREATE TABLE IF NOT EXISTS participants (
+    session_id TEXT,
+    player_id TEXT,
+    nickname TEXT,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (session_id, player_id)
+  );
 `);
 
 // Migration: add sender_nickname for existing DBs
@@ -129,6 +137,23 @@ module.exports = {
 
   clearMessages: (sessionId) => {
     return db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
+  },
+
+  // Participant methods
+  addParticipant: (sessionId, playerId, nickname) => {
+    return db.prepare('INSERT OR IGNORE INTO participants (session_id, player_id, nickname) VALUES (?, ?, ?)')
+      .run(sessionId, playerId, nickname || '');
+  },
+  removeParticipant: (sessionId, playerId) => {
+    return db.prepare('DELETE FROM participants WHERE session_id = ? AND player_id = ?')
+      .run(sessionId, playerId);
+  },
+  isParticipant: (sessionId, playerId) => {
+    const res = db.prepare('SELECT 1 FROM participants WHERE session_id = ? AND player_id = ?').get(sessionId, playerId);
+    return !!res;
+  },
+  getParticipants: (sessionId) => {
+    return db.prepare('SELECT player_id, nickname FROM participants WHERE session_id = ?').all(sessionId);
   },
 
   // Expose db pour stats

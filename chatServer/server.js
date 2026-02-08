@@ -33,11 +33,11 @@ debug('Server starting in DEBUG mode...');
 const server = http.createServer((req, res) => {
     // API pour les statistiques du serveur
     if (req.url === '/api/stats' && ENABLE_DASHBOARD) {
-        res.writeHead(200, { 
+        res.writeHead(200, {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         });
-        
+
         const stats = {
             connections: wss.clients.size,
             rooms: rooms.size,
@@ -51,15 +51,15 @@ const server = http.createServer((req, res) => {
             memory: process.memoryUsage(),
             dbSize: db.getDbSize()
         };
-        
+
         res.end(JSON.stringify(stats));
         return;
     }
-    
+
     // Servir le dashboard si activé
     if (ENABLE_DASHBOARD) {
         const url = req.url === '/' ? '/dashboard.html' : req.url;
-        
+
         const mimeTypes = {
             '.html': 'text/html',
             '.css': 'text/css',
@@ -71,7 +71,7 @@ const server = http.createServer((req, res) => {
             '.svg': 'image/svg+xml',
             '.ico': 'image/x-icon'
         };
-        
+
         // Servir uniquement les fichiers du dashboard
         const allowedFiles = ['/dashboard.html', '/dashboard.css', '/dashboard.js', '/chat_crypto.js'];
         if (allowedFiles.includes(url)) {
@@ -80,7 +80,7 @@ const server = http.createServer((req, res) => {
             const filePath = path.join(__dirname, fileName);
             const extname = path.extname(filePath);
             const contentType = mimeTypes[extname] || 'text/plain';
-            
+
             // Vérifier que le fichier existe
             fs.access(filePath, fs.constants.F_OK, (err) => {
                 if (err) {
@@ -89,7 +89,7 @@ const server = http.createServer((req, res) => {
                     res.end(`Fichier non trouvé: ${fileName}\nChemin recherché: ${filePath}`);
                     return;
                 }
-                
+
                 // Lire et servir le fichier
                 fs.readFile(filePath, (err, content) => {
                     if (err) {
@@ -171,6 +171,9 @@ function handleCommand(ws, msg) {
         case 'GET_PARTICIPANTS':
             handleGetParticipants(ws, payload);
             break;
+        case 'LEAVE_SESSION':
+            handleLeaveSession(ws, payload);
+            break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
     }
@@ -184,25 +187,41 @@ function handleJoinSession(ws, payload) {
     ws.player_nickname = player_nickname || '';
     ws.session_id = session_id;
 
-    const room = rooms.has(session_id) ? rooms.get(session_id) : null;
-    const isNewParticipant = room && room.size > 0;
+    // Check if participant is already known in DB
+    const isKnownParticipant = db.isParticipant(session_id, player_id);
+    const isNewParticipant = !isKnownParticipant;
 
     if (!rooms.has(session_id)) {
         rooms.set(session_id, new Set());
     }
     rooms.get(session_id).add(ws);
 
+    // If new, add to DB
+    if (isNewParticipant) {
+        db.addParticipant(session_id, player_id, player_nickname);
+    }
+
+    // Update nickname in case it changed or was missing
+    if (isKnownParticipant && player_nickname) {
+        // Optional: update nickname in DB if needed, but for now we trust the join payload
+    }
+
     const session = db.getSession(session_id);
     let keys = [];
     let history = [];
 
-    if (!isNewParticipant) {
+    // If they are a known participant (rejoining), they assume they can read history if they have the keys.
+    // If they are NEW, they get nothing until rotation (or if we changed that logic).
+    // Actually, "isNewParticipant" logic in original code was about "is there anyone else".
+    // We strictly follow: If you are NEW to the DB, you trigger rotation.
+
+    if (isKnownParticipant) {
+        // Send current key if available
         const sessionKeys = db.getSessionKeys(session_id);
-        keys = (sessionKeys || []).map(k => ({
-            version: k.version,
-            key_package: k.key_package,
-            nonce: k.key_nonce
-        }));
+        if (sessionKeys && sessionKeys.length > 0) {
+            keys = sessionKeys;
+        }
+        // Send history (enc)
         history = db.getHistory(session_id) || [];
     }
 
@@ -220,7 +239,7 @@ function handleJoinSession(ws, payload) {
         keyRotationRequired.add(session_id);
         const newParticipantMsg = JSON.stringify({
             type: 'NEW_PARTICIPANT',
-            payload: { session_id, player_id }
+            payload: { session_id, player_id, nickname: player_nickname }
         });
         const currentRoom = rooms.get(session_id);
         currentRoom.forEach(client => {
@@ -228,7 +247,9 @@ function handleJoinSession(ws, payload) {
                 client.send(newParticipantMsg);
             }
         });
-        debug(`New participant ${player_id} in ${session_id}; key rotation required`);
+        debug(`New participant ${player_id} added to DB for session ${session_id}; key rotation required`);
+    } else {
+        debug(`Participant ${player_id} rejoined session ${session_id}`);
     }
 }
 
@@ -339,19 +360,25 @@ function handleGetParticipants(ws, payload) {
     const { session_id } = payload;
     if (!session_id) return;
 
+    const dbParticipants = db.getParticipants(session_id);
     const room = rooms.get(session_id);
-    const participants = [];
 
-    if (room) {
-        room.forEach(client => {
-            if (client.readyState === WebSocket.OPEN && client.player_id) {
-                participants.push({
-                    player_id: client.player_id,
-                    player_nickname: client.player_nickname || ''
-                });
+    const participants = dbParticipants.map(p => {
+        let isOnline = false;
+        if (room) {
+            for (const client of room) {
+                if (client.player_id === p.player_id && client.readyState === WebSocket.OPEN) {
+                    isOnline = true;
+                    break;
+                }
             }
-        });
-    }
+        }
+        return {
+            player_id: p.player_id,
+            player_nickname: p.nickname,
+            status: isOnline ? 'online' : 'offline'
+        };
+    });
 
     ws.send(JSON.stringify({
         type: 'PARTICIPANTS_LIST',
@@ -362,6 +389,57 @@ function handleGetParticipants(ws, payload) {
         }
     }));
     debug(`Participants list sent for session ${session_id}: ${participants.length} participant(s)`);
+}
+
+function handleLeaveSession(ws, payload) {
+    const { session_id, player_id } = payload;
+    if (!session_id || !player_id) return;
+
+    // Verify identity (optional but good practice: ensure ws.player_id matches)
+    if (ws.player_id !== player_id) {
+        return sendError(ws, 'FORBIDDEN', 'Cannot leave session for another player');
+    }
+
+    db.removeParticipant(session_id, player_id);
+
+    // Broadcast leave logic
+    const room = rooms.get(session_id);
+    if (room) {
+        // Notify remaining participants
+        const leftMsg = JSON.stringify({
+            type: 'PARTICIPANT_LEFT',
+            payload: {
+                session_id,
+                player_id
+            }
+        });
+
+        room.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(leftMsg);
+            }
+        });
+
+        // Remove socket from room if present
+        if (room.has(ws)) {
+            room.delete(ws);
+        }
+
+        if (room.size === 0) {
+            rooms.delete(session_id);
+            keyRotationRequired.delete(session_id);
+        }
+    }
+
+    // Leaving triggers key rotation necessity for remaining members to secure future messages
+    keyRotationRequired.add(session_id);
+
+    ws.send(JSON.stringify({
+        type: 'LEFT_SESSION',
+        payload: { session_id }
+    }));
+
+    debug(`Participant ${player_id} explicitly left session ${session_id}`);
 }
 
 function sendError(ws, code, message) {
@@ -388,22 +466,13 @@ function removeFromRooms(ws) {
 
         if (room.size === 0) {
             rooms.delete(sessionId);
-            keyRotationRequired.delete(sessionId);
+            // We do NOT delete keyRotationRequired here immediately if we want persistent state, 
+            // but for now, if no one is online, no one can rotate. 
+            // When someone joins, they will see if they are new or known.
         } else if (playerId) {
-            // Notify remaining participants that someone left
-            const leftMsg = JSON.stringify({
-                type: 'PARTICIPANT_LEFT',
-                payload: {
-                    session_id: sessionId,
-                    player_id: playerId
-                }
-            });
-            room.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(leftMsg);
-                }
-            });
-            debug(`Participant ${playerId} left session ${sessionId}; ${room.size} remaining`);
+            // Disconnection does NOT trigger PARTICIPANT_LEFT broadcast
+            // nor does it remove them from the DB.
+            debug(`Participant ${playerId} disconnected from session ${sessionId} (still in DB)`);
         }
     }
 }
