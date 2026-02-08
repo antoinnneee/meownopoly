@@ -23,7 +23,7 @@ Rectangle {
     property var textFileExtensions: [
         ".txt", ".md", ".json", ".xml", ".csv", ".log", ".yml", ".yaml", ".toml", ".ini", ".cfg",
         ".js", ".ts", ".py", ".cpp", ".c", ".h", ".hpp", ".java", ".cs", ".go", ".rs", ".rb",
-        ".php", ".swift", ".kt", ".qml", ".html", ".css", ".sql", ".sh", ".bat"
+        ".php", ".swift", ".kt", ".qml", ".html", ".css", ".sql", ".sh", ".bat", ".qml"
     ]
 
     function isTextFileUrl(url) {
@@ -152,7 +152,7 @@ Rectangle {
         anchors.margins: 8
         model: chatClient ? chatClient.messages : null
         clip: true
-        spacing: 8
+        spacing: 4
         highlightFollowsCurrentItem: false
         reuseItems: true
 
@@ -183,7 +183,7 @@ Rectangle {
             required property var modelData
             required property int index
             width: messageList.width - 16
-            height: delegateImpl.height + 12
+            height: delegateImpl.height + 8
             x: 8
 
             ChatMessageDelegate {
