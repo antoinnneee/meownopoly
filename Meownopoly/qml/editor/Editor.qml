@@ -123,16 +123,23 @@ Base_Board {
             btChat.y = btSelection.y; btChat.x = btSelection.x
         }
         MouseArea {
+            id: btSelMouseArea
             propagateComposedEvents: true
-            anchors.fill: parent
+            Component.onCompleted:{
+                width = parent.width
+                height = parent.height
+            }
+
             hoverEnabled: true
             onEntered: {
+                height = (btSelection.height * 3) + 10
                 console.log("Mouse entered selection button area, moving info and chat buttons")
                 btInfoMap.y += btSelection.height + 10
                 btChat.y += (btSelection.height * 2) + 10
             }
             onExited: {
                 console.log("Mouse exited selection button area, resetting info and chat buttons position")
+
                 btInfoMap.y = btSelection.y
                 btChat.y = btSelection.y
             }
@@ -152,7 +159,6 @@ Base_Board {
         colorBt: "#2ecc71"
         onBtClicked: chatDrawer.open()
         Behavior on y {SmoothedAnimation { velocity : 500}}
-
     }
 
     ChatDrawer {
