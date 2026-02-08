@@ -53,15 +53,12 @@ module.exports = {
     return db.prepare('SELECT * FROM sessions WHERE session_id = ?').get(sessionId);
   },
   getSessionKeys: (sessionId) => {
-    return db.prepare('SELECT version, key_package, key_nonce FROM session_keys WHERE session_id = ? ORDER BY version ASC').all(sessionId);
+    const session = db.prepare('SELECT version, key_package, key_nonce FROM sessions WHERE session_id = ?').get(sessionId);
+    return session ? [session] : [];
   },
   createSession: (sessionId, keyPackage, keyNonce) => {
-    db.transaction(() => {
-      db.prepare('INSERT OR IGNORE INTO sessions (session_id, key_package, key_nonce, version) VALUES (?, ?, ?, 1)')
-        .run(sessionId, keyPackage, keyNonce);
-      db.prepare('INSERT OR IGNORE INTO session_keys (session_id, version, key_package, key_nonce) VALUES (?, 1, ?, ?)')
-        .run(sessionId, keyPackage, keyNonce);
-    })();
+    db.prepare('INSERT OR IGNORE INTO sessions (session_id, key_package, key_nonce, version) VALUES (?, ?, ?, 1)')
+      .run(sessionId, keyPackage, keyNonce);
   },
   updateSession: (sessionId, keyPackage, keyNonce) => {
     return db.transaction(() => {
@@ -71,8 +68,6 @@ module.exports = {
       const newVersion = session.version + 1;
       db.prepare('UPDATE sessions SET key_package = ?, key_nonce = ?, version = ? WHERE session_id = ?')
         .run(keyPackage, keyNonce, newVersion, sessionId);
-      db.prepare('INSERT INTO session_keys (session_id, version, key_package, key_nonce) VALUES (?, ?, ?, ?)')
-        .run(sessionId, newVersion, keyPackage, keyNonce);
 
       return { changes: 1, version: newVersion };
     })();

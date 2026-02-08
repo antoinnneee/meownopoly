@@ -96,6 +96,10 @@ private:
     QVariantList m_participants;
     
     ChatDatabase m_db;
+    
+    // For automatic retry upon KEY_ROTATION_REQUIRED
+    QString m_pendingMessage;
+    bool m_retryPending = false;
 };
 
 #endif // CHAT_CLIENT_H

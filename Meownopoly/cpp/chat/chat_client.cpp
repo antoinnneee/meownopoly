@@ -127,6 +127,8 @@ void ChatClient::onDisconnected() {
     qDebug() << "[ChatClient] Disconnected from server";
     m_connected = false;
     m_participants.clear();
+    m_pendingMessage.clear();
+    m_retryPending = false;
     emit connectedChanged();
     emit participantsChanged();
 }
@@ -196,6 +198,15 @@ void ChatClient::handleKeyUpdate(const QJsonObject &payload) {
         m_currentKeyVersion = version;
 
         emit messagesChanged(); // Reprocess messages if needed
+
+        // Retry pending message if any
+        if (m_retryPending && !m_pendingMessage.isEmpty()) {
+            qDebug() << "[ChatClient] Retrying pending message with new Key Version" << m_currentKeyVersion;
+            QString msg = m_pendingMessage;
+            m_retryPending = false;
+            m_pendingMessage.clear();
+            sendMessage(msg);
+        }
     }
 }
 
@@ -277,6 +288,7 @@ void ChatClient::handleError(const QJsonObject &payload) {
     QString message = payload["message"].toString();
     if (code == "KEY_ROTATION_REQUIRED") {
         qDebug() << "[ChatClient] Server requires key rotation; publishing new key.";
+        m_retryPending = true;
         publishNewKey();
     } else {
         qWarning() << "[ChatClient] Server error:" << code << message;
@@ -468,6 +480,9 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
 void ChatClient::sendMessage(const QString &text) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
+    // Store pending message for retry logic
+    m_pendingMessage = text;
+
     // Use current (latest) key
     if (!m_sessionKeys.contains(m_currentKeyVersion)) {
         qWarning() << "Current key version" << m_currentKeyVersion << "not found in keys map!";
@@ -522,22 +537,9 @@ void ChatClient::sendImage(const QString &filePath) {
     // Use current (latest) key
     if (!m_sessionKeys.contains(m_currentKeyVersion)) return;
 
-    QByteArray nonce = ChatCrypto::generateNonce();
-    // Use PLAIN key
-    QByteArray cipher = ChatCrypto::encrypt(base64.toUtf8(), m_sessionKeys[m_currentKeyVersion], nonce);
+    // Delegate to sendMessage to leverage retry logic
+    sendMessage(base64);
 
-    QJsonObject send;
-    send["type"] = "SEND_MSG";
-    QJsonObject p;
-    p["session_id"] = m_sessionId;
-    p["sender_id"] = m_playerId;
-    p["sender_nickname"] = m_nickname;
-    p["payload"] = QString(cipher.toBase64());
-    p["nonce"] = QString(nonce.toBase64());
-    p["key_v"] = m_currentKeyVersion;
-    send["payload"] = p;
-
-    sendWebSocketMessage(send);
     qDebug() << "[ChatClient] Compressed image sent (Size:" << compressedData.size() / 1024 << "KB)";
 }
 
