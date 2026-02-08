@@ -40,7 +40,10 @@ public:
     Q_INVOKABLE void saveTextToFile(const QString &filePath, const QString &content);
     Q_INVOKABLE void loadHistory();
     Q_INVOKABLE void requestHistory(int beforeId = -1);
+
     Q_INVOKABLE void clearHistory();
+    Q_INVOKABLE void saveImageToFile(const QString &imageId, const QString &filePath);
+    Q_INVOKABLE void copyImageToClipboard(const QString &imageId);
     Q_INVOKABLE void requestParticipants();
 
     static void registerQml(QQmlEngine *engine = nullptr) {

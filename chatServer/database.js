@@ -15,15 +15,7 @@ db.exec(`
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS session_keys (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id TEXT,
-    version INTEGER,
-    key_package TEXT,
-    key_nonce TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(session_id) REFERENCES sessions(session_id)
-  );
+  DROP TABLE IF EXISTS session_keys;
 
   CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

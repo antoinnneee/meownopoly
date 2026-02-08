@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 
 Rectangle {
     id: messageDelegate
@@ -42,6 +43,23 @@ Rectangle {
         to: 1
         duration: 150
         easing.type: Easing.OutQuad
+    }
+
+    FileDialog {
+        id: saveImageDialog
+        title: "Enregistrer l'image"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Images (*.png *.jpg *.jpeg *.webp)"]
+        property string currentImageId: ""
+        onAccepted: {
+            if (messageDelegate.chatClient && currentImageId) {
+                messageDelegate.chatClient.saveImageToFile(currentImageId, saveImageDialog.selectedFile)
+            }
+        }
+    }
+    Timer {
+        id: copyTimer
+        interval: 1500
     }
 
     Column {
@@ -87,44 +105,143 @@ Rectangle {
             visible: !(modelData && (modelData.isImage || modelData.isTextFile))
         }
 
-        Image {
-            source: (modelData && modelData.isImage) ? modelData.text : ""
+
+
+        Column {
             visible: !!(modelData && modelData.isImage)
-            asynchronous: true
-            cache: true
             width: parent.width
-            fillMode: Image.PreserveAspectFit
-            smooth: false
-            mipmap: true
-            sourceSize.width: width
+            spacing: 2
 
+            // En-tête de l'image (style TextFileDisplay)
             Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                border.color: "#444444"
-                border.width: 1
+                width: parent.width
+                height: 24
+                color: "#667eea"
                 radius: 4
-                visible: parent.status === Image.Ready
+                // Coins du bas non arrondis pour coller à l'image
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    height: 4
+                    color: parent.color
+                }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 4
+                    spacing: 8
+
+                    Text {
+                        text: "📷 Image"
+                        font.pixelSize: 10
+                        font.bold: true
+                        color: "white"
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.fillWidth: true
+                    }
+
+                    // Bouton Copier
+                    Rectangle {
+                        id: copyBtn
+                        width: 20
+                        height: 20
+                        color: copyArea.containsMouse ? "#5568d3" : "transparent"
+                        radius: 3
+                        Layout.alignment: Qt.AlignVCenter
+
+                        Text {
+                            text: copyTimer.running ? "✓" : "📋"
+                            font.pixelSize: 12
+                            anchors.centerIn: parent
+                            color: "white"
+                        }
+                        
+                        MouseArea {
+                            id: copyArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (messageDelegate.chatClient && contentImage.source.toString().startsWith("image://chat_images/")) {
+                                    let id = contentImage.source.toString().replace("image://chat_images/", "")
+                                    messageDelegate.chatClient.copyImageToClipboard(id)
+                                    copyTimer.start()
+                                }
+                            }
+                        }
+                        ToolTip {
+                            visible: copyArea.containsMouse
+                            text: "Copier l'image"
+                            delay: 400
+                        }
+                    }
+
+                    // Bouton Sauver
+                    Rectangle {
+                        id: saveBtn
+                        width: 20
+                        height: 20
+                        color: saveArea.containsMouse ? "#5568d3" : "transparent"
+                        radius: 3
+                        Layout.alignment: Qt.AlignVCenter
+
+                        Text {
+                            text: "💾"
+                            font.pixelSize: 12
+                            anchors.centerIn: parent
+                            color: "white"
+                        }
+
+                        MouseArea {
+                            id: saveArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (contentImage.source.toString().startsWith("image://chat_images/")) {
+                                    let id = contentImage.source.toString().replace("image://chat_images/", "")
+                                    saveImageDialog.currentImageId = id
+                                    saveImageDialog.currentFile = "file:///image_" + id + ".png"
+                                    saveImageDialog.open()
+                                }
+                            }
+                        }
+                        ToolTip {
+                            visible: saveArea.containsMouse
+                            text: "Enregistrer sous..."
+                            delay: 400
+                        }
+                    }
+                }
             }
 
-            BusyIndicator {
-                anchors.centerIn: parent
-                running: parent.status === Image.Loading
-                visible: running
-                width: 32
-                height: 32
-            }
+            Image {
+                id: contentImage
+                source: (modelData && modelData.isImage) ? modelData.text : ""
+                asynchronous: true
+                cache: true
+                width: parent.width
+                fillMode: Image.PreserveAspectFit
+                smooth: false
+                mipmap: true
+                sourceSize.width: width
 
-            Rectangle {
-                anchors.fill: parent
-                color: "#3a3a3a"
-                radius: 4
-                visible: parent.status === Image.Error
-                Text {
+                Rectangle {
+                    anchors.fill: parent
+                    color: "transparent"
+                    border.color: "#444444"
+                    border.width: 1
+                    radius: 4
+                    visible: parent.status === Image.Ready
+                }
+
+                BusyIndicator {
                     anchors.centerIn: parent
-                    text: "❌ Erreur de chargement"
-                    color: "#aa4444"
-                    font.pixelSize: 10
+                    running: parent.status === Image.Loading
+                    visible: running
+                    width: 32
+                    height: 32
                 }
             }
         }

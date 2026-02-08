@@ -31,6 +31,12 @@ QString ChatImageProvider::addImage(const QImage &image)
     return id;
 }
 
+QImage ChatImageProvider::getImage(const QString &id)
+{
+    QMutexLocker locker(&m_mutex);
+    return m_images.value(id);
+}
+
 void ChatImageProvider::clear()
 {
     QMutexLocker locker(&m_mutex);

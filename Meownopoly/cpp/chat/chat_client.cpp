@@ -7,6 +7,8 @@
 #include <QFileInfo>
 #include <QUrl>
 #include <QDataStream>
+#include <QClipboard>
+#include <QGuiApplication>
 
 ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     // Initialize database
@@ -803,4 +805,35 @@ QString ChatClient::processMessageText(const QString &text) {
     }
     
     return text;
+}
+
+void ChatClient::saveImageToFile(const QString &imageId, const QString &filePath) {
+    QImage img = ChatImageProvider::getImage(imageId);
+    if (img.isNull()) {
+        qWarning() << "[ChatClient] Image not found for ID:" << imageId;
+        emit errorOccurred("Image introuvable");
+        return;
+    }
+
+    QUrl url(filePath);
+    QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
+
+    if (img.save(localPath)) {
+        qDebug() << "[ChatClient] Image saved to:" << localPath;
+    } else {
+        qWarning() << "[ChatClient] Failed to save image to:" << localPath;
+        emit errorOccurred("Impossible de sauvegarder l'image");
+    }
+}
+
+void ChatClient::copyImageToClipboard(const QString &imageId) {
+    QImage img = ChatImageProvider::getImage(imageId);
+    if (img.isNull()) {
+        qWarning() << "[ChatClient] Image not found for ID:" << imageId;
+        return;
+    }
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setImage(img);
+    qDebug() << "[ChatClient] Image copied to clipboard";
 }
