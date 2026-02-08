@@ -20,6 +20,8 @@ class UiStyle : public QObject
     Q_PROPERTY(int z_GRID READ z_GRID CONSTANT FINAL)
     Q_PROPERTY(int z_GLOBAL_MA READ z_GLOBAL_MA CONSTANT FINAL)
 
+    Q_PROPERTY(int z_CHAT_DRAWER READ z_CHAT_DRAWER CONSTANT FINAL)
+
 public:
 
     UiStyle();
@@ -48,12 +50,17 @@ public:
 
     int z_GLOBAL_MA() const;
 
+    int z_CHAT_DRAWER() const;
+
+signals:
+    void z_CHAT_DRAWERChanged();
 
 private:
 
     static UiStyle *m_pThis;
 
     int m_z_CONFIG_PANEL = 10000;
+    int m_z_CHAT_DRAWER = m_z_CONFIG_PANEL + 100;
     int m_z_HUD = 9000;
     int m_z_SELECTION_RECT = 8000;
     int m_z_TEMPLATE_PREVIEW = 7500;

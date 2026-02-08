@@ -177,9 +177,11 @@ void ChatClient::handleKeyUpdate(const QJsonObject &payload) {
 
     QString keyPkgBase64 = payload["key_package"].toString();
     QString nonceBase64 = payload["nonce"].toString();
+    if (nonceBase64.isEmpty())
+        nonceBase64 = payload["key_nonce"].toString();
     int version = payload["version"].toInt(); // Server MUST send version
 
-    if (!keyPkgBase64.isEmpty()) {
+    if (!keyPkgBase64.isEmpty() && !nonceBase64.isEmpty()) {
         qDebug() << "[ChatClient] Key update received (Version" << version << ")";
         QByteArray keyPkg = QByteArray::fromBase64(keyPkgBase64.toUtf8());
         QByteArray nonce = QByteArray::fromBase64(nonceBase64.toUtf8());
@@ -322,10 +324,17 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 
     // Process keys from server (encrypted with lock key; only we can decrypt with password)
     QJsonArray keysArray = payload["keys"].toArray();
+    qDebug() << "[ChatClient] Received" << keysArray.size() << "keys from server";
+    int serverVersion = payload["current_version"].toInt();
+    qDebug() << "[ChatClient] Server version:" << serverVersion;
+    qDebug() << "[ChatClient] Local version:" << m_currentKeyVersion;
+
     for (const QJsonValue &val : keysArray) {
         QJsonObject k = val.toObject();
         QString keyPkgBase64 = k["key_package"].toString();
         QString nonceBase64 = k["nonce"].toString();
+        if (nonceBase64.isEmpty())
+            nonceBase64 = k["key_nonce"].toString(); // Server DB sends key_nonce
         int version = k["version"].toInt();
         if (keyPkgBase64.isEmpty() || nonceBase64.isEmpty()) continue;
         QByteArray keyPkg = QByteArray::fromBase64(keyPkgBase64.toUtf8());
@@ -350,11 +359,9 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
         publishNewKey();
     } else {
         qDebug() << "[ChatClient] Existing keys found. Using latest Version" << m_currentKeyVersion;
-        // Check if server version is higher?
-        // session.version from server is payload["current_version"].
-        int serverVersion = payload["current_version"].toInt();
         if (serverVersion > m_currentKeyVersion) {
-            qWarning() << "[ChatClient] Server has newer version (" << serverVersion << ") than local (" << m_currentKeyVersion << "). We might miss keys.";
+            qDebug() << "[ChatClient] Server had newer version (" << serverVersion << "); key(s) processed above. If still missing, publishing new key to resync.";
+            publishNewKey();
         }
     }
 

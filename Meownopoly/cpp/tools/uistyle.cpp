@@ -73,3 +73,9 @@ int UiStyle::z_GLOBAL_MA () const
 {
     return m_z_GLOBAL_MA;
 }
+
+int UiStyle::z_CHAT_DRAWER() const
+{
+    return m_z_CHAT_DRAWER;
+}
+
