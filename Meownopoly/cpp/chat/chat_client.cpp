@@ -118,12 +118,17 @@ void ChatClient::onConnected() {
     join["payload"] = payload;
 
     sendWebSocketMessage(join);
+
+    // Request participants list right after joining
+    requestParticipants();
 }
 
 void ChatClient::onDisconnected() {
     qDebug() << "[ChatClient] Disconnected from server";
     m_connected = false;
+    m_participants.clear();
     emit connectedChanged();
+    emit participantsChanged();
 }
 
 void ChatClient::sendWebSocketMessage(const QJsonObject &message) {
@@ -149,6 +154,10 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleKeyUpdate(payload);
     } else if (type == "NEW_PARTICIPANT") {
         handleNewParticipant(payload);
+    } else if (type == "PARTICIPANT_LEFT") {
+        handleParticipantLeft(payload);
+    } else if (type == "PARTICIPANTS_LIST") {
+        handleParticipantsList(payload);
     } else if (type == "ERROR") {
         handleError(payload);
     } else if (type == "HISTORY_CLEARED") {
@@ -191,9 +200,76 @@ void ChatClient::handleKeyUpdate(const QJsonObject &payload) {
 }
 
 void ChatClient::handleNewParticipant(const QJsonObject &payload) {
-    Q_UNUSED(payload);
-    qDebug() << "[ChatClient] New participant joined; publishing new session key.";
+    QString playerId = payload["player_id"].toString();
+    qDebug() << "[ChatClient] New participant joined:" << playerId << "; publishing new session key.";
+
+    // Add to local participants list if not already present
+    bool found = false;
+    for (const QVariant &v : m_participants) {
+        if (v.toMap()["player_id"].toString() == playerId) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        QVariantMap participant;
+        participant["player_id"] = playerId;
+        participant["player_nickname"] = payload["player_nickname"].toString();
+        m_participants.append(participant);
+        emit participantsChanged();
+        emit participantJoined(playerId, payload["player_nickname"].toString());
+    }
+
     publishNewKey();
+}
+
+void ChatClient::handleParticipantLeft(const QJsonObject &payload) {
+    QString playerId = payload["player_id"].toString();
+    qDebug() << "[ChatClient] Participant left:" << playerId;
+
+    for (int i = 0; i < m_participants.size(); ++i) {
+        if (m_participants[i].toMap()["player_id"].toString() == playerId) {
+            m_participants.removeAt(i);
+            break;
+        }
+    }
+
+    emit participantsChanged();
+    emit participantLeft(playerId);
+}
+
+void ChatClient::handleParticipantsList(const QJsonObject &payload) {
+    int count = payload["count"].toInt();
+    QJsonArray participantsArray = payload["participants"].toArray();
+
+    qDebug() << "[ChatClient] Received participants list:" << count << "participant(s)";
+
+    m_participants.clear();
+    for (const QJsonValue &val : participantsArray) {
+        QJsonObject p = val.toObject();
+        QVariantMap participant;
+        participant["player_id"] = p["player_id"].toString();
+        participant["player_nickname"] = p["player_nickname"].toString();
+        m_participants.append(participant);
+    }
+
+    emit participantsChanged();
+}
+
+void ChatClient::requestParticipants() {
+    if (!m_connected) {
+        qWarning() << "[ChatClient] Cannot request participants: not connected";
+        return;
+    }
+
+    QJsonObject request;
+    request["type"] = "GET_PARTICIPANTS";
+    QJsonObject payload;
+    payload["session_id"] = m_sessionId;
+    request["payload"] = payload;
+
+    sendWebSocketMessage(request);
+    qDebug() << "[ChatClient] Requested participants list for session" << m_sessionId;
 }
 
 void ChatClient::handleError(const QJsonObject &payload) {

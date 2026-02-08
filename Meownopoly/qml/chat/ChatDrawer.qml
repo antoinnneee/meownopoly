@@ -88,8 +88,164 @@ Drawer {
         spacing: 0
 
         ChatHeader {
+            id: chatHeader
             chatClient: chatClient
             drawer: chatDrawer
+            onToggleParticipantsPanel: participantsPanel.visible = !participantsPanel.visible
+        }
+
+        // Panneau dépliable des participants
+        Rectangle {
+            id: participantsPanel
+            Layout.fillWidth: true
+            Layout.preferredHeight: visible ? participantsPanelContent.implicitHeight + 16 : 0
+            color: "#2d2d2d"
+            border.color: "#3a3a3a"
+            border.width: 1
+            visible: false
+            clip: true
+
+            Behavior on Layout.preferredHeight {
+                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            }
+
+            Column {
+                id: participantsPanelContent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 8
+                spacing: 4
+
+                // Titre du panneau
+                RowLayout {
+                    width: parent.width
+                    spacing: 6
+
+                    Text {
+                        text: "👥"
+                        font.pixelSize: 12
+                    }
+
+                    Text {
+                        text: "Participants connectés"
+                        color: "#aaaaaa"
+                        font.pixelSize: 11
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: chatClient ? chatClient.participantCount.toString() : "0"
+                        color: "#4A90E2"
+                        font.pixelSize: 11
+                        font.bold: true
+                    }
+
+                    // Bouton rafraîchir
+                    Rectangle {
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                        color: refreshBtnArea.containsMouse ? "#444444" : "transparent"
+                        radius: 4
+
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 10
+                            anchors.centerIn: parent
+                        }
+
+                        MouseArea {
+                            id: refreshBtnArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (chatClient) chatClient.requestParticipants()
+                            }
+                        }
+
+                        ToolTip {
+                            visible: refreshBtnArea.containsMouse
+                            text: "Rafraîchir la liste"
+                            delay: 400
+                        }
+                    }
+                }
+
+                // Séparateur
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#3a3a3a"
+                }
+
+                // Liste des participants
+                Repeater {
+                    model: chatClient ? chatClient.participants : []
+
+                    Rectangle {
+                        width: participantsPanelContent.width
+                        height: 28
+                        color: participantHoverArea.containsMouse ? "#383838" : "transparent"
+                        radius: 4
+
+                        Behavior on color { ColorAnimation { duration: 100 } }
+
+                        MouseArea {
+                            id: participantHoverArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+                            spacing: 8
+
+                            // Indicateur en ligne
+                            Rectangle {
+                                Layout.preferredWidth: 8
+                                Layout.preferredHeight: 8
+                                radius: 4
+                                color: "#4a8a4a"
+                                border.color: "#569c58"
+                                border.width: 1
+                            }
+
+                            Text {
+                                text: modelData.player_nickname || modelData.player_id || "?"
+                                color: (modelData.player_id === chatDrawer.playerId) ? "#4A90E2" : "#cccccc"
+                                font.pixelSize: 11
+                                font.bold: modelData.player_id === chatDrawer.playerId
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+
+                            Text {
+                                text: (modelData.player_id === chatDrawer.playerId) ? "(vous)" : ""
+                                color: "#888888"
+                                font.pixelSize: 9
+                                font.italic: true
+                                visible: modelData.player_id === chatDrawer.playerId
+                            }
+                        }
+                    }
+                }
+
+                // Message si aucun participant
+                Text {
+                    text: "Aucun participant connecté"
+                    color: "#666666"
+                    font.pixelSize: 10
+                    font.italic: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: !chatClient || chatClient.participantCount === 0
+                    topPadding: 4
+                    bottomPadding: 4
+                }
+            }
         }
 
         ChatMessagesList {
@@ -108,6 +264,7 @@ Drawer {
             connected: chatClient.connected
             messageCount: messagesList.messageList ? messagesList.messageList.count : 0
             playerNickname: chatDrawer.playerNickname
+            participantCount: chatClient.participantCount
         }
     }
 

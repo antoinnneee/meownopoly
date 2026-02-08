@@ -168,6 +168,9 @@ function handleCommand(ws, msg) {
         case 'CLEAR_HISTORY':
             handleClearHistory(ws, payload);
             break;
+        case 'GET_PARTICIPANTS':
+            handleGetParticipants(ws, payload);
+            break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
     }
@@ -332,6 +335,35 @@ function handleClearHistory(ws, payload) {
     }
 }
 
+function handleGetParticipants(ws, payload) {
+    const { session_id } = payload;
+    if (!session_id) return;
+
+    const room = rooms.get(session_id);
+    const participants = [];
+
+    if (room) {
+        room.forEach(client => {
+            if (client.readyState === WebSocket.OPEN && client.player_id) {
+                participants.push({
+                    player_id: client.player_id,
+                    player_nickname: client.player_nickname || ''
+                });
+            }
+        });
+    }
+
+    ws.send(JSON.stringify({
+        type: 'PARTICIPANTS_LIST',
+        payload: {
+            session_id,
+            count: participants.length,
+            participants
+        }
+    }));
+    debug(`Participants list sent for session ${session_id}: ${participants.length} participant(s)`);
+}
+
 function sendError(ws, code, message) {
     ws.send(JSON.stringify({
         type: 'ERROR',
@@ -349,11 +381,29 @@ function checkDbSize() {
 
 function removeFromRooms(ws) {
     if (ws.session_id && rooms.has(ws.session_id)) {
-        const room = rooms.get(ws.session_id);
+        const sessionId = ws.session_id;
+        const playerId = ws.player_id;
+        const room = rooms.get(sessionId);
         room.delete(ws);
+
         if (room.size === 0) {
-            rooms.delete(ws.session_id);
-            keyRotationRequired.delete(ws.session_id);
+            rooms.delete(sessionId);
+            keyRotationRequired.delete(sessionId);
+        } else if (playerId) {
+            // Notify remaining participants that someone left
+            const leftMsg = JSON.stringify({
+                type: 'PARTICIPANT_LEFT',
+                payload: {
+                    session_id: sessionId,
+                    player_id: playerId
+                }
+            });
+            room.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(leftMsg);
+                }
+            });
+            debug(`Participant ${playerId} left session ${sessionId}; ${room.size} remaining`);
         }
     }
 }

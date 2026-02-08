@@ -12,6 +12,7 @@ Rectangle {
 
     property var chatClient
     property var drawer
+    signal toggleParticipantsPanel()
 
     // Zone de redimensionnement sur le bord gauche
     Rectangle {
@@ -83,6 +84,52 @@ Rectangle {
             font.pixelSize: 14
             font.bold: true
             Layout.fillWidth: true
+        }
+
+        // Participants badge
+        Rectangle {
+            Layout.preferredHeight: 24
+            Layout.preferredWidth: participantsBadgeRow.implicitWidth + 16
+            color: participantsBtnArea.containsMouse ? "#444444" : "#3a3a3a"
+            radius: 12
+            border.color: participantsBtnArea.containsMouse ? "#4A90E2" : "#555555"
+            border.width: 1
+            visible: chatClient && chatClient.connected
+
+            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on border.color { ColorAnimation { duration: 150 } }
+
+            RowLayout {
+                id: participantsBadgeRow
+                anchors.centerIn: parent
+                spacing: 4
+
+                Text {
+                    text: "👥"
+                    font.pixelSize: 11
+                }
+
+                Text {
+                    text: chatClient ? chatClient.participantCount : "0"
+                    color: "#cccccc"
+                    font.pixelSize: 11
+                    font.bold: true
+                }
+            }
+
+            MouseArea {
+                id: participantsBtnArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: headerBar.toggleParticipantsPanel()
+            }
+
+            ToolTip {
+                visible: participantsBtnArea.containsMouse
+                text: "Participants connectés"
+                delay: 600
+            }
         }
 
         Rectangle {

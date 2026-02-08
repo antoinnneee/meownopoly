@@ -12,6 +12,7 @@ Rectangle {
     property bool connected: false
     property int messageCount: 0
     property string playerNickname: ""
+    property int participantCount: 0
 
     RowLayout {
         anchors.fill: parent
@@ -26,6 +27,18 @@ Rectangle {
         }
 
         Item { Layout.fillWidth: true }
+
+        Text {
+            text: "👥 " + participantCount
+            color: "#666666"
+            font.pixelSize: 9
+        }
+
+        Text {
+            text: "│"
+            color: "#444444"
+            font.pixelSize: 9
+        }
 
         Text {
             text: messageCount + " messages"
