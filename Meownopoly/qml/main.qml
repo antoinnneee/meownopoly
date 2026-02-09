@@ -8,6 +8,7 @@ import "launcher/"
 import "board"
 import "editor"
 import "account/"
+import "multiplayer/"
 
 import QtQuick.Window
 import Qt.labs.platform
@@ -71,6 +72,10 @@ ApplicationWindow {
             
             onAssetManagerTestRequested: {
                 stackView.push(assetManagerTest)
+            }
+            
+            onMultiplayerLobbyRequested: {
+                stackView.push(multiplayerLobby)
             }
         }
     }
@@ -160,6 +165,18 @@ ApplicationWindow {
             onBackRequested: {
                 stackView.pop()
                 stackView.push(titleScreen)
+            }
+        }
+    }
+    
+    Component {
+        id: multiplayerLobby
+        MultiplayerLobby {
+            width: root.width
+            height: root.height
+            
+            onBackToTitleScreen: {
+                stackView.pop()
             }
         }
     }
