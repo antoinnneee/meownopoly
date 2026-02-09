@@ -137,7 +137,7 @@ Base_Board {
                 console.log("Mouse entered selection button area, moving info and chat buttons")
                 console.log("BtSideMenu.height" + BtSideMenu.height )
                 btInfoMap.y =   (Screen.pixelDensity * 20)  + 10
-                btChat.y =      (Screen.pixelDensity * 20) * 2 + 10
+                btChat.y =      (Screen.pixelDensity * 20) * 2  + 10
             }
             onExited: {
                 console.log("Mouse exited selection button area, resetting info and chat buttons position")
