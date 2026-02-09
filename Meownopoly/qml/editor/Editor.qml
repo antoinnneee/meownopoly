@@ -119,29 +119,41 @@ Base_Board {
         z: UiStyle.z_HUD + 1
 
 
-        Component.onCompleted: {
-            btInfoMap.y  = btSelection.y; btInfoMap.x   = btSelection.x
-            btChat.y     = btSelection.y; btChat.x      = btSelection.x
+
+        property real xOrigin
+        property real yOrigin
+
+        function resetPosition() {
+            xOrigin = x
+            yOrigin = y
+            btChat.x = x
+            btChat.y = y
+            btInfoMap.x = x
+            btInfoMap.y = y
         }
+
+        Component.onCompleted: resetPosition()
+        onXChanged: resetPosition()
+        onYChanged: resetPosition()
+
         MouseArea {
             id: btSelMouseArea
             propagateComposedEvents: true
+            hoverEnabled: true
+
             Component.onCompleted:{
                 width = parent.width
                 height = parent.height
             }
 
-            hoverEnabled: true
             onEntered: {
                 height = (btSelection.height * 3) + 10
-                console.log("Mouse entered selection button area, moving info and chat buttons")
-                console.log("BtSideMenu.height" + BtSideMenu.height )
                 btInfoMap.y =   (Screen.pixelDensity * 20)  + 10
                 btChat.y =      (Screen.pixelDensity * 20) * 2  + 10
             }
             onExited: {
-                btInfoMap.y = btSelection.y
-                btChat.y = btSelection.y
+                btInfoMap.x = btSelection.xOrigin; btInfoMap.y = btSelection.yOrigin
+                btChat.x = btSelection.xOrigin; btChat.y = btSelection.yOrigin
             }
         }
     }
