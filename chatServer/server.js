@@ -20,6 +20,7 @@ const MAX_PAYLOAD_SIZE = parseInt(process.env.MAX_PAYLOAD_SIZE) || 10 * 1024 * 1
 const MAX_DB_SIZE = parseInt(process.env.MAX_DB_SIZE) || 500 * 1024 * 1024; // 500 MB
 const DEBUG_MODE = process.env.DEBUG_MODE === 'true';
 const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD === 'true';
+const MAX_SESSIONS = 500; // Limite de sessions actives
 
 function debug(...args) {
     if (DEBUG_MODE) {
@@ -177,6 +178,9 @@ function handleCommand(ws, msg) {
         case 'DELETE_SESSION':
             handleDeleteSession(ws, payload);
             break;
+        case 'LIST_SESSIONS':
+            handleListSessions(ws);
+            break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
     }
@@ -185,6 +189,12 @@ function handleCommand(ws, msg) {
 function handleJoinSession(ws, payload) {
     const { session_id, player_id, player_nickname } = payload;
     if (!session_id || !player_id) return;
+
+    // VÉRIFICATION: Limite de sessions
+    if (!rooms.has(session_id) && rooms.size >= MAX_SESSIONS) {
+        return sendError(ws, 'MAX_SESSIONS_REACHED', 
+            `Server has reached maximum capacity (${MAX_SESSIONS} active sessions). Please try again later.`);
+    }
 
     ws.player_id = player_id;
     ws.player_nickname = player_nickname || '';
@@ -392,6 +402,58 @@ function handleGetParticipants(ws, payload) {
         }
     }));
     debug(`Participants list sent for session ${session_id}: ${participants.length} participant(s)`);
+}
+
+function handleListSessions(ws) {
+    debug('Listing all active sessions');
+    
+    // Récupère toutes les sessions actives
+    const activeSessions = [];
+    
+    for (const [sessionId, clients] of rooms.entries()) {
+        const participants = db.getParticipants(sessionId);
+        const session = db.getSession(sessionId);
+        
+        // Ne lister que les sessions qui ont des participants
+        if (participants.length > 0) {
+            // Déterminer qui est en ligne
+            const onlinePlayerIds = new Set();
+            for (const client of clients) {
+                if (client.player_id && client.readyState === WebSocket.OPEN) {
+                    onlinePlayerIds.add(client.player_id);
+                }
+            }
+            
+            activeSessions.push({
+                session_id: sessionId,
+                host_id: participants[0].player_id, // Premier participant = hôte
+                host_nickname: participants[0].nickname || participants[0].player_id,
+                player_count: participants.length,
+                max_players: 4, // Valeur par défaut, sera personnalisable plus tard
+                created_at: session ? session.created_at : new Date().toISOString(),
+                online_count: onlinePlayerIds.size,
+                status: participants.length >= 4 ? 'full' : 'available'
+            });
+        }
+    }
+    
+    // Trier par date de création (plus récentes en premier)
+    activeSessions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    // Limiter à MAX_SESSIONS
+    const limitedSessions = activeSessions.slice(0, MAX_SESSIONS);
+    
+    ws.send(JSON.stringify({
+        type: 'SESSIONS_LIST',
+        payload: {
+            sessions: limitedSessions,
+            total: activeSessions.length,
+            limit: MAX_SESSIONS,
+            limited: activeSessions.length > MAX_SESSIONS
+        }
+    }));
+    
+    debug(`Sent ${limitedSessions.length}/${activeSessions.length} sessions to client (limit: ${MAX_SESSIONS})`);
 }
 
 function handleLeaveSession(ws, payload) {

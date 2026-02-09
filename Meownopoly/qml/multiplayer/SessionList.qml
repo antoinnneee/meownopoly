@@ -2,10 +2,12 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../ui_item"
+import Meownopoly.Chat 1.0
+import Meownopoly.Account 1.0
 
 /**
  * Vue complète de la liste des sessions disponibles
- * Contient: header, compteur joueurs, liste, bouton création, help text
+ * Connectée au serveur chat pour récupérer les sessions réelles
  */
 Rectangle {
     id: root
@@ -13,43 +15,61 @@ Rectangle {
     color: "#1a1a1a"
     
     signal sessionSelected(var sessionData)
-
-    // Modèle de données factices (5 sessions)
-    ListModel {
-        id: sessionsModel
-        ListElement {
-            name: "Partie de Minuit 🌙"
-            sessionId: "MSN-2847"
-            players: 2
-            maxPlayers: 4
+    
+    // Instance ChatClient pour le lobby
+    ChatClient {
+        id: lobbyChatClient
+        sessionId: "lobby_discovery" // Session spéciale pour la découverte
+        
+        onConnectedChanged: {
+            if (connected) {
+                console.log("✅ Lobby connected, requesting sessions...")
+                lobbyChatClient.requestSessionsList()
+                refreshTimer.start()
+            } else {
+                console.log("❌ Lobby disconnected")
+                refreshTimer.stop()
+            }
         }
-        ListElement {
-            name: "Les Chats Royaux"
-            sessionId: "RYL-5612"
-            players: 3
-            maxPlayers: 4
+        
+        onAvailableSessionsChanged: {
+            console.log("📋 Sessions updated:", lobbyChatClient.availableSessions.length)
         }
-        ListElement {
-            name: "Patte de Velours"
-            sessionId: "VLV-8923"
-            players: 1
-            maxPlayers: 4
-        }
-        ListElement {
-            name: "Ronron Express"
-            sessionId: "RNR-3456"
-            players: 4
-            maxPlayers: 4
-        }
-        ListElement {
-            name: "Griffes & Stratégie"
-            sessionId: "GRF-7891"
-            players: 2
-            maxPlayers: 6
+        
+        onErrorOccurred: function(error) {
+            console.error("❌ Lobby error:", error)
+            errorText.text = "Erreur: " + error
+            errorText.visible = true
         }
     }
-
-
+    
+    // Timer de rafraîchissement automatique
+    Timer {
+        id: refreshTimer
+        interval: 5000 // Rafraîchir toutes les 5 secondes
+        running: false
+        repeat: true
+        onTriggered: {
+            if (lobbyChatClient.connected) {
+                lobbyChatClient.requestSessionsList()
+            }
+        }
+    }
+    
+    Component.onCompleted: {
+        console.log("🚀 SessionList loaded, connecting to server...")
+        // Se connecter au serveur
+        lobbyChatClient.connectToServer(
+            "ws://pattounecorp.ovh:3000",
+            AccountManager.uniqueId,
+            "123", // Mot de passe pour le lobby
+            AccountManager.nickname
+        )
+    }
+    
+    Component.onDestruction: {
+        refreshTimer.stop()
+    }
     
     ColumnLayout {
         anchors.fill: parent
@@ -70,11 +90,24 @@ Rectangle {
             }
             
             Text {
-                text: "🐱 " + sessionsModel.count + " parties en cours"
-                color: "#888888"
+                text: lobbyChatClient.connected ? 
+                    ("🐱 " + lobbyChatClient.availableSessions.length + " parties en cours") :
+                    "🔌 Connexion au serveur..."
+                color: lobbyChatClient.connected ? "#888888" : "#ff9800"
                 font.pixelSize: 18
                 Layout.alignment: Qt.AlignHCenter
             }
+        }
+        
+        // Message d'erreur
+        Text {
+            id: errorText
+            visible: false
+            color: "#f44336"
+            font.pixelSize: 14
+            Layout.alignment: Qt.AlignHCenter
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
         }
         
         // COMPTEUR EN LIGNE INTÉGRÉ
@@ -84,7 +117,7 @@ Rectangle {
             Layout.preferredHeight: 40
             color: "#2a2a2a"
             radius: 20
-            border.color: "#4caf50"
+            border.color: lobbyChatClient.connected ? "#4caf50" : "#666666"
             border.width: 2
             
             Row {
@@ -92,14 +125,14 @@ Rectangle {
                 spacing: 10
                 
                 Text {
-                    text: "🌐"
+                    text: lobbyChatClient.connected ? "🌐" : "⏳"
                     font.pixelSize: 18
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 
                 Text {
-                    text: "127 joueurs en ligne"
-                    color: "#4caf50"
+                    text: lobbyChatClient.connected ? "Serveur connecté" : "Connexion..."
+                    color: lobbyChatClient.connected ? "#4caf50" : "#888888"
                     font.pixelSize: 14
                     font.bold: true
                     anchors.verticalCenter: parent.verticalCenter
@@ -107,29 +140,63 @@ Rectangle {
             }
         }
         
-        // LISTE DES SESSIONS
+        // LISTE DES SESSIONS (DONNÉES RÉELLES)
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
             
+            // Message si aucune session
+            Item {
+                width: parent.width
+                height: sessionsListView.count === 0 ? 200 : 0
+                visible: sessionsListView.count === 0
+                
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 16
+                    
+                    Text {
+                        text: lobbyChatClient.connected ? "😿" : "⏳"
+                        font.pixelSize: 48
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                    
+                    Text {
+                        text: lobbyChatClient.connected ? 
+                            "Aucune partie disponible pour l'instant" :
+                            "Connexion au serveur..."
+                        color: "#888888"
+                        font.pixelSize: 16
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+                    
+                    Text {
+                        text: "Créez une nouvelle session pour commencer !"
+                        color: "#666666"
+                        font.pixelSize: 14
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: lobbyChatClient.connected
+                    }
+                }
+            }
+            
             ListView {
                 id: sessionsListView
-                model: sessionsModel
+                model: lobbyChatClient.availableSessions // 🎯 DONNÉES RÉELLES !
                 spacing: 12
+                width: parent.width
                 
                 delegate: SessionCard {
-                    name: model.name
-                    sessionId: model.sessionId
-                    players: model.players
-                    maxPlayers: model.maxPlayers
+                    // Les propriétés sont automatiquement liées via required property
                     
                     onClicked: {
+                        console.log("Session sélectionnée:", sessionId)
                         root.sessionSelected({
-                            name: model.name,
-                            sessionId: model.sessionId,
-                            players: model.players,
-                            maxPlayers: model.maxPlayers
+                            name: name,
+                            sessionId: sessionId,
+                            players: players,
+                            maxPlayers: maxPlayers
                         })
                     }
                 }
@@ -143,14 +210,18 @@ Rectangle {
             Layout.preferredWidth: 250
             Layout.preferredHeight: 55
             
+            enabled: lobbyChatClient.connected
+            
             particleColor: "#E67E22"
             particleColorVariation: "#ff9800"
             particleCount: 25
             
             background: Rectangle {
-                color: parent.down ? "#d35400" : "#E67E22"
+                color: parent.enabled ? 
+                    (parent.down ? "#d35400" : "#E67E22") : "#555555"
                 radius: 8
-                border.color: parent.hovered ? "#FFFFFF" : "#d35400"
+                border.color: parent.enabled ?
+                    (parent.hovered ? "#FFFFFF" : "#d35400") : "#666666"
                 border.width: 2
                 
                 Rectangle {
@@ -168,23 +239,61 @@ Rectangle {
                 text: parent.text
                 font.pixelSize: 16
                 font.bold: true
-                color: "white"
+                color: parent.enabled ? "white" : "#888888"
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
             
             onClicked: {
-                console.log("Création de session demandée (pas encore implémenté)")
+                console.log("⚠️ Création de session demandée (pas encore implémenté)")
             }
         }
         
-        // HELP TEXT INTÉGRÉ
-        Text {
-            text: "💡 Cliquez sur une session pour rejoindre"
-            color: "#666666"
-            font.pixelSize: 14
-            font.italic: true
+        // HELP TEXT INTÉGRÉ avec bouton refresh
+        Row {
             Layout.alignment: Qt.AlignHCenter
+            spacing: 16
+            
+            Text {
+                text: "💡 Cliquez sur une session pour rejoindre"
+                color: "#666666"
+                font.pixelSize: 14
+                font.italic: true
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            
+            Button {
+                text: "🔄"
+                width: 32
+                height: 32
+                
+                background: Rectangle {
+                    color: parent.pressed ? "#444444" : "#333333"
+                    radius: 16
+                    border.color: "#555555"
+                    border.width: 1
+                }
+                
+                contentItem: Text {
+                    text: parent.text
+                    color: "#cccccc"
+                    font.pixelSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                
+                onClicked: {
+                    if (lobbyChatClient.connected) {
+                        lobbyChatClient.requestSessionsList()
+                    }
+                }
+                
+                ToolTip {
+                    visible: parent.hovered
+                    text: "Rafraîchir la liste"
+                    delay: 500
+                }
+            }
         }
     }
 }
