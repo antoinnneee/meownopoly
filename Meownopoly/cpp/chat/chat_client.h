@@ -21,6 +21,7 @@ class ChatClient : public QObject
     Q_PROPERTY(QVariantList messages READ messages NOTIFY messagesChanged)
     Q_PROPERTY(QVariantList participants READ participants NOTIFY participantsChanged)
     Q_PROPERTY(int participantCount READ participantCount NOTIFY participantsChanged)
+    Q_PROPERTY(QVariantList availableSessions READ availableSessions NOTIFY availableSessionsChanged)
 
 public:
     explicit ChatClient(QObject *parent = nullptr);
@@ -32,6 +33,7 @@ public:
     QVariantList messages() const { return m_messages; }
     QVariantList participants() const { return m_participants; }
     int participantCount() const { return m_participants.size(); }
+    QVariantList availableSessions() const { return m_availableSessions; }
 
     Q_INVOKABLE void connectToServer(const QString &url, const QString &playerId, const QString &password, const QString &nickname = QString());
     Q_INVOKABLE void sendMessage(const QString &text);
@@ -45,6 +47,7 @@ public:
     Q_INVOKABLE void saveImageToFile(const QString &imageId, const QString &filePath);
     Q_INVOKABLE void copyImageToClipboard(const QString &imageId);
     Q_INVOKABLE void requestParticipants();
+    Q_INVOKABLE void requestSessionsList();
 
     static void registerQml(QQmlEngine *engine = nullptr) {
         qmlRegisterType<ChatClient>("Meownopoly.Chat", 1, 0, "ChatClient");
@@ -61,6 +64,7 @@ signals:
     void participantJoined(const QString &playerId, const QString &playerNickname);
     void participantLeft(const QString &playerId);
     void errorOccurred(const QString &error);
+    void availableSessionsChanged();
 
 private slots:
     void onConnected();
@@ -75,6 +79,7 @@ private:
     void handleNewParticipant(const QJsonObject &payload);
     void handleParticipantLeft(const QJsonObject &payload);
     void handleParticipantsList(const QJsonObject &payload);
+    void handleSessionsList(const QJsonObject &payload);
     void handleError(const QJsonObject &payload);
     void handleHistoryCleared();
     void sendWebSocketMessage(const QJsonObject &message);
@@ -97,6 +102,7 @@ private:
     int m_currentKeyVersion = 0;
     QVariantList m_messages;
     QVariantList m_participants;
+    QVariantList m_availableSessions;
     
     ChatDatabase m_db;
     

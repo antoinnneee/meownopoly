@@ -125,5 +125,13 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/TP_Content.qml</file>
         <file>qml/editor/logic/MouseLogic_Template.qml</file>
+        <file>qml/multiplayer/components/BackButton.qml</file>
+        <file>qml/multiplayer/components/StatusIndicator.qml</file>
+        <file>qml/multiplayer/MultiplayerLobby.qml</file>
+        <file>qml/multiplayer/PlayerCard.qml</file>
+        <file>qml/multiplayer/SessionCard.qml</file>
+        <file>qml/multiplayer/SessionCreation.qml</file>
+        <file>qml/multiplayer/SessionDetails.qml</file>
+        <file>qml/multiplayer/SessionList.qml</file>
     </qresource>
 </RCC>

@@ -162,6 +162,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleParticipantLeft(payload);
     } else if (type == "PARTICIPANTS_LIST") {
         handleParticipantsList(payload);
+    } else if (type == "SESSIONS_LIST") {
+        handleSessionsList(payload);
     } else if (type == "ERROR") {
         handleError(payload);
     } else if (type == "HISTORY_CLEARED") {
@@ -271,6 +273,40 @@ void ChatClient::handleParticipantsList(const QJsonObject &payload) {
     emit participantsChanged();
 }
 
+void ChatClient::handleSessionsList(const QJsonObject &payload) {
+    qDebug() << "[ChatClient] Received sessions list";
+    
+    m_availableSessions.clear();
+    
+    QJsonArray sessions = payload["sessions"].toArray();
+    int total = payload["total"].toInt();
+    int limit = payload["limit"].toInt();
+    bool limited = payload["limited"].toBool();
+    
+    if (limited) {
+        qWarning() << "[ChatClient] Sessions list is limited:" << sessions.size() << "/" << total;
+    }
+    
+    for (const QJsonValue &val : sessions) {
+        QJsonObject session = val.toObject();
+        
+        QVariantMap sessionMap;
+        sessionMap["name"] = session["session_id"].toString(); // Utilisé pour l'affichage
+        sessionMap["sessionId"] = session["session_id"].toString();
+        sessionMap["players"] = session["player_count"].toInt();
+        sessionMap["maxPlayers"] = session["max_players"].toInt();
+        sessionMap["hostNickname"] = session["host_nickname"].toString();
+        sessionMap["onlineCount"] = session["online_count"].toInt();
+        sessionMap["status"] = session["status"].toString();
+        sessionMap["createdAt"] = session["created_at"].toString();
+        
+        m_availableSessions.append(sessionMap);
+    }
+    
+    qDebug() << "[ChatClient] Sessions list updated:" << m_availableSessions.size() << "sessions";
+    emit availableSessionsChanged();
+}
+
 void ChatClient::requestParticipants() {
     if (!m_connected) {
         qWarning() << "[ChatClient] Cannot request participants: not connected";
@@ -285,6 +321,21 @@ void ChatClient::requestParticipants() {
 
     sendWebSocketMessage(request);
     qDebug() << "[ChatClient] Requested participants list for session" << m_sessionId;
+}
+
+void ChatClient::requestSessionsList() {
+    if (!m_connected) {
+        qWarning() << "[ChatClient] Cannot request sessions list: not connected";
+        return;
+    }
+    
+    qDebug() << "[ChatClient] Requesting sessions list";
+    
+    QJsonObject msg;
+    msg["type"] = "LIST_SESSIONS";
+    msg["payload"] = QJsonObject();
+    
+    sendWebSocketMessage(msg);
 }
 
 void ChatClient::handleError(const QJsonObject &payload) {
@@ -313,6 +364,7 @@ void ChatClient::publishNewKey() {
     QJsonObject p;
     p["session_id"] = m_sessionId;
     p["blob"] = QString(encryptedPkg.toBase64());
+
     p["nonce"] = QString(nonce.toBase64());
     publish["payload"] = p;
     sendWebSocketMessage(publish);
