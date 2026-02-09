@@ -88,3 +88,17 @@ void TestManager::testSetStunServer(QString ip, int port)
         m_serverManager->setStunServer(ip, (quint16)port);
     }
 }
+
+void TestManager::testSetPeer(QString ip, int port)
+{
+    if (m_serverManager) {
+        m_serverManager->setPeer(ip, (quint16)port);
+    }
+}
+
+void TestManager::testSendMessage(QString message)
+{
+    if (m_serverManager) {
+        m_serverManager->sendMessageToPeer(message);
+    }
+}

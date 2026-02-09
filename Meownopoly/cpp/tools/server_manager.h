@@ -16,6 +16,9 @@ public:
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void sendStunRequest();
     Q_INVOKABLE void setStunServer(QString ip, quint16 port);
+    
+    Q_INVOKABLE void setPeer(QString ip, quint16 port);
+    Q_INVOKABLE void sendMessageToPeer(QString message);
 
 signals:
     void log(QString message);
@@ -36,6 +39,9 @@ private:
     quint16 m_publicPort;
     QHostAddress m_stunSenderAddress;
     quint16 m_stunSenderPort;
+    
+    QHostAddress m_peerAddress;
+    quint16 m_peerPort;
 };
 
 #endif // SERVER_MANAGER_H

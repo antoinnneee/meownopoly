@@ -111,7 +111,34 @@ void ServerManager::onReadyRead()
         // Check if it's a STUN response (basic check)
         if (datagram.size() >= 20) {
             handleStunResponse(datagram, sender, senderPort);
+        } else {
+             // Assume text message
+             QString msg = QString::fromUtf8(datagram);
+             emit log("Received Message from " + sender.toString() + ":" + QString::number(senderPort) + " -> " + msg);
         }
+    }
+}
+
+void ServerManager::setPeer(QString ip, quint16 port)
+{
+    m_peerAddress = QHostAddress(ip);
+    m_peerPort = port;
+    emit log("Peer set to: " + m_peerAddress.toString() + ":" + QString::number(m_peerPort));
+}
+
+void ServerManager::sendMessageToPeer(QString message)
+{
+    if (m_peerAddress.isNull() || m_peerPort == 0) {
+        emit log("Peer not configured/invalid.");
+        return;
+    }
+    
+    QByteArray data = message.toUtf8();
+    qint64 bytes = m_socket->writeDatagram(data, m_peerAddress, m_peerPort);
+    if (bytes == -1) {
+        emit log("Failed to send to peer: " + m_socket->errorString());
+    } else {
+        emit log("Sent to " + m_peerAddress.toString() + ":" + QString::number(m_peerPort) + " via Main Port: " + message);
     }
 }
 
