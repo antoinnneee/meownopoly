@@ -118,9 +118,10 @@ Base_Board {
         anchors.topMargin: 10
         z: UiStyle.z_HUD + 1
 
+
         Component.onCompleted: {
-            btInfoMap.y = btSelection.y; btInfoMap.x = btSelection.x
-            btChat.y = btSelection.y; btChat.x = btSelection.x
+            btInfoMap.y  = btSelection.y; btInfoMap.x   = btSelection.x
+            btChat.y     = btSelection.y; btChat.x      = btSelection.x
         }
         MouseArea {
             id: btSelMouseArea
@@ -134,8 +135,9 @@ Base_Board {
             onEntered: {
                 height = (btSelection.height * 3) + 10
                 console.log("Mouse entered selection button area, moving info and chat buttons")
-                btInfoMap.y += btSelection.height + 10
-                btChat.y += (btSelection.height * 2) + 10
+                console.log("BtSideMenu.height" + BtSideMenu.height )
+                btInfoMap.y =   (Screen.pixelDensity * 20)  + 10
+                btChat.y =      (Screen.pixelDensity * 20) * 2 + 10
             }
             onExited: {
                 console.log("Mouse exited selection button area, resetting info and chat buttons position")
