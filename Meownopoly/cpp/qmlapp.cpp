@@ -33,6 +33,7 @@
 
 #include "tools/editorenum.h"
 #include "tools/uistyle.h"
+#include "tools/test_manager.h"
 
 #include "game/physics/pattounx_engine.h"
 
@@ -73,6 +74,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     Logger::registerQml();
     CursorManager::registerQml();
     UndoRedoManager::registerQml();
+    TestManager::registerQml();
     
     PattounX_engine::registerQml();
     ChatClient::registerQml(this);
