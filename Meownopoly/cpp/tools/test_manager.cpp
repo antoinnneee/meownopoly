@@ -4,7 +4,7 @@
 
 TestManager *TestManager::m_instance = nullptr;
 
-TestManager::TestManager(QObject *parent) : QObject(parent)
+TestManager::TestManager(QObject *parent) : QObject(parent), m_serverManager(nullptr)
 {
 }
 
@@ -50,4 +50,25 @@ void TestManager::testAction4()
 {
     Logger::instance()->error("Test Action 4 executed from C++", "TestManager");
     qDebug() << "Test Action 4 executed";
+}
+
+void TestManager::testUdpServer()
+{
+    if (!m_serverManager) {
+        m_serverManager = new ServerManager(this);
+        connect(m_serverManager, &ServerManager::log, [](QString msg){
+            Logger::instance()->info(msg, "ServerManager");
+            // qDebug() << "[ServerManager]" << msg;
+        });
+    }
+    m_serverManager->startServer();
+}
+
+void TestManager::testSendStun()
+{
+    if (m_serverManager) {
+        m_serverManager->sendStunRequest();
+    } else {
+        Logger::instance()->warn("Server not started. Start UDP Server first.", "TestManager");
+    }
 }

@@ -40,7 +40,8 @@ Rectangle {
                     { name: "Test 1", action: function() { TestManager.testAction1() } },
                     { name: "Test 2", action: function() { TestManager.testAction2() } },
                     { name: "Test 3", action: function() { TestManager.testAction3() } },
-                    { name: "Test 4", action: function() { TestManager.testAction4() } }
+                    { name: "Send STUN", action: function() { TestManager.testSendStun() } },
+                    { name: "Start UDP", action: function() { TestManager.testUdpServer() } }
                 ]
 
                 delegate: Button {
