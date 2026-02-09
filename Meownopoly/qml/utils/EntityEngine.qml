@@ -296,16 +296,16 @@ Item {
         }
     }
 
-
     // --- Boucle de Mouvement ---
     FrameAnimation {
         id: movementLoop
 
         running: root.targetEntity !== null
+        property real fps: smoothFrameTime > 0 ? (1.0 / smoothFrameTime) : 0
+
 
         onTriggered: {
             if (!root.targetEntity) return
-
             var dt = frameTime
 
             if (root.freeCamMode) {
