@@ -38,6 +38,8 @@ SOURCES += \
     cpp/game/physics/pattounx_body.cpp \
     cpp/game/physics/pattounx_zone.cpp \
     cpp/game/physics/pattounx_engine.cpp \
+    cpp/tools/server_manager.cpp \
+    cpp/tools/test_manager.cpp \
     cpp/tools/uistyle.cpp \
     tools/QtFolderCompressor/FolderCompressor.cpp \
     assetManager/asset_manager.cpp \
@@ -92,6 +94,8 @@ HEADERS += \
     cpp/game/physics/pattounx_body.h \
     cpp/game/physics/pattounx_zone.h \
     cpp/game/physics/pattounx_engine.h \
+    cpp/tools/server_manager.h \
+    cpp/tools/test_manager.h \
     cpp/tools/uistyle.h \
     tools/QtFolderCompressor/FolderCompressor.h \
     assetManager/asset_manager.h \

@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const db = require('./database');
 const cleanup = require('./cleanup');
+const stun = require('./simple_stun');
 
 // Initialize TTL cleanup (every hour) - Optional
 const enableTtl = process.env.ENABLE_TTL !== 'false';
@@ -18,6 +19,7 @@ if (enableTtl) {
 const PORT = process.env.PORT || 3000;
 const MAX_PAYLOAD_SIZE = parseInt(process.env.MAX_PAYLOAD_SIZE) || 10 * 1024 * 1024; // 10 MB
 const MAX_DB_SIZE = parseInt(process.env.MAX_DB_SIZE) || 500 * 1024 * 1024; // 500 MB
+const STUN_PORT = parseInt(process.env.STUN_PORT) || 3478;
 const DEBUG_MODE = process.env.DEBUG_MODE === 'true';
 const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD === 'true';
 const MAX_SESSIONS = 500; // Limite de sessions actives
@@ -192,7 +194,7 @@ function handleJoinSession(ws, payload) {
 
     // VÉRIFICATION: Limite de sessions
     if (!rooms.has(session_id) && rooms.size >= MAX_SESSIONS) {
-        return sendError(ws, 'MAX_SESSIONS_REACHED', 
+        return sendError(ws, 'MAX_SESSIONS_REACHED',
             `Server has reached maximum capacity (${MAX_SESSIONS} active sessions). Please try again later.`);
     }
 
@@ -406,14 +408,14 @@ function handleGetParticipants(ws, payload) {
 
 function handleListSessions(ws) {
     debug('Listing all active sessions');
-    
+
     // Récupère toutes les sessions actives
     const activeSessions = [];
-    
+
     for (const [sessionId, clients] of rooms.entries()) {
         const participants = db.getParticipants(sessionId);
         const session = db.getSession(sessionId);
-        
+
         // Ne lister que les sessions qui ont des participants
         if (participants.length > 0) {
             // Déterminer qui est en ligne
@@ -423,7 +425,7 @@ function handleListSessions(ws) {
                     onlinePlayerIds.add(client.player_id);
                 }
             }
-            
+
             activeSessions.push({
                 session_id: sessionId,
                 host_id: participants[0].player_id, // Premier participant = hôte
@@ -436,13 +438,13 @@ function handleListSessions(ws) {
             });
         }
     }
-    
+
     // Trier par date de création (plus récentes en premier)
     activeSessions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    
+
     // Limiter à MAX_SESSIONS
     const limitedSessions = activeSessions.slice(0, MAX_SESSIONS);
-    
+
     ws.send(JSON.stringify({
         type: 'SESSIONS_LIST',
         payload: {
@@ -452,7 +454,7 @@ function handleListSessions(ws) {
             limited: activeSessions.length > MAX_SESSIONS
         }
     }));
-    
+
     debug(`Sent ${limitedSessions.length}/${activeSessions.length} sessions to client (limit: ${MAX_SESSIONS})`);
 }
 
@@ -605,5 +607,12 @@ server.listen(PORT, () => {
     if (ENABLE_DASHBOARD) {
         console.log(`Dashboard disponible sur http://localhost:${PORT}/dashboard.html`);
         console.log(`Labo disponible sur http://localhost:${PORT}/labo.html`);
+    }
+
+    // Start STUN server
+    try {
+        stun.startStunServer(STUN_PORT);
+    } catch (err) {
+        console.error('Failed to start STUN server:', err);
     }
 });

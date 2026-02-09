@@ -16,6 +16,7 @@ import MapTypes
 import utils
 import EditorEnum
 
+import UiStyle
 
 Rectangle {
     id: root
@@ -210,6 +211,47 @@ Rectangle {
         Behavior on border.color { ColorAnimation { duration: 150 } }
         Behavior on border.width { NumberAnimation { duration: 150 } }
         Behavior on height { NumberAnimation { duration: 100 } }
+
+        // Bouton Tests à gauche
+        Rectangle {
+            id: testsButton
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.margins: 8
+            
+            width: 70
+            color: testsMouseArea.pressed ? "#2a2a2a" : 
+                   testsMouseArea.containsMouse ? "#4a4a4a" : "#3a3a3a"
+            border.color: "#555555"
+            border.width: 1
+            radius: 6
+            
+            Behavior on color { ColorAnimation { duration: 150 } }
+            
+            Text {
+                anchors.centerIn: parent
+                text: "Tests"
+                color: "#e0e0e0"
+                font.pixelSize: 11
+                font.bold: true
+            }
+            
+            MouseArea {
+                id: testsMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                
+                onClicked: {
+                    testWindow.visible = !testWindow.visible
+                    if (testWindow.visible) {
+                        testWindow.x = 20
+                        testWindow.y = 20
+                    }
+                }
+            }
+        }
         
         // Bouton Execute à droite
         Rectangle {
@@ -252,7 +294,7 @@ Rectangle {
         // Zone de saisie scrollable
         Flickable {
             id: commandInputFlickable
-            anchors.left: parent.left
+            anchors.left: testsButton.right
             anchors.right: executeButton.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
@@ -332,6 +374,15 @@ Rectangle {
     onVisibleChanged: {
         if (visible) {
             commandInput.forceActiveFocus()
+        } else {
+            // testWindow.visible = false
         }
+    }
+
+    TestCommandWindow {
+        id: testWindow
+        visible: false
+        parent: root.parent
+        z: UiStyle.z_CHAT_DRAWER + 100
     }
 }

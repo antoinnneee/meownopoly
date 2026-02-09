@@ -70,5 +70,6 @@
         <file>qml/meowComponent/TemplateBoundingRect.qml</file>
         <file>qml/meowComponent/preview/TemplatePreviewCursor.qml</file>
         <file>qml/ui_item/BtSideMenu.qml</file>
+        <file>qml/meowComponent/TestCommandWindow.qml</file>
     </qresource>
 </RCC>
