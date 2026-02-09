@@ -66,6 +66,7 @@ Rectangle {
     signal archiverRequested(); // Add signal for asset archiver
     signal launcherRequested(); // Add signal for launcher
     signal assetManagerTestRequested(); // Add signal for asset manager test
+    signal multiplayerLobbyRequested(); // Signal for multiplayer lobby
     // Title text
     Text {
         id: gameTitle
@@ -121,35 +122,10 @@ Rectangle {
                 verticalAlignment: Text.AlignVCenter
             }
             onClicked: {
-                root.startGameRequested()  // Emit the signal
+                root.multiplayerLobbyRequested()  // Emit the signal for multiplayer lobby
             }
         }
 
-        // Create Server Button
-        Button {
-            id: createServerButton
-            text: "Create Server"
-            Layout.preferredWidth: 200
-            Layout.preferredHeight: 50
-
-            background: Rectangle {
-                color: createServerButton.pressed ? "#1565c0" : "#2196f3"
-                radius: 8
-            }
-
-            contentItem: Text {
-                text: createServerButton.text
-                color: "white"
-                font.pixelSize: 18
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            onClicked: {
-                // TODO: Implement server creation functionality
-                console.log("Create server clicked")
-            }
-        }
 
         // Create Server Button
         Button {
