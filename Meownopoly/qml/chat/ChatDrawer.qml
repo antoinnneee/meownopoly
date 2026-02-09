@@ -13,7 +13,7 @@ Drawer {
     height: parent.height
     edge: Qt.RightEdge
 
-    property string gameId: "se"
+    property string gameId: ""
     property string playerId: AccountManager.uniqueId
     property string playerNickname: AccountManager.nickname
     property bool isResizing: false
