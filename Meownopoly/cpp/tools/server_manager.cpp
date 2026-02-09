@@ -40,6 +40,13 @@ void ServerManager::stopServer()
     }
 }
 
+void ServerManager::setStunServer(QString ip, quint16 port)
+{
+    m_stunServerIp = ip;
+    m_stunServerPort = port;
+    emit log("STUN Server set to: " + m_stunServerIp + ":" + QString::number(m_stunServerPort));
+}
+
 void ServerManager::sendStunRequest()
 {
     // Simple STUN Binding Request
@@ -57,15 +64,15 @@ void ServerManager::sendStunRequest()
         out << QRandomGenerator::global()->generate();
     }
 
-    emit log("Resolving stun.l.google.com...");
-    QHostInfo::lookupHost("stun.l.google.com", [this, packet](const QHostInfo &host) {
+    emit log("Resolving " + m_stunServerIp + "...");
+    QHostInfo::lookupHost(m_stunServerIp, [this, packet](const QHostInfo &host) {
         if (host.error() != QHostInfo::NoError) {
             emit log("DNS Lookup failed: " + host.errorString());
             return;
         }
 
         if (host.addresses().isEmpty()) {
-             emit log("No IP addresses found for stun.l.google.com");
+             emit log("No IP addresses found for " + m_stunServerIp);
              return;
         }
 
@@ -79,13 +86,13 @@ void ServerManager::sendStunRequest()
         }
 
         if (stunAddress.isNull()) {
-             emit log("No IPv4 address found for stun.l.google.com");
+             emit log("No IPv4 address found for " + m_stunServerIp);
              // Fallback to first available if no IPv4 (unlikely with google but safe)
              if (!host.addresses().isEmpty()) stunAddress = host.addresses().first();
         }
 
-        emit log("Sending STUN request to " + stunAddress.toString() + ":19302...");
-        m_socket->writeDatagram(packet, stunAddress, 19302); 
+        emit log("Sending STUN request to " + stunAddress.toString() + ":" + QString::number(m_stunServerPort) + "...");
+        m_socket->writeDatagram(packet, stunAddress, m_stunServerPort); 
     });
 }
 
@@ -103,59 +110,74 @@ void ServerManager::onReadyRead()
 
         // Check if it's a STUN response (basic check)
         if (datagram.size() >= 20) {
-            QDataStream in(datagram);
-            in.setByteOrder(QDataStream::BigEndian);
-            quint16 msgType;
-            in >> msgType;
+            handleStunResponse(datagram, sender, senderPort);
+        }
+    }
+}
 
-            if (msgType == 0x0101) { // Binding Success Response
-                emit log("Received STUN Binding Response from " + sender.toString());
+void ServerManager::handleStunResponse(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort)
+{
+    QDataStream in(datagram);
+    in.setByteOrder(QDataStream::BigEndian);
+    quint16 msgType;
+    in >> msgType;
+
+    if (msgType == 0x0101) { // Binding Success Response
+        emit log("Received STUN Binding Response from " + sender.toString() + ":" + QString::number(senderPort));
+        
+        m_stunSenderAddress = sender;
+        m_stunSenderPort = senderPort;
+        
+        // Parse attributes to find XOR-MAPPED-ADDRESS (0x0020) or MAPPED-ADDRESS (0x0001)
+        // Skip header (20 bytes)
+        int pos = 20;
+        int datagramSize = datagram.size(); // Store size locally to avoid repeated calls/potential issues if modified
+        while (pos < datagramSize) {
+            if (pos + 4 > datagramSize) break;
+            
+            quint16 attrType = (quint8)datagram[pos] << 8 | (quint8)datagram[pos+1];
+            quint16 attrLen = (quint8)datagram[pos+2] << 8 | (quint8)datagram[pos+3];
+            
+            pos += 4;
+            if (pos + attrLen > datagramSize) break;
+
+            if (attrType == 0x0001) { // MAPPED-ADDRESS
+                quint8 family = (quint8)datagram[pos+1];
+                quint16 port = (quint8)datagram[pos+2] << 8 | (quint8)datagram[pos+3];
+                quint8 a = (quint8)datagram[pos+4];
+                quint8 b = (quint8)datagram[pos+5];
+                quint8 c = (quint8)datagram[pos+6];
+                quint8 d = (quint8)datagram[pos+7];
                 
-                // Parse attributes to find XOR-MAPPED-ADDRESS (0x0020) or MAPPED-ADDRESS (0x0001)
-                // Skip header (20 bytes)
-                int pos = 20;
-                while (pos < datagram.size()) {
-                    if (pos + 4 > datagram.size()) break;
-                    
-                    quint16 attrType = (quint8)datagram[pos] << 8 | (quint8)datagram[pos+1];
-                    quint16 attrLen = (quint8)datagram[pos+2] << 8 | (quint8)datagram[pos+3];
-                    
-                    pos += 4;
-                    if (pos + attrLen > datagram.size()) break;
+                QString ip = QString("%1.%2.%3.%4").arg(a).arg(b).arg(c).arg(d);
+                m_publicAddress = QHostAddress(ip);
+                m_publicPort = port;
 
-                    if (attrType == 0x0001) { // MAPPED-ADDRESS
-                        quint8 family = (quint8)datagram[pos+1];
-                        quint16 port = (quint8)datagram[pos+2] << 8 | (quint8)datagram[pos+3];
-                        quint8 a = (quint8)datagram[pos+4];
-                        quint8 b = (quint8)datagram[pos+5];
-                        quint8 c = (quint8)datagram[pos+6];
-                        quint8 d = (quint8)datagram[pos+7];
-                        
-                        QString ip = QString("%1.%2.%3.%4").arg(a).arg(b).arg(c).arg(d);
-                        emit log("External Address (MAPPED-ADDRESS): " + ip + ":" + QString::number(port));
-                        emit externalAddressReceived(ip, port);
-                        return; // Found it
-                    }
-                    else if (attrType == 0x0020) { // XOR-MAPPED-ADDRESS
-                         quint8 family = (quint8)datagram[pos+1];
-                         quint16 xPort = (quint8)datagram[pos+2] << 8 | (quint8)datagram[pos+3];
-                         quint32 xIp = (quint8)datagram[pos+4] << 24 | (quint8)datagram[pos+5] << 16 | (quint8)datagram[pos+6] << 8 | (quint8)datagram[pos+7];
-                         
-                         quint16 port = xPort ^ 0x2112; // Magic cookie high 16 bits
-                         quint32 ipVal = xIp ^ 0x2112A442;
-                         
-                         QString ip = QHostAddress(ipVal).toString();
-                         emit log("External Address (XOR-MAPPED-ADDRESS): " + ip + ":" + QString::number(port));
-                         emit externalAddressReceived(ip, port);
-                         return; // Found it
-                    }
-
-                    pos += attrLen;
-                    // Attributes are padded to 4 bytes
-                    int padding = (4 - (attrLen % 4)) % 4;
-                    pos += padding;
-                }
+                emit log("External Address (MAPPED-ADDRESS): " + ip + ":" + QString::number(port));
+                emit externalAddressReceived(ip, port);
+                return; // Found it
             }
+            else if (attrType == 0x0020) { // XOR-MAPPED-ADDRESS
+                 quint8 family = (quint8)datagram[pos+1];
+                 quint16 xPort = (quint8)datagram[pos+2] << 8 | (quint8)datagram[pos+3];
+                 quint32 xIp = (quint8)datagram[pos+4] << 24 | (quint8)datagram[pos+5] << 16 | (quint8)datagram[pos+6] << 8 | (quint8)datagram[pos+7];
+                 
+                 quint16 port = xPort ^ 0x2112; // Magic cookie high 16 bits
+                 quint32 ipVal = xIp ^ 0x2112A442;
+                 
+                 QString ip = QHostAddress(ipVal).toString();
+                 m_publicAddress = QHostAddress(ip);
+                 m_publicPort = port;
+
+                 emit log("External Address (XOR-MAPPED-ADDRESS): " + ip + ":" + QString::number(port));
+                 emit externalAddressReceived(ip, port);
+                 return; // Found it
+            }
+
+            pos += attrLen;
+            // Attributes are padded to 4 bytes
+            int padding = (4 - (attrLen % 4)) % 4;
+            pos += padding;
         }
     }
 }

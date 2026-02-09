@@ -19,6 +19,7 @@ public:
     Q_INVOKABLE void testAction4();
     Q_INVOKABLE void testUdpServer();
     Q_INVOKABLE void testSendStun();
+    Q_INVOKABLE void testSetStunServer(QString ip, int port);
 
 private:
     explicit TestManager(QObject *parent = nullptr);

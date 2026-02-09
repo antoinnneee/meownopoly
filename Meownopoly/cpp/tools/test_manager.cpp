@@ -72,3 +72,19 @@ void TestManager::testSendStun()
         Logger::instance()->warn("Server not started. Start UDP Server first.", "TestManager");
     }
 }
+
+void TestManager::testSetStunServer(QString ip, int port)
+{
+    if (m_serverManager) {
+        m_serverManager->setStunServer(ip, (quint16)port);
+    } else {
+        // Need to create it if not exists, though usually startServer is called first. 
+        // But for config it makes sense to create it.
+        m_serverManager = new ServerManager(this);
+        connect(m_serverManager, &ServerManager::log, [](QString msg){
+             Logger::instance()->info(msg, "ServerManager");
+             // qDebug() << "[ServerManager]" << msg;
+        });
+        m_serverManager->setStunServer(ip, (quint16)port);
+    }
+}

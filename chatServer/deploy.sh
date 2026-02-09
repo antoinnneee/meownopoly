@@ -66,6 +66,7 @@ FILES=(
     "dashboard.js"
     "labo.html"
     "chat_crypto.js"
+    "simple_stun.js"
 )
 
 # Copie des fichiers
