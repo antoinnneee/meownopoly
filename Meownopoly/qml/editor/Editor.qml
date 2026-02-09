@@ -140,8 +140,6 @@ Base_Board {
                 btChat.y =      (Screen.pixelDensity * 20) * 2  + 10
             }
             onExited: {
-                console.log("Mouse exited selection button area, resetting info and chat buttons position")
-
                 btInfoMap.y = btSelection.y
                 btChat.y = btSelection.y
             }

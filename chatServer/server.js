@@ -72,8 +72,8 @@ const server = http.createServer((req, res) => {
             '.ico': 'image/x-icon'
         };
 
-        // Servir uniquement les fichiers du dashboard
-        const allowedFiles = ['/dashboard.html', '/dashboard.css', '/dashboard.js', '/chat_crypto.js'];
+        // Servir uniquement les fichiers du dashboard et labo
+        const allowedFiles = ['/dashboard.html', '/dashboard.css', '/dashboard.js', '/chat_crypto.js', '/labo.html'];
         if (allowedFiles.includes(url)) {
             // Construire le chemin complet du fichier
             const fileName = url.substring(1); // Enlever le '/' initial
@@ -104,7 +104,7 @@ const server = http.createServer((req, res) => {
             });
         } else {
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end('<html><body><h1>Meownopoly Chat Server</h1><p>Dashboard disponible sur <a href="/dashboard.html">/dashboard.html</a></p></body></html>');
+            res.end('<html><body><h1>Meownopoly Chat Server</h1><p>Dashboard disponible sur <a href="/dashboard.html">/dashboard.html</a></p><p>Labo disponible sur <a href="/labo.html">/labo.html</a></p></body></html>');
         }
     } else {
         res.writeHead(200);
@@ -542,5 +542,6 @@ server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
     if (ENABLE_DASHBOARD) {
         console.log(`Dashboard disponible sur http://localhost:${PORT}/dashboard.html`);
+        console.log(`Labo disponible sur http://localhost:${PORT}/labo.html`);
     }
 });
