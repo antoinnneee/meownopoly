@@ -35,7 +35,8 @@ public:
     int participantCount() const { return m_participants.size(); }
     QVariantList availableSessions() const { return m_availableSessions; }
 
-    Q_INVOKABLE void connectToServer(const QString &url, const QString &playerId, const QString &password, const QString &nickname = QString());
+    Q_INVOKABLE void connectToServer(const QString &url);
+    Q_INVOKABLE void connectToSession(const QString &playerId, const QString &password, const QString &nickname = QString());
     Q_INVOKABLE void sendMessage(const QString &text);
     Q_INVOKABLE void sendImage(const QString &filePath);
     Q_INVOKABLE void sendTextFile(const QString &filePath);

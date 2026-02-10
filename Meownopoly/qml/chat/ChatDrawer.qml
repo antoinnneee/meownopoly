@@ -311,12 +311,14 @@ Drawer {
     }
 
     Component.onCompleted: {
-        chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId, "123", playerNickname)
+        chatClient.connectToServer("ws://pattounecorp.ovh:3000")
+        chatClient.connectToSession(playerId, "123", playerNickname)
     }
 
     onOpened: {
         if (!chatClient.connected) {
-            chatClient.connectToServer("ws://pattounecorp.ovh:3000", playerId, "123", playerNickname)
+            chatClient.connectToServer("ws://pattounecorp.ovh:3000")
+            chatClient.connectToSession(playerId, "123", playerNickname)
         }
     }
 }

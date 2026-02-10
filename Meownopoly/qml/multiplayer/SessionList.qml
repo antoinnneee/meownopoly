@@ -59,8 +59,8 @@ Rectangle {
     Component.onCompleted: {
         console.log("🚀 SessionList loaded, connecting to server...")
         // Se connecter au serveur
-        lobbyChatClient.connectToServer(
-            "ws://pattounecorp.ovh:3000",
+        lobbyChatClient.connectToServer("ws://pattounecorp.ovh:3000")
+        lobbyChatClient.connectToSession(
             AccountManager.uniqueId,
             "123", // Mot de passe pour le lobby
             AccountManager.nickname
@@ -189,6 +189,9 @@ Rectangle {
                 
                 delegate: SessionCard {
                     // Les propriétés sont automatiquement liées via required property
+                    hostNickname: model.modelData.hostNickname
+                    onlineCount: model.modelData.onlineCount
+                    sessionId: model.modelData.sessionId
                     
                     onClicked: {
                         console.log("Session sélectionnée:", sessionId)

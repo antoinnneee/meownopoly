@@ -27,6 +27,7 @@ Ce serveur est un relais "aveugle" (Blind Relay) conçu pour faciliter la commun
 - `PUBLISH_KEY` : Publie la clé de session chiffrée (une seule fois par session).
 - `SEND_MSG` : Envoie un message chiffré. Il est stocké et diffusé aux autres clients.
 - `GET_HISTORY` : Récupère les messages plus anciens (pagination).
+- `GET_SESSION_LIST` : Récupère la liste des sessions actives (avec le nombre de participants).
 - `GET_PARTICIPANTS` : Récupère la liste des membres (avec statut online/offline).
 - `LEAVE_SESSION` : Quitte explicitement la session (suppression de la liste + notification aux autres).
 - `DELETE_SESSION` : Supprime définitivement la session et déconnecte tous les participants.
@@ -35,6 +36,7 @@ Ce serveur est un relais "aveugle" (Blind Relay) conçu pour faciliter la commun
 - `INIT_SESSION` : Données initiales reçues après une jointure réussie.
 - `NEW_MESSAGE` : Notification en temps réel d'un nouveau message.
 - `HISTORY_RESULT` : Liste des messages historiques demandés.
+- `SESSIONS_LIST` : Liste des sessions actives avec le nombre de participants.
 - `PARTICIPANTS_LIST` : Liste des membres avec leur statut.
 - `PARTICIPANT_LEFT` : Un membre a quitté explicitement la session (pas lors d'une simple déconnexion).
 - `SESSION_ENDED` : La session a été supprimée par un utilisateur.

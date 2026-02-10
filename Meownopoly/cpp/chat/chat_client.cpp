@@ -58,16 +58,27 @@ void ChatClient::setSessionId(const QString &id) {
     }
 }
 
-void ChatClient::connectToServer(const QString &url, const QString &playerId, const QString &password, const QString &nickname) {
+void ChatClient::connectToServer(const QString &url) {
     qDebug() << "[ChatClient] Connecting to server:" << url;
+    
+    // Reset session data on new connection attempt? 
+    // For now, we just connect. Session data is handled by connectToSession.
+
+    // Use queued connection to call worker method in worker thread
+    QMetaObject::invokeMethod(m_worker, "connectToServer", Qt::QueuedConnection,
+                              Q_ARG(QString, url));
+}
+
+void ChatClient::connectToSession(const QString &playerId, const QString &password, const QString &nickname) {
     m_playerId = playerId;
     m_nickname = nickname.isEmpty() ? playerId : nickname;
     m_password = password;
 
+    qDebug() << "[ChatClient] Preparing session for player:" << m_playerId;
+
     // Derive Lock Key from SessionID + Password
     m_lockKey = ChatCrypto::deriveLockKey(m_sessionId, m_password);
 
-    // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
     // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
     // Keys in DB are encrypted with lockKey. We must decrypt them for memory usage.
     QMap<int, QByteArray> encryptedKeys = m_db.getSessionKeys(m_sessionId);
@@ -100,9 +111,22 @@ void ChatClient::connectToServer(const QString &url, const QString &playerId, co
         m_currentKeyVersion = 0;
     }
 
-    // Use queued connection to call worker method in worker thread
-    QMetaObject::invokeMethod(m_worker, "connectToServer", Qt::QueuedConnection,
-                              Q_ARG(QString, url));
+    // If already connected, join immediately
+    if (m_connected) {
+        // Join session logic
+        QJsonObject join;
+        join["type"] = "JOIN_SESSION";
+        QJsonObject payload;
+        payload["session_id"] = m_sessionId;
+        payload["player_id"] = m_playerId;
+        payload["player_nickname"] = m_nickname;
+        join["payload"] = payload;
+
+        sendWebSocketMessage(join);
+
+        // Request participants list right after joining
+        requestParticipants();
+    }
 }
 
 void ChatClient::onConnected() {
@@ -110,19 +134,22 @@ void ChatClient::onConnected() {
     m_connected = true;
     emit connectedChanged();
 
-    // Join session
-    QJsonObject join;
-    join["type"] = "JOIN_SESSION";
-    QJsonObject payload;
-    payload["session_id"] = m_sessionId;
-    payload["player_id"] = m_playerId;
-    payload["player_nickname"] = m_nickname;
-    join["payload"] = payload;
+    // If we have session data, join automatically (reconnect scenario or connection after setup)
+    if (!m_playerId.isEmpty() && !m_sessionId.isEmpty()) {
+        qDebug() << "[ChatClient] joining session" << m_sessionId << "as" << m_playerId;
+        QJsonObject join;
+        join["type"] = "JOIN_SESSION";
+        QJsonObject payload;
+        payload["session_id"] = m_sessionId;
+        payload["player_id"] = m_playerId;
+        payload["player_nickname"] = m_nickname;
+        join["payload"] = payload;
 
-    sendWebSocketMessage(join);
+        sendWebSocketMessage(join);
 
-    // Request participants list right after joining
-    requestParticipants();
+        // Request participants list right after joining
+        requestParticipants();
+    }
 }
 
 void ChatClient::onDisconnected() {
@@ -303,7 +330,7 @@ void ChatClient::handleSessionsList(const QJsonObject &payload) {
         m_availableSessions.append(sessionMap);
     }
     
-    qDebug() << "[ChatClient] Sessions list updated:" << m_availableSessions.size() << "sessions";
+    qDebug() << "[ChatClient] Sessions list updated:" << m_availableSessions.size() << "sessions" << m_availableSessions;
     emit availableSessionsChanged();
 }
 

@@ -14,6 +14,8 @@ Rectangle {
      property string sessionId
      property int players
      property int maxPlayers
+     property string hostNickname // Nouveau
+     property int onlineCount     // Nouveau
     
     width: ListView.view.width - 32
     height: 90
@@ -64,6 +66,34 @@ Rectangle {
                 color: "#888888"
                 font.pixelSize: 12
                 font.family: "Consolas, Monaco, monospace"
+            }
+            
+            // Hôte
+            Text {
+                text: "👤 Hôte : " + (root.hostNickname ? root.hostNickname : "Inconnu")
+                color: "#aaaaaa"
+                font.pixelSize: 12
+            }
+        }
+        
+        // CENTRE: Online Status
+        ColumnLayout {
+            Layout.alignment: Qt.AlignRight
+            spacing: 2
+            
+            Text {
+                text: "En ligne"
+                color: "#888888"
+                font.pixelSize: 10
+                Layout.alignment: Qt.AlignHCenter
+            }
+            
+            Text {
+                text: "🟢 " + root.onlineCount
+                color: "#4caf50"
+                font.pixelSize: 14
+                font.bold: true
+                Layout.alignment: Qt.AlignHCenter
             }
         }
         
