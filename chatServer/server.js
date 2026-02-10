@@ -181,6 +181,7 @@ function handleCommand(ws, msg) {
             handleDeleteSession(ws, payload);
             break;
         case 'LIST_SESSIONS':
+        case 'GET_SESSION_LIST':
             handleListSessions(ws);
             break;
         default:
@@ -409,7 +410,29 @@ function handleGetParticipants(ws, payload) {
 function handleListSessions(ws) {
     debug('Listing all active sessions');
 
-    // Récupère toutes les sessions actives
+    const activeSessions = getDetailedSessionList(); // Utilisation de la nouvelle fonction
+
+    // Limiter à MAX_SESSIONS
+    const limitedSessions = activeSessions.slice(0, MAX_SESSIONS);
+
+    ws.send(JSON.stringify({
+        type: 'SESSIONS_LIST',
+        payload: {
+            sessions: limitedSessions,
+            total: activeSessions.length,
+            limit: MAX_SESSIONS,
+            limited: activeSessions.length > MAX_SESSIONS
+        }
+    }));
+
+    debug(`Sent ${limitedSessions.length}/${activeSessions.length} sessions to client (limit: ${MAX_SESSIONS})`);
+}
+
+/**
+ * Récupère la liste détaillée des sessions actives
+ * @returns {Array} Liste des objets session
+ */
+function getDetailedSessionList() {
     const activeSessions = [];
 
     for (const [sessionId, clients] of rooms.entries()) {
@@ -442,20 +465,7 @@ function handleListSessions(ws) {
     // Trier par date de création (plus récentes en premier)
     activeSessions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    // Limiter à MAX_SESSIONS
-    const limitedSessions = activeSessions.slice(0, MAX_SESSIONS);
-
-    ws.send(JSON.stringify({
-        type: 'SESSIONS_LIST',
-        payload: {
-            sessions: limitedSessions,
-            total: activeSessions.length,
-            limit: MAX_SESSIONS,
-            limited: activeSessions.length > MAX_SESSIONS
-        }
-    }));
-
-    debug(`Sent ${limitedSessions.length}/${activeSessions.length} sessions to client (limit: ${MAX_SESSIONS})`);
+    return activeSessions;
 }
 
 function handleLeaveSession(ws, payload) {

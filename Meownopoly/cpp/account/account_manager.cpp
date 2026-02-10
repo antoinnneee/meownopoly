@@ -33,6 +33,8 @@ void AccountManager::loadAccount()
     
     m_uniqueId = settings.value("account/uniqueId", "").toString();
     m_nickname = settings.value("account/nickname", "").toString();
+    m_stunServer = settings.value("account/stunServer", "pattouncorp.ovh").toString();
+    m_stunPort = settings.value("account/stunPort", 3000).toUInt();
     
     // Account exists if we have a unique ID
     bool hadAccount = m_hasAccount;
@@ -45,7 +47,9 @@ void AccountManager::loadAccount()
     qDebug() << "AccountManager: Loaded account -" 
              << "hasAccount:" << m_hasAccount 
              << "uniqueId:" << m_uniqueId 
-             << "nickname:" << m_nickname;
+             << "nickname:" << m_nickname
+             << "stunServer:" << m_stunServer
+             << "stunPort:" << m_stunPort;
 }
 
 void AccountManager::saveAccount()
@@ -54,12 +58,15 @@ void AccountManager::saveAccount()
     
     settings.setValue("account/uniqueId", m_uniqueId);
     settings.setValue("account/nickname", m_nickname);
+    settings.setValue("account/stunServer", m_stunServer);
+    settings.setValue("account/stunPort", m_stunPort);
     settings.sync();
     
     qDebug() << "AccountManager: Saved account -"
              << "uniqueId:" << m_uniqueId
              << "nickname:" << m_nickname;
 }
+
 
 void AccountManager::setNickname(const QString &nickname)
 {
@@ -68,6 +75,26 @@ void AccountManager::setNickname(const QString &nickname)
         saveAccount();
         emit nicknameChanged();
         qDebug() << "AccountManager: Nickname changed to" << m_nickname;
+    }
+}
+
+void AccountManager::setStunServer(const QString &server)
+{
+    if (m_stunServer != server) {
+        m_stunServer = server;
+        saveAccount();
+        emit stunServerChanged();
+        qDebug() << "AccountManager: STUN server changed to" << m_stunServer;
+    }
+}
+
+void AccountManager::setStunPort(quint16 port)
+{
+    if (m_stunPort != port) {
+        m_stunPort = port;
+        saveAccount();
+        emit stunPortChanged();
+        qDebug() << "AccountManager: STUN port changed to" << m_stunPort;
     }
 }
 

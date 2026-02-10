@@ -10,6 +10,8 @@ class AccountManager : public QObject
     Q_OBJECT
     Q_PROPERTY(QString uniqueId READ uniqueId NOTIFY uniqueIdChanged)
     Q_PROPERTY(QString nickname READ nickname WRITE setNickname NOTIFY nicknameChanged)
+    Q_PROPERTY(QString stunServer READ stunServer WRITE setStunServer NOTIFY stunServerChanged)
+    Q_PROPERTY(quint16 stunPort READ stunPort WRITE setStunPort NOTIFY stunPortChanged)
     Q_PROPERTY(bool hasAccount READ hasAccount NOTIFY hasAccountChanged)
 
 public:
@@ -23,6 +25,12 @@ public:
     bool hasAccount() const { return m_hasAccount; }
 
     void setNickname(const QString &nickname);
+
+    QString stunServer() const { return m_stunServer; }
+    quint16 stunPort() const { return m_stunPort; }
+
+    Q_INVOKABLE void setStunServer(const QString &server);
+    Q_INVOKABLE void setStunPort(quint16 port);
 
     Q_INVOKABLE void createAccount(const QString &nickname);
     Q_INVOKABLE bool regenerateUniqueId();
@@ -42,6 +50,8 @@ public:
 signals:
     void uniqueIdChanged();
     void nicknameChanged();
+    void stunServerChanged();
+    void stunPortChanged();
     void hasAccountChanged();
     void accountCreated();
 
@@ -52,6 +62,8 @@ private:
 
     QString m_uniqueId;
     QString m_nickname;
+    QString m_stunServer = "pattouncorp.ovh";
+    quint16 m_stunPort = 3000;
     bool m_hasAccount = false;
 };
 

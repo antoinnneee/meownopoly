@@ -51,6 +51,7 @@
 #include "tools/cursor_manager.h"
 #include "chat/chat_client.h"
 #include "account/account_manager.h"
+#include "communication/catway.h"
 
 #include <QImageWriter>
 
@@ -70,7 +71,6 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     MapInfo::registerQml();
     EditorEnum::registerQml();
     ItemSnapableFactory::registerQml();
-//    AnimationProvider::registerQml();
     Logger::registerQml();
     CursorManager::registerQml();
     UndoRedoManager::registerQml();
@@ -79,6 +79,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     PattounX_engine::registerQml();
     ChatClient::registerQml(this);
     AccountManager::registerQml();
+    Catway::registerQml();
 
 
     // Register MapTypes namespace for QML
@@ -98,16 +99,6 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     connect(Game::instance(), &Game::updateListEdits, UndoRedoManager::instance(), &UndoRedoManager::onUpdateListEdits);
     connect(Game::instance(), &Game::askEdit, UndoRedoManager::instance(), &UndoRedoManager::onAskEdit);
     connect(UndoRedoManager::instance(), &UndoRedoManager::returnEdit, Game::instance(), &Game::onReturnEdit);
-    /*
-    // Charger l'animation depuis le dossier anim et la démarrer automatiquement
-    QString animFolderPath = "C:/Users/Antoine/Documents/GitHub/meownopoly/Meownopoly/anim";
-    animationManager->loadAnimationFromFolder("test", animFolderPath);
-    animationManager->startAnimation("test", 15); // 15 FPS pour une animation fluide
-*/
-//    qmlRegisterType<LiveImage>("MyApp.Images", 1, 0, "LiveImage");
-//    AnimationProvider * provider = AnimationProvider::instance();
-//    provider->loadImagesFromFolder("C:/Users/Antoine/Documents/GitHub/meownopoly/Meownopoly/anim");
-
 
 
     //To declare module in QML

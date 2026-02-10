@@ -26,7 +26,6 @@ void ServerManager::startServer()
     if (m_socket->bind(QHostAddress::AnyIPv4, 0)) {
         emit log("UDP Server started on local port: " + QString::number(m_socket->localPort()));
         emit serverStarted(m_socket->localPort());
-        sendStunRequest();
     } else {
         emit log("Failed to bind UDP socket: " + m_socket->errorString());
     }
@@ -108,9 +107,20 @@ void ServerManager::onReadyRead()
 
         m_socket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
 
-        // Check if it's a STUN response (basic check)
+        // Check if it's a STUN response (starts with 0x0101 Binding Success Response)
         if (datagram.size() >= 20) {
-            handleStunResponse(datagram, sender, senderPort);
+            QDataStream peek(datagram);
+            peek.setByteOrder(QDataStream::BigEndian);
+            quint16 msgType;
+            peek >> msgType;
+            if (msgType == 0x0101) {
+                // STUN response — emit signal (Catway connects/disconnects handler)
+                emit stunResponseReceived(datagram, sender, senderPort);
+            } else {
+                // Non-STUN large packet — treat as text
+                QString msg = QString::fromUtf8(datagram);
+                emit log("Received Message from " + sender.toString() + ":" + QString::number(senderPort) + " -> " + msg);
+            }
         } else {
              // Assume text message
              QString msg = QString::fromUtf8(datagram);

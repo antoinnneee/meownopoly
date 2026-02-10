@@ -92,7 +92,7 @@ Rectangle {
     Rectangle {
         id: formContainer
         width: 400
-        height: 280
+        height: 450
         anchors.centerIn: parent
         color: "#2a2a2a"
         radius: 16
@@ -142,6 +142,129 @@ Rectangle {
                     onAccepted: {
                         if (nicknameField.text.trim() !== "") {
                             createAccountButton.clicked()
+                        }
+                    }
+                }
+            }
+
+            // STUN Server Label
+            Text {
+                text: "Serveur STUN"
+                color: "#cccccc"
+                font.pixelSize: 16
+                font.bold: true
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 10
+            }
+
+            // STUN Server Selection
+            ComboBox {
+                id: stunComboBox
+                Layout.fillWidth: true
+                Layout.preferredHeight: 40
+
+                model: ListModel {
+                    id: stunModel
+                    ListElement { text: "Patoun Corp (Default)"; value: "pattouncorp.ovh"; port: 3000 }
+                    ListElement { text: "Google"; value: "stun.l.google.com"; port: 19302 }
+                    ListElement { text: "Custom"; value: "custom"; port: 0 }
+                }
+
+                textRole: "text"
+
+                onActivated: {
+                    if (currentText !== "Custom") {
+                        var item = stunModel.get(currentIndex);
+                        AccountManager.setStunServer(item.value);
+                        AccountManager.setStunPort(item.port);
+                    }
+                }
+
+                Component.onCompleted: {
+                    // Initialize selection based on current settings
+                    var currentServer = AccountManager.stunServer;
+                    var currentPort = AccountManager.stunPort;
+                    var found = false;
+
+                    for (var i = 0; i < stunModel.count; i++) {
+                        var item = stunModel.get(i);
+                        if (item.value === currentServer && item.port === currentPort) {
+                            currentIndex = i;
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        currentIndex = 2; // Custom
+                    }
+                }
+            }
+
+            // Custom STUN Details (Visible only if Custom is selected)
+            RowLayout {
+                Layout.fillWidth: true
+                visible: stunComboBox.currentText === "Custom"
+                spacing: 10
+
+                // Custom Host
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    color: "#333333"
+                    radius: 8
+                    border.color: customHostField.activeFocus ? "#4caf50" : "#555555"
+                    border.width: 1
+
+                    TextField {
+                        id: customHostField
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        placeholderText: "Hôte (ex: stun.example.com)"
+                        placeholderTextColor: "#666666"
+                        color: "#ffffff"
+                        font.pixelSize: 12
+                        verticalAlignment: Text.AlignVCenter
+                        text: AccountManager.stunServer
+
+                        background: null
+
+                        onEditingFinished: {
+                             if (stunComboBox.currentText === "Custom") {
+                                AccountManager.setStunServer(text)
+                             }
+                        }
+                    }
+                }
+
+                // Custom Port
+                Rectangle {
+                    Layout.preferredWidth: 80
+                    Layout.preferredHeight: 40
+                    color: "#333333"
+                    radius: 8
+                    border.color: customPortField.activeFocus ? "#4caf50" : "#555555"
+                    border.width: 1
+
+                    TextField {
+                        id: customPortField
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        placeholderText: "Port"
+                        placeholderTextColor: "#666666"
+                        color: "#ffffff"
+                        font.pixelSize: 12
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        text: AccountManager.stunPort.toString()
+                        validator: IntValidator { bottom: 1; top: 65535 }
+
+                        background: null
+
+                        onEditingFinished: {
+                             if (stunComboBox.currentText === "Custom") {
+                                AccountManager.setStunPort(parseInt(text))
+                             }
                         }
                     }
                 }
