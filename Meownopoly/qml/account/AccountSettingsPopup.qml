@@ -6,7 +6,7 @@ import Meownopoly.Account 1.0
 Popup {
     id: root
     width: 450
-    height: 500
+    height: 600
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
@@ -383,6 +383,210 @@ Popup {
                     NumberAnimation { target: savedText; property: "opacity"; to: 1; duration: 200 }
                     PauseAnimation { duration: 1500 }
                     NumberAnimation { target: savedText; property: "opacity"; to: 0; duration: 300 }
+                }
+            }
+        }
+
+        // STUN Server section
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 8
+
+            Text {
+                text: "Serveur STUN"
+                color: "#888888"
+                font.pixelSize: 12
+            }
+
+            ComboBox {
+                id: stunPopupComboBox
+                Layout.fillWidth: true
+                Layout.preferredHeight: 45
+
+                model: ListModel {
+                    id: stunPopupModel
+                    ListElement { text: "Patoun Corp (Default)"; value: "pattouncorp.ovh"; port: 3000 }
+                    ListElement { text: "Google"; value: "stun.l.google.com"; port: 19302 }
+                    ListElement { text: "Custom"; value: "custom"; port: 0 }
+                }
+
+                textRole: "text"
+
+                delegate: ItemDelegate {
+                    width: stunPopupComboBox.width
+                    contentItem: Text {
+                        text: model.text
+                        color: "#cccccc"
+                        font.pixelSize: 14
+                        elide: Text.ElideRight
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.highlighted ? "#444444" : "#333333"
+                    }
+                    highlighted: stunPopupComboBox.highlightedIndex === index
+                }
+
+                indicator: Canvas {
+                    id: canvas
+                    x: stunPopupComboBox.width - width - 10
+                    y: stunPopupComboBox.topPadding + (stunPopupComboBox.availableHeight - height) / 2
+                    width: 12
+                    height: 8
+                    contextType: "2d"
+
+                    Connections {
+                        target: stunPopupComboBox
+                        function onPressedChanged() { canvas.requestPaint(); }
+                    }
+
+                    onPaint: {
+                        context.reset();
+                        context.moveTo(0, 0);
+                        context.lineTo(width, 0);
+                        context.lineTo(width / 2, height);
+                        context.closePath();
+                        context.fillStyle = "#cccccc";
+                        context.fill();
+                    }
+                }
+
+                contentItem: Text {
+                    leftPadding: 10
+                    rightPadding: stunPopupComboBox.indicator.width + stunPopupComboBox.spacing
+                    text: stunPopupComboBox.displayText
+                    font: stunPopupComboBox.font
+                    color: "#ffffff"
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+
+                background: Rectangle {
+                    implicitWidth: 120
+                    implicitHeight: 40
+                    color: "#333333"
+                    border.color: stunPopupComboBox.pressed ? "#4caf50" : "#444444"
+                    border.width: 1
+                    radius: 8
+                }
+
+                popup: Popup {
+                    y: stunPopupComboBox.height - 1
+                    width: stunPopupComboBox.width
+                    implicitHeight: contentItem.implicitHeight
+                    padding: 1
+
+                    contentItem: ListView {
+                        clip: true
+                        implicitHeight: contentHeight
+                        model: stunPopupComboBox.popup.visible ? stunPopupComboBox.delegateModel : null
+                        currentIndex: stunPopupComboBox.highlightedIndex
+
+                        ScrollIndicator.vertical: ScrollIndicator { }
+                    }
+
+                    background: Rectangle {
+                        border.color: "#444444"
+                        color: "#333333"
+                        radius: 8
+                    }
+                }
+
+                onActivated: {
+                    if (currentText !== "Custom") {
+                        var item = stunPopupModel.get(currentIndex);
+                        AccountManager.setStunServer(item.value);
+                        AccountManager.setStunPort(item.port);
+                    }
+                }
+
+                Component.onCompleted: {
+                    // Initialize selection based on current settings
+                    var currentServer = AccountManager.stunServer;
+                    var currentPort = AccountManager.stunPort;
+                    var found = false;
+
+                    for (var i = 0; i < stunPopupModel.count; i++) {
+                        var item = stunPopupModel.get(i);
+                        if (item.value === currentServer && item.port === currentPort) {
+                            currentIndex = i;
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        currentIndex = 2; // Custom
+                    }
+                }
+            }
+
+            // Custom STUN Details (Visible only if Custom is selected)
+            RowLayout {
+                Layout.fillWidth: true
+                visible: stunPopupComboBox.currentText === "Custom"
+                spacing: 10
+
+                // Custom Host
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    color: "#333333"
+                    radius: 8
+                    border.color: customHostPopupField.activeFocus ? "#4caf50" : "#444444"
+                    border.width: 1
+
+                    TextField {
+                        id: customHostPopupField
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        placeholderText: "Hôte"
+                        placeholderTextColor: "#666666"
+                        color: "#ffffff"
+                        font.pixelSize: 12
+                        verticalAlignment: Text.AlignVCenter
+                        text: AccountManager.stunServer
+
+                        background: null
+
+                        onEditingFinished: {
+                             if (stunPopupComboBox.currentText === "Custom") {
+                                AccountManager.setStunServer(text)
+                             }
+                        }
+                    }
+                }
+
+                // Custom Port
+                Rectangle {
+                    Layout.preferredWidth: 80
+                    Layout.preferredHeight: 40
+                    color: "#333333"
+                    radius: 8
+                    border.color: customPortPopupField.activeFocus ? "#4caf50" : "#444444"
+                    border.width: 1
+
+                    TextField {
+                        id: customPortPopupField
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        placeholderText: "Port"
+                        placeholderTextColor: "#666666"
+                        color: "#ffffff"
+                        font.pixelSize: 12
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        text: AccountManager.stunPort.toString()
+                        validator: IntValidator { bottom: 1; top: 65535 }
+
+                        background: null
+
+                        onEditingFinished: {
+                             if (stunPopupComboBox.currentText === "Custom") {
+                                AccountManager.setStunPort(parseInt(text))
+                             }
+                        }
+                    }
                 }
             }
         }

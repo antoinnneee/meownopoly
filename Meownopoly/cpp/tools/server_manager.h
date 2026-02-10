@@ -20,10 +20,14 @@ public:
     Q_INVOKABLE void setPeer(QString ip, quint16 port);
     Q_INVOKABLE void sendMessageToPeer(QString message);
 
+public slots:
+    void handleStunResponse(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort);
+
 signals:
     void log(QString message);
     void serverStarted(quint16 localPort);
     void externalAddressReceived(QString ip, quint16 port);
+    void stunResponseReceived(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort);
 
 private slots:
     void onReadyRead();
@@ -32,8 +36,6 @@ private:
     QUdpSocket *m_socket;
     QString m_stunServerIp = "stun.l.google.com";
     quint16 m_stunServerPort = 19302;
-    
-    void handleStunResponse(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort);
     
     QHostAddress m_publicAddress;
     quint16 m_publicPort;
