@@ -441,13 +441,15 @@ Popup {
                     }
 
                     onPaint: {
-                        context.reset();
-                        context.moveTo(0, 0);
-                        context.lineTo(width, 0);
-                        context.lineTo(width / 2, height);
-                        context.closePath();
-                        context.fillStyle = "#cccccc";
-                        context.fill();
+                        var ctx = getContext("2d");
+                        if (!ctx) return;
+                        ctx.reset();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(width, 0);
+                        ctx.lineTo(width / 2, height);
+                        ctx.closePath();
+                        ctx.fillStyle = "#cccccc";
+                        ctx.fill();
                     }
                 }
 
