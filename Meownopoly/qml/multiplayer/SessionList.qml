@@ -19,8 +19,6 @@ Rectangle {
     // Instance ChatClient pour le lobby
     ChatClient {
         id: lobbyChatClient
-        sessionId: "lobby_discovery" // Session spéciale pour la découverte
-        
         onConnectedChanged: {
             if (connected) {
                 console.log("✅ Lobby connected, requesting sessions...")
@@ -60,11 +58,11 @@ Rectangle {
         console.log("🚀 SessionList loaded, connecting to server...")
         // Se connecter au serveur
         lobbyChatClient.connectToServer(
-            "ws://pattounecorp.ovh:3000",
-            AccountManager.uniqueId,
-            "123", // Mot de passe pour le lobby
-            AccountManager.nickname
-        )
+                    "ws://pattounecorp.ovh:3000",
+                    AccountManager.uniqueId,
+                    "123", // Mot de passe pour le lobby
+                    AccountManager.nickname
+                    )
     }
     
     Component.onDestruction: {
@@ -90,9 +88,9 @@ Rectangle {
             }
             
             Text {
-                text: lobbyChatClient.connected ? 
-                    ("🐱 " + lobbyChatClient.availableSessions.length + " parties en cours") :
-                    "🔌 Connexion au serveur..."
+                text: lobbyChatClient.connected ?
+                          ("🐱 " + lobbyChatClient.availableSessions.length + " parties en cours") :
+                          "🔌 Connexion au serveur..."
                 color: lobbyChatClient.connected ? "#888888" : "#ff9800"
                 font.pixelSize: 18
                 Layout.alignment: Qt.AlignHCenter
@@ -163,9 +161,9 @@ Rectangle {
                     }
                     
                     Text {
-                        text: lobbyChatClient.connected ? 
-                            "Aucune partie disponible pour l'instant" :
-                            "Connexion au serveur..."
+                        text: lobbyChatClient.connected ?
+                                  "Aucune partie disponible pour l'instant" :
+                                  "Connexion au serveur..."
                         color: "#888888"
                         font.pixelSize: 16
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -189,15 +187,18 @@ Rectangle {
                 
                 delegate: SessionCard {
                     // Les propriétés sont automatiquement liées via required property
-                    
+                    name: model.name
+                    sessionId: model.sessionId
+                    players: model.players
+                    maxPlayers: model.maxPlayers
                     onClicked: {
                         console.log("Session sélectionnée:", sessionId)
                         root.sessionSelected({
-                            name: name,
-                            sessionId: sessionId,
-                            players: players,
-                            maxPlayers: maxPlayers
-                        })
+                                                 name: name,
+                                                 sessionId: sessionId,
+                                                 players: players,
+                                                 maxPlayers: maxPlayers
+                                             })
                     }
                 }
             }
@@ -217,11 +218,11 @@ Rectangle {
             particleCount: 25
             
             background: Rectangle {
-                color: parent.enabled ? 
-                    (parent.down ? "#d35400" : "#E67E22") : "#555555"
+                color: parent.enabled ?
+                           (parent.down ? "#d35400" : "#E67E22") : "#555555"
                 radius: 8
                 border.color: parent.enabled ?
-                    (parent.hovered ? "#FFFFFF" : "#d35400") : "#666666"
+                                  (parent.hovered ? "#FFFFFF" : "#d35400") : "#666666"
                 border.width: 2
                 
                 Rectangle {
