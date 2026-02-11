@@ -39,7 +39,7 @@ Drawer {
 
     id: mapInfoDrawer
     height: parent.height
-    width: Screen.pixelDensity * 75
+    width: 340
     edge: Qt.RightEdge
 
     modal : false
@@ -47,7 +47,9 @@ Drawer {
     signal requestNewMap()
     background : Rectangle {
         anchors.fill: parent
-        color: "#383838"
+        color: "#E6222222"
+        border.color: "#333333"
+        border.width: 1
     }
 
     // Header avec titre

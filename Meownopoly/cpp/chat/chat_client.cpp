@@ -592,7 +592,6 @@ void ChatClient::sendMessage(const QString &text) {
     p["nonce"] = QString(nonce.toBase64());
     p["key_v"] = m_currentKeyVersion;
     send["payload"] = p;
-
     sendWebSocketMessage(send);
 }
 

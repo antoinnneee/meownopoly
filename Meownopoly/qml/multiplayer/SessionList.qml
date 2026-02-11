@@ -11,11 +11,11 @@ import Meownopoly.Account 1.0
  */
 Rectangle {
     id: root
-    
+
     color: "#1a1a1a"
-    
+
     signal sessionSelected(var sessionData)
-    
+
     // Instance ChatClient pour le lobby
     ChatClient {
         id: lobbyChatClient
@@ -29,18 +29,18 @@ Rectangle {
                 refreshTimer.stop()
             }
         }
-        
+
         onAvailableSessionsChanged: {
             console.log("📋 Sessions updated:", lobbyChatClient.availableSessions.length)
         }
-        
+
         onErrorOccurred: function(error) {
             console.error("❌ Lobby error:", error)
             errorText.text = "Erreur: " + error
             errorText.visible = true
         }
     }
-    
+
     // Timer de rafraîchissement automatique
     Timer {
         id: refreshTimer
@@ -53,7 +53,7 @@ Rectangle {
             }
         }
     }
-    
+
     Component.onCompleted: {
         console.log("🚀 SessionList loaded, connecting to server...")
         // Se connecter au serveur
@@ -64,21 +64,21 @@ Rectangle {
             AccountManager.nickname
         )
     }
-    
+
     Component.onDestruction: {
         refreshTimer.stop()
     }
-    
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 24
         spacing: 20
-        
+
         // HEADER INTÉGRÉ
         ColumnLayout {
             Layout.alignment: Qt.AlignHCenter
             spacing: 8
-            
+
             Text {
                 text: "Sessions Disponibles"
                 color: "#ffffff"
@@ -86,7 +86,7 @@ Rectangle {
                 font.bold: true
                 Layout.alignment: Qt.AlignHCenter
             }
-            
+
             Text {
                 text: lobbyChatClient.connected ?
                           ("🐱 " + lobbyChatClient.availableSessions.length + " parties en cours") :
@@ -96,7 +96,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
             }
         }
-        
+
         // Message d'erreur
         Text {
             id: errorText
@@ -107,7 +107,7 @@ Rectangle {
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
-        
+
         // COMPTEUR EN LIGNE INTÉGRÉ
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
@@ -117,17 +117,17 @@ Rectangle {
             radius: 20
             border.color: lobbyChatClient.connected ? "#4caf50" : "#666666"
             border.width: 2
-            
+
             Row {
                 anchors.centerIn: parent
                 spacing: 10
-                
+
                 Text {
                     text: lobbyChatClient.connected ? "🌐" : "⏳"
                     font.pixelSize: 18
                     anchors.verticalCenter: parent.verticalCenter
                 }
-                
+
                 Text {
                     text: lobbyChatClient.connected ? "Serveur connecté" : "Connexion..."
                     color: lobbyChatClient.connected ? "#4caf50" : "#888888"
@@ -137,29 +137,29 @@ Rectangle {
                 }
             }
         }
-        
+
         // LISTE DES SESSIONS (DONNÉES RÉELLES)
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            
+
             // Message si aucune session
             Item {
                 width: parent.width
                 height: sessionsListView.count === 0 ? 200 : 0
                 visible: sessionsListView.count === 0
-                
+
                 Column {
                     anchors.centerIn: parent
                     spacing: 16
-                    
+
                     Text {
                         text: lobbyChatClient.connected ? "😿" : "⏳"
                         font.pixelSize: 48
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-                    
+
                     Text {
                         text: lobbyChatClient.connected ?
                                   "Aucune partie disponible pour l'instant" :
@@ -168,7 +168,7 @@ Rectangle {
                         font.pixelSize: 16
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
-                    
+
                     Text {
                         text: "Créez une nouvelle session pour commencer !"
                         color: "#666666"
@@ -178,19 +178,19 @@ Rectangle {
                     }
                 }
             }
-            
+
             ListView {
                 id: sessionsListView
                 model: lobbyChatClient.availableSessions // 🎯 DONNÉES RÉELLES !
                 spacing: 12
                 width: parent.width
-                
+                height: parent.height
                 delegate: SessionCard {
                     // Les propriétés sont automatiquement liées via required property
                     hostNickname: model.modelData.hostNickname
                     onlineCount: model.modelData.onlineCount
                     sessionId: model.modelData.sessionId
-                    
+
                     onClicked: {
                         console.log("Session sélectionnée:", sessionId)
                         root.sessionSelected({
@@ -203,20 +203,20 @@ Rectangle {
                 }
             }
         }
-        
+
         // BOUTON CRÉATION (ParticleButton direct)
         ParticleButton {
             text: "➕ Créer une Session"
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: 250
             Layout.preferredHeight: 55
-            
+
             enabled: lobbyChatClient.connected
-            
+
             particleColor: "#E67E22"
             particleColorVariation: "#ff9800"
             particleCount: 25
-            
+
             background: Rectangle {
                 color: parent.enabled ?
                            (parent.down ? "#d35400" : "#E67E22") : "#555555"
@@ -224,7 +224,7 @@ Rectangle {
                 border.color: parent.enabled ?
                                   (parent.hovered ? "#FFFFFF" : "#d35400") : "#666666"
                 border.width: 2
-                
+
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 2
@@ -235,7 +235,10 @@ Rectangle {
                     }
                 }
             }
-            
+
+
+
+
             contentItem: Text {
                 text: parent.text
                 font.pixelSize: 16
@@ -244,17 +247,17 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-            
+
             onClicked: {
                 console.log("⚠️ Création de session demandée (pas encore implémenté)")
             }
         }
-        
+
         // HELP TEXT INTÉGRÉ avec bouton refresh
         Row {
             Layout.alignment: Qt.AlignHCenter
             spacing: 16
-            
+
             Text {
                 text: "💡 Cliquez sur une session pour rejoindre"
                 color: "#666666"
@@ -262,19 +265,19 @@ Rectangle {
                 font.italic: true
                 anchors.verticalCenter: parent.verticalCenter
             }
-            
+
             Button {
                 text: "🔄"
                 width: 32
                 height: 32
-                
+
                 background: Rectangle {
                     color: parent.pressed ? "#444444" : "#333333"
                     radius: 16
                     border.color: "#555555"
                     border.width: 1
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
                     color: "#cccccc"
@@ -282,13 +285,13 @@ Rectangle {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-                
+
                 onClicked: {
                     if (lobbyChatClient.connected) {
                         lobbyChatClient.requestSessionsList()
                     }
                 }
-                
+
                 ToolTip {
                     visible: parent.hovered
                     text: "Rafraîchir la liste"
