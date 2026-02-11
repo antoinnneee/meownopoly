@@ -165,6 +165,9 @@ function handleCommand(ws, msg) {
         case 'SEND_MSG':
             handleSendMessage(ws, payload);
             break;
+        case 'SEND_COMMAND':
+            handleSendCommand(ws, payload);
+            break;
         case 'GET_HISTORY':
             handleGetHistory(ws, payload);
             break;
@@ -333,6 +336,54 @@ function handleSendMessage(ws, payload) {
         room.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(rawOutbound);
+            }
+        });
+    }
+}
+
+function handleSendCommand(ws, payload) {
+    const { session_id, recipient_id, payload: ciphertext, nonce, key_v } = payload;
+    if (!session_id || !ciphertext || !nonce) return;
+
+    // Optional: Check key rotation if strict security is desired for commands too
+    if (keyRotationRequired.has(session_id)) {
+        return sendError(ws, 'KEY_ROTATION_REQUIRED', 'A new participant joined; a client must publish a new key before sending commands');
+    }
+
+    const commandMessage = {
+        type: 'NEW_COMMAND',
+        payload: {
+            sender_id: ws.player_id,
+            payload: ciphertext,
+            nonce,
+            key_version: key_v,
+            timestamp: new Date().toISOString()
+        }
+    };
+
+    const room = rooms.get(session_id);
+    if (!room) return;
+
+    if (recipient_id) {
+        // Unicast: Find specific client
+        let found = false;
+        for (const client of room) {
+            if (client.player_id === recipient_id && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(commandMessage));
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            // Optional: Notify sender that recipient was not found
+            debug(`Command recipient ${recipient_id} not found in session ${session_id}`);
+        }
+    } else {
+        // Broadcast: Send to all EXCEPT sender
+        const rawCommand = JSON.stringify(commandMessage);
+        room.forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(rawCommand);
             }
         });
     }
