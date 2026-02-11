@@ -146,6 +146,15 @@ module.exports = {
     return db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
   },
 
+  clearAllData: () => {
+    db.transaction(() => {
+      db.prepare('DELETE FROM messages').run();
+      db.prepare('DELETE FROM participants').run();
+      db.prepare('DELETE FROM sessions').run();
+    })();
+    db.exec('VACUUM');
+  },
+
   // Participant methods
   addParticipant: (sessionId, playerId, nickname) => {
     return db.prepare('INSERT OR IGNORE INTO participants (session_id, player_id, nickname) VALUES (?, ?, ?)')

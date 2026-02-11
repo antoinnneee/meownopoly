@@ -338,6 +338,21 @@ void ChatClient::requestSessionsList() {
     sendWebSocketMessage(msg);
 }
 
+void ChatClient::kickPlayer(const QString &targetPlayerId) {
+    if (!m_connected || m_sessionId.isEmpty()) return;
+
+    qDebug() << "[ChatClient] Kicking player" << targetPlayerId << "from session" << m_sessionId;
+
+    QJsonObject kick;
+    kick["type"] = "KICK";
+    QJsonObject p;
+    p["session_id"] = m_sessionId;
+    p["target_player_id"] = targetPlayerId;
+    kick["payload"] = p;
+
+    sendWebSocketMessage(kick);
+}
+
 void ChatClient::handleError(const QJsonObject &payload) {
     QString code = payload["code"].toString();
     QString message = payload["message"].toString();

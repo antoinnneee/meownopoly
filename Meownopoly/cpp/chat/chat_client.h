@@ -48,6 +48,7 @@ public:
     Q_INVOKABLE void copyImageToClipboard(const QString &imageId);
     Q_INVOKABLE void requestParticipants();
     Q_INVOKABLE void requestSessionsList();
+    Q_INVOKABLE void kickPlayer(const QString &targetPlayerId);
 
     static void registerQml(QQmlEngine *engine = nullptr) {
         qmlRegisterType<ChatClient>("Meownopoly.Chat", 1, 0, "ChatClient");

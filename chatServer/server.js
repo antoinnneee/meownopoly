@@ -183,8 +183,14 @@ function handleCommand(ws, msg) {
         case 'DELETE_SESSION':
             handleDeleteSession(ws, payload);
             break;
+        case 'KICK':
+            handleKick(ws, payload);
+            break;
         case 'LIST_SESSIONS':
             handleListSessions(ws);
+            break;
+        case 'CLEAR_ALL_SESSIONS':
+            handleClearAllRooms(ws);
             break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
@@ -422,6 +428,34 @@ function handleClearHistory(ws, payload) {
     }
 }
 
+function handleClearAllRooms(ws) {
+    debug('CLEANING ALL ROOMS AND SESSIONS...');
+
+    // Delete from DB
+    db.clearAllData();
+
+    // Notify ALL connected clients
+    const clearMsg = JSON.stringify({
+        type: 'SERVER_RESET',
+        payload: { message: 'All sessions and history have been cleared by an administrator.' }
+    });
+
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(clearMsg);
+        }
+        // Reset client session state
+        client.session_id = null;
+        client.player_id = null;
+    });
+
+    // Clear in-memory state
+    rooms.clear();
+    keyRotationRequired.clear();
+
+    debug('ALL ROOMS AND SESSIONS CLEARED.');
+}
+
 function handleGetParticipants(ws, payload) {
     const { session_id } = payload;
     if (!session_id) return;
@@ -597,6 +631,64 @@ function handleDeleteSession(ws, payload) {
     keyRotationRequired.delete(session_id);
 
     debug(`Session ${session_id} deleted by ${ws.player_id}`);
+}
+
+function handleKick(ws, payload) {
+    const { session_id, target_player_id } = payload;
+    if (!session_id || !target_player_id) return;
+
+    const participants = db.getParticipants(session_id);
+    if (!participants || participants.length === 0) return;
+
+    // The host is the first participant in the database
+    const hostId = participants[0].player_id;
+    debug(`Host ID: ${hostId}`);
+    debug(`Player ID: ${ws.player_id}`);
+    debug(`Target player ID: ${target_player_id}`);
+
+    if (ws.player_id !== hostId) {
+        return sendError(ws, 'FORBIDDEN', 'Only the host can kick participants');
+    }
+
+    if (target_player_id === hostId) {
+        return sendError(ws, 'INVALID_OPERATION', 'Host cannot kick themselves');
+    }
+
+    // Remove from DB
+    db.removeParticipant(session_id, target_player_id);
+
+    // Notify and disconnect target
+    const room = rooms.get(session_id);
+    if (room) {
+        const kickedMsg = JSON.stringify({
+            type: 'KICKED',
+            payload: { session_id, reason: 'Kicked by host' }
+        });
+
+        const broadcastMsg = JSON.stringify({
+            type: 'PARTICIPANT_KICKED',
+            payload: { session_id, player_id: target_player_id }
+        });
+
+        for (const client of room) {
+            if (client.player_id === target_player_id) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(kickedMsg);
+                }
+                room.delete(client);
+                client.session_id = null;
+                // We keep connection open, but they are out of the room
+                debug(`Participant ${target_player_id} was kicked from session ${session_id}`);
+            } else if (client.readyState === WebSocket.OPEN) {
+                client.send(broadcastMsg);
+            }
+        }
+    }
+
+    // Trigger key rotation requirement
+    keyRotationRequired.add(session_id);
+
+    debug(`Host ${hostId} kicked ${target_player_id} from session ${session_id}`);
 }
 
 function sendError(ws, code, message) {
