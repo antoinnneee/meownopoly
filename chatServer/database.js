@@ -9,6 +9,7 @@ const db = new Database(dbPath);
 db.exec(`
   CREATE TABLE IF NOT EXISTS sessions (
     session_id TEXT PRIMARY KEY,
+    password_hash TEXT,
     key_package TEXT,
     key_nonce TEXT,
     version INTEGER DEFAULT 1,
@@ -40,12 +41,13 @@ db.exec(`
   );
 `);
 
-// Migration: add sender_nickname for existing DBs
+// Migration: add sender_nickname and password_hash for existing DBs
 try {
   db.prepare('ALTER TABLE messages ADD COLUMN sender_nickname TEXT').run();
-} catch (e) {
-  // Column already exists
-}
+} catch (e) { }
+try {
+  db.prepare('ALTER TABLE sessions ADD COLUMN password_hash TEXT').run();
+} catch (e) { }
 
 module.exports = {
   // Session methods
@@ -53,12 +55,12 @@ module.exports = {
     return db.prepare('SELECT * FROM sessions WHERE session_id = ?').get(sessionId);
   },
   getSessionKeys: (sessionId) => {
-    const session = db.prepare('SELECT version, key_package, key_nonce FROM sessions WHERE session_id = ?').get(sessionId);
+    const session = db.prepare('SELECT version, key_package, key_nonce, password_hash FROM sessions WHERE session_id = ?').get(sessionId);
     return session ? [session] : [];
   },
-  createSession: (sessionId, keyPackage, keyNonce) => {
-    db.prepare('INSERT OR IGNORE INTO sessions (session_id, key_package, key_nonce, version) VALUES (?, ?, ?, 1)')
-      .run(sessionId, keyPackage, keyNonce);
+  createSession: (sessionId, passwordHash, keyPackage, keyNonce) => {
+    db.prepare('INSERT OR IGNORE INTO sessions (session_id, password_hash, key_package, key_nonce, version) VALUES (?, ?, ?, ?, 1)')
+      .run(sessionId, passwordHash, keyPackage, keyNonce);
   },
   updateSession: (sessionId, keyPackage, keyNonce) => {
     return db.transaction(() => {

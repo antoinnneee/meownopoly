@@ -66,6 +66,7 @@ void ChatClient::connectToServer(const QString &url, const QString &playerId, co
 
     // Derive Lock Key from SessionID + Password
     m_lockKey = ChatCrypto::deriveLockKey(m_sessionId, m_password);
+    m_passwordHash = ChatCrypto::derivePasswordProof(m_sessionId, m_password);
 
     // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
     // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
@@ -117,6 +118,7 @@ void ChatClient::onConnected() {
     payload["session_id"] = m_sessionId;
     payload["player_id"] = m_playerId;
     payload["player_nickname"] = m_nickname;
+    payload["password_hash"] = QString(m_passwordHash);
     join["payload"] = payload;
 
     sendWebSocketMessage(join);

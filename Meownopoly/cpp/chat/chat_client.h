@@ -99,6 +99,7 @@ private:
     QString m_nickname;
     QString m_password;
     QByteArray m_lockKey;
+    QByteArray m_passwordHash;
     QMap<int, QByteArray> m_sessionKeys;
     int m_currentKeyVersion = 0;
     QVariantList m_messages;

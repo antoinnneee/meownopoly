@@ -155,6 +155,21 @@ function handleCommand(ws, msg) {
     const { type, payload } = msg;
     debug(`Processing command: ${type}`, payload);
 
+    // COMMANDS THAT REQUIRE BEING JOINED TO A SESSION
+    const sessionCommands = [
+        'PUBLISH_KEY', 'SEND_MSG', 'SEND_COMMAND', 'GET_HISTORY',
+        'CLEAR_HISTORY', 'GET_PARTICIPANTS', 'LEAVE_SESSION',
+        'DELETE_SESSION', 'KICK'
+    ];
+
+    if (sessionCommands.includes(type)) {
+        const session_id = payload ? payload.session_id : null;
+        if (!ws.session_id || ws.session_id !== session_id) {
+            debug(`Access denied for ${ws.player_id || 'unknown'} for command ${type} on session ${session_id}`);
+            return sendError(ws, 'UNAUTHORIZED', 'You must join the session before performing this action.');
+        }
+    }
+
     switch (type) {
         case 'JOIN_SESSION':
             handleJoinSession(ws, payload);
@@ -198,13 +213,27 @@ function handleCommand(ws, msg) {
 }
 
 function handleJoinSession(ws, payload) {
-    const { session_id, player_id, player_nickname } = payload;
+    const { session_id, player_id, player_nickname, password_hash } = payload;
     if (!session_id || !player_id) return;
 
     // VÉRIFICATION: Limite de sessions
     if (!rooms.has(session_id) && rooms.size >= MAX_SESSIONS) {
         return sendError(ws, 'MAX_SESSIONS_REACHED',
             `Server has reached maximum capacity (${MAX_SESSIONS} active sessions). Please try again later.`);
+    }
+
+    const session = db.getSession(session_id);
+
+    // VÉRIFICATION: Mot de passe / Preuve
+    if (session) {
+        if (session.password_hash && session.password_hash !== password_hash) {
+            debug(`Join denied for ${player_id} in session ${session_id}: Invalid password proof`);
+            return sendError(ws, 'INVALID_PASSWORD', 'The password for this session is incorrect.');
+        }
+    } else {
+        // Nouvelle session: on la crée immédiatement avec le hash fourni
+        debug(`Creating new session entry for ${session_id}`);
+        db.createSession(session_id, password_hash, null, null);
     }
 
     ws.player_id = player_id;
@@ -225,25 +254,14 @@ function handleJoinSession(ws, payload) {
         db.addParticipant(session_id, player_id, player_nickname);
     }
 
-    // Update nickname in case it changed or was missing
-    if (isKnownParticipant && player_nickname) {
-        // Optional: update nickname in DB if needed, but for now we trust the join payload
-    }
-
-    const session = db.getSession(session_id);
     let keys = [];
     let history = [];
-
-    // If they are a known participant (rejoining), they assume they can read history if they have the keys.
-    // If they are NEW, they get nothing until rotation (or if we changed that logic).
-    // Actually, "isNewParticipant" logic in original code was about "is there anyone else".
-    // We strictly follow: If you are NEW to the DB, you trigger rotation.
 
     if (isKnownParticipant) {
         // Send current key if available
         const sessionKeys = db.getSessionKeys(session_id);
         if (sessionKeys && sessionKeys.length > 0) {
-            keys = sessionKeys;
+            keys = sessionKeys.filter(k => k.key_package !== null);
         }
         // Send history (enc)
         history = db.getHistory(session_id) || [];
