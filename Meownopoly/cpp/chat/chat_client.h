@@ -11,6 +11,7 @@
 #include "chat_database.h"
 #include "chat_worker.h"
 #include "chat_image_provider.h"
+#include "chat_command_helper.h"
 #include <QQmlEngine>
 
 class ChatClient : public QObject
@@ -49,6 +50,8 @@ public:
     Q_INVOKABLE void requestParticipants();
     Q_INVOKABLE void requestSessionsList();
     Q_INVOKABLE void kickPlayer(const QString &targetPlayerId);
+    Q_INVOKABLE void sendPing(const QString &targetPlayerId = QString());
+    Q_INVOKABLE void sendCommand(const QString &commandType, const QJsonObject &data, const QString &recipientId = QString());
 
     static void registerQml(QQmlEngine *engine = nullptr) {
         qmlRegisterType<ChatClient>("Meownopoly.Chat", 1, 0, "ChatClient");
@@ -66,6 +69,7 @@ signals:
     void participantLeft(const QString &playerId);
     void errorOccurred(const QString &error);
     void availableSessionsChanged();
+    void commandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
 
 private slots:
     void onConnected();
@@ -81,6 +85,7 @@ private:
     void handleParticipantLeft(const QJsonObject &payload);
     void handleParticipantsList(const QJsonObject &payload);
     void handleSessionsList(const QJsonObject &payload);
+    void handleNewCommand(const QJsonObject &payload);
     void handleError(const QJsonObject &payload);
     void handleHistoryCleared();
     void sendWebSocketMessage(const QJsonObject &message);

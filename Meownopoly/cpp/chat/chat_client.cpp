@@ -9,6 +9,7 @@
 #include <QDataStream>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QDateTime>
 
 ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     // Initialize database
@@ -164,8 +165,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleParticipantLeft(payload);
     } else if (type == "PARTICIPANTS_LIST") {
         handleParticipantsList(payload);
-    } else if (type == "SESSIONS_LIST") {
-        handleSessionsList(payload);
+    } else if (type == "NEW_COMMAND") {
+        handleNewCommand(payload);
     } else if (type == "ERROR") {
         handleError(payload);
     } else if (type == "HISTORY_CLEARED") {
@@ -619,6 +620,81 @@ void ChatClient::sendImage(const QString &filePath) {
     sendMessage(base64);
 
     qDebug() << "[ChatClient] Compressed image sent (Size:" << compressedData.size() / 1024 << "KB)";
+}
+
+void ChatClient::sendCommand(const QString &commandType, const QJsonObject &data, const QString &recipientId) {
+    if (!m_connected || m_sessionKeys.isEmpty()) return;
+
+    if (!m_sessionKeys.contains(m_currentKeyVersion)) {
+        qWarning() << "[ChatClient] Current key version" << m_currentKeyVersion << "not found for sendCommand!";
+        return;
+    }
+
+    qDebug() << "[ChatClient] Sending command" << commandType << "to" << (recipientId.isEmpty() ? "all" : recipientId);
+
+    QString internalPayload = ChatCommandHelper::formatCommand(commandType, data);
+    QByteArray nonce = ChatCrypto::generateNonce();
+    QByteArray cipher = ChatCrypto::encrypt(internalPayload.toUtf8(), m_sessionKeys[m_currentKeyVersion], nonce);
+
+    QJsonObject send;
+    send["type"] = "SEND_COMMAND";
+    QJsonObject p;
+    p["session_id"] = m_sessionId;
+    if (!recipientId.isEmpty()) {
+        p["recipient_id"] = recipientId;
+    }
+    p["payload"] = QString(cipher.toBase64());
+    p["nonce"] = QString(nonce.toBase64());
+    p["key_v"] = m_currentKeyVersion;
+    send["payload"] = p;
+
+    sendWebSocketMessage(send);
+}
+
+void ChatClient::sendPing(const QString &targetPlayerId) {
+    qDebug() << "[ChatClient] Sending PING to" << (targetPlayerId.isEmpty() ? "all" : targetPlayerId);
+    QJsonObject data;
+    data["timestamp"] = QDateTime::currentMSecsSinceEpoch();
+    sendCommand("PING", data, targetPlayerId);
+}
+
+void ChatClient::handleNewCommand(const QJsonObject &payload) {
+    QString senderId = payload["sender_id"].toString();
+    QByteArray cipher = QByteArray::fromBase64(payload["payload"].toString().toUtf8());
+    QByteArray nonce = QByteArray::fromBase64(payload["nonce"].toString().toUtf8());
+    int keyVersion = payload["key_version"].toInt();
+
+    if (!m_sessionKeys.contains(keyVersion)) {
+        qWarning() << "[ChatClient] Key version" << keyVersion << "missing for command! Reloading...";
+        loadAndDecryptSessionKeys();
+    }
+
+    if (m_sessionKeys.contains(keyVersion)) {
+        QByteArray plain = ChatCrypto::decrypt(cipher, m_sessionKeys[keyVersion], nonce);
+        if (plain.isEmpty()) {
+            qWarning() << "[ChatClient] Failed to decrypt command from" << senderId;
+            return;
+        }
+
+        QString commandType;
+        QJsonObject data;
+        if (ChatCommandHelper::parseCommand(QString::fromUtf8(plain), commandType, data)) {
+            qDebug() << "[ChatClient] Received command" << commandType << "from" << senderId;
+            
+            if (commandType == "PING") {
+                qDebug() << "[ChatClient] Auto-responding with PONG to" << senderId;
+                sendCommand("PONG", data, senderId);
+            } else if (commandType == "PONG") {
+                qint64 sentTs = data["timestamp"].toVariant().toLongLong();
+                qint64 now = QDateTime::currentMSecsSinceEpoch();
+                qDebug() << "[ChatClient] Received PONG from" << senderId << "Roundtrip:" << (now - sentTs) << "ms";
+            }
+            
+            emit commandReceived(senderId, commandType, data);
+        }
+    } else {
+        qWarning() << "[ChatClient] FAILED to decrypt command. Missing Key Version:" << keyVersion;
+    }
 }
 
 void ChatClient::sendTextFile(const QString &filePath) {
