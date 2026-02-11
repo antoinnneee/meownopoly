@@ -34,6 +34,7 @@ INCLUDEPATH += cpp
 
 SOURCES += \
     cpp/communication/catway.cpp \
+    cpp/chat/chat_command_helper.cpp \
     cpp/game/item_snapable/ZoneParameter.cpp \
     cpp/game/physics/collision2d.cpp \
     cpp/game/physics/pattounx_body.cpp \
@@ -91,6 +92,7 @@ SOURCES += \
 
 HEADERS += \
     cpp/communication/catway.h \
+    cpp/chat/chat_command_helper.h \
     cpp/game/item_snapable/ZoneParameter.h \
     cpp/game/physics/collision2d.h \
     cpp/game/physics/pattounx_body.h \

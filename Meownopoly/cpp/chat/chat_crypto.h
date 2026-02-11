@@ -12,6 +12,7 @@ public:
     explicit ChatCrypto(QObject *parent = nullptr);
 
     static QByteArray deriveLockKey(const QString &gameId, const QString &password);
+    static QByteArray derivePasswordProof(const QString &sessionId, const QString &password);
     
     // AES-256-GCM Encryption/Decryption
     // Result is [payload + auth_tag] or just decrypted payload

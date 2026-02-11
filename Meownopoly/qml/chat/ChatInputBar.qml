@@ -13,6 +13,19 @@ Rectangle {
     signal openImageDialog()
     signal openTextFileDialog()
 
+    function sendCurrentMessage() {
+        if (inputField.text !== "" && chatClient) {
+            var text = inputField.text.trim()
+            if (text.startsWith("/ping")) {
+                chatClient.sendPing()
+            } else {
+                chatClient.sendMessage(inputField.text)
+            }
+            inputField.text = ""
+        }
+        inputField.focus = false
+    }
+
     RowLayout {
         anchors.fill: parent
         anchors.margins: 8
@@ -90,11 +103,7 @@ Rectangle {
                 }
 
                 onAccepted: {
-                    if (inputField.text !== "" && chatClient) {
-                        chatClient.sendMessage(inputField.text)
-                        inputField.text = ""
-                    }
-                    inputField.focus = false
+                    sendCurrentMessage()
                 }
             }
         }
@@ -128,11 +137,7 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    if (inputField.text !== "" && chatClient) {
-                        chatClient.sendMessage(inputField.text)
-                        inputField.text = ""
-                    }
-                    inputField.focus = false
+                    sendCurrentMessage()
                 }
             }
         }

@@ -14,6 +14,13 @@ QByteArray ChatCrypto::deriveLockKey(const QString &gameId, const QString &passw
     return QCryptographicHash::hash((gameId + password).toUtf8(), QCryptographicHash::Sha256);
 }
 
+QByteArray ChatCrypto::derivePasswordProof(const QString &sessionId, const QString &password)
+{
+    // High-entropy proof that password is correct without sending the password itself
+    // Salted with a static string to differentiate from the lock key
+    return QCryptographicHash::hash((password + sessionId + "proof-salt").toUtf8(), QCryptographicHash::Sha256).toHex();
+}
+
 QByteArray ChatCrypto::generateNonce()
 {
     // Use System Random (CSPRNG)
