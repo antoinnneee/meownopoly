@@ -18,6 +18,9 @@ Drawer {
     property string playerNickname: AccountManager.nickname
     property bool isResizing: false
     property int _prevMessageCount: 0
+    // Message privé : destinataire sélectionné (vide = envoi à tous)
+    property string privateRecipientId: ""
+    property string privateRecipientNickname: ""
 
     background: Rectangle {
         color: "#E6222222"
@@ -250,6 +253,38 @@ Drawer {
                                 visible: modelData.player_id === chatDrawer.playerId
                             }
 
+                            // Bouton Message privé (pas pour soi-même)
+                            Rectangle {
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 20
+                                color: privateMsgBtnArea.containsMouse ? "#334466" : "transparent"
+                                radius: 4
+                                visible: modelData.player_id !== chatDrawer.playerId
+
+                                Text {
+                                    text: "🔒"
+                                    font.pixelSize: 10
+                                    anchors.centerIn: parent
+                                }
+
+                                MouseArea {
+                                    id: privateMsgBtnArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        chatDrawer.privateRecipientId = modelData.player_id
+                                        chatDrawer.privateRecipientNickname = modelData.player_nickname || modelData.player_id || "?"
+                                    }
+                                }
+
+                                ToolTip {
+                                    visible: privateMsgBtnArea.containsMouse
+                                    text: "Envoyer un message privé (non enregistré)"
+                                    delay: 400
+                                }
+                            }
+
                             // Bouton Kick (visible seulement pour l'hôte et pas pour soi-même)
                             // Positionné à droite de la ligne du participant
                             Rectangle {
@@ -312,8 +347,15 @@ Drawer {
 
         ChatInputBar {
             chatClient: chatClient
+            drawer: chatDrawer
+            recipientId: chatDrawer.privateRecipientId
+            recipientNickname: chatDrawer.privateRecipientNickname
             onOpenImageDialog: imageDialog.open()
             onOpenTextFileDialog: textFileDialog.open()
+            onClearRecipient: {
+                chatDrawer.privateRecipientId = ""
+                chatDrawer.privateRecipientNickname = ""
+            }
         }
 
         ChatStatusBar {

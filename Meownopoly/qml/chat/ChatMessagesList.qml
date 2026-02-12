@@ -186,6 +186,8 @@ Rectangle {
             height: delegateImpl.height + 8
             x: 8
 
+            readonly property bool isOwn: modelData && messagesContainer.drawer && (modelData.sender === messagesContainer.drawer.playerId)
+
             ChatMessageDelegate {
                 id: delegateImpl
                 drawer: messagesContainer.drawer
@@ -193,6 +195,12 @@ Rectangle {
                 modelData: parent.modelData
                 index: parent.index
                 chatClient: messagesContainer.chatClient
+                anchors.top: parent.top
+                anchors.topMargin: 4
+                anchors.left: parent.isOwn ? undefined : parent.left
+                anchors.right: parent.isOwn ? parent.right : undefined
+                anchors.leftMargin: 0
+                anchors.rightMargin: 0
             }
         }
 

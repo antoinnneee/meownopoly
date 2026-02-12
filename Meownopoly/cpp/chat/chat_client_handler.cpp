@@ -182,7 +182,7 @@ void ChatClient::handleSessionsList(const QJsonObject &payload) {
         QJsonObject session = val.toObject();
 
         QVariantMap sessionMap;
-        sessionMap["name"] = session["session_id"].toString(); // UtilisÈ pour l'affichage
+        sessionMap["name"] = session["session_id"].toString(); // UtilisÔøΩ pour l'affichage
         sessionMap["sessionId"] = session["session_id"].toString();
         sessionMap["players"] = session["player_count"].toInt();
         sessionMap["maxPlayers"] = session["max_players"].toInt();
@@ -313,12 +313,18 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 }
 
 void ChatClient::handleNewMessage(const QJsonObject &payload) {
-    // Messages ÈphÈmËres (privÈs / unicast) ne sont pas enregistrÈs dans l'historique
+    const QString senderId = payload["sender_id"].toString();
     const bool ephemeral = payload["ephemeral"].toBool();
+
+    // Messages √©ph√©m√®res (priv√©s / unicast) ne sont pas enregistr√©s dans l'historique
     if (!ephemeral) {
-        m_db.saveMessage(m_sessionId, payload["sender_id"].toString(), payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
+        m_db.saveMessage(m_sessionId, senderId, payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
                          QByteArray::fromBase64(payload["nonce"].toString().toUtf8()), payload["timestamp"].toString(), payload["key_version"].toInt());
     }
+
+    // Nos propres messages sont d√©j√† affich√©s de fa√ßon optimiste : ne pas les r√©-ajouter
+    if (senderId == m_playerId)
+        return;
 
     QtConcurrent::run([this, payload]() {
         QString senderId = payload["sender_id"].toString();

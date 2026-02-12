@@ -4,14 +4,20 @@ import QtQuick.Layouts
 
 Rectangle {
     Layout.fillWidth: true
-    Layout.preferredHeight: 60
+    Layout.preferredHeight: recipientId ? 88 : 60
     color: "#333333"
     border.color: "#444444"
     border.width: 1
 
     property var chatClient
+    property var drawer
+    property string recipientId: ""
+    property string recipientNickname: ""
     signal openImageDialog()
     signal openTextFileDialog()
+    signal clearRecipient()
+
+    Behavior on Layout.preferredHeight { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
     function sendCurrentMessage() {
         if (inputField.text !== "" && chatClient) {
@@ -19,16 +25,78 @@ Rectangle {
             if (text.startsWith("/ping")) {
                 chatClient.sendPing()
             } else {
-                chatClient.sendMessage(inputField.text)
+                chatClient.sendMessage(inputField.text, recipientId || "", recipientNickname || "")
             }
             inputField.text = ""
         }
         inputField.focus = false
     }
 
-    RowLayout {
+    ColumnLayout {
         anchors.fill: parent
         anchors.margins: 8
+        spacing: 4
+
+        // Bandeau "Message privé à : X"
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 24
+            visible: !!recipientId
+            color: "#2a3a4a"
+            radius: 4
+            border.color: "#4A90E2"
+            border.width: 1
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 4
+                spacing: 6
+
+                Text {
+                    text: "🔒"
+                    font.pixelSize: 10
+                }
+                Text {
+                    text: "Message privé à : " + (recipientNickname || recipientId || "?")
+                    color: "#4A90E2"
+                    font.pixelSize: 10
+                    font.bold: true
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                }
+                Rectangle {
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    color: clearRecipientArea.containsMouse ? "#444444" : "transparent"
+                    radius: 3
+
+                    Text {
+                        text: "✕"
+                        color: "#aaaaaa"
+                        font.pixelSize: 11
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: clearRecipientArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: clearRecipient()
+                    }
+
+                    ToolTip {
+                        visible: clearRecipientArea.containsMouse
+                        text: "Envoyer à tous"
+                        delay: 400
+                    }
+                }
+            }
+        }
+
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
         spacing: 8
 
         Rectangle {
@@ -141,5 +209,6 @@ Rectangle {
                 }
             }
         }
+    }
     }
 }
