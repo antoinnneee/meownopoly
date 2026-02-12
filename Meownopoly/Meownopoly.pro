@@ -34,6 +34,7 @@ VPATH += cpp
 INCLUDEPATH += cpp
 
 SOURCES += \
+    cpp/chat/chat_client_handler.cpp \
     cpp/communication/catway.cpp \
     cpp/chat/chat_command_helper.cpp \
     cpp/game/item_snapable/ZoneParameter.cpp \
