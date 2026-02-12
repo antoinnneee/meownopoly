@@ -482,7 +482,7 @@ function handleGetParticipants(ws, payload) {
     const dbParticipants = db.getParticipants(session_id);
     const room = rooms.get(session_id);
 
-    const participants = dbParticipants.map(p => {
+    const participants = dbParticipants.map((p, index) => {
         let isOnline = false;
         if (room) {
             for (const client of room) {
@@ -495,7 +495,8 @@ function handleGetParticipants(ws, payload) {
         return {
             player_id: p.player_id,
             player_nickname: p.nickname,
-            status: isOnline ? 'online' : 'offline'
+            status: isOnline ? 'online' : 'offline',
+            is_host: index === 0
         };
     });
 

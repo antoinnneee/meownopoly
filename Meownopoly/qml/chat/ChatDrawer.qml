@@ -227,8 +227,31 @@ Drawer {
                                 }
                             }
 
+                            Text {
+                                text: "👑"
+                                font.pixelSize: 10
+                                visible: modelData.is_host || false
+                            }
+
+                            Text {
+                                text: modelData.player_nickname || modelData.player_id || "?"
+                                color: (modelData.player_id === chatDrawer.playerId) ? "#4A90E2" : "#cccccc"
+                                font.pixelSize: 11
+                                font.bold: modelData.player_id === chatDrawer.playerId
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+
+                            Text {
+                                text: (modelData.player_id === chatDrawer.playerId) ? "(vous)" : ""
+                                color: "#888888"
+                                font.pixelSize: 9
+                                font.italic: true
+                                visible: modelData.player_id === chatDrawer.playerId
+                            }
+
                             // Bouton Kick (visible seulement pour l'hôte et pas pour soi-même)
-                            // On suppose que l'hôte est le premier participant dans la liste retournée par le serveur
+                            // Positionné à droite de la ligne du participant
                             Rectangle {
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
@@ -262,23 +285,6 @@ Drawer {
                                     text: "Exclure ce participant"
                                     delay: 400
                                 }
-                            }
-
-                            Text {
-                                text: modelData.player_nickname || modelData.player_id || "?"
-                                color: (modelData.player_id === chatDrawer.playerId) ? "#4A90E2" : "#cccccc"
-                                font.pixelSize: 11
-                                font.bold: modelData.player_id === chatDrawer.playerId
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-
-                            Text {
-                                text: (modelData.player_id === chatDrawer.playerId) ? "(vous)" : ""
-                                color: "#888888"
-                                font.pixelSize: 9
-                                font.italic: true
-                                visible: modelData.player_id === chatDrawer.playerId
                             }
                         }
                     }

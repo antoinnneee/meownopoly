@@ -155,6 +155,7 @@ void ChatClient::handleParticipantsList(const QJsonObject &payload) {
         participant["player_id"] = p["player_id"].toString();
         participant["player_nickname"] = p["player_nickname"].toString();
         participant["status"] = p["status"].toString();
+        participant["is_host"] = p["is_host"].toBool();
         m_participants.append(participant);
     }
 
