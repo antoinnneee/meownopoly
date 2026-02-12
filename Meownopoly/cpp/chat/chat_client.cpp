@@ -248,7 +248,7 @@ void ChatClient::handleKeyUpdate(const QJsonObject &payload) {
 
 void ChatClient::handleNewParticipant(const QJsonObject &payload) {
     QString playerId = payload["player_id"].toString();
-    qDebug() << "[ChatClient] New participant joined:" << playerId << "; publishing new session key.";
+    qDebug() << "[ChatClient] New participant joined:" << playerId << "; publishing new session key is required.";
 
     // Add to local participants list if not already present
     bool found = false;
@@ -262,6 +262,7 @@ void ChatClient::handleNewParticipant(const QJsonObject &payload) {
         QVariantMap participant;
         participant["player_id"] = playerId;
         participant["player_nickname"] = payload["player_nickname"].toString();
+        participant["status"] = "online";
         m_participants.append(participant);
         emit participantsChanged();
         emit participantJoined(playerId, payload["player_nickname"].toString());
@@ -297,6 +298,7 @@ void ChatClient::handleParticipantsList(const QJsonObject &payload) {
         QVariantMap participant;
         participant["player_id"] = p["player_id"].toString();
         participant["player_nickname"] = p["player_nickname"].toString();
+        participant["status"] = p["status"].toString();
         m_participants.append(participant);
     }
 
@@ -580,7 +582,7 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
     QString processedText = processMessageText(text);
     
     // Detect if it's a text file
-    bool isTextFile = processedText.startsWith("📄FILE:");
+    bool isTextFile = processedText.startsWith("FILE:");
     QString fileExtension;
     if (isTextFile) {
         int firstColon = processedText.indexOf(':', 7);

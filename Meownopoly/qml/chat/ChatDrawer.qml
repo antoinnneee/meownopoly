@@ -204,14 +204,27 @@ Drawer {
                             anchors.rightMargin: 8
                             spacing: 8
 
-                            // Indicateur en ligne
+                            // Indicateur en ligne/hors ligne
                             Rectangle {
+                                id: statusIndicator
                                 Layout.preferredWidth: 8
                                 Layout.preferredHeight: 8
                                 radius: 4
-                                color: "#4a8a4a"
-                                border.color: "#569c58"
+                                color: modelData.status === "online" ? "#4a8a4a" : "#a84a4a"
+                                border.color: Qt.lighter(color, 1.2)
                                 border.width: 1
+
+                                ToolTip {
+                                    visible: statusIndicatorArea.containsMouse
+                                    text: modelData.status === "online" ? "En ligne" : "Hors ligne"
+                                    delay: 400
+                                }
+
+                                MouseArea {
+                                    id: statusIndicatorArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                }
                             }
 
                             // Bouton Kick (visible seulement pour l'hôte et pas pour soi-même)
