@@ -40,19 +40,6 @@ Rectangle {
             }
         }
     }
-
-    Component {
-        id: sessionCreationComponent
-        SessionCreation {
-            onBackRequested: {
-                multiplayerStackView.pop()
-            }
-            onSessionCreateRequested: function(sessionData) {
-                console.log("📝 Données de création reçues:", JSON.stringify(sessionData))
-                multiplayerStackView.pop()
-            }
-        }
-    }
     
     ColumnLayout {
         anchors.fill: parent

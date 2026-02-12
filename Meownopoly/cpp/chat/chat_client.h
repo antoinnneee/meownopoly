@@ -16,7 +16,6 @@
 
 class ChatClient : public QObject
 {
-
     Q_OBJECT
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(QString sessionId READ sessionId WRITE setSessionId NOTIFY sessionIdChanged)
@@ -40,7 +39,6 @@ public:
     Q_INVOKABLE void connectToServer(const QString &url);
     Q_INVOKABLE void connectToSession(const QString &playerId, const QString &password, const QString &nickname = QString());
     Q_INVOKABLE void sendMessage(const QString &text);
-
     Q_INVOKABLE void sendImage(const QString &filePath);
     Q_INVOKABLE void sendTextFile(const QString &filePath);
     Q_INVOKABLE void saveTextToFile(const QString &filePath, const QString &content);

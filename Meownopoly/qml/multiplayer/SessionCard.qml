@@ -17,8 +17,7 @@ Rectangle {
      property string hostNickname // Nouveau
      property int onlineCount     // Nouveau
     
-    width: ListView.view.width * 0.7
-    anchors.centerIn: parent
+    width: ListView.view.width - 32
     height: 90
     color: "#2a2a2a"
     radius: 12
