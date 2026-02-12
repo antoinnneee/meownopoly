@@ -480,22 +480,6 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
             int keyVersion = msg["key_version"].toInt(); // Should be present
             QByteArray plain;
             if (m_sessionKeys.contains(keyVersion)) {
-                // The blob in m_sessionKeys is encrypted with lockKey.
-                // We must decrypt the session key first?
-                // Wait, m_sessionKeys stored blobs?
-                // ChatDatabase::getSessionKeys returns the blob+nonce.
-                // We need to unpack and decrypt the session key itself.
-
-                // Optimized approach: m_sessionKeys should store DECRYPTED keys in memory?
-                // No, we store Encrypted Blob + Nonce in m_sessionKeys map value?
-                // Let's assume m_sessionKeys holds: Version -> [EncryptedKey + Nonce] (as loaded from DB)
-
-                // We need to decrypt the session key to use it.
-                // Doing this for every message is slow.
-                // Ideally m_sessionKeys should hold the DECRYPTED keys in memory for the session duration.
-                // Let's change semantic: m_sessionKeys holds PLAIN session keys.
-
-                // In connectToServer/handleKeyUpdate, we decrypt the key before putting into m_sessionKeys.
                 plain = ChatCrypto::decrypt(cipher, m_sessionKeys[keyVersion], nonce);
             } else {
                 plain = "[Encrypted Message - Missing Key]";
@@ -519,7 +503,7 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
             QString processedText = processMessageText(text);
             
             // Detect if it's a text file
-            bool isTextFile = processedText.startsWith("📄FILE:");
+            bool isTextFile = processedText.startsWith("FILE:");
             QString fileExtension;
             if (isTextFile) {
                 // Extract extension from format: 📄FILE:ext:filename
@@ -546,14 +530,17 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 }
 
 void ChatClient::handleNewMessage(const QJsonObject &payload) {
-    qDebug() << "handleNewMessage:";
+
+    m_db.saveMessage(m_sessionId, payload["sender_id"].toString(), payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
+  QByteArray::fromBase64(payload["nonce"].toString().toUtf8()), payload["timestamp"].toString(), payload["key_version"].toInt());
+
+    QtConcurrent::run([this, payload]() {
     QString senderId = payload["sender_id"].toString();
     QString senderNickname = payload["sender_nickname"].toString();
     QByteArray cipher = QByteArray::fromBase64(payload["payload"].toString().toUtf8());
     QByteArray nonce = QByteArray::fromBase64(payload["nonce"].toString().toUtf8());
     QString ts = payload["timestamp"].toString();
 
-    m_db.saveMessage(m_sessionId, senderId, senderNickname, cipher, nonce, ts, payload["key_version"].toInt());
 
     // Decrypt for UI
     int keyVersion = payload["key_version"].toInt();
@@ -610,8 +597,14 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
     msg["isTextFile"] = isTextFile;
     msg["fileExtension"] = fileExtension;
     msg["timestamp"] = ts;
-    m_messages.append(msg);
-    emit messagesChanged();
+    // m_messages.append(msg);
+    // emit messagesChanged();
+        // Return to main thread to send the message via WebSocket
+        QMetaObject::invokeMethod(this, [this, msg]() {
+            m_messages.append(msg);
+            emit messagesChanged();
+        }, Qt::QueuedConnection);
+    });
 }
 
 void ChatClient::sendMessage(const QString &text) {
@@ -798,7 +791,7 @@ void ChatClient::sendTextFile(const QString &filePath) {
     QString fileName = fileInfo.fileName();
 
     // Format: 📄FILE:ext:filename\n\ncontenu
-    QString formattedMessage = QString::fromUtf8("\xF0\x9F\x93\x84") + "FILE:" + extension + ":" + fileName + "\n\n" + content;
+    QString formattedMessage = /*QString::fromUtf8("\xF0\x9F\x93\x84") +*/ "FILE:" + extension + ":" + fileName + "\n\n" + content;
 
     // Encrypt and send using sendMessage
     sendMessage(formattedMessage);
