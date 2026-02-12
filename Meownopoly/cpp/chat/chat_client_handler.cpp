@@ -21,6 +21,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
 
     if (type == "INIT_SESSION") {
         handleInitSession(payload);
+    } else if (type == "SESSIONS_LIST") {
+        handleSessionsList(payload);
     } else if (type == "NEW_MESSAGE") {
         handleNewMessage(payload);
     } else if (type == "HISTORY_RESULT") {
@@ -180,7 +182,7 @@ void ChatClient::handleSessionsList(const QJsonObject &payload) {
         QJsonObject session = val.toObject();
 
         QVariantMap sessionMap;
-        sessionMap["name"] = session["session_id"].toString(); // UtilisÃ© pour l'affichage
+        sessionMap["name"] = session["session_id"].toString(); // Utilisé pour l'affichage
         sessionMap["sessionId"] = session["session_id"].toString();
         sessionMap["players"] = session["player_count"].toInt();
         sessionMap["maxPlayers"] = session["max_players"].toInt();
@@ -287,8 +289,8 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
             bool isTextFile = processedText.startsWith("FILE:");
             QString fileExtension;
             if (isTextFile) {
-                // Extract extension from format: ðŸ“„FILE:ext:filename
-                int firstColon = processedText.indexOf(':', 7); // After "ðŸ“„FILE:"
+                // Extract extension from format: ??FILE:ext:filename
+                int firstColon = processedText.indexOf(':', 7); // After "??FILE:"
                 if (firstColon > 7) {
                     fileExtension = processedText.mid(7, firstColon - 7);
                 }
@@ -311,9 +313,12 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 }
 
 void ChatClient::handleNewMessage(const QJsonObject &payload) {
-
-    m_db.saveMessage(m_sessionId, payload["sender_id"].toString(), payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
-                     QByteArray::fromBase64(payload["nonce"].toString().toUtf8()), payload["timestamp"].toString(), payload["key_version"].toInt());
+    // Messages éphémères (privés / unicast) ne sont pas enregistrés dans l'historique
+    const bool ephemeral = payload["ephemeral"].toBool();
+    if (!ephemeral) {
+        m_db.saveMessage(m_sessionId, payload["sender_id"].toString(), payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
+                         QByteArray::fromBase64(payload["nonce"].toString().toUtf8()), payload["timestamp"].toString(), payload["key_version"].toInt());
+    }
 
     QtConcurrent::run([this, payload]() {
         QString senderId = payload["sender_id"].toString();
@@ -378,6 +383,7 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
         msg["isTextFile"] = isTextFile;
         msg["fileExtension"] = fileExtension;
         msg["timestamp"] = ts;
+        msg["ephemeral"] = payload["ephemeral"].toBool();
         // m_messages.append(msg);
         // emit messagesChanged();
         // Return to main thread to send the message via WebSocket
@@ -475,7 +481,7 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
         QString processedText = processMessageText(text);
 
         // Detect if it's a text file
-        bool isTextFile = processedText.startsWith("ðŸ“„FILE:");
+        bool isTextFile = processedText.startsWith("??FILE:");
         QString fileExtension;
         if (isTextFile) {
             int firstColon = processedText.indexOf(':', 7);
@@ -514,6 +520,3 @@ void ChatClient::handleHistoryCleared() {
     m_messages.clear();
     emit messagesChanged();
 }
-
-
-

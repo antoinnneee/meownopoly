@@ -62,8 +62,8 @@ void ChatClient::setSessionId(const QString &id) {
 
 void ChatClient::connectToServer(const QString &url) {
     qDebug() << "[ChatClient] Connecting to server:" << url;
-    
-    // Reset session data on new connection attempt? 
+
+    // Reset session data on new connection attempt?
     // For now, we just connect. Session data is handled by connectToSession.
 
     // Use queued connection to call worker method in worker thread
@@ -139,15 +139,15 @@ void ChatClient::onConnected() {
 
     if (!m_playerId.isEmpty() && !m_sessionId.isEmpty()) {
 
-    // Join session
-    QJsonObject join;
-    join["type"] = "JOIN_SESSION";
-    QJsonObject payload;
-    payload["session_id"] = m_sessionId;
-    payload["player_id"] = m_playerId;
-    payload["player_nickname"] = m_nickname;
-    payload["password_hash"] = QString(m_passwordHash);
-    join["payload"] = payload;
+        // Join session
+        QJsonObject join;
+        join["type"] = "JOIN_SESSION";
+        QJsonObject payload;
+        payload["session_id"] = m_sessionId;
+        payload["player_id"] = m_playerId;
+        payload["player_nickname"] = m_nickname;
+        payload["password_hash"] = QString(m_passwordHash);
+        join["payload"] = payload;
 
         sendWebSocketMessage(join);
 
@@ -193,13 +193,13 @@ void ChatClient::requestSessionsList() {
         qWarning() << "[ChatClient] Cannot request sessions list: not connected";
         return;
     }
-    
+
     qDebug() << "[ChatClient] Requesting sessions list";
-    
+
     QJsonObject msg;
     msg["type"] = "LIST_SESSIONS";
     msg["payload"] = QJsonObject();
-    
+
     sendWebSocketMessage(msg);
 }
 
@@ -240,11 +240,12 @@ void ChatClient::publishNewKey() {
 }
 
 
-void ChatClient::sendMessage(const QString &text) {
+void ChatClient::sendMessage(const QString &text, const QString &recipientId) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
-    // Store pending message for retry logic
-    m_pendingMessage = text;
+    // Store pending message for retry logic (only for broadcast, not for private)
+    if (recipientId.isEmpty())
+        m_pendingMessage = text;
 
     // Use current (latest) key
     if (!m_sessionKeys.contains(m_currentKeyVersion)) {
@@ -252,7 +253,8 @@ void ChatClient::sendMessage(const QString &text) {
         return;
     }
 
-    qDebug() << "[ChatClient] Sending message with Key Version" << m_currentKeyVersion;
+    qDebug() << "[ChatClient] Sending message with Key Version" << m_currentKeyVersion
+             << (recipientId.isEmpty() ? "(broadcast)" : QString("(to %1)").arg(recipientId));
     QByteArray nonce = ChatCrypto::generateNonce();
     // Use the PLAIN key for encryption
     QByteArray cipher = ChatCrypto::encrypt(text.toUtf8(), m_sessionKeys[m_currentKeyVersion], nonce);
@@ -266,6 +268,8 @@ void ChatClient::sendMessage(const QString &text) {
     p["payload"] = QString(cipher.toBase64());
     p["nonce"] = QString(nonce.toBase64());
     p["key_v"] = m_currentKeyVersion;
+    if (!recipientId.isEmpty())
+        p["recipient_id"] = recipientId;
     send["payload"] = p;
 
     sendWebSocketMessage(send);
@@ -384,7 +388,7 @@ void ChatClient::sendTextFile(const QString &filePath) {
     QString extension = fileInfo.suffix().toLower();
     QString fileName = fileInfo.fileName();
 
-    // Format: 📄FILE:ext:filename\n\ncontenu
+    // Format: ??FILE:ext:filename\n\ncontenu
     QString formattedMessage = /*QString::fromUtf8("\xF0\x9F\x93\x84") +*/ "FILE:" + extension + ":" + fileName + "\n\n" + content;
 
     // Encrypt and send using sendMessage
@@ -448,7 +452,7 @@ void ChatClient::loadHistory() {
         if (m_sessionKeys.contains(keyVersion)) {
             plain = ChatCrypto::decrypt(cipher, m_sessionKeys[keyVersion], nonce);
         } else {
-             plain = "[Encrypted (V" + QByteArray::number(keyVersion) + ")]";
+            plain = "[Encrypted (V" + QByteArray::number(keyVersion) + ")]";
         }
 
         QString text = QString::fromUtf8(plain);
@@ -467,9 +471,9 @@ void ChatClient::loadHistory() {
         }
 
         QString processedText = processMessageText(text);
-        
+
         // Detect if it's a text file
-        bool isTextFile = processedText.startsWith("📄FILE:");
+        bool isTextFile = processedText.startsWith("??FILE:");
         QString fileExtension;
         if (isTextFile) {
             int firstColon = processedText.indexOf(':', 7);
@@ -544,13 +548,13 @@ QString ChatClient::processMessageText(const QString &text) {
             }
         }
     }
-    
-    // Process text files (format: 📄FILE:ext:filename\n\ncontenu)
-    if (text.startsWith("📄FILE:")) {
+
+    // Process text files (format: ??FILE:ext:filename\n\ncontenu)
+    if (text.startsWith("??FILE:")) {
         // Return as-is, will be handled by QML
         return text;
     }
-    
+
     return text;
 }
 
@@ -594,7 +598,7 @@ void ChatClient::decodeImageAsync(const QString &senderId, const QString &text, 
         QString base64Data = text.mid(commaIndex + 1);
         QByteArray data = QByteArray::fromBase64(base64Data.toUtf8());
         QImage img = QImage::fromData(data);
-        
+
         if (!img.isNull()) {
             QString imageId = ChatImageProvider::addImage(img);
             QString imageUri = QString("image://chat_images/%1").arg(imageId);
@@ -608,14 +612,14 @@ void ChatClient::decodeImageAsync(const QString &senderId, const QString &text, 
                         m["isImage"] = true; // Now it's an image
                         m["isLoading"] = false;
                         m_messages[i] = m;
-                        emit messagesChanged(); 
+                        emit messagesChanged();
                         break;
                     }
                 }
             }, Qt::QueuedConnection);
         } else {
-             qWarning() << "[ChatClient] Failed to decode image in background thread";
-             QMetaObject::invokeMethod(this, [this, senderId, ts]() {
+            qWarning() << "[ChatClient] Failed to decode image in background thread";
+            QMetaObject::invokeMethod(this, [this, senderId, ts]() {
                 for (int i = 0; i < m_messages.size(); ++i) {
                     QVariantMap m = m_messages[i].toMap();
                     if (m["sender"].toString() == senderId && m["timestamp"].toString() == ts && m.value("isLoading").toBool()) {
