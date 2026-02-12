@@ -311,12 +311,18 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 }
 
 void ChatClient::handleNewMessage(const QJsonObject &payload) {
-    // Messages éphémères (privés / unicast) ne sont pas enregistrés dans l'historique
+    const QString senderId = payload["sender_id"].toString();
     const bool ephemeral = payload["ephemeral"].toBool();
+
+    // Messages éphémères (privés / unicast) ne sont pas enregistrés dans l'historique
     if (!ephemeral) {
-        m_db.saveMessage(m_sessionId, payload["sender_id"].toString(), payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
+        m_db.saveMessage(m_sessionId, senderId, payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
                          QByteArray::fromBase64(payload["nonce"].toString().toUtf8()), payload["timestamp"].toString(), payload["key_version"].toInt());
     }
+
+    // Nos propres messages sont déjà affichés de façon optimiste : ne pas les ré-ajouter
+    if (senderId == m_playerId)
+        return;
 
     QtConcurrent::run([this, payload]() {
         QString senderId = payload["sender_id"].toString();

@@ -5,9 +5,8 @@ import QtQuick.Dialogs
 
 Rectangle {
     id: messageDelegate
-    width: (listView ? listView.width : 0) - 16
+    width: Math.min((listView ? listView.width : 320) - 24, Math.max(140, (listView ? listView.width : 320) * 0.78))
     height: hasData ? (contentCol.height + 12) : 0
-    x: 8
     visible: hasData
 
     required property var modelData
@@ -19,10 +18,11 @@ Rectangle {
     property bool hasData: !!modelData
     property bool isOwnMessage: hasData && drawer && (modelData.sender === drawer.playerId)
 
-    color: isOwnMessage ? "#3d4a3d" : "#333333"
-    radius: 6
-    border.color: isOwnMessage ? "#4a8a4a" : "#444444"
-    border.width: 1
+    // Style distinct : nos messages = bulle verte à droite, les autres = gris à gauche
+    color: isOwnMessage ? "#1e4620" : "#333333"
+    radius: 12
+    border.color: isOwnMessage ? "#2d6b30" : "#444444"
+    border.width: isOwnMessage ? 1.5 : 1
     antialiasing: true
 
     opacity: 0
@@ -74,6 +74,7 @@ Rectangle {
         RowLayout {
             width: parent.width
             spacing: 6
+            layoutDirection: messageDelegate.isOwnMessage ? Qt.RightToLeft : Qt.LeftToRight
 
             Text {
                 text: "🐱"
@@ -82,23 +83,23 @@ Rectangle {
             }
 
             Text {
-                text: messageDelegate.isOwnMessage ? (drawer ? drawer.playerNickname : "") : (modelData ? (modelData.senderNickname || modelData.sender || "?") : "?")
+                text: messageDelegate.isOwnMessage ? "Vous" : (modelData ? (modelData.senderNickname || modelData.sender || "?") : "?")
                 font.pixelSize: 10
                 font.bold: true
-                color: messageDelegate.isOwnMessage ? "#569c58" : "#4A90E2"
+                color: messageDelegate.isOwnMessage ? "#7bc97f" : "#4A90E2"
                 Layout.fillWidth: true
             }
 
             Text {
                 text: (modelData && drawer && typeof drawer.formatTimestamp === "function") ? drawer.formatTimestamp(modelData.timestamp) : "--:--"
                 font.pixelSize: 8
-                color: "#666666"
+                color: messageDelegate.isOwnMessage ? "#9ccc9e" : "#666666"
             }
 
-            // Badge message privé (non enregistré dans l'historique)
+            // Badge message privé : afficher le destinataire pour nos envois, "Reçu en privé" pour les autres
             Rectangle {
                 visible: !!(modelData && modelData.ephemeral)
-                Layout.preferredWidth: 52
+                Layout.preferredWidth: Math.max(52, ephemeralLabel.implicitWidth + 10)
                 Layout.preferredHeight: 14
                 radius: 3
                 color: "#2a3a4a"
@@ -106,7 +107,10 @@ Rectangle {
                 border.width: 1
 
                 Text {
-                    text: "🔒 Privé"
+                    id: ephemeralLabel
+                    text: messageDelegate.isOwnMessage && (modelData.recipientNickname || modelData.recipientId)
+                        ? ("🔒 À : " + (modelData.recipientNickname || modelData.recipientId || "?"))
+                        : "🔒 Privé"
                     font.pixelSize: 8
                     color: "#4A90E2"
                     anchors.centerIn: parent
@@ -114,7 +118,9 @@ Rectangle {
 
                 ToolTip {
                     visible: ephemeralBadgeArea.containsMouse
-                    text: "Message privé (non enregistré)"
+                    text: messageDelegate.isOwnMessage && (modelData.recipientNickname || modelData.recipientId)
+                        ? ("Message privé à " + (modelData.recipientNickname || modelData.recipientId) + " (non enregistré)")
+                        : "Message privé (non enregistré)"
                     delay: 400
                 }
 
@@ -130,7 +136,7 @@ Rectangle {
             text: modelData ? (modelData.text || "") : ""
             width: parent.width
             wrapMode: Text.Wrap
-            color: "#cccccc"
+            color: messageDelegate.isOwnMessage ? "#e0e0e0" : "#cccccc"
             font.pixelSize: 12
             visible: !(modelData && (modelData.isImage || modelData.isTextFile))
         }

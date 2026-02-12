@@ -25,7 +25,7 @@ Rectangle {
             if (text.startsWith("/ping")) {
                 chatClient.sendPing()
             } else {
-                chatClient.sendMessage(inputField.text, recipientId || "")
+                chatClient.sendMessage(inputField.text, recipientId || "", recipientNickname || "")
             }
             inputField.text = ""
         }

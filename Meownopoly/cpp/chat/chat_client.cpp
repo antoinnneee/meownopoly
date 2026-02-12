@@ -240,7 +240,7 @@ void ChatClient::publishNewKey() {
 }
 
 
-void ChatClient::sendMessage(const QString &text, const QString &recipientId) {
+void ChatClient::sendMessage(const QString &text, const QString &recipientId, const QString &recipientNickname) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
     // Store pending message for retry logic (only for broadcast, not for private)
@@ -273,6 +273,52 @@ void ChatClient::sendMessage(const QString &text, const QString &recipientId) {
     send["payload"] = p;
 
     sendWebSocketMessage(send);
+
+    // Affichage optimiste : afficher notre message tout de suite (nécessaire pour les messages privés que le serveur ne nous renvoie pas)
+    const QString ts = QDateTime::currentDateTime().toString(Qt::ISODate);
+    const bool isPrivate = !recipientId.isEmpty();
+    if (text.startsWith("data:image/")) {
+        QVariantMap placeholder;
+        placeholder["sender"] = m_playerId;
+        placeholder["senderNickname"] = m_nickname;
+        placeholder["text"] = "Chargement de l'image...";
+        placeholder["isImage"] = false;
+        placeholder["isTextFile"] = false;
+        placeholder["timestamp"] = ts;
+        placeholder["isLoading"] = true;
+        placeholder["ephemeral"] = isPrivate;
+        if (isPrivate) {
+            placeholder["recipientId"] = recipientId;
+            placeholder["recipientNickname"] = recipientNickname;
+        }
+        m_messages.append(placeholder);
+        emit messagesChanged();
+        decodeImageAsync(m_playerId, text, ts);
+    } else {
+        const QString processedText = processMessageText(text);
+        const bool isTextFile = processedText.startsWith("FILE:");
+        QString fileExtension;
+        if (isTextFile) {
+            const int firstColon = processedText.indexOf(':', 7);
+            if (firstColon > 7)
+                fileExtension = processedText.mid(7, firstColon - 7);
+        }
+        QVariantMap msg;
+        msg["sender"] = m_playerId;
+        msg["senderNickname"] = m_nickname;
+        msg["text"] = processedText;
+        msg["isImage"] = processedText.startsWith("image://");
+        msg["isTextFile"] = isTextFile;
+        msg["fileExtension"] = fileExtension;
+        msg["timestamp"] = ts;
+        msg["ephemeral"] = isPrivate;
+        if (isPrivate) {
+            msg["recipientId"] = recipientId;
+            msg["recipientNickname"] = recipientNickname;
+        }
+        m_messages.append(msg);
+        emit messagesChanged();
+    }
 }
 
 void ChatClient::sendImage(const QString &filePath) {
