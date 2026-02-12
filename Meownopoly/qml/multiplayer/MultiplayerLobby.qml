@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "./components"
+import Meownopoly.Chat 1.0
+import Meownopoly.Account 1.0
 
 /**
  * Conteneur principal du lobby multijoueur
@@ -14,17 +16,56 @@ Rectangle {
 
     signal backToTitleScreen()
 
+    // ChatClient mutualisé pour tout le lobby
+    ChatClient {
+        id: lobbyChatClient
+        
+        onConnectedChanged: {
+            if (connected) {
+                console.log("✅ Lobby connected, requesting sessions...")
+                lobbyChatClient.requestSessionsList()
+                refreshTimer.start()
+            } else {
+                console.log("❌ Lobby disconnected")
+                refreshTimer.stop()
+            }
+        }
+
+        onAvailableSessionsChanged: {
+            console.log("📋 Sessions updated:", lobbyChatClient.availableSessions.length)
+        }
+
+        onErrorOccurred: function(error) {
+            console.error("❌ Lobby error:", error)
+        }
+        
+        Component.onCompleted: {
+            console.log("🚀 MultiplayerLobby ChatClient connecting...")
+            lobbyChatClient.connectToServer("ws://pattounecorp.ovh:3000")
+        }
+    }
+    
+    // Timer de rafraîchissement automatique
+    Timer {
+        id: refreshTimer
+        interval: 10000
+        running: false
+        repeat: false
+        onTriggered: {
+            if (lobbyChatClient.connected) {
+                lobbyChatClient.requestSessionsList()
+            }
+        }
+    }
+
     // Components pour le StackView
     Component {
         id: sessionListComponent
         SessionList {
+            // Passer le ChatClient mutualisé
+            chatClient: lobbyChatClient
             onSessionSelected: function(sessionData) {
-                multiplayerStackView.push(sessionDetailsComponent, {
-                    sessionName: sessionData.name,
-                    sessionId: sessionData.sessionId,
-                    players: sessionData.players,
-                    maxPlayers: sessionData.maxPlayers
-                })
+                lobbyChatClient.connectToSession(AccountManager.uniqueId, sessionData.password, AccountManager.nickname, sessionData.sessionId)
             }
         }
     }
@@ -44,11 +85,19 @@ Rectangle {
     Component {
         id: sessionCreationComponent
         SessionCreation {
+            // Passer le ChatClient mutualisé
+            chatClient: lobbyChatClient
+            
             onBackRequested: {
                 multiplayerStackView.pop()
             }
+            
             onSessionCreateRequested: function(sessionData) {
-                console.log("📝 Données de création reçues:", JSON.stringify(sessionData))
+                console.log("📝 Création de session:", JSON.stringify(sessionData))
+                // Rejoindre la session (qui sera créée automatiquement par le serveur)
+                lobbyChatClient.connectToSessionDirect(sessionData.password,sessionData.sessionId)
+                
+                // Retourner à la liste
                 multiplayerStackView.pop()
             }
         }

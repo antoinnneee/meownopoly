@@ -2,71 +2,27 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../ui_item"
-import Meownopoly.Chat 1.0
-import Meownopoly.Account 1.0
 
 /**
  * Vue complète de la liste des sessions disponibles
- * Connectée au serveur chat pour récupérer les sessions réelles
+ * Utilise le ChatClient mutualisé du parent
  */
 Rectangle {
     id: root
 
     color: "#1a1a1a"
 
+    // Propriété pour recevoir le ChatClient du parent
+    required property var chatClient
+
     signal sessionSelected(var sessionData)
 
-    // Instance ChatClient pour le lobby
-    ChatClient {
-        id: lobbyChatClient
-        onConnectedChanged: {
-            if (connected) {
-                console.log("✅ Lobby connected, requesting sessions...")
-                lobbyChatClient.requestSessionsList()
-                refreshTimer.start()
-            } else {
-                console.log("❌ Lobby disconnected")
-                refreshTimer.stop()
-            }
-        }
-
-        onAvailableSessionsChanged: {
-            console.log("📋 Sessions updated:", lobbyChatClient.availableSessions.length)
-        }
-
-        onErrorOccurred: function(error) {
-            console.error("❌ Lobby error:", error)
-            errorText.text = "Erreur: " + error
-            errorText.visible = true
-        }
-    }
-
-    // Timer de rafraîchissement automatique
-    Timer {
-        id: refreshTimer
-        interval: 10000 // Rafraîchir toutes les 5 secondes
-        running: false
-        repeat: false
-        onTriggered: {
-            if (lobbyChatClient.connected) {
-                lobbyChatClient.requestSessionsList()
-            }
-        }
-    }
-
     Component.onCompleted: {
-        console.log("🚀 SessionList loaded, connecting to server...")
-        // Se connecter au serveur
-        lobbyChatClient.connectToServer("ws://pattounecorp.ovh:3000")
-        lobbyChatClient.connectToSession(
-            AccountManager.uniqueId,
-            "123", // Mot de passe pour le lobby
-            AccountManager.nickname
-        )
-    }
-
-    Component.onDestruction: {
-        refreshTimer.stop()
+        console.log("🚀 SessionList loaded, chatClient ready:", chatClient !== null)
+        // Le ChatClient est déjà connecté depuis MultiplayerLobby
+        if (chatClient && chatClient.connected) {
+            chatClient.requestSessionsList()
+        }
     }
 
     ColumnLayout {
@@ -88,24 +44,13 @@ Rectangle {
             }
 
             Text {
-                text: lobbyChatClient.connected ?
-                          ("🐱 " + lobbyChatClient.availableSessions.length + " parties en cours") :
+                text: chatClient.connected ?
+                          ("🐱 " + chatClient.availableSessions.length + " parties en cours") :
                           "🔌 Connexion au serveur..."
-                color: lobbyChatClient.connected ? "#888888" : "#ff9800"
+                color: chatClient.connected ? "#888888" : "#ff9800"
                 font.pixelSize: 18
                 Layout.alignment: Qt.AlignHCenter
             }
-        }
-
-        // Message d'erreur
-        Text {
-            id: errorText
-            visible: false
-            color: "#f44336"
-            font.pixelSize: 14
-            Layout.alignment: Qt.AlignHCenter
-            wrapMode: Text.WordWrap
-            Layout.fillWidth: true
         }
 
         // COMPTEUR EN LIGNE INTÉGRÉ
@@ -115,7 +60,7 @@ Rectangle {
             Layout.preferredHeight: 40
             color: "#2a2a2a"
             radius: 20
-            border.color: lobbyChatClient.connected ? "#4caf50" : "#666666"
+            border.color: chatClient.connected ? "#4caf50" : "#666666"
             border.width: 2
 
             Row {
@@ -123,14 +68,14 @@ Rectangle {
                 spacing: 10
 
                 Text {
-                    text: lobbyChatClient.connected ? "🌐" : "⏳"
+                    text: chatClient.connected ? "🌐" : "⏳"
                     font.pixelSize: 18
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
-                    text: lobbyChatClient.connected ? "Serveur connecté" : "Connexion..."
-                    color: lobbyChatClient.connected ? "#4caf50" : "#888888"
+                    text: chatClient.connected ? "Serveur connecté" : "Connexion..."
+                    color: chatClient.connected ? "#4caf50" : "#888888"
                     font.pixelSize: 14
                     font.bold: true
                     anchors.verticalCenter: parent.verticalCenter
@@ -155,13 +100,13 @@ Rectangle {
                     spacing: 16
 
                     Text {
-                        text: lobbyChatClient.connected ? "😿" : "⏳"
+                        text: chatClient.connected ? "😿" : "⏳"
                         font.pixelSize: 48
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
 
                     Text {
-                        text: lobbyChatClient.connected ?
+                        text: chatClient.connected ?
                                   "Aucune partie disponible pour l'instant" :
                                   "Connexion au serveur..."
                         color: "#888888"
@@ -174,14 +119,14 @@ Rectangle {
                         color: "#666666"
                         font.pixelSize: 14
                         anchors.horizontalCenter: parent.horizontalCenter
-                        visible: lobbyChatClient.connected
+                        visible: chatClient.connected
                     }
                 }
             }
 
             ListView {
                 id: sessionsListView
-                model: lobbyChatClient.availableSessions // 🎯 DONNÉES RÉELLES !
+                model: chatClient.availableSessions // 🎯 DONNÉES RÉELLES !
                 spacing: 12
                 width: parent.width
                 height: parent.height
@@ -211,7 +156,7 @@ Rectangle {
             Layout.preferredWidth: 250
             Layout.preferredHeight: 55
 
-            enabled: lobbyChatClient.connected
+            enabled: chatClient.connected
 
             particleColor: "#E67E22"
             particleColorVariation: "#ff9800"
@@ -287,8 +232,8 @@ Rectangle {
                 }
 
                 onClicked: {
-                    if (lobbyChatClient.connected) {
-                        lobbyChatClient.requestSessionsList()
+                    if (chatClient.connected) {
+                        chatClient.requestSessionsList()
                     }
                 }
 

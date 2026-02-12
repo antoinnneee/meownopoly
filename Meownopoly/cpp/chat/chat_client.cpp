@@ -1,5 +1,7 @@
 #include "chat_client.h"
 #include "chat_image_provider.h"
+#include "../account/account_manager.h"
+
 #include <QJsonDocument>
 #include <QDebug>
 #include <QImage>
@@ -69,6 +71,78 @@ void ChatClient::connectToServer(const QString &url) {
     // Use queued connection to call worker method in worker thread
     QMetaObject::invokeMethod(m_worker, "connectToServer", Qt::QueuedConnection,
                               Q_ARG(QString, url));
+}
+
+void ChatClient::connectToSessionDirect(const QString &password, const QString &sessionId)
+{
+
+    m_playerId = AccountManager::instance()->uniqueId();
+    m_nickname = AccountManager::instance()->nickname();
+    m_sessionId = sessionId;
+    m_password = password;
+
+
+    m_password = password;
+    if (sessionId.isEmpty()) {
+        qWarning() << "[ChatClient] Session ID is empty. Cannot connect to session.";
+        return;
+    }
+    m_sessionId = sessionId;
+
+    qDebug() << "[ChatClient] Preparing session for player:" << AccountManager::instance()->uniqueId();
+
+    // Derive Lock Key from SessionID + Password
+    m_lockKey = ChatCrypto::deriveLockKey(m_sessionId, m_password);
+    m_passwordHash = ChatCrypto::derivePasswordProof(m_sessionId, m_password);
+
+    // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
+    // Keys in DB are encrypted with lockKey. We must decrypt them for memory usage.
+    QMap<int, QByteArray> encryptedKeys = m_db.getSessionKeys(m_sessionId);
+    m_sessionKeys.clear();
+
+    qDebug() << "[ChatClient] Loaded" << encryptedKeys.size() << "encrypted keys from local storage";
+
+    for (auto it = encryptedKeys.begin(); it != encryptedKeys.end(); ++it) {
+        int version = it.key();
+        QByteArray combined = it.value();
+
+        QDataStream stream(combined);
+        QByteArray encryptedPkg, nonce;
+        stream >> encryptedPkg >> nonce;
+
+        QByteArray plainKey = ChatCrypto::decrypt(encryptedPkg, m_lockKey, nonce);
+        if (!plainKey.isEmpty()) {
+            m_sessionKeys.insert(version, plainKey);
+        } else {
+            qWarning() << "[ChatClient] Failed to decrypt session key Version" << version;
+        }
+    }
+
+    qDebug() << "[ChatClient] Decrypted" << m_sessionKeys.size() << "session keys into memory";
+
+    // Determine current version (max version locally)
+    if (!m_sessionKeys.isEmpty()) {
+        m_currentKeyVersion = m_sessionKeys.lastKey();
+    } else {
+        m_currentKeyVersion = 0;
+    }
+
+    // If already connected, join immediately
+    if (m_connected) {
+        // Join session logic
+        QJsonObject join;
+        join["type"] = "JOIN_SESSION";
+        QJsonObject payload;
+        payload["session_id"] = m_sessionId;
+        payload["player_id"] = m_playerId;
+        payload["player_nickname"] = m_nickname;
+        join["payload"] = payload;
+
+        sendWebSocketMessage(join);
+
+        // Request participants list right after joining
+        requestParticipants();
+    }
 }
 
 void ChatClient::connectToSession(const QString &playerId, const QString &password, const QString &nickname) {

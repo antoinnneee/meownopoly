@@ -37,6 +37,8 @@ public:
     QVariantList availableSessions() const { return m_availableSessions; }
 
     Q_INVOKABLE void connectToServer(const QString &url);
+
+    Q_INVOKABLE void connectToSessionDirect(const QString &password, const QString &sessionId);
     Q_INVOKABLE void connectToSession(const QString &playerId, const QString &password, const QString &nickname = QString());
     Q_INVOKABLE void sendMessage(const QString &text, const QString &recipientId = QString(), const QString &recipientNickname = QString());
     Q_INVOKABLE void sendImage(const QString &filePath);

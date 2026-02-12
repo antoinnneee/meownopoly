@@ -2,17 +2,19 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "./components"
-
 import ui_item
 
 /**
  * Écran de création de session
- * Front-end uniquement - Les inputs sont validés mais non fonctionnels
+ * Utilise le ChatClient mutualisé du parent
  */
 Rectangle {
     id: root
 
     color: "#1a1a1a"
+
+    // Propriété pour recevoir le ChatClient du parent
+    required property var chatClient
 
     // Signaux pour la navigation
     signal backRequested()
@@ -24,6 +26,7 @@ Rectangle {
 
     property int maxPlayersSelection: 4
     property bool isPublicSession: true
+
 
     ColumnLayout {
         anchors.fill: parent
@@ -549,7 +552,7 @@ Rectangle {
                     console.log("  - Max joueurs:", root.maxPlayersSelection)
                     console.log("  - Publique:", root.isPublicSession)
 
-                    // Émettre le signal avec toutes les données nécessaires
+                    // Émettre le signal avec toutes les données
                     root.sessionCreateRequested({
                         sessionId: sessionId,
                         name: sessionNameInput.text,
