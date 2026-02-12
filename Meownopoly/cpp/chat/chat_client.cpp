@@ -180,6 +180,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
 
     if (type == "INIT_SESSION") {
         handleInitSession(payload);
+    } else if (type == "SESSIONS_LIST") {
+        handleSessionsList(payload);
     } else if (type == "NEW_MESSAGE") {
         handleNewMessage(payload);
     } else if (type == "HISTORY_RESULT") {

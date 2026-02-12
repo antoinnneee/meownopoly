@@ -536,20 +536,26 @@ Rectangle {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-
                 onClicked: {
-                    console.log("🎉 Session créée (front-end uniquement)")
+                    // Générer un ID de session unique
+                    const timestamp = Date.now()
+                    const random = Math.floor(Math.random() * 10000)
+                    const sessionId = "game_" + timestamp + "_" + random
+
+                    console.log("🎉 Création de session demandée")
+                    console.log("  - ID:", sessionId)
                     console.log("  - Nom:", sessionNameInput.text)
                     console.log("  - Mot de passe:", sessionPasswordInput.text)
-                    console.log("  - Max joueurs:", maxPlayersSelection)
-                    console.log("  - Publique:", isPublicSession)
+                    console.log("  - Max joueurs:", root.maxPlayersSelection)
+                    console.log("  - Publique:", root.isPublicSession)
 
-                    // Émettre le signal avec les données
+                    // Émettre le signal avec toutes les données nécessaires
                     root.sessionCreateRequested({
+                        sessionId: sessionId,
                         name: sessionNameInput.text,
                         password: sessionPasswordInput.text,
-                        maxPlayers: maxPlayersSelection,
-                        isPublic: isPublicSession
+                        maxPlayers: root.maxPlayersSelection,
+                        isPublic: root.isPublicSession
                     })
                 }
             }

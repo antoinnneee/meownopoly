@@ -46,7 +46,7 @@ Rectangle {
         id: refreshTimer
         interval: 10000 // Rafraîchir toutes les 5 secondes
         running: false
-        repeat: true
+        repeat: false
         onTriggered: {
             if (lobbyChatClient.connected) {
                 lobbyChatClient.requestSessionsList()
