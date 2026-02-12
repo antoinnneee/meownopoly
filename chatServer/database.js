@@ -173,7 +173,9 @@ module.exports = {
   getParticipants: (sessionId) => {
     return db.prepare('SELECT player_id, nickname FROM participants WHERE session_id = ? ORDER BY joined_at ASC').all(sessionId);
   },
-
+	getAllSessions: () => {
+	return db.prepare('SELECT * FROM sessions ORDER BY created_at DESC').all();
+	},
   // Expose db pour stats
   db: db
 };

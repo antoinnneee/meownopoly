@@ -11,19 +11,6 @@ import ItemSnapable
 import ui_item
 import "../../../meowComponent"
 
-import QtQuick 2.15
-import QtQuick.Controls
-import QtQuick.Layouts
-import QtQuick.Window
-import QtQuick.Shapes
-import QtQml
-import QtCore
-import QtQuick.Dialogs
-import Case
-import ItemSnapable
-import ui_item
-import "../../../meowComponent"
-
 import Game
 import MapFileManager
 import MapTypes
@@ -39,7 +26,7 @@ Drawer {
 
     id: mapInfoDrawer
     height: parent.height
-    width: Screen.pixelDensity * 75
+    width: 340
     edge: Qt.RightEdge
 
     modal : false
@@ -47,7 +34,9 @@ Drawer {
     signal requestNewMap()
     background : Rectangle {
         anchors.fill: parent
-        color: "#383838"
+        color: "#E6222222"
+        border.color: "#333333"
+        border.width: 1
     }
 
     // Header avec titre

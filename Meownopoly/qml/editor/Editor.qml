@@ -206,8 +206,8 @@ Base_Board {
         logic: logic
         selectionPanel: selectionPanel
         sidePanel: sidePanel
-
         z: UiStyle.z_HUD
+
     }
 
     // Connexion pour écouter la demande de création de carte depuis le drawer
