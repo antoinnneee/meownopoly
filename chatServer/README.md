@@ -40,7 +40,7 @@ Ce serveur est un relais "aveugle" (Blind Relay) conçu pour faciliter la commun
 - `PARTICIPANTS_LIST` : Liste des membres avec leur statut.
 - `PARTICIPANT_LEFT` : Un membre a quitté explicitement la session (pas lors d'une simple déconnexion).
 - `SESSION_ENDED` : La session a été supprimée par un utilisateur.
-- `ERROR` : Signalement d'une erreur (ex: payload trop gros).
+- `ERROR` : Signalement d'une erreur. Codes possibles : `PAYLOAD_TOO_LARGE`, `INVALID_FORMAT`, `UNKNOWN_COMMAND`, `MAX_SESSIONS_REACHED`, `FORBIDDEN`, **`KEY_ROTATION_REQUIRED`** (envoyé en réponse à `SEND_MSG` lorsqu'un nouveau participant a rejoint ou qu'un participant a quitté la session ; un client doit publier une nouvelle clé via `PUBLISH_KEY` avant d'envoyer des messages).
 
 ## Installation et Lancement
 

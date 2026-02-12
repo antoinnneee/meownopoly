@@ -214,6 +214,43 @@ Drawer {
                                 border.width: 1
                             }
 
+                            // Bouton Kick (visible seulement pour l'hôte et pas pour soi-même)
+                            // On suppose que l'hôte est le premier participant dans la liste retournée par le serveur
+                            Rectangle {
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 20
+                                color: kickBtnArea.containsMouse ? "#552222" : "transparent"
+                                radius: 4
+                                visible: {
+                                    if (!chatClient || chatClient.participants.length < 1) return false;
+                                    var isHost = chatClient.participants[0].player_id === chatDrawer.playerId;
+                                    var isNotMe = modelData.player_id !== chatDrawer.playerId;
+                                    return isHost && isNotMe;
+                                }
+
+                                Text {
+                                    text: "❌"
+                                    font.pixelSize: 10
+                                    anchors.centerIn: parent
+                                }
+
+                                MouseArea {
+                                    id: kickBtnArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (chatClient) chatClient.kickPlayer(modelData.player_id)
+                                    }
+                                }
+
+                                ToolTip {
+                                    visible: kickBtnArea.containsMouse
+                                    text: "Exclure ce participant"
+                                    delay: 400
+                                }
+                            }
+
                             Text {
                                 text: modelData.player_nickname || modelData.player_id || "?"
                                 color: (modelData.player_id === chatDrawer.playerId) ? "#4A90E2" : "#cccccc"

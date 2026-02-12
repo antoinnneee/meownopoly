@@ -1,6 +1,6 @@
 // Configuration - Détection automatique de l'URL WebSocket
-const WS_URL = window.location.protocol === 'https:' 
-    ? `wss://${window.location.host}` 
+const WS_URL = window.location.protocol === 'https:'
+    ? `wss://${window.location.host}`
     : `ws://${window.location.host}`;
 
 // État global
@@ -33,16 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
     initWebSocket();
     updateUptime();
     setInterval(updateUptime, 1000);
-    
+
     // Récupérer les stats du serveur toutes les 3 secondes
     fetchServerStats();
     setInterval(fetchServerStats, 3000);
-    
+
     document.getElementById('clearLogsBtn').addEventListener('click', clearLogs);
-    
+
     // Toggle du journal d'activité
     document.getElementById('activityLogHeader').addEventListener('click', toggleActivityLog);
-    
+
+    // Tout nettoyer (Salles + Messages)
+    document.getElementById('clearAllRoomsBtn').addEventListener('click', clearAllRooms);
+
     // Initialiser le mini chat client
     initChatClient();
 });
@@ -53,19 +56,19 @@ async function fetchServerStats() {
         const protocol = window.location.protocol;
         const host = window.location.host;
         const response = await fetch(`${protocol}//${host}/api/stats`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         // Mettre à jour les statistiques
         stats.connections = data.connections || 0;
         stats.rooms = data.rooms || 0;
         stats.messages = data.messages || 0;
         updateStats();
-        
+
         // Mettre à jour les salons avec les données réelles
         if (data.sessions && data.sessions.length > 0) {
             activeRooms.clear();
@@ -85,12 +88,12 @@ async function fetchServerStats() {
             activeRooms.clear();
             renderRooms();
         }
-        
+
         // Uptime du serveur
         if (data.uptime) {
             startTime = Date.now() - (data.uptime * 1000);
         }
-        
+
     } catch (err) {
         console.error('Erreur lors de la récupération des stats:', err);
     }
@@ -99,10 +102,10 @@ async function fetchServerStats() {
 // WebSocket
 function initWebSocket() {
     addLog('Tentative de connexion au serveur...', 'info');
-    
+
     try {
         ws = new WebSocket(WS_URL);
-        
+
         ws.onopen = () => {
             addLog('✓ Connecté au serveur WebSocket', 'success');
             updateServerStatus(true);
@@ -110,7 +113,7 @@ function initWebSocket() {
                 clearInterval(reconnectInterval);
                 reconnectInterval = null;
             }
-            
+
             // Joindre une session de monitoring fictive
             ws.send(JSON.stringify({
                 type: 'JOIN_SESSION',
@@ -121,7 +124,7 @@ function initWebSocket() {
                 }
             }));
         };
-        
+
         ws.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data);
@@ -130,16 +133,16 @@ function initWebSocket() {
                 console.error('Erreur de parsing du message:', err);
             }
         };
-        
+
         ws.onerror = (error) => {
             addLog('✗ Erreur de connexion WebSocket', 'error');
             console.error('WebSocket error:', error);
         };
-        
+
         ws.onclose = () => {
             addLog('✗ Déconnecté du serveur', 'warning');
             updateServerStatus(false);
-            
+
             if (!reconnectInterval) {
                 reconnectInterval = setInterval(() => {
                     addLog('Tentative de reconnexion...', 'info');
@@ -155,57 +158,70 @@ function initWebSocket() {
 
 function handleServerMessage(message) {
     const { type, payload } = message;
-    
+
     switch (type) {
         case 'INIT_SESSION':
             addLog(`Session initialisée (version: ${payload.current_version})`, 'info');
             break;
-            
+
         case 'NEW_MESSAGE':
             addLog(`💬 Nouveau message de ${payload.sender_nickname || payload.sender_id}`, 'info');
-            
-            // Mettre à jour l'activité (les stats seront rechargées par l'API)
             break;
-            
+
         case 'NEW_PARTICIPANT':
             addLog(`👤 Nouveau participant: ${payload.player_id} dans la session ${payload.session_id}`, 'success');
-            
-            // Marquer pour rechargement des stats
             setTimeout(fetchServerStats, 500);
             break;
-            
+
         case 'KEY_UPDATE':
             addLog(`🔑 Clé mise à jour (version: ${payload.version})`, 'info');
             break;
-            
+
         case 'HISTORY_CLEARED':
-            addLog(`🗑️ Historique effacé`, 'warning');
-            // Effacer l'affichage du chat
-            const messagesContainer = document.getElementById('chatMessages');
-            if (messagesContainer) {
-                messagesContainer.innerHTML = '<div class="chat-empty">Historique effacé - Aucun message</div>';
-            }
+            addLog(`🗑️ Historique effacé pour ${payload.session_id}`, 'warning');
             setTimeout(fetchServerStats, 500);
             break;
-            
+
+        case 'SERVER_RESET':
+            addLog(`🚨 SERVEUR RÉINITIALISÉ : ${payload.message}`, 'error');
+            setTimeout(fetchServerStats, 500);
+            break;
+
         case 'ERROR':
             addLog(`❌ Erreur: ${payload.message} (${payload.code})`, 'error');
             break;
-            
+
         default:
             addLog(`Message reçu: ${type}`, 'info');
     }
 }
 
+function clearAllRooms() {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer TOUS les salons, TOUS les messages et TOUS les participants ? Cette action est irréversible.')) {
+        return;
+    }
+
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        alert('Non connecté au serveur WebSocket.');
+        return;
+    }
+
+    addLog('Demande de réinitialisation complète du serveur...', 'warning');
+    ws.send(JSON.stringify({
+        type: 'CLEAR_ALL_SESSIONS',
+        payload: {}
+    }));
+}
+
 // Gestion des connexions (affichage simplifié)
 function renderConnections() {
     const container = document.getElementById('connectionsList');
-    
+
     if (stats.connections === 0) {
         container.innerHTML = '<div class="empty-state">Aucune connexion active</div>';
         return;
     }
-    
+
     container.innerHTML = `
         <div class="connection-item">
             <div class="connection-header">
@@ -222,12 +238,12 @@ function renderConnections() {
 
 function renderRooms() {
     const container = document.getElementById('roomsList');
-    
+
     if (activeRooms.size === 0) {
         container.innerHTML = '<div class="empty-state">Aucun salon actif</div>';
         return;
     }
-    
+
     container.innerHTML = Array.from(activeRooms.values())
         .filter(room => room.id !== '__dashboard_monitor__')
         .sort((a, b) => b.messageCount - a.messageCount)
@@ -242,9 +258,9 @@ function renderRooms() {
                     <div>🕐 Actif</div>
                     ${room.participants && room.participants.size > 0 ? `
                         <div class="room-participants">
-                            ${Array.from(room.participants).map(p => 
-                                `<span class="participant-tag">${p}</span>`
-                            ).join('')}
+                            ${Array.from(room.participants).map(p =>
+            `<span class="participant-tag">${p}</span>`
+        ).join('')}
                         </div>
                     ` : ''}
                 </div>
@@ -262,7 +278,7 @@ function updateStats() {
 function updateServerStatus(connected) {
     const badge = document.getElementById('serverStatus');
     const statusText = badge.querySelector('.status-text');
-    
+
     if (connected) {
         badge.classList.add('connected');
         statusText.textContent = 'Connecté';
@@ -277,8 +293,8 @@ function updateUptime() {
     const hours = Math.floor(uptime / 3600000);
     const minutes = Math.floor((uptime % 3600000) / 60000);
     const seconds = Math.floor((uptime % 60000) / 1000);
-    
-    document.getElementById('uptime').textContent = 
+
+    document.getElementById('uptime').textContent =
         `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
@@ -287,18 +303,18 @@ function addLog(message, type = 'info') {
     const logContainer = document.getElementById('activityLog');
     const timestamp = new Date().toLocaleTimeString('fr-FR');
     const autoScroll = document.getElementById('autoScrollCheck').checked;
-    
+
     const logEntry = document.createElement('div');
     logEntry.className = `log-entry ${type}`;
     logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span>${message}`;
-    
+
     logContainer.appendChild(logEntry);
-    
+
     // Limiter à 100 entrées
     while (logContainer.children.length > 100) {
         logContainer.removeChild(logContainer.firstChild);
     }
-    
+
     if (autoScroll) {
         logContainer.scrollTop = logContainer.scrollHeight;
     }
@@ -312,7 +328,7 @@ function clearLogs() {
 function toggleActivityLog() {
     const section = document.getElementById('activityLogSection');
     const icon = document.querySelector('.toggle-icon');
-    
+
     if (section.style.display === 'none') {
         section.style.display = 'block';
         icon.classList.add('open');
@@ -338,7 +354,7 @@ function formatTime(date) {
 function initChatClient() {
     // Générer un ID unique pour ce client
     currentPlayerId = 'dashboard_' + Math.random().toString(36).substr(2, 9);
-    
+
     // Événements
     document.getElementById('joinBtn').addEventListener('click', joinChatSession);
     document.getElementById('sendBtn').addEventListener('click', sendChatMessage);
@@ -347,13 +363,13 @@ function initChatClient() {
         document.getElementById('fileInput').click();
     });
     document.getElementById('fileInput').addEventListener('change', handleFileUpload);
-    
+
     document.getElementById('messageInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             sendChatMessage();
         }
     });
-    
+
     // Cliquer sur un salon pour le rejoindre
     document.getElementById('roomsList').addEventListener('click', (e) => {
         const roomItem = e.target.closest('.room-item');
@@ -362,16 +378,16 @@ function initChatClient() {
             document.getElementById('sessionInput').value = roomId;
         }
     });
-    
+
     // Drag & drop de fichiers sur la zone de chat
     const chatMessages = document.getElementById('chatMessages');
-    
+
     chatMessages.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
         chatMessages.classList.add('drag-over');
     });
-    
+
     chatMessages.addEventListener('dragleave', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -380,17 +396,17 @@ function initChatClient() {
             chatMessages.classList.remove('drag-over');
         }
     });
-    
+
     chatMessages.addEventListener('drop', async (e) => {
         e.preventDefault();
         e.stopPropagation();
         chatMessages.classList.remove('drag-over');
-        
+
         if (!currentSession) {
             alert('Rejoignez une session avant de déposer un fichier');
             return;
         }
-        
+
         const files = e.dataTransfer.files;
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -423,7 +439,7 @@ async function handleImageDrop(file) {
         alert('Image trop volumineuse (max 5MB)');
         return;
     }
-    
+
     try {
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -439,29 +455,29 @@ async function handleImageDrop(file) {
 async function handleFileUpload(event) {
     const file = event.target.files ? event.target.files[0] : event;
     if (!file) return;
-    
+
     // Vérifier la taille
     const maxSize = 1024 * 1024; // 1MB max
     if (file.size > maxSize) {
         alert('Le fichier est trop volumineux (max 1MB)');
         return;
     }
-    
+
     try {
         const text = await file.text();
-        
+
         // Format: 📄FILE:extension:nom_fichier\n\ncontenu
         const extension = file.name.split('.').pop().toLowerCase();
         const content = `📄FILE:${extension}:${file.name}\n\n${text}`;
-        
+
         // Envoyer directement (ne pas passer par l'input qui perd les \n)
         await sendRawMessage(content);
-        
+
         // Réinitialiser l'input file si c'est un event
         if (event.target && event.target.files) {
             event.target.value = '';
         }
-        
+
         addLog(`📤 Fichier "${file.name}" envoyé (${extension.toUpperCase()})`, 'success');
     } catch (err) {
         console.error('Erreur lecture fichier:', err);
@@ -471,12 +487,12 @@ async function handleFileUpload(event) {
 
 function clearChatMessages() {
     if (!currentSession) return;
-    
+
     if (confirm(`Voulez-vous vraiment effacer tous les messages de la session "${currentSession}" ?\n\nCette action est irréversible et affectera tous les participants.`)) {
         // Effacer immédiatement l'affichage local
         const messagesContainer = document.getElementById('chatMessages');
         messagesContainer.innerHTML = '<div class="chat-empty">Effacement en cours...</div>';
-        
+
         // Envoyer la demande au serveur
         chatWs.send(JSON.stringify({
             type: 'CLEAR_HISTORY',
@@ -484,7 +500,7 @@ function clearChatMessages() {
                 session_id: currentSession
             }
         }));
-        
+
         addLog(`🗑️ Historique effacé pour "${currentSession}"`, 'warning');
     }
 }
@@ -493,36 +509,36 @@ function joinChatSession() {
     const sessionId = document.getElementById('sessionInput').value.trim();
     const nickname = document.getElementById('nicknameInput').value.trim() || 'Dashboard';
     const password = document.getElementById('passwordInput').value.trim();
-    
+
     if (!sessionId) {
         alert('Veuillez entrer un ID de session');
         return;
     }
-    
+
     if (!password) {
         alert('Veuillez entrer le mot de passe de la session');
         return;
     }
-    
+
     // Fermer la connexion précédente si elle existe
     if (chatWs) {
         chatWs.close();
     }
-    
+
     currentSession = sessionId;
     currentNickname = nickname;
     currentPassword = password;
     chatMessages = [];
     sessionKeys.clear();
     currentKeyVersion = 0;
-    
+
     // Dériver la Lock Key de manière asynchrone
     ChatCrypto.deriveLockKey(sessionId, password).then(key => {
         lockKey = key;
-        
+
         // Créer une nouvelle connexion WebSocket
         chatWs = new WebSocket(WS_URL);
-        
+
         chatWs.onopen = () => {
             // Rejoindre la session
             chatWs.send(JSON.stringify({
@@ -533,10 +549,10 @@ function joinChatSession() {
                     player_nickname: nickname
                 }
             }));
-            
+
             updateChatStatus('Connexion...', false);
         };
-        
+
         chatWs.onmessage = (event) => {
             try {
                 const message = JSON.parse(event.data);
@@ -545,12 +561,12 @@ function joinChatSession() {
                 console.error('Erreur chat:', err);
             }
         };
-        
+
         chatWs.onerror = (error) => {
             console.error('Erreur WebSocket chat:', error);
             updateChatStatus('Erreur de connexion', false);
         };
-        
+
         chatWs.onclose = () => {
             updateChatStatus('Déconnecté', false);
             document.getElementById('chatArea').style.display = 'none';
@@ -562,13 +578,13 @@ function joinChatSession() {
 
 async function handleChatMessage(message) {
     const { type, payload } = message;
-    
+
     switch (type) {
         case 'INIT_SESSION':
             // Session rejointe avec succès
             updateChatStatus(`Connecté à "${currentSession}"`, true);
             document.getElementById('chatArea').style.display = 'block';
-            
+
             // Traiter les clés du serveur
             if (payload.keys && payload.keys.length > 0) {
                 for (const keyData of payload.keys) {
@@ -576,10 +592,10 @@ async function handleChatMessage(message) {
                         const encryptedKeyBytes = ChatCrypto.base64ToBytes(keyData.key_package);
                         const nonceBytes = ChatCrypto.base64ToBytes(keyData.nonce);
                         const version = keyData.version;
-                        
+
                         // Déchiffrer la clé de session avec la Lock Key
                         const sessionKey = await ChatCrypto.decrypt(encryptedKeyBytes, lockKey, nonceBytes);
-                        
+
                         if (sessionKey) {
                             sessionKeys.set(version, sessionKey);
                             if (version > currentKeyVersion) {
@@ -594,14 +610,14 @@ async function handleChatMessage(message) {
                     }
                 }
             }
-            
+
             // Si aucune clé et pas un nouveau participant, créer une clé
             const isNewJoiner = payload.new_joiner;
             if (!isNewJoiner && sessionKeys.size === 0) {
                 addLog('💡 Nouvelle session - génération clé...', 'info');
                 await publishNewKey();
             }
-            
+
             // Charger l'historique
             if (payload.history && payload.history.length > 0) {
                 for (const msg of payload.history) {
@@ -609,7 +625,7 @@ async function handleChatMessage(message) {
                 }
             }
             break;
-            
+
         case 'HISTORY_RESULT':
             if (payload.history && payload.history.length > 0) {
                 for (const msg of payload.history) {
@@ -617,22 +633,22 @@ async function handleChatMessage(message) {
                 }
             }
             break;
-            
+
         case 'NEW_MESSAGE':
             await displayServerMessage(payload);
             break;
-            
+
         case 'NEW_PARTICIPANT':
             addLog(`👋 ${payload.player_id} a rejoint`, 'success');
             break;
-            
+
         case 'KEY_UPDATE':
             addLog(`🔑 Nouvelle clé v${payload.version}`, 'info');
             try {
                 const encryptedKeyBytes = ChatCrypto.base64ToBytes(payload.key_package);
                 const nonceBytes = ChatCrypto.base64ToBytes(payload.nonce);
                 const version = payload.version;
-                
+
                 const sessionKey = await ChatCrypto.decrypt(encryptedKeyBytes, lockKey, nonceBytes);
                 if (sessionKey) {
                     sessionKeys.set(version, sessionKey);
@@ -645,12 +661,27 @@ async function handleChatMessage(message) {
                 console.error('Erreur KEY_UPDATE:', err);
             }
             break;
-            
+
         case 'ERROR':
             addLog(`❌ ${payload.message}`, 'error');
             if (payload.code === 'KEY_ROTATION_REQUIRED') {
                 await publishNewKey();
             }
+            break;
+
+        case 'HISTORY_CLEARED':
+            addLog(`🗑️ Historique effacé`, 'warning');
+            clearChatMessages();
+            break;
+
+        case 'SERVER_RESET':
+            addLog(`🚨 Le serveur a été réinitialisé.`, 'error');
+            alert('Le serveur a été réinitialisé par un administrateur. Vous avez été déconnecté.');
+            document.getElementById('chatArea').style.display = 'none';
+            document.getElementById('chatStatus').innerText = 'Serveur réinitialisé';
+            document.getElementById('chatStatus').className = 'chat-client-status';
+            currentSessionId = null;
+            if (chatWs) chatWs.close();
             break;
     }
 }
@@ -658,9 +689,9 @@ async function handleChatMessage(message) {
 async function sendChatMessage() {
     const input = document.getElementById('messageInput');
     const content = input.value.trim();
-    
+
     if (!content) return;
-    
+
     await sendRawMessage(content);
     input.value = '';
 }
@@ -670,20 +701,20 @@ async function sendRawMessage(content) {
     if (!content || !chatWs || chatWs.readyState !== WebSocket.OPEN) {
         return;
     }
-    
+
     if (currentKeyVersion === 0 || !sessionKeys.has(currentKeyVersion)) {
         addLog('❌ Aucune clé de session disponible', 'error');
         return;
     }
-    
+
     try {
         // Chiffrer le message avec la clé de session actuelle
         const plainBytes = ChatCrypto.stringToBytes(content);
         const sessionKey = sessionKeys.get(currentKeyVersion);
         const nonce = ChatCrypto.generateNonce();
-        
+
         const cipherBytes = await ChatCrypto.encrypt(plainBytes, sessionKey, nonce);
-        
+
         // Envoyer au serveur
         chatWs.send(JSON.stringify({
             type: 'SEND_MSG',
@@ -708,14 +739,14 @@ async function displayServerMessage(msgData) {
         const keyVersion = msgData.key_version || 1;
         const cipherBytes = ChatCrypto.base64ToBytes(msgData.payload);
         const nonceBytes = ChatCrypto.base64ToBytes(msgData.nonce);
-        
+
         let content = '[Message chiffré - clé manquante]';
         let isDecrypted = false;
-        
+
         if (sessionKeys.has(keyVersion)) {
             const sessionKey = sessionKeys.get(keyVersion);
             const plainBytes = await ChatCrypto.decrypt(cipherBytes, sessionKey, nonceBytes);
-            
+
             if (plainBytes) {
                 content = ChatCrypto.bytesToString(plainBytes);
                 isDecrypted = true;
@@ -723,7 +754,7 @@ async function displayServerMessage(msgData) {
                 content = '[Échec du déchiffrement]';
             }
         }
-        
+
         displayChatMessage({
             sender: msgData.sender_nickname || msgData.sender_id,
             content: content,
@@ -742,12 +773,12 @@ async function publishNewKey() {
         addLog('❌ Impossible de publier une clé', 'error');
         return;
     }
-    
+
     try {
         const sessionKey = ChatCrypto.generateSessionKey();
         const nonce = ChatCrypto.generateNonce();
         const encryptedKey = await ChatCrypto.encrypt(sessionKey, lockKey, nonce);
-        
+
         chatWs.send(JSON.stringify({
             type: 'PUBLISH_KEY',
             payload: {
@@ -756,7 +787,7 @@ async function publishNewKey() {
                 nonce: ChatCrypto.bytesToBase64(nonce)
             }
         }));
-        
+
         addLog('📤 Nouvelle clé publiée', 'info');
     } catch (err) {
         console.error('Erreur publication clé:', err);
@@ -765,33 +796,33 @@ async function publishNewKey() {
 
 function displayChatMessage({ sender, content, time, isOwn, isEncrypted }) {
     const messagesContainer = document.getElementById('chatMessages');
-    
+
     // Supprimer le message "Aucun message" si présent
     const emptyState = messagesContainer.querySelector('.chat-empty');
     if (emptyState) {
         emptyState.remove();
     }
-    
+
     const messageDiv = document.createElement('div');
     messageDiv.className = 'chat-message' + (isOwn ? ' own' : '');
-    
+
     // Détecter les messages très longs (> 500 caractères)
     const isLongMessage = content.length > 500;
-    
+
     // Détecter si c'est une image (supporte WEBP, PNG, JPEG, GIF, etc.)
     const isImage = content.match(/^data:image\/(webp|png|jpeg|jpg|gif|bmp|svg\+xml);base64,/i);
-    
+
     // Détecter si c'est un fichier texte (nouveau format: 📄FILE:ext:filename)
     const isTextFile = content.startsWith('📄FILE:');
-    
+
     let contentClass = 'chat-message-content';
     let displayContent = content;
-    
+
     if (isImage && !isEncrypted) {
         // Extraire le type d'image
         const imageType = isImage[1].toUpperCase();
         const sizeKB = Math.round(content.length / 1024);
-        
+
         // Afficher l'image avec des informations
         displayContent = `
             <div style="margin-bottom: 8px; color: #666; font-style: italic;">
@@ -819,11 +850,11 @@ function displayChatMessage({ sender, content, time, isOwn, isEncrypted }) {
         const parts = afterPrefix.split(':');
         const extension = parts[0] || 'txt';
         const fileName = parts[1] || 'Unknown';
-        
+
         // Extraire le contenu via \n\n (robuste)
         const sepIdx = content.indexOf('\n\n');
         const fileContent = sepIdx !== -1 ? content.substring(sepIdx + 2) : content;
-        
+
         // Icônes par extension
         const extensionIcons = {
             'txt': '📄', 'md': '📝', 'json': '📊', 'xml': '🏷️',
@@ -832,10 +863,10 @@ function displayChatMessage({ sender, content, time, isOwn, isEncrypted }) {
             'csv': '📊', 'sql': '🗄️', 'sh': '🖥️', 'bat': '🖥️'
         };
         const icon = extensionIcons[extension.toLowerCase()] || '📄';
-        
+
         // Stocker les données pour les boutons (compteur unique)
         const fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        
+
         contentClass += ' long-message text-file-display';
         const escapedContent = fileContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         displayContent = `
@@ -854,7 +885,7 @@ function displayChatMessage({ sender, content, time, isOwn, isEncrypted }) {
         contentClass += ' long-message';
         displayContent = `<div style="margin-bottom: 8px; color: #666; font-style: italic;">📎 Message long (${content.length} caractères)</div>${content}`;
     }
-    
+
     messageDiv.innerHTML = `
         <div class="chat-message-header">
             <span class="chat-message-sender">${sender}</span>
@@ -864,7 +895,7 @@ function displayChatMessage({ sender, content, time, isOwn, isEncrypted }) {
             ${isEncrypted && !isImage ? '🔒 ' : ''}${displayContent}
         </div>
     `;
-    
+
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
@@ -898,7 +929,7 @@ document.addEventListener('keydown', (e) => {
 function copyFileContent(fileId) {
     const pre = document.getElementById(fileId);
     if (!pre) return;
-    
+
     const text = pre.textContent;
     navigator.clipboard.writeText(text).then(() => {
         // Feedback visuel
@@ -925,20 +956,20 @@ function copyFileContent(fileId) {
 function downloadFile(fileId) {
     const pre = document.getElementById(fileId);
     if (!pre) return;
-    
+
     const text = pre.textContent;
     const fileName = pre.dataset.filename || 'file.txt';
-    
+
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    
+
     setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);

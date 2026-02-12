@@ -65,8 +65,15 @@ h2 {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .stats-grid {
@@ -119,6 +126,17 @@ h2 {
     gap: 30px;
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    margin-bottom: 0;
+}
+
 .section {
     background: white;
     padding: 30px;
@@ -126,12 +144,14 @@ h2 {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.connections-list, .rooms-list {
+.connections-list,
+.rooms-list {
     display: grid;
     gap: 15px;
 }
 
-.connection-item, .room-item {
+.connection-item,
+.room-item {
     background: #f8f9fa;
     padding: 20px;
     border-radius: 10px;
@@ -139,24 +159,28 @@ h2 {
     transition: background 0.2s;
 }
 
-.connection-item:hover, .room-item:hover {
+.connection-item:hover,
+.room-item:hover {
     background: #e9ecef;
 }
 
-.connection-header, .room-header {
+.connection-header,
+.room-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
 }
 
-.connection-id, .room-id {
+.connection-id,
+.room-id {
     font-weight: bold;
     color: #667eea;
     font-size: 1.1em;
 }
 
-.connection-badge, .room-badge {
+.connection-badge,
+.room-badge {
     background: #667eea;
     color: white;
     padding: 4px 12px;
@@ -164,7 +188,8 @@ h2 {
     font-size: 0.85em;
 }
 
-.connection-details, .room-details {
+.connection-details,
+.room-details {
     color: #666;
     font-size: 0.9em;
     line-height: 1.6;
@@ -293,6 +318,7 @@ h2 {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -436,6 +462,21 @@ h2 {
     background: #f57c00;
 }
 
+.btn-danger {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.2s;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+}
+
 .chat-messages {
     background: #f8f9fa;
     border-radius: 10px;
@@ -453,7 +494,7 @@ h2 {
     background: white;
     border-radius: 10px;
     border-left: 4px solid #667eea;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s;
 }
 
@@ -503,7 +544,7 @@ h2 {
     margin-top: 10px;
     border: 2px solid #e0e0e0;
     background: #f5f5f5;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .chat-message-content img:active {
@@ -644,8 +685,13 @@ h2 {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modal-image {
@@ -693,7 +739,7 @@ h2 {
     color: #667eea;
     font-weight: bold;
     pointer-events: none;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     padding: 20px 30px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
@@ -729,13 +775,13 @@ h2 {
 .text-file-ext {
     font-size: 0.8em;
     opacity: 0.9;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     padding: 2px 8px;
     border-radius: 4px;
 }
 
 .text-file-btn {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
     padding: 4px 8px;
@@ -746,7 +792,7 @@ h2 {
 }
 
 .text-file-btn:hover {
-    background: rgba(255,255,255,0.35);
+    background: rgba(255, 255, 255, 0.35);
 }
 
 .text-file-content {

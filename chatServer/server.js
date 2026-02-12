@@ -155,6 +155,21 @@ function handleCommand(ws, msg) {
     const { type, payload } = msg;
     debug(`Processing command: ${type}`, payload);
 
+    // COMMANDS THAT REQUIRE BEING JOINED TO A SESSION
+    const sessionCommands = [
+        'PUBLISH_KEY', 'SEND_MSG', 'SEND_COMMAND', 'GET_HISTORY',
+        'CLEAR_HISTORY', 'GET_PARTICIPANTS', 'LEAVE_SESSION',
+        'DELETE_SESSION', 'KICK'
+    ];
+
+    if (sessionCommands.includes(type)) {
+        const session_id = payload ? payload.session_id : null;
+        if (!ws.session_id || ws.session_id !== session_id) {
+            debug(`Access denied for ${ws.player_id || 'unknown'} for command ${type} on session ${session_id}`);
+            return sendError(ws, 'UNAUTHORIZED', 'You must join the session before performing this action.');
+        }
+    }
+
     switch (type) {
         case 'JOIN_SESSION':
             handleJoinSession(ws, payload);
@@ -164,6 +179,9 @@ function handleCommand(ws, msg) {
             break;
         case 'SEND_MSG':
             handleSendMessage(ws, payload);
+            break;
+        case 'SEND_COMMAND':
+            handleSendCommand(ws, payload);
             break;
         case 'GET_HISTORY':
             handleGetHistory(ws, payload);
@@ -180,9 +198,15 @@ function handleCommand(ws, msg) {
         case 'DELETE_SESSION':
             handleDeleteSession(ws, payload);
             break;
+        case 'KICK':
+            handleKick(ws, payload);
+            break;
         case 'LIST_SESSIONS':
         case 'GET_SESSION_LIST':
             handleListSessions(ws);
+            break;
+        case 'CLEAR_ALL_SESSIONS':
+            handleClearAllRooms(ws);
             break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
@@ -190,13 +214,27 @@ function handleCommand(ws, msg) {
 }
 
 function handleJoinSession(ws, payload) {
-    const { session_id, player_id, player_nickname } = payload;
+    const { session_id, player_id, player_nickname, password_hash } = payload;
     if (!session_id || !player_id) return;
 
     // VÉRIFICATION: Limite de sessions
     if (!rooms.has(session_id) && rooms.size >= MAX_SESSIONS) {
         return sendError(ws, 'MAX_SESSIONS_REACHED',
             `Server has reached maximum capacity (${MAX_SESSIONS} active sessions). Please try again later.`);
+    }
+
+    const session = db.getSession(session_id);
+
+    // VÉRIFICATION: Mot de passe / Preuve
+    if (session) {
+        if (session.password_hash && session.password_hash !== password_hash) {
+            debug(`Join denied for ${player_id} in session ${session_id}: Invalid password proof`);
+            return sendError(ws, 'INVALID_PASSWORD', 'The password for this session is incorrect.');
+        }
+    } else {
+        // Nouvelle session: on la crée immédiatement avec le hash fourni
+        debug(`Creating new session entry for ${session_id}`);
+        db.createSession(session_id, password_hash, null, null);
     }
 
     ws.player_id = player_id;
@@ -217,25 +255,14 @@ function handleJoinSession(ws, payload) {
         db.addParticipant(session_id, player_id, player_nickname);
     }
 
-    // Update nickname in case it changed or was missing
-    if (isKnownParticipant && player_nickname) {
-        // Optional: update nickname in DB if needed, but for now we trust the join payload
-    }
-
-    const session = db.getSession(session_id);
     let keys = [];
     let history = [];
-
-    // If they are a known participant (rejoining), they assume they can read history if they have the keys.
-    // If they are NEW, they get nothing until rotation (or if we changed that logic).
-    // Actually, "isNewParticipant" logic in original code was about "is there anyone else".
-    // We strictly follow: If you are NEW to the DB, you trigger rotation.
 
     if (isKnownParticipant) {
         // Send current key if available
         const sessionKeys = db.getSessionKeys(session_id);
         if (sessionKeys && sessionKeys.length > 0) {
-            keys = sessionKeys;
+            keys = sessionKeys.filter(k => k.key_package !== null);
         }
         // Send history (enc)
         history = db.getHistory(session_id) || [];
@@ -339,6 +366,54 @@ function handleSendMessage(ws, payload) {
     }
 }
 
+function handleSendCommand(ws, payload) {
+    const { session_id, recipient_id, payload: ciphertext, nonce, key_v } = payload;
+    if (!session_id || !ciphertext || !nonce) return;
+
+    // Optional: Check key rotation if strict security is desired for commands too
+    if (keyRotationRequired.has(session_id)) {
+        return sendError(ws, 'KEY_ROTATION_REQUIRED', 'A new participant joined; a client must publish a new key before sending commands');
+    }
+
+    const commandMessage = {
+        type: 'NEW_COMMAND',
+        payload: {
+            sender_id: ws.player_id,
+            payload: ciphertext,
+            nonce,
+            key_version: key_v,
+            timestamp: new Date().toISOString()
+        }
+    };
+
+    const room = rooms.get(session_id);
+    if (!room) return;
+
+    if (recipient_id) {
+        // Unicast: Find specific client
+        let found = false;
+        for (const client of room) {
+            if (client.player_id === recipient_id && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(commandMessage));
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            // Optional: Notify sender that recipient was not found
+            debug(`Command recipient ${recipient_id} not found in session ${session_id}`);
+        }
+    } else {
+        // Broadcast: Send to all EXCEPT sender
+        const rawCommand = JSON.stringify(commandMessage);
+        room.forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(rawCommand);
+            }
+        });
+    }
+}
+
 function handleGetHistory(ws, payload) {
     const { session_id, before_id } = payload;
     if (!session_id) return;
@@ -370,6 +445,34 @@ function handleClearHistory(ws, payload) {
             }
         });
     }
+}
+
+function handleClearAllRooms(ws) {
+    debug('CLEANING ALL ROOMS AND SESSIONS...');
+
+    // Delete from DB
+    db.clearAllData();
+
+    // Notify ALL connected clients
+    const clearMsg = JSON.stringify({
+        type: 'SERVER_RESET',
+        payload: { message: 'All sessions and history have been cleared by an administrator.' }
+    });
+
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(clearMsg);
+        }
+        // Reset client session state
+        client.session_id = null;
+        client.player_id = null;
+    });
+
+    // Clear in-memory state
+    rooms.clear();
+    keyRotationRequired.clear();
+
+    debug('ALL ROOMS AND SESSIONS CLEARED.');
 }
 
 function handleGetParticipants(ws, payload) {
@@ -556,6 +659,64 @@ function handleDeleteSession(ws, payload) {
     keyRotationRequired.delete(session_id);
 
     debug(`Session ${session_id} deleted by ${ws.player_id}`);
+}
+
+function handleKick(ws, payload) {
+    const { session_id, target_player_id } = payload;
+    if (!session_id || !target_player_id) return;
+
+    const participants = db.getParticipants(session_id);
+    if (!participants || participants.length === 0) return;
+
+    // The host is the first participant in the database
+    const hostId = participants[0].player_id;
+    debug(`Host ID: ${hostId}`);
+    debug(`Player ID: ${ws.player_id}`);
+    debug(`Target player ID: ${target_player_id}`);
+
+    if (ws.player_id !== hostId) {
+        return sendError(ws, 'FORBIDDEN', 'Only the host can kick participants');
+    }
+
+    if (target_player_id === hostId) {
+        return sendError(ws, 'INVALID_OPERATION', 'Host cannot kick themselves');
+    }
+
+    // Remove from DB
+    db.removeParticipant(session_id, target_player_id);
+
+    // Notify and disconnect target
+    const room = rooms.get(session_id);
+    if (room) {
+        const kickedMsg = JSON.stringify({
+            type: 'KICKED',
+            payload: { session_id, reason: 'Kicked by host' }
+        });
+
+        const broadcastMsg = JSON.stringify({
+            type: 'PARTICIPANT_KICKED',
+            payload: { session_id, player_id: target_player_id }
+        });
+
+        for (const client of room) {
+            if (client.player_id === target_player_id) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(kickedMsg);
+                }
+                room.delete(client);
+                client.session_id = null;
+                // We keep connection open, but they are out of the room
+                debug(`Participant ${target_player_id} was kicked from session ${session_id}`);
+            } else if (client.readyState === WebSocket.OPEN) {
+                client.send(broadcastMsg);
+            }
+        }
+    }
+
+    // Trigger key rotation requirement
+    keyRotationRequired.add(session_id);
+
+    debug(`Host ${hostId} kicked ${target_player_id} from session ${session_id}`);
 }
 
 function sendError(ws, code, message) {
