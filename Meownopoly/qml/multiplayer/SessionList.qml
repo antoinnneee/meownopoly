@@ -44,7 +44,7 @@ Rectangle {
     // Timer de rafraîchissement automatique
     Timer {
         id: refreshTimer
-        interval: 5000 // Rafraîchir toutes les 5 secondes
+        interval: 10000 // Rafraîchir toutes les 5 secondes
         running: false
         repeat: true
         onTriggered: {
@@ -249,7 +249,7 @@ Rectangle {
             }
 
             onClicked: {
-                console.log("⚠️ Création de session demandée (pas encore implémenté)")
+                multiplayerStackView.push(sessionCreationComponent)
             }
         }
 
