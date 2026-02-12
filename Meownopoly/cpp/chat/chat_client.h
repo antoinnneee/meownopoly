@@ -92,6 +92,8 @@ private:
     void sendWebSocketMessage(const QJsonObject &message);
     void publishNewKey();
     QString processMessageText(const QString &text);
+    void decodeImageAsync(const QString &senderId, const QString &text, const QString &ts);
+
     /** Charge les clés depuis la DB et les déchiffre avec m_lockKey. Met à jour m_sessionKeys. */
     void loadAndDecryptSessionKeys();
     

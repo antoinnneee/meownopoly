@@ -1,4 +1,5 @@
-QT += quick core qml widgets core-private quickcontrols2 network quick3d sql websockets
+QT += quick core qml widgets core-private quickcontrols2 network quick3d sql websockets concurrent
+
 
 android:{
     QT += core-private

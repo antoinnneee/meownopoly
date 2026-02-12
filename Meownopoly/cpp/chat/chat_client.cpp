@@ -10,6 +10,7 @@
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QDateTime>
+#include <QtConcurrent>
 
 ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     // Initialize database
@@ -136,6 +137,8 @@ void ChatClient::onConnected() {
     m_connected = true;
     emit connectedChanged();
 
+    if (!m_playerId.isEmpty() && !m_sessionId.isEmpty()) {
+
     // Join session
     QJsonObject join;
     join["type"] = "JOIN_SESSION";
@@ -170,7 +173,6 @@ void ChatClient::sendWebSocketMessage(const QJsonObject &message) {
 }
 
 void ChatClient::onTextMessageReceived(const QString &message) {
-    qDebug() << "Received message: TextMessageReceived";
     QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
     QJsonObject obj = doc.object();
     QString type = obj["type"].toString();
@@ -500,6 +502,20 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
             }
 
             QString text = QString::fromUtf8(plain);
+            if (text.startsWith("data:image/")) {
+                QVariantMap placeholder;
+                placeholder["sender"] = senderId;
+                placeholder["senderNickname"] = senderNickname;
+                placeholder["text"] = "Chargement de l'image...";
+                placeholder["isImage"] = false; // Fix: Keep false to avoid QML Image source errors
+                placeholder["isTextFile"] = false;
+                placeholder["timestamp"] = ts;
+                placeholder["isLoading"] = true;
+                m_messages.append(placeholder);
+                decodeImageAsync(senderId, text, ts);
+                continue;
+            }
+
             QString processedText = processMessageText(text);
             
             // Detect if it's a text file
@@ -557,6 +573,23 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
     }
 
     QString text = QString::fromUtf8(plain);
+    if (text.startsWith("data:image/")) {
+        qDebug() << "image process start:";
+        QVariantMap placeholder;
+        placeholder["sender"] = senderId;
+        placeholder["senderNickname"] = senderNickname;
+        placeholder["text"] = "Chargement de l'image...";
+        placeholder["isImage"] = false; // Fix: Keep false to avoid QML Image source errors
+        placeholder["isTextFile"] = false;
+        placeholder["timestamp"] = ts;
+        placeholder["isLoading"] = true;
+        m_messages.append(placeholder);
+        emit messagesChanged();
+        decodeImageAsync(senderId, text, ts);
+        qDebug() << "image process concurrent run:";
+        return;
+    }
+
     QString processedText = processMessageText(text);
     
     // Detect if it's a text file
@@ -613,38 +646,48 @@ void ChatClient::sendMessage(const QString &text) {
 }
 
 void ChatClient::sendImage(const QString &filePath) {
-    qDebug() << "[ChatClient] Sending image (compressing...):" << filePath;
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
-    QUrl url(filePath);
-    QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
+    // Use QtConcurrent to process the image in a background thread
+    QtConcurrent::run([this, filePath]() {
+        qDebug() << "[ChatClient] Sending image (compressing in background...):" << filePath;
 
-    QImage img(localPath);
-    if (img.isNull()) {
-        qWarning() << "Could not load image:" << localPath;
-        return;
-    }
+        QUrl url(filePath);
+        QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
 
-    // Resize if too large (max 1200px)
-    if (img.width() > 1200 || img.height() > 1200) {
-        img = img.scaled(1200, 1200, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    }
+        QImage img(localPath);
+        if (img.isNull()) {
+            qWarning() << "Could not load image:" << localPath;
+            return;
+        }
 
-    // Compress to JPEG
-    QByteArray compressedData;
-    QBuffer buffer(&compressedData);
-    buffer.open(QIODevice::WriteOnly);
-    img.save(&buffer, "WEBP", 90); // 90% quality
+        // Resize if too large (max 1200px)
+        if (img.width() > 1200 || img.height() > 1200) {
+            img = img.scaled(1200, 1200, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        }
 
-    QString base64 = QString("data:image/WEBP;base64,%1").arg(QString(compressedData.toBase64()));
+        // Compress to WEBP
+        QByteArray compressedData;
+        QBuffer buffer(&compressedData);
+        buffer.open(QIODevice::WriteOnly);
+        img.save(&buffer, "WEBP", 90); // 90% quality
 
-    // Use current (latest) key
-    if (!m_sessionKeys.contains(m_currentKeyVersion)) return;
+        QString base64 = QString("data:image/WEBP;base64,%1").arg(QString(compressedData.toBase64()));
+        int sizeKb = compressedData.size() / 1024;
 
-    // Delegate to sendMessage to leverage retry logic
-    sendMessage(base64);
+        // Return to main thread to send the message via WebSocket
+        QMetaObject::invokeMethod(this, [this, base64, sizeKb]() {
+            if (!m_connected || m_sessionKeys.isEmpty()) return;
 
-    qDebug() << "[ChatClient] Compressed image sent (Size:" << compressedData.size() / 1024 << "KB)";
+            // Use current (latest) key
+            if (!m_sessionKeys.contains(m_currentKeyVersion)) return;
+
+            // Delegate to sendMessage to leverage retry logic
+            sendMessage(base64);
+
+            qDebug() << "[ChatClient] Compressed image sent (Size:" << sizeKb << "KB)";
+        }, Qt::QueuedConnection);
+    });
 }
 
 void ChatClient::sendCommand(const QString &commandType, const QJsonObject &data, const QString &recipientId) {
@@ -822,6 +865,20 @@ void ChatClient::loadHistory() {
         }
 
         QString text = QString::fromUtf8(plain);
+        if (text.startsWith("data:image/")) {
+            QVariantMap placeholder;
+            placeholder["sender"] = m["sender_id"];
+            placeholder["senderNickname"] = m["sender_nickname"];
+            placeholder["text"] = "Chargement de l'image...";
+            placeholder["isImage"] = false; // Fix: Keep false
+            placeholder["isTextFile"] = false;
+            placeholder["timestamp"] = m["timestamp"];
+            placeholder["isLoading"] = true;
+            m_messages.append(placeholder);
+            decodeImageAsync(m["sender_id"].toString(), text, m["timestamp"].toString());
+            continue;
+        }
+
         QString processedText = processMessageText(text);
         
         // Detect if it's a text file
@@ -897,6 +954,20 @@ void ChatClient::handleHistoryResult(const QJsonObject &payload) {
         }
 
         QString text = QString::fromUtf8(plain);
+        if (text.startsWith("data:image/")) {
+            QVariantMap placeholder;
+            placeholder["sender"] = senderId;
+            placeholder["senderNickname"] = senderNickname;
+            placeholder["text"] = "Chargement de l'image...";
+            placeholder["isImage"] = false; // Fix: Keep false
+            placeholder["isTextFile"] = false;
+            placeholder["timestamp"] = ts;
+            placeholder["isLoading"] = true;
+            olderMessages.append(placeholder);
+            decodeImageAsync(senderId, text, ts);
+            continue; 
+        }
+
         QString processedText = processMessageText(text);
         
         // Detect if it's a text file
@@ -1013,4 +1084,50 @@ void ChatClient::copyImageToClipboard(const QString &imageId) {
     QClipboard *clipboard = QGuiApplication::clipboard();
     clipboard->setImage(img);
     qDebug() << "[ChatClient] Image copied to clipboard";
+}
+
+void ChatClient::decodeImageAsync(const QString &senderId, const QString &text, const QString &ts) {
+    // text is the full base64 string
+    QtConcurrent::run([this, senderId, ts, text]() {
+        int commaIndex = text.indexOf(',');
+        if (commaIndex == -1) return;
+
+        QString base64Data = text.mid(commaIndex + 1);
+        QByteArray data = QByteArray::fromBase64(base64Data.toUtf8());
+        QImage img = QImage::fromData(data);
+        
+        if (!img.isNull()) {
+            QString imageId = ChatImageProvider::addImage(img);
+            QString imageUri = QString("image://chat_images/%1").arg(imageId);
+
+            // Return to main thread to update the message
+            QMetaObject::invokeMethod(this, [this, senderId, ts, imageUri]() {
+                for (int i = 0; i < m_messages.size(); ++i) {
+                    QVariantMap m = m_messages[i].toMap();
+                    if (m["sender"].toString() == senderId && m["timestamp"].toString() == ts && m.value("isLoading").toBool()) {
+                        m["text"] = imageUri;
+                        m["isImage"] = true; // Now it's an image
+                        m["isLoading"] = false;
+                        m_messages[i] = m;
+                        emit messagesChanged(); 
+                        break;
+                    }
+                }
+            }, Qt::QueuedConnection);
+        } else {
+             qWarning() << "[ChatClient] Failed to decode image in background thread";
+             QMetaObject::invokeMethod(this, [this, senderId, ts]() {
+                for (int i = 0; i < m_messages.size(); ++i) {
+                    QVariantMap m = m_messages[i].toMap();
+                    if (m["sender"].toString() == senderId && m["timestamp"].toString() == ts && m.value("isLoading").toBool()) {
+                        m["text"] = "[Erreur de chargement d'image]";
+                        m["isLoading"] = false;
+                        m_messages[i] = m;
+                        emit messagesChanged();
+                        break;
+                    }
+                }
+            }, Qt::QueuedConnection);
+        }
+    });
 }
