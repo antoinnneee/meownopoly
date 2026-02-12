@@ -331,7 +331,7 @@ function handlePublishKey(ws, payload) {
 }
 
 function handleSendMessage(ws, payload) {
-    const { session_id, sender_id, sender_nickname, payload: ciphertext, nonce, key_v } = payload;
+    const { session_id, sender_id, sender_nickname, recipient_id, payload: ciphertext, nonce, key_v } = payload;
     if (!session_id || !sender_id || !ciphertext || !nonce) return;
 
     if (keyRotationRequired.has(session_id)) {
@@ -339,25 +339,48 @@ function handleSendMessage(ws, payload) {
     }
 
     const nickname = sender_nickname || (ws.player_nickname || '');
-    const result = db.saveMessage(session_id, sender_id, nickname, ciphertext, nonce, key_v);
+    const isPrivate = !!recipient_id;
+    let msgId = null;
+    if (!isPrivate) {
+        const result = db.saveMessage(session_id, sender_id, nickname, ciphertext, nonce, key_v);
+        msgId = result.lastInsertRowid;
+    }
+
+    const outboundPayload = {
+        sender_id,
+        sender_nickname: nickname,
+        payload: ciphertext,
+        nonce,
+        key_version: key_v,
+        timestamp: new Date().toISOString()
+    };
+    if (msgId !== null) outboundPayload.msg_id = msgId;
+    if (isPrivate) outboundPayload.ephemeral = true;
 
     const outboundMessage = {
         type: 'NEW_MESSAGE',
-        payload: {
-            msg_id: result.lastInsertRowid,
-            sender_id,
-            sender_nickname: nickname,
-            payload: ciphertext,
-            nonce,
-            key_version: key_v,
-            timestamp: new Date().toISOString()
-        }
+        payload: outboundPayload
     };
 
-    // Broadcast to all in the same room
     const room = rooms.get(session_id);
-    if (room) {
-        const rawOutbound = JSON.stringify(outboundMessage);
+    if (!room) return;
+
+    const rawOutbound = JSON.stringify(outboundMessage);
+    if (recipient_id) {
+        // Unicast: envoyer uniquement au destinataire (message non enregistré dans l'historique)
+        let found = false;
+        for (const client of room) {
+            if (client.player_id === recipient_id && client.readyState === WebSocket.OPEN) {
+                client.send(rawOutbound);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            debug(`Message recipient ${recipient_id} not found in session ${session_id}`);
+        }
+    } else {
+        // Broadcast à toute la room
         room.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(rawOutbound);

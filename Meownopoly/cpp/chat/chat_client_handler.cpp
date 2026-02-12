@@ -311,9 +311,12 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
 }
 
 void ChatClient::handleNewMessage(const QJsonObject &payload) {
-
-    m_db.saveMessage(m_sessionId, payload["sender_id"].toString(), payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
-                     QByteArray::fromBase64(payload["nonce"].toString().toUtf8()), payload["timestamp"].toString(), payload["key_version"].toInt());
+    // Messages éphémères (privés / unicast) ne sont pas enregistrés dans l'historique
+    const bool ephemeral = payload["ephemeral"].toBool();
+    if (!ephemeral) {
+        m_db.saveMessage(m_sessionId, payload["sender_id"].toString(), payload["sender_nickname"].toString(), QByteArray::fromBase64(payload["payload"].toString().toUtf8()),
+                         QByteArray::fromBase64(payload["nonce"].toString().toUtf8()), payload["timestamp"].toString(), payload["key_version"].toInt());
+    }
 
     QtConcurrent::run([this, payload]() {
         QString senderId = payload["sender_id"].toString();
@@ -378,6 +381,7 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
         msg["isTextFile"] = isTextFile;
         msg["fileExtension"] = fileExtension;
         msg["timestamp"] = ts;
+        msg["ephemeral"] = payload["ephemeral"].toBool();
         // m_messages.append(msg);
         // emit messagesChanged();
         // Return to main thread to send the message via WebSocket

@@ -94,6 +94,36 @@ Rectangle {
                 font.pixelSize: 8
                 color: "#666666"
             }
+
+            // Badge message privé (non enregistré dans l'historique)
+            Rectangle {
+                visible: !!(modelData && modelData.ephemeral)
+                Layout.preferredWidth: 52
+                Layout.preferredHeight: 14
+                radius: 3
+                color: "#2a3a4a"
+                border.color: "#4A90E2"
+                border.width: 1
+
+                Text {
+                    text: "🔒 Privé"
+                    font.pixelSize: 8
+                    color: "#4A90E2"
+                    anchors.centerIn: parent
+                }
+
+                ToolTip {
+                    visible: ephemeralBadgeArea.containsMouse
+                    text: "Message privé (non enregistré)"
+                    delay: 400
+                }
+
+                MouseArea {
+                    id: ephemeralBadgeArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                }
+            }
         }
 
         Text {

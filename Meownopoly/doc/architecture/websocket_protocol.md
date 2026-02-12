@@ -51,13 +51,14 @@ Publie une nouvelle clé de session (chiffrée avec la Lock Key).
 - `nonce` (string, base64) : Nonce utilisé pour le chiffrement du blob.
 
 ### `SEND_MSG`
-Envoie un message de chat diffusé à tous les participants.
+Envoie un message de chat. Par défaut diffusé à tous les participants et enregistré dans l'historique.
 - `session_id` (string) : Identifiant de la session.
 - `sender_id` (string) : Identifiant de l'expéditeur.
 - `sender_nickname` (string) : Pseudonyme de l'expéditeur.
 - `payload` (string, base64) : Contenu du message chiffré.
 - `nonce` (string, base64) : Nonce utilisé pour le chiffrement du payload.
 - `key_v` (int) : Version de la clé de session utilisée.
+- `recipient_id` (string, optionnel) : Si présent, le message est envoyé **uniquement** à ce participant (unicast) et **n'est pas enregistré** dans l'historique de la session.
 
 ### `SEND_COMMAND`
 Envoie une commande interne chiffrée (ex: PING/PONG, signaux de jeu).
@@ -110,7 +111,8 @@ Envoyée après un `JOIN_SESSION` réussi.
 
 ### `NEW_MESSAGE`
 Diffusé quand un nouveau message est reçu.
-- `msg_id` (int) : ID unique du message en base de données.
+- `msg_id` (int, optionnel) : ID unique du message en base de données. Absent ou 0 pour les messages éphémères (envoyés avec `recipient_id`).
+- `ephemeral` (bool, optionnel) : Si `true`, le message ne doit pas être enregistré dans l'historique local (message privé / unicast).
 - `sender_id` (string) : ID de l'expéditeur.
 - `sender_nickname` (string) : Pseudonyme de l'expéditeur.
 - `payload` (string, base64) : Message chiffré.

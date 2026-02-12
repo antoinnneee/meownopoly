@@ -240,11 +240,12 @@ void ChatClient::publishNewKey() {
 }
 
 
-void ChatClient::sendMessage(const QString &text) {
+void ChatClient::sendMessage(const QString &text, const QString &recipientId) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
-    // Store pending message for retry logic
-    m_pendingMessage = text;
+    // Store pending message for retry logic (only for broadcast, not for private)
+    if (recipientId.isEmpty())
+        m_pendingMessage = text;
 
     // Use current (latest) key
     if (!m_sessionKeys.contains(m_currentKeyVersion)) {
@@ -252,7 +253,8 @@ void ChatClient::sendMessage(const QString &text) {
         return;
     }
 
-    qDebug() << "[ChatClient] Sending message with Key Version" << m_currentKeyVersion;
+    qDebug() << "[ChatClient] Sending message with Key Version" << m_currentKeyVersion
+             << (recipientId.isEmpty() ? "(broadcast)" : QString("(to %1)").arg(recipientId));
     QByteArray nonce = ChatCrypto::generateNonce();
     // Use the PLAIN key for encryption
     QByteArray cipher = ChatCrypto::encrypt(text.toUtf8(), m_sessionKeys[m_currentKeyVersion], nonce);
@@ -266,6 +268,8 @@ void ChatClient::sendMessage(const QString &text) {
     p["payload"] = QString(cipher.toBase64());
     p["nonce"] = QString(nonce.toBase64());
     p["key_v"] = m_currentKeyVersion;
+    if (!recipientId.isEmpty())
+        p["recipient_id"] = recipientId;
     send["payload"] = p;
 
     sendWebSocketMessage(send);
