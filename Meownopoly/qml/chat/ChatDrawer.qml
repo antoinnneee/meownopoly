@@ -127,13 +127,13 @@ Drawer {
 
                     Text {
                         text: "👥"
-                        font.pixelSize: 12
+                        font.pointSize: 9
                     }
 
                     Text {
                         text: "Participants connectés"
                         color: "#aaaaaa"
-                        font.pixelSize: 11
+                        font.pointSize: 8
                         font.bold: true
                         Layout.fillWidth: true
                     }
@@ -141,7 +141,7 @@ Drawer {
                     Text {
                         text: chatClient ? chatClient.participantCount.toString() : "0"
                         color: "#4A90E2"
-                        font.pixelSize: 11
+                        font.pointSize: 8
                         font.bold: true
                     }
 
@@ -154,7 +154,7 @@ Drawer {
 
                         Text {
                             text: "🔄"
-                            font.pixelSize: 10
+                            font.pointSize: 8
                             anchors.centerIn: parent
                         }
 
@@ -232,14 +232,14 @@ Drawer {
 
                             Text {
                                 text: "👑"
-                                font.pixelSize: 10
+                                font.pointSize: 8
                                 visible: modelData.is_host || false
                             }
 
                             Text {
                                 text: modelData.player_nickname || modelData.player_id || "?"
                                 color: (modelData.player_id === chatDrawer.playerId) ? "#4A90E2" : "#cccccc"
-                                font.pixelSize: 11
+                                font.pointSize: 8
                                 font.bold: modelData.player_id === chatDrawer.playerId
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
@@ -248,7 +248,7 @@ Drawer {
                             Text {
                                 text: (modelData.player_id === chatDrawer.playerId) ? "(vous)" : ""
                                 color: "#888888"
-                                font.pixelSize: 9
+                                font.pointSize: 7
                                 font.italic: true
                                 visible: modelData.player_id === chatDrawer.playerId
                             }
@@ -263,7 +263,7 @@ Drawer {
 
                                 Text {
                                     text: "🔒"
-                                    font.pixelSize: 10
+                                    font.pointSize: 8
                                     anchors.centerIn: parent
                                 }
 
@@ -301,7 +301,7 @@ Drawer {
 
                                 Text {
                                     text: "❌"
-                                    font.pixelSize: 10
+                                    font.pointSize: 8
                                     anchors.centerIn: parent
                                 }
 
@@ -329,7 +329,7 @@ Drawer {
                 Text {
                     text: "Aucun participant connecté"
                     color: "#666666"
-                    font.pixelSize: 10
+                    font.pointSize: 8
                     font.italic: true
                     anchors.horizontalCenter: parent.horizontalCenter
                     visible: !chatClient || chatClient.participantCount === 0

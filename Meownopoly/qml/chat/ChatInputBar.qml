@@ -54,12 +54,12 @@ Rectangle {
 
                 Text {
                     text: "🔒"
-                    font.pixelSize: 10
+                    font.pointSize: 8
                 }
                 Text {
                     text: "Message privé à : " + (recipientNickname || recipientId || "?")
                     color: "#4A90E2"
-                    font.pixelSize: 10
+                    font.pointSize: 8
                     font.bold: true
                     Layout.fillWidth: true
                     elide: Text.ElideRight
@@ -73,7 +73,7 @@ Rectangle {
                     Text {
                         text: "✕"
                         color: "#aaaaaa"
-                        font.pixelSize: 11
+                        font.pointSize: 8
                         anchors.centerIn: parent
                     }
 
@@ -110,7 +110,7 @@ Rectangle {
             Text {
                 text: "📷"
                 anchors.centerIn: parent
-                font.pixelSize: 16
+                font.pointSize: 12
             }
 
             MouseArea {
@@ -134,7 +134,7 @@ Rectangle {
             Text {
                 text: "📄"
                 anchors.centerIn: parent
-                font.pixelSize: 16
+                font.pointSize: 12
             }
 
             MouseArea {
@@ -164,7 +164,7 @@ Rectangle {
                 placeholderText: "Tapez un message..."
                 placeholderTextColor: "#666666"
                 color: "#cccccc"
-                font.pixelSize: 12
+                font.pointSize: 9
 
                 background: Rectangle {
                     color: "transparent"
@@ -195,7 +195,7 @@ Rectangle {
                 Text {
                     text: "Envoyer"
                     color: "#ffffff"
-                    font.pixelSize: 10
+                    font.pointSize: 8
                     font.bold: true
                 }
             }

@@ -75,13 +75,13 @@ Rectangle {
 
         Text {
             text: "💬"
-            font.pixelSize: 20
+            font.pointSize: 15
         }
 
         Text {
             text: "Chat"
             color: "#cccccc"
-            font.pixelSize: 14
+            font.pointSize: 10
             font.bold: true
             Layout.fillWidth: true
         }
@@ -106,13 +106,13 @@ Rectangle {
 
                 Text {
                     text: "👥"
-                    font.pixelSize: 11
+                    font.pointSize: 8
                 }
 
                 Text {
                     text: chatClient ? chatClient.participantCount : "0"
                     color: "#cccccc"
-                    font.pixelSize: 11
+                    font.pointSize: 8
                     font.bold: true
                 }
             }
@@ -141,7 +141,7 @@ Rectangle {
 
             Text {
                 text: "🗑️"
-                font.pixelSize: 14
+                font.pointSize: 10
                 anchors.centerIn: parent
             }
 
@@ -174,7 +174,7 @@ Rectangle {
         Text {
             text: drawer ? drawer.gameId : ""
             color: "#888888"
-            font.pixelSize: 10
+            font.pointSize: 8
             elide: Text.ElideRight
             Layout.maximumWidth: 80
         }
