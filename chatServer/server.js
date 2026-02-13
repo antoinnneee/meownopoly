@@ -166,7 +166,7 @@ function handleCommand(ws, msg) {
         const session_id = payload ? payload.session_id : null;
         if (!ws.session_id || ws.session_id !== session_id) {
             debug(`Access denied for ${ws.player_id || 'unknown'} for command ${type} on session ${session_id}`);
-            return sendError(ws, 'UNAUTHORIZED', 'You must join the session before performing this action.');
+            return sendError(ws, 'UNAUTHORIZED', `You must join the session before performing this action. (TYPE: ${type}, SESSION_ID: ${session_id})`);
         }
     }
 

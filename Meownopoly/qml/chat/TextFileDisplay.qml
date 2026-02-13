@@ -74,7 +74,7 @@ Column {
             // Icône + nom du fichier
             Text {
                 text: textFileDisplay.icon + " " + textFileDisplay.fileName
-                font.pixelSize: 11
+                font.pointSize: 8
                 font.bold: true
                 color: "white"
                 anchors.verticalCenter: parent.verticalCenter
@@ -92,7 +92,7 @@ Column {
 
                 Text {
                     text: textFileDisplay.fileExtension.toUpperCase()
-                    font.pixelSize: 8
+                    font.pointSize: 6
                     font.bold: true
                     color: "white"
                     anchors.centerIn: parent
@@ -109,7 +109,7 @@ Column {
 
                 Text {
                     text: textFileDisplay.copyFeedback ? "✓ Copié" : "Copier"
-                    font.pixelSize: 9
+                    font.pointSize: 7
                     font.bold: true
                     color: "white"
                     anchors.centerIn: parent
@@ -141,7 +141,7 @@ Column {
 
                 Text {
                     text: "Sauver"
-                    font.pixelSize: 9
+                    font.pointSize: 7
                     font.bold: true
                     color: "white"
                     anchors.centerIn: parent
@@ -191,7 +191,7 @@ Column {
                 selectByMouse: true
                 color: "#e0e0e0"
                 font.family: "Consolas, Monaco, monospace"
-                font.pixelSize: 11
+                font.pointSize: 8
                 textFormat: TextEdit.PlainText
             }
         }

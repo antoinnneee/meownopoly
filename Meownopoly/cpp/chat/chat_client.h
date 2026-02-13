@@ -98,7 +98,17 @@ private:
 
     /** Charge les clés depuis la DB et les déchiffre avec m_lockKey. Met à jour m_sessionKeys. */
     void loadAndDecryptSessionKeys();
-    
+
+    /** Déchiffre un payload avec la clé de session (version). Retourne le texte brut ou un placeholder si clé manquante. */
+    QByteArray decryptMessagePayload(const QByteArray &cipher, const QByteArray &nonce, int keyVersion);
+    /** Extrait le timestamp d'un objet message JSON (server_timestamp ou timestamp). */
+    static QString messageTimestamp(const QJsonObject &msg);
+    /** Construit le QVariantMap pour un message déchiffré (image placeholder ou texte). *outIsImagePlaceholder = true si image async à lancer. */
+    QVariantMap buildMessageMapFromDecryptedText(const QString &senderId, const QString &senderNickname,
+        const QString &text, const QString &ts, bool isEphemeral, bool *outIsImagePlaceholder = nullptr);
+    /** Retourne l'index du participant dans m_participants par player_id, ou -1. */
+    int indexOfParticipant(const QString &playerId) const;
+
     // Worker thread for WebSocket
     QThread *m_workerThread;
     ChatWorker *m_worker;

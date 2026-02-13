@@ -23,7 +23,7 @@ Rectangle {
         Text {
             text: connected ? "● Connecté" : "○ Déconnecté"
             color: connected ? "#4a8a4a" : "#888888"
-            font.pixelSize: 9
+            font.pointSize: 7
         }
 
         Item { Layout.fillWidth: true }
@@ -31,36 +31,36 @@ Rectangle {
         Text {
             text: "👥 " + participantCount
             color: "#666666"
-            font.pixelSize: 9
+            font.pointSize: 7
         }
 
         Text {
             text: "│"
             color: "#444444"
-            font.pixelSize: 9
+            font.pointSize: 7
         }
 
         Text {
             text: messageCount + " messages"
             color: "#666666"
-            font.pixelSize: 9
+            font.pointSize: 7
         }
 
         Text {
             text: "│"
             color: "#444444"
-            font.pixelSize: 9
+            font.pointSize: 7
         }
 
         Text {
             text: "🐱"
-            font.pixelSize: 9
+            font.pointSize: 7
         }
 
         Text {
             text: playerNickname
             color: "#888888"
-            font.pixelSize: 9
+            font.pointSize: 7
             elide: Text.ElideRight
             Layout.maximumWidth: 100
         }
