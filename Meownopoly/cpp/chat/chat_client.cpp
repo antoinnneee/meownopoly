@@ -1,7 +1,7 @@
 #include "chat_client.h"
 #include "chat_image_provider.h"
+#include "tools/logger.h"
 #include <QJsonDocument>
-#include <QDebug>
 #include <QImage>
 #include <QBuffer>
 #include <QFileInfo>
@@ -33,23 +33,23 @@ ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     // Start the worker thread
     m_workerThread->start();
 
-    qDebug() << "[ChatClient] Initialized with worker thread";
+    Logger::instance()->info("Initialized with worker thread", "ChatClient");
 }
 
 ChatClient::~ChatClient() {
-    qDebug() << "[ChatClient] Destructor called";
+    Logger::instance()->debug("Destructor called", "ChatClient");
 
     // Stop the worker thread
     if (m_workerThread) {
         m_workerThread->quit();
         if (!m_workerThread->wait(3000)) {
-            qWarning() << "[ChatClient] Worker thread did not finish in time, terminating";
+            Logger::instance()->warn("Worker thread did not finish in time, terminating", "ChatClient");
             m_workerThread->terminate();
             m_workerThread->wait();
         }
     }
 
-    qDebug() << "[ChatClient] Destroyed";
+    Logger::instance()->debug("Destroyed", "ChatClient");
 }
 
 void ChatClient::setSessionId(const QString &id) {
@@ -61,7 +61,7 @@ void ChatClient::setSessionId(const QString &id) {
 }
 
 void ChatClient::connectToServer(const QString &url) {
-    qDebug() << "[ChatClient] Connecting to server:" << url;
+    Logger::instance()->info(QString("Connecting to server: %1").arg(url), "ChatClient");
     
     // Reset session data on new connection attempt? 
     // For now, we just connect. Session data is handled by connectToSession.
@@ -76,7 +76,7 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
     m_nickname = nickname.isEmpty() ? playerId : nickname;
     m_password = password;
 
-    qDebug() << "[ChatClient] Preparing session for player:" << m_playerId;
+    Logger::instance()->info(QString("Preparing session for player: %1").arg(m_playerId), "ChatClient");
 
     // Derive Lock Key from SessionID + Password
     m_lockKey = ChatCrypto::deriveLockKey(m_sessionId, m_password);
@@ -87,7 +87,7 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
     QMap<int, QByteArray> encryptedKeys = m_db.getSessionKeys(m_sessionId);
     m_sessionKeys.clear();
 
-    qDebug() << "[ChatClient] Loaded" << encryptedKeys.size() << "encrypted keys from local storage";
+    Logger::instance()->debug(QString("Loaded %1 encrypted keys from local storage").arg(encryptedKeys.size()), "ChatClient");
 
     for (auto it = encryptedKeys.begin(); it != encryptedKeys.end(); ++it) {
         int version = it.key();
@@ -101,11 +101,11 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
         if (!plainKey.isEmpty()) {
             m_sessionKeys.insert(version, plainKey);
         } else {
-            qWarning() << "[ChatClient] Failed to decrypt session key Version" << version;
+            Logger::instance()->warn(QString("Failed to decrypt session key Version %1").arg(version), "ChatClient");
         }
     }
 
-    qDebug() << "[ChatClient] Decrypted" << m_sessionKeys.size() << "session keys into memory";
+    Logger::instance()->debug(QString("Decrypted %1 session keys into memory").arg(m_sessionKeys.size()), "ChatClient");
 
     // Determine current version (max version locally)
     if (!m_sessionKeys.isEmpty()) {
@@ -133,7 +133,7 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
 }
 
 void ChatClient::onConnected() {
-    qDebug() << "[ChatClient] Connected to server";
+    Logger::instance()->info("Connected to server", "ChatClient");
     m_connected = true;
     emit connectedChanged();
 
@@ -157,7 +157,7 @@ void ChatClient::onConnected() {
 }
 
 void ChatClient::onDisconnected() {
-    qDebug() << "[ChatClient] Disconnected from server";
+    Logger::instance()->info("Disconnected from server", "ChatClient");
     m_connected = false;
     m_participants.clear();
     m_pendingMessage.clear();
@@ -174,7 +174,7 @@ void ChatClient::sendWebSocketMessage(const QJsonObject &message) {
 
 void ChatClient::requestParticipants() {
     if (!m_connected) {
-        qWarning() << "[ChatClient] Cannot request participants: not connected";
+        Logger::instance()->warn("Cannot request participants: not connected", "ChatClient");
         return;
     }
 
@@ -185,16 +185,16 @@ void ChatClient::requestParticipants() {
     request["payload"] = payload;
 
     sendWebSocketMessage(request);
-    qDebug() << "[ChatClient] Requested participants list for session" << m_sessionId;
+    Logger::instance()->debug(QString("Requested participants list for session %1").arg(m_sessionId), "ChatClient");
 }
 
 void ChatClient::requestSessionsList() {
     if (!m_connected) {
-        qWarning() << "[ChatClient] Cannot request sessions list: not connected";
+        Logger::instance()->warn("Cannot request sessions list: not connected", "ChatClient");
         return;
     }
-    
-    qDebug() << "[ChatClient] Requesting sessions list";
+
+    Logger::instance()->debug("Requesting sessions list", "ChatClient");
     
     QJsonObject msg;
     msg["type"] = "LIST_SESSIONS";
@@ -206,7 +206,7 @@ void ChatClient::requestSessionsList() {
 void ChatClient::kickPlayer(const QString &targetPlayerId) {
     if (!m_connected || m_sessionId.isEmpty()) return;
 
-    qDebug() << "[ChatClient] Kicking player" << targetPlayerId << "from session" << m_sessionId;
+    Logger::instance()->info(QString("Kicking player %1 from session %2").arg(targetPlayerId).arg(m_sessionId), "ChatClient");
 
     QJsonObject kick;
     kick["type"] = "KICK";
@@ -221,7 +221,7 @@ void ChatClient::kickPlayer(const QString &targetPlayerId) {
 
 void ChatClient::publishNewKey() {
     if (m_lockKey.isEmpty()) {
-        qWarning() << "[ChatClient] Cannot publish key: LockKey not derived (missing password?)";
+        Logger::instance()->warn("Cannot publish key: LockKey not derived (missing password?)", "ChatClient");
         return;
     }
     QByteArray newKey = ChatCrypto::generateRandomKey();
@@ -236,145 +236,19 @@ void ChatClient::publishNewKey() {
     p["nonce"] = QString(nonce.toBase64());
     publish["payload"] = p;
     sendWebSocketMessage(publish);
-    qDebug() << "[ChatClient] Published new key. Waiting for KEY_UPDATE.";
+    Logger::instance()->debug("Published new key. Waiting for KEY_UPDATE.", "ChatClient");
 }
 
-
-void ChatClient::sendMessage(const QString &text, const QString &recipientId, const QString &recipientNickname) {
-    if (!m_connected || m_sessionKeys.isEmpty()) return;
-
-    // Store pending message for retry logic (only for broadcast, not for private)
-    if (recipientId.isEmpty())
-        m_pendingMessage = text;
-
-    // Use current (latest) key
-    if (!m_sessionKeys.contains(m_currentKeyVersion)) {
-        qWarning() << "Current key version" << m_currentKeyVersion << "not found in keys map!";
-        return;
-    }
-
-    qDebug() << "[ChatClient] Sending message with Key Version" << m_currentKeyVersion
-             << (recipientId.isEmpty() ? "(broadcast)" : QString("(to %1)").arg(recipientId));
-    QByteArray nonce = ChatCrypto::generateNonce();
-    // Use the PLAIN key for encryption
-    QByteArray cipher = ChatCrypto::encrypt(text.toUtf8(), m_sessionKeys[m_currentKeyVersion], nonce);
-
-    QJsonObject send;
-    send["type"] = "SEND_MSG";
-    QJsonObject p;
-    p["session_id"] = m_sessionId;
-    p["sender_id"] = m_playerId;
-    p["sender_nickname"] = m_nickname;
-    p["payload"] = QString(cipher.toBase64());
-    p["nonce"] = QString(nonce.toBase64());
-    p["key_v"] = m_currentKeyVersion;
-    if (!recipientId.isEmpty())
-        p["recipient_id"] = recipientId;
-    send["payload"] = p;
-
-    sendWebSocketMessage(send);
-
-    // Affichage optimiste : afficher notre message tout de suite (nécessaire pour les messages privés que le serveur ne nous renvoie pas)
-    const QString ts = QDateTime::currentDateTime().toString(Qt::ISODate);
-    const bool isPrivate = !recipientId.isEmpty();
-    if (text.startsWith("data:image/")) {
-        QVariantMap placeholder;
-        placeholder["sender"] = m_playerId;
-        placeholder["senderNickname"] = m_nickname;
-        placeholder["text"] = "Chargement de l'image...";
-        placeholder["isImage"] = false;
-        placeholder["isTextFile"] = false;
-        placeholder["timestamp"] = ts;
-        placeholder["isLoading"] = true;
-        placeholder["ephemeral"] = isPrivate;
-        if (isPrivate) {
-            placeholder["recipientId"] = recipientId;
-            placeholder["recipientNickname"] = recipientNickname;
-        }
-        m_messages.append(placeholder);
-        emit messagesChanged();
-        decodeImageAsync(m_playerId, text, ts);
-    } else {
-        const QString processedText = processMessageText(text);
-        const bool isTextFile = processedText.startsWith("FILE:");
-        QString fileExtension;
-        if (isTextFile) {
-            const int firstColon = processedText.indexOf(':', 7);
-            if (firstColon > 7)
-                fileExtension = processedText.mid(7, firstColon - 7);
-        }
-        QVariantMap msg;
-        msg["sender"] = m_playerId;
-        msg["senderNickname"] = m_nickname;
-        msg["text"] = processedText;
-        msg["isImage"] = processedText.startsWith("image://");
-        msg["isTextFile"] = isTextFile;
-        msg["fileExtension"] = fileExtension;
-        msg["timestamp"] = ts;
-        msg["ephemeral"] = isPrivate;
-        if (isPrivate) {
-            msg["recipientId"] = recipientId;
-            msg["recipientNickname"] = recipientNickname;
-        }
-        m_messages.append(msg);
-        emit messagesChanged();
-    }
-}
-
-void ChatClient::sendImage(const QString &filePath) {
-    if (!m_connected || m_sessionKeys.isEmpty()) return;
-
-    // Use QtConcurrent to process the image in a background thread
-    QtConcurrent::run([this, filePath]() {
-        qDebug() << "[ChatClient] Sending image (compressing in background...):" << filePath;
-
-        QUrl url(filePath);
-        QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
-
-        QImage img(localPath);
-        if (img.isNull()) {
-            qWarning() << "Could not load image:" << localPath;
-            return;
-        }
-
-        // Resize if too large (max 1200px)
-        if (img.width() > 1200 || img.height() > 1200) {
-            img = img.scaled(1200, 1200, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        }
-
-        // Compress to WEBP
-        QByteArray compressedData;
-        QBuffer buffer(&compressedData);
-        buffer.open(QIODevice::WriteOnly);
-        img.save(&buffer, "WEBP", 90); // 90% quality
-
-        QString base64 = QString("data:image/WEBP;base64,%1").arg(QString(compressedData.toBase64()));
-        int sizeKb = compressedData.size() / 1024;
-
-        // Return to main thread to send the message via WebSocket
-        QMetaObject::invokeMethod(this, [this, base64, sizeKb]() {
-            if (!m_connected || m_sessionKeys.isEmpty()) return;
-
-            // Use current (latest) key
-            if (!m_sessionKeys.contains(m_currentKeyVersion)) return;
-
-            // Delegate to sendMessage to leverage retry logic
-            sendMessage(base64);
-
-            qDebug() << "[ChatClient] Compressed image sent (Size:" << sizeKb << "KB)";
-        }, Qt::QueuedConnection);
-    });
-}
 
 void ChatClient::sendCommand(const QString &commandType, const QJsonObject &data, const QString &recipientId) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
     if (!m_sessionKeys.contains(m_currentKeyVersion)) {
-        qWarning() << "[ChatClient] Current key version" << m_currentKeyVersion << "not found for sendCommand!";
+        Logger::instance()->warn(QString("Current key version %1 not found for sendCommand!").arg(m_currentKeyVersion), "ChatClient");
         return;
     }
 
-    qDebug() << "[ChatClient] Sending command" << commandType << "to" << (recipientId.isEmpty() ? "all" : recipientId);
+    Logger::instance()->debug(QString("Sending command %1 to %2").arg(commandType).arg(recipientId.isEmpty() ? "all" : recipientId), "ChatClient");
 
     QString internalPayload = ChatCommandHelper::formatCommand(commandType, data);
     QByteArray nonce = ChatCrypto::generateNonce();
@@ -396,65 +270,10 @@ void ChatClient::sendCommand(const QString &commandType, const QJsonObject &data
 }
 
 void ChatClient::sendPing(const QString &targetPlayerId) {
-    qDebug() << "[ChatClient] Sending PING to" << (targetPlayerId.isEmpty() ? "all" : targetPlayerId);
+    Logger::instance()->debug(QString("Sending PING to %1").arg(targetPlayerId.isEmpty() ? "all" : targetPlayerId), "ChatClient");
     QJsonObject data;
     data["timestamp"] = QDateTime::currentMSecsSinceEpoch();
     sendCommand("PING", data, targetPlayerId);
-}
-
-void ChatClient::sendTextFile(const QString &filePath) {
-    qDebug() << "[ChatClient] Sending text file:" << filePath;
-    if (!m_connected || m_sessionKeys.isEmpty()) return;
-
-    QUrl url(filePath);
-    QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
-
-    QFileInfo fileInfo(localPath);
-    if (!fileInfo.exists() || !fileInfo.isFile()) {
-        qWarning() << "[ChatClient] File not found:" << localPath;
-        return;
-    }
-
-    // Limit file size to 1MB
-    if (fileInfo.size() > 1024 * 1024) {
-        qWarning() << "[ChatClient] File too large:" << fileInfo.size() << "bytes (max 1MB)";
-        emit errorOccurred("Fichier trop volumineux (max 1MB)");
-        return;
-    }
-
-    QFile file(localPath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "[ChatClient] Cannot open file:" << localPath;
-        return;
-    }
-
-    QString content = QString::fromUtf8(file.readAll());
-    file.close();
-
-    QString extension = fileInfo.suffix().toLower();
-    QString fileName = fileInfo.fileName();
-
-    // Format: 📄FILE:ext:filename\n\ncontenu
-    QString formattedMessage = /*QString::fromUtf8("\xF0\x9F\x93\x84") +*/ "FILE:" + extension + ":" + fileName + "\n\n" + content;
-
-    // Encrypt and send using sendMessage
-    sendMessage(formattedMessage);
-    qDebug() << "[ChatClient] Text file sent:" << fileName << "(" << extension << "," << content.size() << "chars)";
-}
-
-void ChatClient::saveTextToFile(const QString &filePath, const QString &content) {
-    QUrl url(filePath);
-    QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
-
-    QFile file(localPath);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        file.write(content.toUtf8());
-        file.close();
-        qDebug() << "[ChatClient] File saved to:" << localPath;
-    } else {
-        qWarning() << "[ChatClient] Failed to save file:" << localPath;
-        emit errorOccurred("Impossible de sauvegarder le fichier");
-    }
 }
 
 void ChatClient::clearHistory() {
@@ -467,11 +286,11 @@ void ChatClient::clearHistory() {
     clear["payload"] = p;
 
     sendWebSocketMessage(clear);
-    qDebug() << "[ChatClient] Requesting history clear";
+    Logger::instance()->debug("Requesting history clear", "ChatClient");
 }
 
 void ChatClient::loadHistory() {
-    qDebug() << "[ChatClient] Loading history for session" << m_sessionId;
+    Logger::instance()->debug(QString("Loading history for session %1").arg(m_sessionId), "ChatClient");
     m_messages.clear();
     QVariantList history = m_db.getMessages(m_sessionId);
     for (const QVariant &v : history) {
@@ -519,12 +338,12 @@ void ChatClient::loadHistory() {
         QString processedText = processMessageText(text);
         
         // Detect if it's a text file
-        bool isTextFile = processedText.startsWith("📄FILE:");
+        bool isTextFile = processedText.startsWith("FILE:");
         QString fileExtension;
         if (isTextFile) {
-            int firstColon = processedText.indexOf(':', 7);
-            if (firstColon > 7) {
-                fileExtension = processedText.mid(7, firstColon - 7);
+            int firstColon = processedText.indexOf(':', 3);
+            if (firstColon > 3) {
+                fileExtension = processedText.mid(3, firstColon - 3);
             }
         }
 
@@ -543,11 +362,11 @@ void ChatClient::loadHistory() {
 
 void ChatClient::requestHistory(int beforeId) {
     if (!m_connected) {
-        qWarning() << "[ChatClient] Cannot request history: not connected to server";
+        Logger::instance()->warn("Cannot request history: not connected to server", "ChatClient");
         return;
     }
 
-    qDebug() << "[ChatClient] Requesting history from server (beforeId:" << beforeId << ")";
+    Logger::instance()->debug(QString("Requesting history from server (beforeId: %1)").arg(beforeId), "ChatClient");
 
     QJsonObject request;
     request["type"] = "GET_HISTORY";
@@ -596,7 +415,7 @@ QString ChatClient::processMessageText(const QString &text) {
     }
     
     // Process text files (format: 📄FILE:ext:filename\n\ncontenu)
-    if (text.startsWith("📄FILE:")) {
+    if (text.startsWith("FILE:")) {
         // Return as-is, will be handled by QML
         return text;
     }
@@ -607,7 +426,7 @@ QString ChatClient::processMessageText(const QString &text) {
 void ChatClient::saveImageToFile(const QString &imageId, const QString &filePath) {
     QImage img = ChatImageProvider::getImage(imageId);
     if (img.isNull()) {
-        qWarning() << "[ChatClient] Image not found for ID:" << imageId;
+        Logger::instance()->warn(QString("Image not found for ID: %1").arg(imageId), "ChatClient");
         emit errorOccurred("Image introuvable");
         return;
     }
@@ -616,9 +435,9 @@ void ChatClient::saveImageToFile(const QString &imageId, const QString &filePath
     QString localPath = url.isLocalFile() ? url.toLocalFile() : filePath;
 
     if (img.save(localPath)) {
-        qDebug() << "[ChatClient] Image saved to:" << localPath;
+        Logger::instance()->debug(QString("Image saved to: %1").arg(localPath), "ChatClient");
     } else {
-        qWarning() << "[ChatClient] Failed to save image to:" << localPath;
+        Logger::instance()->warn(QString("Failed to save image to: %1").arg(localPath), "ChatClient");
         emit errorOccurred("Impossible de sauvegarder l'image");
     }
 }
@@ -626,13 +445,13 @@ void ChatClient::saveImageToFile(const QString &imageId, const QString &filePath
 void ChatClient::copyImageToClipboard(const QString &imageId) {
     QImage img = ChatImageProvider::getImage(imageId);
     if (img.isNull()) {
-        qWarning() << "[ChatClient] Image not found for ID:" << imageId;
+        Logger::instance()->warn(QString("Image not found for ID: %1").arg(imageId), "ChatClient");
         return;
     }
 
     QClipboard *clipboard = QGuiApplication::clipboard();
     clipboard->setImage(img);
-    qDebug() << "[ChatClient] Image copied to clipboard";
+    Logger::instance()->debug("Image copied to clipboard", "ChatClient");
 }
 
 void ChatClient::decodeImageAsync(const QString &senderId, const QString &text, const QString &ts) {
@@ -664,7 +483,7 @@ void ChatClient::decodeImageAsync(const QString &senderId, const QString &text, 
                 }
             }, Qt::QueuedConnection);
         } else {
-             qWarning() << "[ChatClient] Failed to decode image in background thread";
+            Logger::instance()->warn("Failed to decode image in background thread", "ChatClient");
              QMetaObject::invokeMethod(this, [this, senderId, ts]() {
                 for (int i = 0; i < m_messages.size(); ++i) {
                     QVariantMap m = m_messages[i].toMap();
