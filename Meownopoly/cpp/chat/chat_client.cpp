@@ -149,7 +149,7 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
     m_nickname = nickname.isEmpty() ? playerId : nickname;
     m_password = password;
 
-    Logger::instance()->info(QString("Preparing session for player: %1").arg(m_playerId), "ChatClient");
+    Logger::instance()->info(QString("Preparing session %4 for player: %2_%1, %3").arg(m_playerId).arg(m_nickname).arg(m_password).arg(m_sessionId), "ChatClient");
 
     // Derive Lock Key from SessionID + Password
     m_lockKey = ChatCrypto::deriveLockKey(m_sessionId, m_password);
@@ -157,28 +157,8 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
 
     // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
     // Keys in DB are encrypted with lockKey. We must decrypt them for memory usage.
-    QMap<int, QByteArray> encryptedKeys = m_db.getSessionKeys(m_sessionId);
     m_sessionKeys.clear();
-
-    Logger::instance()->debug(QString("Loaded %1 encrypted keys from local storage").arg(encryptedKeys.size()), "ChatClient");
-
-    for (auto it = encryptedKeys.begin(); it != encryptedKeys.end(); ++it) {
-        int version = it.key();
-        QByteArray combined = it.value();
-
-        QDataStream stream(combined);
-        QByteArray encryptedPkg, nonce;
-        stream >> encryptedPkg >> nonce;
-
-        QByteArray plainKey = ChatCrypto::decrypt(encryptedPkg, m_lockKey, nonce);
-        if (!plainKey.isEmpty()) {
-            m_sessionKeys.insert(version, plainKey);
-        } else {
-            Logger::instance()->warn(QString("Failed to decrypt session key Version %1").arg(version), "ChatClient");
-        }
-    }
-
-    Logger::instance()->debug(QString("Decrypted %1 session keys into memory").arg(m_sessionKeys.size()), "ChatClient");
+    loadAndDecryptSessionKeys();
 
     // Determine current version (max version locally)
     if (!m_sessionKeys.isEmpty()) {
@@ -209,24 +189,6 @@ void ChatClient::onConnected() {
     Logger::instance()->info("Connected to server", "ChatClient");
     m_connected = true;
     emit connectedChanged();
-
-    if (!m_playerId.isEmpty() && !m_sessionId.isEmpty()) {
-
-        // Join session
-        QJsonObject join;
-        join["type"] = "JOIN_SESSION";
-        QJsonObject payload;
-        payload["session_id"] = m_sessionId;
-        payload["player_id"] = m_playerId;
-        payload["player_nickname"] = m_nickname;
-        payload["password_hash"] = QString(m_passwordHash);
-        join["payload"] = payload;
-
-        sendWebSocketMessage(join);
-
-        // Request participants list right after joining
-        requestParticipants();
-    }
 }
 
 void ChatClient::onDisconnected() {
@@ -309,7 +271,7 @@ void ChatClient::publishNewKey() {
     p["nonce"] = QString(nonce.toBase64());
     publish["payload"] = p;
     sendWebSocketMessage(publish);
-    Logger::instance()->debug("Published new key. Waiting for KEY_UPDATE.", "ChatClient");
+    Logger::instance()->info("Published new key. Waiting for KEY_UPDATE.", "ChatClient");
 }
 
 
@@ -411,12 +373,12 @@ void ChatClient::loadHistory() {
         QString processedText = processMessageText(text);
 
         // Detect if it's a text file
-        bool isTextFile = processedText.startsWith("FILE:");
+        bool isTextFile = processedText.startsWith(QString::fromUtf8("\xF0\x9F\x93\x84") + "FILE:");
         QString fileExtension;
         if (isTextFile) {
-            int firstColon = processedText.indexOf(':', 3);
-            if (firstColon > 3) {
-                fileExtension = processedText.mid(3, firstColon - 3);
+            int firstColon = processedText.indexOf(':', 7);
+            if (firstColon > 7) {
+                fileExtension = processedText.mid(7, firstColon - 7);
             }
         }
 
@@ -465,11 +427,11 @@ void ChatClient::loadAndDecryptSessionKeys() {
         QByteArray plainKey = ChatCrypto::decrypt(encryptedPkg, m_lockKey, nonce);
         if (!plainKey.isEmpty()) {
             m_sessionKeys.insert(version, plainKey);
-            if (version > m_currentKeyVersion) {
-                m_currentKeyVersion = version;
-            }
+        } else {
+            Logger::instance()->warn(QString("Failed to decrypt session key Version %1").arg(version), "ChatClient");
         }
     }
+    Logger::instance()->info(QString("Loaded %1 session keys into memory").arg(m_sessionKeys.size()), "ChatClient");
 }
 
 QString ChatClient::processMessageText(const QString &text) {
@@ -488,7 +450,7 @@ QString ChatClient::processMessageText(const QString &text) {
     }
     
     // Process text files (format: 📄FILE:ext:filename\n\ncontenu)
-    if (text.startsWith("FILE:")) {
+    if (text.startsWith(QString::fromUtf8("\xF0\x9F\x93\x84") + "FILE:")) {
         // Return as-is, will be handled by QML
         return text;
     }

@@ -47,12 +47,12 @@ QVariantMap ChatClient::buildMessageMapFromDecryptedText(const QString &senderId
     }
 
     QString processedText = processMessageText(text);
-    bool isTextFile = processedText.startsWith("FILE:");
+    bool isTextFile = processedText.startsWith("📄FILE:");
     QString fileExtension;
     if (isTextFile) {
-        int firstColon = processedText.indexOf(':', 3);
-        if (firstColon > 3)
-            fileExtension = processedText.mid(3, firstColon - 3);
+        int firstColon = processedText.indexOf(':', 7);
+        if (firstColon > 7)
+            fileExtension = processedText.mid(7, firstColon - 7);
     }
     QVariantMap message;
     message["sender"] = senderId;
@@ -274,9 +274,7 @@ void ChatClient::handleInitSession(const QJsonObject &payload) {
         if (!sessionKey.isEmpty()) {
             m_db.saveSessionKey(m_sessionId, version, keyPkg, nonce);
             m_sessionKeys.insert(version, sessionKey);
-            if (version > m_currentKeyVersion) {
-                m_currentKeyVersion = version;
-            }
+            m_currentKeyVersion = version;
         } else {
             Logger::instance()->warn(QString("Failed to decrypt key package version %1 (wrong password?)").arg(version), "ChatClient");
         }

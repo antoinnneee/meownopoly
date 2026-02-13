@@ -65,12 +65,12 @@ void ChatClient::sendMessage(const QString &text, const QString &recipientId, co
         decodeImageAsync(m_playerId, text, ts);
     } else {
         const QString processedText = processMessageText(text);
-        const bool isTextFile = processedText.startsWith("FILE:");
+        const bool isTextFile = processedText.startsWith("📄FILE:");
         QString fileExtension;
         if (isTextFile) {
-            const int firstColon = processedText.indexOf(':', 3);
-            if (firstColon > 3)
-                fileExtension = processedText.mid(3, firstColon - 3);
+            const int firstColon = processedText.indexOf(':', 7);
+            if (firstColon > 7)
+                fileExtension = processedText.mid(7, firstColon - 7);
         }
         QVariantMap msg;
         msg["sender"] = m_playerId;
@@ -168,7 +168,7 @@ void ChatClient::sendTextFile(const QString &filePath) {
     QString fileName = fileInfo.fileName();
 
     // Format: 📄FILE:ext:filename\n\ncontenu
-    QString formattedMessage = "FILE:" + extension + ":" + fileName + "\n\n" + content;
+    QString formattedMessage = "📄FILE:" + extension + ":" + fileName + "\n\n" + content;
 
     // Encrypt and send using sendMessage
     sendMessage(formattedMessage);

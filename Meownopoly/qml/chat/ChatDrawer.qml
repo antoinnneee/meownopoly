@@ -35,7 +35,7 @@ Drawer {
         onConnectedChanged: {
             if (connected) {
                 console.log("Chat connected!")
-                chatClient.requestHistory()
+                connectToSession(playerId, "123", playerNickname)
             } else {
                 console.log("Chat disconnected!")
             }
@@ -410,7 +410,6 @@ Drawer {
 
     Component.onCompleted: {
         chatClient.connectToServer("ws://pattounecorp.ovh:3000")
-        chatClient.connectToSession(playerId, "123", playerNickname)
     }
 
     onOpened: {
