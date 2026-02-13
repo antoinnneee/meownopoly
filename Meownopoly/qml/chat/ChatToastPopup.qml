@@ -56,7 +56,7 @@ Popup {
                     Text {
                         text: "💬 " + model.sender
                         color: "#4A90E2"
-                        font.pixelSize: 11
+                        font.pointSize: 8
                         font.bold: true
                         width: parent.width - 24
                         elide: Text.ElideRight
@@ -64,7 +64,7 @@ Popup {
                     Text {
                         text: model.text
                         color: "#cccccc"
-                        font.pixelSize: 12
+                        font.pointSize: 9
                         width: parent.width - 24
                         wrapMode: Text.Wrap
                         maximumLineCount: 3

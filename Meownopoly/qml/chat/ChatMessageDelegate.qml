@@ -78,13 +78,13 @@ Rectangle {
 
             Text {
                 text: "🐱"
-                font.pixelSize: 12
+                font.pointSize: 9
                 visible: !messageDelegate.isOwnMessage
             }
 
             Text {
                 text: messageDelegate.isOwnMessage ? "Vous" : (modelData ? (modelData.senderNickname || modelData.sender || "?") : "?")
-                font.pixelSize: 10
+                font.pointSize: 8
                 font.bold: true
                 color: messageDelegate.isOwnMessage ? "#7bc97f" : "#4A90E2"
                 Layout.fillWidth: true
@@ -92,7 +92,7 @@ Rectangle {
 
             Text {
                 text: (modelData && drawer && typeof drawer.formatTimestamp === "function") ? drawer.formatTimestamp(modelData.timestamp) : "--:--"
-                font.pixelSize: 8
+                font.pointSize: 6
                 color: messageDelegate.isOwnMessage ? "#9ccc9e" : "#666666"
             }
 
@@ -111,7 +111,7 @@ Rectangle {
                     text: messageDelegate.isOwnMessage && (modelData.recipientNickname || modelData.recipientId)
                         ? ("🔒 À : " + (modelData.recipientNickname || modelData.recipientId || "?"))
                         : "🔒 Privé"
-                    font.pixelSize: 8
+                    font.pointSize: 6
                     color: "#4A90E2"
                     anchors.centerIn: parent
                 }
@@ -137,7 +137,7 @@ Rectangle {
             width: parent.width
             wrapMode: Text.Wrap
             color: messageDelegate.isOwnMessage ? "#e0e0e0" : "#cccccc"
-            font.pixelSize: 12
+            font.pointSize: 9
             visible: !(modelData && (modelData.isImage || modelData.isTextFile))
         }
 
@@ -170,7 +170,7 @@ Rectangle {
 
                     Text {
                         text: "📷 Image"
-                        font.pixelSize: 10
+                        font.pointSize: 8
                         font.bold: true
                         color: "white"
                         Layout.alignment: Qt.AlignVCenter
@@ -188,7 +188,7 @@ Rectangle {
 
                         Text {
                             text: copyTimer.running ? "✓" : "📋"
-                            font.pixelSize: 12
+                            font.pointSize: 9
                             anchors.centerIn: parent
                             color: "white"
                         }
@@ -224,7 +224,7 @@ Rectangle {
 
                         Text {
                             text: "💾"
-                            font.pixelSize: 12
+                            font.pointSize: 9
                             anchors.centerIn: parent
                             color: "white"
                         }

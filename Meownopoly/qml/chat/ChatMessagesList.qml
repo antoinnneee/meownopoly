@@ -116,7 +116,7 @@ Rectangle {
 
                     Text {
                         text: "📎"
-                        font.pixelSize: 28
+                        font.pointSize: 21
                         anchors.centerIn: parent
                     }
 
@@ -131,7 +131,7 @@ Rectangle {
                 Text {
                     text: "Déposez votre fichier ici"
                     color: "#cccccc"
-                    font.pixelSize: 14
+                    font.pointSize: 10
                     font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -139,7 +139,7 @@ Rectangle {
                 Text {
                     text: "Images ou fichiers texte"
                     color: "#888888"
-                    font.pixelSize: 10
+                    font.pointSize: 8
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
@@ -232,21 +232,21 @@ Rectangle {
 
                 Text {
                     text: "🐾"
-                    font.pixelSize: 24
+                    font.pointSize: 18
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
                 Text {
                     text: "Aucun message"
                     color: "#888888"
-                    font.pixelSize: 11
+                    font.pointSize: 8
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
                 Text {
                     text: "Commencez la conversation !"
                     color: "#666666"
-                    font.pixelSize: 9
+                    font.pointSize: 7
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
