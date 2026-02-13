@@ -82,7 +82,6 @@ void ChatClient::connectToSessionDirect(const QString &password, const QString &
     m_password = password;
 
 
-    m_password = password;
     if (sessionId.isEmpty()) {
         qWarning() << "[ChatClient] Session ID is empty. Cannot connect to session.";
         return;
