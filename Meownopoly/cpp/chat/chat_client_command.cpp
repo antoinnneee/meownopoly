@@ -99,11 +99,6 @@ void ChatClient::sendRequestConnectionInfo(const QString &recipientId) {
     sendCommand("REQUEST_CONNECTION_INFO", QJsonObject(), recipientId);
 }
 
-void ChatClient::sendRequestConnectionInfo(const QString &recipientId) {
-    Logger::instance()->debug(QString("Sending REQUEST_CONNECTION_INFO to %1").arg(recipientId.isEmpty() ? "all" : recipientId), "ChatClient");
-    QJsonObject data;
-    sendCommand("REQUEST_CONNECTION_INFO", data, recipientId);
-}
 
 void ChatClient::sendShareConnection(const QString &recipientId) {
     Logger::instance()->debug(QString("Sending SHARE_CONNECTION to %1 (placeholder)").arg(recipientId.isEmpty() ? "all" : recipientId), "ChatClient");

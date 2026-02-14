@@ -4,15 +4,21 @@ QT += quick core qml widgets core-private quickcontrols2 network quick3d sql web
 android:{
     QT += core-private
 
-    ANDROID_VERSION_CODE = 1
-    ANDROID_VERSION_NAME = 1-indev
-    DEFINES+= APP_VERSION_CODE='\"$${ANDROID_VERSION_CODE}\"'
-    DEFINES+= APP_VERSION_NAME='\"$${ANDROID_VERSION_NAME}\"'
+    # ANDROID_VERSION_CODE = 1
+    # ANDROID_VERSION_NAME = 1-indev
+    # DEFINES+= APP_VERSION_CODE='\"$${ANDROID_VERSION_CODE}\"'
+    # DEFINES+= APP_VERSION_NAME='\"$${ANDROID_VERSION_NAME}\"'
+    DEFINES+= APP_VERSION_CODE=1
+    # DEFINES+= APP_VERSION_NAME="meownopoly"
 
     appinfo.obj.depends = FORCE
     QMAKE_EXTRA_TARGETS += appinfo.obj
     PRE_TARGETDEPS += appinfo.obj
+
 }
+
+android: include(C:/Users/Antoine/AppData/Local/Android/Sdk/android_openssl/openssl.pri)
+
 
 #if changement in path need to REBUILD !
 DEFINES += BUILD_DIR=\\\"$$OUT_PWD\\\"

@@ -3,8 +3,8 @@
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #ifdef Q_OS_ANDROID
-const QString appVersionName(APP_VERSION_NAME);
-const QString appVersionCode(APP_VERSION_CODE);
+const QString appVersionName("APP_VERSION_NAME");
+const QString appVersionCode("APP_VERSION_CODE");
 #endif
 
 AppInfo *AppInfo::m_pThis = nullptr;
@@ -60,7 +60,7 @@ QString AppInfo::getVersionName()
 QString AppInfo::getVersionNumber()
 {
 #ifdef Q_OS_ANDROID
-    return APP_VERSION_CODE;
+    return QString("APP_VERSION_CODE");
 #else
     return "NOTANDROID";
 #endif

@@ -16,7 +16,14 @@ public:
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void sendStunRequest();
     Q_INVOKABLE void setStunServer(QString ip, quint16 port);
-    
+    Q_INVOKABLE QString getStunServer() const;
+    Q_INVOKABLE quint16 getStunPort() const;
+    Q_INVOKABLE void setPublicPort(quint16 port);
+    Q_INVOKABLE void setStunSenderAddress(QString ip);
+    Q_INVOKABLE void setStunSenderPort(quint16 port);
+    Q_INVOKABLE QString getExternalIp() const;
+    Q_INVOKABLE quint16 getExternalPort() const;
+
     Q_INVOKABLE void setPeer(QString ip, quint16 port);
     Q_INVOKABLE void sendMessageToPeer(QString message);
 
@@ -38,7 +45,7 @@ private:
     quint16 m_stunServerPort = 19302;
     
     QHostAddress m_publicAddress;
-    quint16 m_publicPort;
+    quint16 m_publicPort = 0;
     QHostAddress m_stunSenderAddress;
     quint16 m_stunSenderPort;
     

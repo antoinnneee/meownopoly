@@ -78,6 +78,41 @@ void Catway::setPeer(QString ip, quint16 port)
     m_serverManager->setPeer(ip, port);
 }
 
+void Catway::setPublicPort(quint16 port)
+{
+    m_serverManager->setPublicPort(port);
+}
+
+void Catway::setStunServer(QString ip)
+{
+    m_serverManager->setStunServer(ip, m_serverManager->getStunPort());
+}
+
+void Catway::setStunPort(quint16 port)
+{
+    m_serverManager->setStunServer(m_serverManager->getStunServer(), port);
+}
+
+void Catway::setStunSenderAddress(QString ip)
+{
+    m_serverManager->setStunSenderAddress(ip);
+}
+
+void Catway::setStunSenderPort(quint16 port)
+{
+    m_serverManager->setStunSenderPort(port);
+}
+
+QString Catway::getExternalIp() const
+{
+    return m_serverManager->getExternalIp();
+}
+
+quint16 Catway::getExternalPort() const
+{
+    return m_serverManager->getExternalPort();
+}
+
 // --- STUN scoped handling ---
 
 void Catway::sendStunRequest()

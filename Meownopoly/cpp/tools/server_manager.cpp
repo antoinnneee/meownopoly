@@ -46,6 +46,41 @@ void ServerManager::setStunServer(QString ip, quint16 port)
     emit log("STUN Server set to: " + m_stunServerIp + ":" + QString::number(m_stunServerPort));
 }
 
+QString ServerManager::getExternalIp() const
+{
+    return m_publicAddress.toString();
+}
+
+quint16 ServerManager::getExternalPort() const
+{
+    return m_publicPort;
+}
+
+QString ServerManager::getStunServer() const
+{
+    return m_stunServerIp;
+}
+
+quint16 ServerManager::getStunPort() const
+{
+    return m_stunServerPort;
+}
+
+void ServerManager::setPublicPort(quint16 port)
+{
+    m_publicPort = port;
+}
+
+void ServerManager::setStunSenderAddress(QString ip)
+{
+    m_stunSenderAddress = QHostAddress(ip);
+}
+
+void ServerManager::setStunSenderPort(quint16 port)
+{
+    m_stunSenderPort = port;
+}
+
 void ServerManager::sendStunRequest()
 {
     // Simple STUN Binding Request
