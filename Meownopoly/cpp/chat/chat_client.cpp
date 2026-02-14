@@ -251,6 +251,8 @@ void ChatClient::kickPlayer(const QString &targetPlayerId) {
     kick["payload"] = p;
 
     sendWebSocketMessage(kick);
+    // Demander la liste à jour après exclusion d'un participant
+    requestParticipants();
 }
 
 

@@ -6,6 +6,7 @@
         <file>qml/chat/ChatInputBar.qml</file>
         <file>qml/chat/ChatMessageDelegate.qml</file>
         <file>qml/chat/ChatMessagesList.qml</file>
+        <file>qml/chat/ChatParticipantsPanel.qml</file>
         <file>qml/chat/ChatStatusBar.qml</file>
         <file>qml/chat/ChatToastPopup.qml</file>
         <file>qml/chat/TextFileDisplay.qml</file>
