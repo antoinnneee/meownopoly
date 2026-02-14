@@ -87,11 +87,22 @@ void Catway::setStunPort(quint16 port)
 
 QString Catway::getExternalIp() const
 {
+    if (!m_localSocketInfos.isEmpty()) {
+        UdpSocketInfo *last = m_localSocketInfos.last();
+        QString addr = last->publicAddress();
+        if (!addr.isEmpty())
+            return addr;
+    }
     return m_stunManager->getExternalIp();
 }
 
 quint16 Catway::getExternalPort() const
 {
+    if (!m_localSocketInfos.isEmpty()) {
+        UdpSocketInfo *last = m_localSocketInfos.last();
+        if (last->publicPort() != 0)
+            return last->publicPort();
+    }
     return m_stunManager->getExternalPort();
 }
 
