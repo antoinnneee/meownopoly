@@ -1,13 +1,30 @@
 #include "stun_manager.h"
+#include "udp_socket_info.h"
 #include <QDataStream>
 #include <QRandomGenerator>
 
 #include <QHostInfo>
+#include <QTimer>
 
 StunManager::StunManager(QObject *parent)
-    : QObject(parent), m_socket(new QUdpSocket(this))
+    : QObject(parent)
 {
-    connect(m_socket, &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
+    m_socketInfo = new UdpSocketInfo(this);
+    QUdpSocket *sock = new QUdpSocket(m_socketInfo);
+    m_socketInfo->setSocket(sock);
+    
+    m_stunTimeout = new QTimer(this);
+    m_stunTimeout->setSingleShot(true);
+    m_stunTimeout->setInterval(5000);
+    connect(m_stunTimeout, &QTimer::timeout, this, &StunManager::onStunTimeout);
+}
+
+void StunManager::onStunTimeout()
+{
+    // No response received — disconnect handler
+    m_stunTimeout->stop();
+    disconnect(m_stunTimeout, &QTimer::timeout, this, &StunManager::onStunTimeout);
+    emit log("STUN request timed out, handler disconnected");
 }
 
 StunManager::~StunManager()
@@ -15,27 +32,32 @@ StunManager::~StunManager()
     stopServer();
 }
 
-void StunManager::startServer()
+bool StunManager::startServer()
 {
-    if (m_socket->state() == QAbstractSocket::BoundState) {
-        emit log("Server already running on port " + QString::number(m_socket->localPort()));
-        return;
+    QUdpSocket *s = m_socketInfo->socket();
+    if (!s || s->state() == QAbstractSocket::BoundState) {
+        if (s)
+            emit log("Server already running on port " + QString::number(s->localPort()));
+        return true;
     }
 
     // Bind explicitly to AnyIPv4 to avoid IPv6 issues if STUN server is IPv4 only or network stack issues
-    if (m_socket->bind(QHostAddress::AnyIPv4, 0)) {
-        emit log("UDP Server started on local port: " + QString::number(m_socket->localPort()));
-        emit serverStarted(m_socket->localPort());
+    if (s->bind(QHostAddress::AnyIPv4, 0)) {
+        emit log("UDP port punching started on local port: " + QString::number(s->localPort()));
+        emit serverStarted(s->localPort());
+        return true;
     } else {
-        emit log("Failed to bind UDP socket: " + m_socket->errorString());
+        emit log("Failed to bind UDP socket: " + s->errorString());
+        return false;
     }
 }
 
 void StunManager::stopServer()
 {
-    if (m_socket->state() == QAbstractSocket::BoundState) {
-        m_socket->close();
-        emit log("UDP Server stopped");
+    QUdpSocket *s = m_socketInfo->socket();
+    if (s && s->state() == QAbstractSocket::BoundState) {
+        s->close();
+        emit log("UDP port punching stopped");
     }
 }
 
@@ -48,12 +70,12 @@ void StunManager::setStunServer(QString ip, quint16 port)
 
 QString StunManager::getExternalIp() const
 {
-    return m_publicAddress.toString();
+    return m_socketInfo ? m_socketInfo->publicAddress() : QString();
 }
 
 quint16 StunManager::getExternalPort() const
 {
-    return m_publicPort;
+    return m_socketInfo ? m_socketInfo->publicPort() : 0;
 }
 
 QString StunManager::getStunServer() const
@@ -68,7 +90,8 @@ quint16 StunManager::getStunPort() const
 
 void StunManager::setPublicPort(quint16 port)
 {
-    m_publicPort = port;
+    if (m_socketInfo)
+        m_socketInfo->setPublicPort(port);
 }
 
 void StunManager::setStunSenderAddress(QString ip)
@@ -83,6 +106,8 @@ void StunManager::setStunSenderPort(quint16 port)
 
 void StunManager::sendStunRequest()
 {
+    m_stunTimeout->start();
+    connect(m_socketInfo->socket(), &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
     // Simple STUN Binding Request
     QByteArray packet;
     QDataStream out(&packet, QIODevice::WriteOnly);
@@ -126,21 +151,23 @@ void StunManager::sendStunRequest()
         }
 
         emit log("Sending STUN request to " + stunAddress.toString() + ":" + QString::number(m_stunServerPort) + "...");
-        m_socket->writeDatagram(packet, stunAddress, m_stunServerPort);
+        if (m_socketInfo && m_socketInfo->socket())
+            m_socketInfo->socket()->writeDatagram(packet, stunAddress, m_stunServerPort);
     });
 }
 
 void StunManager::onReadyRead()
 {
-    emit log("onReadyRead");
+    QUdpSocket *s = m_socketInfo ? m_socketInfo->socket() : nullptr;
+    if (!s) return;
 
-    while (m_socket->hasPendingDatagrams()) {
+    while (s->hasPendingDatagrams()) {
         QByteArray datagram;
-        datagram.resize(m_socket->pendingDatagramSize());
+        datagram.resize(s->pendingDatagramSize());
         QHostAddress sender;
         quint16 senderPort;
 
-        m_socket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
+        s->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
 
         // Check if it's a STUN response (starts with 0x0101 Binding Success Response)
         if (datagram.size() >= 20) {
@@ -150,7 +177,7 @@ void StunManager::onReadyRead()
             peek >> msgType;
             if (msgType == 0x0101) {
                 // STUN response — emit signal (Catway connects/disconnects handler)
-                emit stunResponseReceived(datagram, sender, senderPort);
+                handleStunResponse(datagram, sender, senderPort);
             } else {
                 // Non-STUN large packet — treat as text
                 QString msg = QString::fromUtf8(datagram);
@@ -173,20 +200,27 @@ void StunManager::setPeer(QString ip, quint16 port)
 
 QUdpSocket *StunManager::getSocket() const
 {
-    return m_socket;
+    return m_socketInfo ? m_socketInfo->socket() : nullptr;
 }
 
-QUdpSocket *StunManager::takeSocket()
+UdpSocketInfo *StunManager::currentSocketInfo() const
 {
-    QUdpSocket *old = m_socket;
-    m_socket = new QUdpSocket(this);
-    connect(m_socket, &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
-    if (old) {
-        disconnect(old, &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
-        old->setParent(nullptr);
-    }
+    return m_socketInfo;
+}
+
+UdpSocketInfo *StunManager::takeSocket()
+{
+    UdpSocketInfo *oldInfo = m_socketInfo;
+    if (oldInfo && oldInfo->socket())
+        disconnect(oldInfo->socket(), &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
+    m_socketInfo = new UdpSocketInfo(this);
+    QUdpSocket *newSock = new QUdpSocket(m_socketInfo);
+    m_socketInfo->setSocket(newSock);
+    connect(m_socketInfo->socket(), &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
+    if (oldInfo)
+        oldInfo->setParent(nullptr);
     emit log("New UDP socket prepared for punching (previous socket taken)");
-    return old;
+    return oldInfo;
 }
 
 void StunManager::sendMessageToPeer(QString message)
@@ -195,14 +229,15 @@ void StunManager::sendMessageToPeer(QString message)
         emit log("Peer not configured/invalid.");
         return;
     }
-    if (!m_socket || m_socket->state() != QAbstractSocket::BoundState) {
+    QUdpSocket *s = m_socketInfo ? m_socketInfo->socket() : nullptr;
+    if (!s || s->state() != QAbstractSocket::BoundState) {
         emit log("Socket not bound, cannot send to peer.");
         return;
     }
     QByteArray data = message.toUtf8();
-    qint64 bytes = m_socket->writeDatagram(data, m_peerAddress, m_peerPort);
+    qint64 bytes = s->writeDatagram(data, m_peerAddress, m_peerPort);
     if (bytes == -1) {
-        emit log("Failed to send to peer: " + m_socket->errorString());
+        emit log("Failed to send to peer: " + s->errorString());
     } else {
         emit log("Sent to " + m_peerAddress.toString() + ":" + QString::number(m_peerPort) + " via Main Port: " + message);
     }
@@ -243,9 +278,10 @@ void StunManager::handleStunResponse(const QByteArray &datagram, const QHostAddr
                 quint8 d = (quint8)datagram[pos+7];
 
                 QString ip = QString("%1.%2.%3.%4").arg(a).arg(b).arg(c).arg(d);
-                m_publicAddress = QHostAddress(ip);
-                m_publicPort = port;
-
+                if (m_socketInfo) {
+                    m_socketInfo->setPublicAddress(ip);
+                    m_socketInfo->setPublicPort(port);
+                }
                 emit log("External Address (MAPPED-ADDRESS): " + ip + ":" + QString::number(port));
                 emit externalAddressReceived(ip, port);
                 return; // Found it
@@ -259,9 +295,10 @@ void StunManager::handleStunResponse(const QByteArray &datagram, const QHostAddr
                  quint32 ipVal = xIp ^ 0x2112A442;
 
                  QString ip = QHostAddress(ipVal).toString();
-                 m_publicAddress = QHostAddress(ip);
-                 m_publicPort = port;
-
+                 if (m_socketInfo) {
+                     m_socketInfo->setPublicAddress(ip);
+                     m_socketInfo->setPublicPort(port);
+                 }
                  emit log("External Address (XOR-MAPPED-ADDRESS): " + ip + ":" + QString::number(port));
                  emit externalAddressReceived(ip, port);
                  return; // Found it

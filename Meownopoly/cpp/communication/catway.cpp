@@ -19,7 +19,6 @@ Catway::Catway(QObject *parent)
     // Relay signals from StunManager
     connect(m_stunManager, &StunManager::log, this, &Catway::log);
     connect(m_stunManager, &StunManager::serverStarted, this, &Catway::serverStarted);
-    connect(m_stunManager, &StunManager::externalAddressReceived, this, &Catway::externalAddressReceived);
 
     // Sync STUN parameters from AccountManager
     auto *am = AccountManager::instance();
@@ -33,6 +32,7 @@ Catway::Catway(QObject *parent)
 
 void Catway::registerQml()
 {
+    qmlRegisterType<UdpSocketInfo>("Catway", 1, 0, "UdpSocketInfo");
     qmlRegisterSingletonType<Catway>("Catway", 1, 0, "Catway", &Catway::qmlInstance);
 }
 
@@ -74,10 +74,6 @@ void Catway::setPeer(QString ip, quint16 port)
     m_stunManager->setPeer(ip, port);
 }
 
-void Catway::setPublicPort(quint16 port)
-{
-    m_stunManager->setPublicPort(port);
-}
 
 void Catway::setStunServer(QString ip)
 {
@@ -87,16 +83,6 @@ void Catway::setStunServer(QString ip)
 void Catway::setStunPort(quint16 port)
 {
     m_stunManager->setStunServer(m_stunManager->getStunServer(), port);
-}
-
-void Catway::setStunSenderAddress(QString ip)
-{
-    m_stunManager->setStunSenderAddress(ip);
-}
-
-void Catway::setStunSenderPort(quint16 port)
-{
-    m_stunManager->setStunSenderPort(port);
 }
 
 QString Catway::getExternalIp() const
@@ -114,43 +100,67 @@ QObject *Catway::getSocket() const
     return m_stunManager->getSocket();
 }
 
+QObject *Catway::currentSocketInfo() const
+{
+    return m_stunManager->currentSocketInfo();
+}
+
 QObject *Catway::takeSocket()
 {
-    return m_stunManager->takeSocket();
+    UdpSocketInfo *info = m_stunManager->takeSocket();
+    if (info) {
+        info->setParent(this);
+        m_localSocketInfos.append(info);
+        emit localPortsChanged();
+    }
+    return info;
+}
+
+QQmlListProperty<UdpSocketInfo> Catway::localPorts()
+{
+    return QQmlListProperty<UdpSocketInfo>(this, &m_localSocketInfos, &Catway::localPortsCount, &Catway::localPortsAt);
+}
+
+qsizetype Catway::localPortsCount(QQmlListProperty<UdpSocketInfo> *p)
+{
+    return static_cast<QList<UdpSocketInfo *> *>(p->data)->size();
+}
+
+UdpSocketInfo *Catway::localPortsAt(QQmlListProperty<UdpSocketInfo> *p, qsizetype index)
+{
+    return static_cast<QList<UdpSocketInfo *> *>(p->data)->at(index);
 }
 
 // --- STUN scoped handling ---
 
 void Catway::sendStunRequest()
 {
-    // Connect STUN handler only for this request
-    m_stunConnection = connect(m_stunManager, &StunManager::stunResponseReceived,
-                               this, &Catway::onStunResponse);
+    m_stunManager->sendStunRequest();
+}
 
+void Catway::setupNewPort()
+{
+    auto *am = AccountManager::instance();
+    m_stunManager->setStunServer(am->stunServer(), am->stunPort());
+    m_stunManager->startServer();
     m_stunManager->sendStunRequest();
 
-    // Start timeout to disconnect handler if no response
-    m_stunTimeout->start();
-    emit log("STUN request sent, handler connected (timeout 5s)");
+    disconnect(m_externalAddressTakePortConnection);
+    m_externalAddressTakePortConnection = connect(m_stunManager, &StunManager::externalAddressReceived,
+                                                  this, &Catway::onExternalAddressReceivedTakePort);
 }
 
-void Catway::onStunResponse(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort)
+void Catway::onExternalAddressReceivedTakePort(QString ip, quint16 port)
 {
-    // Disconnect — we got our response
-    disconnect(m_stunConnection);
-    m_stunTimeout->stop();
-
-    emit log("STUN response received, handler disconnected");
-
-    // Delegate actual parsing to StunManager
-    m_stunManager->handleStunResponse(datagram, sender, senderPort);
-}
-
-void Catway::onStunTimeout()
-{
-    // No response received — disconnect handler
-    disconnect(m_stunConnection);
-    emit log("STUN request timed out, handler disconnected");
+    Q_UNUSED(ip)
+    Q_UNUSED(port)
+    disconnect(m_externalAddressTakePortConnection);
+    UdpSocketInfo *info = takeSocket();
+    if (info) {
+        info->setParent(this);
+        m_localSocketInfos.append(info);
+        emit localPortsChanged();
+    }
 }
 
 // --- AccountManager sync ---

@@ -4,6 +4,9 @@
 #include <QObject>
 #include <QUdpSocket>
 #include <QHostAddress>
+#include <QTimer>
+
+class UdpSocketInfo;
 
 class StunManager : public QObject
 {
@@ -12,7 +15,7 @@ public:
     explicit StunManager(QObject *parent = nullptr);
     ~StunManager();
 
-    Q_INVOKABLE void startServer();
+    Q_INVOKABLE bool startServer();
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void sendStunRequest();
     Q_INVOKABLE void setStunServer(QString ip, quint16 port);
@@ -29,8 +32,10 @@ public:
 
     /// Retourne le socket UDP actuel (peut être nullptr). Ne transfère pas la propriété.
     QUdpSocket *getSocket() const;
-    /// Détache le socket actuel (à gérer par l'appelant) et en crée un nouveau, prêt pour un prochain setup UDP punching (sans bind).
-    QUdpSocket *takeSocket();
+    /// Retourne l'info du socket actuel (publicAddress, publicPort, socket). Ne transfère pas la propriété.
+    UdpSocketInfo *currentSocketInfo() const;
+    /// Détache l'UdpSocketInfo actuel (à gérer par l'appelant) et en crée un nouveau, prêt pour un prochain setup UDP punching (sans bind).
+    UdpSocketInfo *takeSocket();
 
 public slots:
     void handleStunResponse(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort);
@@ -39,23 +44,22 @@ signals:
     void log(QString message);
     void serverStarted(quint16 localPort);
     void externalAddressReceived(QString ip, quint16 port);
-    void stunResponseReceived(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort);
 
 private slots:
     void onReadyRead();
+    void onStunTimeout();
 
 private:
-    QUdpSocket *m_socket;
+    UdpSocketInfo *m_socketInfo;
     QString m_stunServerIp = "stun.l.google.com";
     quint16 m_stunServerPort = 19302;
 
-    QHostAddress m_publicAddress;
-    quint16 m_publicPort = 0;
     QHostAddress m_stunSenderAddress;
     quint16 m_stunSenderPort;
 
     QHostAddress m_peerAddress;
     quint16 m_peerPort;
+    QTimer *m_stunTimeout;
 };
 
 #endif // STUN_MANAGER_H

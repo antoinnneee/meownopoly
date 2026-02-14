@@ -50,6 +50,7 @@ SOURCES += \
     cpp/game/physics/pattounx_body.cpp \
     cpp/game/physics/pattounx_zone.cpp \
     cpp/game/physics/pattounx_engine.cpp \
+    cpp/communication/udp_socket_info.cpp \
     cpp/communication/stun_manager.cpp \
     cpp/tools/test_manager.cpp \
     cpp/tools/uistyle.cpp \
@@ -108,6 +109,7 @@ HEADERS += \
     cpp/game/physics/pattounx_body.h \
     cpp/game/physics/pattounx_zone.h \
     cpp/game/physics/pattounx_engine.h \
+    cpp/communication/udp_socket_info.h \
     cpp/communication/stun_manager.h \
     cpp/tools/test_manager.h \
     cpp/tools/uistyle.h \
