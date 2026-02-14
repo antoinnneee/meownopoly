@@ -156,12 +156,7 @@ void Catway::onExternalAddressReceivedTakePort(QString ip, quint16 port)
     Q_UNUSED(ip)
     Q_UNUSED(port)
     disconnect(m_externalAddressTakePortConnection);
-    UdpSocketInfo *info = takeSocket();
-    if (info) {
-        info->setParent(this);
-        m_localSocketInfos.append(info);
-        emit localPortsChanged();
-    }
+    takeSocket();
 }
 
 // --- AccountManager sync ---
