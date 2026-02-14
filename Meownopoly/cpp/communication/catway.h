@@ -36,14 +36,14 @@ public:
     /// Retourne l'info du socket actuel (publicAddress, publicPort, socket).
     Q_INVOKABLE QObject *currentSocketInfo() const;
     /// Détache le socket actuel et en prépare un nouveau dans StunManager. L'ancien UdpSocketInfo est ajouté à localPorts et retourné.
-    Q_INVOKABLE QObject *takeSocket();
+    Q_INVOKABLE UdpSocketInfo *takeSocket();
 
     /// Liste des infos de ports locaux (sockets récupérés via takeSocket).
     Q_PROPERTY(QQmlListProperty<UdpSocketInfo> localPorts READ localPorts NOTIFY localPortsChanged)
     QQmlListProperty<UdpSocketInfo> localPorts();
 
 public slots:
-    void setupNewPort();
+    Q_INVOKABLE void setupNewPort();
 signals:
     void log(QString message);
     void serverStarted(quint16 port);
@@ -52,7 +52,6 @@ signals:
 
 private slots:
     void onAccountStunChanged();
-    void onStunTimeout();
     void onExternalAddressReceivedTakePort(QString ip, quint16 port);
 
 private:

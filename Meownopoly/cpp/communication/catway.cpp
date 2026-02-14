@@ -105,7 +105,7 @@ QObject *Catway::currentSocketInfo() const
     return m_stunManager->currentSocketInfo();
 }
 
-QObject *Catway::takeSocket()
+UdpSocketInfo *Catway::takeSocket()
 {
     UdpSocketInfo *info = m_stunManager->takeSocket();
     if (info) {
@@ -141,6 +141,7 @@ void Catway::sendStunRequest()
 void Catway::setupNewPort()
 {
     auto *am = AccountManager::instance();
+    qDebug()<<"setupNewPort";
     m_stunManager->setStunServer(am->stunServer(), am->stunPort());
     m_stunManager->startServer();
     m_stunManager->sendStunRequest();

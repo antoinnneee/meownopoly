@@ -50,6 +50,7 @@
 #include "tools/logger.h"
 #include "tools/cursor_manager.h"
 #include "chat/chat_client.h"
+#include "chat/chat_slash_commands.h"
 #include "account/account_manager.h"
 #include "communication/catway.h"
 
@@ -78,6 +79,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     
     PattounX_engine::registerQml();
     ChatClient::registerQml(this);
+    ChatSlashCommands::registerQml();
     AccountManager::registerQml();
     Catway::registerQml();
 
@@ -125,6 +127,10 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel");  // Contains: caseSelectionPanelMain
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
+
+    Logger* loggerInstance = Logger::instance();
+    Catway* catwayInstance = Catway::instance();
+    connect(catwayInstance, &Catway::log, loggerInstance, &Logger::log);
 
 }
 

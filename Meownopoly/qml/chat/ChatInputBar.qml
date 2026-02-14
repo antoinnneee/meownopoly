@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Meownopoly.Chat 1.0
+import Catway 1.0
 
 Rectangle {
     Layout.fillWidth: true
@@ -22,7 +24,10 @@ Rectangle {
     function sendCurrentMessage() {
         if (inputField.text !== "" && chatClient) {
             var text = inputField.text.trim()
-            if (text.startsWith("/ping")) {
+            var cmd = SlashCommands.commandFromText(text)
+            if (cmd === SlashCommands.stun) {
+                Catway.setupNewPort()
+            } else if (cmd === SlashCommands.ping) {
                 chatClient.sendPing()
             } else {
                 chatClient.sendMessage(inputField.text, recipientId || "", recipientNickname || "")

@@ -33,6 +33,11 @@ QObject *Logger::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
     return Logger::instance();
 }
 
+void Logger::log(const QString &message)
+{
+    logMessage("INFO", message, QString("LOG"), "");
+}
+
 void Logger::info(const QString &message, const QString &category)
 {
 #if LOG_LEVEL_INFO

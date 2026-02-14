@@ -36,6 +36,7 @@ public:
 
 public slots:
     // Méthodes de logging avec catégorie optionnelle
+    Q_INVOKABLE void log(const QString &message);
     Q_INVOKABLE void info(const QString &message, const QString &category = QString());
     Q_INVOKABLE void debug(const QString &message, const QString &category = QString());
     Q_INVOKABLE void warn(const QString &message, const QString &category = QString());

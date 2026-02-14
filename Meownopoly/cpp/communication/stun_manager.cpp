@@ -17,6 +17,7 @@ StunManager::StunManager(QObject *parent)
     m_stunTimeout->setSingleShot(true);
     m_stunTimeout->setInterval(5000);
     connect(m_stunTimeout, &QTimer::timeout, this, &StunManager::onStunTimeout);
+    disconnect(sock, &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
 }
 
 void StunManager::onStunTimeout()
@@ -284,6 +285,7 @@ void StunManager::handleStunResponse(const QByteArray &datagram, const QHostAddr
                 }
                 emit log("External Address (MAPPED-ADDRESS): " + ip + ":" + QString::number(port));
                 emit externalAddressReceived(ip, port);
+                m_stunTimeout->stop();
                 return; // Found it
             }
             else if (attrType == 0x0020) { // XOR-MAPPED-ADDRESS
@@ -301,6 +303,7 @@ void StunManager::handleStunResponse(const QByteArray &datagram, const QHostAddr
                  }
                  emit log("External Address (XOR-MAPPED-ADDRESS): " + ip + ":" + QString::number(port));
                  emit externalAddressReceived(ip, port);
+                 m_stunTimeout->stop();
                  return; // Found it
             }
 

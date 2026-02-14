@@ -42,6 +42,7 @@ INCLUDEPATH += cpp
 SOURCES += \
     cpp/chat/chat_client_handler.cpp \
     cpp/chat/chat_client_message.cpp \
+    cpp/chat/chat_slash_commands.cpp \
     cpp/chat/chat_client_command.cpp \
     cpp/communication/catway.cpp \
     cpp/chat/chat_command_helper.cpp \
@@ -103,6 +104,7 @@ SOURCES += \
 
 HEADERS += \
     cpp/communication/catway.h \
+    cpp/chat/chat_slash_commands.h \
     cpp/chat/chat_command_helper.h \
     cpp/game/item_snapable/ZoneParameter.h \
     cpp/game/physics/collision2d.h \
