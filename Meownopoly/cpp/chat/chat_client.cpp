@@ -275,42 +275,6 @@ void ChatClient::publishNewKey() {
 }
 
 
-void ChatClient::sendCommand(const QString &commandType, const QJsonObject &data, const QString &recipientId) {
-    if (!m_connected || m_sessionKeys.isEmpty()) return;
-
-    if (!m_sessionKeys.contains(m_currentKeyVersion)) {
-        Logger::instance()->warn(QString("Current key version %1 not found for sendCommand!").arg(m_currentKeyVersion), "ChatClient");
-        return;
-    }
-
-    Logger::instance()->debug(QString("Sending command %1 to %2").arg(commandType).arg(recipientId.isEmpty() ? "all" : recipientId), "ChatClient");
-
-    QString internalPayload = ChatCommandHelper::formatCommand(commandType, data);
-    QByteArray nonce = ChatCrypto::generateNonce();
-    QByteArray cipher = ChatCrypto::encrypt(internalPayload.toUtf8(), m_sessionKeys[m_currentKeyVersion], nonce);
-
-    QJsonObject send;
-    send["type"] = "SEND_COMMAND";
-    QJsonObject p;
-    p["session_id"] = m_sessionId;
-    if (!recipientId.isEmpty()) {
-        p["recipient_id"] = recipientId;
-    }
-    p["payload"] = QString(cipher.toBase64());
-    p["nonce"] = QString(nonce.toBase64());
-    p["key_v"] = m_currentKeyVersion;
-    send["payload"] = p;
-
-    sendWebSocketMessage(send);
-}
-
-void ChatClient::sendPing(const QString &targetPlayerId) {
-    Logger::instance()->debug(QString("Sending PING to %1").arg(targetPlayerId.isEmpty() ? "all" : targetPlayerId), "ChatClient");
-    QJsonObject data;
-    data["timestamp"] = QDateTime::currentMSecsSinceEpoch();
-    sendCommand("PING", data, targetPlayerId);
-}
-
 void ChatClient::clearHistory() {
     if (!m_connected) return;
 
@@ -333,18 +297,6 @@ void ChatClient::loadHistory() {
         QByteArray cipher = m["payload"].toByteArray();
         QByteArray nonce = m["nonce"].toByteArray();
 
-        // Check for key_version (assuming it was saved, or default 1 if not)
-        // Hmm, saveMessage didn't take key_version before.
-        // We need to update ChatDatabase::saveMessage signature? Or just assume we can't save it yet?
-        // Wait, m_db.getMessages returns QVariantMap.
-        // If the DB schema doesn't have key_version yet, we have a problem.
-        // But we added session_keys table. Did we update messages table?
-        // We did not update ChatDatabase::saveMessage signature in the .h or .cpp in recent steps!
-        // We only saw 'local_history' table creation.
-
-        // For now, let's assume we try to decrypt with current key or try all keys?
-        // No, that's inefficient.
-        // Let's assume standard behavior: if version missing, try version 1.
         int keyVersion = 1;
         if (m.contains("key_version")) keyVersion = m["key_version"].toInt();
 

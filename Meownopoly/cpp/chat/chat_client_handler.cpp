@@ -382,40 +382,6 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
     });
 }
 
-void ChatClient::handleNewCommand(const QJsonObject &payload) {
-    QString senderId = payload["sender_id"].toString();
-    QByteArray cipher = QByteArray::fromBase64(payload["payload"].toString().toUtf8());
-    QByteArray nonce = QByteArray::fromBase64(payload["nonce"].toString().toUtf8());
-    int keyVersion = payload["key_version"].toInt();
-
-    if (!m_sessionKeys.contains(keyVersion)) {
-        Logger::instance()->warn(QString("Key version %1 missing for command! Reloading...").arg(keyVersion), "ChatClient");
-        loadAndDecryptSessionKeys();
-    }
-    QByteArray plain = decryptMessagePayload(cipher, nonce, keyVersion);
-    if (plain.isEmpty()) {
-        Logger::instance()->warn(QString("FAILED to decrypt command from %1 - Missing Key Version: %2").arg(senderId).arg(keyVersion), "ChatClient");
-        return;
-    }
-
-    QString commandType;
-    QJsonObject data;
-    if (ChatCommandHelper::parseCommand(QString::fromUtf8(plain), commandType, data)) {
-        Logger::instance()->debug(QString("Received command %1 from %2").arg(commandType).arg(senderId), "ChatClient");
-
-        if (commandType == "PING") {
-            Logger::instance()->debug(QString("Auto-responding with PONG to %1").arg(senderId), "ChatClient");
-            sendCommand("PONG", data, senderId);
-        } else if (commandType == "PONG") {
-            qint64 sentTs = data["timestamp"].toVariant().toLongLong();
-            qint64 now = QDateTime::currentMSecsSinceEpoch();
-            Logger::instance()->debug(QString("Received PONG from %1 Roundtrip: %2 ms").arg(senderId).arg(now - sentTs), "ChatClient");
-        }
-
-        emit commandReceived(senderId, commandType, data);
-    }
-}
-
 
 void ChatClient::handleHistoryResult(const QJsonObject &payload) {
     Logger::instance()->debug("Received history result from server", "ChatClient");

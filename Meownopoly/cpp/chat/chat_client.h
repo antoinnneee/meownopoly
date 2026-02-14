@@ -54,6 +54,8 @@ public:
     Q_INVOKABLE void requestSessionsList();
     Q_INVOKABLE void kickPlayer(const QString &targetPlayerId);
     Q_INVOKABLE void sendPing(const QString &targetPlayerId = QString());
+    Q_INVOKABLE void sendRequestConnectionInfo(const QString &recipientId = QString());
+    Q_INVOKABLE void sendShareConnection(const QString &recipientId = QString());
     Q_INVOKABLE void sendCommand(const QString &commandType, const QJsonObject &data, const QString &recipientId = QString());
 
     static void registerQml(QQmlEngine *engine = nullptr) {
