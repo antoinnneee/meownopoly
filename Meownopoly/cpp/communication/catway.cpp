@@ -4,7 +4,7 @@
 #include <QQmlEngine>
 #include <QHostAddress>
 
-#include "../tools/server_manager.h"
+#include "server_manager.h"
 #include "../account/account_manager.h"
 
 Catway *Catway::m_pThis = nullptr;
@@ -28,11 +28,6 @@ Catway::Catway(QObject *parent)
     // Initialize STUN params from current AccountManager values
     onAccountStunChanged();
 
-    // Setup STUN timeout timer (single-shot)
-    m_stunTimeout = new QTimer(this);
-    m_stunTimeout->setSingleShot(true);
-    m_stunTimeout->setInterval(5000);
-    connect(m_stunTimeout, &QTimer::timeout, this, &Catway::onStunTimeout);
 }
 
 void Catway::registerQml()
