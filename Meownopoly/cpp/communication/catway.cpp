@@ -3,8 +3,9 @@
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include <QHostAddress>
+#include <QUdpSocket>
 
-#include "server_manager.h"
+#include "stun_manager.h"
 #include "../account/account_manager.h"
 
 Catway *Catway::m_pThis = nullptr;
@@ -12,13 +13,13 @@ Catway *Catway::m_pThis = nullptr;
 Catway::Catway(QObject *parent)
     : QObject(parent)
 {
-    // Create ServerManager owned by Catway
-    m_serverManager = new ServerManager(this);
+    // Create StunManager owned by Catway
+    m_stunManager = new StunManager(this);
 
-    // Relay signals from ServerManager
-    connect(m_serverManager, &ServerManager::log, this, &Catway::log);
-    connect(m_serverManager, &ServerManager::serverStarted, this, &Catway::serverStarted);
-    connect(m_serverManager, &ServerManager::externalAddressReceived, this, &Catway::externalAddressReceived);
+    // Relay signals from StunManager
+    connect(m_stunManager, &StunManager::log, this, &Catway::log);
+    connect(m_stunManager, &StunManager::serverStarted, this, &Catway::serverStarted);
+    connect(m_stunManager, &StunManager::externalAddressReceived, this, &Catway::externalAddressReceived);
 
     // Sync STUN parameters from AccountManager
     auto *am = AccountManager::instance();
@@ -55,57 +56,67 @@ QObject *Catway::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 void Catway::startServer()
 {
-    m_serverManager->startServer();
+    m_stunManager->startServer();
 }
 
 void Catway::stopServer()
 {
-    m_serverManager->stopServer();
+    m_stunManager->stopServer();
 }
 
 void Catway::sendMessageToPeer(QString message)
 {
-    m_serverManager->sendMessageToPeer(message);
+    m_stunManager->sendMessageToPeer(message);
 }
 
 void Catway::setPeer(QString ip, quint16 port)
 {
-    m_serverManager->setPeer(ip, port);
+    m_stunManager->setPeer(ip, port);
 }
 
 void Catway::setPublicPort(quint16 port)
 {
-    m_serverManager->setPublicPort(port);
+    m_stunManager->setPublicPort(port);
 }
 
 void Catway::setStunServer(QString ip)
 {
-    m_serverManager->setStunServer(ip, m_serverManager->getStunPort());
+    m_stunManager->setStunServer(ip, m_stunManager->getStunPort());
 }
 
 void Catway::setStunPort(quint16 port)
 {
-    m_serverManager->setStunServer(m_serverManager->getStunServer(), port);
+    m_stunManager->setStunServer(m_stunManager->getStunServer(), port);
 }
 
 void Catway::setStunSenderAddress(QString ip)
 {
-    m_serverManager->setStunSenderAddress(ip);
+    m_stunManager->setStunSenderAddress(ip);
 }
 
 void Catway::setStunSenderPort(quint16 port)
 {
-    m_serverManager->setStunSenderPort(port);
+    m_stunManager->setStunSenderPort(port);
 }
 
 QString Catway::getExternalIp() const
 {
-    return m_serverManager->getExternalIp();
+    return m_stunManager->getExternalIp();
 }
 
 quint16 Catway::getExternalPort() const
 {
-    return m_serverManager->getExternalPort();
+    return m_stunManager->getExternalPort();
+}
+
+QObject *Catway::getSocket() const
+{
+    return m_stunManager->getSocket();
+}
+
+QObject *Catway::takeSocket()
+{
+    return m_stunManager->takeSocket();
 }
 
 // --- STUN scoped handling ---
@@ -113,10 +124,10 @@ quint16 Catway::getExternalPort() const
 void Catway::sendStunRequest()
 {
     // Connect STUN handler only for this request
-    m_stunConnection = connect(m_serverManager, &ServerManager::stunResponseReceived,
+    m_stunConnection = connect(m_stunManager, &StunManager::stunResponseReceived,
                                this, &Catway::onStunResponse);
 
-    m_serverManager->sendStunRequest();
+    m_stunManager->sendStunRequest();
 
     // Start timeout to disconnect handler if no response
     m_stunTimeout->start();
@@ -131,8 +142,8 @@ void Catway::onStunResponse(const QByteArray &datagram, const QHostAddress &send
 
     emit log("STUN response received, handler disconnected");
 
-    // Delegate actual parsing to ServerManager
-    m_serverManager->handleStunResponse(datagram, sender, senderPort);
+    // Delegate actual parsing to StunManager
+    m_stunManager->handleStunResponse(datagram, sender, senderPort);
 }
 
 void Catway::onStunTimeout()
@@ -147,5 +158,5 @@ void Catway::onStunTimeout()
 void Catway::onAccountStunChanged()
 {
     auto *am = AccountManager::instance();
-    m_serverManager->setStunServer(am->stunServer(), am->stunPort());
+    m_stunManager->setStunServer(am->stunServer(), am->stunPort());
 }

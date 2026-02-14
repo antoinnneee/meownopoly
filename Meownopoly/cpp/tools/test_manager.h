@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QQmlEngine>
-#include "server_manager.h"
+#include "communication/stun_manager.h"
 
 class TestManager : public QObject
 {
@@ -27,7 +27,7 @@ public:
 private:
     explicit TestManager(QObject *parent = nullptr);
     static TestManager *m_instance;
-    ServerManager *m_serverManager;
+    StunManager *m_stunManager;
 };
 
 #endif // TEST_MANAGER_H

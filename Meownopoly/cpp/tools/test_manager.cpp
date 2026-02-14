@@ -4,7 +4,7 @@
 
 TestManager *TestManager::m_instance = nullptr;
 
-TestManager::TestManager(QObject *parent) : QObject(parent), m_serverManager(nullptr)
+TestManager::TestManager(QObject *parent) : QObject(parent), m_stunManager(nullptr)
 {
 }
 
@@ -54,20 +54,20 @@ void TestManager::testAction4()
 
 void TestManager::testUdpServer()
 {
-    if (!m_serverManager) {
-        m_serverManager = new ServerManager(this);
-        connect(m_serverManager, &ServerManager::log, [](QString msg){
-            Logger::instance()->info(msg, "ServerManager");
-            // qDebug() << "[ServerManager]" << msg;
+    if (!m_stunManager) {
+        m_stunManager = new StunManager(this);
+        connect(m_stunManager, &StunManager::log, [](QString msg){
+            Logger::instance()->info(msg, "StunManager");
+            // qDebug() << "[StunManager]" << msg;
         });
     }
-    m_serverManager->startServer();
+    m_stunManager->startServer();
 }
 
 void TestManager::testSendStun()
 {
-    if (m_serverManager) {
-        m_serverManager->sendStunRequest();
+    if (m_stunManager) {
+        m_stunManager->sendStunRequest();
     } else {
         Logger::instance()->warn("Server not started. Start UDP Server first.", "TestManager");
     }
@@ -75,30 +75,30 @@ void TestManager::testSendStun()
 
 void TestManager::testSetStunServer(QString ip, int port)
 {
-    if (m_serverManager) {
-        m_serverManager->setStunServer(ip, (quint16)port);
+    if (m_stunManager) {
+        m_stunManager->setStunServer(ip, (quint16)port);
     } else {
         // Need to create it if not exists, though usually startServer is called first. 
         // But for config it makes sense to create it.
-        m_serverManager = new ServerManager(this);
-        connect(m_serverManager, &ServerManager::log, [](QString msg){
-             Logger::instance()->info(msg, "ServerManager");
-             // qDebug() << "[ServerManager]" << msg;
+        m_stunManager = new StunManager(this);
+        connect(m_stunManager, &StunManager::log, [](QString msg){
+             Logger::instance()->info(msg, "StunManager");
+             // qDebug() << "[StunManager]" << msg;
         });
-        m_serverManager->setStunServer(ip, (quint16)port);
+        m_stunManager->setStunServer(ip, (quint16)port);
     }
 }
 
 void TestManager::testSetPeer(QString ip, int port)
 {
-    if (m_serverManager) {
-        m_serverManager->setPeer(ip, (quint16)port);
+    if (m_stunManager) {
+        m_stunManager->setPeer(ip, (quint16)port);
     }
 }
 
 void TestManager::testSendMessage(QString message)
 {
-    if (m_serverManager) {
-        m_serverManager->sendMessageToPeer(message);
+    if (m_stunManager) {
+        m_stunManager->sendMessageToPeer(message);
     }
 }

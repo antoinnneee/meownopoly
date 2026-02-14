@@ -6,7 +6,8 @@
 #include <QHostAddress>
 #include <QTimer>
 
-class ServerManager;
+class QUdpSocket;
+class StunManager;
 
 class Catway : public QObject
 {
@@ -29,6 +30,11 @@ public:
     Q_INVOKABLE QString getExternalIp() const;
     Q_INVOKABLE quint16 getExternalPort() const;
 
+    /// Retourne le socket UDP actuel (pour usage C++). Ne transfère pas la propriété.
+    Q_INVOKABLE QObject *getSocket() const;
+    /// Détache le socket actuel et en prépare un nouveau dans StunManager (sans startServer). Retourne l'ancien socket (à gérer par l'appelant).
+    Q_INVOKABLE QObject *takeSocket();
+
 signals:
     void log(QString message);
     void serverStarted(quint16 port);
@@ -43,7 +49,7 @@ private:
     explicit Catway(QObject *parent = nullptr);
     static Catway *m_pThis;
 
-    ServerManager *m_serverManager;
+    StunManager *m_stunManager;
     QMetaObject::Connection m_stunConnection;
     QTimer *m_stunTimeout;
 };
