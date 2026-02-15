@@ -40,16 +40,13 @@ void ChatClient::handleNewCommand(const QJsonObject &payload) {
             qint64 now = QDateTime::currentMSecsSinceEpoch();
             Logger::instance()->debug(QString("Received PONG from %1 Roundtrip: %2 ms").arg(senderId).arg(now - sentTs), "ChatClient");
         } else if (commandType == "REQUEST_CONNECTION_INFO") {
-            Logger::instance()->debug(QString("Auto-responding with SHARE_CONNECTION to %1").arg(senderId), "ChatClient");
+            Logger::instance()->debug(QString("Auto-responding with REPLY_CONNECTION_INFO to %1").arg(senderId), "ChatClient");
             sendShareConnection(senderId);
-        } else if (commandType == "REQUEST_CONNECTION_INFO") {
-            Logger::instance()->debug(QString("Auto-responding with SHARE_CONNECTION to %1").arg(senderId), "ChatClient");
-            sendShareConnection(senderId);
-        } else if (commandType == "SHARE_CONNECTION") {
+        } else if (commandType == "REPLY_CONNECTION_INFO") {
             // Placeholder: données IP/port à remplacer plus tard par les vraies valeurs
             QString ip = data["ip"].toString();
             int port = data["port"].toInt();
-            Logger::instance()->debug(QString("Received SHARE_CONNECTION from %1 -> %2:%3 (placeholder)").arg(senderId).arg(ip).arg(port), "ChatClient");
+            Logger::instance()->debug(QString("Received REPLY_CONNECTION_INFO from %1 -> %2:%3 (placeholder)").arg(senderId).arg(ip).arg(port), "ChatClient");
         }
 
         emit commandReceived(senderId, commandType, data);
@@ -94,17 +91,22 @@ void ChatClient::sendPing(const QString &targetPlayerId) {
     sendCommand("PING", data, targetPlayerId);
 }
 
-void ChatClient::sendRequestConnectionInfo(const QString &recipientId) {
+void ChatClient::sendRequestConnectionInfo(const QString &recipientId, const QString &ip, quint16 port) {
     Logger::instance()->debug(QString("Sending REQUEST_CONNECTION_INFO to %1").arg(recipientId.isEmpty() ? "all" : recipientId), "ChatClient");
-    sendCommand("REQUEST_CONNECTION_INFO", QJsonObject(), recipientId);
+    QJsonObject data;
+    if (!ip.isEmpty())
+        data["ip"] = ip;
+    if (port != 0)
+        data["port"] = static_cast<int>(port);
+    sendCommand("REQUEST_CONNECTION_INFO", data, recipientId);
 }
 
 
 void ChatClient::sendShareConnection(const QString &recipientId) {
-    Logger::instance()->debug(QString("Sending SHARE_CONNECTION to %1 (placeholder)").arg(recipientId.isEmpty() ? "all" : recipientId), "ChatClient");
+    Logger::instance()->debug(QString("Sending REPLY_CONNECTION_INFO to %1 (placeholder)").arg(recipientId.isEmpty() ? "all" : recipientId), "ChatClient");
     QJsonObject data;
     // Placeholder: à remplacer par l'IP et le port réels du serveur/hôte
     data["ip"] = QStringLiteral("0.0.0.0");
     data["port"] = 0;
-    sendCommand("SHARE_CONNECTION", data, recipientId);
+    sendCommand("REPLY_CONNECTION_INFO", data, recipientId);
 }
