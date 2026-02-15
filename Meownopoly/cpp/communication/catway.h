@@ -11,6 +11,7 @@
 class QUdpSocket;
 class StunManager;
 #include "udp_socket_info.h"
+#include "player_network.h"
 
 class Catway : public QObject
 {
@@ -42,6 +43,16 @@ public:
     Q_PROPERTY(QQmlListProperty<UdpSocketInfo> localPorts READ localPorts NOTIFY localPortsChanged)
     QQmlListProperty<UdpSocketInfo> localPorts();
 
+    /// Liste des joueurs réseau (playerId, nickname, socketInfo).
+    Q_PROPERTY(QQmlListProperty<PlayerNetwork> players READ players NOTIFY playersChanged)
+    QQmlListProperty<PlayerNetwork> players();
+
+    Q_INVOKABLE void addPlayer(PlayerNetwork *player);
+    Q_INVOKABLE void removePlayer(PlayerNetwork *player);
+    Q_INVOKABLE PlayerNetwork *playerAt(int index) const;
+    /// Retourne le joueur dont le playerId correspond, ou null.
+    Q_INVOKABLE PlayerNetwork *playerById(const QString &playerId) const;
+
 public slots:
     Q_INVOKABLE void setupNewPort();
 signals:
@@ -49,6 +60,7 @@ signals:
     void serverStarted(quint16 port);
     void externalAddressReceived(QString ip, quint16 port);
     void localPortsChanged();
+    void playersChanged();
 
 private slots:
     void onAccountStunChanged();
@@ -60,9 +72,12 @@ private:
 
     static qsizetype localPortsCount(QQmlListProperty<UdpSocketInfo> *p);
     static UdpSocketInfo *localPortsAt(QQmlListProperty<UdpSocketInfo> *p, qsizetype index);
+    static qsizetype playersCount(QQmlListProperty<PlayerNetwork> *p);
+    static PlayerNetwork *playersAt(QQmlListProperty<PlayerNetwork> *p, qsizetype index);
 
     StunManager *m_stunManager;
     QList<UdpSocketInfo *> m_localSocketInfos;
+    QList<PlayerNetwork *> m_players;
     QMetaObject::Connection m_stunConnection;
     QMetaObject::Connection m_externalAddressTakePortConnection;
 };

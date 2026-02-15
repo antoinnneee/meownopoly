@@ -45,6 +45,7 @@ SOURCES += \
     cpp/chat/chat_slash_commands.cpp \
     cpp/chat/chat_client_command.cpp \
     cpp/communication/catway.cpp \
+    cpp/communication/player_network.cpp \
     cpp/chat/chat_command_helper.cpp \
     cpp/game/item_snapable/ZoneParameter.cpp \
     cpp/game/physics/collision2d.cpp \
@@ -104,6 +105,7 @@ SOURCES += \
 
 HEADERS += \
     cpp/communication/catway.h \
+    cpp/communication/player_network.h \
     cpp/chat/chat_slash_commands.h \
     cpp/chat/chat_command_helper.h \
     cpp/game/item_snapable/ZoneParameter.h \

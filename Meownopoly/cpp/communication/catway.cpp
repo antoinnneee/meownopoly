@@ -142,6 +142,56 @@ UdpSocketInfo *Catway::localPortsAt(QQmlListProperty<UdpSocketInfo> *p, qsizetyp
     return static_cast<QList<UdpSocketInfo *> *>(p->data)->at(index);
 }
 
+// --- Players list ---
+
+QQmlListProperty<PlayerNetwork> Catway::players()
+{
+    return QQmlListProperty<PlayerNetwork>(this, &m_players, &Catway::playersCount, &Catway::playersAt);
+}
+
+qsizetype Catway::playersCount(QQmlListProperty<PlayerNetwork> *p)
+{
+    return static_cast<QList<PlayerNetwork *> *>(p->data)->size();
+}
+
+PlayerNetwork *Catway::playersAt(QQmlListProperty<PlayerNetwork> *p, qsizetype index)
+{
+    return static_cast<QList<PlayerNetwork *> *>(p->data)->at(index);
+}
+
+void Catway::addPlayer(PlayerNetwork *player)
+{
+    if (!player || m_players.contains(player))
+        return;
+    player->setParent(this);
+    m_players.append(player);
+    emit playersChanged();
+}
+
+void Catway::removePlayer(PlayerNetwork *player)
+{
+    if (!player || !m_players.removeOne(player))
+        return;
+    player->setParent(nullptr);
+    emit playersChanged();
+}
+
+PlayerNetwork *Catway::playerAt(int index) const
+{
+    if (index < 0 || index >= m_players.size())
+        return nullptr;
+    return m_players.at(index);
+}
+
+PlayerNetwork *Catway::playerById(const QString &playerId) const
+{
+    for (PlayerNetwork *p : m_players) {
+        if (p && p->playerId() == playerId)
+            return p;
+    }
+    return nullptr;
+}
+
 // --- STUN scoped handling ---
 
 void Catway::sendStunRequest()

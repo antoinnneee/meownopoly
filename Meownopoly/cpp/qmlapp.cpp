@@ -53,6 +53,7 @@
 #include "chat/chat_slash_commands.h"
 #include "account/account_manager.h"
 #include "communication/catway.h"
+#include "communication/player_network.h"
 
 #include <QImageWriter>
 
@@ -82,6 +83,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     ChatSlashCommands::registerQml();
     AccountManager::registerQml();
     Catway::registerQml();
+    PlayerNetwork::registerQml();
 
 
     // Register MapTypes namespace for QML
