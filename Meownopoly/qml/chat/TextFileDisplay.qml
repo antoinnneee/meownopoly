@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Dialogs
 
 Column {
@@ -58,14 +59,14 @@ Column {
         }
     }
 
-    // En-tête violet avec infos fichier
+    // En-tête violet avec infos fichier (même style que l'en-tête des images)
     Rectangle {
         width: parent.width
         height: 30
         color: "#667eea"
         radius: 6
 
-        Row {
+        RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 10
             anchors.rightMargin: 6
@@ -77,18 +78,18 @@ Column {
                 font.pointSize: 8
                 font.bold: true
                 color: "white"
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.alignment: Qt.AlignVCenter
+                Layout.fillWidth: true
                 elide: Text.ElideMiddle
-                width: parent.width - 170
             }
 
             // Badge extension
             Rectangle {
-                width: 36
-                height: 18
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 18
                 color: "#5568d3"
                 radius: 9
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.alignment: Qt.AlignVCenter
 
                 Text {
                     text: textFileDisplay.fileExtension.toUpperCase()
@@ -99,18 +100,17 @@ Column {
                 }
             }
 
-            // Bouton Copier
+            // Bouton Copier (icône comme pour les images)
             Rectangle {
-                width: 52
-                height: 20
-                color: copyArea.containsMouse ? "#5568d3" : "#4a5bc7"
-                radius: 4
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+                color: copyArea.containsMouse ? "#5568d3" : "transparent"
+                radius: 3
+                Layout.alignment: Qt.AlignVCenter
 
                 Text {
-                    text: textFileDisplay.copyFeedback ? "✓ Copié" : "Copier"
-                    font.pointSize: 7
-                    font.bold: true
+                    text: textFileDisplay.copyFeedback ? "✓" : "📋"
+                    font.pointSize: 9
                     color: "white"
                     anchors.centerIn: parent
                 }
@@ -128,21 +128,25 @@ Column {
                         copyTimer.restart()
                     }
                 }
+                ToolTip {
+                    visible: copyArea.containsMouse
+                    text: "Copier le texte"
+                    delay: 400
+                }
             }
 
-            // Bouton Sauver
+            // Bouton Sauver (icône comme pour les images)
             Rectangle {
-                width: 52
-                height: 20
-                color: saveArea.containsMouse ? "#5568d3" : "#4a5bc7"
-                radius: 4
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+                color: saveArea.containsMouse ? "#5568d3" : "transparent"
+                radius: 3
+                Layout.alignment: Qt.AlignVCenter
                 visible: !!textFileDisplay.chatClient
 
                 Text {
-                    text: "Sauver"
-                    font.pointSize: 7
-                    font.bold: true
+                    text: "💾"
+                    font.pointSize: 9
                     color: "white"
                     anchors.centerIn: parent
                 }
@@ -153,6 +157,11 @@ Column {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: saveDialog.open()
+                }
+                ToolTip {
+                    visible: saveArea.containsMouse
+                    text: "Enregistrer sous..."
+                    delay: 400
                 }
             }
         }
@@ -186,13 +195,13 @@ Column {
                 id: contentText
                 width: scrollView.width - 10
                 text: textFileDisplay.fileContent
-                wrapMode: TextEdit.Wrap
+                wrapMode: Text.WordWrap
                 readOnly: true
                 selectByMouse: true
                 color: "#e0e0e0"
                 font.family: "Consolas, Monaco, monospace"
                 font.pointSize: 8
-                textFormat: TextEdit.PlainText
+                textFormat: textFileDisplay.fileExtension == "md" ? Text.MarkdownText : Text.AutoText
             }
         }
     }

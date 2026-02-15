@@ -238,7 +238,7 @@ Rectangle {
                                 if (contentImage.source.toString().startsWith("image://chat_images/")) {
                                     let id = contentImage.source.toString().replace("image://chat_images/", "")
                                     saveImageDialog.currentImageId = id
-                                    saveImageDialog.currentFile = "file:///image_" + id + ".png"
+                                    saveImageDialog.currentFile = "file:///image_" + id + ".webp"
                                     saveImageDialog.open()
                                 }
                             }

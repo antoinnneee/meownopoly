@@ -31,26 +31,43 @@ void ChatClient::handleNewCommand(const QJsonObject &payload) {
     QJsonObject data;
     if (ChatCommandHelper::parseCommand(QString::fromUtf8(plain), commandType, data)) {
         Logger::instance()->debug(QString("Received command %1 from %2").arg(commandType).arg(senderId), "ChatClient");
-
-        if (commandType == "PING") {
-            Logger::instance()->debug(QString("Auto-responding with PONG to %1").arg(senderId), "ChatClient");
-            sendCommand("PONG", data, senderId);
-        } else if (commandType == "PONG") {
-            qint64 sentTs = data["timestamp"].toVariant().toLongLong();
-            qint64 now = QDateTime::currentMSecsSinceEpoch();
-            Logger::instance()->debug(QString("Received PONG from %1 Roundtrip: %2 ms").arg(senderId).arg(now - sentTs), "ChatClient");
-        } else if (commandType == "REQUEST_CONNECTION_INFO") {
-            Logger::instance()->debug(QString("Auto-responding with REPLY_CONNECTION_INFO to %1").arg(senderId), "ChatClient");
-            sendShareConnection(senderId);
-        } else if (commandType == "REPLY_CONNECTION_INFO") {
-            // Placeholder: données IP/port à remplacer plus tard par les vraies valeurs
-            QString ip = data["ip"].toString();
-            int port = data["port"].toInt();
-            Logger::instance()->debug(QString("Received REPLY_CONNECTION_INFO from %1 -> %2:%3 (placeholder)").arg(senderId).arg(ip).arg(port), "ChatClient");
-        }
-
+        dispatchIncomingCommand(senderId, commandType, data);
         emit commandReceived(senderId, commandType, data);
     }
+}
+
+void ChatClient::dispatchIncomingCommand(const QString &senderId, const QString &commandType, const QJsonObject &data) {
+    if (commandType == "PING")
+        onIncomingCommandPing(senderId, data);
+    else if (commandType == "PONG")
+        onIncomingCommandPong(senderId, data);
+    else if (commandType == "REQUEST_CONNECTION_INFO")
+        onIncomingCommandRequestConnectionInfo(senderId, data);
+    else if (commandType == "REPLY_CONNECTION_INFO")
+        onIncomingCommandReplyConnectionInfo(senderId, data);
+}
+
+void ChatClient::onIncomingCommandPing(const QString &senderId, const QJsonObject &data) {
+    Logger::instance()->debug(QString("Auto-responding with PONG to %1").arg(senderId), "ChatClient");
+    sendCommand("PONG", data, senderId);
+}
+
+void ChatClient::onIncomingCommandPong(const QString &senderId, const QJsonObject &data) {
+    qint64 sentTs = data["timestamp"].toVariant().toLongLong();
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    Logger::instance()->debug(QString("Received PONG from %1 Roundtrip: %2 ms").arg(senderId).arg(now - sentTs), "ChatClient");
+}
+
+void ChatClient::onIncomingCommandRequestConnectionInfo(const QString &senderId, const QJsonObject &data) {
+    Q_UNUSED(data)
+    Logger::instance()->debug(QString("Auto-responding with REPLY_CONNECTION_INFO to %1").arg(senderId), "ChatClient");
+    sendShareConnection(senderId);
+}
+
+void ChatClient::onIncomingCommandReplyConnectionInfo(const QString &senderId, const QJsonObject &data) {
+    QString ip = data["ip"].toString();
+    int port = data["port"].toInt();
+    Logger::instance()->debug(QString("Received REPLY_CONNECTION_INFO from %1 -> %2:%3").arg(senderId).arg(ip).arg(port), "ChatClient");
 }
 
 
