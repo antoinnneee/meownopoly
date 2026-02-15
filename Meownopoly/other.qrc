@@ -11,6 +11,12 @@
         <file>qml/test/TEST_3D.qml</file>
         <file>qml/test/TEST_PAW_MENU.qml</file>
         <file>qml/test/Test_Comp.qml</file>
+        <file>qml/test/qmldir</file>
+        <file>qml/test/CatwayTest/CatwayTest.qml</file>
+        <file>qml/test/CatwayTest/StunCard.qml</file>
+        <file>qml/test/CatwayTest/LocalPortsCard.qml</file>
+        <file>qml/test/CatwayTest/CreatePlayerForm.qml</file>
+        <file>qml/test/CatwayTest/PlayersListCard.qml</file>
         <file>qml/menu/PawMenu.qml</file>
         <file>qml/menu/PawSubButton.qml</file>
         <file>qml/menu/PawMainPad.qml</file>

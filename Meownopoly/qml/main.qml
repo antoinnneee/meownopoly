@@ -77,6 +77,10 @@ ApplicationWindow {
             onMultiplayerLobbyRequested: {
                 stackView.push(multiplayerLobby)
             }
+
+            onCatwayTestRequested: {
+                stackView.push(catwayTest)
+            }
         }
     }
 
@@ -174,8 +178,20 @@ ApplicationWindow {
         MultiplayerLobby {
             width: root.width
             height: root.height
-            
+
             onBackToTitleScreen: {
+                stackView.pop()
+            }
+        }
+    }
+
+    Component {
+        id: catwayTest
+        CatwayTest {
+            width: root.width
+            height: root.height
+
+            onBackRequested: {
                 stackView.pop()
             }
         }

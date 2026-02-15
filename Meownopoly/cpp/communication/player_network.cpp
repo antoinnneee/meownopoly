@@ -31,6 +31,35 @@ void PlayerNetwork::setSocketInfo(UdpSocketInfo *info)
 {
     if (m_socketInfo != info) {
         m_socketInfo = info;
+        if (info) {
+            if (m_ip != info->publicAddress()) {
+                m_ip = info->publicAddress();
+                emit ipChanged();
+            }
+            if (m_port != info->publicPort()) {
+                m_port = info->publicPort();
+                emit portChanged();
+            }
+        } else {
+            if (!m_ip.isEmpty()) { m_ip.clear(); emit ipChanged(); }
+            if (m_port != 0) { m_port = 0; emit portChanged(); }
+        }
         emit socketInfoChanged();
+    }
+}
+
+void PlayerNetwork::setIp(const QString &ip)
+{
+    if (m_ip != ip) {
+        m_ip = ip;
+        emit ipChanged();
+    }
+}
+
+void PlayerNetwork::setPort(quint16 port)
+{
+    if (m_port != port) {
+        m_port = port;
+        emit portChanged();
     }
 }

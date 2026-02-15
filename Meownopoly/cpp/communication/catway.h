@@ -1,6 +1,7 @@
 #ifndef CATWAY_H
 #define CATWAY_H
 
+#include "chat/chat_client.h"
 #include <QObject>
 #include <QQmlEngine>
 #include <QQmlListProperty>

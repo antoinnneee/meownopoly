@@ -67,6 +67,7 @@ Rectangle {
     signal launcherRequested(); // Add signal for launcher
     signal assetManagerTestRequested(); // Add signal for asset manager test
     signal multiplayerLobbyRequested(); // Signal for multiplayer lobby
+    signal catwayTestRequested(); // Signal for Catway test interface
     // Title text
     Text {
         id: gameTitle
@@ -258,6 +259,29 @@ Rectangle {
             }
         }
         
+        // Catway Test Button
+        Button {
+            id: catwayTestButton
+            text: "📡 Test Catway"
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 50
+
+            background: Rectangle {
+                color: catwayTestButton.pressed ? "#00695c" : "#00897b"
+                radius: 8
+            }
+
+            contentItem: Text {
+                text: catwayTestButton.text
+                color: "white"
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            onClicked: root.catwayTestRequested()
+        }
+
         // Asset Manager Test Button
         Button {
             id: assetManagerTestButton
