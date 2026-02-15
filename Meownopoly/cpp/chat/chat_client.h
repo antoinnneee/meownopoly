@@ -38,7 +38,7 @@ public:
 
     Q_INVOKABLE void connectToServer(const QString &url);
 
-    Q_INVOKABLE void connectToSessionDirect(const QString &password, const QString &sessionId);
+    Q_INVOKABLE void connectToSessionDirect(const QString &sessionId, const QString &password);
     Q_INVOKABLE void connectToSession(const QString &playerId, const QString &password, const QString &nickname = QString());
     Q_INVOKABLE void sendMessage(const QString &text, const QString &recipientId = QString(), const QString &recipientNickname = QString());
     Q_INVOKABLE void sendImage(const QString &filePath);

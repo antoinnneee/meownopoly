@@ -48,6 +48,10 @@ public:
     Q_PROPERTY(QQmlListProperty<PlayerNetwork> players READ players NOTIFY playersChanged)
     QQmlListProperty<PlayerNetwork> players();
 
+    /// Client de chat intégré (accessible en QML via Catway.chatClient).
+    Q_PROPERTY(ChatClient *chatClient READ chatClient CONSTANT)
+    ChatClient *chatClient() const;
+
     Q_INVOKABLE void addPlayer(PlayerNetwork *player);
     Q_INVOKABLE void removePlayer(PlayerNetwork *player);
     Q_INVOKABLE PlayerNetwork *playerAt(int index) const;
@@ -77,6 +81,7 @@ private:
     static PlayerNetwork *playersAt(QQmlListProperty<PlayerNetwork> *p, qsizetype index);
 
     StunManager *m_stunManager;
+    ChatClient *m_chatClient;
     QList<UdpSocketInfo *> m_localSocketInfos;
     QList<PlayerNetwork *> m_players;
     QMetaObject::Connection m_stunConnection;

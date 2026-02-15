@@ -21,5 +21,6 @@
         <file>qml/menu/PawSubButton.qml</file>
         <file>qml/menu/PawMainPad.qml</file>
         <file>qml/menu/pawTools.js</file>
+        <file>qml/test/CatwayTest/ChatClientCard.qml</file>
     </qresource>
 </RCC>

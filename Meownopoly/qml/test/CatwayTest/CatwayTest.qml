@@ -56,46 +56,74 @@ Rectangle {
             }
         }
 
-        RowLayout {
+        ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 16
+            clip: true
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+            contentWidth: availableWidth
+            contentHeight: contentColumn.implicitHeight
 
             ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.minimumWidth: 280
-                spacing: 12
+                id: contentColumn
+                width: root.width - 32
+                spacing: 16
 
-                StunCard { Layout.fillWidth: true; host: root }
-
-                LocalPortsCard {
+                RowLayout {
+                    spacing: 16
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    host: root
-                    onPortClicked: function(socketInfo, index) {
-                        root.selectedPortIndex = index
-                        root.selectedSocketInfo = socketInfo
+                    Layout.minimumHeight: 800
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.minimumWidth: 280
+                        spacing: 12
+
+                        StunCard { Layout.fillWidth: true; host: root }
+
+                        LocalPortsCard {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            host: root
+                            onPortClicked: function(socketInfo, index) {
+                                root.selectedPortIndex = index
+                                root.selectedSocketInfo = socketInfo
+                            }
+                        }
                     }
-                }
-            }
 
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.minimumWidth: 280
-                spacing: 12
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.minimumWidth: 280
+                        spacing: 12
 
-                CreatePlayerForm {
-                Layout.fillWidth: true
-                    host: root
-                    playerComponent: playerComponent
-                }
+                        CreatePlayerForm {
+                            Layout.fillWidth: true
+                            host: root
+                            playerComponent: playerComponent
+                        }
 
-                PlayersListCard {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    host: root
+                        PlayersListCard {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            host: root
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 280
+                        spacing: 12
+
+                        ChatClientCard {
+                            Layout.fillWidth: true
+                            host: root
+                        }
+                    }
                 }
             }
         }

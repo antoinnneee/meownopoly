@@ -95,7 +95,7 @@ Rectangle {
             onSessionCreateRequested: function(sessionData) {
                 console.log("📝 Création de session:", JSON.stringify(sessionData))
                 // Rejoindre la session (qui sera créée automatiquement par le serveur)
-                lobbyChatClient.connectToSessionDirect(sessionData.password,sessionData.sessionId)
+                lobbyChatClient.connectToSessionDirect(sessionData.sessionId, sessionData.password)
                 
                 // Retourner à la liste
                 multiplayerStackView.pop()

@@ -73,7 +73,7 @@ void ChatClient::connectToServer(const QString &url) {
                               Q_ARG(QString, url));
 }
 
-void ChatClient::connectToSessionDirect(const QString &password, const QString &sessionId)
+void ChatClient::connectToSessionDirect(const QString &sessionId, const QString &password)
 {
 
     m_playerId = AccountManager::instance()->uniqueId();
@@ -96,28 +96,8 @@ void ChatClient::connectToSessionDirect(const QString &password, const QString &
 
     // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
     // Keys in DB are encrypted with lockKey. We must decrypt them for memory usage.
-    QMap<int, QByteArray> encryptedKeys = m_db.getSessionKeys(m_sessionId);
     m_sessionKeys.clear();
-
-    qDebug() << "[ChatClient] Loaded" << encryptedKeys.size() << "encrypted keys from local storage";
-
-    for (auto it = encryptedKeys.begin(); it != encryptedKeys.end(); ++it) {
-        int version = it.key();
-        QByteArray combined = it.value();
-
-        QDataStream stream(combined);
-        QByteArray encryptedPkg, nonce;
-        stream >> encryptedPkg >> nonce;
-
-        QByteArray plainKey = ChatCrypto::decrypt(encryptedPkg, m_lockKey, nonce);
-        if (!plainKey.isEmpty()) {
-            m_sessionKeys.insert(version, plainKey);
-        } else {
-            qWarning() << "[ChatClient] Failed to decrypt session key Version" << version;
-        }
-    }
-
-    qDebug() << "[ChatClient] Decrypted" << m_sessionKeys.size() << "session keys into memory";
+    loadAndDecryptSessionKeys();
 
     // Determine current version (max version locally)
     if (!m_sessionKeys.isEmpty()) {

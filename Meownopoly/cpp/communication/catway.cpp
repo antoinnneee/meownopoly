@@ -16,6 +16,9 @@ Catway::Catway(QObject *parent)
     // Create StunManager owned by Catway
     m_stunManager = new StunManager(this);
 
+    // Client de chat intégré (exposé en QML via la propriété chatClient)
+    m_chatClient = new ChatClient(this);
+
     // Relay signals from StunManager
     connect(m_stunManager, &StunManager::log, this, &Catway::log);
     connect(m_stunManager, &StunManager::serverStarted, this, &Catway::serverStarted);
@@ -43,6 +46,11 @@ Catway *Catway::instance()
         m_pThis = new Catway;
     }
     return m_pThis;
+}
+
+ChatClient *Catway::chatClient() const
+{
+    return m_chatClient;
 }
 
 QObject *Catway::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
