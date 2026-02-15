@@ -4,8 +4,39 @@ import QtQuick.Layouts
 import Catway 1.0
 
 Rectangle {
+    id: createPlayerFormRoot
     required property var host
     required property Component playerComponent
+
+    /// Joueur en cours d'édition (null = mode création).
+    property var editingPlayer: null
+
+    function setPlayer(playerId, nickname) {
+        fieldPlayerId.text = playerId || ""
+        fieldNickname.text = nickname || ""
+        editingPlayer = null
+    }
+
+    function loadPlayer(player) {
+        if (!player) return
+        editingPlayer = player
+        fieldPlayerId.text = player.playerId || ""
+        fieldNickname.text = player.nickname || ""
+        fieldDestIp.text = player.ip || ""
+        fieldDestPort.text = player.port ? String(player.port) : ""
+        host.selectedSocketInfo = player.socketInfo || null
+        host.selectedPortIndex = -1
+    }
+
+    function clearForm() {
+        editingPlayer = null
+        fieldPlayerId.clear()
+        fieldNickname.clear()
+        fieldDestIp.clear()
+        fieldDestPort.clear()
+        host.selectedSocketInfo = null
+        host.selectedPortIndex = -1
+    }
 
     color: host.cardBg
     radius: host.cardRadius
@@ -20,7 +51,7 @@ Rectangle {
         spacing: 10
 
         Text {
-            text: "Créer un joueur"
+            text: editingPlayer ? "Modifier le joueur" : "Créer un joueur"
             color: host.textPrimary
             font.pixelSize: 15
             font.bold: true
@@ -144,42 +175,70 @@ Rectangle {
             }
         }
 
-        Button {
-            text: "Ajouter le joueur"
-            implicitHeight: 40
-            font.pixelSize: 13
-            font.bold: true
+        RowLayout {
+            spacing: 8
             Layout.topMargin: 2
-            background: Rectangle {
-                color: parent.pressed ? Qt.darker(host.accent, 1.2) : (parent.hovered ? host.accentHover : host.accent)
-                radius: 8
-            }
-            contentItem: Text {
-                text: parent.text
-                color: "white"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            onClicked: {
-                var info = host.selectedSocketInfo
-                if (!info)
-                    info = Catway.currentSocketInfo()
-                var p = playerComponent.createObject(host)
-                if (p) {
-                    p.playerId = fieldPlayerId.text.trim() || ("id_" + Date.now())
-                    p.nickname = fieldNickname.text.trim() || "Joueur"
-                    p.socketInfo = info
-                    p.ip = fieldDestIp.text.trim()
-                    var portVal = parseInt(fieldDestPort.text, 10)
-                    p.port = (portVal >= 1 && portVal <= 65535) ? portVal : 0
-                    Catway.addPlayer(p)
-                    fieldPlayerId.clear()
-                    fieldNickname.clear()
-                    fieldDestIp.clear()
-                    fieldDestPort.clear()
-                    host.selectedSocketInfo = null
-                    host.selectedPortIndex = -1
+            Button {
+                text: editingPlayer ? "Modifier le joueur" : "Ajouter le joueur"
+                implicitHeight: 40
+                font.pixelSize: 13
+                font.bold: true
+                Layout.fillWidth: true
+                background: Rectangle {
+                    color: parent.pressed ? Qt.darker(host.accent, 1.2) : (parent.hovered ? host.accentHover : host.accent)
+                    radius: 8
                 }
+                contentItem: Text {
+                    text: parent.text
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: {
+                    var info = host.selectedSocketInfo
+                    if (!info)
+                        info = Catway.currentSocketInfo()
+                    if (editingPlayer) {
+                        editingPlayer.playerId = fieldPlayerId.text.trim() || editingPlayer.playerId
+                        editingPlayer.nickname = fieldNickname.text.trim() || "Joueur"
+                        editingPlayer.socketInfo = info
+                        editingPlayer.ip = fieldDestIp.text.trim()
+                        var portVal = parseInt(fieldDestPort.text, 10)
+                        editingPlayer.port = (portVal >= 1 && portVal <= 65535) ? portVal : 0
+                        clearForm()
+                    } else {
+                        var p = playerComponent.createObject(host)
+                        if (p) {
+                            p.playerId = fieldPlayerId.text.trim() || ("id_" + Date.now())
+                            p.nickname = fieldNickname.text.trim() || "Joueur"
+                            p.socketInfo = info
+                            p.ip = fieldDestIp.text.trim()
+                            var portVal = parseInt(fieldDestPort.text, 10)
+                            p.port = (portVal >= 1 && portVal <= 65535) ? portVal : 0
+                            Catway.addPlayer(p)
+                            clearForm()
+                        }
+                    }
+                }
+            }
+            Button {
+                text: "Nouveau"
+                implicitHeight: 40
+                font.pixelSize: 12
+                visible: !!editingPlayer
+                background: Rectangle {
+                    color: parent.pressed ? "#2d2d35" : "transparent"
+                    radius: 8
+                    border.color: host.cardBorder
+                    border.width: 1
+                }
+                contentItem: Text {
+                    text: parent.text
+                    color: host.textPrimary
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: clearForm()
             }
         }
     }

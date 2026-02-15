@@ -95,6 +95,23 @@ Rectangle {
                         }
                     }
 
+
+                    ColumnLayout {
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 280
+                        spacing: 12
+
+                        ChatClientCard {
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                            Layout.fillWidth: true
+                            host: root
+                            onParticipantClicked: function(playerId, nickname) {
+                                createPlayerForm.setPlayer(playerId, nickname)
+                            }
+                        }
+                    }
+
                     ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -102,6 +119,7 @@ Rectangle {
                         spacing: 12
 
                         CreatePlayerForm {
+                            id: createPlayerForm
                             Layout.fillWidth: true
                             host: root
                             playerComponent: playerComponent
@@ -111,17 +129,9 @@ Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             host: root
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: 280
-                        spacing: 12
-
-                        ChatClientCard {
-                            Layout.fillWidth: true
-                            host: root
+                            onPlayerClicked: function(player) {
+                                createPlayerForm.loadPlayer(player)
+                            }
                         }
                     }
                 }

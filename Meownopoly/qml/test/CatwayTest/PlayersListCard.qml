@@ -4,7 +4,10 @@ import QtQuick.Layouts
 import Catway 1.0
 
 Rectangle {
+    id: playersListCard
     required property var host
+
+    signal playerClicked(var player)
 
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -69,9 +72,16 @@ Rectangle {
                 delegate: Rectangle {
                     width: playersList.width - 4
                     height: 48
-                    color: "#222226"
+                    color: rowMouseArea.pressed ? host.cardBorder : "#222226"
                     radius: 6
                     clip: true
+
+                    MouseArea {
+                        id: rowMouseArea
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton
+                        onClicked: playersListCard.playerClicked(modelData)
+                    }
 
                     RowLayout {
                         anchors.fill: parent

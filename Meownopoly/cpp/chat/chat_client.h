@@ -92,6 +92,7 @@ private:
     void handleSessionsList(const QJsonObject &payload);
     void handleNewCommand(const QJsonObject &payload);
     void dispatchIncomingCommand(const QString &senderId, const QString &commandType, const QJsonObject &data);
+
     void onIncomingCommandPing(const QString &senderId, const QJsonObject &data);
     void onIncomingCommandPong(const QString &senderId, const QJsonObject &data);
     void onIncomingCommandRequestConnectionInfo(const QString &senderId, const QJsonObject &data);

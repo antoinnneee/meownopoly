@@ -5,7 +5,10 @@ import Catway 1.0
 import Meownopoly.Chat 1.0
 
 Rectangle {
+    id: chatClientCard
     required property var host
+
+    signal participantClicked(string playerId, string nickname)
 
     color: host.cardBg
     radius: host.cardRadius
@@ -66,6 +69,7 @@ Rectangle {
                 }
                 color: host.textPrimary
                 Layout.fillWidth: true
+                text: "ws://pattounecorp.ovh:3000"
             }
         }
         Button {
@@ -158,31 +162,6 @@ Rectangle {
         }
 
         Item { height: 4 }
-
-        Button {
-            text: "Rafraîchir liste des sessions"
-            implicitHeight: 36
-            font.pixelSize: 12
-            background: Rectangle {
-                color: parent.pressed ? "#2d2d35" : "transparent"
-                radius: 6
-                border.color: host.cardBorder
-                border.width: 1
-            }
-            contentItem: Text {
-                text: parent.text
-                color: host.textPrimary
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            onClicked: {
-                if (chatClient)
-                    chatClient.requestSessionsList()
-            }
-        }
-
-        Item { height: 8 }
-
         Text {
             text: "Participants à la session"
             color: host.textPrimary
@@ -190,7 +169,7 @@ Rectangle {
             font.bold: true
         }
         RowLayout {
-            spacing: 6
+            spacing: 8
             Text {
                 text: chatClient && chatClient.connected
                       ? (chatClient.participantCount + " participant(s)")
@@ -198,55 +177,124 @@ Rectangle {
                 color: host.textSecondary
                 font.pixelSize: 12
             }
-            Item { Layout.fillWidth: true }
-            Button {
-                text: "Rafraîchir"
-                implicitHeight: 28
+            TextField {
+                id: fieldRequestConnectionRecipient
+                placeholderText: "ID (vide = tous)"
+                placeholderTextColor: "#71717a"
                 font.pixelSize: 11
+                implicitHeight: 28
+                Layout.preferredWidth: 100
                 visible: chatClient && chatClient.connected
                 background: Rectangle {
-                    color: parent.pressed ? "#2d2d35" : "transparent"
+                    color: "#222226"
                     radius: 4
-                    border.color: host.cardBorder
+                    border.color: fieldRequestConnectionRecipient.activeFocus ? host.accent : host.cardBorder
                     border.width: 1
                 }
-                contentItem: Text {
-                    text: parent.text
-                    color: host.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                color: host.textPrimary
+            }
+            ColumnLayout {
+                spacing: 4
+                visible: chatClient && chatClient.connected
+                Button {
+                    text: "Rafraîchir"
+                    implicitHeight: 28
+                    font.pixelSize: 11
+                    Layout.fillWidth: true
+                    background: Rectangle {
+                        color: parent.pressed ? "#2d2d35" : "transparent"
+                        radius: 4
+                        border.color: host.cardBorder
+                        border.width: 1
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        color: host.textPrimary
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        if (chatClient)
+                            chatClient.requestParticipants()
+                    }
                 }
-                onClicked: {
-                    if (chatClient)
-                        chatClient.requestParticipants()
+                Button {
+                    text: "Demander infos connexion"
+                    implicitHeight: 28
+                    font.pixelSize: 11
+                    Layout.fillWidth: true
+                    background: Rectangle {
+                        color: parent.pressed ? "#2d2d35" : "transparent"
+                        radius: 4
+                        border.color: host.cardBorder
+                        border.width: 1
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        color: host.textPrimary
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        if (chatClient)
+                            chatClient.sendRequestConnectionInfo(fieldRequestConnectionRecipient.text.trim(), "", 0)
+                    }
                 }
             }
+            Item { Layout.fillWidth: true }
         }
         ListView {
             id: participantsList
             Layout.fillWidth: true
-            Layout.preferredHeight: chatClient && chatClient.connected ? Math.min(220, Math.max(80, chatClient.participantCount * 40 + 8)) : 0
+            Layout.preferredHeight: chatClient && chatClient.connected ? Math.min(260, Math.max(80, chatClient.participantCount * 48 + 8)) : 0
             clip: true
             spacing: 4
             model: chatClient && chatClient.connected ? chatClient.participants : []
             delegate: Rectangle {
-                width: participantsList.width
-                height: 36
-                color: "#222226"
+                width: parent.width
+                height: 44
+                color: participantMouseArea.pressed ? host.cardBorder : "#222226"
                 radius: 6
                 border.color: host.cardBorder
                 border.width: 1
+                MouseArea {
+                    id: participantMouseArea
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    onClicked: {
+                        var data = modelData
+                        if (!data) return
+                        var pid = data.player_id || ""
+                        var nick = data.player_nickname || ""
+                        var card = participantsList.parent.parent
+                        if (card && card.fieldRequestConnectionRecipient)
+                            card.fieldRequestConnectionRecipient.text = pid
+                        if (card)
+                            card.participantClicked(pid, nick)
+                    }
+                }
                 RowLayout {
                     anchors.fill: parent
                     anchors.margins: 8
                     spacing: 8
-                    Text {
-                        text: modelData.player_nickname || modelData.player_id || "—"
-                        color: host.textPrimary
-                        font.pixelSize: 13
-                        font.bold: !!modelData.is_host
+                    ColumnLayout {
+                        spacing: 2
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
+                        Text {
+                            text: modelData.player_nickname || "—"
+                            color: host.textPrimary
+                            font.pixelSize: 13
+                            font.bold: !!modelData.is_host
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                        Text {
+                            text: modelData.player_id ? ("id: " + modelData.player_id) : ""
+                            color: host.textSecondary
+                            font.pixelSize: 11
+                            Layout.fillWidth: true
+                            elide: Text.ElideMiddle
+                        }
                     }
                     Text {
                         text: modelData.is_host ? "Hôte" : ""
