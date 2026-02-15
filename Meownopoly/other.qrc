@@ -22,5 +22,10 @@
         <file>qml/menu/PawMainPad.qml</file>
         <file>qml/menu/pawTools.js</file>
         <file>qml/test/CatwayTest/ChatClientCard.qml</file>
+        <file>qml/test/CatwayTest/UdpTestTab.qml</file>
+        <file>qml/test/CatwayTest/DrawGrid.qml</file>
+        <file>qml/test/CatwayTest/UdpPlayersPanel.qml</file>
+        <file>qml/test/CatwayTest/UdpChatTile.qml</file>
+        <file>qml/test/CatwayTest/UdpDrawTile.qml</file>
     </qresource>
 </RCC>

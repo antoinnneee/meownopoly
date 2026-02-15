@@ -46,6 +46,45 @@ Rectangle {
                 }
                 onClicked: root.backRequested()
             }
+            TabBar {
+                id: tabBar
+                Layout.alignment: Qt.AlignLeft
+                currentIndex: stack.currentIndex
+                onCurrentIndexChanged: stack.currentIndex = currentIndex
+                background: Rectangle { color: "transparent" }
+                TabButton {
+                    text: "Catway"
+                    font.pixelSize: 14
+                    contentItem: Text {
+                        text: parent.text
+                        color: parent.checked ? root.accent : root.textSecondary
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.checked ? root.cardBg : "transparent"
+                        radius: 8
+                        border.color: parent.checked ? root.accent : root.cardBorder
+                        border.width: 1
+                    }
+                }
+                TabButton {
+                    text: "UDP Tests"
+                    font.pixelSize: 14
+                    contentItem: Text {
+                        text: parent.text
+                        color: parent.checked ? root.accent : root.textSecondary
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.checked ? root.cardBg : "transparent"
+                        radius: 8
+                        border.color: parent.checked ? root.accent : root.cardBorder
+                        border.width: 1
+                    }
+                }
+            }
             Text {
                 text: "Test Catway"
                 color: root.textPrimary
@@ -56,22 +95,25 @@ Rectangle {
             }
         }
 
-        ScrollView {
+        StackLayout {
+            id: stack
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
-            ScrollBar.vertical.policy: ScrollBar.AsNeeded
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            currentIndex: tabBar.currentIndex
 
-            contentWidth: availableWidth
-            contentHeight: contentColumn.implicitHeight
-
-            ColumnLayout {
-                id: contentColumn
-                width: root.width - 32
-                spacing: 16
-
-                RowLayout {
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                contentWidth: availableWidth
+                contentHeight: contentColumn.implicitHeight
+                ColumnLayout {
+                    id: contentColumn
+                    width: root.width - 32
+                    spacing: 16
+                    RowLayout {
                     spacing: 16
                     Layout.fillWidth: true
                     Layout.minimumHeight: 800
@@ -133,6 +175,27 @@ Rectangle {
                                 createPlayerForm.loadPlayer(player)
                             }
                         }
+                    }
+                }
+            }
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                contentWidth: availableWidth
+                contentHeight: udpTestContent.implicitHeight
+                ColumnLayout {
+                    id: udpTestContent
+                    width: root.width - 32
+                    spacing: 12
+                    UdpTestTab {
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 700
+                        host: root
                     }
                 }
             }

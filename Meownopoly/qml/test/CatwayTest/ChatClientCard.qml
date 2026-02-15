@@ -117,6 +117,7 @@ Rectangle {
                 }
                 color: host.textPrimary
                 Layout.fillWidth: true
+                text: "Pattoune"
             }
         }
         ColumnLayout {
@@ -137,6 +138,7 @@ Rectangle {
                 }
                 color: host.textPrimary
                 Layout.fillWidth: true
+                text: "123"
             }
         }
         Button {
