@@ -179,68 +179,26 @@ Rectangle {
                 color: host.textSecondary
                 font.pixelSize: 12
             }
-            TextField {
-                id: fieldRequestConnectionRecipient
-                placeholderText: "ID (vide = tous)"
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 11
+            Button {
+                text: "Rafraîchir"
                 implicitHeight: 28
-                Layout.preferredWidth: 100
+                font.pixelSize: 11
                 visible: chatClient && chatClient.connected
                 background: Rectangle {
-                    color: "#222226"
+                    color: parent.pressed ? "#2d2d35" : "transparent"
                     radius: 4
-                    border.color: fieldRequestConnectionRecipient.activeFocus ? host.accent : host.cardBorder
+                    border.color: host.cardBorder
                     border.width: 1
                 }
-                color: host.textPrimary
-            }
-            ColumnLayout {
-                spacing: 4
-                visible: chatClient && chatClient.connected
-                Button {
-                    text: "Rafraîchir"
-                    implicitHeight: 28
-                    font.pixelSize: 11
-                    Layout.fillWidth: true
-                    background: Rectangle {
-                        color: parent.pressed ? "#2d2d35" : "transparent"
-                        radius: 4
-                        border.color: host.cardBorder
-                        border.width: 1
-                    }
-                    contentItem: Text {
-                        text: parent.text
-                        color: host.textPrimary
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    onClicked: {
-                        if (chatClient)
-                            chatClient.requestParticipants()
-                    }
+                contentItem: Text {
+                    text: parent.text
+                    color: host.textPrimary
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
-                Button {
-                    text: "Demander infos connexion"
-                    implicitHeight: 28
-                    font.pixelSize: 11
-                    Layout.fillWidth: true
-                    background: Rectangle {
-                        color: parent.pressed ? "#2d2d35" : "transparent"
-                        radius: 4
-                        border.color: host.cardBorder
-                        border.width: 1
-                    }
-                    contentItem: Text {
-                        text: parent.text
-                        color: host.textPrimary
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    onClicked: {
-                        if (chatClient)
-                            chatClient.sendRequestConnectionInfo(fieldRequestConnectionRecipient.text.trim(), "", 0)
-                    }
+                onClicked: {
+                    if (chatClient)
+                        chatClient.requestParticipants()
                 }
             }
             Item { Layout.fillWidth: true }
@@ -269,8 +227,6 @@ Rectangle {
                         var pid = data.player_id || ""
                         var nick = data.player_nickname || ""
                         var card = participantsList.parent.parent
-                        if (card && card.fieldRequestConnectionRecipient)
-                            card.fieldRequestConnectionRecipient.text = pid
                         if (card)
                             card.participantClicked(pid, nick)
                     }

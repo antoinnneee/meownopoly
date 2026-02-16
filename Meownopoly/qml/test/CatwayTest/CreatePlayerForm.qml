@@ -177,6 +177,46 @@ Rectangle {
 
         RowLayout {
             spacing: 8
+            Layout.fillWidth: true
+            visible: !!Catway.chatClient
+            Button {
+                text: "Demander infos connexion"
+                implicitHeight: 36
+                font.pixelSize: 12
+                enabled: !!(host.selectedSocketInfo || Catway.currentSocketInfo()) && fieldPlayerId.text.trim().length > 0
+                background: Rectangle {
+                    color: parent.enabled ? (parent.pressed ? "#2d2d35" : "transparent") : "#1a1a1e"
+                    radius: 6
+                    border.color: host.cardBorder
+                    border.width: 1
+                }
+                contentItem: Text {
+                    text: parent.text
+                    color: parent.enabled ? host.textPrimary : host.textSecondary
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: {
+                    var pid = fieldPlayerId.text.trim()
+                    var info = host.selectedSocketInfo || Catway.currentSocketInfo()
+                    if (!Catway.chatClient || !info || pid.length === 0)
+                        return
+                    var ip = info.publicAddress || ""
+                    var port = info.publicPort || 0
+                    Catway.chatClient.sendRequestConnectionInfo(pid, ip, port)
+                }
+            }
+            Text {
+                text: "Player ID requis + socket choisi."
+                color: host.textSecondary
+                font.pixelSize: 11
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+            }
+        }
+
+        RowLayout {
+            spacing: 8
             Layout.topMargin: 2
             Button {
                 text: editingPlayer ? "Modifier le joueur" : "Ajouter le joueur"

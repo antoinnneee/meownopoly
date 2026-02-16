@@ -60,7 +60,9 @@ void ChatClient::onIncomingCommandPong(const QString &senderId, const QJsonObjec
 
 void ChatClient::onIncomingCommandRequestConnectionInfo(const QString &senderId, const QJsonObject &data) {
     Q_UNUSED(data)
-    Logger::instance()->debug(QString("Auto-responding with REPLY_CONNECTION_INFO to %1").arg(senderId), "ChatClient");
+    QString ip = data["ip"].toString();
+    int port = data["port"].toInt();
+    Logger::instance()->debug(QString("Auto-responding with REPLY_CONNECTION_INFO to %1 (%2:%3)").arg(senderId).arg(ip).arg(port), "ChatClient");
     sendShareConnection(senderId);
 }
 
