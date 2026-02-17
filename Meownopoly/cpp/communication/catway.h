@@ -8,6 +8,7 @@
 #include <QHostAddress>
 #include <QTimer>
 #include <QList>
+#include <QJsonObject>
 
 class QUdpSocket;
 class StunManager;
@@ -70,6 +71,7 @@ signals:
 private slots:
     void onAccountStunChanged();
     void onExternalAddressReceivedTakePort(QString ip, quint16 port);
+    void onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
 
 private:
     explicit Catway(QObject *parent = nullptr);

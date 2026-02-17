@@ -18,6 +18,7 @@ Catway::Catway(QObject *parent)
 
     // Client de chat intégré (exposé en QML via la propriété chatClient)
     m_chatClient = new ChatClient(this);
+    connect(m_chatClient, &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
 
     // Relay signals from StunManager
     connect(m_stunManager, &StunManager::log, this, &Catway::log);
@@ -234,4 +235,38 @@ void Catway::onAccountStunChanged()
 {
     auto *am = AccountManager::instance();
     m_stunManager->setStunServer(am->stunServer(), am->stunPort());
+}
+
+// --- Chat commands -> PlayerNetwork ---
+
+void Catway::onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data)
+{
+    if (commandType == QStringLiteral("REPLY_CONNECTION_INFO")) {
+        PlayerNetwork *player = playerById(senderId);
+        if (player) {
+            QString ip = data[QStringLiteral("ip")].toString();
+            int port = data[QStringLiteral("port")].toInt();
+            player->setIp(ip);
+            player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
+        }
+        return;
+    }
+    if (commandType == QStringLiteral("REQUEST_CONNECTION_INFO")) {
+        PlayerNetwork *player = playerById(senderId);
+        if (player) {
+            QString ip = data[QStringLiteral("ip")].toString();
+            int port = data[QStringLiteral("port")].toInt();
+            player->setIp(ip);
+            player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
+        }
+        UdpSocketInfo *socketInfo = player ? qobject_cast<UdpSocketInfo *>(player->socketInfo()) : nullptr;
+        if (!socketInfo)
+            socketInfo = qobject_cast<UdpSocketInfo *>(currentSocketInfo());
+        if (socketInfo) {
+            QJsonObject replyData;
+            replyData[QStringLiteral("ip")] = socketInfo->publicAddress();
+            replyData[QStringLiteral("port")] = static_cast<int>(socketInfo->publicPort());
+            m_chatClient->sendCommand(QStringLiteral("REPLY_CONNECTION_INFO"), replyData, senderId);
+        }
+    }
 }

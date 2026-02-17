@@ -157,7 +157,7 @@ Rectangle {
                     ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.minimumWidth: 280
+                        Layout.minimumWidth: 220
                         spacing: 12
 
                         CreatePlayerForm {
