@@ -72,8 +72,16 @@ private slots:
     void onAccountStunChanged();
     void onExternalAddressReceivedTakePort(QString ip, quint16 port);
     void onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
+    void onPendingCommandReady(QString ip, quint16 port);
 
 private:
+    struct PendingCommand {
+        QString senderId;
+        QString commandType;
+        QJsonObject data;
+    };
+    QList<PendingCommand> m_pendingCommands;
+
     explicit Catway(QObject *parent = nullptr);
     static Catway *m_pThis;
 
@@ -82,12 +90,16 @@ private:
     static qsizetype playersCount(QQmlListProperty<PlayerNetwork> *p);
     static PlayerNetwork *playersAt(QQmlListProperty<PlayerNetwork> *p, qsizetype index);
 
+    PlayerNetwork *getOrCreatePlayer(const QString &playerId);
+    QString nicknameFromChat(const QString &playerId) const;
+
     StunManager *m_stunManager;
     ChatClient *m_chatClient;
     QList<UdpSocketInfo *> m_localSocketInfos;
     QList<PlayerNetwork *> m_players;
     QMetaObject::Connection m_stunConnection;
     QMetaObject::Connection m_externalAddressTakePortConnection;
+    QMetaObject::Connection m_pendingCommandConnection;
 };
 
 #endif // CATWAY_H

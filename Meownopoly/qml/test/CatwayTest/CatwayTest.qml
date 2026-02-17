@@ -113,71 +113,86 @@ Rectangle {
                     id: contentColumn
                     width: root.width - 32
                     spacing: 16
-                    RowLayout {
-                    spacing: 16
-                    Layout.fillWidth: true
-                    Layout.minimumHeight: 800
-
-                    ColumnLayout {
+                    SplitView {
+                        id: columnSplitView
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.minimumWidth: 280
-                        spacing: 12
-
-                        StunCard { Layout.fillWidth: true; host: root }
-
-                        LocalPortsCard {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            host: root
-                            onPortClicked: function(socketInfo, index) {
-                                root.selectedPortIndex = index
-                                root.selectedSocketInfo = socketInfo
+                        Layout.minimumHeight: 800
+                        orientation: Qt.Horizontal
+                        handle: Rectangle {
+                            implicitWidth: 8
+                            color: "transparent"
+                            Rectangle {
+                                width: 2
+                                height: parent.height
+                                anchors.centerIn: parent
+                                color: root.cardBorder
+                                radius: 1
                             }
                         }
-                    }
 
-
-                    ColumnLayout {
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: 280
-                        spacing: 12
-
-                        ChatClientCard {
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            Layout.fillWidth: true
-                            host: root
-                            onParticipantClicked: function(playerId, nickname) {
-                                createPlayerForm.setPlayer(playerId, nickname)
+                        Item {
+                            SplitView.minimumWidth: 200
+                            SplitView.preferredWidth: columnSplitView.width * 0.30
+                            SplitView.fillWidth: true
+                            ColumnLayout {
+                                anchors.fill: parent
+                                spacing: 12
+                                StunCard { Layout.fillWidth: true; host: root }
+                                LocalPortsCard {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    host: root
+                                    onPortClicked: function(socketInfo, index) {
+                                        root.selectedPortIndex = index
+                                        root.selectedSocketInfo = socketInfo
+                                    }
+                                }
                             }
                         }
-                    }
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.minimumWidth: 220
-                        spacing: 12
-
-                        CreatePlayerForm {
-                            id: createPlayerForm
-                            Layout.fillWidth: true
-                            host: root
-                            playerComponent: playerComponent
+                        Item {
+                            SplitView.minimumWidth: 200
+                            SplitView.preferredWidth: columnSplitView.width * 0.25
+                            SplitView.fillWidth: true
+                            ColumnLayout {
+                                anchors.fill: parent
+                                spacing: 12
+                                ChatClientCard {
+                                    Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                                    Layout.fillWidth: true
+                                    host: root
+                                    onParticipantClicked: function(playerId, nickname) {
+                                        createPlayerForm.setPlayer(playerId, nickname)
+                                    }
+                                }
+                            }
                         }
 
-                        PlayersListCard {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            host: root
-                            onPlayerClicked: function(player) {
-                                createPlayerForm.loadPlayer(player)
+                        Item {
+                            SplitView.minimumWidth: 180
+                            SplitView.preferredWidth: columnSplitView.width * 0.45
+                            SplitView.fillWidth: true
+                            ColumnLayout {
+                                anchors.fill: parent
+                                spacing: 12
+                                CreatePlayerForm {
+                                    id: createPlayerForm
+                                    Layout.fillWidth: true
+                                    host: root
+                                    playerComponent: playerComponent
+                                }
+                                PlayersListCard {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    host: root
+                                    onPlayerClicked: function(player) {
+                                        createPlayerForm.loadPlayer(player)
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
             }
 
             ScrollView {

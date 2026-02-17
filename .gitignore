@@ -34,3 +34,4 @@ Meownopoly/.vscode/settings.json
 /chatServer/node_modules
 chatServer/chat.db
 chatServer/.deployEnv
+.vscode/settings.json

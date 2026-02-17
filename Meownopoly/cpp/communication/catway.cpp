@@ -4,9 +4,11 @@
 #include <QQmlEngine>
 #include <QHostAddress>
 #include <QUdpSocket>
+#include <QVariant>
 
 #include "stun_manager.h"
 #include "../account/account_manager.h"
+#include "../tools/logger.h"
 
 Catway *Catway::m_pThis = nullptr;
 
@@ -239,20 +241,71 @@ void Catway::onAccountStunChanged()
 
 // --- Chat commands -> PlayerNetwork ---
 
+QString Catway::nicknameFromChat(const QString &playerId) const
+{
+    const QVariantList list = m_chatClient->participants();
+    for (const QVariant &v : list) {
+        QVariantMap m = v.toMap();
+        if (m[QStringLiteral("player_id")].toString() == playerId)
+            return m[QStringLiteral("player_nickname")].toString();
+    }
+    return playerId;
+}
+
+PlayerNetwork *Catway::getOrCreatePlayer(const QString &playerId)
+{
+    PlayerNetwork *player = playerById(playerId);
+    if (player)
+        return player;
+
+    UdpSocketInfo *current = qobject_cast<UdpSocketInfo *>(currentSocketInfo());
+    if (!current || current->publicAddress().isEmpty() || current->publicPort() == 0)
+    {
+        Logger::instance()->error("Failed to get current socket info", "Catway");
+        return nullptr;
+    }
+
+    UdpSocketInfo *socketInfo = takeSocket();
+    if (!socketInfo)
+    {
+        Logger::instance()->error("Failed to take socket", "Catway");
+        return nullptr;
+    }
+
+    player = new PlayerNetwork(this);
+    player->setPlayerId(playerId);
+    player->setNickname(nicknameFromChat(playerId));
+    player->setSocketInfo(socketInfo);
+    addPlayer(player);
+//    setupNewPort();
+    return player;
+}
+
 void Catway::onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data)
 {
     if (commandType == QStringLiteral("REPLY_CONNECTION_INFO")) {
-        PlayerNetwork *player = playerById(senderId);
+        PlayerNetwork *player = getOrCreatePlayer(senderId);
         if (player) {
             QString ip = data[QStringLiteral("ip")].toString();
             int port = data[QStringLiteral("port")].toInt();
             player->setIp(ip);
             player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
+        } else {
+            m_pendingCommands.append({senderId, commandType, data});
+            if (m_pendingCommands.size() == 1) {
+                disconnect(m_externalAddressTakePortConnection);
+                m_pendingCommandConnection = connect(m_stunManager, &StunManager::externalAddressReceived,
+                                                     this, &Catway::onPendingCommandReady);
+                auto *am = AccountManager::instance();
+                m_stunManager->setStunServer(am->stunServer(), am->stunPort());
+                m_stunManager->startServer();
+                m_stunManager->sendStunRequest();
+            }
         }
         return;
     }
     if (commandType == QStringLiteral("REQUEST_CONNECTION_INFO")) {
-        PlayerNetwork *player = playerById(senderId);
+        PlayerNetwork *player = getOrCreatePlayer(senderId);
         if (player) {
             QString ip = data[QStringLiteral("ip")].toString();
             int port = data[QStringLiteral("port")].toInt();
@@ -260,13 +313,33 @@ void Catway::onChatCommandReceived(const QString &senderId, const QString &comma
             player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
         }
         UdpSocketInfo *socketInfo = player ? qobject_cast<UdpSocketInfo *>(player->socketInfo()) : nullptr;
-        if (!socketInfo)
-            socketInfo = qobject_cast<UdpSocketInfo *>(currentSocketInfo());
         if (socketInfo) {
             QJsonObject replyData;
             replyData[QStringLiteral("ip")] = socketInfo->publicAddress();
             replyData[QStringLiteral("port")] = static_cast<int>(socketInfo->publicPort());
             m_chatClient->sendCommand(QStringLiteral("REPLY_CONNECTION_INFO"), replyData, senderId);
+        } else {
+            m_pendingCommands.append({senderId, commandType, data});
+            if (m_pendingCommands.size() == 1) {
+                disconnect(m_externalAddressTakePortConnection);
+                m_pendingCommandConnection = connect(m_stunManager, &StunManager::externalAddressReceived,
+                                                     this, &Catway::onPendingCommandReady);
+                auto *am = AccountManager::instance();
+                m_stunManager->setStunServer(am->stunServer(), am->stunPort());
+                m_stunManager->startServer();
+                m_stunManager->sendStunRequest();
+            }
         }
     }
+}
+
+void Catway::onPendingCommandReady(QString ip, quint16 port)
+{
+    Q_UNUSED(ip)
+    Q_UNUSED(port)
+    disconnect(m_pendingCommandConnection);
+    const QList<PendingCommand> toProcess = m_pendingCommands;
+    m_pendingCommands.clear();
+    for (const PendingCommand &c : toProcess)
+        onChatCommandReceived(c.senderId, c.commandType, c.data);
 }
