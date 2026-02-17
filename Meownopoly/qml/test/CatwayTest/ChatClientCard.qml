@@ -260,10 +260,23 @@ Rectangle {
                         font.pixelSize: 11
                         visible: !!modelData.is_host
                     }
-                    Text {
-                        text: modelData.status || "—"
-                        color: host.textSecondary
-                        font.pixelSize: 11
+                    Rectangle {
+                        width: 10
+                        height: 10
+                        radius: 5
+                        Layout.alignment: Qt.AlignVCenter
+                        color: {
+                            var s = modelData.status || ""
+                            if (s === "online")  return "#22c55e"
+                            if (s === "offline") return "#71717a"
+                            if (s === "away")    return "#eab308"
+                            if (s === "busy")    return "#f87171"
+                            return "#71717a"
+                        }
+                        // ToolTip.visible: statusHover.containsMouse
+                        // ToolTip.text: modelData.status || "inconnu"
+                        // ToolTip.delay: 400
+                        HoverHandler { id: statusHover }
                     }
                 }
             }
