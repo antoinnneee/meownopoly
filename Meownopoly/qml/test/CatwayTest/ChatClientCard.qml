@@ -269,8 +269,6 @@ Rectangle {
                             var s = modelData.status || ""
                             if (s === "online")  return "#22c55e"
                             if (s === "offline") return "#71717a"
-                            if (s === "away")    return "#eab308"
-                            if (s === "busy")    return "#f87171"
                             return "#71717a"
                         }
                         // ToolTip.visible: statusHover.containsMouse
