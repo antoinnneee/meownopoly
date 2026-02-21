@@ -306,6 +306,12 @@ void Catway::initiateHolePunch(PlayerNetwork *player)
     sendUdpPunch(player, QStringLiteral("HP:STRIKE"));
 }
 
+void Catway::sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message)
+{
+    if (!player) return;
+    sendUdpPunch(player, message);
+}
+
 void Catway::sendUdpPunch(PlayerNetwork *player, const QString &content)
 {
     if (!player || player->ip().isEmpty() || player->port() == 0) return;
@@ -354,6 +360,9 @@ void Catway::onPlayerUdpReadyRead()
             // Target side might receive this if NAT allows, but usually Step 2 is triggered by Chat.
             // If we receive STRIKE, it means the other side's NAT is already punched for us.
             emit log("UDP Hole Punching: Received STRIKE. Other side is punching.");
+        } else {
+            // Generic UDP message
+            emit udpMessageReceived(targetPlayer->playerId(), msg);
         }
     }
 }

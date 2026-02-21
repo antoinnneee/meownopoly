@@ -40,6 +40,7 @@ Rectangle {
 
                 UdpChatTile {
                     host: udpTestRoot.host
+                    targetPlayer: udpTestRoot.selectedPlayer
                 }
 
                 UdpDrawTile {

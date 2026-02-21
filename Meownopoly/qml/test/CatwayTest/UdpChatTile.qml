@@ -1,10 +1,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Catway
 
 Rectangle {
     id: udpChatCard
     required property var host
+    property var targetPlayer: null
 
     Layout.fillWidth: true
     Layout.preferredHeight: 180
@@ -12,6 +14,17 @@ Rectangle {
     radius: host.cardRadius
     border.color: host.cardBorder
     border.width: 1
+
+    Connections {
+        target: Catway
+        function onUdpMessageReceived(senderId, message) {
+            if (targetPlayer && senderId === targetPlayer.playerId) {
+                udpChatLog.text += "\n[" + targetPlayer.nickname + "] " + message
+            } else {
+                udpChatLog.text += "\n[" + senderId + "] " + message
+            }
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -37,6 +50,7 @@ Rectangle {
                 color: host.textPrimary
                 background: Rectangle { color: "#222226"; radius: 4 }
                 padding: 8
+                onTextChanged: cursorPosition = length
             }
         }
         RowLayout {
@@ -79,8 +93,11 @@ Rectangle {
     function sendUdpMessage() {
         var msg = udpChatInput.text.trim()
         if (msg.length === 0) return
+        if (!targetPlayer) {
+            udpChatLog.text += "\n[erreur] Sélectionnez un joueur d'abord"
+            return
+        }
+        Catway.sendUdpMessageToPlayer(targetPlayer, msg)
         udpChatLog.text += "\n[envoyé] " + msg
-        udpChatInput.clear()
-        // TODO: envoi UDP réel
     }
 }

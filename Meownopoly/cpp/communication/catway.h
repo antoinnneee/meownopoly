@@ -60,6 +60,7 @@ public:
     Q_INVOKABLE PlayerNetwork *playerById(const QString &playerId) const;
 
     Q_INVOKABLE void initiateHolePunch(PlayerNetwork *player);
+    Q_INVOKABLE void sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message);
     void sendUdpPunch(PlayerNetwork *player, const QString &content);
 
 public slots:
@@ -69,6 +70,7 @@ signals:
     void log(QString message);
     void serverStarted(quint16 port);
     void externalAddressReceived(QString ip, quint16 port);
+    void udpMessageReceived(QString senderId, QString message);
     void localPortsChanged();
     void playersChanged();
 
