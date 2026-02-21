@@ -144,6 +144,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 8
                 Button {
+                    id: holePunchButton
                     text: " ✊ "
                     font.pixelSize: 18
                     implicitHeight: 40
@@ -158,7 +159,11 @@ ColumnLayout {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
-                    onClicked: { /* TODO: action poing UDP vers selectedPlayer */ }
+                    onClicked: {
+                        if (selectedPlayer) {
+                            Catway.initiateHolePunch(selectedPlayer)
+                        }
+                    }
                 }
                 Button {
                     text: " 📤 "

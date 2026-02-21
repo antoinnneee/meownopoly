@@ -59,8 +59,12 @@ public:
     /// Retourne le joueur dont le playerId correspond, ou null.
     Q_INVOKABLE PlayerNetwork *playerById(const QString &playerId) const;
 
+    Q_INVOKABLE void initiateHolePunch(PlayerNetwork *player);
+    void sendUdpPunch(PlayerNetwork *player, const QString &content);
+
 public slots:
     Q_INVOKABLE void setupNewPort();
+
 signals:
     void log(QString message);
     void serverStarted(quint16 port);
@@ -73,6 +77,7 @@ private slots:
     void onExternalAddressReceivedTakePort(QString ip, quint16 port);
     void onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void onPendingCommandReady(QString ip, quint16 port);
+    void onPlayerUdpReadyRead();
 
 private:
     struct PendingCommand {
