@@ -8,6 +8,7 @@
 #include <QRandomGenerator>
 #include <algorithm>
 #include <type_traits>
+#include "tools/metadata_generator.h"
 
 AssetManager* AssetManager::m_pThis = nullptr;
 
@@ -598,152 +599,15 @@ QString AssetManager::buildAssetPath(const QString &category, const QString &typ
 
 bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
 {
-    QDir dir(directoryPath);
-    if (!dir.exists()) {
-        ASSET_ERROR("Directory does not exist:" << directoryPath);
-        return false;
-    }
-
-    // Get all PNG files in the directory
-    QStringList filters;
-    filters << "*.png" << "*.jpg" << "*.jpeg" << "*.webp";  // maybe not work with other than png
-    QStringList imageFiles = dir.entryList(filters, QDir::Files);
-
-    if (imageFiles.isEmpty()) {
-        ASSET_ERROR("No image files found in:" << directoryPath);
-        return false;
-    }
-
-    // Sort files naturally (1.png, 2.png, 10.png, etc.)
-    std::sort(imageFiles.begin(), imageFiles.end(), [](const QString &a, const QString &b) {
-        QFileInfo fileInfoA(a);
-        QFileInfo fileInfoB(b);
-
-        // Extract numbers from filenames for natural sorting
-        QString baseA = fileInfoA.baseName();
-        QString baseB = fileInfoB.baseName();
-
-        bool okA, okB;
-        int numA = baseA.toInt(&okA);
-        int numB = baseB.toInt(&okB);
-
-        if (okA && okB) {
-            return numA < numB;
-        }
-
-        return a < b;
-    });
-
-    QJsonArray assetsArray;
-
-    for (int i = 0; i < imageFiles.size(); ++i) {
-        const QString &filename = imageFiles[i];
-        QString fullPath = dir.absoluteFilePath(filename);
-
-        // Read image dimensions
-        QImageReader reader(fullPath);
-        QSize imageSize = reader.size();
-
-        if (!imageSize.isValid()) {
-            ASSET_ERROR("Cannot read image dimensions for:" << fullPath);
-            continue;
-        }
-
-        // Generate ID from filename (remove extension)
-        QFileInfo fileInfo(filename);
-        QString id = fileInfo.baseName();
-        QString extension = fileInfo.suffix();
-        
-        // Detect animation (important: reader already read the file, use it)
-        bool isAnimated = reader.supportsAnimation() && reader.imageCount() > 1;
-        int frameCount = isAnimated ? reader.imageCount() : 1;
-        
-        ASSET_INFO("Processing" << filename << "- Animated:" << isAnimated << "Frames:" << frameCount);
-
-        // Calculate ratio as integers
-        int w = imageSize.width();
-        int h = imageSize.height();
-        // Find GCD to simplify the ratio
-        int a = w;
-        int b = h;
-        while (b != 0) {
-            int temp = b;
-            b = a % b;
-            a = temp;
-        }
-        int gcd = a;
-        int ratioWidth = w / gcd;
-        int ratioHeight = h / gcd;
-
-        // Create asset object
-        QJsonObject assetObj;
-        assetObj["id"] = id;
-        assetObj["filename"] = filename;
-        assetObj["extension"] = extension;
-        assetObj["animated"] = isAnimated;
-        assetObj["frameCount"] = frameCount;
-        assetObj["ratioWidth"] = ratioWidth;
-        assetObj["ratioHeight"] = ratioHeight;
-        assetObj["width"] = imageSize.width();
-        assetObj["height"] = imageSize.height();
-
-        assetsArray.append(assetObj);
-    }
-
-    // Create metadata object
-    QJsonObject metadataObj;
-    metadataObj["assets"] = assetsArray;
-
-    // Write to metadata.json
-    QString metadataPath = dir.absoluteFilePath("metadata.json");
-    QFile metadataFile(metadataPath);
-
-    if (!metadataFile.open(QIODevice::WriteOnly)) {
-        ASSET_ERROR("Cannot create metadata file:" << metadataPath);
-        return false;
-    }
-
-    QJsonDocument doc(metadataObj);
-    metadataFile.write(doc.toJson());
-    metadataFile.close();
-
-    ASSET_INFO("Generated metadata for" << imageFiles.size() << "assets in:" << directoryPath);
-    ASSET_INFO("Metadata saved to:" << metadataPath);
-
-    return true;
+    return MetadataGenerator::generateMetadataForDirectory(directoryPath);
 }
 
 bool AssetManager::generateAllMetadata()
 {
-    QDir assetsDir(m_assetsBasePath);
-    if (!assetsDir.exists()) {
-        ASSET_ERROR("Assets base directory does not exist:" << m_assetsBasePath);
-        return false;
-    }
-
-    bool success = true;
-    int generatedCount = 0;
-
-    for (const QString &category : m_categories) {
-        QString categoryPath = assetsDir.absoluteFilePath(category);
-        QDir categoryDir(categoryPath);
-        if (categoryDir.exists()) {
-            QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-            for (const QString &typeName : typeDirectories) {
-                QString typePath = categoryDir.absoluteFilePath(typeName);
-                if (generateMetadataForDirectory(typePath)) {
-                    generatedCount++;
-                } else {
-                    success = false;
-                }
-            }
-        }
-    }
-
-    ASSET_INFO("Generated metadata for" << generatedCount << "directories");
+    bool success = MetadataGenerator::generateAllMetadata(m_assetsBasePath);
 
     // Reload assets after generation
-    if (success && generatedCount > 0) {
+    if (success) {
         loadAssets();
     }
 
