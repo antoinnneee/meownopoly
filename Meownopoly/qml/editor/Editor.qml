@@ -178,6 +178,7 @@ Base_Board {
         gameId: "Pattoune" /*root.mapInfo.mapName*/
         z: UiStyle.z_HUD
         onOpenFullScreenMsg: function(modelMsg) {
+            chatDrawer.close()
             fullScreenMsgPopup.currentMessage = modelMsg
             fullScreenMsgPopup.open()
         }
@@ -343,6 +344,7 @@ Base_Board {
 
         property var currentMessage: null
 
+        onOpened: chatDrawer.close()
         onClosed: chatDrawer.open()
 
         modal: true
