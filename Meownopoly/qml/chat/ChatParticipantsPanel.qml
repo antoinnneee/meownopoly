@@ -117,19 +117,19 @@ Rectangle {
                     anchors.rightMargin: 8
                     spacing: 8
 
-                    // Indicateur en ligne/hors ligne
+                    // Indicateur en ligne/hors ligne/absent
                     Rectangle {
                         id: statusIndicator
                         Layout.preferredWidth: 8
                         Layout.preferredHeight: 8
                         radius: 4
-                        color: modelData.status === "online" ? "#4a8a4a" : "#a84a4a"
+                        color: modelData.status === "online" ? "#4a8a4a" : (modelData.status === "away" ? "#e2a94a" : "#a84a4a")
                         border.color: Qt.lighter(color, 1.2)
                         border.width: 1
 
                         ToolTip {
                             visible: statusIndicatorArea.containsMouse
-                            text: modelData.status === "online" ? "En ligne" : "Hors ligne"
+                            text: modelData.status === "online" ? "En ligne" : (modelData.status === "away" ? "Absent" : "Hors ligne")
                             delay: 400
                         }
 

@@ -137,6 +137,17 @@ wss.on('connection', (ws) => {
             debug(`Received command: ${message.type}`, message.payload);
             handleCommand(ws, message);
 
+            // Update user activity status
+            if (ws.session_id && ws.player_id) {
+                ws.last_activity = Date.now();
+                if (ws.status === 'away') {
+                    ws.status = 'online';
+                    broadcastParticipantsList(ws.session_id);
+                } else {
+                    ws.status = 'online';
+                }
+            }
+
             // Periodic check of DB size after a message is processed
             checkDbSize();
         } catch (err) {
@@ -506,11 +517,11 @@ function handleGetParticipants(ws, payload) {
     const room = rooms.get(session_id);
 
     const participants = dbParticipants.map((p, index) => {
-        let isOnline = false;
+        let status = 'offline';
         if (room) {
             for (const client of room) {
                 if (client.player_id === p.player_id && client.readyState === WebSocket.OPEN) {
-                    isOnline = true;
+                    status = client.status || 'online';
                     break;
                 }
             }
@@ -518,7 +529,7 @@ function handleGetParticipants(ws, payload) {
         return {
             player_id: p.player_id,
             player_nickname: p.nickname,
-            status: isOnline ? 'online' : 'offline',
+            status: status,
             is_host: index === 0
         };
     });
@@ -532,6 +543,46 @@ function handleGetParticipants(ws, payload) {
         }
     }));
     debug(`Participants list sent for session ${session_id}: ${participants.length} participant(s)`);
+}
+
+function broadcastParticipantsList(session_id) {
+    const dbParticipants = db.getParticipants(session_id);
+    const room = rooms.get(session_id);
+
+    const participants = dbParticipants.map((p, index) => {
+        let status = 'offline';
+        if (room) {
+            for (const client of room) {
+                if (client.player_id === p.player_id && client.readyState === WebSocket.OPEN) {
+                    status = client.status || 'online';
+                    break;
+                }
+            }
+        }
+        return {
+            player_id: p.player_id,
+            player_nickname: p.nickname,
+            status: status,
+            is_host: index === 0
+        };
+    });
+
+    const msg = JSON.stringify({
+        type: 'PARTICIPANTS_LIST',
+        payload: {
+            session_id,
+            count: participants.length,
+            participants
+        }
+    });
+
+    if (room) {
+        room.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(msg);
+            }
+        });
+    }
 }
 
 function handleListSessions(ws) {
@@ -796,6 +847,71 @@ function getSessionMessageCount(sessionId) {
         return 0;
     }
 }
+
+// Activity timeouts checking interval
+const AWAY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const KICK_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes
+
+setInterval(() => {
+    const now = Date.now();
+    for (const [sessionId, room] of rooms.entries()) {
+        let statusChanged = false;
+        const toKick = [];
+
+        for (const client of room) {
+            if (client.readyState === WebSocket.OPEN && client.player_id) {
+                if (!client.last_activity) client.last_activity = now;
+
+                const inactiveTime = now - client.last_activity;
+
+                if (inactiveTime >= KICK_TIMEOUT_MS) {
+                    toKick.push(client);
+                } else if (inactiveTime >= AWAY_TIMEOUT_MS) {
+                    if (client.status !== 'away') {
+                        client.status = 'away';
+                        statusChanged = true;
+                    }
+                }
+            }
+        }
+
+        for (const client of toKick) {
+            debug(`Kicking participant ${client.player_id} from session ${sessionId} due to inactivity`);
+            const target_player_id = client.player_id;
+
+            db.removeParticipant(sessionId, target_player_id);
+
+            const kickedMsg = JSON.stringify({
+                type: 'KICKED',
+                payload: { session_id: sessionId, reason: 'Kicked due to inactivity' }
+            });
+
+            const broadcastMsg = JSON.stringify({
+                type: 'PARTICIPANT_KICKED',
+                payload: { session_id: sessionId, player_id: target_player_id }
+            });
+
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(kickedMsg);
+            }
+            room.delete(client);
+            client.session_id = null;
+
+            for (const other of room) {
+                if (other.readyState === WebSocket.OPEN) {
+                    other.send(broadcastMsg);
+                }
+            }
+
+            keyRotationRequired.add(sessionId);
+            statusChanged = true;
+        }
+
+        if (statusChanged) {
+            broadcastParticipantsList(sessionId);
+        }
+    }
+}, 60000); // run every 1 minute
 
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
