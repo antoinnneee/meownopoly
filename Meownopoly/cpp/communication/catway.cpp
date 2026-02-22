@@ -133,6 +133,9 @@ UdpSocketInfo *Catway::takeSocket()
     if (info) {
         info->setParent(this);
         m_localSocketInfos.append(info);
+        if (info->socket()) {
+            connect(info->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
+        }
         emit localPortsChanged();
     }
     return info;
@@ -174,6 +177,16 @@ void Catway::addPlayer(PlayerNetwork *player)
 {
     if (!player || m_players.contains(player))
         return;
+
+    if (player->socketInfo() && player->socketInfo() == m_stunManager->currentSocketInfo()) {
+        player->setSocketInfo(takeSocket());
+    } else if (player->socketInfo() && player->socketInfo()->socket()) {
+        // Just in case it was created freely, ensure readyRead is connected
+        // although normally they should be in localPorts already via takeSocket()
+        disconnect(player->socketInfo()->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
+        connect(player->socketInfo()->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
+    }
+
     player->setParent(this);
     m_players.append(player);
     emit playersChanged();
@@ -278,10 +291,6 @@ PlayerNetwork *Catway::getOrCreatePlayer(const QString &playerId)
     player->setSocketInfo(socketInfo);
     addPlayer(player);
 
-    if (socketInfo->socket()) {
-        connect(socketInfo->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
-    }
-
     return player;
 }
 
@@ -329,22 +338,27 @@ void Catway::onPlayerUdpReadyRead()
     QUdpSocket *socket = qobject_cast<QUdpSocket *>(sender());
     if (!socket) return;
 
-    // Find which player this socket belongs to
-    PlayerNetwork *targetPlayer = nullptr;
-    for (PlayerNetwork *p : m_players) {
-        if (p->socketInfo() && p->socketInfo()->socket() == socket) {
-            targetPlayer = p;
-            break;
-        }
-    }
-    if (!targetPlayer) return;
-
     while (socket->hasPendingDatagrams()) {
         QByteArray datagram;
         datagram.resize(socket->pendingDatagramSize());
         QHostAddress senderAddr;
         quint16 senderPort;
         socket->readDatagram(datagram.data(), datagram.size(), &senderAddr, &senderPort);
+
+        // Find which player this socket belongs to
+        PlayerNetwork *targetPlayer = nullptr;
+        for (PlayerNetwork *p : m_players) {
+            if (p->socketInfo() && p->socketInfo()->socket() == socket) {
+                targetPlayer = p;
+                break;
+            }
+        }
+        
+        if (!targetPlayer) {
+            QString msg = QString::fromUtf8(datagram);
+            emit log(QString("UDP Recv on unassigned socket from %1:%2 -> %3").arg(senderAddr.toString(), QString::number(senderPort), msg));
+            continue;
+        }
 
         QString msg = QString::fromUtf8(datagram);
         emit log(QString("UDP Recv from %1:%2 -> %3").arg(senderAddr.toString(), QString::number(senderPort), msg));
