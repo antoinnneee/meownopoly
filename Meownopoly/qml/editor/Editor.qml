@@ -343,7 +343,6 @@ Base_Board {
 
         property var currentMessage: null
 
-        onOpened: chatDrawer.close()
         onClosed: chatDrawer.open()
 
         modal: true
@@ -414,7 +413,10 @@ Base_Board {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: fullScreenMsgPopup.close()
+                        onClicked: {
+                                    chatDrawer.close()
+                                    fullScreenMsgPopup.close()
+                        }
                     }
                 }
             }
