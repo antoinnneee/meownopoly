@@ -177,6 +177,10 @@ Base_Board {
         id: chatDrawer
         gameId: "Pattoune" /*root.mapInfo.mapName*/
         z: UiStyle.z_HUD
+        onOpenFullScreenMsg: function(modelMsg) {
+            fullScreenMsgPopup.currentMessage = modelMsg
+            fullScreenMsgPopup.open()
+        }
     }
 
     MenuMapAtStart {
@@ -330,6 +334,103 @@ Base_Board {
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu,
                                   adminCommandPanel)
+        }
+    }
+
+    // Popup plein écran pour afficher un message agrandi
+    Popup {
+        id: fullScreenMsgPopup
+
+        property var currentMessage: null
+
+        onOpened: chatDrawer.close()
+        onClosed: chatDrawer.open()
+
+        modal: true
+        dim: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: root.width * 0.75
+        height: root.height * 0.7
+
+        padding: 0
+
+        background: Rectangle {
+            color: "#2b2b2b"
+            radius: 12
+            border.color: "#444444"
+            border.width: 1
+
+            // Barre de titre
+            Rectangle {
+                id: popupHeader
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 40
+                color: "#333333"
+                radius: 12
+
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: parent.radius
+                    color: parent.color
+                }
+
+                Text {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Message"
+                    color: "#cccccc"
+                    font.pointSize: 11
+                    font.bold: true
+                }
+
+                Rectangle {
+                    id: closeBt
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 28
+                    height: 28
+                    radius: 14
+                    color: closeBtArea.containsMouse ? "#c0392b" : "#444444"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "✕"
+                        color: "#cccccc"
+                        font.pointSize: 10
+                        font.bold: true
+                    }
+
+                    MouseArea {
+                        id: closeBtArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: fullScreenMsgPopup.close()
+                    }
+                }
+            }
+        }
+
+        Overlay.modal: Rectangle {
+            color: "#aa000000"
+        }
+
+        enter: Transition {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; from: 0.92; to: 1; duration: 200; easing.type: Easing.OutCubic }
+        }
+        exit: Transition {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 150; easing.type: Easing.InCubic }
+            NumberAnimation { property: "scale"; from: 1; to: 0.92; duration: 150; easing.type: Easing.InCubic }
         }
     }
 

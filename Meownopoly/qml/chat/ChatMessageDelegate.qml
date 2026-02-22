@@ -18,12 +18,23 @@ Rectangle {
     property bool hasData: !!modelData
     property bool isOwnMessage: hasData && drawer && (modelData.sender === drawer.playerId)
 
+    signal openFullScreenMsg(var modelMsg)
+
     // Style distinct : nos messages = bulle verte à droite, les autres = gris à gauche
     color: isOwnMessage ? "#1e4620" : "#333333"
     radius: 12
     border.color: isOwnMessage ? "#2d6b30" : "#444444"
     border.width: isOwnMessage ? 1.5 : 1
     antialiasing: true
+
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        onDoubleClicked: {
+            openFullScreenMsg(messageDelegate.modelData)
+            console.log("Double-clicked message ")
+        }
+    }
 
     opacity: 0
     Component.onCompleted: {

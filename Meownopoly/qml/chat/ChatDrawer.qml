@@ -22,6 +22,8 @@ Drawer {
     property string privateRecipientId: ""
     property string privateRecipientNickname: ""
 
+    signal openFullScreenMsg(var modelMsg)
+
     background: Rectangle {
         color: "#E6222222"
         border.color: "#333333"
@@ -108,6 +110,11 @@ Drawer {
             id: messagesList
             chatClient: chatClient
             drawer: chatDrawer
+            onOpenFullScreenMsg: function(modelMsg) {
+                chatDrawer.openFullScreenMsg(modelMsg)
+            }
+
+
         }
 
         ChatInputBar {
