@@ -26,8 +26,8 @@ find_package(Qt6 REQUIRED COMPONENTS
     Quick3D
     Sql
     WebSockets
+    Concurrent
 )
-
 # ============================================================================
 # Collecter les fichiers sources
 # ============================================================================
@@ -35,6 +35,10 @@ find_package(Qt6 REQUIRED COMPONENTS
 file(GLOB_RECURSE SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/cpp/*.cpp"
 )
+
+# Exclure les fichiers de test standalone de la bibliothèque reliable
+# (test.cpp a son propre main() et requiert RELIABLE_ENABLE_TESTS=1)
+list(FILTER SOURCES EXCLUDE REGEX ".*/reliable/test\\.cpp$")
 
 # Headers C++
 file(GLOB_RECURSE HEADERS
@@ -100,6 +104,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/chat
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/account
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/assetManager
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/reliable
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/communication
 )
 
 # ============================================================================
@@ -115,6 +121,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Quick3D
     Qt6::Sql
     Qt6::WebSockets
+    Qt6::Concurrent
 )
 
 # ============================================================================

@@ -2,5 +2,9 @@
     "files.associations": {
         "xstring": "cpp",
         "xutility": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/Antoine/Documents/GitHub/meownopoly/Meownopoly",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "cmake.options.statusBarVisibility": "visible"
 }

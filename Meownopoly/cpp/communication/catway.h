@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QList>
 #include <QJsonObject>
+#include <QElapsedTimer>
 
 class QUdpSocket;
 class StunManager;
@@ -63,6 +64,10 @@ public:
     Q_INVOKABLE void sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message);
     void sendUdpPunch(PlayerNetwork *player, const QString &content);
 
+    /// Envoie des données via l'endpoint reliable du joueur (ACK garanti).
+    /// À n'utiliser qu'après que la connexion UDP est établie (HP:FINAL reçu).
+    Q_INVOKABLE void sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data);
+
 public slots:
     Q_INVOKABLE void setupNewPort();
 
@@ -73,6 +78,8 @@ signals:
     void udpMessageReceived(QString senderId, QString message);
     void localPortsChanged();
     void playersChanged();
+    /// Émis quand un paquet fiable (via reliable) est reçu et acquitté.
+    void reliableMessageReceived(QString senderId, QByteArray data);
 
 private slots:
     void onAccountStunChanged();
@@ -80,6 +87,7 @@ private slots:
     void onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void onPendingCommandReady(QString ip, quint16 port);
     void onPlayerUdpReadyRead();
+    void onReliableUpdate();
 
 private:
     struct PendingCommand {
@@ -107,6 +115,8 @@ private:
     QMetaObject::Connection m_stunConnection;
     QMetaObject::Connection m_externalAddressTakePortConnection;
     QMetaObject::Connection m_pendingCommandConnection;
+    QTimer *m_reliableUpdateTimer = nullptr;
+    QElapsedTimer m_reliableClock;
 };
 
 #endif // CATWAY_H

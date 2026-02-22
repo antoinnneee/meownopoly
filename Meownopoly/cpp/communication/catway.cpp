@@ -5,10 +5,51 @@
 #include <QHostAddress>
 #include <QUdpSocket>
 #include <QVariant>
+#include <QElapsedTimer>
 
 #include "stun_manager.h"
 #include "../account/account_manager.h"
 #include "../tools/logger.h"
+#include "reliable.h"
+
+// ---------------------------------------------------------------------------
+// Callbacks C statiques pour reliable (doivent être des fonctions C, pas des
+// lambdas capturantes). Le contexte est un PlayerNetwork*.
+// ---------------------------------------------------------------------------
+
+struct CatwayReliableContext {
+    PlayerNetwork *player;
+    Catway        *catway;
+};
+
+static void catway_transmit_packet(
+    void *context, uint64_t /*id*/, uint16_t /*sequence*/,
+    uint8_t *packet_data, int packet_bytes)
+{
+    auto *ctx = static_cast<CatwayReliableContext *>(context);
+    if (!ctx || !ctx->player || !ctx->catway) return;
+    PlayerNetwork *player = ctx->player;
+    UdpSocketInfo *si = player->socketInfo();
+    if (!si || !si->socket() || player->ip().isEmpty() || player->port() == 0) return;
+    // Préfixer avec le magic byte 0x01 pour distinguer les paquets reliable des raw UDP
+    QByteArray datagram;
+    datagram.reserve(1 + packet_bytes);
+    datagram.append('\x01');
+    datagram.append(reinterpret_cast<const char *>(packet_data), packet_bytes);
+    si->socket()->writeDatagram(datagram, QHostAddress(player->ip()), player->port());
+}
+
+static int catway_process_packet(
+    void *context, uint64_t /*id*/, uint16_t /*sequence*/,
+    uint8_t *packet_data, int packet_bytes)
+{
+    auto *ctx = static_cast<CatwayReliableContext *>(context);
+    if (!ctx || !ctx->catway) return 0;
+    QByteArray data(reinterpret_cast<const char *>(packet_data), packet_bytes);
+    // Émettre le signal avec l'ID du joueur comme expéditeur
+    emit ctx->catway->reliableMessageReceived(ctx->player->playerId(), data);
+    return 1; // 1 = ACK le paquet
+}
 
 Catway *Catway::m_pThis = nullptr;
 
@@ -34,6 +75,13 @@ Catway::Catway(QObject *parent)
     // Initialize STUN params from current AccountManager values
     onAccountStunChanged();
 
+    // Timer de mise à jour des endpoints reliable (~60 Hz)
+    reliable_init();
+    m_reliableClock.start();
+    m_reliableUpdateTimer = new QTimer(this);
+    m_reliableUpdateTimer->setInterval(16); // ~60 Hz
+    connect(m_reliableUpdateTimer, &QTimer::timeout, this, &Catway::onReliableUpdate);
+    m_reliableUpdateTimer->start();
 }
 
 void Catway::registerQml()
@@ -190,12 +238,25 @@ void Catway::addPlayer(PlayerNetwork *player)
     player->setParent(this);
     m_players.append(player);
     emit playersChanged();
+
+    // Initialiser l'endpoint reliable pour ce joueur.
+    // On alloue le contexte sur le tas ; il sera libéré quand le joueur est supprimé.
+    auto *ctx = new CatwayReliableContext{player, this};
+    // Stocker le contexte dans une propriété dynamique pour pouvoir le libérer plus tard.
+    player->setProperty("_reliableCtx", QVariant::fromValue<void *>(ctx));
+    player->initReliable(ctx, catway_transmit_packet, catway_process_packet);
 }
 
 void Catway::removePlayer(PlayerNetwork *player)
 {
     if (!player || !m_players.removeOne(player))
         return;
+    // Libérer le contexte reliable
+    void *ctxPtr = player->property("_reliableCtx").value<void *>();
+    if (ctxPtr) {
+        delete static_cast<CatwayReliableContext *>(ctxPtr);
+        player->setProperty("_reliableCtx", QVariant());
+    }
     player->setParent(nullptr);
     emit playersChanged();
 }
@@ -360,23 +421,35 @@ void Catway::onPlayerUdpReadyRead()
             continue;
         }
 
-        QString msg = QString::fromUtf8(datagram);
-        emit log(QString("UDP Recv from %1:%2 -> %3").arg(senderAddr.toString(), QString::number(senderPort), msg));
-
-        if (msg == QStringLiteral("HP:REPLY")) {
-            // Initiator side: received reply, send final
-            sendUdpPunch(targetPlayer, QStringLiteral("HP:FINAL"));
-            emit log("UDP Hole Punching: Received REPLY, sent FINAL. Connection should be open!");
-        } else if (msg == QStringLiteral("HP:FINAL")) {
-            // Target side: received final, punching complete
-            emit log("UDP Hole Punching: Received FINAL. Punching SUCCESS!");
-        } else if (msg == QStringLiteral("HP:STRIKE")) {
-            // Target side might receive this if NAT allows, but usually Step 2 is triggered by Chat.
-            // If we receive STRIKE, it means the other side's NAT is already punched for us.
-            emit log("UDP Hole Punching: Received STRIKE. Other side is punching.");
+        // Détection du type de paquet via le magic byte
+        if (!datagram.isEmpty() && datagram[0] == '\x01') {
+            // Paquet fiable (reliable)
+            if (targetPlayer->endpoint()) {
+                // On retire le magic byte avant de passer à reliable
+                const uint8_t *reliableData = reinterpret_cast<const uint8_t *>(datagram.constData()) + 1;
+                int reliableSize = datagram.size() - 1;
+                
+                reliable_endpoint_receive_packet(
+                    targetPlayer->endpoint(),
+                    const_cast<uint8_t *>(reliableData),
+                    reliableSize
+                );
+            }
         } else {
-            // Generic UDP message
-            emit udpMessageReceived(targetPlayer->playerId(), msg);
+            // Paquet brut (raw UDP) : Hole Punching, Chat legacy, Dessin legacy
+            QString msg = QString::fromUtf8(datagram);
+            
+            if (msg == QStringLiteral("HP:REPLY")) {
+                sendUdpPunch(targetPlayer, QStringLiteral("HP:FINAL"));
+                emit log("UDP Hole Punching: Received REPLY, sent FINAL. Connection should be open!");
+            } else if (msg == QStringLiteral("HP:FINAL")) {
+                emit log("UDP Hole Punching: Received FINAL. Punching SUCCESS!");
+            } else if (msg == QStringLiteral("HP:STRIKE")) {
+                emit log("UDP Hole Punching: Received STRIKE. Other side is punching.");
+            } else {
+                // Message de jeu legacy (chat, dessin)
+                emit udpMessageReceived(targetPlayer->playerId(), msg);
+            }
         }
     }
 }
@@ -457,4 +530,34 @@ void Catway::onPendingCommandReady(QString ip, quint16 port)
     m_pendingCommands.clear();
     for (const PendingCommand &c : toProcess)
         onChatCommandReceived(c.senderId, c.commandType, c.data);
+}
+
+// ---------------------------------------------------------------------------
+// reliable — send & update
+// ---------------------------------------------------------------------------
+
+void Catway::sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data)
+{
+    if (!player || data.isEmpty()) return;
+    reliable_endpoint_t *ep = player->endpoint();
+    if (!ep) {
+        emit log(QStringLiteral("sendReliableToPlayer: no endpoint for player %1").arg(player->playerId()));
+        return;
+    }
+    reliable_endpoint_send_packet(
+        ep,
+        reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())),
+        data.size()
+    );
+}
+
+void Catway::onReliableUpdate()
+{
+    double timeSeconds = m_reliableClock.elapsed() / 1000.0;
+    for (PlayerNetwork *player : m_players) {
+        reliable_endpoint_t *ep = player ? player->endpoint() : nullptr;
+        if (!ep) continue;
+        reliable_endpoint_update(ep, timeSeconds);
+        reliable_endpoint_clear_acks(ep);
+    }
 }

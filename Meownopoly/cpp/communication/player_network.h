@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include "udp_socket_info.h"
+#include "reliable.h"
 
 class PlayerNetwork : public QObject
 {
@@ -19,8 +20,20 @@ class PlayerNetwork : public QObject
 
 public:
     explicit PlayerNetwork(QObject *parent = nullptr);
+    ~PlayerNetwork();
 
     static void registerQml();
+
+    // --- reliable endpoint ---
+    /// Initialise l'endpoint reliable pour ce joueur.
+    /// context : pointeur arbitraire passé aux callbacks (généralement PlayerNetwork*).
+    void initReliable(
+        void *context,
+        void (*transmitFn)(void*, uint64_t, uint16_t, uint8_t*, int),
+        int  (*processFn)(void*, uint64_t, uint16_t, uint8_t*, int)
+    );
+    void destroyReliable();
+    reliable_endpoint_t *endpoint() const { return m_endpoint; }
 
     QString playerId() const { return m_playerId; }
     void setPlayerId(const QString &id);
@@ -50,6 +63,7 @@ private:
     UdpSocketInfo *m_socketInfo = nullptr;
     QString m_ip;
     quint16 m_port = 0;
+    reliable_endpoint_t *m_endpoint = nullptr;
 };
 
 #endif // PLAYER_NETWORK_H
