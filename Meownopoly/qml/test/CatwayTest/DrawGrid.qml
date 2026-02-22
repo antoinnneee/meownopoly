@@ -1,10 +1,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Catway 1.0
 
 Item {
     id: gridRoot
     property var host: null
+    property var targetPlayer: null
 
     property string paintColor: "#7c3aed"
 
@@ -25,9 +27,19 @@ Item {
         }
     }
 
-    function clearAll() {
+    function clearLocal() {
         for (var i = 0; i < gridModel.count; i++)
             gridModel.setProperty(i, "cellColor", "")
+    }
+
+    function clearAll() {
+        clearLocal()
+    }
+
+    function setCellColor(idx, colorStr) {
+        if (idx >= 0 && idx < gridModel.count) {
+            gridModel.setProperty(idx, "cellColor", colorStr)
+        }
     }
 
     function cellIndexAt(mx, my) {
@@ -42,7 +54,12 @@ Item {
         var idx = cellIndexAt(mx, my)
         if (idx >= 0) {
             var colorStr = paint ? String(paintColor) : ""
-            gridModel.setProperty(idx, "cellColor", colorStr)
+            if (gridModel.get(idx).cellColor !== colorStr) {
+                gridModel.setProperty(idx, "cellColor", colorStr)
+                if (gridRoot.targetPlayer) {
+                    Catway.sendUdpMessageToPlayer(gridRoot.targetPlayer, "DRAW:" + idx + ":" + colorStr)
+                }
+            }
         }
     }
 

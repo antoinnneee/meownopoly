@@ -45,6 +45,7 @@ Rectangle {
 
                 UdpDrawTile {
                     host: udpTestRoot.host
+                    targetPlayer: udpTestRoot.selectedPlayer
                 }
 
                 // Ajouter d'autres tuiles ici (ex: NouvelleTuile { host: udpTestRoot.host })

@@ -1,10 +1,12 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Catway 1.0
 
 Rectangle {
     id: udpDrawTileRoot
     required property var host
+    property var targetPlayer: null
     property int selectedColorIndex: 0
 
     Layout.fillWidth: true
@@ -13,6 +15,24 @@ Rectangle {
     radius: host.cardRadius
     border.color: host.cardBorder
     border.width: 1
+
+    Connections {
+        target: Catway
+        function onUdpMessageReceived(senderId, message) {
+            if (udpDrawTileRoot.targetPlayer && senderId === udpDrawTileRoot.targetPlayer.playerId) {
+                if (message === "CLEAR") {
+                    drawGrid.clearLocal();
+                } else if (message.startsWith("DRAW:")) {
+                    var parts = message.split(":");
+                    if (parts.length === 3) {
+                        var idx = parseInt(parts[1]);
+                        var colorStr = parts[2];
+                        drawGrid.setCellColor(idx, colorStr);
+                    }
+                }
+            }
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -43,7 +63,12 @@ Rectangle {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-                onClicked: drawGrid.clearAll()
+                onClicked: {
+                    drawGrid.clearAll()
+                    if (udpDrawTileRoot.targetPlayer) {
+                        Catway.sendUdpMessageToPlayer(udpDrawTileRoot.targetPlayer, "CLEAR")
+                    }
+                }
             }
         }
         RowLayout {
@@ -58,6 +83,7 @@ Rectangle {
                     id: drawGrid
                     anchors.centerIn: parent
                     host: host
+                    targetPlayer: udpDrawTileRoot.targetPlayer
                 }
             }
             ColumnLayout {
