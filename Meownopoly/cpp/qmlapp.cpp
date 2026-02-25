@@ -44,7 +44,7 @@
 #include "game/map/mapinfo.h"
 #include "game/map/mapfilemanager.h"
 #include "game/map/templatefilemanager.h"
-
+#include "tools/mouse_event_filter.h"
 #include "game/item_snapable/itemsnapablefactory.h"
 
 //#include "animationprovider.h"
