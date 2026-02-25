@@ -49,8 +49,8 @@ Rectangle {
     Timer {
         id: refreshTimer
         interval: 10000
-        running: false
-        repeat: false
+        running: true
+        repeat: true
         onTriggered: {
             if (lobbyChatClient.connected) {
                 lobbyChatClient.requestSessionsList()
@@ -65,7 +65,8 @@ Rectangle {
             // Passer le ChatClient mutualisé
             chatClient: lobbyChatClient
             onSessionSelected: function(sessionData) {
-                lobbyChatClient.connectToSession(AccountManager.uniqueId, sessionData.password, AccountManager.nickname)
+                lobbyChatClient.connectToSessionDirect(sessionData.sessionId,sessionData.password)
+                // lobbyChatClient.connectToSession(AccountManager.uniqueId, sessionData.password, AccountManager.nickname)
             }
         }
     }
