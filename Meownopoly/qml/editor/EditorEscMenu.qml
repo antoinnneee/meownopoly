@@ -9,8 +9,8 @@ import MapTypes
 
 Rectangle {
     id: escMenu
-    width: Screen.pixelDensity * 150
-    height: Screen.pixelDensity * 125
+    width: (parent.width * 0.8 > Screen.pixelDensity * 180) ? parent.width * 0.8 : Screen.pixelDensity * 150
+    height: (parent.height * 0.8 > Screen.pixelDensity * 150) ? parent.height * 0.8 : Screen.pixelDensity * 150
     anchors.centerIn: parent
     color: "#2C2C2C"
     radius: 10
@@ -745,7 +745,7 @@ Rectangle {
                                         Text { text: "Sensibilité de la souris"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
                                         Slider {
                                             id: sensitivitySlider
-                                            Layout.preferredWidth: 200; from: 0.1; to: 2.0; 
+                                            Layout.preferredWidth: 200; from: 0.8; to: 4.0; 
                                             value: parseFloat(stControlsConfig.value("mouseSensitivity", "1.0"))
                                             onValueChanged: {
                                                 stControlsConfig.setValue("mouseSensitivity", value)
