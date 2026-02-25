@@ -10,190 +10,149 @@ L'éditeur de Meownopoly est un éditeur de cartes sophistiqué construit en QML
 
 ### `/qml/editor/` - Dossier Principal de l'Éditeur
 
+L'éditeur hérite de **`meowComponent/Base_Board.qml`** (grille, fond, `GlobalMa`) et instancie **`meowComponent/Base_WorkArea.qml`** pour la zone de travail. La logique hérite de **`meowComponent/Base_logic.qml`**.
+
 #### **Fichiers Racine**
 - **`Editor.qml`** : Point d'entrée principal de l'éditeur
-  - Gère le layout global (grille, zone de travail, panneaux)
-  - Contient le `MouseArea` principal (`mainMa`) qui capture tous les événements souris
-  - Coordonne tous les sous-composants
+  - Étend `Base_Board` ; gère le layout global (grille `gameGrid`, `workArea`, panneaux)
+  - Contient le `MouseArea` principal (`mainMa`, fourni par `Base_Board`) qui capture tous les événements souris
+  - Instancie `workArea` (Base_WorkArea), `logic` (EditorLogic), `selectionPanel`, `sidePanel` (BottomSidePanel), `mapInfoPanel`
   - Gère les raccourcis clavier (Delete, Escape)
 
 - **`EditorLogic.qml`** : Cerveau de l'éditeur
-  - Centralise toute la logique métier
-  - Charge dynamiquement les différents modes de souris via `Loader`
-  - Contient les références aux listes d'éléments snapables
+  - Étend `Base_logic` ; centralise toute la logique métier
+  - Charge dynamiquement les modes de souris via un `Loader` (source = `editorDynamicComponent.mouseLogic_*_comp`)
+  - Contient `snapableTilesList`, `editorGrid`, `selectionRect`, `workArea`, `tileLogic`, `planLogic`
   - Gère la sélection par rectangle
 
-- **`EditorDynamicComponent.qml`** : Fabrique d'éléments
+- **`EditorDynamicComponent.qml`** : Fabrique d'éléments et de logiques
   - Contient les `Component` pour créer dynamiquement :
-    - `SnapableCaseTile` (cases de jeu)
-    - `SnapableDecoration` (décorations)
-  - Gère les événements de suppression et configuration
+    - `SnapableCaseTile`, `SnapableDecoration`, `SnapableExclusionZone` (zones physiques)
+    - Modes souris : `MouseLogic_Selection`, `MouseLogic_Pose`, `MouseLogic_Game`, `MouseLogic_Selection_link`, `MouseLogic_DrawPolygon`, `MouseLogic_Template`
+    - Scroll : `ScrollLogic`, `ScrollLogic_POSE`
+  - Gère les événements de suppression et configuration des éléments
 
 - **`Editor_WheelHandler.qml`** : Gestionnaire de molette
-  - Capture les événements de la molette de la souris
-  - Délègue au `ScrollLogic` approprié
+  - Capture les événements de la molette et délègue au `ScrollLogic` approprié
 
-- **`Background.qml`** : Image de fond
-  - Affiche l'image de fond de la carte
-  - Gère différents modes d'affichage (Stretch, Fit, Tile)
+- **`EditorEscMenu.qml`** : Menu Escape (chargement de carte, options, etc.)
+
+- **`EditorController.qml`** : Contrôleur (initialisation, raccourcis, etc.)
+
+- **`Trackers.qml`** : Composants de suivi (prévisualisation polygone, lien, template)
 
 - **`MenuMapAtStart.qml`** : Menu de démarrage
   - Permet de créer/charger une carte au lancement
 
+**Composants partagés** (dans **`/qml/meowComponent/`**) :
+- **`Background.qml`** : Image de fond de la carte (utilisée par Base_Board)
+- **`SelectionRect.qml`** : Rectangle de sélection (instancié dans Editor.qml)
+
 #### **Sous-dossier `/qml/editor/logic/`** - Logique Métier
 
-**Architecture Modulaire basée sur des États**
+**Architecture modulaire basée sur des états (State Machine)**
 
-Le système utilise un pattern "State Machine" où la logique de la souris et du scroll change selon le mode actif :
-
-**Logique de la Souris** (3 modes) :
+**Logique de la Souris** (6 modes) :
 - **`MouseLogic_Base.qml`** : Classe de base abstraite
-  - Définit l'interface commune pour tous les modes
-  - Gère la sélection d'éléments (`selectedElements`)
+  - Définit l'interface commune ; propriétés : `grid`, `clickElement`, `selectedElements`
   - Méthodes : `pressedLeft()`, `clickedLeft()`, `release()`, etc.
   - Gère la configuration des cases dans le panneau
 
 - **`MouseLogic_Selection.qml`** : Mode NORMAL (sélection/déplacement)
-  - Gestion de la sélection d'éléments
-  - Déplacement d'éléments par drag & drop
-  - **Sélection par rectangle** (voir section dédiée)
-  - Support de la multi-sélection avec Ctrl
-  - Utilise un `groupeSelection` pour déplacer plusieurs éléments ensemble
+  - Gestion de la sélection, déplacement par drag & drop, **sélection par rectangle**
+  - Support de la multi-sélection avec Ctrl ; utilise `groupeSelection`
 
 - **`MouseLogic_Pose.qml`** : Mode POSE (placement d'éléments)
   - Permet de placer des assets/cases sur la grille
-  - Désactive certaines interactions de sélection
 
 - **`MouseLogic_Selection_link.qml`** : Mode SELECTION_LINK (création de connexions)
-  - Mode spécial pour créer des liens entre cases
-  - Attend un clic sur la case cible pour créer la connexion
-  - Utilise `linkSourceCase` et `kind` (previous/next)
+  - Hérite de `MouseLogic_Selection` ; utilise `linkSourceCase` et `kind` (previous/next)
+
+- **`MouseLogic_Game.qml`** : Mode GAME (jeu / test)
+
+- **`MouseLogic_DrawPolygon.qml`** : Mode dessin de polygones (zones)
+
+- **`MouseLogic_Template.qml`** : Mode TEMPLATE (sélection par zone / templates)
+  - Hérite de `MouseLogic_Selection`
 
 **Logique de Scroll** (2 modes) :
-- **`ScrollLogic.qml`** : Scroll normal
-  - Ctrl + Molette = Zoom (change `mmSize`)
-
+- **`ScrollLogic.qml`** : Scroll normal — Ctrl + Molette = Zoom (`editorGrid.mmSize`)
 - **`ScrollLogic_POSE.qml`** : Scroll en mode pose
-  - Comportement adapté au placement d'éléments
 
-**Logique des Tuiles** :
-- **`TileLogic.qml`** : Gestion centralisée des éléments
-  - Création de nouveaux éléments (`createNewTileAtPosition()`)
-  - Suppression d'éléments (`deleteElement()`)
-  - Gestion des connexions entre cases
-  - Désélection globale
-  - Maintient l'ordre Z (`currentZOrder`)
+**Logique des Tuiles et Plans** :
+- **`TileLogic.qml`** : Création/suppression d'éléments (`createNewTileAtPosition`, `deleteElement`, zones d'exclusion), connexions, désélection, ordre Z
+- **`PlanLogic.qml`** : Gestion des plans/calques Z (visibilité par plage de plans)
 
-**Logique de Plan** :
-- **`PlanLogic.qml`** : Gestion des plans/calques Z
-  - Gère les niveaux de profondeur (z-layers)
+#### **Composants partagés `/qml/meowComponent/`** - Grille, Snapables, Cases
 
-#### **Sous-dossier `/qml/editor/tools/`** - Outils de l'Éditeur
-
-**Grille et Snapping** :
+**Grille** (`/qml/meowComponent/grid/`) :
 - **`GridManager.qml`** : ⭐ Composant central de la grille
-  - Dessine la grille avec un `Repeater` optimisé
-  - Calcule les positions de snap
-  - Fonctions clés :
-    - `snapToGridCoord(value)` : Arrondit une coordonnée à la grille
-    - `getGridPosition(x, y)` : Convertit pixels → coordonnées grille
-    - `snapElement2(element)` : Positionne un élément sur la grille
-  - Propriétés dynamiques :
-    - `gridSize` = `Screen.pixelDensity * mmSize` (taille d'une cellule en pixels)
-    - `boardSize` = `gridSize * 600` (grille de 600×600)
-  - Mode redimensionnement visuel (`resizeMode`)
+  - Dessine la grille avec un seul `Repeater` optimisé (lignes verticales + horizontales)
+  - Propriétés : `gridSize = Screen.pixelDensity * mmSize`, `boardSize = gridSize * croisillons` (600), `croisillons`, `mmSize`, `scaleLevel`
+  - Fonctions : `getGridPosition(x, y)`, `snapElement2(element)` (utilise `snapableParameters.displayParameter`)
+  - Mode redimensionnement visuel (`resizeMode`), signal `selectedElementSnapped`
 
-- **`SelectionRect.qml`** : Rectangle de sélection
-  - Rectangle visuel bleu semi-transparent
-  - Fonctions :
-    - `show()/hide()` : Afficher/masquer
-    - `updateGeometry()` : Mise à jour des dimensions
-    - `updateGeometryFromGrid()` : Version avec coordonnées grille
+**À la racine de meowComponent** :
+- **`SelectionRect.qml`** : Rectangle de sélection ; `show()/hide()`, `updateGeometry()` / `updateGeometryFromGrid()`
 
-**Éléments Snapables** (sous-dossier `tools/snapable/`) :
+**Éléments Snapables** (`/qml/meowComponent/snapable/`) :
 - **`SnapableElement.qml`** : ⭐ Classe de base pour tous les éléments
-  - Rectangle qui se positionne automatiquement sur la grille
-  - **Système de coordonnées** :
-    - `displaySettings.gridRelativePositionX/Y` : Position en unités de grille (0, 1, 2, ...)
-    - `x/y` : Position en pixels (calculée automatiquement = gridPos × gridSize)
-    - `width/height` : Taille en pixels (= unitSize × gridSize)
-  - **Auto-snapping** :
-    - À la création (`Component.onCompleted`)
-    - Après un drag (`onElementReleased`)
-  - **Gestion du Z** :
-    - `z = zOrder + zLayer` (normal)
-    - `z = zOrder + zLayer + 11` (si sélectionné)
-  - Contient :
-    - `SnapableElementControl` : Boutons de contrôle
-    - `SnapableElementResizeHandles` : Poignées de redimensionnement
-    - `SnapableElementConnections` : Gestionnaire de connexions
+  - Reçoit un `ItemSnapable snapableParameters` (C++) ; coordonnées via **`snapableParameters.displayParameter`** :
+    - `gridRelativePositionX/Y` : position en unités de grille
+    - `x/y` : bindés à `gridRelativePositionX/Y * gridManager.gridSize`
+    - `width/height` : `gridManager.gridSize * unitSizeWidth/Height`
+  - Auto-snapping à la création et après drag (`onElementReleased`)
+  - Z : `zOrder + zLayer` (normal), +11 si sélectionné
+  - Contient : `SnapableElementControl`, `SnapableElementResizeHandles`, gestionnaire de connexions (`connectionManager`)
 
-- **`SnapableElementConnections.qml`** : Gestionnaire de connexions entre éléments
-  - Maintient deux listes : `previousElements[]` et `nextElements[]`
-  - Dessine les connexions visuelles avec `ConnectionOverlay`
-  - Fonctions bidirectionnelles (ajouter un lien met à jour les deux éléments)
+- **`SnapableElementConnections.qml`** : Gestionnaire de connexions (exposé comme `connectionManager` sur l’élément)
+  - Listes `previousElements[]`, `nextElements[]` ; dessin avec `ConnectionOverlay` ; bidirectionnalité
 
-- **`SnapableElementControl.qml`** : Boutons de contrôle d'un élément
-  - Boutons pour : supprimer, changer de plan, configurer
-
-- **`SnapableElementResizeHandles.qml`** : Poignées de redimensionnement
-  - 8 poignées aux coins et bords
-  - Redimensionnement en unités de grille
-
-- **`SnapableElementDeleteAnimation.qml`** : Animation de suppression
-- **`SnapableElementCreateAnimation.qml`** : Animation de création
-
-**Éléments Concrets** (héritent de SnapableElement) :
-- **`SnapableCaseTile.qml`** : Case de jeu (Kibble Dispenser, Cat Door, etc.)
-  - Contient un `caseData` (logique C++)
-  - Affiche le contenu de la case avec `TileContent.qml`
-
+- **`SnapableElementControl.qml`** : Boutons (supprimer, plan, configurer)
+- **`SnapableElementResizeHandles.qml`** : Poignées de redimensionnement (unités de grille)
+- **`ResizeHandle.qml`** : Poignée individuelle
+- **`SnapableElementDeleteAnimation.qml`** / **`SnapableElementCreateAnimation.qml`** : Animations
+- **`SnapableCaseTile.qml`** : Case de jeu (caseData, TileContent)
 - **`SnapableDecoration.qml`** : Élément décoratif
-  - Contient un `decorationSettings`
-  - Affiche une image de décoration
+- **`SnapableExclusionZone.qml`** : Zone d'exclusion / physique
+- **`ConnectionOverlay.qml`** / **`ConnectionOverlay2.qml`** : Lignes de connexion visuelles
 
-**Autres Outils** :
-- **`AssetPreviewCursor.qml`** : Aperçu de l'asset sous le curseur en mode POSE
-- **`ConnectionOverlay.qml`** : Ligne de connexion visuelle entre deux éléments
-- **`LoadMapButton.qml`** : Bouton pour charger une carte
+**Aperçus** (`/qml/meowComponent/preview/`) :
+- **`AssetPreviewCursor.qml`** : Aperçu sous le curseur en mode POSE
+- **`PolygonPreviewCursor.qml`**, **`LinkPreviewCursor.qml`**, **`TemplatePreviewCursor.qml`**
 
 #### **Sous-dossier `/qml/editor/panel/`** - Panneaux d'Interface
 
-**Panneau Principal** :
-- **`SelectionPanel.qml`** : Panneau inférieur multi-onglets
-  - Contient un `StackLayout` avec 3 panneaux :
-    1. `AssetSelectionPanel` : Sélection d'assets (décorations)
-    2. `CaseSelectionPanel` : Sélection de cases
-    3. `MapSelectionPanel` : Paramètres de la carte
-  - **Redimensionnable** : Zone de drag en haut pour ajuster la hauteur
-  - Propage les signaux : `assetSelected`, `connectionRequested`, `effectChanged`
+**Structure à deux niveaux** : `bottomPanel/bottomMainPanel/` (panneau principal) et `bottomPanel/bottomSidePanel/` (panneau latéral).
 
-**Panneaux Enfants** :
-- **`assetSelectionPanel/`** : Sélection d'assets avec effets visuels
-  - `AssetSelectionPanel.qml` : Gestionnaire principal
-  - `ASP_CategoryGrid.qml` : Grille de catégories
-  - `ASP_ContentArea.qml` : Zone de contenu
-  - `VisualEffectsPanel.qml` : Effets visuels (rotation, miroir, couleur, etc.)
+**Panneau principal** (`bottomPanel/bottomMainPanel/`) :
+- **`SelectionPanel.qml`** : Panneau inférieur avec `MenuSelector` (onglets) et zone de redimensionnement
+  - `StackLayout` avec **`AssetSelectionPanel`** (assets + types de cases intégrés)
+  - Signaux : `assetSelected`, `assetCleared`, `caseSelected`, `visualEffectChanged`, `resizeStarted`/`resizeFinished`
+  - Sous-dossiers : `assetSelectionPanel/`, `caseSelectionPanel/`, `menuSelectionPanel/`, `editorBottomPanel/`, `templatePanel/`, `zonePanel/`
+  - **Note** : `MapSelectionPanel` existe en backup uniquement ; paramètres carte / sauvegarde-chargement passent par `MapInfoPanel` et `EditorEscMenu`.
 
-- **`caseSelectionPanel/`** : Sélection et configuration des cases
-  - `CaseSelectionPanel.qml` : Gestionnaire principal
-  - `CSP_CaseTypeSelector.qml` : Sélecteur de type de case
-  - `CaseConfigurationPanelSection.qml` : Configuration détaillée d'une case
-  - `ConnectionsConfigurationSection.qml` : ⭐ Gestion des connexions
-  - Configuration spécifique par type de case (CCPS_*.qml)
+**Panneau latéral** (`bottomPanel/bottomSidePanel/`) :
+- **`BottomSidePanel.qml`** : Panneau coulissant (droite) ; expose `visualEffectsPanel`, `caseConfigurationPanel`, `connectionsConfigurationPanel`, `zoneConfigurationPanel`
+- **`caseConfigPanel/`** : Configuration de case
+  - `CaseConfigurationPanel.qml`, `CaseConfigurationPanelSection.qml`
+  - `ConnectionsConfigurationSection.qml` : ⭐ Gestion des connexions (previous/next)
+  - `ConnectionListSection.qml`, `ConnectionsPanel.qml`
+  - Sections par type : `CCPS_*.qml`, `CCP_*.qml`
+- **`visualEffectPanel/`** : `VisualEffectsPanel.qml`, `TransformPanel.qml`, `VEP_*.qml` (couleur, miroir, rotation, etc.)
+- **`zoneConfigPanel/`** : Configuration des zones physiques (`ZCP_*.qml`, `ZoneConfigurationPanelSection.qml`)
+- **`ModelSelectionPanel.qml`** : Sélection de modèles
 
-- **`mapSelectionPanel/`** : Paramètres de la carte
-  - Background, sauvegarde/chargement, paramètres généraux
+**Autres panneaux** :
+- **`mapInfoPanel/`** : `MapInfoPanel.qml`, `MapInfoDrawer.qml`, `MapNavigationBar.qml`, `MapSidePanel.qml` — infos carte et fond d’écran
 
-- **`InfoPanel.qml`** : Panneau d'informations (coins supérieur)
-
-#### **Sous-dossier `/qml/case/`** - Affichage des Cases
+#### **Sous-dossier `/qml/meowComponent/case/`** - Affichage des Cases
 
 - **`CaseTile.qml`** : Composant d'affichage d'une case
 - **`TileContent.qml`** : Contenu visuel d'une case
 - **`TileDetailsPopup.qml`** : Popup de détails
-- **`content/`** : Contenus spécifiques par type de case
-- **`details/`** : Détails spécifiques par type de case
+- **`content/`** : Contenus spécifiques par type (KibbleDispenser, CatDoor, RestArea, etc.)
+- **`details/`** : Détails spécifiques par type
 
 ---
 
@@ -201,30 +160,32 @@ Le système utilise un pattern "State Machine" où la logique de la souris et du
 
 ### 2.1 Génération de la Grille
 
-La grille est générée par **`GridManager.qml`** :
+La grille est générée par **`meowComponent/grid/GridManager.qml`** (instancié dans `Base_Board` comme `gameGrid`, exposé à l’éditeur comme `editorGrid`) :
 
 ```qml
-// Taille dynamique basée sur la densité de pixels de l'écran
-property int mmSize: logic.mmSize  // Taille en millimètres (défaut: 10mm)
+property int croisillons: 600
+property int mmSize: 12
+property real defaultMmSize: 12.0
+property real scaleLevel: mmSize / defaultMmSize
 property int gridSize: Screen.pixelDensity * mmSize  // Pixels par cellule
 
-property int boardSize: gridSize * 600  // Grille de 600×600 cellules
+property int boardSize: gridSize * croisillons  // Grille de 600×600 cellules
 width: boardSize
 height: boardSize
 ```
 
 **Rendu de la grille** :
-- Utilise un seul `Repeater` optimisé qui crée des lignes verticales et horizontales
-- Nombre de lignes calculé dynamiquement : `Math.ceil(width / gridSize) + 1`
-- Lignes verticales et horizontales dans le même modèle pour optimisation
+- Un seul `Repeater` avec `model: totalLineCount` où `totalLineCount = verticalLinesCount + horizontalLinesCount`
+- `verticalLinesCount` / `horizontalLinesCount` = `croisillons + 1` si la grille est affichée
+- Chaque delegate est un `Rectangle` dont la position et la taille dépendent de `isVertical` (index < verticalLinesCount)
 
 ```qml
 Repeater {
-    model: verticalLinesCount + horizontalLinesCount
+    model: gridContainer.totalLineCount
     Rectangle {
-        readonly property bool isVertical: index < verticalLinesCount
-        x: isVertical ? index * gridSize : 0
-        y: isVertical ? 0 : (index - verticalLinesCount) * gridSize
+        readonly property bool isVertical: index < gridContainer.verticalLinesCount
+        x: isVertical ? verticalIndex * gridManager.gridSize : 0
+        y: isVertical ? 0 : horizontalIndex * gridManager.gridSize
         width: isVertical ? lineWidth : parent.width
         height: isVertical ? parent.height : lineWidth
     }
@@ -235,15 +196,14 @@ Repeater {
 
 **Deux systèmes coexistent** :
 
-1. **Coordonnées de grille** (logiques) : `gridRelativePositionX/Y`
+1. **Coordonnées de grille** (logiques) : `snapableParameters.displayParameter.gridRelativePositionX/Y`
    - Entiers : 0, 1, 2, 3, ...
-   - Stockées dans `DisplayParameter`
+   - Stockées dans le `DisplayParameter` C++ (via `ItemSnapable`)
 
 2. **Coordonnées pixel** (visuelles) : `x/y`
-   - Calculées automatiquement : `x = gridRelativePositionX * gridSize`
-   - Bindées dans `SnapableElement.qml`
+   - Calculées automatiquement : `x = gridRelativePositionX * gridSize` (bindings dans `SnapableElement.qml`)
 
-**Conversion** :
+**Conversion** (dans `GridManager`) :
 ```javascript
 // Pixel → Grille
 function getGridPosition(x, y) {
@@ -252,11 +212,7 @@ function getGridPosition(x, y) {
         Math.floor(y / gridSize)
     )
 }
-
-// Snap à la grille
-function snapToGridCoord(value) {
-    return Math.round(value / gridSize) * gridSize
-}
+// getGridPixelPosition(x, y) pour grille → pixel
 ```
 
 ---
@@ -291,21 +247,23 @@ Désélection → parent = workArea → snap final
 
 ### 3.3 Fonction Snap
 
+Dans **`SnapableElement.qml`**, les positions logiques sont dans **`snapableParameters.displayParameter`** :
+
 ```javascript
 function snapToGrid() {
     if (!gridManager || !gridManager.snapToGrid) return
     
-    // Calculer les positions snappées
     var snappedGridX = Math.round(x / gridManager.gridSize)
     var snappedGridY = Math.round(y / gridManager.gridSize)
     
-    // Mettre à jour les positions relatives (qui vont automatiquement mettre à jour x et y)
-    displaySettings.gridRelativePositionX = snappedGridX
-    displaySettings.gridRelativePositionY = snappedGridY
+    snapableParameters.displayParameter.gridRelativePositionX = snappedGridX
+    snapableParameters.displayParameter.gridRelativePositionY = snappedGridY
     
-    gridManager.snapElement2(snapableElement)
+    gridManager.snapElement2(snapableElement)  // ou l'élément root
 }
 ```
+
+`GridManager.snapElement2(element)` lit `element.snapableParameters.displayParameter.gridRelativePositionX/Y` et met à jour `element.x/y` ; si l’élément est sélectionné, émet `selectedElementSnapped(element)` pour recréer les bindings.
 
 ### 3.4 Groupe de Sélection
 
@@ -344,25 +302,14 @@ gridSize = Screen.pixelDensity * mmSize
 
 ### 4.2 Contrôle du Zoom
 
-**Via la molette** (`ScrollLogic.qml`) :
-```javascript
-function scrollUp(wheel) {
-    if (wheel.modifiers & Qt.ControlModifier) {
-        logic.updateSize(logic.mmSize + 1)  // Zoom in
-    }
-}
-
-function scrollDown(wheel) {
-    if (wheel.modifiers & Qt.ControlModifier) {
-        logic.updateSize(logic.mmSize - 1)  // Zoom out
-    }
-}
-```
+**Via la molette** (`editor/logic/ScrollLogic.qml`) :
+- La fonction `scrollGrid(wheel, deltaSize)` est appelée par le wheel handler.
+- Si `wheel.modifiers & Qt.ControlModifier` : mise à jour de `editorGrid.mmSize` (zoom centré sous la souris), ajustement de `editorGrid.x/y` et éventuellement de `tileLogic.currentElementWidth/Height` pour garder le ratio.
 
 **Effet cascade** :
-1. `mmSize` change
-2. `gridSize` est recalculé (binding automatique)
-3. Tous les éléments snapables repositionnent et redimensionnent automatiquement car leurs `x/y/width/height` sont bindés à `gridSize`
+1. `editorGrid.mmSize` change (GridManager)
+2. `gridSize` et `scaleLevel` sont recalculés (bindings)
+3. Tous les éléments snapables se repositionnent et redimensionnent car leurs `x/y/width/height` sont bindés à `gridManager.gridSize`
 
 ### 4.3 Avantages de cette Approche
 
@@ -377,38 +324,30 @@ function scrollDown(wheel) {
 
 ### 5.1 Architecture
 
-Chaque élément snapable contient un **`SnapableElementConnections`** qui gère :
+Chaque élément snapable expose un gestionnaire de connexions (**`connectionManager`**, instance de **`SnapableElementConnections.qml`**) qui gère :
 - `previousElements[]` : Liste des éléments précédents (flux de jeu)
 - `nextElements[]` : Liste des éléments suivants
+- `parentElement` : référence vers l’élément parent
 
-**Bidirectionnalité automatique** :
-```javascript
-function addNextElement(element) {
-    nextElements.push(element)
-    // Ajoute automatiquement le lien inverse
-    if (!element.previousElements.includes(parentElement)) {
-        element.previousElements.push(parentElement)
-    }
-}
-```
+La bidirectionnalité est gérée côté C++ (`ItemSnapable::addNext` / `addPrev`) et/ou dans la couche QML selon les cas ; les overlays sont mis à jour via `nextElementsSegments.updateModel()`.
 
 ### 5.2 Affichage Visuel
 
-Les connexions sont affichées par un `Repeater` dans `SnapableElementConnections.qml` :
+Les connexions sont affichées par un `Repeater` dans **`meowComponent/snapable/SnapableElementConnections.qml`** (exposé comme `connectionManager` sur l’élément) :
 
 ```qml
-ListModel { id: nextElementsSegments }
+ListModel { id: nextElementsSegments }  // mis à jour par updateModel() sur nextElements
 
 Repeater {
     model: nextElementsSegments
     delegate: ConnectionOverlay {
-        fromElement: model.fromElement
-        toElement: model.toElement
+        fromElement: parentElement
+        toElement: model.toElement  // nextEl
     }
 }
 ```
 
-`ConnectionOverlay.qml` dessine une ligne entre les centres des deux éléments.
+`ConnectionOverlay.qml` dessine une ligne entre les deux éléments (avec prise en compte de `groupeSelection` pour le décalage).
 
 ### 5.3 Processus de Création d'un Lien
 
@@ -426,25 +365,15 @@ Repeater {
    logic.mouseLogic.linkSourceCase = sourceElement
    ```
 
-3. **Attente du clic** :
-   - `MouseLogic_Selection_link` est actif
-   - Utilisateur clique sur la case cible
+3. **Attente du clic** : `MouseLogic_Selection_link` est actif ; l’utilisateur clique sur la case cible.
 
-4. **Création du lien** :
-   ```javascript
-   logic.tileLogic.createSnapableLink(linkSourceCase, targetCase, kind)
-   ```
+4. **Création du lien** : appel à `logic.tileLogic.createSnapableLink(linkSourceCase, targetCase, kind)` ou équivalent (ajout via `snapableParameters.addNext` / `addPrev` côté C++).
 
-5. **Retour au mode normal** :
-   ```javascript
-   changeMouseMode(EditorEnum.EM_NORMAL)
-   ```
+5. **Retour au mode normal** : `changeMouseMode(EditorEnum.EM_NORMAL)` (par ex. depuis `EditorController` ou dans `MouseLogic_Selection_link`).
 
 ### 5.4 Synchronisation avec le Backend C++
 
-Les connexions sont également stockées dans l'objet `Case` C++ :
-- `Case::getNextList()` : Retourne la liste des cases suivantes
-- Lors du chargement d'une carte : `TileLogic::builtConnections()` reconstruit les connexions visuelles
+Les connexions sont stockées dans l’objet `ItemSnapable`/`Case` C++ ; au chargement d’une carte, les connexions visuelles sont reconstruites à partir de ces données.
 
 ---
 
@@ -452,9 +381,9 @@ Les connexions sont également stockées dans l'objet `Case` C++ :
 
 ### 6.1 Composants Impliqués
 
-1. **`SelectionRect.qml`** : Rectangle visuel bleu
-2. **`MouseLogic_Selection.qml`** : Logique de détection
-3. **`Editor.qml`** : Capture des mouvements de souris
+1. **`meowComponent/SelectionRect.qml`** : Rectangle visuel (instancié dans `Editor.qml`, passé à `logic.selectionRect`)
+2. **`editor/logic/MouseLogic_Selection.qml`** : Logique de détection
+3. **`Editor.qml`** : Capture des mouvements de souris via `mainMa` (fourni par Base_Board)
 
 ### 6.2 Processus Détaillé
 
@@ -556,30 +485,35 @@ function release(mouse, drag) {
 ```
 EditorLogic.editorMouseMode (enum)
    ↓
-Loader → charge le MouseLogic correspondant
+Loader (sourceComponent: editorDynamicComponent.mouseLogic_*_comp) → charge le MouseLogic correspondant
    ↓
    ├─ EM_NORMAL → MouseLogic_Selection
    ├─ EM_POSE → MouseLogic_Pose
-   └─ EM_SELECTION_LINK → MouseLogic_Selection_link
+   ├─ EM_GAME → MouseLogic_Game
+   ├─ EM_SELECTION_LINK → MouseLogic_Selection_link
+   ├─ EM_DRAW_POLYGON → MouseLogic_DrawPolygon
+   └─ EM_TEMPLATE → MouseLogic_Template
 ```
 
 **Avantages** :
 - Séparation claire des comportements
 - Pas de gros `if/else` dans le code
-- Extension facile (ajouter un nouveau mode = nouveau fichier)
+- Extension facile (ajouter un nouveau mode = nouveau fichier + enum + Component dans EditorDynamicComponent)
 
 ### 7.2 Pattern "Factory" pour la Création d'Éléments
 
-`EditorDynamicComponent` contient des `Component` QML qui sont instanciés à la demande :
+`EditorDynamicComponent` contient des `Component` QML instanciés à la demande par **`editor/logic/TileLogic.qml`** :
 
 ```javascript
 // TileLogic.qml
-var newTile = editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-    "displaySettings.gridRelativePositionX": gridX,
-    "displaySettings.gridRelativePositionY": gridY,
-    // ...
+var newTile = dynamicComponent.snapableCaseTileComponent.createObject(workArea, {
+    "snapableParameters.displayParameter.gridRelativePositionX": gridX,
+    "snapableParameters.displayParameter.gridRelativePositionY": gridY,
+    // + caseData, displayParameter, etc.
 })
 ```
+
+Idem pour `snapableDecorationComponent` et `snapablePhysicZoneComponent` (zones d’exclusion).
 
 ### 7.3 Pattern "Observer" via Signaux QML
 
@@ -597,53 +531,53 @@ SnapableElement.elementDeleted
 Les positions et tailles sont automatiquement synchronisées :
 
 ```qml
-// SnapableElement.qml
-x: displaySettings.gridRelativePositionX * gridManager.gridSize
-width: gridManager.gridSize * displaySettings.unitSizeWidth
+// SnapableElement.qml (meowComponent/snapable)
+x: snapableParameters.displayParameter.gridRelativePositionX * gridManager.gridSize
+width: gridManager.gridSize * snapableParameters.displayParameter.unitSizeWidth
 ```
 
-Changer `gridRelativePositionX` ou `gridSize` met à jour `x` automatiquement.
+Changer `gridRelativePositionX` / `unitSizeWidth` ou `gridSize` met à jour `x` / `width` automatiquement.
 
 ---
 
 ## 8. Résumé des Sous-Dossiers
 
 ### `/qml/editor/` - Éditeur Principal
-**Rôle** : Point d'entrée et coordination générale  
-**Fichiers clés** : `Editor.qml`, `EditorLogic.qml`
+**Rôle** : Point d'entrée et coordination générale (hérite de `meowComponent/Base_Board`)  
+**Fichiers clés** : `Editor.qml`, `EditorLogic.qml`, `EditorDynamicComponent.qml`, `EditorEscMenu.qml`, `EditorController.qml`, `Trackers.qml`, `MenuMapAtStart.qml`
 
 ### `/qml/editor/logic/` - Logique Métier
-**Rôle** : Gestion des modes, souris, scroll, tuiles  
+**Rôle** : Modes souris, scroll, tuiles, plans  
 **Pattern** : State Machine avec Loaders  
-**Fichiers clés** : `MouseLogic_*.qml`, `TileLogic.qml`, `ScrollLogic.qml`
+**Fichiers clés** : `MouseLogic_Base.qml`, `MouseLogic_Selection.qml`, `MouseLogic_Pose.qml`, `MouseLogic_Selection_link.qml`, `MouseLogic_Game.qml`, `MouseLogic_DrawPolygon.qml`, `MouseLogic_Template.qml`, `TileLogic.qml`, `PlanLogic.qml`, `ScrollLogic.qml`, `ScrollLogic_POSE.qml`
 
-### `/qml/editor/tools/` - Outils et Composants Réutilisables
-**Rôle** : Grille, rectangle de sélection, éléments snapables  
-**Fichiers clés** : `GridManager.qml`, `SelectionRect.qml`
+### `/qml/meowComponent/` - Composants Partagés (éditeur + jeu)
+**Rôle** : Grille, zone de travail, fond, rectangle de sélection, éléments snapables, cases  
+**Fichiers clés** : `Base_Board.qml`, `Base_WorkArea.qml`, `Base_logic.qml`, `Background.qml`, `SelectionRect.qml`, `GlobalMa.qml`
 
-### `/qml/editor/tools/snapable/` - Système Snapable
+### `/qml/meowComponent/grid/` - Grille
+**Rôle** : Grille et snapping  
+**Fichiers clés** : `GridManager.qml`
+
+### `/qml/meowComponent/snapable/` - Système Snapable
 **Rôle** : Classe de base et comportements des éléments accrochables  
-**Fichiers clés** : `SnapableElement.qml`, `SnapableElementConnections.qml`
+**Fichiers clés** : `SnapableElement.qml`, `SnapableElementConnections.qml`, `SnapableCaseTile.qml`, `SnapableDecoration.qml`, `SnapableExclusionZone.qml`, `ConnectionOverlay.qml`
 
-### `/qml/editor/panel/` - Interface Utilisateur
-**Rôle** : Panneaux de sélection et configuration  
-**Fichiers clés** : `SelectionPanel.qml`
+### `/qml/editor/panel/bottomPanel/bottomMainPanel/` - Panneau Principal (bas)
+**Rôle** : Panneau inférieur avec onglets (MenuSelector) et contenu  
+**Fichiers clés** : `SelectionPanel.qml`, `assetSelectionPanel/AssetSelectionPanel.qml`, `caseSelectionPanel/`, `menuSelectionPanel/`, `editorBottomPanel/`, `templatePanel/`, `zonePanel/`
 
-### `/qml/editor/panel/assetSelectionPanel/` - Sélection d'Assets
-**Rôle** : Choisir des décorations, appliquer des effets visuels  
-**Fichiers clés** : `AssetSelectionPanel.qml`, `VisualEffectsPanel.qml`
+### `/qml/editor/panel/bottomPanel/bottomSidePanel/` - Panneau Latéral (droite)
+**Rôle** : Configuration case, connexions, effets visuels, zones  
+**Fichiers clés** : `BottomSidePanel.qml`, `caseConfigPanel/CaseConfigurationPanel.qml`, `connectionConfigPanel/ConnectionsConfigurationSection.qml`, `visualEffectPanel/VisualEffectsPanel.qml`, `zoneConfigPanel/`
 
-### `/qml/editor/panel/caseSelectionPanel/` - Sélection de Cases
-**Rôle** : Choisir des types de cases, configurer les propriétés, gérer les connexions  
-**Fichiers clés** : `CaseSelectionPanel.qml`, `CaseConfigurationPanelSection.qml`, `ConnectionsConfigurationSection.qml`
+### `/qml/editor/panel/mapInfoPanel/` - Infos Carte
+**Rôle** : Infos carte, fond d’écran, navigation (sauvegarde/chargement via EditorEscMenu / MapNavigationBar)  
+**Fichiers clés** : `MapInfoPanel.qml`, `MapInfoDrawer.qml`, `MapNavigationBar.qml`
 
-### `/qml/editor/panel/mapSelectionPanel/` - Paramètres de Carte
-**Rôle** : Background, sauvegarde/chargement  
-**Fichiers clés** : `MapSelectionPanel.qml`
-
-### `/qml/case/` - Affichage des Cases
+### `/qml/meowComponent/case/` - Affichage des Cases
 **Rôle** : Composants visuels pour afficher les cases de jeu  
-**Fichiers clés** : `CaseTile.qml`, `TileContent.qml`
+**Fichiers clés** : `CaseTile.qml`, `TileContent.qml`, `content/`, `details/`
 
 ---
 
@@ -666,7 +600,7 @@ Editor.placeSelectedAsset(gridX, gridY)
    ↓
 logic.tileLogic.createNewTileAtPosition(type, gridX, gridY, ItemSnapable.CaseTile)
    ↓
-editorDynamicComponent.snapableCaseTileComponent.createObject(...)
+dynamicComponent.snapableCaseTileComponent.createObject(workArea, ...)
    ↓
 Nouvel élément ajouté à snapableTilesList
    ↓
@@ -749,9 +683,9 @@ selectionRect.hide()
 ```
 Utilisateur sélectionne une case
    ↓
-updateCaseConfiguration() → connectionsPanel.setTargetElement()
+updateCaseConfiguration() → connectionsConfigurationPanel.setTargetElement()
    ↓
-Utilisateur clique "Connect Next" dans le panneau
+Utilisateur clique "Connect Next" dans le panneau (BottomSidePanel / connectionConfigPanel)
    ↓
 signal connectionRequested("next")
    ↓
@@ -767,9 +701,9 @@ MouseLogic_Selection_link.clickedLeft()
    ↓
 logic.tileLogic.createSnapableLink(source, target, "next")
    ↓
-source.connectionManager.addNextElement(target)
+source.connectionManager / snapableParameters.addNext(target) (côté C++/QML)
    ↓
-Connexion visuelle affichée (ConnectionOverlay)
+Connexion visuelle affichée (ConnectionOverlay via nextElementsSegments)
    ↓
 Retour au mode EM_NORMAL
 ```
@@ -780,13 +714,14 @@ Retour au mode EM_NORMAL
 
 ### 10.1 Gestion du Z-Order
 
-Chaque élément a deux composantes pour son ordre Z :
-- **`zLayer`** : Couche logique (0-10), modifiable par l'utilisateur via les contrôles
-- **`zOrder`** : Ordre microscopique (0.00001 incréments), détermine l'ordre dans la même couche
-- **Bonus de sélection** : +11 quand sélectionné
+Chaque élément a deux composantes pour son ordre Z (dans **`snapableParameters.displayParameter`**) :
+- **`zLayer`** : Couche logique, modifiable par l’utilisateur via les contrôles
+- **`zOrder`** : Ordre dans la même couche
+- **Bonus de sélection** : +11 quand sélectionné (et non en train d’être déplacé)
 
 ```qml
-z: (isSelected) ? displaySettings.zOrder + 11 : displaySettings.zOrder + displaySettings.zLayer
+// SnapableElement.qml
+z: (isSelected && !isDragging) ? snapableParameters.displayParameter.zOrder + 11 : snapableParameters.displayParameter.zOrder + snapableParameters.displayParameter.zLayer
 ```
 
 ### 10.2 Optimisation de la Grille
@@ -807,7 +742,7 @@ Repeater {
 
 ### 10.3 Transparence des Clics
 
-`SnapableElement` peut implémenter `isTransparent(mouse)` pour ignorer les clics sur des zones transparentes (utile pour les PNG avec alpha).
+`SnapableElement` peut implémenter une logique pour ignorer les clics sur des zones transparentes (utile pour les PNG avec alpha), selon la configuration du projet.
 
 ### 10.4 Prévention du Vol de Drag
 
@@ -826,24 +761,25 @@ Essentiel pour que les éléments enfants gardent le contrôle de leurs interact
 
 ### Ajouter un Nouveau Mode de Souris
 
-1. Créer `MouseLogic_NewMode.qml` héritant de `MouseLogic_Base`
-2. Ajouter l'enum dans `EditorEnum` (fichier C++)
-3. Modifier le `Loader` dans `EditorLogic.qml` :
+1. Créer `editor/logic/MouseLogic_NewMode.qml` héritant de `MouseLogic_Base`
+2. Ajouter l’enum dans `EditorEnum` (C++, ex. `cpp/tools/editorenum.h`)
+3. Ajouter un `Component` dans `EditorDynamicComponent.qml` (ex. `mouseLogic_newMode_comp`) et l’alias correspondant
+4. Modifier le `Loader` dans `EditorLogic.qml` :
    ```qml
-   sourceComponent: (logic.editorMouseMode == EditorEnum.EM_NEW_MODE) ? newModeComponent : ...
+   sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NEW_MODE) ? editorDynamicComponent.mouseLogic_newMode_comp : ...
    ```
 
 ### Ajouter un Nouveau Type d'Élément Snapable
 
-1. Créer `SnapableNewType.qml` héritant de `SnapableElement`
-2. Ajouter un `Component` dans `EditorDynamicComponent.qml`
-3. Ajouter la logique de création dans `TileLogic.qml`
+1. Créer `meowComponent/snapable/SnapableNewType.qml` héritant de `SnapableElement`
+2. Ajouter un `Component` dans `editor/EditorDynamicComponent.qml`
+3. Ajouter la logique de création dans `editor/logic/TileLogic.qml` (createObject avec le bon component)
 
 ### Ajouter une Nouvelle Catégorie dans le Panneau
 
-1. Créer le panel dans `/panel/newCategoryPanel/`
-2. Ajouter dans le `StackLayout` de `SelectionPanel.qml`
-3. Ajouter un bouton dans `MenuSelector.qml`
+1. Créer le panel dans `editor/panel/bottomPanel/bottomMainPanel/newCategoryPanel/` (ou l’intégrer dans le panneau latéral `bottomSidePanel/`)
+2. Si panneau principal : ajouter dans le `StackLayout` de `SelectionPanel.qml` et un onglet dans `MenuSelector.qml`
+3. Si panneau latéral : l’ajouter dans `BottomSidePanel_Content.qml` (ou équivalent)
 
 ---
 
@@ -872,5 +808,6 @@ L'éditeur de Meownopoly est un système bien architecturé qui utilise :
 
 **Auteur de l'analyse** : Assistant IA  
 **Date** : 12 octobre 2025  
-**Version** : 1.0
+**Dernière révision** : 25 février 2026 — Vérification de l’architecture : chemins (`meowComponent/`, `editor/panel/bottomPanel/`), noms (`snapableParameters.displayParameter`, `ConnectionsConfigurationSection`, `BottomSidePanel`), modes souris (EM_GAME, EM_DRAW_POLYGON, EM_TEMPLATE), MapInfoPanel, EditorController, Trackers.  
+**Version** : 1.1
 
