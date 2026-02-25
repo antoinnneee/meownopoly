@@ -65,7 +65,7 @@ Rectangle {
             // Passer le ChatClient mutualisé
             chatClient: lobbyChatClient
             onSessionSelected: function(sessionData) {
-                lobbyChatClient.connectToSession(AccountManager.uniqueId, sessionData.password, AccountManager.nickname, sessionData.sessionId)
+                lobbyChatClient.connectToSession(AccountManager.uniqueId, sessionData.password, AccountManager.nickname)
             }
         }
     }
