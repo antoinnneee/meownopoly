@@ -81,53 +81,22 @@ void ChatClient::connectToSessionDirect(const QString &sessionId, const QString 
     m_sessionId = sessionId;
     m_password = password;
 
-
-    if (sessionId.isEmpty()) {
-        qWarning() << "[ChatClient] Session ID is empty. Cannot connect to session.";
-        return;
-    }
-    m_sessionId = sessionId;
-
-    qDebug() << "[ChatClient] Preparing session for player:" << AccountManager::instance()->uniqueId();
-
-    // Derive Lock Key from SessionID + Password
-    m_lockKey = ChatCrypto::deriveLockKey(m_sessionId, m_password);
-    m_passwordHash = ChatCrypto::derivePasswordProof(m_sessionId, m_password);
-
-    // Load LOCAL keys immediately (Forward Secrecy = no keys from server)
-    // Keys in DB are encrypted with lockKey. We must decrypt them for memory usage.
-    m_sessionKeys.clear();
-    loadAndDecryptSessionKeys();
-
-    // Determine current version (max version locally)
-    if (!m_sessionKeys.isEmpty()) {
-        m_currentKeyVersion = m_sessionKeys.lastKey();
-    } else {
-        m_currentKeyVersion = 0;
-    }
-
-    // If already connected, join immediately
-    if (m_connected) {
-        // Join session logic
-        QJsonObject join;
-        join["type"] = "JOIN_SESSION";
-        QJsonObject payload;
-        payload["session_id"] = m_sessionId;
-        payload["player_id"] = m_playerId;
-        payload["player_nickname"] = m_nickname;
-        join["payload"] = payload;
-
-        sendWebSocketMessage(join);
-
-        // Request participants list right after joining
-        requestParticipants();
-    }
+    joinSession();
 }
 
 void ChatClient::connectToSession(const QString &playerId, const QString &password, const QString &nickname) {
+
     m_playerId = playerId;
     m_nickname = nickname.isEmpty() ? playerId : nickname;
     m_password = password;
+
+    joinSession();
+}
+
+void ChatClient::joinSession(){
+
+    if (m_sessionId.isEmpty()) {Logger::instance()->warn("Session ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de session ne peut pas �tre vide");return;}
+    if (m_playerId.isEmpty()) {Logger::instance()->warn("Player ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de joueur ne peut pas �tre vide");return;}
 
     Logger::instance()->info(QString("Preparing session %4 for player: %2_%1, %3").arg(m_playerId).arg(m_nickname).arg(m_password).arg(m_sessionId), "ChatClient");
 
@@ -164,6 +133,7 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
         requestParticipants();
     }
 }
+
 
 void ChatClient::onConnected() {
     Logger::instance()->info("Connected to server", "ChatClient");
