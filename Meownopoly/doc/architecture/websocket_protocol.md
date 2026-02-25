@@ -163,3 +163,59 @@ Envoyé en cas d'échec d'une opération.
 
 ### `HISTORY_CLEARED` / `SESSION_ENDED` / `SERVER_RESET`
 Signaux de maintenance ou de destruction de session.
+
+---
+
+## Contenu et structure de la session (côté serveur)
+
+Le serveur (`chatServer/server.js`) et la base de données (`chatServer/database.js`) maintiennent les sessions selon la structure suivante.
+
+### Données persistantes (base SQLite)
+
+**Table `sessions`**
+| Champ           | Type      | Description |
+|-----------------|-----------|-------------|
+| `session_id`    | TEXT (PK) | Identifiant unique de la session. |
+| `password_hash` | TEXT      | Preuve du mot de passe (hash) utilisée pour vérifier les rejoins. |
+| `key_package`   | TEXT      | Dernière clé de session chiffrée (blob). |
+| `key_nonce`     | TEXT      | Nonce utilisé pour le chiffrement du blob. |
+| `version`       | INTEGER   | Version courante de la clé (incrémentée à chaque rotation). |
+| `created_at`    | TIMESTAMP | Date de création de la session. |
+
+**Table `participants`**
+| Champ        | Type      | Description |
+|--------------|-----------|-------------|
+| `session_id` | TEXT      | Référence vers la session. |
+| `player_id`  | TEXT      | Identifiant du joueur. |
+| `nickname`   | TEXT      | Pseudonyme du joueur. |
+| `joined_at`  | TIMESTAMP | Date d’inscription dans la session. |
+| *(PK)*       |           | `(session_id, player_id)`. |
+
+L’ordre d’insertion définit l’**hôte** : le premier participant (`ORDER BY joined_at ASC`) est considéré comme hôte (pour le KICK, etc.).
+
+**Table `messages`**
+| Champ             | Type      | Description |
+|-------------------|-----------|-------------|
+| `id`              | INTEGER   | Identifiant unique du message (auto). |
+| `session_id`      | TEXT      | Session concernée. |
+| `sender_id`       | TEXT      | ID de l’expéditeur. |
+| `sender_nickname` | TEXT      | Pseudonyme au moment de l’envoi. |
+| `payload`         | TEXT      | Message chiffré (base64). |
+| `nonce`           | TEXT      | Nonce du chiffrement. |
+| `key_version`     | INTEGER   | Version de la clé utilisée. |
+| `server_timestamp`| TIMESTAMP | Date d’enregistrement côté serveur. |
+
+### État en mémoire (serveur Node.js)
+
+- **`rooms`** : `Map<session_id, Set<WebSocket>>` — Connexions WebSocket actuellement dans chaque session. Une session peut exister en base sans entrée dans `rooms` si personne n’est connecté.
+- **`keyRotationRequired`** : `Set<session_id>` — Sessions pour lesquelles un nouveau participant vient d’arriver ou quelqu’un vient de partir ; aucun message/commande n’est accepté tant qu’un client n’a pas publié une nouvelle clé via `PUBLISH_KEY`.
+- **État attaché à chaque socket (`ws`)** : `session_id`, `player_id`, `player_nickname`, `last_activity`, `status` (`'online'` ou `'away'` après un délai d’inactivité).
+
+### Clés de session exposées au client
+
+`db.getSessionKeys(session_id)` retourne une liste (en pratique une seule entrée) d’objets avec :
+- `version` : version de la clé
+- `key_package` : blob chiffré (envoyé tel quel dans les trames)
+- `key_nonce` : nonce (envoyé sous le champ `nonce` dans INIT_SESSION / KEY_UPDATE)
+
+Les entrées avec `key_package === null` sont filtrées avant envoi au client (session sans clé encore publiée).
