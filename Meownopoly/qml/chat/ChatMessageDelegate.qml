@@ -5,20 +5,19 @@ import QtQuick.Dialogs
 
 Rectangle {
     id: messageDelegate
-    width: Math.min((listView ? listView.width : 320) - 24, Math.max(140, (listView ? listView.width : 320) * 0.78))
-    height: hasData ? (contentCol.height + 12) : 0
-    visible: hasData
-
     required property var modelData
     required property int index
     required property var drawer
     required property var listView
     property var chatClient: null
 
+    property var fullScreenMode: null
     property bool hasData: !!modelData
     property bool isOwnMessage: hasData && drawer && (modelData.sender === drawer.playerId)
 
     signal openFullScreenMsg(var modelMsg)
+
+    visible: hasData
 
     // Style distinct : nos messages = bulle verte à droite, les autres = gris à gauche
     color: isOwnMessage ? "#1e4620" : "#333333"
@@ -26,6 +25,17 @@ Rectangle {
     border.color: isOwnMessage ? "#2d6b30" : "#444444"
     border.width: isOwnMessage ? 1.5 : 1
     antialiasing: true
+
+    width: fullScreenMode
+           ? parent.width
+           : Math.min((listView ? listView.width : 320) - 24,
+                       Math.max(140, (listView ? listView.width : 320) * 0.78))
+    height: fullScreenMode
+            ? parent.height
+            : (hasData ? (contentCol.height + 12) : 0)
+
+    // width: Math.min((listView ? listView.width : 320) - 24, Math.max(140, (listView ? listView.width : 320) * 0.78))
+    // height: hasData ? (contentCol.height + 12) : 0
 
     MouseArea {
         anchors.fill: parent
@@ -156,6 +166,7 @@ Rectangle {
 
         Column {
             visible: !!(modelData && modelData.isImage)
+
             width: parent.width
             spacing: 2
 
@@ -299,6 +310,7 @@ Rectangle {
             fileExtension: (modelData && modelData.fileExtension) ? modelData.fileExtension : "txt"
             width: parent.width
             chatClient: messageDelegate.chatClient
+            fullScreenHeight:  messageDelegate.fullScreenMode ? messageDelegate.height : -1
         }
     }
 }

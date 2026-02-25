@@ -55,6 +55,7 @@ Base_Board {
     property alias editorSidePanel: sidePanel
 
     property alias escMenu: escMenu
+    property alias fullScreenMsgPopup: fullScreenMsgPopup
     property alias view3D: gameScene.view3D
 
     signal updateSettings
@@ -179,7 +180,7 @@ Base_Board {
         z: UiStyle.z_HUD
         onOpenFullScreenMsg: function(modelMsg) {
             chatDrawer.close()
-            fullScreenMsgPopup.currentMessage = modelMsg
+            fullScreenMsgPopup.currentModel = modelMsg
             fullScreenMsgPopup.open()
         }
     }
@@ -333,7 +334,7 @@ Base_Board {
         }
         Component.onCompleted: {
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
-            EditorController.init(logic, selectionPanel, escMenu,
+            EditorController.init(logic, selectionPanel, escMenu, fullScreenMsgPopup,
                                   adminCommandPanel)
         }
     }
@@ -342,9 +343,7 @@ Base_Board {
     Popup {
         id: fullScreenMsgPopup
 
-        property var currentMessage: null
-
-        onOpened: chatDrawer.close()
+        property var currentModel: null
         onClosed: chatDrawer.open()
 
         modal: true
@@ -416,12 +415,22 @@ Base_Board {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                                    chatDrawer.close()
-                                    fullScreenMsgPopup.close()
+                            chatDrawer.close()
+                            fullScreenMsgPopup.close()
                         }
                     }
                 }
             }
+        }
+
+        ChatMessageDelegate {
+            fullScreenMode : true
+            modelData : fullScreenMsgPopup.currentModel
+            anchors.bottom: parent.bottom
+            index : 0
+            drawer : null
+            listView : fullScreenMsgPopup
+            hasData: true
         }
 
         Overlay.modal: Rectangle {
