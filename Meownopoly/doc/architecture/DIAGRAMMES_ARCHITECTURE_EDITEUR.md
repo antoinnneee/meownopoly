@@ -3,33 +3,37 @@
 ## 🏗️ Architecture Globale
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Editor.qml                            │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │                  EditorLogic.qml                      │   │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐     │   │
-│  │  │MouseLogic  │  │ScrollLogic │  │TileLogic   │     │   │
-│  │  │  (Loader)  │  │  (Loader)  │  │            │     │   │
-│  │  └────────────┘  └────────────┘  └────────────┘     │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                                                               │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │               GridManager (Grille)                    │   │
-│  │  ┌─────────────────────────────────────────────┐     │   │
-│  │  │          WorkArea (Zone de travail)          │     │   │
-│  │  │  ┌─────────────┐  ┌─────────────┐           │     │   │
-│  │  │  │SnapableCase │  │SnapableDeco │  ...      │     │   │
-│  │  │  └─────────────┘  └─────────────┘           │     │   │
-│  │  └─────────────────────────────────────────────┘     │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                                                               │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │            SelectionPanel (Panneau Bas)               │   │
-│  │  ┌───────┐  ┌───────┐  ┌──────┐                      │   │
-│  │  │Assets │  │Cases  │  │ Map  │  ← Onglets           │   │
-│  │  └───────┘  └───────┘  └──────┘                      │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                                  Editor.qml                                   │
+│  ┌─────────────────────────────────────────────────────────────────────────┐  │
+│  │                            Base_Board (Base)                            │  │
+│  │  ┌──────────────────────────────────┐  ┌─────────────────────────────┐  │  │
+│  │  │       GridManager (Grille)       │  │      GlobalMa (Souris)      │  │  │
+│  │  └──────────────────────────────────┘  └─────────────────────────────┘  │  │
+│  └─────────────────────────────────────────────────────────────────────────┘  │
+│                                                                               │
+│  ┌───────────────────────────────┐        ┌────────────────────────────────┐  │
+│  │    WorkArea (Zone Travail)    │        │       Panneaux Latéraux        │  │
+│  │  ┌─────────────────────────┐  │        │  ┌────────────┐┌────────────┐  │  │
+│  │  │        GameScene        │  │        │  │MapInfoPanel││ SidePanel  │  │  │
+│  │  │  ┌───────────────────┐  │  │        │  │ (Informations)│(Configuration) │  │
+│  │  │  │  Moteur 3D (3D)   │  │  │        │  └────────────┘└────────────┘  │  │
+│  │  │  └───────────────────┘  │  │        └────────────────────────────────┘  │
+│  │  │                         │  │                                            │
+│  │  │  ┌───────────────────┐  │  │        ┌────────────────────────────────┐  │
+│  │  │  │ SnapableElements  │  │  │        │       EditorLogic (Logic)      │  │
+│  │  │  │ (Cases, Déco...)  │  │  │        │  ┌────────────┐┌────────────┐  │  │
+│  │  │  └───────────────────┘  │  │        │  │ MouseLogic ││ TileLogic   │  │  │
+│  │  └─────────────────────────┘  │        │  │ (Loader)   ││ PlanLogic   │  │  │
+│  └───────────────────────────────┘        │  └────────────┘└────────────┘  │  │
+│                                           └────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────────────────────────┐  │
+│  │                       SelectionPanel (Panneau Bas)                      │  │
+│  │  ┌─────────────────┐  ┌──────────────────┐  ┌───────────────┐           │  │
+│  │  │ AssetSelection  │  │ CaseSelection    │  │ Zone/Template │           │  │
+│  │  └─────────────────┘  └──────────────────┘  └───────────────┘           │  │
+│  └─────────────────────────────────────────────────────────────────────────┘  │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -43,8 +47,8 @@ GridManager
     │
     ├─ gridSize = Screen.pixelDensity × mmSize
     │       │
-    │       ├─ mmSize = 10 (défaut)
-    │       └─ Ctrl+Molette → mmSize ± 1 (ZOOM)
+    │       ├─ mmSize = 12 (défaut)
+    │       └─ Ctrl+Molette → mmSize ± 1 (ZOOM centré sous curseur)
     │
     ├─ boardSize = gridSize × 600
     │
@@ -157,21 +161,22 @@ EditorLogic.editorMouseMode
          ├─────────────┬──────────────┬─────────────────┐
          │             │              │                 │
          ▼             ▼              ▼                 ▼
-    EM_NORMAL     EM_POSE      EM_SELECTION_LINK    ...
-         │             │              │
-         ▼             ▼              ▼
+     EM_NORMAL     EM_POSE      EM_SELECTION_LINK      EM_GAME
+          │             │              │                 EM_DRAW_POLYGON
+          │             │              │                 EM_TEMPLATE
+          ▼             ▼              ▼                         ▼
   Loader dynamique charge le bon MouseLogic
          │             │              │
          ▼             ▼              ▼
-┌────────────────┐ ┌───────────┐ ┌─────────────────┐
-│ MouseLogic_    │ │MouseLogic_│ │ MouseLogic_     │
-│ Selection      │ │  Pose     │ │ Selection_link  │
-├────────────────┤ ├───────────┤ ├─────────────────┤
-│• Sélection     │ │• Place    │ │• Attend clic    │
-│• Déplacement   │ │  assets   │ │  sur cible      │
-│• Rectangle     │ │• Aperçu   │ │• Crée connexion │
-│• Multi-sél     │ │  curseur  │ │• Retour NORMAL  │
-└────────────────┘ └───────────┘ └─────────────────┘
+┌────────────────┐ ┌───────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ MouseLogic_    │ │MouseLogic_│ │ MouseLogic_     │ │ MouseLogic_     │
+│ Selection      │ │  Pose     │ │ Selection_link  │ │ Game/Zone/Temp  │
+├────────────────┤ ├───────────┤ ├─────────────────┤ ├─────────────────┤
+│• Sélection     │ │• Place    │ │• Attend clic    │ │• Test gameplay  │
+│• Déplacement   │ │  assets   │ │  sur cible      │ │• Dessin Polygone│
+│• Rectangle     │ │• Aperçu   │ │• Crée connexion │ │• Multi-zones    │
+│• Multi-sél     │ │  curseur  │ │• Retour NORMAL  │ │• Templates      │
+└────────────────┘ └───────────┘ └─────────────────┘ └─────────────────┘
 
 Changer de mode :
     logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
@@ -200,9 +205,10 @@ mmSize = 11  (était 10)
          ↓
 gridSize recalculé (binding)
          ↓
-gridSize = Screen.pixelDensity × 11
+gridSize = Screen.pixelDensity × 12
          ↓
 Tous les éléments repositionnés/redimensionnés (bindings)
+ScrollLogic ajuste x/y pour maintenir le point sous la souris
 
 AVANT (mmSize=10, gridSize=50px) :
 ┌──────┬──────┬──────┐
@@ -762,6 +768,6 @@ Mais changement de taille de cellule
 
 ---
 
-**Date** : 12 octobre 2025  
-**Version** : 1.0
+**Date** : 25 février 2026  
+**Version** : 1.1
 
