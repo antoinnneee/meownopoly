@@ -505,19 +505,13 @@ Rectangle {
                                 }
 
                                 onClicked: {
-                                    const timestamp = Date.now()
-                                    const random = Math.floor(Math.random() * 10000)
-                                    const sessionId = "game_" + timestamp + "_" + random
-
                                     console.log("🎉 Création de session demandée")
-                                    console.log("  - ID:", sessionId)
-                                    console.log("  - Nom:", sessionNameInput.text)
+                                    console.log("  - Nom - Id :", sessionNameInput.text)
                                     console.log("  - Mot de passe:", sessionPasswordInput.text)
                                     console.log("  - Mode:", root.isEditionMode ? "Edition" : "Jeu")
 
                                     root.sessionCreateRequested({
-                                        sessionId: sessionId,
-                                        name: sessionNameInput.text,
+                                        sessionId: sessionNameInput.text,
                                         password: sessionPasswordInput.text,
                                         isEditionMode: root.isEditionMode
                                     })
