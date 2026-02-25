@@ -44,6 +44,34 @@ Drawer {
 
     modal : false
 
+    // --- Dynamic tile counting ---
+    property int _refreshTrigger: 0
+
+    Connections {
+        target: mapInfoPanel.logic
+        function onSnapableTilesListUpdated() {
+            _refreshTrigger++
+        }
+    }
+
+    function countByType(tileType) {
+        var _trigger = _refreshTrigger  // force re-eval on signal
+        var list = mapInfoPanel.logic.snapableTilesList
+        if (!list) return 0
+        var count = 0
+        for (var i = 0; i < list.length; i++) {
+            if (list[i] && list[i].snapableParameters
+                    && list[i].snapableParameters.tileType === tileType)
+                count++
+        }
+        return count
+    }
+
+    readonly property int caseCount: countByType(ItemSnapable.CaseTile)
+    readonly property int decoCount: countByType(ItemSnapable.DecorationTile)
+    readonly property int zoneCount: countByType(ItemSnapable.PhysicZoneTile)
+
+
     signal requestNewMap()
     background : Rectangle {
         anchors.fill: parent
@@ -733,10 +761,9 @@ Drawer {
                         // Stats badges with subtle colors
                         Repeater {
                             model: [
-                                {icon: "🔷", label: "Tuiles", value: "42", color: "#673AB7"},
-                                {icon: "🏠", label: "Cases", value: "36", color: "#4A90E2"},
-                                {icon: "🌳", label: "Déco", value: "6", color: "#FFC107"},
-                                {icon: "🎲", label: "Events", value: "12", color: "#E91E63"}
+                                {icon: "🏠", label: "Cases", value: mapInfoDrawer.caseCount.toString(), color: "#4A90E2"},
+                                {icon: "🌳", label: "Déco", value: mapInfoDrawer.decoCount.toString(), color: "#FFC107"},
+                                {icon: "🔷", label: "Zone", value: mapInfoDrawer.zoneCount.toString(), color: "#E91E63"}
                             ]
 
                             Rectangle {

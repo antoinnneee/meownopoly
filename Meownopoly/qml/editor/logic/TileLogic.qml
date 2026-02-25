@@ -117,6 +117,7 @@ QtObject {
             // newTile.snapableParameters.print()
             
             snapableTilesList.push(newTile)
+            logic.snapableTilesListUpdated()
             if (newTile.snapToGridFromGridPos) {
                 newTile.snapToGridFromGridPos()
             }
@@ -146,6 +147,7 @@ QtObject {
         if (index !== -1) {
             // Supprimer l'élément de la liste
             snapableTilesList.splice(index, 1)
+            logic.snapableTilesListUpdated()
             logic.mouseLogic.unselectSelectedElements()
 
             // Détruire l'objet QML
@@ -174,6 +176,7 @@ QtObject {
         if (index !== -1) {
             // Supprimer l'élément de la liste
             snapableTilesList.splice(index, 1)
+            logic.snapableTilesListUpdated()
 
             // Si c'était l'élément sélectionné, le désélectionner
             logic.mouseLogic.unselectSelectedElements()
