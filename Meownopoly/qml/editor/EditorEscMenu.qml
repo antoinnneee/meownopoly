@@ -416,6 +416,14 @@ Rectangle {
                 id: stEnableAutoSave
                 category: "Editor/SaveConfig"
             }
+            Settings {
+                id: stVideoConfig
+                category: "Video"
+            }
+            Settings {
+                id: stControlsConfig
+                category: "Controls"
+            }
             
             ColumnLayout {
                 anchors.fill: parent
@@ -603,19 +611,31 @@ Rectangle {
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Qualité graphique"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
-                                        ComboBox {
-                                            Layout.preferredWidth: 200; model: ["Faible", "Moyenne", "Élevée", "Ultra"]
-                                            background: Rectangle { color: "#333333"; radius: 6; border.color: parent.pressed ? "#4A90E2" : "#555555"; border.width: 1 }
-                                            contentItem: Text { text: parent.currentText; color: "white"; verticalAlignment: Text.AlignVCenter; leftPadding: 10; font.pixelSize: 14 }
-                                        }
-                                    }
-                                    
-                                    RowLayout {
-                                        Layout.fillWidth: true
                                         Text { text: "Résolution"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
                                         ComboBox {
-                                            Layout.preferredWidth: 200; model: ["1920x1080", "1366x768", "1280x720", "1024x768"]
+                                            id: resolutionCombo
+                                            Layout.preferredWidth: 200; 
+                                            model: ["1920x1080", "1366x768", "1280x720", "1024x768"]
+                                            currentIndex: {
+                                                let savedRes = stVideoConfig.value("resolution", "1280x720")
+                                                let idx = model.indexOf(savedRes)
+                                                return idx >= 0 ? idx : 2 // default to 1280x720
+                                            }
+                                            onActivated: {
+                                                let res = currentText
+                                                stVideoConfig.setValue("resolution", res)
+                                                stVideoConfig.sync()
+                                                
+                                                let parts = res.split("x")
+                                                if(parts.length === 2 && Window.window) {
+                                                    Window.window.width = parseInt(parts[0])
+                                                    Window.window.height = parseInt(parts[1])
+                                                    
+                                                    // Centrer la fenêtre
+                                                    Window.window.x = (Screen.desktopAvailableWidth - Window.window.width) / 2
+                                                    Window.window.y = (Screen.desktopAvailableHeight - Window.window.height) / 2
+                                                }
+                                            }
                                             background: Rectangle { color: "#333333"; radius: 6; border.color: parent.pressed ? "#4A90E2" : "#555555"; border.width: 1 }
                                             contentItem: Text { text: parent.currentText; color: "white"; verticalAlignment: Text.AlignVCenter; leftPadding: 10; font.pixelSize: 14 }
                                         }
@@ -623,9 +643,22 @@ Rectangle {
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Mode plein écran"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Text { text: "Mode plein écran sans bordure"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
                                         Switch {
-                                            id: fullscreenSwitch; checked: false
+                                            id: fullscreenSwitch; 
+                                            checked: stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true
+                                            onCheckedChanged: {
+                                                stVideoConfig.setValue("fullscreen", checked)
+                                                stVideoConfig.sync()
+                                                
+                                                if(Window.window) {
+                                                    if(checked) {
+                                                        Window.window.visibility = Window.FullScreen
+                                                    } else {
+                                                        Window.window.visibility = Window.Windowed
+                                                    }
+                                                }
+                                            }
                                             indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? "#4A90E2" : "#444444"
                                                 Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: "white"; Behavior on x { NumberAnimation { duration: 150 } } } }
                                         }
@@ -712,7 +745,12 @@ Rectangle {
                                         Text { text: "Sensibilité de la souris"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
                                         Slider {
                                             id: sensitivitySlider
-                                            Layout.preferredWidth: 200; from: 0.1; to: 2.0; value: 1.0
+                                            Layout.preferredWidth: 200; from: 0.1; to: 2.0; 
+                                            value: parseFloat(stControlsConfig.value("mouseSensitivity", "1.0"))
+                                            onValueChanged: {
+                                                stControlsConfig.setValue("mouseSensitivity", value)
+                                                stControlsConfig.sync()
+                                            }
                                             background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: "#444444"; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: "#4A90E2"; radius: 2 } }
                                             handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? "#f0f0f0" : "white"; border.color: "#4A90E2"; border.width: 1 }
                                         }
@@ -723,7 +761,12 @@ Rectangle {
                                         Layout.fillWidth: true
                                         Text { text: "Inverser l'axe Y"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
                                         Switch {
-                                            id: invertMouseSwitch; checked: false
+                                            id: invertMouseSwitch; 
+                                            checked: stControlsConfig.value("invertMouseY", false) === "true" || stControlsConfig.value("invertMouseY", false) === true
+                                            onCheckedChanged: {
+                                                stControlsConfig.setValue("invertMouseY", checked)
+                                                stControlsConfig.sync()
+                                            }
                                             indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? "#4A90E2" : "#444444"
                                                 Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: "white"; Behavior on x { NumberAnimation { duration: 150 } } } }
                                         }
