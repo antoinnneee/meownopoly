@@ -1,7 +1,7 @@
 
 #include <QQmlEngine>
 #include "undoredomanager.h"
-#include "../tools/logger.h"
+#include "../../tools/logger.h"
 #include "qjsonarray.h"
 
 UndoRedoManager *UndoRedoManager::m_instance = nullptr;
