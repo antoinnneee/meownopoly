@@ -9,8 +9,8 @@ import MapTypes
 
 Rectangle {
     id: escMenu
-    width: (parent.width * 0.8 > Screen.pixelDensity * 180) ? parent.width * 0.8 : Screen.pixelDensity * 150
-    height: (parent.height * 0.8 > Screen.pixelDensity * 150) ? parent.height * 0.8 : Screen.pixelDensity * 150
+    width: (parent.width * 0.8 < Screen.pixelDensity * 180) ? parent.width * 0.8 : Screen.pixelDensity * 180
+    height: (parent.height * 0.8 < Screen.pixelDensity * 150) ? parent.height * 0.8 : Screen.pixelDensity * 150
     anchors.centerIn: parent
     color: "#2C2C2C"
     radius: 10
