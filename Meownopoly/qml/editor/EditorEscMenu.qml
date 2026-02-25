@@ -407,25 +407,34 @@ Rectangle {
             anchors.fill: parent
             visible: currentView === "settings"
             
-            Column {
+            Settings {
+                id: stBackGroundEditor
+                property bool selectBackgroundAtStart: value("selectBackgroundAtStart", "true") === "true" || value("selectBackgroundAtStart", "true") === true
+                category: "Editor"
+            }
+            Settings {
+                id: stEnableAutoSave
+                category: "Editor/SaveConfig"
+            }
+            
+            ColumnLayout {
                 anchors.fill: parent
                 spacing: 15
                 
                 // Header avec bouton retour
-                Row {
-                    width: parent.width
-                    height: 40
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
                     spacing: 15
                     
                     Button {
-                        width: 40
-                        height: 40
+                        Layout.preferredWidth: 40
+                        Layout.preferredHeight: 40
                         text: "←"
-                        anchors.verticalCenter: parent.verticalCenter
                         
                         background: Rectangle {
                             color: parent.pressed ? "#3A7BD5" : "#4A90E2"
-                            radius: 6
+                            radius: 8
                         }
                         
                         contentItem: Text {
@@ -445,405 +454,279 @@ Rectangle {
                     Text {
                         text: "Paramètres"
                         color: "white"
-                        font.pixelSize: 20
+                        font.pixelSize: 22
                         font.bold: true
-                        anchors.verticalCenter: parent.verticalCenter
+                        Layout.fillWidth: true
                     }
                 }
                 
                 // Contenu des paramètres
                 Rectangle {
-                    width: parent.width
-                    height: parent.height - 60
-                    color: "#333333"
-                    radius: 8
-                    border.color: "#4A90E2"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: "#1E1E1E"
+                    radius: 12
+                    border.color: "#333333"
                     border.width: 1
                     
                     ScrollView {
                         anchors.fill: parent
                         anchors.margins: 15
-
-                        Column {
+                        contentWidth: availableWidth
+                        clip: true
+                        
+                        ColumnLayout {
                             width: parent.width
-                            // anchors.top: displayMenuBtn.bottom
-                            anchors.topMargin: 10
-                            spacing: 20
-
-                            Button {
-                                id: displayMenuBtn
-                                height: 50
-                                width: escMenu.width * 0.82
-                                background: Rectangle {
-                                    color: displayMenuBtn.checked ? "#4A90E2" : "#333333"
-                                    radius: 8
-                                    border.width: 1
-                                    border.color: displayMenuBtn.checked ? "#FFFFFF" : "#555555"
-                                }
-                                contentItem: Text {
-                                    id: txt
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    text: displayMenuBtn.checked ? "Afficher la modification de carte au lancement de l'éditeur ?" :
-                                                                   "Ne pas afficher la modification de carte au lancement de l'éditeur ?"
-                                    wrapMode: Text.WordWrap
-                                    color: "white"
-                                    font.pixelSize: 13
-                                }
-                                onVisibleChanged: {
-                                    state = stBackGroundEditor.value("selectBackgroundAtStart", "true")
-                                }
-                                onClicked:{
-                                    checked = !checked
-                                    stBackGroundEditor.setValue("selectBackgroundAtStart", checked)
-                                    stBackGroundEditor.sync()
-                                }
-                                Settings {
-                                    id: stBackGroundEditor
-                                    property bool selectBackgroundAtStart: value("selectBackgroundAtStart", "true")
-                                    category: "Editor"
-                                }
-                            }
-                            Row {
-                                id: rowSave
-                                height: 50
-                                width: escMenu.width
-                                spacing: 10
-                                Button {
-                                    id: enableAutoSaveBtn
-                                    height: 50
-                                    width: escMenu.width * 0.5
-                                    property int indexBt
-                                    background: Rectangle {
-                                        color: {
-                                            switch (enableAutoSaveBtn.indexBt){
-                                            case 1 :
-                                            default: "#333333"; break;
-                                            case 2 : "#4A90E2"; break;
-                                            case 3 : "#63C76F"; break;
-                                            }
-                                        }
-                                        border.color: {
-                                            switch (enableAutoSaveBtn.indexBt){
-                                            case 1 :
-                                            default: "#555555"; break;
-                                            case 2 :
-                                            case 3 : "#FFFFFF"; break;
-                                            }
-                                        }
-
-                                        border.width: 1
-                                        radius: 8
-                                    }
-                                    contentItem: Text {
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        text:switch (enableAutoSaveBtn.indexBt){
-                                             case 1 :
-                                             default: "Pas de sauvegarde automatique"; break;
-                                             case 2 : "Sauvegarde toute les "; break;
-                                             case 3 : "Sauvegarde en continu"; break;
-                                             }
-                                        wrapMode: Text.WordWrap
-                                        color: "white"
-                                        font.pixelSize: 13
-                                    }
-
-                                    Component.onCompleted: indexBt = stEnableAutoSave.value("saveEvent", "0")
-
-                                    onVisibleChanged: {
-                                        enableAutoSaveBtn.indexBt = parseInt(stEnableAutoSave.value("saveEvent", "0"))
-                                        if (enableAutoSaveBtn.indexBt == 2) {
-                                            saveIntervalSpinBox.value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
-                                        }
-                                    }
-                                    onClicked:{
-                                        enableAutoSaveBtn.indexBt % 3 ? enableAutoSaveBtn.indexBt += 1 : enableAutoSaveBtn.indexBt = 1
-                                        stEnableAutoSave.setValue("saveEvent", enableAutoSaveBtn.indexBt)
-                                        stEnableAutoSave.sync()
-                                        escMenu.indexSaveEvent(enableAutoSaveBtn.indexBt)
-                                        if (enableAutoSaveBtn.indexBt == 2) {
-                                            saveIntervalSpinBox.value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
-                                        }
-                                    }
-                                    Settings {
-                                        id: stEnableAutoSave
-                                        category: "Editor/SaveConfig"
-                                    }
-                                }
+                            spacing: 15
+                            
+                            // --- SECTION ÉDITEUR ---
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: editorLayout.implicitHeight + 30
+                                color: "#252525"
+                                radius: 8
+                                border.color: "#3A3A3A"
+                                border.width: 1
                                 
-                                // Conteneur discret pour l'intervalle de sauvegarde
-                                Row {
-                                    id: intervalRow
-                                    height: 50
-                                    visible: enableAutoSaveBtn.indexBt == 2
-                                    spacing: 8
-                                    anchors.verticalCenter: parent.verticalCenter
+                                ColumnLayout {
+                                    id: editorLayout
+                                    anchors.fill: parent
+                                    anchors.margins: 15
+                                    spacing: 15
                                     
-                                    // SpinBox discret
-                                    SpinBox {
-                                        id: saveIntervalSpinBox
-                                        height: 35
-                                        width: 50
-                                        from: 1
-                                        to: 5
+                                    Text {
+                                        text: "Éditeur"
+                                        color: "#4A90E2"
+                                        font.pixelSize: 16
+                                        font.bold: true
+                                        Layout.fillWidth: true
+                                    }
 
-                                        Component.onCompleted: value = parseInt(stEnableAutoSave.value("saveInterval", "1"))
-
-                                        contentItem: TextInput {
-                                            text: saveIntervalSpinBox.textFromValue(saveIntervalSpinBox.value, saveIntervalSpinBox.locale)
-                                            font.pixelSize: 12
-                                            color: "#CCCCCC"
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                            readOnly: true
-                                            selectByMouse: false
-                                        }
-                                        
-                                        background: Rectangle {
-                                            color: "#2A2A2A"
-                                            radius: 4
-                                            border.color: "#555555"
-                                            border.width: 1
-                                        }
-                                        
-                                        up.indicator: Rectangle {
-                                            x: saveIntervalSpinBox.mirrored ? 0 : parent.width - width
-                                            height: parent.height / 2
-                                            implicitWidth: 18
-                                            color: saveIntervalSpinBox.up.pressed ? "#3A3A3A" : "#2A2A2A"
-                                            border.color: "#555555"
-                                            border.width: 1
-                                            radius: 4
-                                            Text {
-                                                text: "+"
-                                                color: "#CCCCCC"
-                                                font.pixelSize: 11
-                                                anchors.centerIn: parent
+                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#3A3A3A" }
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 15
+                                        Text { text: "Afficher la sélection de carte au lancement"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Switch {
+                                            id: launchSwitch
+                                            checked: stBackGroundEditor.selectBackgroundAtStart
+                                            onCheckedChanged: {
+                                                stBackGroundEditor.setValue("selectBackgroundAtStart", checked)
+                                                stBackGroundEditor.sync()
+                                            }
+                                            indicator: Rectangle {
+                                                implicitWidth: 46; implicitHeight: 24
+                                                x: parent.leftPadding
+                                                y: parent.height / 2 - height / 2
+                                                radius: 12
+                                                color: parent.checked ? "#4A90E2" : "#444444"
+                                                Rectangle {
+                                                    x: parent.parent.checked ? parent.width - width - 2 : 2
+                                                    y: 2; width: 20; height: 20; radius: 10; color: "white"
+                                                    Behavior on x { NumberAnimation { duration: 150 } }
+                                                }
                                             }
                                         }
-                                        
-                                        down.indicator: Rectangle {
-                                            x: saveIntervalSpinBox.mirrored ? 0 : parent.width - width
-                                            y: parent.height / 2
-                                            height: parent.height / 2
-                                            implicitWidth: 18
-                                            color: saveIntervalSpinBox.down.pressed ? "#3A3A3A" : "#2A2A2A"
-                                            border.color: "#555555"
-                                            border.width: 1
-                                            radius: 4
-                                            Text {
-                                                text: "−"
-                                                color: "#CCCCCC"
-                                                font.pixelSize: 11
-                                                anchors.centerIn: parent
+                                    }
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 15
+                                        Text { text: "Mode de sauvegarde"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        ComboBox {
+                                            id: autoSaveCombo
+                                            Layout.preferredWidth: 220
+                                            model: ["Manuelle", "Intervalle de temps", "Continue"]
+                                            currentIndex: {
+                                                let val = parseInt(stEnableAutoSave.value("saveEvent", "1"))
+                                                return val > 0 && val <= 3 ? val - 1 : 0
                                             }
-                                        }
-                                        
-                                        onValueChanged: {
-                                            if (visible) {
-                                                stEnableAutoSave.setValue("saveInterval", value)
+                                            onActivated: {
+                                                stEnableAutoSave.setValue("saveEvent", currentIndex + 1)
                                                 stEnableAutoSave.sync()
+                                                escMenu.indexSaveEvent(currentIndex + 1)
                                             }
+                                            background: Rectangle { color: "#333333"; radius: 6; border.color: autoSaveCombo.pressed ? "#4A90E2" : "#555555"; border.width: 1 }
+                                            contentItem: Text { text: parent.currentText; color: "white"; verticalAlignment: Text.AlignVCenter; leftPadding: 10; font.pixelSize: 14 }
                                         }
                                     }
-                                    
-                                    // Texte "minutes"
-                                    Text {
-                                        text: "minutes"
-                                        color: "#CCCCCC"
-                                        font.pixelSize: 12
-                                        anchors.verticalCenter: parent.verticalCenter
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 15
+                                        visible: autoSaveCombo.currentIndex === 1
+                                        Text { text: "Intervalle (minutes)"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        SpinBox {
+                                            id: saveIntervalSpinBox
+                                            Layout.preferredWidth: 120
+                                            from: 1; to: 60
+                                            value: parseInt(stEnableAutoSave.value("saveInterval", "1"))
+                                            onValueChanged: { stEnableAutoSave.setValue("saveInterval", value); stEnableAutoSave.sync() }
+                                            background: Rectangle { color: "#333333"; radius: 6; border.color: "#555555"; border.width: 1 }
+                                            contentItem: TextInput {
+                                                text: parent.textFromValue(parent.value, parent.locale)
+                                                font.pixelSize: 14; color: "white"
+                                                horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; readOnly: true
+                                            }
+                                            up.indicator: Rectangle { x: parent.width - width; height: parent.height; implicitWidth: 30; color: parent.parent.up.pressed ? "#4A90E2" : "#404040"; radius: 6; Text { text: "+"; color: "white"; anchors.centerIn: parent } }
+                                            down.indicator: Rectangle { x: 0; height: parent.height; implicitWidth: 30; color: parent.parent.down.pressed ? "#4A90E2" : "#404040"; radius: 6; Text { text: "-"; color: "white"; anchors.centerIn: parent } }
+                                        }
                                     }
                                 }
                             }
 
-                            // Section Graphiques
-                            Column {
-                                width: parent.width
-                                spacing: 10
+                            // --- SECTION GRAPHIQUES ---
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: graphicsLayout.implicitHeight + 30
+                                color: "#252525"
+                                radius: 8
+                                border.color: "#3A3A3A"
+                                border.width: 1
                                 
-                                Text {
-                                    text: "Graphiques"
-                                    color: "#4A90E2"
-                                    font.pixelSize: 16
-                                    font.bold: true
-                                }
-                                
-                                Row {
-                                    width: parent.width
-                                    height: 30
-                                    spacing: 10
+                                ColumnLayout {
+                                    id: graphicsLayout
+                                    anchors.fill: parent
+                                    anchors.margins: 15
+                                    spacing: 15
                                     
                                     Text {
-                                        text: "Qualité graphique:"
-                                        color: "white"
-                                        font.pixelSize: 14
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: "Graphiques"
+                                        color: "#4A90E2"
+                                        font.pixelSize: 16
+                                        font.bold: true
+                                        Layout.fillWidth: true
                                     }
                                     
-                                    ComboBox {
-                                        width: 150
-                                        model: ["Faible", "Moyenne", "Élevée", "Ultra"]
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-                                
-                                Row {
-                                    width: parent.width
-                                    height: 30
-                                    spacing: 10
+                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#3A3A3A" }
                                     
-                                    Text {
-                                        text: "Résolution:"
-                                        color: "white"
-                                        font.pixelSize: 14
-                                        anchors.verticalCenter: parent.verticalCenter
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Qualité graphique"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        ComboBox {
+                                            Layout.preferredWidth: 200; model: ["Faible", "Moyenne", "Élevée", "Ultra"]
+                                            background: Rectangle { color: "#333333"; radius: 6; border.color: parent.pressed ? "#4A90E2" : "#555555"; border.width: 1 }
+                                            contentItem: Text { text: parent.currentText; color: "white"; verticalAlignment: Text.AlignVCenter; leftPadding: 10; font.pixelSize: 14 }
+                                        }
                                     }
                                     
-                                    ComboBox {
-                                        width: 150
-                                        model: ["1920x1080", "1366x768", "1280x720", "1024x768"]
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-                                
-                                Row {
-                                    width: parent.width
-                                    height: 30
-                                    spacing: 10
-                                    
-                                    CheckBox {
-                                        id: fullscreenCheckbox
-                                        checked: false
-                                        anchors.verticalCenter: parent.verticalCenter
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Résolution"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        ComboBox {
+                                            Layout.preferredWidth: 200; model: ["1920x1080", "1366x768", "1280x720", "1024x768"]
+                                            background: Rectangle { color: "#333333"; radius: 6; border.color: parent.pressed ? "#4A90E2" : "#555555"; border.width: 1 }
+                                            contentItem: Text { text: parent.currentText; color: "white"; verticalAlignment: Text.AlignVCenter; leftPadding: 10; font.pixelSize: 14 }
+                                        }
                                     }
                                     
-                                    Text {
-                                        text: "Mode plein écran"
-                                        color: "white"
-                                        font.pixelSize: 14
-                                        anchors.verticalCenter: parent.verticalCenter
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Mode plein écran"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Switch {
+                                            id: fullscreenSwitch; checked: false
+                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? "#4A90E2" : "#444444"
+                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: "white"; Behavior on x { NumberAnimation { duration: 150 } } } }
+                                        }
                                     }
                                 }
                             }
-                            
-                            // Section Audio
-                            Column {
-                                width: parent.width
-                                spacing: 10
+
+                            // --- SECTION AUDIO ---
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: audioLayout.implicitHeight + 30
+                                color: "#252525"
+                                radius: 8
+                                border.color: "#3A3A3A"
+                                border.width: 1
                                 
-                                Text {
-                                    text: "Audio"
-                                    color: "#4A90E2"
-                                    font.pixelSize: 16
-                                    font.bold: true
-                                }
-                                
-                                Row {
-                                    width: parent.width
-                                    height: 30
-                                    spacing: 10
+                                ColumnLayout {
+                                    id: audioLayout
+                                    anchors.fill: parent
+                                    anchors.margins: 15
+                                    spacing: 15
                                     
                                     Text {
-                                        text: "Volume général:"
-                                        color: "white"
-                                        font.pixelSize: 14
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: "Audio"
+                                        color: "#4A90E2"
+                                        font.pixelSize: 16
+                                        font.bold: true
+                                        Layout.fillWidth: true
                                     }
                                     
-                                    Slider {
-                                        width: 200
-                                        from: 0
-                                        to: 100
-                                        value: 50
-                                        anchors.verticalCenter: parent.verticalCenter
+                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#3A3A3A" }
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Volume général"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Slider {
+                                            id: volumeSlider
+                                            Layout.preferredWidth: 200; from: 0; to: 100; value: 50
+                                            background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: "#444444"; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: "#4A90E2"; radius: 2 } }
+                                            handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? "#f0f0f0" : "white"; border.color: "#4A90E2"; border.width: 1 }
+                                        }
+                                        Text { text: Math.round(volumeSlider.value) + "%"; color: "#E0E0E0"; font.pixelSize: 14; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
                                     }
                                     
-                                    Text {
-                                        text: Math.round(parent.value) + "%"
-                                        color: "white"
-                                        font.pixelSize: 12
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-                                
-                                Row {
-                                    width: parent.width
-                                    height: 30
-                                    spacing: 10
-                                    
-                                    CheckBox {
-                                        id: musicCheckbox
-                                        checked: true
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                    
-                                    Text {
-                                        text: "Activer la musique"
-                                        color: "white"
-                                        font.pixelSize: 14
-                                        anchors.verticalCenter: parent.verticalCenter
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Activer la musique"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Switch {
+                                            id: musicSwitch; checked: true
+                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? "#4A90E2" : "#444444"
+                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: "white"; Behavior on x { NumberAnimation { duration: 150 } } } }
+                                        }
                                     }
                                 }
                             }
-                            
-                            // Section Contrôles
-                            Column {
-                                width: parent.width
-                                spacing: 10
+
+                            // --- SECTION CONTRÔLES ---
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: controlsLayout.implicitHeight + 30
+                                color: "#252525"
+                                radius: 8
+                                border.color: "#3A3A3A"
+                                border.width: 1
                                 
-                                Text {
-                                    text: "Contrôles"
-                                    color: "#4A90E2"
-                                    font.pixelSize: 16
-                                    font.bold: true
-                                }
-                                
-                                Row {
-                                    width: parent.width
-                                    height: 30
-                                    spacing: 10
+                                ColumnLayout {
+                                    id: controlsLayout
+                                    anchors.fill: parent
+                                    anchors.margins: 15
+                                    spacing: 15
                                     
                                     Text {
-                                        text: "Sensibilité de la souris:"
-                                        color: "white"
-                                        font.pixelSize: 14
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: "Contrôles"
+                                        color: "#4A90E2"
+                                        font.pixelSize: 16
+                                        font.bold: true
+                                        Layout.fillWidth: true
                                     }
                                     
-                                    Slider {
-                                        width: 200
-                                        from: 0.1
-                                        to: 2.0
-                                        value: 1.0
-                                        anchors.verticalCenter: parent.verticalCenter
+                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#3A3A3A" }
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Sensibilité de la souris"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Slider {
+                                            id: sensitivitySlider
+                                            Layout.preferredWidth: 200; from: 0.1; to: 2.0; value: 1.0
+                                            background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: "#444444"; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: "#4A90E2"; radius: 2 } }
+                                            handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? "#f0f0f0" : "white"; border.color: "#4A90E2"; border.width: 1 }
+                                        }
+                                        Text { text: (Math.round(sensitivitySlider.value * 100) / 100).toFixed(2); color: "#E0E0E0"; font.pixelSize: 14; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
                                     }
                                     
-                                    Text {
-                                        text: Math.round(parent.value * 100) / 100
-                                        color: "white"
-                                        font.pixelSize: 12
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-                                
-                                Row {
-                                    width: parent.width
-                                    height: 30
-                                    spacing: 10
-                                    
-                                    CheckBox {
-                                        id: invertMouseCheckbox
-                                        checked: false
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                    
-                                    Text {
-                                        text: "Inverser l'axe Y de la souris"
-                                        color: "white"
-                                        font.pixelSize: 14
-                                        anchors.verticalCenter: parent.verticalCenter
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Inverser l'axe Y"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Switch {
+                                            id: invertMouseSwitch; checked: false
+                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? "#4A90E2" : "#444444"
+                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: "white"; Behavior on x { NumberAnimation { duration: 150 } } } }
+                                        }
                                     }
                                 }
                             }
@@ -852,7 +735,6 @@ Rectangle {
                 }
             }
         }
-        
         // Vue About
         Item {
             id: aboutView

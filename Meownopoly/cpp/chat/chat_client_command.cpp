@@ -57,20 +57,6 @@ void ChatClient::onIncomingCommandPong(const QString &senderId, const QJsonObjec
     Logger::instance()->debug(QString("Received PONG from %1 Roundtrip: %2 ms").arg(senderId).arg(now - sentTs), "ChatClient");
 }
 
-void ChatClient::onIncomingCommandRequestConnectionInfo(const QString &senderId, const QJsonObject &data) {
-    QString ip = data["ip"].toString();
-    int port = data["port"].toInt();
-    Logger::instance()->debug(QString("Received REQUEST_CONNECTION_INFO from %1 (%2:%3), reply handled by Catway").arg(senderId).arg(ip).arg(port), "ChatClient");
-}
-
-void ChatClient::onIncomingCommandReplyConnectionInfo(const QString &senderId, const QJsonObject &data) {
-    QString ip = data["ip"].toString();
-    int port = data["port"].toInt();
-    Logger::instance()->debug(QString("Received REPLY_CONNECTION_INFO from %1 -> %2:%3").arg(senderId).arg(ip).arg(port), "ChatClient");
-}
-
-
-
 void ChatClient::sendCommand(const QString &commandType, const QJsonObject &data, const QString &recipientId) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 

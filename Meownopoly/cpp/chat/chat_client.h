@@ -97,8 +97,6 @@ private:
 
     void onIncomingCommandPing(const QString &senderId, const QJsonObject &data);
     void onIncomingCommandPong(const QString &senderId, const QJsonObject &data);
-    void onIncomingCommandRequestConnectionInfo(const QString &senderId, const QJsonObject &data);
-    void onIncomingCommandReplyConnectionInfo(const QString &senderId, const QJsonObject &data);
     void handleError(const QJsonObject &payload);
     void handleHistoryCleared();
     void sendWebSocketMessage(const QJsonObject &message);
