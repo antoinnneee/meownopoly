@@ -12,6 +12,7 @@ import "multiplayer/"
 
 import QtQuick.Window
 import Qt.labs.platform
+import QtCore
 
 import Game
 import Meownopoly.Account 1.0
@@ -19,10 +20,28 @@ import Meownopoly.Account 1.0
 
 ApplicationWindow {
     id: root
-    width: 1280
-    height: 720
+    
+    Settings {
+        id: stVideoConfig
+        category: "Video"
+    }
+
+    width: {
+        let res = stVideoConfig.value("resolution", "1280x720")
+        let parts = res.split("x")
+        return parts.length === 2 ? parseInt(parts[0]) : 1280
+    }
+    
+    height: {
+        let res = stVideoConfig.value("resolution", "1280x720")
+        let parts = res.split("x")
+        return parts.length === 2 ? parseInt(parts[1]) : 720
+    }
+    
     visible: true
     title: "Meownopoly"
+    
+    visibility: (stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true) ? Window.FullScreen : Window.Windowed
 
     StackView {
         id: stackView

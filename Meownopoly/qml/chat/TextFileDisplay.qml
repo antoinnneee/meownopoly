@@ -12,6 +12,8 @@ Column {
     required property string fileExtension
     property var chatClient: null
 
+    property int fullScreenHeight: -1
+
     // Parse the text file format: 📄FILE:ext:filename\n\ncontenu
     property string fileName: {
         if (!text.startsWith("📄FILE:")) return "Unknown"
@@ -176,7 +178,8 @@ Column {
     // Contenu du fichier (scrollable)
     Rectangle {
         width: parent.width
-        height: Math.min(contentText.contentHeight + 20, 300)
+        height: fullScreenHeight == -1 ?  Math.min(contentText.contentHeight + 20, 300) :
+                                         Math.min(contentText.contentHeight + 20, fullScreenHeight)
         color: "#2a2a2a"
         radius: 6
         border.color: "#444444"

@@ -7,6 +7,7 @@ Rectangle {
     Layout.fillWidth: true
     Layout.fillHeight: true
     color: "#2a2a2a"
+
     border.color: dropArea.containsDrag ? "#4A90E2" : "#444444"
     border.width: dropArea.containsDrag ? 2 : 1
 
@@ -15,6 +16,7 @@ Rectangle {
     property alias messageList: messageList
 
     signal countChanged(int count)
+    signal openFullScreenMsg(var modelMsg)
 
     Behavior on border.color { ColorAnimation { duration: 150 } }
     Behavior on border.width { NumberAnimation { duration: 150 } }
@@ -201,6 +203,9 @@ Rectangle {
                 anchors.right: parent.isOwn ? parent.right : undefined
                 anchors.leftMargin: 0
                 anchors.rightMargin: 0
+                onOpenFullScreenMsg: function(modelMsg) {
+                    messagesContainer.openFullScreenMsg(modelMsg)
+                }
             }
         }
 

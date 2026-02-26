@@ -31,6 +31,8 @@ Base_logic {
     property var polygonPreview: null  // Référence au composant de prévisualisation du polygone
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
+    signal snapableTilesListUpdated()
+
 
     property alias planLogic: planLogic
     property alias tileLogic: tileLogic
@@ -101,6 +103,7 @@ Base_logic {
 
             // Vider la liste principale d'abord
             snapableTilesList = []
+            snapableTilesListUpdated()
 
             // Détruire les éléments directement sans animation ni sauvegarde
             for (var i = 0; i < elementsToRemove.length; i++) {

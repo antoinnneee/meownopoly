@@ -40,6 +40,8 @@ public:
 
     Q_INVOKABLE void connectToSessionDirect(const QString &sessionId, const QString &password);
     Q_INVOKABLE void connectToSession(const QString &playerId, const QString &password, const QString &nickname = QString());
+    Q_INVOKABLE void joinSession();
+
     Q_INVOKABLE void sendMessage(const QString &text, const QString &recipientId = QString(), const QString &recipientNickname = QString());
     Q_INVOKABLE void sendImage(const QString &filePath);
     Q_INVOKABLE void sendTextFile(const QString &filePath);
@@ -95,8 +97,6 @@ private:
 
     void onIncomingCommandPing(const QString &senderId, const QJsonObject &data);
     void onIncomingCommandPong(const QString &senderId, const QJsonObject &data);
-    void onIncomingCommandRequestConnectionInfo(const QString &senderId, const QJsonObject &data);
-    void onIncomingCommandReplyConnectionInfo(const QString &senderId, const QJsonObject &data);
     void handleError(const QJsonObject &payload);
     void handleHistoryCleared();
     void sendWebSocketMessage(const QJsonObject &message);

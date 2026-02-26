@@ -1,8 +1,6 @@
 #include <QDebug>
-
-#include <QQmlApplicationEngine>
-#include <QQuickStyle>
-#include <QtQml/QQmlContext>
+#include <QGuiApplication>
+#include "tools/mouse_event_filter.h"
 
 #include "qmlapp.h"
 
@@ -12,6 +10,9 @@
 #include "game/meowstyle.h"
 #include "game/item_snapable/ItemSnapable.h"
 #include "launcher/launcher_manager.h"
+#include <QQmlApplicationEngine>
+#include <QQuickStyle>
+#include <QtQml/QQmlContext>
 
 #include <QJsonArray>
 #include <QJsonObject>
@@ -43,7 +44,7 @@
 #include "game/map/mapinfo.h"
 #include "game/map/mapfilemanager.h"
 #include "game/map/templatefilemanager.h"
-
+#include "tools/mouse_event_filter.h"
 #include "game/item_snapable/itemsnapablefactory.h"
 
 //#include "animationprovider.h"
@@ -59,6 +60,7 @@
 
 QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
 {
+    qApp->installEventFilter(MouseEventFilter::instance());
     // qDebug() << QImageWriter::supportedImageFormats();
     QQuickStyle::setStyle("Material");
     UiStyle::registerQml();
