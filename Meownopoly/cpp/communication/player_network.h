@@ -62,6 +62,7 @@ signals:
     void socketInfoChanged();
     void ipChanged();
     void portChanged();
+    void p2pConnectedChanged();
 
 private:
     QString m_playerId;

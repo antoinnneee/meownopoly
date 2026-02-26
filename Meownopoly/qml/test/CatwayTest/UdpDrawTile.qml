@@ -16,21 +16,28 @@ Rectangle {
     border.color: host.cardBorder
     border.width: 1
 
+    function applyDrawMessage(senderId, message) {
+        if (!udpDrawTileRoot.targetPlayer || senderId !== udpDrawTileRoot.targetPlayer.playerId)
+            return
+        if (message === "CLEAR") {
+            drawGrid.clearLocal()
+        } else if (message.startsWith("DRAW:")) {
+            var parts = message.split(":")
+            if (parts.length === 3) {
+                var idx = parseInt(parts[1])
+                var colorStr = parts[2]
+                drawGrid.setCellColor(idx, colorStr)
+            }
+        }
+    }
+
     Connections {
         target: Catway
         function onUdpMessageReceived(senderId, message) {
-            if (udpDrawTileRoot.targetPlayer && senderId === udpDrawTileRoot.targetPlayer.playerId) {
-                if (message === "CLEAR") {
-                    drawGrid.clearLocal();
-                } else if (message.startsWith("DRAW:")) {
-                    var parts = message.split(":");
-                    if (parts.length === 3) {
-                        var idx = parseInt(parts[1]);
-                        var colorStr = parts[2];
-                        drawGrid.setCellColor(idx, colorStr);
-                    }
-                }
-            }
+            applyDrawMessage(senderId, message)
+        }
+        function onReliableMessageReceivedString(senderId, message) {
+            applyDrawMessage(senderId, message)
         }
     }
 

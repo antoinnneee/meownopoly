@@ -85,6 +85,8 @@ signals:
     void playersChanged();
     /// Émis quand un paquet fiable (via reliable) est reçu et acquitté.
     void reliableMessageReceived(QString senderId, QByteArray data);
+    /// Même contenu en QString (UTF-8), pratique pour le QML (draw, chat, etc.).
+    void reliableMessageReceivedString(QString senderId, QString message);
     void heartbeatIntervalChanged();
 
 private slots:

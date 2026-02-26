@@ -104,3 +104,11 @@ void PlayerNetwork::setPort(quint16 port)
         emit portChanged();
     }
 }
+
+void PlayerNetwork::setP2pConnected(bool connected)
+{
+    if (m_p2pConnected != connected) {
+        m_p2pConnected = connected;
+        emit p2pConnectedChanged();
+    }
+}

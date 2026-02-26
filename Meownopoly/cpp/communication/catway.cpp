@@ -64,8 +64,9 @@ static int catway_process_packet(
     auto *ctx = static_cast<CatwayReliableContext *>(context);
     if (!ctx || !ctx->catway) return 0;
     QByteArray data(reinterpret_cast<const char *>(packet_data), packet_bytes);
-    // Émettre le signal avec l'ID du joueur comme expéditeur
-    emit ctx->catway->reliableMessageReceived(ctx->player->playerId(), data);
+    QString senderId = ctx->player->playerId();
+    emit ctx->catway->reliableMessageReceived(senderId, data);
+    emit ctx->catway->reliableMessageReceivedString(senderId, QString::fromUtf8(data));
     return 1; // 1 = ACK le paquet
 }
 

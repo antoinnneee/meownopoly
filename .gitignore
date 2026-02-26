@@ -36,3 +36,4 @@ chatServer/chat.db
 chatServer/.deployEnv
 .vscode/settings.json
 /build
+/Meownopoly/.cache
