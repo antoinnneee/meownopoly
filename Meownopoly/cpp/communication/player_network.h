@@ -18,6 +18,9 @@ class PlayerNetwork : public QObject
     /// Port de destination pour envoyer des données à ce joueur (peut différer du publicPort du socket).
     Q_PROPERTY(quint16 port READ port WRITE setPort NOTIFY portChanged)
 
+    /// Indique si la connexion UDP (Hole Punching) a réussi et est prête pour l'échange bidirectionnel.
+    Q_PROPERTY(bool p2pConnected READ isP2pConnected WRITE setP2pConnected NOTIFY p2pConnectedChanged)
+
 public:
     explicit PlayerNetwork(QObject *parent = nullptr);
     ~PlayerNetwork();
@@ -50,6 +53,9 @@ public:
     quint16 port() const { return m_port; }
     void setPort(quint16 port);
 
+    bool isP2pConnected() const { return m_p2pConnected; }
+    void setP2pConnected(bool connected);
+
 signals:
     void playerIdChanged();
     void nicknameChanged();
@@ -63,6 +69,7 @@ private:
     UdpSocketInfo *m_socketInfo = nullptr;
     QString m_ip;
     quint16 m_port = 0;
+    bool m_p2pConnected = false;
     reliable_endpoint_t *m_endpoint = nullptr;
 };
 

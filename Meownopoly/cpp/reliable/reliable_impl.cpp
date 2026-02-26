@@ -12,6 +12,11 @@
 // Désactiver les tests internes de reliable qui ont leur propre main()
 #define RELIABLE_ENABLE_TESTS 0
 
+// Forcer le mode debug pour avoir les logs et assertions même en build Release
+#ifndef RELIABLE_DEBUG
+#define RELIABLE_DEBUG 1
+#endif
+
 extern "C" {
 #include "reliable.c"
 }

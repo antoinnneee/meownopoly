@@ -66,7 +66,7 @@ Rectangle {
                 onClicked: {
                     drawGrid.clearAll()
                     if (udpDrawTileRoot.targetPlayer) {
-                        Catway.sendUdpMessageToPlayer(udpDrawTileRoot.targetPlayer, "CLEAR")
+                        Catway.sendReliableToPlayer(udpDrawTileRoot.targetPlayer, "CLEAR")
                     }
                 }
             }

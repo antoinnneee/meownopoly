@@ -6,11 +6,29 @@
 #include <QUdpSocket>
 #include <QVariant>
 #include <QElapsedTimer>
+#include <QDebug>
+#include <cstdarg>
+#include <cstdio>
 
 #include "stun_manager.h"
 #include "../account/account_manager.h"
 #include "../tools/logger.h"
 #include "reliable.h"
+
+// ---------------------------------------------------------------------------
+// Debug reliable : redirection des logs vers qDebug
+// ---------------------------------------------------------------------------
+static int catway_reliable_printf(const char *fmt, ...)
+{
+    char buf[4096];
+    va_list args;
+    va_start(args, fmt);
+    int n = std::vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    if (n > 0)
+        qDebug().noquote() << "[reliable]" << buf;
+    return n;
+}
 
 // ---------------------------------------------------------------------------
 // Callbacks C statiques pour reliable (doivent être des fonctions C, pas des
@@ -77,11 +95,20 @@ Catway::Catway(QObject *parent)
 
     // Timer de mise à jour des endpoints reliable (~60 Hz)
     reliable_init();
+    reliable_log_level(RELIABLE_LOG_LEVEL_DEBUG);
+    reliable_set_printf_function(catway_reliable_printf);
+    qDebug() << "Catway: reliable debug activé (niveau DEBUG). Les logs [reliable] apparaîtront quand le canal fiable est utilisé (sendReliableToPlayer ou paquets reçus avec préfixe 0x01).";
     m_reliableClock.start();
     m_reliableUpdateTimer = new QTimer(this);
     m_reliableUpdateTimer->setInterval(16); // ~60 Hz
     connect(m_reliableUpdateTimer, &QTimer::timeout, this, &Catway::onReliableUpdate);
     m_reliableUpdateTimer->start();
+
+    // Timer du Heartbeat P2P
+    m_heartbeatTimer = new QTimer(this);
+    m_heartbeatTimer->setInterval(m_heartbeatInterval);
+    connect(m_heartbeatTimer, &QTimer::timeout, this, &Catway::onHeartbeat);
+    m_heartbeatTimer->start();
 }
 
 void Catway::registerQml()
@@ -112,6 +139,22 @@ QObject *Catway::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 }
 
 // --- Delegated methods ---
+
+int Catway::heartbeatInterval() const
+{
+    return m_heartbeatInterval;
+}
+
+void Catway::setHeartbeatInterval(int intervalMs)
+{
+    if (m_heartbeatInterval != intervalMs) {
+        m_heartbeatInterval = intervalMs;
+        if (m_heartbeatTimer) {
+            m_heartbeatTimer->setInterval(m_heartbeatInterval);
+        }
+        emit heartbeatIntervalChanged();
+    }
+}
 
 void Catway::startServer()
 {
@@ -251,6 +294,8 @@ void Catway::removePlayer(PlayerNetwork *player)
 {
     if (!player || !m_players.removeOne(player))
         return;
+    qDebug() << "[Catway] removePlayer:" << player->playerId() << "- déconnexion du joueur (endpoint reliable détruit)";
+    player->destroyReliable();
     // Libérer le contexte reliable
     void *ctxPtr = player->property("_reliableCtx").value<void *>();
     if (ctxPtr) {
@@ -423,7 +468,8 @@ void Catway::onPlayerUdpReadyRead()
 
         // Détection du type de paquet via le magic byte
         if (!datagram.isEmpty() && datagram[0] == '\x01') {
-            // Paquet fiable (reliable)
+            // Paquet fiable (reliable) — les logs [reliable] s'afficheront ici
+            qDebug() << "[Catway UDP] Paquet fiable (0x01) reçu, taille" << datagram.size() << "joueur" << targetPlayer->playerId();
             if (targetPlayer->endpoint()) {
                 // On retire le magic byte avant de passer à reliable
                 const uint8_t *reliableData = reinterpret_cast<const uint8_t *>(datagram.constData()) + 1;
@@ -434,18 +480,28 @@ void Catway::onPlayerUdpReadyRead()
                     const_cast<uint8_t *>(reliableData),
                     reliableSize
                 );
+            } else {
+                qDebug() << "[Catway UDP] Pas d'endpoint reliable pour ce joueur, paquet ignoré.";
             }
         } else {
-            // Paquet brut (raw UDP) : Hole Punching, Chat legacy, Dessin legacy
+            // Paquet brut (raw) — chat/dessin/hole punch utilisent ce chemin
+            if (datagram.size() <= 80)
+                qDebug() << "[Catway UDP] Paquet raw reçu, taille" << datagram.size() << "joueur" << targetPlayer->playerId() << "->" << QString::fromUtf8(datagram);
+            // Hole Punching, Chat legacy, Dessin legacy
             QString msg = QString::fromUtf8(datagram);
             
             if (msg == QStringLiteral("HP:REPLY")) {
+                targetPlayer->setP2pConnected(true);
                 sendUdpPunch(targetPlayer, QStringLiteral("HP:FINAL"));
                 emit log("UDP Hole Punching: Received REPLY, sent FINAL. Connection should be open!");
             } else if (msg == QStringLiteral("HP:FINAL")) {
+                targetPlayer->setP2pConnected(true);
                 emit log("UDP Hole Punching: Received FINAL. Punching SUCCESS!");
             } else if (msg == QStringLiteral("HP:STRIKE")) {
                 emit log("UDP Hole Punching: Received STRIKE. Other side is punching.");
+            } else if (msg == QStringLiteral("HP:PING")) {
+                // Heartbeat silencieux : sert à maintenir le port du routeur ouvert
+                // Pas besoin de parser ou logger afin de ne pas spammer la console
             } else {
                 // Message de jeu legacy (chat, dessin)
                 emit udpMessageReceived(targetPlayer->playerId(), msg);
@@ -559,5 +615,14 @@ void Catway::onReliableUpdate()
         if (!ep) continue;
         reliable_endpoint_update(ep, timeSeconds);
         reliable_endpoint_clear_acks(ep);
+    }
+}
+
+void Catway::onHeartbeat()
+{
+    for (PlayerNetwork *player : m_players) {
+        if (player && player->isP2pConnected()) {
+            sendUdpPunch(player, QStringLiteral("HP:PING"));
+        }
     }
 }

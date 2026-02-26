@@ -46,6 +46,11 @@ public:
     Q_PROPERTY(QQmlListProperty<UdpSocketInfo> localPorts READ localPorts NOTIFY localPortsChanged)
     QQmlListProperty<UdpSocketInfo> localPorts();
 
+    /// Intervalle d'envoi du battement de cœur P2P (Heartbeat) en millisecondes. Défaut : 10000ms.
+    Q_PROPERTY(int heartbeatInterval READ heartbeatInterval WRITE setHeartbeatInterval NOTIFY heartbeatIntervalChanged)
+    int heartbeatInterval() const;
+    void setHeartbeatInterval(int intervalMs);
+
     /// Liste des joueurs réseau (playerId, nickname, socketInfo).
     Q_PROPERTY(QQmlListProperty<PlayerNetwork> players READ players NOTIFY playersChanged)
     QQmlListProperty<PlayerNetwork> players();
@@ -80,6 +85,7 @@ signals:
     void playersChanged();
     /// Émis quand un paquet fiable (via reliable) est reçu et acquitté.
     void reliableMessageReceived(QString senderId, QByteArray data);
+    void heartbeatIntervalChanged();
 
 private slots:
     void onAccountStunChanged();
@@ -88,6 +94,7 @@ private slots:
     void onPendingCommandReady(QString ip, quint16 port);
     void onPlayerUdpReadyRead();
     void onReliableUpdate();
+    void onHeartbeat();
 
 private:
     struct PendingCommand {
@@ -117,6 +124,8 @@ private:
     QMetaObject::Connection m_pendingCommandConnection;
     QTimer *m_reliableUpdateTimer = nullptr;
     QElapsedTimer m_reliableClock;
+    QTimer *m_heartbeatTimer = nullptr;
+    int m_heartbeatInterval = 10000;
 };
 
 #endif // CATWAY_H

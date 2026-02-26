@@ -74,6 +74,8 @@ qt_add_executable(${PROJECT_NAME}
 # ============================================================================
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     BUILD_DIR="${CMAKE_BINARY_DIR}"
+    # Activer le mode debug de la lib reliable (logs détaillés, assertions)
+    $<$<CONFIG:Debug>:RELIABLE_DEBUG>
 )
 
 # Configuration spécifique Android
