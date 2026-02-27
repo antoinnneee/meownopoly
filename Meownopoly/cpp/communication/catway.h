@@ -10,12 +10,50 @@
 #include <QList>
 #include <QJsonObject>
 #include <QElapsedTimer>
+#include <QThread>
 
 class QUdpSocket;
 class StunManager;
+class CatwayWorker;
 #include "udp_socket_info.h"
 #include "player_network.h"
 
+// ---------------------------------------------------------------------------
+// Worker pour exécuter les sockets UDP et timer reliable hors du Main Thread
+// ---------------------------------------------------------------------------
+class CatwayWorker : public QObject
+{
+    Q_OBJECT
+public:
+    explicit CatwayWorker(QObject *parent = nullptr);
+    ~CatwayWorker();
+
+    StunManager *stunManager() const { return m_stunManager; }
+
+    static void catway_transmit_packet(void *context, uint64_t id, uint16_t sequence, uint8_t *packet_data, int packet_bytes);
+    static int catway_process_packet(void *context, uint64_t id, uint16_t sequence, uint8_t *packet_data, int packet_bytes);
+
+public slots:
+    void initReliable();
+    void startReliableTimer();
+    void tearDown();
+
+private slots:
+    void onReliableUpdate();
+
+signals:
+    void reliableMessageReceived(QString senderId, QByteArray data);
+    void reliableMessageReceivedString(QString senderId, QString message);
+
+private:
+    StunManager *m_stunManager;
+    QTimer *m_reliableUpdateTimer = nullptr;
+    QElapsedTimer m_reliableClock;
+};
+
+// ---------------------------------------------------------------------------
+// Classe Main (UI Thread)
+// ---------------------------------------------------------------------------
 class Catway : public QObject
 {
     Q_OBJECT
@@ -97,6 +135,7 @@ private slots:
     void onPlayerUdpReadyRead();
     void onReliableUpdate();
     void onHeartbeat();
+    void onStunRequestFailed();
 
 private:
     struct PendingCommand {
@@ -117,15 +156,15 @@ private:
     PlayerNetwork *getOrCreatePlayer(const QString &playerId);
     QString nicknameFromChat(const QString &playerId) const;
 
-    StunManager *m_stunManager;
+    CatwayWorker *m_worker;
+    QThread *m_networkThread;
+    
     ChatClient *m_chatClient;
     QList<UdpSocketInfo *> m_localSocketInfos;
     QList<PlayerNetwork *> m_players;
     QMetaObject::Connection m_stunConnection;
     QMetaObject::Connection m_externalAddressTakePortConnection;
     QMetaObject::Connection m_pendingCommandConnection;
-    QTimer *m_reliableUpdateTimer = nullptr;
-    QElapsedTimer m_reliableClock;
     QTimer *m_heartbeatTimer = nullptr;
     int m_heartbeatInterval = 10000;
 };

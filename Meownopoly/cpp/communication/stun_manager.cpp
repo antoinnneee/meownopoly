@@ -23,6 +23,7 @@ StunManager::StunManager(QObject *parent)
 void StunManager::onStunTimeout()
 {
     // No response received — disconnect handler
+    emit stunFailed(); // Notify Catway to clear pending commands
     m_stunTimeout->stop();
     disconnect(m_stunTimeout, &QTimer::timeout, this, &StunManager::onStunTimeout);
     emit log("STUN request timed out, handler disconnected");

@@ -44,6 +44,7 @@ signals:
     void log(QString message);
     void serverStarted(quint16 localPort);
     void externalAddressReceived(QString ip, quint16 port);
+    void stunFailed(); // Emitted on timeout
 
 private slots:
     void onReadyRead();

@@ -35,6 +35,57 @@ static int catway_reliable_printf(const char *fmt, ...)
 // lambdas capturantes). Le contexte est un PlayerNetwork*.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Worker Implementation (Threaded Networking)
+// ---------------------------------------------------------------------------
+
+CatwayWorker::CatwayWorker(QObject *parent) : QObject(parent)
+{
+    m_stunManager = new StunManager(this);
+}
+
+CatwayWorker::~CatwayWorker()
+{
+}
+
+void CatwayWorker::initReliable()
+{
+    reliable_init();
+    reliable_log_level(RELIABLE_LOG_LEVEL_DEBUG);
+    reliable_set_printf_function(catway_reliable_printf);
+    qDebug() << "[CatwayWorker] reliable init in thread:" << QThread::currentThreadId();
+}
+
+void CatwayWorker::startReliableTimer()
+{
+    m_reliableClock.start();
+    m_reliableUpdateTimer = new QTimer(this);
+    m_reliableUpdateTimer->setInterval(16); // ~60 Hz
+    connect(m_reliableUpdateTimer, &QTimer::timeout, this, &CatwayWorker::onReliableUpdate);
+    m_reliableUpdateTimer->start();
+}
+
+void CatwayWorker::onReliableUpdate()
+{
+    double timeSeconds = m_reliableClock.elapsed() / 1000.0;
+    
+    // Pour parcourir les players en thread-safe, Catway devra émettre un signal vers le worker,
+    // ou le worker gérera sa propre liste d'endpoints locaux.
+    // Pour l'instant, appeler Catway::instance()->onReliableUpdate() depuis le thread principal via signal.
+    QMetaObject::invokeMethod(Catway::instance(), "onReliableUpdate", Qt::QueuedConnection);
+}
+
+void CatwayWorker::tearDown()
+{
+    if (m_reliableUpdateTimer) {
+        m_reliableUpdateTimer->stop();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Callbacks C statiques pour reliable
+// ---------------------------------------------------------------------------
+
 struct CatwayReliableContext {
     PlayerNetwork *player;
     Catway        *catway;
@@ -65,8 +116,11 @@ static int catway_process_packet(
     if (!ctx || !ctx->catway) return 0;
     QByteArray data(reinterpret_cast<const char *>(packet_data), packet_bytes);
     QString senderId = ctx->player->playerId();
-    emit ctx->catway->reliableMessageReceived(senderId, data);
-    emit ctx->catway->reliableMessageReceivedString(senderId, QString::fromUtf8(data));
+    // Émettre le signal via le QThread GUI pour ne pas crasher les bindings QML
+    QMetaObject::invokeMethod(ctx->catway, [ctx, senderId, data]() {
+        emit ctx->catway->reliableMessageReceived(senderId, data);
+        emit ctx->catway->reliableMessageReceivedString(senderId, QString::fromUtf8(data));
+    }, Qt::QueuedConnection);
     return 1; // 1 = ACK le paquet
 }
 
@@ -75,8 +129,24 @@ Catway *Catway::m_pThis = nullptr;
 Catway::Catway(QObject *parent)
     : QObject(parent)
 {
-    // Create StunManager owned by Catway
-    m_stunManager = new StunManager(this);
+    // === Threaded Networking Setup ===
+    m_networkThread = new QThread(this);
+    m_worker = new CatwayWorker();
+    
+    // Le Worker gère désormais le StunManager
+    m_stunManager = m_worker->stunManager();
+
+    m_worker->moveToThread(m_networkThread);
+    
+    // Lancer la lib `reliable` dans le nouveau thread une fois démarré
+    connect(m_networkThread, &QThread::started, m_worker, &CatwayWorker::initReliable);
+    connect(m_networkThread, &QThread::started, m_worker, &CatwayWorker::startReliableTimer);
+
+    // Mettre fin au worker proprement quand le thread s'arrête
+    connect(m_networkThread, &QThread::finished, m_worker, &QObject::deleteLater);
+
+    m_networkThread->start();
+    // =================================
 
     // Client de chat intégré (exposé en QML via la propriété chatClient)
     m_chatClient = new ChatClient(this);
@@ -85,6 +155,7 @@ Catway::Catway(QObject *parent)
     // Relay signals from StunManager
     connect(m_stunManager, &StunManager::log, this, &Catway::log);
     connect(m_stunManager, &StunManager::serverStarted, this, &Catway::serverStarted);
+    connect(m_stunManager, &StunManager::stunFailed, this, &Catway::onStunRequestFailed);
 
     // Sync STUN parameters from AccountManager
     auto *am = AccountManager::instance();
@@ -93,17 +164,6 @@ Catway::Catway(QObject *parent)
 
     // Initialize STUN params from current AccountManager values
     onAccountStunChanged();
-
-    // Timer de mise à jour des endpoints reliable (~60 Hz)
-    reliable_init();
-    reliable_log_level(RELIABLE_LOG_LEVEL_DEBUG);
-    reliable_set_printf_function(catway_reliable_printf);
-    qDebug() << "Catway: reliable debug activé (niveau DEBUG). Les logs [reliable] apparaîtront quand le canal fiable est utilisé (sendReliableToPlayer ou paquets reçus avec préfixe 0x01).";
-    m_reliableClock.start();
-    m_reliableUpdateTimer = new QTimer(this);
-    m_reliableUpdateTimer->setInterval(16); // ~60 Hz
-    connect(m_reliableUpdateTimer, &QTimer::timeout, this, &Catway::onReliableUpdate);
-    m_reliableUpdateTimer->start();
 
     // Timer du Heartbeat P2P
     m_heartbeatTimer = new QTimer(this);
@@ -226,7 +286,10 @@ UdpSocketInfo *Catway::takeSocket()
         info->setParent(this);
         m_localSocketInfos.append(info);
         if (info->socket()) {
-            connect(info->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
+            info->socket()->setParent(nullptr); // Must unparent before moving
+            info->socket()->moveToThread(m_networkThread);
+            // Connect with QueuedConnection because socket is on NetworkThread and Catway is on GUI Thread
+            connect(info->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead, Qt::QueuedConnection);
         }
         emit localPortsChanged();
     }
@@ -275,8 +338,13 @@ void Catway::addPlayer(PlayerNetwork *player)
     } else if (player->socketInfo() && player->socketInfo()->socket()) {
         // Just in case it was created freely, ensure readyRead is connected
         // although normally they should be in localPorts already via takeSocket()
-        disconnect(player->socketInfo()->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
-        connect(player->socketInfo()->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
+        QUdpSocket *sock = player->socketInfo()->socket();
+        if (sock->thread() != m_networkThread) {
+            sock->setParent(nullptr);
+            sock->moveToThread(m_networkThread);
+        }
+        disconnect(sock, &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
+        connect(sock, &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead, Qt::QueuedConnection);
     }
 
     player->setParent(this);
@@ -627,6 +695,17 @@ void Catway::onPendingCommandReady(QString ip, quint16 port)
     m_pendingCommands.clear();
     for (const PendingCommand &c : toProcess)
         onChatCommandReceived(c.senderId, c.commandType, c.data);
+}
+
+void Catway::onStunRequestFailed()
+{
+    // Faille 6 (Deadlock): Si le STUN échoue, on doit vider la file d'attente
+    // sinon Catway restera bloqué indéfiniment à attendre une adresse publique.
+    if (!m_pendingCommands.isEmpty()) {
+        emit log(QString("SÉCURITÉ: Requête STUN échouée. Annulation de %1 commandes en attente (évite le Deadlock).").arg(m_pendingCommands.size()));
+        m_pendingCommands.clear();
+        disconnect(m_pendingCommandConnection);
+    }
 }
 
 // ---------------------------------------------------------------------------
