@@ -296,6 +296,28 @@ void Catway::removePlayer(PlayerNetwork *player)
     if (!player || !m_players.removeOne(player))
         return;
     qDebug() << "[Catway] removePlayer:" << player->playerId() << "- déconnexion du joueur (endpoint reliable détruit)";
+    
+    // Libérer le socket si plus utilisé (Faille 5 - Fuite de Sockets)
+    UdpSocketInfo *si = player->socketInfo();
+    if (si) {
+        bool inUse = false;
+        if (m_stunManager->currentSocketInfo() == si) {
+            inUse = true;
+        } else {
+            for (PlayerNetwork *p : m_players) {
+                if (p->socketInfo() == si) {
+                    inUse = true;
+                    break;
+                }
+            }
+        }
+        if (!inUse) {
+            m_localSocketInfos.removeOne(si);
+            si->deleteLater();
+            emit localPortsChanged();
+        }
+    }
+
     player->destroyReliable();
     // Libérer le contexte reliable
     void *ctxPtr = player->property("_reliableCtx").value<void *>();
@@ -467,8 +489,26 @@ void Catway::onPlayerUdpReadyRead()
             continue;
         }
 
+        // --- FILTRE DE SÉCURITÉ (ANTI-SPOOFING) ---
+        // On n'accepte le paquet que s'il vient de l'IP et du port publics du joueur ciblé.
+        if (targetPlayer->ip().isEmpty() || senderAddr.toString() != targetPlayer->ip() || senderPort != targetPlayer->port()) {
+            qWarning() << "[SÉCURITÉ] Paquet UDP spoofé ou inconnu ignoré. Provenance:" 
+                       << senderAddr.toString() << ":" << senderPort 
+                       << "- Attendu:" << targetPlayer->ip() << ":" << targetPlayer->port();
+            continue;
+        }
+        // ------------------------------------------
+
         // Détection du type de paquet via le magic byte
         if (!datagram.isEmpty() && datagram[0] == '\x01') {
+            // --- SÉCURITÉ ---
+            // On refuse de traiter des paquets de "reliable.io" si le Hole Punching
+            // n'a pas été formellement complété (évite le spoofing de trame P2P).
+            if (!targetPlayer->isP2pConnected()) {
+                qWarning() << "[SÉCURITÉ] Paquet fiable ignoré : la connexion P2P n'est pas encore établie avec" << targetPlayer->playerId();
+                continue;
+            }
+
             // Paquet fiable (reliable) — les logs [reliable] s'afficheront ici
             qDebug() << "[Catway UDP] Paquet fiable (0x01) reçu, taille" << datagram.size() << "joueur" << targetPlayer->playerId();
             if (targetPlayer->endpoint()) {

@@ -37,11 +37,44 @@ Pour que deux joueurs derrière des routeurs NAT puissent communiquer directemen
 ### Étape 1 : Obtenir l'IP/Port publics (STUN)
 Avant de se connecter, le client demande au serveur STUN son IP et son port publics (`sendStunRequest()` / `setupNewPort()`). Le socket ayant servi à cette requête est conservé dans un `UdpSocketInfo`.
 
+#### Diagramme Étape 1 (STUN)
+
+```mermaid
+sequenceDiagram
+    participant Client as QML/Test
+    participant Catway
+    participant StunManager
+    participant SocketInfo as UdpSocketInfo
+
+    Client->>Catway: setupNewPort()/sendStunRequest()
+    Catway->>StunManager: setStunServer(...), startServer()
+    Catway->>StunManager: sendStunRequest()
+    StunManager-->>Catway: externalAddressReceived(ip, port)
+    Catway->>Catway: takeSocket()
+    Catway-->>SocketInfo: Crée UdpSocketInfo(ip, port, socket)
+```
+
 ### Étape 2 : Échange des informations (Signaling)
 1. Le joueur d'initiative (Initiator) appelle `Catway::initiateHolePunch(PlayerNetwork *player)`.
 2. Il récupère l'IP/Port publics de son propre `UdpSocketInfo`.
 3. Il envoie un message de chat spécial de type `UDP_HOLE_PUNCH_REQUEST` contenant son IP/Port via `ChatClient`.
 4. Simultanément, il commence à envoyer des trames UDP factices ou d'initialisation (`HP:STRIKE`) vers la destination présumée du joueur distant pour "poinçonner" (punch) son propre routeur NAT.
+
+#### Diagramme Étape 2 (Signaling UDP_HOLE_PUNCH_REQUEST)
+
+```mermaid
+sequenceDiagram
+    participant CatwayA as Catway (Initiateur)
+    participant PlayerA as PlayerNetwork(A)
+    participant ChatA as ChatClient(A)
+    participant WSServer as ServeurWS
+    participant CatwayB as Catway (Target)
+
+    CatwayA->>PlayerA: Lit socketInfo.publicAddress/publicPort
+    CatwayA->>ChatA: sendCommand("UDP_HOLE_PUNCH_REQUEST", {ip, port}, targetId)
+    ChatA->>WSServer: UDP_HOLE_PUNCH_REQUEST
+    WSServer-->>CatwayB: UDP_HOLE_PUNCH_REQUEST\n(senderId, ip, port)
+```
 
 ### Étape 3 : Réponse et Finalisation de la connexion P2P
 1. Le joueur cible (Target) reçoit le `UDP_HOLE_PUNCH_REQUEST` via le chat centralisé.
@@ -50,12 +83,96 @@ Avant de se connecter, le client demande au serveur STUN son IP et son port publ
 4. L'initiateur reçoit le message UDP `HP:REPLY`. Le chemin P2P est désormais ouvert et fonctionnel dans les deux sens.
 5. Il renvoie un message de confirmation UDP `HP:FINAL`.
 
+#### Diagramme Étape 3 (Réponse HP:REPLY / HP:FINAL)
+
+```mermaid
+sequenceDiagram
+    participant CatwayB as Catway (Target)
+    participant PlayerB as PlayerNetwork(B)
+    participant CatwayA as Catway (Initiateur)
+
+    CatwayB->>CatwayB: onChatCommandReceived("UDP_HOLE_PUNCH_REQUEST")
+    CatwayB->>PlayerB: getOrCreatePlayer(senderId)\n+ setIp/Port(initiator)
+    CatwayB->>CatwayA: Envoie UDP "HP:REPLY"
+
+    CatwayA->>CatwayA: onPlayerUdpReadyRead()\nmsg == "HP:REPLY"
+    CatwayA->>PlayerB: setP2pConnected(true)
+    CatwayA->>CatwayB: sendUdpPunch("HP:FINAL")
+
+    CatwayB->>CatwayB: onPlayerUdpReadyRead()\nmsg == "HP:FINAL"
+    CatwayB->>PlayerB: setP2pConnected(true)
+```
+
 ### Étape 4 : Maintien de la connexion (Heartbeat / Keep-Alive)
 Une fois la connexion ouverte (réception de `HP:REPLY` ou `HP:FINAL`), le routeur NAT doit garder le "trou" ouvert. Les routeurs ferment généralement les ports inactifs au bout d'un certain temps de non-utilisation (ex: 30 à 120 secondes).
 Pour éviter cela :
 - L'instance de `Catway` déclenche un `QTimer` configuré par la propriété `heartbeatInterval` (valeur par défaut : 10000 millisecondes / 10s).
 - À chaque "tic", le système parcourt la liste des joueurs. Pour tous ceux dont le Hole Punching a réussi (`player->isP2pConnected() == true`), une petite trame silencieuse `"HP:PING"` est envoyée.
 - À la réception, la trame `"HP:PING"` est simplement ignorée pour ne pas polluer les logs. Sa simple arrivée (et émission) au niveau réseau permet de réinitialiser le chronomètre d'expiration du NAT.
+
+#### Diagramme Étape 4 (Heartbeat HP:PING)
+
+```mermaid
+sequenceDiagram
+    participant Timer as QTimer(heartbeatInterval)
+    participant Catway
+    participant Player as PlayerNetwork
+    participant Remote as RemotePlayer
+
+    Timer->>Catway: timeout() -> onHeartbeat()
+    Catway->>Player: if isP2pConnected()\nsendUdpPunch("HP:PING")
+    Player->>Remote: UDP "HP:PING"
+    Remote-->>Remote: onPlayerUdpReadyRead()\nmsg == "HP:PING"\n(trame ignorée,\nNAT gardé ouvert)
+```
+
+### 2.1 Diagramme de séquence : Initialisation d'un `PlayerNetwork` et Heartbeat
+
+```mermaid
+sequenceDiagram
+    participant Catway
+    participant StunManager
+    participant ChatClient
+    participant WSServer as ServeurWS
+    participant PlayerNetwork as Player(A)
+    participant TargetCatway as Catway(B)
+    participant TargetPlayer as Player(B)
+    participant Timer as HeartbeatTimer
+
+    %% 1) Récupération de sa propre IP publique via STUN + socket local
+    Catway->>StunManager: sendStunRequest() / setupNewPort()
+    StunManager-->>Catway: externalAddressReceived(ipA, portA)
+    Catway->>Catway: takeSocket() -> UdpSocketInfo(ipA, portA)
+    Catway->>PlayerNetwork: Crée Player(A)\n+ associe UdpSocketInfo + endpoint fiable
+
+    %% 2) Demande d'infos de connexion via WebSocket (REQUEST/REPLY_CONNECTION_INFO)
+    Catway->>ChatClient: sendRequestConnectionInfo(targetId, ipA, portA)
+    ChatClient->>WSServer: REQUEST_CONNECTION_INFO { ip: ipA, port: portA }
+    WSServer-->>TargetCatway: REQUEST_CONNECTION_INFO { ip: ipA, port: portA }
+    TargetCatway->>TargetCatway: getOrCreatePlayer(initiatorId)\n(peut déclencher STUN + takeSocket côté B)
+    TargetCatway->>TargetPlayer: Met à jour ip/port de Player(A) vus par B
+    TargetCatway->>ChatClient: sendCommand(\"REPLY_CONNECTION_INFO\", { ip: ipB, port: portB }, initiatorId)
+    ChatClient->>WSServer: REPLY_CONNECTION_INFO { ip: ipB, port: portB }
+    WSServer-->>ChatClient: REPLY_CONNECTION_INFO { ip: ipB, port: portB }
+    ChatClient-->>Catway: onChatCommandReceived(\"REPLY_CONNECTION_INFO\")\n-> Player(A).ip = ipB, port = portB
+
+    %% 3) Demande de connexion P2P et trouage UDP (UDP_HOLE_PUNCH_REQUEST + HP:*) 
+    Catway->>ChatClient: WS: UDP_HOLE_PUNCH_REQUEST\n(targetId, mon IP/port publics)
+    ChatClient->>WSServer: UDP_HOLE_PUNCH_REQUEST { ip: ipA, port: portA }
+    WSServer-->>TargetCatway: UDP_HOLE_PUNCH_REQUEST { ip: ipA, port: portA }
+
+    TargetCatway->>TargetPlayer: Crée Player(B) si besoin\n+ enregistre IP/port initiateur
+    TargetCatway->>Player(A): Envoie HP:REPLY via UDP
+    Player(A)-->>TargetPlayer: (NAT des deux côtés est poinçonné)
+    Catway-->>PlayerNetwork: Marque isP2pConnected = true\n(+ répond HP:FINAL si HP:REPLY reçu)
+
+    %% 4) Heartbeat pour garder le trou NAT ouvert (HP:PING)
+    Catway->>Timer: Démarre le QTimer(heartbeatInterval)
+    loop Toutes les heartbeatInterval ms
+        Timer->>PlayerNetwork: Demande d'envoi d'un "HP:PING"
+        PlayerNetwork->>TargetPlayer: Envoie trame UDP "HP:PING"
+        TargetPlayer-->>PlayerNetwork: (Optionnel) Réception / ignore la trame\n(NAT timeout réinitialisé)
+    end
+```
 
 ---
 
