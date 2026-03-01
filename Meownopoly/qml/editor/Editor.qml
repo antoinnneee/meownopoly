@@ -183,6 +183,17 @@ Base_Board {
             fullScreenMsgPopup.currentModel = modelMsg
             fullScreenMsgPopup.open()
         }
+        onCreateSnapableRequested: function(jsonString) {
+            try {
+                var jsonObj = JSON.parse(jsonString)
+                var item = ItemSnapableFactory.createItemSnapableFromJson(jsonObj)
+                logic.tileLogic.createItemSnapableTile(item)
+            } catch (e) {
+                console.error("Erreur /create :", e)
+            }
+        }
+        onClosed: root.forceActiveFocus()
+        onFocusReleased: root.forceActiveFocus()
     }
 
     MenuMapAtStart {

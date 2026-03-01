@@ -17,6 +17,7 @@ class ChatSlashCommands : public QObject
     Q_PROPERTY(QStringList commands READ commands CONSTANT)
     Q_PROPERTY(QString ping READ ping CONSTANT)
     Q_PROPERTY(QString stun READ stun CONSTANT)
+    Q_PROPERTY(QString create READ create CONSTANT)
 
 public:
     explicit ChatSlashCommands(QObject *parent = nullptr);
@@ -32,9 +33,11 @@ public:
     /// Constantes pour usage C++ (même ordre que commands()).
     static const QString CMD_PING;
     static const QString CMD_STUN;
+    static const QString CMD_CREATE;
 
     QString ping() const { return CMD_PING; }
     QString stun() const { return CMD_STUN; }
+    QString create() const { return CMD_CREATE; }
 
 private:
     static QStringList s_allCommands;

@@ -18,6 +18,8 @@ Rectangle {
     signal openImageDialog()
     signal openTextFileDialog()
     signal clearRecipient()
+    signal createSnapableRequested(string jsonString)
+    signal focusReleased()
 
     Behavior on Layout.preferredHeight { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
@@ -29,12 +31,16 @@ Rectangle {
                 Catway.setupNewPort()
             } else if (cmd === SlashCommands.ping) {
                 chatClient.sendPing()
+            } else if (cmd === SlashCommands.create) {
+                var jsonString = text.substring(SlashCommands.create.length).trim()
+                createSnapableRequested(jsonString)
             } else {
                 chatClient.sendMessage(inputField.text, recipientId || "", recipientNickname || "")
             }
             inputField.text = ""
         }
         inputField.focus = false
+        focusReleased()
     }
 
     ColumnLayout {

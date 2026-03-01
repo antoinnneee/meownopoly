@@ -4,8 +4,9 @@
 
 const QString ChatSlashCommands::CMD_PING = QStringLiteral("/ping");
 const QString ChatSlashCommands::CMD_STUN = QStringLiteral("/stun");
+const QString ChatSlashCommands::CMD_CREATE = QStringLiteral("/create");
 
-QStringList ChatSlashCommands::s_allCommands = { CMD_PING, CMD_STUN };
+QStringList ChatSlashCommands::s_allCommands = { CMD_PING, CMD_STUN, CMD_CREATE };
 
 ChatSlashCommands::ChatSlashCommands(QObject *parent)
     : QObject(parent)

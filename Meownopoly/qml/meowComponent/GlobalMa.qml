@@ -25,6 +25,7 @@ MouseArea{
     }
     
     onPressed: function (mouse) {
+        parent.forceActiveFocus()
         if (mouse.button === Qt.LeftButton) {
             mouseLogic.pressedLeft(mouse, drag)
         }

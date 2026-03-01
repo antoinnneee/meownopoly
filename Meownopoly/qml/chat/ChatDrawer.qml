@@ -23,6 +23,8 @@ Drawer {
     property string privateRecipientNickname: ""
 
     signal openFullScreenMsg(var modelMsg)
+    signal createSnapableRequested(string jsonString)
+    signal focusReleased()
 
     background: Rectangle {
         color: "#E6222222"
@@ -128,6 +130,10 @@ Drawer {
                 chatDrawer.privateRecipientId = ""
                 chatDrawer.privateRecipientNickname = ""
             }
+            onCreateSnapableRequested: function(jsonString) {
+                chatDrawer.createSnapableRequested(jsonString)
+            }
+            onFocusReleased: chatDrawer.focusReleased()
         }
 
         ChatStatusBar {
