@@ -325,13 +325,7 @@ function handleCreateSession(ws, payload) {
     // Créer la session dans la DB (sans participants pour l'instant)
     debug(`Creating new session: ${session_id} (name: ${session_name || 'N/A'})`);
 
-    // Si database.js supporte les métadonnées (session_name, max_players, is_public)
-    if (db.createSessionWithMetadata) {
-        db.createSessionWithMetadata(session_id, password_hash, session_name, max_players || 4, is_public);
-    } else {
-        // Fallback: créer avec l'ancienne méthode
-        db.createSession(session_id, password_hash, null, null);
-    }
+    db.createSession(session_id, session_name || '', password_hash, null, null);
 
     // Répondre au client
     ws.send(JSON.stringify({
