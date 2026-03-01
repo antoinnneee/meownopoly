@@ -92,30 +92,21 @@ QtObject {
     function createItemSnapableTile(itemSnapableData) {
         currentZOrder = currentZOrder + 0.00001
         itemSnapableData.displayParameter.zOrder  = currentZOrder;
-        // Créer le bon type de tile selon le tileType
-        // On passe directement itemSnapableData pour conserver les références next/prev
-        var newTile
+        // Choisir le bon composant selon le tileType
+        var tileComponent
         if (itemSnapableData.tileType === ItemSnapable.CaseTile) {
-            newTile = dynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                "generalMA": mainMa,
-                "snapableParameters": itemSnapableData
-            })
+            tileComponent = dynamicComponent.snapableCaseTileComponent
         } else if (itemSnapableData.tileType === ItemSnapable.DecorationTile) {
-            newTile = dynamicComponent.snapableDecorationComponent.createObject(workArea, {
-                "generalMA": mainMa,
-                "snapableParameters": itemSnapableData
-            })
+            tileComponent = dynamicComponent.snapableDecorationComponent
         } else if (itemSnapableData.tileType === ItemSnapable.PhysicZoneTile) {
-            newTile = dynamicComponent.snapablePhysicZoneComponent.createObject(workArea, {
-                "generalMA": mainMa,
-                "snapableParameters": itemSnapableData
-            })
+            tileComponent = dynamicComponent.snapablePhysicZoneComponent
         }
-        
-        if (newTile) {
-            // console.log("created item")
-            // newTile.snapableParameters.print()
-            
+        var newTile = tileComponent ? tileComponent.createObject(workArea, {
+            "generalMA": mainMa,
+            "snapableParameters": itemSnapableData
+        }) : null
+
+        if (newTile) {            
             snapableTilesList.push(newTile)
             logic.snapableTilesListUpdated()
             if (newTile.snapToGridFromGridPos) {
@@ -123,41 +114,6 @@ QtObject {
             }
         }
         return newTile
-    }
-
-    // Fonction pour créer une zone d'exclusion
-    function createPhysicZone(snapableParameters) {
-        console.log("TileLogic: Création d'une zone d'exclusion")
-        return createItemSnapableTile(snapableParameters)
-    }
-
-    // Fonction pour supprimer une zone d'exclusion
-    function deletePhysicZone(element) {
-        console.log("TileLogic: Suppression d'une zone d'exclusion")
-        
-        // Trouver l'index de l'élément dans la liste
-        var index = -1
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            if (snapableTilesList[i] === element) {
-                index = i
-                break
-            }
-        }
-
-        if (index !== -1) {
-            // Supprimer l'élément de la liste
-            snapableTilesList.splice(index, 1)
-            logic.snapableTilesListUpdated()
-            logic.mouseLogic.unselectSelectedElements()
-
-            // Détruire l'objet QML
-            element.destroy()
-            
-            // Sauvegarder après suppression
-            logic.saveMap(MapTypes.UNDOREDO)
-        } else {
-            console.log("Erreur: Zone d'exclusion non trouvée dans la liste")
-        }
     }
 
     // Fonction pour supprimer un élément
@@ -183,11 +139,11 @@ QtObject {
 
             // Détruire l'objet QML
             element.destroy()
+
         } else {
             console.log("Erreur: Élément non trouvé dans la liste")
         }
     }
-
 
 
  /*

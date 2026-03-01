@@ -57,21 +57,18 @@ QtObject {
     function createItemSnapableTile(itemSnapableData) {
         currentZOrder = currentZOrder + 0.00001
         itemSnapableData.displayParameter.zOrder  = currentZOrder;
-        // Créer le bon type de tile selon le tileType
-        // On passe directement itemSnapableData pour conserver les références next/prev
-        var newTile
+        // Choisir le bon composant selon le tileType
+        var tileComponent
         if (itemSnapableData.tileType === ItemSnapable.CaseTile) {
-            newTile = dynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-                "generalMA": mainMa,
-                "snapableParameters": itemSnapableData
-            })
+            tileComponent = dynamicComponent.snapableCaseTileComponent
         } else if (itemSnapableData.tileType === ItemSnapable.DecorationTile) {
-            newTile = dynamicComponent.snapableDecorationComponent.createObject(workArea, {
-                "generalMA": mainMa,
-                "snapableParameters": itemSnapableData
-            })
+            tileComponent = dynamicComponent.snapableDecorationComponent
         }
-        
+        var newTile = tileComponent ? tileComponent.createObject(workArea, {
+            "generalMA": mainMa,
+            "snapableParameters": itemSnapableData
+        }) : null
+
         if (newTile) {
             // console.log("created item")
             // newTile.snapableParameters.print()

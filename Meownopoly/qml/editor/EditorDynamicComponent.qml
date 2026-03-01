@@ -65,7 +65,9 @@ Item{
 
             // Gestion de la suppression
             onElementDeleted: function(element) {
-                logic.tileLogic.deletePhysicZone(element)
+                logic.tileLogic.deleteElementsConnections(element)
+                element.connectionManager.deleteLinkedConnection()
+                logic.tileLogic.deleteElement(element)
                 logic.mouseLogic.removeElementFromTemplateSelection(element)
             }
         }

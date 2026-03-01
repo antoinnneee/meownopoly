@@ -184,7 +184,7 @@ MouseLogic_Base {
         snapableParameters.zoneParameter.accelerationMultiplier = accelerationMultiplier
         
         // Créer l'élément via TileLogic
-        var zone = logic.tileLogic.createPhysicZone(snapableParameters)
+        var zone = logic.tileLogic.createItemSnapableTile(snapableParameters)
         zone.updateDisplayBounds()
 
         
