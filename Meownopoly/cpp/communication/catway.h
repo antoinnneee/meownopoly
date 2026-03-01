@@ -40,7 +40,7 @@ public slots:
 
     // STUN & Socket control (Proxied to StunManager on worker thread)
     void startStunServer();
-    void stopServer();
+    void stopStunServer();
     void sendStunRequest();
     void setStunServerInfo(const QString &host, quint16 port);
     UdpSocketInfo* takeSocket();
@@ -77,10 +77,8 @@ public:
 
 
     Q_INVOKABLE void startStunServer();
-    Q_INVOKABLE void stopServer();
+    Q_INVOKABLE void stopStunServer();
     Q_INVOKABLE void sendStunRequest();
-    Q_INVOKABLE void setStunServerURL(QString ip);
-    Q_INVOKABLE void setStunPort(quint16 port);
     Q_INVOKABLE QString getExternalIp() const;
     Q_INVOKABLE quint16 getExternalPort() const;
 
@@ -118,8 +116,8 @@ public:
 
     Q_INVOKABLE void initiateHolePunch(PlayerNetwork *player);
     Q_INVOKABLE void sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message);
-    void sendUdpPunch(PlayerNetwork *player, const QString &content);
-    void sendUdpPunch(PlayerNetwork *player, const QByteArray &data);
+    void sendUdpDatagram(PlayerNetwork *player, const QByteArray &data);
+    void sendUdpDatagram(PlayerNetwork *player, const QString &content);
 
     /// Envoie des données via l'endpoint reliable du joueur (ACK garanti).
     /// À n'utiliser qu'après que la connexion UDP est établie (HP:FINAL reçu).

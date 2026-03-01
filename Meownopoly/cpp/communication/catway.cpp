@@ -13,191 +13,6 @@
 #include "stun_manager.h"
 #include "../account/account_manager.h"
 #include "../tools/logger.h"
-#include "reliable.h"
-
-// ---------------------------------------------------------------------------
-// Debug reliable : redirection des logs vers qDebug
-// ---------------------------------------------------------------------------
-static int catway_reliable_printf(const char *fmt, ...)
-{
-    char buf[4096];
-    va_list args;
-    va_start(args, fmt);
-    int n = std::vsnprintf(buf, sizeof(buf), fmt, args);
-    va_end(args);
-    if (n > 0)
-        qDebug().noquote() << "[reliable]" << buf;
-    return n;
-}
-
-// ---------------------------------------------------------------------------
-// Callbacks C statiques pour reliable (doivent être des fonctions C, pas des
-// lambdas capturantes). Le contexte est un PlayerNetwork*.
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Worker Implementation (Threaded Networking)
-// ---------------------------------------------------------------------------
-
-CatwayWorker::CatwayWorker(QObject *parent) : QObject(parent)
-{
-    m_stunManager = new StunManager(this);
-}
-
-CatwayWorker::~CatwayWorker()
-{
-}
-
-void CatwayWorker::initReliable()
-{
-    reliable_init();
-    reliable_log_level(RELIABLE_LOG_LEVEL_DEBUG);
-    reliable_set_printf_function(catway_reliable_printf);
-    qDebug() << "[CatwayWorker] reliable init in thread:" << QThread::currentThreadId();
-}
-
-void CatwayWorker::startReliableTimer()
-{
-    m_reliableClock.start();
-    m_reliableUpdateTimer = new QTimer(this);
-    m_reliableUpdateTimer->setInterval(16); // ~60 Hz
-    connect(m_reliableUpdateTimer, &QTimer::timeout, this, &CatwayWorker::onReliableUpdate);
-    m_reliableUpdateTimer->start();
-}
-
-void CatwayWorker::startStunServer()
-{
-    m_stunManager->startServer();
-}
-
-void CatwayWorker::stopServer()
-{
-    m_stunManager->stopServer();
-}
-
-void CatwayWorker::sendStunRequest()
-{
-    m_stunManager->sendStunRequest();
-}
-
-void CatwayWorker::setStunServerInfo(const QString &host, quint16 port)
-{
-    m_stunManager->setStunServer(host, port);
-}
-
-UdpSocketInfo* CatwayWorker::takeSocket()
-{
-    UdpSocketInfo *info = m_stunManager->takeSocket();
-    if (info) {
-        // MUST move from the thread it currently belongs to (NetworkThread)
-        // push it to the GUI thread.
-        info->moveToThread(Catway::instance()->thread());
-    }
-    return info;
-}
-
-void CatwayWorker::onReliableUpdate()
-{
-    double timeSeconds = m_reliableClock.elapsed() / 1000.0;
-    
-    // Accéder aux players via le singleton Catway.
-    // Note : bien que les QObjects vivent sur le thread GUI, les pointeurs `reliable_endpoint_t*`
-    // sont manipulés exclusivement pour les E/S réseau.
-    Catway *catway = Catway::instance();
-    if (!catway) return;
-
-    for (int i = 0; i < catway->playersCount(); ++i) {
-        PlayerNetwork *player = catway->playerAt(i);
-        reliable_endpoint_t *ep = player ? player->endpoint() : nullptr;
-        if (!ep) continue;
-        reliable_endpoint_update(ep, timeSeconds);
-        reliable_endpoint_clear_acks(ep);
-    }
-}
-
-void CatwayWorker::onSocketReadyRead()
-{
-    QUdpSocket *socket = qobject_cast<QUdpSocket *>(sender());
-    if (!socket) return;
-
-    while (socket->hasPendingDatagrams()) {
-        QByteArray datagram;
-        datagram.resize(socket->pendingDatagramSize());
-        QHostAddress senderAddr;
-        quint16 senderPort;
-        socket->readDatagram(datagram.data(), datagram.size(), &senderAddr, &senderPort);
-
-        // --- NEW: Handle reliable packets directly on the network thread ---
-        if (!datagram.isEmpty() && datagram[0] == '\x01') {
-             Catway *catway = Catway::instance();
-             if (catway) {
-                 PlayerNetwork *targetPlayer = nullptr;
-                 for (int i = 0; i < catway->playersCount(); ++i) {
-                     PlayerNetwork *p = catway->playerAt(i);
-                     if (p && p->socketInfo() && p->socketInfo()->socket() == socket) {
-                         // Robust security check: use QHostAddress comparison
-                         if (!p->ip().isEmpty() && QHostAddress(p->ip()) == senderAddr && senderPort == p->port()) {
-                             targetPlayer = p;
-                             break;
-                         }
-                     }
-                 }
-
-                 if (targetPlayer && targetPlayer->isP2pConnected() && targetPlayer->endpoint()) {
-                     const uint8_t *reliableData = reinterpret_cast<const uint8_t *>(datagram.constData()) + 1;
-                     int reliableSize = datagram.size() - 1;
-                     reliable_endpoint_receive_packet(targetPlayer->endpoint(), const_cast<uint8_t *>(reliableData), reliableSize);
-                     continue; // Don't relay to Catway GUI thread
-                 } else if (targetPlayer) {
-                     qDebug() << "[reliable] Received reliable packet from" << targetPlayer->playerId() 
-                              << "but p2pConnected=" << targetPlayer->isP2pConnected() 
-                              << "endpoint=" << (targetPlayer->endpoint() != nullptr);
-                 }
-             }
-        }
-        // ------------------------------------------------------------------
-
-        emit datagramReceived(socket, datagram, senderAddr, senderPort);
-    }
-}
-
-void CatwayWorker::sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port)
-{
-    if (socket && socket->thread() == QThread::currentThread()) {
-        socket->writeDatagram(data, address, port);
-    } else if (socket) {
-        qWarning() << "[CatwayWorker] sendDatagram called on wrong thread for socket" << socket;
-    }
-}
-
-void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray &data)
-{
-    Catway *catway = Catway::instance();
-    if (!catway) return;
-
-    PlayerNetwork *player = catway->playerById(playerId);
-    if (!player) return;
-
-    reliable_endpoint_t *ep = player->endpoint();
-    if (!ep) {
-        qDebug() << "[reliable] Error: No endpoint for player" << playerId;
-        return;
-    }
-
-    qDebug() << "[reliable] Sending packet to" << playerId << "size" << data.size();
-    reliable_endpoint_send_packet(ep, reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())), data.size());
-}
-
-void CatwayWorker::tearDown()
-{
-    if (m_reliableUpdateTimer) {
-        m_reliableUpdateTimer->stop();
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Callbacks C statiques pour reliable
-// ---------------------------------------------------------------------------
 
 struct CatwayReliableContext {
     PlayerNetwork *player;
@@ -232,7 +47,7 @@ static void catway_transmit_packet(
         si->socket()->writeDatagram(datagram, QHostAddress(targetIp), targetPort);
     } else {
         // Fallback to Catway's thread-safe delegator if called from another thread
-        Catway::instance()->sendUdpPunch(player, datagram);
+        Catway::instance()->sendUdpDatagram(player, datagram);
     }
 }
 
@@ -325,8 +140,11 @@ void Catway::setChatClient(ChatClient *client)
     if (m_chatClient == client)
         return;
 
-    if (m_chatClient)
+    if (m_chatClient) {
         disconnect(m_chatClient, &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
+        if (m_chatClient->parent() == this)
+            m_chatClient->deleteLater();
+    }
 
     m_chatClient = client;
 
@@ -366,18 +184,9 @@ void Catway::startStunServer()
     QMetaObject::invokeMethod(m_worker, "startStunServer", Qt::QueuedConnection);
 }
 
-void Catway::stopServer()
+void Catway::stopStunServer()
 {
-    QMetaObject::invokeMethod(m_worker, "stopServer", Qt::QueuedConnection);
-}
-
-void Catway::setStunPort(quint16 port)
-{
-    QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, m_worker->stunManager()->getStunServer()), Q_ARG(quint16, port));
-}
-void Catway::setStunServerURL(QString url)
-{
-    QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, url), Q_ARG(quint16, m_worker->stunManager()->getStunPort()));
+    QMetaObject::invokeMethod(m_worker, "stopStunServer", Qt::QueuedConnection);
 }
 
 QString Catway::getExternalIp() const
@@ -668,22 +477,22 @@ void Catway::initiateHolePunch(PlayerNetwork *player)
     m_chatClient->sendCommand(QStringLiteral("UDP_HOLE_PUNCH_REQUEST"), data, player->playerId());
 
     // 2. Emit UDP frame (HP:STRIKE)
-    sendUdpPunch(player, QStringLiteral("HP:STRIKE"));
+    sendUdpDatagram(player, QStringLiteral("HP:STRIKE"));
 }
 
 void Catway::sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message)
 {
     if (!player) return;
-    sendUdpPunch(player, message);
+    sendUdpDatagram(player, message);
 }
 
-void Catway::sendUdpPunch(PlayerNetwork *player, const QString &content)
+void Catway::sendUdpDatagram(PlayerNetwork *player, const QString &content)
 {
     if (!player || player->ip().isEmpty() || player->port() == 0) return;
-    sendUdpPunch(player, content.toUtf8());
+    sendUdpDatagram(player, content.toUtf8());
 }
 
-void Catway::sendUdpPunch(PlayerNetwork *player, const QByteArray &data)
+void Catway::sendUdpDatagram(PlayerNetwork *player, const QByteArray &data)
 {
     if (!player || player->ip().isEmpty() || player->port() == 0) return;
     UdpSocketInfo *si = player->socketInfo();
@@ -695,7 +504,7 @@ void Catway::sendUdpPunch(PlayerNetwork *player, const QByteArray &data)
                               Q_ARG(QByteArray, data),
                               Q_ARG(QHostAddress, addr),
                               Q_ARG(quint16, player->port()));
-    
+
     if (data.size() > 0 && data[0] != '\x01') {
         emit log(QString("Sent UDP Punch [%1] to %2:%3").arg(QString::fromUtf8(data), player->ip(), QString::number(player->port())));
     }
@@ -736,14 +545,13 @@ void Catway::onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAd
             return;
         } else {
         // Paquet brut (raw) — chat/dessin/hole punch utilisent ce chemin
-        if (datagram.size() <= 80)
-            // qDebug() << "[Catway UDP] Paquet raw reçu, taille" << datagram.size() << "joueur" << targetPlayer->playerId() << "->" << QString::fromUtf8(datagram);
-        // Hole Punching, Chat legacy, Dessin legacy
+        // if (datagram.size() <= 80) qDebug() << "[Catway UDP] Paquet raw reçu, taille" << datagram.size() << "joueur" << targetPlayer->playerId() << "->" << QString::fromUtf8(datagram);
+
         QString msg = QString::fromUtf8(datagram);
-        
+
         if (msg == QStringLiteral("HP:REPLY")) {
             targetPlayer->setP2pConnected(true);
-            sendUdpPunch(targetPlayer, QStringLiteral("HP:FINAL"));
+            sendUdpDatagram(targetPlayer, QStringLiteral("HP:FINAL"));
             emit log("UDP Hole Punching: Received REPLY, sent FINAL. Connection should be open!");
         } else if (msg == QStringLiteral("HP:FINAL")) {
             targetPlayer->setP2pConnected(true);
@@ -762,14 +570,23 @@ void Catway::onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAd
 
 void Catway::onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data)
 {
-    if (commandType == QStringLiteral("REPLY_CONNECTION_INFO")) {
-        PlayerNetwork *player = getOrCreatePlayer(senderId);
-        if (player) {
+
+    bool containPlayerInfo = (commandType == QStringLiteral("REPLY_CONNECTION_INFO") || commandType == QStringLiteral("UDP_HOLE_PUNCH_REQUEST") || commandType == QStringLiteral("REQUEST_CONNECTION_INFO"));
+    PlayerNetwork *player = nullptr;
+    if (containPlayerInfo)
+    {
+        player = getOrCreatePlayer(senderId);
+        if (player)
+        {
             QString ip = data[QStringLiteral("ip")].toString();
             int port = data[QStringLiteral("port")].toInt();
             player->setIp(ip);
             player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
-        } else {
+        }
+    }
+
+    if (commandType == QStringLiteral("REPLY_CONNECTION_INFO")) {
+        if (!player) {
             m_pendingCommands.append({senderId, commandType, data});
             if (m_pendingCommands.size() == 1) {
                 disconnect(m_externalAddressTakePortConnection);
@@ -784,27 +601,14 @@ void Catway::onChatCommandReceived(const QString &senderId, const QString &comma
         return;
     }
     if (commandType == QStringLiteral("UDP_HOLE_PUNCH_REQUEST")) {
-        PlayerNetwork *player = getOrCreatePlayer(senderId);
         if (player) {
-            QString ip = data[QStringLiteral("ip")].toString();
-            int port = data[QStringLiteral("port")].toInt();
-            player->setIp(ip);
-            player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
-            
             // Target side: Received chat request, send UDP REPLY
             emit log(QString("Received UDP_HOLE_PUNCH_REQUEST from %1. Sending HP:REPLY...").arg(senderId));
-            sendUdpPunch(player, QStringLiteral("HP:REPLY"));
+            sendUdpDatagram(player, QStringLiteral("HP:REPLY"));
         }
         return;
     }
     if (commandType == QStringLiteral("REQUEST_CONNECTION_INFO")) {
-        PlayerNetwork *player = getOrCreatePlayer(senderId);
-        if (player) {
-            QString ip = data[QStringLiteral("ip")].toString();
-            int port = data[QStringLiteral("port")].toInt();
-            player->setIp(ip);
-            player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
-        }
         UdpSocketInfo *socketInfo = player ? qobject_cast<UdpSocketInfo *>(player->socketInfo()) : nullptr;
         if (socketInfo) {
             QJsonObject replyData;
@@ -867,7 +671,7 @@ void Catway::onHeartbeat()
 {
     for (PlayerNetwork *player : m_players) {
         if (player && player->isP2pConnected()) {
-            sendUdpPunch(player, QStringLiteral("HP:PING"));
+            sendUdpDatagram(player, QStringLiteral("HP:PING"));
         }
     }
 }

@@ -40,18 +40,5 @@ Rectangle {
             }
             onClicked: Catway.setupNewPort()
         }
-        RowLayout {
-            spacing: 16
-            RowLayout {
-                spacing: 6
-                Text { text: "IP:"; color: host.textSecondary; font.pixelSize: 12 }
-                Text { text: Catway.getExternalIp(); color: host.textPrimary; font.pixelSize: 12 }
-            }
-            RowLayout {
-                spacing: 6
-                Text { text: "Port:"; color: host.textSecondary; font.pixelSize: 12 }
-                Text { text: Catway.getExternalPort(); color: host.textPrimary; font.pixelSize: 12 }
-            }
-        }
     }
 }
