@@ -1,4 +1,4 @@
-﻿#ifndef MAP_H
+#ifndef MAP_H
 #define MAP_H
 
 #include <QObject>
@@ -10,8 +10,9 @@ class Map : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QList<ItemSnapable*> caseTiles READ caseTiles NOTIFY caseTilesChanged FINAL)
-    Q_PROPERTY(QList<ItemSnapable*> decorationTiles READ decorationTiles NOTIFY decorationTilesChanged FINAL)
+    Q_PROPERTY(int caseTileCount READ caseTileCount NOTIFY caseTileCountChanged FINAL)
+    Q_PROPERTY(int decorationTileCount READ decorationTileCount NOTIFY decorationTileCountChanged FINAL)
+    Q_PROPERTY(int zoneTileCount READ zoneTileCount NOTIFY zoneTileCountChanged FINAL)
 
     Q_PROPERTY(MapInfo *mapInfo READ getMapInfo WRITE setMapInfo NOTIFY mapInfoChanged FINAL)
 
@@ -19,12 +20,9 @@ public:
     Map(QObject *parent = nullptr);
     Map(QJsonObject jsonObject, QObject *parent = nullptr);
 
-    QList<ItemSnapable*> caseTiles() const { return m_caseTiles; }
-    void setCaseTiles(const QList<ItemSnapable*> &caseTiles) { m_caseTiles = caseTiles; emit caseTilesChanged(); }
-
-
-    QList<ItemSnapable*> decorationTiles() const { return m_decorationTiles; }
-    void setDecorationTiles(const QList<ItemSnapable*> &decorationTiles) { m_decorationTiles = decorationTiles; emit decorationTilesChanged(); }
+    int caseTileCount() const { return m_caseTileCount; }
+    int decorationTileCount() const { return m_decorationTileCount; }
+    int zoneTileCount() const { return m_zoneTileCount; }
 
     MapInfo *getMapInfo() const;
     void setMapInfo(MapInfo *newMapInfo);
@@ -37,18 +35,21 @@ public:
 
 
 signals:
-    void caseTilesChanged();
-    void decorationTilesChanged();
+    void caseTileCountChanged();
+    void decorationTileCountChanged();
+    void zoneTileCountChanged();
     void mapInfoChanged();
     
     void mapLoaded(Map *map);
     void foundItemSnapableTile(ItemSnapable *itemSnapable);
 
 private:
+    void updateTileCounts();
 
     QList<ItemSnapable*> m_tiles;
-    QList<ItemSnapable*> m_caseTiles;
-    QList<ItemSnapable*> m_decorationTiles;
+    int m_caseTileCount = 0;
+    int m_decorationTileCount = 0;
+    int m_zoneTileCount = 0;
 
     MapInfo *mapInfo = nullptr;
 

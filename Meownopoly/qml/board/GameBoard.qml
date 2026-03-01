@@ -77,7 +77,7 @@ Base_Board {
         target: Game
 
         function onFoundItemSnapableTile(itemSnapableData){
-            logic.tileLogic.createItemSnapable(itemSnapableData);
+            logic.tileLogic.createItemSnapableTile(itemSnapableData);
         }
 
         function onMapLoaded(map)

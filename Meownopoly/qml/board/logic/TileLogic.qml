@@ -54,7 +54,7 @@ QtObject {
     }
 
 
-    function createItemSnapable(itemSnapableData) {
+    function createItemSnapableTile(itemSnapableData) {
         currentZOrder = currentZOrder + 0.00001
         itemSnapableData.displayParameter.zOrder  = currentZOrder;
         // Créer le bon type de tile selon le tileType

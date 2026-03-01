@@ -264,7 +264,7 @@ Base_Board {
         function onFoundItemSnapableTile(itemSnapableData) {
             Logger.info("Found itemSnapable tile:" + itemSnapableData,
                         "MAP_LOADING")
-            logic.tileLogic.createItemSnapable(itemSnapableData)
+            logic.tileLogic.createItemSnapableTile(itemSnapableData)
         }
 
         function onMapLoaded(map) {

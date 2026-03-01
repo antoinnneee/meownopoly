@@ -1,4 +1,4 @@
-﻿#include "map.h"
+#include "map.h"
 #include "mapfilemanager.h"
 #include "maptypes.h"
 
@@ -21,15 +21,8 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
         const QJsonObject tileObject = value.toObject();
         ItemSnapable *is = new ItemSnapable(tileObject);
         m_tiles.append(is);
-        /*
-        if (is->tileType() == TileType::CaseTile){
-            m_caseTiles.append(is);
-        }
-        if (is->tileType() == TileType::DecorationTile){
-            m_decorationTiles.append(is);
-        }
-*/
     }
+    updateTileCounts();
 
     // qDebug() << "Snapable tiles loaded successfully";
     // qDebug() << "--------------------------------";
@@ -78,6 +71,41 @@ QList<ItemSnapable *> Map::tiles() const
 void Map::setTiles(const QList<ItemSnapable *> &newTiles)
 {
     m_tiles = newTiles;
+    updateTileCounts();
+}
+
+void Map::updateTileCounts()
+{
+    int caseCount = 0;
+    int decorationCount = 0;
+    int zoneCount = 0;
+    for (ItemSnapable *tile : std::as_const(m_tiles)) {
+        switch (tile->tileType()) {
+        case ItemSnapable::CaseTile:
+            ++caseCount;
+            break;
+        case ItemSnapable::DecorationTile:
+            ++decorationCount;
+            break;
+        case ItemSnapable::PhysicZoneTile:
+            ++zoneCount;
+            break;
+        default:
+            break;
+        }
+    }
+    if (m_caseTileCount != caseCount) {
+        m_caseTileCount = caseCount;
+        emit caseTileCountChanged();
+    }
+    if (m_decorationTileCount != decorationCount) {
+        m_decorationTileCount = decorationCount;
+        emit decorationTileCountChanged();
+    }
+    if (m_zoneTileCount != zoneCount) {
+        m_zoneTileCount = zoneCount;
+        emit zoneTileCountChanged();
+    }
 }
 
 Map *Map::loadMap(QJsonObject newEdit)

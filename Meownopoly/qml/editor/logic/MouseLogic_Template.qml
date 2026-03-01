@@ -499,7 +499,7 @@ MouseLogic_Selection {
         var itemSnapableList = Game.generateItems(jsonObj)
         
         for (var i = 0; i < itemSnapableList.length; i++) {
-            logic.tileLogic.createItemSnapable(itemSnapableList[i])
+            logic.tileLogic.createItemSnapableTile(itemSnapableList[i])
         }
         
         logic.saveMap(MapTypes.UNDOREDO)

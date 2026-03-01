@@ -46,7 +46,7 @@ QtObject {
         snapableParameters.decorationParameter.decorationType = selectionPanel.currentSelectedAssetType
         snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
 
-        var newTile = createItemSnapable(snapableParameters)
+        var newTile = createItemSnapableTile(snapableParameters)
 
         var visualEffectsPanel = editorSidePanel.visualEffectsPanel
         if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
@@ -89,7 +89,7 @@ QtObject {
     }
 
 
-    function createItemSnapable(itemSnapableData) {
+    function createItemSnapableTile(itemSnapableData) {
         currentZOrder = currentZOrder + 0.00001
         itemSnapableData.displayParameter.zOrder  = currentZOrder;
         // Créer le bon type de tile selon le tileType
@@ -128,7 +128,7 @@ QtObject {
     // Fonction pour créer une zone d'exclusion
     function createPhysicZone(snapableParameters) {
         console.log("TileLogic: Création d'une zone d'exclusion")
-        return createItemSnapable(snapableParameters)
+        return createItemSnapableTile(snapableParameters)
     }
 
     // Fonction pour supprimer une zone d'exclusion
