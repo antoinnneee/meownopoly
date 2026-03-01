@@ -79,8 +79,6 @@ public:
     Q_INVOKABLE void startStunServer();
     Q_INVOKABLE void stopStunServer();
     Q_INVOKABLE void sendStunRequest();
-    Q_INVOKABLE QString getExternalIp() const;
-    Q_INVOKABLE quint16 getExternalPort() const;
 
     /// Retourne le socket UDP actuel (pour usage C++). Ne transfère pas la propriété.
     Q_INVOKABLE QObject *getSocket() const;

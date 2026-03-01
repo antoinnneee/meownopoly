@@ -189,31 +189,6 @@ void Catway::stopStunServer()
     QMetaObject::invokeMethod(m_worker, "stopStunServer", Qt::QueuedConnection);
 }
 
-QString Catway::getExternalIp() const
-{
-    if (!m_localSocketInfos.isEmpty()) {
-        UdpSocketInfo *last = m_localSocketInfos.last();
-        QString addr = last->publicAddress();
-        if (!addr.isEmpty())
-            return addr;
-    }
-    QString res;
-    QMetaObject::invokeMethod(m_worker->stunManager(), "getExternalIp", Qt::BlockingQueuedConnection, Q_RETURN_ARG(QString, res));
-    return res;
-}
-
-quint16 Catway::getExternalPort() const
-{
-    if (!m_localSocketInfos.isEmpty()) {
-        UdpSocketInfo *last = m_localSocketInfos.last();
-        if (last->publicPort() != 0)
-            return last->publicPort();
-    }
-    quint16 res = 0;
-    QMetaObject::invokeMethod(m_worker->stunManager(), "getExternalPort", Qt::BlockingQueuedConnection, Q_RETURN_ARG(quint16, res));
-    return res;
-}
-
 QObject *Catway::getSocket() const
 {
     QUdpSocket *res = nullptr;
