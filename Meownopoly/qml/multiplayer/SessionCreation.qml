@@ -21,6 +21,7 @@ Rectangle {
 
     // Signaux pour la navigation
     signal backRequested()
+    // sessionData : { name, password, isEditionMode }
     signal sessionCreateRequested(var sessionData)
 
     // État du formulaire — seul le nom est obligatoire
@@ -555,28 +556,15 @@ Rectangle {
 
                                 onClicked: {
                                     console.log("🎉 Création de session demandée")
-                                    console.log("  - ID:", sessionId)
                                     console.log("  - Nom:", sessionNameInput.text)
-                                    console.log("  - Mot de passe:", sessionPasswordInput.text)
+                                    console.log("  - Mot de passe:", sessionPasswordInput.text.length > 0 ? "***" : "(vide)")
                                     console.log("  - Mode:", root.isEditionMode ? "Edition" : "Jeu")
 
                                     root.sessionCreateRequested({
-                                                                    sessionId: sessionId,
-                                                                    name: sessionNameInput.text,
-                                                                    password: sessionPasswordInput.text,
-                                                                    isEditionMode: root.isEditionMode
-                                                                })
-                                    /*
-                                    console.log("  - Id/Nom:", sessionNameInput.text)
-                                    console.log("  - Mot de passe:", sessionPasswordInput.text)
-                                    console.log("  - Mode:", root.isEditionMode ? "Edition" : "Jeu")
-
-                                    root.sessionCreateRequested({
-                                        sessionId: sessionNameInput.text,
-                                        password: sessionPasswordInput.text,
+                                        name:         sessionNameInput.text,
+                                        password:     sessionPasswordInput.text,
                                         isEditionMode: root.isEditionMode
                                     })
-                                    */
                                 }
                             }
                         }

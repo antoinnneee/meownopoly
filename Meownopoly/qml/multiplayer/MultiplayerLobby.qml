@@ -42,6 +42,11 @@ Rectangle {
             console.error("❌ Lobby error:", error)
         }
 
+        onSessionCreated: function(sessionId, sessionName) {
+            console.log("✅ Session créée:", sessionName, "(id:", sessionId + ")")
+            lobbyChatClient.requestSessionsList()
+        }
+
         Component.onCompleted: {
             console.log("🚀 MultiplayerLobby ChatClient connecting...")
             lobbyChatClient.connectToServer("ws://pattounecorp.ovh:3000")
@@ -97,11 +102,8 @@ Rectangle {
             }
 
             onSessionCreateRequested: function(sessionData) {
-                console.log("📝 Création de session:", JSON.stringify(sessionData))
-                // Rejoindre la session (qui sera créée automatiquement par le serveur)
-                lobbyChatClient.connectToSessionDirect(sessionData.sessionId, sessionData.password)
-
-                // Retourner à la liste
+                console.log("📝 Création de session:", sessionData.name)
+                lobbyChatClient.createSession(sessionData.name, sessionData.password)
                 multiplayerStackView.pop()
             }
         }

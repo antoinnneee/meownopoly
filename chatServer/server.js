@@ -217,10 +217,10 @@ function handleCommand(ws, msg) {
 }
 
 function handleJoinSession(ws, payload) {
-    const { session_id, session_name, player_id, player_nickname, password_hash } = payload;
+    const { session_id, player_id, player_nickname, password_hash } = payload;
     if (!session_id || !player_id) return;
 
-    // VÉRIFICATION: Limite de sessions
+    // VÉRIFICATION: Limite de sessions en mémoire
     if (!rooms.has(session_id) && rooms.size >= MAX_SESSIONS) {
         return sendError(ws, 'MAX_SESSIONS_REACHED',
             `Server has reached maximum capacity (${MAX_SESSIONS} active sessions). Please try again later.`);
@@ -228,16 +228,15 @@ function handleJoinSession(ws, payload) {
 
     const session = db.getSession(session_id);
 
-    // VÉRIFICATION: Mot de passe / Preuve
-    if (session) {
-        if (session.password_hash && session.password_hash !== password_hash) {
-            debug(`Join denied for ${player_id} in session ${session_id}: Invalid password proof`);
-            return sendError(ws, 'INVALID_PASSWORD', 'The password for this session is incorrect.');
-        }
-    } else {
-        // Nouvelle session: on la crée immédiatement avec le hash fourni
-        debug(`Creating new session entry for ${session_id} (${session_name || 'unnamed'})`);
-        db.createSession(session_id, session_name, password_hash, null, null);
+    if (!session) {
+        debug(`Join denied for ${player_id}: session ${session_id} does not exist.`);
+        return sendError(ws, 'SESSION_NOT_FOUND', 'Cette session n\'existe pas. Veuillez d\'abord la créer.');
+    }
+
+    // VÉRIFICATION: Mot de passe
+    if (session.password_hash && session.password_hash !== password_hash) {
+        debug(`Join denied for ${player_id} in session ${session_id}: Invalid password proof`);
+        return sendError(ws, 'INVALID_PASSWORD', 'The password for this session is incorrect.');
     }
 
     ws.player_id = player_id;
@@ -274,7 +273,7 @@ function handleJoinSession(ws, payload) {
     ws.send(JSON.stringify({
         type: 'INIT_SESSION',
         payload: {
-            current_version: session ? session.version : 0,
+            current_version: session.version,
             keys,
             history,
             new_joiner: isNewParticipant
@@ -285,7 +284,7 @@ function handleJoinSession(ws, payload) {
         keyRotationRequired.add(session_id);
         const newParticipantMsg = JSON.stringify({
             type: 'NEW_PARTICIPANT',
-            payload: { session_id, player_id, nickname: player_nickname }
+            payload: { session_id, player_id, player_nickname }
         });
         const currentRoom = rooms.get(session_id);
         currentRoom.forEach(client => {

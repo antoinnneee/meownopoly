@@ -37,6 +37,8 @@ public:
     Q_INVOKABLE void loadAccount();
     Q_INVOKABLE void saveAccount();
 
+    static QString getNewUniqueId();
+
     // Static registration for QML
     static void registerQml() {
         qmlRegisterSingletonType<AccountManager>("Meownopoly.Account", 1, 0, "AccountManager",

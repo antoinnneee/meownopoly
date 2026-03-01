@@ -73,6 +73,36 @@ void ChatClient::connectToServer(const QString &url) {
                               Q_ARG(QString, url));
 }
 
+void ChatClient::createSession(QString nameSession, QString pwdSession, QString idSession) {
+    m_playerId  = AccountManager::instance()->uniqueId();
+    m_nickname  = AccountManager::instance()->nickname();
+    m_sessionId = idSession;
+    m_password  = pwdSession;
+
+    m_lockKey     = ChatCrypto::deriveLockKey(m_sessionId, m_password);
+    m_passwordHash = ChatCrypto::derivePasswordProof(m_sessionId, m_password);
+
+    if (!m_connected) {
+        emit errorOccurred("Non connecté au serveur");
+        return;
+    }
+
+    QJsonObject msg;
+    msg["type"] = "CREATE_SESSION";
+    QJsonObject payload;
+    payload["session_id"]    = m_sessionId;
+    payload["session_name"]  = nameSession;
+    payload["password_hash"] = QString(m_passwordHash.toBase64());
+    payload["max_players"]   = 4;
+    payload["is_public"]     = true;
+    msg["payload"] = payload;
+
+    sendWebSocketMessage(msg);
+    Logger::instance()->info(
+        QString("Requesting session creation: %1 (%2)").arg(idSession).arg(nameSession),
+        "ChatClient");
+}
+
 void ChatClient::connectToSessionDirect(const QString &sessionId, const QString &password)
 {
 
@@ -122,9 +152,10 @@ void ChatClient::joinSession(){
         QJsonObject join;
         join["type"] = "JOIN_SESSION";
         QJsonObject payload;
-        payload["session_id"] = m_sessionId;
-        payload["player_id"] = m_playerId;
+        payload["session_id"]     = m_sessionId;
+        payload["player_id"]      = m_playerId;
         payload["player_nickname"] = m_nickname;
+        payload["password_hash"]  = QString(m_passwordHash.toBase64());
         join["payload"] = payload;
 
         sendWebSocketMessage(join);
