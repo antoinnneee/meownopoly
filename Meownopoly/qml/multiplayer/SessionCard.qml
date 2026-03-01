@@ -52,7 +52,7 @@ Rectangle {
             
             // Nom de la session
             Text {
-                text: root.name
+                text: "Name: " +  root.name
                 color: "#ffffff"
                 font.pixelSize: 18
                 font.bold: true

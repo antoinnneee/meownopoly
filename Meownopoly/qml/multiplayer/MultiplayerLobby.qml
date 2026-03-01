@@ -19,7 +19,7 @@ Rectangle {
     signal lunchNewSession(bool isEdition)
     signal lunchExistingSession(bool isEdition)
 
-    // ChatClient mutualisé pour tout le lobby
+    // ChatClient mutualisé pour tout le lobbyD
     ChatClient {
         id: lobbyChatClient
 

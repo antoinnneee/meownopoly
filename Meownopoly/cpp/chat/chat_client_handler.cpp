@@ -234,7 +234,7 @@ void ChatClient::handleSessionsList(const QJsonObject &payload) {
         QJsonObject session = val.toObject();
 
         QVariantMap sessionMap;
-        sessionMap["name"] = session["session_id"].toString(); // Utilis� pour l'affichage
+        sessionMap["name"] = session["session_id"].toString(); // Utilise pour l'affichage
         sessionMap["sessionId"] = session["session_id"].toString();
         sessionMap["players"] = session["player_count"].toInt();
         sessionMap["maxPlayers"] = session["max_players"].toInt();

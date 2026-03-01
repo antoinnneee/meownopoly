@@ -13,7 +13,8 @@ import AssetManager
 Rectangle {
     id: root
 
-    color: "#2b2220"
+    // Animation fluide sur le fond
+    Behavior on color { ColorAnimation { duration: 300 } }
 
     // Propriété pour recevoir le ChatClient du parent
     required property var chatClient
@@ -27,6 +28,38 @@ Rectangle {
 
     // Mode : Edition ou Jeu
     property bool isEditionMode: false
+
+    // ═══════════════════════════════════════
+    // Palette Dynamique (Orange 🎮 <-> Violet 🛠️)
+    // ═══════════════════════════════════════
+    readonly property color cOrangePrimary: "#E67E22"
+    readonly property color cOrangeSecondary: "#D4692A"
+    readonly property color cOrangeDark: "#c0681a"
+    readonly property color cVioletPrimary: "#9B59B6"
+    readonly property color cVioletSecondary: "#BB77DD"
+    readonly property color cVioletDark: "#6b4d8a"
+
+    readonly property color bgRoot: isEditionMode ? "#2a2035" : "#2b2220"
+    readonly property color bgPanel: isEditionMode ? "#352a42" : "#352a22"
+
+    readonly property color cPrimary: isEditionMode ? cVioletPrimary : cOrangePrimary
+    readonly property color cSecondary: isEditionMode ? cVioletSecondary : cOrangeSecondary
+    readonly property color cDark: isEditionMode ? cVioletDark : cOrangeDark
+
+    readonly property color bgInput: isEditionMode ? "#2e2440" : "#2e2418"
+    readonly property color bgInputFocus: isEditionMode ? "#3f3350" : "#3f3025"
+    readonly property color borderInput: isEditionMode ? "#5a4d6b" : "#6b5a40"
+
+    readonly property color textHighlight: isEditionMode ? "#d4b8e8" : "#f0d4a8"
+    readonly property color textMuted: isEditionMode ? "#7a6b8e" : "#8a7a60"
+    readonly property color textDim: isEditionMode ? "#6b5a7a" : "#7a6540"
+
+    readonly property color bgBtnHover: isEditionMode ? "#3f3350" : "#3f3020"
+    readonly property color bgBtnPress: isEditionMode ? "#4a3d5a" : "#4a3520"
+    readonly property color borderBtn: isEditionMode ? "#5a4d6b" : "#6b5a40"
+    readonly property color borderBtnHover: isEditionMode ? "#9a8aae" : "#a08a6a"
+
+    color: bgRoot
 
     // ═══════════════════════════════════════
     // Patounes — Particle animation background
@@ -102,7 +135,7 @@ Rectangle {
             Item { width: 40; height: 40 }
         }
 
-        // Separator gradient orange → violet
+        // Separator dynamique central
         Rectangle {
             Layout.fillWidth: true
             Layout.topMargin: 12
@@ -110,9 +143,9 @@ Rectangle {
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 0.15; color: "#E67E22" }
-                GradientStop { position: 0.5; color: "#D4692A" }
-                GradientStop { position: 0.85; color: "#E67E22" }
+                GradientStop { position: 0.15; color: root.cPrimary }
+                GradientStop { position: 0.5; color: root.cSecondary }
+                GradientStop { position: 0.85; color: root.cPrimary }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -136,10 +169,12 @@ Rectangle {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#352a22"
+                    color: root.bgPanel
                     radius: 16
-                    border.color: "#E67E22"
+                    border.color: root.cPrimary
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 300 } }
+                    Behavior on border.color { ColorAnimation { duration: 300 } }
 
                     // Accent bar top
                     Rectangle {
@@ -150,8 +185,8 @@ Rectangle {
                         radius: 16
                         gradient: Gradient {
                             orientation: Gradient.Horizontal
-                            GradientStop { position: 0.0; color: "#E67E22" }
-                            GradientStop { position: 1.0; color: "#D4692A" }
+                            GradientStop { position: 0.0; color: root.cPrimary }
+                            GradientStop { position: 1.0; color: root.cSecondary }
                         }
                     }
 
@@ -172,19 +207,21 @@ Rectangle {
                             }
                             Text {
                                 text: "Informations"
-                                color: "#f0d4a8"
+                                color: root.textHighlight
                                 font.pixelSize: 17
                                 font.bold: true
                                 anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
                             }
                         }
 
                         // — Nom de la session —
                         Text {
                             text: "Nom de la session *"
-                            color: "#f0d4a8"
+                            color: root.textHighlight
                             font.pixelSize: 14
                             font.bold: true
+                            Behavior on color { ColorAnimation { duration: 300 } }
                         }
 
                         TextField {
@@ -192,20 +229,19 @@ Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 46
                             Layout.topMargin: 8
-                            placeholderText: "ex: Partie du vendredi soir"
-                            placeholderTextColor: "#7a6540"
+                            placeholderTextColor: root.textDim
                             color: "#f5f0ff"
                             font.pixelSize: 15
                             maximumLength: 50
 
                             background: Rectangle {
-                                color: sessionNameInput.focus ? "#3f3025" : "#2e2418"
+                                color: sessionNameInput.focus ? root.bgInputFocus : root.bgInput
                                 radius: 10
                                 border.color: {
-                                    if (sessionNameInput.focus) return "#E67E22"
+                                    if (sessionNameInput.focus) return root.cPrimary
                                     if (sessionNameInput.text.length > 0 && sessionNameInput.text.length < 3)
                                         return "#E74C3C"
-                                    return "#6b5a40"
+                                    return root.borderInput
                                 }
                                 border.width: 2
                                 Behavior on border.color { ColorAnimation { duration: 200 } }
@@ -216,10 +252,11 @@ Rectangle {
                         Text {
                             Layout.topMargin: 6
                             text: sessionNameInput.text.length + "/50" +
-                                 (sessionNameInput.text.length > 0 && sessionNameInput.text.length < 3 ? "  ⚠ min. 3" : "")
-                            color: sessionNameInput.text.length >= 3 ? "#8a7a60" : "#E74C3C"
+                                  (sessionNameInput.text.length > 0 && sessionNameInput.text.length < 3 ? "  ⚠ min. 3" : "")
+                            color: sessionNameInput.text.length >= 3 ? root.textMuted : "#E74C3C"
                             font.pixelSize: 11
                             font.italic: true
+                            Behavior on color { ColorAnimation { duration: 300 } }
                         }
 
                         // Spacer
@@ -230,17 +267,19 @@ Rectangle {
                             spacing: 8
                             Text {
                                 text: "Mot de passe"
-                                color: "#f0d4a8"
+                                color: root.textHighlight
                                 font.pixelSize: 14
                                 font.bold: true
                                 anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
                             }
                             Text {
                                 text: "(optionnel)"
-                                color: "#8a7a60"
+                                color: root.textMuted
                                 font.pixelSize: 12
                                 font.italic: true
                                 anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
                             }
                         }
 
@@ -250,16 +289,16 @@ Rectangle {
                             Layout.preferredHeight: 46
                             Layout.topMargin: 8
                             placeholderText: "Laisser vide pour session ouverte"
-                            placeholderTextColor: "#7a6540"
+                            placeholderTextColor: root.textDim
                             echoMode: showPasswordCheckbox.checked ? TextInput.Normal : TextInput.Password
                             color: "#f5f0ff"
                             font.pixelSize: 15
                             maximumLength: 30
 
                             background: Rectangle {
-                                color: sessionPasswordInput.focus ? "#3f3025" : "#2e2418"
+                                color: sessionPasswordInput.focus ? root.bgInputFocus : root.bgInput
                                 radius: 10
-                                border.color: sessionPasswordInput.focus ? "#E67E22" : "#6b5a40"
+                                border.color: sessionPasswordInput.focus ? root.cPrimary : root.borderInput
                                 border.width: 2
                                 Behavior on border.color { ColorAnimation { duration: 200 } }
                                 Behavior on color { ColorAnimation { duration: 200 } }
@@ -275,8 +314,8 @@ Rectangle {
                                 checked: false
                                 indicator: Rectangle {
                                     width: 22; height: 22; radius: 6
-                                    color: showPasswordCheckbox.checked ? "#E67E22" : "#2e2418"
-                                    border.color: showPasswordCheckbox.checked ? "#F0983A" : "#6b5a40"
+                                    color: showPasswordCheckbox.checked ? root.cPrimary : root.bgInput
+                                    border.color: showPasswordCheckbox.checked ? root.cSecondary : root.borderInput
                                     border.width: 2
                                     Behavior on color { ColorAnimation { duration: 200 } }
 
@@ -291,9 +330,10 @@ Rectangle {
 
                             Text {
                                 text: "Afficher le mot de passe"
-                                color: "#a08a6a"
+                                color: root.textMuted
                                 font.pixelSize: 13
                                 anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
                             }
                         }
 
@@ -306,10 +346,12 @@ Rectangle {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#352a22"
+                    color: root.bgPanel
                     radius: 16
-                    border.color: "#E67E22"
+                    border.color: root.cPrimary
                     border.width: 1
+                    Behavior on color { ColorAnimation { duration: 300 } }
+                    Behavior on border.color { ColorAnimation { duration: 300 } }
 
                     // Accent bar top
                     Rectangle {
@@ -320,8 +362,8 @@ Rectangle {
                         radius: 16
                         gradient: Gradient {
                             orientation: Gradient.Horizontal
-                            GradientStop { position: 0.0; color: "#9B59B6" }
-                            GradientStop { position: 1.0; color: "#E67E22" }
+                            GradientStop { position: 0.0; color: root.cPrimary }
+                            GradientStop { position: 1.0; color: root.cSecondary }
                         }
                     }
 
@@ -342,19 +384,21 @@ Rectangle {
                             }
                             Text {
                                 text: "Configuration"
-                                color: "#f0d4a8"
+                                color: root.textHighlight
                                 font.pixelSize: 17
                                 font.bold: true
                                 anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
                             }
                         }
 
                         // — Mode toggle —
                         Text {
                             text: "Mode de la session"
-                            color: "#f0d4a8"
+                            color: root.textHighlight
                             font.pixelSize: 14
                             font.bold: true
+                            Behavior on color { ColorAnimation { duration: 300 } }
                         }
 
                         // Toggle switch row
@@ -369,8 +413,8 @@ Rectangle {
 
                                 indicator: Rectangle {
                                     width: 56; height: 30; radius: 15
-                                    color: modeCheckbox.checked ? "#9B59B6" : "#E67E22"
-                                    border.color: modeCheckbox.checked ? "#BB77DD" : "#F0983A"
+                                    color: modeCheckbox.checked ? root.cVioletPrimary : root.cOrangePrimary
+                                    border.color: modeCheckbox.checked ? root.cVioletSecondary : root.cOrangeSecondary
                                     border.width: 1
                                     Behavior on color { ColorAnimation { duration: 250 } }
 
@@ -395,7 +439,7 @@ Rectangle {
                                 }
                                 Text {
                                     text: root.isEditionMode ? "Édition" : "Jeu"
-                                    color: root.isEditionMode ? "#BB77DD" : "#F0983A"
+                                    color: root.isEditionMode ? root.cVioletSecondary : root.cOrangeSecondary
                                     font.pixelSize: 18
                                     font.bold: true
                                     anchors.verticalCenter: parent.verticalCenter
@@ -410,6 +454,8 @@ Rectangle {
                             Layout.topMargin: 16
                             height: modeDescText.implicitHeight + 24
                             radius: 10
+
+                            // Cette description de mode utilise toujours du contraste par rapport au mode actif
                             color: root.isEditionMode ? "#352840" : "#3d2d20"
                             border.color: root.isEditionMode ? "#6b4d8a" : "#8a6530"
                             border.width: 1
@@ -421,12 +467,13 @@ Rectangle {
                                 anchors.centerIn: parent
                                 width: parent.width - 24
                                 text: root.isEditionMode ?
-                                     "📐 Collaborer sur l'éditeur de carte avec d'autres joueurs" :
-                                     "🎲 Lancer une partie de Meownopoly classique"
+                                          "📐 Collaborer sur l'éditeur de carte avec d'autres joueurs" :
+                                          "🎲 Lancer une partie de Meownopoly classique"
                                 color: root.isEditionMode ? "#c9a8e8" : "#e8c8a0"
                                 font.pixelSize: 13
                                 wrapMode: Text.WordWrap
                                 horizontalAlignment: Text.AlignHCenter
+                                Behavior on color { ColorAnimation { duration: 250 } }
                             }
                         }
 
@@ -444,20 +491,21 @@ Rectangle {
                                 Layout.preferredHeight: 48
 
                                 background: Rectangle {
-                                    color: parent.pressed ? "#4a3520" : (parent.hovered ? "#3f3020" : "#352a22")
+                                    color: parent.pressed ? root.bgBtnPress : (parent.hovered ? root.bgBtnHover : root.bgPanel)
                                     radius: 10
-                                    border.color: parent.hovered ? "#a08a6a" : "#6b5a40"
+                                    border.color: parent.hovered ? root.borderBtnHover : root.borderBtn
                                     border.width: 2
                                     Behavior on color { ColorAnimation { duration: 150 } }
                                 }
 
                                 contentItem: Text {
                                     text: "Annuler"
-                                    color: "#f0d4a8"
+                                    color: root.textHighlight
                                     font.pixelSize: 15
                                     font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
+                                    Behavior on color { ColorAnimation { duration: 300 } }
                                 }
 
                                 onClicked: root.backRequested()
@@ -470,16 +518,16 @@ Rectangle {
                                 Layout.preferredHeight: 48
                                 enabled: root.formValid
 
-                                particleColor: "#E67E22"
-                                particleColorVariation: "#9B59B6"
+                                particleColor: root.cPrimary
+                                particleColorVariation: root.cSecondary
                                 particleCount: 30
 
                                 background: Rectangle {
                                     color: parent.enabled ?
-                                           (parent.down ? "#c0681a" : "#E67E22") : "#4a3d5a"
+                                               (parent.down ? root.cDark : root.cPrimary) : root.bgBtnPress
                                     radius: 10
                                     border.color: parent.enabled ?
-                                                  (parent.hovered ? "#FFFFFF" : "#c0681a") : "#5a4d6b"
+                                                      (parent.hovered ? "#FFFFFF" : root.cDark) : root.borderBtn
                                     border.width: 2
 
                                     Rectangle {
@@ -499,14 +547,27 @@ Rectangle {
                                     text: parent.text
                                     font.pixelSize: 15
                                     font.bold: true
-                                    color: parent.enabled ? "white" : "#8a7a60"
+                                    color: parent.enabled ? "white" : root.textMuted
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
+                                    Behavior on color { ColorAnimation { duration: 300 } }
                                 }
 
                                 onClicked: {
                                     console.log("🎉 Création de session demandée")
-                                    console.log("  - Nom - Id :", sessionNameInput.text)
+                                    console.log("  - ID:", sessionId)
+                                    console.log("  - Nom:", sessionNameInput.text)
+                                    console.log("  - Mot de passe:", sessionPasswordInput.text)
+                                    console.log("  - Mode:", root.isEditionMode ? "Edition" : "Jeu")
+
+                                    root.sessionCreateRequested({
+                                                                    sessionId: sessionId,
+                                                                    name: sessionNameInput.text,
+                                                                    password: sessionPasswordInput.text,
+                                                                    isEditionMode: root.isEditionMode
+                                                                })
+                                    /*
+                                    console.log("  - Id/Nom:", sessionNameInput.text)
                                     console.log("  - Mot de passe:", sessionPasswordInput.text)
                                     console.log("  - Mode:", root.isEditionMode ? "Edition" : "Jeu")
 
@@ -515,6 +576,7 @@ Rectangle {
                                         password: sessionPasswordInput.text,
                                         isEditionMode: root.isEditionMode
                                     })
+                                    */
                                 }
                             }
                         }

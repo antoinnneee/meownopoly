@@ -137,17 +137,6 @@ wss.on('connection', (ws) => {
             debug(`Received command: ${message.type}`, message.payload);
             handleCommand(ws, message);
 
-            // Update user activity status
-            if (ws.session_id && ws.player_id) {
-                ws.last_activity = Date.now();
-                if (ws.status === 'away') {
-                    ws.status = 'online';
-                    broadcastParticipantsList(ws.session_id);
-                } else {
-                    ws.status = 'online';
-                }
-            }
-
             // Periodic check of DB size after a message is processed
             checkDbSize();
         } catch (err) {
@@ -177,13 +166,16 @@ function handleCommand(ws, msg) {
         const session_id = payload ? payload.session_id : null;
         if (!ws.session_id || ws.session_id !== session_id) {
             debug(`Access denied for ${ws.player_id || 'unknown'} for command ${type} on session ${session_id}`);
-            return sendError(ws, 'UNAUTHORIZED', `You must join the session before performing this action. (TYPE: ${type}, SESSION_ID: ${session_id})`);
+            return sendError(ws, 'UNAUTHORIZED', 'You must join the session before performing this action.');
         }
     }
 
     switch (type) {
         case 'JOIN_SESSION':
             handleJoinSession(ws, payload);
+            break;
+        case 'CREATE_SESSION':
+            handleCreateSession(ws, payload);
             break;
         case 'PUBLISH_KEY':
             handlePublishKey(ws, payload);
@@ -225,7 +217,7 @@ function handleCommand(ws, msg) {
 }
 
 function handleJoinSession(ws, payload) {
-    const { session_id, player_id, player_nickname, password_hash } = payload;
+    const { session_id, session_name, player_id, player_nickname, password_hash } = payload;
     if (!session_id || !player_id) return;
 
     // VÉRIFICATION: Limite de sessions
@@ -244,8 +236,8 @@ function handleJoinSession(ws, payload) {
         }
     } else {
         // Nouvelle session: on la crée immédiatement avec le hash fourni
-        debug(`Creating new session entry for ${session_id}`);
-        db.createSession(session_id, password_hash, null, null);
+        debug(`Creating new session entry for ${session_id} (${session_name || 'unnamed'})`);
+        db.createSession(session_id, session_name, password_hash, null, null);
     }
 
     ws.player_id = player_id;
@@ -307,6 +299,71 @@ function handleJoinSession(ws, payload) {
     }
 }
 
+function handleCreateSession(ws, payload) {
+    const { session_id, session_name, password_hash, max_players, is_public } = payload;
+
+    if (!session_id) {
+        return sendError(ws, 'MISSING_PARAMETER', 'session_id is required');
+    }
+
+    if (!password_hash) {
+        return sendError(ws, 'MISSING_PARAMETER', 'password_hash is required');
+    }
+
+    // Vérifier si la session existe déjà
+    const existingSession = db.getSession(session_id);
+    if (existingSession) {
+        return sendError(ws, 'SESSION_EXISTS', 'A session with this ID already exists');
+    }
+
+    // VÉRIFICATION: Limite de sessions (compter toutes les sessions DB)
+    const allSessions = db.getAllSessions ? db.getAllSessions() : [];
+    if (allSessions.length >= MAX_SESSIONS) {
+        return sendError(ws, 'MAX_SESSIONS_REACHED',
+            `Server has reached maximum capacity (${MAX_SESSIONS} sessions). Please try again later.`);
+    }
+
+    // Créer la session dans la DB (sans participants pour l'instant)
+    debug(`Creating new session: ${session_id} (name: ${session_name || 'N/A'})`);
+
+    // Si database.js supporte les métadonnées (session_name, max_players, is_public)
+    if (db.createSessionWithMetadata) {
+        db.createSessionWithMetadata(session_id, password_hash, session_name, max_players || 4, is_public);
+    } else {
+        // Fallback: créer avec l'ancienne méthode
+        db.createSession(session_id, password_hash, null, null);
+    }
+
+    // Répondre au client
+    ws.send(JSON.stringify({
+        type: 'SESSION_CREATED',
+        payload: {
+            session_id: session_id,
+            session_name: session_name || session_id,
+            max_players: max_players || 4,
+            is_public: is_public !== false,
+            created_at: new Date().toISOString()
+        }
+    }));
+
+    debug(`Session ${session_id} created successfully`);
+
+    // Broadcast aux autres clients connectés (pour mettre à jour leur liste)
+    const broadcastMsg = JSON.stringify({
+        type: 'SESSION_CREATED_BROADCAST',
+        payload: {
+            session_id: session_id,
+            session_name: session_name || session_id
+        }
+    });
+
+    wss.clients.forEach(client => {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
+            client.send(broadcastMsg);
+        }
+    });
+}
+
 function handlePublishKey(ws, payload) {
     const { session_id, blob, nonce } = payload;
     if (!session_id || !blob || !nonce) return;
@@ -342,7 +399,7 @@ function handlePublishKey(ws, payload) {
 }
 
 function handleSendMessage(ws, payload) {
-    const { session_id, sender_id, sender_nickname, recipient_id, payload: ciphertext, nonce, key_v } = payload;
+    const { session_id, sender_id, sender_nickname, payload: ciphertext, nonce, key_v } = payload;
     if (!session_id || !sender_id || !ciphertext || !nonce) return;
 
     if (keyRotationRequired.has(session_id)) {
@@ -350,48 +407,25 @@ function handleSendMessage(ws, payload) {
     }
 
     const nickname = sender_nickname || (ws.player_nickname || '');
-    const isPrivate = !!recipient_id;
-    let msgId = null;
-    if (!isPrivate) {
-        const result = db.saveMessage(session_id, sender_id, nickname, ciphertext, nonce, key_v);
-        msgId = result.lastInsertRowid;
-    }
-
-    const outboundPayload = {
-        sender_id,
-        sender_nickname: nickname,
-        payload: ciphertext,
-        nonce,
-        key_version: key_v,
-        timestamp: new Date().toISOString()
-    };
-    if (msgId !== null) outboundPayload.msg_id = msgId;
-    if (isPrivate) outboundPayload.ephemeral = true;
+    const result = db.saveMessage(session_id, sender_id, nickname, ciphertext, nonce, key_v);
 
     const outboundMessage = {
         type: 'NEW_MESSAGE',
-        payload: outboundPayload
+        payload: {
+            msg_id: result.lastInsertRowid,
+            sender_id,
+            sender_nickname: nickname,
+            payload: ciphertext,
+            nonce,
+            key_version: key_v,
+            timestamp: new Date().toISOString()
+        }
     };
 
+    // Broadcast to all in the same room
     const room = rooms.get(session_id);
-    if (!room) return;
-
-    const rawOutbound = JSON.stringify(outboundMessage);
-    if (recipient_id) {
-        // Unicast: envoyer uniquement au destinataire (message non enregistré dans l'historique)
-        let found = false;
-        for (const client of room) {
-            if (client.player_id === recipient_id && client.readyState === WebSocket.OPEN) {
-                client.send(rawOutbound);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            debug(`Message recipient ${recipient_id} not found in session ${session_id}`);
-        }
-    } else {
-        // Broadcast à toute la room
+    if (room) {
+        const rawOutbound = JSON.stringify(outboundMessage);
         room.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(rawOutbound);
@@ -516,12 +550,12 @@ function handleGetParticipants(ws, payload) {
     const dbParticipants = db.getParticipants(session_id);
     const room = rooms.get(session_id);
 
-    const participants = dbParticipants.map((p, index) => {
-        let status = 'offline';
+    const participants = dbParticipants.map(p => {
+        let isOnline = false;
         if (room) {
             for (const client of room) {
                 if (client.player_id === p.player_id && client.readyState === WebSocket.OPEN) {
-                    status = client.status || 'online';
+                    isOnline = true;
                     break;
                 }
             }
@@ -529,8 +563,7 @@ function handleGetParticipants(ws, payload) {
         return {
             player_id: p.player_id,
             player_nickname: p.nickname,
-            status: status,
-            is_host: index === 0
+            status: isOnline ? 'online' : 'offline'
         };
     });
 
@@ -545,50 +578,10 @@ function handleGetParticipants(ws, payload) {
     debug(`Participants list sent for session ${session_id}: ${participants.length} participant(s)`);
 }
 
-function broadcastParticipantsList(session_id) {
-    const dbParticipants = db.getParticipants(session_id);
-    const room = rooms.get(session_id);
-
-    const participants = dbParticipants.map((p, index) => {
-        let status = 'offline';
-        if (room) {
-            for (const client of room) {
-                if (client.player_id === p.player_id && client.readyState === WebSocket.OPEN) {
-                    status = client.status || 'online';
-                    break;
-                }
-            }
-        }
-        return {
-            player_id: p.player_id,
-            player_nickname: p.nickname,
-            status: status,
-            is_host: index === 0
-        };
-    });
-
-    const msg = JSON.stringify({
-        type: 'PARTICIPANTS_LIST',
-        payload: {
-            session_id,
-            count: participants.length,
-            participants
-        }
-    });
-
-    if (room) {
-        room.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(msg);
-            }
-        });
-    }
-}
-
 function handleListSessions(ws) {
     debug('Listing all active sessions');
 
-    const activeSessions = getDetailedSessionList(); // Utilisation de la nouvelle fonction
+    const activeSessions = getDetailedSessionList();
 
     // Limiter à MAX_SESSIONS
     const limitedSessions = activeSessions.slice(0, MAX_SESSIONS);
@@ -607,19 +600,61 @@ function handleListSessions(ws) {
 }
 
 /**
- * Récupère la liste détaillée des sessions actives
+ * Récupère la liste détaillée de TOUTES les sessions (DB + mémoire)
  * @returns {Array} Liste des objets session
  */
 function getDetailedSessionList() {
     const activeSessions = [];
+    const processedSessions = new Set();
 
-    for (const [sessionId, clients] of rooms.entries()) {
+    // 1. Récupérer toutes les sessions de la DB (même sans clients connectés)
+    const allDbSessions = db.getAllSessions ? db.getAllSessions() : [];
+
+    debug(`Found ${allDbSessions.length} sessions in database`);
+
+    for (const session of allDbSessions) {
+        const sessionId = session.session_id;
         const participants = db.getParticipants(sessionId);
-        const session = db.getSession(sessionId);
 
-        // Ne lister que les sessions qui ont des participants
-        if (participants.length > 0) {
-            // Déterminer qui est en ligne
+        // Lister toutes les sessions, même sans participants
+        processedSessions.add(sessionId);
+
+        // Déterminer qui est en ligne (si la room existe en mémoire)
+        const room = rooms.get(sessionId);
+        const onlinePlayerIds = new Set();
+
+        if (room) {
+            for (const client of room) {
+                if (client.player_id && client.readyState === WebSocket.OPEN) {
+                    onlinePlayerIds.add(client.player_id);
+                }
+            }
+        }
+
+        // Construire l'objet session
+        const sessionData = {
+            session_id: sessionId,
+            session_name: session.session_name || sessionId,
+            host_id: participants.length > 0 ? participants[0].player_id : null,
+            host_nickname: participants.length > 0 ? (participants[0].nickname || participants[0].player_id) : 'En attente',
+            player_count: participants.length,
+            max_players: session.max_players || 4,
+            created_at: session.created_at,
+            online_count: onlinePlayerIds.size,
+            is_public: session.is_public !== 0,
+            status: participants.length === 0 ? 'waiting' :
+                participants.length >= (session.max_players || 4) ? 'full' : 'available'
+        };
+
+        activeSessions.push(sessionData);
+    }
+
+    // 2. Ajouter les sessions en mémoire qui ne sont pas encore en DB (cas rare)
+    for (const [sessionId, clients] of rooms.entries()) {
+        if (!processedSessions.has(sessionId)) {
+            const participants = db.getParticipants(sessionId);
+            const session = db.getSession(sessionId);
+
             const onlinePlayerIds = new Set();
             for (const client of clients) {
                 if (client.player_id && client.readyState === WebSocket.OPEN) {
@@ -629,6 +664,7 @@ function getDetailedSessionList() {
 
             activeSessions.push({
                 session_id: sessionId,
+                session_name: session ? session.session_name || '' : '',
                 host_id: participants[0].player_id, // Premier participant = hôte
                 host_nickname: participants[0].nickname || participants[0].player_id,
                 player_count: participants.length,
@@ -643,6 +679,7 @@ function getDetailedSessionList() {
     // Trier par date de création (plus récentes en premier)
     activeSessions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+    debug(`Returning ${activeSessions.length} sessions to client`);
     return activeSessions;
 }
 
@@ -847,71 +884,6 @@ function getSessionMessageCount(sessionId) {
         return 0;
     }
 }
-
-// Activity timeouts checking interval
-const AWAY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
-const KICK_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes
-
-setInterval(() => {
-    const now = Date.now();
-    for (const [sessionId, room] of rooms.entries()) {
-        let statusChanged = false;
-        const toKick = [];
-
-        for (const client of room) {
-            if (client.readyState === WebSocket.OPEN && client.player_id) {
-                if (!client.last_activity) client.last_activity = now;
-
-                const inactiveTime = now - client.last_activity;
-
-                if (inactiveTime >= KICK_TIMEOUT_MS) {
-                    toKick.push(client);
-                } else if (inactiveTime >= AWAY_TIMEOUT_MS) {
-                    if (client.status !== 'away') {
-                        client.status = 'away';
-                        statusChanged = true;
-                    }
-                }
-            }
-        }
-
-        for (const client of toKick) {
-            debug(`Kicking participant ${client.player_id} from session ${sessionId} due to inactivity`);
-            const target_player_id = client.player_id;
-
-            db.removeParticipant(sessionId, target_player_id);
-
-            const kickedMsg = JSON.stringify({
-                type: 'KICKED',
-                payload: { session_id: sessionId, reason: 'Kicked due to inactivity' }
-            });
-
-            const broadcastMsg = JSON.stringify({
-                type: 'PARTICIPANT_KICKED',
-                payload: { session_id: sessionId, player_id: target_player_id }
-            });
-
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(kickedMsg);
-            }
-            room.delete(client);
-            client.session_id = null;
-
-            for (const other of room) {
-                if (other.readyState === WebSocket.OPEN) {
-                    other.send(broadcastMsg);
-                }
-            }
-
-            keyRotationRequired.add(sessionId);
-            statusChanged = true;
-        }
-
-        if (statusChanged) {
-            broadcastParticipantsList(sessionId);
-        }
-    }
-}, 60000); // run every 1 minute
 
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
