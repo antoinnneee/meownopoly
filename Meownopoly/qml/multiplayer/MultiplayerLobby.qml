@@ -16,10 +16,13 @@ Rectangle {
 
     signal backToTitleScreen()
 
+    signal lunchNewSession(bool isEdition)
+    signal lunchExistingSession(bool isEdition)
+
     // ChatClient mutualisé pour tout le lobby
     ChatClient {
         id: lobbyChatClient
-        
+
         onConnectedChanged: {
             if (connected) {
                 console.log("✅ Lobby connected, requesting sessions...")
@@ -38,13 +41,13 @@ Rectangle {
         onErrorOccurred: function(error) {
             console.error("❌ Lobby error:", error)
         }
-        
+
         Component.onCompleted: {
             console.log("🚀 MultiplayerLobby ChatClient connecting...")
             lobbyChatClient.connectToServer("ws://pattounecorp.ovh:3000")
         }
     }
-    
+
     // Timer de rafraîchissement automatique
     Timer {
         id: refreshTimer
@@ -81,23 +84,23 @@ Rectangle {
                 console.log("Join requested - fonctionnalité à implémenter")
             }
         }
-    } 
+    }
 
     Component {
         id: sessionCreationComponent
         SessionCreation {
             // Passer le ChatClient mutualisé
             chatClient: lobbyChatClient
-            
+
             onBackRequested: {
                 multiplayerStackView.pop()
             }
-            
+
             onSessionCreateRequested: function(sessionData) {
                 console.log("📝 Création de session:", JSON.stringify(sessionData))
                 // Rejoindre la session (qui sera créée automatiquement par le serveur)
                 lobbyChatClient.connectToSessionDirect(sessionData.sessionId, sessionData.password)
-                
+
                 // Retourner à la liste
                 multiplayerStackView.pop()
             }
