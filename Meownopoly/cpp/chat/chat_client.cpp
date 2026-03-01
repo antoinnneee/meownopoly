@@ -27,7 +27,7 @@ ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     connect(m_worker, &ChatWorker::connected, this, &ChatClient::onConnected);
     connect(m_worker, &ChatWorker::disconnected, this, &ChatClient::onDisconnected);
     connect(m_worker, &ChatWorker::textMessageReceived, this, &ChatClient::onTextMessageReceived);
-    connect(m_worker, &ChatWorker::errorOccurred, this, &ChatClient::errorOccurred);
+    connect(m_worker, &ChatWorker::errorOccurred, this, &ChatClient::onWorkerError);
 
     // Connect client signals to worker slots (cross-thread)
     connect(this, &ChatClient::destroyed, m_worker, &ChatWorker::deleteLater);
@@ -83,7 +83,7 @@ void ChatClient::createSession(QString nameSession, QString pwdSession, QString 
     m_passwordHash = ChatCrypto::derivePasswordProof(m_sessionId, m_password);
 
     if (!m_connected) {
-        emit errorOccurred("Non connecté au serveur");
+        emit errorOccurred("Non connect au serveur");
         return;
     }
 
@@ -125,8 +125,8 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
 
 void ChatClient::joinSession(){
 
-    if (m_sessionId.isEmpty()) {Logger::instance()->warn("Session ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de session ne peut pas ï¿½tre vide");return;}
-    if (m_playerId.isEmpty()) {Logger::instance()->warn("Player ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de joueur ne peut pas ï¿½tre vide");return;}
+    if (m_sessionId.isEmpty()) {Logger::instance()->warn("Session ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de session ne peut pas tre vide");return;}
+    if (m_playerId.isEmpty()) {Logger::instance()->warn("Player ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de joueur ne peut pas tre vide");return;}
 
     Logger::instance()->info(QString("Preparing session %4 for player: %2_%1, %3").arg(m_playerId).arg(m_nickname).arg(m_password).arg(m_sessionId), "ChatClient");
 
@@ -182,6 +182,10 @@ void ChatClient::onDisconnected() {
     emit participantsChanged();
 }
 
+void ChatClient::onWorkerError(const QString &error) {
+    emit errorOccurred(error, ChatClient::OTHER);
+}
+
 void ChatClient::sendWebSocketMessage(const QJsonObject &message) {
     QString jsonString = QJsonDocument(message).toJson(QJsonDocument::Compact);
     QMetaObject::invokeMethod(m_worker, "sendTextMessage", Qt::QueuedConnection,
@@ -232,7 +236,7 @@ void ChatClient::kickPlayer(const QString &targetPlayerId) {
     kick["payload"] = p;
 
     sendWebSocketMessage(kick);
-    // Demander la liste Ã  jour aprÃ¨s exclusion d'un participant
+    // Demander la liste à jour après exclusion d'un participant
     requestParticipants();
 }
 
@@ -384,7 +388,7 @@ QString ChatClient::processMessageText(const QString &text) {
         }
     }
     
-    // Process text files (format: ðŸ“„FILE:ext:filename\n\ncontenu)
+    // Process text files (format: ??FILE:ext:filename\n\ncontenu)
     if (text.startsWith(QString::fromUtf8("\xF0\x9F\x93\x84") + "FILE:")) {
         // Return as-is, will be handled by QML
         return text;

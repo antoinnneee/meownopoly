@@ -95,6 +95,7 @@ private slots:
     void onConnected();
     void onDisconnected();
     void onTextMessageReceived(const QString &message);
+    void onWorkerError(const QString &error);
 
 private:
     void handleInitSession(const QJsonObject &payload);
