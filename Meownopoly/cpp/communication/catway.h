@@ -105,8 +105,9 @@ public:
     QQmlListProperty<PlayerNetwork> players();
 
     /// Client de chat intégré (accessible en QML via Catway.chatClient).
-    Q_PROPERTY(ChatClient *chatClient READ chatClient CONSTANT)
+    Q_PROPERTY(ChatClient *chatClient READ chatClient WRITE setChatClient NOTIFY chatClientChanged)
     ChatClient *chatClient() const;
+    Q_INVOKABLE void setChatClient(ChatClient *client);
 
     Q_INVOKABLE void addPlayer(PlayerNetwork *player);
     Q_INVOKABLE void removePlayer(PlayerNetwork *player);
@@ -139,6 +140,7 @@ signals:
     /// Même contenu en QString (UTF-8), pratique pour le QML (draw, chat, etc.).
     void reliableMessageReceivedString(QString senderId, QString message);
     void heartbeatIntervalChanged();
+    void chatClientChanged();
 
 private slots:
     void onAccountStunChanged();

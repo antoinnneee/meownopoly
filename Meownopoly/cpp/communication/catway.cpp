@@ -320,6 +320,22 @@ ChatClient *Catway::chatClient() const
     return m_chatClient;
 }
 
+void Catway::setChatClient(ChatClient *client)
+{
+    if (m_chatClient == client)
+        return;
+
+    if (m_chatClient)
+        disconnect(m_chatClient, &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
+
+    m_chatClient = client;
+
+    if (m_chatClient)
+        connect(m_chatClient, &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
+
+    emit chatClientChanged();
+}
+
 QObject *Catway::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
