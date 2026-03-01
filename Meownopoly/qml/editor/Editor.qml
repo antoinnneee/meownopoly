@@ -25,6 +25,7 @@ import UndoRedoManager
 import AssetManager
 import ItemSnapableFactory
 import ui_item
+import Catway 1.0
 
 import utils
 import chat
@@ -201,6 +202,10 @@ Base_Board {
         }
         onClosed: root.forceActiveFocus()
         onFocusReleased: root.forceActiveFocus()
+
+        Component.onCompleted: {
+            Catway.setChatClient(chatDrawer.chatClient)
+        }
     }
 
     MenuMapAtStart {
