@@ -185,9 +185,16 @@ Base_Board {
         }
         onCreateSnapableRequested: function(jsonString) {
             try {
-                var jsonObj = JSON.parse(jsonString)
-                var item = ItemSnapableFactory.createItemSnapableFromJson(jsonObj)
-                logic.tileLogic.createItemSnapableTile(item)
+                var parsed = JSON.parse(jsonString)
+                if (Array.isArray(parsed)) {
+                    for (var i = 0; i < parsed.length; ++i) {
+                        var item = ItemSnapableFactory.createItemSnapableFromJson(parsed[i])
+                        logic.tileLogic.createItemSnapableTile(item)
+                    }
+                } else {
+                    var item = ItemSnapableFactory.createItemSnapableFromJson(parsed)
+                    logic.tileLogic.createItemSnapableTile(item)
+                }
             } catch (e) {
                 console.error("Erreur /create :", e)
             }
@@ -274,6 +281,12 @@ Base_Board {
         function onCreateItemRequested(jsonData) {
             var item = ItemSnapableFactory.createItemSnapableFromJson(jsonData)
             logic.tileLogic.createItemSnapableTile(item)
+        }
+        function onCreateItemsRequested(jsonArray) {
+            for (var i = 0; i < jsonArray.length; ++i) {
+                var item = ItemSnapableFactory.createItemSnapableFromJson(jsonArray[i])
+                logic.tileLogic.createItemSnapableTile(item)
+            }
         }
     }
 

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QJsonObject>
+#include <QJsonArray>
 #include "game/case/Case.h"
 #include "ItemSnapable.h"
 
@@ -23,7 +24,10 @@ public:
     /// Demande la création d'un item depuis C++ ou QML.
     /// Émet createItemRequested(jsonData) que l'éditeur QML intercepte.
     Q_INVOKABLE void requestCreateItem(const QJsonObject &jsonData);
-    /// Variante prenant une chaîne JSON (pratique depuis C++).
+    /// Demande la création de plusieurs items depuis un tableau JSON.
+    /// Émet createItemsRequested(jsonArray) que l'éditeur QML intercepte.
+    Q_INVOKABLE void requestCreateItems(const QJsonArray &jsonArray);
+    /// Variante prenant une chaîne JSON — détecte automatiquement objet ou tableau.
     void requestCreateItemFromString(const QString &jsonString);
 
 public slots:
@@ -31,6 +35,8 @@ public slots:
 signals:
     /// Émis pour demander à l'éditeur QML de créer et placer un ItemSnapable.
     void createItemRequested(const QJsonObject &jsonData);
+    /// Émis pour demander à l'éditeur QML de créer et placer plusieurs ItemSnapable.
+    void createItemsRequested(const QJsonArray &jsonArray);
 
 private slots:
 
