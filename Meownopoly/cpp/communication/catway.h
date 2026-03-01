@@ -45,12 +45,18 @@ public slots:
     void setStunServerInfo(const QString &host, quint16 port);
     UdpSocketInfo* takeSocket();
 
+    // --- Thread-safe I/O ---
+    void sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port);
+    void sendReliablePacket(const QString &playerId, const QByteArray &data);
+    void onSocketReadyRead();
+
 private slots:
     void onReliableUpdate();
 
 signals:
     void reliableMessageReceived(QString senderId, QByteArray data);
     void reliableMessageReceivedString(QString senderId, QString message);
+    void datagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress sender, quint16 port);
 
 private:
     StunManager *m_stunManager;
@@ -112,6 +118,7 @@ public:
     Q_INVOKABLE void initiateHolePunch(PlayerNetwork *player);
     Q_INVOKABLE void sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message);
     void sendUdpPunch(PlayerNetwork *player, const QString &content);
+    void sendUdpPunch(PlayerNetwork *player, const QByteArray &data);
 
     /// Envoie des données via l'endpoint reliable du joueur (ACK garanti).
     /// À n'utiliser qu'après que la connexion UDP est établie (HP:FINAL reçu).
@@ -138,7 +145,7 @@ private slots:
     void onExternalAddressReceivedTakePort(QString ip, quint16 port);
     void onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void onPendingCommandReady(QString ip, quint16 port);
-    void onPlayerUdpReadyRead();
+    void onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress sender, quint16 port);
     void onHeartbeat();
     void onStunRequestFailed();
 

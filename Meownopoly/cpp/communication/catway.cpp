@@ -115,6 +115,79 @@ void CatwayWorker::onReliableUpdate()
     }
 }
 
+void CatwayWorker::onSocketReadyRead()
+{
+    QUdpSocket *socket = qobject_cast<QUdpSocket *>(sender());
+    if (!socket) return;
+
+    while (socket->hasPendingDatagrams()) {
+        QByteArray datagram;
+        datagram.resize(socket->pendingDatagramSize());
+        QHostAddress senderAddr;
+        quint16 senderPort;
+        socket->readDatagram(datagram.data(), datagram.size(), &senderAddr, &senderPort);
+
+        // --- NEW: Handle reliable packets directly on the network thread ---
+        if (!datagram.isEmpty() && datagram[0] == '\x01') {
+             Catway *catway = Catway::instance();
+             if (catway) {
+                 PlayerNetwork *targetPlayer = nullptr;
+                 for (int i = 0; i < catway->playersCount(); ++i) {
+                     PlayerNetwork *p = catway->playerAt(i);
+                     if (p && p->socketInfo() && p->socketInfo()->socket() == socket) {
+                         // Robust security check: use QHostAddress comparison
+                         if (!p->ip().isEmpty() && QHostAddress(p->ip()) == senderAddr && senderPort == p->port()) {
+                             targetPlayer = p;
+                             break;
+                         }
+                     }
+                 }
+
+                 if (targetPlayer && targetPlayer->isP2pConnected() && targetPlayer->endpoint()) {
+                     const uint8_t *reliableData = reinterpret_cast<const uint8_t *>(datagram.constData()) + 1;
+                     int reliableSize = datagram.size() - 1;
+                     reliable_endpoint_receive_packet(targetPlayer->endpoint(), const_cast<uint8_t *>(reliableData), reliableSize);
+                     continue; // Don't relay to Catway GUI thread
+                 } else if (targetPlayer) {
+                     qDebug() << "[reliable] Received reliable packet from" << targetPlayer->playerId() 
+                              << "but p2pConnected=" << targetPlayer->isP2pConnected() 
+                              << "endpoint=" << (targetPlayer->endpoint() != nullptr);
+                 }
+             }
+        }
+        // ------------------------------------------------------------------
+
+        emit datagramReceived(socket, datagram, senderAddr, senderPort);
+    }
+}
+
+void CatwayWorker::sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port)
+{
+    if (socket && socket->thread() == QThread::currentThread()) {
+        socket->writeDatagram(data, address, port);
+    } else if (socket) {
+        qWarning() << "[CatwayWorker] sendDatagram called on wrong thread for socket" << socket;
+    }
+}
+
+void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray &data)
+{
+    Catway *catway = Catway::instance();
+    if (!catway) return;
+
+    PlayerNetwork *player = catway->playerById(playerId);
+    if (!player) return;
+
+    reliable_endpoint_t *ep = player->endpoint();
+    if (!ep) {
+        qDebug() << "[reliable] Error: No endpoint for player" << playerId;
+        return;
+    }
+
+    qDebug() << "[reliable] Sending packet to" << playerId << "size" << data.size();
+    reliable_endpoint_send_packet(ep, reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())), data.size());
+}
+
 void CatwayWorker::tearDown()
 {
     if (m_reliableUpdateTimer) {
@@ -138,14 +211,29 @@ static void catway_transmit_packet(
     auto *ctx = static_cast<CatwayReliableContext *>(context);
     if (!ctx || !ctx->player || !ctx->catway) return;
     PlayerNetwork *player = ctx->player;
+    if (!player) return;
+
     UdpSocketInfo *si = player->socketInfo();
-    if (!si || !si->socket() || player->ip().isEmpty() || player->port() == 0) return;
-    // Préfixer avec le magic byte 0x01 pour distinguer les paquets reliable des raw UDP
+    QString targetIp = player->ip();
+    quint16 targetPort = player->port();
+
+    if (!si || !si->socket() || targetIp.isEmpty() || targetPort == 0) {
+        qDebug() << "[reliable] Skip transmit: socket or target address missing for player" << (player ? player->playerId() : "unknown");
+        return;
+    }
+
     QByteArray datagram;
     datagram.reserve(1 + packet_bytes);
     datagram.append('\x01');
     datagram.append(reinterpret_cast<const char *>(packet_data), packet_bytes);
-    si->socket()->writeDatagram(datagram, QHostAddress(player->ip()), player->port());
+    
+    // Check if we are on the thread owning the socket
+    if (si->socket()->thread() == QThread::currentThread()) {
+        si->socket()->writeDatagram(datagram, QHostAddress(targetIp), targetPort);
+    } else {
+        // Fallback to Catway's thread-safe delegator if called from another thread
+        Catway::instance()->sendUdpPunch(player, datagram);
+    }
 }
 
 static int catway_process_packet(
@@ -331,8 +419,11 @@ UdpSocketInfo *Catway::takeSocket()
             // The QUdpSocket itself stays in the network thread for processing
             info->socket()->setParent(nullptr); 
             info->socket()->moveToThread(m_networkThread);
-            // QueuedConnection ensures readyRead (Network Thread) triggers slot (GUI Thread)
-            connect(info->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead, Qt::QueuedConnection);
+            
+            // Connect socket signals to worker slots (both on network thread)
+            connect(info->socket(), &QUdpSocket::readyRead, m_worker, &CatwayWorker::onSocketReadyRead);
+            // Relay datagrams from worker (network thread) to Catway (GUI thread)
+            connect(m_worker, &CatwayWorker::datagramReceived, this, &Catway::onDatagramReceived, Qt::QueuedConnection);
         }
         emit localPortsChanged();
     }
@@ -386,8 +477,11 @@ void Catway::addPlayer(PlayerNetwork *player)
             sock->setParent(nullptr);
             sock->moveToThread(m_networkThread);
         }
-        disconnect(sock, &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead);
-        connect(sock, &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead, Qt::QueuedConnection);
+        disconnect(sock, &QUdpSocket::readyRead, m_worker, &CatwayWorker::onSocketReadyRead);
+        connect(sock, &QUdpSocket::readyRead, m_worker, &CatwayWorker::onSocketReadyRead);
+
+        // disconnect(m_worker, &CatwayWorker::datagramReceived, this, &Catway::onDatagramReceived);
+        connect(m_worker, &CatwayWorker::datagramReceived, this, &Catway::onDatagramReceived, Qt::QueuedConnection);
     }
 
     player->setParent(this);
@@ -570,101 +664,82 @@ void Catway::sendUdpMessageToPlayer(PlayerNetwork *player, const QString &messag
 void Catway::sendUdpPunch(PlayerNetwork *player, const QString &content)
 {
     if (!player || player->ip().isEmpty() || player->port() == 0) return;
+    sendUdpPunch(player, content.toUtf8());
+}
+
+void Catway::sendUdpPunch(PlayerNetwork *player, const QByteArray &data)
+{
+    if (!player || player->ip().isEmpty() || player->port() == 0) return;
     UdpSocketInfo *si = player->socketInfo();
     if (!si || !si->socket()) return;
 
-    QByteArray data = content.toUtf8();
     QHostAddress addr(player->ip());
-    si->socket()->writeDatagram(data, addr, player->port());
-    emit log(QString("Sent UDP Punch [%1] to %2:%3").arg(content, player->ip(), QString::number(player->port())));
+    QMetaObject::invokeMethod(m_worker, "sendDatagram", Qt::QueuedConnection,
+                              Q_ARG(QUdpSocket*, si->socket()),
+                              Q_ARG(QByteArray, data),
+                              Q_ARG(QHostAddress, addr),
+                              Q_ARG(quint16, player->port()));
+    
+    if (data.size() > 0 && data[0] != '\x01') {
+        emit log(QString("Sent UDP Punch [%1] to %2:%3").arg(QString::fromUtf8(data), player->ip(), QString::number(player->port())));
+    }
 }
 
-void Catway::onPlayerUdpReadyRead()
+void Catway::onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress senderAddr, quint16 senderPort)
 {
-    QUdpSocket *socket = qobject_cast<QUdpSocket *>(sender());
-    qDebug() << "receive data";
-    if (!socket) return;
-
-    while (socket->hasPendingDatagrams()) {
-        QByteArray datagram;
-        datagram.resize(socket->pendingDatagramSize());
-        QHostAddress senderAddr;
-        quint16 senderPort;
-        socket->readDatagram(datagram.data(), datagram.size(), &senderAddr, &senderPort);
-
-        // Find which player this socket belongs to
-        PlayerNetwork *targetPlayer = nullptr;
-        for (PlayerNetwork *p : m_players) {
-            if (p->socketInfo() && p->socketInfo()->socket() == socket) {
-                targetPlayer = p;
-                break;
-            }
+    // Find which player this socket belongs to
+    PlayerNetwork *targetPlayer = nullptr;
+    for (PlayerNetwork *p : m_players) {
+        if (p->socketInfo() && p->socketInfo()->socket() == socket) {
+            targetPlayer = p;
+            break;
         }
-        
-        if (!targetPlayer) {
-            QString msg = QString::fromUtf8(datagram);
-            emit log(QString("UDP Recv on unassigned socket from %1:%2 -> %3").arg(senderAddr.toString(), QString::number(senderPort), msg));
-            continue;
-        }
+    }
+    
+    if (!targetPlayer) {
+        QString msg = QString::fromUtf8(datagram);
+        emit log(QString("UDP Recv on unassigned socket from %1:%2 -> %3").arg(senderAddr.toString(), QString::number(senderPort), msg));
+        return;
+    }
 
-        // --- FILTRE DE SÉCURITÉ (ANTI-SPOOFING) ---
-        // On n'accepte le paquet que s'il vient de l'IP et du port publics du joueur ciblé.
-        if (targetPlayer->ip().isEmpty() || senderAddr.toString() != targetPlayer->ip() || senderPort != targetPlayer->port()) {
-            qWarning() << "[SÉCURITÉ] Paquet UDP spoofé ou inconnu ignoré. Provenance:" 
-                       << senderAddr.toString() << ":" << senderPort 
-                       << "- Attendu:" << targetPlayer->ip() << ":" << targetPlayer->port();
-            continue;
-        }
-        // ------------------------------------------
+    // --- FILTRE DE SÉCURITÉ (ANTI-SPOOFING) ---
+    // On n'accepte le paquet que s'il vient de l'IP et du port publics du joueur ciblé.
+    if (targetPlayer->ip().isEmpty() || senderAddr.toString() != targetPlayer->ip() || senderPort != targetPlayer->port()) {
+        qWarning() << "[SÉCURITÉ] Paquet UDP spoofé ou inconnu ignoré. Provenance:" 
+                    << senderAddr.toString() << ":" << senderPort 
+                    << "- Attendu:" << targetPlayer->ip() << ":" << targetPlayer->port();
+        return;
+    }
+    // ------------------------------------------
 
         // Détection du type de paquet via le magic byte
         if (!datagram.isEmpty() && datagram[0] == '\x01') {
-            // --- SÉCURITÉ ---
-            // On refuse de traiter des paquets de "reliable.io" si le Hole Punching
-            // n'a pas été formellement complété (évite le spoofing de trame P2P).
-            if (!targetPlayer->isP2pConnected()) {
-                qWarning() << "[SÉCURITÉ] Paquet fiable ignoré : la connexion P2P n'est pas encore établie avec" << targetPlayer->playerId();
-                continue;
-            }
-
-            // Paquet fiable (reliable) — les logs [reliable] s'afficheront ici
-            qDebug() << "[Catway UDP] Paquet fiable (0x01) reçu, taille" << datagram.size() << "joueur" << targetPlayer->playerId();
-            if (targetPlayer->endpoint()) {
-                // On retire le magic byte avant de passer à reliable
-                const uint8_t *reliableData = reinterpret_cast<const uint8_t *>(datagram.constData()) + 1;
-                int reliableSize = datagram.size() - 1;
-                
-                reliable_endpoint_receive_packet(
-                    targetPlayer->endpoint(),
-                    const_cast<uint8_t *>(reliableData),
-                    reliableSize
-                );
-            } else {
-                qDebug() << "[Catway UDP] Pas d'endpoint reliable pour ce joueur, paquet ignoré.";
-            }
+            // NOTE: Les paquets fiables sont désormais traités directement dans CatwayWorker::onSocketReadyRead.
+            // Si on arrive ici, c'est que le worker n'a pas pu identifier le joueur ou que la sécu a échoué.
+            qDebug() << "[Catway GUI] Paquet fiable (0x01) reçu mais ignoré (devrait être géré par le worker)";
+            return;
         } else {
-            // Paquet brut (raw) — chat/dessin/hole punch utilisent ce chemin
-            if (datagram.size() <= 80)
-                qDebug() << "[Catway UDP] Paquet raw reçu, taille" << datagram.size() << "joueur" << targetPlayer->playerId() << "->" << QString::fromUtf8(datagram);
-            // Hole Punching, Chat legacy, Dessin legacy
-            QString msg = QString::fromUtf8(datagram);
-            
-            if (msg == QStringLiteral("HP:REPLY")) {
-                targetPlayer->setP2pConnected(true);
-                sendUdpPunch(targetPlayer, QStringLiteral("HP:FINAL"));
-                emit log("UDP Hole Punching: Received REPLY, sent FINAL. Connection should be open!");
-            } else if (msg == QStringLiteral("HP:FINAL")) {
-                targetPlayer->setP2pConnected(true);
-                emit log("UDP Hole Punching: Received FINAL. Punching SUCCESS!");
-            } else if (msg == QStringLiteral("HP:STRIKE")) {
-                emit log("UDP Hole Punching: Received STRIKE. Other side is punching.");
-            } else if (msg == QStringLiteral("HP:PING")) {
-                // Heartbeat silencieux : sert à maintenir le port du routeur ouvert
-                // Pas besoin de parser ou logger afin de ne pas spammer la console
-            } else {
-                // Message de jeu legacy (chat, dessin)
-                emit udpMessageReceived(targetPlayer->playerId(), msg);
-            }
+        // Paquet brut (raw) — chat/dessin/hole punch utilisent ce chemin
+        if (datagram.size() <= 80)
+            // qDebug() << "[Catway UDP] Paquet raw reçu, taille" << datagram.size() << "joueur" << targetPlayer->playerId() << "->" << QString::fromUtf8(datagram);
+        // Hole Punching, Chat legacy, Dessin legacy
+        QString msg = QString::fromUtf8(datagram);
+        
+        if (msg == QStringLiteral("HP:REPLY")) {
+            targetPlayer->setP2pConnected(true);
+            sendUdpPunch(targetPlayer, QStringLiteral("HP:FINAL"));
+            emit log("UDP Hole Punching: Received REPLY, sent FINAL. Connection should be open!");
+        } else if (msg == QStringLiteral("HP:FINAL")) {
+            targetPlayer->setP2pConnected(true);
+            emit log("UDP Hole Punching: Received FINAL. Punching SUCCESS!");
+        } else if (msg == QStringLiteral("HP:STRIKE")) {
+            emit log("UDP Hole Punching: Received STRIKE. Other side is punching.");
+        } else if (msg == QStringLiteral("HP:PING")) {
+            // Heartbeat silencieux : sert à maintenir le port du routeur ouvert
+            // Pas besoin de parser ou logger afin de ne pas spammer la console
+        } else {
+            // Message de jeu legacy (chat, dessin)
+            emit udpMessageReceived(targetPlayer->playerId(), msg);
         }
     }
 }
@@ -765,16 +840,9 @@ void Catway::onStunRequestFailed()
 void Catway::sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data)
 {
     if (!player || data.isEmpty()) return;
-    reliable_endpoint_t *ep = player->endpoint();
-    if (!ep) {
-        emit log(QStringLiteral("sendReliableToPlayer: no endpoint for player %1").arg(player->playerId()));
-        return;
-    }
-    reliable_endpoint_send_packet(
-        ep,
-        reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())),
-        data.size()
-    );
+    QMetaObject::invokeMethod(m_worker, "sendReliablePacket", Qt::QueuedConnection,
+                              Q_ARG(QString, player->playerId()),
+                              Q_ARG(QByteArray, data));
 }
 
 // Removed Catway::onReliableUpdate as it is now in CatwayWorker
