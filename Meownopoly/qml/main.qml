@@ -41,7 +41,8 @@ ApplicationWindow {
     visible: true
     title: "Meownopoly"
     
-    visibility: (stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true) ? Window.FullScreen : Window.Windowed
+    visibility: (Qt.platform.os === "android") ? Window.FullScreen
+        : ((stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true) ? Window.FullScreen : Window.Windowed)
 
     StackView {
         id: stackView
