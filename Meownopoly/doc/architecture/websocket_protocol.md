@@ -13,16 +13,30 @@ Le serveur fonctionne comme un "relais aveugle". Il ne connaît pas le contenu d
 
 ---
 
-## Processus de Connexion et Authentification
+## Processus de Création d'une Session
 
-Le processus de connexion suit une logique stricte pour garantir la sécurité du "Blind Relay".
+La création est désormais une opération distincte du rejoindre. Elle suit les étapes suivantes :
+
+1. **Connexion WebSocket** : Le client ouvre une connexion TCP vers le serveur.
+2. **Requête `CREATE_SESSION`** : Le client envoie le `session_id` (généré localement via `AccountManager::getNewUniqueId()`), le `session_name`, et le `password_hash`.
+3. **Vérification Serveur** :
+   - Si une session avec cet ID existe déjà → erreur `SESSION_EXISTS`.
+   - Sinon : la session est créée en base avec son nom et son hash.
+4. **Confirmation (`SESSION_CREATED`)** : Le serveur répond avec les métadonnées de la session créée.
+5. **Rejoindre automatiquement** : Après réception de `SESSION_CREATED`, le client envoie immédiatement `JOIN_SESSION` pour entrer dans la session qu'il vient de créer (côté C++ : `handleSessionCreated` appelle `joinSession()`).
+6. **Initialisation (`INIT_SESSION`)** : Le serveur répond au `JOIN_SESSION` avec les clés et l'historique (vides pour une nouvelle session).
+7. **Génération de la première clé** : Le client détecte qu'il n'y a pas de clé et publie la première via `PUBLISH_KEY`.
+
+---
+
+## Processus de Rejoindre une Session Existante
 
 1. **Connexion WebSocket** : Le client ouvre une connexion TCP vers le serveur.
 2. **Requête `JOIN_SESSION`** : Le client envoie ses identifiants (`player_id`, `nickname`) et la preuve du mot de passe (`password_hash`).
 3. **Vérification Serveur** :
-   - **Session inexistante** : Le serveur crée la session et enregistre le `password_hash` fourni comme référence.
-   - **Session existante** : Le serveur compare le `password_hash` reçu avec celui stocké en base de données.
-   - **Échec** : Si les hashs ne correspondent pas, le serveur renvoie une erreur `INVALID_PASSWORD`.
+   - **Session inexistante** : Le serveur renvoie une erreur `SESSION_NOT_FOUND`. La session doit être créée explicitement via `CREATE_SESSION`.
+   - **Mot de passe invalide** : Le serveur renvoie une erreur `INVALID_PASSWORD`.
+   - **Succès** : Le client est ajouté à la session (participant connu ou nouveau).
 4. **Initialisation (`INIT_SESSION`)** : En cas de succès, le serveur renvoie :
    - La version actuelle de la clé de session.
    - La **dernière clé de session** enregistrée (chiffrée).
@@ -37,8 +51,16 @@ Le processus de connexion suit une logique stricte pour garantir la sécurité d
 
 Ces trames sont envoyées par le client pour interagir avec le serveur.
 
+### `CREATE_SESSION`
+Crée une nouvelle session sur le serveur. Ne rejoint pas la session — un `JOIN_SESSION` doit suivre.
+- `session_id` (string) : Identifiant unique de la session, généré côté client via `AccountManager::getNewUniqueId()`.
+- `session_name` (string) : Nom lisible de la session, saisi par l'utilisateur.
+- `password_hash` (string) : Preuve de connaissance du mot de passe (hash dérivé de `session_id + password`).
+- `max_players` (int) : Nombre maximum de joueurs (défaut : 4).
+- `is_public` (bool) : Si `true`, la session apparaît dans la liste publique (défaut : `true`).
+
 ### `JOIN_SESSION`
-Utilisée pour rejoindre une session existante ou en créer une nouvelle.
+Rejoint une session existante. Renvoie `SESSION_NOT_FOUND` si la session n'existe pas encore.
 - `session_id` (string) : Identifiant unique de la session.
 - `player_id` (string) : Identifiant unique du joueur.
 - `player_nickname` (string) : Pseudonyme du joueur.
@@ -102,6 +124,14 @@ Efface tous les messages d'une session.
 
 ## Trames Serveur -> Client (Réponses / Événements)
 
+### `SESSION_CREATED`
+Confirmation de création de session, envoyée après un `CREATE_SESSION` réussi. Le client doit ensuite envoyer un `JOIN_SESSION` pour entrer dans la session.
+- `session_id` (string) : Identifiant de la session créée.
+- `session_name` (string) : Nom de la session.
+- `max_players` (int) : Capacité maximale.
+- `is_public` (bool) : Visibilité dans la liste publique.
+- `created_at` (string) : Date ISO de création.
+
 ### `INIT_SESSION`
 Envoyée après un `JOIN_SESSION` réussi.
 - `current_version` (int) : Version actuelle de la clé.
@@ -142,14 +172,26 @@ Réponse à `GET_PARTICIPANTS`.
 
 ### `SESSIONS_LIST`
 Réponse à `LIST_SESSIONS`.
-- `sessions` (array) : Liste des sessions actives avec détails (hôte, nombre de joueurs, date).
+- `sessions` (array) : Liste des sessions. Chaque entrée contient :
+  - `session_id` (string)
+  - `session_name` (string) : Nom lisible de la session.
+  - `host_id` (string) : ID du premier participant (hôte).
+  - `host_nickname` (string) : Pseudonyme de l'hôte.
+  - `player_count` (int) : Nombre de participants enregistrés.
+  - `max_players` (int) : Capacité maximale.
+  - `online_count` (int) : Nombre de joueurs actuellement connectés.
+  - `is_public` (bool)
+  - `status` (string) : `"waiting"`, `"available"` ou `"full"`.
+  - `created_at` (string) : Date ISO de création.
 - `total` (int) : Nombre total sur le serveur.
+- `limit` (int) : Limite appliquée.
+- `limited` (bool) : `true` si la liste a été tronquée.
 
 ### `NEW_PARTICIPANT`
 Diffusé quand un nouveau joueur rejoint la session.
 - `session_id` (string)
 - `player_id` (string)
-- `nickname` (string)
+- `player_nickname` (string)
 
 ### `PARTICIPANT_LEFT` / `PARTICIPANT_KICKED`
 Diffusé quand un joueur quitte ou est expulsé.
@@ -158,7 +200,19 @@ Diffusé quand un joueur quitte ou est expulsé.
 
 ### `ERROR`
 Envoyé en cas d'échec d'une opération.
-- `code` (string) : Code d'erreur (ex: `UNAUTHORIZED`, `KEY_ROTATION_REQUIRED`).
+- `code` (string) : Code d'erreur. Codes possibles :
+
+| Code | Déclencheur | Comportement client |
+|------|-------------|---------------------|
+| `UNAUTHORIZED` | Commande de session sans avoir rejoint | — |
+| `INVALID_PASSWORD` | `JOIN_SESSION` avec mauvais hash | `emit errorOccurred` |
+| `SESSION_NOT_FOUND` | `JOIN_SESSION` sur session inexistante | `emit errorOccurred("La session demandée n'existe pas.")` |
+| `SESSION_EXISTS` | `CREATE_SESSION` sur ID déjà pris | `emit errorOccurred` |
+| `KEY_ROTATION_REQUIRED` | `SEND_MSG` / `SEND_COMMAND` bloqué | Publie une nouvelle clé et relance le message en attente |
+| `MAX_SESSIONS_REACHED` | Limite serveur atteinte | `emit errorOccurred` |
+| `MISSING_PARAMETER` | Paramètre obligatoire absent | `emit errorOccurred` |
+| `PAYLOAD_TOO_LARGE` | Message dépassant la limite (10 MB) | `emit errorOccurred` |
+
 - `message` (string) : Description explicative.
 
 ### `HISTORY_CLEARED` / `SESSION_ENDED` / `SERVER_RESET`
@@ -176,6 +230,7 @@ Le serveur (`chatServer/server.js`) et la base de données (`chatServer/database
 | Champ           | Type      | Description |
 |-----------------|-----------|-------------|
 | `session_id`    | TEXT (PK) | Identifiant unique de la session. |
+| `session_name`  | TEXT      | Nom lisible de la session, saisi par le créateur. |
 | `password_hash` | TEXT      | Preuve du mot de passe (hash) utilisée pour vérifier les rejoins. |
 | `key_package`   | TEXT      | Dernière clé de session chiffrée (blob). |
 | `key_nonce`     | TEXT      | Nonce utilisé pour le chiffrement du blob. |
@@ -188,34 +243,42 @@ Le serveur (`chatServer/server.js`) et la base de données (`chatServer/database
 | `session_id` | TEXT      | Référence vers la session. |
 | `player_id`  | TEXT      | Identifiant du joueur. |
 | `nickname`   | TEXT      | Pseudonyme du joueur. |
-| `joined_at`  | TIMESTAMP | Date d’inscription dans la session. |
+| `joined_at`  | TIMESTAMP | Date d'inscription dans la session. |
 | *(PK)*       |           | `(session_id, player_id)`. |
 
-L’ordre d’insertion définit l’**hôte** : le premier participant (`ORDER BY joined_at ASC`) est considéré comme hôte (pour le KICK, etc.).
+L'ordre d'insertion définit l'**hôte** : le premier participant (`ORDER BY joined_at ASC`) est considéré comme hôte (pour le KICK, etc.).
 
 **Table `messages`**
 | Champ             | Type      | Description |
 |-------------------|-----------|-------------|
 | `id`              | INTEGER   | Identifiant unique du message (auto). |
 | `session_id`      | TEXT      | Session concernée. |
-| `sender_id`       | TEXT      | ID de l’expéditeur. |
-| `sender_nickname` | TEXT      | Pseudonyme au moment de l’envoi. |
+| `sender_id`       | TEXT      | ID de l'expéditeur. |
+| `sender_nickname` | TEXT      | Pseudonyme au moment de l'envoi. |
 | `payload`         | TEXT      | Message chiffré (base64). |
 | `nonce`           | TEXT      | Nonce du chiffrement. |
 | `key_version`     | INTEGER   | Version de la clé utilisée. |
-| `server_timestamp`| TIMESTAMP | Date d’enregistrement côté serveur. |
+| `server_timestamp`| TIMESTAMP | Date d'enregistrement côté serveur. |
 
 ### État en mémoire (serveur Node.js)
 
-- **`rooms`** : `Map<session_id, Set<WebSocket>>` — Connexions WebSocket actuellement dans chaque session. Une session peut exister en base sans entrée dans `rooms` si personne n’est connecté.
-- **`keyRotationRequired`** : `Set<session_id>` — Sessions pour lesquelles un nouveau participant vient d’arriver ou quelqu’un vient de partir ; aucun message/commande n’est accepté tant qu’un client n’a pas publié une nouvelle clé via `PUBLISH_KEY`.
-- **État attaché à chaque socket (`ws`)** : `session_id`, `player_id`, `player_nickname`, `last_activity`, `status` (`'online'` ou `'away'` après un délai d’inactivité).
+- **`rooms`** : `Map<session_id, Set<WebSocket>>` — Connexions WebSocket actuellement dans chaque session. Une session peut exister en base sans entrée dans `rooms` si personne n'est connecté.
+- **`keyRotationRequired`** : `Set<session_id>` — Sessions pour lesquelles un nouveau participant vient d'arriver ou quelqu'un vient de partir ; aucun message/commande n'est accepté tant qu'un client n'a pas publié une nouvelle clé via `PUBLISH_KEY`.
+- **État attaché à chaque socket (`ws`)** : `session_id`, `player_id`, `player_nickname`.
 
 ### Clés de session exposées au client
 
-`db.getSessionKeys(session_id)` retourne une liste (en pratique une seule entrée) d’objets avec :
+`db.getSessionKeys(session_id)` retourne une liste (en pratique une seule entrée) d'objets avec :
 - `version` : version de la clé
 - `key_package` : blob chiffré (envoyé tel quel dans les trames)
 - `key_nonce` : nonce (envoyé sous le champ `nonce` dans INIT_SESSION / KEY_UPDATE)
 
 Les entrées avec `key_package === null` sont filtrées avant envoi au client (session sans clé encore publiée).
+
+---
+
+## Génération des identifiants de session
+
+Les `session_id` sont générés **exclusivement côté client** via `AccountManager::getNewUniqueId()` (méthode statique C++). En QML, l'ID est généré automatiquement en ne passant pas le troisième argument à `chatClient.createSession(name, password)` — le paramètre par défaut C++ se charge de l'appel à `getNewUniqueId()`.
+
+Le `session_name` (nom lisible) est un champ distinct, saisi par l'utilisateur dans l'interface de création.
