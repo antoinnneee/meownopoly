@@ -57,7 +57,7 @@ Item {
             if (gridModel.get(idx).cellColor !== colorStr) {
                 gridModel.setProperty(idx, "cellColor", colorStr)
                 if (gridRoot.targetPlayer) {
-                    Catway.sendUdpMessageToPlayer(gridRoot.targetPlayer, "DRAW:" + idx + ":" + colorStr)
+                    Catway.sendReliableToPlayer(gridRoot.targetPlayer, "DRAW:" + idx + ":" + colorStr)
                 }
             }
         }

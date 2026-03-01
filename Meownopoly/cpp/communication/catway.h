@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QList>
 #include <QJsonObject>
+#include <QElapsedTimer>
 
 class QUdpSocket;
 class StunManager;
@@ -45,6 +46,11 @@ public:
     Q_PROPERTY(QQmlListProperty<UdpSocketInfo> localPorts READ localPorts NOTIFY localPortsChanged)
     QQmlListProperty<UdpSocketInfo> localPorts();
 
+    /// Intervalle d'envoi du battement de cœur P2P (Heartbeat) en millisecondes. Défaut : 10000ms.
+    Q_PROPERTY(int heartbeatInterval READ heartbeatInterval WRITE setHeartbeatInterval NOTIFY heartbeatIntervalChanged)
+    int heartbeatInterval() const;
+    void setHeartbeatInterval(int intervalMs);
+
     /// Liste des joueurs réseau (playerId, nickname, socketInfo).
     Q_PROPERTY(QQmlListProperty<PlayerNetwork> players READ players NOTIFY playersChanged)
     QQmlListProperty<PlayerNetwork> players();
@@ -63,6 +69,10 @@ public:
     Q_INVOKABLE void sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message);
     void sendUdpPunch(PlayerNetwork *player, const QString &content);
 
+    /// Envoie des données via l'endpoint reliable du joueur (ACK garanti).
+    /// À n'utiliser qu'après que la connexion UDP est établie (HP:FINAL reçu).
+    Q_INVOKABLE void sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data);
+
 public slots:
     Q_INVOKABLE void setupNewPort();
 
@@ -73,6 +83,11 @@ signals:
     void udpMessageReceived(QString senderId, QString message);
     void localPortsChanged();
     void playersChanged();
+    /// Émis quand un paquet fiable (via reliable) est reçu et acquitté.
+    void reliableMessageReceived(QString senderId, QByteArray data);
+    /// Même contenu en QString (UTF-8), pratique pour le QML (draw, chat, etc.).
+    void reliableMessageReceivedString(QString senderId, QString message);
+    void heartbeatIntervalChanged();
 
 private slots:
     void onAccountStunChanged();
@@ -80,6 +95,8 @@ private slots:
     void onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void onPendingCommandReady(QString ip, quint16 port);
     void onPlayerUdpReadyRead();
+    void onReliableUpdate();
+    void onHeartbeat();
 
 private:
     struct PendingCommand {
@@ -107,6 +124,10 @@ private:
     QMetaObject::Connection m_stunConnection;
     QMetaObject::Connection m_externalAddressTakePortConnection;
     QMetaObject::Connection m_pendingCommandConnection;
+    QTimer *m_reliableUpdateTimer = nullptr;
+    QElapsedTimer m_reliableClock;
+    QTimer *m_heartbeatTimer = nullptr;
+    int m_heartbeatInterval = 10000;
 };
 
 #endif // CATWAY_H

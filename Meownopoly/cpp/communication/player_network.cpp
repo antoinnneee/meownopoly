@@ -6,6 +6,47 @@ PlayerNetwork::PlayerNetwork(QObject *parent)
 {
 }
 
+PlayerNetwork::~PlayerNetwork()
+{
+    destroyReliable();
+}
+
+void PlayerNetwork::initReliable(
+    void *context,
+    void (*transmitFn)(void*, uint64_t, uint16_t, uint8_t*, int),
+    int  (*processFn)(void*, uint64_t, uint16_t, uint8_t*, int)
+)
+{
+    destroyReliable();
+
+    struct reliable_config_t config;
+    reliable_default_config(&config);
+
+    // Nom lisible dans les logs reliable (tronqué à 255 chars)
+    QByteArray name = ("player:" + m_playerId).toUtf8();
+    reliable_copy_string(config.name, name.constData(), sizeof(config.name));
+
+    config.context                 = context;
+    config.transmit_packet_function = transmitFn;
+    config.process_packet_function  = processFn;
+
+    // Paramètres adaptés au jeu (paquets < 1200 bytes la plupart du temps)
+    config.max_packet_size = 32 * 1024;
+    config.fragment_above  = 1200;
+    config.max_fragments   = 32;
+    config.fragment_size   = 1024;
+
+    m_endpoint = reliable_endpoint_create(&config, 0.0);
+}
+
+void PlayerNetwork::destroyReliable()
+{
+    if (m_endpoint) {
+        reliable_endpoint_destroy(m_endpoint);
+        m_endpoint = nullptr;
+    }
+}
+
 void PlayerNetwork::registerQml()
 {
     qmlRegisterType<PlayerNetwork>("Catway", 1, 0, "PlayerNetwork");
@@ -61,5 +102,13 @@ void PlayerNetwork::setPort(quint16 port)
     if (m_port != port) {
         m_port = port;
         emit portChanged();
+    }
+}
+
+void PlayerNetwork::setP2pConnected(bool connected)
+{
+    if (m_p2pConnected != connected) {
+        m_p2pConnected = connected;
+        emit p2pConnectedChanged();
     }
 }
