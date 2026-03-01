@@ -18,6 +18,14 @@
 
 class ChatClient : public QObject
 {
+
+    enum ErrorSession {
+        SESSION_DOES_NOT_EXIST,
+        INVALID_PASSWORD,
+        OTHER
+    };
+    Q_ENUM (ErrorSession)
+
     Q_OBJECT
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(QString sessionId READ sessionId WRITE setSessionId NOTIFY sessionIdChanged)
@@ -78,7 +86,7 @@ signals:
     void participantsChanged();
     void participantJoined(const QString &playerId, const QString &playerNickname);
     void participantLeft(const QString &playerId);
-    void errorOccurred(const QString &error);
+    void errorOccurred(const QString &error, ChatClient::ErrorSession errorType = ChatClient::OTHER);
     void availableSessionsChanged();
     void commandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void sessionCreated(const QString &sessionId, const QString &sessionName);
@@ -87,6 +95,7 @@ private slots:
     void onConnected();
     void onDisconnected();
     void onTextMessageReceived(const QString &message);
+    void onWorkerError(const QString &error);
 
 private:
     void handleInitSession(const QJsonObject &payload);

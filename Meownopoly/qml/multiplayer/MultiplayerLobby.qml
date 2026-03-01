@@ -38,7 +38,12 @@ Rectangle {
             console.log("📋 Sessions updated:", lobbyChatClient.availableSessions.length)
         }
 
-        onErrorOccurred: function(error) {
+        onErrorOccurred: function(error, errorType) {
+            if (errorType === ChatClient.INVALID_PASSWORD) {
+                sessionPasswordDialog.sessionIdForJoin = lobbyChatClient.sessionId
+                sessionPasswordDialog.open()
+                return
+            }
             console.error("❌ Lobby error:", error)
         }
 
@@ -50,6 +55,71 @@ Rectangle {
         Component.onCompleted: {
             console.log("🚀 MultiplayerLobby ChatClient connecting...")
             lobbyChatClient.connectToServer("ws://pattounecorp.ovh:3000")
+        }
+    }
+
+    // Popup mot de passe lorsque INVALID_PASSWORD (session protégée)
+    Dialog {
+        id: sessionPasswordDialog
+        title: "Mot de passe requis"
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(360, parent.width - 40)
+
+        property string sessionIdForJoin: ""
+
+        background: Rectangle {
+            color: "#2a2a2a"
+            border.color: "#E67E22"
+            border.width: 2
+            radius: 12
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 16
+
+            Text {
+                text: "Cette session est protégée. Entrez le mot de passe :"
+                color: "#e0e0e0"
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            TextField {
+                id: sessionPasswordField
+                placeholderText: "Mot de passe"
+                echoMode: TextInput.Password
+                color: "#f5f0ff"
+                font.pixelSize: 14
+                Layout.fillWidth: true
+                Layout.preferredHeight: 44
+
+                background: Rectangle {
+                    color: "#1a1a1a"
+                    border.color: sessionPasswordField.activeFocus ? "#E67E22" : "#555555"
+                    border.width: 2
+                    radius: 8
+                }
+
+                onAccepted: sessionPasswordDialog.acceptAndJoin()
+            }
+        }
+
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        onAccepted: acceptAndJoin()
+        onRejected: {
+            sessionPasswordField.text = ""
+            sessionIdForJoin = ""
+        }
+
+        function acceptAndJoin() {
+            if (sessionIdForJoin.length === 0) return
+            lobbyChatClient.connectToSessionDirect(sessionIdForJoin, sessionPasswordField.text)
+            sessionPasswordField.text = ""
+            sessionIdForJoin = ""
+            close()
         }
     }
 

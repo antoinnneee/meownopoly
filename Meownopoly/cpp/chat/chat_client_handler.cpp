@@ -121,6 +121,9 @@ void ChatClient::handleError(const QJsonObject &payload) {
     } else if (code == "SESSION_NOT_FOUND") {
         Logger::instance()->warn("Join failed: session does not exist.", "ChatClient");
         emit errorOccurred("La session demandée n'existe pas.");
+    } else if (code == "INVALID_PASSWORD") {
+        Logger::instance()->warn("Join failed: invalid password.", "ChatClient");
+        emit errorOccurred("Le mot de passe pour la session est invalide.", ErrorSession::INVALID_PASSWORD);
     } else {
         Logger::instance()->warn(QString("Server error: %1 %2").arg(code).arg(message), "ChatClient");
         emit errorOccurred(message);
