@@ -81,7 +81,7 @@ Rectangle {
                 console.log("Join requested - fonctionnalité à implémenter")
             }
         }
-    }
+    } 
 
     Component {
         id: sessionCreationComponent
