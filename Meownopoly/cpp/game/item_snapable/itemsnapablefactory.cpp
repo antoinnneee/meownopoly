@@ -2,6 +2,7 @@
 
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
+#include <QJsonDocument>
 
 ItemSnapableFactory *ItemSnapableFactory::m_pThis = nullptr;
 
@@ -58,5 +59,21 @@ ItemSnapable *ItemSnapableFactory::createPhysicZone()
     ItemSnapable *snap = new ItemSnapable();
     snap->setTileType(ItemSnapable::PhysicZoneTile);
     return snap;
+}
+
+void ItemSnapableFactory::requestCreateItem(const QJsonObject &jsonData)
+{
+    emit createItemRequested(jsonData);
+}
+
+void ItemSnapableFactory::requestCreateItemFromString(const QString &jsonString)
+{
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || !doc.isObject()) {
+        qWarning() << "ItemSnapableFactory::requestCreateItemFromString : JSON invalide —" << error.errorString();
+        return;
+    }
+    emit createItemRequested(doc.object());
 }
 

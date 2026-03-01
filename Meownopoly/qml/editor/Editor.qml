@@ -270,6 +270,14 @@ Base_Board {
     }
 
     Connections {
+        target: ItemSnapableFactory
+        function onCreateItemRequested(jsonData) {
+            var item = ItemSnapableFactory.createItemSnapableFromJson(jsonData)
+            logic.tileLogic.createItemSnapableTile(item)
+        }
+    }
+
+    Connections {
         target: Game
 
         function onFoundItemSnapableTile(itemSnapableData) {
