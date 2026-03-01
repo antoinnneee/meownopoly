@@ -78,7 +78,7 @@ void AccountManager::setNickname(const QString &nickname)
     }
 }
 
-void AccountManager::setStunServer(const QString &server)
+void AccountManager::setStunServerURL(const QString &server)
 {
     if (m_stunServer != server) {
         m_stunServer = server;

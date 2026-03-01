@@ -193,13 +193,6 @@ void StunManager::onReadyRead()
     }
 }
 
-void StunManager::setPeer(QString ip, quint16 port)
-{
-    m_peerAddress = QHostAddress(ip);
-    m_peerPort = port;
-    emit log("Peer set to: " + m_peerAddress.toString() + ":" + QString::number(m_peerPort));
-}
-
 QUdpSocket *StunManager::getSocket() const
 {
     return m_socketInfo ? m_socketInfo->socket() : nullptr;
@@ -223,26 +216,6 @@ UdpSocketInfo *StunManager::takeSocket()
         oldInfo->setParent(nullptr);
     emit log("New UDP socket prepared for punching (previous socket taken)");
     return oldInfo;
-}
-
-void StunManager::sendMessageToPeer(QString message)
-{
-    if (m_peerAddress.isNull() || m_peerPort == 0) {
-        emit log("Peer not configured/invalid.");
-        return;
-    }
-    QUdpSocket *s = m_socketInfo ? m_socketInfo->socket() : nullptr;
-    if (!s || s->state() != QAbstractSocket::BoundState) {
-        emit log("Socket not bound, cannot send to peer.");
-        return;
-    }
-    QByteArray data = message.toUtf8();
-    qint64 bytes = s->writeDatagram(data, m_peerAddress, m_peerPort);
-    if (bytes == -1) {
-        emit log("Failed to send to peer: " + s->errorString());
-    } else {
-        emit log("Sent to " + m_peerAddress.toString() + ":" + QString::number(m_peerPort) + " via Main Port: " + message);
-    }
 }
 
 void StunManager::handleStunResponse(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort)

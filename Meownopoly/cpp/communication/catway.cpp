@@ -65,14 +65,54 @@ void CatwayWorker::startReliableTimer()
     m_reliableUpdateTimer->start();
 }
 
+void CatwayWorker::startStunServer()
+{
+    m_stunManager->startServer();
+}
+
+void CatwayWorker::stopServer()
+{
+    m_stunManager->stopServer();
+}
+
+void CatwayWorker::sendStunRequest()
+{
+    m_stunManager->sendStunRequest();
+}
+
+void CatwayWorker::setStunServerInfo(const QString &host, quint16 port)
+{
+    m_stunManager->setStunServer(host, port);
+}
+
+UdpSocketInfo* CatwayWorker::takeSocket()
+{
+    UdpSocketInfo *info = m_stunManager->takeSocket();
+    if (info) {
+        // MUST move from the thread it currently belongs to (NetworkThread)
+        // push it to the GUI thread.
+        info->moveToThread(Catway::instance()->thread());
+    }
+    return info;
+}
+
 void CatwayWorker::onReliableUpdate()
 {
     double timeSeconds = m_reliableClock.elapsed() / 1000.0;
     
-    // Pour parcourir les players en thread-safe, Catway devra émettre un signal vers le worker,
-    // ou le worker gérera sa propre liste d'endpoints locaux.
-    // Pour l'instant, appeler Catway::instance()->onReliableUpdate() depuis le thread principal via signal.
-    QMetaObject::invokeMethod(Catway::instance(), "onReliableUpdate", Qt::QueuedConnection);
+    // Accéder aux players via le singleton Catway.
+    // Note : bien que les QObjects vivent sur le thread GUI, les pointeurs `reliable_endpoint_t*`
+    // sont manipulés exclusivement pour les E/S réseau.
+    Catway *catway = Catway::instance();
+    if (!catway) return;
+
+    for (int i = 0; i < catway->playersCount(); ++i) {
+        PlayerNetwork *player = catway->playerAt(i);
+        reliable_endpoint_t *ep = player ? player->endpoint() : nullptr;
+        if (!ep) continue;
+        reliable_endpoint_update(ep, timeSeconds);
+        reliable_endpoint_clear_acks(ep);
+    }
 }
 
 void CatwayWorker::tearDown()
@@ -129,12 +169,12 @@ Catway *Catway::m_pThis = nullptr;
 Catway::Catway(QObject *parent)
     : QObject(parent)
 {
+    // qDebug() << "INIT CATWAY";
     // === Threaded Networking Setup ===
     m_networkThread = new QThread(this);
     m_worker = new CatwayWorker();
     
     // Le Worker gère désormais le StunManager
-    m_stunManager = m_worker->stunManager();
 
     m_worker->moveToThread(m_networkThread);
     
@@ -153,9 +193,9 @@ Catway::Catway(QObject *parent)
     connect(m_chatClient, &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
 
     // Relay signals from StunManager
-    connect(m_stunManager, &StunManager::log, this, &Catway::log);
-    connect(m_stunManager, &StunManager::serverStarted, this, &Catway::serverStarted);
-    connect(m_stunManager, &StunManager::stunFailed, this, &Catway::onStunRequestFailed);
+    connect(m_worker->stunManager(), &StunManager::log, this, &Catway::log);
+    connect(m_worker->stunManager(), &StunManager::serverStarted, this, &Catway::stunServerStarted);
+    connect(m_worker->stunManager(), &StunManager::stunFailed, this, &Catway::onStunRequestFailed);
 
     // Sync STUN parameters from AccountManager
     auto *am = AccountManager::instance();
@@ -217,35 +257,23 @@ void Catway::setHeartbeatInterval(int intervalMs)
     }
 }
 
-void Catway::startServer()
+void Catway::startStunServer()
 {
-    m_stunManager->startServer();
+    QMetaObject::invokeMethod(m_worker, "startStunServer", Qt::QueuedConnection);
 }
 
 void Catway::stopServer()
 {
-    m_stunManager->stopServer();
-}
-
-void Catway::sendMessageToPeer(QString message)
-{
-    m_stunManager->sendMessageToPeer(message);
-}
-
-void Catway::setPeer(QString ip, quint16 port)
-{
-    m_stunManager->setPeer(ip, port);
-}
-
-
-void Catway::setStunServer(QString ip)
-{
-    m_stunManager->setStunServer(ip, m_stunManager->getStunPort());
+    QMetaObject::invokeMethod(m_worker, "stopServer", Qt::QueuedConnection);
 }
 
 void Catway::setStunPort(quint16 port)
 {
-    m_stunManager->setStunServer(m_stunManager->getStunServer(), port);
+    QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, m_worker->stunManager()->getStunServer()), Q_ARG(quint16, port));
+}
+void Catway::setStunServerURL(QString url)
+{
+    QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, url), Q_ARG(quint16, m_worker->stunManager()->getStunPort()));
 }
 
 QString Catway::getExternalIp() const
@@ -256,7 +284,9 @@ QString Catway::getExternalIp() const
         if (!addr.isEmpty())
             return addr;
     }
-    return m_stunManager->getExternalIp();
+    QString res;
+    QMetaObject::invokeMethod(m_worker->stunManager(), "getExternalIp", Qt::BlockingQueuedConnection, Q_RETURN_ARG(QString, res));
+    return res;
 }
 
 quint16 Catway::getExternalPort() const
@@ -266,29 +296,42 @@ quint16 Catway::getExternalPort() const
         if (last->publicPort() != 0)
             return last->publicPort();
     }
-    return m_stunManager->getExternalPort();
+    quint16 res = 0;
+    QMetaObject::invokeMethod(m_worker->stunManager(), "getExternalPort", Qt::BlockingQueuedConnection, Q_RETURN_ARG(quint16, res));
+    return res;
 }
 
 QObject *Catway::getSocket() const
 {
-    return m_stunManager->getSocket();
+    QUdpSocket *res = nullptr;
+    QMetaObject::invokeMethod(m_worker->stunManager(), "getSocket", Qt::BlockingQueuedConnection, Q_RETURN_ARG(QUdpSocket*, res));
+    return res;
 }
 
 QObject *Catway::currentSocketInfo() const
 {
-    return m_stunManager->currentSocketInfo();
+    UdpSocketInfo *res = nullptr;
+    QMetaObject::invokeMethod(m_worker->stunManager(), "currentSocketInfo", Qt::BlockingQueuedConnection, Q_RETURN_ARG(UdpSocketInfo*, res));
+    return res;
 }
 
 UdpSocketInfo *Catway::takeSocket()
 {
-    UdpSocketInfo *info = m_stunManager->takeSocket();
+    UdpSocketInfo *info = nullptr;
+    // Call takeSocket on worker thread and wait for result (BlockingQueuedConnection)
+    QMetaObject::invokeMethod(m_worker, "takeSocket", Qt::BlockingQueuedConnection, Q_RETURN_ARG(UdpSocketInfo*, info));
+
     if (info) {
+        // Migration rule: must move to GUI thread before parenting to Catway
+        // (Now performed by the worker before returning)
         info->setParent(this);
+        
         m_localSocketInfos.append(info);
         if (info->socket()) {
-            info->socket()->setParent(nullptr); // Must unparent before moving
+            // The QUdpSocket itself stays in the network thread for processing
+            info->socket()->setParent(nullptr); 
             info->socket()->moveToThread(m_networkThread);
-            // Connect with QueuedConnection because socket is on NetworkThread and Catway is on GUI Thread
+            // QueuedConnection ensures readyRead (Network Thread) triggers slot (GUI Thread)
             connect(info->socket(), &QUdpSocket::readyRead, this, &Catway::onPlayerUdpReadyRead, Qt::QueuedConnection);
         }
         emit localPortsChanged();
@@ -333,7 +376,7 @@ void Catway::addPlayer(PlayerNetwork *player)
     if (!player || m_players.contains(player))
         return;
 
-    if (player->socketInfo() && player->socketInfo() == m_stunManager->currentSocketInfo()) {
+    if (player->socketInfo() && player->socketInfo() == currentSocketInfo()) {
         player->setSocketInfo(takeSocket());
     } else if (player->socketInfo() && player->socketInfo()->socket()) {
         // Just in case it was created freely, ensure readyRead is connected
@@ -369,7 +412,7 @@ void Catway::removePlayer(PlayerNetwork *player)
     UdpSocketInfo *si = player->socketInfo();
     if (si) {
         bool inUse = false;
-        if (m_stunManager->currentSocketInfo() == si) {
+        if (currentSocketInfo() == si) {
             inUse = true;
         } else {
             for (PlayerNetwork *p : m_players) {
@@ -404,6 +447,11 @@ PlayerNetwork *Catway::playerAt(int index) const
     return m_players.at(index);
 }
 
+int Catway::playersCount() const
+{
+    return m_players.size();
+}
+
 PlayerNetwork *Catway::playerById(const QString &playerId) const
 {
     for (PlayerNetwork *p : m_players) {
@@ -417,19 +465,20 @@ PlayerNetwork *Catway::playerById(const QString &playerId) const
 
 void Catway::sendStunRequest()
 {
-    m_stunManager->sendStunRequest();
+    QMetaObject::invokeMethod(m_worker, "sendStunRequest", Qt::QueuedConnection);
 }
 
 void Catway::setupNewPort()
 {
     auto *am = AccountManager::instance();
     qDebug()<<"setupNewPort";
-    m_stunManager->setStunServer(am->stunServer(), am->stunPort());
-    m_stunManager->startServer();
-    m_stunManager->sendStunRequest();
+    
+    QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, am->stunServer()), Q_ARG(quint16, am->stunPort()));
+    QMetaObject::invokeMethod(m_worker, "startStunServer", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(m_worker, "sendStunRequest", Qt::QueuedConnection);
 
     disconnect(m_externalAddressTakePortConnection);
-    m_externalAddressTakePortConnection = connect(m_stunManager, &StunManager::externalAddressReceived,
+    m_externalAddressTakePortConnection = connect(m_worker->stunManager(), &StunManager::externalAddressReceived,
                                                   this, &Catway::onExternalAddressReceivedTakePort);
 }
 
@@ -446,7 +495,7 @@ void Catway::onExternalAddressReceivedTakePort(QString ip, quint16 port)
 void Catway::onAccountStunChanged()
 {
     auto *am = AccountManager::instance();
-    m_stunManager->setStunServer(am->stunServer(), am->stunPort());
+    QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, am->stunServer()), Q_ARG(quint16, am->stunPort()));
 }
 
 // --- Chat commands -> PlayerNetwork ---
@@ -533,6 +582,7 @@ void Catway::sendUdpPunch(PlayerNetwork *player, const QString &content)
 void Catway::onPlayerUdpReadyRead()
 {
     QUdpSocket *socket = qobject_cast<QUdpSocket *>(sender());
+    qDebug() << "receive data";
     if (!socket) return;
 
     while (socket->hasPendingDatagrams()) {
@@ -632,12 +682,12 @@ void Catway::onChatCommandReceived(const QString &senderId, const QString &comma
             m_pendingCommands.append({senderId, commandType, data});
             if (m_pendingCommands.size() == 1) {
                 disconnect(m_externalAddressTakePortConnection);
-                m_pendingCommandConnection = connect(m_stunManager, &StunManager::externalAddressReceived,
+                m_pendingCommandConnection = connect(m_worker->stunManager(), &StunManager::externalAddressReceived,
                                                      this, &Catway::onPendingCommandReady);
                 auto *am = AccountManager::instance();
-                m_stunManager->setStunServer(am->stunServer(), am->stunPort());
-                m_stunManager->startServer();
-                m_stunManager->sendStunRequest();
+                QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, am->stunServer()), Q_ARG(quint16, am->stunPort()));
+                QMetaObject::invokeMethod(m_worker, "startStunServer", Qt::QueuedConnection);
+                QMetaObject::invokeMethod(m_worker, "sendStunRequest", Qt::QueuedConnection);
             }
         }
         return;
@@ -675,12 +725,12 @@ void Catway::onChatCommandReceived(const QString &senderId, const QString &comma
             m_pendingCommands.append({senderId, commandType, data});
             if (m_pendingCommands.size() == 1) {
                 disconnect(m_externalAddressTakePortConnection);
-                m_pendingCommandConnection = connect(m_stunManager, &StunManager::externalAddressReceived,
+                m_pendingCommandConnection = connect(m_worker->stunManager(), &StunManager::externalAddressReceived,
                                                      this, &Catway::onPendingCommandReady);
                 auto *am = AccountManager::instance();
-                m_stunManager->setStunServer(am->stunServer(), am->stunPort());
-                m_stunManager->startServer();
-                m_stunManager->sendStunRequest();
+                QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, am->stunServer()), Q_ARG(quint16, am->stunPort()));
+                QMetaObject::invokeMethod(m_worker, "startStunServer", Qt::QueuedConnection);
+                QMetaObject::invokeMethod(m_worker, "sendStunRequest", Qt::QueuedConnection);
             }
         }
     }
@@ -727,16 +777,7 @@ void Catway::sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data)
     );
 }
 
-void Catway::onReliableUpdate()
-{
-    double timeSeconds = m_reliableClock.elapsed() / 1000.0;
-    for (PlayerNetwork *player : m_players) {
-        reliable_endpoint_t *ep = player ? player->endpoint() : nullptr;
-        if (!ep) continue;
-        reliable_endpoint_update(ep, timeSeconds);
-        reliable_endpoint_clear_acks(ep);
-    }
-}
+// Removed Catway::onReliableUpdate as it is now in CatwayWorker
 
 void Catway::onHeartbeat()
 {

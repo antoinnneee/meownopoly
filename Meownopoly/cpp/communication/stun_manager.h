@@ -27,15 +27,12 @@ public:
     Q_INVOKABLE QString getExternalIp() const;
     Q_INVOKABLE quint16 getExternalPort() const;
 
-    Q_INVOKABLE void setPeer(QString ip, quint16 port);
-    Q_INVOKABLE void sendMessageToPeer(QString message);
-
     /// Retourne le socket UDP actuel (peut être nullptr). Ne transfère pas la propriété.
-    QUdpSocket *getSocket() const;
+    Q_INVOKABLE QUdpSocket *getSocket() const;
     /// Retourne l'info du socket actuel (publicAddress, publicPort, socket). Ne transfère pas la propriété.
-    UdpSocketInfo *currentSocketInfo() const;
+    Q_INVOKABLE UdpSocketInfo *currentSocketInfo() const;
     /// Détache l'UdpSocketInfo actuel (à gérer par l'appelant) et en crée un nouveau, prêt pour un prochain setup UDP punching (sans bind).
-    UdpSocketInfo *takeSocket();
+    Q_INVOKABLE UdpSocketInfo *takeSocket();
 
 public slots:
     void handleStunResponse(const QByteArray &datagram, const QHostAddress &sender, quint16 senderPort);

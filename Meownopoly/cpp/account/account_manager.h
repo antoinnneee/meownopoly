@@ -10,7 +10,7 @@ class AccountManager : public QObject
     Q_OBJECT
     Q_PROPERTY(QString uniqueId READ uniqueId NOTIFY uniqueIdChanged)
     Q_PROPERTY(QString nickname READ nickname WRITE setNickname NOTIFY nicknameChanged)
-    Q_PROPERTY(QString stunServer READ stunServer WRITE setStunServer NOTIFY stunServerChanged)
+    Q_PROPERTY(QString stunServer READ stunServer WRITE setStunServerURL NOTIFY stunServerChanged)
     Q_PROPERTY(quint16 stunPort READ stunPort WRITE setStunPort NOTIFY stunPortChanged)
     Q_PROPERTY(bool hasAccount READ hasAccount NOTIFY hasAccountChanged)
 
@@ -29,7 +29,7 @@ public:
     QString stunServer() const { return m_stunServer; }
     quint16 stunPort() const { return m_stunPort; }
 
-    Q_INVOKABLE void setStunServer(const QString &server);
+    Q_INVOKABLE void setStunServerURL(const QString &server);
     Q_INVOKABLE void setStunPort(quint16 port);
 
     Q_INVOKABLE void createAccount(const QString &nickname);

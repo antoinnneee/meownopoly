@@ -175,7 +175,7 @@ Rectangle {
                 onActivated: {
                     if (currentText !== "Custom") {
                         var item = stunModel.get(currentIndex);
-                        AccountManager.setStunServer(item.value);
+                        AccountManager.setStunServerURL(item.value);
                         AccountManager.setStunPort(item.port);
                     }
                 }
@@ -231,7 +231,7 @@ Rectangle {
 
                         onEditingFinished: {
                              if (stunComboBox.currentText === "Custom") {
-                                AccountManager.setStunServer(text)
+                                AccountManager.setStunServerURL(text)
                              }
                         }
                     }

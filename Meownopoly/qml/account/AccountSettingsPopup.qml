@@ -497,7 +497,7 @@ Popup {
                 onActivated: {
                     if (currentText !== "Custom") {
                         var item = stunPopupModel.get(currentIndex);
-                        AccountManager.setStunServer(item.value);
+                        AccountManager.setStunServerURL(item.value);
                         AccountManager.setStunPort(item.port);
                     }
                 }
@@ -553,7 +553,7 @@ Popup {
 
                         onEditingFinished: {
                              if (stunPopupComboBox.currentText === "Custom") {
-                                AccountManager.setStunServer(text)
+                                AccountManager.setStunServerURL(text)
                              }
                         }
                     }

@@ -99,7 +99,7 @@ Rectangle {
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 11
                     }
-                    onClicked: TestManager.testSetStunServer(ipInput.text, parseInt(portInput.text))
+                    // onClicked: TestManager.testSetStunServer(ipInput.text, parseInt(portInput.text))
                 }
 
                 Button {
@@ -222,7 +222,6 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 11
                 }
-                onClicked: TestManager.testSetPeer(peerIpInput.text, parseInt(peerPortInput.text))
             }
 
             // Messaging
@@ -261,7 +260,6 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 11
                 }
-                onClicked: TestManager.testSendMessage(messageInput.text)
             }
         }
 

@@ -38,6 +38,13 @@ public slots:
     void startReliableTimer();
     void tearDown();
 
+    // STUN & Socket control (Proxied to StunManager on worker thread)
+    void startStunServer();
+    void stopServer();
+    void sendStunRequest();
+    void setStunServerInfo(const QString &host, quint16 port);
+    UdpSocketInfo* takeSocket();
+
 private slots:
     void onReliableUpdate();
 
@@ -63,12 +70,10 @@ public:
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
 
-    Q_INVOKABLE void startServer();
+    Q_INVOKABLE void startStunServer();
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void sendStunRequest();
-    Q_INVOKABLE void sendMessageToPeer(QString message);
-    Q_INVOKABLE void setPeer(QString ip, quint16 port);
-    Q_INVOKABLE void setStunServer(QString ip);
+    Q_INVOKABLE void setStunServerURL(QString ip);
     Q_INVOKABLE void setStunPort(quint16 port);
     Q_INVOKABLE QString getExternalIp() const;
     Q_INVOKABLE quint16 getExternalPort() const;
@@ -100,6 +105,7 @@ public:
     Q_INVOKABLE void addPlayer(PlayerNetwork *player);
     Q_INVOKABLE void removePlayer(PlayerNetwork *player);
     Q_INVOKABLE PlayerNetwork *playerAt(int index) const;
+    int playersCount() const;
     /// Retourne le joueur dont le playerId correspond, ou null.
     Q_INVOKABLE PlayerNetwork *playerById(const QString &playerId) const;
 
@@ -116,7 +122,7 @@ public slots:
 
 signals:
     void log(QString message);
-    void serverStarted(quint16 port);
+    void stunServerStarted(quint16 port);
     void externalAddressReceived(QString ip, quint16 port);
     void udpMessageReceived(QString senderId, QString message);
     void localPortsChanged();
@@ -133,7 +139,6 @@ private slots:
     void onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void onPendingCommandReady(QString ip, quint16 port);
     void onPlayerUdpReadyRead();
-    void onReliableUpdate();
     void onHeartbeat();
     void onStunRequestFailed();
 
