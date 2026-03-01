@@ -1,8 +1,10 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Particles
 import "./components"
 import ui_item
+import AssetManager
 
 /**
  * Écran de création de session
@@ -11,566 +13,564 @@ import ui_item
 Rectangle {
     id: root
 
-    color: "#1a1a1a"
+    // Animation fluide sur le fond
+    Behavior on color { ColorAnimation { duration: 300 } }
 
     // Propriété pour recevoir le ChatClient du parent
     required property var chatClient
 
     // Signaux pour la navigation
     signal backRequested()
+    // sessionData : { name, password, isEditionMode }
     signal sessionCreateRequested(var sessionData)
 
-    // État du formulaire
-    property bool formValid: sessionNameInput.text.length >= 3 &&
-                            sessionPasswordInput.text.length >= 3
+    // État du formulaire — seul le nom est obligatoire
+    property bool formValid: sessionNameInput.text.length >= 3
 
-    property int maxPlayersSelection: 4
-    property bool isPublicSession: true
+    // Mode : Edition ou Jeu
+    property bool isEditionMode: false
 
+    // ═══════════════════════════════════════
+    // Palette Dynamique (Orange 🎮 <-> Violet 🛠️)
+    // ═══════════════════════════════════════
+    readonly property color cOrangePrimary: "#E67E22"
+    readonly property color cOrangeSecondary: "#D4692A"
+    readonly property color cOrangeDark: "#c0681a"
+    readonly property color cVioletPrimary: "#9B59B6"
+    readonly property color cVioletSecondary: "#BB77DD"
+    readonly property color cVioletDark: "#6b4d8a"
 
+    readonly property color bgRoot: isEditionMode ? "#2a2035" : "#2b2220"
+    readonly property color bgPanel: isEditionMode ? "#352a42" : "#352a22"
+
+    readonly property color cPrimary: isEditionMode ? cVioletPrimary : cOrangePrimary
+    readonly property color cSecondary: isEditionMode ? cVioletSecondary : cOrangeSecondary
+    readonly property color cDark: isEditionMode ? cVioletDark : cOrangeDark
+
+    readonly property color bgInput: isEditionMode ? "#2e2440" : "#2e2418"
+    readonly property color bgInputFocus: isEditionMode ? "#3f3350" : "#3f3025"
+    readonly property color borderInput: isEditionMode ? "#5a4d6b" : "#6b5a40"
+
+    readonly property color textHighlight: isEditionMode ? "#d4b8e8" : "#f0d4a8"
+    readonly property color textMuted: isEditionMode ? "#7a6b8e" : "#8a7a60"
+    readonly property color textDim: isEditionMode ? "#6b5a7a" : "#7a6540"
+
+    readonly property color bgBtnHover: isEditionMode ? "#3f3350" : "#3f3020"
+    readonly property color bgBtnPress: isEditionMode ? "#4a3d5a" : "#4a3520"
+    readonly property color borderBtn: isEditionMode ? "#5a4d6b" : "#6b5a40"
+    readonly property color borderBtnHover: isEditionMode ? "#9a8aae" : "#a08a6a"
+
+    color: bgRoot
+
+    // ═══════════════════════════════════════
+    // Patounes — Particle animation background
+    // ═══════════════════════════════════════
+    ParticleSystem {
+        id: particleSystem
+        anchors.fill: parent
+        clip: true
+
+        Emitter {
+            id: burstEmitter
+            enabled: true
+            anchors.fill: parent
+            lifeSpan: 2000
+            size: 50
+            emitRate: 15
+            velocity: AngleDirection {
+                angle: 270
+                angleVariation: 15
+                magnitude: 200
+                magnitudeVariation: 50
+            }
+        }
+
+        ImageParticle {
+            id: firework
+            source: AssetManager.getAssetById("ui", "particules", "pawn1").path
+            color: Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
+            colorVariation: 0.5
+            alpha: 0.75
+            rotationVariation: 360
+        }
+    }
+
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: {
+            burstEmitter.burst(1)
+            firework.color = Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
+        }
+    }
+
+    // ═══════════════════════════════════════
+    // Layout principal — pas de scroll
+    // ═══════════════════════════════════════
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
-        spacing: 24
+        anchors.margins: 32
+        spacing: 0
 
         // HEADER
         RowLayout {
             Layout.fillWidth: true
             spacing: 16
 
-            // Bouton retour
             BackButton {
                 onBackClicked: root.backRequested()
             }
 
-            // Titre centré
             Item {
                 Layout.fillWidth: true
-
                 Text {
                     text: "🐱 Créer une Session"
-                    color: "#ffffff"
+                    color: "#f5f0ff"
                     font.pixelSize: 28
                     font.bold: true
                     anchors.centerIn: parent
                 }
             }
 
-            // Spacer pour équilibrer le layout
-            Item {
-                width: 40
-                height: 40
+            Item { width: 40; height: 40 }
+        }
+
+        // Separator dynamique central
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.topMargin: 12
+            height: 2
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 0.15; color: root.cPrimary }
+                GradientStop { position: 0.5; color: root.cSecondary }
+                GradientStop { position: 0.85; color: root.cPrimary }
+                GradientStop { position: 1.0; color: "transparent" }
             }
         }
 
-        // Separator
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: "#444444"
-        }
-
-        // FORMULAIRE PRINCIPAL
-        ScrollView {
+        // ═══════════════════════════════════════
+        // FORMULAIRE — layout horizontal spacieux
+        // ═══════════════════════════════════════
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
+            Layout.topMargin: 20
 
-            ColumnLayout {
-                width: parent.width
-                spacing: 20
+            // Conteneur central limité en largeur
+            RowLayout {
+                anchors.centerIn: parent
+                width: Math.min(parent.width, 820)
+                height: Math.min(parent.height, 420)
+                spacing: 28
 
-                // Section: Informations générales
-                GroupBox {
+                // ── COLONNE GAUCHE : Nom + Mot de passe ──
+                Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredWidth: Math.min(600, parent.width * 0.8)
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillHeight: true
+                    color: root.bgPanel
+                    radius: 16
+                    border.color: root.cPrimary
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 300 } }
+                    Behavior on border.color { ColorAnimation { duration: 300 } }
 
-                    background: Rectangle {
-                        color: "#2a2a2a"
-                        radius: 12
-                        border.color: "#444444"
-                        border.width: 2
-                    }
-
-                    label: Text {
-                        text: "📝 Informations de la session"
-                        color: "#ffffff"
-                        font.pixelSize: 18
-                        font.bold: true
-                        padding: 10
+                    // Accent bar top
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 3
+                        radius: 16
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+                            GradientStop { position: 0.0; color: root.cPrimary }
+                            GradientStop { position: 1.0; color: root.cSecondary }
+                        }
                     }
 
                     ColumnLayout {
                         anchors.fill: parent
-                        spacing: 16
+                        anchors.margins: 24
+                        spacing: 0
 
-                        // Nom de la session
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
+                        // Section header
+                        Row {
+                            spacing: 10
+                            Layout.bottomMargin: 20
 
                             Text {
-                                text: "Nom de la session *"
-                                color: "#cccccc"
-                                font.pixelSize: 14
+                                text: "📝"
+                                font.pixelSize: 20
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "Informations"
+                                color: root.textHighlight
+                                font.pixelSize: 17
                                 font.bold: true
-                            }
-
-                            TextField {
-                                id: sessionNameInput
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 45
-
-                                placeholderText: "ex: Partie du vendredi soir"
-
-                                color: "#ffffff"
-                                font.pixelSize: 16
-
-                                background: Rectangle {
-                                    color: sessionNameInput.focus ? "#333333" : "#1a1a1a"
-                                    radius: 8
-                                    border.color: {
-                                        if (sessionNameInput.focus) return "#4caf50"
-                                        if (sessionNameInput.text.length > 0 && sessionNameInput.text.length < 3)
-                                            return "#ff9800"
-                                        return "#555555"
-                                    }
-                                    border.width: 2
-
-                                    Behavior on border.color {
-                                        ColorAnimation { duration: 200 }
-                                    }
-                                }
-
-                                maximumLength: 50
-                            }
-
-                            // Compteur de caractères
-                            Text {
-                                text: sessionNameInput.text.length + "/50 caractères" +
-                                     (sessionNameInput.text.length < 3 ? " (minimum 3)" : "")
-                                color: sessionNameInput.text.length >= 3 ? "#888888" : "#ff9800"
-                                font.pixelSize: 12
-                                font.italic: true
+                                anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
                             }
                         }
 
-                        // Mot de passe
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
+                        // — Nom de la session —
+                        Text {
+                            text: "Nom de la session *"
+                            color: root.textHighlight
+                            font.pixelSize: 14
+                            font.bold: true
+                            Behavior on color { ColorAnimation { duration: 300 } }
+                        }
 
+                        TextField {
+                            id: sessionNameInput
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 46
+                            Layout.topMargin: 8
+                            placeholderTextColor: root.textDim
+                            color: "#f5f0ff"
+                            font.pixelSize: 15
+                            maximumLength: 50
+
+                            background: Rectangle {
+                                color: sessionNameInput.focus ? root.bgInputFocus : root.bgInput
+                                radius: 10
+                                border.color: {
+                                    if (sessionNameInput.focus) return root.cPrimary
+                                    if (sessionNameInput.text.length > 0 && sessionNameInput.text.length < 3)
+                                        return "#E74C3C"
+                                    return root.borderInput
+                                }
+                                border.width: 2
+                                Behavior on border.color { ColorAnimation { duration: 200 } }
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
+                        }
+
+                        Text {
+                            Layout.topMargin: 6
+                            text: sessionNameInput.text.length + "/50" +
+                                  (sessionNameInput.text.length > 0 && sessionNameInput.text.length < 3 ? "  ⚠ min. 3" : "")
+                            color: sessionNameInput.text.length >= 3 ? root.textMuted : "#E74C3C"
+                            font.pixelSize: 11
+                            font.italic: true
+                            Behavior on color { ColorAnimation { duration: 300 } }
+                        }
+
+                        // Spacer
+                        Item { Layout.preferredHeight: 16 }
+
+                        // — Mot de passe —
+                        Row {
+                            spacing: 8
                             Text {
-                                text: "Mot de passe *"
-                                color: "#cccccc"
+                                text: "Mot de passe"
+                                color: root.textHighlight
                                 font.pixelSize: 14
                                 font.bold: true
+                                anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
                             }
+                            Text {
+                                text: "(optionnel)"
+                                color: root.textMuted
+                                font.pixelSize: 12
+                                font.italic: true
+                                anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
+                            }
+                        }
 
-                            TextField {
-                                id: sessionPasswordInput
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 45
+                        TextField {
+                            id: sessionPasswordInput
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 46
+                            Layout.topMargin: 8
+                            placeholderText: "Laisser vide pour session ouverte"
+                            placeholderTextColor: root.textDim
+                            echoMode: showPasswordCheckbox.checked ? TextInput.Normal : TextInput.Password
+                            color: "#f5f0ff"
+                            font.pixelSize: 15
+                            maximumLength: 30
 
-                                placeholderText: "Minimum 3 caractères"
-                                echoMode: showPasswordCheckbox.checked ? TextInput.Normal : TextInput.Password
+                            background: Rectangle {
+                                color: sessionPasswordInput.focus ? root.bgInputFocus : root.bgInput
+                                radius: 10
+                                border.color: sessionPasswordInput.focus ? root.cPrimary : root.borderInput
+                                border.width: 2
+                                Behavior on border.color { ColorAnimation { duration: 200 } }
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
+                        }
 
-                                color: "#ffffff"
-                                font.pixelSize: 16
+                        Row {
+                            Layout.topMargin: 10
+                            spacing: 10
 
-                                background: Rectangle {
-                                    color: sessionPasswordInput.focus ? "#333333" : "#1a1a1a"
-                                    radius: 8
-                                    border.color: {
-                                        if (sessionPasswordInput.focus) return "#4caf50"
-                                        if (sessionPasswordInput.text.length > 0 && sessionPasswordInput.text.length < 3)
-                                            return "#ff9800"
-                                        return "#555555"
-                                    }
+                            CheckBox {
+                                id: showPasswordCheckbox
+                                checked: false
+                                indicator: Rectangle {
+                                    width: 22; height: 22; radius: 6
+                                    color: showPasswordCheckbox.checked ? root.cPrimary : root.bgInput
+                                    border.color: showPasswordCheckbox.checked ? root.cSecondary : root.borderInput
                                     border.width: 2
+                                    Behavior on color { ColorAnimation { duration: 200 } }
 
-                                    Behavior on border.color {
-                                        ColorAnimation { duration: 200 }
+                                    Text {
+                                        text: "✓"; color: "#ffffff"
+                                        font.pixelSize: 16; font.bold: true
+                                        anchors.centerIn: parent
+                                        visible: showPasswordCheckbox.checked
                                     }
                                 }
-
-                                maximumLength: 30
                             }
 
-                            // Checkbox pour afficher le mot de passe
+                            Text {
+                                text: "Afficher le mot de passe"
+                                color: root.textMuted
+                                font.pixelSize: 13
+                                anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
+                            }
+                        }
+
+                        // Fill remaining space
+                        Item { Layout.fillHeight: true }
+                    }
+                }
+
+                // ── COLONNE DROITE : Mode + Actions ──
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: root.bgPanel
+                    radius: 16
+                    border.color: root.cPrimary
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 300 } }
+                    Behavior on border.color { ColorAnimation { duration: 300 } }
+
+                    // Accent bar top
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 3
+                        radius: 16
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+                            GradientStop { position: 0.0; color: root.cPrimary }
+                            GradientStop { position: 1.0; color: root.cSecondary }
+                        }
+                    }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 24
+                        spacing: 0
+
+                        // Section header
+                        Row {
+                            spacing: 10
+                            Layout.bottomMargin: 20
+
+                            Text {
+                                text: "⚙️"
+                                font.pixelSize: 20
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "Configuration"
+                                color: root.textHighlight
+                                font.pixelSize: 17
+                                font.bold: true
+                                anchors.verticalCenter: parent.verticalCenter
+                                Behavior on color { ColorAnimation { duration: 300 } }
+                            }
+                        }
+
+                        // — Mode toggle —
+                        Text {
+                            text: "Mode de la session"
+                            color: root.textHighlight
+                            font.pixelSize: 14
+                            font.bold: true
+                            Behavior on color { ColorAnimation { duration: 300 } }
+                        }
+
+                        // Toggle switch row
+                        Row {
+                            Layout.topMargin: 14
+                            spacing: 16
+
+                            CheckBox {
+                                id: modeCheckbox
+                                checked: root.isEditionMode
+                                onCheckedChanged: root.isEditionMode = checked
+
+                                indicator: Rectangle {
+                                    width: 56; height: 30; radius: 15
+                                    color: modeCheckbox.checked ? root.cVioletPrimary : root.cOrangePrimary
+                                    border.color: modeCheckbox.checked ? root.cVioletSecondary : root.cOrangeSecondary
+                                    border.width: 1
+                                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                                    Rectangle {
+                                        width: 24; height: 24; radius: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: modeCheckbox.checked ? parent.width - width - 3 : 3
+                                        color: "#f5f0ff"
+                                        Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+                                    }
+                                }
+                            }
+
                             Row {
                                 spacing: 8
-
-                                CheckBox {
-                                    id: showPasswordCheckbox
-                                    checked: false
-
-                                    indicator: Rectangle {
-                                        width: 20
-                                        height: 20
-                                        radius: 4
-                                        color: "#1a1a1a"
-                                        border.color: showPasswordCheckbox.checked ? "#4caf50" : "#555555"
-                                        border.width: 2
-
-                                        Text {
-                                            text: "✓"
-                                            color: "#4caf50"
-                                            font.pixelSize: 16
-                                            font.bold: true
-                                            anchors.centerIn: parent
-                                            visible: showPasswordCheckbox.checked
-                                        }
-                                    }
-                                }
+                                anchors.verticalCenter: parent.verticalCenter
 
                                 Text {
-                                    text: "Afficher le mot de passe"
-                                    color: "#888888"
-                                    font.pixelSize: 12
+                                    text: root.isEditionMode ? "🛠️" : "🎮"
+                                    font.pixelSize: 22
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
-                            }
-                        }
-                    }
-                }
-
-                // Section: Configuration de la partie
-                GroupBox {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: Math.min(600, parent.width * 0.8)
-                    Layout.alignment: Qt.AlignHCenter
-
-                    background: Rectangle {
-                        color: "#2a2a2a"
-                        radius: 12
-                        border.color: "#444444"
-                        border.width: 2
-                    }
-
-                    label: Text {
-                        text: "⚙️ Configuration"
-                        color: "#ffffff"
-                        font.pixelSize: 18
-                        font.bold: true
-                        padding: 10
-                    }
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        spacing: 16
-
-                        // Nombre de joueurs maximum
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
-
-                            Text {
-                                text: "Nombre de joueurs maximum"
-                                color: "#cccccc"
-                                font.pixelSize: 14
-                                font.bold: true
-                            }
-
-                            Row {
-                                spacing: 12
-
-                                Repeater {
-                                    model: [2, 3, 4, 5, 6]
-
-                                    delegate: Rectangle {
-                                        width: 60
-                                        height: 60
-                                        radius: 30
-                                        color: maxPlayersButtonMouseArea.containsMouse ?
-                                               (maxPlayersSelection === modelData ? "#4caf50" : "#444444") :
-                                               (maxPlayersSelection === modelData ? "#4caf50" : "#333333")
-                                        border.color: maxPlayersSelection === modelData ? "#ffffff" : "#555555"
-                                        border.width: 2
-
-                                        property int playersCount: modelData
-
-                                        Behavior on color {
-                                            ColorAnimation { duration: 200 }
-                                        }
-
-                                        Text {
-                                            text: modelData
-                                            color: "#ffffff"
-                                            font.pixelSize: 24
-                                            font.bold: true
-                                            anchors.centerIn: parent
-                                        }
-
-                                        MouseArea {
-                                            id: maxPlayersButtonMouseArea
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-
-                                            onClicked: {
-                                                root.maxPlayersSelection = modelData
-                                            }
-                                        }
-
-                                        // Animation hover
-                                        scale: maxPlayersButtonMouseArea.containsMouse ? 1.1 : 1.0
-                                        Behavior on scale {
-                                            NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
-                                        }
-                                    }
+                                Text {
+                                    text: root.isEditionMode ? "Édition" : "Jeu"
+                                    color: root.isEditionMode ? root.cVioletSecondary : root.cOrangeSecondary
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Behavior on color { ColorAnimation { duration: 200 } }
                                 }
                             }
+                        }
+
+                        // Description du mode
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.topMargin: 16
+                            height: modeDescText.implicitHeight + 24
+                            radius: 10
+
+                            // Cette description de mode utilise toujours du contraste par rapport au mode actif
+                            color: root.isEditionMode ? "#352840" : "#3d2d20"
+                            border.color: root.isEditionMode ? "#6b4d8a" : "#8a6530"
+                            border.width: 1
+                            Behavior on color { ColorAnimation { duration: 250 } }
+                            Behavior on border.color { ColorAnimation { duration: 250 } }
 
                             Text {
-                                text: "💡 " + (maxPlayersSelection === 2 ? "Duel intense" :
-                                             maxPlayersSelection === 3 ? "Trio stratégique" :
-                                             maxPlayersSelection === 4 ? "Partie classique (recommandé)" :
-                                             maxPlayersSelection === 5 ? "Partie étendue" :
-                                             "Chaos total !")
-                                color: "#888888"
-                                font.pixelSize: 12
-                                font.italic: true
+                                id: modeDescText
+                                anchors.centerIn: parent
+                                width: parent.width - 24
+                                text: root.isEditionMode ?
+                                          "📐 Collaborer sur l'éditeur de carte avec d'autres joueurs" :
+                                          "🎲 Lancer une partie de Meownopoly classique"
+                                color: root.isEditionMode ? "#c9a8e8" : "#e8c8a0"
+                                font.pixelSize: 13
+                                wrapMode: Text.WordWrap
+                                horizontalAlignment: Text.AlignHCenter
+                                Behavior on color { ColorAnimation { duration: 250 } }
                             }
                         }
 
-                        // Visibilité de la session
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
+                        // Fill space
+                        Item { Layout.fillHeight: true }
 
-                            Text {
-                                text: "Visibilité"
-                                color: "#cccccc"
-                                font.pixelSize: 14
-                                font.bold: true
+                        // ── Boutons d'action ──
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 14
+
+                            // Annuler
+                            Button {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 48
+
+                                background: Rectangle {
+                                    color: parent.pressed ? root.bgBtnPress : (parent.hovered ? root.bgBtnHover : root.bgPanel)
+                                    radius: 10
+                                    border.color: parent.hovered ? root.borderBtnHover : root.borderBtn
+                                    border.width: 2
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                }
+
+                                contentItem: Text {
+                                    text: "Annuler"
+                                    color: root.textHighlight
+                                    font.pixelSize: 15
+                                    font.bold: true
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    Behavior on color { ColorAnimation { duration: 300 } }
+                                }
+
+                                onClicked: root.backRequested()
                             }
 
-                            Row {
-                                spacing: 12
+                            // Créer
+                            ParticleButton {
+                                text: "✨ Créer"
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 48
+                                enabled: root.formValid
 
-                                // Publique
-                                Rectangle {
-                                    width: 140
-                                    height: 50
-                                    radius: 8
-                                    color: visibilityMouseArea1.containsMouse ?
-                                           (isPublicSession ? "#4caf50" : "#444444") :
-                                           (isPublicSession ? "#4caf50" : "#333333")
-                                    border.color: isPublicSession ? "#ffffff" : "#555555"
+                                particleColor: root.cPrimary
+                                particleColorVariation: root.cSecondary
+                                particleCount: 30
+
+                                background: Rectangle {
+                                    color: parent.enabled ?
+                                               (parent.down ? root.cDark : root.cPrimary) : root.bgBtnPress
+                                    radius: 10
+                                    border.color: parent.enabled ?
+                                                      (parent.hovered ? "#FFFFFF" : root.cDark) : root.borderBtn
                                     border.width: 2
 
-                                    Behavior on color {
-                                        ColorAnimation { duration: 200 }
-                                    }
-
-                                    Row {
-                                        anchors.centerIn: parent
-                                        spacing: 8
-
-                                        Text {
-                                            text: "🌐"
-                                            font.pixelSize: 18
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-
-                                        Text {
-                                            text: "Publique"
-                                            color: "#ffffff"
-                                            font.pixelSize: 14
-                                            font.bold: true
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: visibilityMouseArea1
+                                    Rectangle {
                                         anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.isPublicSession = true
+                                        anchors.margins: 2
+                                        radius: 8
+                                        gradient: Gradient {
+                                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.15) }
+                                            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
+                                        }
                                     }
+
+                                    Behavior on color { ColorAnimation { duration: 150 } }
                                 }
 
-                                // Privée
-                                Rectangle {
-                                    width: 140
-                                    height: 50
-                                    radius: 8
-                                    color: visibilityMouseArea2.containsMouse ?
-                                           (!isPublicSession ? "#ff9800" : "#444444") :
-                                           (!isPublicSession ? "#ff9800" : "#333333")
-                                    border.color: !isPublicSession ? "#ffffff" : "#555555"
-                                    border.width: 2
-
-                                    Behavior on color {
-                                        ColorAnimation { duration: 200 }
-                                    }
-
-                                    Row {
-                                        anchors.centerIn: parent
-                                        spacing: 8
-
-                                        Text {
-                                            text: "🔒"
-                                            font.pixelSize: 18
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-
-                                        Text {
-                                            text: "Privée"
-                                            color: "#ffffff"
-                                            font.pixelSize: 14
-                                            font.bold: true
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: visibilityMouseArea2
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.isPublicSession = false
-                                    }
+                                contentItem: Text {
+                                    text: parent.text
+                                    font.pixelSize: 15
+                                    font.bold: true
+                                    color: parent.enabled ? "white" : root.textMuted
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    Behavior on color { ColorAnimation { duration: 300 } }
                                 }
-                            }
 
-                            Text {
-                                text: isPublicSession ?
-                                     "📢 Votre session apparaîtra dans la liste publique" :
-                                     "🔐 Seuls les joueurs avec le mot de passe pourront rejoindre"
-                                color: "#888888"
-                                font.pixelSize: 12
-                                font.italic: true
+                                onClicked: {
+                                    console.log("🎉 Création de session demandée")
+                                    console.log("  - Nom:", sessionNameInput.text)
+                                    console.log("  - Mot de passe:", sessionPasswordInput.text.length > 0 ? "***" : "(vide)")
+                                    console.log("  - Mode:", root.isEditionMode ? "Edition" : "Jeu")
+
+                                    root.sessionCreateRequested({
+                                        name:         sessionNameInput.text,
+                                        password:     sessionPasswordInput.text,
+                                        isEditionMode: root.isEditionMode
+                                    })
+                                }
                             }
                         }
                     }
                 }
-
-                // Spacer
-                Item {
-                    Layout.fillHeight: true
-                    Layout.minimumHeight: 20
-                }
             }
-        }
-
-        // Separator
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: "#444444"
-        }
-
-        // FOOTER AVEC BOUTONS
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignHCenter
-            spacing: 16
-
-            // Bouton Annuler
-            Button {
-                Layout.preferredWidth: 150
-                Layout.preferredHeight: 50
-
-                text: "Annuler"
-
-                background: Rectangle {
-                    color: parent.pressed ? "#555555" : (parent.hovered ? "#444444" : "#333333")
-                    radius: 8
-                    border.color: "#666666"
-                    border.width: 2
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "#ffffff"
-                    font.pixelSize: 16
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: root.backRequested()
-            }
-
-            // Bouton Créer la session
-            ParticleButton {
-                text: "✨ Créer la session"
-                Layout.preferredWidth: 200
-                Layout.preferredHeight: 50
-
-                enabled: root.formValid
-
-                particleColor: "#4caf50"
-                particleColorVariation: "#8bc34a"
-                particleCount: 30
-
-                background: Rectangle {
-                    color: parent.enabled ?
-                           (parent.down ? "#388e3c" : "#4caf50") : "#555555"
-                    radius: 8
-                    border.color: parent.enabled ?
-                                  (parent.hovered ? "#FFFFFF" : "#388e3c") : "#666666"
-                    border.width: 2
-
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        radius: 6
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.2) }
-                            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
-                        }
-                    }
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    font.pixelSize: 16
-                    font.bold: true
-                    color: parent.enabled ? "white" : "#888888"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                onClicked: {
-                    // Générer un ID de session unique
-                    const timestamp = Date.now()
-                    const random = Math.floor(Math.random() * 10000)
-                    const sessionId = "game_" + timestamp + "_" + random
-
-                    console.log("🎉 Création de session demandée")
-                    console.log("  - ID:", sessionId)
-                    console.log("  - Nom:", sessionNameInput.text)
-                    console.log("  - Mot de passe:", sessionPasswordInput.text)
-                    console.log("  - Max joueurs:", root.maxPlayersSelection)
-                    console.log("  - Publique:", root.isPublicSession)
-
-                    // Émettre le signal avec toutes les données
-                    root.sessionCreateRequested({
-                        sessionId: sessionId,
-                        name: sessionNameInput.text,
-                        password: sessionPasswordInput.text,
-                        maxPlayers: root.maxPlayersSelection,
-                        isPublic: root.isPublicSession
-                    })
-                }
-            }
-        }
-
-        // Note pour développeurs
-        Text {
-            text: "⚠️ Interface front-end uniquement - Logique de création non implémentée"
-            color: "#666666"
-            font.pixelSize: 11
-            font.italic: true
-            Layout.alignment: Qt.AlignHCenter
         }
     }
 

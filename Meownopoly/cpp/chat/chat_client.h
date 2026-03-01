@@ -7,6 +7,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+
+#include "account_manager.h"
 #include "chat_crypto.h"
 #include "chat_database.h"
 #include "chat_worker.h"
@@ -37,6 +39,8 @@ public:
     QVariantList availableSessions() const { return m_availableSessions; }
 
     Q_INVOKABLE void connectToServer(const QString &url);
+
+    Q_INVOKABLE void createSession(QString nameSession, QString pwdSession, QString idSession = AccountManager::getNewUniqueId());
 
     Q_INVOKABLE void connectToSessionDirect(const QString &sessionId, const QString &password);
     Q_INVOKABLE void connectToSession(const QString &playerId, const QString &password, const QString &nickname = QString());
@@ -77,6 +81,7 @@ signals:
     void errorOccurred(const QString &error);
     void availableSessionsChanged();
     void commandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
+    void sessionCreated(const QString &sessionId, const QString &sessionName);
 
 private slots:
     void onConnected();
@@ -92,6 +97,7 @@ private:
     void handleParticipantLeft(const QJsonObject &payload);
     void handleParticipantsList(const QJsonObject &payload);
     void handleSessionsList(const QJsonObject &payload);
+    void handleSessionCreated(const QJsonObject &payload);
     void handleNewCommand(const QJsonObject &payload);
     void dispatchIncomingCommand(const QString &senderId, const QString &commandType, const QJsonObject &data);
 

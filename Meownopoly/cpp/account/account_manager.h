@@ -37,14 +37,16 @@ public:
     Q_INVOKABLE void loadAccount();
     Q_INVOKABLE void saveAccount();
 
+    static QString getNewUniqueId();
+
     // Static registration for QML
     static void registerQml() {
         qmlRegisterSingletonType<AccountManager>("Meownopoly.Account", 1, 0, "AccountManager",
-            [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
-                Q_UNUSED(engine)
-                Q_UNUSED(scriptEngine)
-                return AccountManager::instance();
-            });
+                                                 [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
+                                                     Q_UNUSED(engine)
+                                                     Q_UNUSED(scriptEngine)
+                                                     return AccountManager::instance();
+                                                 });
     }
 
 signals:
@@ -60,10 +62,12 @@ private:
 
     static AccountManager* s_instance;
 
-    QString m_uniqueId;
     QString m_nickname;
+
+    QString m_uniqueId;
     QString m_stunServer = "pattouncorp.ovh";
     quint16 m_stunPort = 3000;
+
     bool m_hasAccount = false;
 };
 

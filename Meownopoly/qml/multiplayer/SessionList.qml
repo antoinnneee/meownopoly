@@ -126,24 +126,26 @@ Rectangle {
 
             ListView {
                 id: sessionsListView
-                model: chatClient.availableSessions // 🎯 DONNÉES RÉELLES !
+                model: chatClient.availableSessions
                 spacing: 12
                 width: parent.width
                 height: parent.height
                 delegate: SessionCard {
-                    // Les propriétés sont automatiquement liées via required property
-                    hostNickname: model.modelData.hostNickname
-                    onlineCount: model.modelData.onlineCount
-                    sessionId: model.modelData.sessionId
+                    name:         modelData.name        ?? ""
+                    sessionId:    modelData.sessionId   ?? ""
+                    players:      modelData.players     ?? 0
+                    maxPlayers:   modelData.maxPlayers  ?? 4
+                    hostNickname: modelData.hostNickname ?? ""
+                    onlineCount:  modelData.onlineCount ?? 0
 
                     onClicked: {
-                        console.log("Session sélectionnée:", sessionId)
+                        console.log("Session sélectionnée:", sessionId, "-", name)
                         root.sessionSelected({
-                                                 name: name,
-                                                 sessionId: sessionId,
-                                                 players: players,
-                                                 maxPlayers: maxPlayers
-                                             })
+                            name:       name,
+                            sessionId:  sessionId,
+                            players:    players,
+                            maxPlayers: maxPlayers
+                        })
                     }
                 }
             }

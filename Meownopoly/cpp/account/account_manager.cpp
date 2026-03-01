@@ -67,7 +67,6 @@ void AccountManager::saveAccount()
              << "nickname:" << m_nickname;
 }
 
-
 void AccountManager::setNickname(const QString &nickname)
 {
     if (m_nickname != nickname) {
@@ -125,13 +124,7 @@ void AccountManager::createAccount(const QString &nickname)
 
 void AccountManager::generateUniqueId()
 {
-    QString id;
-    id.reserve(s_idLength);
-    auto* rng = QRandomGenerator::global();
-    for (int i = 0; i < s_idLength; ++i) {
-        id.append(QChar(s_idChars[rng->bounded(s_idCharsCount)]));
-    }
-    m_uniqueId = id;
+    m_uniqueId = getNewUniqueId();
 }
 
 bool AccountManager::regenerateUniqueId()
@@ -145,4 +138,15 @@ bool AccountManager::regenerateUniqueId()
     emit uniqueIdChanged();
     qDebug() << "AccountManager: Unique ID regenerated:" << m_uniqueId;
     return true;
+}
+
+QString AccountManager::getNewUniqueId()
+{
+    QString id;
+    id.reserve(s_idLength);
+    auto* rng = QRandomGenerator::global();
+    for (int i = 0; i < s_idLength; ++i) {
+        id.append(QChar(s_idChars[rng->bounded(s_idCharsCount)]));
+    }
+    return id;
 }

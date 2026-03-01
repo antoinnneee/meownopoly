@@ -48,6 +48,9 @@ try {
 try {
   db.prepare('ALTER TABLE sessions ADD COLUMN password_hash TEXT').run();
 } catch (e) { }
+try {
+  db.prepare('ALTER TABLE sessions ADD COLUMN session_name TEXT').run();
+} catch (e) { }
 
 module.exports = {
   // Session methods
@@ -58,9 +61,9 @@ module.exports = {
     const session = db.prepare('SELECT version, key_package, key_nonce, password_hash FROM sessions WHERE session_id = ?').get(sessionId);
     return session ? [session] : [];
   },
-  createSession: (sessionId, passwordHash, keyPackage, keyNonce) => {
-    db.prepare('INSERT OR IGNORE INTO sessions (session_id, password_hash, key_package, key_nonce, version) VALUES (?, ?, ?, ?, 1)')
-      .run(sessionId, passwordHash, keyPackage, keyNonce);
+  createSession: (sessionId, sessionName, passwordHash, keyPackage, keyNonce) => {
+    db.prepare('INSERT OR IGNORE INTO sessions (session_id, session_name, password_hash, key_package, key_nonce, version) VALUES (?, ?, ?, ?, ?, 1)')
+      .run(sessionId, sessionName || '', passwordHash, keyPackage, keyNonce);
   },
   updateSession: (sessionId, keyPackage, keyNonce) => {
     return db.transaction(() => {

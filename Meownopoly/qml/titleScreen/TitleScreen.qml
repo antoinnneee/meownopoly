@@ -10,6 +10,19 @@ Rectangle {
     id: root
     color: "#1a1a1a"  // Dark background for modern look
 
+
+    signal startGameRequested()  // Add this signal
+    signal testViewRequested()  // Add this signal
+    signal editorRequested();
+    signal caseCreatorRequested(); // Add signal for case creator
+    signal test3DRequested(); // Add signal for 3D test
+    signal archiverRequested(); // Add signal for asset archiver
+    signal launcherRequested(); // Add signal for launcher
+    signal assetManagerTestRequested(); // Add signal for asset manager test
+    signal multiplayerLobbyRequested(); // Signal for multiplayer lobby
+    signal catwayTestRequested(); // Signal for Catway test interface
+
+
     // Account settings popup
     AccountSettingsPopup {
         id: accountSettingsPopup
@@ -58,16 +71,6 @@ Rectangle {
         }
     }
 
-    signal startGameRequested()  // Add this signal
-    signal testViewRequested()  // Add this signal
-    signal editorRequested();
-    signal caseCreatorRequested(); // Add signal for case creator
-    signal test3DRequested(); // Add signal for 3D test
-    signal archiverRequested(); // Add signal for asset archiver
-    signal launcherRequested(); // Add signal for launcher
-    signal assetManagerTestRequested(); // Add signal for asset manager test
-    signal multiplayerLobbyRequested(); // Signal for multiplayer lobby
-    signal catwayTestRequested(); // Signal for Catway test interface
     // Title text
     Text {
         id: gameTitle

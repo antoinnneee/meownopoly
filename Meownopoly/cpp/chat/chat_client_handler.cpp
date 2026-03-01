@@ -84,6 +84,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
 
     if (type == "INIT_SESSION") {
         handleInitSession(payload);
+    } else if (type == "SESSION_CREATED") {
+        handleSessionCreated(payload);
     } else if (type == "SESSIONS_LIST") {
         handleSessionsList(payload);
     } else if (type == "NEW_MESSAGE") {
@@ -116,6 +118,9 @@ void ChatClient::handleError(const QJsonObject &payload) {
         Logger::instance()->info("Server requires key rotation; publishing new key.", "ChatClient");
         m_retryPending = true;
         publishNewKey();
+    } else if (code == "SESSION_NOT_FOUND") {
+        Logger::instance()->warn("Join failed: session does not exist.", "ChatClient");
+        emit errorOccurred("La session demandée n'existe pas.");
     } else {
         Logger::instance()->warn(QString("Server error: %1 %2").arg(code).arg(message), "ChatClient");
         emit errorOccurred(message);
@@ -234,7 +239,8 @@ void ChatClient::handleSessionsList(const QJsonObject &payload) {
         QJsonObject session = val.toObject();
 
         QVariantMap sessionMap;
-        sessionMap["name"] = session["session_id"].toString(); // Utilis� pour l'affichage
+        QString sessionName = session["session_name"].toString();
+        sessionMap["name"] = sessionName.isEmpty() ? session["session_id"].toString() : sessionName;
         sessionMap["sessionId"] = session["session_id"].toString();
         sessionMap["players"] = session["player_count"].toInt();
         sessionMap["maxPlayers"] = session["max_players"].toInt();
@@ -250,6 +256,21 @@ void ChatClient::handleSessionsList(const QJsonObject &payload) {
     emit availableSessionsChanged();
 }
 
+
+void ChatClient::handleSessionCreated(const QJsonObject &payload) {
+    const QString sessionId   = payload["session_id"].toString();
+    const QString sessionName = payload["session_name"].toString();
+    Logger::instance()->info(
+        QString("Session created on server: %1 (%2). Joining now...").arg(sessionId).arg(sessionName),
+        "ChatClient");
+
+    m_sessionKeys.clear();
+    m_currentKeyVersion = 0;
+
+    joinSession();
+
+    emit sessionCreated(sessionId, sessionName);
+}
 
 void ChatClient::handleInitSession(const QJsonObject &payload) {
     Logger::instance()->debug("Received init session.", "ChatClient");
