@@ -66,7 +66,7 @@ private:
 
     QString m_uniqueId;
     QString m_stunServer = "pattouncorp.ovh";
-    quint16 m_stunPort = 3000;
+    quint16 m_stunPort = 3478;
 
     bool m_hasAccount = false;
 };

@@ -45,7 +45,6 @@ bool StunManager::startServer()
 
     // Bind explicitly to AnyIPv4 to avoid IPv6 issues if STUN server is IPv4 only or network stack issues
     if (s->bind(QHostAddress::AnyIPv4, 0)) {
-        emit log("UDP port punching started on local port: " + QString::number(s->localPort()));
         emit serverStarted(s->localPort());
         return true;
     } else {

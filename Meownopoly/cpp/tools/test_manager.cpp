@@ -54,14 +54,7 @@ void TestManager::testAction4()
 
 void TestManager::testUdpServer()
 {
-    if (!m_stunManager) {
-        m_stunManager = new StunManager(this);
-        connect(m_stunManager, &StunManager::log, [](QString msg){
-            Logger::instance()->info(msg, "StunManager");
-            // qDebug() << "[StunManager]" << msg;
-        });
-    }
-    m_stunManager->startServer();
+
 }
 
 void TestManager::testSendStun()
