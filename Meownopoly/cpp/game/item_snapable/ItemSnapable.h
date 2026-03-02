@@ -61,8 +61,6 @@ public:
 
     Q_INVOKABLE void changeCaseDataType(Case::CaseType caseType);
 
-
-
     Q_INVOKABLE void addNext(ItemSnapable *newNext);
     Q_INVOKABLE bool removeNext(ItemSnapable *caseToRemove); // Nouvelle fonction
     Q_INVOKABLE  bool removeNextAt(int index); // Nouvelle fonction

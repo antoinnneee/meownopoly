@@ -174,16 +174,12 @@ Item {
         if (event.isAutoRepeat) return
 
         switch(event.key) {
-            case Qt.Key_Z:
             case Qt.Key_Up:
                 keyUp = true; break;
-            case Qt.Key_S:
             case Qt.Key_Down:
                 keyDown = true; break;
-            case Qt.Key_Q:
             case Qt.Key_Left:
                 keyLeft = true; break;
-            case Qt.Key_D:
             case Qt.Key_Right:
                 keyRight = true; break;
             case Qt.Key_Shift:
