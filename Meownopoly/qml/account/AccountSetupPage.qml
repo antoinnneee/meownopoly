@@ -165,7 +165,7 @@ Rectangle {
 
                 model: ListModel {
                     id: stunModel
-                    ListElement { text: "Patoun Corp (Default)"; value: "pattouncorp.ovh"; port: 3478 }
+                    ListElement { text: "Patoun Corp (Default)"; value: "pattounecorp.ovh"; port: 3478 }
                     ListElement { text: "Google"; value: "stun.l.google.com"; port: 19302 }
                     ListElement { text: "Custom"; value: "custom"; port: 0 }
                 }
