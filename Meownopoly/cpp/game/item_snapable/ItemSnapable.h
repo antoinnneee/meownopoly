@@ -30,6 +30,7 @@ class ItemSnapable : public QObject
 
 public:
     ItemSnapable();
+    ~ItemSnapable();
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(const QJsonObject &json, QObject *parent = nullptr);

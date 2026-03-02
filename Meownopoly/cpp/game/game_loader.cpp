@@ -132,6 +132,7 @@ QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
     for (const QJsonValueRef value : snapableTilesArray) {
         QJsonObject tileObject = value.toObject();
         ItemSnapable *is = new ItemSnapable(tileObject);
+        QQmlEngine::setObjectOwnership(is, QQmlEngine::JavaScriptOwnership);
         listItems.append(is);
     }
     return listItems;

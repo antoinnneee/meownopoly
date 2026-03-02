@@ -11,6 +11,18 @@ ItemSnapable::ItemSnapable() {
 
 }
 
+ItemSnapable::~ItemSnapable() {
+    qDebug() << "============== delete itemSnapable ===============";
+    if (m_caseData)
+        delete m_caseData;
+    if (m_displayParameter)
+        delete m_displayParameter;
+    if (m_decorationParameter)
+        delete m_decorationParameter;
+    if (m_zoneParameter)
+        delete m_zoneParameter;
+}
+
 void ItemSnapable::registerQml()
 {
     qmlRegisterType<ItemSnapable>("ItemSnapable", 1, 0, "ItemSnapable"); // Register ItemSnapable class

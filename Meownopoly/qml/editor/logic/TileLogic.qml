@@ -138,7 +138,9 @@ QtObject {
             logic.mouseLogic.unselectSelectedElements()
 
             // Détruire l'objet QML
+            var pItemSnapable = element.snapableParameters
             element.destroy()
+            pItemSnapable.destroy()
 
         } else {
             console.log("Erreur: Élément non trouvé dans la liste")

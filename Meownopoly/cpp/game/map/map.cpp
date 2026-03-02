@@ -20,6 +20,7 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
     for (const QJsonValueRef value : snapableTilesArray) {
         const QJsonObject tileObject = value.toObject();
         ItemSnapable *is = new ItemSnapable(tileObject);
+        QQmlEngine::setObjectOwnership(is, QQmlEngine::JavaScriptOwnership);
         m_tiles.append(is);
     }
     updateTileCounts();

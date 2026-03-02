@@ -40,18 +40,21 @@ QObject *ItemSnapableFactory::qmlInstance(QQmlEngine *engine, QJSEngine *scriptE
 ItemSnapable *ItemSnapableFactory::createItemSnapable()
 {
     ItemSnapable *snap = new ItemSnapable();
+    QQmlEngine::setObjectOwnership(snap, QQmlEngine::JavaScriptOwnership);
     return snap;
 }
 
 ItemSnapable *ItemSnapableFactory::createItemSnapable(Case::CaseType caseType)
 {
     ItemSnapable *snap = new ItemSnapable(caseType);
+    QQmlEngine::setObjectOwnership(snap, QQmlEngine::JavaScriptOwnership);
     return snap;
 }
 
 ItemSnapable *ItemSnapableFactory::createItemSnapableFromJson(const QJsonObject &json)
 {
     ItemSnapable *snap = new ItemSnapable(json);
+    QQmlEngine::setObjectOwnership(snap, QQmlEngine::JavaScriptOwnership);
     return snap;
 }
 
@@ -59,6 +62,7 @@ ItemSnapable *ItemSnapableFactory::createPhysicZone()
 {
     ItemSnapable *snap = new ItemSnapable();
     snap->setTileType(ItemSnapable::PhysicZoneTile);
+    QQmlEngine::setObjectOwnership(snap, QQmlEngine::JavaScriptOwnership);
     return snap;
 }
 
