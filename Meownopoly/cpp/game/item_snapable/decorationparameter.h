@@ -7,8 +7,13 @@ class DecorationParameter : public QObject
 {
     Q_OBJECT
 public:
+
+    bool operator==(const DecorationParameter &other) const;
+
     explicit DecorationParameter(QObject *parent = nullptr);
     explicit DecorationParameter(const QJsonObject &json, QObject *parent = nullptr);
+
+
     QString toJSON();
     
     Q_PROPERTY(QString decorationCategory READ decorationCategory WRITE setDecorationCategory NOTIFY decorationCategoryChanged)
@@ -22,6 +27,12 @@ public:
     QString decorationId() const;
     void setDecorationId(const QString &decorationId);
     Q_INVOKABLE QString getAnimePath(QString imagePath);
+
+    bool operator==(const DecorationParameter &other) const {
+        return m_decorationCategory == other.m_decorationCategory
+            && m_decorationType     == other.m_decorationType
+            && m_decorationId       == other.m_decorationId;
+    }
 
 
 signals:

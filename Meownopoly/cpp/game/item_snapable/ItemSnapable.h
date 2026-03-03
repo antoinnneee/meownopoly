@@ -29,6 +29,9 @@ class ItemSnapable : public QObject
 
 
 public:
+
+    bool operator==(const ItemSnapable &other) const;
+
     ItemSnapable();
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
     ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent = nullptr);
@@ -78,6 +81,41 @@ public:
 
     // Copie les données d'un autre ItemSnapable
     Q_INVOKABLE void copyFrom(ItemSnapable* source);
+
+    bool operator==(const ItemSnapable &other) const {
+        if (m_tileType != other.m_tileType)
+            return false;
+        if (m_displayParameter && other.m_displayParameter) {
+            if (!(*m_displayParameter == *other.m_displayParameter))
+                return false;
+        }
+        switch (m_tileType) {
+        case DecorationTile:
+            if (m_decorationParameter && other.m_decorationParameter)
+                if (!(*m_decorationParameter == *other.m_decorationParameter))
+                    return false;
+            break;
+        case PhysicZoneTile:
+            if (m_zoneParameter && other.m_zoneParameter)
+                if (!(*m_zoneParameter == *other.m_zoneParameter))
+                    return false;
+            break;
+        case CaseTile:
+            if (m_caseData && other.m_caseData)
+                if (m_caseData->toJSON() != other.m_caseData->toJSON())
+                    return false;
+            break;
+        }
+        if (next.size() != other.next.size() || prev.size() != other.prev.size())
+            return false;
+        for (int i = 0; i < next.size(); i++)
+            if (next[i]->uniqueId() != other.next[i]->uniqueId())
+                return false;
+        for (int i = 0; i < prev.size(); i++)
+            if (prev[i]->uniqueId() != other.prev[i]->uniqueId())
+                return false;
+        return true;
+    }
 
 signals:
     void caseDataChanged();

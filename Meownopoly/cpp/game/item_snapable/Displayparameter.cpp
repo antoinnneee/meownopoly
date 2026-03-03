@@ -2,6 +2,39 @@
 #include "tools/logger.h"
 
 
+bool DisplayParameter::operator==(const DisplayParameter &other) const {
+    return m_unitSizeWidth     == other.m_unitSizeWidth
+           && m_unitSizeHeight    == other.m_unitSizeHeight
+           && m_gridRelativePositionX == other.m_gridRelativePositionX
+           && m_gridRelativePositionY == other.m_gridRelativePositionY
+           && m_zLayer            == other.m_zLayer
+           && m_zOrder            == other.m_zOrder
+           // effets couleur/brillance
+           && m_effectBrightness  == other.m_effectBrightness
+           && m_effectContrast    == other.m_effectContrast
+           && m_effectSaturation  == other.m_effectSaturation
+           && m_effectColorization == other.m_effectColorization
+           && m_effectColorizationColor == other.m_effectColorizationColor
+           // flou
+           && m_effectBlurEnabled    == other.m_effectBlurEnabled
+           && m_effectBlur           == other.m_effectBlur
+           && m_effectBlurMax        == other.m_effectBlurMax
+           && m_effectBlurMultiplier == other.m_effectBlurMultiplier
+           // ombre
+           && m_effectShadowEnabled          == other.m_effectShadowEnabled
+           && m_effectShadowBlur             == other.m_effectShadowBlur
+           && m_effectShadowColor            == other.m_effectShadowColor
+           && m_effectShadowHorizontalOffset == other.m_effectShadowHorizontalOffset
+           && m_effectShadowVerticalOffset   == other.m_effectShadowVerticalOffset
+           && m_effectShadowOpacity          == other.m_effectShadowOpacity
+           && m_effectShadowScale            == other.m_effectShadowScale
+           // transform
+           && m_rotationAngle     == other.m_rotationAngle
+           && m_mirrorHorizontal  == other.m_mirrorHorizontal
+           && m_mirrorVertical    == other.m_mirrorVertical;
+}
+
+
 DisplayParameter::DisplayParameter(int unitSizeWidth, int unitSizeHeight, int gridRelativePositionX, int gridRelativePositionY, int zLayer, float zOrder, QObject *parent)
     : QObject(parent)
 {

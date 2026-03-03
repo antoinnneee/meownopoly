@@ -22,6 +22,9 @@ class ZoneParameter : public QObject
     Q_PROPERTY(qreal accelerationMultiplier READ accelerationMultiplier WRITE setAccelerationMultiplier NOTIFY accelerationMultiplierChanged FINAL)
 
 public:
+
+    bool operator==(const ZoneParameter &other) const;
+
     explicit ZoneParameter(QObject *parent = nullptr);
     explicit ZoneParameter(const QJsonObject &json, QObject *parent = nullptr);
     explicit ZoneParameter(const ZoneParameter &other, QObject *parent = nullptr);
@@ -61,6 +64,17 @@ public:
     qreal accelerationMultiplier() const;
     void setAccelerationMultiplier(qreal newAccelerationMultiplier);
 
+    bool operator==(const ZoneParameter &other) const {
+        return m_polygonPoints          == other.m_polygonPoints
+            && m_zoneColor              == other.m_zoneColor
+            && m_zoneName               == other.m_zoneName
+            && m_velocityDirection      == other.m_velocityDirection
+            && m_velocityStrenght       == other.m_velocityStrenght
+            && m_frictionStrenght       == other.m_frictionStrenght
+            && m_exclusion              == other.m_exclusion
+            && m_speedMultiplier        == other.m_speedMultiplier
+            && m_accelerationMultiplier == other.m_accelerationMultiplier;
+    }
 
 signals:
     void polygonPointsChanged();
