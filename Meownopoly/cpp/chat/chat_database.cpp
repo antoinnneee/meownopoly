@@ -4,6 +4,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QDebug>
+#include <QAtomicInt>
 
 ChatDatabase::ChatDatabase(QObject *parent) : QObject(parent) {}
 
@@ -11,15 +12,21 @@ ChatDatabase::~ChatDatabase() {
     if (m_db.isOpen()) {
         m_db.close();
     }
+    if (!m_connectionName.isEmpty()) {
+        QSqlDatabase::removeDatabase(m_connectionName);
+    }
 }
 
 bool ChatDatabase::init()
 {
+    static QAtomicInt s_counter(0);
+    m_connectionName = QString("ChatConnection_%1").arg(s_counter.fetchAndAddRelaxed(1));
+
     QString dbPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir().mkpath(dbPath);
     dbPath += "/local_chat.db";
 
-    m_db = QSqlDatabase::addDatabase("QSQLITE", "ChatConnection");
+    m_db = QSqlDatabase::addDatabase("QSQLITE", m_connectionName);
     m_db.setDatabaseName(dbPath);
 
     if (!m_db.open()) {

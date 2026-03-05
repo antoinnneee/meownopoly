@@ -23,6 +23,11 @@ public:
     void setDecorationId(const QString &decorationId);
     Q_INVOKABLE QString getAnimePath(QString imagePath);
 
+    bool operator==(const DecorationParameter &other) const {
+        return m_decorationCategory == other.m_decorationCategory
+            && m_decorationType == other.m_decorationType
+            && m_decorationId == other.m_decorationId;
+    }
 
 signals:
     void decorationTypeChanged();

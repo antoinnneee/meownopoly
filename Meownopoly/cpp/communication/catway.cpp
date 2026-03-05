@@ -72,7 +72,11 @@ Catway *Catway::m_pThis = nullptr;
 Catway::Catway(QObject *parent)
     : QObject(parent)
 {
-    // qDebug() << "INIT CATWAY";
+    // Assigner m_pThis immédiatement : le thread réseau (timer 16ms) peut appeler
+    // instance() avant que le constructeur soit terminé → race condition sinon.
+    Q_ASSERT_X(m_pThis == nullptr, "Catway::Catway", "Catway doit être un singleton");
+    m_pThis = this;
+
     // === Threaded Networking Setup ===
     m_networkThread = new QThread(this);
     m_worker = new CatwayWorker();

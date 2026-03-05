@@ -23,6 +23,7 @@ public:
 
 private:
     QSqlDatabase m_db;
+    QString m_connectionName;
 };
 
 #endif // CHAT_DATABASE_H
