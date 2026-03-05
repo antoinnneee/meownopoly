@@ -40,6 +40,7 @@ Documentation complète sur l'architecture de l'éditeur de cartes :
 ### Systèmes Spécialisés
 - **[ASSET_MANAGER.md](./ASSET_MANAGER.md)** - Système de gestion des ressources (images, sons, assets)
 - **[VISUAL_EFFECTS_SYSTEM.md](./VISUAL_EFFECTS_SYSTEM.md)** - Système d'effets visuels et post-processing
+- **[PHYSICS_ENGINE.md](./PHYSICS_ENGINE.md)** - Moteur physique 2D PattounX
 
 ## 🎯 Par Où Commencer ?
 

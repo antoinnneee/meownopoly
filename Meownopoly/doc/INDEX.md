@@ -26,6 +26,7 @@ Documentation technique sur l'architecture du système et les composants.
 ### Systèmes
 - [Gestionnaire d'Assets](./architecture/ASSET_MANAGER.md) - Système de gestion des ressources
 - [Système d'Effets Visuels](./architecture/VISUAL_EFFECTS_SYSTEM.md) - Effets post-processing
+- [Moteur Physique PattounX](./architecture/PHYSICS_ENGINE.md) - Documentation du moteur de collisions 2D PattounX
 
 ---
 

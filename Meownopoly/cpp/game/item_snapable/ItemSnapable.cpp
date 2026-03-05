@@ -12,7 +12,6 @@ ItemSnapable::ItemSnapable() {
 }
 
 ItemSnapable::~ItemSnapable() {
-    qDebug() << "============== delete itemSnapable ===============";
     if (m_caseData)
         delete m_caseData;
     if (m_displayParameter)
