@@ -3,10 +3,9 @@ import QtQuick.Controls 2.15
 import AssetManager
 import DecorationParameter
 
-import bottomSidePanel
+import editor
+import meowComponent
 
-import "../snapable"
-import "../grid"
 import Game
 import ItemSnapable
 import ItemSnapableFactory
