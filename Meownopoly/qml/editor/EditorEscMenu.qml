@@ -577,8 +577,8 @@ Rectangle {
                                                 font.pixelSize: 14; color: "white"
                                                 horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; readOnly: true
                                             }
-                                            up.indicator: Rectangle { x: parent.width - width; height: parent.height; implicitWidth: 30; color: parent.parent.up.pressed ? "#4A90E2" : "#404040"; radius: 6; Text { text: "+"; color: "white"; anchors.centerIn: parent } }
-                                            down.indicator: Rectangle { x: 0; height: parent.height; implicitWidth: 30; color: parent.parent.down.pressed ? "#4A90E2" : "#404040"; radius: 6; Text { text: "-"; color: "white"; anchors.centerIn: parent } }
+                                            up.indicator: Rectangle { x: parent.width - width; height: parent.height; implicitWidth: 30; color: parent.up.pressed ? "#4A90E2" : "#404040"; radius: 6; Text { text: "+"; color: "white"; anchors.centerIn: parent } }
+                                            down.indicator: Rectangle { x: 0; height: parent.height; implicitWidth: 30; color: parent.down.pressed ? "#4A90E2" : "#404040"; radius: 6; Text { text: "-"; color: "white"; anchors.centerIn: parent } }
                                         }
                                     }
                                 }

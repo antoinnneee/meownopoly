@@ -18,13 +18,6 @@ Item {
     x: mouseX - width / 2
     y: mouseY - height / 2
 
-    Rectangle{
-        anchors.fill: parent
-        color: "transparent"
-        border.color: "red"
-        border.width: 10
-        radius: 4
-    }
 
     width: 40
     height: 40
