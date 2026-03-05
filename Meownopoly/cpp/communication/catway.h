@@ -156,6 +156,7 @@ private:
     QList<PendingCommand> m_pendingCommands;
 
     explicit Catway(QObject *parent = nullptr);
+    ~Catway();
     static Catway *m_pThis;
 
     static qsizetype localPortsCount(QQmlListProperty<UdpSocketInfo> *p);

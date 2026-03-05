@@ -12,6 +12,7 @@ ChatDatabase::~ChatDatabase() {
     if (m_db.isOpen()) {
         m_db.close();
     }
+    m_db = QSqlDatabase(); // clear the instance before removeDatabase
     if (!m_connectionName.isEmpty()) {
         QSqlDatabase::removeDatabase(m_connectionName);
     }

@@ -125,6 +125,17 @@ void Catway::registerQml()
     qmlRegisterSingletonType<Catway>("Catway", 1, 0, "Catway", &Catway::qmlInstance);
 }
 
+Catway::~Catway()
+{
+    if (m_networkThread) {
+        m_networkThread->quit();
+        if (!m_networkThread->wait(3000)) {
+            m_networkThread->terminate();
+            m_networkThread->wait();
+        }
+    }
+}
+
 Catway *Catway::instance()
 {
     if (m_pThis == nullptr)
