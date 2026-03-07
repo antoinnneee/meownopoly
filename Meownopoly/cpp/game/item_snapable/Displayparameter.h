@@ -17,6 +17,8 @@ class DisplayParameter: public QObject {
     Q_OBJECT
 
 public:
+
+
     // position and size
     Q_PROPERTY(int unitSizeWidth READ unitSizeWidth WRITE setUnitSizeWidth NOTIFY unitSizeWidthChanged)
     Q_PROPERTY(int unitSizeHeight READ unitSizeHeight WRITE setUnitSizeHeight NOTIFY unitSizeHeightChanged)
@@ -55,8 +57,12 @@ public:
     Q_PROPERTY(bool mirrorVertical READ mirrorVertical WRITE setMirrorVertical NOTIFY mirrorVerticalChanged)
 
 
+    // bool operator==(const DisplayParameter &other) const;
+
     DisplayParameter(int unitSizeWidth = 0, int unitSizeHeight = 0, int gridRelativePosition = 0, int gridRelativePositionY = 0, int zLayer = 5, float zOrder = 0, QObject *parent = nullptr);
     DisplayParameter(const QJsonObject &json, QObject *parent = nullptr);
+
+
     QString toJSON();
 
 
@@ -121,6 +127,34 @@ public:
 
     float zOrder() const;
     void setZOrder(float newZOrder);
+
+    bool operator==(DisplayParameter &other)  {
+        return m_unitSizeWidth              == other.m_unitSizeWidth
+            && m_unitSizeHeight             == other.m_unitSizeHeight
+            && m_gridRelativePositionX      == other.m_gridRelativePositionX
+            && m_gridRelativePositionY      == other.m_gridRelativePositionY
+            && m_zLayer                     == other.m_zLayer
+            && m_zOrder                     == other.m_zOrder
+            && m_effectBrightness           == other.m_effectBrightness
+            && m_effectContrast             == other.m_effectContrast
+            && m_effectSaturation           == other.m_effectSaturation
+            && m_effectColorization         == other.m_effectColorization
+            && m_effectColorizationColor    == other.m_effectColorizationColor
+            && m_effectBlurEnabled          == other.m_effectBlurEnabled
+            && m_effectBlur                 == other.m_effectBlur
+            && m_effectBlurMax              == other.m_effectBlurMax
+            && m_effectBlurMultiplier       == other.m_effectBlurMultiplier
+            && m_effectShadowEnabled        == other.m_effectShadowEnabled
+            && m_effectShadowBlur           == other.m_effectShadowBlur
+            && m_effectShadowColor          == other.m_effectShadowColor
+            && m_effectShadowHorizontalOffset == other.m_effectShadowHorizontalOffset
+            && m_effectShadowVerticalOffset == other.m_effectShadowVerticalOffset
+            && m_effectShadowOpacity        == other.m_effectShadowOpacity
+            && m_effectShadowScale          == other.m_effectShadowScale
+            && m_rotationAngle              == other.m_rotationAngle
+            && m_mirrorHorizontal           == other.m_mirrorHorizontal
+            && m_mirrorVertical             == other.m_mirrorVertical;
+    }
 
 signals:
     void unitSizeWidthChanged();

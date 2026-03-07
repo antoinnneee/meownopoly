@@ -4,6 +4,7 @@
 #include <QQmlEngine>
 #include "game/case/CaseFactory.h"
 
+
 ItemSnapable::ItemSnapable() {
     m_uniqueId = QUuid::createUuid();
     m_caseData = new Case();

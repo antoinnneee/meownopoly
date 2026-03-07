@@ -147,8 +147,8 @@ Rectangle {
                         }
 
                         Item {
-                            SplitView.minimumWidth: 200
-                            SplitView.preferredWidth: columnSplitView.width * 0.30
+                            SplitView.minimumWidth: 150
+                            SplitView.preferredWidth: columnSplitView.width * 0.20
                             SplitView.fillWidth: true
                             ColumnLayout {
                                 anchors.fill: parent
@@ -168,7 +168,7 @@ Rectangle {
 
                         Item {
                             SplitView.minimumWidth: 200
-                            SplitView.preferredWidth: columnSplitView.width * 0.25
+                            SplitView.preferredWidth: columnSplitView.width * 0.30
                             SplitView.fillWidth: true
                             ColumnLayout {
                                 anchors.fill: parent
@@ -186,7 +186,7 @@ Rectangle {
 
                         Item {
                             SplitView.minimumWidth: 180
-                            SplitView.preferredWidth: columnSplitView.width * 0.45
+                            SplitView.preferredWidth: columnSplitView.width * 0.50
                             SplitView.fillWidth: true
                             ColumnLayout {
                                 anchors.fill: parent

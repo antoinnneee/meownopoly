@@ -103,6 +103,26 @@ Rectangle {
         }
         ColumnLayout {
             spacing: 4
+            Text { text: "Nom de la session"; color: host.textSecondary; font.pixelSize: 11 }
+            TextField {
+                id: fieldSessionName
+                placeholderText: "ex: Ma Super Partie"
+                placeholderTextColor: "#71717a"
+                font.pixelSize: 13
+                implicitHeight: 38
+                background: Rectangle {
+                    color: "#222226"
+                    radius: 6
+                    border.color: fieldSessionName.activeFocus ? host.accent : host.cardBorder
+                    border.width: fieldSessionName.activeFocus ? 2 : 1
+                }
+                color: host.textPrimary
+                Layout.fillWidth: true
+                text: "Session de " + AccountManager.nickname
+            }
+        }
+        ColumnLayout {
+            spacing: 4
             Text { text: "Session ID"; color: host.textSecondary; font.pixelSize: 11 }
             TextField {
                 id: fieldSessionId
@@ -142,25 +162,50 @@ Rectangle {
                 text: "123"
             }
         }
-        Button {
-            text: "Rejoindre la session"
-            implicitHeight: 36
-            font.pixelSize: 12
-            background: Rectangle {
-                color: parent.pressed ? "#2d2d35" : "transparent"
-                radius: 6
-                border.color: host.cardBorder
-                border.width: 1
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+            Button {
+                text: "Créer une session"
+                Layout.fillWidth: true
+                implicitHeight: 36
+                font.pixelSize: 12
+                background: Rectangle {
+                    color: parent.pressed ? Qt.darker(host.accent, 1.2) : (parent.hovered ? host.accentHover : host.accent)
+                    radius: 8
+                }
+                contentItem: Text {
+                    text: parent.text
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: {
+                    if (chatClient && fieldSessionName.text.trim())
+                        chatClient.createSession(fieldSessionName.text.trim(), fieldDirectPassword.text, fieldSessionId.text.trim())
+                }
             }
-            contentItem: Text {
-                text: parent.text
-                color: host.textPrimary
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            onClicked: {
-                if (chatClient && fieldSessionId.text.trim())
-                    chatClient.connectToSessionDirect(fieldSessionId.text.trim(), fieldDirectPassword.text)
+            Button {
+                text: "Rejoindre"
+                Layout.fillWidth: true
+                implicitHeight: 36
+                font.pixelSize: 12
+                background: Rectangle {
+                    color: parent.pressed ? "#2d2d35" : "transparent"
+                    radius: 6
+                    border.color: host.cardBorder
+                    border.width: 1
+                }
+                contentItem: Text {
+                    text: parent.text
+                    color: host.textPrimary
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: {
+                    if (chatClient && fieldSessionId.text.trim())
+                        chatClient.connectToSessionDirect(fieldSessionId.text.trim(), fieldDirectPassword.text)
+                }
             }
         }
 
