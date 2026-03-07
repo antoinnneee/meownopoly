@@ -175,6 +175,7 @@ void GameSession::broadcastMinigameSnapshot(const QJsonObject &snapshot)
 
 void GameSession::onReliableReceived(const QString &senderId, const QByteArray &data)
 {
+    qDebug() << "[GameSession] onReliableReceived:" << senderId << "data:" << data;
     GameMessageType::Value type;
     QJsonObject payload;
 
@@ -220,6 +221,7 @@ void GameSession::onReliableReceived(const QString &senderId, const QByteArray &
 
 void GameSession::onUdpReceived(const QString &senderId, const QString &message)
 {
+    qDebug() << "[GameSession] onUdpReceived:" << senderId << "message:" << message;
     qreal x, y, vx, vy;
     if (GameProtocol::unpackMinigameInput(message, x, y, vx, vy)) {
         emit minigameInputReceived(senderId, x, y, vx, vy);
