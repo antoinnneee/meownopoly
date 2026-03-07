@@ -17,13 +17,13 @@ Rectangle {
 
     Connections {
         target: Catway
-        function onUdpMessageReceived(senderId, message) {
-            if (targetPlayer && senderId === targetPlayer.playerId) {
-                udpChatLog.text += "\n[" + targetPlayer.nickname + "] " + message
-            } else {
-                udpChatLog.text += "\n[" + senderId + "] " + message
-            }
-        }
+        // function onUdpMessageReceived(senderId, message) {
+        //     if (targetPlayer && senderId === targetPlayer.playerId) {
+        //         udpChatLog.text += "\n[" + targetPlayer.nickname + "] " + message
+        //     } else {
+        //         udpChatLog.text += "\n[" + senderId + "] " + message
+        //     }
+        // }
     }
 
     ColumnLayout {

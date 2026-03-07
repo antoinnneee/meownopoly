@@ -223,18 +223,18 @@ void GameSession::onUdpReceived(const QString &senderId, const QString &message)
 {
     // qDebug() << "[GameSession] onUdpReceived:" << senderId << "message:" << message;
     qreal x, y, vx, vy;
-    // if (GameProtocol::unpackMinigameInput(message, x, y, vx, vy)) {
-        // emit minigameInputReceived(senderId, x, y, vx, vy);
+    if (GameProtocol::unpackMinigameInput(message, x, y, vx, vy)) {
+        emit minigameInputReceived(senderId, x, y, vx, vy);
 
-        // // Hôte : re-broadcast la position aux autres joueurs
-        // if (m_isHost) {
-        //     Catway *catway = Catway::instance();
-        //     const int count = catway->playersCount();
-        //     for (int i = 0; i < count; ++i) {
-        //         PlayerNetwork *p = catway->playerAt(i);
-        //         if (p && p->playerId() != senderId && p->isP2pConnected())
-        //             catway->sendUdpDatagram(p, message);
-        //     }
-        // }
-    // }
+        // Hôte : re-broadcast la position aux autres joueurs
+        if (m_isHost) {
+            Catway *catway = Catway::instance();
+            const int count = catway->playersCount();
+            for (int i = 0; i < count; ++i) {
+                PlayerNetwork *p = catway->playerAt(i);
+                if (p && p->playerId() != senderId && p->isP2pConnected())
+                    catway->sendUdpDatagram(p, message);
+            }
+        }
+    }
 }
