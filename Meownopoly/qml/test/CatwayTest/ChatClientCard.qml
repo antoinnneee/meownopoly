@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Catway 1.0
 import Meownopoly.Chat 1.0
+import Meownopoly.Account 1.0
 
 Rectangle {
     id: chatClientCard

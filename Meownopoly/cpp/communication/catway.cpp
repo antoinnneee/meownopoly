@@ -112,11 +112,6 @@ Catway::Catway(QObject *parent)
     // Initialize STUN params from current AccountManager values
     onAccountStunChanged();
 
-    // Timer du Heartbeat P2P
-    m_heartbeatTimer = new QTimer(this);
-    m_heartbeatTimer->setInterval(m_heartbeatInterval);
-    connect(m_heartbeatTimer, &QTimer::timeout, this, &Catway::onHeartbeat);
-    m_heartbeatTimer->start();
 }
 
 void Catway::registerQml()
@@ -174,24 +169,6 @@ QObject *Catway::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
     Q_UNUSED(engine)
     Q_UNUSED(scriptEngine)
     return Catway::instance();
-}
-
-// --- Delegated methods ---
-
-int Catway::heartbeatInterval() const
-{
-    return m_heartbeatInterval;
-}
-
-void Catway::setHeartbeatInterval(int intervalMs)
-{
-    if (m_heartbeatInterval != intervalMs) {
-        m_heartbeatInterval = intervalMs;
-        if (m_heartbeatTimer) {
-            m_heartbeatTimer->setInterval(m_heartbeatInterval);
-        }
-        emit heartbeatIntervalChanged();
-    }
 }
 
 void Catway::startStunServer()
@@ -669,16 +646,5 @@ void Catway::broadcastRaw(const QString &message)
     for (PlayerNetwork *player : m_players) {
         if (player && player->isP2pConnected())
             sendUdpDatagram(player, message);
-    }
-}
-
-// Removed Catway::onReliableUpdate as it is now in CatwayWorker
-
-void Catway::onHeartbeat()
-{
-    for (PlayerNetwork *player : m_players) {
-        if (player && player->isP2pConnected()) {
-            sendUdpDatagram(player, QStringLiteral("HP:PING"));
-        }
     }
 }

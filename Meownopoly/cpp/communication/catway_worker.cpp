@@ -21,6 +21,13 @@ static int catway_reliable_printf(const char *fmt, ...)
 CatwayWorker::CatwayWorker(QObject *parent) : QObject(parent)
 {
     m_stunManager = new StunManager(this);
+
+    // Timer du Heartbeat P2P
+    m_heartbeatTimer = new QTimer(this);
+    m_heartbeatTimer->setInterval(m_heartbeatInterval);
+    connect(m_heartbeatTimer, &QTimer::timeout, this, &CatwayWorker::onHeartbeat);
+    m_heartbeatTimer->start();
+
 }
 
 CatwayWorker::~CatwayWorker()
@@ -171,3 +178,16 @@ void CatwayWorker::tearDown()
         m_reliableUpdateTimer->stop();
     }
 }
+
+
+// Removed Catway::onReliableUpdate as it is now in CatwayWorker
+
+void CatwayWorker::onHeartbeat()
+{
+    for (PlayerNetwork *player : m_players) {
+        if (player && player->isP2pConnected()) {
+            sendUdpDatagram(player, QStringLiteral("HP:PING"));
+        }
+    }
+}
+
