@@ -181,12 +181,21 @@ void CatwayWorker::tearDown()
 
 
 // Removed Catway::onReliableUpdate as it is now in CatwayWorker
-
 void CatwayWorker::onHeartbeat()
 {
-    for (PlayerNetwork *player : m_players) {
+    Catway *catway = Catway::instance();
+    if (!catway) return;
+
+
+    for (int i = 0; i < catway->playersCount(); ++i) {
+        PlayerNetwork *player = catway->playerAt(i);
         if (player && player->isP2pConnected()) {
-            sendUdpDatagram(player, QStringLiteral("HP:PING"));
+            UdpSocketInfo *si = player->socketInfo();
+            if (!si || !si->socket()) continue;
+
+            QHostAddress addr(player->ip());
+
+            sendDatagram(si->socket(), QStringLiteral("HP:PING").toLatin1(), addr, player->port());
         }
     }
 }

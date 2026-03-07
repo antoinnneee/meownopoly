@@ -529,6 +529,7 @@ void Catway::onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAd
         } else if (msg == QStringLiteral("HP:PING")) {
             // Heartbeat silencieux : sert à maintenir le port du routeur ouvert
             // Pas besoin de parser ou logger afin de ne pas spammer la console
+            emit log("HP:PING");
         } else {
             // Message de jeu legacy (chat, dessin)
             emit udpMessageReceived(targetPlayer->playerId(), msg);
