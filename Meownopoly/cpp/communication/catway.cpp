@@ -655,6 +655,22 @@ void Catway::sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data)
                               Q_ARG(QByteArray, data));
 }
 
+void Catway::broadcastReliable(const QByteArray &data)
+{
+    for (PlayerNetwork *player : m_players) {
+        if (player && player->isP2pConnected())
+            sendReliableToPlayer(player, data);
+    }
+}
+
+void Catway::broadcastRaw(const QString &message)
+{
+    for (PlayerNetwork *player : m_players) {
+        if (player && player->isP2pConnected())
+            sendUdpDatagram(player, message);
+    }
+}
+
 // Removed Catway::onReliableUpdate as it is now in CatwayWorker
 
 void Catway::onHeartbeat()

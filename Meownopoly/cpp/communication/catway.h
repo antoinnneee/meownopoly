@@ -121,6 +121,12 @@ public:
     /// À n'utiliser qu'après que la connexion UDP est établie (HP:FINAL reçu).
     Q_INVOKABLE void sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data);
 
+    /// Envoie un paquet fiable à tous les joueurs P2P connectés.
+    Q_INVOKABLE void broadcastReliable(const QByteArray &data);
+
+    /// Envoie un message UDP brut à tous les joueurs P2P connectés (lossy, minijeux).
+    Q_INVOKABLE void broadcastRaw(const QString &message);
+
 public slots:
     Q_INVOKABLE void setupNewPort();
 

@@ -55,6 +55,8 @@
 #include "account/account_manager.h"
 #include "communication/catway.h"
 #include "communication/player_network.h"
+#include "game/network/game_session.h"
+#include "game/network/minigame_sync.h"
 
 #include <QImageWriter>
 
@@ -86,6 +88,8 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     AccountManager::registerQml();
     Catway::registerQml();
     PlayerNetwork::registerQml();
+    GameSession::registerQml();
+    MinigameSync::registerQml();
 
 
     // Register MapTypes namespace for QML

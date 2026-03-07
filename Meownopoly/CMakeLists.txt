@@ -108,6 +108,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/assetManager
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/reliable
     ${CMAKE_CURRENT_SOURCE_DIR}/cpp/communication
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpp/game/network
 )
 
 # ============================================================================
