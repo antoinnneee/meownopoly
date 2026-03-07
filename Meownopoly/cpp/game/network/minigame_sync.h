@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QHash>
 #include <QQmlEngine>
 #include <QJsonObject>
 
@@ -69,12 +70,18 @@ signals:
 private slots:
     void onInputTick();
     void onSnapshotTick();
+    void onRemotePosition(const QString &playerId, qreal x, qreal y, qreal vx, qreal vy);
+    void onRenderTick();
 
 private:
     void applyRates();
 
+    struct RemotePos { qreal x = 0, y = 0, vx = 0, vy = 0; };
+
     QTimer m_inputTimer;
     QTimer m_snapshotTimer;
+    QTimer m_renderTimer;
+    QHash<QString, RemotePos> m_remotePositions;
 
     int m_inputRateHz    = 60;
     int m_snapshotRateHz = 1;

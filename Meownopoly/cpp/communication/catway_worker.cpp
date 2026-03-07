@@ -30,8 +30,7 @@ CatwayWorker::~CatwayWorker()
 void CatwayWorker::initReliable()
 {
     reliable_init();
-    reliable_log_level(RELIABLE_LOG_LEVEL_DEBUG);
-    reliable_set_printf_function(catway_reliable_printf);
+    reliable_log_level(RELIABLE_LOG_LEVEL_NONE);
     qDebug() << "[CatwayWorker] reliable init in thread:" << QThread::currentThreadId();
 }
 
@@ -163,7 +162,6 @@ void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray 
         return;
     }
 
-    qDebug() << "[reliable] Sending packet to" << playerId << "size" << data.size();
     reliable_endpoint_send_packet(ep, reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())), data.size());
 }
 

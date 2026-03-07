@@ -8,10 +8,12 @@ MinigameSync::MinigameSync(QObject *parent) : QObject(parent)
     connect(&m_inputTimer,    &QTimer::timeout, this, &MinigameSync::onInputTick);
     connect(&m_snapshotTimer, &QTimer::timeout, this, &MinigameSync::onSnapshotTick);
 
-    // Relay des positions reçues depuis GameSession
     GameSession *gs = GameSession::instance();
     connect(gs, &GameSession::minigameInputReceived,
-            this, &MinigameSync::playerPositionUpdated);
+            this, &MinigameSync::onRemotePosition);
+    connect(&m_renderTimer, &QTimer::timeout,
+            this, &MinigameSync::onRenderTick);
+    m_renderTimer.setInterval(33); // ~30 Hz
     connect(gs, &GameSession::minigameSnapshotReceived,
             this, &MinigameSync::snapshotReceived);
 }
@@ -27,6 +29,7 @@ void MinigameSync::start()
 {
     applyRates();
     m_inputTimer.start();
+    m_renderTimer.start();
     emit runningChanged();
 }
 
@@ -34,6 +37,7 @@ void MinigameSync::stop()
 {
     m_inputTimer.stop();
     m_snapshotTimer.stop();
+    m_renderTimer.stop();
     emit runningChanged();
 }
 
@@ -92,4 +96,17 @@ void MinigameSync::onSnapshotTick()
 {
     if (!m_snapshot.isEmpty())
         GameSession::instance()->broadcastMinigameSnapshot(m_snapshot);
+}
+
+// ── Rendu différé des positions distantes (30 Hz) ─────────────────────────────
+
+void MinigameSync::onRemotePosition(const QString &playerId, qreal x, qreal y, qreal vx, qreal vy)
+{
+    m_remotePositions[playerId] = {x, y, vx, vy};
+}
+
+void MinigameSync::onRenderTick()
+{
+    for (auto it = m_remotePositions.constBegin(); it != m_remotePositions.constEnd(); ++it)
+        emit playerPositionUpdated(it.key(), it.value().x, it.value().y, it.value().vx, it.value().vy);
 }

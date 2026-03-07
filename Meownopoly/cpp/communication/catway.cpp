@@ -283,6 +283,7 @@ void Catway::addPlayer(PlayerNetwork *player)
         return;
 
     if (player->socketInfo() && player->socketInfo() == currentSocketInfo()) {
+        disconnect(m_worker, &CatwayWorker::datagramReceived, this, &Catway::onDatagramReceived);
         player->setSocketInfo(takeSocket());
     } else if (player->socketInfo() && player->socketInfo()->socket()) {
         // Just in case it was created freely, ensure readyRead is connected
@@ -295,7 +296,7 @@ void Catway::addPlayer(PlayerNetwork *player)
         disconnect(sock, &QUdpSocket::readyRead, m_worker, &CatwayWorker::onSocketReadyRead);
         connect(sock, &QUdpSocket::readyRead, m_worker, &CatwayWorker::onSocketReadyRead);
 
-        // disconnect(m_worker, &CatwayWorker::datagramReceived, this, &Catway::onDatagramReceived);
+        disconnect(m_worker, &CatwayWorker::datagramReceived, this, &Catway::onDatagramReceived);
         connect(m_worker, &CatwayWorker::datagramReceived, this, &Catway::onDatagramReceived, Qt::QueuedConnection);
     }
 
@@ -495,7 +496,7 @@ void Catway::sendUdpDatagram(PlayerNetwork *player, const QByteArray &data)
                               Q_ARG(QHostAddress, addr),
                               Q_ARG(quint16, player->port()));
 
-    if (data.size() > 0 && data[0] != '\x01') {
+    if (data.startsWith("HP:") && data != "HP:PING") {
         emit log(QString("Sent UDP Punch [%1] to %2:%3").arg(QString::fromUtf8(data), player->ip(), QString::number(player->port())));
     }
 }
