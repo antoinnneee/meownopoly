@@ -4,6 +4,13 @@
 #include "tools/logger.h"
 #include "assetManager/asset_manager.h"
 
+
+// bool DecorationParameter::operator==(const DecorationParameter &other) const {
+//     return m_decorationCategory == other.m_decorationCategory
+//            && m_decorationType    == other.m_decorationType
+//            && m_decorationId      == other.m_decorationId;
+// }
+
 DecorationParameter::DecorationParameter(QObject *parent)
     : QObject{parent}
 {
