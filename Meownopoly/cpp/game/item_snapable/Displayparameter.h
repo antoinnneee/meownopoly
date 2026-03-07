@@ -57,7 +57,7 @@ public:
     Q_PROPERTY(bool mirrorVertical READ mirrorVertical WRITE setMirrorVertical NOTIFY mirrorVerticalChanged)
 
 
-    bool operator==(const DisplayParameter &other) const;
+    // bool operator==(const DisplayParameter &other) const;
 
     DisplayParameter(int unitSizeWidth = 0, int unitSizeHeight = 0, int gridRelativePosition = 0, int gridRelativePositionY = 0, int zLayer = 5, float zOrder = 0, QObject *parent = nullptr);
     DisplayParameter(const QJsonObject &json, QObject *parent = nullptr);
@@ -128,7 +128,7 @@ public:
     float zOrder() const;
     void setZOrder(float newZOrder);
 
-    bool operator==(const DisplayParameter &other) const {
+    bool operator==(DisplayParameter &other)  {
         return m_unitSizeWidth              == other.m_unitSizeWidth
             && m_unitSizeHeight             == other.m_unitSizeHeight
             && m_gridRelativePositionX      == other.m_gridRelativePositionX

@@ -8,7 +8,7 @@ class DecorationParameter : public QObject
     Q_OBJECT
 public:
 
-    bool operator==(const DecorationParameter &other) const;
+    // bool operator==(const DecorationParameter &other) const;
 
     explicit DecorationParameter(QObject *parent = nullptr);
     explicit DecorationParameter(const QJsonObject &json, QObject *parent = nullptr);

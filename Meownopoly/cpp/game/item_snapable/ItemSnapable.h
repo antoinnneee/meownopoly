@@ -30,7 +30,6 @@ class ItemSnapable : public QObject
 
 public:
 
-    bool operator==(const ItemSnapable &other) const;
 
     ItemSnapable();
     ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent = nullptr);
