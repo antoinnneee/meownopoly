@@ -34,7 +34,8 @@ Item{
                 logic.tileLogic.deleteElementsConnections(element)
                 element.connectionManager.deleteLinkedConnection()
                 logic.tileLogic.deleteElement(element)
-                logic.mouseLogic.removeElementFromTemplateSelection(element)
+                if (logic.editorMouseMode === EditorEnum.EM_TEMPLATE)
+                    logic.mouseLogic.removeElementFromTemplateSelection(element)
             }
         }
     }
@@ -51,7 +52,8 @@ Item{
                 logic.tileLogic.deleteElementsConnections(element)
                 element.connectionManager.deleteLinkedConnection()
                 logic.tileLogic.deleteElement(element)
-                logic.mouseLogic.removeElementFromTemplateSelection(element)
+                if (logic.editorMouseMode === EditorEnum.EM_TEMPLATE)
+                    logic.mouseLogic.removeElementFromTemplateSelection(element)
             }
         }
     }
@@ -68,7 +70,8 @@ Item{
                 logic.tileLogic.deleteElementsConnections(element)
                 element.connectionManager.deleteLinkedConnection()
                 logic.tileLogic.deleteElement(element)
-                logic.mouseLogic.removeElementFromTemplateSelection(element)
+                if (logic.editorMouseMode === EditorEnum.EM_TEMPLATE)
+                    logic.mouseLogic.removeElementFromTemplateSelection(element)
             }
         }
     }
