@@ -61,8 +61,12 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
         flag = MapFileManager::saveMap(jsonObject, mapInfo->getMapName(), mapType);
         break;
     case MapTypes::UNDOREDO:
+        if (compareMap(itemSnapableList, jsonObject)) {
+            emit updateListEdits(jsonObject);
+        } else {
+            Logger::instance()->info("UNDOREDO: no changes detected, skipping save", "Game");
+        }
         flag = true;
-        emit updateListEdits(jsonObject);
         break;
     default:
         break;
@@ -70,12 +74,72 @@ bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::Ma
     return flag;
 }
 
+// Retourne true si des changements ont été détectés (la carte doit être sauvegardée),
+// false si l'état est identique au dernier edit conservé dans UndoRedoManager.
+bool Game::compareMap(const QVariantList& itemSnapableList, const QJsonObject& newJsonState)
+{
+    QJsonObject lastEdit = UndoRedoManager::instance()->getLastEdit();
+
+    // Pas d'état précédent : premier enregistrement, toujours sauvegarder
+    if (lastEdit.isEmpty())
+        return true;
+
+    // --- Comparaison des tiles ---
+    QJsonArray oldTiles = lastEdit["snapableTiles"].toArray();
+    QJsonArray newTiles = newJsonState["snapableTiles"].toArray();
+
+    if (oldTiles.size() != newTiles.size())
+        return true;
+
+    // Indexer les anciens tiles par uniqueId pour une recherche en O(1)
+    QMap<QString, QJsonObject> oldTileMap;
+    for (const QJsonValue& v : oldTiles)
+        oldTileMap[v.toObject()["uniqueId"].toString()] = v.toObject();
+
+    for (int i = 0; i < itemSnapableList.size(); ++i) {
+        ItemSnapable* newTile = qvariant_cast<ItemSnapable*>(itemSnapableList.at(i));
+        if (!newTile) continue;
+
+        QString id = newTile->uniqueId().toString();
+        if (!oldTileMap.contains(id))
+            return true; // tile ajoutée
+
+        // Comparaison JSON du tile (inclut displayParameter, decorationParameter,
+        // zoneParameter, caseData, next/prev sérialisés en UUID)
+        QJsonParseError parseError;
+        QJsonObject newTileJson = QJsonDocument::fromJson(newTile->toJSON().toUtf8(), &parseError).object();
+        if (parseError.error != QJsonParseError::NoError)
+            return true; // En cas d'erreur de sérialisation, sauvegarder par sécurité
+
+        if (oldTileMap[id] != newTileJson)
+            return true; // tile modifiée
+    }
+
+    // --- Comparaison des métadonnées (mapLastModified exclu car toujours mis à jour) ---
+    QJsonObject oldMeta = lastEdit["mapInfo"].toObject();
+    QJsonObject newMeta = newJsonState["mapInfo"].toObject();
+
+    static const QStringList metaKeys = {
+        "mapName", "mapDescription", "mapCreationDate", "version",
+        "musicPath", "backgroundPath", "backgroundScaling",
+        "isBackgroundOnGrill", "backgroundTileSize"
+    };
+    for (const QString& key : metaKeys) {
+        if (oldMeta.value(key) != newMeta.value(key))
+            return true;
+    }
+
+    return false; // Aucun changement détecté
+}
+
+
 bool Game::deleteMap(QString mapName, MapTypes::MapType mapType)
 {
     bool flag = false;
     flag = MapFileManager::removeMapFile(mapName, mapType);
     return flag;
 }
+
 
 Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 {
@@ -117,7 +181,7 @@ void Game::onReturnEdit(QJsonObject newEdit)
         connect(map, &Map::foundItemSnapableTile, this, &Game::foundItemSnapableTile);
         connect(map, &Map::mapLoaded, this, &Game::mapLoaded);
 
-        // Emettre les signaux immediatement car Map ne les Ã©met plus
+        // Emettre les signaux immediatement car Map ne les émet plus
         for (ItemSnapable *tile : map->tiles()) {
             emit foundItemSnapableTile(tile);
         }

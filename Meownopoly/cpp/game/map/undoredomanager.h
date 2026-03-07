@@ -38,8 +38,12 @@ public:
     bool isRestoringState() const;
     void setIsRestoringState(bool newIsRestoringState);
 
-    // void compareJsonObject(QJsonObject newEdit);
-    // void compareJsonFields(const QJsonObject& oldObj, const QJsonObject& newObj, const QString& path);
+    QJsonObject getLastEdit() const {
+        if (m_currentEditIndex >= 0 && m_currentEditIndex < m_listEdits.size()) {
+            return m_listEdits.at(m_currentEditIndex);
+        }
+        return QJsonObject(); // Return empty object if index is out of bounds
+    }
 
 public slots:
 
