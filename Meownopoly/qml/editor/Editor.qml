@@ -36,6 +36,9 @@ import QtQuick3D.Helpers
 import editor
 import "."
 
+
+
+
 Base_Board {
     id: root
 
@@ -78,7 +81,8 @@ Base_Board {
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
 
-        console.log("UiStyle.z_CONFIG_PANEL !!! ", UiStyle.z_CONFIG_PANEL)
+        // chatDrawer.chatClient = Catway.chatClient
+        chatDrawer.updateChatClient(Catway.chatClient)
     }
 
     onUpdateSettings: {
@@ -200,12 +204,13 @@ Base_Board {
                 console.error("Erreur /create :", e)
             }
         }
+
         onClosed: root.forceActiveFocus()
         onFocusReleased: root.forceActiveFocus()
 
-        Component.onCompleted: {
-            Catway.setChatClient(chatDrawer.chatClient)
-        }
+        // Component.onCompleted: {
+        //     Catway.setChatClient(chatDrawer.chatClient)
+        // }
     }
 
     MenuMapAtStart {

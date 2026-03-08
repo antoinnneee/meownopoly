@@ -131,12 +131,12 @@ Rectangle {
                 width: parent.width
                 height: parent.height
                 delegate: SessionCard {
-                    name:         modelData.name        ?? ""
-                    sessionId:    modelData.sessionId   ?? ""
-                    players:      modelData.players     ?? 0
-                    maxPlayers:   modelData.maxPlayers  ?? 4
+                    name:         modelData.name         ?? ""
+                    sessionId:    modelData.sessionId    ?? ""
+                    players:      modelData.players      ?? 0
+                    maxPlayers:   modelData.maxPlayers   ?? 4
                     hostNickname: modelData.hostNickname ?? ""
-                    onlineCount:  modelData.onlineCount ?? 0
+                    onlineCount:  modelData.onlineCount  ?? 0
 
                     onClicked: {
                         console.log("Session sélectionnée:", sessionId, "-", name)

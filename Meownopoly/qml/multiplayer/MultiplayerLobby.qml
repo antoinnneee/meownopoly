@@ -5,14 +5,18 @@ import "./components"
 import Meownopoly.Chat 1.0
 import Meownopoly.Account 1.0
 
+import Catway 1.0
+
 /**
  * Conteneur principal du lobby multijoueur
  * Gère la navigation interne entre SessionList et SessionDetails
  */
+
 Rectangle {
     id: root
 
     color: "#1a1a1a"
+
 
     signal backToTitleScreen()
 
@@ -120,6 +124,7 @@ Rectangle {
             sessionPasswordField.text = ""
             sessionIdForJoin = ""
             close()
+            Catway.setChatClient(lobbyChatClient)
         }
     }
 
@@ -144,7 +149,6 @@ Rectangle {
             chatClient: lobbyChatClient
             onSessionSelected: function(sessionData) {
                 lobbyChatClient.connectToSessionDirect(sessionData.sessionId,sessionData.password)
-                // lobbyChatClient.connectToSession(AccountManager.uniqueId, sessionData.password, AccountManager.nickname)
             }
         }
     }

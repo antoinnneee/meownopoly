@@ -41,14 +41,15 @@ const server = http.createServer((req, res) => {
             'Access-Control-Allow-Origin': '*'
         });
 
+        const detailedSessions = getDetailedSessionList();
         const stats = {
             connections: wss.clients.size,
             rooms: rooms.size,
             messages: getTotalMessages(),
-            sessions: Array.from(rooms.keys()).map(sessionId => ({
-                id: sessionId,
-                participants: rooms.get(sessionId).size,
-                messages: getSessionMessageCount(sessionId)
+            sessions: detailedSessions.map(s => ({
+                id: s.session_id,
+                participants: s.player_count,
+                messages: getSessionMessageCount(s.session_id)
             })),
             uptime: process.uptime(),
             memory: process.memoryUsage(),

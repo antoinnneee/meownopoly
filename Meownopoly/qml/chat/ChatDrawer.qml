@@ -13,7 +13,7 @@ Drawer {
     height: parent.height
     edge: Qt.RightEdge
 
-    property alias chatClient: chatClient
+property var chatClient: internalChatClient
 
     property string gameId: ""
     property string playerId: AccountManager.uniqueId
@@ -24,9 +24,15 @@ Drawer {
     property string privateRecipientId: ""
     property string privateRecipientNickname: ""
 
+    signal updateChatClient(var newClient)
     signal openFullScreenMsg(var modelMsg)
     signal createSnapableRequested(string jsonString)
     signal focusReleased()
+
+    onUpdateChatClient: function (newClient){
+        console.log("ChatDrawer: updating chat client...")
+        chatClient = newClient
+    }
 
     background: Rectangle {
         color: "#E6222222"
@@ -34,18 +40,20 @@ Drawer {
         border.width: 1
     }
 
-    ChatClient {
-        id: chatClient
-        sessionId: chatDrawer.gameId
 
-        onConnectedChanged: {
-            if (connected) {
-                console.log("Chat connected!")
-                connectToSession(playerId, "123", playerNickname)
-            } else {
-                console.log("Chat disconnected!")
-            }
-        }
+
+    ChatClient {
+        id: internalChatClient
+        // sessionId: chatDrawer.gameId
+
+        // onConnectedChanged: {
+        //     if (connected) {
+        //         console.log("Chat connected!")
+        //         connectToSession(playerId, "123", playerNickname)
+        //     } else {
+        //         console.log("Chat disconnected!")
+        //     }
+        // }
     }
 
     function formatTimestamp(ts) {
@@ -75,7 +83,7 @@ Drawer {
         title: "Choose an image"
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.webp)"]
         onAccepted: {
-            chatClient.sendImage(imageDialog.selectedFile)
+            ombelline.sendImage(imageDialog.selectedFile)
         }
     }
 
@@ -88,7 +96,7 @@ Drawer {
             "All files (*)"
         ]
         onAccepted: {
-            chatClient.sendTextFile(textFileDialog.selectedFile)
+            ombelline.sendTextFile(textFileDialog.selectedFile)
         }
     }
 
