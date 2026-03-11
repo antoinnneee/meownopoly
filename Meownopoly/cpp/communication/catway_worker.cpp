@@ -146,6 +146,18 @@ void CatwayWorker::onSocketReadyRead()
     }
 }
 
+void CatwayWorker::broadcastReliable(const QByteArray &data)
+{
+    Catway *catway = Catway::instance();
+    if (!catway) return;
+
+    for (int i = 0; i < catway->playersCount(); ++i) {
+        PlayerNetwork *player = catway->playerAt(i);
+        if (player && player->isP2pConnected())
+            sendReliablePacket(player, data);
+    }
+}
+
 void CatwayWorker::sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port)
 {
     if (socket && socket->thread() == QThread::currentThread()) {
@@ -166,6 +178,19 @@ void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray 
     reliable_endpoint_t *ep = player->endpoint();
     if (!ep) {
         qDebug() << "[reliable] Error: No endpoint for player" << playerId;
+        return;
+    }
+
+    reliable_endpoint_send_packet(ep, reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())), data.size());
+}
+
+void CatwayWorker::sendReliablePacket(PlayerNetwork *player, const QByteArray &data)
+{
+    if (!player) return;
+
+    reliable_endpoint_t *ep = player->endpoint();
+    if (!ep) {
+        qDebug() << "[reliable] Error: No endpoint for player" << player->playerId();
         return;
     }
 

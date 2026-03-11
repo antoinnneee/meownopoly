@@ -636,10 +636,8 @@ void Catway::sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data)
 
 void Catway::broadcastReliable(const QByteArray &data)
 {
-    for (PlayerNetwork *player : m_players) {
-        if (player && player->isP2pConnected())
-            sendReliableToPlayer(player, data);
-    }
+    QMetaObject::invokeMethod(m_worker, "broadcastReliable", Qt::QueuedConnection,
+                              Q_ARG(QByteArray, data));
 }
 
 void Catway::broadcastRaw(const QString &message)

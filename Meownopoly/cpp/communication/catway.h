@@ -47,11 +47,18 @@ public slots:
 
     // --- Thread-safe I/O ---
     void sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port);
+    void sendReliablePacket(PlayerNetwork *player, const QByteArray &data);
     void sendReliablePacket(const QString &playerId, const QByteArray &data);
     void onSocketReadyRead();
 
+
+    /// Envoie un paquet fiable à tous les joueurs P2P connectés.
+    void broadcastReliable(const QByteArray &data);
+
+
 private slots:
     void onReliableUpdate();
+    void onHeartbeat();
 
 signals:
     void reliableMessageReceived(QString senderId, QByteArray data);
@@ -62,6 +69,8 @@ private:
     StunManager *m_stunManager;
     QTimer *m_reliableUpdateTimer = nullptr;
     QElapsedTimer m_reliableClock;
+    QTimer *m_heartbeatTimer = nullptr;
+    int m_heartbeatInterval = 10000;
 };
 
 // ---------------------------------------------------------------------------
@@ -90,11 +99,6 @@ public:
     /// Liste des infos de ports locaux (sockets récupérés via takeSocket).
     Q_PROPERTY(QQmlListProperty<UdpSocketInfo> localPorts READ localPorts NOTIFY localPortsChanged)
     QQmlListProperty<UdpSocketInfo> localPorts();
-
-    /// Intervalle d'envoi du battement de cœur P2P (Heartbeat) en millisecondes. Défaut : 10000ms.
-    Q_PROPERTY(int heartbeatInterval READ heartbeatInterval WRITE setHeartbeatInterval NOTIFY heartbeatIntervalChanged)
-    int heartbeatInterval() const;
-    void setHeartbeatInterval(int intervalMs);
 
     /// Liste des joueurs réseau (playerId, nickname, socketInfo).
     Q_PROPERTY(QQmlListProperty<PlayerNetwork> players READ players NOTIFY playersChanged)
@@ -141,7 +145,6 @@ signals:
     void reliableMessageReceived(QString senderId, QByteArray data);
     /// Même contenu en QString (UTF-8), pratique pour le QML (draw, chat, etc.).
     void reliableMessageReceivedString(QString senderId, QString message);
-    void heartbeatIntervalChanged();
     void chatClientChanged();
 
 private slots:
@@ -150,7 +153,6 @@ private slots:
     void onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void onPendingCommandReady(QString ip, quint16 port);
     void onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress sender, quint16 port);
-    void onHeartbeat();
     void onStunRequestFailed();
 
 private:
@@ -182,8 +184,6 @@ private:
     QMetaObject::Connection m_stunConnection;
     QMetaObject::Connection m_externalAddressTakePortConnection;
     QMetaObject::Connection m_pendingCommandConnection;
-    QTimer *m_heartbeatTimer = nullptr;
-    int m_heartbeatInterval = 10000;
 };
 
 #endif // CATWAY_H

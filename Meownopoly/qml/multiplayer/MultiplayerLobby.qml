@@ -5,6 +5,7 @@ import "./components"
 import Meownopoly.Chat 1.0
 import Meownopoly.Account 1.0
 
+import Catway 1.0
 /**
  * Conteneur principal du lobby multijoueur
  * Gère la navigation interne entre SessionList et SessionDetails
