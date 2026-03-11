@@ -37,8 +37,6 @@ import editor
 import "."
 
 
-
-
 Base_Board {
     id: root
 
@@ -129,6 +127,8 @@ Base_Board {
         property real xOrigin
         property real yOrigin
 
+        property bool isClicked: false
+
         function resetPosition() {
             xOrigin = x
             yOrigin = y
@@ -147,17 +147,26 @@ Base_Board {
             propagateComposedEvents: true
             hoverEnabled: true
 
+            onClicked: btSelection.isClicked = !btSelection.isClicked
+
             Component.onCompleted:{
                 width = parent.width
                 height = parent.height
             }
 
             onEntered: {
+                extand()
+            }
+            onExited: {
+                retract()
+            }
+            function extand() {
                 height = (btSelection.height * 3) + 10
                 btInfoMap.y =   (Screen.pixelDensity * 20)  + 10
                 btChat.y =      (Screen.pixelDensity * 20) * 2  + 10
             }
-            onExited: {
+             function retract() {
+                 if (btSelection.isClicked) return
                 btInfoMap.x = btSelection.xOrigin; btInfoMap.y = btSelection.yOrigin
                 btChat.x = btSelection.xOrigin; btChat.y = btSelection.yOrigin
             }
