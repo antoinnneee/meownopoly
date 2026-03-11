@@ -37,6 +37,8 @@ import editor
 import "."
 
 
+
+
 Base_Board {
     id: root
 
@@ -122,12 +124,10 @@ Base_Board {
         anchors.topMargin: 10
         z: UiStyle.z_HUD + 1
 
-
-
         property real xOrigin
         property real yOrigin
 
-        property bool isClicked: false
+        property bool fixExtand: false
 
         function resetPosition() {
             xOrigin = x
@@ -142,31 +142,35 @@ Base_Board {
         onXChanged: resetPosition()
         onYChanged: resetPosition()
 
+        onBtClicked:  btSelection.fixExtand = !btSelection.fixExtand
+
+        Text {
+            id: lock
+            text: "🔒"
+            opacity: 0.5
+            visible: btSelection.fixExtand
+        }
+
         MouseArea {
             id: btSelMouseArea
             propagateComposedEvents: true
             hoverEnabled: true
-
-            onClicked: btSelection.isClicked = !btSelection.isClicked
 
             Component.onCompleted:{
                 width = parent.width
                 height = parent.height
             }
 
-            onEntered: {
-                extand()
-            }
-            onExited: {
-                retract()
-            }
+            onEntered: extand()
+            onExited: retract()
+
             function extand() {
                 height = (btSelection.height * 3) + 10
                 btInfoMap.y =   (Screen.pixelDensity * 20)  + 10
                 btChat.y =      (Screen.pixelDensity * 20) * 2  + 10
             }
              function retract() {
-                 if (btSelection.isClicked) return
+                 if (btSelection.fixExtand) return
                 btInfoMap.x = btSelection.xOrigin; btInfoMap.y = btSelection.yOrigin
                 btChat.x = btSelection.xOrigin; btChat.y = btSelection.yOrigin
             }
