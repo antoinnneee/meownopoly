@@ -6,3 +6,4 @@ ChatParticipantsPanel 1.0 ChatParticipantsPanel.qml
 ChatInputBar 1.0 ChatInputBar.qml
 ChatStatusBar 1.0 ChatStatusBar.qml
 ChatMessageDelegate 1.0 ChatMessageDelegate.qml
+ChatSessionSelector 1.0 ChatSessionSelector.qml

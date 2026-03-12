@@ -12,7 +12,9 @@ Rectangle {
 
     property var chatClient
     property var drawer
+
     signal toggleParticipantsPanel()
+    signal sessionJoinRequested(string sessionId, string sessionName)
 
     // Zone de redimensionnement sur le bord gauche
     Rectangle {
@@ -170,13 +172,12 @@ Rectangle {
                 NumberAnimation { to: 1.0; duration: 800 }
             }
         }
-
-        Text {
-            text: drawer ? drawer.gameId : ""
-            color: "#888888"
-            font.pointSize: 8
-            elide: Text.ElideRight
-            Layout.maximumWidth: 80
+        ChatHeaderSelection {
+            chatClient: headerBar.chatClient
+            currentSessionId: drawer ? drawer.gameId : ""
+            onSessionJoinRequested: function(sessionId, sessionName) {
+                headerBar.sessionJoinRequested(sessionId, sessionName)
+            }
         }
     }
 }

@@ -10,5 +10,6 @@
         <file>qml/chat/ChatStatusBar.qml</file>
         <file>qml/chat/ChatToastPopup.qml</file>
         <file>qml/chat/TextFileDisplay.qml</file>
+        <file>qml/chat/ChatHeaderSelection.qml</file>
     </qresource>
 </RCC>

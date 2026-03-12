@@ -65,7 +65,9 @@ public:
     Q_INVOKABLE void saveImageToFile(const QString &imageId, const QString &filePath);
     Q_INVOKABLE void copyImageToClipboard(const QString &imageId);
     Q_INVOKABLE void requestParticipants();
+
     Q_INVOKABLE void requestSessionsList();
+
     Q_INVOKABLE void kickPlayer(const QString &targetPlayerId);
     Q_INVOKABLE void sendPing(const QString &targetPlayerId = QString());
     Q_INVOKABLE void sendRequestConnectionInfo(const QString &recipientId = QString(), const QString &ip = QString(), quint16 port = 0);

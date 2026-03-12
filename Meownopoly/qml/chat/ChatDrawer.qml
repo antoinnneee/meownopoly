@@ -13,7 +13,7 @@ Drawer {
     height: parent.height
     edge: Qt.RightEdge
 
-property var chatClient: internalChatClient
+    property var chatClient: internalChatClient
 
     property string gameId: ""
     property string playerId: AccountManager.uniqueId
@@ -44,16 +44,6 @@ property var chatClient: internalChatClient
 
     ChatClient {
         id: internalChatClient
-        // sessionId: chatDrawer.gameId
-
-        // onConnectedChanged: {
-        //     if (connected) {
-        //         console.log("Chat connected!")
-        //         connectToSession(playerId, "123", playerNickname)
-        //     } else {
-        //         console.log("Chat disconnected!")
-        //     }
-        // }
     }
 
     function formatTimestamp(ts) {
@@ -65,8 +55,8 @@ property var chatClient: internalChatClient
         }
         let now = new Date()
         let isToday = date.getDate() === now.getDate() &&
-                      date.getMonth() === now.getMonth() &&
-                      date.getFullYear() === now.getFullYear()
+            date.getMonth() === now.getMonth() &&
+            date.getFullYear() === now.getFullYear()
         let hours = date.getHours().toString().padStart(2, '0')
         let minutes = date.getMinutes().toString().padStart(2, '0')
         if (isToday) {
@@ -109,6 +99,9 @@ property var chatClient: internalChatClient
             chatClient: chatClient
             drawer: chatDrawer
             onToggleParticipantsPanel: participantsPanel.visible = !participantsPanel.visible
+            onSessionJoinRequested: function(sessionId, sessionName) {
+                chatClient.connectToSessionDirect(sessionId, "")
+            }
         }
 
         // Panneau dépliable des participants
