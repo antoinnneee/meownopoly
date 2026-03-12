@@ -80,9 +80,7 @@ Base_Board {
 
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
-
-        // chatDrawer.chatClient = Catway.chatClient
-        chatDrawer.updateChatClient(Catway.chatClient)
+        // chatClient est désormais lié à Catway.chatClient via binding déclaratif dans ChatDrawer
     }
 
     onUpdateSettings: {

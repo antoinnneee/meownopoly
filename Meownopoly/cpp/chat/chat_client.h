@@ -19,12 +19,7 @@
 class ChatClient : public QObject
 {
 
-    enum ErrorSession {
-        SESSION_DOES_NOT_EXIST,
-        INVALID_PASSWORD,
-        OTHER
-    };
-    Q_ENUM (ErrorSession)
+
 
     Q_OBJECT
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
@@ -35,6 +30,14 @@ class ChatClient : public QObject
     Q_PROPERTY(QVariantList availableSessions READ availableSessions NOTIFY availableSessionsChanged)
 
 public:
+
+    enum ErrorSession {
+        SESSION_DOES_NOT_EXIST,
+        INVALID_PASSWORD,
+        OTHER
+    };
+    Q_ENUM (ErrorSession)
+
     explicit ChatClient(QObject *parent = nullptr);
     ~ChatClient();
 

@@ -5,6 +5,7 @@ import QtQuick.Particles
 import Meownopoly.Chat 1.0
 import Meownopoly.Account 1.0
 import QtQuick.Dialogs
+import Catway 1.0
 import "."
 
 Drawer {
@@ -13,26 +14,20 @@ Drawer {
     height: parent.height
     edge: Qt.RightEdge
 
-    property var chatClient: internalChatClient
+    // chatClient suit Catway.chatClient en priorité ; tombe sur internalChatClient si nul.
+    property var chatClient: Catway.chatClient ?? internalChatClient
 
     property string gameId: ""
     property string playerId: AccountManager.uniqueId
     property string playerNickname: AccountManager.nickname
     property bool isResizing: false
     property int _prevMessageCount: 0
-    // Message privé : destinataire sélectionné (vide = envoi à tous)
     property string privateRecipientId: ""
     property string privateRecipientNickname: ""
 
-    signal updateChatClient(var newClient)
     signal openFullScreenMsg(var modelMsg)
     signal createSnapableRequested(string jsonString)
     signal focusReleased()
-
-    onUpdateChatClient: function (newClient){
-        console.log("ChatDrawer: updating chat client...")
-        chatClient = newClient
-    }
 
     background: Rectangle {
         color: "#E6222222"
@@ -40,10 +35,99 @@ Drawer {
         border.width: 1
     }
 
-
-
+    // Client de secours (utilisé tant qu'aucune session n'est active via Catway)
     ChatClient {
         id: internalChatClient
+    }
+
+    // Réagit aux changements de session active dans Catway
+    Connections {
+        target: Catway
+        function onChatClientChanged() {
+            // La propriété chatClient se met à jour automatiquement via le binding.
+            // Réinitialiser le compteur de messages pour éviter une fausse notification.
+            chatDrawer._prevMessageCount = chatDrawer.chatClient
+                ? chatDrawer.chatClient.messages.length
+                : 0
+        }
+    }
+
+    // Gestion des erreurs de session (notamment mot de passe requis)
+    Connections {
+        target: ChatSessionManager
+        function onSessionError(sessionId, error, errorType) {
+            if (errorType === 1) { // ChatClient.INVALID_PASSWORD = 1
+                sessionPasswordDialog.sessionIdForJoin = sessionId
+                sessionPasswordDialog.open()
+            }
+        }
+    }
+
+    // Dialog mot de passe pour sessions protégées (accessible depuis le sélecteur de session)
+    Dialog {
+        id: sessionPasswordDialog
+        title: "Mot de passe requis"
+        modal: true
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(320, chatDrawer.width - 24)
+
+        property string sessionIdForJoin: ""
+
+        background: Rectangle {
+            color: "#2a2a2a"
+            border.color: "#4A90E2"
+            border.width: 2
+            radius: 10
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+
+            Text {
+                text: "Session protégée — entrez le mot de passe :"
+                color: "#cccccc"
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            TextField {
+                id: pwdField
+                placeholderText: "Mot de passe"
+                echoMode: TextInput.Password
+                color: "#f5f0ff"
+                font.pixelSize: 13
+                Layout.fillWidth: true
+                Layout.preferredHeight: 40
+
+                background: Rectangle {
+                    color: "#1a1a1a"
+                    border.color: pwdField.activeFocus ? "#4A90E2" : "#555555"
+                    border.width: 2
+                    radius: 6
+                }
+
+                onAccepted: sessionPasswordDialog.acceptAndJoin()
+            }
+        }
+
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        onAccepted: acceptAndJoin()
+        onRejected: {
+            pwdField.text = ""
+            sessionIdForJoin = ""
+        }
+
+        function acceptAndJoin() {
+            if (sessionIdForJoin.length === 0) return
+            const client = ChatSessionManager.joinSession(sessionIdForJoin, pwdField.text)
+            ChatSessionManager.setActiveSession(client)
+            pwdField.text = ""
+            sessionIdForJoin = ""
+            close()
+        }
     }
 
     function formatTimestamp(ts) {
@@ -73,7 +157,7 @@ Drawer {
         title: "Choose an image"
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.webp)"]
         onAccepted: {
-            ombelline.sendImage(imageDialog.selectedFile)
+            chatClient.sendImage(imageDialog.selectedFile)
         }
     }
 
@@ -86,7 +170,7 @@ Drawer {
             "All files (*)"
         ]
         onAccepted: {
-            ombelline.sendTextFile(textFileDialog.selectedFile)
+            chatClient.sendTextFile(textFileDialog.selectedFile)
         }
     }
 
@@ -96,34 +180,33 @@ Drawer {
 
         ChatHeader {
             id: chatHeader
-            chatClient: chatClient
+            chatClient: chatDrawer.chatClient
             drawer: chatDrawer
             onToggleParticipantsPanel: participantsPanel.visible = !participantsPanel.visible
             onSessionJoinRequested: function(sessionId, sessionName) {
-                chatClient.connectToSessionDirect(sessionId, "")
+                const client = ChatSessionManager.joinSession(sessionId, "")
+                ChatSessionManager.setActiveSession(client)
             }
         }
 
         // Panneau dépliable des participants
         ChatParticipantsPanel {
             id: participantsPanel
-            chatClient: chatClient
+            chatClient: chatDrawer.chatClient
             drawer: chatDrawer
         }
 
         ChatMessagesList {
             id: messagesList
-            chatClient: chatClient
+            chatClient: chatDrawer.chatClient
             drawer: chatDrawer
             onOpenFullScreenMsg: function(modelMsg) {
                 chatDrawer.openFullScreenMsg(modelMsg)
             }
-
-
         }
 
         ChatInputBar {
-            chatClient: chatClient
+            chatClient: chatDrawer.chatClient
             drawer: chatDrawer
             recipientId: chatDrawer.privateRecipientId
             recipientNickname: chatDrawer.privateRecipientNickname
@@ -140,10 +223,10 @@ Drawer {
         }
 
         ChatStatusBar {
-            connected: chatClient.connected
+            connected: chatDrawer.chatClient ? chatDrawer.chatClient.connected : false
             messageCount: messagesList.messageList ? messagesList.messageList.count : 0
             playerNickname: chatDrawer.playerNickname
-            participantCount: chatClient.participantCount
+            participantCount: chatDrawer.chatClient ? chatDrawer.chatClient.participantCount : 0
         }
     }
 
@@ -190,13 +273,17 @@ Drawer {
     }
 
     Component.onCompleted: {
-        chatClient.connectToServer("ws://pattounecorp.ovh:3000")
+        // Le fallback internalChatClient se connecte seulement si aucune session n'est active
+        if (!Catway.chatClient) {
+            internalChatClient.connectToServer("ws://pattounecorp.ovh:3000")
+        }
     }
 
     onOpened: {
-        if (!chatClient.connected) {
-            chatClient.connectToServer("ws://pattounecorp.ovh:3000")
-            chatClient.connectToSession(playerId, "123", playerNickname)
+        // Si le client actif n'est pas connecté et qu'on utilise le fallback, on (re)connecte
+        if (!chatClient.connected && chatClient === internalChatClient) {
+            internalChatClient.connectToServer("ws://pattounecorp.ovh:3000")
+            internalChatClient.connectToSession(playerId, "123", playerNickname)
         }
     }
 }

@@ -50,9 +50,7 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            if (root.chatClient  && root.chatClient.connected) root.chatClient.requestSessionsList()
-            else if (!root.chatClient) console.warn("Cannot request sessions list: chat client not set")
-            else console.warn("Cannot request sessions list: chat client not connected")
+            ChatSessionManager.requestSessionsRefresh()
             sessionPopup.visible ? sessionPopup.close() : sessionPopup.open()
         }
     }
@@ -107,7 +105,7 @@ Rectangle {
                 id: sessionList
                 width: 230
                 height: Math.min(contentHeight, 200)
-                model: root.chatClient ? root.chatClient.availableSessions : []
+                model: ChatSessionManager.availableSessions
                 clip: true
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 

@@ -96,7 +96,7 @@ Rectangle {
             radius: 12
             border.color: participantsBtnArea.containsMouse ? "#4A90E2" : "#555555"
             border.width: 1
-            visible: chatClient && chatClient.connected
+            visible: chatClient ? chatClient.connected : false
 
             Behavior on color { ColorAnimation { duration: 100 } }
             Behavior on border.color { ColorAnimation { duration: 150 } }
@@ -139,7 +139,7 @@ Rectangle {
             Layout.preferredHeight: 24
             color: clearBtnArea.containsMouse ? "#444444" : "transparent"
             radius: 4
-            visible: chatClient && chatClient.connected
+            visible: chatClient ? chatClient.connected : false
 
             Text {
                 text: "🗑️"
@@ -165,8 +165,8 @@ Rectangle {
             border.color: chatClient && chatClient.connected ? "#569c58" : "#cc4444"
             border.width: 1
 
-            SequentialAnimation on opacity {
-                running: chatClient && !chatClient.connected
+            SequentialAnimation on opacity {    
+                running: chatClient ? !chatClient.connected : false
                 loops: Animation.Infinite
                 NumberAnimation { to: 0.4; duration: 800 }
                 NumberAnimation { to: 1.0; duration: 800 }

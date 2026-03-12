@@ -52,6 +52,7 @@
 #include "tools/cursor_manager.h"
 #include "chat/chat_client.h"
 #include "chat/chat_slash_commands.h"
+#include "chat/chat_session_manager.h"
 #include "account/account_manager.h"
 #include "communication/catway.h"
 #include "communication/player_network.h"
@@ -85,6 +86,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     PattounX_engine::registerQml();
     ChatClient::registerQml(this);
     ChatSlashCommands::registerQml();
+    ChatSessionManager::registerQml();
     AccountManager::registerQml();
     Catway::registerQml();
     PlayerNetwork::registerQml();

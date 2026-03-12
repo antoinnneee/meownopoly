@@ -16,9 +16,6 @@ Rectangle {
     // Animation fluide sur le fond
     Behavior on color { ColorAnimation { duration: 300 } }
 
-    // Propriété pour recevoir le ChatClient du parent
-    required property var chatClient
-
     // Signaux pour la navigation
     signal backRequested()
     // sessionData : { name, password, isEditionMode }
