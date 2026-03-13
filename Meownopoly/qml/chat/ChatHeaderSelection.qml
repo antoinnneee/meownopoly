@@ -8,6 +8,7 @@ Rectangle {
 
     property var chatClient
     property string currentSessionId: ""
+    property string _selectedName: ""
 
     signal sessionJoinRequested(string sessionId, string sessionName)
 
@@ -30,7 +31,7 @@ Rectangle {
         spacing: 2
 
         Text {
-            text: root.currentSessionId !== "" ? root.currentSessionId : "—"
+            text: root._selectedName !== "" ? root._selectedName : (root.currentSessionId !== "" ? root.currentSessionId : "—")
             color: "#888888"
             font.pointSize: 8
             elide: Text.ElideRight
@@ -57,7 +58,9 @@ Rectangle {
 
     ToolTip {
         visible: selectorArea.containsMouse && !sessionPopup.visible
-        text: root.currentSessionId !== "" ? "Session : " + root.currentSessionId : "Choisir une session"
+        text: root._selectedName !== ""
+            ? root._selectedName
+            : (root.currentSessionId !== "" ? root.currentSessionId : "—")
         delay: 600
     }
 
@@ -163,6 +166,7 @@ Rectangle {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             sessionPopup.close()
+                            root._selectedName = modelData.name ?? modelData.sessionId
                             root.sessionJoinRequested(modelData.sessionId, modelData.name ?? "")
                         }
                     }
