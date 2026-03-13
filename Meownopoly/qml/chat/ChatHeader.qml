@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Meownopoly.Chat 1.0
 
 Rectangle {
     id: headerBar
@@ -165,7 +166,7 @@ Rectangle {
             border.color: chatClient && chatClient.connected ? "#569c58" : "#cc4444"
             border.width: 1
 
-            SequentialAnimation on opacity {    
+            SequentialAnimation on opacity {
                 running: chatClient ? !chatClient.connected : false
                 loops: Animation.Infinite
                 NumberAnimation { to: 0.4; duration: 800 }
@@ -174,7 +175,7 @@ Rectangle {
         }
         ChatHeaderSelection {
             chatClient: headerBar.chatClient
-            currentSessionId: drawer ? drawer.gameId : ""
+            currentSessionId: headerBar.chatClient ? ChatSessionManager.sessionNameForId(headerBar.chatClient.sessionId) : ""
             onSessionJoinRequested: function(sessionId, sessionName) {
                 headerBar.sessionJoinRequested(sessionId, sessionName)
             }

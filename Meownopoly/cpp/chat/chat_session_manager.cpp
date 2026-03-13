@@ -81,6 +81,7 @@ void ChatSessionManager::registerQml()
         &ChatSessionManager::qmlInstance);
 }
 
+
 // ---------------------------------------------------------------------------
 // Accesseurs statiques C++
 // ---------------------------------------------------------------------------
@@ -198,6 +199,16 @@ ChatClient *ChatSessionManager::clientForSession(const QString &sessionId) const
         if (c->sessionId() == sessionId) return c;
     }
     return nullptr;
+}
+
+QString ChatSessionManager::sessionNameForId(const QString &sessionId) const
+{
+    for (const QVariant &v : m_availableSessions) {
+        QVariantMap session = v.toMap();
+        if (session.value("sessionId").toString() == sessionId)
+            return session.value("name", sessionId).toString();
+    }
+    return sessionId;
 }
 
 void ChatSessionManager::requestSessionsRefresh()
