@@ -181,6 +181,9 @@ void ChatSessionManager::leaveSession(ChatClient *client)
     emit sessionLeft(sessionId);
     emit statsChanged();
 
+    if (Catway::instance()->chatClient() == client)
+        Catway::instance()->setChatClient(nullptr);
+
     client->deleteLater();
     Logger::instance()->info("Left session: " + sessionId, "ChatSessionManager");
 }
@@ -244,6 +247,8 @@ void ChatSessionManager::connectSessionClient(ChatClient *client, const QString 
             if (idx >= 0) {
                 m_sessions.removeAt(idx);
                 emit statsChanged();
+                if (Catway::instance()->chatClient() == client)
+                    Catway::instance()->setChatClient(nullptr);
                 client->deleteLater();
             }
         }
