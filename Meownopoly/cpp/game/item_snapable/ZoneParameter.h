@@ -26,6 +26,7 @@ public:
     // bool operator==(const ZoneParameter &other) const;
 
     bool operator==(const ZoneParameter &other) const {
+        qDebug() << "Comparing ZoneParameter with zoneName:" << zoneName() << "to ZoneParameter with zoneName:" << other.zoneName();
         return m_polygonPoints         == other.m_polygonPoints
                && m_zoneColor             == other.m_zoneColor
                && m_zoneName              == other.m_zoneName

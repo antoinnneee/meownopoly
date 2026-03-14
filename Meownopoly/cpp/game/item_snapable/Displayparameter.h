@@ -129,6 +129,7 @@ public:
     void setZOrder(float newZOrder);
 
     bool operator==(DisplayParameter &other)  {
+        qDebug() << "Comparing DisplayParameter with unitSizeWidth:" << unitSizeWidth() << "to DisplayParameter with unitSizeWidth:" << other.unitSizeWidth();
         return m_unitSizeWidth              == other.m_unitSizeWidth
             && m_unitSizeHeight             == other.m_unitSizeHeight
             && m_gridRelativePositionX      == other.m_gridRelativePositionX

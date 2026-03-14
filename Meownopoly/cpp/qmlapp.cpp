@@ -63,6 +63,8 @@
 
 QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
 {
+    qDebug() << "Device supports OpenSSL: " << QSslSocket::supportsSsl();
+
     qApp->installEventFilter(MouseEventFilter::instance());
     // qDebug() << QImageWriter::supportedImageFormats();
     QQuickStyle::setStyle("Material");

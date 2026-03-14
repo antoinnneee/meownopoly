@@ -83,6 +83,7 @@ public:
     Q_INVOKABLE void copyFrom(ItemSnapable* source);
 
     bool operator==(const ItemSnapable &other) const {
+        qDebug() << "Comparing ItemSnapable with uniqueId:" << uniqueId() << "to ItemSnapable with uniqueId:" << other.uniqueId();
         if (m_tileType != other.m_tileType)
             return false;
         if (m_displayParameter && other.m_displayParameter) {

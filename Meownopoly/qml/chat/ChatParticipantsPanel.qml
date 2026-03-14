@@ -172,7 +172,7 @@ Rectangle {
                         visible: modelData.player_id !== drawer.playerId
 
                         Text {
-                            text: "🔒"
+                            text: "✉️"
                             font.pointSize: 8
                             anchors.centerIn: parent
                         }

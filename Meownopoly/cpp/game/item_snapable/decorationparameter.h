@@ -2,6 +2,7 @@
 #define DECORATIONPARAMETER_H
 
 #include <QObject>
+#include <qdebug.h>
 
 class DecorationParameter : public QObject
 {
@@ -29,6 +30,7 @@ public:
     Q_INVOKABLE QString getAnimePath(QString imagePath);
 
     bool operator==(const DecorationParameter &other) const {
+        qDebug() << "Comparing DecorationParameter with decorationCategory:";
         return m_decorationCategory == other.m_decorationCategory
             && m_decorationType     == other.m_decorationType
             && m_decorationId       == other.m_decorationId;

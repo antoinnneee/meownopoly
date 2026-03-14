@@ -6,6 +6,7 @@
 #include <QStringList>
 #include <QQmlEngine>
 #include "maptypes.h"
+#include "map.h"
 
 #define MAP_FILE_PATH ("./map/")
 
@@ -14,6 +15,10 @@ class MapFileManager : public QObject
     Q_OBJECT
 
 public:
+
+
+    Q_PROPERTY(Map *currentMap READ getCurrentMap WRITE setCurrentMap NOTIFY currentMapChanged FINAL)
+
     // QML registration
     static void registerQml();
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
@@ -38,9 +43,17 @@ public:
     static QString normalizeMapName(const QString &mapName);
     static QString getMapFilePath(const QString &mapName, MapTypes::MapType mapType);
 
+    Map *getCurrentMap() const;
+    void setCurrentMap(Map *newCurrentMap);
+
+signals:
+    void currentMapChanged();
+
 private:
     explicit MapFileManager(QObject *parent = nullptr);
     static MapFileManager *m_instance;
+
+    Map *currentMap = nullptr;
 };
 
 #endif // MAPFILEMANAGER_H

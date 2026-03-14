@@ -44,6 +44,19 @@ MapFileManager::MapFileManager(QObject *parent) : QObject(parent)
 {
 }
 
+Map *MapFileManager::getCurrentMap() const
+{
+    return currentMap;
+}
+
+void MapFileManager::setCurrentMap(Map *newCurrentMap)
+{
+    if (currentMap == newCurrentMap)
+        return;
+    currentMap = newCurrentMap;
+    emit currentMapChanged();
+}
+
 QJsonObject MapFileManager::readMapFile(const QString &mapName, MapTypes::MapType mapType)
 {
     QString filePath = getMapFilePath(mapName, mapType);
