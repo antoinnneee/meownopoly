@@ -50,6 +50,20 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 
 }
 
+Map::~Map()
+{
+    if (mapInfo) {
+        delete mapInfo;
+        mapInfo = nullptr;
+    }
+    if (m_tiles.size() > 0) {
+        for (int i = 0; i < m_tiles.size(); i++){
+            delete m_tiles.at(i);
+        }
+        m_tiles.clear();
+    }
+}
+
 
 MapInfo *Map::getMapInfo() const
 {

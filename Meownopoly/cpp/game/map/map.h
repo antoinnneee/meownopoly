@@ -20,6 +20,8 @@ public:
     Map(QObject *parent = nullptr);
     Map(QJsonObject jsonObject, QObject *parent = nullptr);
 
+    ~Map();
+
     int caseTileCount() const { return m_caseTileCount; }
     int decorationTileCount() const { return m_decorationTileCount; }
     int zoneTileCount() const { return m_zoneTileCount; }

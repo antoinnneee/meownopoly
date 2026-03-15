@@ -706,8 +706,7 @@ Base_Board {
     }
 
     function initializeEditor() {
-        if (!MapFileManager.mapExists(mapInfo.autosaveMapName,
-                                      MapTypes.AUTOSAVE)) {
+        if (!MapFileManager.mapExists(mapInfo.autosaveMapName,MapTypes.AUTOSAVE)) {
             Logger.info("Creating autosave map", "MAP FILE MANAGER")
             MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
             logic.saveMap(MapTypes.AUTOSAVE)
@@ -716,8 +715,7 @@ Base_Board {
         }
 
         if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
-            Logger.info("Loading custom map:" + stEnableAutoSave.currentMap,
-                        "MAP FILE MANAGER")
+            Logger.info("Loading custom map:" + stEnableAutoSave.currentMap, "MAP FILE MANAGER")
             if (MapFileManager.mapExists(stEnableAutoSave.currentMap,
                                          MapTypes.CUSTOM)) {
                 Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)

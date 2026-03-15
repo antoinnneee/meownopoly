@@ -16,8 +16,10 @@ class MapFileManager : public QObject
 
 public:
 
-
     Q_PROPERTY(Map *currentMap READ getCurrentMap WRITE setCurrentMap NOTIFY currentMapChanged FINAL)
+
+    explicit MapFileManager(QObject *parent = nullptr);
+    ~MapFileManager();
 
     // QML registration
     static void registerQml();
@@ -50,9 +52,8 @@ signals:
     void currentMapChanged();
 
 private:
-    explicit MapFileManager(QObject *parent = nullptr);
-    static MapFileManager *m_instance;
 
+    static MapFileManager *m_instance;
     Map *currentMap = nullptr;
 };
 

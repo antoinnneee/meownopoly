@@ -33,7 +33,7 @@ void ItemSnapable::registerQml()
 }
 
 ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent)
-: QObject(parent)
+    : QObject(parent)
 {
     m_caseData = caseData;
     m_displayParameter = displayParameter;
@@ -41,7 +41,7 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
 }
 
 ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent)
-: QObject(parent)
+    : QObject(parent)
 {
     m_decorationParameter = decorationParameter;
     m_displayParameter = displayParameter;
@@ -50,7 +50,7 @@ ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayPar
 }
 
 ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
-: QObject(parent)
+    : QObject(parent)
 {
     m_json = json;
     if (m_json.contains("caseData")) {

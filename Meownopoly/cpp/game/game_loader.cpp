@@ -140,7 +140,6 @@ bool Game::deleteMap(QString mapName, MapTypes::MapType mapType)
     return flag;
 }
 
-
 Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 {
     Map *map = nullptr;
@@ -165,7 +164,7 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
         }
         emit mapLoaded(map);
     }
-    
+    MapFileManager::instance()->setCurrentMap(map);
     return map;
 }
 
@@ -186,6 +185,7 @@ void Game::onReturnEdit(QJsonObject newEdit)
             emit foundItemSnapableTile(tile);
         }
         emit mapLoaded(map);
+        MapFileManager::instance()->setCurrentMap(map);
     }
 }
 

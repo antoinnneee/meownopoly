@@ -44,6 +44,13 @@ MapFileManager::MapFileManager(QObject *parent) : QObject(parent)
 {
 }
 
+MapFileManager::~MapFileManager()
+{
+    if (currentMap)
+        delete currentMap;
+        currentMap = nullptr;
+}
+
 Map *MapFileManager::getCurrentMap() const
 {
     return currentMap;
@@ -213,8 +220,6 @@ bool MapFileManager::saveMap(const QJsonObject &mapData, const QString &mapName,
         return false;
     }
     
-    // qDebug() << "Map saved successfully to:" << filePath;
-    // qDebug().noquote() << QString::fromUtf8(jsonData);
     return true;
 }
 
@@ -235,6 +240,8 @@ QString MapFileManager::createMapFile(const QString &mapName, MapTypes::MapType 
     if (saveMap(emptyMap, normalizedName, mapType)) {
         return filePath;
     }
+
+//    setCurrentMap()
     
     return QString();
 }
