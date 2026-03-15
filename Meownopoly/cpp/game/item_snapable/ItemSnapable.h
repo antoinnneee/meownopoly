@@ -59,6 +59,10 @@ public:
 
     QJsonObject getOriginalJson() const { return m_json; }
 
+    // Shadow copy — état connu au dernier commitCurrentState()
+    QString lastKnownJson() const { return m_lastKnownJson; }
+    void commitCurrentState() { m_lastKnownJson = toJSON(); }
+
     QUuid uniqueId() const;
     void setUniqueId(const QUuid &newUniqueId);
 
@@ -134,6 +138,7 @@ private :
     DecorationParameter * m_decorationParameter = new DecorationParameter;
     ZoneParameter * m_zoneParameter = new ZoneParameter;
     QJsonObject m_json;
+    QString m_lastKnownJson;
     QUuid m_uniqueId;
     TileType m_tileType;
 };

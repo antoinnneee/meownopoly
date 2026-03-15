@@ -21,7 +21,7 @@ import EditorEnum
 import Logger
 import DisplayParameter
 import DecorationParameter
-import UndoRedoManager
+import EditDelta 1.0
 import AssetManager
 import ItemSnapableFactory
 import ui_item
@@ -291,8 +291,8 @@ Base_Board {
     }
 
     Connections {
-        target: UndoRedoManager
-        function onForceUnSelectAllElement() {
+        target: Game
+        function onForceUnselectAll() {
             logic.mouseLogic.unselectSelectedElements()
         }
     }
@@ -332,17 +332,15 @@ Base_Board {
             if (mapInfo.mapName !== stEnableAutoSave.currentMap)
                 stEnableAutoSave.setValue("currentMap", mapInfo.mapName)
 
-            // Check if we're restoring from undo/redo
-            if (UndoRedoManager.isRestoringState) {
-                Logger.info("Map loaded during restoration - NOT saving",
-                            "UNDO - RESTORE")
-                // Clear the restoration flag now that loading is complete
-                UndoRedoManager.clearRestorationFlag()
-            } else {
-                // Only save initial state if not restoring
-                Logger.info("Map loaded normally - saving initial state",
-                            "UNDO - SAVE")
-                logic.saveMap(MapTypes.UNDOREDO)
+            Logger.info("Map loaded — shadow copies committed in C++, undo history cleared", "MAP_LOADING")
+        }
+
+        function onTileRemoved(tileId) {
+            for (var i = 0; i < logic.snapableTilesList.length; i++) {
+                if (logic.snapableTilesList[i].snapableParameters.uniqueId === tileId) {
+                    logic.tileLogic.deleteElement(logic.snapableTilesList[i])
+                    break
+                }
             }
         }
 
@@ -616,7 +614,13 @@ Base_Board {
             id: saveMapDelayer
             interval: 200
             onTriggered: {
-                logic.saveMap(MapTypes.UNDOREDO)
+                var txId = Game.beginTransaction()
+                for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
+                    var el = logic.mouseLogic.selectedElements[i]
+                    if (el && el.snapableParameters)
+                        Game.updateEditState(EditDelta.TileModified, el.snapableParameters, txId)
+                }
+                Game.commitTransaction()
             }
         }
 

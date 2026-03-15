@@ -2,6 +2,8 @@ import QtQuick 2.15
 import MapTypes
 import EditorEnum
 import ItemSnapableFactory
+import Game
+import EditDelta 1.0
 
 /**
  * Logique de souris pour le mode dessin de polygone (zones d'exclusion)
@@ -187,12 +189,11 @@ MouseLogic_Base {
         var zone = logic.tileLogic.createItemSnapableTile(snapableParameters)
         zone.updateDisplayBounds()
 
+        if (zone && zone.snapableParameters)
+            Game.updateEditState(EditDelta.TileAdded, zone.snapableParameters)
         
         // Réinitialiser le dessin
         resetDrawing()
-        
-        // Sauvegarder
-        logic.saveMap(MapTypes.UNDOREDO)
     }
     
     function calculateBounds(points) {

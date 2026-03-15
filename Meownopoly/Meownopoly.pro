@@ -94,7 +94,6 @@ SOURCES += \
     tools/cursor_manager.cpp \
     tools/editorenum.cpp \
     tools/logger.cpp \
-    game/map/undoredomanager.cpp \
     chat/chat_client.cpp \
     chat/chat_crypto.cpp \
     chat/chat_database.cpp \
@@ -154,7 +153,6 @@ HEADERS += \
     tools/cursor_manager.h \
     tools/editorenum.h \
     tools/logger.h \
-    game/map/undoredomanager.h \
     chat/chat_client.h \
     chat/chat_crypto.h \
     chat/chat_database.h \

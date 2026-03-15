@@ -1,4 +1,4 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Particles
@@ -545,7 +545,7 @@ Rectangle {
                                         ComboBox {
                                             id: autoSaveCombo
                                             Layout.preferredWidth: 220
-                                            model: ["Manuelle", "Intervalle de temps", "Continue"]
+                                            model: ["Manuelle", "Intervalle de temps", "Sur modification"]
                                             currentIndex: {
                                                 let val = parseInt(stEnableAutoSave.value("saveEvent", "1"))
                                                 return val > 0 && val <= 3 ? val - 1 : 0

@@ -12,7 +12,6 @@ import bottomMainPanel
 import MapInfo
 import EditorEnum
 import Logger
-import UndoRedoManager
 import MapTypes
 import MapFileManager
 
@@ -114,24 +113,22 @@ Base_logic {
         }
 
     function saveMap(saveType){
-        // Ne pas sauvegarder si on est en mode restauration
-        if (saveType === MapTypes.UNDOREDO && !UndoRedoManager.canSave()) {
-            console.log("[UNDO][SAVE] Blocked during restoration - canSave() returned false")
+        if (saveType === MapTypes.UNDOREDO) {
+            // UNDOREDO est géré individuellement par Game.updateEditState()
             return
         }
 
-        var itemSnapableList = [];
-
-        for (var i = 0; i < snapableTilesList.length; i++) {
-            var tile = snapableTilesList[i]
-            if (tile) {
-                var displayInfo = tile.snapableParameters.displayParameter
-                itemSnapableList.push(tile.snapableParameters)
-            }
+        // Vérifier si on peut sauvegarder (pas en cours de restauration)
+        if (!(MapFileManager.currentMap ? MapFileManager.currentMap.canSave : true)) {
+            console.log("[SAVE] Blocked during undo/redo restoration")
+            return
         }
 
-        if (saveType === MapTypes.UNDOREDO) {
-            console.log("[UNDO][SAVE] Saving new state with", snapableTilesList.length, "elements")
+        var itemSnapableList = []
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var tile = snapableTilesList[i]
+            if (tile)
+                itemSnapableList.push(tile.snapableParameters)
         }
         Game.saveMap(mapInfo, itemSnapableList, saveType)
     }

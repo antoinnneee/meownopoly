@@ -4,7 +4,9 @@
 
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QDebug>
+#include <QQmlEngine>
 
 Map::Map(QObject *parent) : QObject(parent)
 {
@@ -13,9 +15,6 @@ Map::Map(QObject *parent) : QObject(parent)
 Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 {
     QJsonArray snapableTilesArray = jsonObject["snapableTiles"].toArray();
-    // qDebug() << "Snapable tiles:" << snapableTilesArray.size();
-    // qDebug() << "--------------------------------";
-    // qDebug() << "Start loading snapable tiles";
 
     for (const QJsonValueRef value : snapableTilesArray) {
         const QJsonObject tileObject = value.toObject();
@@ -24,10 +23,6 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
         m_tiles.append(is);
     }
     updateTileCounts();
-
-    // qDebug() << "Snapable tiles loaded successfully";
-    // qDebug() << "--------------------------------";
-    // qDebug() << "building links between snapable tiles";
 
     for (ItemSnapable *is : std::as_const(m_tiles)) {
         QJsonObject originalJson = is->getOriginalJson();
@@ -39,15 +34,10 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
                 if (targetTile->uniqueId().toString() == nextId) {
                     is->addNext(targetTile);
                     targetTile->addPrev(is);
-                    // qDebug() << "Link built between" << is->uniqueId() << "and" << targetTile->uniqueId();
                 }
             }
         }
     }
-    // qDebug() << "Links built successfully";
-
-    // qDebug() << "--------------------------------";
-
 }
 
 Map::~Map()
@@ -74,7 +64,11 @@ void Map::setMapInfo(MapInfo *newMapInfo)
 {
     if (mapInfo == newMapInfo)
         return;
+    if (mapInfo)
+        mapInfo->deleteLater();
     mapInfo = newMapInfo;
+    if (newMapInfo)
+        newMapInfo->setParent(this);
     emit mapInfoChanged();
 }
 
@@ -128,10 +122,9 @@ Map *Map::loadMap(QJsonObject newEdit)
     QJsonObject jsonObject = newEdit;
     Map *map = new Map(jsonObject);
 
-    // Créer MapInfo depuis JSON
     QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
-    MapInfo *mapInfo = new MapInfo(mapInfoObject);
-    map->setMapInfo(mapInfo);
+    MapInfo *mi = new MapInfo(mapInfoObject);
+    map->setMapInfo(mi);
     return map;
 }
 
@@ -147,18 +140,164 @@ Map *Map::loadMap(QString mapName, MapTypes::MapType mapType)
             return nullptr;
         }
         break;
-    case MapTypes::UNDOREDO:
-        qWarning() << Q_FUNC_INFO << "  - SHOULD NOT BEEN SEEN WITH UNDOREDO TYPE";
-        break;
     default:
         break;
     }
 
     Map *map = new Map(jsonObject);
 
-    // Créer MapInfo depuis JSON
     QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
-    MapInfo *mapInfo = new MapInfo(mapInfoObject);
-    map->setMapInfo(mapInfo);
+    MapInfo *mi = new MapInfo(mapInfoObject);
+    map->setMapInfo(mi);
     return map;
+}
+
+// ---- Undo/redo delta ----
+
+void Map::pushDelta(const EditDelta &delta)
+{
+    m_undoStack.push(delta);
+    m_redoStack.clear();
+}
+
+void Map::clearHistory()
+{
+    m_undoStack.clear();
+    m_redoStack.clear();
+}
+
+ItemSnapable* Map::tileById(const QUuid &id) const
+{
+    for (ItemSnapable *tile : m_tiles) {
+        if (tile->uniqueId() == id)
+            return tile;
+    }
+    return nullptr;
+}
+
+void Map::addTile(ItemSnapable* tile)
+{
+    if (!tile) return;
+    m_tiles.append(tile);
+    updateTileCounts();
+}
+
+void Map::removeTile(const QUuid &tileId)
+{
+    for (int i = 0; i < m_tiles.size(); ++i) {
+        if (m_tiles[i]->uniqueId() == tileId) {
+            m_tiles.removeAt(i);
+            updateTileCounts();
+            return;
+        }
+    }
+}
+
+void Map::applyDelta(const EditDelta &delta, bool applyBefore)
+{
+    const QJsonObject &jsonState = applyBefore ? delta.before : delta.after;
+
+    switch (delta.type) {
+    case EditDeltaType::TileModified: {
+        ItemSnapable *tile = tileById(delta.tileId);
+        if (tile) {
+            ItemSnapable tmp(jsonState);
+            tile->copyFrom(&tmp);
+            tile->commitCurrentState();
+        }
+        break;
+    }
+    case EditDeltaType::TileAdded: {
+        if (applyBefore) {
+            // undo an addition = remove the tile
+            emit tileRemovedFromHistory(delta.tileId);
+            removeTile(delta.tileId);
+        } else {
+            // redo an addition = re-add the tile
+            ItemSnapable *tile = new ItemSnapable(jsonState);
+            QQmlEngine::setObjectOwnership(tile, QQmlEngine::JavaScriptOwnership);
+            addTile(tile);
+            tile->commitCurrentState();
+            emit tileRestoredFromHistory(tile);
+        }
+        break;
+    }
+    case EditDeltaType::TileDeleted: {
+        if (applyBefore) {
+            // undo a deletion = restore the tile
+            ItemSnapable *tile = new ItemSnapable(jsonState);
+            QQmlEngine::setObjectOwnership(tile, QQmlEngine::JavaScriptOwnership);
+            addTile(tile);
+            tile->commitCurrentState();
+            emit tileRestoredFromHistory(tile);
+        } else {
+            // redo a deletion = remove the tile again
+            emit tileRemovedFromHistory(delta.tileId);
+            removeTile(delta.tileId);
+        }
+        break;
+    }
+    case EditDeltaType::MetadataChanged: {
+        if (mapInfo) {
+            MapInfo *mi = new MapInfo(jsonState);
+            setMapInfo(mi);
+        }
+        break;
+    }
+    }
+}
+
+bool Map::undo()
+{
+    if (m_undoStack.isEmpty())
+        return false;
+
+    m_isRestoringState = true;
+    emit canSaveChanged();
+
+    // Collect all deltas in the same group
+    QUuid groupId = m_undoStack.top().groupId;
+    QList<EditDelta> group;
+    while (!m_undoStack.isEmpty() &&
+           ((groupId.isNull() && group.isEmpty()) ||
+            (!groupId.isNull() && m_undoStack.top().groupId == groupId))) {
+        group.prepend(m_undoStack.pop());
+    }
+
+    for (const EditDelta &delta : group) {
+        applyDelta(delta, true);
+        m_redoStack.push(delta);
+    }
+
+    m_isRestoringState = false;
+    emit canSaveChanged();
+    emit forceUnselectAll();
+    return true;
+}
+
+bool Map::redo()
+{
+    if (m_redoStack.isEmpty())
+        return false;
+
+    m_isRestoringState = true;
+    emit canSaveChanged();
+
+    QUuid groupId = m_redoStack.top().groupId;
+    QList<EditDelta> group;
+    while (!m_redoStack.isEmpty() &&
+           ((groupId.isNull() && group.isEmpty()) ||
+            (!groupId.isNull() && m_redoStack.top().groupId == groupId))) {
+        group.prepend(m_redoStack.pop());
+    }
+
+    for (const EditDelta &delta : group) {
+        applyDelta(delta, false);
+        m_undoStack.push(delta);
+    }
+
+    m_isRestoringState = false;
+    emit canSaveChanged();
+    emit forceUnselectAll();
+    return true;
 }

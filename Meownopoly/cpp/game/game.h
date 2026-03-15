@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QUuid>
 #include "game/case/Case.h"
 #include "game/case/CaseRestArea.h"
 
@@ -18,7 +19,7 @@
 #include "map/mapinfo.h"
 #include "map/map.h"
 #include "map/maptypes.h"
-#include "map/undoredomanager.h"
+#include "map/editdelta.h"
 
 
 class Game : public QObject
@@ -56,7 +57,7 @@ public:
     Q_INVOKABLE QList<Case*> getPurchasableCases() const;
 
     QList<Player*> players() const { return m_listPlayers; }
-    int boardSize() const { return 40; }  // Standard Monopoly board size
+    int boardSize() const { return 40; }
     int currentPlayerIndex() const;
 
     Q_INVOKABLE Case* getNewCaseType(Case::CaseType type);
@@ -70,20 +71,23 @@ public:
     QList<Card *> listCards() const;
 
     // Map saving/loading
-
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
 
     Q_INVOKABLE bool saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType);
-    bool compareMap(const QVariantList& itemSnapableList, const QJsonObject& newJsonState);
     Q_INVOKABLE bool deleteMap(QString mapName, MapTypes::MapType mapType);
     Q_INVOKABLE Map *loadMap(QString mapName, MapTypes::MapType mapType);
 
     Q_INVOKABLE QList<ItemSnapable*> generateItems(QJsonObject jsonObject);
 
-
     Q_INVOKABLE void askPreview();
     Q_INVOKABLE void askNext();
+
+    // ---- Delta undo/redo API ----
+    Q_INVOKABLE void updateEditState(int type, ItemSnapable* tile, QUuid groupId = {});
+    Q_INVOKABLE void updateEditMetadata(const QString& beforeJson, const QString& afterJson);
+    Q_INVOKABLE QUuid beginTransaction();
+    Q_INVOKABLE void  commitTransaction();
 
     // Template saving/loading
     Q_INVOKABLE bool saveTemplate(QString name, QJsonArray elementsJson);
@@ -93,9 +97,6 @@ public:
 
 
     ~Game();
-
-public slots:
-    void onReturnEdit(QJsonObject newEdit);
 
 signals:
     void gameStarted();
@@ -108,9 +109,10 @@ signals:
 
     void mapLoaded(Map *map);
     void foundItemSnapableTile(ItemSnapable *itemSnapable);
-    void updateListEdits(QJsonObject newEdit);
-    void askEdit(UndoRedoManager::EditAction editAction);
 
+    // Delta undo/redo signals relayed to QML
+    void tileRemoved(QUuid tileId);
+    void forceUnselectAll();
 
 
 private:
@@ -122,12 +124,9 @@ private:
     QList<Card*>  m_listCards;
     QList<CaseRestArea*>    m_family[CaseRestArea::FT_COUNT];
 
-    int userSelectNext = 0;
-    int userSelectPrev = 0;
-
     int m_currentPlayerIndex = 0;
 
-
+    QUuid m_currentTransaction;
 };
 
 #endif // GAME_H

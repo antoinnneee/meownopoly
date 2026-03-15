@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
-import UndoRedoManager
 import meowComponent
 
 import bottomMainPanel

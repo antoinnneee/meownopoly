@@ -1,5 +1,7 @@
 import QtQuick 2.15
 import MapTypes
+import Game
+import EditDelta 1.0
 
 MouseLogic_Base {
     id: mouseLogic
@@ -31,10 +33,10 @@ MouseLogic_Base {
         var realPos = mainMa.mapToItem(grid, mouse.x, mouse.y)
         var gridPos = grid.getGridPosition(realPos.x, realPos.y)
         console.log("Placing selected asset at:", gridPos)
-        logic.tileLogic.placeSelectedAsset(gridPos.x, gridPos.y)
+        var placed = logic.tileLogic.placeSelectedAsset(gridPos.x, gridPos.y)
         mouse.accepted = true
-        // Sauvegarder APRÈS la création de l'élément
-        logic.saveMap(MapTypes.UNDOREDO)
+        if (placed && placed.snapableParameters)
+            Game.updateEditState(EditDelta.TileAdded, placed.snapableParameters)
     }
 
     function pressAndHold(mouse, drag)

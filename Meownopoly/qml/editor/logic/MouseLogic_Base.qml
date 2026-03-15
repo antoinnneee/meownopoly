@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Shapes
 import QtQml
-import UndoRedoManager
 import CursorManager
 import "../../meowComponent/snapable"
 import "../../meowComponent/grid"

@@ -40,7 +40,7 @@
 
 #include "game/map/map.h"
 #include "game/map/maptypes.h"
-#include "game/map/undoredomanager.h"
+#include "game/map/editdelta.h"
 #include "game/map/mapinfo.h"
 #include "game/map/mapfilemanager.h"
 #include "game/map/templatefilemanager.h"
@@ -82,7 +82,6 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     ItemSnapableFactory::registerQml();
     Logger::registerQml();
     CursorManager::registerQml();
-    UndoRedoManager::registerQml();
     TestManager::registerQml();
     
     PattounX_engine::registerQml();
@@ -98,6 +97,9 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
 
     // Register MapTypes namespace for QML
     qmlRegisterUncreatableMetaObject(MapTypes::staticMetaObject, "MapTypes", 1, 0, "MapTypes", "Error: only enums");
+
+    // Register EditDeltaType namespace for QML
+    qmlRegisterUncreatableMetaObject(EditDeltaType::staticMetaObject, "EditDelta", 1, 0, "EditDelta", "Error: only enums");
     
     // Create and expose FolderCompressor instance to QML
     folderCompressor = new FolderCompressor(this);
@@ -108,12 +110,6 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     
     // Create and expose AssetManager instance to QML
     assetManager = AssetManager::instance();
-
-    // Connect Game signals to UndoRedoManager
-    connect(Game::instance(), &Game::updateListEdits, UndoRedoManager::instance(), &UndoRedoManager::onUpdateListEdits);
-    connect(Game::instance(), &Game::askEdit, UndoRedoManager::instance(), &UndoRedoManager::onAskEdit);
-    connect(UndoRedoManager::instance(), &UndoRedoManager::returnEdit, Game::instance(), &Game::onReturnEdit);
-
 
     //To declare module in QML
 

@@ -1,4 +1,4 @@
-﻿#include "mapfilemanager.h"
+#include "mapfilemanager.h"
 #include "game/map/mapinfo.h"
 #include "maptypes.h"
 
@@ -46,9 +46,10 @@ MapFileManager::MapFileManager(QObject *parent) : QObject(parent)
 
 MapFileManager::~MapFileManager()
 {
-    if (currentMap)
+    if (currentMap) {
         delete currentMap;
         currentMap = nullptr;
+    }
 }
 
 Map *MapFileManager::getCurrentMap() const
@@ -60,6 +61,8 @@ void MapFileManager::setCurrentMap(Map *newCurrentMap)
 {
     if (currentMap == newCurrentMap)
         return;
+    if (currentMap)
+        currentMap->deleteLater();
     currentMap = newCurrentMap;
     emit currentMapChanged();
 }

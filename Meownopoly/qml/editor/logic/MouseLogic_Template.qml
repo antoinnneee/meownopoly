@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import Game
 import MapTypes
+import EditDelta 1.0
 
 /**
  * MouseLogic pour le mode Template.
@@ -206,8 +207,13 @@ MouseLogic_Selection {
                         selectedElements[i].updateRelativePosition()
                     }
                 }
-                // Sauvegarder pour undo/redo
-                logic.saveMap(MapTypes.UNDOREDO)
+                // Enregistrer les nouvelles positions dans l'historique undo
+                var txId = Game.beginTransaction()
+                for (var j = 0; j < selectedElements.length; j++) {
+                    if (selectedElements[j] && selectedElements[j].snapableParameters)
+                        Game.updateEditState(EditDelta.TileModified, selectedElements[j].snapableParameters, txId)
+                }
+                Game.commitTransaction()
             }
             clickElement = []
             
@@ -498,11 +504,13 @@ MouseLogic_Selection {
         var jsonObj = { "snapableTiles": elementsArray }
         var itemSnapableList = Game.generateItems(jsonObj)
         
+        var txId = Game.beginTransaction()
         for (var i = 0; i < itemSnapableList.length; i++) {
             logic.tileLogic.createItemSnapableTile(itemSnapableList[i])
+            if (itemSnapableList[i])
+                Game.updateEditState(EditDelta.TileAdded, itemSnapableList[i], txId)
         }
-        
-        logic.saveMap(MapTypes.UNDOREDO)
+        Game.commitTransaction()
         console.log("[TEMPLATE] Placed", itemSnapableList.length, "elements")
     }
     

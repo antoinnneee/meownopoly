@@ -9,7 +9,7 @@ ItemSnapable::ItemSnapable() {
     m_uniqueId = QUuid::createUuid();
     m_caseData = new Case();
     m_tileType = DecorationTile;
-
+    commitCurrentState();
 }
 
 ItemSnapable::~ItemSnapable() {
@@ -38,6 +38,7 @@ ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter,
     m_caseData = caseData;
     m_displayParameter = displayParameter;
     m_uniqueId = QUuid::createUuid();
+    commitCurrentState();
 }
 
 ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayParameter * displayParameter, QObject *parent)
@@ -47,6 +48,7 @@ ItemSnapable::ItemSnapable(DecorationParameter * decorationParameter, DisplayPar
     m_displayParameter = displayParameter;
     m_caseData = nullptr;
     m_uniqueId = QUuid::createUuid();
+    commitCurrentState();
 }
 
 ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
@@ -67,6 +69,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
     }
     m_uniqueId = QUuid(m_json["uniqueId"].toString());
     m_tileType = TileType(m_json["tileType"].toInt());
+    commitCurrentState();
 }
 
 ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)
@@ -77,6 +80,7 @@ ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)
     m_decorationParameter = new DecorationParameter();
     m_uniqueId = QUuid::createUuid();
     m_tileType = CaseTile;
+    commitCurrentState();
 }
 
 // ItemSnapable::ItemSnapable(Case::CaseType caseType, QObject *parent)

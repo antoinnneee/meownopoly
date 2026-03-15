@@ -8,6 +8,7 @@ import "../../meowComponent/preview"
 import ".."
 import MapTypes
 import ItemSnapableFactory
+import EditDelta 1.0
 
 QtObject {
     required property var snapableTilesList
@@ -49,11 +50,12 @@ QtObject {
         var newTile = createItemSnapableTile(snapableParameters)
 
         var visualEffectsPanel = editorSidePanel.visualEffectsPanel
-        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return
+        if (!visualEffectsPanel || !visualEffectsPanel.effectsLocked) return newTile
 
         var currentEffects = visualEffectsPanel.getCurrentEffects()
         newTile.applyVisualEffects(currentEffects)
         mainMa.elementClicked(newTile)
+        return newTile
     }
 
     /**
@@ -168,8 +170,9 @@ QtObject {
             source.connectionManager.addNextElement(target)
         }
         
-        // Sauvegarder après création de la connexion
-        logic.saveMap(MapTypes.UNDOREDO)
+        // Enregistrer la modification de connexion dans l'historique undo
+        if (source.snapableParameters)
+            Game.updateEditState(EditDelta.TileModified, source.snapableParameters)
     }
 
     function builtConnections()

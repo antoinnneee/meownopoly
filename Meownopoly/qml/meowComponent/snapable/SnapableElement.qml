@@ -12,7 +12,7 @@ import Case
 import ItemSnapableFactory
 
 import MapTypes
-import UndoRedoManager
+import MapFileManager
 
 Rectangle {
     id: snapableElement
@@ -100,7 +100,7 @@ Rectangle {
         snapToGrid()
 
         //Check if we are restoring state from undo/redo
-        if (!UndoRedoManager.isRestoringState)
+        if (MapFileManager.currentMap ? MapFileManager.currentMap.canSave : true)
             createAnimation.start()
 
         snapableParameters.displayParameterChanged()

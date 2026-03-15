@@ -4,6 +4,7 @@ import EditorEnum
 import MapTypes
 import Game
 import Logger
+import EditDelta 1.0
 
     Item {
     id: keyController
@@ -44,24 +45,14 @@ import Logger
                 return
             }
 
-            // Attendre que toutes les animations de suppression soient terminées avant de sauvegarder
-            var pendingDeletions = selectItem.length
-
-            // Handler appelé quand chaque animation de suppression est terminée
-            var deletionHandler = function() {
-                pendingDeletions--
-                if (pendingDeletions === 0) {
-                    // Toutes les animations sont terminées, sauvegarder maintenant
-                    logic.saveMap(MapTypes.UNDOREDO)
-                }
-            }
-
-            // Connecter au signal elementDeleted de chaque élément et déclencher la suppression
+            // Capturer l'état AVANT la suppression pendant que le pointeur C++ est encore valide
+            var txId = Game.beginTransaction()
             for (var i = 0; i < selectItem.length; i++) {
                 var element = selectItem[i]
-                element.elementDeleted.connect(deletionHandler)
+                Game.updateEditState(EditDelta.TileDeleted, element.snapableParameters, txId)
                 element.deleteRequest(false)
             }
+            Game.commitTransaction()
             event.accepted = true
             break;
 

@@ -22,7 +22,6 @@ import EditorEnum
 import Logger
 import DisplayParameter
 import DecorationParameter
-import UndoRedoManager
 import AssetManager
 import ItemSnapableFactory
 import ui_item

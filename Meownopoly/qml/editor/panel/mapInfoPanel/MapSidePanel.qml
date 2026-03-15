@@ -20,7 +20,6 @@ import Logger
 import DisplayParameter
 import DecorationParameter
 import ItemSnapableFactory
-import UndoRedoManager
 import AssetManager
 
 Rectangle {

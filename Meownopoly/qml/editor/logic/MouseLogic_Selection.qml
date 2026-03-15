@@ -2,6 +2,8 @@ import QtQuick 2.15
 import "../../meowComponent/snapable"
 
 import MapTypes
+import Game
+import EditDelta 1.0
 
 MouseLogic_Base {
     id: mouseLogic
@@ -97,8 +99,13 @@ MouseLogic_Base {
                         selectedElements[i].updateRelativePosition()
                     }
                 }
-                // Now save with the updated positions
-                logic.saveMap(MapTypes.UNDOREDO)
+                // Enregistrer les nouvelles positions dans l'historique undo
+                var txId = Game.beginTransaction()
+                for (var j = 0; j < selectedElements.length; j++) {
+                    if (selectedElements[j] && selectedElements[j].snapableParameters)
+                        Game.updateEditState(EditDelta.TileModified, selectedElements[j].snapableParameters, txId)
+                }
+                Game.commitTransaction()
             }
             clickElement = []
         }
