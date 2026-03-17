@@ -88,6 +88,7 @@ public:
     Q_INVOKABLE void updateEditMetadata(const QString& beforeJson, const QString& afterJson);
     Q_INVOKABLE QUuid beginTransaction();
     Q_INVOKABLE void  commitTransaction();
+    Q_INVOKABLE void  removeMapTile(const QUuid &tileId);
 
     // Template saving/loading
     Q_INVOKABLE bool saveTemplate(QString name, QJsonArray elementsJson);

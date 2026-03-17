@@ -267,25 +267,41 @@ QtObject {
         elementBindings[element] = true
     }
 
-    // Fonction pour détruire les bindings pour un élément
+    // // Fonction pour détruire les bindings pour un élément
+    // function destroyBindingsForElement(element) {
+    //     if (!element) return
+
+    //     if (elementBindings[element]) {
+    //         // Récupérer la position actuelle avant de casser les bindings
+    //         var currentX = element.x
+    //         var currentY = element.y
+
+    //         // Casser les bindings en assignant des valeurs fixes
+    //         element.x = currentX
+    //         element.y = currentY
+
+    //         delete elementBindings[element]
+    //     }
+
+    //     if (elementInitialPositions[element])
+    //         delete elementInitialPositions[element]
+    // }
     function destroyBindingsForElement(element) {
         if (!element) return
-
         if (elementBindings[element]) {
-            // Récupérer la position actuelle avant de casser les bindings
-            var currentX = element.x
-            var currentY = element.y
-
-            // Casser les bindings en assignant des valeurs fixes
-            element.x = currentX
-            element.y = currentY
-
+            // Restaurer le binding vers displayParameter au lieu d'une valeur fixe
+            element.x = Qt.binding(function() {
+                return element.snapableParameters.displayParameter.gridRelativePositionX * element.gridManager.gridSize
+            })
+            element.y = Qt.binding(function() {
+                return element.snapableParameters.displayParameter.gridRelativePositionY * element.gridManager.gridSize
+            })
             delete elementBindings[element]
         }
-
         if (elementInitialPositions[element])
             delete elementInitialPositions[element]
     }
+
 
     // Fonction pour recréer les bindings d'un élément après un snap (appelée via signal)
     function rebindElement(element) {

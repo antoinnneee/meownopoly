@@ -132,17 +132,16 @@ QtObject {
         }
 
         if (index !== -1) {
-            // Supprimer l'élément de la liste
             snapableTilesList.splice(index, 1)
             logic.snapableTilesListUpdated()
 
-            // Si c'était l'élément sélectionné, le désélectionner
             logic.mouseLogic.unselectSelectedElements()
 
-            // Détruire l'objet QML
-            var pItemSnapable = element.snapableParameters
+            // Capturer l'uuid avant destroy() (après, snapableParameters peut être null)
+            var uuid = element.snapableParameters ? element.snapableParameters.uniqueId : null
             element.destroy()
-            pItemSnapable.destroy()
+            // Le C++ gère la suppression de l'ItemSnapable via deleteLater()
+            if (uuid) Game.removeMapTile(uuid)
 
         } else {
             console.log("Erreur: Élément non trouvé dans la liste")

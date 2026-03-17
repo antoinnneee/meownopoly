@@ -19,7 +19,7 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
     for (const QJsonValueRef value : snapableTilesArray) {
         const QJsonObject tileObject = value.toObject();
         ItemSnapable *is = new ItemSnapable(tileObject);
-        QQmlEngine::setObjectOwnership(is, QQmlEngine::JavaScriptOwnership);
+        QQmlEngine::setObjectOwnership(is, QQmlEngine::CppOwnership);
         m_tiles.append(is);
     }
     updateTileCounts();
@@ -46,12 +46,10 @@ Map::~Map()
         delete mapInfo;
         mapInfo = nullptr;
     }
-    if (m_tiles.size() > 0) {
-        for (int i = 0; i < m_tiles.size(); i++){
-            delete m_tiles.at(i);
-        }
-        m_tiles.clear();
+    for (int i = 0; i < m_tiles.size(); i++){
+        delete m_tiles.at(i);
     }
+    m_tiles.clear();
 }
 
 
@@ -201,21 +199,35 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore)
     case EditDeltaType::TileModified: {
         ItemSnapable *tile = tileById(delta.tileId);
         if (tile) {
+            qDebug() << "[APPLY_DELTA] TileModified � avant copyFrom: gridX="
+                     << tile->displayParameter()->gridRelativePositionX()
+                     << "gridY=" << tile->displayParameter()->gridRelativePositionY();
             ItemSnapable tmp(jsonState);
+            qDebug() << "[APPLY_DELTA] Valeurs � restaurer: gridX="
+                     << tmp.displayParameter()->gridRelativePositionX()
+                     << "gridY=" << tmp.displayParameter()->gridRelativePositionY();
             tile->copyFrom(&tmp);
+            qDebug() << "[APPLY_DELTA] Apr�s copyFrom: gridX="
+                     << tile->displayParameter()->gridRelativePositionX()
+                     << "gridY=" << tile->displayParameter()->gridRelativePositionY();
             tile->commitCurrentState();
+        } else {
+            qDebug() << "[APPLY_DELTA] TileModified � tile NON TROUV� pour id=" << delta.tileId.toString();
         }
         break;
     }
     case EditDeltaType::TileAdded: {
         if (applyBefore) {
             // undo an addition = remove the tile
-            emit tileRemovedFromHistory(delta.tileId);
+            // Retirer de m_tiles AVANT le signal pour que removeMapTile() c�t� QML soit un no-op s�r
+            ItemSnapable *toDelete = tileById(delta.tileId);
             removeTile(delta.tileId);
+            emit tileRemovedFromHistory(delta.tileId);
+            if (toDelete) toDelete->deleteLater();
         } else {
             // redo an addition = re-add the tile
             ItemSnapable *tile = new ItemSnapable(jsonState);
-            QQmlEngine::setObjectOwnership(tile, QQmlEngine::JavaScriptOwnership);
+            QQmlEngine::setObjectOwnership(tile, QQmlEngine::CppOwnership);
             addTile(tile);
             tile->commitCurrentState();
             emit tileRestoredFromHistory(tile);
@@ -226,14 +238,17 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore)
         if (applyBefore) {
             // undo a deletion = restore the tile
             ItemSnapable *tile = new ItemSnapable(jsonState);
-            QQmlEngine::setObjectOwnership(tile, QQmlEngine::JavaScriptOwnership);
+            QQmlEngine::setObjectOwnership(tile, QQmlEngine::CppOwnership);
             addTile(tile);
             tile->commitCurrentState();
             emit tileRestoredFromHistory(tile);
         } else {
             // redo a deletion = remove the tile again
-            emit tileRemovedFromHistory(delta.tileId);
+            // M�me logique : retirer de m_tiles AVANT le signal
+            ItemSnapable *toDelete = tileById(delta.tileId);
             removeTile(delta.tileId);
+            emit tileRemovedFromHistory(delta.tileId);
+            if (toDelete) toDelete->deleteLater();
         }
         break;
     }
@@ -249,29 +264,37 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore)
 
 bool Map::undo()
 {
-    if (m_undoStack.isEmpty())
+    if (m_undoStack.isEmpty()) {
+        qDebug() << "[UNDO] Stack VIDE � rien � annuler";
         return false;
+    }
 
+    qDebug() << "[UNDO] D�but. undoStack.size=" << m_undoStack.size();
     m_isRestoringState = true;
     emit canSaveChanged();
 
     // Collect all deltas in the same group
     QUuid groupId = m_undoStack.top().groupId;
     QList<EditDelta> group;
-    while (!m_undoStack.isEmpty() &&
-           ((groupId.isNull() && group.isEmpty()) ||
+    while   (!m_undoStack.isEmpty() &&((groupId.isNull() && group.isEmpty()) ||
             (!groupId.isNull() && m_undoStack.top().groupId == groupId))) {
+
         group.prepend(m_undoStack.pop());
     }
 
+    qDebug() << "[UNDO] Step 1 � emit forceUnselectAll (AVANT applyDelta)";
+    m_isRestoringState = false;
+    emit forceUnselectAll();
+    emit canSaveChanged();
+
+    qDebug() << "[UNDO] Step 2 � applyDelta loop (" << group.size() << "deltas)";
     for (const EditDelta &delta : group) {
+        qDebug() << "[UNDO] applyDelta type=" << delta.type << "tileId=" << delta.tileId.toString();
         applyDelta(delta, true);
         m_redoStack.push(delta);
     }
 
-    m_isRestoringState = false;
-    emit canSaveChanged();
-    emit forceUnselectAll();
+    qDebug() << "[UNDO] Termin�. redoStack.size=" << m_redoStack.size();
     return true;
 }
 
@@ -291,13 +314,14 @@ bool Map::redo()
         group.prepend(m_redoStack.pop());
     }
 
+    m_isRestoringState = false;
+    emit canSaveChanged();
+    emit forceUnselectAll();
+
     for (const EditDelta &delta : group) {
         applyDelta(delta, false);
         m_undoStack.push(delta);
     }
 
-    m_isRestoringState = false;
-    emit canSaveChanged();
-    emit forceUnselectAll();
     return true;
 }

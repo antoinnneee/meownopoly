@@ -819,8 +819,9 @@ Rectangle {
                         checked: logic.mapInfo.isBackgroundOnGrill
 
                         onCheckedChanged: {
+                            var before = logic.mapInfo.toJSON()
                             logic.mapInfo.isBackgroundOnGrill = checked
-                            logic.saveMap(MapTypes.UNDOREDO)
+                            Game.updateEditMetadata(before, logic.mapInfo.toJSON())
                         }
 
                         indicator: Rectangle {
@@ -896,8 +897,9 @@ Rectangle {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
+                                        var before = logic.mapInfo.toJSON()
                                         logic.mapInfo.backgroundScaling = modelData.mode
-                                        logic.saveMap(MapTypes.UNDOREDO)
+                                        Game.updateEditMetadata(before, logic.mapInfo.toJSON())
                                     }
                                 }
                             }
@@ -923,16 +925,18 @@ Rectangle {
                             to: 400
                             stepSize: 20
                             value: logic.mapInfo.backgroundTileSize || 100
+                            property string _beforeJson: ""
 
                             onValueChanged: {
-                                if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined') {
+                                if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined')
                                     logic.mapInfo.backgroundTileSize = value
-                                }
                             }
 
                             onPressedChanged: {
-                                if (!pressed && typeof logic !== 'undefined') {
-                                    logic.saveMap(MapTypes.UNDOREDO)
+                                if (pressed) {
+                                    _beforeJson = logic.mapInfo.toJSON()
+                                } else {
+                                    Game.updateEditMetadata(_beforeJson, logic.mapInfo.toJSON())
                                 }
                             }
 
@@ -1117,8 +1121,9 @@ Rectangle {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
+                                    var before = mapInfo.toJSON()
                                     mapInfo.backgroundPath = ""
-                                    logic.saveMap(MapTypes.UNDOREDO)
+                                    Game.updateEditMetadata(before, mapInfo.toJSON())
                                 }
                             }
                         }
@@ -1279,9 +1284,9 @@ Rectangle {
                                         cursorShape: Qt.PointingHandCursor
 
                                         onClicked: {
-                                            console.log("Selected background:", modelData)
+                                            var before = mapInfo.toJSON()
                                             mapInfo.backgroundPath = modelData
-                                            logic.saveMap(MapTypes.UNDOREDO)
+                                            Game.updateEditMetadata(before, mapInfo.toJSON())
                                         }
                                     }
                                 }

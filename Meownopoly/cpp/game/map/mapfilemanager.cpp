@@ -59,11 +59,15 @@ Map *MapFileManager::getCurrentMap() const
 
 void MapFileManager::setCurrentMap(Map *newCurrentMap)
 {
+    if (newCurrentMap)
+        QQmlEngine::setObjectOwnership(newCurrentMap, QQmlEngine::CppOwnership);
     if (currentMap == newCurrentMap)
         return;
     if (currentMap)
         currentMap->deleteLater();
+
     currentMap = newCurrentMap;
+
     emit currentMapChanged();
 }
 

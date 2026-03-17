@@ -255,6 +255,16 @@ Base_Board {
         z: UiStyle.z_HUD
     }
 
+    // Connexion pour écouter les changements de carte et mettre à jour les infos
+    Connections {
+        target: MapFileManager.currentMap
+        function onMapInfoChanged() {
+            var cMap = MapFileManager.currentMap
+            if (cMap && cMap.mapInfo)
+                mapInfo.setMapInfo(cMap.mapInfo)
+        }
+    }
+
     // Connexion pour écouter la demande de création de carte depuis le drawer
     Connections {
         target: mapInfoPanel.mapInfoDrawer

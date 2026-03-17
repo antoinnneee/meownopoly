@@ -103,7 +103,7 @@ private:
     QVariantList m_availableSessions;
     int          m_totalPlayerCount = 0;
 
-    static constexpr int         REFRESH_INTERVAL_MS = 10000;
+    static constexpr int         REFRESH_INTERVAL_MS = 100000;
     static constexpr const char *SERVER_URL = "ws://pattounecorp.ovh:3000";
 };
 

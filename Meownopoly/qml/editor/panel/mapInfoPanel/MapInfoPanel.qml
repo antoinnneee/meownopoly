@@ -71,8 +71,9 @@ Item {
         title: "Sélectionner une image"
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif *.bmp)"]
         onAccepted: {
+            var before = mapInfo.toJSON()
             mapInfo.backgroundPath = customFileDialog.selectedFile
-            logic.saveMap(MapTypes.UNDOREDO)
+            Game.updateEditMetadata(before, mapInfo.toJSON())
         }
     }
 }

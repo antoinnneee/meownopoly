@@ -3,6 +3,8 @@ import QtQuick.Controls
 import ".."
 import "../grid"
 import MapTypes
+import Game
+import EditDelta 1.0
 
 Rectangle {
     id: handle
@@ -22,11 +24,11 @@ Rectangle {
     // Curseur selon la direction
     property string cursorShape: {
         switch(direction) {
-            case "nw": case "se": return "SizeFDiagCursor"
-            case "ne": case "sw": return "SizeBDiagCursor"
-            case "n": case "s": return "SizeVerCursor"
-            case "e": case "w": return "SizeHorCursor"
-            default: return "ArrowCursor"
+        case "nw": case "se": return "SizeFDiagCursor"
+                   case "ne": case "sw": return "SizeBDiagCursor"
+                              case "n": case "s": return "SizeVerCursor"
+                                        case "e": case "w": return "SizeHorCursor"
+                                                  default: return "ArrowCursor"
         }
     }
     
@@ -79,7 +81,7 @@ Rectangle {
             }
             
             // Sauvegarder après redimensionnement
-            logic.saveMap(MapTypes.UNDOREDO)
+            Game.updateEditState(EditDelta.TileModified, targetElement.snapableParameters)
         }
         
         onPositionChanged: {
@@ -96,113 +98,113 @@ Rectangle {
                 var deltaUnitsY = Math.round(globalDeltaY / targetElement.gridManager.gridSize)
                 
                 switch (direction) {
-                    case "e":
-                    {
-                        var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
-                        var newUnitWidth = startUnitWidth + deltaUnitsX
-                        if (newUnitWidth >= 1) {
-                            targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
-                        }
-                        break
+                case "e":
+                {
+                    var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
+                    var newUnitWidth = startUnitWidth + deltaUnitsX
+                    if (newUnitWidth >= 1) {
+                        targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
                     }
-                    case "s":
-                    {
-                        var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
-                        var newUnitHeight = startUnitHeight + deltaUnitsY
-                        if (newUnitHeight >= 1) {
-                            targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
-                        }
-                        break
+                    break
+                }
+                case "s":
+                {
+                    var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
+                    var newUnitHeight = startUnitHeight + deltaUnitsY
+                    if (newUnitHeight >= 1) {
+                        targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
                     }
-                    case "w":
-                    {
-                        // Pour redimensionner vers la gauche :
-                        // 1. Calculer les unités de départ (référence fixe)
-                        var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
-                        
-                        // 2. Calculer la nouvelle largeur basée sur le déplacement depuis le début
-                        var newUnitWidth = startUnitWidth - deltaUnitsX
-                        
-                        
-                        // S'assurer qu'on a au minimum 1 unité de largeur
-                        if (newUnitWidth >= 1) {
-                            // 3. Déplacer l'élément vers la gauche et ajuster la largeur
-                            targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
-                            targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
-                        }
-                        break
+                    break
+                }
+                case "w":
+                {
+                    // Pour redimensionner vers la gauche :
+                    // 1. Calculer les unités de départ (référence fixe)
+                    var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
+
+                    // 2. Calculer la nouvelle largeur basée sur le déplacement depuis le début
+                    var newUnitWidth = startUnitWidth - deltaUnitsX
+
+
+                    // S'assurer qu'on a au minimum 1 unité de largeur
+                    if (newUnitWidth >= 1) {
+                        // 3. Déplacer l'élément vers la gauche et ajuster la largeur
+                        targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
+                        targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
                     }
-                    case "n":
-                    {
-                        var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
-                        var newUnitHeight = startUnitHeight - deltaUnitsY
-                        if (newUnitHeight >= 1) {
-                            targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
-                            targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
-                        }
-                        break;
+                    break
+                }
+                case "n":
+                {
+                    var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
+                    var newUnitHeight = startUnitHeight - deltaUnitsY
+                    if (newUnitHeight >= 1) {
+                        targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
+                        targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
                     }
-                    case "nw": // Nord-Ouest (coin haut-gauche)
-                    {
-                        var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
-                        var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
-                        var newUnitWidth = startUnitWidth - deltaUnitsX
-                        var newUnitHeight = startUnitHeight - deltaUnitsY
-                        
-                        
-                        if (newUnitWidth >= 1 && newUnitHeight >= 1) {
-                            // Déplacer en x et y, changer largeur et hauteur
-                            targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
-                            targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
-                            targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
-                            targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
-                        }
-                        break;
+                    break;
+                }
+                case "nw": // Nord-Ouest (coin haut-gauche)
+                {
+                    var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
+                    var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
+                    var newUnitWidth = startUnitWidth - deltaUnitsX
+                    var newUnitHeight = startUnitHeight - deltaUnitsY
+
+
+                    if (newUnitWidth >= 1 && newUnitHeight >= 1) {
+                        // Déplacer en x et y, changer largeur et hauteur
+                        targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
+                        targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
+                        targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
+                        targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
                     }
-                    case "ne": // Nord-Est (coin haut-droite)
-                    {
-                        var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
-                        var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
-                        var newUnitWidth = startUnitWidth + deltaUnitsX
-                        var newUnitHeight = startUnitHeight - deltaUnitsY
-                        
-                        if (newUnitWidth >= 1 && newUnitHeight >= 1) {
-                            // Déplacer seulement en y, changer largeur et hauteur
-                            targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
-                            targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
-                            targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
-                        }
-                        break;
+                    break;
+                }
+                case "ne": // Nord-Est (coin haut-droite)
+                {
+                    var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
+                    var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
+                    var newUnitWidth = startUnitWidth + deltaUnitsX
+                    var newUnitHeight = startUnitHeight - deltaUnitsY
+
+                    if (newUnitWidth >= 1 && newUnitHeight >= 1) {
+                        // Déplacer seulement en y, changer largeur et hauteur
+                        targetElement.y = startElementY + (deltaUnitsY * gridManager.gridSize)
+                        targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
+                        targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
                     }
-                    case "sw": // Sud-Ouest (coin bas-gauche)
-                    {
-                        var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
-                        var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
-                        var newUnitWidth = startUnitWidth - deltaUnitsX
-                        var newUnitHeight = startUnitHeight + deltaUnitsY
-                        
-                        if (newUnitWidth >= 1 && newUnitHeight >= 1) {
-                            // Déplacer seulement en x, changer largeur et hauteur
-                            targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
-                            targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
-                            targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
-                        }
-                        break;
+                    break;
+                }
+                case "sw": // Sud-Ouest (coin bas-gauche)
+                {
+                    var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
+                    var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
+                    var newUnitWidth = startUnitWidth - deltaUnitsX
+                    var newUnitHeight = startUnitHeight + deltaUnitsY
+
+                    if (newUnitWidth >= 1 && newUnitHeight >= 1) {
+                        // Déplacer seulement en x, changer largeur et hauteur
+                        targetElement.x = startElementX + (deltaUnitsX * gridManager.gridSize)
+                        targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
+                        targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
                     }
-                    case "se": // Sud-Est (coin bas-droite)
-                    {
-                        var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
-                        var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
-                        var newUnitWidth = startUnitWidth + deltaUnitsX
-                        var newUnitHeight = startUnitHeight + deltaUnitsY
-                        
-                        if (newUnitWidth >= 1 && newUnitHeight >= 1) {
-                            // Pas de déplacement, juste changer largeur et hauteur
-                            targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
-                            targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
-                        }
-                        break;
+                    break;
+                }
+                case "se": // Sud-Est (coin bas-droite)
+                {
+                    var startUnitWidth = Math.round(startWidth / gridManager.gridSize)
+                    var startUnitHeight = Math.round(startHeight / gridManager.gridSize)
+                    var newUnitWidth = startUnitWidth + deltaUnitsX
+                    var newUnitHeight = startUnitHeight + deltaUnitsY
+
+                    if (newUnitWidth >= 1 && newUnitHeight >= 1) {
+                        // Pas de déplacement, juste changer largeur et hauteur
+                        targetElement.snapableParameters.displayParameter.unitSizeWidth = newUnitWidth
+                        targetElement.snapableParameters.displayParameter.unitSizeHeight = newUnitHeight
                     }
+                    break;
+                }
                 }
             }
         }
@@ -212,15 +214,15 @@ Rectangle {
     states: State {
         name: "hovered"
         when: handleMouseArea.containsMouse && !targetElement.isResizing
-        PropertyChanges { 
+        PropertyChanges {
             target: handle
             scale: 1.2
-            color: Qt.lighter("#2196F3", 1.2) 
+            color: Qt.lighter("#2196F3", 1.2)
         }
     }
     
     transitions: Transition {
-        NumberAnimation { 
+        NumberAnimation {
             properties: "scale,color"
             duration: 120
             easing.type: Easing.OutQuad

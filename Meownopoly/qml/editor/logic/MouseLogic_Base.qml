@@ -319,17 +319,17 @@ QtObject {
     function createBindingsForElement(element) {
         if (!element) return
 
-        // Stocker la position initiale relative
         var initialX = element.x - groupeSelection.x
         var initialY = element.y - groupeSelection.y
         elementInitialPositions[element] = {x: initialX, y: initialY}
 
-        // Créer les bindings dynamiquement en utilisant Qt.binding()
-        // Stocker les valeurs initiales dans des variables accessibles via closure
         var bindingInitialX = initialX
         var bindingInitialY = initialY
 
-        // Créer les bindings
+        console.log("[BINDING][create] element.x=" + element.x
+                    + " groupeSelection.x=" + groupeSelection.x
+                    + " initialX=" + initialX)
+
         element.x = Qt.binding(function() {
             return groupeSelection.x + bindingInitialX
         })
@@ -337,8 +337,8 @@ QtObject {
             return groupeSelection.y + bindingInitialY
         })
 
-        // Marquer l'élément comme ayant des bindings actifs
         elementBindings[element] = true
+        console.log("[BINDING][create] binding groupeSelection+offset appliqué. element.x évalue à=" + element.x)
     }
 
     // Fonction pour détruire les bindings pour un élément
@@ -346,14 +346,23 @@ QtObject {
         if (!element) return
 
         if (elementBindings[element]) {
-            // Récupérer la position actuelle avant de casser les bindings
             var currentX = element.x
             var currentY = element.y
+            var gridX = element.snapableParameters
+                        ? element.snapableParameters.displayParameter.gridRelativePositionX
+                        : "N/A"
 
-            // Casser les bindings en assignant des valeurs fixes
-            element.x = currentX
-            element.y = currentY
+            console.log("[BINDING][destroy] AVANT — element.x=" + currentX
+                        + " gridRelativePositionX_data=" + gridX)
 
+            element.x = Qt.binding(function() {
+                return element.snapableParameters.displayParameter.gridRelativePositionX * element.gridManager.gridSize
+            })
+            element.y = Qt.binding(function() {
+                return element.snapableParameters.displayParameter.gridRelativePositionY * element.gridManager.gridSize
+            })
+
+            console.log("[BINDING][destroy] APRÈS — element.x=" + element.x + " (valeur fixe)")
             delete elementBindings[element]
         }
 

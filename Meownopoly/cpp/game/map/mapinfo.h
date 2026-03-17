@@ -31,7 +31,7 @@ public:
     MapInfo(const QJsonObject &json);
     static void registerQml();
 
-    QString toJSON();
+    Q_INVOKABLE QString toJSON();
 
     
     void setMapName(const QString &mapName);

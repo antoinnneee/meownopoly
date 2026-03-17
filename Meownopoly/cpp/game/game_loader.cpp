@@ -90,7 +90,7 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
             emit foundItemSnapableTile(tile);
         emit mapLoaded(map);
     }
-    MapFileManager::instance()->setCurrentMap(map);
+    MapFileManager::instance()->setCurrentMap(map);    
     return map;
 }
 
@@ -109,9 +109,14 @@ QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
 
 void Game::askPreview()
 {
+    qDebug() << "[GAME] askPreview() appelé";
     Map *map = MapFileManager::instance()->getCurrentMap();
-    if (map)
-        map->undo();
+    if (!map) {
+        qDebug() << "[GAME] askPreview() — currentMap est NULL";
+        return;
+    }
+    qDebug() << "[GAME] askPreview() — appel Map::undo()";
+    map->undo();
 }
 
 void Game::askNext()
@@ -167,4 +172,13 @@ QUuid Game::beginTransaction()
 void Game::commitTransaction()
 {
     m_currentTransaction = QUuid();
+}
+
+void Game::removeMapTile(const QUuid &tileId)
+{
+    Map *map = MapFileManager::instance()->getCurrentMap();
+    if (!map) return;
+    ItemSnapable *tile = map->tileById(tileId);
+    map->removeTile(tileId);       // no-op si déjà retiré (undo path)
+    if (tile) tile->deleteLater(); // no-op si déjà null
 }

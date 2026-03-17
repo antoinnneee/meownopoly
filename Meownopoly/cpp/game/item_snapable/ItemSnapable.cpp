@@ -264,13 +264,20 @@ void ItemSnapable::copyFrom(ItemSnapable* source)
     
     // Copier les display parameters
     if (source->displayParameter()) {
+        qDebug() << "[COPY_FROM] gridRelativePositionX:" << m_displayParameter->gridRelativePositionX()
+                 << "->" << source->displayParameter()->gridRelativePositionX();
+        qDebug() << "[COPY_FROM] gridRelativePositionY:" << m_displayParameter->gridRelativePositionY()
+                 << "->" << source->displayParameter()->gridRelativePositionY();
         m_displayParameter->setGridRelativePositionX(source->displayParameter()->gridRelativePositionX());
         m_displayParameter->setGridRelativePositionY(source->displayParameter()->gridRelativePositionY());
         m_displayParameter->setUnitSizeWidth(source->displayParameter()->unitSizeWidth());
         m_displayParameter->setUnitSizeHeight(source->displayParameter()->unitSizeHeight());
         m_displayParameter->setZLayer(source->displayParameter()->zLayer());
         m_displayParameter->setZOrder(source->displayParameter()->zOrder());
+        qDebug() << "[COPY_FROM] Après set — gridX:" << m_displayParameter->gridRelativePositionX()
+                 << "gridY:" << m_displayParameter->gridRelativePositionY();
         emit displayParameterChanged();
+        qDebug() << "[COPY_FROM] displayParameterChanged() émis";
     }
     
     // Copier les case data si c'est un CaseTile
