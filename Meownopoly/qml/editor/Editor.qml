@@ -36,9 +36,6 @@ import QtQuick3D.Helpers
 import editor
 import "."
 
-
-
-
 Base_Board {
     id: root
 
@@ -684,26 +681,26 @@ Base_Board {
 
     Timer {
         id: tmpSaver
-        repeat: true
-        property bool isMapCustom: mapInfo.mapName !== mapInfo.autosaveMapName
+        // repeat: true
+        // property bool isMapCustom: mapInfo.mapName !== mapInfo.autosaveMapName
         function setSaveTimer() {
             stEnableAutoSave.sync()
-            tmpSaver.interval = stEnableAutoSave.value(
-                        "saveEvent", "1") == 3 ? 500 : stEnableAutoSave.value(
-                                                     "saveInterval",
-                                                     "0") * 1000 * 60
-            tmpSaver.running = stEnableAutoSave.value("saveEvent",
-                                                      "1") == 1 ? false : true
+            // tmpSaver.interval = stEnableAutoSave.value(
+            //             "saveEvent", "1") == 3 ? 500 : stEnableAutoSave.value(
+            //                                          "saveInterval",
+            //                                          "0") * 1000 * 60
+            // tmpSaver.running = stEnableAutoSave.value("saveEvent",
+            //                                           "1") == 1 ? false : true
         }
-        onTriggered: {
-            console.log("Auto-saving map:", mapInfo.mapName)
-            if (isMapCustom)
-                logic.saveMap(MapTypes.CUSTOM)
-            else
-                logic.saveMap(MapTypes.AUTOSAVE)
+        // onTriggered: {
+        //     console.log("Auto-saving map:", mapInfo.mapName)
+        //     if (isMapCustom)
+        //         logic.saveMap(MapTypes.CUSTOM)
+        //     else
+        //         logic.saveMap(MapTypes.AUTOSAVE)
 
-            busyTimer.start()
-        }
+        //     busyTimer.start()
+        // }
     }
 
     Timer {

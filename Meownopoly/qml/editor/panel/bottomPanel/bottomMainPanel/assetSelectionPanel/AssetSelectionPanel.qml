@@ -36,6 +36,7 @@ EditorBottomPanel {
     property string currentView: "categories"
 
     onComingFromOtherMenuChanged: {
+        assetManagerSettings.clearAssetSelection()
         console.log("AssetSelectionPanel: comingFromOtherMenu changed to", comingFromOtherMenu)
     }
 

@@ -338,7 +338,6 @@ QtObject {
         })
 
         elementBindings[element] = true
-        console.log("[BINDING][create] binding groupeSelection+offset appliqué. element.x évalue à=" + element.x)
     }
 
     // Fonction pour détruire les bindings pour un élément
@@ -352,8 +351,6 @@ QtObject {
                         ? element.snapableParameters.displayParameter.gridRelativePositionX
                         : "N/A"
 
-            console.log("[BINDING][destroy] AVANT — element.x=" + currentX
-                        + " gridRelativePositionX_data=" + gridX)
 
             element.x = Qt.binding(function() {
                 return element.snapableParameters.displayParameter.gridRelativePositionX * element.gridManager.gridSize
@@ -362,7 +359,6 @@ QtObject {
                 return element.snapableParameters.displayParameter.gridRelativePositionY * element.gridManager.gridSize
             })
 
-            console.log("[BINDING][destroy] APRÈS — element.x=" + element.x + " (valeur fixe)")
             delete elementBindings[element]
         }
 
@@ -377,7 +373,6 @@ QtObject {
         var centerX = rootEditor.width / 2 + rootEditor.appPositionX
         var centerY = rootEditor.height / 2 + rootEditor.appPositionY
         
-        console.log("[MOUSE_LOGIC] Centre de la fenêtre calculé: (" + centerX + ", " + centerY + ")")
         
         // Déplacer le curseur au centre de la fenêtre via le singleton CursorManager
         CursorManager.setPos(centerX, centerY)
