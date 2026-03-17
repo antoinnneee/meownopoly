@@ -171,6 +171,7 @@ EditorBottomPanel {
         anchors.fill: parent
 //        anchors.topMargin: resizeHandle.height // Prendre en compte la zone de redimensionnement
         currentIndex: 0
+        onCurrentIndexChanged: clearAssetSelection() // Effacer la sélection d'asset lors du changement d'onglet
         visible: true // Assurer que le StackLayout est visible
 
         // Asset Selection Panel
