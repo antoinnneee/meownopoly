@@ -1,4 +1,4 @@
-﻿import QtQuick 2.15
+import QtQuick 2.15
 import QtCore
 
 import Game
@@ -120,7 +120,6 @@ Base_logic {
 
         // Vérifier si on peut sauvegarder (pas en cours de restauration)
         if (!(MapFileManager.currentMap ? MapFileManager.currentMap.canSave : true)) {
-            console.log("[SAVE] Blocked during undo/redo restoration")
             return
         }
 

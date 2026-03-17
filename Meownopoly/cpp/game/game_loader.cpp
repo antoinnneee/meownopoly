@@ -115,7 +115,6 @@ void Game::askPreview()
         qDebug() << "[GAME] askPreview() — currentMap est NULL";
         return;
     }
-    qDebug() << "[GAME] askPreview() — appel Map::undo()";
     map->undo();
 }
 

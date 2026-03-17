@@ -199,20 +199,9 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore)
     case EditDeltaType::TileModified: {
         ItemSnapable *tile = tileById(delta.tileId);
         if (tile) {
-            qDebug() << "[APPLY_DELTA] TileModified � avant copyFrom: gridX="
-                     << tile->displayParameter()->gridRelativePositionX()
-                     << "gridY=" << tile->displayParameter()->gridRelativePositionY();
             ItemSnapable tmp(jsonState);
-            qDebug() << "[APPLY_DELTA] Valeurs � restaurer: gridX="
-                     << tmp.displayParameter()->gridRelativePositionX()
-                     << "gridY=" << tmp.displayParameter()->gridRelativePositionY();
             tile->copyFrom(&tmp);
-            qDebug() << "[APPLY_DELTA] Apr�s copyFrom: gridX="
-                     << tile->displayParameter()->gridRelativePositionX()
-                     << "gridY=" << tile->displayParameter()->gridRelativePositionY();
             tile->commitCurrentState();
-        } else {
-            qDebug() << "[APPLY_DELTA] TileModified � tile NON TROUV� pour id=" << delta.tileId.toString();
         }
         break;
     }
@@ -264,12 +253,9 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore)
 
 bool Map::undo()
 {
-    if (m_undoStack.isEmpty()) {
-        qDebug() << "[UNDO] Stack VIDE � rien � annuler";
+    if (m_undoStack.isEmpty())
         return false;
-    }
 
-    qDebug() << "[UNDO] D�but. undoStack.size=" << m_undoStack.size();
     m_isRestoringState = true;
     emit canSaveChanged();
 
@@ -282,19 +268,14 @@ bool Map::undo()
         group.prepend(m_undoStack.pop());
     }
 
-    qDebug() << "[UNDO] Step 1 � emit forceUnselectAll (AVANT applyDelta)";
     m_isRestoringState = false;
     emit forceUnselectAll();
     emit canSaveChanged();
 
-    qDebug() << "[UNDO] Step 2 � applyDelta loop (" << group.size() << "deltas)";
     for (const EditDelta &delta : group) {
-        qDebug() << "[UNDO] applyDelta type=" << delta.type << "tileId=" << delta.tileId.toString();
         applyDelta(delta, true);
         m_redoStack.push(delta);
     }
-
-    qDebug() << "[UNDO] Termin�. redoStack.size=" << m_redoStack.size();
     return true;
 }
 

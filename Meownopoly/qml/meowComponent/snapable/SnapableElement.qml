@@ -68,24 +68,14 @@ Rectangle {
     signal elementReleased()
     onElementReleased: {
         isDragging = false
-        console.log("[SNAPABLE][onElementReleased] x=" + x
-                    + " gridX_data=" + snapableParameters.displayParameter.gridRelativePositionX
-                    + " (avant updateRelativePosition)")
         updateRelativePosition()
-        console.log("[SNAPABLE][onElementReleased] APRÈS updateRelativePosition: gridX_data="
-                    + snapableParameters.displayParameter.gridRelativePositionX)
         if (autoSnap && gridManager && gridManager.snapToGrid) {
             snapToGrid()
-            console.log("[SNAPABLE][onElementReleased] APRÈS snapToGrid: gridX_data="
-                        + snapableParameters.displayParameter.gridRelativePositionX)
         }
     }
 
     signal elementUnselected()
     onElementUnselected: {
-        console.log("[SNAPABLE][onElementUnselected] isSelected=" + isSelected
-                    + " x=" + x
-                    + " gridX_data=" + snapableParameters.displayParameter.gridRelativePositionX)
         isSelected = false
         elementReleased()
     }
@@ -256,8 +246,7 @@ Rectangle {
         if (!gridManager || gridManager.gridSize === 0) return
         var newGridX = Math.round(x / gridManager.gridSize)
         var newGridY = Math.round(y / gridManager.gridSize)
-        console.log("[SNAPABLE][updateRelativePosition] x=" + x + " -> gridX=" + newGridX
-                    + "  (était: " + snapableParameters.displayParameter.gridRelativePositionX + ")")
+
         snapableParameters.displayParameter.gridRelativePositionX = newGridX
         snapableParameters.displayParameter.gridRelativePositionY = newGridY
     }

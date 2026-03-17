@@ -93,29 +93,16 @@ MouseLogic_Base {
             // The visual positions (x, y) have changed via bindings, but the data positions
             // (gridRelativePositionX/Y) need to be explicitly updated
             if (drag.target === groupeSelection) {
-                console.log("[UNDO][DRAG] Updating positions for", selectedElements.length, "element(s) before save")
                 for (var i = 0; i < selectedElements.length; i++) {
-                    if (selectedElements[i] && selectedElements[i].updateRelativePosition) {
-                        var el = selectedElements[i]
-                        var beforeX = el.snapableParameters ? el.snapableParameters.displayParameter.gridRelativePositionX : "null"
-                        el.updateRelativePosition()
-                        var afterX = el.snapableParameters ? el.snapableParameters.displayParameter.gridRelativePositionX : "null"
-                        console.log("[UNDO][DRAG] element", i, "gridX:", beforeX, "->", afterX, "(visual x=" + el.x + ")")
-                    }
+                    if (selectedElements[i] && selectedElements[i].updateRelativePosition)
+                        selectedElements[i].updateRelativePosition()
                 }
                 var txId = Game.beginTransaction()
-                console.log("[UNDO][DRAG] beginTransaction txId=", txId)
                 for (var j = 0; j < selectedElements.length; j++) {
-                    if (selectedElements[j] && selectedElements[j].snapableParameters) {
-                        var sp = selectedElements[j].snapableParameters
-                        console.log("[UNDO][DRAG] updateEditState TileModified gridX=", sp.displayParameter.gridRelativePositionX)
-                        Game.updateEditState(EditDelta.TileModified, sp, txId)
-                    }
+                    if (selectedElements[j] && selectedElements[j].snapableParameters)
+                        Game.updateEditState(EditDelta.TileModified, selectedElements[j].snapableParameters, txId)
                 }
                 Game.commitTransaction()
-                console.log("[UNDO][DRAG] commitTransaction — delta pushed to undoStack")
-            } else {
-                console.log("[UNDO][DRAG] drag.target != groupeSelection — RIEN ENREGISTRÉ. drag.target=", drag.target, "groupeSelection=", groupeSelection)
             }
             clickElement = []
         }

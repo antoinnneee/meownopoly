@@ -342,7 +342,6 @@ Base_Board {
             if (mapInfo.mapName !== stEnableAutoSave.currentMap)
                 stEnableAutoSave.setValue("currentMap", mapInfo.mapName)
 
-            Logger.info("Map loaded — shadow copies committed in C++, undo history cleared", "MAP_LOADING")
         }
 
         function onTileRemoved(tileId) {

@@ -78,7 +78,6 @@ import EditDelta 1.0
         case (Qt.Key_Y) :
             if (logic.mouseLogic.isControlPressed)
             {
-                console.log("Redo requested via Ctrl+Y")
                 Game.askNext()
                 event.accepted = true
             }
@@ -87,7 +86,6 @@ import EditDelta 1.0
         case (Qt.Key_Z) :
             if (logic.mouseLogic.isControlPressed)
             {
-                console.log("Undo requested via Ctrl+Z")
                 Game.askPreview()
                 event.accepted = true
             }
