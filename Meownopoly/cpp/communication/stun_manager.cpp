@@ -40,12 +40,14 @@ bool StunManager::startServer()
     if (!s || s->state() == QAbstractSocket::BoundState) {
         if (s)
             emit log("Server already running on port " + QString::number(s->localPort()));
+        emit currentSocketInfoChanged(m_socketInfo);
         return true;
     }
 
     // Bind explicitly to AnyIPv4 to avoid IPv6 issues if STUN server is IPv4 only or network stack issues
     if (s->bind(QHostAddress::AnyIPv4, 0)) {
         emit serverStarted(s->localPort());
+        emit currentSocketInfoChanged(m_socketInfo);
         return true;
     } else {
         emit log("Failed to bind UDP socket: " + s->errorString());
@@ -213,6 +215,7 @@ UdpSocketInfo *StunManager::takeSocket()
     connect(m_socketInfo->socket(), &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
     if (oldInfo)
         oldInfo->setParent(nullptr);
+    emit currentSocketInfoChanged(m_socketInfo);
     emit log("New UDP socket prepared for punching (previous socket taken)");
     return oldInfo;
 }

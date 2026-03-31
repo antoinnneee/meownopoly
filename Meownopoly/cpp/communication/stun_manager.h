@@ -42,6 +42,7 @@ signals:
     void serverStarted(quint16 localPort);
     void externalAddressReceived(QString ip, quint16 port);
     void stunFailed(); // Emitted on timeout
+    void currentSocketInfoChanged(UdpSocketInfo *info);
 
 private slots:
     void onReadyRead();

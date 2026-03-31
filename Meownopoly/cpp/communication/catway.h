@@ -8,6 +8,7 @@
 #include <QHostAddress>
 #include <QTimer>
 #include <QList>
+#include <QHash>
 #include <QJsonObject>
 #include <QElapsedTimer>
 #include <QThread>
@@ -15,11 +16,24 @@
 class QUdpSocket;
 class StunManager;
 class CatwayWorker;
+struct reliable_endpoint_t;
 #include "udp_socket_info.h"
 #include "player_network.h"
 
-static void catway_transmit_packet(void *context, uint64_t id, uint16_t sequence, uint8_t *packet_data, int packet_bytes);
-static int catway_process_packet(void *context, uint64_t id, uint16_t sequence, uint8_t *packet_data, int packet_bytes);
+// ---------------------------------------------------------------------------
+// Snapshot immuable d'un joueur, utilisé exclusivement sur le thread réseau.
+// Mis à jour depuis le thread GUI via CatwayWorker::setPlayerSnapshots().
+// ---------------------------------------------------------------------------
+struct PlayerSnapshot {
+    QString playerId;
+    QString ip;
+    quint16 port       = 0;
+    bool p2pConnected  = false;
+    reliable_endpoint_t *endpoint = nullptr; // valide tant que le joueur est dans m_players
+    QUdpSocket *socket            = nullptr; // valide tant que socketInfo est en vie
+};
+Q_DECLARE_METATYPE(QList<PlayerSnapshot>)
+
 // ---------------------------------------------------------------------------
 // Worker pour exécuter les sockets UDP et timer reliable hors du Main Thread
 // ---------------------------------------------------------------------------
@@ -32,6 +46,8 @@ public:
 
     StunManager *stunManager() const { return m_stunManager; }
 
+    /// Recherche un snapshot par playerId. Doit être appelé depuis le thread réseau uniquement.
+    const PlayerSnapshot *findSnapshot(const QString &playerId) const;
 
 public slots:
     void initReliable();
@@ -43,7 +59,7 @@ public slots:
     void stopStunServer();
     void sendStunRequest();
     void setStunServerInfo(const QString &host, quint16 port);
-    UdpSocketInfo* takeSocket();
+    UdpSocketInfo* takeStunSocket();
 
     // --- Thread-safe I/O ---
     void sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port);
@@ -51,10 +67,11 @@ public slots:
     void sendReliablePacket(const QString &playerId, const QByteArray &data);
     void onSocketReadyRead();
 
-
     /// Envoie un paquet fiable à tous les joueurs P2P connectés.
     void broadcastReliable(const QByteArray &data);
 
+    /// Met à jour la copie locale des snapshots joueurs (appelé depuis le thread GUI via QueuedConnection).
+    void setPlayerSnapshots(QList<PlayerSnapshot> snapshots);
 
 private slots:
     void onReliableUpdate();
@@ -71,6 +88,9 @@ private:
     QElapsedTimer m_reliableClock;
     QTimer *m_heartbeatTimer = nullptr;
     int m_heartbeatInterval = 10000;
+
+    // Copie locale des joueurs — accédée uniquement depuis le thread réseau, jamais depuis le GUI.
+    QList<PlayerSnapshot> m_playerSnapshots;
 };
 
 // ---------------------------------------------------------------------------
@@ -93,10 +113,10 @@ public:
     Q_INVOKABLE QObject *getSocket() const;
     /// Retourne l'info du socket actuel (publicAddress, publicPort, socket).
     Q_INVOKABLE QObject *currentSocketInfo() const;
-    /// Détache le socket actuel et en prépare un nouveau dans StunManager. L'ancien UdpSocketInfo est ajouté à localPorts et retourné.
-    Q_INVOKABLE UdpSocketInfo *takeSocket();
+    /// Détache le socket actuel et en prépare un nouveau dans StunManager. L'ancien UdpSocketInfo est ajouté à localPorts et est retourné.
+    Q_INVOKABLE UdpSocketInfo *takeStunSocket();
 
-    /// Liste des infos de ports locaux (sockets récupérés via takeSocket).
+    /// Liste des infos de ports locaux (sockets récupérés via takeStunSocket).
     Q_PROPERTY(QQmlListProperty<UdpSocketInfo> localPorts READ localPorts NOTIFY localPortsChanged)
     QQmlListProperty<UdpSocketInfo> localPorts();
 
@@ -106,7 +126,7 @@ public:
 
     /// Client de chat intégré (accessible en QML via Catway.chatClient).
     Q_PROPERTY(ChatClient *chatClient READ chatClient WRITE setChatClient NOTIFY chatClientChanged)
-    ChatClient *chatClient() const;
+    ChatClient *chatClient() const { return m_chatClient; }
     Q_INVOKABLE void setChatClient(ChatClient *client);
 
     Q_INVOKABLE void addPlayer(PlayerNetwork *player);
@@ -154,6 +174,7 @@ private slots:
     void onPendingCommandReady(QString ip, quint16 port);
     void onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress sender, quint16 port);
     void onStunRequestFailed();
+    void onCurrentSocketInfoChanged(UdpSocketInfo *info);
 
 private:
     struct PendingCommand {
@@ -175,15 +196,32 @@ private:
     PlayerNetwork *getOrCreatePlayer(const QString &playerId);
     QString nicknameFromChat(const QString &playerId) const;
 
+    /// Construit un snapshot de m_players et l'envoie au worker via QueuedConnection.
+    void pushPlayerSnapshots();
+
+    /// Extrait la logique commune de mise en file d'attente STUN pour les commandes chat en attente.
+    void triggerStunForPendingCommand(const QString &senderId, const QString &commandType, const QJsonObject &data);
+
     CatwayWorker *m_worker;
     QThread *m_networkThread;
-    
+
     ChatClient *m_chatClient;
     QList<UdpSocketInfo *> m_localSocketInfos;
     QList<PlayerNetwork *> m_players;
-    QMetaObject::Connection m_stunConnection;
+
+    /// Cache du socket STUN courant, mis à jour via StunManager::currentSocketInfoChanged (P3).
+    UdpSocketInfo *m_currentStunSocketInfo = nullptr;
+
+    /// Contextes reliable indexés par joueur — remplace le stockage void* via QVariant (P6).
+    QHash<PlayerNetwork*, struct CatwayReliableContext*> m_reliableContexts;
+
     QMetaObject::Connection m_externalAddressTakePortConnection;
     QMetaObject::Connection m_pendingCommandConnection;
 };
 
+struct CatwayReliableContext {
+    PlayerNetwork *player;
+    Catway        *catway;
+    CatwayWorker  *worker;
+};
 #endif // CATWAY_H
