@@ -200,6 +200,15 @@ private:
     /// Extrait la logique commune de mise en file d'attente STUN pour les commandes chat en attente.
     void triggerStunForPendingCommand(const QString &senderId, const QString &commandType, const QJsonObject &data);
 
+    void handleHolePunchReply(PlayerNetwork *player);
+    void handleHolePunchFinal(PlayerNetwork *player);
+    void handleHolePunchStrike(PlayerNetwork *player);
+    void handleHolePunchPing(PlayerNetwork *player);
+
+    void handleChatReplyConnectionInfo(const QString &senderId, const QJsonObject &data, PlayerNetwork *player);
+    void handleChatUdpHolePunchRequest(const QString &senderId, const QJsonObject &data, PlayerNetwork *player);
+    void handleChatRequestConnectionInfo(const QString &senderId, const QJsonObject &data, PlayerNetwork *player);
+
     CatwayWorker *m_worker;
     QThread *m_networkThread;
 

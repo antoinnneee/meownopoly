@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <cstdarg>
 #include <cstdio>
+#include <QSet>
 
 #include "stun_manager.h"
 #include "../account/account_manager.h"
@@ -172,27 +173,6 @@ QString Catway::nicknameFromChat(const QString &playerId) const
 }
 
 
-void Catway::initiateHolePunch(PlayerNetwork *player)
-{
-    if (!player) return;
-    UdpSocketInfo *si = player->socketInfo();
-    if (!si || si->publicAddress().isEmpty() || si->publicPort() == 0) {
-        emit log("Cannot initiate hole punch: No local public IP/Port for this player slot yet.");
-        return;
-    }
-
-    emit log(QString("Initiating UDP hole punching for player %1 (%2)").arg(player->nickname(), player->playerId()));
-
-    // 1. Send chat request
-    QJsonObject data;
-    data[QStringLiteral("ip")] = si->publicAddress();
-    data[QStringLiteral("port")] = static_cast<int>(si->publicPort());
-    m_chatClient->sendCommand(QStringLiteral("UDP_HOLE_PUNCH_REQUEST"), data, player->playerId());
-
-    // 2. Emit UDP frame (HP:STRIKE)
-    sendUdpDatagram(player, QStringLiteral("HP:STRIKE"));
-}
-
 void Catway::sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message)
 {
     if (!player) return;
@@ -201,13 +181,13 @@ void Catway::sendUdpMessageToPlayer(PlayerNetwork *player, const QString &messag
 
 void Catway::sendUdpDatagram(PlayerNetwork *player, const QString &content)
 {
-    if (!player || player->ip().isEmpty() || player->port() == 0) return;
     sendUdpDatagram(player, content.toUtf8());
 }
 
 void Catway::sendUdpDatagram(PlayerNetwork *player, const QByteArray &data)
 {
     if (!player || player->ip().isEmpty() || player->port() == 0) return;
+
     UdpSocketInfo *si = player->socketInfo();
     if (!si || !si->socket()) return;
 
@@ -225,6 +205,14 @@ void Catway::sendUdpDatagram(PlayerNetwork *player, const QByteArray &data)
 
 void Catway::onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress senderAddr, quint16 senderPort)
 {
+    using HolePunchDatagramHandler = void (Catway::*)(PlayerNetwork *);
+    static const QHash<QString, HolePunchDatagramHandler> kHolePunchHandlers = {
+        { QStringLiteral("HP:REPLY"),  &Catway::handleHolePunchReply },
+        { QStringLiteral("HP:FINAL"),  &Catway::handleHolePunchFinal },
+        { QStringLiteral("HP:STRIKE"), &Catway::handleHolePunchStrike },
+        { QStringLiteral("HP:PING"),   &Catway::handleHolePunchPing },
+    };
+
     PlayerNetwork *targetPlayer = nullptr;
     for (PlayerNetwork *p : m_players) {
         if (p->socketInfo() && p->socketInfo()->socket() == socket) {
@@ -250,71 +238,53 @@ void Catway::onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAd
 
     if (!datagram.isEmpty() && datagram[0] == '\x01') {
         // Les paquets fiables sont traités directement dans CatwayWorker::onSocketReadyRead.
-        qDebug() << "[Catway GUI] Paquet fiable (0x01) reçu mais ignoré (devrait être géré par le worker)";
+        qWarning() << "[Catway GUI] Paquet fiable (0x01) reçu mais ignoré (devrait être géré par le worker). Ce message ne devrais pas etre visible";
         return;
     }
 
     QString msg = QString::fromUtf8(datagram);
-
-    if (msg == QStringLiteral("HP:REPLY")) {
-        targetPlayer->setP2pConnected(true);
-        sendUdpDatagram(targetPlayer, QStringLiteral("HP:FINAL"));
-        emit log("UDP Hole Punching: Received REPLY, sent FINAL. Connection should be open!");
-    } else if (msg == QStringLiteral("HP:FINAL")) {
-        targetPlayer->setP2pConnected(true);
-        emit log("UDP Hole Punching: Received FINAL. Punching SUCCESS!");
-    } else if (msg == QStringLiteral("HP:STRIKE")) {
-        emit log("UDP Hole Punching: Received STRIKE. Other side is punching.");
-    } else if (msg == QStringLiteral("HP:PING")) {
-        // P7 — heartbeat silencieux, pas de log
-    } else {
-        emit udpMessageReceived(targetPlayer->playerId(), msg);
+    const HolePunchDatagramHandler handler = kHolePunchHandlers.value(msg);
+    if (handler) {
+        (this->*handler)(targetPlayer);
+        return;
     }
+    emit udpMessageReceived(targetPlayer->playerId(), msg);
 }
 
+namespace {
+
+const QSet<QString> kChatCommandsWithConnectionInfo = {
+    QStringLiteral("REPLY_CONNECTION_INFO"),
+    QStringLiteral("UDP_HOLE_PUNCH_REQUEST"),
+    QStringLiteral("REQUEST_CONNECTION_INFO"),
+};
+
+} // namespace
 
 void Catway::onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data)
 {
-    bool containPlayerInfo = (commandType == QStringLiteral("REPLY_CONNECTION_INFO")
-                           || commandType == QStringLiteral("UDP_HOLE_PUNCH_REQUEST")
-                           || commandType == QStringLiteral("REQUEST_CONNECTION_INFO"));
+    // Table statique dans la méthode : les pointeurs sur handlers privés ne sont valides qu’ici (accès membre).
+    using ChatCommandHandler = void (Catway::*)(const QString &, const QJsonObject &, PlayerNetwork *);
+    static const QHash<QString, ChatCommandHandler> kHandlers = {
+        { QStringLiteral("REPLY_CONNECTION_INFO"), &Catway::handleChatReplyConnectionInfo },
+        { QStringLiteral("UDP_HOLE_PUNCH_REQUEST"), &Catway::handleChatUdpHolePunchRequest },
+        { QStringLiteral("REQUEST_CONNECTION_INFO"), &Catway::handleChatRequestConnectionInfo },
+    };
+
     PlayerNetwork *player = nullptr;
-    if (containPlayerInfo)
-    {
+    if (kChatCommandsWithConnectionInfo.contains(commandType)) {
         player = getOrCreatePlayer(senderId);
-        if (player)
-        {
-            QString ip = data[QStringLiteral("ip")].toString();
-            int port = data[QStringLiteral("port")].toInt();
+        if (player) {
+            const QString ip = data[QStringLiteral("ip")].toString();
+            const int port = data[QStringLiteral("port")].toInt();
             player->setIp(ip);
             player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
         }
     }
 
-    if (commandType == QStringLiteral("REPLY_CONNECTION_INFO")) {
-        if (!player) {
-            triggerStunForPendingCommand(senderId, commandType, data); // P4
-        }
-        return;
-    }
-    if (commandType == QStringLiteral("UDP_HOLE_PUNCH_REQUEST")) {
-        if (player) {
-            emit log(QString("Received UDP_HOLE_PUNCH_REQUEST from %1. Sending HP:REPLY...").arg(senderId));
-            sendUdpDatagram(player, QStringLiteral("HP:REPLY"));
-        }
-        return;
-    }
-    if (commandType == QStringLiteral("REQUEST_CONNECTION_INFO")) {
-        UdpSocketInfo *socketInfo = player ? qobject_cast<UdpSocketInfo *>(player->socketInfo()) : nullptr;
-        if (socketInfo) {
-            QJsonObject replyData;
-            replyData[QStringLiteral("ip")] = socketInfo->publicAddress();
-            replyData[QStringLiteral("port")] = static_cast<int>(socketInfo->publicPort());
-            m_chatClient->sendCommand(QStringLiteral("REPLY_CONNECTION_INFO"), replyData, senderId);
-        } else {
-            triggerStunForPendingCommand(senderId, commandType, data); // P4
-        }
-    }
+    const ChatCommandHandler handler = kHandlers.value(commandType);
+    if (handler)
+        (this->*handler)(senderId, data, player);
 }
 
 void Catway::onPendingCommandReady(QString ip, quint16 port)
