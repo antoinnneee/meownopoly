@@ -174,7 +174,7 @@ Rectangle {
 
                 onActivated: {
                     if (currentText !== "Custom") {
-                        var item = stunModel.get(currentIndex);
+                        const item = stunModel.get(currentIndex);
                         AccountManager.setStunServerURL(item.value);
                         AccountManager.setStunPort(item.port);
                     }
@@ -182,12 +182,12 @@ Rectangle {
 
                 Component.onCompleted: {
                     // Initialize selection based on current settings
-                    var currentServer = AccountManager.stunServer;
-                    var currentPort = AccountManager.stunPort;
-                    var found = false;
+                    const currentServer = AccountManager.stunServer;
+                    const currentPort = AccountManager.stunPort;
+                    let found = false;
 
-                    for (var i = 0; i < stunModel.count; i++) {
-                        var item = stunModel.get(i);
+                    for (let i = 0; i < stunModel.count; i++) {
+                        const item = stunModel.get(i);
                         if (item.value === currentServer && item.port === currentPort) {
                             currentIndex = i;
                             found = true;
@@ -230,9 +230,9 @@ Rectangle {
                         background: null
 
                         onEditingFinished: {
-                             if (stunComboBox.currentText === "Custom") {
+                            if (stunComboBox.currentText === "Custom") {
                                 AccountManager.setStunServerURL(text)
-                             }
+                            }
                         }
                     }
                 }
@@ -262,9 +262,9 @@ Rectangle {
                         background: null
 
                         onEditingFinished: {
-                             if (stunComboBox.currentText === "Custom") {
+                            if (stunComboBox.currentText === "Custom") {
                                 AccountManager.setStunPort(parseInt(text))
-                             }
+                            }
                         }
                     }
                 }
@@ -316,8 +316,8 @@ Rectangle {
                 }
 
                 onClicked: {
-                    var nickname = nicknameField.text.trim()
-                    
+                    const nickname = nicknameField.text.trim()
+
                     if (nickname.length < 2) {
                         errorText.text = "Le pseudo doit contenir au moins 2 caractères"
                         return

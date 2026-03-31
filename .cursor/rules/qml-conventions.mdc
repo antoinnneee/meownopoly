@@ -1,0 +1,93 @@
+---
+description: Conventions QML pour le projet Meownopoly
+globs: **/*.qml
+alwaysApply: false
+---
+
+# Conventions QML — Meownopoly
+
+## Nommage
+
+- **`id` racine** : `root` par défaut, ou un nom sémantique de rôle (`board`, `chatDrawer`, `headerBar`)
+- **Fichiers** : `PascalCase.qml` ; panneaux d'éditeur avec préfixe court (`CCP_`, `ASP_`, `VEP_`)
+- **Propriétés & fonctions** : `camelCase` — `gameGrid`, `showConnections`, `formatTimestamp`
+- **Propriétés internes** : préfixe `_` — `_prevMessageCount`
+- **Signaux** : `camelCase`, intention claire, souvent suffixe `Requested` ou `Changed`
+
+```qml
+// ✅ BON
+signal backRequested()
+signal configurationChanged()
+signal createSnapableRequested(string jsonString)
+
+// ❌ MAUVAIS
+signal lunchGame()   // faute de frappe
+signal onClik()      // ambiguïté avec handler Qt
+```
+
+## Structure des fichiers
+
+Ordre recommandé :
+
+1. `pragma` (si Singleton ou ComponentBehavior)
+2. `import` — Qt d'abord, puis modules projet
+3. Type racine + `id: root`
+4. Propriétés publiques
+5. Propriétés internes (`_prefixe`)
+6. Alias
+7. Signaux
+8. Fonctions JavaScript
+9. Arbre visuel (background → enfants → overlays)
+
+## Bindings
+
+- Utiliser le préfixe `root.` dans les enfants pour éviter l'ambiguïté
+- Ternaires pour couleurs / visibilité inline
+- Null-safety avec `??` pour les références optionnelles
+
+```qml
+// ✅
+border.color: root.isActive ? "#4CAF50" : "#555"
+property var client: Catway.chatClient ?? internalChatClient
+```
+
+## Signaux
+
+- Déclarer au niveau racine, après les propriétés
+- Émettre via `root.signalName()` depuis les enfants
+- Handlers C++ : nommer l'argument explicitement
+
+```qml
+// ✅
+onLogMessage: function(message) { console.log(message) }
+
+// ❌ — argument implicitement `arguments[0]`, peu lisible
+onLogMessage: console.log(arguments[0])
+```
+
+## Réutilisation
+
+- Composants génériques → `ui_item/`
+- Éléments du plateau → `meowComponent/`
+- Logiques d'interaction → `board/logic/` ou `editor/logic/`, nommées `MouseLogic_*`, `ScrollLogic_*`
+- Utilitaires partagés → `pragma Singleton` dans `utils/`
+- Héritage : préfixer la base par `Base_` (`Base_logic`, `Base_Board`)
+
+## Fonctions JavaScript
+
+- `const` / `let` dans les nouvelles fonctions ; éviter `var`
+- Fonctions locales à un Dialog nommées proche du déclencheur : `acceptAndJoin`
+
+```qml
+// ✅
+function formatTimestamp(ts) {
+    const date = new Date(ts)
+    return date.toLocaleTimeString()
+}
+```
+
+## À éviter
+
+- Espaces multiples dans les déclarations de propriétés (`property  var  x`)
+- Typos dans les noms publics qui créent une API incohérente (`lunchGame` vs `launchGame`)
+- Mélanger les versions d'import (`QtQuick 2.15` vs `import QtQuick`) dans la même base de code
