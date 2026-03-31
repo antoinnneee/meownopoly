@@ -10,7 +10,6 @@ Rectangle {
 
     signal accountCreated()
 
-    // Fireworks system (same as TitleScreen)
     ParticleSystem {
         id: particleSystem
         anchors.fill: parent
@@ -50,7 +49,6 @@ Rectangle {
         }
     }
 
-    // Title
     Text {
         id: welcomeTitle
         text: "Bienvenue sur Meownopoly!"
@@ -64,7 +62,6 @@ Rectangle {
         }
     }
 
-    // Subtitle
     Text {
         id: subtitle
         text: "Créez votre profil pour commencer"
@@ -77,7 +74,6 @@ Rectangle {
         }
     }
 
-    // Cat emoji decoration
     Text {
         text: "🐱"
         font.pixelSize: 80
@@ -88,7 +84,6 @@ Rectangle {
         }
     }
 
-    // Main form container
     Rectangle {
         id: formContainer
         width: 400
@@ -104,7 +99,6 @@ Rectangle {
             anchors.margins: 30
             spacing: 20
 
-            // Nickname label
             Text {
                 text: "Choisissez votre pseudo"
                 color: "#cccccc"
@@ -113,7 +107,6 @@ Rectangle {
                 Layout.alignment: Qt.AlignHCenter
             }
 
-            // Nickname input field
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
@@ -147,7 +140,6 @@ Rectangle {
                 }
             }
 
-            // STUN Server Label
             Text {
                 text: "Serveur STUN"
                 color: "#cccccc"
@@ -157,7 +149,6 @@ Rectangle {
                 Layout.topMargin: 10
             }
 
-            // STUN Server Selection
             ComboBox {
                 id: stunComboBox
                 Layout.fillWidth: true
@@ -181,7 +172,6 @@ Rectangle {
                 }
 
                 Component.onCompleted: {
-                    // Initialize selection based on current settings
                     const currentServer = AccountManager.stunServer;
                     const currentPort = AccountManager.stunPort;
                     let found = false;
@@ -196,18 +186,16 @@ Rectangle {
                     }
 
                     if (!found) {
-                        currentIndex = 2; // Custom
+                        currentIndex = 2
                     }
                 }
             }
 
-            // Custom STUN Details (Visible only if Custom is selected)
             RowLayout {
                 Layout.fillWidth: true
                 visible: stunComboBox.currentText === "Custom"
                 spacing: 10
 
-                // Custom Host
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
@@ -237,7 +225,6 @@ Rectangle {
                     }
                 }
 
-                // Custom Port
                 Rectangle {
                     Layout.preferredWidth: 80
                     Layout.preferredHeight: 40
@@ -270,7 +257,6 @@ Rectangle {
                 }
             }
 
-            // Character count
             Text {
                 text: nicknameField.text.length + "/20 caractères"
                 color: "#666666"
@@ -278,7 +264,6 @@ Rectangle {
                 Layout.alignment: Qt.AlignRight
             }
 
-            // Error message
             Text {
                 id: errorText
                 text: ""
@@ -288,7 +273,6 @@ Rectangle {
                 visible: text !== ""
             }
 
-            // Create account button
             Button {
                 id: createAccountButton
                 text: "Créer mon compte"
@@ -322,7 +306,7 @@ Rectangle {
                         errorText.text = "Le pseudo doit contenir au moins 2 caractères"
                         return
                     }
-                    
+
                     errorText.text = ""
                     AccountManager.createAccount(nickname)
                     root.accountCreated()
@@ -331,7 +315,6 @@ Rectangle {
         }
     }
 
-    // Info text at bottom
     Text {
         text: "Votre compte est stocké localement sur cet appareil"
         color: "#666666"
@@ -343,7 +326,6 @@ Rectangle {
         }
     }
 
-    // Version text
     Text {
         text: "v0.2.0 editor edition"
         color: "#808080"

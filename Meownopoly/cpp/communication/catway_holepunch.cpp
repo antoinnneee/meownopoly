@@ -11,13 +11,11 @@ void Catway::initiateHolePunch(PlayerNetwork *player)
 
     emit log(QString("Initiating UDP hole punching for player %1 (%2)").arg(player->nickname(), player->playerId()));
 
-    // 1. Send chat request
     QJsonObject data;
     data[QStringLiteral("ip")] = si->publicAddress();
     data[QStringLiteral("port")] = static_cast<int>(si->publicPort());
     m_chatClient->sendCommand(QStringLiteral("UDP_HOLE_PUNCH_REQUEST"), data, player->playerId());
 
-    // 2. Emit UDP frame (HP:STRIKE)
     sendUdpDatagram(player, QStringLiteral("HP:STRIKE"));
 }
 
@@ -46,7 +44,6 @@ void Catway::handleHolePunchStrike(PlayerNetwork *player)
 void Catway::handleHolePunchPing(PlayerNetwork *player)
 {
     Q_UNUSED(player)
-    // P7 — heartbeat silencieux, pas de log
 }
 
 

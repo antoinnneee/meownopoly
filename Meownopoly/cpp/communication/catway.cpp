@@ -43,14 +43,12 @@ QObject *Catway::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 Catway::Catway(QObject *parent)
     : QObject(parent)
 {
-    // Assigner m_pThis immédiatement : le thread réseau (timer 16ms) peut appeler
-    // instance() avant que le constructeur soit terminé → race condition sinon.
+    // Réseau sur thread dédié : instance() peut être appelé avant la fin du constructeur.
     Q_ASSERT_X(m_pThis == nullptr, "Catway::Catway", "Catway doit être un singleton");
     m_pThis = this;
 
     qRegisterMetaType<QList<PlayerSnapshot>>("QList<PlayerSnapshot>");
 
-    // === Threaded Networking Setup ===
     m_networkThread = new QThread(this);
     m_worker = new CatwayWorker();
 
@@ -61,26 +59,20 @@ Catway::Catway(QObject *parent)
     connect(m_networkThread, &QThread::finished, m_worker, &QObject::deleteLater);
 
     m_networkThread->start();
-    // =================================
 
-    // Client de chat intégré (exposé en QML via la propriété chatClient)
     m_chatClient = new ChatClient(this);
     connect(m_chatClient, &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
 
-    // Relay signals from StunManager
     connect(m_worker->stunManager(), &StunManager::log, this, &Catway::log);
     connect(m_worker->stunManager(), &StunManager::serverStarted, this, &Catway::stunServerStarted);
     connect(m_worker->stunManager(), &StunManager::stunFailed, this, &Catway::onStunRequestFailed);
 
-    // P3 — Cache du socket STUN courant, évite les BlockingQueuedConnection
     connect(m_worker->stunManager(), &StunManager::currentSocketInfoChanged,
             this, &Catway::onCurrentSocketInfoChanged, Qt::QueuedConnection);
 
-    // P5 — Connexion unique de datagramReceived, établie une seule fois ici
     connect(m_worker, &CatwayWorker::datagramReceived,
             this, &Catway::onDatagramReceived, Qt::QueuedConnection);
 
-    // Sync STUN parameters from AccountManager
     auto *am = AccountManager::instance();
     connect(am, &AccountManager::stunServerChanged, this, &Catway::onAccountStunChanged);
     connect(am, &AccountManager::stunPortChanged, this, &Catway::onAccountStunChanged);
@@ -134,8 +126,6 @@ UdpSocketInfo *Catway::localPortsAt(QQmlListProperty<UdpSocketInfo> *p, qsizetyp
     return static_cast<QList<UdpSocketInfo *> *>(p->data)->at(index);
 }
 
-// --- Players list ---
-
 QQmlListProperty<PlayerNetwork> Catway::players()
 {
     return QQmlListProperty<PlayerNetwork>(this, &m_players, &Catway::playersCount, &Catway::playersAt);
@@ -151,15 +141,11 @@ PlayerNetwork *Catway::playersAt(QQmlListProperty<PlayerNetwork> *p, qsizetype i
     return static_cast<QList<PlayerNetwork *> *>(p->data)->at(index);
 }
 
-// --- AccountManager sync ---
-
 void Catway::onAccountStunChanged()
 {
     auto *am = AccountManager::instance();
     QMetaObject::invokeMethod(m_worker, "setStunServerInfo", Qt::QueuedConnection, Q_ARG(QString, am->stunServer()), Q_ARG(quint16, am->stunPort()));
 }
-
-// --- Chat commands -> PlayerNetwork ---
 
 QString Catway::nicknameFromChat(const QString &playerId) const
 {
@@ -227,18 +213,15 @@ void Catway::onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAd
         return;
     }
 
-    // --- FILTRE DE SÉCURITÉ (ANTI-SPOOFING) ---
     if (targetPlayer->ip().isEmpty() || senderAddr.toString() != targetPlayer->ip() || senderPort != targetPlayer->port()) {
         qWarning() << "[SÉCURITÉ] Paquet UDP spoofé ou inconnu ignoré. Provenance:"
                     << senderAddr.toString() << ":" << senderPort
                     << "- Attendu:" << targetPlayer->ip() << ":" << targetPlayer->port();
         return;
     }
-    // ------------------------------------------
 
     if (!datagram.isEmpty() && datagram[0] == '\x01') {
-        // Les paquets fiables sont traités directement dans CatwayWorker::onSocketReadyRead.
-        qWarning() << "[Catway GUI] Paquet fiable (0x01) reçu mais ignoré (devrait être géré par le worker). Ce message ne devrais pas etre visible";
+        qWarning() << "[Catway GUI] Paquet fiable (0x01) reçu côté GUI (attendu dans CatwayWorker::onSocketReadyRead)";
         return;
     }
 
@@ -263,7 +246,6 @@ const QSet<QString> kChatCommandsWithConnectionInfo = {
 
 void Catway::onChatCommandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data)
 {
-    // Table statique dans la méthode : les pointeurs sur handlers privés ne sont valides qu’ici (accès membre).
     using ChatCommandHandler = void (Catway::*)(const QString &, const QJsonObject &, PlayerNetwork *);
     static const QHash<QString, ChatCommandHandler> kHandlers = {
         { QStringLiteral("REPLY_CONNECTION_INFO"), &Catway::handleChatReplyConnectionInfo },
@@ -297,10 +279,6 @@ void Catway::onPendingCommandReady(QString ip, quint16 port)
     for (const PendingCommand &c : toProcess)
         onChatCommandReceived(c.senderId, c.commandType, c.data);
 }
-
-// ---------------------------------------------------------------------------
-// reliable — send & update
-// ---------------------------------------------------------------------------
 
 void Catway::sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data)
 {

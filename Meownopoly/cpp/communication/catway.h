@@ -20,10 +20,7 @@ struct reliable_endpoint_t;
 #include "udp_socket_info.h"
 #include "player_network.h"
 
-// ---------------------------------------------------------------------------
-// Snapshot immuable d'un joueur, utilisé exclusivement sur le thread réseau.
-// Mis à jour depuis le thread GUI via CatwayWorker::setPlayerSnapshots().
-// ---------------------------------------------------------------------------
+// Copie thread-réseau des infos joueur (mise à jour depuis le GUI via setPlayerSnapshots).
 struct PlayerSnapshot {
     QString playerId;
     QString ip;
@@ -34,9 +31,6 @@ struct PlayerSnapshot {
 };
 Q_DECLARE_METATYPE(QList<PlayerSnapshot>)
 
-// ---------------------------------------------------------------------------
-// Worker pour exécuter les sockets UDP et timer reliable hors du Main Thread
-// ---------------------------------------------------------------------------
 class CatwayWorker : public QObject
 {
     Q_OBJECT
@@ -54,14 +48,12 @@ public slots:
     void startReliableTimer();
     void tearDown();
 
-    // STUN & Socket control (Proxied to StunManager on worker thread)
     void startStunServer();
     void stopStunServer();
     void sendStunRequest();
     void setStunServerInfo(const QString &host, quint16 port);
     UdpSocketInfo* takeStunSocket();
 
-    // --- Thread-safe I/O ---
     void sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port);
     void sendReliablePacket(PlayerNetwork *player, const QByteArray &data);
     void sendReliablePacket(const QString &playerId, const QByteArray &data);
@@ -87,13 +79,9 @@ private:
     QTimer *m_heartbeatTimer = nullptr;
     int m_heartbeatInterval = 10000;
 
-    // Copie locale des joueurs — accédée uniquement depuis le thread réseau, jamais depuis le GUI.
     QList<PlayerSnapshot> m_playerSnapshots;
 };
 
-// ---------------------------------------------------------------------------
-// Classe Main (UI Thread)
-// ---------------------------------------------------------------------------
 class Catway : public QObject
 {
     Q_OBJECT
@@ -220,10 +208,8 @@ private:
     /// Dernier id connu par joueur (pour réindexer après playerIdChanged).
     QHash<PlayerNetwork *, QString> m_playerIdByPlayer;
 
-    /// Cache du socket STUN courant, mis à jour via StunManager::currentSocketInfoChanged (P3).
     UdpSocketInfo *m_currentStunSocketInfo = nullptr;
 
-    /// Contextes reliable indexés par joueur — remplace le stockage void* via QVariant (P6).
     QHash<PlayerNetwork*, struct CatwayReliableContext*> m_reliableContexts;
 
     QMetaObject::Connection m_externalAddressTakePortConnection;

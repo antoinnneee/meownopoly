@@ -32,10 +32,6 @@ CatwayWorker::~CatwayWorker()
 {
 }
 
-// ---------------------------------------------------------------------------
-// P1 + P8 — Snapshot
-// ---------------------------------------------------------------------------
-
 void CatwayWorker::setPlayerSnapshots(QList<PlayerSnapshot> snapshots)
 {
     m_playerSnapshots = std::move(snapshots);
@@ -50,15 +46,10 @@ const PlayerSnapshot *CatwayWorker::findSnapshot(const QString &playerId) const
     return nullptr;
 }
 
-// ---------------------------------------------------------------------------
-// Initialisation
-// ---------------------------------------------------------------------------
-
 void CatwayWorker::initReliable()
 {
     reliable_init();
     reliable_log_level(RELIABLE_LOG_LEVEL_NONE);
-    qDebug() << "[CatwayWorker] reliable init in thread:" << QThread::currentThreadId();
 }
 
 void CatwayWorker::startReliableTimer()
@@ -69,10 +60,6 @@ void CatwayWorker::startReliableTimer()
     connect(m_reliableUpdateTimer, &QTimer::timeout, this, &CatwayWorker::onReliableUpdate);
     m_reliableUpdateTimer->start();
 }
-
-// ---------------------------------------------------------------------------
-// STUN proxies
-// ---------------------------------------------------------------------------
 
 void CatwayWorker::startStunServer()
 {
@@ -98,7 +85,6 @@ UdpSocketInfo* CatwayWorker::takeStunSocket()
 {
     UdpSocketInfo *info = m_stunManager->takeSocket();
     if (info) {
-        // Repousser vers le thread GUI avant de retourner à Catway
         info->moveToThread(Catway::instance()->thread());
     }
     return info;
@@ -128,7 +114,6 @@ void CatwayWorker::onSocketReadyRead()
         socket->readDatagram(datagram.data(), datagram.size(), &senderAddr, &senderPort);
 
         if (!datagram.isEmpty() && datagram[0] == '\x01') {
-            // Recherche du joueur dans les snapshots (thread réseau uniquement)
             const PlayerSnapshot *targetSnap = nullptr;
             for (const PlayerSnapshot &s : m_playerSnapshots) {
                 if (s.socket == socket) {
@@ -155,10 +140,6 @@ void CatwayWorker::onSocketReadyRead()
     }
 }
 
-// ---------------------------------------------------------------------------
-// P1 — Heartbeat — utilise uniquement m_playerSnapshots
-// ---------------------------------------------------------------------------
-
 void CatwayWorker::onHeartbeat()
 {
     for (const PlayerSnapshot &s : m_playerSnapshots) {
@@ -167,10 +148,6 @@ void CatwayWorker::onHeartbeat()
         sendDatagram(s.socket, QStringLiteral("HP:PING").toLatin1(), QHostAddress(s.ip), s.port);
     }
 }
-
-// ---------------------------------------------------------------------------
-// Envoi
-// ---------------------------------------------------------------------------
 
 void CatwayWorker::sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port)
 {
@@ -181,7 +158,6 @@ void CatwayWorker::sendDatagram(QUdpSocket *socket, const QByteArray &data, cons
     }
 }
 
-// P1 — broadcastReliable utilise uniquement m_playerSnapshots
 void CatwayWorker::broadcastReliable(const QByteArray &data)
 {
     for (const PlayerSnapshot &s : m_playerSnapshots) {
@@ -192,7 +168,6 @@ void CatwayWorker::broadcastReliable(const QByteArray &data)
     }
 }
 
-// P1 — sendReliablePacket(QString) utilise findSnapshot au lieu de Catway::instance()
 void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray &data)
 {
     const PlayerSnapshot *snap = findSnapshot(playerId);

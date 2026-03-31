@@ -25,7 +25,6 @@ Popup {
         anchors.margins: 25
         spacing: 20
 
-        // Header
         RowLayout {
             Layout.fillWidth: true
 
@@ -42,7 +41,6 @@ Popup {
                 Layout.fillWidth: true
             }
 
-            // Close button
             Rectangle {
                 width: 32
                 height: 32
@@ -65,14 +63,12 @@ Popup {
             }
         }
 
-        // Separator
         Rectangle {
             Layout.fillWidth: true
             height: 1
             color: "#444444"
         }
 
-        // Unique ID section
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -110,7 +106,6 @@ Popup {
                         Layout.fillWidth: true
                     }
 
-                    // Copy button
                     Rectangle {
                         width: 30
                         height: 30
@@ -128,7 +123,6 @@ Popup {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
-                                // Copy to clipboard would require C++ integration
                                 copyConfirmText.visible = true
                                 copyConfirmTimer.restart()
                             }
@@ -205,7 +199,6 @@ Popup {
             }
         }
 
-        // Nickname section
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -298,7 +291,6 @@ Popup {
             }
         }
 
-        // STUN Server section
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -414,7 +406,6 @@ Popup {
                 }
 
                 Component.onCompleted: {
-                    // Initialize selection based on current settings
                     const currentServer = AccountManager.stunServer;
                     const currentPort = AccountManager.stunPort;
                     let found = false;
@@ -429,18 +420,16 @@ Popup {
                     }
 
                     if (!found) {
-                        currentIndex = 2; // Custom
+                        currentIndex = 2
                     }
                 }
             }
 
-            // Custom STUN Details (Visible only if Custom is selected)
             RowLayout {
                 Layout.fillWidth: true
                 visible: stunPopupComboBox.currentText === "Custom"
                 spacing: 10
 
-                // Custom Host
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
@@ -470,7 +459,6 @@ Popup {
                     }
                 }
 
-                // Custom Port
                 Rectangle {
                     Layout.preferredWidth: 80
                     Layout.preferredHeight: 40
@@ -507,7 +495,6 @@ Popup {
         Item { Layout.fillHeight: true }
     }
 
-    // Confirmation régénération identifiant (overlay)
     Popup {
         id: confirmRegenIdPopup
         width: 380

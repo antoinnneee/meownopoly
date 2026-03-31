@@ -20,7 +20,6 @@ static void catway_transmit_packet(
     auto *ctx = static_cast<CatwayReliableContext *>(context);
     if (!ctx || !ctx->player || !ctx->catway || !ctx->worker) return;
 
-    // Lire ip/port/socket depuis le snapshot du worker (thread réseau) — P8
     const PlayerSnapshot *snap = ctx->worker->findSnapshot(ctx->player->playerId());
     if (!snap || snap->ip.isEmpty() || snap->port == 0 || !snap->socket) {
         qDebug() << "[reliable] Skip transmit: no snapshot or missing address for player"
@@ -44,11 +43,10 @@ static int catway_process_packet(
     if (!ctx || !ctx->catway) return 0;
     QByteArray data(reinterpret_cast<const char *>(packet_data), packet_bytes);
     QString senderId = ctx->player->playerId();
-    // Émettre le signal via le QThread GUI pour ne pas crasher les bindings QML
     QMetaObject::invokeMethod(ctx->catway, [ctx, senderId, data]() {
         emit ctx->catway->reliableMessageReceived(senderId, data);
     }, Qt::QueuedConnection);
-    return 1; // 1 = ACK le paquet
+    return 1;
 }
 
 
@@ -86,7 +84,6 @@ void Catway::addPlayer(PlayerNetwork *player)
         }
         connect(sock, &QUdpSocket::readyRead, m_worker, &CatwayWorker::onSocketReadyRead,
                 Qt::UniqueConnection);
-        // P5 — datagramReceived déjà connecté en constructeur, pas de reconnexion ici
     }
 
     player->setParent(this);
@@ -97,13 +94,10 @@ void Catway::addPlayer(PlayerNetwork *player)
             Qt::UniqueConnection);
     emit playersChanged();
 
-    // Initialiser l'endpoint reliable pour ce joueur.
     auto *ctx = new CatwayReliableContext{player, this, m_worker};
-    // P6 — Stocker le contexte dans un QHash typé
     m_reliableContexts[player] = ctx;
     player->initReliable(ctx, catway_transmit_packet, catway_process_packet);
 
-    // P1+P8 — Pousser un snapshot initial, puis se connecter aux changements de propriétés
     connect(player, &PlayerNetwork::ipChanged,          this, &Catway::pushPlayerSnapshots);
     connect(player, &PlayerNetwork::portChanged,        this, &Catway::pushPlayerSnapshots);
     connect(player, &PlayerNetwork::p2pConnectedChanged,this, &Catway::pushPlayerSnapshots);
@@ -115,9 +109,7 @@ void Catway::removePlayer(PlayerNetwork *player)
 {
     if (!player || !m_players.removeOne(player))
         return;
-    qDebug() << "[Catway] removePlayer:" << player->playerId() << "- déconnexion du joueur (endpoint reliable détruit)";
 
-    // Déconnecter les signaux de propriétés
     disconnect(player, &PlayerNetwork::playerIdChanged,    this, &Catway::onPlayerNetworkPlayerIdChanged);
     disconnect(player, &PlayerNetwork::ipChanged,          this, &Catway::pushPlayerSnapshots);
     disconnect(player, &PlayerNetwork::portChanged,        this, &Catway::pushPlayerSnapshots);
@@ -127,7 +119,6 @@ void Catway::removePlayer(PlayerNetwork *player)
     m_playersById.remove(m_playerIdByPlayer.value(player));
     m_playerIdByPlayer.remove(player);
 
-    // Libérer le socket si plus utilisé
     UdpSocketInfo *si = player->socketInfo();
     if (si) {
         bool inUse = false;
@@ -150,7 +141,6 @@ void Catway::removePlayer(PlayerNetwork *player)
 
     player->destroyReliable();
 
-    // P6 — Libérer le contexte depuis le QHash
     CatwayReliableContext *ctx = m_reliableContexts.take(player);
     delete ctx;
 
@@ -220,3 +210,4 @@ PlayerNetwork *Catway::getOrCreatePlayer(const QString &playerId)
 
     return player;
 }
+
