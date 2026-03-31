@@ -47,7 +47,6 @@ static int catway_process_packet(
     // Émettre le signal via le QThread GUI pour ne pas crasher les bindings QML
     QMetaObject::invokeMethod(ctx->catway, [ctx, senderId, data]() {
         emit ctx->catway->reliableMessageReceived(senderId, data);
-        emit ctx->catway->reliableMessageReceivedString(senderId, QString::fromUtf8(data));
     }, Qt::QueuedConnection);
     return 1; // 1 = ACK le paquet
 }
@@ -92,6 +91,10 @@ void Catway::addPlayer(PlayerNetwork *player)
 
     player->setParent(this);
     m_players.append(player);
+    m_playersById.insert(player->playerId(), player);
+    m_playerIdByPlayer.insert(player, player->playerId());
+    connect(player, &PlayerNetwork::playerIdChanged, this, &Catway::onPlayerNetworkPlayerIdChanged,
+            Qt::UniqueConnection);
     emit playersChanged();
 
     // Initialiser l'endpoint reliable pour ce joueur.
@@ -115,10 +118,14 @@ void Catway::removePlayer(PlayerNetwork *player)
     qDebug() << "[Catway] removePlayer:" << player->playerId() << "- déconnexion du joueur (endpoint reliable détruit)";
 
     // Déconnecter les signaux de propriétés
+    disconnect(player, &PlayerNetwork::playerIdChanged,    this, &Catway::onPlayerNetworkPlayerIdChanged);
     disconnect(player, &PlayerNetwork::ipChanged,          this, &Catway::pushPlayerSnapshots);
     disconnect(player, &PlayerNetwork::portChanged,        this, &Catway::pushPlayerSnapshots);
     disconnect(player, &PlayerNetwork::p2pConnectedChanged,this, &Catway::pushPlayerSnapshots);
     disconnect(player, &PlayerNetwork::socketInfoChanged,  this, &Catway::pushPlayerSnapshots);
+
+    m_playersById.remove(m_playerIdByPlayer.value(player));
+    m_playerIdByPlayer.remove(player);
 
     // Libérer le socket si plus utilisé
     UdpSocketInfo *si = player->socketInfo();
@@ -167,11 +174,22 @@ int Catway::playersCount() const
 
 PlayerNetwork *Catway::playerById(const QString &playerId) const
 {
-    for (PlayerNetwork *p : m_players) {
-        if (p && p->playerId() == playerId)
-            return p;
-    }
-    return nullptr;
+    return m_playersById.value(playerId);
+}
+
+void Catway::onPlayerNetworkPlayerIdChanged()
+{
+    auto *p = qobject_cast<PlayerNetwork *>(sender());
+    if (!p || !m_playerIdByPlayer.contains(p))
+        return;
+    const QString oldId = m_playerIdByPlayer.value(p);
+    const QString newId = p->playerId();
+    if (oldId == newId)
+        return;
+    m_playersById.remove(oldId);
+    if (!newId.isEmpty())
+        m_playersById.insert(newId, p);
+    m_playerIdByPlayer[p] = newId;
 }
 
 PlayerNetwork *Catway::getOrCreatePlayer(const QString &playerId)

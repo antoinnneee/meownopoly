@@ -11,6 +11,7 @@
 #include <cstdio>
 
 #include "stun_manager.h"
+#include "../account/account_manager.h"
 
 
 void Catway::onCurrentSocketInfoChanged(UdpSocketInfo *info)

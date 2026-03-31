@@ -1,6 +1,6 @@
 # Architecture détaillée de Catway
 
-Ce document décrit en profondeur le fonctionnement interne de la classe `Catway` et de ses composants satellites : threads impliqués, responsabilités de chaque élément, flux d'interactions cross-thread, et suggestions de simplification architecturale.
+Ce document décrit en profondeur le fonctionnement interne de la classe `Catway` et de ses composants satellites : threads impliqués, responsabilités de chaque élément, flux d'interactions cross-thread, et historique des problèmes corrigés. Il est aligné avec la **répartition du code en plusieurs fichiers** (`catway.cpp`, `catway_stun.cpp`, `catway_player.cpp`, `catway_worker.cpp`) et les noms d’API actuels (`takeStunSocket`, etc.).
 
 ---
 
@@ -38,17 +38,36 @@ graph TD
     end
 ```
 
+
+
 ---
 
 ## 2. Composants et leurs threads
 
+### 2.0 Organisation des fichiers sources
+
+L’implémentation de `Catway` est répartie sur plusieurs unités de compilation (une seule classe, plusieurs `.cpp`) pour clarifier les responsabilités :
+
+
+| Fichier                                                          | Contenu principal                                                                                                                                                                                 |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[catway.h](../../cpp/communication/catway.h)`                   | Déclarations `Catway`, `CatwayWorker`, `PlayerSnapshot`, `CatwayReliableContext`                                                                                                                  |
+| `[catway.cpp](../../cpp/communication/catway.cpp)`               | Singleton, constructeur / destructeur, enregistrement QML, listes `localPorts` / `players`, chat, UDP, datagrammes, commandes chat, reliable broadcast                                            |
+| `[catway_stun.cpp](../../cpp/communication/catway_stun.cpp)`     | Cache `m_currentStunSocketInfo`, `getSocket` / `currentSocketInfo`, `takeStunSocket`, flux STUN (`setupNewPort`, `onExternalAddressReceivedTakePort`), `triggerStunForPendingCommand`, échec STUN |
+| `[catway_player.cpp](../../cpp/communication/catway_player.cpp)` | `pushPlayerSnapshots`, `addPlayer` / `removePlayer`, joueurs (`playerAt`, `getOrCreatePlayer`, …), callbacks C `catway_transmit_packet` / `catway_process_packet`                                 |
+| `[catway_worker.cpp](../../cpp/communication/catway_worker.cpp)` | Thread réseau : timers, STUN proxy, sockets, reliable                                                                                                                                             |
+
+
+Ces fichiers sont référencés dans `[Meownopoly.pro](../../Meownopoly.pro)` (`SOURCES`) aux côtés de `catway.cpp`.
+
 ### 2.1 `Catway` — Thread GUI
 
-Fichiers : `catway.h` / `catway.cpp`
+Fichiers : `catway.h` et les `.cpp` listés en 2.0.
 
 Singleton exposé à QML. Il ne fait **jamais d'I/O réseau lui-même** : il délègue au worker via `QMetaObject::invokeMethod` et réceptionne les résultats par des signaux avec `Qt::QueuedConnection`.
 
 Responsabilités :
+
 - Enregistrement QML (`registerQml`) et point d'entrée `instance()`
 - Gestion de la liste `m_players` (`QList<PlayerNetwork*>`)
 - Gestion de la liste `m_localSocketInfos` (`QList<UdpSocketInfo*>`)
@@ -63,6 +82,7 @@ Fichiers : `catway.h` / `catway_worker.cpp`
 Objet déplacé sur `m_networkThread` via `moveToThread`. Il possède tous les objets réseau actifs.
 
 Responsabilités :
+
 - Posséder et piloter `StunManager`
 - Réceptionner les datagrammes UDP (`onSocketReadyRead`)
 - Envoyer les datagrammes (`sendDatagram`)
@@ -75,9 +95,11 @@ Responsabilités :
 Fichiers : `stun_manager.h` / `stun_manager.cpp`
 
 Possédé par `CatwayWorker` (parent = worker, donc même thread). Gère :
+
 - Le binding d'un `QUdpSocket` sur un port local
 - L'envoi d'une requête STUN et le parsing de la réponse
-- La fourniture du socket prêt via `takeSocket()` (recrée un nouveau socket en interne)
+- La fourniture du socket prêt via `StunManager::takeSocket()` (recrée un nouveau socket en interne) ; côté QML / façade, `Catway::takeStunSocket()` appelle le slot `CatwayWorker::takeStunSocket()` (même logique, nom explicite)
+- Signal `currentSocketInfoChanged(UdpSocketInfo*)` après bind réussi et après `takeSocket()` interne (alimente le cache P3)
 - La détection de timeout → signal `stunFailed`
 
 ### 2.4 `PlayerNetwork` — Thread GUI
@@ -86,47 +108,52 @@ Fichiers : `player_network.h` / `player_network.cpp`
 
 QObject vivant sur le thread GUI, exposé en QML. Contient :
 
-| Membre | Type | Usage |
-|---|---|---|
-| `m_playerId` | `QString` | Identifiant unique |
-| `m_nickname` | `QString` | Pseudo affiché |
-| `m_socketInfo` | `UdpSocketInfo*` | Socket local alloué à ce joueur |
-| `m_ip` / `m_port` | `QString` / `quint16` | Adresse de destination distante |
-| `m_p2pConnected` | `bool` | Connexion UDP établie (post hole-punch) |
-| `m_endpoint` | `reliable_endpoint_t*` | Endpoint de la lib `reliable` |
 
-> **Attention** : `m_endpoint`, `m_ip`, `m_port` et `m_p2pConnected` sont lus depuis le thread réseau (dans `onSocketReadyRead`, `onReliableUpdate`, `onHeartbeat`) sans verrou. Voir P1 et P8.
+| Membre            | Type                   | Usage                                   |
+| ----------------- | ---------------------- | --------------------------------------- |
+| `m_playerId`      | `QString`              | Identifiant unique                      |
+| `m_nickname`      | `QString`              | Pseudo affiché                          |
+| `m_socketInfo`    | `UdpSocketInfo`*       | Socket local alloué à ce joueur         |
+| `m_ip` / `m_port` | `QString` / `quint16`  | Adresse de destination distante         |
+| `m_p2pConnected`  | `bool`                 | Connexion UDP établie (post hole-punch) |
+| `m_endpoint`      | `reliable_endpoint_t*` | Endpoint de la lib `reliable`           |
+
+
+Le worker n’accède plus directement à ces membres depuis son thread : il utilise les **snapshots** (`PlayerSnapshot`) poussés depuis le GUI (voir P1 / P8, section 4).
 
 ### 2.5 `UdpSocketInfo` — Propriété partagée (GUI/Réseau)
 
 Fichiers : `udp_socket_info.h` / `udp_socket_info.cpp`
 
-Objet dont la **propriété Qt** est sur le thread GUI (parent = `Catway`), mais dont le `QUdpSocket*` membre est **déplacé sur le thread réseau** après `takeSocket()`. Cette séparation est intentionnelle mais inhabituelle.
+Objet dont la **propriété Qt** est sur le thread GUI (parent = `Catway`), mais dont le `QUdpSocket`* membre est **déplacé sur le thread réseau** après `takeSocket()`. Cette séparation est intentionnelle mais inhabituelle.
 
-| Membre | Thread |
-|---|---|
+
+| Membre                            | Thread                                    |
+| --------------------------------- | ----------------------------------------- |
 | `m_publicAddress`, `m_publicPort` | GUI (lecture/écriture depuis STUN signal) |
-| `QUdpSocket* m_socket` | Réseau (I/O UDP) |
+| `QUdpSocket* m_socket`            | Réseau (I/O UDP)                          |
+
 
 ### 2.6 `CatwayReliableContext` — Pont inter-thread
 
-Struct allouée sur le **thread GUI** (dans `addPlayer`), mais utilisée en lecture depuis le **thread réseau** par les callbacks C de la lib `reliable`.
+Struct définie en fin de `[catway.h](../../cpp/communication/catway.h)`, allouée sur le **thread GUI** (dans `addPlayer`), utilisée depuis le **thread réseau** par les callbacks C de la lib `reliable`.
 
 ```cpp
 struct CatwayReliableContext {
-    PlayerNetwork *player;  // vit sur GUI
-    Catway        *catway;  // vit sur GUI
+    PlayerNetwork *player;
+    Catway        *catway;
+    CatwayWorker  *worker;   // pour findSnapshot() dans catway_transmit_packet
 };
 ```
 
-Elle est passée comme `void* context` à `reliable_endpoint_create`, et stockée actuellement via une propriété dynamique `_reliableCtx` sur le `PlayerNetwork` (voir P6).
+Stockage dans `Catway::m_reliableContexts` (`QHash<PlayerNetwork*, CatwayReliableContext*>`, voir P6).
 
 ### 2.7 Callbacks `catway_transmit_packet` / `catway_process_packet` — Thread Réseau
 
-Fonctions libres statiques (portée fichier) définies dans `catway.cpp`. Passées à `player->initReliable()` comme callbacks C de la lib `reliable`. Elles sont appelées **depuis le thread réseau** lors des opérations d'envoi ou de réception de paquets fiables.
+Fonctions statiques en portée fichier, définies dans `[catway_player.cpp](../../cpp/communication/catway_player.cpp)`. Passées à `player->initReliable()` comme callbacks C de la lib `reliable`. Elles sont appelées **depuis le thread réseau** lors des opérations d'envoi ou de réception de paquets fiables.
 
-- `catway_transmit_packet` : sérialise le paquet reliable (préfixe `\x01`) et l'écrit directement sur le socket (même thread ✓).
-- `catway_process_packet` : reçoit un paquet acquitté et émet les signaux `reliableMessageReceived` / `reliableMessageReceivedString` sur le thread GUI via `QMetaObject::invokeMethod(..., Qt::QueuedConnection)`.
+- `catway_transmit_packet` : lit ip/port/socket via `ctx->worker->findSnapshot(playerId)` puis sérialise le paquet reliable (préfixe `\x01`) et écrit sur le socket (même thread ✓).
+- `catway_process_packet` : reçoit un paquet acquitté et émet `reliableMessageReceived(senderId, QByteArray)` sur le thread GUI via `QMetaObject::invokeMethod(..., Qt::QueuedConnection)` (un seul signal ; pas de doublon QString).
 
 ### 2.8 Timer reliable (~60 Hz) — Thread Réseau
 
@@ -158,7 +185,7 @@ sequenceDiagram
     Catway->>Worker: invokeMethod startStunServer [async]
     Catway->>Worker: invokeMethod sendStunRequest [async]
     STUN-->>Catway: externalAddressReceived [QueuedConnection GUI]
-    Catway->>Worker: invokeMethod takeSocket [BLOQUANT]
+    Catway->>Worker: invokeMethod takeStunSocket [BLOQUANT]
     Worker->>Worker: UdpSocketInfo moveToThread GUI
     Worker-->>Catway: UdpSocketInfo*
     Catway->>QUdpSocket: moveToThread réseau
@@ -166,7 +193,9 @@ sequenceDiagram
     Catway->>Catway: emit localPortsChanged
 ```
 
-> `takeSocket()` utilise `Qt::BlockingQueuedConnection` : le thread GUI est suspendu le temps que le worker effectue le `moveToThread`. Voir P3.
+
+
+> `getSocket()` / `currentSocketInfo()` ne bloquent plus le GUI (cache P3). Seul `**takeStunSocket()**` utilise encore `Qt::BlockingQueuedConnection` pour récupérer le `UdpSocketInfo*` depuis le worker.
 
 ---
 
@@ -187,7 +216,6 @@ sequenceDiagram
         Lib->>Worker: catway_process_packet() callback
         Worker->>Catway: invokeMethod lambda QueuedConnection
         Catway->>Catway: emit reliableMessageReceived
-        Catway->>Catway: emit reliableMessageReceivedString
     else datagram brut
         Worker->>Catway: emit datagramReceived QueuedConnection
         Catway->>Catway: onDatagramReceived()
@@ -199,12 +227,14 @@ sequenceDiagram
         else HP:STRIKE
             Catway->>Catway: emit log
         else HP:PING
-            Catway->>Catway: emit log
+            Catway->>Catway: traitement silencieux (pas de log)
         else message jeu raw
             Catway->>Catway: emit udpMessageReceived
         end
     end
 ```
+
+
 
 > Les paquets `0x01` (reliable) sont traités **entièrement sur le thread réseau**. Seul l'émission du signal remonte sur le GUI via `QueuedConnection`.
 
@@ -226,6 +256,8 @@ sequenceDiagram
     Lib->>QUdpSocket: writeDatagram() même thread OK
 ```
 
+
+
 ---
 
 ### Flux D : Hole Punching complet
@@ -241,7 +273,7 @@ sequenceDiagram
     A->>Chat: sendCommand UDP_HOLE_PUNCH_REQUEST ip+port
     A->>ANet: invokeMethod sendDatagram HP:STRIKE
     Chat-->>B: commandReceived UDP_HOLE_PUNCH_REQUEST
-    B->>B: getOrCreatePlayer -> takeSocket -> addPlayer
+    B->>B: getOrCreatePlayer -> takeStunSocket -> addPlayer
     B->>BNet: invokeMethod sendDatagram HP:REPLY
     BNet-->>A: datagramReceived HP:REPLY QueuedConnection
     A->>A: player.p2pConnected = true
@@ -249,6 +281,8 @@ sequenceDiagram
     ANet-->>B: datagramReceived HP:FINAL QueuedConnection
     B->>B: player.p2pConnected = true
 ```
+
+
 
 ---
 
@@ -273,67 +307,9 @@ sequenceDiagram
     Catway->>Catway: rejouer onChatCommandReceived pour chaque cmd
 ```
 
----
 
-## 4. Problèmes identifiés et suggestions de simplification
 
-### P1 — ~~Race condition sur `m_players`~~ ✅ Résolu
-
-**Pattern snapshot** : Le worker ne touche plus jamais `Catway::instance()`. Il possède sa propre `QList<PlayerSnapshot>` mise à jour via `setPlayerSnapshots(Qt::QueuedConnection)` à chaque `addPlayer()`, `removePlayer()`, ou changement de propriété d'un joueur (`ipChanged`, `portChanged`, `p2pConnectedChanged`, `socketInfoChanged`). Tous les accès cross-thread ont été supprimés.
+La logique d’enchaînement STUN + file d’attente est centralisée dans `Catway::triggerStunForPendingCommand()` (`[catway_stun.cpp](../../cpp/communication/catway_stun.cpp)`) : au premier élément en file, on **déconnecte** `m_externalAddressTakePortConnection` (handler utilisé par `setupNewPort` / `onExternalAddressReceivedTakePort`) pour éviter un `takeStunSocket()` intempestif, puis on **connecte** `externalAddressReceived` vers `onPendingCommandReady` via `m_pendingCommandConnection`, déconnectée après traitement ou en cas d’échec STUN.
 
 ---
 
-### P2 — ~~Déclarations de callbacks dans `CatwayWorker`~~ ✅ Résolu
-
-Les déclarations de `catway_transmit_packet` et `catway_process_packet` ont été déplacées hors de la classe `CatwayWorker` dans le header. Leur appartenance est désormais claire : ce sont des fonctions libres liées au contexte de `Catway`, pas au worker.
-
----
-
-### P3 — ~~`BlockingQueuedConnection` pour `getSocket` / `currentSocketInfo`~~ ✅ Résolu
-
-`StunManager` émet désormais `currentSocketInfoChanged(UdpSocketInfo*)` après chaque bind réussi et après chaque `takeSocket()`. `Catway` connecte ce signal en `QueuedConnection` et met à jour `m_currentStunSocketInfo`. `getSocket()` et `currentSocketInfo()` lisent directement ce cache, sans aucun `BlockingQueuedConnection`.
-
----
-
-### P4 — ~~Logique `PendingCommand` dupliquée~~ ✅ Résolu
-
-La méthode privée `Catway::triggerStunForPendingCommand()` regroupe la logique commune. Les deux branches de `onChatCommandReceived` l'appellent désormais.
-
----
-
-### P5 — ~~Reconnexion fragile du signal `datagramReceived`~~ ✅ Résolu
-
-`datagramReceived` est connecté **une seule fois** dans le constructeur de `Catway` avec `Qt::QueuedConnection`. Les `disconnect/connect` manuels dans `takeSocket()` et `addPlayer()` ont été supprimés.
-
----
-
-### P6 — ~~Stockage du `CatwayReliableContext` via `void*`~~ ✅ Résolu
-
-`Catway` possède désormais `QHash<PlayerNetwork*, CatwayReliableContext*> m_reliableContexts`. La création et la destruction des contextes sont typées et explicites. `CatwayReliableContext` inclut également un pointeur `CatwayWorker*` pour que `catway_transmit_packet` puisse accéder au snapshot sans toucher `PlayerNetwork` depuis le thread réseau.
-
----
-
-### P7 — ~~`emit log("HP:PING")` à chaque heartbeat reçu~~ ✅ Résolu
-
-Le `emit log("HP:PING")` a été supprimé. La réception d'un heartbeat `HP:PING` est silencieuse.
-
----
-
-### P8 — ~~`PlayerNetwork` accédé depuis deux threads~~ ✅ Résolu (via P1)
-
-Résolu par le pattern snapshot de P1. Le worker n'accède plus jamais aux membres de `PlayerNetwork` depuis le thread réseau. `catway_transmit_packet` utilise désormais `ctx->worker->findSnapshot()` pour lire ip/port/socket depuis le snapshot du worker.
-
----
-
-## 5. Résumé des priorités
-
-| Priorité | Point | Statut |
-|---|---|---|
-| Haute | P1 — Race condition sur `m_players` | ✅ Résolu — pattern snapshot |
-| Haute | P3 — `BlockingQueuedConnection` GUI | ✅ Résolu — cache via signal StunManager |
-| Moyenne | P4 — Logique `PendingCommand` dupliquée | ✅ Résolu — `triggerStunForPendingCommand()` |
-| Moyenne | P5 — Reconnexion fragile `datagramReceived` | ✅ Résolu — connexion unique en constructeur |
-| Moyenne | P6 — `CatwayReliableContext` via `void*` | ✅ Résolu — `QHash` typé |
-| Basse | P2 — callbacks hors `CatwayWorker` | ✅ Résolu |
-| Basse | P7 — Log spam `HP:PING` | ✅ Résolu — `emit log` supprimé |
-| Basse | P8 — `PlayerNetwork` cross-thread | ✅ Résolu — via P1 snapshot |

@@ -78,8 +78,6 @@ private slots:
     void onHeartbeat();
 
 signals:
-    void reliableMessageReceived(QString senderId, QByteArray data);
-    void reliableMessageReceivedString(QString senderId, QString message);
     void datagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress sender, quint16 port);
 
 private:
@@ -161,10 +159,9 @@ signals:
     void udpMessageReceived(QString senderId, QString message);
     void localPortsChanged();
     void playersChanged();
-    /// Émis quand un paquet fiable (via reliable) est reçu et acquitté.
+    /// Émis quand un paquet fiable (via reliable) est reçu et acquitté (payload brut, souvent UTF-8).
+    /// En QML : convertir avec `String.fromCharCode` / `TextDecoder` si besoin de texte.
     void reliableMessageReceived(QString senderId, QByteArray data);
-    /// Même contenu en QString (UTF-8), pratique pour le QML (draw, chat, etc.).
-    void reliableMessageReceivedString(QString senderId, QString message);
     void chatClientChanged();
 
 private slots:
@@ -175,6 +172,7 @@ private slots:
     void onDatagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress sender, quint16 port);
     void onStunRequestFailed();
     void onCurrentSocketInfoChanged(UdpSocketInfo *info);
+    void onPlayerNetworkPlayerIdChanged();
 
 private:
     struct PendingCommand {
@@ -208,6 +206,10 @@ private:
     ChatClient *m_chatClient;
     QList<UdpSocketInfo *> m_localSocketInfos;
     QList<PlayerNetwork *> m_players;
+    /// Index playerId → joueur pour playerById en O(1). Synchronisé avec m_playerIdByPlayer.
+    QHash<QString, PlayerNetwork *> m_playersById;
+    /// Dernier id connu par joueur (pour réindexer après playerIdChanged).
+    QHash<PlayerNetwork *, QString> m_playerIdByPlayer;
 
     /// Cache du socket STUN courant, mis à jour via StunManager::currentSocketInfoChanged (P3).
     UdpSocketInfo *m_currentStunSocketInfo = nullptr;

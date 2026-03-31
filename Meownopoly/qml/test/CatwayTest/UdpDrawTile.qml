@@ -16,6 +16,14 @@ Rectangle {
     border.color: host.cardBorder
     border.width: 1
 
+    function reliablePayloadToString(data) {
+        if (typeof data === "string")
+            return data
+        if (data instanceof ArrayBuffer)
+            return new TextDecoder("utf-8").decode(data)
+        return new TextDecoder("utf-8").decode(new Uint8Array(data))
+    }
+
     function applyDrawMessage(senderId, message) {
         if (!udpDrawTileRoot.targetPlayer || senderId !== udpDrawTileRoot.targetPlayer.playerId)
             return
@@ -36,8 +44,8 @@ Rectangle {
         function onUdpMessageReceived(senderId, message) {
             applyDrawMessage(senderId, message)
         }
-        function onReliableMessageReceivedString(senderId, message) {
-            applyDrawMessage(senderId, message)
+        function onReliableMessageReceived(senderId, data) {
+            applyDrawMessage(senderId, reliablePayloadToString(data))
         }
     }
 

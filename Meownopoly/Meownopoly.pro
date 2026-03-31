@@ -45,6 +45,9 @@ SOURCES += \
     cpp/chat/chat_slash_commands.cpp \
     cpp/chat/chat_client_command.cpp \
     cpp/communication/catway.cpp \
+    cpp/communication/catway_stun.cpp \
+    cpp/communication/catway_player.cpp \
+    cpp/communication/catway_worker.cpp \
     cpp/communication/player_network.cpp \
     cpp/chat/chat_command_helper.cpp \
     cpp/game/item_snapable/ZoneParameter.cpp \
