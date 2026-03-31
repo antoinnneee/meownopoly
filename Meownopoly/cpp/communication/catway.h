@@ -18,6 +18,8 @@ class CatwayWorker;
 #include "udp_socket_info.h"
 #include "player_network.h"
 
+static void catway_transmit_packet(void *context, uint64_t id, uint16_t sequence, uint8_t *packet_data, int packet_bytes);
+static int catway_process_packet(void *context, uint64_t id, uint16_t sequence, uint8_t *packet_data, int packet_bytes);
 // ---------------------------------------------------------------------------
 // Worker pour exécuter les sockets UDP et timer reliable hors du Main Thread
 // ---------------------------------------------------------------------------
@@ -30,8 +32,6 @@ public:
 
     StunManager *stunManager() const { return m_stunManager; }
 
-    static void catway_transmit_packet(void *context, uint64_t id, uint16_t sequence, uint8_t *packet_data, int packet_bytes);
-    static int catway_process_packet(void *context, uint64_t id, uint16_t sequence, uint8_t *packet_data, int packet_bytes);
 
 public slots:
     void initReliable();

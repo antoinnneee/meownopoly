@@ -38,11 +38,6 @@ Guides pratiques pour les utilisateurs et développeurs.
 - [Guide de Gameplay](./guides/GAMEPLAY_GUIDE.md) - Règles et mécaniques de jeu
 - [Guide de l'Éditeur de Maps](./guides/MAP_EDITOR_GUIDE.md) - Création de plateaux personnalisés
 
-### Pour les Développeurs
-- [Guide du Développeur](./guides/DEVELOPER_GUIDE.md) - Guide complet pour les développeurs
-- [Directives de Contribution](./guides/CONTRIBUTION_GUIDELINES.md) - Comment contribuer au projet
-
----
 
 ## 🎨 Design & UI ([/design](./design/))
 
