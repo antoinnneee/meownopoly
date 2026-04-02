@@ -30,15 +30,40 @@ QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTiles
     return snapableTilesArray;
 }
 
+bool Game::saveCurrentMap(){
+
+    Map *currentMap = MapFileManager::instance()->getCurrentMap();
+    MapInfo *currentMapInfo = currentMap->getMapInfo();
+    MapTypes::MapType currentType = currentMapInfo->getType();
+
+    qDebug() << Q_FUNC_INFO << currentMapInfo->getMapName() << " Type: " << currentType;
+
+    QJsonObject jsonObject;
+    QString mapInfoJson = currentMapInfo->toJSON();
+    QJsonDocument mapInfoDoc = QJsonDocument::fromJson(mapInfoJson.toUtf8());
+    QJsonArray snapableTilesArray;
+
+    jsonObject["mapInfo"] = mapInfoDoc.object();
+
+    for (int i = 0; i < currentMap->tiles().size(); ++i) {
+        ItemSnapable* currentTile = currentMap->tiles().at(i);
+        snapableTilesArray = formatTileDataToJson(*currentTile, snapableTilesArray);
+    }
+    jsonObject["snapableTiles"] = snapableTilesArray;
+    qDebug() << Q_FUNC_INFO << "Saving map with " << snapableTilesArray.size() << " snapable tiles.";
+    return MapFileManager::saveMap(jsonObject, currentMapInfo->getMapName(), currentType);
+}
+
 bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType)
 {
-    qDebug() << "Game::saveMap called " << mapInfo->getMapName() << " Type: " << mapType;
+    qDebug() << Q_FUNC_INFO << mapInfo->getMapName() << " Type: " << mapType;
     Logger::instance()->info(QString("saveMap called %1, Type %2").arg(mapInfo->getMapName()).arg(mapType), "Game");
 
     QJsonArray snapableTilesArray;
     QJsonObject jsonObject;
     QString mapInfoJson = mapInfo->toJSON();
     QJsonDocument mapInfoDoc = QJsonDocument::fromJson(mapInfoJson.toUtf8());
+
     jsonObject["mapInfo"] = mapInfoDoc.object();
 
     for (int i = 0; i < itemSnapableList.size(); ++i) {
@@ -127,11 +152,24 @@ void Game::askNext()
 
 // ---- Delta undo/redo ----
 
+bool Game::saveOnEdit(){
+
+    QSettings setting;
+    bool flag = false;
+
+    setting.beginGroup("Editor/SaveConfig");
+    flag = setting.value("saveEvent") == "3";
+    qDebug() << "setting.value(saveEvent) " << setting.value("saveEvent");
+    return flag;
+}
+
 void Game::updateEditState(int type, ItemSnapable* tile, QUuid groupId)
 {
+    qDebug() << Q_FUNC_INFO << "tile status " << tile << ", type:" << type << "tileId:" << (tile ? tile->uniqueId() : QUuid()) << "groupId:" << groupId;
     Map *map = MapFileManager::instance()->getCurrentMap();
     if (!map || !map->canSave() || !tile)
         return;
+    qDebug() << Q_FUNC_INFO << "Current map is valid, proceeding with edit delta creation.";
 
     EditDelta delta;
     delta.type    = static_cast<EditDeltaType::Type>(type);
@@ -147,6 +185,11 @@ void Game::updateEditState(int type, ItemSnapable* tile, QUuid groupId)
 
     tile->commitCurrentState();
     map->pushDelta(delta);
+
+    if (saveOnEdit()){
+        qDebug() << Q_FUNC_INFO << "saveOnEdit is enabled, saving current map after edit.";
+        qDebug() << Q_FUNC_INFO << "process return " <<  Game::saveCurrentMap();
+    }
 }
 
 void Game::updateEditMetadata(const QString& beforeJson, const QString& afterJson)

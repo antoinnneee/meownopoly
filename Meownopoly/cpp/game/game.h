@@ -74,6 +74,7 @@ public:
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
     QJsonArray formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTilesArray);
 
+    Q_INVOKABLE bool saveCurrentMap();
     Q_INVOKABLE bool saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType);
     Q_INVOKABLE bool deleteMap(QString mapName, MapTypes::MapType mapType);
     Q_INVOKABLE Map *loadMap(QString mapName, MapTypes::MapType mapType);
@@ -84,6 +85,7 @@ public:
     Q_INVOKABLE void askNext();
 
     // ---- Delta undo/redo API ----
+    static bool saveOnEdit();
     Q_INVOKABLE void updateEditState(int type, ItemSnapable* tile, QUuid groupId = {});
     Q_INVOKABLE void updateEditMetadata(const QString& beforeJson, const QString& afterJson);
     Q_INVOKABLE QUuid beginTransaction();

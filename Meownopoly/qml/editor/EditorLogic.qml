@@ -7,7 +7,7 @@ import ItemSnapable
 import TileType
 import meowComponent
 
-import bottomMainPanel
+// import bottomMainPanel
 
 import MapInfo
 import EditorEnum

@@ -72,6 +72,7 @@ signals:
 
 private:
 
+
     QList<ItemSnapable*> m_tiles;
     int m_caseTileCount = 0;
     int m_decorationTileCount = 0;

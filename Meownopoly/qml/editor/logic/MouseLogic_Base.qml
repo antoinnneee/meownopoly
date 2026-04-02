@@ -286,7 +286,7 @@ QtObject {
                 configLinkPanel.setTargetElement(element)
             }
             if (element.snapableParameters.caseData) {
-                console.log("[LOGIC] Updating case configuration for:", element.snapableParameters.caseData.name)
+                console.log("[LOGIC EDITOR] Updating case configuration for:", element.snapableParameters.caseData.name)
                 if (caseConfigPanel)
                 {
                     caseConfigPanel.setTargetCase(element)
