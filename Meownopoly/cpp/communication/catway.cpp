@@ -5,10 +5,7 @@
 #include <QHostAddress>
 #include <QUdpSocket>
 #include <QVariant>
-#include <QElapsedTimer>
 #include <QDebug>
-#include <cstdarg>
-#include <cstdio>
 #include <QSet>
 
 #include "stun_manager.h"

@@ -17,7 +17,6 @@ StunManager::StunManager(QObject *parent)
     m_stunTimeout->setSingleShot(true);
     m_stunTimeout->setInterval(5000);
     connect(m_stunTimeout, &QTimer::timeout, this, &StunManager::onStunTimeout);
-    disconnect(sock, &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
 }
 
 void StunManager::onStunTimeout()

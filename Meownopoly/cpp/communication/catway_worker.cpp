@@ -4,6 +4,17 @@
 
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/// Convertit un QByteArray const en pointeur uint8_t* pour reliable.io
+/// (l'API reliable ne modifie pas les données passées à send_packet).
+static inline uint8_t *toReliableBytes(const QByteArray &ba)
+{
+    return reinterpret_cast<uint8_t *>(const_cast<char *>(ba.constData()));
+}
+
+// ---------------------------------------------------------------------------
 // Debug reliable : redirection des logs vers qDebug
 // ---------------------------------------------------------------------------
 static int catway_reliable_printf(const char *fmt, ...)
@@ -163,7 +174,7 @@ void CatwayWorker::broadcastReliable(const QByteArray &data)
     for (const PlayerSnapshot &s : m_playerSnapshots) {
         if (!s.p2pConnected || !s.endpoint) continue;
         reliable_endpoint_send_packet(s.endpoint,
-                                      reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())),
+                                      toReliableBytes(data),
                                       data.size());
     }
 }
@@ -176,7 +187,7 @@ void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray 
         return;
     }
     reliable_endpoint_send_packet(snap->endpoint,
-                                  reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())),
+                                  toReliableBytes(data),
                                   data.size());
 }
 
@@ -189,7 +200,7 @@ void CatwayWorker::sendReliablePacket(PlayerNetwork *player, const QByteArray &d
         return;
     }
     reliable_endpoint_send_packet(ep,
-                                  reinterpret_cast<uint8_t *>(const_cast<char *>(data.constData())),
+                                  toReliableBytes(data),
                                   data.size());
 }
 

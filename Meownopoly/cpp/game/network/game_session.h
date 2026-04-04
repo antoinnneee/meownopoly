@@ -100,6 +100,11 @@ private:
     void connectToCatway();
     void disconnectFromCatway();
 
+    /// Hôte : relay un paquet fiable à tous les joueurs P2P connectés sauf senderId.
+    void relayReliableToOthers(const QString &senderId, const QByteArray &packet);
+    /// Hôte : relay un message UDP brut à tous les joueurs P2P connectés sauf senderId.
+    void relayRawToOthers(const QString &senderId, const QString &message);
+
     bool    m_active          = false;
     bool    m_isHost          = false;
     QString m_localPlayerId;

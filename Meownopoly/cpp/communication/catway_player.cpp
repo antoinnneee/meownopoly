@@ -1,14 +1,8 @@
 #include "catway.h"
 
-#include <QQmlApplicationEngine>
-#include <QQmlEngine>
 #include <QHostAddress>
 #include <QUdpSocket>
-#include <QVariant>
-#include <QElapsedTimer>
 #include <QDebug>
-#include <cstdarg>
-#include <cstdio>
 
 #include "../tools/logger.h"
 
