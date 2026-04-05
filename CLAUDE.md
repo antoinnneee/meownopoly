@@ -10,7 +10,7 @@ Meownopoly is a networked board game (Monopoly-inspired, cat-themed) built with 
 
 - **V2** : branche principale de développement (équivalent de main pour le travail actif)
 - **V2Antoine** : branche de travail d'Antoine
-- **V2_Valou** : branche de travail de Valère
+- **V2_Valou** : branche de travail de Valou
 - Les deux développeurs mergent dans V2 une fois leur travail stabilisé
 
 ## Build Commands
