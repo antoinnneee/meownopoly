@@ -37,3 +37,5 @@ chatServer/.deployEnv
 .vscode/settings.json
 /build
 /Meownopoly/.cache
+.claude/settings.local.json
+/.claude/skills
