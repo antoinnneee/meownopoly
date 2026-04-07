@@ -9,7 +9,11 @@ UdpSocketInfo::~UdpSocketInfo()
 {
     if (m_socket) {
         disconnect(m_socket, nullptr, this, nullptr);
-        if (m_socket->parent() == this)
+        // Toujours fermer et libérer le socket, même si le parent a été changé
+        // (setParent(nullptr) est utilisé avant moveToThread)
+        if (m_socket->thread() == thread())
+            delete m_socket;
+        else
             m_socket->deleteLater();
         m_socket = nullptr;
     }

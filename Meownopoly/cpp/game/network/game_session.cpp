@@ -112,6 +112,7 @@ void GameSession::disconnectFromCatway()
 
 void GameSession::sendEvent(int type, const QJsonObject &payload)
 {
+    if (!m_active) return;
     const auto msgType = static_cast<GameMessageType::Value>(type);
     const QByteArray packet = GameProtocol::pack(msgType, payload);
     Catway *catway = Catway::instance();
@@ -132,7 +133,7 @@ void GameSession::sendEvent(int type, const QJsonObject &payload)
 
 void GameSession::broadcastEvent(int type, const QJsonObject &payload)
 {
-    if (!m_isHost) {
+    if (!m_active || !m_isHost) {
         qWarning() << "[GameSession] broadcastEvent called by non-host — ignoring.";
         return;
     }

@@ -106,7 +106,8 @@ void StunManager::setStunSenderPort(quint16 port)
 void StunManager::sendStunRequest()
 {
     m_stunTimeout->start();
-    connect(m_socketInfo->socket(), &QUdpSocket::readyRead, this, &StunManager::onReadyRead);
+    connect(m_socketInfo->socket(), &QUdpSocket::readyRead, this, &StunManager::onReadyRead,
+            Qt::UniqueConnection);
     QByteArray packet;
     QDataStream out(&packet, QIODevice::WriteOnly);
     out.setByteOrder(QDataStream::BigEndian);
@@ -232,7 +233,7 @@ void StunManager::handleStunResponse(const QByteArray &datagram, const QHostAddr
             pos += 4;
             if (pos + attrLen > datagramSize) break;
 
-            if (attrType == 0x0001) {
+            if (attrType == 0x0001 && attrLen >= 8) {
                 quint16 port = (quint8)datagram[pos+2] << 8 | (quint8)datagram[pos+3];
                 quint8 a = (quint8)datagram[pos+4];
                 quint8 b = (quint8)datagram[pos+5];
@@ -248,7 +249,7 @@ void StunManager::handleStunResponse(const QByteArray &datagram, const QHostAddr
                 emit externalAddressReceived(ip, port);
                 m_stunTimeout->stop();
                 return;
-            } else if (attrType == 0x0020) {
+            } else if (attrType == 0x0020 && attrLen >= 8) {
                 quint16 xPort = (quint8)datagram[pos+2] << 8 | (quint8)datagram[pos+3];
                 quint32 xIp = (quint8)datagram[pos+4] << 24 | (quint8)datagram[pos+5] << 16 | (quint8)datagram[pos+6] << 8 | (quint8)datagram[pos+7];
 

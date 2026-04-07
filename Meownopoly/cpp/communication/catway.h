@@ -28,6 +28,8 @@ struct PlayerSnapshot {
     bool p2pConnected  = false;
     reliable_endpoint_t *endpoint = nullptr; // valide tant que le joueur est dans m_players
     QUdpSocket *socket            = nullptr; // valide tant que socketInfo est en vie
+    qint64 lastReceivedMs = 0; // timestamp du dernier paquet reçu (pour timeout)
+    int strikeRetryCount  = 0; // compteur de retries HP:STRIKE (max avant abandon)
 };
 Q_DECLARE_METATYPE(QList<PlayerSnapshot>)
 
@@ -64,12 +66,17 @@ public slots:
     /// Met à jour la copie locale des snapshots joueurs (appelé depuis le thread GUI via QueuedConnection).
     void setPlayerSnapshots(QList<PlayerSnapshot> snapshots);
 
+    /// Initialise le timestamp de réception pour un joueur (appelé quand le hole punch réussit).
+    void initLastReceived(const QString &playerId);
+
 private slots:
     void onReliableUpdate();
     void onHeartbeat();
 
 signals:
     void datagramReceived(QUdpSocket *socket, QByteArray datagram, QHostAddress sender, quint16 port);
+    /// Émis quand un joueur P2P n'a pas répondu depuis trop longtemps.
+    void playerTimedOut(QString playerId);
 
 private:
     StunManager *m_stunManager;
@@ -79,6 +86,10 @@ private:
     int m_heartbeatInterval = 10000;
 
     QList<PlayerSnapshot> m_playerSnapshots;
+    /// Timestamps persistés par playerId (survit aux rebuilds de snapshots)
+    QHash<QString, qint64> m_lastReceivedByPlayer;
+    /// Compteurs de retries HP:STRIKE persistés par playerId
+    QHash<QString, int> m_strikeRetryByPlayer;
 };
 
 class Catway : public QObject

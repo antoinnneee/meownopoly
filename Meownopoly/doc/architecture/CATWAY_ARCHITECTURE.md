@@ -140,13 +140,16 @@ Struct définie en fin de `[catway.h](../../cpp/communication/catway.h)`, allou�
 
 ```cpp
 struct CatwayReliableContext {
-    PlayerNetwork *player;
+    PlayerNetwork *player;   // GUI-thread only — ne PAS accéder depuis le network thread
+    QString        playerId; // copie thread-safe pour les callbacks réseau
     Catway        *catway;
     CatwayWorker  *worker;   // pour findSnapshot() dans catway_transmit_packet
 };
 ```
 
-Stockage dans `Catway::m_reliableContexts` (`QHash<PlayerNetwork*, CatwayReliableContext*>`, voir P6).
+Le champ `playerId` est une **copie thread-safe** : les callbacks réseau (`catway_transmit_packet`, `catway_process_packet`) utilisent `ctx->playerId` au lieu de `ctx->player->playerId()` pour éviter tout accès cross-thread au `PlayerNetwork`. Il est mis à jour dans `onPlayerNetworkPlayerIdChanged()`.
+
+Stockage dans `Catway::m_reliableContexts` (`QHash<PlayerNetwork*, CatwayReliableContext*>`).
 
 ### 2.7 Callbacks `catway_transmit_packet` / `catway_process_packet` — Thread Réseau
 
@@ -161,7 +164,12 @@ Fonctions statiques en portée fichier, définies dans `[catway_player.cpp](../.
 
 ### 2.9 Timer heartbeat (10 s) — Thread Réseau
 
-`QTimer` créé dans le constructeur de `CatwayWorker`. Envoie `HP:PING` via UDP à chaque joueur dont `p2pConnected == true`, pour maintenir les trous NAT ouverts.
+`QTimer` créé dans le constructeur de `CatwayWorker`, **démarré dans `initReliable()`** (sur le network thread). Toutes les 10 secondes :
+
+- **Joueurs `p2pConnected`** : envoie `HP:PING` pour maintenir les trous NAT ouverts. Si aucun paquet n'a été reçu depuis **30 secondes**, émet `playerTimedOut(playerId)` et le joueur est marqué déconnecté côté GUI.
+- **Joueurs non connectés** (avec IP/port connus) : renvoie `HP:STRIKE` automatiquement (retry hole punch, max **15 essais** soit ~150s avant abandon).
+
+Les timestamps de réception sont persistés dans `m_lastReceivedByPlayer` (QHash) pour survivre aux rebuilds de snapshots. Les compteurs de retry HP:STRIKE sont persistés dans `m_strikeRetryByPlayer`.
 
 ### 2.10 `ChatClient` — Thread GUI
 
@@ -225,7 +233,7 @@ sequenceDiagram
         else HP:FINAL
             Catway->>Catway: player.p2pConnected = true
         else HP:STRIKE
-            Catway->>Catway: emit log
+            Catway->>Catway: sendUdpDatagram HP:REPLY
         else HP:PING
             Catway->>Catway: traitement silencieux (pas de log)
         else message jeu raw
@@ -310,6 +318,31 @@ sequenceDiagram
 
 
 La logique d’enchaînement STUN + file d’attente est centralisée dans `Catway::triggerStunForPendingCommand()` (`[catway_stun.cpp](../../cpp/communication/catway_stun.cpp)`) : au premier élément en file, on **déconnecte** `m_externalAddressTakePortConnection` (handler utilisé par `setupNewPort` / `onExternalAddressReceivedTakePort`) pour éviter un `takeStunSocket()` intempestif, puis on **connecte** `externalAddressReceived` vers `onPendingCommandReady` via `m_pendingCommandConnection`, déconnectée après traitement ou en cas d’échec STUN.
+
+---
+
+### Flux F : Détection same-network (NAT hairpinning)
+
+Quand deux instances sont sur le même réseau (même IP publique STUN), les paquets UDP envoyés à l’IP publique ne reviennent pas (NAT hairpinning non garanti). Le système détecte cela automatiquement :
+
+1. Les commandes chat `REQUEST_CONNECTION_INFO`, `REPLY_CONNECTION_INFO` et `UDP_HOLE_PUNCH_REQUEST` incluent un champ `localPort` en plus de `ip`/`port`.
+2. Dans `onChatCommandReceived`, si l’IP publique du peer correspond à l’une de nos IPs publiques (`m_localSocketInfos` ou `m_currentStunSocketInfo`), l’adresse de destination est remplacée par `127.0.0.1:localPort`.
+3. Cela permet le P2P sur la même machine (test dual-instance) ou sur le même réseau local.
+
+---
+
+### Flux G : Shutdown propre
+
+1. `Catway::~Catway()` appelle `m_worker->tearDown()` via `BlockingQueuedConnection` → arrête les timers heartbeat et reliable.
+2. `m_networkThread->quit()` puis `wait(3000)`.
+3. Si le thread ne s’arrête pas dans les 3 secondes, `terminate()` + `wait()`.
+4. Le worker est détruit automatiquement via `QThread::finished` → `deleteLater`.
+
+---
+
+### Test dual-instance
+
+Le flag CLI `--instance N` (ex: `Meownopoly.exe --instance 2`) sépare le `applicationName` Qt, ce qui isole les QSettings et la base de données SQLite par instance. Le target CMake `dual_test_p2p` lance les deux instances automatiquement.
 
 ---
 

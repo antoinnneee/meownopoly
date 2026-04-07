@@ -2,6 +2,7 @@
 
 #include <QHostAddress>
 #include <QUdpSocket>
+#include <QDateTime>
 #include <QDebug>
 
 #include "../tools/logger.h"
@@ -57,6 +58,7 @@ void Catway::pushPlayerSnapshots()
         s.p2pConnected = p->isP2pConnected();
         s.endpoint     = p->endpoint();
         s.socket       = p->socketInfo() ? p->socketInfo()->socket() : nullptr;
+        // lastReceivedMs sera restauré par le worker depuis m_lastReceivedByPlayer
         snapshots.append(s);
     }
     QMetaObject::invokeMethod(m_worker, "setPlayerSnapshots", Qt::QueuedConnection,
@@ -90,13 +92,15 @@ void Catway::addPlayer(PlayerNetwork *player)
 
     auto *ctx = new CatwayReliableContext{player, player->playerId(), this, m_worker};
     m_reliableContexts[player] = ctx;
+    // initReliable crée l'endpoint — doit être appelé AVANT pushPlayerSnapshots
+    // pour que le snapshot contienne un endpoint valide dès le premier push.
     player->initReliable(ctx, catway_transmit_packet, catway_process_packet);
 
     connect(player, &PlayerNetwork::ipChanged,          this, &Catway::pushPlayerSnapshots);
     connect(player, &PlayerNetwork::portChanged,        this, &Catway::pushPlayerSnapshots);
     connect(player, &PlayerNetwork::p2pConnectedChanged,this, &Catway::pushPlayerSnapshots);
     connect(player, &PlayerNetwork::socketInfoChanged,  this, &Catway::pushPlayerSnapshots);
-    pushPlayerSnapshots();
+    pushPlayerSnapshots(); // endpoint est déjà créé ici
 }
 
 void Catway::removePlayer(PlayerNetwork *player)
@@ -112,6 +116,10 @@ void Catway::removePlayer(PlayerNetwork *player)
 
     m_playersById.remove(m_playerIdByPlayer.value(player));
     m_playerIdByPlayer.remove(player);
+
+    // Push les snapshots AVANT de détruire l'endpoint/context pour éviter
+    // que le network thread utilise un pointeur mort pendant la destruction.
+    pushPlayerSnapshots();
 
     UdpSocketInfo *si = player->socketInfo();
     if (si) {
@@ -140,7 +148,6 @@ void Catway::removePlayer(PlayerNetwork *player)
 
     player->setParent(nullptr);
     emit playersChanged();
-    pushPlayerSnapshots();
 }
 
 

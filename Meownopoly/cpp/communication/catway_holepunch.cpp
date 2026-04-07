@@ -26,6 +26,10 @@ void Catway::handleHolePunchReply(PlayerNetwork *player)
     if (!player) return;
     player->setP2pConnected(true);
     sendUdpDatagram(player, QStringLiteral("HP:FINAL"));
+    // Initialiser le timestamp côté worker pour éviter un faux timeout
+    QMetaObject::invokeMethod(m_worker, [this, id = player->playerId()]() {
+        m_worker->initLastReceived(id);
+    }, Qt::QueuedConnection);
     emit log("UDP Hole Punching: Received REPLY, sent FINAL. Connection should be open!");
 }
 
@@ -33,13 +37,17 @@ void Catway::handleHolePunchFinal(PlayerNetwork *player)
 {
     if (!player) return;
     player->setP2pConnected(true);
+    QMetaObject::invokeMethod(m_worker, [this, id = player->playerId()]() {
+        m_worker->initLastReceived(id);
+    }, Qt::QueuedConnection);
     emit log("UDP Hole Punching: Received FINAL. Punching SUCCESS!");
 }
 
 void Catway::handleHolePunchStrike(PlayerNetwork *player)
 {
-    Q_UNUSED(player)
-    emit log("UDP Hole Punching: Received STRIKE. Other side is punching.");
+    if (!player) return;
+    emit log("UDP Hole Punching: Received STRIKE. Sending REPLY...");
+    sendUdpDatagram(player, QStringLiteral("HP:REPLY"));
 }
 
 void Catway::handleHolePunchPing(PlayerNetwork *player)

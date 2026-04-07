@@ -106,9 +106,17 @@ sequenceDiagram
 ### Étape 4 : Maintien de la connexion (Heartbeat / Keep-Alive)
 Une fois la connexion ouverte (réception de `HP:REPLY` ou `HP:FINAL`), le routeur NAT doit garder le "trou" ouvert. Les routeurs ferment généralement les ports inactifs au bout d'un certain temps de non-utilisation (ex: 30 à 120 secondes).
 Pour éviter cela :
-- L'instance de `Catway` déclenche un `QTimer` configuré par la propriété `heartbeatInterval` (valeur par défaut : 10000 millisecondes / 10s).
-- À chaque "tic", le système parcourt la liste des joueurs. Pour tous ceux dont le Hole Punching a réussi (`player->isP2pConnected() == true`), une petite trame silencieuse `"HP:PING"` est envoyée.
-- À la réception, la trame `"HP:PING"` est simplement ignorée pour ne pas polluer les logs. Sa simple arrivée (et émission) au niveau réseau permet de réinitialiser le chronomètre d'expiration du NAT.
+- L'instance de `CatwayWorker` déclenche un `QTimer` configuré à 10 secondes (`heartbeatInterval`).
+- À chaque "tic", le système parcourt les snapshots des joueurs :
+  - **Joueurs `p2pConnected`** : envoie `"HP:PING"` pour maintenir le trou NAT.
+  - **Joueurs non connectés** (avec IP/port connus) : renvoie `"HP:STRIKE"` automatiquement (retry hole punch, max 15 essais).
+- **Détection de timeout** : si aucun paquet n'a été reçu d'un joueur connecté depuis 30 secondes, le signal `playerTimedOut(playerId)` est émis et le joueur est marqué déconnecté (`p2pConnected = false`).
+- Les timestamps de réception (`lastReceivedMs`) et compteurs de retry (`strikeRetryCount`) sont persistés côté worker dans des `QHash` pour survivre aux rebuilds de snapshots.
+
+### Étape 4bis : Détection same-network (NAT hairpinning)
+Quand deux joueurs partagent la même IP publique (même réseau local ou même machine), le NAT hairpinning n'est pas garanti. Le système détecte automatiquement cette situation :
+- Les commandes chat incluent un champ `localPort` en plus de `ip`/`port`.
+- Si l'IP publique du peer correspond à l'une de nos IPs publiques, l'adresse est remplacée par `127.0.0.1:localPort`.
 
 #### Diagramme Étape 4 (Heartbeat HP:PING)
 

@@ -70,6 +70,14 @@ Catway::Catway(QObject *parent)
     connect(m_worker, &CatwayWorker::datagramReceived,
             this, &Catway::onDatagramReceived, Qt::QueuedConnection);
 
+    connect(m_worker, &CatwayWorker::playerTimedOut, this, [this](const QString &playerId) {
+        PlayerNetwork *p = playerById(playerId);
+        if (p && p->isP2pConnected()) {
+            p->setP2pConnected(false);
+            emit log(QString("Player %1 timed out — marked as disconnected").arg(playerId));
+        }
+    }, Qt::QueuedConnection);
+
     auto *am = AccountManager::instance();
     connect(am, &AccountManager::stunServerChanged, this, &Catway::onAccountStunChanged);
     connect(am, &AccountManager::stunPortChanged, this, &Catway::onAccountStunChanged);
@@ -80,6 +88,8 @@ Catway::Catway(QObject *parent)
 Catway::~Catway()
 {
     if (m_networkThread) {
+        // Arrêter proprement les timers et la boucle reliable avant de quitter le thread
+        QMetaObject::invokeMethod(m_worker, "tearDown", Qt::BlockingQueuedConnection);
         m_networkThread->quit();
         if (!m_networkThread->wait(3000)) {
             m_networkThread->terminate();
@@ -300,6 +310,7 @@ void Catway::sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data)
 {
     if (!player || data.isEmpty()) return;
     const QString playerId = player->playerId();
+    if (playerId.isEmpty()) return;
     QMetaObject::invokeMethod(m_worker, "sendReliablePacket", Qt::QueuedConnection,
                               Q_ARG(QString, playerId),
                               Q_ARG(QByteArray, data));
