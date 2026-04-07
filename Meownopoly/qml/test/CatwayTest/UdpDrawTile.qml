@@ -19,9 +19,8 @@ Rectangle {
     function reliablePayloadToString(data) {
         if (typeof data === "string")
             return data
-        if (data instanceof ArrayBuffer)
-            return new TextDecoder("utf-8").decode(data)
-        return new TextDecoder("utf-8").decode(new Uint8Array(data))
+        // QByteArray arrive comme objet en QML — toString() le convertit en UTF-8
+        return String(data)
     }
 
     function applyDrawMessage(senderId, message) {

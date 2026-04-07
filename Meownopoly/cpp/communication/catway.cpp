@@ -254,8 +254,27 @@ void Catway::onChatCommandReceived(const QString &senderId, const QString &comma
     if (kChatCommandsWithConnectionInfo.contains(commandType)) {
         player = getOrCreatePlayer(senderId);
         if (player) {
-            const QString ip = data[QStringLiteral("ip")].toString();
-            const int port = data[QStringLiteral("port")].toInt();
+            QString ip = data[QStringLiteral("ip")].toString();
+            int port = data[QStringLiteral("port")].toInt();
+            const int localPort = data[QStringLiteral("localPort")].toInt();
+
+            // Détection same-network : si le peer a la même IP publique que nous,
+            // on passe en loopback + port local (NAT hairpinning non garanti)
+            if (localPort > 0 && !ip.isEmpty()) {
+                bool samePublicIp = false;
+                for (UdpSocketInfo *si : m_localSocketInfos) {
+                    if (si && si->publicAddress() == ip) { samePublicIp = true; break; }
+                }
+                if (!samePublicIp && m_currentStunSocketInfo && m_currentStunSocketInfo->publicAddress() == ip)
+                    samePublicIp = true;
+
+                if (samePublicIp) {
+                    emit log(QString("Same public IP detected (%1) — switching to 127.0.0.1:%2").arg(ip, QString::number(localPort)));
+                    ip = QStringLiteral("127.0.0.1");
+                    port = localPort;
+                }
+            }
+
             player->setIp(ip);
             player->setPort(port >= 1 && port <= 65535 ? static_cast<quint16>(port) : 0);
         }
@@ -280,8 +299,9 @@ void Catway::onPendingCommandReady(QString ip, quint16 port)
 void Catway::sendReliableToPlayer(PlayerNetwork *player, const QByteArray &data)
 {
     if (!player || data.isEmpty()) return;
+    const QString playerId = player->playerId();
     QMetaObject::invokeMethod(m_worker, "sendReliablePacket", Qt::QueuedConnection,
-                              Q_ARG(PlayerNetwork*, player),
+                              Q_ARG(QString, playerId),
                               Q_ARG(QByteArray, data));
 }
 

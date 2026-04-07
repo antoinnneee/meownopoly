@@ -93,7 +93,7 @@ void ChatClient::sendPing(const QString &targetPlayerId) {
     sendCommand("PING", data, targetPlayerId);
 }
 
-void ChatClient::sendRequestConnectionInfo(const QString &recipientId, const QString &ip, quint16 port) {
+void ChatClient::sendRequestConnectionInfo(const QString &recipientId, const QString &ip, quint16 port, quint16 localPort) {
     if (ip.isEmpty() || port == 0) {
         Logger::instance()->error(
             QString("sendRequestConnectionInfo annulé : socket manquant ou port invalide (ip='%1', port=%2)").arg(ip).arg(port),
@@ -104,6 +104,8 @@ void ChatClient::sendRequestConnectionInfo(const QString &recipientId, const QSt
     QJsonObject data;
     data["ip"] = ip;
     data["port"] = static_cast<int>(port);
+    if (localPort > 0)
+        data["localPort"] = static_cast<int>(localPort);
     sendCommand("REQUEST_CONNECTION_INFO", data, recipientId);
 }
 

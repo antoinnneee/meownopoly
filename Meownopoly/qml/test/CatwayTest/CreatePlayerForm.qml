@@ -203,7 +203,8 @@ Rectangle {
                         return
                     var ip = info.publicAddress || ""
                     var port = info.publicPort || 0
-                    Catway.chatClient.sendRequestConnectionInfo(pid, ip, port)
+                    var lport = info.localPort || 0
+                    Catway.chatClient.sendRequestConnectionInfo(pid, ip, port, lport)
                 }
             }
             Text {

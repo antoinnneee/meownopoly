@@ -14,6 +14,7 @@ void Catway::initiateHolePunch(PlayerNetwork *player)
     QJsonObject data;
     data[QStringLiteral("ip")] = si->publicAddress();
     data[QStringLiteral("port")] = static_cast<int>(si->publicPort());
+    data[QStringLiteral("localPort")] = static_cast<int>(si->localPort());
     m_chatClient->sendCommand(QStringLiteral("UDP_HOLE_PUNCH_REQUEST"), data, player->playerId());
 
     sendUdpDatagram(player, QStringLiteral("HP:STRIKE"));
@@ -69,6 +70,7 @@ void Catway::handleChatRequestConnectionInfo(const QString &senderId, const QJso
         QJsonObject replyData;
         replyData[QStringLiteral("ip")] = socketInfo->publicAddress();
         replyData[QStringLiteral("port")] = static_cast<int>(socketInfo->publicPort());
+        replyData[QStringLiteral("localPort")] = static_cast<int>(socketInfo->localPort());
         m_chatClient->sendCommand(QStringLiteral("REPLY_CONNECTION_INFO"), replyData, senderId);
     } else {
         triggerStunForPendingCommand(senderId, QStringLiteral("REQUEST_CONNECTION_INFO"), data);

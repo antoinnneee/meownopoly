@@ -191,19 +191,6 @@ void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray 
                                   data.size());
 }
 
-void CatwayWorker::sendReliablePacket(PlayerNetwork *player, const QByteArray &data)
-{
-    if (!player) return;
-    reliable_endpoint_t *ep = player->endpoint();
-    if (!ep) {
-        qDebug() << "[reliable] Error: No endpoint for player" << player->playerId();
-        return;
-    }
-    reliable_endpoint_send_packet(ep,
-                                  toReliableBytes(data),
-                                  data.size());
-}
-
 void CatwayWorker::tearDown()
 {
     if (m_reliableUpdateTimer)

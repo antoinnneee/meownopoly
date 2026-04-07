@@ -55,7 +55,6 @@ public slots:
     UdpSocketInfo* takeStunSocket();
 
     void sendDatagram(QUdpSocket *socket, const QByteArray &data, const QHostAddress &address, quint16 port);
-    void sendReliablePacket(PlayerNetwork *player, const QByteArray &data);
     void sendReliablePacket(const QString &playerId, const QByteArray &data);
     void onSocketReadyRead();
 
@@ -217,7 +216,8 @@ private:
 };
 
 struct CatwayReliableContext {
-    PlayerNetwork *player;
+    PlayerNetwork *player;   // GUI-thread only — ne PAS accéder depuis le network thread
+    QString        playerId; // copie thread-safe pour les callbacks réseau
     Catway        *catway;
     CatwayWorker  *worker;
 };

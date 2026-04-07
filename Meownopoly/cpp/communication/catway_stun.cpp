@@ -36,6 +36,10 @@ UdpSocketInfo *Catway::takeStunSocket()
     UdpSocketInfo *info = nullptr;
     QMetaObject::invokeMethod(m_worker, "takeStunSocket", Qt::BlockingQueuedConnection, Q_RETURN_ARG(UdpSocketInfo*, info));
 
+    // Invalider immédiatement pour éviter une double-prise dans addPlayer
+    // (onCurrentSocketInfoChanged mettra à jour avec le nouveau socket via QueuedConnection)
+    m_currentStunSocketInfo = nullptr;
+
     if (info) {
         info->setParent(this);
 

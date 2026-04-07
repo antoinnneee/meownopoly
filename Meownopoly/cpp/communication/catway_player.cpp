@@ -12,12 +12,12 @@ static void catway_transmit_packet(
     uint8_t *packet_data, int packet_bytes)
 {
     auto *ctx = static_cast<CatwayReliableContext *>(context);
-    if (!ctx || !ctx->player || !ctx->catway || !ctx->worker) return;
+    if (!ctx || !ctx->catway || !ctx->worker) return;
 
-    const PlayerSnapshot *snap = ctx->worker->findSnapshot(ctx->player->playerId());
+    const PlayerSnapshot *snap = ctx->worker->findSnapshot(ctx->playerId);
     if (!snap || snap->ip.isEmpty() || snap->port == 0 || !snap->socket) {
         qDebug() << "[reliable] Skip transmit: no snapshot or missing address for player"
-                 << (ctx->player ? ctx->player->playerId() : QStringLiteral("unknown"));
+                 << ctx->playerId;
         return;
     }
 
@@ -36,7 +36,7 @@ static int catway_process_packet(
     auto *ctx = static_cast<CatwayReliableContext *>(context);
     if (!ctx || !ctx->catway) return 0;
     QByteArray data(reinterpret_cast<const char *>(packet_data), packet_bytes);
-    QString senderId = ctx->player->playerId();
+    const QString senderId = ctx->playerId;
     QMetaObject::invokeMethod(ctx->catway, [ctx, senderId, data]() {
         emit ctx->catway->reliableMessageReceived(senderId, data);
     }, Qt::QueuedConnection);
@@ -88,7 +88,7 @@ void Catway::addPlayer(PlayerNetwork *player)
             Qt::UniqueConnection);
     emit playersChanged();
 
-    auto *ctx = new CatwayReliableContext{player, this, m_worker};
+    auto *ctx = new CatwayReliableContext{player, player->playerId(), this, m_worker};
     m_reliableContexts[player] = ctx;
     player->initReliable(ctx, catway_transmit_packet, catway_process_packet);
 
@@ -174,6 +174,11 @@ void Catway::onPlayerNetworkPlayerIdChanged()
     if (!newId.isEmpty())
         m_playersById.insert(newId, p);
     m_playerIdByPlayer[p] = newId;
+
+    // Mettre à jour le contexte reliable pour que les callbacks réseau utilisent le bon id
+    CatwayReliableContext *ctx = m_reliableContexts.value(p);
+    if (ctx)
+        ctx->playerId = newId;
 }
 
 PlayerNetwork *Catway::getOrCreatePlayer(const QString &playerId)

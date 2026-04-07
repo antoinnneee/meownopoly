@@ -180,6 +180,20 @@ endif()
 # endif()
 
 # ============================================================================
+# Target de test P2P dual-instance
+# ============================================================================
+if(WIN32)
+    add_custom_target(dual_test_p2p
+        COMMAND cmd /c start "Meownopoly - Instance 1" "$<TARGET_FILE:${PROJECT_NAME}>"
+        COMMAND ${CMAKE_COMMAND} -E sleep 2
+        COMMAND cmd /c start "Meownopoly - Instance 2" "$<TARGET_FILE:${PROJECT_NAME}>" --instance 2
+        DEPENDS ${PROJECT_NAME}
+        COMMENT "Lancement du test P2P dual-instance..."
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+endif()
+
+# ============================================================================
 # Messages d'information
 # ============================================================================
 message(STATUS "")
