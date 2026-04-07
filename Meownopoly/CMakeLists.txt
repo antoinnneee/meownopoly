@@ -138,31 +138,16 @@ set(QML_IMPORT_PATH
 )
 
 # ============================================================================
-# Configuration de déploiement
+# Configuration de déploiement (portable Windows)
 # ============================================================================
-# Windows : configuration pour windeployqt (optionnel, décommentez si besoin)
-# if(WIN32)
-#     set(DEPLOY_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/deploy.bat")
-#     file(WRITE ${DEPLOY_SCRIPT} 
-#         "windeployqt \"$<TARGET_FILE:${PROJECT_NAME}>\" --qmldir \"${CMAKE_CURRENT_SOURCE_DIR}/qml\" --no-translations"
-#     )
-#     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#         COMMAND ${DEPLOY_SCRIPT}
-#         COMMENT "Running windeployqt..."
-#     )
-# endif()
-
-# Linux/Unix
-if(UNIX AND NOT ANDROID AND NOT APPLE)
-    install(TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION /opt/${PROJECT_NAME}/bin
+if(WIN32)
+    find_program(WINDEPLOYQT windeployqt HINTS "${Qt6_DIR}/../../../bin")
+    file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/deploy_$<CONFIG>.bat"
+        CONTENT "$<IF:$<CONFIG:Release>,\"${WINDEPLOYQT}\" \"$<TARGET_FILE:${PROJECT_NAME}>\" --qmldir \"${CMAKE_CURRENT_SOURCE_DIR}/qml\" --no-translations,@echo Deploy skipped (not Release)>"
     )
-endif()
-
-# QNX
-if(QNX)
-    install(TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION /tmp/${PROJECT_NAME}/bin
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND "${CMAKE_BINARY_DIR}/deploy_$<CONFIG>.bat"
+        COMMENT "Running windeployqt (Release only)..."
     )
 endif()
 if (ANDROID)
