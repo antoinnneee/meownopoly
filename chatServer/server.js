@@ -22,7 +22,8 @@ const MAX_DB_SIZE = parseInt(process.env.MAX_DB_SIZE) || 500 * 1024 * 1024; // 5
 const STUN_PORT = parseInt(process.env.STUN_PORT) || 3478;
 const DEBUG_MODE = process.env.DEBUG_MODE === 'true';
 const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD === 'true';
-const MAX_SESSIONS = 500; // Limite de sessions actives
+const MAX_SESSIONS = parseInt(process.env.MAX_SESSIONS) || 500; // Limite de sessions actives
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || ''; // Si défini, requis pour les commandes admin (CLEAR_ALL_SESSIONS)
 
 function debug(...args) {
     if (DEBUG_MODE) {
@@ -209,7 +210,7 @@ function handleCommand(ws, msg) {
             handleListSessions(ws);
             break;
         case 'CLEAR_ALL_SESSIONS':
-            handleClearAllRooms(ws);
+            handleClearAllRooms(ws, payload);
             break;
         default:
             sendError(ws, 'UNKNOWN_COMMAND', `Command ${type} not recognized`);
@@ -325,7 +326,7 @@ function handleCreateSession(ws, payload) {
     // Créer la session dans la DB (sans participants pour l'instant)
     debug(`Creating new session: ${session_id} (name: ${session_name || 'N/A'})`);
 
-    db.createSession(session_id, session_name || '', password_hash, null, null);
+    db.createSession(session_id, session_name || '', password_hash, null, null, max_players || 4, is_public !== false ? 1 : 0);
 
     // Répondre au client
     ws.send(JSON.stringify({
@@ -362,14 +363,13 @@ function handlePublishKey(ws, payload) {
     if (!session_id || !blob || !nonce) return;
 
     const result = db.updateSession(session_id, blob, nonce);
-    const version = result.changes === 0 ? 1 : result.version;
-
     if (result.changes === 0) {
-        db.createSession(session_id, blob, nonce);
-        debug(`Key package created for session ${session_id}`);
-    } else {
-        debug(`Key package updated/rotated for session ${session_id} (Version ${version})`);
+        // La session DOIT exister (créée par CREATE_SESSION). On refuse plutôt que
+        // d'invoquer createSession() avec des paramètres mal alignés.
+        return sendError(ws, 'SESSION_NOT_FOUND', 'Cannot publish key: session does not exist');
     }
+    const version = result.version;
+    debug(`Key package updated/rotated for session ${session_id} (Version ${version})`);
 
     keyRotationRequired.delete(session_id);
 
@@ -392,36 +392,68 @@ function handlePublishKey(ws, payload) {
 }
 
 function handleSendMessage(ws, payload) {
-    const { session_id, sender_id, sender_nickname, payload: ciphertext, nonce, key_v } = payload;
-    if (!session_id || !sender_id || !ciphertext || !nonce) return;
+    const { session_id, sender_nickname, payload: ciphertext, nonce, key_v, recipient_id } = payload;
+    if (!session_id || !ciphertext || !nonce) return;
+
+    // SECURITY: ne JAMAIS faire confiance à payload.sender_id (spoofable).
+    // L'identité d'expéditeur est celle attachée à la socket par JOIN_SESSION.
+    const sender_id = ws.player_id;
+    if (!sender_id) {
+        return sendError(ws, 'UNAUTHORIZED', 'You must join a session before sending messages');
+    }
 
     if (keyRotationRequired.has(session_id)) {
         return sendError(ws, 'KEY_ROTATION_REQUIRED', 'A new participant joined; a client must publish a new key before sending messages');
     }
 
     const nickname = sender_nickname || (ws.player_nickname || '');
-    const result = db.saveMessage(session_id, sender_id, nickname, ciphertext, nonce, key_v);
+    const room = rooms.get(session_id);
+    if (!room) return;
+
+    const isPrivate = !!recipient_id;
+    const timestamp = new Date().toISOString();
+
+    // Les messages privés (unicast) ne sont PAS persistés et NE sont PAS broadcastés.
+    let msgId = null;
+    if (!isPrivate) {
+        const result = db.saveMessage(session_id, sender_id, nickname, ciphertext, nonce, key_v);
+        msgId = result.lastInsertRowid;
+    }
 
     const outboundMessage = {
         type: 'NEW_MESSAGE',
         payload: {
-            msg_id: result.lastInsertRowid,
+            msg_id: msgId,
             sender_id,
             sender_nickname: nickname,
             payload: ciphertext,
             nonce,
             key_version: key_v,
-            timestamp: new Date().toISOString()
+            timestamp,
+            ephemeral: isPrivate,
+            ...(isPrivate ? { recipient_id } : {})
         }
     };
+    const raw = JSON.stringify(outboundMessage);
 
-    // Broadcast to all in the same room
-    const room = rooms.get(session_id);
-    if (room) {
-        const rawOutbound = JSON.stringify(outboundMessage);
+    if (isPrivate) {
+        // Unicast: n'envoyer qu'au destinataire (l'expéditeur a déjà l'affichage optimiste).
+        let delivered = false;
+        for (const client of room) {
+            if (client.player_id === recipient_id && client.readyState === WebSocket.OPEN) {
+                client.send(raw);
+                delivered = true;
+                break;
+            }
+        }
+        if (!delivered) {
+            debug(`Private message recipient ${recipient_id} not online in session ${session_id}`);
+        }
+    } else {
+        // Broadcast à tous (y compris l'expéditeur, qui filtrera côté client).
         room.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
-                client.send(rawOutbound);
+                client.send(raw);
             }
         });
     }
@@ -490,6 +522,11 @@ function handleClearHistory(ws, payload) {
     const { session_id } = payload;
     if (!session_id) return;
 
+    // SECURITY: seul le host peut effacer l'historique de la session
+    if (!db.isHost(session_id, ws.player_id)) {
+        return sendError(ws, 'FORBIDDEN', 'Only the host can clear the session history');
+    }
+
     // Delete from DB
     db.clearMessages(session_id);
 
@@ -508,7 +545,16 @@ function handleClearHistory(ws, payload) {
     }
 }
 
-function handleClearAllRooms(ws) {
+function handleClearAllRooms(ws, payload) {
+    // SECURITY: si ADMIN_TOKEN est défini côté serveur, on l'exige.
+    // S'il n'est PAS défini, la commande est désactivée par défaut (fail-closed).
+    const providedToken = (payload && typeof payload.admin_token === 'string') ? payload.admin_token : '';
+    if (!ADMIN_TOKEN) {
+        return sendError(ws, 'FORBIDDEN', 'CLEAR_ALL_SESSIONS is disabled (no ADMIN_TOKEN configured)');
+    }
+    if (providedToken !== ADMIN_TOKEN) {
+        return sendError(ws, 'FORBIDDEN', 'Invalid admin token');
+    }
     debug('CLEANING ALL ROOMS AND SESSIONS...');
 
     // Delete from DB
@@ -655,16 +701,18 @@ function getDetailedSessionList() {
                 }
             }
 
+            const host = participants[0] || null;
             activeSessions.push({
                 session_id: sessionId,
                 session_name: session ? session.session_name || '' : '',
-                host_id: participants[0].player_id, // Premier participant = hôte
-                host_nickname: participants[0].nickname || participants[0].player_id,
+                host_id: host ? host.player_id : null,
+                host_nickname: host ? (host.nickname || host.player_id) : 'En attente',
                 player_count: participants.length,
-                max_players: 4, // Valeur par défaut, sera personnalisable plus tard
+                max_players: (session && session.max_players) || 4,
                 created_at: session ? session.created_at : new Date().toISOString(),
                 online_count: onlinePlayerIds.size,
-                status: participants.length >= 4 ? 'full' : 'available'
+                status: participants.length === 0 ? 'waiting' :
+                    participants.length >= ((session && session.max_players) || 4) ? 'full' : 'available'
             });
         }
     }
@@ -731,11 +779,9 @@ function handleDeleteSession(ws, payload) {
     const { session_id } = payload;
     if (!session_id) return;
 
-    // Optional: Check if user has rights to delete (e.g. is creator or admin)
-    // For now, any participant can delete (blind relay logic) or maybe just anyone who knows the ID.
-    // Let's assume anyone who can connect can delete for now, or check participation.
-    if (!db.isParticipant(session_id, ws.player_id)) {
-        return sendError(ws, 'FORBIDDEN', 'You must be a participant to delete the session');
+    // SECURITY: seul le host peut supprimer une session
+    if (!db.isHost(session_id, ws.player_id)) {
+        return sendError(ws, 'FORBIDDEN', 'Only the host can delete the session');
     }
 
     // Delete from DB

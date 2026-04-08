@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QtQml>
 #include <QThread>
+#include <QThreadPool>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -90,6 +91,18 @@ signals:
     void availableSessionsChanged();
     void commandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void sessionCreated(const QString &sessionId, const QString &sessionName);
+    /** Émis quand le serveur indique qu'une session a été créée par un autre client. */
+    void sessionCreatedBroadcast(const QString &sessionId, const QString &sessionName);
+    /** Émis quand on a été expulsé de la session par le host. */
+    void kicked(const QString &sessionId, const QString &reason);
+    /** Émis quand un autre participant a été expulsé. */
+    void participantKicked(const QString &sessionId, const QString &playerId);
+    /** Émis quand la session a été supprimée (par le host). */
+    void sessionEnded(const QString &sessionId, const QString &reason);
+    /** Émis quand un quitter explicite (LEAVE_SESSION) a été acquitté par le serveur. */
+    void leftSession(const QString &sessionId);
+    /** Émis quand le serveur a réinitialisé toutes les sessions (admin). */
+    void serverReset(const QString &message);
 
 private slots:
     void onConnected();
@@ -114,6 +127,14 @@ private:
     void onIncomingCommandPong(const QString &senderId, const QJsonObject &data);
     void handleError(const QJsonObject &payload);
     void handleHistoryCleared();
+    void handleKicked(const QJsonObject &payload);
+    void handleParticipantKicked(const QJsonObject &payload);
+    void handleSessionEnded(const QJsonObject &payload);
+    void handleLeftSession(const QJsonObject &payload);
+    void handleServerReset(const QJsonObject &payload);
+    void handleSessionCreatedBroadcast(const QJsonObject &payload);
+    /** Vide totalement l'état de session côté client (clés, participants, messages). */
+    void resetSessionState();
     void sendWebSocketMessage(const QJsonObject &message);
     void publishNewKey();
     QString processMessageText(const QString &text);
@@ -135,6 +156,13 @@ private:
     // Worker thread for WebSocket
     QThread *m_workerThread;
     ChatWorker *m_worker;
+
+    // Thread pool dédié aux tâches asynchrones du chat (déchiffrement, décodage image,
+    // compression image). On en possède un membre plutôt que QThreadPool::globalInstance()
+    // afin de pouvoir attendre la fin de TOUTES les tâches en vol dans le destructeur, sans
+    // risquer un use-after-free quand une lambda capturant `this` continue à tourner après
+    // la destruction de ChatClient.
+    QThreadPool m_chatPool;
     
     bool m_connected = false;
     QString m_sessionId;
@@ -151,8 +179,10 @@ private:
     
     ChatDatabase m_db;
     
-    // For automatic retry upon KEY_ROTATION_REQUIRED
-    QString m_pendingMessage;
+    // For automatic retry upon KEY_ROTATION_REQUIRED.
+    // File d'attente FIFO : tous les messages envoyés pendant qu'une rotation
+    // de clé est en cours seront rejoués dans l'ordre lorsque KEY_UPDATE arrive.
+    QStringList m_pendingMessages;
     bool m_retryPending = false;
 };
 

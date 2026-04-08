@@ -51,6 +51,12 @@ try {
 try {
   db.prepare('ALTER TABLE sessions ADD COLUMN session_name TEXT').run();
 } catch (e) { }
+try {
+  db.prepare('ALTER TABLE sessions ADD COLUMN max_players INTEGER DEFAULT 4').run();
+} catch (e) { }
+try {
+  db.prepare('ALTER TABLE sessions ADD COLUMN is_public INTEGER DEFAULT 1').run();
+} catch (e) { }
 
 module.exports = {
   // Session methods
@@ -61,9 +67,14 @@ module.exports = {
     const session = db.prepare('SELECT version, key_package, key_nonce, password_hash FROM sessions WHERE session_id = ?').get(sessionId);
     return session ? [session] : [];
   },
-  createSession: (sessionId, sessionName, passwordHash, keyPackage, keyNonce) => {
-    db.prepare('INSERT OR IGNORE INTO sessions (session_id, session_name, password_hash, key_package, key_nonce, version) VALUES (?, ?, ?, ?, ?, 1)')
-      .run(sessionId, sessionName || '', passwordHash, keyPackage, keyNonce);
+  getAllSessions: () => {
+    return db.prepare(
+      'SELECT session_id, session_name, password_hash, version, created_at, max_players, is_public FROM sessions ORDER BY created_at DESC'
+    ).all();
+  },
+  createSession: (sessionId, sessionName, passwordHash, keyPackage, keyNonce, maxPlayers = 4, isPublic = 1) => {
+    db.prepare('INSERT OR IGNORE INTO sessions (session_id, session_name, password_hash, key_package, key_nonce, version, max_players, is_public) VALUES (?, ?, ?, ?, ?, 1, ?, ?)')
+      .run(sessionId, sessionName || '', passwordHash, keyPackage, keyNonce, maxPlayers, isPublic ? 1 : 0);
   },
   updateSession: (sessionId, keyPackage, keyNonce) => {
     return db.transaction(() => {
@@ -175,6 +186,17 @@ module.exports = {
   },
   getParticipants: (sessionId) => {
     return db.prepare('SELECT player_id, nickname FROM participants WHERE session_id = ? ORDER BY joined_at ASC').all(sessionId);
+  },
+  /**
+   * Le host est le premier participant à avoir rejoint la session.
+   * Retourne null si aucun participant.
+   */
+  getHost: (sessionId) => {
+    return db.prepare('SELECT player_id, nickname FROM participants WHERE session_id = ? ORDER BY joined_at ASC LIMIT 1').get(sessionId) || null;
+  },
+  isHost: (sessionId, playerId) => {
+    const host = db.prepare('SELECT player_id FROM participants WHERE session_id = ? ORDER BY joined_at ASC LIMIT 1').get(sessionId);
+    return !!host && host.player_id === playerId;
   },
 
   // Expose db pour stats

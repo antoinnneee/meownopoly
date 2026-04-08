@@ -3,6 +3,10 @@
 void Catway::initiateHolePunch(PlayerNetwork *player)
 {
     if (!player) return;
+    if (!m_chatClient) {
+        emit log("Cannot initiate hole punch: chat client unavailable (shutting down?).");
+        return;
+    }
     UdpSocketInfo *si = player->socketInfo();
     if (!si || si->publicAddress().isEmpty() || si->publicPort() == 0) {
         emit log("Cannot initiate hole punch: No local public IP/Port for this player slot yet.");
@@ -75,6 +79,10 @@ void Catway::handleChatRequestConnectionInfo(const QString &senderId, const QJso
 {
     UdpSocketInfo *socketInfo = player ? qobject_cast<UdpSocketInfo *>(player->socketInfo()) : nullptr;
     if (socketInfo) {
+        if (!m_chatClient) {
+            emit log("Cannot reply with connection info: chat client unavailable (shutting down?).");
+            return;
+        }
         QJsonObject replyData;
         replyData[QStringLiteral("ip")] = socketInfo->publicAddress();
         replyData[QStringLiteral("port")] = static_cast<int>(socketInfo->publicPort());

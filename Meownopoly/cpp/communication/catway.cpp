@@ -87,6 +87,15 @@ Catway::Catway(QObject *parent)
 
 Catway::~Catway()
 {
+    // Détacher le ChatClient (souvent possédé par QML, déjà détruit à ce stade) AVANT
+    // de stopper le réseau. On évite que des datagrammes en vol ne déréférencent un
+    // pointeur dangling pendant la phase de teardown du thread réseau.
+    if (m_chatClient) {
+        disconnect(m_chatClient.data(), &ChatClient::commandReceived,
+                   this, &Catway::onChatCommandReceived);
+        m_chatClient.clear();
+    }
+
     if (m_networkThread) {
         // Arrêter proprement les timers et la boucle reliable avant de quitter le thread
         QMetaObject::invokeMethod(m_worker, "tearDown", Qt::BlockingQueuedConnection);
@@ -101,11 +110,11 @@ Catway::~Catway()
 
 void Catway::setChatClient(ChatClient *client)
 {
-    if (m_chatClient == client)
+    if (m_chatClient.data() == client)
         return;
 
     if (m_chatClient) {
-        disconnect(m_chatClient, &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
+        disconnect(m_chatClient.data(), &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
         if (m_chatClient->parent() == this)
             m_chatClient->deleteLater();
     }
@@ -113,7 +122,7 @@ void Catway::setChatClient(ChatClient *client)
     m_chatClient = client;
 
     if (m_chatClient)
-        connect(m_chatClient, &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
+        connect(m_chatClient.data(), &ChatClient::commandReceived, this, &Catway::onChatCommandReceived);
 
     emit chatClientChanged();
 }
@@ -156,6 +165,8 @@ void Catway::onAccountStunChanged()
 
 QString Catway::nicknameFromChat(const QString &playerId) const
 {
+    if (!m_chatClient)
+        return playerId;
     const QVariantList list = m_chatClient->participants();
     for (const QVariant &v : list) {
         QVariantMap m = v.toMap();

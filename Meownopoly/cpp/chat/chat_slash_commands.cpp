@@ -22,8 +22,12 @@ QObject *ChatSlashCommands::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEng
 {
     Q_UNUSED(engine)
     Q_UNUSED(scriptEngine)
-    static ChatSlashCommands instance;
-    return &instance;
+    // IMPORTANT : qmlRegisterSingletonType prend la propriété de l'objet retourné et
+    // appellera delete dessus à la destruction du moteur QML. Retourner l'adresse d'une
+    // variable static (durée de vie statique, non allouée par new) provoque un
+    // undefined behavior → crash à la fermeture (souvent visible juste après la
+    // destruction des autres singletons QML).
+    return new ChatSlashCommands();
 }
 
 QStringList ChatSlashCommands::commands() const

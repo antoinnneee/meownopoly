@@ -18,6 +18,10 @@ ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     // Initialize database
     m_db.init();
 
+    // Pool dédié pour les tâches async du chat (cf. commentaire dans le header).
+    // 4 threads max suffisent largement pour déchiffrement / décodage image.
+    m_chatPool.setMaxThreadCount(4);
+
     // Create worker thread
     m_workerThread = new QThread(this);
     m_worker = new ChatWorker();
@@ -41,7 +45,15 @@ ChatClient::ChatClient(QObject *parent) : QObject(parent) {
 ChatClient::~ChatClient() {
     Logger::instance()->debug("Destructor called", "ChatClient");
 
-    // Stop the worker thread
+    // 1) ATTENDRE la fin de toutes les tâches asynchrones qui capturent `this`
+    //    (handleNewMessage, decodeImageAsync, sendImage). Sans ça, une lambda en vol
+    //    accèderait à des membres déjà détruits → crash à la fermeture (cf. instance 2).
+    if (!m_chatPool.waitForDone(3000)) {
+        Logger::instance()->warn("Chat thread pool did not finish in time", "ChatClient");
+        // On ne peut pas tuer un QThreadPool de force ; on continue, mais on accepte le risque.
+    }
+
+    // 2) Stop the worker thread (WebSocket)
     if (m_workerThread) {
         m_workerThread->quit();
         if (!m_workerThread->wait(3000)) {
@@ -176,7 +188,7 @@ void ChatClient::onDisconnected() {
     Logger::instance()->info("Disconnected from server", "ChatClient");
     m_connected = false;
     m_participants.clear();
-    m_pendingMessage.clear();
+    m_pendingMessages.clear();
     m_retryPending = false;
     emit connectedChanged();
     emit participantsChanged();
@@ -430,7 +442,9 @@ void ChatClient::copyImageToClipboard(const QString &imageId) {
 
 void ChatClient::decodeImageAsync(const QString &senderId, const QString &text, const QString &ts) {
     // text is the full base64 string
-    QtConcurrent::run([this, senderId, ts, text]() {
+    // Utilise m_chatPool (et non QtConcurrent global) afin que ~ChatClient puisse attendre
+    // la fin de toutes les tâches en vol et éviter un use-after-free à la fermeture.
+    m_chatPool.start([this, senderId, ts, text]() {
         int commaIndex = text.indexOf(',');
         if (commaIndex == -1) return;
 

@@ -3,6 +3,7 @@
 
 #include "chat/chat_client.h"
 #include <QObject>
+#include <QPointer>
 #include <QQmlEngine>
 #include <QQmlListProperty>
 #include <QHostAddress>
@@ -121,8 +122,12 @@ public:
     QQmlListProperty<PlayerNetwork> players();
 
     /// Client de chat intégré (accessible en QML via Catway.chatClient).
+    /// IMPORTANT: m_chatClient peut pointer vers un objet possédé par QML. On utilise
+    /// QPointer pour qu'il s'auto-nullifie quand QML le détruit, sinon on récupère un
+    /// dangling pointer lors du teardown du thread réseau (datagrammes UDP en vol qui
+    /// appellent sendCommand → use-after-free → crash à la fermeture).
     Q_PROPERTY(ChatClient *chatClient READ chatClient WRITE setChatClient NOTIFY chatClientChanged)
-    ChatClient *chatClient() const { return m_chatClient; }
+    ChatClient *chatClient() const { return m_chatClient.data(); }
     Q_INVOKABLE void setChatClient(ChatClient *client);
 
     Q_INVOKABLE void addPlayer(PlayerNetwork *player);
@@ -210,7 +215,7 @@ private:
     CatwayWorker *m_worker;
     QThread *m_networkThread;
 
-    ChatClient *m_chatClient;
+    QPointer<ChatClient> m_chatClient;
     QList<UdpSocketInfo *> m_localSocketInfos;
     QList<PlayerNetwork *> m_players;
     /// Index playerId → joueur pour playerById en O(1). Synchronisé avec m_playerIdByPlayer.

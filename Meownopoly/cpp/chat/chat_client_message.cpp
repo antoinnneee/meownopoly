@@ -13,9 +13,11 @@
 void ChatClient::sendMessage(const QString &text, const QString &recipientId, const QString &recipientNickname) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
-    // Store pending message for retry logic (only for broadcast, not for private)
+    // Store pending message for retry logic (only for broadcast, not for private).
+    // On enfile en FIFO : si plusieurs messages sont envoyés pendant qu'une rotation
+    // de clé est en cours, ils seront tous rejoués dans l'ordre par handleKeyUpdate.
     if (recipientId.isEmpty())
-        m_pendingMessage = text;
+        m_pendingMessages.append(text);
 
     // Use current (latest) key
     if (!m_sessionKeys.contains(m_currentKeyVersion)) {
@@ -93,8 +95,8 @@ void ChatClient::sendMessage(const QString &text, const QString &recipientId, co
 void ChatClient::sendImage(const QString &filePath) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
-    // Use QtConcurrent to process the image in a background thread
-    QtConcurrent::run([this, filePath]() {
+    // Use the chat thread pool to process the image so ~ChatClient can wait for completion.
+    m_chatPool.start([this, filePath]() {
         Logger::instance()->debug(QString("Sending image (compressing in background...): %1").arg(filePath), "ChatClient");
 
         QUrl url(filePath);

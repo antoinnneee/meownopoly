@@ -106,7 +106,93 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleError(payload);
     } else if (type == "HISTORY_CLEARED") {
         handleHistoryCleared();
+    } else if (type == "KICKED") {
+        handleKicked(payload);
+    } else if (type == "PARTICIPANT_KICKED") {
+        handleParticipantKicked(payload);
+    } else if (type == "SESSION_ENDED") {
+        handleSessionEnded(payload);
+    } else if (type == "LEFT_SESSION") {
+        handleLeftSession(payload);
+    } else if (type == "SERVER_RESET") {
+        handleServerReset(payload);
+    } else if (type == "SESSION_CREATED_BROADCAST") {
+        handleSessionCreatedBroadcast(payload);
+    } else {
+        Logger::instance()->warn(QString("Unhandled server message type: %1").arg(type), "ChatClient");
     }
+}
+
+void ChatClient::resetSessionState() {
+    m_sessionId.clear();
+    m_password.clear();
+    m_lockKey.clear();
+    m_passwordHash.clear();
+    m_sessionKeys.clear();
+    m_currentKeyVersion = 0;
+    m_messages.clear();
+    m_participants.clear();
+    m_pendingMessages.clear();
+    m_retryPending = false;
+    emit sessionIdChanged();
+    emit messagesChanged();
+    emit participantsChanged();
+}
+
+void ChatClient::handleKicked(const QJsonObject &payload) {
+    const QString sessionId = payload["session_id"].toString();
+    const QString reason = payload["reason"].toString();
+    Logger::instance()->info(QString("Kicked from session %1: %2").arg(sessionId, reason), "ChatClient");
+    emit kicked(sessionId, reason);
+    resetSessionState();
+}
+
+void ChatClient::handleParticipantKicked(const QJsonObject &payload) {
+    const QString sessionId = payload["session_id"].toString();
+    const QString playerId  = payload["player_id"].toString();
+    Logger::instance()->info(QString("Participant %1 kicked from %2").arg(playerId, sessionId), "ChatClient");
+
+    int idx = indexOfParticipant(playerId);
+    if (idx >= 0) {
+        m_participants.removeAt(idx);
+        emit participantsChanged();
+    }
+    emit participantKicked(sessionId, playerId);
+}
+
+void ChatClient::handleSessionEnded(const QJsonObject &payload) {
+    const QString sessionId = payload["session_id"].toString();
+    const QString reason    = payload["reason"].toString();
+    Logger::instance()->info(QString("Session %1 ended: %2").arg(sessionId, reason), "ChatClient");
+    emit sessionEnded(sessionId, reason);
+    resetSessionState();
+}
+
+void ChatClient::handleLeftSession(const QJsonObject &payload) {
+    const QString sessionId = payload["session_id"].toString();
+    Logger::instance()->debug(QString("Server acknowledged LEAVE for session %1").arg(sessionId), "ChatClient");
+    emit leftSession(sessionId);
+    resetSessionState();
+}
+
+void ChatClient::handleServerReset(const QJsonObject &payload) {
+    const QString message = payload["message"].toString();
+    Logger::instance()->warn(QString("Server reset notification: %1").arg(message), "ChatClient");
+    emit serverReset(message);
+    resetSessionState();
+    // Refresh disponible sessions list (now empty)
+    m_availableSessions.clear();
+    emit availableSessionsChanged();
+}
+
+void ChatClient::handleSessionCreatedBroadcast(const QJsonObject &payload) {
+    const QString sessionId   = payload["session_id"].toString();
+    const QString sessionName = payload["session_name"].toString();
+    Logger::instance()->debug(QString("Another client created session %1 (%2)").arg(sessionId, sessionName), "ChatClient");
+    emit sessionCreatedBroadcast(sessionId, sessionName);
+    // Optionnel: rafraîchir automatiquement la liste pour le lobby.
+    if (m_connected)
+        requestSessionsList();
 }
 
 
@@ -164,13 +250,16 @@ void ChatClient::handleKeyUpdate(const QJsonObject &payload) {
 
         emit messagesChanged(); // Reprocess messages if needed
 
-        // Retry pending message if any
-        if (m_retryPending && !m_pendingMessage.isEmpty()) {
-            Logger::instance()->debug(QString("Retrying pending message with new Key Version %1").arg(m_currentKeyVersion), "ChatClient");
-            QString msg = m_pendingMessage;
+        // Retry queued messages (FIFO) si une rotation était attendue.
+        if (m_retryPending && !m_pendingMessages.isEmpty()) {
+            Logger::instance()->debug(QString("Retrying %1 pending message(s) with new Key Version %2")
+                                          .arg(m_pendingMessages.size()).arg(m_currentKeyVersion), "ChatClient");
+            const QStringList toRetry = m_pendingMessages;
+            m_pendingMessages.clear();
             m_retryPending = false;
-            m_pendingMessage.clear();
-            sendMessage(msg);
+            for (const QString &msg : toRetry) {
+                sendMessage(msg);
+            }
         }
     }
 }
@@ -360,31 +449,54 @@ void ChatClient::handleNewMessage(const QJsonObject &payload) {
                          QByteArray::fromBase64(payload["nonce"].toString().toUtf8()), payload["timestamp"].toString(), payload["key_version"].toInt());
     }
 
-    // Nos propres messages sont déjà affichés de façon optimiste : ne pas les ré-ajouter
-    if (senderId == m_playerId)
+    // Nos propres messages sont déjà affichés de façon optimiste : ne pas les ré-ajouter.
+    // En revanche on en profite pour dépiler la file d'attente FIFO des messages envoyés
+    // (utile uniquement si une rotation de clé survient avant l'ack).
+    if (senderId == m_playerId) {
+        if (!m_pendingMessages.isEmpty())
+            m_pendingMessages.removeFirst();
         return;
+    }
 
-    QtConcurrent::run([this, payload]() {
-        QString senderId = payload["sender_id"].toString();
-        QString senderNickname = payload["sender_nickname"].toString();
-        QByteArray cipher = QByteArray::fromBase64(payload["payload"].toString().toUtf8());
-        QByteArray nonce = QByteArray::fromBase64(payload["nonce"].toString().toUtf8());
-        QString ts = messageTimestamp(payload);
-        int keyVersion = payload["key_version"].toInt();
-        bool isEphemeral = payload["ephemeral"].toBool();
+    // THREAD SAFETY: tout ce qui touche m_sessionKeys et m_db doit rester sur la GUI thread.
+    // On capture la clé nécessaire ICI (thread principal), puis on délègue uniquement le
+    // déchiffrement (CPU) à QtConcurrent. Pour l'UI on revient en queued connection.
+    const int keyVersion = payload["key_version"].toInt();
 
-        if (!m_sessionKeys.contains(keyVersion)) {
-            Logger::instance()->warn(QString("Key version %1 missing in memory! Reloading keys from DB...").arg(keyVersion), "ChatClient");
-            loadAndDecryptSessionKeys();
+    if (!m_sessionKeys.contains(keyVersion)) {
+        Logger::instance()->warn(QString("Key version %1 missing in memory! Reloading keys from DB on GUI thread...").arg(keyVersion), "ChatClient");
+        // Rechargement DB sur la GUI thread (m_db est lié à ce thread, pas thread-safe).
+        loadAndDecryptSessionKeys();
+    }
+
+    // Snapshot par valeur de la clé requise (seul ce qui est nécessaire à la lambda).
+    const QByteArray sessionKey = m_sessionKeys.value(keyVersion);
+    QStringList availableKeys;
+    if (sessionKey.isEmpty()) {
+        for (int k : m_sessionKeys.keys()) availableKeys << QString::number(k);
+    }
+
+    // Utilise m_chatPool pour permettre à ~ChatClient d'attendre la fin de la tâche
+    // (waitForDone) et éviter un use-after-free quand l'app se ferme alors qu'un
+    // déchiffrement est en cours.
+    m_chatPool.start([this, payload, keyVersion, sessionKey, availableKeys]() {
+        const QString senderId = payload["sender_id"].toString();
+        const QString senderNickname = payload["sender_nickname"].toString();
+        const QByteArray cipher = QByteArray::fromBase64(payload["payload"].toString().toUtf8());
+        const QByteArray nonce = QByteArray::fromBase64(payload["nonce"].toString().toUtf8());
+        const QString ts = messageTimestamp(payload);
+        const bool isEphemeral = payload["ephemeral"].toBool();
+
+        QByteArray plain;
+        if (!sessionKey.isEmpty()) {
+            plain = ChatCrypto::decrypt(cipher, sessionKey, nonce);
         }
-        QByteArray plain = decryptMessagePayload(cipher, nonce, keyVersion);
         if (plain.isEmpty()) {
-            QStringList avail;
-            for (int k : m_sessionKeys.keys()) avail << QString::number(k);
-            Logger::instance()->warn(QString("FAILED to decrypt message. Missing Key Version: %1 (Available: %2)").arg(keyVersion).arg(avail.join(", ")), "ChatClient");
+            Logger::instance()->warn(QString("FAILED to decrypt message. Missing/invalid Key Version: %1 (Available at dispatch: %2)")
+                                         .arg(keyVersion).arg(availableKeys.join(", ")), "ChatClient");
             plain = "[Encrypted Message - Missing Key]";
         }
-        QString text = QString::fromUtf8(plain);
+        const QString text = QString::fromUtf8(plain);
 
         bool isImagePlaceholder = false;
         QVariantMap msg = buildMessageMapFromDecryptedText(senderId, senderNickname, text, ts, isEphemeral, &isImagePlaceholder);
