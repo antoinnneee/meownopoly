@@ -202,14 +202,12 @@ void GameSession::relayRawToOthers(const QString &senderId, const QString &messa
 
 void GameSession::onReliableReceived(const QString &senderId, const QByteArray &data)
 {
-    qDebug() << "[GameSession] onReliableReceived:" << senderId << "data:" << data;
     GameMessageType::Value type;
     QJsonObject payload;
 
-    if (!GameProtocol::unpack(data, type, payload)) {
-        qWarning() << "[GameSession] Failed to unpack reliable packet from" << senderId;
+    // Ignorer silencieusement les paquets non-GameProtocol (ex: "DRAW:..." du test dessin)
+    if (!GameProtocol::unpack(data, type, payload))
         return;
-    }
 
     if (type == GameMessageType::MapSync) {
         emit mapSyncReceived(senderId, payload.value("map").toObject());
