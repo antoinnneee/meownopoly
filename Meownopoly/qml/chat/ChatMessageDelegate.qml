@@ -274,16 +274,56 @@ Rectangle {
                 }
             }
 
+            // Placeholder visible UNIQUEMENT pendant le chargement de l'image.
+            // Il réserve une hauteur fixe pour que la ListView ne « saute » pas en bas
+            // au moment où l'image se décode. Une fois Image.Ready, on bascule sur la
+            // vraie Image (sans hauteur explicite) qui prend exactement sa taille
+            // peintée — donc plus de bulle « trop grande » par rapport à l'image.
+            Item {
+                id: imagePlaceholder
+                width: parent.width
+                height: 200
+                visible: contentImage.status !== Image.Ready
+                Rectangle {
+                    anchors.fill: parent
+                    color: "transparent"
+                    border.color: "#444444"
+                    border.width: 1
+                    radius: 4
+                }
+                BusyIndicator {
+                    anchors.centerIn: parent
+                    running: contentImage.status === Image.Loading
+                    visible: running
+                    width: 32
+                    height: 32
+                }
+            }
+
             Image {
                 id: contentImage
                 source: (modelData && modelData.isImage) ? modelData.text : ""
                 asynchronous: true
                 cache: true
                 width: parent.width
+                // Pas de hauteur explicite : on laisse l'Image se dimensionner sur son
+                // implicitHeight (= taille réellement peintée après scaling sourceSize).
+                // Mettre `height: implicitHeight` casse le calcul quand width change et
+                // donne une bulle plus grande que l'image — d'où le bug précédent.
                 fillMode: Image.PreserveAspectFit
                 smooth: false
                 mipmap: true
                 sourceSize.width: width
+                visible: status === Image.Ready
+
+                // Quand l'image finit son chargement, sa hauteur change : si la ListView
+                // était collée au bas, on la fait re-snapper pour rester au dernier message.
+                onStatusChanged: {
+                    if (status === Image.Ready && messageDelegate.listView
+                            && messageDelegate.listView.stickToBottom) {
+                        messageDelegate.listView.snapToBottom()
+                    }
+                }
 
                 Rectangle {
                     anchors.fill: parent
@@ -292,14 +332,6 @@ Rectangle {
                     border.width: 1
                     radius: 4
                     visible: parent.status === Image.Ready
-                }
-
-                BusyIndicator {
-                    anchors.centerIn: parent
-                    running: parent.status === Image.Loading
-                    visible: running
-                    width: 32
-                    height: 32
                 }
             }
         }
