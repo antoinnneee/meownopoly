@@ -39,3 +39,4 @@ chatServer/.deployEnv
 /Meownopoly/.cache
 .claude/settings.local.json
 /.claude/skills
+/.cache
