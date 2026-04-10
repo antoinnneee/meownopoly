@@ -83,21 +83,15 @@ Rectangle {
         }
         
         onVersionInfoUpdated: {
-            versionInfoSection.currentVersion = logic.currentVersion
-            versionInfoSection.latestVersion = logic.latestVersion
-            actionsSection.currentVersion = logic.currentVersion
-            actionsSection.latestVersion = logic.latestVersion
+            // Bindings déclaratifs dans les sections — rien à faire ici
         }
-        
+
         onDownloadProgressUpdated: {
-            versionInfoSection.downloadProgress = logic.downloadProgress
-            versionInfoSection.isDownloading = logic.isDownloading
-            actionsSection.isDownloading = logic.isDownloading
-            packagingSection.isDownloading = logic.isDownloading
+            // Bindings déclaratifs dans les sections — rien à faire ici
         }
         
         onDownloadStatusUpdated: {
-            versionInfoSection.downloadStatus = logic.downloadStatus
+            // Binding déclaratif dans VersionInfoSection — rien à faire ici
             console.log("download state changed : ", logic.downloadStatus)
         }
         

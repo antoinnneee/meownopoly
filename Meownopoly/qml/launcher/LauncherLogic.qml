@@ -126,7 +126,6 @@ QtObject {
     }
 
     function updateServerUrl(newUrl) {
-        root.serverUrl = newUrl
         root.settings.serverUrl = newUrl
     }
 
