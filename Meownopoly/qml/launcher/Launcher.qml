@@ -71,9 +71,10 @@ Rectangle {
         id: logic
 
         onUpdateAvailable: {
-            if (autoUpdate)
-            {
+            if (autoUpdate) {
                 logic.downloadResources()
+            } else {
+                updateBanner.visible = true
             }
         }
         
@@ -116,41 +117,83 @@ Rectangle {
         }
     }
     
+    // Bannière de mise à jour (quand autoUpdate est désactivé)
+    Rectangle {
+        id: updateBanner
+        visible: false
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 40
+        color: "#FF9800"
+        z: 10
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: 10
+
+            Text {
+                text: "Nouvelle version disponible: " + logic.latestVersion
+                color: "white"
+                font.bold: true
+                Layout.fillWidth: true
+            }
+
+            Button {
+                text: "Telecharger"
+                onClicked: { logic.downloadResources(); updateBanner.visible = false }
+                background: Rectangle { color: "#E65100"; radius: 4 }
+                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            }
+
+            Button {
+                text: "x"
+                onClicked: updateBanner.visible = false
+                background: Rectangle { color: "transparent" }
+                contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+            }
+        }
+    }
+
     ScrollView {
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.topMargin: updateBanner.visible ? updateBanner.height + 10 : 10
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
+        anchors.bottomMargin: 10
         contentWidth: availableWidth
-        
+
         ColumnLayout {
             width: parent.width
             spacing: 15
-            
+
             // Header
             LauncherHeader {
                 onBackRequested: root.backRequested()
             }
-            
+
             // Section 1: Configuration du serveur
             ServerConfigSection {
                 id: serverConfigSection
                 serverUrl: logic.serverUrl
-                
+                uploadToken: logic.settings.uploadToken
+
                 onServerUrlChanged: logic.updateServerUrl(serverUrl)
                 onTestConnectionRequested: logic.testConnection()
-                
-                // Connexion avec le LauncherManager pour le statut de connexion devrais etre dans LauncherLogic
-                Connections {
-                    target: LauncherManager
-                    
-                    function onConnectionTestResult(success, message) {
-                        serverConfigSection.connectionValid = success
-                        serverConfigSection.connectionMessage = message
-                        serverConfigSection.statusAnimation.start()
-                        serverConfigSection.statusIcon.state = success ? "valid" : "invalid"
-                    }
+                onUploadTokenEdited: function(token) { logic.updateUploadToken(token) }
+            }
+
+            // Connexion test résultat (via LauncherLogic, plus de couplage direct)
+            Connections {
+                target: logic
+                function onConnectionTestResult(success, message) {
+                    serverConfigSection.connectionValid = success
+                    serverConfigSection.connectionMessage = message
+                    serverConfigSection.statusAnimation.start()
+                    serverConfigSection.statusIcon.state = success ? "valid" : "invalid"
                 }
             }
-            
+
             // Section 2: Informations de version
             VersionInfoSection {
                 id: versionInfoSection
@@ -159,6 +202,9 @@ Rectangle {
                 downloadStatus: logic.downloadStatus
                 isDownloading: logic.isDownloading
                 downloadProgress: logic.downloadProgress
+                bytesReceived: logic.bytesReceived
+                bytesTotal: logic.bytesTotal
+                versionDescription: logic.versionDescription
             }
             
             // Section 3: Actions

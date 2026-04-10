@@ -5,13 +5,14 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: root
     Layout.fillWidth: true
-    Layout.preferredHeight: 120
+    Layout.preferredHeight: 210
     color: "#3a3a3a"
     radius: 10
     border.color: "#555555"
     border.width: 1
     
     property alias serverUrl: serverUrlField.text
+    property alias uploadToken: uploadTokenField.text
     property bool connectionValid: false
     property string connectionMessage: ""
 
@@ -19,6 +20,7 @@ Rectangle {
     property alias statusIcon: statusIcon
 
     signal testConnectionRequested()
+    signal uploadTokenEdited(string token)
     
     // Animation pour l'icône de statut
     SequentialAnimation {
@@ -178,6 +180,33 @@ Rectangle {
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
             opacity: 0.8
+        }
+
+        // Token d'upload
+        RowLayout {
+            Layout.fillWidth: true
+
+            Text {
+                text: "Token upload:"
+                color: "#cccccc"
+                Layout.preferredWidth: 120
+            }
+
+            TextField {
+                id: uploadTokenField
+                Layout.fillWidth: true
+                placeholderText: "Token pour autoriser les uploads"
+                echoMode: TextInput.Password
+                color: "#ffffff"
+                onTextChanged: root.uploadTokenEdited(text)
+
+                background: Rectangle {
+                    color: "#2a2a2a"
+                    border.color: "#555555"
+                    border.width: 1
+                    radius: 4
+                }
+            }
         }
     }
 }

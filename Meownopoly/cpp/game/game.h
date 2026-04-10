@@ -9,11 +9,7 @@
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonObject>
-#include "game/case/Case.h"
-#include "game/case/CaseRestArea.h"
 
-#include "card.h"
-#include "game/player.h"
 #include "game/item_snapable/ItemSnapable.h"
 #include "map/mapinfo.h"
 #include "map/map.h"

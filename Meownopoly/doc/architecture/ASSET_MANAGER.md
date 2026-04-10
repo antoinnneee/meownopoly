@@ -115,8 +115,45 @@ Chaque élément du modèle contient :
 
 2. **Icônes de joueur** (`player_icons/`)
 
+## Modèles 3D
+
+Les modèles 3D sont gérés séparément des assets 2D, via le `LauncherManager` et le serveur de ressources.
+
+### Structure côté client
+```
+{AppDataPath}/models/
+  ├── NomDuPack/
+  │   ├── version.json          # {"version": "1.0.0", "timestamp": "..."}
+  │   ├── model1.glb
+  │   └── textures/
+  └── AutrePack/
+      └── ...
+```
+
+### Format des packs
+- Extension : `.meow` (même compression que les assets)
+- Nommage : `{nom}_v{version}.meow` (ex: `PionChat_v1.0.0.meow`)
+- Contenu : dossier compressé avec un `model_manifest.json`
+
+### Manifest modèle
+```json
+{
+  "version": "1.0.0",
+  "name": "PionChat",
+  "type": "model",
+  "timestamp": "2025-01-15T10:30:00"
+}
+```
+
+### Workflow
+1. Le launcher récupère la liste des packs via `GET /api/models/list`
+2. L'UI affiche les packs avec leur version locale vs serveur
+3. Le téléchargement passe par la queue de téléchargement (comme les assets)
+4. Après extraction, un `version.json` local est créé pour le suivi
+
 ## Notes importantes
 - Les types sont déterminés dynamiquement par les noms des dossiers
 - Pas de hachage ni de date de modification
 - Structure extensible pour de futures catégories d'assets
 - Pas de validation de format d'image (supposé PNG)
+- Les téléchargements sont vérifiés par checksum SHA-256

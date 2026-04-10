@@ -1,15 +1,23 @@
+require('dotenv').config();
+
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
+const fsp = fs.promises;
 const crypto = require('crypto');
-const https = require('https'); // Ajoute ce module natif
-const http = require('http');   // Pour la redirection optionnelle
+const https = require('https');
+const http = require('http');
 
 const app = express();
-app.set('trust proxy', 1); // Trust first key proxy (Nginx)
+app.set('trust proxy', 1);
 const port = 8080;
+
+// Configuration depuis .env
+const UPLOAD_TOKEN = process.env.UPLOAD_TOKEN || '';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Configuration
 const ASSETS_DIR = path.join(__dirname, 'assets');
@@ -61,24 +69,52 @@ app.use((req, res, next) => {
     next();
 });
 
-// Utilitaires
-function getFileChecksum(filePath) {
-    const fileBuffer = fs.readFileSync(filePath);
-    const hashSum = crypto.createHash('sha256');
-    hashSum.update(fileBuffer);
-    return hashSum.digest('hex');
+// Rate limiter pour les uploads (10 requêtes par 15 minutes)
+const uploadLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { error: 'Trop de requetes. Reessayez plus tard.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Middleware d'authentification pour les uploads
+function authUpload(req, res, next) {
+    if (!UPLOAD_TOKEN) {
+        return res.status(403).json({ error: 'Uploads desactives (pas de UPLOAD_TOKEN configure)' });
+    }
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || authHeader !== `Bearer ${UPLOAD_TOKEN}`) {
+        return res.status(401).json({ error: 'Token invalide ou manquant' });
+    }
+    next();
 }
 
-function getLatestVersion() {
+// Utilitaires (async)
+function getFileChecksum(filePath) {
+    return new Promise((resolve, reject) => {
+        const hash = crypto.createHash('sha256');
+        const stream = fs.createReadStream(filePath);
+        stream.on('data', chunk => hash.update(chunk));
+        stream.on('end', () => resolve(hash.digest('hex')));
+        stream.on('error', reject);
+    });
+}
+
+async function getLatestVersion() {
     try {
-        const versionFiles = fs.readdirSync(VERSIONS_DIR)
-            .filter(file => file.endsWith('.json'))
-            .map(file => {
-                const content = fs.readFileSync(path.join(VERSIONS_DIR, file), 'utf8');
+        const files = await fsp.readdir(VERSIONS_DIR);
+        const jsonFiles = files.filter(file => file.endsWith('.json'));
+
+        const versionFiles = await Promise.all(
+            jsonFiles.map(async file => {
+                const content = await fsp.readFile(path.join(VERSIONS_DIR, file), 'utf8');
                 return JSON.parse(content);
             })
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
+        );
+
+        versionFiles.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
         return versionFiles[0] || {
             version: '0.0.0',
             timestamp: new Date().toISOString(),
@@ -96,9 +132,9 @@ function getLatestVersion() {
     }
 }
 
-function saveVersionInfo(versionData) {
+async function saveVersionInfo(versionData) {
     const filePath = path.join(VERSIONS_DIR, `${versionData.version}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(versionData, null, 2));
+    await fsp.writeFile(filePath, JSON.stringify(versionData, null, 2));
 }
 
 // Routes API
@@ -114,102 +150,130 @@ app.get('/api/ping', (req, res) => {
 });
 
 // Informations de version
-app.get('/api/version', (req, res) => {
+app.get('/api/version', async (req, res) => {
     try {
-        const latestVersion = getLatestVersion();
+        const latestVersion = await getLatestVersion();
         res.json(latestVersion);
     } catch (error) {
         console.error('Erreur version:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Erreur lors de la récupération de la version',
-            details: error.message 
+            details: error.message
         });
     }
 });
 
 // Liste de toutes les versions
-app.get('/api/versions', (req, res) => {
+app.get('/api/versions', async (req, res) => {
     try {
-        const versionFiles = fs.readdirSync(VERSIONS_DIR)
-            .filter(file => file.endsWith('.json'))
-            .map(file => {
-                const content = fs.readFileSync(path.join(VERSIONS_DIR, file), 'utf8');
+        const files = await fsp.readdir(VERSIONS_DIR);
+        const jsonFiles = files.filter(file => file.endsWith('.json'));
+
+        const versionFiles = await Promise.all(
+            jsonFiles.map(async file => {
+                const content = await fsp.readFile(path.join(VERSIONS_DIR, file), 'utf8');
                 return JSON.parse(content);
             })
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
+        );
+
+        versionFiles.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         res.json({ versions: versionFiles });
     } catch (error) {
         console.error('Erreur versions:', error);
-        res.status(500).json({ 
-            error: 'Erreur lors de la récupération des versions' 
+        res.status(500).json({
+            error: 'Erreur lors de la récupération des versions'
         });
     }
 });
 
 // Téléchargement d'une version spécifique
-app.get('/api/download/:version', (req, res) => {
-    const version = req.params.version;
-    const fileName = `assets_v${version}.meow`;
+app.get('/api/download/:version', async (req, res) => {
+    const safeVersion = req.params.version.replace(/[^a-zA-Z0-9._-]/g, '');
+    const fileName = `assets_v${safeVersion}.meow`;
     const filePath = path.join(ASSETS_DIR, fileName);
-    
+
     console.log(`Tentative de téléchargement: ${filePath}`);
-    
+
     if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ 
+        return res.status(404).json({
             error: 'Version non trouvée',
-            version: version,
-            availableFiles: fs.readdirSync(ASSETS_DIR)
+            version: safeVersion
         });
     }
-    
+
     try {
         const stats = fs.statSync(filePath);
-        
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Length', stats.size);
-        
-        const fileStream = fs.createReadStream(filePath);
-        fileStream.pipe(res);
-        
+
+        // Checksum depuis les métadonnées de version
+        const versionMetaPath = path.join(VERSIONS_DIR, `${safeVersion}.json`);
+        if (fs.existsSync(versionMetaPath)) {
+            try {
+                const meta = JSON.parse(await fsp.readFile(versionMetaPath, 'utf8'));
+                if (meta.checksum) {
+                    const hash = meta.checksum.startsWith('sha256:') ? meta.checksum.slice(7) : meta.checksum;
+                    res.setHeader('X-Checksum-Sha256', hash);
+                }
+            } catch (_) { /* métadonnées optionnelles */ }
+        }
+
+        // Support HTTP Range pour reprise de téléchargement
+        const range = req.headers.range;
+        if (range) {
+            const parts = range.replace(/bytes=/, '').split('-');
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : stats.size - 1;
+            const chunkSize = end - start + 1;
+
+            res.writeHead(206, {
+                'Content-Range': `bytes ${start}-${end}/${stats.size}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunkSize,
+                'Content-Type': 'application/octet-stream',
+                'Content-Disposition': `attachment; filename="${fileName}"`,
+            });
+            fs.createReadStream(filePath, { start, end }).pipe(res);
+        } else {
+            res.setHeader('Accept-Ranges', 'bytes');
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Content-Length', stats.size);
+            fs.createReadStream(filePath).pipe(res);
+        }
+
         console.log(`Téléchargement démarré pour ${fileName} (${stats.size} bytes)`);
-        
+
     } catch (error) {
         console.error('Erreur download:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Erreur lors du téléchargement',
-            details: error.message 
+            details: error.message
         });
     }
 });
 
-// Upload d'un nouveau paquet
-app.post('/api/upload', upload.single('package'), (req, res) => {
+// Upload d'un nouveau paquet (authentifié + rate limité)
+app.post('/api/upload', uploadLimiter, authUpload, upload.single('package'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'Aucun fichier fourni' });
     }
-    
+
     try {
         const uploadedFile = req.file;
         const version = req.body.version;
-        
+
         if (!version) {
-            fs.unlinkSync(uploadedFile.path); // Nettoyer le fichier temporaire
+            await fsp.unlink(uploadedFile.path);
             return res.status(400).json({ error: 'Version requise' });
         }
-        
-        // Déplacer le fichier vers le dossier assets
+
         const finalFileName = `assets_v${version}.meow`;
         const finalPath = path.join(ASSETS_DIR, finalFileName);
-        
-        fs.renameSync(uploadedFile.path, finalPath);
-        
-        // Calculer le checksum
-        const checksum = getFileChecksum(finalPath);
-        const stats = fs.statSync(finalPath);
-        
-        // Créer les métadonnées de version
+
+        await fsp.rename(uploadedFile.path, finalPath);
+
+        const checksum = await getFileChecksum(finalPath);
+        const stats = await fsp.stat(finalPath);
+
         const versionData = {
             version: version,
             timestamp: new Date().toISOString(),
@@ -218,11 +282,11 @@ app.post('/api/upload', upload.single('package'), (req, res) => {
             checksum: `sha256:${checksum}`,
             filename: finalFileName
         };
-        
-        saveVersionInfo(versionData);
-        
+
+        await saveVersionInfo(versionData);
+
         console.log(`Upload réussi: ${finalFileName} (${stats.size} bytes)`);
-        
+
         res.json({
             success: true,
             version: version,
@@ -230,44 +294,42 @@ app.post('/api/upload', upload.single('package'), (req, res) => {
             size: stats.size,
             checksum: checksum
         });
-        
+
     } catch (error) {
         console.error('Erreur upload:', error);
-        
-        // Nettoyer en cas d'erreur
+
         if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+            await fsp.unlink(req.file.path).catch(() => {});
         }
-        
-        res.status(500).json({ 
+
+        res.status(500).json({
             error: 'Erreur lors de l\'upload',
-            details: error.message 
+            details: error.message
         });
     }
 });
 
-// Route pour lister les fichiers disponibles (debug)
-app.get('/api/files', (req, res) => {
+// Route pour lister les fichiers disponibles (debug, désactivé en production)
+app.get('/api/files', async (req, res) => {
+    if (IS_PRODUCTION) {
+        return res.status(403).json({ error: 'Endpoint desactive en production' });
+    }
+
     try {
-        const assetFiles = fs.readdirSync(ASSETS_DIR);
-        const versionFiles = fs.readdirSync(VERSIONS_DIR);
-        const modelFiles = fs.existsSync(MODELS_DIR) ? fs.readdirSync(MODELS_DIR) : [];
-        
+        const assetFiles = await fsp.readdir(ASSETS_DIR);
+        const versionFiles = await fsp.readdir(VERSIONS_DIR);
+        let modelFiles = [];
+        try { modelFiles = await fsp.readdir(MODELS_DIR); } catch (_) {}
+
         res.json({
             assets: assetFiles,
             versions: versionFiles,
-            models: modelFiles,
-            paths: {
-                assets: ASSETS_DIR,
-                versions: VERSIONS_DIR,
-                models: MODELS_DIR,
-                uploads: UPLOADS_DIR
-            }
+            models: modelFiles
         });
     } catch (error) {
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Erreur lors de la liste des fichiers',
-            details: error.message 
+            details: error.message
         });
     }
 });
@@ -277,24 +339,21 @@ app.get('/api/files', (req, res) => {
 // -------------------------------------------------------
 
 // 1. Lister les packs de modèles disponibles
-app.get('/api/models/list', (req, res) => {
+app.get('/api/models/list', async (req, res) => {
     try {
-        const files = fs.readdirSync(MODELS_DIR);
+        const files = await fsp.readdir(MODELS_DIR);
         const packs = {};
 
-        // Analyse des fichiers nom_vVersion.meow
-        files.forEach(file => {
-            if (!file.endsWith('.meow')) return;
+        for (const file of files) {
+            if (!file.endsWith('.meow')) continue;
 
-            // Regex pour extraire nom et version: packName_v1.0.0.meow
             const match = file.match(/^(.+)_v(.+)\.meow$/);
             if (match) {
                 const name = match[1];
                 const version = match[2];
                 const filePath = path.join(MODELS_DIR, file);
-                const stats = fs.statSync(filePath);
+                const stats = await fsp.stat(filePath);
 
-                // On garde une liste de toutes les versions ou juste la dernière
                 if (!packs[name]) {
                     packs[name] = [];
                 }
@@ -307,10 +366,8 @@ app.get('/api/models/list', (req, res) => {
                     uploadedAt: stats.mtime
                 });
             }
-        });
+        }
 
-        // Pour chaque pack, on peut trier par version si besoin, 
-        // ou renvoyer la structure complète pour que le client choisisse.
         res.json({
             success: true,
             packs: packs
@@ -322,13 +379,11 @@ app.get('/api/models/list', (req, res) => {
     }
 });
 
-// 2. Télécharger un pack spécifique
-app.get('/api/models/download/:name/:version', (req, res) => {
-    const { name, version } = req.params;
-    // Sécurisation basique du nom de fichier pour éviter les ../
-    const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '');
-    const safeVersion = version.replace(/[^a-zA-Z0-9._-]/g, '');
-    
+// 2. Télécharger un pack spécifique (avec checksum + Range)
+app.get('/api/models/download/:name/:version', async (req, res) => {
+    const safeName = req.params.name.replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeVersion = req.params.version.replace(/[^a-zA-Z0-9._-]/g, '');
+
     const fileName = `${safeName}_v${safeVersion}.meow`;
     const filePath = path.join(MODELS_DIR, fileName);
 
@@ -338,51 +393,71 @@ app.get('/api/models/download/:name/:version', (req, res) => {
 
     try {
         const stats = fs.statSync(filePath);
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Length', stats.size);
-        
-        const fileStream = fs.createReadStream(filePath);
-        fileStream.pipe(res);
-        
+
+        // Checksum du fichier
+        const checksum = await getFileChecksum(filePath);
+        res.setHeader('X-Checksum-Sha256', checksum);
+
+        // Support HTTP Range pour reprise
+        const range = req.headers.range;
+        if (range) {
+            const parts = range.replace(/bytes=/, '').split('-');
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : stats.size - 1;
+            const chunkSize = end - start + 1;
+
+            res.writeHead(206, {
+                'Content-Range': `bytes ${start}-${end}/${stats.size}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunkSize,
+                'Content-Type': 'application/octet-stream',
+                'Content-Disposition': `attachment; filename="${fileName}"`,
+            });
+            fs.createReadStream(filePath, { start, end }).pipe(res);
+        } else {
+            res.setHeader('Accept-Ranges', 'bytes');
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Content-Length', stats.size);
+            fs.createReadStream(filePath).pipe(res);
+        }
+
     } catch (error) {
         console.error('Erreur download modèle:', error);
         res.status(500).json({ error: 'Erreur lors du téléchargement' });
     }
 });
 
-// 3. Upload d'un pack de modèle spécifique
-app.post('/api/models/upload', upload.single('package'), (req, res) => {
+// 3. Upload d'un pack de modèle spécifique (authentifié + rate limité)
+app.post('/api/models/upload', uploadLimiter, authUpload, upload.single('package'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'Aucun fichier fourni' });
     }
 
     try {
         const uploadedFile = req.file;
-        const name = req.body.name; // Identifiant du pack (ex: "ville", "personnages")
+        const name = req.body.name;
         const version = req.body.version;
 
         if (!version || !name) {
-            fs.unlinkSync(uploadedFile.path);
+            await fsp.unlink(uploadedFile.path);
             return res.status(400).json({ error: 'Nom du pack et version requis' });
         }
 
-        // Nettoyage des inputs
         const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '');
         const safeVersion = version.replace(/[^a-zA-Z0-9._-]/g, '');
 
         const finalFileName = `${safeName}_v${safeVersion}.meow`;
         const finalPath = path.join(MODELS_DIR, finalFileName);
 
-        // Si une version identique existe déjà, on l'écrase (ou on pourrait rejeter)
         if (fs.existsSync(finalPath)) {
             console.log(`Remplacement du fichier existant: ${finalFileName}`);
         }
 
-        fs.renameSync(uploadedFile.path, finalPath);
-        
-        const stats = fs.statSync(finalPath);
-        const checksum = getFileChecksum(finalPath);
+        await fsp.rename(uploadedFile.path, finalPath);
+
+        const stats = await fsp.stat(finalPath);
+        const checksum = await getFileChecksum(finalPath);
 
         console.log(`Upload Modèle réussi: ${finalFileName} (${stats.size} bytes)`);
 
@@ -401,35 +476,34 @@ app.post('/api/models/upload', upload.single('package'), (req, res) => {
     } catch (error) {
         console.error('Erreur upload modèle:', error);
         if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+            await fsp.unlink(req.file.path).catch(() => {});
         }
         res.status(500).json({ error: 'Erreur lors de l\'upload du modèle' });
     }
 });
 
+// Page d'accueil
+app.get('/', (req, res) => {
+    res.send('Serveur Meownopoly en ligne !');
+});
+
 // Gestion des erreurs
 app.use((error, req, res, next) => {
     console.error('Erreur serveur:', error);
-    res.status(500).json({ 
+    res.status(500).json({
         error: 'Erreur interne du serveur',
-        message: error.message 
+        message: error.message
     });
 });
 
 // Route 404
 app.use((req, res) => {
-    res.status(404).json({ 
+    res.status(404).json({
         error: 'Endpoint non trouvé',
         path: req.path,
-        method: req.method 
+        method: req.method
     });
 });
-
-app.get('/', (req, res) => {
-    res.send('Serveur en ligne !');
-  });
-
-// ... (Garde tout le reste de ton code : routes, multer, express, etc.)
 
 // --- CONFIGURATION SSL ---
 const domain = 'pattounecorp.ovh';
@@ -452,12 +526,11 @@ https.createServer(sslOptions, app).listen(httpsPort, '0.0.0.0', () => {
     console.log(`⬆️  Uploads: ${UPLOADS_DIR}`);
     console.log('='.repeat(50));
     // Afficher la version actuelle
-    try {
-        const latest = getLatestVersion();
+    getLatestVersion().then(latest => {
         console.log(`📦 Version actuelle: ${latest.version}`);
-    } catch (error) {
+    }).catch(() => {
         console.log('⚠️  Aucune version disponible');
-    }
+    });
 });
 
 // 2. Optionnel : Serveur HTTP (Port 80) pour rediriger automatiquement vers le HTTPS

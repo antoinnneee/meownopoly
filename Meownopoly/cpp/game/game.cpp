@@ -31,6 +31,7 @@ Game::~Game()
 }
 
 void Game::registerQml() {
+    qmlRegisterType<Game>("Game", 1, 0, "Game"); // Register Player class
     qmlRegisterType<Player>("Player", 1, 0, "Player"); // Register Player class
     CaseFactory::registerCaseQml();
 }
