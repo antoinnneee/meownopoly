@@ -31,12 +31,13 @@ Meownopoly/.vscode/settings.json
 Meownopoly/.vscode/settings.json
 Meownopoly/.vscode/settings.json
 Meownopoly/.vscode/settings.json
-/chatServer/node_modules
+chatServer/node_modules
 chatServer/chat.db
 chatServer/.deployEnv
 .vscode/settings.json
 /build
 /Meownopoly/.cache
 .claude/settings.local.json
-/.claude/skills
 /.cache
+.claude/skills/chat-server.md
+.claude/skills/build.md

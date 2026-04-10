@@ -70,7 +70,7 @@ No automated test runner is configured. Manual testing via the executable.
 
 ## Key Patterns
 
-- **Singletons**: `Catway`, `AssetManager`, `MapFileManager`, `Launcher` — registered as QML singletons
+- **Singletons**: `Catway`, `AssetManager`, `MapFileManager`, `LauncherManager` — registered as QML singletons
 - **C++/QML bridge**: `Q_PROPERTY` for data binding, `Q_INVOKABLE` for method calls
 - **Resource files**: `qml.qrc`, `asset.qrc`, `base_comp.qrc`, `chat.qrc`, `launcher.qrc`, `other.qrc`
 
@@ -79,7 +79,8 @@ No automated test runner is configured. Manual testing via the executable.
 - Root `id`: `root` by default, or a semantic role name
 - Files: `PascalCase.qml`; editor panels prefixed (`CCP_`, `ASP_`, `VEP_`)
 - Internal properties prefixed with `_`
-- Signals: `camelCase`, often suffixed `Requested` or `Changed`
+- Signals: `camelCase`, often suffixed `Requested`. Avoid `Changed` suffix for custom signals — QML auto-generates `<property>Changed` for every property/alias, causing "Duplicate signal name" errors
+- Prefer declarative bindings over imperative assignments in signal handlers — imperative `prop = value` overwrites bindings and triggers `qt.qml.binding.removal` warnings
 - Use `root.` prefix in children to avoid binding ambiguity
 - Use `const`/`let` (not `var`) in JS functions
 - Reusable components in `ui_item/`, board elements in `meowComponent/`, logic in `board/logic/` or `editor/logic/`
@@ -91,8 +92,8 @@ No automated test runner is configured. Manual testing via the executable.
 - `Meownopoly/qml/` — QML UI (editor, board, chat, menu, launcher, account, components)
 - `Meownopoly/doc/` — Comprehensive project documentation (40+ files)
 - `Meownopoly/config/` — Configuration files
-- `chatServer/` — Node.js WebSocket chat server with SQLite
-- `asset_server/` — Node.js HTTP asset distribution server
+- `chatServer/` — Node.js WebSocket chat server with SQLite (deploy via `deploy.sh` + `.deployEnv`)
+- `asset_server/` — Node.js HTTP asset distribution server (deploy via `deploy.sh` + `.deployEnv`)
 - `image_tools/` — Image processing utilities
 
 ## External Documentation
