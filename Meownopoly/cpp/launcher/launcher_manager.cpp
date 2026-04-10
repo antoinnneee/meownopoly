@@ -16,22 +16,25 @@ LauncherManager *LauncherManager::m_instance = nullptr;
 LauncherManager::LauncherManager(QObject *parent)
     : QObject(parent)
 {
-    // Initialize network manager
     m_networkManager = new QNetworkAccessManager(this);
-    
-    // Initialize folder compressor
     m_folderCompressor = new FolderCompressor(this);
 
     m_basePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QString downloadPath = m_basePath + "/download";
-    QDir().mkpath(downloadPath);
-    QString assetsPath = m_basePath + "/assets";
-    QDir().mkpath(assetsPath);
-    QString modelsPath = m_basePath + "/models"; // New folder
-    QDir().mkpath(modelsPath);
-    // Load current version from file
-    m_currentVersion = getCurrentVersionFromFile();
+    QDir().mkpath(m_basePath + "/download");
+    QDir().mkpath(m_basePath + "/assets");
+    QDir().mkpath(m_basePath + "/models");
 
+    // Download timeout (5 minutes sans activité)
+    m_downloadTimer = new QTimer(this);
+    m_downloadTimer->setSingleShot(true);
+    connect(m_downloadTimer, &QTimer::timeout, this, [this]() {
+        if (m_currentDownload && m_currentDownload->isRunning()) {
+            emit logMessage("Timeout du telechargement (5 min sans activite)");
+            m_currentDownload->abort();
+        }
+    });
+
+    m_currentVersion = getCurrentVersionFromFile();
     emit logMessage("LauncherManager initialisé");
 }
 
@@ -62,6 +65,26 @@ QString reformat_server_url(const QString &serverUrl)
         return QString("https://") + serverUrl;
     }
     return serverUrl;
+}
+
+void LauncherManager::setUploadToken(const QString &token)
+{
+    m_uploadToken = token;
+}
+
+int LauncherManager::compareVersions(const QString &v1, const QString &v2)
+{
+    QStringList p1 = v1.split('.');
+    QStringList p2 = v2.split('.');
+    while (p1.size() < 3) p1.append("0");
+    while (p2.size() < 3) p2.append("0");
+    for (int i = 0; i < 3; ++i) {
+        int n1 = p1[i].toInt();
+        int n2 = p2[i].toInt();
+        if (n1 < n2) return -1;
+        if (n1 > n2) return 1;
+    }
+    return 0;
 }
 
 void LauncherManager::testServerConnection(const QString &serverUrl)
@@ -111,56 +134,113 @@ void LauncherManager::checkForUpdates(const QString &serverUrl)
 
 void LauncherManager::downloadResources(const QString &serverUrl, const QString &version)
 {
+    DownloadRequest req;
+    req.type = DownloadRequest::Asset;
+    req.serverUrl = serverUrl;
+    req.version = version;
+
     if (m_currentDownload) {
-        m_currentDownload->deleteLater();
-        m_currentDownload = nullptr;
-    }
-    
-    emit logMessage("Début du téléchargement des ressources...");
-    setIsDownloading(true);
-    setDownloadProgress(0.0);
-    setDownloadStatus("Téléchargement...");
-    
-    QString formattedServerUrl = reformat_server_url(serverUrl);
-    QString downloadUrl = formattedServerUrl + "/api/download/" + version;
-    QString fileName = m_basePath + "/download/" + QString("assets_v%1.meow").arg(version);
-    
-    m_downloadFile = new QFile(fileName, this);
-    if (!m_downloadFile->open(QIODevice::WriteOnly)) {
-        emit logMessage("❌ Erreur: Impossible d'ouvrir le fichier pour écriture");
-        setDownloadStatus("Erreur");
-        setIsDownloading(false);
+        m_downloadQueue.enqueue(req);
+        emit logMessage("Telechargement ajouté à la file d'attente");
         return;
     }
-    
+    m_retryCount = 0;
+    executeDownload(req);
+}
+
+void LauncherManager::executeDownload(const DownloadRequest &req)
+{
+    m_currentRequest = req;
+
+    QString formattedServerUrl = reformat_server_url(req.serverUrl);
+    QString downloadUrl;
+    QString fileName;
+
+    if (req.type == DownloadRequest::Model) {
+        downloadUrl = formattedServerUrl + "/api/models/download/" + req.modelName + "/" + req.modelVersion;
+        fileName = m_basePath + "/download/" + QString("%1_v%2.meow").arg(req.modelName, req.modelVersion);
+        emit logMessage("Début du telechargement du modele: " + req.modelName + " v" + req.modelVersion);
+    } else {
+        downloadUrl = formattedServerUrl + "/api/download/" + req.version;
+        fileName = m_basePath + "/download/" + QString("assets_v%1.meow").arg(req.version);
+        emit logMessage("Début du telechargement des ressources v" + req.version + "...");
+    }
+
+    setIsDownloading(true);
+    setDownloadProgress(0.0);
+    m_bytesReceived = 0;
+    m_bytesTotal = 0;
+    setDownloadStatus("Telechargement...");
+
+    // Checksum init
+    delete m_downloadHash;
+    m_downloadHash = new QCryptographicHash(QCryptographicHash::Sha256);
+
+    // Reprise de téléchargement : détection de fichier partiel
+    qint64 resumeOffset = 0;
+    QFileInfo partialInfo(fileName);
+    if (partialInfo.exists() && partialInfo.size() > 0 && m_retryCount > 0) {
+        // Fichier partiel existant d'une tentative précédente
+        resumeOffset = partialInfo.size();
+
+        // Pré-hasher le contenu existant pour le checksum final
+        QFile existingFile(fileName);
+        if (existingFile.open(QIODevice::ReadOnly)) {
+            while (!existingFile.atEnd()) {
+                m_downloadHash->addData(existingFile.read(64 * 1024));
+            }
+            existingFile.close();
+        }
+
+        emit logMessage(QString("Reprise du telechargement a %1 octets").arg(resumeOffset));
+    }
+
+    m_downloadFile = new QFile(fileName, this);
+    QIODevice::OpenMode openMode = (resumeOffset > 0) ? QIODevice::Append : QIODevice::WriteOnly;
+    if (!m_downloadFile->open(openMode)) {
+        emit logMessage("Erreur: Impossible d'ouvrir le fichier pour ecriture");
+        setDownloadStatus("Erreur");
+        setIsDownloading(false);
+        delete m_downloadHash;
+        m_downloadHash = nullptr;
+        processNextDownload();
+        return;
+    }
+
     QNetworkRequest request;
-    request.setUrl(downloadUrl);
+    request.setUrl(QUrl(downloadUrl));
     request.setRawHeader("User-Agent", "Meownopoly-Launcher/1.0");
-    
+
+    // Header Range pour reprise
+    if (resumeOffset > 0) {
+        request.setRawHeader("Range", QString("bytes=%1-").arg(resumeOffset).toUtf8());
+    }
+
     m_currentDownload = m_networkManager->get(request);
-    
-    connect(m_currentDownload, &QNetworkReply::downloadProgress, 
+    m_downloadTimer->start(DOWNLOAD_TIMEOUT_MS);
+
+    connect(m_currentDownload, &QNetworkReply::downloadProgress,
             this, &LauncherManager::onDownloadProgress);
-    connect(m_currentDownload, &QNetworkReply::finished, 
+    connect(m_currentDownload, &QNetworkReply::finished,
             this, &LauncherManager::onDownloadFinished);
     connect(m_currentDownload, &QNetworkReply::readyRead, [this]() {
-        if (m_downloadFile) {
-            m_downloadFile->write(m_currentDownload->readAll());
+        if (m_downloadFile && m_currentDownload) {
+            QByteArray data = m_currentDownload->readAll();
+            if (m_downloadHash) m_downloadHash->addData(data);
+            m_downloadFile->write(data);
         }
     });
 }
 
 void LauncherManager::forceDownloadResources(const QString &serverUrl)
 {
-    emit logMessage("Téléchargement forcé des ressources...");
+    emit logMessage("Telechargement forcé des ressources...");
     setIsDownloading(true);
     setDownloadProgress(0.0);
-    setDownloadStatus("Téléchargement forcé...");
-    
+    setDownloadStatus("Telechargement forcé...");
+
     m_currentVersion = "0.0.0";
-    // First check for updates to get the latest version
     checkForUpdates(serverUrl);
-    // The download will be triggered in onVersionCheckFinished
 }
 
 void LauncherManager::createResourcePackage(const QString &folderPath, const QString &version)
@@ -217,104 +297,89 @@ void LauncherManager::createResourcePackage(const QString &folderPath, const QSt
 void LauncherManager::uploadPackageToServer(const QString &serverUrl)
 {
     if (m_lastCreatedPackage.isEmpty() || !QFile::exists(m_lastCreatedPackage)) {
-        emit logMessage("❌ Aucun paquet à uploader");
+        emit logMessage("Aucun paquet à uploader");
         setDownloadStatus("Aucun paquet à uploader");
         return;
     }
-    
-    // Extraire la version du nom du fichier (format: assets_vX.X.X.meow)
+
     QString fileName = QFileInfo(m_lastCreatedPackage).fileName();
     QRegularExpression versionRegex("assets_v([0-9]+\\.[0-9]+\\.[0-9]+)\\.meow");
     QRegularExpressionMatch match = versionRegex.match(fileName);
-    
+
     if (!match.hasMatch()) {
-        emit logMessage("❌ Erreur: Format de nom de fichier invalide");
+        emit logMessage("Erreur: Format de nom de fichier invalide");
         setDownloadStatus("Format de fichier invalide");
         return;
     }
-    
+
     QString version = match.captured(1);
-    emit logMessage("📦 Upload du paquet version " + version + "...");
-    
-    // Lire le contenu du fichier en mémoire
-    QFile packageFile(m_lastCreatedPackage);
-    if (!packageFile.open(QIODevice::ReadOnly)) {
-        emit logMessage("❌ Erreur: Impossible de lire le paquet");
-        setDownloadStatus("Erreur de lecture");
-        return;
-    }
-    
-    QByteArray fileData = packageFile.readAll();
-    packageFile.close();
-    
-    if (fileData.isEmpty()) {
-        emit logMessage("❌ Erreur: Fichier vide");
-        setDownloadStatus("Fichier vide");
-        return;
-    }
-    
-    // Créer une requête multipart/form-data
+    emit logMessage("Upload du paquet version " + version + "...");
+
     QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
-    
-    // Partie fichier
+
+    // Streaming : on utilise setBodyDevice au lieu de readAll()
+    QFile *packageFileDevice = new QFile(m_lastCreatedPackage, multiPart);
+    if (!packageFileDevice->open(QIODevice::ReadOnly)) {
+        emit logMessage("Erreur: Impossible de lire le paquet");
+        setDownloadStatus("Erreur de lecture");
+        delete multiPart;
+        return;
+    }
+
     QHttpPart filePart;
     filePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
-    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, 
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader,
                        QVariant("form-data; name=\"package\"; filename=\"" + fileName + "\""));
-    filePart.setBody(fileData);
+    filePart.setBodyDevice(packageFileDevice);
     multiPart->append(filePart);
-    
-    // Partie version
+
     QHttpPart versionPart;
     versionPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"version\""));
     versionPart.setBody(version.toUtf8());
     multiPart->append(versionPart);
-    
-    // Partie timestamp
+
     QHttpPart timestampPart;
     timestampPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"timestamp\""));
     timestampPart.setBody(QDateTime::currentDateTime().toString(Qt::ISODate).toUtf8());
     multiPart->append(timestampPart);
-    
-    // Configurer et envoyer la requête
+
     QNetworkRequest request;
     QString formattedServerUrl = reformat_server_url(serverUrl);
     request.setUrl(QUrl(formattedServerUrl + "/api/upload"));
     request.setRawHeader("User-Agent", "Meownopoly-Launcher/1.0");
-    
+    if (!m_uploadToken.isEmpty()) {
+        request.setRawHeader("Authorization", ("Bearer " + m_uploadToken).toUtf8());
+    }
+
     QNetworkReply *uploadReply = m_networkManager->post(request, multiPart);
-    multiPart->setParent(uploadReply); // Nettoyer automatiquement
-    
+    multiPart->setParent(uploadReply);
+
     setDownloadStatus("Upload en cours...");
-    
-    // Gérer la fin de l'upload
+
     connect(uploadReply, &QNetworkReply::finished, [this, uploadReply, version]() {
         if (uploadReply->error() == QNetworkReply::NoError) {
-            emit logMessage("✅ Upload du paquet v" + version + " terminé avec succès");
+            emit logMessage("Upload du paquet v" + version + " terminé avec succès");
             setDownloadStatus("Upload terminé");
-            
-            // Vérifier la réponse du serveur
+
             QByteArray response = uploadReply->readAll();
             QJsonDocument doc = QJsonDocument::fromJson(response);
             QJsonObject obj = doc.object();
 
             if (obj["success"].toBool()) {
-                emit logMessage("✅ Paquet validé par le serveur");
+                emit logMessage("Paquet validé par le serveur");
             } else {
-                emit logMessage("⚠️ Le serveur signale une erreur: " + obj["message"].toString());
+                emit logMessage("Le serveur signale une erreur: " + obj["message"].toString());
             }
         } else {
-            emit logMessage("❌ Erreur d'upload: " + uploadReply->errorString());
+            emit logMessage("Erreur d'upload: " + uploadReply->errorString());
             setDownloadStatus("Erreur d'upload");
         }
         uploadReply->deleteLater();
     });
-    
-    // Gérer la progression
+
     connect(uploadReply, &QNetworkReply::uploadProgress, [this](qint64 sent, qint64 total) {
         if (total > 0) {
-            double progress = static_cast<double>(sent) / total;
-            setDownloadProgress(progress);
+            setDownloadProgress(static_cast<double>(sent) / total);
         }
     });
 }
@@ -351,50 +416,19 @@ void LauncherManager::fetchModelsList(const QString &serverUrl)
 
 void LauncherManager::downloadModel(const QString &serverUrl, const QString &name, const QString &version)
 {
+    DownloadRequest req;
+    req.type = DownloadRequest::Model;
+    req.serverUrl = serverUrl;
+    req.modelName = name;
+    req.modelVersion = version;
+
     if (m_currentDownload) {
-        emit logMessage("❌ Un téléchargement est déjà en cours");
+        m_downloadQueue.enqueue(req);
+        emit logMessage("Telechargement du modele ajouté à la file d'attente");
         return;
     }
-
-    emit logMessage("Début du téléchargement du modèle: " + name + " v" + version);
-    setIsDownloading(true);
-    setDownloadProgress(0.0);
-    setDownloadStatus("Téléchargement modèle...");
-    
-    // Set flags for onDownloadFinished
-    m_isModelDownload = true;
-    m_currentModelName = name;
-    m_currentModelVersion = version;
-
-    QString formattedServerUrl = reformat_server_url(serverUrl);
-    // Encoding URL parameters manually or using QUrlQuery would be safer, but simple concat here matches existing style
-    QString downloadUrl = formattedServerUrl + "/api/models/download/" + name + "/" + version;
-    
-    QString fileName = QString("%1_v%2.meow").arg(name, version);
-    QString filePath = m_basePath + "/download/" + fileName;
-    
-    m_downloadFile = new QFile(filePath, this);
-    if (!m_downloadFile->open(QIODevice::WriteOnly)) {
-        emit logMessage("❌ Erreur: Impossible d'ouvrir le fichier pour écriture");
-        setDownloadStatus("Erreur Fichier");
-        setIsDownloading(false);
-        m_isModelDownload = false;
-        return;
-    }
-    
-    QNetworkRequest request;
-    request.setUrl(downloadUrl);
-    request.setRawHeader("User-Agent", "Meownopoly-Launcher/1.0");
-    
-    m_currentDownload = m_networkManager->get(request);
-    
-    connect(m_currentDownload, &QNetworkReply::downloadProgress, this, &LauncherManager::onDownloadProgress);
-    connect(m_currentDownload, &QNetworkReply::finished, this, &LauncherManager::onDownloadFinished);
-    connect(m_currentDownload, &QNetworkReply::readyRead, [this]() {
-        if (m_downloadFile) {
-            m_downloadFile->write(m_currentDownload->readAll());
-        }
-    });
+    m_retryCount = 0;
+    executeDownload(req);
 }
 
 void LauncherManager::createModelPackage(const QString &folderPath, const QString &name, const QString &version)
@@ -454,72 +488,70 @@ void LauncherManager::createModelPackage(const QString &folderPath, const QStrin
 void LauncherManager::uploadModelPackage(const QString &serverUrl, const QString &name, const QString &version)
 {
     if (m_lastCreatedPackage.isEmpty() || !QFile::exists(m_lastCreatedPackage)) {
-        emit logMessage("❌ Aucun paquet modèle à uploader");
+        emit logMessage("Aucun paquet modele à uploader");
         return;
     }
-    
-    emit logMessage("📦 Upload du modèle '" + name + "' v" + version + "...");
-    
-    QFile packageFile(m_lastCreatedPackage);
-    if (!packageFile.open(QIODevice::ReadOnly)) {
-        emit logMessage("❌ Erreur lecture fichier");
-        return;
-    }
-    
-    QByteArray fileData = packageFile.readAll();
-    packageFile.close();
-    
+
+    emit logMessage("Upload du modele '" + name + "' v" + version + "...");
+
     QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
-    
-    // File Part
+
+    // Streaming upload
+    QFile *packageFileDevice = new QFile(m_lastCreatedPackage, multiPart);
+    if (!packageFileDevice->open(QIODevice::ReadOnly)) {
+        emit logMessage("Erreur lecture fichier");
+        delete multiPart;
+        return;
+    }
+
     QHttpPart filePart;
     QString fileName = QFileInfo(m_lastCreatedPackage).fileName();
     filePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
-    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, 
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader,
                        QVariant("form-data; name=\"package\"; filename=\"" + fileName + "\""));
-    filePart.setBody(fileData);
+    filePart.setBodyDevice(packageFileDevice);
     multiPart->append(filePart);
-    
-    // Name Part
+
     QHttpPart namePart;
     namePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"name\""));
     namePart.setBody(name.toUtf8());
     multiPart->append(namePart);
 
-    // Version Part
     QHttpPart versionPart;
     versionPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"version\""));
     versionPart.setBody(version.toUtf8());
     multiPart->append(versionPart);
-    
+
     QNetworkRequest request;
     QString formattedServerUrl = reformat_server_url(serverUrl);
     request.setUrl(QUrl(formattedServerUrl + "/api/models/upload"));
     request.setRawHeader("User-Agent", "Meownopoly-Launcher/1.0");
-    
+    if (!m_uploadToken.isEmpty()) {
+        request.setRawHeader("Authorization", ("Bearer " + m_uploadToken).toUtf8());
+    }
+
     QNetworkReply *uploadReply = m_networkManager->post(request, multiPart);
     multiPart->setParent(uploadReply);
-    
-    setDownloadStatus("Upload modèle...");
+
+    setDownloadStatus("Upload modele...");
     setIsDownloading(true);
     setDownloadProgress(0.0);
 
     connect(uploadReply, &QNetworkReply::finished, [this, uploadReply, name, version]() {
         if (uploadReply->error() == QNetworkReply::NoError) {
-            emit logMessage("✅ Upload modèle terminé");
+            emit logMessage("Upload modele terminé");
             setDownloadStatus("Upload OK");
-            // Refresh list
         } else {
-            emit logMessage("❌ Erreur upload: " + uploadReply->errorString());
+            emit logMessage("Erreur upload: " + uploadReply->errorString());
             setDownloadStatus("Erreur Upload");
         }
         setIsDownloading(false);
         uploadReply->deleteLater();
     });
-    
+
     connect(uploadReply, &QNetworkReply::uploadProgress, [this](qint64 sent, qint64 total) {
         if (total > 0) {
-            setDownloadProgress((double)sent / total);
+            setDownloadProgress(static_cast<double>(sent) / total);
         }
     });
 }
@@ -549,24 +581,11 @@ void LauncherManager::onModelsListFinished()
                     std::sort(versionsList.begin(), versionsList.end(), [](const QVariant &v1, const QVariant &v2) {
                         QString ver1 = v1.toJsonObject()["version"].toString();
                         QString ver2 = v2.toJsonObject()["version"].toString();
-                        
-                        // Fallback for converting from QVariantMap if needed (QVariant::toJsonObject might need explicit conversion)
+
                         if (ver1.isEmpty() && v1.canConvert<QVariantMap>()) ver1 = v1.toMap()["version"].toString();
                         if (ver2.isEmpty() && v2.canConvert<QVariantMap>()) ver2 = v2.toMap()["version"].toString();
 
-                        QStringList p1 = ver1.split('.');
-                        QStringList p2 = ver2.split('.');
-                        
-                        // Normalize length to 3 parts
-                        while(p1.length() < 3) p1.append("0");
-                        while(p2.length() < 3) p2.append("0");
-                        
-                        for(int i=0; i<3; i++) {
-                            int n1 = p1[i].toInt();
-                            int n2 = p2[i].toInt();
-                            if (n1 != n2) return n1 > n2; // Descending
-                        }
-                        return false;
+                        return compareVersions(ver1, ver2) > 0; // Descending
                     });
 
                     QVariantMap modelData;
@@ -614,159 +633,226 @@ void LauncherManager::onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal
     if (bytesTotal > 0) {
         double progress = static_cast<double>(bytesReceived) / bytesTotal;
         setDownloadProgress(progress);
-        
-        qDebug() << QString("Download progress: %1% (%2/%3 bytes)")
-                    .arg(progress * 100.0, 0, 'f', 1)
-                    .arg(bytesReceived)
-                    .arg(bytesTotal);
+        m_bytesReceived = bytesReceived;
+        m_bytesTotal = bytesTotal;
+        emit downloadProgressChanged();
+    }
+
+    // Reset timeout sur activité
+    if (m_downloadTimer && m_downloadTimer->isActive()) {
+        m_downloadTimer->start(DOWNLOAD_TIMEOUT_MS);
     }
 }
 
 void LauncherManager::onDownloadFinished()
 {
-    if (!m_currentDownload) {
+    if (!m_currentDownload)
         return;
-    }
-    
-    // Close the file
+
+    // Arrêter le timer de timeout
+    if (m_downloadTimer) m_downloadTimer->stop();
+
+    // Fermer le fichier
     if (m_downloadFile) {
         m_downloadFile->close();
         delete m_downloadFile;
         m_downloadFile = nullptr;
     }
-    
-    if (m_currentDownload->error() == QNetworkReply::NoError) {
-        emit logMessage("✅ Fichier téléchargé avec succès!");
-        
-        if (m_isModelDownload) {
-            // Extraction du modèle
-            QString fileName = QString("%1_v%2.meow").arg(m_currentModelName, m_currentModelVersion);
-            QString compressedFile = m_basePath + "/download/" + fileName;
-            // Dossier cible: assets/models/NomDuModele/
-            // Ou juste assets/ ? Le user a dit "Ne les mets pas dans le meme dossier que les assets" sur le serveur.
-            // Côté client, Unity/Godot/etc s'attend probablement à les trouver quelque part.
-            // Disons m_basePath/models/NomDuPack/
-            QString extractPath = m_basePath + "/models/" + m_currentModelName + "/";
-            QDir().mkpath(extractPath);
 
-            bool success = m_folderCompressor->decompressFolder(compressedFile, extractPath, FC_DELETE_BOTH);
-            if (success) {
-                 emit logMessage("✅ Modèle extrait avec succès vers: " + extractPath);
-                 
-                 // Sauvegarder la version locale du modèle
-                 QJsonObject verObj;
-                 verObj["version"] = m_currentModelVersion;
-                 verObj["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-                 
-                 QFile verFile(extractPath + "version.json");
-                 if (verFile.open(QIODevice::WriteOnly)) {
-                     verFile.write(QJsonDocument(verObj).toJson());
-                     verFile.close();
-                 }
-                 
-                 setDownloadStatus("Download success");
-                 
-                 // Update internal list to refresh UI instantly
-                 QVariantList list = m_modelsList;
-                 bool found = false;
-                 for(int i=0; i<list.size(); i++) {
-                     QVariantMap map = list[i].toMap();
-                     if (map["name"].toString() == m_currentModelName) {
-                         map["localVersion"] = m_currentModelVersion;
-                         map["isInstalled"] = true;
-                         list[i] = map;
-                         found = true;
-                         break;
-                     }
-                 }
-                 
-                 if (found) {
-                     setModelsList(list);
-                 } else {
-                     // Should not happen if we downloaded from the list, but maybe if manual download?
-                     // In that case we might want to re-fetch the list completely.
-                 }
+    bool success = (m_currentDownload->error() == QNetworkReply::NoError);
 
-            } else {
-                 emit logMessage("❌ Échec de l'extraction du modèle");
-                 setDownloadStatus("Erreur d'extraction");
-            }
-            // Reset flags
-            m_isModelDownload = false;
-            m_currentModelName = "";
-            m_currentModelVersion = "";
+    if (!success) {
+        emit logMessage("Echec du telechargement: " + m_currentDownload->errorString());
 
+        // Cleanup hash (sera recréé au retry avec pré-hash du fichier partiel)
+        delete m_downloadHash;
+        m_downloadHash = nullptr;
+
+        // Retry automatique (3 tentatives, backoff exponentiel)
+        // On garde le fichier partiel pour permettre la reprise via Range
+        if (m_retryCount < MAX_RETRIES) {
+            m_retryCount++;
+            int delayMs = 1000 * (1 << m_retryCount); // 2s, 4s, 8s
+            emit logMessage(QString("Nouvelle tentative %1/%2 dans %3s (avec reprise)...")
+                            .arg(m_retryCount).arg(MAX_RETRIES).arg(delayMs / 1000));
+            setDownloadStatus(QString("Retry %1/%2...").arg(m_retryCount).arg(MAX_RETRIES));
+
+            m_currentDownload->deleteLater();
+            m_currentDownload = nullptr;
+
+            QTimer::singleShot(delayMs, this, [this]() {
+                executeDownload(m_currentRequest);
+            });
+            return;
+        }
+
+        // Toutes les tentatives échouées — supprimer le fichier incomplet
+        QString compressedFile;
+        if (m_currentRequest.type == DownloadRequest::Model) {
+            compressedFile = m_basePath + "/download/" + QString("%1_v%2.meow").arg(m_currentRequest.modelName, m_currentRequest.modelVersion);
         } else {
-            // Extraction des assets principaux (Logique existante)
-            QString compressedFile = m_basePath + "/download/" +QString("assets_v%1.meow").arg(m_latestVersion);
-            QString extractPath = m_basePath + "/assets/";
-            
-            bool success = m_folderCompressor->decompressFolder(compressedFile, extractPath, FC_DELETE_BOTH);
-            if (success) {
-                emit logMessage("✅ Assets extraits avec succès vers: " + extractPath);
-                setCurrentVersion(m_latestVersion);
-                saveVersionInfo(m_latestVersion);
-                setDownloadStatus("Download success");
-                emit downloadSucess();
-            } else {
-                emit logMessage("❌ Échec de l'extraction des assets");
-                setDownloadStatus("Erreur d'extraction");
+            compressedFile = m_basePath + "/download/" + QString("assets_v%1.meow").arg(m_currentRequest.version);
+        }
+        if (QFile::exists(compressedFile))
+            QFile::remove(compressedFile);
+
+        m_retryCount = 0;
+        setDownloadStatus("Erreur de telechargement");
+        setIsDownloading(false);
+        setDownloadProgress(0.0);
+        m_currentDownload->deleteLater();
+        m_currentDownload = nullptr;
+        processNextDownload();
+        return;
+    }
+
+    // --- Téléchargement réussi ---
+    emit logMessage("Fichier telecharge avec succes!");
+    m_retryCount = 0;
+
+    // Vérification du checksum SHA-256
+    if (m_downloadHash) {
+        QString actualHash = m_downloadHash->result().toHex();
+
+        // Récupérer le checksum attendu depuis le header HTTP (modèles) ou depuis parseVersionInfo (assets)
+        QString serverChecksum = QString::fromUtf8(m_currentDownload->rawHeader("X-Checksum-Sha256"));
+        if (serverChecksum.isEmpty() && !m_expectedChecksum.isEmpty()) {
+            serverChecksum = m_expectedChecksum;
+        }
+
+        if (!serverChecksum.isEmpty() && actualHash != serverChecksum) {
+            emit logMessage("ERREUR: Checksum invalide! Attendu: " + serverChecksum + " Obtenu: " + actualHash);
+            setDownloadStatus("Erreur de verification");
+
+            // Supprimer le fichier corrompu
+            QString compressedFile;
+            if (m_currentRequest.type == DownloadRequest::Model)
+                compressedFile = m_basePath + "/download/" + QString("%1_v%2.meow").arg(m_currentRequest.modelName, m_currentRequest.modelVersion);
+            else
+                compressedFile = m_basePath + "/download/" + QString("assets_v%1.meow").arg(m_currentRequest.version);
+            QFile::remove(compressedFile);
+
+            delete m_downloadHash;
+            m_downloadHash = nullptr;
+            setIsDownloading(false);
+            setDownloadProgress(0.0);
+            m_currentDownload->deleteLater();
+            m_currentDownload = nullptr;
+            processNextDownload();
+            return;
+        }
+
+        if (!serverChecksum.isEmpty()) {
+            emit logMessage("Checksum SHA-256 verifie OK");
+        }
+
+        delete m_downloadHash;
+        m_downloadHash = nullptr;
+    }
+
+    // Extraction
+    if (m_currentRequest.type == DownloadRequest::Model) {
+        QString fileName = QString("%1_v%2.meow").arg(m_currentRequest.modelName, m_currentRequest.modelVersion);
+        QString compressedFile = m_basePath + "/download/" + fileName;
+        QString extractPath = m_basePath + "/models/" + m_currentRequest.modelName + "/";
+        QDir().mkpath(extractPath);
+
+        bool extractOk = m_folderCompressor->decompressFolder(compressedFile, extractPath, FC_DELETE_BOTH);
+        if (extractOk) {
+            emit logMessage("Modele extrait avec succes vers: " + extractPath);
+
+            // Sauvegarder la version locale
+            QJsonObject verObj;
+            verObj["version"] = m_currentRequest.modelVersion;
+            verObj["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+
+            QFile verFile(extractPath + "version.json");
+            if (verFile.open(QIODevice::WriteOnly)) {
+                verFile.write(QJsonDocument(verObj).toJson());
+                verFile.close();
             }
+
+            setDownloadStatus("Download success");
+
+            // Mettre à jour la liste pour rafraîchir l'UI
+            QVariantList list = m_modelsList;
+            for (int i = 0; i < list.size(); i++) {
+                QVariantMap map = list[i].toMap();
+                if (map["name"].toString() == m_currentRequest.modelName) {
+                    map["localVersion"] = m_currentRequest.modelVersion;
+                    map["isInstalled"] = true;
+                    list[i] = map;
+                    break;
+                }
+            }
+            setModelsList(list);
+        } else {
+            emit logMessage("Echec de l'extraction du modele");
+            setDownloadStatus("Erreur d'extraction");
         }
     } else {
-        emit logMessage("❌ Échec du téléchargement: " + m_currentDownload->errorString());
-        setDownloadStatus("Erreur de téléchargement");
-        
-        // Clean up the incomplete file
-        QString compressedFile;
-        if (m_isModelDownload) {
-             compressedFile = m_basePath + "/download/" + QString("%1_v%2.meow").arg(m_currentModelName, m_currentModelVersion);
-             m_isModelDownload = false;
+        // Assets principaux
+        QString compressedFile = m_basePath + "/download/" + QString("assets_v%1.meow").arg(m_currentRequest.version);
+        QString extractPath = m_basePath + "/assets/";
+
+        bool extractOk = m_folderCompressor->decompressFolder(compressedFile, extractPath, FC_DELETE_BOTH);
+        if (extractOk) {
+            emit logMessage("Assets extraits avec succes vers: " + extractPath);
+            setCurrentVersion(m_currentRequest.version);
+            saveVersionInfo(m_currentRequest.version);
+            setDownloadStatus("Download success");
+            emit downloadSucess();
         } else {
-             compressedFile = m_basePath + "/download/" + QString("assets_v%1.meow").arg(m_latestVersion);
-        }
-        if (QFile::exists(compressedFile)) {
-             QFile::remove(compressedFile);
+            emit logMessage("Echec de l'extraction des assets");
+            setDownloadStatus("Erreur d'extraction");
         }
     }
-    
+
     setIsDownloading(false);
-    setDownloadProgress(m_currentDownload->error() == QNetworkReply::NoError ? 1.0 : 0.0);
-    
-    // Clean up
+    setDownloadProgress(1.0);
+
     m_currentDownload->deleteLater();
     m_currentDownload = nullptr;
+
+    processNextDownload();
+}
+
+void LauncherManager::processNextDownload()
+{
+    if (!m_downloadQueue.isEmpty()) {
+        DownloadRequest next = m_downloadQueue.dequeue();
+        m_retryCount = 0;
+        executeDownload(next);
+    }
 }
 
 void LauncherManager::onVersionCheckFinished()
 {
-    if (!m_versionCheckReply) {
+    if (!m_versionCheckReply)
         return;
-    }
-    
+
     if (m_versionCheckReply->error() == QNetworkReply::NoError) {
         QJsonDocument doc = QJsonDocument::fromJson(m_versionCheckReply->readAll());
         QJsonObject obj = doc.object();
-        
+
         if (parseVersionInfo(obj)) {
             emit logMessage("Version actuelle: " + m_currentVersion + ", Dernière: " + m_latestVersion);
             setDownloadStatus("Vérification terminée");
-            if (m_currentVersion != m_latestVersion)
-            {
+
+            // Comparaison sémantique : mise à jour seulement si le serveur a une version supérieure
+            if (compareVersions(m_currentVersion, m_latestVersion) < 0) {
                 emit updateAvailable();
             }
-
         } else {
-            emit logMessage("❌ Erreur: Format de version invalide");
+            emit logMessage("Erreur: Format de version invalide");
             setDownloadStatus("Format invalide");
         }
     } else {
-        emit logMessage("❌ Erreur de vérification: " + m_versionCheckReply->errorString());
-        qDebug() << "ENUM ERROR " <<  m_versionCheckReply->error();
-
+        emit logMessage("Erreur de vérification: " + m_versionCheckReply->errorString());
+        qDebug() << "ENUM ERROR " << m_versionCheckReply->error();
         setDownloadStatus("Erreur de vérification");
     }
-    
+
     m_versionCheckReply->deleteLater();
     m_versionCheckReply = nullptr;
 }
@@ -837,6 +923,16 @@ bool LauncherManager::parseVersionInfo(const QJsonObject &versionInfo)
 {
     if (versionInfo.contains("version")) {
         setLatestVersion(versionInfo["version"].toString());
+
+        // Extraire le checksum attendu pour la vérification après téléchargement
+        QString checksum = versionInfo["checksum"].toString();
+        if (checksum.startsWith("sha256:"))
+            checksum = checksum.mid(7);
+        m_expectedChecksum = checksum;
+
+        // Extraire la description de version
+        m_versionDescription = versionInfo["description"].toString();
+
         return true;
     }
     return false;

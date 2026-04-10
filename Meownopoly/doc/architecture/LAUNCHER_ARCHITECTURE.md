@@ -43,10 +43,13 @@ Le launcher a été refactorisé pour utiliser un pattern singleton séparé, d�
 
 **Responsabilités :**
 - Gestion des connexions réseau
-- Téléchargement et upload de fichiers
+- Téléchargement et upload de fichiers (assets + modèles 3D)
 - Compression/décompression avec FolderCompressor
 - Gestion des versions et métadonnées
 - Communication avec le serveur de ressources
+- Vérification d'intégrité SHA-256 des téléchargements
+- Queue de téléchargement avec retry automatique
+- Authentification des uploads par token
 
 **Propriétés Q_PROPERTY :**
 ```cpp
@@ -56,10 +59,15 @@ Q_PROPERTY(bool isDownloading READ isDownloading NOTIFY isDownloadingChanged)
 Q_PROPERTY(double downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
 Q_PROPERTY(QString downloadStatus READ downloadStatus NOTIFY downloadStatusChanged)
 Q_PROPERTY(bool packageCreated READ packageCreated NOTIFY packageCreatedChanged)
+Q_PROPERTY(QVariantList modelsList READ modelsList NOTIFY modelsListChanged)
+Q_PROPERTY(qint64 bytesReceived READ bytesReceived NOTIFY downloadProgressChanged)
+Q_PROPERTY(qint64 bytesTotal READ bytesTotal NOTIFY downloadProgressChanged)
+Q_PROPERTY(QString versionDescription READ versionDescription NOTIFY latestVersionChanged)
 ```
 
 **Méthodes Q_INVOKABLE :**
 ```cpp
+// Assets
 Q_INVOKABLE void testServerConnection(const QString &serverUrl);
 Q_INVOKABLE void checkForUpdates(const QString &serverUrl);
 Q_INVOKABLE void downloadResources(const QString &serverUrl, const QString &version);
@@ -67,6 +75,16 @@ Q_INVOKABLE void forceDownloadResources(const QString &serverUrl);
 Q_INVOKABLE void createResourcePackage(const QString &folderPath, const QString &version);
 Q_INVOKABLE void uploadPackageToServer(const QString &serverUrl);
 Q_INVOKABLE void resetDownloadState();
+Q_INVOKABLE void setUploadToken(const QString &token);
+
+// Modèles 3D
+Q_INVOKABLE void fetchModelsList(const QString &serverUrl);
+Q_INVOKABLE void downloadModel(const QString &serverUrl, const QString &name, const QString &version);
+Q_INVOKABLE void createModelPackage(const QString &folderPath, const QString &name, const QString &version);
+Q_INVOKABLE void uploadModelPackage(const QString &serverUrl, const QString &name, const QString &version);
+
+// Utilitaire
+static int compareVersions(const QString &v1, const QString &v2);
 ```
 
 ### 🌉 LauncherLogic.qml (Pont QML)
@@ -230,5 +248,72 @@ QVERIFY(spy.wait());
 - Tous les logs passent par le signal `logMessage`
 - État centralisé dans le singleton
 - Pas de duplication de données entre composants
+
+## Fonctionnalités Avancées
+
+### 🔒 Authentification des Uploads
+
+Les uploads (assets et modèles) nécessitent un token d'authentification Bearer :
+- Le token est configuré côté serveur via la variable d'environnement `UPLOAD_TOKEN`
+- Côté client, le token est sauvegardé dans les Settings QML et transmis via `setUploadToken()`
+- Le header `Authorization: Bearer <token>` est ajouté automatiquement aux requêtes POST
+
+### 📥 Queue de Téléchargement
+
+Le système gère une file d'attente de téléchargements :
+
+```cpp
+struct DownloadRequest {
+    enum Type { Asset, Model };
+    Type type;
+    QString serverUrl, version, modelName, modelVersion;
+};
+QQueue<DownloadRequest> m_downloadQueue;
+```
+
+- Si un téléchargement est en cours, les nouveaux sont mis en queue
+- `processNextDownload()` est appelé automatiquement à la fin de chaque téléchargement
+- Élimine le besoin d'un flag `m_isModelDownload` — le type est dans la requête
+
+### 🔄 Retry Automatique avec Reprise
+
+En cas d'échec de téléchargement :
+1. **3 tentatives** avec backoff exponentiel (2s, 4s, 8s)
+2. **Reprise** : le fichier partiel est conservé entre les tentatives
+3. **HTTP Range** : le header `Range: bytes=X-` reprend là où le téléchargement s'est arrêté
+4. Le fichier partiel est pré-hashé pour maintenir la vérification d'intégrité
+
+### ✅ Vérification d'Intégrité SHA-256
+
+- Le hash est calculé en streaming pendant le téléchargement via `QCryptographicHash`
+- Comparé au checksum retourné par le serveur (champ `checksum` de la version ou header `X-Checksum-Sha256`)
+- En cas de mismatch, le fichier est supprimé et une erreur est signalée
+
+### ⏱️ Timeout de Téléchargement
+
+- Timer de 5 minutes (`DOWNLOAD_TIMEOUT_MS`) initialisé au début du téléchargement
+- Réinitialisé à chaque progression (`onDownloadProgress`)
+- Si aucune donnée n'est reçue pendant 5 minutes, le téléchargement est avorté
+
+### 📊 Comparaison Sémantique de Versions
+
+```cpp
+static int compareVersions(const QString &v1, const QString &v2);
+// Retourne -1 si v1 < v2, 0 si égales, 1 si v1 > v2
+```
+
+- Utilisé pour détecter les mises à jour (remplace la comparaison string `!=`)
+- Utilisé aussi pour trier les versions de modèles 3D
+- Gère correctement les cas comme `1.0.10 > 1.0.9`
+
+### 🎨 Composants QML d'Interface
+
+1. **LauncherHeader.qml** - En-tête et navigation
+2. **ServerConfigSection.qml** - Configuration serveur + token d'upload
+3. **VersionInfoSection.qml** - Versions, progression (avec taille en Mo), description
+4. **ActionsSection.qml** - Boutons d'actions
+5. **PackagingSection.qml** - Création/upload de paquets (assets et modèles 3D)
+6. **ModelsSection.qml** - Liste et gestion des modèles 3D
+7. **LogsSection.qml** - Logs et debug
 
 Cette architecture moderne et modulaire rend le launcher plus robuste, maintenable et extensible pour les futures évolutions !

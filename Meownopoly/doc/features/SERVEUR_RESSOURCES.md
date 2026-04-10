@@ -6,11 +6,11 @@ Ce document décrit l'architecture et l'implémentation recommandée pour le ser
 
 ## Architecture du Serveur
 
-### Endpoints API Requis
+### Endpoints API
 
-Le serveur doit implémenter les endpoints suivants :
+#### Routes publiques (sans authentification)
 
-#### 1. Test de Connexion
+##### 1. Test de Connexion
 ```
 GET /api/ping
 ```
@@ -19,11 +19,12 @@ GET /api/ping
 {
     "status": "ok",
     "message": "Serveur Meownopoly actif",
-    "timestamp": "2024-01-15T10:30:00Z"
+    "timestamp": "2024-01-15T10:30:00Z",
+    "version": "1.0.0"
 }
 ```
 
-#### 2. Vérification de Version
+##### 2. Vérification de Version
 ```
 GET /api/version
 ```
@@ -38,29 +39,65 @@ GET /api/version
 }
 ```
 
-#### 3. Téléchargement de Ressources
+##### 3. Liste des versions
+```
+GET /api/versions
+```
+
+##### 4. Téléchargement de Ressources
 ```
 GET /api/download/{version}
 ```
-**Paramètres :**
-- `version` : Version spécifique à télécharger (ex: "1.2.3")
+- Paramètre `version` sanitisé (alphanum + `.` + `-` + `_` uniquement)
+- Supporte le header `Range` pour la reprise de téléchargement (réponse 206)
+- Inclut le header `X-Checksum-Sha256` si les métadonnées de version existent
+- Header `Accept-Ranges: bytes` dans la réponse
 
-**Réponse :** Fichier binaire `.meow` (archive compressée)
+##### 5. Liste des modèles 3D
+```
+GET /api/models/list
+```
 
-#### 4. Upload de Paquet (optionnel)
+##### 6. Téléchargement d'un modèle
+```
+GET /api/models/download/{name}/{version}
+```
+- Paramètres sanitisés contre le path traversal
+- Supporte Range + checksum comme la route assets
+
+##### 7. Liste des fichiers (debug, désactivé en production)
+```
+GET /api/files
+```
+- Retourne 403 en mode production (`NODE_ENV=production`)
+
+#### Routes protégées (authentification + rate limiting)
+
+##### 8. Upload d'un paquet d'assets
 ```
 POST /api/upload
+Authorization: Bearer <UPLOAD_TOKEN>
 ```
-**Body :** Multipart form data avec le fichier `.meow`
-
-**Réponse :**
+- **Rate limit** : 10 requêtes par 15 minutes
+- **Body** : Multipart form-data (`package`, `version`, `description`)
+- **Réponse :**
 ```json
 {
     "success": true,
     "version": "1.2.4",
-    "message": "Paquet uploadé avec succès"
+    "message": "Paquet uploadé avec succès",
+    "size": 125847296,
+    "checksum": "abc123..."
 }
 ```
+
+##### 9. Upload d'un modèle 3D
+```
+POST /api/models/upload
+Authorization: Bearer <UPLOAD_TOKEN>
+```
+- **Rate limit** : 10 requêtes par 15 minutes
+- **Body** : Multipart form-data (`package`, `name`, `version`)
 
 ## Technologies Recommandées
 
@@ -181,19 +218,24 @@ go get github.com/gin-gonic/gin
 ## Structure des Fichiers
 
 ```
-serveur-ressources/
-├── assets/                    # Dossier des paquets de ressources
+asset_server/
+├── assets/                    # Paquets de ressources (.meow)
 │   ├── assets_v1.0.0.meow
-│   ├── assets_v1.0.1.meow
 │   └── assets_v1.1.0.meow
-├── versions/                  # Métadonnées des versions
+├── models/                    # Paquets de modèles 3D (.meow)
+│   ├── PionChat_v1.0.0.meow
+│   └── Ville_v2.0.0.meow
+├── versions/                  # Métadonnées des versions (JSON)
 │   ├── 1.0.0.json
-│   ├── 1.0.1.json
 │   └── 1.1.0.json
 ├── uploads/                   # Dossier temporaire pour uploads
-├── logs/                      # Logs du serveur
-├── config.json               # Configuration du serveur
-└── server.js|server.py|main.go  # Fichier principal
+├── server.js                  # Serveur Express principal
+├── package.json               # Dépendances Node.js
+├── .env                       # Configuration (non versionné)
+├── .env.example               # Template de configuration
+├── setup-domain.sh            # Script de déploiement (Nginx + SSL + systemd)
+├── start_server.sh            # Script de démarrage Linux
+└── start_server.bat           # Script de démarrage Windows
 ```
 
 ## Format des Métadonnées de Version
@@ -241,23 +283,30 @@ Pour permettre l'accès depuis d'autres machines :
 
 ## Sécurité
 
-### Recommandations de base :
-1. **Authentification** : Implémenter un système de token pour l'upload
-2. **Validation** : Vérifier les fichiers uploadés (type, taille, contenu)
-3. **Rate Limiting** : Limiter le nombre de requêtes par IP
-4. **HTTPS** : Utiliser SSL en production (même local)
+### Mesures implémentées
 
-### Exemple avec authentification simple :
-```javascript
-const API_KEY = 'your-secret-key';
+1. **Authentification Bearer Token** : Les routes d'upload (`/api/upload`, `/api/models/upload`) exigent le header `Authorization: Bearer <token>`. Le token est configuré via la variable d'environnement `UPLOAD_TOKEN`. Si le token n'est pas configuré, les uploads sont désactivés (403).
 
-app.post('/api/upload', (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || authHeader !== `Bearer ${API_KEY}`) {
-        return res.status(401).json({ error: 'Non autorisé' });
-    }
-    // Continuer avec l'upload...
-});
+2. **Rate Limiting** : `express-rate-limit` limite les uploads à 10 requêtes par 15 minutes par IP.
+
+3. **Sanitisation des paramètres** : Les paramètres `version`, `name` sont nettoyés avec `replace(/[^a-zA-Z0-9._-]/g, '')` pour empêcher le path traversal.
+
+4. **Protection debug** : La route `/api/files` est désactivée en production (`NODE_ENV=production`). Les chemins absolus du serveur ne sont plus exposés.
+
+5. **HTTPS** : SSL via Let's Encrypt avec renouvellement automatique.
+
+6. **Taille max** : Limite de 500 Mo par upload (multer).
+
+### Configuration
+```bash
+# .env (copier depuis .env.example)
+UPLOAD_TOKEN=votre_token_secret_ici
+NODE_ENV=production
+```
+
+Générer un token :
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 ## Déploiement et Maintenance
@@ -315,6 +364,14 @@ app.use((req, res, next) => {
     next();
 });
 ```
+
+## Fonctionnalités Avancées Implémentées
+
+- **Modèles 3D** : Routes dédiées pour les packs de modèles (`/api/models/*`)
+- **Reprise de téléchargement** : Support HTTP Range (réponse 206) pour reprendre les downloads interrompus
+- **Vérification d'intégrité** : Header `X-Checksum-Sha256` sur les téléchargements, checksum SHA-256 dans les métadonnées de version
+- **I/O asynchrone** : Toutes les opérations fichier utilisent `fs.promises` pour ne pas bloquer le serveur
+- **Checksum streaming** : Le calcul de hash utilise `createReadStream` au lieu de charger le fichier entier en mémoire
 
 ## Extension Future
 

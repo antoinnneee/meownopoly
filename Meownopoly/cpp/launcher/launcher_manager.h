@@ -12,6 +12,8 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QDateTime>
+#include <QCryptographicHash>
+#include <QQueue>
 #include "tools/QtFolderCompressor/FolderCompressor.h"
 
 class LauncherManager : public QObject
@@ -25,6 +27,9 @@ class LauncherManager : public QObject
     Q_PROPERTY(QString downloadStatus READ downloadStatus NOTIFY downloadStatusChanged)
     Q_PROPERTY(bool packageCreated READ packageCreated NOTIFY packageCreatedChanged)
     Q_PROPERTY(QVariantList modelsList READ modelsList NOTIFY modelsListChanged)
+    Q_PROPERTY(qint64 bytesReceived READ bytesReceived NOTIFY downloadProgressChanged)
+    Q_PROPERTY(qint64 bytesTotal READ bytesTotal NOTIFY downloadProgressChanged)
+    Q_PROPERTY(QString versionDescription READ versionDescription NOTIFY latestVersionChanged)
 
 public:
     static void registerQml();
@@ -39,6 +44,9 @@ public:
     QString downloadStatus() const { return m_downloadStatus; }
     bool packageCreated() const { return m_packageCreated; }
     QVariantList modelsList() const { return m_modelsList; }
+    qint64 bytesReceived() const { return m_bytesReceived; }
+    qint64 bytesTotal() const { return m_bytesTotal; }
+    QString versionDescription() const { return m_versionDescription; }
     
     // Launcher methods invokable from QML
     Q_INVOKABLE void testServerConnection(const QString &serverUrl);
@@ -48,12 +56,17 @@ public:
     Q_INVOKABLE void createResourcePackage(const QString &folderPath, const QString &version);
     Q_INVOKABLE void uploadPackageToServer(const QString &serverUrl);
     Q_INVOKABLE void resetDownloadState();
+    Q_INVOKABLE void setUploadToken(const QString &token);
 
-    // New methods for Models
+    // Methods for Models
     Q_INVOKABLE void fetchModelsList(const QString &serverUrl);
     Q_INVOKABLE void downloadModel(const QString &serverUrl, const QString &name, const QString &version);
     Q_INVOKABLE void createModelPackage(const QString &folderPath, const QString &name, const QString &version);
     Q_INVOKABLE void uploadModelPackage(const QString &serverUrl, const QString &name, const QString &version);
+
+    // Utilitaire de comparaison sémantique de versions
+    // Retourne -1 si v1 < v2, 0 si égales, 1 si v1 > v2
+    static int compareVersions(const QString &v1, const QString &v2);
 
 signals:
     void currentVersionChanged();
@@ -73,32 +86,64 @@ private slots:
     void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void onVersionCheckFinished();
     void onConnectionTestFinished();
-    void onModelsListFinished(); // New slot
+    void onModelsListFinished();
 
 private:
     explicit LauncherManager(QObject *parent = nullptr);
     static LauncherManager *m_instance;
-    
+
+    // --- Requête de téléchargement (queue) ---
+    struct DownloadRequest {
+        enum Type { Asset, Model };
+        Type type;
+        QString serverUrl;
+        QString version;
+        QString modelName;
+        QString modelVersion;
+    };
+    QQueue<DownloadRequest> m_downloadQueue;
+    void executeDownload(const DownloadRequest &req);
+    void processNextDownload();
+
     // Network components
     QNetworkAccessManager *m_networkManager = nullptr;
     QNetworkReply *m_currentDownload = nullptr;
     QNetworkReply *m_versionCheckReply = nullptr;
     QNetworkReply *m_connectionTestReply = nullptr;
-    QNetworkReply *m_modelsListReply = nullptr; // New reply
+    QNetworkReply *m_modelsListReply = nullptr;
     QFile *m_downloadFile = nullptr;
-    
+
     // FolderCompressor instance
     FolderCompressor *m_folderCompressor = nullptr;
-    
+
     // Properties
     QString m_currentVersion = "0.0.0";
     QString m_latestVersion = "0.0.0";
+    QString m_versionDescription;
     bool m_isDownloading = false;
     double m_downloadProgress = 0.0;
     QString m_downloadStatus = "Prêt";
     bool m_packageCreated = false;
     QString m_lastCreatedPackage;
-    QVariantList m_modelsList; // New property data
+    QVariantList m_modelsList;
+    qint64 m_bytesReceived = 0;
+    qint64 m_bytesTotal = 0;
+
+    // Auth
+    QString m_uploadToken;
+
+    // Checksum verification
+    QString m_expectedChecksum;
+    QCryptographicHash *m_downloadHash = nullptr;
+
+    // Download timeout
+    QTimer *m_downloadTimer = nullptr;
+    static constexpr int DOWNLOAD_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+    // Retry
+    int m_retryCount = 0;
+    static constexpr int MAX_RETRIES = 3;
+    DownloadRequest m_currentRequest;
 
     // Helper methods
     QString getCurrentVersionFromFile();
@@ -111,13 +156,10 @@ private:
     void setDownloadProgress(double progress);
     void setDownloadStatus(const QString &status);
     void setPackageCreated(bool created);
-    void setModelsList(const QVariantList &list); // New helper
-    QString getLocalModelVersion(const QString &modelName); // Helper for checking installed models
+    void setModelsList(const QVariantList &list);
+    QString getLocalModelVersion(const QString &modelName);
 
     QString m_basePath;
-    bool m_isModelDownload = false; // Flag to distinguish asset vs model download
-    QString m_currentModelName;     // To track which model is being downloaded
-    QString m_currentModelVersion;
 };
 
 #endif // LAUNCHER_MANAGER_H
