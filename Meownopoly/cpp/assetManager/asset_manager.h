@@ -12,6 +12,8 @@
 #include <QQmlEngine>
 #include <QImageReader>
 #include <QJsonDocument>
+#include <QHash>
+#include <QUrl>
 
 // Debug defines
 #define ENABLE_ASSET_DEBUG 0
@@ -256,7 +258,10 @@ private:
     QString m_assetsBasePath;
     static AssetManager *m_pThis;
     
-    QList<QPair<QString, AssetModel*>> m_models;
+    QHash<QString, AssetModel*> m_models;
+
+    // Cache d'images pour isTransparent (évite de recharger l'image à chaque appel)
+    QHash<QString, QImage> m_imageCache;
 
     QStringList m_categories;
 };

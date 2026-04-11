@@ -6,8 +6,7 @@
 #include <QDir>
 #include <QImageReader>
 #include <QRandomGenerator>
-#include <algorithm>
-#include <type_traits>
+#include <QUrl>
 #include "tools/metadata_generator.h"
 
 AssetManager* AssetManager::m_pThis = nullptr;
@@ -118,10 +117,8 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
     }
 
     AssetModel *filteredModel = new AssetModel();
-    if (!filteredModel) {
-        ASSET_ERROR("Failed to create filtered model");
-        return nullptr;
-    }
+    // Ownership explicite pour QML — évite fuite mémoire si le modèle est réassigné
+    QQmlEngine::setObjectOwnership(filteredModel, QQmlEngine::JavaScriptOwnership);
 
     int matchCount = 0;
     for (const Asset &asset : m_assets) {
@@ -172,7 +169,6 @@ QObject* AssetManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 AssetModel* AssetManager::getAssetModel(const QString &category, const QString &type)
 {
-    // Vérification des paramEtres
     if (category.isEmpty() || type.isEmpty()) {
         ASSET_ERROR("Invalid parameters - category:" << category << "type:" << type);
         return nullptr;
@@ -181,33 +177,25 @@ AssetModel* AssetManager::getAssetModel(const QString &category, const QString &
     QString key = category + "_" + type;
     ASSET_DEBUG("Looking for key:" << key);
 
-    // Vérifier si le modèle filtré existe déj�
-    for (int i = m_models.size() - 1; i >= 0; --i) { // Parcourir à l'envers pour éviter les problèmes d'index
-        if (m_models[i].first == key) {
-            AssetModel* existingModel = m_models[i].second;
-                    if (existingModel && existingModel->parent()) { // Vérifier que le pointeur est valide
+    auto it = m_models.find(key);
+    if (it != m_models.end()) {
+        AssetModel* existingModel = it.value();
+        if (existingModel && existingModel->parent()) {
             ASSET_INFO("Found existing model with" << existingModel->rowCount() << "assets");
             return existingModel;
-        } else {
-            // Le modèle existe mais est null ou invalide, le supprimer du cache
-            ASSET_ERROR("Removing invalid model from cache for key:" << key);
-                if (existingModel) {
-                    existingModel->deleteLater(); // Suppression sécurisée
-                }
-                m_models.removeAt(i);
-                break;
-            }
         }
+        // Modèle invalide, le supprimer du cache
+        ASSET_ERROR("Removing invalid model from cache for key:" << key);
+        if (existingModel) {
+            existingModel->deleteLater();
+        }
+        m_models.erase(it);
     }
 
-    AssetModel *filteredModel = nullptr;
-
-    filteredModel = new AssetModel(this); // Avec parent directement
-    if (filteredModel) {
-        m_models.append(QPair<QString, AssetModel*>(key, filteredModel));
-        ASSET_INFO("Created empty model for category:" << category);
-    }
-    return filteredModel;
+    AssetModel *newModel = new AssetModel(this);
+    m_models.insert(key, newModel);
+    ASSET_INFO("Created empty model for category:" << category);
+    return newModel;
 }
 
 // Helper function to create a fallback Asset
@@ -368,9 +356,7 @@ QVariantMap AssetManager::getRandomAsset(const QString &category, const QString 
 QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
 {
     ASSET_DEBUG("Requesting" << category << type << id);
-    qDebug() << "Building asset path for category:" << category << "type:" << type << "id:" << id;
 
-    
     AssetModel *model = getAssetModel(category, type);
     if (model == nullptr) {
         ASSET_ERROR("Asset not valid, returning fallback for" << category << type << id);
@@ -390,23 +376,16 @@ QString AssetManager::getAssetPath(const QString &category, const QString &type,
 
 QString AssetManager::getAnimatedGifPath(const QString &category, const QString &type, const QString &id)
 {
-    qDebug() << "Getting animated GIF path for category:" << category << "type:" << type << "id:" << id;
-    
+    ASSET_DEBUG("Getting animated GIF path for category:" << category << "type:" << type << "id:" << id);
+
     QString animatedPath = buildAssetPath(category, type, id + "-animated.webp");
-    
-    // Vérifier si le fichier animé existe
-    QString localPath = animatedPath;
-    if (localPath.startsWith("file:///")) {
-        localPath = localPath.mid(8);
-    }
-    
-    QFile animatedFile(localPath);
-    if (!animatedFile.exists()) {
+
+    QString localPath = QUrl(animatedPath).toLocalFile();
+    if (!QFile::exists(localPath)) {
         ASSET_ERROR("Animated asset not found:" << animatedPath << ", returning fallback");
         return getDefaultAssetPath();
     }
-    
-    qDebug() << animatedPath;
+
     return animatedPath;
 }
 
@@ -426,15 +405,14 @@ void AssetManager::loadAssets()
 {
     ASSET_INFO("Starting asset loading...");
 
-
-    // Clear filtered models cache
-    cleanupInvalidModels(); // Nettoyer d'abord les modèles invalides
-    for (const QPair<QString, AssetModel*> &pair : m_models) {
-        if (pair.second) {
-            pair.second->deleteLater(); // Suppression sécurisée
+    // Supprimer tous les modèles existants
+    for (auto it = m_models.begin(); it != m_models.end(); ++it) {
+        if (it.value()) {
+            it.value()->deleteLater();
         }
     }
     m_models.clear();
+    m_imageCache.clear();
 
     QDir assetsDir(m_assetsBasePath);
     if (!assetsDir.exists()) {
@@ -534,53 +512,25 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         int frameCount = assetObj["frameCount"].toInt(1);
 
         QString fullPath = buildAssetPath(categoryName, typeName, filename);
-        
+
         // Vérifier que le fichier existe, sinon utiliser l'asset par défaut
-        QString localPath = fullPath;
-        if (localPath.startsWith("file:///")) {
-            localPath = localPath.mid(8);
-        }
-        
-        QFile assetFile(localPath);
-        if (!assetFile.exists()) {
+        QString localPath = QUrl(fullPath).toLocalFile();
+        if (!QFile::exists(localPath)) {
             ASSET_ERROR("Asset file not found:" << localPath << ", using fallback");
             fullPath = getDefaultAssetPath();
         }
 
-        // Add to appropriate model
-        // todo: select model from variable, list with type and model
-        AssetModel *targetModel = nullptr;
-
+        // Récupérer ou créer le modèle pour cette catégorie/type
         QString key = categoryName + "_" + typeName;
-        targetModel = nullptr;
+        AssetModel *targetModel = m_models.value(key, nullptr);
 
-        // Chercher le modèle existant
-        for (const QPair<QString, AssetModel*> &pair : m_models) {
-            if (pair.first == key) {
-                targetModel = pair.second;
-                // Vérifier que le modèle est toujours valide
-                if (targetModel && targetModel->parent()) {
-                    break;
-                } else {
-                    // Modèle invalide, on va en créer un nouveau
-                    targetModel = nullptr;
-                    break;
-                }
-            }
-        }
-
-        // Créer un nouveau modèle si pas trouvé ou invalide
         if (!targetModel) {
-            targetModel = new AssetModel(this); // Avec parent pour gestion mémoire
-            m_models.append(QPair<QString, AssetModel*>(key, targetModel));
+            targetModel = new AssetModel(this);
+            m_models.insert(key, targetModel);
             ASSET_INFO("Created new model for" << key);
         }
 
-
-        if (targetModel) {
-
-            targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename, extension, animated, frameCount);
-        }
+        targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename, extension, animated, frameCount);
     }
 }
 
@@ -588,13 +538,13 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
 QString AssetManager::buildAssetPath(const QString &category, const QString &type, const QString &filename) const
 {
     QDir assetsDir(m_assetsBasePath);
+    QString localPath;
     if (type.isEmpty()) {
-        // For categories without types (like player_icons)
-        return "file:///" + assetsDir.absoluteFilePath(category + "/" + filename);
+        localPath = assetsDir.absoluteFilePath(category + "/" + filename);
     } else {
-        // For categories with types (like decoration/grass, decoration/tree)
-        return "file:///" + assetsDir.absoluteFilePath(category + "/" + type + "/" + filename);
+        localPath = assetsDir.absoluteFilePath(category + "/" + type + "/" + filename);
     }
+    return QUrl::fromLocalFile(localPath).toString();
 }
 
 bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
@@ -623,9 +573,12 @@ QStringList AssetManager::scanAvailableAssets()
         return result;
     }
 
-    loadAssets(); // load assets to get categories
+    // Utiliser les catégories déjà chargées, ou scanner le dossier directement
+    QStringList categories = m_categories.isEmpty()
+        ? assetsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)
+        : m_categories;
 
-    for (const QString &category : m_categories) {
+    for (const QString &category : categories) {
         QString categoryPath = assetsDir.absoluteFilePath(category);
         QDir categoryDir(categoryPath);
         if (categoryDir.exists()) {
@@ -669,8 +622,7 @@ QStringList AssetManager::getAvailableBackgrounds() const
     // Récupérer la liste des fichiers avec leurs chemins absolus
     QFileInfoList fileList = directory.entryInfoList();
     for (const QFileInfo &fileInfo : fileList) {
-        // Ajouter le chemin absolu avec le préfixe file:///
-        backgrounds.append("file:///" + fileInfo.absoluteFilePath());
+        backgrounds.append(QUrl::fromLocalFile(fileInfo.absoluteFilePath()).toString());
     }
     
     return backgrounds;
@@ -678,15 +630,26 @@ QStringList AssetManager::getAvailableBackgrounds() const
 
 bool AssetManager::isTransparent(float px, float py, QString path)
 {
-    if (path.startsWith("file:///"))
-        path = path.right(path.length() - 8);
-    QImage image(path);
-    if (image.isNull()) {
-        ASSET_ERROR("Failed to load image:" << path);
-        return false; // or true, depending on how you want to handle errors
+    QString localPath = path.startsWith("file:") ? QUrl(path).toLocalFile() : path;
+
+    // Utiliser le cache d'images pour éviter de recharger à chaque appel
+    if (!m_imageCache.contains(localPath)) {
+        QImage image(localPath);
+        if (image.isNull()) {
+            ASSET_ERROR("Failed to load image:" << localPath);
+            return false;
+        }
+        m_imageCache.insert(localPath, image);
     }
 
-    QColor color = image.pixelColor(image.width()/px, image.height()/py);
+    const QImage &image = m_imageCache[localPath];
+    int pixelX = static_cast<int>(image.width() / px);
+    int pixelY = static_cast<int>(image.height() / py);
+
+    if (pixelX < 0 || pixelX >= image.width() || pixelY < 0 || pixelY >= image.height())
+        return true;
+
+    QColor color = image.pixelColor(pixelX, pixelY);
     if (!color.isValid())
         return true;
     return (color.alpha() == 0);
@@ -805,14 +768,16 @@ void AssetManager::cleanupInvalidModels()
 {
     ASSET_DEBUG("Cleaning up invalid models...");
 
-    for (int i = m_models.size() - 1; i >= 0; --i) {
-        AssetModel* model = m_models[i].second;
+    for (auto it = m_models.begin(); it != m_models.end(); ) {
+        AssetModel* model = it.value();
         if (!model || !model->parent()) {
-            ASSET_ERROR("Removing invalid model for key:" << m_models[i].first);
+            ASSET_ERROR("Removing invalid model for key:" << it.key());
             if (model) {
                 model->deleteLater();
             }
-            m_models.removeAt(i);
+            it = m_models.erase(it);
+        } else {
+            ++it;
         }
     }
 
