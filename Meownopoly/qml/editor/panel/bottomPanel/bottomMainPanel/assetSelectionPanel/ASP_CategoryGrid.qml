@@ -14,6 +14,11 @@ ScrollView {
     // Signals
     signal categorySelected(string category, string type)
     
+    // Supprime les accents/diacritiques pour une recherche insensible aux accents
+    function removeAccents(str) {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    }
+
     // Public functions
     function refreshCategories() {
         generateCategories()
@@ -85,24 +90,29 @@ ScrollView {
         Repeater {
             model: {
                 // Filter categories based on activeFilter and searchText
-                var filtered = []
-                for (var i = 0; i < gridLayout.categories.length; i++) {
-                    var cat = gridLayout.categories[i]
-                    
+                let filtered = []
+                for (let i = 0; i < gridLayout.categories.length; i++) {
+                    const cat = gridLayout.categories[i]
+
                     // Apply filter
-                    var passesFilter = true
+                    let passesFilter = true
                     if (root.activeFilter === "Decoration" && cat.category !== "decoration") {
                         passesFilter = false
                     } else if (root.activeFilter === "Tile" && cat.category !== "tile") {
                         passesFilter = false
                     }
                     
-                    // Apply search
-                    var passesSearch = true
+                    // Apply search (nom, description de catégorie, et tags/description des assets)
+                    let passesSearch = true
                     if (root.searchText !== "") {
-                        var searchLower = root.searchText.toLowerCase()
-                        passesSearch = cat.name.toLowerCase().includes(searchLower) ||
-                                     cat.description.toLowerCase().includes(searchLower)
+                        const searchNorm = root.removeAccents(root.searchText.toLowerCase())
+                        passesSearch = root.removeAccents(cat.name.toLowerCase()).includes(searchNorm) ||
+                                     root.removeAccents(cat.description.toLowerCase()).includes(searchNorm)
+
+                        // Si pas trouvé dans le nom/description de catégorie, chercher dans les tags des assets
+                        if (!passesSearch) {
+                            passesSearch = AssetManager.hasMatchingAsset(cat.category, cat.type, root.searchText)
+                        }
                     }
                     
                     if (passesFilter && passesSearch) {

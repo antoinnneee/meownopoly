@@ -127,10 +127,7 @@ EditorBottomPanel {
         onAssetSelected: function(category, type, id) {
             root.assetSelected(category, type, id)
         }
-        onSearchTextChanged: {
-            root.searchText = searchText
-            root.searchText = Qt.binding(function(){ return root.searchText})
-        }
+        onSearchTextChanged: root.searchText = titleBar.searchText
 
 
         onCurrentViewChanged:  {

@@ -770,6 +770,46 @@ QStringList AssetManager::getAvailableCategories() const
     return m_categories;
 }
 
+// Supprime les accents/diacritiques d'une chaîne pour une recherche insensible aux accents
+static QString removeAccents(const QString &str)
+{
+    QString normalized = str.normalized(QString::NormalizationForm_D);
+    QString result;
+    result.reserve(normalized.size());
+    for (const QChar &ch : normalized) {
+        if (ch.category() != QChar::Mark_NonSpacing)
+            result.append(ch);
+    }
+    return result;
+}
+
+bool AssetManager::hasMatchingAsset(const QString &category, const QString &type, const QString &searchText)
+{
+    if (category.isEmpty() || type.isEmpty() || searchText.isEmpty())
+        return false;
+
+    AssetModel *model = getAssetModel(category, type);
+    if (!model)
+        return false;
+
+    const QString searchNorm = removeAccents(searchText.toLower());
+    for (const Asset &asset : model->getAssetList()) {
+        // Chercher dans l'id et le filename
+        if (removeAccents(asset.id.toLower()).contains(searchNorm) ||
+            removeAccents(asset.filename.toLower()).contains(searchNorm))
+            return true;
+        // Chercher dans la description
+        if (removeAccents(asset.description.toLower()).contains(searchNorm))
+            return true;
+        // Chercher dans les tags
+        for (const QString &tag : asset.tags) {
+            if (removeAccents(tag.toLower()).contains(searchNorm))
+                return true;
+        }
+    }
+    return false;
+}
+
 bool AssetManager::isAssetValid(const QString &category, const QString &type, const QString &id)
 {
     // Vérifications de base

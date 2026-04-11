@@ -201,6 +201,15 @@ public:
     Q_INVOKABLE QStringList getAvailableCategories() const;
     
     /**
+     * @brief Vérifie si au moins un asset d'une catégorie/type a un tag ou une description contenant le texte recherché
+     * @param category Catégorie de l'asset
+     * @param type Type de l'asset
+     * @param searchText Texte à rechercher (insensible à la casse)
+     * @return true si au moins un asset matche
+     */
+    Q_INVOKABLE bool hasMatchingAsset(const QString &category, const QString &type, const QString &searchText);
+
+    /**
      * @brief Vérifie si un asset existe
      * @param category Catégorie de l'asset
      * @param type Type de l'asset
