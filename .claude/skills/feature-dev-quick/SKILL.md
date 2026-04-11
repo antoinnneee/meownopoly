@@ -1,8 +1,8 @@
 ---
 name: feature-dev-quick
 description: Develop a feature with automatic model selection based on complexity. Triggers when the user asks to implement, add, create, or develop a new feature or modification in the codebase.
-user-invocable: true
-argument-hint: [description de la feature]
+user_invocable: true
+argument_hint: [description de la feature]
 ---
 
 # Feature Dev Quick
