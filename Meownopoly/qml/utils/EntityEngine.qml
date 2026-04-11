@@ -259,7 +259,8 @@ Item {
         if (inputVector.length() > 1) {
             inputVector = inputVector.normalized()
         }
-        playerBody.inputVector = inputVector
+        if (playerBody)
+            playerBody.inputVector = inputVector
     }
 
     // ==================== PHYSIQUE C++ ====================

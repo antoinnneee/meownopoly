@@ -56,6 +56,10 @@ QVariant AssetModel::data(const QModelIndex &index, int role) const
         return asset.animated;
     case FrameCountRole:
         return asset.frameCount;
+    case TagsRole:
+        return asset.tags;
+    case DescriptionRole:
+        return asset.description;
     default:
         return QVariant();
     }
@@ -76,12 +80,15 @@ QHash<int, QByteArray> AssetModel::roleNames() const
     roles[ExtensionRole] = "extension";
     roles[AnimatedRole] = "animated";
     roles[FrameCountRole] = "frameCount";
+    roles[TagsRole] = "tags";
+    roles[DescriptionRole] = "description";
     return roles;
 }
 
 void AssetModel::addAsset(const QString &path, const QString &type, const QString &category,
-                         int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename, 
-                         const QString &extension, bool animated, int frameCount)
+                         int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename,
+                         const QString &extension, bool animated, int frameCount,
+                         const QStringList &tags, const QString &description)
 {
     beginInsertRows(QModelIndex(), m_assets.size(), m_assets.size());
     Asset asset;
@@ -97,6 +104,8 @@ void AssetModel::addAsset(const QString &path, const QString &type, const QStrin
     asset.extension = extension;
     asset.animated = animated;
     asset.frameCount = frameCount;
+    asset.tags = tags;
+    asset.description = description;
     m_assets.append(asset);
     endInsertRows();
 }
@@ -125,7 +134,8 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
         if (asset.type == type) {
             filteredModel->addAsset(asset.path, asset.type, asset.category,
                                   asset.ratioWidth, asset.ratioHeight, asset.width, asset.height,
-                                  asset.id, asset.filename, asset.extension, asset.animated, asset.frameCount);
+                                  asset.id, asset.filename, asset.extension, asset.animated, asset.frameCount,
+                                  asset.tags, asset.description);
             matchCount++;
         }
     }
@@ -214,6 +224,8 @@ Asset createFallbackAsset()
     fallback.extension = QStringLiteral("webp");
     fallback.animated = false;
     fallback.frameCount = 1;
+    fallback.tags = {};
+    fallback.description = QString();
     return fallback;
 }
 
@@ -256,6 +268,8 @@ QVariantMap assetToVariantMap(const Asset &asset)
     map["extension"] = asset.extension;
     map["animated"] = asset.animated;
     map["frameCount"] = asset.frameCount;
+    map["tags"] = asset.tags;
+    map["description"] = asset.description;
     return map;
 }
 
@@ -275,6 +289,8 @@ QVariantMap createFallbackAssetMap(const QString &defaultPath)
     map["extension"] = "webp";
     map["animated"] = false;
     map["frameCount"] = 1;
+    map["tags"] = QStringList();
+    map["description"] = QString();
     return map;
 }
 
@@ -457,15 +473,37 @@ void AssetManager::loadCategory(const QString &categoryPath, const QString &cate
 {
     QDir categoryDir(categoryPath);
 
+    // Charger tags.json pour cette catégorie
+    QHash<QString, QPair<QStringList, QString>> tagsData;
+    QString tagsFilePath = categoryDir.absoluteFilePath("tags.json");
+    QFile tagsFile(tagsFilePath);
+    if (tagsFile.open(QIODevice::ReadOnly)) {
+        QJsonParseError parseError;
+        QJsonDocument tagsDoc = QJsonDocument::fromJson(tagsFile.readAll(), &parseError);
+        if (parseError.error == QJsonParseError::NoError) {
+            QJsonObject tagsObj = tagsDoc.object();
+            for (auto it = tagsObj.begin(); it != tagsObj.end(); ++it) {
+                QJsonObject entry = it.value().toObject();
+                QStringList tags;
+                for (const QJsonValue &tag : entry["tags"].toArray()) {
+                    tags.append(tag.toString());
+                }
+                QString description = entry["description"].toString();
+                tagsData.insert(it.key(), {tags, description});
+            }
+        }
+        tagsFile.close();
+    }
+
     QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
     for (const QString &typeName : typeDirectories) {
         QString typePath = categoryDir.absoluteFilePath(typeName);
-        loadTypeFromDirectory(typePath, typeName, categoryName);
+        loadTypeFromDirectory(typePath, typeName, categoryName, tagsData);
     }
 }
 
-void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName)
+void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName, const QHash<QString, QPair<QStringList, QString>> &tagsData)
 {
     QDir typeDir(typePath);
     QString metadataPath = typeDir.absoluteFilePath("metadata.json");
@@ -511,6 +549,15 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         bool animated = assetObj["animated"].toBool(false);
         int frameCount = assetObj["frameCount"].toInt(1);
 
+        // Rechercher les tags et description pour cet asset
+        QStringList tags;
+        QString description;
+        QString tagsKey = typeName + "/" + filename;
+        if (tagsData.contains(tagsKey)) {
+            tags = tagsData[tagsKey].first;
+            description = tagsData[tagsKey].second;
+        }
+
         QString fullPath = buildAssetPath(categoryName, typeName, filename);
 
         // Vérifier que le fichier existe, sinon utiliser l'asset par défaut
@@ -530,7 +577,7 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
             ASSET_INFO("Created new model for" << key);
         }
 
-        targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename, extension, animated, frameCount);
+        targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename, extension, animated, frameCount, tags, description);
     }
 }
 

@@ -4,6 +4,7 @@
 ```
 {AppDataPath}/assets/
   ├── decoration/
+  │   ├── tags.json                 # Tags et descriptions (par catégorie)
   │   ├── grass/
   │   │   ├── metadata.json
   │   │   ├── grass_01.png
@@ -21,10 +22,12 @@
   │   ├── bg2.webp
   │   └── ...
   ├── player_icons/
+  │   ├── tags.json
   │   ├── metadata.json
   │   ├── avatar1.png
   │   └── ...
   └── ui/
+      ├── tags.json
       └── avatar/
           ├── metadata.json
           └── ...
@@ -84,6 +87,44 @@ Chaque dossier contenant des assets possède un fichier `metadata.json` génér�
 | `ratioHeight` | int | Ratio hauteur simplifié (via GCD) |
 | `animated` | bool | `true` si l'asset est animé (défaut: `false`) |
 | `frameCount` | int | Nombre de frames si animé (défaut: `1`) |
+
+## Format du tags.json
+
+Fichier optionnel placé à la racine de chaque **catégorie** (ex: `decoration/tags.json`). Les clés sont au format `"{type}/{filename}"`. Généré par l'outil `image_tools/tagger_images.py` qui utilise Claude pour analyser visuellement les images.
+
+```json
+{
+  "tree/3.png": {
+    "tags": ["arbre", "aquarelle", "jaune", "vert", "rochers", "nature", "feuillage", "tronc", "végétation", "décoratif"],
+    "description": "Arbre style aquarelle aux couleurs jaune et vert, posé sur des rochers."
+  },
+  "grass/1.png": {
+    "tags": ["herbe", "vert", "pelouse", "nature", "texture", "gazon", "prairie", "sol", "végétal", "plat"],
+    "description": "Touffe d'herbe verte sur fond transparent."
+  }
+}
+```
+
+### Champs
+| Champ | Type | Description |
+|-------|------|-------------|
+| `tags` | string[] | 10 mots-clés décrivant le contenu, le style, les couleurs, l'ambiance |
+| `description` | string | Description courte de l'image (max 200 caractères) |
+
+### Chargement
+Le `tags.json` est chargé dans `loadCategory()` avant le parcours des types. Pour chaque asset, les tags et la description sont associés via la clé `"{type}/{filename}"` et stockés dans le struct `Asset`.
+
+### Génération
+```bash
+# Générer les tags pour un dossier d'assets
+python image_tools/tagger_images.py ./assets/decoration tags.json --recursive
+
+# Options
+#   --recursive, -r       Inclure les sous-dossiers
+#   --batch-size N        Nombre d'images par appel CLI (défaut: 5)
+#   --workers N           Nombre d'appels CLI en parallèle (défaut: 2)
+#   --model MODEL         Modèle Claude à utiliser (défaut: sonnet)
+```
 
 ## Classe AssetManager
 
@@ -186,7 +227,7 @@ Q_INVOKABLE void setAssetsBasePath(basePath);
 #### Utilitaires
 
 ```cpp
-// Vérifie si un pixel est transparent (charge l'image entière à chaque appel)
+// Vérifie si un pixel est transparent (cache d'images interne)
 Q_INVOKABLE bool isTransparent(float px, float py, QString path);
 ```
 
@@ -215,6 +256,8 @@ Chaque élément du modèle expose ces rôles :
 | `extension` | string | Extension du fichier |
 | `animated` | bool | Si l'asset est animé |
 | `frameCount` | int | Nombre de frames d'animation |
+| `tags` | QStringList | Liste de mots-clés (depuis `tags.json`, vide si absent) |
+| `description` | string | Description courte (depuis `tags.json`, vide si absent) |
 
 ## Exemples d'utilisation en QML
 
@@ -269,6 +312,39 @@ if (success) {
 ```qml
 Image {
     source: AssetManager.getAssetPath("decoration", "grass", "grass_01")
+}
+```
+
+### Recherche par tags et description
+```qml
+// Filtrer les assets visibles dans un Repeater (utilisé dans ASP_Grid)
+visible: {
+    if (searchText === "") return true
+
+    const searchLower = searchText.toLowerCase()
+    const idMatch = (model.id || "").toString().toLowerCase().includes(searchLower)
+    const filenameMatch = (model.filename || "").toLowerCase().includes(searchLower)
+    const descriptionMatch = (model.description || "").toLowerCase().includes(searchLower)
+
+    let tagsMatch = false
+    const tags = model.tags || []
+    for (let i = 0; i < tags.length; i++) {
+        if (tags[i].toLowerCase().includes(searchLower)) {
+            tagsMatch = true
+            break
+        }
+    }
+
+    return idMatch || filenameMatch || descriptionMatch || tagsMatch
+}
+```
+
+### Accéder aux tags d'un asset
+```qml
+var asset = AssetManager.getAssetById("decoration", "tree", "3")
+if (asset.id) {
+    console.log("Tags:", asset.tags)           // ["arbre", "aquarelle", ...]
+    console.log("Description:", asset.description) // "Arbre style aquarelle..."
 }
 ```
 

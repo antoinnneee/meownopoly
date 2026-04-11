@@ -41,6 +41,8 @@ struct Asset {
     QString extension;
     bool animated;
     int frameCount;
+    QStringList tags;
+    QString description;
 };
 
 class AssetModel : public QAbstractListModel
@@ -63,7 +65,9 @@ public:
         FilenameRole,
         ExtensionRole,
         AnimatedRole,
-        FrameCountRole
+        FrameCountRole,
+        TagsRole,
+        DescriptionRole
     };
 
     explicit AssetModel(QObject *parent = nullptr);
@@ -75,8 +79,9 @@ public:
 
     // Asset management
     void addAsset(const QString &path, const QString &type, const QString &category,
-                  int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename, 
-                  const QString &extension = "png", bool animated = false, int frameCount = 1);
+                  int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename,
+                  const QString &extension = "png", bool animated = false, int frameCount = 1,
+                  const QStringList &tags = {}, const QString &description = "");
     void clear();
     
     // Filtering
@@ -252,7 +257,7 @@ signals:
 
 private:
     void loadCategory(const QString &categoryPath, const QString &categoryName);
-    void loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName);
+    void loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName, const QHash<QString, QPair<QStringList, QString>> &tagsData);
     void cleanupInvalidModels();
 
     QString m_assetsBasePath;

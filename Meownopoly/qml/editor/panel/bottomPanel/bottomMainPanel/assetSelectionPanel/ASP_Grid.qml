@@ -80,15 +80,29 @@ ScrollView {
                            root.currentSelectedType === root.type && 
                            root.currentSelectedId === (model.id || "").toString()
                 
+                // Description pour le tooltip
+                assetDescription: model.description || ""
+
                 // Filter by search text
                 visible: {
                     if (root.searchText === "") return true
-                    
-                    var searchLower = root.searchText.toLowerCase()
-                    var idMatch = (model.id || "").toString().toLowerCase().includes(searchLower)
-                    var filenameMatch = (model.filename || "").toLowerCase().includes(searchLower)
-                    
-                    return idMatch || filenameMatch
+
+                    const searchLower = root.searchText.toLowerCase()
+                    const idMatch = (model.id || "").toString().toLowerCase().includes(searchLower)
+                    const filenameMatch = (model.filename || "").toLowerCase().includes(searchLower)
+                    const descriptionMatch = (model.description || "").toLowerCase().includes(searchLower)
+
+                    // Recherche dans les tags
+                    let tagsMatch = false
+                    const tags = model.tags || []
+                    for (let i = 0; i < tags.length; i++) {
+                        if (tags[i].toLowerCase().includes(searchLower)) {
+                            tagsMatch = true
+                            break
+                        }
+                    }
+
+                    return idMatch || filenameMatch || descriptionMatch || tagsMatch
                 }
                 
                 onAssetClicked: function(id) {
