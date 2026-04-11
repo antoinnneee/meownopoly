@@ -3,6 +3,7 @@
 #include "maptypes.h"
 
 #include <QFile>
+#include <QLockFile>
 #include <QTemporaryFile>
 #include <QDir>
 #include <QJsonDocument>
@@ -47,29 +48,37 @@ MapFileManager::MapFileManager(QObject *parent) : QObject(parent)
 QJsonObject MapFileManager::readMapFile(const QString &mapName, MapTypes::MapType mapType)
 {
     QString filePath = getMapFilePath(mapName, mapType);
+
+    // Verrouillage fichier pour éviter les lectures pendant une écriture
+    QLockFile lockFile(filePath + ".lock");
+    if (!lockFile.tryLock(3000)) {
+        qWarning() << "Cannot acquire lock for reading:" << filePath;
+        return QJsonObject();
+    }
+
     QFile file(filePath);
-    
+
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << "Failed to open map file for reading:" << filePath;
         return QJsonObject();
     }
-    
+
     QByteArray data = file.readAll();
     file.close();
-    
+
     QJsonParseError parseError;
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-    
+
     if (parseError.error != QJsonParseError::NoError) {
         qDebug() << "JSON parse error in" << filePath << ":" << parseError.errorString();
         return QJsonObject();
     }
-    
+
     if (!doc.isObject()) {
         qDebug() << "Invalid JSON format in" << filePath << "- expected object";
         return QJsonObject();
     }
-    
+
     return doc.object();
 }
 
@@ -173,7 +182,7 @@ bool MapFileManager::renameMap(QString oldMapName, QString newMapName)
 bool MapFileManager::saveMap(const QJsonObject &mapData, const QString &mapName, MapTypes::MapType mapType)
 {
     QString filePath = getMapFilePath(mapName, mapType);
-    
+
     // Ensure directory exists
     QDir dir = QFileInfo(filePath).dir();
     if (!dir.exists()) {
@@ -182,26 +191,44 @@ bool MapFileManager::saveMap(const QJsonObject &mapData, const QString &mapName,
             return false;
         }
     }
-    
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qDebug() << "Failed to open file for writing:" << filePath;
+
+    // Verrouillage fichier pour éviter les écritures concurrentes
+    QLockFile lockFile(filePath + ".lock");
+    if (!lockFile.tryLock(3000)) {
+        qWarning() << "Cannot acquire lock for writing:" << filePath;
         return false;
     }
-    
+
+    // Écriture atomique : écrire dans un fichier temporaire puis renommer
+    QString tmpFilePath = filePath + ".tmp";
+    QFile tmpFile(tmpFilePath);
+    if (!tmpFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qDebug() << "Failed to open temp file for writing:" << tmpFilePath;
+        return false;
+    }
+
     QJsonDocument doc(mapData);
     QByteArray jsonData = doc.toJson(QJsonDocument::Indented);
-    
-    qint64 bytesWritten = file.write(jsonData);
-    file.close();
-    
+
+    qint64 bytesWritten = tmpFile.write(jsonData);
+    tmpFile.close();
+
     if (bytesWritten == -1) {
-        qDebug() << "Failed to write to file:" << filePath;
+        qDebug() << "Failed to write to temp file:" << tmpFilePath;
+        QFile::remove(tmpFilePath);
         return false;
     }
-    
-    // qDebug() << "Map saved successfully to:" << filePath;
-    // qDebug().noquote() << QString::fromUtf8(jsonData);
+
+    // Remplacer le fichier original par le temporaire (atomique sur la plupart des OS)
+    if (QFile::exists(filePath)) {
+        QFile::remove(filePath);
+    }
+    if (!QFile::rename(tmpFilePath, filePath)) {
+        qWarning() << "Failed to rename temp file to:" << filePath;
+        QFile::remove(tmpFilePath);
+        return false;
+    }
+
     return true;
 }
 

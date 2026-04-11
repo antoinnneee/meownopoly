@@ -4,6 +4,7 @@
 
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QHash>
 #include <QDebug>
 
 Map::Map(QObject *parent) : QObject(parent)
@@ -12,13 +13,26 @@ Map::Map(QObject *parent) : QObject(parent)
 
 Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 {
-    QJsonArray snapableTilesArray = jsonObject["snapableTiles"].toArray();
-    // qDebug() << "Snapable tiles:" << snapableTilesArray.size();
-    // qDebug() << "--------------------------------";
-    // qDebug() << "Start loading snapable tiles";
+    if (!jsonObject.contains("snapableTiles") || !jsonObject["snapableTiles"].isArray()) {
+        qWarning() << "MAP_LOADING: Clé 'snapableTiles' manquante ou invalide dans le JSON de la map";
+        return;
+    }
 
-    for (const QJsonValueRef value : snapableTilesArray) {
-        const QJsonObject tileObject = value.toObject();
+    QJsonArray snapableTilesArray = jsonObject["snapableTiles"].toArray();
+
+    for (int i = 0; i < snapableTilesArray.size(); ++i) {
+        if (!snapableTilesArray[i].isObject()) {
+            qWarning() << "MAP_LOADING: Entrée snapableTiles[" << i << "] n'est pas un objet JSON - ignorée";
+            continue;
+        }
+        const QJsonObject tileObject = snapableTilesArray[i].toObject();
+
+        // Vérifier les champs obligatoires avant de créer la tile
+        if (!tileObject.contains("uniqueId") || !tileObject.contains("tileType")) {
+            qWarning() << "MAP_LOADING: Tile[" << i << "] sans uniqueId ou tileType - ignorée";
+            continue;
+        }
+
         ItemSnapable *is = new ItemSnapable(tileObject);
         QQmlEngine::setObjectOwnership(is, QQmlEngine::JavaScriptOwnership);
         m_tiles.append(is);
@@ -29,24 +43,38 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
     // qDebug() << "--------------------------------";
     // qDebug() << "building links between snapable tiles";
 
+    // Construire un index UUID → tile pour une résolution O(1)
+    QHash<QString, ItemSnapable*> tileIndex;
+    for (ItemSnapable *tile : std::as_const(m_tiles)) {
+        QString id = tile->uniqueId().toString();
+        if (tileIndex.contains(id)) {
+            qWarning() << "MAP_LOADING: UUID dupliqué détecté:" << id << "- seule la dernière tile sera référencée";
+        }
+        tileIndex[id] = tile;
+    }
+
+    // Reconstruire les connexions avec validation des références
     for (ItemSnapable *is : std::as_const(m_tiles)) {
         QJsonObject originalJson = is->getOriginalJson();
         QJsonArray nextIdArray = originalJson["next"].toArray();
 
         for (const QJsonValueRef value : nextIdArray) {
             QString nextId = value.toString();
-            for (ItemSnapable *targetTile : m_tiles) {
-                if (targetTile->uniqueId().toString() == nextId) {
-                    is->addNext(targetTile);
-                    targetTile->addPrev(is);
-                    // qDebug() << "Link built between" << is->uniqueId() << "and" << targetTile->uniqueId();
-                }
+            if (nextId.isEmpty()) {
+                qWarning() << "MAP_LOADING: UUID vide dans next[] de la tile" << is->uniqueId().toString();
+                continue;
+            }
+            ItemSnapable *targetTile = tileIndex.value(nextId, nullptr);
+            if (targetTile) {
+                is->addNext(targetTile);
+                targetTile->addPrev(is);
+            } else {
+                qWarning() << "MAP_LOADING: Référence next invalide:" << nextId
+                           << "depuis la tile" << is->uniqueId().toString()
+                           << "- connexion ignorée";
             }
         }
     }
-    // qDebug() << "Links built successfully";
-
-    // qDebug() << "--------------------------------";
 
 }
 
@@ -114,10 +142,15 @@ Map *Map::loadMap(QJsonObject newEdit)
     QJsonObject jsonObject = newEdit;
     Map *map = new Map(jsonObject);
 
-    // Créer MapInfo depuis JSON
-    QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
-    MapInfo *mapInfo = new MapInfo(mapInfoObject);
-    map->setMapInfo(mapInfo);
+    // Créer MapInfo depuis JSON (avec vérification)
+    if (jsonObject.contains("mapInfo") && jsonObject["mapInfo"].isObject()) {
+        QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
+        MapInfo *mapInfo = new MapInfo(mapInfoObject);
+        map->setMapInfo(mapInfo);
+    } else {
+        qWarning() << "MAP_LOADING: Clé 'mapInfo' manquante ou invalide - map chargée sans métadonnées";
+    }
+
     return map;
 }
 
@@ -142,9 +175,14 @@ Map *Map::loadMap(QString mapName, MapTypes::MapType mapType)
 
     Map *map = new Map(jsonObject);
 
-    // Créer MapInfo depuis JSON
-    QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
-    MapInfo *mapInfo = new MapInfo(mapInfoObject);
-    map->setMapInfo(mapInfo);
+    // Créer MapInfo depuis JSON (avec vérification)
+    if (jsonObject.contains("mapInfo") && jsonObject["mapInfo"].isObject()) {
+        QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
+        MapInfo *mapInfo = new MapInfo(mapInfoObject);
+        map->setMapInfo(mapInfo);
+    } else {
+        qWarning() << "MAP_LOADING: Clé 'mapInfo' manquante ou invalide - map chargée sans métadonnées";
+    }
+
     return map;
 }

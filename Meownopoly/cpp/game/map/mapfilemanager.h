@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QStringList>
 #include <QQmlEngine>
+#include <QLockFile>
 #include "maptypes.h"
 
 #define MAP_FILE_PATH ("./map/")
