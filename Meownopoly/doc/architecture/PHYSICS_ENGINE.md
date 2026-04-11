@@ -17,9 +17,14 @@ Le système est axé autour de trois entités fondamentales :
 2. **`PattounX_body`** : Un corps physique 2D représentant des entités mouvantes (joueurs, familiers, etc.).
    - Possède une position, vélocité, accélération, masse, rayon de collision et coefficients de friction.
    - Subit les impulsions, forces et calculs de restitution.
+   - Dispose d'un système de **mise en veille automatique** (sleep) : un body quasi-immobile pendant `SLEEP_FRAMES_REQUIRED` frames est endormi et ignoré par la simulation jusqu'à réception d'un input ou d'une force externe.
 3. **`PattounX_zone`** : Une zone d'effet environnementale définie par un polygone 2D complexe.
    - Générée généralement via un `ItemSnapable` (des tuiles sur une grille).
    - Peut agir comme une simple zone d'exclusion (mur) ou bien altérer les caractéristiques d'un corps la traversant (modificateur de friction, de vitesse ou d'accélération).
+4. **`Collision2D`** : Classe utilitaire statique fournissant les primitives de collision.
+   - Sweep analytique cercle-segment (`sweepCircleSegment`) par résolution quadratique.
+   - Tests statiques cercle-polygone, point-dans-polygone, cercle-AABB.
+   - Fonction de rebond (`applyBounce`) avec coefficients de restitution et glissement.
 
 ---
 
@@ -99,10 +104,11 @@ myCat->applyImpulse(QVector2D(50.0, 0.0));
 
 Il faut fournir à l'engine un "delta time" (`dt` en secondes) symbolisant l'écart de temps écoulé entre la frame courante et la précédente. C'est l'essence même du moteur qui effectuera en interne :
 
-1. L'intégration des forces vers la vélocité.
-2. L'application du comportement des zones (sable ralentissant, glace glissante...).
-3. La validation des collisions pour rectifier la position et déterminer les rebonds.
-4. L'intégration de la vélocité vers la position finale.
+1. **Intégration** : application de la friction au sol et des effets de zones, puis intégration d'Euler semi-implicite (forces → vélocité → position). Le damping est exponentiel et indépendant du framerate : `factor = pow(1 - damping, dt * 60)`.
+2. **CCD Sweep + Rewind** : pour chaque body en mouvement, un balayage analytique (sweep) cercle-polygone détecte la collision la plus proche le long du déplacement. Le body est **ramené au point d'impact** (rewind CCD) et sa vélocité est corrigée (bounce/slide). Cela empêche le tunneling même à haute vitesse.
+3. **Détection statique résiduelle** : une passe de détection statique cercle-polygone à la position corrigée gère les cas de repos (body appuyé contre un mur, coincé dans un coin).
+4. **Solver itératif** : résolution des impulsions par `VELOCITY_ITERATIONS` passes (friction Coulomb avec moyenne géométrique body/zone), puis correction de position anti-pénétration.
+5. **Signaux dédupliqués** : émission d'un seul signal `collisionOccurred` / `bodyCollided` par paire body/zone unique.
 
 ```cpp
 // Dans une fonction d'update itérative de votre boucle de jeu :
@@ -136,8 +142,10 @@ connect(myCat, &PattounX_body::enteredZone, this, [=](PattounX_zone* zone) {
 ```
 
 Liste utile de signaux exposés :
-- Sur un corps (`PattounX_body`) : `positionChanged()`, `velocityChanged()`, `isCollidingChanged()`, `enteredZone()`, `exitedZone()`, `collisionOccurred()`.
+- Sur un corps (`PattounX_body`) : `positionChanged()`, `velocityChanged()`, `isCollidingChanged()`, `isSleepingChanged()`, `enteredZone()`, `exitedZone()`, `collisionOccurred()`, `inputVectorChanged()`.
 - Sur le moteur (`PattounX_engine`) : `bodyCollided()`, `bodyEnteredZone()`, `bodyExitedZone()`.
+
+**Note** : les signaux de collision sont dédupliqués par paire body/zone — même si un body touche plusieurs segments d'une même zone dans la même frame, un seul `collisionOccurred` est émis pour cette paire.
 
 ---
 
@@ -152,4 +160,26 @@ Liste utile de signaux exposés :
 - **Position Discrète :**
   Pour un clonage paranoïaque ou des retours arrières brutaux (ex: téléportation), n'utilisez pas `applyImpulse` mais utilisez la mutation directe `setPosition(vector)`. Vous pouvez également utiliser `stop()` pour absorber toute l'inertie ou `reset()` pour faire table rase sur la mémoire tampon de vitesse et d'accumulation de vecteurs.
 - **Paramètres Constantes :**
-  Le moteur travaille sur des itérations prédictibles (`VELOCITY_ITERATIONS = 4`), avec un slop de pénétration (`PENETRATION_SLOP = 0.01`). Vous n'avez pas en règle générale besoin de modifier le fonctionnement des corrections de pénétration tunnel, celles-ci conviennent très bien avec les mouvements erratiques de la souris et la latence moyenne de Qt.
+  Le moteur travaille sur des itérations prédictibles (`VELOCITY_ITERATIONS = 4`), avec un slop de pénétration (`PENETRATION_SLOP = 0.01`). Le rewind CCD empêche le tunneling même à haute vitesse — le body est replacé au point d'impact exact avant toute résolution.
+- **Sleep System :**
+  Un body dont la vélocité reste sous `SLEEP_VELOCITY_THRESHOLD` (0.5) pendant `SLEEP_FRAMES_REQUIRED` (30) frames est automatiquement endormi. Les bodies endormis sont ignorés par la simulation (pas d'intégration, pas de collision), ce qui économise du CPU. Ils se réveillent automatiquement dès qu'un input ou une force externe est appliquée.
+- **Broadphase AABB :**
+  Avant chaque test de collision (sweep ou statique), un test rapide de recouvrement AABB filtre les zones éloignées. Cela réduit significativement le nombre de tests narrowphase, surtout sur les maps avec beaucoup de zones.
+
+---
+
+## 🔬 5. Détails Techniques : CCD Analytique
+
+Le CCD (Continuous Collision Detection) utilise un **sweep analytique** cercle-segment plutôt qu'un échantillonnage discret. Pour chaque segment du polygone, la résolution se décompose en :
+
+1. **Cercle vs sommets** : résolution quadratique `|P0 + t*V - vertex|² = r²` pour trouver le premier `t ∈ [0,1]` de contact.
+2. **Cercle vs corps du segment** : projection de la trajectoire sur la normale du segment, résolution linéaire `d0 + t*dv = ±radius`, puis vérification que le point de contact est bien sur le segment.
+
+Le plus petit `t` trouvé parmi tous les segments donne le point d'impact. Le body est rembobiné à cette position, puis le bounce/slide est appliqué sur la vélocité.
+
+### Friction Coulomb
+
+La résolution des collisions utilise le modèle de friction de Coulomb :
+- **Coefficient combiné** : moyenne géométrique `μ = √(μ_body × μ_zone)`
+- **Friction statique** : si `|jt| < j × μ`, l'impulsion tangentielle arrête le mouvement
+- **Friction dynamique** : sinon, glissement avec `μ_dynamique = √(μ_dyn_body × μ_zone)`

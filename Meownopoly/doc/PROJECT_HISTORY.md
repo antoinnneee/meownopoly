@@ -525,33 +525,28 @@ staticFriction, dynamicFriction, linearDamping,
 isStatic, collisionEnabled, isColliding, inputVector
 ```
 
-Methode `integrate(dt, worldFriction)` : integration d'Euler semi-implicite — accumulation de forces, mise a jour de vitesse, damping via `frictionFactor = 1.0 - (linearDamping * dt * 60.0)`, puis mise a jour position.
+Methode `integrate(dt)` : integration d'Euler semi-implicite — accumulation de forces, mise a jour de vitesse, damping exponentiel framerate-independant via `frictionFactor = pow(1.0 - linearDamping, dt * 60.0)`, puis mise a jour position. Inclut un systeme de sleep : bodies quasi-immobiles pendant 30 frames sont endormis et ignores par la simulation.
 
-**`PattounX_zone`** : `enum ZoneType { Zone_Exclusion, Zone_Speed, Zone_Friction }`. Herite de `ZoneParameter` pour acceder aux polygones et parametres.
+**`PattounX_zone`** : wrapper autour d'un `ItemSnapable` et son `ZoneParameter`. Fournit les tests de collision (statique et sweep) et l'acces aux parametres (friction, vitesse, acceleration, exclusion).
 
 ### Detection de collision continue (CCD)
 
-**21 decembre** — l'algorithme CCD implemente dans les diffs :
+**21 decembre** — premiere implementation CCD par echantillonnage discret (4-50 pas adaptatifs).
+
+**Avril 2026** — remplacement par un **sweep analytique** (`sweepCircleSegment`) :
 
 ```cpp
-static CollisionResult checkCirclePolygonSweep(
-    const QVector2D& startPos,
-    const QVector2D& endPos,
-    qreal radius,
-    const Polygon2D& polygon
-) {
-    // Nombre d'etapes adaptatif
-    // MIN_STEPS=4, MAX_STEPS=50, BASE_STEPS_PER_UNIT=8.0
-    int steps = qBound(MIN_STEPS,
-        (int)(movement.length() * BASE_STEPS_PER_UNIT), MAX_STEPS);
-
-    // Test bounding box etendue preliminaire
-    // Puis balayage : testPos = startPos + t * movement (t de 1/N a 1)
-    // Premier t avec collision statique = moment d'impact dans [0,1]
-};
+// Pour chaque segment du polygone :
+// 1. Cercle vs sommets : resolution quadratique
+//    |P0 + t*V - vertex|^2 = r^2
+// 2. Cercle vs corps du segment : projection sur la normale
+//    d0 + t*dv = ±radius, puis clamp sur le segment
+// Le plus petit t dans [0,1] donne le point d'impact exact.
 ```
 
-**27 decembre** : resolution iterative avec friction et restitution (`resolveCollisions(contacts, dt)`, `correctPositions(contacts)`).
+Le moteur utilise un **CCD rewind** : apres integration, le body est rembobine au point d'impact (`prevPos + t * movement`), puis le bounce/slide est applique sur la velocite. Cela empeche le tunneling meme a haute vitesse.
+
+**27 decembre** : resolution iterative avec friction Coulomb (moyenne geometrique body/zone) et restitution (`resolveCollisions(contacts, dt)`, `correctPositions(contacts)`). Signaux de collision dedupliques par paire body/zone.
 
 ### Construction du moteur — jour par jour
 
@@ -884,6 +879,9 @@ Dec 25  [PHYSIQUE]      ExclusionParameter -> PolygonParameter -> ZoneParameter
    |                    PattounX_zone (Exclusion/Speed/Friction)
    |                    CCD : checkCirclePolygonSweep (4-50 steps adaptatif)
    |                    resolveCollisions + correctPositions (friction/restitution)
+   |    [Avr 26]         CCD analytique (sweepCircleSegment, resolution quadratique)
+   |                    CCD rewind anti-tunneling, sleep system, broadphase AABB
+   |                    Friction Coulomb (moyenne geometrique), signaux dedupliques
    |                    TemplateFileManager (positions absolues -> relatives)
    |                    Modules qmldir (23+ composants enregistres)
    |
@@ -1036,7 +1034,7 @@ Editor.qml
 
 5. **AnimatedSprite -> AnimatedImage (Oct 25)** : apres avoir lutte avec `AnimatedSprite` (frameWidth, frameHeight, transparence), Valere bascule sur `AnimatedImage` natif qui supporte `.webp` anime sans configuration.
 
-6. **Moteur physique custom (Dec 25)** : PattounX from scratch avec CCD (balayage adaptatif 4-50 pas). Integration d'Euler semi-implicite. Plus de controle que Box2D, mais plus de maintenance.
+6. **Moteur physique custom (Dec 25, maj Avr 26)** : PattounX from scratch. CCD analytique (sweep quadratique cercle-segment) avec rewind anti-tunneling. Euler semi-implicite, damping exponentiel framerate-independant, friction Coulomb (moyenne geometrique), sleep system, broadphase AABB. Plus de controle que Box2D, mais plus de maintenance.
 
 7. **E2EE blind relay (Jan 26)** : AES-256-GCM, derivation de cle locale, rotation de cle par version. Le serveur ne voit jamais les messages en clair. Choix de securite fort.
 
