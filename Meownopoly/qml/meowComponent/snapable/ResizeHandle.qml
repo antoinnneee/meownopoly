@@ -69,15 +69,21 @@ Rectangle {
         
         onReleased: {
             targetElement.isResizing = false
-            
+
             // Mettre à jour les positions relatives après redimensionnement
             targetElement.updateRelativePosition()
-            
+
+            // Recréer le binding vers groupeSelection si l'élément est sélectionné,
+            // car l'assignation directe de x/y pendant le resize casse le Qt.binding
+            if (targetElement.isSelected && logic.mouseLogic && logic.mouseLogic.rebindElement) {
+                logic.mouseLogic.rebindElement(targetElement)
+            }
+
             // Désactiver le mode visual de la grille
             if (gridManager && gridManager.exitResizeMode) {
                 gridManager.exitResizeMode()
             }
-            
+
             // Sauvegarder après redimensionnement
             logic.saveMap(MapTypes.UNDOREDO)
         }
