@@ -2,6 +2,8 @@
 #include "game/item_snapable/ItemSnapable.h"
 #include "game/item_snapable/ZoneParameter.h"
 #include <QDebug>
+#include <QSet>
+#include <QPair>
 #include <QtQml>
 
 void PattounX_engine::registerQml()
@@ -164,9 +166,7 @@ void PattounX_engine::clearZones()
 void PattounX_engine::setZonesFromSnapables(const QVariantList& snapables)
 {
     clearZones();
-    
-    int zoneIndex = 0;
-    
+
     for (const QVariant& var : snapables) {
         QObject* obj = var.value<QObject*>();
         ItemSnapable* snapable = qobject_cast<ItemSnapable*>(obj);
@@ -205,47 +205,110 @@ void PattounX_engine::setZonesFromSnapables(const QVariantList& snapables)
 void PattounX_engine::updateAll(qreal dt)
 {
     if (!m_enabled || dt <= 0) return;
-    
+
+    // 1. Intégrer tous les bodies (friction, zones, accélération, vitesse, position)
     for (PattounX_body* body : m_bodies) {
         updateBody(body, dt);
     }
-    // 2. Détection des collisions (Broadphase + Narrowphase CCD)
-    QVector<CollisionResult> contacts;
+
+    // 2. CCD sweep + rewind (anti-tunneling)
+    //    Pour chaque body, on cherche la collision la plus proche (t minimal)
+    //    puis on ramène le body au point d'impact et on applique le bounce.
+    QSet<QPair<PattounX_body*, PattounX_zone*>> collidedPairs;
+
     for (PattounX_body* body : m_bodies) {
-        if (!body->collisionEnabled() || body->isStatic()) continue;
+        if (!body->collisionEnabled() || body->isStatic() || body->isSleeping()) continue;
+
+        QVector2D p0 = body->previousPosition();
+        QVector2D p1 = body->position();
+        QVector2D movement = p1 - p0;
+
+        // Skip si pas de mouvement significatif
+        if (movement.lengthSquared() < Collision2D::EPSILON * Collision2D::EPSILON) continue;
+
+        qreal earliestT = 1.0;
+        CollisionResult earliestContact;
+        bool hasContact = false;
 
         for (PattounX_zone* zone : m_zones) {
             if (!zone->isActive() || !zone->exclusion()) continue;
 
-            // Utilisation collision sweep pour détecter TOUS les segments impactés
-            QVector<CollisionResult> results = zone->checkCollisionSweepAll(body->previousPosition(), body->position(), body->collisionRadius());
+            // Broadphase AABB : skip si le mouvement n'intersecte pas la zone élargie
+            {
+                qreal r = body->collisionRadius();
+                QRectF extBox = zone->boundingBox().adjusted(-r, -r, r, r);
+                QRectF moveBox(
+                    std::min(p0.x(), p1.x()) - r,
+                    std::min(p0.y(), p1.y()) - r,
+                    std::abs(p1.x() - p0.x()) + 2 * r,
+                    std::abs(p1.y() - p0.y()) + 2 * r
+                );
+                if (!moveBox.intersects(extBox)) continue;
+            }
 
-            for (CollisionResult& result : results) {
-                result.body = body;
-                
-                // Si c'est une collision par balayage (t < 1.0), on calcule la pénétration totale
-                // La pénétration doit pousser le body à l'extérieur de la surface d'impact
-                if (result.t < 1.0) {
-                    QVector2D impactPos = body->previousPosition() + result.t * (body->position() - body->previousPosition());
-                    QVector2D penetrationVec = body->position() - impactPos;
-                    qreal depth = QVector2D::dotProduct(penetrationVec, -result.normal);
-                    
-                    // La pénétration totale est la profondeur de tunneling + un petit buffer
-                    result.penetration = std::max(result.penetration, depth + TUNNELING_BUFFER);
+            QVector<CollisionResult> results = zone->checkCollisionSweepAll(p0, p1, body->collisionRadius());
+
+            for (const CollisionResult& result : results) {
+                collidedPairs.insert(qMakePair(body, result.zone));
+
+                if (result.t < earliestT) {
+                    earliestT = result.t;
+                    earliestContact = result;
+                    earliestContact.body = body;
+                    hasContact = true;
                 }
-                
-                contacts.append(result);
+            }
+        }
+
+        // Rewind au point d'impact + bounce/slide sur la vélocité
+        if (hasContact && earliestT < 1.0) {
+            QVector2D contactPos = p0 + earliestT * movement;
+            // Pousser légèrement hors de la surface de collision
+            body->movePosition(contactPos + earliestContact.normal * TUNNELING_BUFFER);
+
+            // Appliquer le bounce/slide sur la vélocité
+            QVector2D vel = body->velocity();
+            qreal velAlongNormal = QVector2D::dotProduct(vel, earliestContact.normal);
+            if (velAlongNormal < 0) {
+                QVector2D newVel = Collision2D::applyBounce(
+                    vel, earliestContact.normal,
+                    body->bounceFactor(), body->slideFactor());
+                body->setVelocity(newVel);
             }
         }
     }
 
-    // 3. Résolution des collisions (Solver Itératif)
-    // On répète plusieurs fois pour stabiliser les empilements ou coins
+    // 3. Détection statique aux positions corrigées (gère les contacts au repos, les coins)
+    QVector<CollisionResult> contacts;
+    for (PattounX_body* body : m_bodies) {
+        if (!body->collisionEnabled() || body->isStatic() || body->isSleeping()) continue;
+
+        for (PattounX_zone* zone : m_zones) {
+            if (!zone->isActive() || !zone->exclusion()) continue;
+
+            QVector<CollisionResult> results = zone->checkCollisionAll(body->position(), body->collisionRadius());
+
+            for (CollisionResult& result : results) {
+                result.body = body;
+                contacts.append(result);
+                collidedPairs.insert(qMakePair(body, result.zone));
+            }
+        }
+    }
+
+    // 4. Solver itératif pour les contacts statiques résiduels
     for (int i = 0; i < VELOCITY_ITERATIONS; ++i) {
         resolveCollisions(contacts, dt);
     }
-    // 4. Correction de position (Anti-pénétration / Anti-jitter)
+
+    // 5. Correction de position (anti-pénétration)
     correctPositions(contacts);
+
+    // 6. Émettre les signaux de collision (dédupliqués par paire body/zone)
+    for (const auto& pair : collidedPairs) {
+        emit bodyCollided(pair.first, pair.second);
+        emit pair.first->collisionOccurred(pair.second);
+    }
 }
 
 void PattounX_engine::updateBody(PattounX_body* body, qreal dt)
@@ -305,39 +368,46 @@ void PattounX_engine::resolveCollisions(const QVector<CollisionResult>& contacts
         qreal jt = -QVector2D::dotProduct(rv, tangent);
         jt /= A->invMass();
 
-        // Loi de Coulomb : Clamper la friction
-        // On utilise l'impulsion normale 'j' comme force de pression
-        qreal mu = std::sqrt(std::pow(A->staticFriction(), 2) + 0.5*0.5); // 0.5 pour le mur par défaut
+        // Loi de Coulomb : friction combinée body/zone (moyenne géométrique)
+        qreal zoneFriction = 0.5; // défaut
+        if (m.zone && m.zone->zoneParameter()) {
+            qreal zf = m.zone->zoneParameter()->frictionStrenght();
+            if (zf > 0.0) zoneFriction = zf;
+        }
+        qreal mu = std::sqrt(A->staticFriction() * zoneFriction);
 
         QVector2D frictionImpulse;
         if (std::abs(jt) < j * mu) {
-            // Friction Statique (Assez fort pour arrêter)
+            // Friction Statique (assez fort pour arrêter)
             frictionImpulse = jt * tangent;
         } else {
-            // Friction Dynamique (Glissement)
-            qreal dynamicMu = std::sqrt(std::pow(A->dynamicFriction(), 2) + 0.3*0.3);
+            // Friction Dynamique (glissement)
+            qreal dynamicMu = std::sqrt(A->dynamicFriction() * zoneFriction);
             frictionImpulse = -j * tangent * dynamicMu;
         }
 
         // Appliquer la friction
         A->setVelocity(A->velocity() + frictionImpulse * A->invMass());
-
-        // Signaux de collision
-        emit bodyCollided(A, m.zone);
-        emit A->collisionOccurred(m.zone);
     }
 }
 void PattounX_engine::correctPositions(const QVector<CollisionResult>& contacts)
 {
-
     for (const CollisionResult& m : contacts) {
         PattounX_body* A = m.body;
 
-        // La pénétration a été ajustée dans updateAll pour les sweeps
-        qreal correctionMag = std::max(m.penetration - PENETRATION_SLOP, 0.0) * POSITION_CORRECTION_PERCENT;
-        QVector2D correction = m.normal * correctionMag;
+        // Recalculer la pénétration résiduelle par rapport à la position ACTUELLE
+        // (qui a pu être déplacée par une correction précédente)
+        QVector2D toBody = A->position() - m.closestPoint;
+        qreal currentDist = toBody.length();
+        qreal residualPenetration = A->collisionRadius() - currentDist;
 
-        A->setPosition(A->position() + correction);
+        if (residualPenetration <= PENETRATION_SLOP) continue;
+
+        qreal correctionMag = (residualPenetration - PENETRATION_SLOP) * POSITION_CORRECTION_PERCENT;
+        QVector2D normal = (currentDist > Collision2D::EPSILON) ? toBody / currentDist : m.normal;
+        QVector2D correction = normal * correctionMag;
+
+        A->movePosition(A->position() + correction);
     }
 }
 
@@ -370,20 +440,18 @@ void PattounX_engine::applyGroundFrictionAndZones(PattounX_body* body, qreal dt)
 
     for (PattounX_zone* zone : m_zones) {
         if (!zone->isActive()) continue;
-        
-        // Optimisation possible : AABB check avant containsPoint
+
+        // Broadphase AABB
+        if (!zone->boundingBox().contains(pos.x(), pos.y())) continue;
+
         if (zone->containsPoint(pos)) {
             currentZones.insert(zone);
             
             // Appliquer les paramètres de la zone
             const ZoneParameter& params = zone->getZoneParameters();
             
-            // Modifier le damping (Glace = damping faible, Boue = damping fort)
-            // if (params.frictionStrenght() > 0) {
-                 // Si c'est une zone de friction (ex: boue)
-                 // Si frictionStrength = 0 (Glace)
-                 currentDamping = params.frictionStrenght(); 
-            // }
+            // Damping : on garde le max parmi toutes les zones (Glace=faible, Boue=fort)
+            currentDamping = std::max(currentDamping, params.frictionStrenght());
             
             // Boost de vitesse
             if (params.velocityStrenght() > 0) {

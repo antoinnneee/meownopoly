@@ -167,6 +167,26 @@ public:
     );
     
     /**
+     * @brief Sweep analytique cercle vs segment (résolution quadratique)
+     * @param startPos Position de départ du cercle
+     * @param endPos Position d'arrivée du cercle
+     * @param radius Rayon du cercle
+     * @param segA Début du segment
+     * @param segB Fin du segment
+     * @param outNormal Normale de collision (sortie)
+     * @return t dans [0,1] de la première collision, ou -1 si aucune
+     */
+    static qreal sweepCircleSegment(
+        const QVector2D& startPos,
+        const QVector2D& endPos,
+        qreal radius,
+        const QVector2D& segA,
+        const QVector2D& segB,
+        QVector2D& outClosest,
+        QVector2D& outNormal
+    );
+
+    /**
      * @brief Constantes pour les calculs
      */
     static constexpr qreal EPSILON = 0.0001;

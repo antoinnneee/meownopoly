@@ -260,6 +260,104 @@ CollisionResult Collision2D::checkCirclePolygonSweep(
     return best;
 }
 
+qreal Collision2D::sweepCircleSegment(
+    const QVector2D& startPos,
+    const QVector2D& endPos,
+    qreal radius,
+    const QVector2D& segA,
+    const QVector2D& segB,
+    QVector2D& outClosest,
+    QVector2D& outNormal)
+{
+    // Sweep analytique : on cherche le plus petit t dans [0,1] tel que
+    // dist(startPos + t*movement, segment[segA,segB]) == radius
+    //
+    // Stratégie : tester la collision du rayon de mouvement contre la capsule
+    // formée par le segment gonflé du rayon (Minkowski sum).
+    // Cela se décompose en :
+    //   1) Rayon vs cercle aux extrémités segA et segB (rayon radius)
+    //   2) Rayon vs les deux segments parallèles décalés de ±radius*normal
+
+    QVector2D movement = endPos - startPos;
+    qreal bestT = -1.0;
+
+    // --- 1. Sweep cercle vs sommets (résolution quadratique) ---
+    // Pour un sommet V : |startPos + t*movement - V|² = radius²
+    // => |movement|²·t² + 2·dot(startPos-V, movement)·t + |startPos-V|² - r² = 0
+    auto sweepCircleVertex = [&](const QVector2D& vertex) {
+        QVector2D d = startPos - vertex;
+        qreal a = QVector2D::dotProduct(movement, movement);
+        qreal b = 2.0 * QVector2D::dotProduct(d, movement);
+        qreal c = QVector2D::dotProduct(d, d) - radius * radius;
+
+        qreal discriminant = b * b - 4.0 * a * c;
+        if (discriminant < 0 || a < EPSILON * EPSILON) return;
+
+        qreal sqrtDisc = std::sqrt(discriminant);
+        qreal t = (-b - sqrtDisc) / (2.0 * a);
+
+        if (t >= -EPSILON && t <= 1.0 + EPSILON) {
+            t = std::clamp(t, 0.0, 1.0);
+            if (bestT < 0 || t < bestT) {
+                bestT = t;
+                outClosest = vertex;
+                QVector2D hitPos = startPos + t * movement;
+                QVector2D toCenter = hitPos - vertex;
+                qreal len = toCenter.length();
+                outNormal = (len > EPSILON) ? toCenter / len : QVector2D(0, 1);
+            }
+        }
+    };
+
+    sweepCircleVertex(segA);
+    sweepCircleVertex(segB);
+
+    // --- 2. Sweep cercle vs segment infini, puis clamp sur [0,L] ---
+    QVector2D segDir = segB - segA;
+    qreal segLenSq = segDir.lengthSquared();
+
+    if (segLenSq > EPSILON * EPSILON) {
+        qreal segLen = std::sqrt(segLenSq);
+        QVector2D segNorm(-segDir.y() / segLen, segDir.x() / segLen);
+
+        // On projette le mouvement sur la normale du segment :
+        // distance(t) = dot(startPos + t*movement - segA, segNorm)
+        // On cherche |distance(t)| == radius
+        qreal d0 = QVector2D::dotProduct(startPos - segA, segNorm);
+        qreal dv = QVector2D::dotProduct(movement, segNorm);
+
+        // distance(t) = d0 + t*dv
+        // d0 + t*dv = ±radius => t = (±radius - d0) / dv
+        auto trySegmentSide = [&](qreal targetDist) {
+            if (std::abs(dv) < EPSILON) return; // Mouvement parallèle au segment
+            qreal t = (targetDist - d0) / dv;
+
+            if (t >= -EPSILON && t <= 1.0 + EPSILON) {
+                t = std::clamp(t, 0.0, 1.0);
+                QVector2D hitPos = startPos + t * movement;
+
+                // Vérifier que le point de contact est bien sur le segment [0, segLen]
+                qreal proj = QVector2D::dotProduct(hitPos - segA, segDir) / segLenSq;
+                if (proj >= -EPSILON && proj <= 1.0 + EPSILON) {
+                    proj = std::clamp(proj, 0.0, 1.0);
+                    if (bestT < 0 || t < bestT) {
+                        bestT = t;
+                        outClosest = segA + proj * segDir;
+                        QVector2D toCenter = hitPos - outClosest;
+                        qreal len = toCenter.length();
+                        outNormal = (len > EPSILON) ? toCenter / len : segNorm;
+                    }
+                }
+            }
+        };
+
+        trySegmentSide(radius);
+        trySegmentSide(-radius);
+    }
+
+    return bestT;
+}
+
 QVector<CollisionResult> Collision2D::checkCirclePolygonSweepAll(
     const QVector2D& startPos,
     const QVector2D& endPos,
@@ -277,7 +375,7 @@ QVector<CollisionResult> Collision2D::checkCirclePolygonSweepAll(
         return checkCirclePolygonAll(startPos, radius, polygon);
     }
 
-    // Test AABB étendu
+    // Test AABB étendu (broadphase rapide)
     QRectF extendedBox = polygon.boundingBox.adjusted(-radius, -radius, radius, radius);
     QRectF movementBox(
         std::min(startPos.x(), endPos.x()) - radius,
@@ -288,49 +386,26 @@ QVector<CollisionResult> Collision2D::checkCirclePolygonSweepAll(
 
     if (!movementBox.intersects(extendedBox)) return results;
 
-    const int MIN_STEPS = 8;
-    const int MAX_STEPS = 64;
-    int steps = std::clamp(static_cast<int>(movementLength * 10.0 / radius), MIN_STEPS, MAX_STEPS);
-
-    // Pour chaque segment, on cherche le premier impact
+    // Pour chaque segment du polygone, sweep analytique
     for (int i = 0; i < polygon.points.size(); ++i) {
         int j = (i + 1) % polygon.points.size();
-        const QVector2D& pA = polygon.points[i];
-        const QVector2D& pB = polygon.points[j];
-        
-        bool segmentHit = false;
-        CollisionResult earliestSegmentResult;
-        earliestSegmentResult.t = 2.0;
 
-        for (int step = 0; step <= steps; ++step) {
-            qreal t = static_cast<qreal>(step) / steps;
-            QVector2D testPos = startPos + t * movement;
+        QVector2D closest, normal;
+        qreal t = sweepCircleSegment(startPos, endPos, radius, polygon.points[i], polygon.points[j], closest, normal);
 
-            SegmentResult segRes = pointToSegmentDistance(testPos, pA, pB);
-            if (segRes.distance < radius) {
-                if (t < earliestSegmentResult.t) {
-                    segmentHit = true;
-                    earliestSegmentResult.colliding = true;
-                    earliestSegmentResult.t = t;
-                    earliestSegmentResult.distance = segRes.distance;
-                    earliestSegmentResult.closestPoint = segRes.closestPoint;
-                    earliestSegmentResult.penetration = radius - segRes.distance;
-                    
-                    QVector2D toCenter = testPos - segRes.closestPoint;
-                    if (toCenter.lengthSquared() > EPSILON * EPSILON) {
-                        earliestSegmentResult.normal = toCenter.normalized();
-                    } else {
-                        earliestSegmentResult.normal = polygon.normals[i];
-                    }
-                }
-                // Une fois qu'on a un impact sur CE segment, on passe au segment suivant
-                // pour garantir qu'on a le PREMIER impact de chaque segment.
-                break; 
-            }
-        }
-        
-        if (segmentHit) {
-            results.append(earliestSegmentResult);
+        if (t >= 0.0) {
+            CollisionResult result;
+            result.colliding = true;
+            result.t = t;
+            result.closestPoint = closest;
+            result.normal = normal;
+
+            QVector2D hitPos = startPos + t * movement;
+            result.distance = (hitPos - closest).length();
+            result.penetration = radius - result.distance;
+            if (result.penetration < 0) result.penetration = 0;
+
+            results.append(result);
         }
     }
 

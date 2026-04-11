@@ -78,7 +78,9 @@ void PattounX_body::setMass(qreal mass)
 {
     if (!qFuzzyCompare(m_mass, mass)) {
         m_mass = std::max(0.01, mass);
+        m_invMass = 1.0 / m_mass;
         emit massChanged();
+        emit invMassChanged();
     }
 }
 
@@ -105,16 +107,24 @@ void PattounX_body::applyForce(const QVector2D& inputVector, qreal inputForce) {
 
 void PattounX_body::applyForce(const QVector2D& force)
 {
-    // On ajoute directement à l'accumulateur ou à la vitesse si intégration Euler simple
     if (m_isStatic) return;
-        m_forceAccumulator += force;
+    m_forceAccumulator += force;
+    if (m_isSleeping && force.lengthSquared() > 0.0001) {
+        m_isSleeping = false;
+        m_sleepFrameCount = 0;
+        emit isSleepingChanged();
+    }
 }
-
 
 void PattounX_body::applyImpulse(const QVector2D& impulse)
 {
     if (m_isStatic) return;
-        m_velocity += impulse * m_invMass;
+    m_velocity += impulse * m_invMass;
+    if (m_isSleeping) {
+        m_isSleeping = false;
+        m_sleepFrameCount = 0;
+        emit isSleepingChanged();
+    }
     emit velocityChanged();
 }
 
@@ -137,6 +147,20 @@ void PattounX_body::reset() {
 void PattounX_body::integrate(qreal dt) {
     if (m_isStatic || dt <= 0) return;
 
+    // Réveiller si input ou force externe
+    if (m_isSleeping) {
+        bool hasInput = m_inputVector.lengthSquared() > 0.0001;
+        bool hasForce = m_forceAccumulator.lengthSquared() > 0.0001;
+        if (hasInput || hasForce) {
+            m_isSleeping = false;
+            m_sleepFrameCount = 0;
+            emit isSleepingChanged();
+        } else {
+            m_forceAccumulator = QVector2D(0, 0);
+            return; // Toujours endormi, skip
+        }
+    }
+
     m_previousPosition = m_position;
 
     // Calculer la vitesse max effective avec le multiplicateur de zone
@@ -149,9 +173,8 @@ void PattounX_body::integrate(qreal dt) {
         // 2. On tend vers cette vitesse selon l'accélération
         m_velocity += (targetVelocity - m_velocity) * std::min(1.0, m_acceleration * m_zoneAccelerationMultiplier * dt);
     } else {
-        // 3. Pas d'input : on applique la friction classique pour s'arrêter
-        qreal frictionFactor = 1.0 - (m_linearDamping * dt * 60.0);
-        if (frictionFactor < 0) frictionFactor = 0;
+        // 3. Pas d'input : friction exponentielle (framerate-indépendante)
+        qreal frictionFactor = std::pow(1.0 - m_linearDamping, dt * 60.0);
         m_velocity *= frictionFactor;
     }
 
@@ -161,8 +184,7 @@ void PattounX_body::integrate(qreal dt) {
 
     // 5. Freinage progressif si on dépasse maxSpeed (ex: fin de sprint ou sortie de zone rapide)
     if (m_velocity.length() > effectiveMaxSpeed + 0.01) {
-        qreal decelerationFactor = 1.0 - (m_linearDamping * dt * 60.0);
-        if (decelerationFactor < 0) decelerationFactor = 0;
+        qreal decelerationFactor = std::pow(1.0 - m_linearDamping, dt * 60.0);
         m_velocity *= decelerationFactor;
         
         // On s'assure de ne pas descendre trop bas d'un coup
@@ -177,12 +199,35 @@ void PattounX_body::integrate(qreal dt) {
     // On ne notifie les changements qu'une fois le calcul fini
     emit positionChanged();
     emit velocityChanged();
-    // qDebug() << m_velocity.length() <<  "/" << m_maxSpeed;
-    
+
+    // Gestion du sleep : si la vitesse reste basse pendant N frames, endormir
+    if (m_velocity.lengthSquared() < SLEEP_VELOCITY_THRESHOLD * SLEEP_VELOCITY_THRESHOLD
+        && m_inputVector.lengthSquared() < 0.0001) {
+        m_sleepFrameCount++;
+        if (m_sleepFrameCount >= SLEEP_FRAMES_REQUIRED) {
+            m_velocity = QVector2D(0, 0);
+            m_isSleeping = true;
+            m_sleepFrameCount = 0;
+            emit isSleepingChanged();
+            emit velocityChanged();
+        }
+    } else {
+        m_sleepFrameCount = 0;
+    }
+
     // On nettoie pour la frame suivante
-    m_forceAccumulator = QVector2D(0,0);
+    m_forceAccumulator = QVector2D(0, 0);
 }
 
+
+void PattounX_body::movePosition(const QVector2D& pos)
+{
+    if (m_position != pos) {
+        m_position = pos;
+        // Ne pas toucher à m_previousPosition — le CCD en a besoin
+        emit positionChanged();
+    }
+}
 
 void PattounX_body::setCollidingState(bool colliding, const QVector2D& normal)
 {

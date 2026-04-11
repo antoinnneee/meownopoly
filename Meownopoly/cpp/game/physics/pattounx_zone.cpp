@@ -84,7 +84,7 @@ bool PattounX_zone::containsPoint(const QVector2D& point) const
 }
 
 
-CollisionResult PattounX_zone::checkCollision(const QVector2D& center, qreal radius) const
+CollisionResult PattounX_zone::checkCollision(const QVector2D& center, qreal radius)
 {
     CollisionResult result;
 
@@ -93,17 +93,17 @@ CollisionResult PattounX_zone::checkCollision(const QVector2D& center, qreal rad
     }
 
     // Seules les zones d'exclusion génèrent des collisions physiques
-    if (exclusion() == true) {
+    if (exclusion()) {
         result = Collision2D::checkCirclePolygon(center, radius, m_polygon);
         if (result.colliding) {
-            result.zone = const_cast<PattounX_zone*>(this);
+            result.zone = this;
         }
     }
 
     return result;
 }
 
-CollisionResult PattounX_zone::checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const
+CollisionResult PattounX_zone::checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius)
 {
     CollisionResult result;
 
@@ -112,33 +112,33 @@ CollisionResult PattounX_zone::checkCollisionSweep(const QVector2D& startPos, co
     }
 
     // Seules les zones d'exclusion génèrent des collisions physiques
-    if (exclusion() == true) {
+    if (exclusion()) {
         result = Collision2D::checkCirclePolygonSweep(startPos, endPos, radius, m_polygon);
         if (result.colliding) {
-            result.zone = const_cast<PattounX_zone*>(this);
+            result.zone = this;
         }
     }
 
     return result;
 }
 
-QVector<CollisionResult> PattounX_zone::checkCollisionAll(const QVector2D& center, qreal radius) const
+QVector<CollisionResult> PattounX_zone::checkCollisionAll(const QVector2D& center, qreal radius)
 {
     QVector<CollisionResult> results;
     if (!m_isActive || !m_polygon.isValid() || !exclusion()) return results;
-    
+
     results = Collision2D::checkCirclePolygonAll(center, radius, m_polygon);
-    for (auto& res : results) res.zone = const_cast<PattounX_zone*>(this);
+    for (auto& res : results) res.zone = this;
     return results;
 }
 
-QVector<CollisionResult> PattounX_zone::checkCollisionSweepAll(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const
+QVector<CollisionResult> PattounX_zone::checkCollisionSweepAll(const QVector2D& startPos, const QVector2D& endPos, qreal radius)
 {
     QVector<CollisionResult> results;
     if (!m_isActive || !m_polygon.isValid() || !exclusion()) return results;
-    
+
     results = Collision2D::checkCirclePolygonSweepAll(startPos, endPos, radius, m_polygon);
-    for (auto& res : results) res.zone = const_cast<PattounX_zone*>(this);
+    for (auto& res : results) res.zone = this;
     return results;
 }
 
