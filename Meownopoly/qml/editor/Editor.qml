@@ -28,6 +28,7 @@ import ui_item
 import Catway 1.0
 import EditorSession 1.0
 import EditorOpBus 1.0
+import Meownopoly.Account 1.0
 
 import utils
 import chat
@@ -86,6 +87,18 @@ Base_Board {
         gameGrid.isEdit = true
 
         console.log("UiStyle.z_CONFIG_PANEL !!! ", UiStyle.z_CONFIG_PANEL)
+
+        // Phase 4 : si la session collab est déjà active lors de l'ouverture
+        // de l'éditeur (cas usuel : startAsClient déclenché depuis le panel
+        // de test avant navigation), le signal `activeChanged` est déjà passé
+        // → on déclenche manuellement le Hello côté client.
+        if (EditorSession.active && !EditorSession.isHost) {
+            console.log("[FullSync] client → envoi Hello (déjà actif au chargement)")
+            EditorSession.sendEvent(EditorMessageType.Hello, {
+                "nickname": AccountManager.nickname || "",
+                "assetPackHash": ""
+            })
+        }
     }
 
     onUpdateSettings: {
@@ -302,6 +315,291 @@ Base_Board {
         }
     }
 
+    // Phase 3: applier distant. EditorOpBus positionne `isApplyingRemote=true`
+    // pendant l'émission — les mutations déclenchées ci-dessous passeront par
+    // submitOp mais seront droppées (pas de re-broadcast, pas de boucle).
+    Connections {
+        target: EditorOpBus
+        function onRemoteOpReceived(op) {
+
+            function findByUuid(uuid) {
+                return snapableTilesList.find(function(t) {
+                    return t && t.snapableParameters
+                        && String(t.snapableParameters.uniqueId) === uuid
+                })
+            }
+
+            switch (op.op) {
+            case EditorOpType.CreateItem: {
+                const newItem = ItemSnapableFactory.createItemSnapableFromJson(op.item)
+                logic.tileLogic.createItemSnapableTile(newItem)
+                break
+            }
+
+            case EditorOpType.DeleteItem: {
+                const victim = findByUuid(op.target)
+                if (victim) logic.tileLogic.deleteElement(victim)
+                break
+            }
+
+            case EditorOpType.MoveItem: {
+                const mover = findByUuid(op.target)
+                if (mover && mover.snapableParameters) {
+                    mover.snapableParameters.displayParameter.gridRelativePositionX = op.gridX
+                    mover.snapableParameters.displayParameter.gridRelativePositionY = op.gridY
+                    if (mover.snapToGridFromGridPos) mover.snapToGridFromGridPos()
+                }
+                break
+            }
+
+            case EditorOpType.ResizeItem: {
+                const rsz = findByUuid(op.target)
+                if (rsz && rsz.snapableParameters) {
+                    rsz.snapableParameters.displayParameter.unitSizeWidth  = op.w
+                    rsz.snapableParameters.displayParameter.unitSizeHeight = op.h
+                }
+                break
+            }
+
+            case EditorOpType.SetDisplayParameter: {
+                const dt = findByUuid(op.target)
+                if (dt && dt.snapableParameters && op.fields) {
+                    const dp = dt.snapableParameters.displayParameter
+                    for (const key in op.fields) {
+                        dp[key] = op.fields[key]
+                    }
+                }
+                break
+            }
+
+            case EditorOpType.SetZoneParameter: {
+                const zt = findByUuid(op.target)
+                if (zt && zt.applyPhysicSettings && op.fields) {
+                    zt.applyPhysicSettings(op.fields)
+                }
+                break
+            }
+
+            case EditorOpType.SetCaseData: {
+                const ct = findByUuid(op.target)
+                if (ct && ct.snapableParameters && ct.snapableParameters.caseData && op.fields) {
+                    const cd = ct.snapableParameters.caseData
+                    for (const k in op.fields) {
+                        // Changement de type = remplacement du sous-objet ;
+                        // on délègue à la méthode dédiée pour préserver les invariants.
+                        if (k === "type" && ct.snapableParameters.changeCaseDataType) {
+                            if (op.fields[k] !== cd.type) {
+                                ct.snapableParameters.changeCaseDataType(op.fields[k])
+                            }
+                        } else {
+                            cd[k] = op.fields[k]
+                        }
+                    }
+                }
+                break
+            }
+
+            case EditorOpType.LinkItems: {
+                const linkSrc = findByUuid(op.source)
+                const linkDst = findByUuid(op.target)
+                if (linkSrc && linkDst && linkSrc.connectionManager) {
+                    if (op.kind === "next") {
+                        linkSrc.connectionManager.addNextElement(linkDst)
+                    } else if (op.kind === "previous") {
+                        linkSrc.connectionManager.addPreviousElement(linkDst)
+                    }
+                }
+                break
+            }
+
+            case EditorOpType.UnlinkItems: {
+                const unSrc = findByUuid(op.source)
+                const unDst = findByUuid(op.target)
+                if (unSrc && unDst && unSrc.connectionManager) {
+                    if (op.kind === "next") {
+                        unSrc.connectionManager.removeNextElement(unDst)
+                    } else if (op.kind === "previous") {
+                        unSrc.connectionManager.removePreviousElement(unDst)
+                    }
+                }
+                break
+            }
+
+            default:
+                console.log("[Editor] remote op inconnue:", JSON.stringify(op))
+                break
+            }
+        }
+    }
+
+    // ─── Phase 4 : full-sync à la connexion ─────────────────────────────────
+    //
+    // Protocole :
+    //   1. Client devient actif → envoie Hello à l'hôte.
+    //   2. Hôte reçoit Hello → snapshot atomique de la liste des tuiles, split
+    //      en chunks (~20 KB chacun, sous le plafond reliable 32 KB), chaque
+    //      chunk envoyé en point-à-point au seul senderId.
+    //   3. Client accumule les chunks dans un buffer indexé ; quand tous sont
+    //      là, wipe l'état local et reconstruit depuis le snapshot (tout ça
+    //      dans un beginApplyRemote/endApplyRemote pour bloquer la remontée).
+    //
+    // Pas de serverSeq en v1 : reliable.io garantit l'ordre par endpoint, donc
+    // les ops qui arrivent après les chunks s'appliquent sur l'état reconstruit.
+    QtObject {
+        id: fullSyncBuffer
+        property var chunks: ({})   // index → string
+        property int expected: -1
+    }
+
+    function _fullSyncChunkSize() { return 20000 }
+
+    function _sendFullSyncTo(senderId) {
+        // Sérialise la liste des tuiles courante. On passe par snapableTiles
+        // comme format (cohérent avec MapFileManager), mais sans mapInfo
+        // car le client conserve son propre mapInfo courant.
+        console.log("[FullSync] host scan snapableTilesList.length =",
+                    snapableTilesList.length)
+        const tiles = []
+        for (let i = 0; i < snapableTilesList.length; i++) {
+            const t = snapableTilesList[i]
+            if (!t) {
+                console.warn("[FullSync] tile", i, "null/undefined — skipping")
+                continue
+            }
+            if (!t.snapableParameters) {
+                console.warn("[FullSync] tile", i, "has no snapableParameters — skipping")
+                continue
+            }
+            try {
+                const raw = t.snapableParameters.toJSON()
+                if (i === 0) console.log("[FullSync] sample tile[0] JSON:", raw)
+                tiles.push(JSON.parse(raw))
+            } catch (e) {
+                console.warn("[FullSync] tile", i, "JSON error:", e,
+                             "raw=", t.snapableParameters.toJSON())
+            }
+        }
+        const payload = JSON.stringify({ snapableTiles: tiles })
+        const CHUNK = _fullSyncChunkSize()
+        const count = Math.max(1, Math.ceil(payload.length / CHUNK))
+        console.log("[FullSync] host → " + senderId
+                    + " : " + tiles.length + " tuiles sérialisées, "
+                    + payload.length + " octets, " + count + " chunks")
+        for (let c = 0; c < count; c++) {
+            EditorSession.sendEventTo(senderId, EditorMessageType.FullSync, {
+                "chunkIndex": c,
+                "chunkCount": count,
+                "payload":    payload.substr(c * CHUNK, CHUNK)
+            })
+        }
+    }
+
+    function _receiveFullSyncChunk(payload) {
+        const idx   = payload.chunkIndex
+        const count = payload.chunkCount
+        if (fullSyncBuffer.expected !== count) {
+            // Nouveau stream ou premier chunk — reset.
+            fullSyncBuffer.chunks = ({})
+            fullSyncBuffer.expected = count
+        }
+        fullSyncBuffer.chunks[idx] = payload.payload
+        // Tous reçus ?
+        let got = 0
+        for (const k in fullSyncBuffer.chunks) got++
+        if (got < count) return
+
+        // Réassemble dans l'ordre.
+        let joined = ""
+        for (let i = 0; i < count; i++) {
+            joined += fullSyncBuffer.chunks[i] || ""
+        }
+        fullSyncBuffer.chunks = ({})
+        fullSyncBuffer.expected = -1
+
+        let snapshot
+        try { snapshot = JSON.parse(joined) }
+        catch (e) {
+            console.warn("[FullSync] JSON parse failed:", e)
+            return
+        }
+
+        _applyFullSyncSnapshot(snapshot)
+    }
+
+    function _applyFullSyncSnapshot(snapshot) {
+        const tiles = (snapshot && snapshot.snapableTiles) || []
+        console.log("[FullSync] applying snapshot —", tiles.length, "tuiles reçues")
+        if (tiles.length > 0) {
+            console.log("[FullSync] sample incoming tile[0]:",
+                        JSON.stringify(tiles[0]).substring(0, 300))
+        }
+
+        EditorOpBus.beginApplyRemote()
+        try {
+            // 1) Wipe local (copie défensive, deleteElement modifie la liste).
+            const toDelete = snapableTilesList.slice()
+            console.log("[FullSync] wiping", toDelete.length, "tuiles locales")
+            for (let i = 0; i < toDelete.length; i++) {
+                if (toDelete[i]) logic.tileLogic.deleteElement(toDelete[i])
+            }
+            // 2) Reconstruit depuis le snapshot.
+            let rebuilt = 0
+            for (let j = 0; j < tiles.length; j++) {
+                const item = ItemSnapableFactory.createItemSnapableFromJson(tiles[j])
+                if (!item) {
+                    console.warn("[FullSync] createItemSnapableFromJson returned null for tile", j)
+                    continue
+                }
+                const newTile = logic.tileLogic.createItemSnapableTile(item)
+                if (newTile) rebuilt++
+                else console.warn("[FullSync] createItemSnapableTile returned null for tile", j)
+            }
+            console.log("[FullSync] rebuilt", rebuilt, "/", tiles.length, "tuiles")
+            // 3) Rétablit les connexions (next/prev) depuis les JSON.
+            logic.tileLogic.builtConnections()
+        } finally {
+            EditorOpBus.endApplyRemote()
+        }
+    }
+
+    Connections {
+        target: EditorSession
+
+        // Client qui vient de devenir actif → salue l'hôte pour réclamer un
+        // FullSync. Hôte n'envoie pas Hello.
+        function onActiveChanged() {
+            if (EditorSession.active && !EditorSession.isHost) {
+                console.log("[FullSync] client → envoi Hello (activeChanged)")
+                EditorSession.sendEvent(EditorMessageType.Hello, {
+                    "nickname": AccountManager.nickname || "",
+                    "assetPackHash": ""   // TODO phase 4b : calculer
+                })
+            }
+        }
+
+        function onEditorEventReceived(type, senderId, payload) {
+            const hex = "0x" + type.toString(16)
+            switch (type) {
+            case EditorMessageType.Hello:
+                console.log("[FullSync] host ← Hello from", senderId)
+                if (EditorSession.isHost) {
+                    _sendFullSyncTo(senderId)
+                }
+                break
+            case EditorMessageType.FullSync:
+                console.log("[FullSync] client ← chunk", payload.chunkIndex,
+                            "/", payload.chunkCount)
+                if (!EditorSession.isHost) {
+                    _receiveFullSyncChunk(payload)
+                }
+                break
+            default:
+                console.log("[EditorSession] event non implémenté:", hex)
+                break
+            }
+        }
+    }
+
     Connections {
         target: Game
 
@@ -358,6 +656,45 @@ Base_Board {
     }
 
     mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
+
+    // Badge de statut collaboratif. Visible uniquement quand EditorSession.active.
+    // Sert de confirmation visuelle à côté des logs console pendant les tests.
+    Rectangle {
+        id: collabBadge
+        visible: EditorSession.active
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 12
+        anchors.rightMargin: 12
+        z: 10000
+        width: badgeRow.implicitWidth + 20
+        height: badgeRow.implicitHeight + 10
+        radius: 6
+        color: EditorSession.isHost ? "#1e4d3a" : "#1e3a5f"
+        border.color: EditorSession.isHost ? "#22c55e" : "#3b82f6"
+        border.width: 1
+
+        Row {
+            id: badgeRow
+            anchors.centerIn: parent
+            spacing: 8
+            Rectangle {
+                width: 10
+                height: 10
+                radius: 5
+                anchors.verticalCenter: parent.verticalCenter
+                color: EditorSession.isHost ? "#22c55e" : "#3b82f6"
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: (EditorSession.isHost ? "Collab · Hôte" : "Collab · Client")
+                      + (EditorSession.sessionId ? "  (" + EditorSession.sessionId + ")" : "")
+                color: "#f4f4f5"
+                font.pixelSize: 12
+                font.bold: true
+            }
+        }
+    }
 
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {

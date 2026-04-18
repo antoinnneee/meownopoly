@@ -82,13 +82,28 @@ QJsonObject MapFileManager::readMapFile(const QString &mapName, MapTypes::MapTyp
     return doc.object();
 }
 
+QString MapFileManager::mapBasePath()
+{
+    static QString cached;
+    if (cached.isEmpty()) {
+        cached = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/map/";
+        QDir d(cached);
+        if (!d.exists()) {
+            d.mkpath(".");
+        }
+        qDebug() << "[MapFileManager] mapBasePath =" << cached;
+    }
+    return cached;
+}
+
 QStringList MapFileManager::getAvailableMaps()
 {
     QStringList maps;
-    QDir mapDir(MAP_FILE_PATH);
-    
+    const QString base = mapBasePath();
+    QDir mapDir(base);
+
     if (!mapDir.exists()) {
-        qDebug() << "Map directory does not exist:" << MAP_FILE_PATH;
+        qDebug() << "Map directory does not exist:" << base;
         return maps;
     }
     
@@ -302,5 +317,5 @@ QString MapFileManager::getMapFilePath(const QString &mapName, MapTypes::MapType
         break;
     }
     
-    return MAP_FILE_PATH + fileName;
+    return mapBasePath() + fileName;
 }

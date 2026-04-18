@@ -113,15 +113,18 @@ QtObject {
             if (newTile.snapToGridFromGridPos) {
                 newTile.snapToGridFromGridPos()
             }
-            // Phase 2: enregistrement d'op (log-only, aucune mutation ajoutée).
-            EditorOpBus.recordOp({
+            // Phase 3: embarquer la sérialisation JSON complète pour permettre
+            // le replay côté distant via ItemSnapableFactory.createItemSnapableFromJson.
+            let itemJson = {}
+            try {
+                itemJson = JSON.parse(itemSnapableData.toJSON())
+            } catch (e) {
+                console.warn("TileLogic: toJSON parse error", e)
+            }
+            EditorOpBus.submitOp({
                 "op":       EditorOpType.CreateItem,
                 "target":   String(itemSnapableData.uniqueId),
-                "tileType": itemSnapableData.tileType,
-                "gridX":    itemSnapableData.displayParameter.gridRelativePositionX,
-                "gridY":    itemSnapableData.displayParameter.gridRelativePositionY,
-                "w":        itemSnapableData.displayParameter.unitSizeWidth,
-                "h":        itemSnapableData.displayParameter.unitSizeHeight
+                "item":     itemJson
             })
         }
         return newTile

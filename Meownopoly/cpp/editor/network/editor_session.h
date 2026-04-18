@@ -77,6 +77,13 @@ public:
     /// Hôte uniquement : broadcast d'un événement à tous (reliable).
     Q_INVOKABLE void broadcastEvent(int type, const QJsonObject &payload = {});
 
+    /// Envoi point-à-point d'un événement éditeur (reliable).
+    /// Utilisé notamment par l'hôte pour pousser un FullSync au seul client
+    /// qui vient de rejoindre, sans polluer les autres pairs.
+    Q_INVOKABLE void sendEventTo(const QString &playerId,
+                                 int type,
+                                 const QJsonObject &payload = {});
+
     /// Mise à jour de curseur — UDP brut (lossy), haute fréquence.
     Q_INVOKABLE void sendCursor(qreal x, qreal y);
 

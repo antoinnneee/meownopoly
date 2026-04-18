@@ -162,6 +162,24 @@ void EditorSession::broadcastEvent(int type, const QJsonObject &payload)
     Catway::instance()->broadcastReliable(packet);
 }
 
+void EditorSession::sendEventTo(const QString &playerId, int type, const QJsonObject &payload)
+{
+    if (!m_active) return;
+    if (playerId.isEmpty()) {
+        qWarning() << "[EditorSession] sendEventTo: empty playerId";
+        return;
+    }
+    const QByteArray packet = EditorProtocol::pack(
+        static_cast<EditorMessageType::Value>(type), payload);
+    Catway *catway = Catway::instance();
+    PlayerNetwork *p = catway->playerById(playerId);
+    if (p) {
+        catway->sendReliableToPlayer(p, packet);
+    } else {
+        qWarning() << "[EditorSession] sendEventTo: player not found:" << playerId;
+    }
+}
+
 void EditorSession::sendOp(const QJsonObject &op)
 {
     sendEvent(EditorMessageType::Op, op);

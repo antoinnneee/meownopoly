@@ -1,5 +1,7 @@
 #include "editor_op_bus.h"
 
+#include "editor/network/editor_session.h"
+
 #include <QDebug>
 #include <QJsonDocument>
 #include <QUuid>
@@ -10,8 +12,10 @@ EditorOpBus::EditorOpBus(QObject *parent) : QObject(parent) {}
 
 EditorOpBus *EditorOpBus::instance()
 {
-    if (!m_pThis)
+    if (!m_pThis) {
         m_pThis = new EditorOpBus();
+        m_pThis->connectToEditorSession();
+    }
     return m_pThis;
 }
 
@@ -30,11 +34,64 @@ void EditorOpBus::registerQml()
                                      "Error: only enums");
 }
 
-void EditorOpBus::recordOp(const QJsonObject &op)
+void EditorOpBus::connectToEditorSession()
 {
-    qDebug().noquote() << "[EditorOpBus]"
+    if (m_sessionConnected) return;
+    EditorSession *sess = EditorSession::instance();
+    connect(sess, &EditorSession::opReceived,
+            this, &EditorOpBus::onSessionOpReceived);
+    m_sessionConnected = true;
+}
+
+void EditorOpBus::submitOp(const QJsonObject &op)
+{
+    // Garde anti-boucle : si on est en train d'appliquer une op distante,
+    // les mutations QML vont traverser ce chokepoint mais ne doivent pas
+    // être re-soumises au réseau.
+    if (m_isApplyingRemote) return;
+
+    qDebug().noquote() << "[EditorOpBus] submit"
                        << QJsonDocument(op).toJson(QJsonDocument::Compact);
     emit opRecorded(op);
+
+    // Phase 3 : si la session collaborative est active, envoyer l'op.
+    EditorSession *sess = EditorSession::instance();
+    if (sess->active()) {
+        sess->sendOp(op);
+    }
+}
+
+void EditorOpBus::onSessionOpReceived(const QString &senderId, const QJsonObject &op)
+{
+    Q_UNUSED(senderId);
+    qDebug().noquote() << "[EditorOpBus] remote from" << senderId
+                       << QJsonDocument(op).toJson(QJsonDocument::Compact);
+
+    // Positionne le flag pour que les mutations QML déclenchées par le replay
+    // soient droppées dans submitOp (empêche la ré-émission réseau).
+    beginApplyRemote();
+    emit remoteOpReceived(op);
+    endApplyRemote();
+}
+
+void EditorOpBus::beginApplyRemote()
+{
+    if (m_applyDepth++ == 0) {
+        m_isApplyingRemote = true;
+        emit isApplyingRemoteChanged();
+    }
+}
+
+void EditorOpBus::endApplyRemote()
+{
+    if (m_applyDepth <= 0) {
+        qWarning() << "[EditorOpBus] endApplyRemote called without matching begin";
+        return;
+    }
+    if (--m_applyDepth == 0) {
+        m_isApplyingRemote = false;
+        emit isApplyingRemoteChanged();
+    }
 }
 
 QString EditorOpBus::newUuid() const

@@ -8,8 +8,6 @@
 #include <QLockFile>
 #include "maptypes.h"
 
-#define MAP_FILE_PATH ("./map/")
-
 class MapFileManager : public QObject
 {
     Q_OBJECT
@@ -38,6 +36,13 @@ public:
     // Utility methods (static)
     static QString normalizeMapName(const QString &mapName);
     static QString getMapFilePath(const QString &mapName, MapTypes::MapType mapType);
+
+    /// Répertoire racine où les cartes sont stockées.
+    /// Utilise QStandardPaths::AppDataLocation — namespacé par applicationName
+    /// (défini dans main.cpp en fonction de --instance), donc chaque instance
+    /// a son propre répertoire quand on passe `--instance N`.
+    /// Crée le répertoire à la volée s'il n'existe pas.
+    Q_INVOKABLE static QString mapBasePath();
 
 private:
     explicit MapFileManager(QObject *parent = nullptr);

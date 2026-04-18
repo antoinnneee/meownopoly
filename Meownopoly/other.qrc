@@ -29,5 +29,8 @@
         <file>qml/test/CatwayTest/MinigameSyncPanel.qml</file>
         <file>qml/test/CatwayTest/MapSyncCard.qml</file>
         <file>qml/test/CatwayTest/BoardEventsCard.qml</file>
+        <file>qml/test/CatwayTest/EditorSessionPanel.qml</file>
+        <file>qml/test/CatwayTest/EditorOpsCard.qml</file>
+        <file>qml/test/CatwayTest/EditorNetworkTestTab.qml</file>
     </qresource>
 </RCC>
