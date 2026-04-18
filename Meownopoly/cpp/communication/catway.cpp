@@ -76,7 +76,7 @@ Catway::Catway(QObject *parent)
             p->setP2pConnected(false);
             emit log(QString("Player %1 timed out — marked as disconnected").arg(playerId));
         }
-        // Phase 8 : relay aux couches session (EditorSession, GameSession).
+        // relay aux couches session (EditorSession, GameSession).
         emit playerTimedOut(playerId);
     }, Qt::QueuedConnection);
 

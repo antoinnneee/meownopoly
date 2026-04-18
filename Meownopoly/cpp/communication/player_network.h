@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QVariantMap>
 #include "udp_socket_info.h"
 #include "reliable.h"
 
@@ -55,6 +56,15 @@ public:
 
     bool isP2pConnected() const { return m_p2pConnected; }
     void setP2pConnected(bool connected);
+
+    /// Stats transmission reliable.io. Retourne un snapshot {rtt, rttMin,
+    /// rttMax, rttAvg, packetLoss, sentBwKbps, recvBwKbps, ackedBwKbps,
+    /// packetsSent, packetsReceived, packetsAcked, packetsStale,
+    /// packetsInvalid, fragmentsSent, fragmentsReceived, fragmentsInvalid}.
+    /// Les champs sont lus sans verrou — le thread worker écrit en même
+    /// temps, mais lire des floats/uint64 reste safe pour un affichage UI
+    /// poll @ 2 Hz. Retourne une map vide si l'endpoint n'existe pas.
+    Q_INVOKABLE QVariantMap stats() const;
 
 signals:
     void playerIdChanged();

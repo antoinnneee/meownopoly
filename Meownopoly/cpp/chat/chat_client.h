@@ -54,7 +54,7 @@ public:
 
     Q_INVOKABLE void createSession(QString nameSession, QString pwdSession, QString idSession = AccountManager::getNewUniqueId());
 
-    /// Phase 8 — host migration : renommer la session courante (même
+    /// — host migration : renommer la session courante (même
     /// session_id, même participants). Utilisé par le client élu pour
     /// réécrire le prefix `[EDIT:<hostId>]` sans casser le canal chat.
     Q_INVOKABLE void renameSession(const QString &newName);
@@ -104,7 +104,7 @@ signals:
     /** Émis quand le serveur indique qu'une session a été créée par un autre client. */
     void sessionCreatedBroadcast(const QString &sessionId, const QString &sessionName);
 
-    /// Phase 8 — host migration : broadcast du chat server quand une session a
+    /// — host migration : broadcast du chat server quand une session a
     /// été renommée. availableSessions est déjà rafraîchi au moment de l'émission.
     void sessionRenamed(const QString &sessionId, const QString &sessionName);
     /** Émis quand on a été expulsé de la session par le host. */
@@ -148,6 +148,7 @@ private:
     void handleServerReset(const QJsonObject &payload);
     void handleSessionCreatedBroadcast(const QJsonObject &payload);
     void handleSessionRenamed(const QJsonObject &payload);
+    void handleSessionDeleted(const QJsonObject &payload);
     /** Vide totalement l'état de session côté client (clés, participants, messages). */
     void resetSessionState();
     void sendWebSocketMessage(const QJsonObject &message);

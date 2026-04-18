@@ -126,7 +126,7 @@ ApplicationWindow {
             appPositionY: root.y
             escMenu.onReturnToMainMenu: {
                 console.log("Retour au menu principal demandé")
-                // Phase 7 : si on est en session collaborative, couper proprement
+                // si on est en session collaborative, couper proprement
                 // avant de quitter l'éditeur (stop libère Catway et clear undo).
                 if (EditorSession.active) {
                     console.log("[main] EditorSession.stop (retour menu)")
@@ -135,7 +135,7 @@ ApplicationWindow {
                 }
                 stackView.pop()
             }
-            // Phase 8 : l'éditeur a détecté la nouvelle session lobby du
+            // l'éditeur a détecté la nouvelle session lobby du
             // nouvel hôte (après host migration) → on relance le p2pStateMachine
             // existant avec skipPush (l'éditeur est déjà au-dessus de la pile).
             onReconnectRequested: function(sessionId, hostId) {
@@ -145,7 +145,7 @@ ApplicationWindow {
                     console.warn("[main] Catway.chatClient null — abandon reconnect")
                     return
                 }
-                // Phase 8 : session_id inchangé (le nouvel hôte a juste
+                // session_id inchangé (le nouvel hôte a juste
                 // renommé la session côté serveur). Pas de re-join WS — on
                 // garde la même connexion, ses participants, son historique.
                 // Juste relancer le p2p state machine vers le nouvel hôte.
@@ -236,7 +236,7 @@ ApplicationWindow {
                 stackView.pop()
             }
 
-            // Phase 7 : host vient de créer une session (éditeur ou jeu).
+            // host vient de créer une session (éditeur ou jeu).
             // Si éditeur, on démarre EditorSession.startAsHost et on push l'éditeur.
             onLaunchNewSession: function(isEdition, hostId) {
                 if (!isEdition) {
@@ -292,7 +292,7 @@ ApplicationWindow {
         }
     }
 
-    // Phase 8 : quand le pair local se promeut hôte (host migration), on
+    // quand le pair local se promeut hôte (host migration), on
     // publie une nouvelle session lobby "[EDIT:<localId>] Map". Les clients
     // survivants la verront apparaître dans `availableSessions` et se
     // reconnecteront automatiquement (cf. Editor.onReconnectRequested).
@@ -303,7 +303,7 @@ ApplicationWindow {
                 console.warn("[main] promoteToHost: Catway.chatClient null — skip publish")
                 return
             }
-            // Phase 8 : on GARDE le même session_id pour que les survivants
+            // on GARDE le même session_id pour que les survivants
             // restent sur le même canal de chat (même historique, même clé).
             // On renomme juste le prefix [EDIT:...] pour que le lobby affiche
             // le nouvel hôte. Les survivants reconnaissent directement via
@@ -339,7 +339,7 @@ ApplicationWindow {
         property int attempts: 0
         property bool requestSent: false
         property bool holePunchSent: false
-        // Phase 8 : true quand on se reconnecte à un nouvel hôte (editor déjà
+        // true quand on se reconnecte à un nouvel hôte (editor déjà
         // dans la pile) — on n'empile pas un 2e Editor à la fin.
         property bool skipPush: false
         readonly property int maxAttempts: 50   // ~15 s

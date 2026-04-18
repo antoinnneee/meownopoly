@@ -52,7 +52,7 @@ void EditorOpBus::submitOp(const QJsonObject &op)
 
     EditorSession *sess = EditorSession::instance();
 
-    // Phase 8 : rate-limit local (collab uniquement). En monoposte, pas de
+    // rate-limit local (collab uniquement). En monoposte, pas de
     // raison de throttle — l'autosave encaisse déjà les rafales.
     if (sess->active()) {
         if (!m_localClock.isValid()) { m_localClock.start(); m_localLastMs = 0; }
@@ -73,7 +73,7 @@ void EditorOpBus::submitOp(const QJsonObject &op)
                        << QJsonDocument(op).toJson(QJsonDocument::Compact);
     emit opRecorded(op);
 
-    // Phase 3 : si la session collaborative est active, envoyer l'op.
+    // si la session collaborative est active, envoyer l'op.
     if (sess->active()) {
         sess->sendOp(op);
     }
@@ -82,7 +82,7 @@ void EditorOpBus::submitOp(const QJsonObject &op)
 void EditorOpBus::onSessionOpReceived(const QString &senderId, const QJsonObject &op)
 {
     Q_UNUSED(senderId);
-    // Phase 8 : log structuré {seq, by, type} pour post-mortem.
+    // log structuré {seq, by, type} pour post-mortem.
     qDebug().noquote() << "[EditorOpBus] apply seq="
                        << op.value("_seq").toDouble(0)
                        << "by=" << op.value("_by").toString(senderId)

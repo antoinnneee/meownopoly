@@ -45,7 +45,7 @@ class EditorSession : public QObject
     /// pair se déconnecte (best-effort, timeouts non implémentés en v1).
     Q_PROPERTY(QVariantMap remoteSelections READ remoteSelections NOTIFY remoteSelectionsChanged)
 
-    /// Phase 8 : roster connu des clients (du point de vue du dernier
+    /// roster connu des clients (du point de vue du dernier
     /// `PlayerRoster` reçu de l'hôte). Utilisé pour l'élection de succession
     /// quand l'hôte tombe. N'inclut PAS l'hôte lui-même.
     Q_PROPERTY(QStringList knownRoster READ knownRoster NOTIFY knownRosterChanged)
@@ -63,14 +63,14 @@ public:
     QVariantMap remoteSelections() const { return m_remoteSelections; }
     QStringList knownRoster() const { return m_knownRoster; }
 
-    /// Phase 8 : détermine (déterministiquement) l'id du nouvel hôte parmi les
+    /// détermine (déterministiquement) l'id du nouvel hôte parmi les
     /// survivants. Basé uniquement sur le roster cache + localPlayerId, en
     /// excluant l'ancien hôte. Plus petit id lexicographique gagne. Tous les
     /// pairs qui partagent le même roster élisent le même gagnant.
     /// Retourne QString() si aucun candidat.
     Q_INVOKABLE QString electNewHost() const;
 
-    /// Phase 8 : bascule le pair local en hôte tout en préservant l'état local
+    /// bascule le pair local en hôte tout en préservant l'état local
     /// (tuiles, pile undo). Appelé par le client élu à la perte de l'hôte.
     /// Retourne false si la session n'était pas active.
     Q_INVOKABLE bool promoteToHost();
@@ -134,24 +134,24 @@ signals:
     /// Mise à jour de curseur d'un autre joueur (UDP brut).
     void cursorReceived(const QString &senderId, qreal x, qreal y);
 
-    /// Phase 8 : l'hôte est tombé (timeout Catway). `electedHostId` est l'id
+    /// l'hôte est tombé (timeout Catway). `electedHostId` est l'id
     /// du nouvel hôte désigné par l'élection (ou vide si aucun candidat). Si
     /// `electedHostId == localPlayerId`, le pair local doit s'auto-promouvoir
     /// via `promoteToHost()`. Sinon, fallback monoposte recommandé.
     void hostLost(const QString &electedHostId);
 
-    /// Phase 8 : émis une fois que `promoteToHost()` a réussi. Main.qml s'en
+    /// émis une fois que `promoteToHost()` a réussi. Main.qml s'en
     /// sert pour publier une nouvelle session lobby et permettre aux clients
     /// survivants de découvrir et rejoindre le nouvel hôte automatiquement.
     void promotedToHost();
 
     void knownRosterChanged();
 
-    /// Phase 8 : un pair a quitté (timeout). Émis côté hôte. Les consumers QML
+    /// un pair a quitté (timeout). Émis côté hôte. Les consumers QML
     /// doivent purger curseur/sélection associés au `playerId`.
     void peerLeft(const QString &playerId);
 
-    /// Phase 8 : op rate-limitée côté hôte → notif locale à l'émetteur.
+    /// op rate-limitée côté hôte → notif locale à l'émetteur.
     void opRateLimited(const QString &senderId, int dropped);
 
     void activeChanged();
@@ -176,20 +176,20 @@ private:
     /// Hôte : relay un paquet fiable à tous les joueurs P2P connectés sauf senderId.
     void relayReliableToOthers(const QString &senderId, const QByteArray &packet);
 
-    /// Phase 8 : send avec fallback chunké si packet > k_chunkThresholdBytes.
+    /// send avec fallback chunké si packet > k_chunkThresholdBytes.
     /// Route le paquet à travers sendFn(playerId, bytes).
     void sendReliableOrChunked(const QString &playerId,
                                EditorMessageType::Value type,
                                const QJsonObject &payload,
                                bool broadcast);
 
-    /// Phase 8 : rate-limit token bucket par sender. Retourne true si accepté.
+    /// rate-limit token bucket par sender. Retourne true si accepté.
     bool consumeOpToken(const QString &senderId);
 
-    /// Phase 8 : accumulation des chunks OpChunk par (senderId, opId).
+    /// accumulation des chunks OpChunk par (senderId, opId).
     void handleOpChunk(const QString &senderId, const QJsonObject &payload);
 
-    /// Phase 8 : (hôte) construit et diffuse le roster courant à tous.
+    /// (hôte) construit et diffuse le roster courant à tous.
     void broadcastRoster();
 
     bool    m_active        = false;
@@ -198,22 +198,22 @@ private:
     QString m_hostPlayerId;
     QString m_sessionId;
     QVariantMap m_remoteSelections;  // playerId → QStringList d'uuids
-    QStringList m_knownRoster;       // Phase 8 : clients connus (hors hôte)
+    QStringList m_knownRoster;       // clients connus (hors hôte)
 
     QMetaObject::Connection m_reliableConn;
     QMetaObject::Connection m_udpConn;
     QMetaObject::Connection m_timeoutConn;
 
-    // Phase 8 : compteur monotone attribué côté hôte à chaque op rebroadcastée.
+    // compteur monotone attribué côté hôte à chaque op rebroadcastée.
     quint64 m_serverSeq = 0;
 
-    // Phase 8 : rate-limit. Token bucket par sender (capacité k_opBurst,
+    // rate-limit. Token bucket par sender (capacité k_opBurst,
     // refill k_opRatePerSec). Clé = senderId (ou localPlayerId pour local).
     struct TokenBucket { double tokens; qint64 lastRefillMs; };
     QHash<QString, TokenBucket> m_opBuckets;
     QElapsedTimer m_rateClock;
 
-    // Phase 8 : réassemblage des ops chunkées. Clé = senderId + "/" + opId.
+    // réassemblage des ops chunkées. Clé = senderId + "/" + opId.
     struct ChunkBuffer {
         int      chunkCount = 0;
         int      origType   = 0;

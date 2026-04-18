@@ -120,6 +120,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleSessionCreatedBroadcast(payload);
     } else if (type == "SESSION_RENAMED") {
         handleSessionRenamed(payload);
+    } else if (type == "SESSION_DELETED") {
+        handleSessionDeleted(payload);
     } else {
         Logger::instance()->warn(QString("Unhandled server message type: %1").arg(type), "ChatClient");
     }
@@ -185,6 +187,21 @@ void ChatClient::handleServerReset(const QJsonObject &payload) {
     // Refresh disponible sessions list (now empty)
     m_availableSessions.clear();
     emit availableSessionsChanged();
+}
+
+void ChatClient::handleSessionDeleted(const QJsonObject &payload) {
+    const QString sessionId = payload["session_id"].toString();
+    Logger::instance()->debug(QString("Session %1 deleted on server").arg(sessionId),
+                              "ChatClient");
+    bool changed = false;
+    for (int i = m_availableSessions.size() - 1; i >= 0; --i) {
+        if (m_availableSessions[i].toMap().value("sessionId").toString() == sessionId) {
+            m_availableSessions.removeAt(i);
+            changed = true;
+            break;
+        }
+    }
+    if (changed) emit availableSessionsChanged();
 }
 
 void ChatClient::handleSessionRenamed(const QJsonObject &payload) {

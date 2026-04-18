@@ -46,7 +46,7 @@ Item {
                 onLayerClicked: function(index){
                     console.log("layer " + index + "clicked")
                     layerChanged(index +1)
-                    // Phase 2: SetDisplayParameter{zLayer} (log-only).
+                    // SetDisplayParameter{zLayer} (log-only).
                     if (targetElement && targetElement.snapableParameters) {
                         EditorOpBus.recordOp({
                             "op":     EditorOpType.SetDisplayParameter,

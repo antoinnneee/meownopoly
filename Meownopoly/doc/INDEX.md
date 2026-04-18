@@ -22,6 +22,11 @@ Documentation technique sur l'architecture du système et les composants.
 - [📖 Analyse Complète](./architecture/ANALYSE_ARCHITECTURE_EDITEUR.md) - Analyse détaillée de l'éditeur (12 sections)
 - [📋 Résumé](./architecture/RESUME_ARCHITECTURE_EDITEUR.md) - Vue d'ensemble rapide avec points clés
 - [📊 Diagrammes](./architecture/DIAGRAMMES_ARCHITECTURE_EDITEUR.md) - Diagrammes visuels ASCII
+- [🌐 Éditeur Collaboratif](./architecture/COLLABORATIVE_EDITOR.md) - Stack réseau collab, op bus, host migration, stats transmission
+
+### Réseau
+- [Architecture Catway](./architecture/CATWAY_ARCHITECTURE.md) - Threading, I/O, reliable.io
+- [Réseau P2P](./architecture/P2P_NETWORK_ARCHITECTURE.md) - UDP hole-punching, signaling, reliable
 
 ### Systèmes
 - [Gestionnaire d'Assets](./architecture/ASSET_MANAGER.md) - Système de gestion des ressources
@@ -97,6 +102,7 @@ Documentation sur les fonctionnalités spécifiques.
 
 | Date | Document | Modification |
 |------|----------|--------------|
+| 2026-04-18 | Architecture/Collab Editor | Nouveau : stack collaborative (EditorSession, EditorOpBus, host migration, stats reliable.io) |
 | 2026-04-10 | Architecture/Launcher | Ajout queue, retry, checksum, timeout, modèles 3D, auth |
 | 2026-04-10 | Architecture/Asset Manager | Ajout section modèles 3D |
 | 2026-04-10 | Features/Serveur Ressources | Routes modèles 3D, sécurité, Range, async I/O |

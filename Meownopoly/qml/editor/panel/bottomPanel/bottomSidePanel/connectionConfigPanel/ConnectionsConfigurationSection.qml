@@ -230,7 +230,7 @@ CollapsableGroupBox {
                     
                     onRemoveElement: function(element, index) {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
-                            // Phase 3+6 : unlink + inverse (link) pour undo.
+                            // unlink + inverse (link) pour undo.
                             if (root.targetSnapableElement.snapableParameters && element && element.snapableParameters) {
                                 const sid = String(root.targetSnapableElement.snapableParameters.uniqueId)
                                 const tid = String(element.snapableParameters.uniqueId)
@@ -282,7 +282,7 @@ CollapsableGroupBox {
                     
                     onRemoveElement: function(element, index) {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
-                            // Phase 3+6 : unlink + inverse (link) pour undo.
+                            // unlink + inverse (link) pour undo.
                             if (root.targetSnapableElement.snapableParameters && element && element.snapableParameters) {
                                 const sid = String(root.targetSnapableElement.snapableParameters.uniqueId)
                                 const tid = String(element.snapableParameters.uniqueId)

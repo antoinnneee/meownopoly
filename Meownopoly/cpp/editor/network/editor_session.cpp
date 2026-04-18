@@ -133,7 +133,7 @@ void EditorSession::connectToCatway()
                              this,   &EditorSession::onReliableReceived);
     m_udpConn      = connect(catway, &Catway::udpMessageReceived,
                              this,   &EditorSession::onUdpReceived);
-    // Phase 8 : détection de perte de pair.
+    // détection de perte de pair.
     m_timeoutConn  = connect(catway, &Catway::playerTimedOut,
                              this,   &EditorSession::onPlayerTimedOut);
     if (!m_rateClock.isValid()) m_rateClock.start();
@@ -185,7 +185,7 @@ void EditorSession::sendEventTo(const QString &playerId, int type, const QJsonOb
                           payload, /*broadcast=*/false);
 }
 
-// Phase 8 : envoi reliable avec fallback chunké OpChunk si le paquet dépasse
+// envoi reliable avec fallback chunké OpChunk si le paquet dépasse
 // k_chunkThresholdBytes. Le chunking ne s'applique qu'aux messages d'éditeur
 // dont la perte de framing peut être contournée (on n'entoure pas Hello).
 void EditorSession::sendReliableOrChunked(const QString &playerId,
@@ -239,7 +239,7 @@ void EditorSession::sendReliableOrChunked(const QString &playerId,
     }
 }
 
-// Phase 8 : retourne true si l'op est autorisée, false si rate-limitée.
+// retourne true si l'op est autorisée, false si rate-limitée.
 bool EditorSession::consumeOpToken(const QString &senderId)
 {
     const qint64 nowMs = m_rateClock.isValid() ? m_rateClock.elapsed() : 0;
@@ -309,7 +309,7 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
     switch (type) {
     case EditorMessageType::Op: {
         QJsonObject opPayload = payload;
-        // Phase 8 : côté hôte, rate-limit par expéditeur et tag d'un _seq monotone
+        // côté hôte, rate-limit par expéditeur et tag d'un _seq monotone
         // avant rebroadcast — les clients loggent le _seq pour corrélation.
         if (m_isHost) {
             if (!consumeOpToken(senderId)) {
@@ -343,7 +343,7 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
         break;
 
     case EditorMessageType::Hello:
-        // Phase 8 : l'hôte agrège le roster à la volée. Le premier Hello
+        // l'hôte agrège le roster à la volée. Le premier Hello
         // d'un client l'ajoute ; on rediffuse à tous pour que chacun puisse
         // élire un successeur déterministe en cas de perte de l'hôte.
         if (m_isHost && !senderId.isEmpty() && !m_knownRoster.contains(senderId)) {
@@ -355,7 +355,7 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
         break;
 
     case EditorMessageType::PlayerRoster: {
-        // Phase 8 : côté client, cacher la nouvelle snapshot du roster.
+        // côté client, cacher la nouvelle snapshot du roster.
         if (!m_isHost) {
             QStringList newRoster;
             const QJsonArray arr = payload.value("players").toArray();
@@ -421,7 +421,7 @@ void EditorSession::onUdpReceived(const QString &senderId, const QString &messag
     emit cursorReceived(senderId, x, y);
 }
 
-// Phase 8 : réassemblage des ops chunkées. Une fois tous les fragments reçus,
+// réassemblage des ops chunkées. Une fois tous les fragments reçus,
 // on reconstruit le paquet original et on le ré-injecte dans onReliableReceived
 // pour suivre le même chemin que les ops non-chunkées (rate-limit, seq, etc.).
 void EditorSession::handleOpChunk(const QString &senderId, const QJsonObject &payload)
@@ -465,7 +465,7 @@ void EditorSession::handleOpChunk(const QString &senderId, const QJsonObject &pa
     onReliableReceived(senderId, rebuilt);
 }
 
-// Phase 8 : diffuse le roster courant à tous les clients.
+// diffuse le roster courant à tous les clients.
 void EditorSession::broadcastRoster()
 {
     if (!m_isHost) return;
@@ -475,7 +475,7 @@ void EditorSession::broadcastRoster()
                    QJsonObject{{ "players", arr }});
 }
 
-// Phase 8 : élection déterministe. Candidats = roster cache ∪ {self} privé
+// élection déterministe. Candidats = roster cache ∪ {self} privé
 // de l'ancien hôte. Gagnant = plus petit id lexicographique.
 QString EditorSession::electNewHost() const
 {
@@ -488,7 +488,7 @@ QString EditorSession::electNewHost() const
     return candidates.first();
 }
 
-// Phase 8 : bascule du rôle client → hôte en préservant l'état local.
+// bascule du rôle client → hôte en préservant l'état local.
 bool EditorSession::promoteToHost()
 {
     if (!m_active) {
@@ -505,14 +505,14 @@ bool EditorSession::promoteToHost()
     return ok;
 }
 
-// Phase 8 : perte d'un pair détectée par Catway. Côté client, si c'est l'hôte
+// perte d'un pair détectée par Catway. Côté client, si c'est l'hôte
 // qui tombe → on arrête la session (le QML reprend en mode monoposte avec son
 // snapshot local). Côté hôte, on purge la présence et notifie les clients.
 void EditorSession::onPlayerTimedOut(const QString &playerId)
 {
     if (!m_active) return;
     if (!m_isHost && playerId == m_hostPlayerId) {
-        // Phase 8 : élection déterministe sur la base du dernier roster cache
+        // élection déterministe sur la base du dernier roster cache
         // reçu de l'ancien hôte. Tous les survivants qui partagent le même
         // roster élisent le même gagnant → pas de négociation nécessaire.
         //
@@ -542,7 +542,7 @@ void EditorSession::onPlayerTimedOut(const QString &playerId)
         }
         for (const QString &k : toDrop) m_chunkBuffers.remove(k);
 
-        // Phase 8 : retirer du roster + rediffuser la nouvelle liste.
+        // retirer du roster + rediffuser la nouvelle liste.
         if (m_knownRoster.removeAll(playerId) > 0) {
             emit knownRosterChanged();
             broadcastRoster();

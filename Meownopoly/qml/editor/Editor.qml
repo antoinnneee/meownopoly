@@ -71,7 +71,7 @@ Base_Board {
     signal openNewMapMenu
     property alias entity: gameScene.entity
 
-    // Phase 8 : la reconnexion auto après host migration est pilotée par main.qml
+    // la reconnexion auto après host migration est pilotée par main.qml
     // (qui possède le p2pStateMachine). Émis depuis `onHostLost` quand le pair
     // local n'est pas élu — la session de chat reste la MÊME (le nouvel hôte
     // l'a juste renommée côté serveur), donc pas de re-join chat nécessaire.
@@ -92,7 +92,7 @@ Base_Board {
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
 
-        // Phase 4 : si la session collab est déjà active lors de l'ouverture
+        // si la session collab est déjà active lors de l'ouverture
         // de l'éditeur (cas usuel : startAsClient déclenché depuis le panel
         // de test avant navigation), le signal `activeChanged` est déjà passé
         // → on déclenche manuellement le Hello côté client.
@@ -351,7 +351,7 @@ Base_Board {
         }
     }
 
-    // Phase 3: applier distant. EditorOpBus positionne `isApplyingRemote=true`
+    // applier distant. EditorOpBus positionne `isApplyingRemote=true`
     // pendant l'émission — les mutations déclenchées ci-dessous passeront par
     // submitOp mais seront droppées (pas de re-broadcast, pas de boucle).
     Connections {
@@ -484,7 +484,7 @@ Base_Board {
         }
     }
 
-    // ─── Phase 4 : full-sync à la connexion ─────────────────────────────────
+    // ─── full-sync à la connexion ─────────────────────────────────
     //
     // Protocole :
     //   1. Client devient actif → envoie Hello à l'hôte.
@@ -624,7 +624,7 @@ Base_Board {
                 console.log("[FullSync] client → envoi Hello (activeChanged)")
                 EditorSession.sendEvent(EditorMessageType.Hello, {
                     "nickname": AccountManager.nickname || "",
-                    "assetPackHash": ""   // TODO phase 4b : calculer
+                    "assetPackHash": ""   // TODO: calculer
                 })
             }
         }
@@ -651,12 +651,12 @@ Base_Board {
             }
         }
 
-        // Phase 5a : curseur distant reçu (UDP brut, ~20 Hz).
+        // curseur distant reçu (UDP brut, ~20 Hz).
         function onCursorReceived(senderId, x, y) {
             root._upsertRemoteCursor(senderId, x, y)
         }
 
-        // Phase 8 : hôte perdu. L'élection détermine le nouvel hôte de façon
+        // hôte perdu. L'élection détermine le nouvel hôte de façon
         // déterministe (plus petit playerId du roster cache, ancien hôte exclu).
         // - Si `electedHostId === localPlayerId` : promotion auto, l'état local
         //   est préservé et le pair devient hôte (les autres doivent rejoindre
@@ -673,7 +673,7 @@ Base_Board {
                 console.log("[EditorSession] Je suis le nouvel hôte — promotion.")
                 EditorSession.promoteToHost()
             } else if (electedHostId) {
-                // Phase 8 : le nouvel hôte a conservé la MÊME session de chat
+                // le nouvel hôte a conservé la MÊME session de chat
                 // (rename côté serveur, pas de createSession). Donc on peut
                 // relancer P2P directement sur la session actuelle — pas de
                 // polling, pas d'attente de découverte.
@@ -692,7 +692,7 @@ Base_Board {
             }
         }
 
-        // Phase 8 : un pair a quitté → purge curseur/sélection locale.
+        // un pair a quitté → purge curseur/sélection locale.
         function onPeerLeft(playerId) {
             console.log("[EditorSession] pair parti:", playerId)
             const copy = {}
@@ -702,13 +702,13 @@ Base_Board {
             root._remoteCursorKeys = Object.keys(copy)
         }
 
-        // Phase 8 : op rejetée (rate-limit ou autre) → log côté auteur.
+        // op rejetée (rate-limit ou autre) → log côté auteur.
         function onOpRejected(reject) {
             console.warn("[EditorSession] op rejetée:", JSON.stringify(reject))
         }
     }
 
-    // ─── Phase 5a : présence curseurs ───────────────────────────────────────
+    // ─── présence curseurs ───────────────────────────────────────
     //
     // Envoi : timer 20 Hz qui pousse la position `mainMa` (mappée en workArea
     // coords) via EditorSession.sendCursor. La position côté pair s'affiche
@@ -758,7 +758,7 @@ Base_Board {
             // plutôt que mainMa.mouseX/mouseY — ces derniers sont masqués par
             // les MouseAreas enfants (tuiles, grille) qui consomment le hover.
             //
-            // Phase 8 fix : conversion en unités de grille avant envoi. Le
+            // conversion en unités de grille avant envoi. Le
             // repère commun entre pairs est la position en cases (fractionnelle),
             // invariante par zoom (gridSize local) et résolution d'écran. Les
             // coords workArea en pixels dépendent de `mmSize` qui peut différer
@@ -776,7 +776,7 @@ Base_Board {
         }
     }
 
-    // Phase 5a (bug drag) : pendant un drag-select, le HoverHandler de workArea
+    // pendant un drag-select, le HoverHandler de workArea
     // cesse d'émettre (pointeur grabbed par mainMa). On complète la source de
     // position avec mainMa.onPositionChanged — qui fire aussi pendant le press —
     // en mappant les coords root→workArea. Les deux sources coexistent sans
@@ -814,7 +814,7 @@ Base_Board {
         }
     }
 
-    // ─── Phase 5b : broadcast de la sélection locale ────────────────────────
+    // ─── broadcast de la sélection locale ────────────────────────
     //
     // Connectée sur selectedElementsChanged de mouseLogic : debounce 100 ms,
     // puis envoie SelectionUpdate{uuids} en reliable. L'hôte rebroadcast
@@ -851,7 +851,7 @@ Base_Board {
         function onFoundItemSnapableTile(itemSnapableData) {
             Logger.info("Found itemSnapable tile:" + itemSnapableData,
                         "MAP_LOADING")
-            // Phase 4 (bug) : load disque ne doit JAMAIS émettre d'op réseau.
+            // load disque ne doit JAMAIS émettre d'op réseau.
             // Filet de sécurité : wrap begin/endApplyRemote → submitOp drop.
             EditorOpBus.beginApplyRemote()
             try {
@@ -948,6 +948,151 @@ Base_Board {
                 font.bold: true
             }
         }
+
+        // Click sur le badge → toggle du panneau de stats réseau.
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: netStatsPanel.open = !netStatsPanel.open
+            acceptedButtons: Qt.LeftButton
+        }
+    }
+
+    // panneau de stats de transmission (reliable.io par pair).
+    // Toggle via clic sur le badge collab. Poll @ 2 Hz.
+    Rectangle {
+        id: netStatsPanel
+        property bool open: false
+        visible: EditorSession.active && open
+        anchors.top: collabBadge.bottom
+        anchors.right: parent.right
+        anchors.topMargin: 6
+        anchors.rightMargin: 12
+        z: 10000
+        width: Math.max(320, statsCol.implicitWidth + 20)
+        height: statsCol.implicitHeight + 16
+        radius: 8
+        color: "#0f172a"
+        border.color: "#334155"
+        border.width: 1
+        opacity: 0.95
+
+        // Snapshot rafraîchi par le timer. Clé = playerId, valeur = map stats.
+        property var snapshots: ({})
+        property int tick: 0  // force ré-évaluation du Repeater
+
+        Timer {
+            interval: 500
+            repeat: true
+            running: netStatsPanel.visible
+            onTriggered: {
+                const snap = {}
+                const n = Catway.playersCount()
+                for (let i = 0; i < n; ++i) {
+                    const p = Catway.playerAt(i)
+                    if (p && p.p2pConnected && p.playerId)
+                        snap[p.playerId] = p.stats()
+                }
+                netStatsPanel.snapshots = snap
+                netStatsPanel.tick += 1
+            }
+        }
+
+        function _fmt(n, digits) {
+            if (n === undefined || n === null) return "—"
+            return Number(n).toFixed(digits === undefined ? 1 : digits)
+        }
+
+        function _playerIds() {
+            const k = []
+            for (const id in netStatsPanel.snapshots) k.push(id)
+            k.sort()
+            return k
+        }
+
+        Column {
+            id: statsCol
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 8
+
+            Row {
+                spacing: 6
+                Text {
+                    text: "📊 Réseau (reliable.io)"
+                    color: "#f1f5f9"
+                    font.pixelSize: 12
+                    font.bold: true
+                }
+                Text {
+                    text: "pairs: " + Object.keys(netStatsPanel.snapshots).length
+                    color: "#94a3b8"
+                    font.pixelSize: 11
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: "#1e293b" }
+
+            Repeater {
+                model: (netStatsPanel.tick, netStatsPanel._playerIds())
+                delegate: Column {
+                    width: statsCol.width
+                    spacing: 3
+                    readonly property var s: netStatsPanel.snapshots[modelData] || ({})
+
+                    Text {
+                        text: modelData.substring(0, 12)
+                              + (EditorSession.hostPlayerId === modelData ? "  🛡️ hôte" : "")
+                        color: "#cbd5e1"
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.family: "Consolas, Monaco, monospace"
+                    }
+                    Grid {
+                        columns: 4
+                        columnSpacing: 10
+                        rowSpacing: 2
+                        Text { text: "RTT";    color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: netStatsPanel._fmt(s.rtt) + " ms";    color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "loss";   color: "#64748b"; font.pixelSize: 10 }
+                        Text {
+                            text: netStatsPanel._fmt((s.packetLoss || 0) * 100) + " %"
+                            color: (s.packetLoss || 0) > 0.05 ? "#f87171" : "#e2e8f0"
+                            font.pixelSize: 10
+                            font.family: "Consolas, Monaco, monospace"
+                        }
+                        Text { text: "sent";   color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: netStatsPanel._fmt(s.sentBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "recv";   color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: netStatsPanel._fmt(s.recvBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "acked";  color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: netStatsPanel._fmt(s.ackedBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "pkts";   color: "#64748b"; font.pixelSize: 10 }
+                        Text {
+                            text: (s.packetsSent || 0) + "↑ / " + (s.packetsAcked || 0) + "✓"
+                            color: "#e2e8f0"
+                            font.pixelSize: 10
+                            font.family: "Consolas, Monaco, monospace"
+                        }
+                        Text { text: "frag";   color: "#64748b"; font.pixelSize: 10 }
+                        Text {
+                            text: (s.fragmentsSent || 0) + "↑ / " + (s.fragmentsReceived || 0) + "↓"
+                            color: "#e2e8f0"
+                            font.pixelSize: 10
+                            font.family: "Consolas, Monaco, monospace"
+                        }
+                    }
+                }
+            }
+
+            Text {
+                visible: Object.keys(netStatsPanel.snapshots).length === 0
+                text: "Aucun pair P2P connecté."
+                color: "#64748b"
+                font.pixelSize: 10
+                font.italic: true
+            }
+        }
     }
 
     // Zone de travail de l'éditeur (par-dessus la grille)
@@ -956,7 +1101,7 @@ Base_Board {
         z: UiStyle.z_WORKAREA
         anchors.fill: gameGrid
 
-        // Phase 5a : tracking position souris en mode hover (sans clic).
+        // tracking position souris en mode hover (sans clic).
         // HoverHandler coexiste avec les MouseAreas des tuiles/grille et
         // reporte une position même quand un enfant capte les évènements.
         HoverHandler {
@@ -986,10 +1131,10 @@ Base_Board {
                                   adminCommandPanel)
         }
 
-        // Phase 5a : overlay des curseurs distants. Enfant de workArea pour
+        // overlay des curseurs distants. Enfant de workArea pour
         // suivre scroll/zoom du grid.
         //
-        // Phase 8 fix : les coordonnées reçues sont en UNITÉS DE GRILLE
+        // les coordonnées reçues sont en UNITÉS DE GRILLE
         // (fractionnelles), pas en pixels. Conversion locale via
         // `gameGrid.gridSize` — invariant par zoom : case N s'affiche à la
         // même position-case quel que soit mmSize. Rebinding automatique
@@ -1293,7 +1438,7 @@ Base_Board {
             id: saveMapDelayer
             interval: 200
 
-            // Phase 2: au commit debouncé, émettre les ops correspondant à l'état
+            // au commit debouncé, émettre les ops correspondant à l'état
             // courant des panels (effets visuels, settings physiques), une par
             // élément sélectionné. Log-only.
             property string pendingOpKind: ""  // "display" | "zone" | ""
@@ -1305,17 +1450,22 @@ Base_Board {
                 if (pendingOpKind === "display") {
                     const effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
                     const fields = {
-                        "effectBrightness":   effects.brightness,
-                        "effectContrast":     effects.contrast,
-                        "effectSaturation":   effects.saturation,
-                        "effectColorization": effects.colorization,
-                        "effectBlurEnabled":  effects.blurEnabled,
-                        "effectBlur":         effects.blur,
-                        "effectShadowEnabled": effects.shadowEnabled,
-                        "effectShadowBlur":   effects.shadowBlur,
-                        "rotationAngle":      effects.rotationAngle,
-                        "mirrorHorizontal":   effects.mirrorHorizontal,
-                        "mirrorVertical":     effects.mirrorVertical
+                        "effectBrightness":        effects.brightness,
+                        "effectContrast":          effects.contrast,
+                        "effectSaturation":        effects.saturation,
+                        "effectColorization":      effects.colorization,
+                        // la couleur de colorization était absente
+                        // → les pairs voyaient l'intensité changer mais pas la
+                        // teinte choisie. On envoie la string #RRGGBB, que le
+                        // QColor côté remote accepte via assignation.
+                        "effectColorizationColor": String(effects.colorizationColor),
+                        "effectBlurEnabled":       effects.blurEnabled,
+                        "effectBlur":              effects.blur,
+                        "effectShadowEnabled":     effects.shadowEnabled,
+                        "effectShadowBlur":        effects.shadowBlur,
+                        "rotationAngle":           effects.rotationAngle,
+                        "mirrorHorizontal":        effects.mirrorHorizontal,
+                        "mirrorVertical":          effects.mirrorVertical
                     }
                     for (var i = 0; i < els.length; i++) {
                         if (!els[i] || !els[i].snapableParameters) continue

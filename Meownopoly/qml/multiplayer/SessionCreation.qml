@@ -27,8 +27,9 @@ Rectangle {
     // État du formulaire — seul le nom est obligatoire
     property bool formValid: sessionNameInput.text.length >= 3
 
-    // Mode : Edition ou Jeu
-    property bool isEditionMode: false
+    // Mode : Edition ou Jeu — par défaut on crée une session éditeur collab
+    // (le mode "Jeu" n'est pas encore câblé sur le networking côté main.qml).
+    property bool isEditionMode: true
 
     // ═══════════════════════════════════════
     // Palette Dynamique (Orange 🎮 <-> Violet 🛠️)

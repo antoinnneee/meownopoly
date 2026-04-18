@@ -353,7 +353,7 @@ Rectangle {
         snapableParameters.zoneParameter.accelerationMultiplier = physicSettings.accelerationMultiplier
     }
 
-    // ─── Phase 5b : liserés des sélections distantes ───────────────────────
+    // ─── liserés des sélections distantes ───────────────────────
     //
     // Recalculé sur remoteSelectionsChanged (NOTIFY de la Q_PROPERTY C++).
     // Retourne la liste des playerIds qui ont cette tuile dans leur sélection.
