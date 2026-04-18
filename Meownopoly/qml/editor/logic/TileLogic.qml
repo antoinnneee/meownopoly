@@ -8,6 +8,7 @@ import "../../meowComponent/preview"
 import ".."
 import MapTypes
 import ItemSnapableFactory
+import EditorOpBus 1.0
 
 QtObject {
     required property var snapableTilesList
@@ -106,12 +107,22 @@ QtObject {
             "snapableParameters": itemSnapableData
         }) : null
 
-        if (newTile) {            
+        if (newTile) {
             snapableTilesList.push(newTile)
             logic.snapableTilesListUpdated()
             if (newTile.snapToGridFromGridPos) {
                 newTile.snapToGridFromGridPos()
             }
+            // Phase 2: enregistrement d'op (log-only, aucune mutation ajoutée).
+            EditorOpBus.recordOp({
+                "op":       EditorOpType.CreateItem,
+                "target":   String(itemSnapableData.uniqueId),
+                "tileType": itemSnapableData.tileType,
+                "gridX":    itemSnapableData.displayParameter.gridRelativePositionX,
+                "gridY":    itemSnapableData.displayParameter.gridRelativePositionY,
+                "w":        itemSnapableData.displayParameter.unitSizeWidth,
+                "h":        itemSnapableData.displayParameter.unitSizeHeight
+            })
         }
         return newTile
     }
@@ -130,6 +141,12 @@ QtObject {
         }
 
         if (index !== -1) {
+            // Phase 2: enregistrement d'op avant la suppression (log-only).
+            const deletedUuid = element.snapableParameters
+                                ? String(element.snapableParameters.uniqueId)
+                                : ""
+            EditorOpBus.recordOp(EditorOpBus.makeDeleteOp(deletedUuid))
+
             // Supprimer l'élément de la liste
             snapableTilesList.splice(index, 1)
             logic.snapableTilesListUpdated()
@@ -167,7 +184,13 @@ QtObject {
         } else if (kind === "next") {
             source.connectionManager.addNextElement(target)
         }
-        
+
+        // Phase 2: enregistrement d'op avant la sauvegarde (log-only).
+        EditorOpBus.recordOp(EditorOpBus.makeLinkOp(
+            source.snapableParameters ? String(source.snapableParameters.uniqueId) : "",
+            target.snapableParameters ? String(target.snapableParameters.uniqueId) : "",
+            kind))
+
         // Sauvegarder après création de la connexion
         logic.saveMap(MapTypes.UNDOREDO)
     }

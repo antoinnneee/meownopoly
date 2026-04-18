@@ -3,6 +3,7 @@ import QtQuick.Controls
 import ".."
 import "../grid"
 import MapTypes
+import EditorOpBus 1.0
 
 Rectangle {
     id: handle
@@ -82,6 +83,28 @@ Rectangle {
             // Désactiver le mode visual de la grille
             if (gridManager && gridManager.exitResizeMode) {
                 gridManager.exitResizeMode()
+            }
+
+            // Phase 2: op ResizeItem + MoveItem éventuel (resize par coin déplace
+            // aussi la position). Log-only.
+            if (targetElement.snapableParameters) {
+                const sp = targetElement.snapableParameters
+                const uuid = String(sp.uniqueId)
+                EditorOpBus.recordOp({
+                    "op":     EditorOpType.ResizeItem,
+                    "target": uuid,
+                    "w":      sp.displayParameter.unitSizeWidth,
+                    "h":      sp.displayParameter.unitSizeHeight
+                })
+                // Les coins nw/ne/sw/n/w déplacent aussi l'origine
+                if (direction === "nw" || direction === "ne" || direction === "sw"
+                    || direction === "n"  || direction === "w") {
+                    EditorOpBus.recordOp(EditorOpBus.makeMoveOp(
+                        uuid,
+                        sp.displayParameter.gridRelativePositionX,
+                        sp.displayParameter.gridRelativePositionY,
+                        -1))
+                }
             }
 
             // Sauvegarder après redimensionnement

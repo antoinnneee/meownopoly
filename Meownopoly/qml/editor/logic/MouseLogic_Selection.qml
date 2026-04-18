@@ -2,6 +2,7 @@ import QtQuick 2.15
 import "../../meowComponent/snapable"
 
 import MapTypes
+import EditorOpBus 1.0
 
 MouseLogic_Base {
     id: mouseLogic
@@ -95,6 +96,17 @@ MouseLogic_Base {
                 for (var i = 0; i < selectedElements.length; i++) {
                     if (selectedElements[i] && selectedElements[i].updateRelativePosition) {
                         selectedElements[i].updateRelativePosition()
+                    }
+                }
+                // Phase 2: un MoveItem par élément déplacé (log-only, avant le saveMap).
+                for (var mi = 0; mi < selectedElements.length; mi++) {
+                    const el = selectedElements[mi]
+                    if (el && el.snapableParameters) {
+                        EditorOpBus.recordOp(EditorOpBus.makeMoveOp(
+                            String(el.snapableParameters.uniqueId),
+                            el.snapableParameters.displayParameter.gridRelativePositionX,
+                            el.snapableParameters.displayParameter.gridRelativePositionY,
+                            -1))
                     }
                 }
                 // Now save with the updated positions

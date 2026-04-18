@@ -26,6 +26,8 @@ import AssetManager
 import ItemSnapableFactory
 import ui_item
 import Catway 1.0
+import EditorSession 1.0
+import EditorOpBus 1.0
 
 import utils
 import chat
@@ -45,6 +47,11 @@ Base_Board {
 
     property int appPositionX: 0
     property int appPositionY: 0
+
+    // Mode collaboratif : tant que false, l'éditeur reste strictement monoposte.
+    // Les interceptions réseau ultérieures checkeront ce flag avant d'agir.
+    readonly property bool collaborative: EditorSession.active
+
     property int availableHeight: height - selectionPanel.height
     property alias groupeSelection: workArea.groupeSelection
 
@@ -599,7 +606,55 @@ Base_Board {
         Timer {
             id: saveMapDelayer
             interval: 200
+
+            // Phase 2: au commit debouncé, émettre les ops correspondant à l'état
+            // courant des panels (effets visuels, settings physiques), une par
+            // élément sélectionné. Log-only.
+            property string pendingOpKind: ""  // "display" | "zone" | ""
+
+            function flushOps() {
+                const els = logic.mouseLogic.selectedElements
+                if (!els || els.length === 0) { pendingOpKind = ""; return }
+
+                if (pendingOpKind === "display") {
+                    const effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
+                    const fields = {
+                        "effectBrightness":   effects.brightness,
+                        "effectContrast":     effects.contrast,
+                        "effectSaturation":   effects.saturation,
+                        "effectColorization": effects.colorization,
+                        "effectBlurEnabled":  effects.blurEnabled,
+                        "effectBlur":         effects.blur,
+                        "effectShadowEnabled": effects.shadowEnabled,
+                        "effectShadowBlur":   effects.shadowBlur,
+                        "rotationAngle":      effects.rotationAngle,
+                        "mirrorHorizontal":   effects.mirrorHorizontal,
+                        "mirrorVertical":     effects.mirrorVertical
+                    }
+                    for (var i = 0; i < els.length; i++) {
+                        if (!els[i] || !els[i].snapableParameters) continue
+                        EditorOpBus.recordOp({
+                            "op":     EditorOpType.SetDisplayParameter,
+                            "target": String(els[i].snapableParameters.uniqueId),
+                            "fields": fields
+                        })
+                    }
+                } else if (pendingOpKind === "zone") {
+                    const physic = root.editorSidePanel.zoneConfigurationPanel.getCurrentPhysicSettings()
+                    for (var j = 0; j < els.length; j++) {
+                        if (!els[j] || !els[j].snapableParameters) continue
+                        EditorOpBus.recordOp({
+                            "op":     EditorOpType.SetZoneParameter,
+                            "target": String(els[j].snapableParameters.uniqueId),
+                            "fields": physic
+                        })
+                    }
+                }
+                pendingOpKind = ""
+            }
+
             onTriggered: {
+                flushOps()
                 logic.saveMap(MapTypes.UNDOREDO)
             }
         }
@@ -611,6 +666,7 @@ Base_Board {
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
+            saveMapDelayer.pendingOpKind = "display"
             if (saveMapDelayer.running)
                 saveMapDelayer.restart()
             else
@@ -646,6 +702,7 @@ Base_Board {
                 logic.mouseLogic.selectedElements[i].applyPhysicSettings(
                             physicSettings)
             }
+            saveMapDelayer.pendingOpKind = "zone"
             if (saveMapDelayer.running)
                 saveMapDelayer.restart()
             else
