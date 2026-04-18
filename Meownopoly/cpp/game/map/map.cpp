@@ -239,7 +239,7 @@ void Map::rewireLinks(ItemSnapable *tile, const QJsonObject &json, QSet<QUuid> &
     if (!tile) return;
     unwireLinks(tile, touchedOut);
 
-    const QJsonArray nextIds = json["next"].toArray();
+    QJsonArray nextIds = json["next"].toArray();
     for (const QJsonValueRef v : nextIds) {
         ItemSnapable *t = tileById(QUuid(v.toString()));
         if (!t) continue;
@@ -247,8 +247,8 @@ void Map::rewireLinks(ItemSnapable *tile, const QJsonObject &json, QSet<QUuid> &
         if (!t->prev.contains(tile)) t->addPrev(tile);
         touchedOut.insert(t->uniqueId());
     }
-    const QJsonArray prevIds = json["prev"].toArray();
-    for (const QJsonValueRef v : prevIds) {
+    QJsonArray prevIds = json["prev"].toArray();
+    for ( QJsonValueRef v : prevIds) {
         ItemSnapable *s = tileById(QUuid(v.toString()));
         if (!s) continue;
         if (!tile->prev.contains(s)) tile->addPrev(s);
