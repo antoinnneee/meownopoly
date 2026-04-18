@@ -50,12 +50,30 @@ void EditorOpBus::submitOp(const QJsonObject &op)
     // être re-soumises au réseau.
     if (m_isApplyingRemote) return;
 
+    EditorSession *sess = EditorSession::instance();
+
+    // Phase 8 : rate-limit local (collab uniquement). En monoposte, pas de
+    // raison de throttle — l'autosave encaisse déjà les rafales.
+    if (sess->active()) {
+        if (!m_localClock.isValid()) { m_localClock.start(); m_localLastMs = 0; }
+        const qint64 nowMs = m_localClock.elapsed();
+        const double dt = (nowMs - m_localLastMs) / 1000.0;
+        m_localTokens = qMin(k_localBurst, m_localTokens + dt * k_localRatePerSec);
+        m_localLastMs = nowMs;
+        if (m_localTokens < 1.0) {
+            qWarning().noquote() << "[EditorOpBus] local throttle — drop op"
+                                 << QJsonDocument(op).toJson(QJsonDocument::Compact);
+            emit localThrottled(op);
+            return;
+        }
+        m_localTokens -= 1.0;
+    }
+
     qDebug().noquote() << "[EditorOpBus] submit"
                        << QJsonDocument(op).toJson(QJsonDocument::Compact);
     emit opRecorded(op);
 
     // Phase 3 : si la session collaborative est active, envoyer l'op.
-    EditorSession *sess = EditorSession::instance();
     if (sess->active()) {
         sess->sendOp(op);
     }
@@ -64,8 +82,11 @@ void EditorOpBus::submitOp(const QJsonObject &op)
 void EditorOpBus::onSessionOpReceived(const QString &senderId, const QJsonObject &op)
 {
     Q_UNUSED(senderId);
-    qDebug().noquote() << "[EditorOpBus] remote from" << senderId
-                       << QJsonDocument(op).toJson(QJsonDocument::Compact);
+    // Phase 8 : log structuré {seq, by, type} pour post-mortem.
+    qDebug().noquote() << "[EditorOpBus] apply seq="
+                       << op.value("_seq").toDouble(0)
+                       << "by=" << op.value("_by").toString(senderId)
+                       << "type=" << op.value("op").toInt();
 
     // Positionne le flag pour que les mutations QML déclenchées par le replay
     // soient droppées dans submitOp (empêche la ré-émission réseau).

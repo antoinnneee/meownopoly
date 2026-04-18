@@ -7,6 +7,7 @@
 #include <QHash>
 #include <QUuid>
 #include <QQmlEngine>
+#include <QElapsedTimer>
 
 #include "editor_op_type.h"
 
@@ -131,6 +132,10 @@ signals:
     /// Émis pour chaque op enregistrée localement (utile pour logs/tests).
     void opRecorded(const QJsonObject &op);
 
+    /// Phase 8 : une soumission locale a été rejetée par le rate-limit client
+    /// (avant même d'atteindre le réseau). QML peut afficher un toast.
+    void localThrottled(const QJsonObject &op);
+
     /// Émis quand une op distante est reçue et doit être appliquée par QML.
     /// QML doit mettre isApplyingRemote=true via beginApplyRemote() avant la
     /// mutation, et endApplyRemote() juste après — automatique via le flag
@@ -166,6 +171,14 @@ private:
     // Ops en attente, indexées par groupId de transaction (Game::beginTransaction).
     // Vidées en un seul batch via flushGroup(groupId) à commitTransaction.
     QHash<QUuid, QList<QJsonObject>> m_pendingGroups;
+
+    // Rate-limit local (token bucket). Évite de noyer la file réseau quand
+    // un script QML boucle sur submitOp.
+    double m_localTokens   = 60.0;
+    qint64 m_localLastMs   = 0;
+    QElapsedTimer m_localClock;
+    static constexpr double k_localRatePerSec = 30.0;
+    static constexpr double k_localBurst      = 60.0;
 };
 
 #endif // EDITOR_OP_BUS_H

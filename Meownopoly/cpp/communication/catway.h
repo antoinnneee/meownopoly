@@ -173,6 +173,9 @@ signals:
     /// En QML : convertir avec `String.fromCharCode` / `TextDecoder` si besoin de texte.
     void reliableMessageReceived(QString senderId, QByteArray data);
     void chatClientChanged();
+    /// Phase 8 : relay du timeout depuis CatwayWorker (permet aux modules
+    /// de niveau session — GameSession/EditorSession — de réagir sur le thread GUI).
+    void playerTimedOut(QString playerId);
 
 private slots:
     void onAccountStunChanged();

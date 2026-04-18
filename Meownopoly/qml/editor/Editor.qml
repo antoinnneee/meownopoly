@@ -71,6 +71,14 @@ Base_Board {
     signal openNewMapMenu
     property alias entity: gameScene.entity
 
+    // Phase 8 : la reconnexion auto après host migration est pilotée par main.qml
+    // (qui possède le p2pStateMachine). L'éditeur détecte l'apparition de la
+    // nouvelle session lobby `[EDIT:<electedHostId>]` et relaie via ce signal.
+    signal reconnectRequested(string sessionId, string hostId)
+
+    // Id du nouvel hôte dont on attend l'apparition dans `availableSessions`.
+    property string _awaitingReconnectHostId: ""
+
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
         initializeEditor()
@@ -649,6 +657,50 @@ Base_Board {
         function onCursorReceived(senderId, x, y) {
             root._upsertRemoteCursor(senderId, x, y)
         }
+
+        // Phase 8 : hôte perdu. L'élection détermine le nouvel hôte de façon
+        // déterministe (plus petit playerId du roster cache, ancien hôte exclu).
+        // - Si `electedHostId === localPlayerId` : promotion auto, l'état local
+        //   est préservé et le pair devient hôte (les autres doivent rejoindre
+        //   via le lobby pour reprendre la collab).
+        // - Sinon : fallback monoposte. L'état est conservé mais la session
+        //   collab est terminée jusqu'à une nouvelle entrée par le lobby.
+        function onHostLost(electedHostId) {
+            console.warn("[EditorSession] hôte perdu — élu :", electedHostId,
+                         "(moi =", EditorSession.localPlayerId + ")")
+            if (electedHostId && electedHostId === EditorSession.localPlayerId) {
+                // `promoteToHost` fait stop+startAsHost en interne, préserve l'état.
+                console.log("[EditorSession] Je suis le nouvel hôte — promotion.")
+                EditorSession.promoteToHost()
+            } else if (electedHostId) {
+                // Fallback : stop collab, on ARME la reconnexion auto. Le
+                // nouvel hôte va publier une session lobby `[EDIT:<id>]` ; dès
+                // qu'elle apparaît dans `availableSessions` on relaie à main.qml.
+                console.log("[EditorSession] Nouvel hôte :", electedHostId,
+                            "— attente de sa session lobby pour auto-rejoin.")
+                EditorSession.stop()
+                root._awaitingReconnectHostId = electedHostId
+                if (Catway.chatClient) Catway.chatClient.requestSessionsList()
+            } else {
+                console.log("[EditorSession] Aucun candidat — monoposte.")
+                EditorSession.stop()
+            }
+        }
+
+        // Phase 8 : un pair a quitté → purge curseur/sélection locale.
+        function onPeerLeft(playerId) {
+            console.log("[EditorSession] pair parti:", playerId)
+            const copy = {}
+            for (const k in root.remoteCursors)
+                if (k !== playerId) copy[k] = root.remoteCursors[k]
+            root.remoteCursors = copy
+            root._remoteCursorKeys = Object.keys(copy)
+        }
+
+        // Phase 8 : op rejetée (rate-limit ou autre) → log côté auteur.
+        function onOpRejected(reject) {
+            console.warn("[EditorSession] op rejetée:", JSON.stringify(reject))
+        }
     }
 
     // ─── Phase 5a : présence curseurs ───────────────────────────────────────
@@ -700,13 +752,75 @@ Base_Board {
             // Utilise _hoverX/_hoverY (alimenté par le HoverHandler de workArea)
             // plutôt que mainMa.mouseX/mouseY — ces derniers sont masqués par
             // les MouseAreas enfants (tuiles, grille) qui consomment le hover.
+            //
+            // Phase 8 fix : conversion en unités de grille avant envoi. Le
+            // repère commun entre pairs est la position en cases (fractionnelle),
+            // invariante par zoom (gridSize local) et résolution d'écran. Les
+            // coords workArea en pixels dépendent de `mmSize` qui peut différer
+            // entre pairs. Division par gameGrid.gridSize → la case `N` est à
+            // la valeur `N` quel que soit le zoom local.
+            const gs = gameGrid ? gameGrid.gridSize : 0
+            if (!gs) return
             const x = root._hoverX
             const y = root._hoverY
             if (x === -99999) return                 // pas encore de position
             if (x === lastX && y === lastY) return   // pas bougé
             lastX = x
             lastY = y
-            EditorSession.sendCursor(x, y)
+            EditorSession.sendCursor(x / gs, y / gs)
+        }
+    }
+
+    // Phase 8 : scan des sessions disponibles pour auto-rejoin après host migration.
+    // Se déclenche uniquement quand `_awaitingReconnectHostId` est armé (set par
+    // onHostLost non-élu). Matche `[EDIT:<id>] <mapName>` du nouvel hôte.
+    Connections {
+        target: Catway.chatClient
+        enabled: root._awaitingReconnectHostId !== ""
+        function onAvailableSessionsChanged() {
+            const list = Catway.chatClient.availableSessions
+            if (!list || list.length === 0) return
+            const prefix = "[EDIT:" + root._awaitingReconnectHostId + "]"
+            for (let i = 0; i < list.length; i++) {
+                const s = list[i]
+                const name = s.name || s.sessionName || ""
+                if (name.startsWith(prefix)) {
+                    const hostId = root._awaitingReconnectHostId
+                    const sid    = s.sessionId
+                    console.log("[Reconnect] Session du nouvel hôte trouvée:",
+                                sid, "→ reconnect")
+                    root._awaitingReconnectHostId = ""
+                    root.reconnectRequested(sid, hostId)
+                    return
+                }
+            }
+        }
+    }
+
+    // Timer de repolling toutes les 2 s tant qu'on attend la session (en
+    // complément d'onAvailableSessionsChanged, car le serveur ne push pas
+    // systématiquement).
+    Timer {
+        interval: 2000
+        repeat: true
+        running: root._awaitingReconnectHostId !== ""
+        onTriggered: {
+            if (Catway.chatClient) Catway.chatClient.requestSessionsList()
+        }
+    }
+
+    // Phase 5a (bug drag) : pendant un drag-select, le HoverHandler de workArea
+    // cesse d'émettre (pointeur grabbed par mainMa). On complète la source de
+    // position avec mainMa.onPositionChanged — qui fire aussi pendant le press —
+    // en mappant les coords root→workArea. Les deux sources coexistent sans
+    // conflit (dernière vue écrase).
+    Connections {
+        target: mainMa
+        enabled: EditorSession.active
+        function onPositionChanged(mouse) {
+            const p = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+            root._hoverX = p.x
+            root._hoverY = p.y
         }
     }
 
@@ -770,7 +884,14 @@ Base_Board {
         function onFoundItemSnapableTile(itemSnapableData) {
             Logger.info("Found itemSnapable tile:" + itemSnapableData,
                         "MAP_LOADING")
-            logic.tileLogic.createItemSnapableTile(itemSnapableData)
+            // Phase 4 (bug) : load disque ne doit JAMAIS émettre d'op réseau.
+            // Filet de sécurité : wrap begin/endApplyRemote → submitOp drop.
+            EditorOpBus.beginApplyRemote()
+            try {
+                logic.tileLogic.createItemSnapableTile(itemSnapableData)
+            } finally {
+                EditorOpBus.endApplyRemote()
+            }
         }
 
         function onMapLoaded(map) {
@@ -899,8 +1020,13 @@ Base_Board {
         }
 
         // Phase 5a : overlay des curseurs distants. Enfant de workArea pour
-        // suivre scroll/zoom du grid. Les coordonnées reçues sont locales à
-        // workArea (envoyées via mapToItem côté pair).
+        // suivre scroll/zoom du grid.
+        //
+        // Phase 8 fix : les coordonnées reçues sont en UNITÉS DE GRILLE
+        // (fractionnelles), pas en pixels. Conversion locale via
+        // `gameGrid.gridSize` — invariant par zoom : case N s'affiche à la
+        // même position-case quel que soit mmSize. Rebinding automatique
+        // quand l'utilisateur local zoome (gridSize change → x/y recalculés).
         Item {
             id: remoteCursorsOverlay
             anchors.fill: parent
@@ -912,10 +1038,21 @@ Base_Board {
                 delegate: Item {
                     readonly property var _entry: root.remoteCursors[modelData]
                     readonly property color _color: root._colorForPlayer(modelData)
-                    x: _entry ? _entry.x : 0
-                    y: _entry ? _entry.y : 0
+                    readonly property real _gs: gameGrid ? gameGrid.gridSize : 0
+                    x: _entry ? _entry.x * _gs : 0
+                    y: _entry ? _entry.y * _gs : 0
                     width: 1; height: 1
-                    visible: !!_entry
+                    visible: !!_entry && _gs > 0
+
+                    // Lissage visuel — le timer d'envoi tourne à 20 Hz (50 ms)
+                    // donc une interpolation ~60 ms OutQuad couvre un cycle
+                    // sans retard perceptible. OutQuad évite le rebond.
+                    Behavior on x {
+                        NumberAnimation { duration: 60; easing.type: Easing.OutQuad }
+                    }
+                    Behavior on y {
+                        NumberAnimation { duration: 60; easing.type: Easing.OutQuad }
+                    }
 
                     // Flèche de curseur stylisée
                     Canvas {
@@ -1334,7 +1471,18 @@ Base_Board {
     }
 
     function initializeEditor() {
-        if (!MapFileManager.mapExists(mapInfo.autosaveMapName,MapTypes.AUTOSAVE)) {
+        // Client en mode collab → ne PAS charger la carte locale, la FullSync
+        // de l'hôte va la fournir. Autrement, les tuiles chargées déclencheraient
+        // `onFoundItemSnapableTile` qui soumet des CreateItem ops, rebroadcastées
+        // par l'hôte à tous les pairs (bug: items du client chez l'hôte).
+        if (EditorSession.active && !EditorSession.isHost) {
+            Logger.info("Collab client — skip local map load (waiting for FullSync)",
+                        "MAP FILE MANAGER")
+            tmpSaver.setSaveTimer()
+            return
+        }
+
+        if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)) {
             Logger.info("Creating autosave map", "MAP FILE MANAGER")
             MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
             logic.saveMap(MapTypes.AUTOSAVE)
