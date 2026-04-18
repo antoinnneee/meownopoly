@@ -458,15 +458,26 @@ Base_Board {
             case EditorOpType.ApplyState: {
                 // Pattern B : delta Map applyBefore/after sur le peer.
                 // Supporte à la fois un op unique et un batch (transactions).
-                if (op.batch && Array.isArray(op.ops)) {
-                    for (let i = 0; i < op.ops.length; i++) {
-                        const subOp = op.ops[i]
-                        Game.applyRemoteDelta(subOp.type, subOp.tileId, subOp.groupId,
-                                              subOp.before, subOp.after, subOp.applyBefore)
-                    }
+                // `before`/`after` sont optionnels dans le payload : seul le
+                // côté correspondant à applyBefore est envoyé (économie de BP).
+                function _apply(sub) {
+                    const before = sub.before || ({})
+                    const after  = sub.after  || ({})
+                    Game.applyRemoteDelta(sub.type, sub.tileId, sub.groupId,
+                                          before, after, !!sub.applyBefore)
+                    // Re-sync visuel : les bindings QML sur gridRelativePositionX/Y
+                    // peuvent avoir été cassés par un drag local précédent ; re-snap
+                    // positionne la tile visuellement même si le binding est inerte.
+                    const target = findByUuid(String(sub.tileId))
+                    if (target && target.snapToGridFromGridPos)
+                        target.snapToGridFromGridPos()
+                }
+
+                if (op.batch === true) {
+                    const ops = op.ops || []
+                    for (let i = 0; i < ops.length; i++) _apply(ops[i])
                 } else {
-                    Game.applyRemoteDelta(op.type, op.tileId, op.groupId,
-                                          op.before, op.after, op.applyBefore)
+                    _apply(op)
                 }
                 break
             }

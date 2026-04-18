@@ -225,15 +225,25 @@ void EditorOpBus::submitFromDelta(int type,
     if (m_isApplyingRemote) return;
     if (!EditorSession::instance()->active()) return;
 
+    // Économie de bande passante : on n'envoie que le côté qu'on va appliquer.
+    // applyBefore=false (forward: pose/modif/suppr/undo-redo forward) → only `after`.
+    // applyBefore=true  (undo local broadcast) → only `before`.
+    // Pour TileAdded forward : after non vide, before vide → envoyer after.
+    // Pour TileDeleted forward : before non vide (payload pour undo côté peer), after vide.
+    //   Le peer applyBefore=false lit after (vide) → removeTile par UUID. before est inutile
+    //   pour le peer distant (son propre undo ne touche pas à ce delta), on peut skip.
     QJsonObject op{
         { "op",          static_cast<int>(EditorOpType::ApplyState) },
         { "type",        type },
         { "tileId",      tileId.toString() },
         { "groupId",     groupId.toString() },
-        { "before",      before },
-        { "after",       after },
         { "applyBefore", applyBefore },
     };
+    if (applyBefore) {
+        op.insert("before", before);
+    } else {
+        op.insert("after", after);
+    }
 
     if (groupId.isNull()) {
         submitOp(op);
@@ -262,5 +272,11 @@ void EditorOpBus::flushGroup(const QUuid &groupId)
         { "groupId", groupId.toString() },
         { "ops",     arr },
     };
+    const int approxBytes = QJsonDocument(batch).toJson(QJsonDocument::Compact).size();
+    qDebug() << "[EditorOpBus] flushGroup" << groupId.toString()
+             << "ops=" << ops.size() << "bytes=" << approxBytes;
+    if (approxBytes > 30000) {
+        qWarning() << "[EditorOpBus] batch > 30KB — reliable.io may drop the packet";
+    }
     submitOp(batch);
 }

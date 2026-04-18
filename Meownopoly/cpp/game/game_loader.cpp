@@ -315,7 +315,10 @@ void Game::applyRemoteDelta(int type, const QString &tileId, const QString &grou
                             bool applyBefore)
 {
     Map *map = MapFileManager::instance()->getCurrentMap();
-    if (!map) return;
+    if (!map) {
+        qWarning() << "[Game::applyRemoteDelta] no current map — op dropped";
+        return;
+    }
 
     EditDelta delta;
     delta.type    = static_cast<EditDeltaType::Type>(type);
@@ -323,6 +326,10 @@ void Game::applyRemoteDelta(int type, const QString &tileId, const QString &grou
     delta.groupId = QUuid(groupId);
     delta.before  = before;
     delta.after   = after;
+
+    const bool tilePresent = map->tileById(delta.tileId) != nullptr;
+    qDebug() << "[Game::applyRemoteDelta] type=" << type << "tileId=" << tileId
+             << "applyBefore=" << applyBefore << "tilePresent=" << tilePresent;
 
     QSet<QUuid> touched;
     map->applyDelta(delta, applyBefore, touched);
