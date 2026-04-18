@@ -72,12 +72,10 @@ Base_Board {
     property alias entity: gameScene.entity
 
     // Phase 8 : la reconnexion auto après host migration est pilotée par main.qml
-    // (qui possède le p2pStateMachine). L'éditeur détecte l'apparition de la
-    // nouvelle session lobby `[EDIT:<electedHostId>]` et relaie via ce signal.
+    // (qui possède le p2pStateMachine). Émis depuis `onHostLost` quand le pair
+    // local n'est pas élu — la session de chat reste la MÊME (le nouvel hôte
+    // l'a juste renommée côté serveur), donc pas de re-join chat nécessaire.
     signal reconnectRequested(string sessionId, string hostId)
-
-    // Id du nouvel hôte dont on attend l'apparition dans `availableSessions`.
-    property string _awaitingReconnectHostId: ""
 
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
@@ -670,17 +668,24 @@ Base_Board {
                          "(moi =", EditorSession.localPlayerId + ")")
             if (electedHostId && electedHostId === EditorSession.localPlayerId) {
                 // `promoteToHost` fait stop+startAsHost en interne, préserve l'état.
+                // main.qml reçoit `promotedToHost` et renomme la session chat
+                // (MÊME sessionId) — aucun re-join nécessaire pour les autres.
                 console.log("[EditorSession] Je suis le nouvel hôte — promotion.")
                 EditorSession.promoteToHost()
             } else if (electedHostId) {
-                // Fallback : stop collab, on ARME la reconnexion auto. Le
-                // nouvel hôte va publier une session lobby `[EDIT:<id>]` ; dès
-                // qu'elle apparaît dans `availableSessions` on relaie à main.qml.
-                console.log("[EditorSession] Nouvel hôte :", electedHostId,
-                            "— attente de sa session lobby pour auto-rejoin.")
+                // Phase 8 : le nouvel hôte a conservé la MÊME session de chat
+                // (rename côté serveur, pas de createSession). Donc on peut
+                // relancer P2P directement sur la session actuelle — pas de
+                // polling, pas d'attente de découverte.
+                const sid = Catway.chatClient ? Catway.chatClient.sessionId : ""
+                if (!sid) {
+                    console.warn("[Reconnect] pas de session chat active — stop")
+                    EditorSession.stop()
+                    return
+                }
+                console.log("[Reconnect] auto →", electedHostId, "via session", sid)
                 EditorSession.stop()
-                root._awaitingReconnectHostId = electedHostId
-                if (Catway.chatClient) Catway.chatClient.requestSessionsList()
+                root.reconnectRequested(sid, electedHostId)
             } else {
                 console.log("[EditorSession] Aucun candidat — monoposte.")
                 EditorSession.stop()
@@ -768,44 +773,6 @@ Base_Board {
             lastX = x
             lastY = y
             EditorSession.sendCursor(x / gs, y / gs)
-        }
-    }
-
-    // Phase 8 : scan des sessions disponibles pour auto-rejoin après host migration.
-    // Se déclenche uniquement quand `_awaitingReconnectHostId` est armé (set par
-    // onHostLost non-élu). Matche `[EDIT:<id>] <mapName>` du nouvel hôte.
-    Connections {
-        target: Catway.chatClient
-        enabled: root._awaitingReconnectHostId !== ""
-        function onAvailableSessionsChanged() {
-            const list = Catway.chatClient.availableSessions
-            if (!list || list.length === 0) return
-            const prefix = "[EDIT:" + root._awaitingReconnectHostId + "]"
-            for (let i = 0; i < list.length; i++) {
-                const s = list[i]
-                const name = s.name || s.sessionName || ""
-                if (name.startsWith(prefix)) {
-                    const hostId = root._awaitingReconnectHostId
-                    const sid    = s.sessionId
-                    console.log("[Reconnect] Session du nouvel hôte trouvée:",
-                                sid, "→ reconnect")
-                    root._awaitingReconnectHostId = ""
-                    root.reconnectRequested(sid, hostId)
-                    return
-                }
-            }
-        }
-    }
-
-    // Timer de repolling toutes les 2 s tant qu'on attend la session (en
-    // complément d'onAvailableSessionsChanged, car le serveur ne push pas
-    // systématiquement).
-    Timer {
-        interval: 2000
-        repeat: true
-        running: root._awaitingReconnectHostId !== ""
-        onTriggered: {
-            if (Catway.chatClient) Catway.chatClient.requestSessionsList()
         }
     }
 

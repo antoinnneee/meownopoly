@@ -161,7 +161,7 @@ function handleCommand(ws, msg) {
     const sessionCommands = [
         'PUBLISH_KEY', 'SEND_MSG', 'SEND_COMMAND', 'GET_HISTORY',
         'CLEAR_HISTORY', 'GET_PARTICIPANTS', 'LEAVE_SESSION',
-        'DELETE_SESSION', 'KICK'
+        'DELETE_SESSION', 'KICK', 'RENAME_SESSION'
     ];
 
     if (sessionCommands.includes(type)) {
@@ -205,6 +205,9 @@ function handleCommand(ws, msg) {
             break;
         case 'KICK':
             handleKick(ws, payload);
+            break;
+        case 'RENAME_SESSION':
+            handleRenameSession(ws, payload);
             break;
         case 'LIST_SESSIONS':
         case 'GET_SESSION_LIST':
@@ -869,6 +872,34 @@ function handleKick(ws, payload) {
     keyRotationRequired.add(session_id);
 
     debug(`Host ${hostId} kicked ${target_player_id} from session ${session_id}`);
+}
+
+// Phase 8 — host migration : rename une session existante (même session_id).
+// Utilisé quand un client élu se promeut hôte et réécrit le prefix
+// `[EDIT:<hostId>]` dans le nom affiché au lobby. Tous les clients reçoivent
+// un broadcast SESSION_RENAMED pour mettre à jour leur availableSessions.
+function handleRenameSession(ws, payload) {
+    const { session_id, session_name } = payload;
+    if (!session_id) return sendError(ws, 'MISSING_PARAMETER', 'session_id is required');
+    if (typeof session_name !== 'string') return sendError(ws, 'MISSING_PARAMETER', 'session_name required');
+
+    const existing = db.getSession(session_id);
+    if (!existing) return sendError(ws, 'SESSION_NOT_FOUND', 'Session not found');
+
+    const result = db.renameSession(session_id, session_name);
+    if (!result || result.changes === 0) {
+        return sendError(ws, 'RENAME_FAILED', 'Unable to rename session');
+    }
+
+    debug(`Session ${session_id} renamed to "${session_name}" by ${ws.player_id || 'unknown'}`);
+
+    const broadcastMsg = JSON.stringify({
+        type: 'SESSION_RENAMED',
+        payload: { session_id, session_name }
+    });
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) client.send(broadcastMsg);
+    });
 }
 
 function sendError(ws, code, message) {

@@ -118,6 +118,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleServerReset(payload);
     } else if (type == "SESSION_CREATED_BROADCAST") {
         handleSessionCreatedBroadcast(payload);
+    } else if (type == "SESSION_RENAMED") {
+        handleSessionRenamed(payload);
     } else {
         Logger::instance()->warn(QString("Unhandled server message type: %1").arg(type), "ChatClient");
     }
@@ -183,6 +185,29 @@ void ChatClient::handleServerReset(const QJsonObject &payload) {
     // Refresh disponible sessions list (now empty)
     m_availableSessions.clear();
     emit availableSessionsChanged();
+}
+
+void ChatClient::handleSessionRenamed(const QJsonObject &payload) {
+    const QString sessionId   = payload["session_id"].toString();
+    const QString sessionName = payload["session_name"].toString();
+    Logger::instance()->debug(
+        QString("Session %1 renamed to \"%2\"").arg(sessionId, sessionName),
+        "ChatClient");
+
+    // Mise à jour in-place de availableSessions (évite un round-trip).
+    bool changed = false;
+    for (int i = 0; i < m_availableSessions.size(); ++i) {
+        QVariantMap m = m_availableSessions[i].toMap();
+        if (m.value("sessionId").toString() == sessionId) {
+            m.insert("name", sessionName);
+            m_availableSessions[i] = m;
+            changed = true;
+            break;
+        }
+    }
+    if (changed) emit availableSessionsChanged();
+
+    emit sessionRenamed(sessionId, sessionName);
 }
 
 void ChatClient::handleSessionCreatedBroadcast(const QJsonObject &payload) {

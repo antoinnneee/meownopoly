@@ -145,7 +145,10 @@ ApplicationWindow {
                     console.warn("[main] Catway.chatClient null — abandon reconnect")
                     return
                 }
-                Catway.chatClient.connectToSessionDirect(sessionId, "")
+                // Phase 8 : session_id inchangé (le nouvel hôte a juste
+                // renommé la session côté serveur). Pas de re-join WS — on
+                // garde la même connexion, ses participants, son historique.
+                // Juste relancer le p2p state machine vers le nouvel hôte.
                 p2pStateMachine.targetHostId = hostId
                 p2pStateMachine.state = "STUN"
                 p2pStateMachine.attempts = 0
@@ -300,12 +303,27 @@ ApplicationWindow {
                 console.warn("[main] promoteToHost: Catway.chatClient null — skip publish")
                 return
             }
+            // Phase 8 : on GARDE le même session_id pour que les survivants
+            // restent sur le même canal de chat (même historique, même clé).
+            // On renomme juste le prefix [EDIT:...] pour que le lobby affiche
+            // le nouvel hôte. Les survivants reconnaissent directement via
+            // hole-punch sur la session existante — aucun re-join chat nécessaire.
             const pid = EditorSession.localPlayerId
-            // Le chat server ne permet pas deux sessions du même owner en
-            // même temps ; on renomme en `[EDIT:<pid>] Session ré-hôtée`.
-            const name = "[EDIT:" + pid + "] Session ré-hôtée"
-            console.log("[main] promotion — createSession:", name)
-            Catway.chatClient.createSession(name, "")
+            const sid = Catway.chatClient.sessionId
+            // Cherche le nom courant dans availableSessions pour préserver la
+            // partie "user" après le prefix [EDIT:...].
+            let oldName = ""
+            const list = Catway.chatClient.availableSessions || []
+            for (let i = 0; i < list.length; ++i) {
+                if (list[i].sessionId === sid) {
+                    oldName = list[i].name || ""
+                    break
+                }
+            }
+            const stripped = oldName.replace(/^\[EDIT:[^\]]+\]\s*/, "")
+            const newName = "[EDIT:" + pid + "] " + (stripped || "Session")
+            console.log("[main] promotion — renameSession:", oldName, "→", newName)
+            Catway.chatClient.renameSession(newName)
         }
     }
 
