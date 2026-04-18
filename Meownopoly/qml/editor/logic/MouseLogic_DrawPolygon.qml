@@ -190,7 +190,7 @@ MouseLogic_Base {
         zone.updateDisplayBounds()
 
         if (zone && zone.snapableParameters)
-            Game.updateEditState(EditDelta.TileAdded, zone.snapableParameters)
+            Game.updateMap(EditDelta.TileAdded, zone.snapableParameters)
         
         // Réinitialiser le dessin
         resetDrawing()

@@ -54,6 +54,7 @@ public:
     void setZoneParameter(ZoneParameter * zoneParameter);
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
+    void applyJson(const QJsonObject &json);
 
     Q_INVOKABLE void print();
 

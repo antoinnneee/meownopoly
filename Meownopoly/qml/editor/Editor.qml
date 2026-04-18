@@ -353,6 +353,11 @@ Base_Board {
         function onClearCurrentMap() {
             logic.removeCurrentMap()
         }
+
+        function onAfterRestoration(tileIds) {
+            // Resync des connexions visuelles après undo/redo
+            logic.tileLogic.rebuildConnectionsFor(tileIds)
+        }
     }
 
     wheelHandler: Editor_WheelHandler {
@@ -624,7 +629,7 @@ Base_Board {
                 for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                     var el = logic.mouseLogic.selectedElements[i]
                     if (el && el.snapableParameters)
-                        Game.updateEditState(EditDelta.TileModified, el.snapableParameters, txId)
+                        Game.updateMap(EditDelta.TileModified, el.snapableParameters, txId)
                 }
                 Game.commitTransaction()
             }

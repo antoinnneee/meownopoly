@@ -821,7 +821,7 @@ Rectangle {
                         onCheckedChanged: {
                             var before = logic.mapInfo.toJSON()
                             logic.mapInfo.isBackgroundOnGrill = checked
-                            Game.updateEditMetadata(before, logic.mapInfo.toJSON())
+                            Game.updateMapMetadata(before, logic.mapInfo.toJSON())
                         }
 
                         indicator: Rectangle {
@@ -899,7 +899,7 @@ Rectangle {
                                     onClicked: {
                                         var before = logic.mapInfo.toJSON()
                                         logic.mapInfo.backgroundScaling = modelData.mode
-                                        Game.updateEditMetadata(before, logic.mapInfo.toJSON())
+                                        Game.updateMapMetadata(before, logic.mapInfo.toJSON())
                                     }
                                 }
                             }
@@ -936,7 +936,7 @@ Rectangle {
                                 if (pressed) {
                                     _beforeJson = logic.mapInfo.toJSON()
                                 } else {
-                                    Game.updateEditMetadata(_beforeJson, logic.mapInfo.toJSON())
+                                    Game.updateMapMetadata(_beforeJson, logic.mapInfo.toJSON())
                                 }
                             }
 
@@ -1123,7 +1123,7 @@ Rectangle {
                                 onClicked: {
                                     var before = mapInfo.toJSON()
                                     mapInfo.backgroundPath = ""
-                                    Game.updateEditMetadata(before, mapInfo.toJSON())
+                                    Game.updateMapMetadata(before, mapInfo.toJSON())
                                 }
                             }
                         }
@@ -1286,7 +1286,7 @@ Rectangle {
                                         onClicked: {
                                             var before = mapInfo.toJSON()
                                             mapInfo.backgroundPath = modelData
-                                            Game.updateEditMetadata(before, mapInfo.toJSON())
+                                            Game.updateMapMetadata(before, mapInfo.toJSON())
                                         }
                                     }
                                 }

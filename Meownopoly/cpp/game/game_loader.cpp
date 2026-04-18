@@ -107,6 +107,7 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
         connect(map, &Map::tileRemovedFromHistory, this, &Game::tileRemoved);
         connect(map, &Map::tileRestoredFromHistory, this, &Game::foundItemSnapableTile);
         connect(map, &Map::forceUnselectAll, this, &Game::forceUnselectAll);
+        connect(map, &Map::afterRestoration, this, &Game::afterRestoration);
 
         for (ItemSnapable *tile : map->tiles())
             emit foundItemSnapableTile(tile);
@@ -164,45 +165,61 @@ bool Game::saveOnEdit(){
     return flag;
 }
 
-void Game::updateEditState(int type, ItemSnapable* tile, QUuid groupId)
+void Game::updateMap(int type, ItemSnapable* tile, QUuid groupId)
 {
-    qDebug() << "updateEditState()  " << (tile ? "tile is Valid" : "tile is not valid")
-             << ", type operation:" << (type == EditDeltaType::TileAdded ? "TileAdded" : type == EditDeltaType::TileDeleted ? "TileDeleted" : "MetadataChanged");
     Map *map = MapFileManager::instance()->getCurrentMap();
-    if (!map || !map->canSave() || !tile){
+    if (!map || !map->canSave() || !tile) {
         qDebug() << Q_FUNC_INFO << " Can't update editState "
                  << (map ? "map is valid, " : "map is null, ")
-                 << (map->canSave() ? "mapCanSave == true " : "mapCanSave == false")
+                 << (map && map->canSave() ? "mapCanSave == true " : "mapCanSave == false ")
                  << (tile ? "tile is valid." : "tile is null.") << " Returning.";
         return;
     }
 
+    const auto deltaType = static_cast<EditDeltaType::Type>(type);
+
     EditDelta delta;
-    delta.type    = static_cast<EditDeltaType::Type>(type);
+    delta.type    = deltaType;
     delta.tileId  = tile->uniqueId();
     delta.groupId = groupId.isNull() ? m_currentTransaction : groupId;
+    delta.before  = QJsonDocument::fromJson(tile->lastKnownJson().toUtf8()).object();
+    delta.after   = QJsonDocument::fromJson(tile->toJSON().toUtf8()).object();
 
-    QJsonParseError err;
-    delta.before = QJsonDocument::fromJson(tile->lastKnownJson().toUtf8(), &err).object();
-    delta.after  = QJsonDocument::fromJson(tile->toJSON().toUtf8()).object();
-
-    if (delta.type == EditDeltaType::TileDeleted) delta.after  = {};
-    if (delta.type == EditDeltaType::TileAdded) {
+    // Mutation de m_tiles et ajustement du delta selon le type
+    switch (deltaType) {
+    case EditDeltaType::TileAdded:
         delta.before = {};
         if (!map->tileById(tile->uniqueId())) {
             QQmlEngine::setObjectOwnership(tile, QQmlEngine::CppOwnership);
             map->addTile(tile);
         }
+        break;
+    case EditDeltaType::TileDeleted:
+        delta.after = {};
+        // Retire de m_tiles immédiatement (stashe pour deleteLater ultérieur)
+        map->removeTile(tile->uniqueId());
+        break;
+    case EditDeltaType::TileModified:
+    case EditDeltaType::MetadataChanged:
+        // Rien à muter ici : la tile est déjà en place et mutée par QML
+        // (pour Modified), ou le flux passe par updateMapMetadata.
+        break;
     }
 
-    tile->commitCurrentState();
     map->pushDelta(delta);
 
-    if (saveOnEdit())
-        qDebug() << "saveOnEdit is enabled, saving current map return " << Game::saveCurrentMap();
+    if (deltaType != EditDeltaType::TileDeleted)
+        tile->commitCurrentState();
+
+    // Sauvegarde : différée si en transaction, sinon immédiate si saveOnEdit
+    if (!m_currentTransaction.isNull()) {
+        m_txDirty = true;
+    } else if (saveOnEdit()) {
+        qDebug() << Q_FUNC_INFO << "saveOnEdit -> save return " << Game::saveCurrentMap();
+    }
 }
 
-void Game::updateEditMetadata(const QString& beforeJson, const QString& afterJson)
+void Game::updateMapMetadata(const QString& beforeJson, const QString& afterJson)
 {
     Map *map = MapFileManager::instance()->getCurrentMap();
     if (!map || !map->canSave())
@@ -212,25 +229,35 @@ void Game::updateEditMetadata(const QString& beforeJson, const QString& afterJso
     delta.type   = EditDeltaType::MetadataChanged;
     delta.before = QJsonDocument::fromJson(beforeJson.toUtf8()).object();
     delta.after  = QJsonDocument::fromJson(afterJson.toUtf8()).object();
+    delta.groupId = m_currentTransaction;
     map->pushDelta(delta);
+
+    if (!m_currentTransaction.isNull()) {
+        m_txDirty = true;
+    } else if (saveOnEdit()) {
+        qDebug() << Q_FUNC_INFO << "saveOnEdit -> save return " << Game::saveCurrentMap();
+    }
 }
 
 QUuid Game::beginTransaction()
 {
     m_currentTransaction = QUuid::createUuid();
+    m_txDirty = false;
     return m_currentTransaction;
 }
 
 void Game::commitTransaction()
 {
     m_currentTransaction = QUuid();
+    if (m_txDirty && saveOnEdit()) {
+        qDebug() << Q_FUNC_INFO << "saveOnEdit -> save return " << Game::saveCurrentMap();
+    }
+    m_txDirty = false;
 }
 
-void Game::removeMapTile(const QUuid &tileId)
+void Game::finalizeDeletedTile(const QUuid &tileId)
 {
     Map *map = MapFileManager::instance()->getCurrentMap();
     if (!map) return;
-    ItemSnapable *tile = map->tileById(tileId);
-    map->removeTile(tileId);       // no-op si déjà retiré (undo path)
-    if (tile) tile->deleteLater(); // no-op si déjà null
+    map->finalizeTile(tileId);  // no-op si déjà finalisé
 }

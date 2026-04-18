@@ -140,8 +140,9 @@ QtObject {
             // Capturer l'uuid avant destroy() (après, snapableParameters peut être null)
             var uuid = element.snapableParameters ? element.snapableParameters.uniqueId : null
             element.destroy()
-            // Le C++ gère la suppression de l'ItemSnapable via deleteLater()
-            if (uuid) Game.removeMapTile(uuid)
+            // Le C++ finalise la destruction de l'ItemSnapable (deleteLater).
+            // m_tiles a déjà été mis à jour par Game.updateMap(TileDeleted).
+            if (uuid) Game.finalizeDeletedTile(uuid)
 
         } else {
             console.log("Erreur: Élément non trouvé dans la liste")
@@ -169,9 +170,10 @@ QtObject {
             source.connectionManager.addNextElement(target)
         }
 
-        // Enregistrer la modification de connexion dans l'historique undo
+        // Enregistrer la modification de connexion dans l'historique undo.
+        // rewireLinks côté C++ restaurera symétriquement target.prev sur undo.
         if (source.snapableParameters)
-            Game.updateEditState(EditDelta.TileModified, source.snapableParameters)
+            Game.updateMap(EditDelta.TileModified, source.snapableParameters)
     }
 
     function builtConnections()
@@ -197,6 +199,58 @@ QtObject {
             }
         }
     }
+    /**
+     * @brief Resynchronise les connectionManager QML des tiles listées à partir
+     *        de l'état C++ (appelé après un undo/redo via Game.afterRestoration).
+     * @param tileIds QList<QUuid> — tiles affectées par le batch de restauration.
+     */
+    function rebuildConnectionsFor(tileIds) {
+        if (!tileIds || tileIds.length === 0) return
+        var set = {}
+        for (var i = 0; i < tileIds.length; i++) set[tileIds[i].toString()] = true
+
+        var affected = []
+        for (var i = 0; i < snapableTilesList.length; i++) {
+            var t = snapableTilesList[i]
+            if (t && t.snapableParameters && set[t.snapableParameters.uniqueId.toString()])
+                affected.push(t)
+        }
+        if (affected.length === 0) return
+
+        // Phase 1 : vider les listes QML des tiles affectées
+        for (var a = 0; a < affected.length; a++) {
+            var at = affected[a]
+            at.blockConnections = true
+            at.connectionManager.nextElements = []
+            at.connectionManager.previousElements = []
+        }
+
+        // Phase 2 : rebuild depuis l'état C++ (forward ; addNextElement
+        // ajoute symétriquement target.previousElements)
+        for (var a2 = 0; a2 < affected.length; a2++) {
+            var srcTile = affected[a2]
+            var cppNextList = srcTile.snapableParameters.getNextList()
+            for (var j = 0; j < cppNextList.length; j++) {
+                var cppNext = cppNextList[j]
+                var qmlNext = null
+                for (var k = 0; k < snapableTilesList.length; k++) {
+                    if (snapableTilesList[k] && snapableTilesList[k].snapableParameters === cppNext) {
+                        qmlNext = snapableTilesList[k]
+                        break
+                    }
+                }
+                if (qmlNext) {
+                    var wasBlocked = qmlNext.blockConnections
+                    qmlNext.blockConnections = true
+                    srcTile.connectionManager.addNextElement(qmlNext)
+                    if (!wasBlocked) qmlNext.blockConnections = false
+                }
+            }
+        }
+
+        for (var a3 = 0; a3 < affected.length; a3++) affected[a3].blockConnections = false
+    }
+
     function deleteElementsConnections(element) {
         var nexts = element.connectionManager.nextElements || []
         // itere sur les segments de connexion element->next

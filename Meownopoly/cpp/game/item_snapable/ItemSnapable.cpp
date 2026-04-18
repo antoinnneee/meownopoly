@@ -254,45 +254,40 @@ void ItemSnapable::setTileType(const ItemSnapable::TileType &newTileType)
     emit tileTypeChanged();
 }
 
+void ItemSnapable::applyJson(const QJsonObject &json)
+{
+    // tileType
+    if (json.contains("tileType"))
+        setTileType(TileType(json["tileType"].toInt()));
+
+    // caseData — clone via factory, libère l'ancien
+    if (json.contains("caseData")) {
+        QJsonObject cj = json["caseData"].toObject();
+        Case *newCase = CaseFactory::createCase(cj);
+        if (m_caseData)
+            m_caseData->deleteLater();
+        m_caseData = newCase;
+        emit caseDataChanged();
+    }
+
+    if (json.contains("displayParameter"))
+        m_displayParameter->applyJson(json["displayParameter"].toObject());
+
+    if (json.contains("decorationParameter"))
+        m_decorationParameter->applyJson(json["decorationParameter"].toObject());
+
+    if (json.contains("zoneParameter"))
+        m_zoneParameter->applyJson(json["zoneParameter"].toObject());
+
+    // NB: uniqueId jamais override (identité de la tile) ;
+    // next/prev gérés par Map::rewireLinks après applyJson.
+    Q_ASSERT(!json.contains("uniqueId") ||
+             QUuid(json["uniqueId"].toString()) == m_uniqueId);
+}
+
 void ItemSnapable::copyFrom(ItemSnapable* source)
 {
     if (!source) return;
-    
-    // Copier le type de tile
-    setTileType(source->tileType());
-    
-    // Copier les display parameters
-    if (source->displayParameter()) {
-        m_displayParameter->setGridRelativePositionX(source->displayParameter()->gridRelativePositionX());
-        m_displayParameter->setGridRelativePositionY(source->displayParameter()->gridRelativePositionY());
-        m_displayParameter->setUnitSizeWidth(source->displayParameter()->unitSizeWidth());
-        m_displayParameter->setUnitSizeHeight(source->displayParameter()->unitSizeHeight());
-        m_displayParameter->setZLayer(source->displayParameter()->zLayer());
-        m_displayParameter->setZOrder(source->displayParameter()->zOrder());
-        emit displayParameterChanged();
-    }
-    
-    // Copier les case data si c'est un CaseTile
-    if (source->tileType() == CaseTile && source->caseData()) {
-        setCaseData(source->caseData());
-    }
-    
-    // Copier les decoration parameters si c'est une DecorationTile
-    if (source->tileType() == DecorationTile && source->decorationParameter()) {
-        m_decorationParameter->setDecorationCategory(source->decorationParameter()->decorationCategory());
-        m_decorationParameter->setDecorationType(source->decorationParameter()->decorationType());
-        m_decorationParameter->setDecorationId(source->decorationParameter()->decorationId());
-        emit decorationParameterChanged();
-    }
-    
-    // Copier les exclusion parameters si c'est une PhysicZone
-    if (source->tileType() == PhysicZoneTile && source->zoneParameter()) {
-        m_zoneParameter->setPolygonPoints(source->zoneParameter()->polygonPoints());
-        m_zoneParameter->setZoneColor(source->zoneParameter()->zoneColor());
-        m_zoneParameter->setZoneName(source->zoneParameter()->zoneName());
-        emit zoneParameterChanged();
-    }
-    
-    // Copier l'UUID
-    setUniqueId(source->uniqueId());
+    QJsonObject j = QJsonDocument::fromJson(source->toJSON().toUtf8()).object();
+    applyJson(j);
 }

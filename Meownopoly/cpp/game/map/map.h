@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QStack>
+#include <QSet>
+#include <QUuid>
 #include "mapinfo.h"
 #include "editdelta.h"
 #include "game/item_snapable/ItemSnapable.h"
@@ -48,9 +50,14 @@ public:
 
     ItemSnapable* tileById(const QUuid &id) const;
     void addTile(ItemSnapable* tile);
-    void removeTile(const QUuid &tileId);
+    void removeTile(const QUuid &tileId);        // stashe dans m_pendingDestroy
+    void finalizeTile(const QUuid &tileId);      // deleteLater depuis m_pendingDestroy
 
-    void applyDelta(const EditDelta &delta, bool applyBefore);
+    void applyDelta(const EditDelta &delta, bool applyBefore, QSet<QUuid> &touchedOut);
+
+    // Link helpers (symmetriques)
+    void unwireLinks(ItemSnapable *tile, QSet<QUuid> &touchedOut);
+    void rewireLinks(ItemSnapable *tile, const QJsonObject &json, QSet<QUuid> &touchedOut);
 
     void updateTileCounts();
 
@@ -70,10 +77,16 @@ signals:
     void tileRestoredFromHistory(ItemSnapable *tile);
     void forceUnselectAll();
 
+    // Émis à la fin d'un batch undo/redo, contient les UUID des tiles dont
+    // l'état (liens inclus) a été mis à jour. Le QML s'en sert pour
+    // resynchroniser les connectionManager visuels.
+    void afterRestoration(const QList<QUuid> &tileIds);
+
 private:
 
 
     QList<ItemSnapable*> m_tiles;
+    QList<ItemSnapable*> m_pendingDestroy;
     int m_caseTileCount = 0;
     int m_decorationTileCount = 0;
     int m_zoneTileCount = 0;

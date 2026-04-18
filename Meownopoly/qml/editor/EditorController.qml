@@ -49,7 +49,7 @@ import EditDelta 1.0
             var txId = Game.beginTransaction()
             for (var i = 0; i < selectItem.length; i++) {
                 var element = selectItem[i]
-                Game.updateEditState(EditDelta.TileDeleted, element.snapableParameters, txId)
+                Game.updateMap(EditDelta.TileDeleted, element.snapableParameters, txId)
                 element.deleteRequest(false)
             }
             Game.commitTransaction()

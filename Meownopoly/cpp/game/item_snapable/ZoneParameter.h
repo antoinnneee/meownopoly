@@ -42,6 +42,7 @@ public:
     explicit ZoneParameter(const QJsonObject &json, QObject *parent = nullptr);
     explicit ZoneParameter(const ZoneParameter &other, QObject *parent = nullptr);
     QString toJSON();
+    void applyJson(const QJsonObject &json);
     
     QVariantList polygonPoints() const;
     void setPolygonPoints(const QVariantList &points);

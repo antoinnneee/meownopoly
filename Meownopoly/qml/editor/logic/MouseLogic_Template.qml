@@ -211,7 +211,7 @@ MouseLogic_Selection {
                 var txId = Game.beginTransaction()
                 for (var j = 0; j < selectedElements.length; j++) {
                     if (selectedElements[j] && selectedElements[j].snapableParameters)
-                        Game.updateEditState(EditDelta.TileModified, selectedElements[j].snapableParameters, txId)
+                        Game.updateMap(EditDelta.TileModified, selectedElements[j].snapableParameters, txId)
                 }
                 Game.commitTransaction()
             }
@@ -508,7 +508,7 @@ MouseLogic_Selection {
         for (var i = 0; i < itemSnapableList.length; i++) {
             logic.tileLogic.createItemSnapableTile(itemSnapableList[i])
             if (itemSnapableList[i])
-                Game.updateEditState(EditDelta.TileAdded, itemSnapableList[i], txId)
+                Game.updateMap(EditDelta.TileAdded, itemSnapableList[i], txId)
         }
         Game.commitTransaction()
         console.log("[TEMPLATE] Placed", itemSnapableList.length, "elements")

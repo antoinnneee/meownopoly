@@ -71,6 +71,35 @@ DisplayParameter::DisplayParameter(const QJsonObject &json, QObject *parent): QO
     m_mirrorVertical = json["mirrorVertical"].toInt();
 }
 
+void DisplayParameter::applyJson(const QJsonObject &json)
+{
+    setUnitSizeWidth(json["unitSizeWidth"].toInt());
+    setUnitSizeHeight(json["unitSizeHeight"].toInt());
+    setGridRelativePositionX(json["gridRelativePositionX"].toInt());
+    setGridRelativePositionY(json["gridRelativePositionY"].toInt());
+    setZLayer(json["zLayer"].toInt());
+    setZOrder(json["zOrder"].toDouble());
+    setEffectBrightness(json["effectBrightness"].toDouble());
+    setEffectContrast(json["effectContrast"].toDouble());
+    setEffectSaturation(json["effectSaturation"].toDouble());
+    setEffectColorization(json["effectColorization"].toDouble());
+    setEffectColorizationColor(QColor(json["effectColorizationColor"].toString()));
+    setEffectBlurEnabled(json["effectBlurEnabled"].toInt());
+    setEffectBlur(json["effectBlur"].toDouble());
+    setEffectBlurMax(json["effectBlurMax"].toInt());
+    setEffectBlurMultiplier(json["effectBlurMultiplier"].toDouble());
+    setEffectShadowEnabled(json["effectShadowEnabled"].toInt());
+    setEffectShadowBlur(json["effectShadowBlur"].toDouble());
+    setEffectShadowColor(QColor(json["effectShadowColor"].toString()));
+    setEffectShadowHorizontalOffset(json["effectShadowHorizontalOffset"].toDouble());
+    setEffectShadowVerticalOffset(json["effectShadowVerticalOffset"].toDouble());
+    setEffectShadowOpacity(json["effectShadowOpacity"].toDouble());
+    setEffectShadowScale(json["effectShadowScale"].toDouble());
+    setRotationAngle(json["rotationAngle"].toDouble());
+    setMirrorHorizontal(json["mirrorHorizontal"].toInt());
+    setMirrorVertical(json["mirrorVertical"].toInt());
+}
+
 QString DisplayParameter::toJSON()
 {
     QString json;

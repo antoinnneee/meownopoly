@@ -16,7 +16,8 @@ public:
 
 
     QString toJSON();
-    
+    void applyJson(const QJsonObject &json);
+
     Q_PROPERTY(QString decorationCategory READ decorationCategory WRITE setDecorationCategory NOTIFY decorationCategoryChanged)
     Q_PROPERTY(QString decorationType READ decorationType WRITE setDecorationType NOTIFY decorationTypeChanged)
     Q_PROPERTY(QString decorationId READ decorationId WRITE setDecorationId NOTIFY decorationIdChanged)

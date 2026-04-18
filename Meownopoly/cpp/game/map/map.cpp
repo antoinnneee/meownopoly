@@ -50,6 +50,10 @@ Map::~Map()
         delete m_tiles.at(i);
     }
     m_tiles.clear();
+    // Les tiles stashées en attente de destruction (déjà retirées de m_tiles)
+    for (ItemSnapable *t : std::as_const(m_pendingDestroy))
+        delete t;
+    m_pendingDestroy.clear();
 }
 
 
@@ -184,14 +188,76 @@ void Map::removeTile(const QUuid &tileId)
 {
     for (int i = 0; i < m_tiles.size(); ++i) {
         if (m_tiles[i]->uniqueId() == tileId) {
+            ItemSnapable *t = m_tiles[i];
             m_tiles.removeAt(i);
             updateTileCounts();
+            m_pendingDestroy.append(t);
             return;
         }
     }
 }
 
-void Map::applyDelta(const EditDelta &delta, bool applyBefore)
+void Map::finalizeTile(const QUuid &tileId)
+{
+    for (int i = 0; i < m_pendingDestroy.size(); ++i) {
+        if (m_pendingDestroy[i]->uniqueId() == tileId) {
+            m_pendingDestroy[i]->deleteLater();
+            m_pendingDestroy.removeAt(i);
+            return;
+        }
+    }
+}
+
+// Retire `tile` des listes next/prev de ses voisins et vide ses propres listes.
+void Map::unwireLinks(ItemSnapable *tile, QSet<QUuid> &touchedOut)
+{
+    if (!tile) return;
+    touchedOut.insert(tile->uniqueId());
+
+    const QList<ItemSnapable*> oldNext = tile->next;
+    const QList<ItemSnapable*> oldPrev = tile->prev;
+    for (ItemSnapable *n : oldNext) {
+        if (n) {
+            n->removePrev(tile);
+            touchedOut.insert(n->uniqueId());
+        }
+    }
+    for (ItemSnapable *p : oldPrev) {
+        if (p) {
+            p->removeNext(tile);
+            touchedOut.insert(p->uniqueId());
+        }
+    }
+    tile->next.clear();
+    tile->prev.clear();
+}
+
+// Réinitialise les liens de `tile` à partir de `json` (champs "next"/"prev").
+// Maintien de la symétrie : chaque voisin voit aussi sa liste inverse mise à jour.
+void Map::rewireLinks(ItemSnapable *tile, const QJsonObject &json, QSet<QUuid> &touchedOut)
+{
+    if (!tile) return;
+    unwireLinks(tile, touchedOut);
+
+    const QJsonArray nextIds = json["next"].toArray();
+    for (const QJsonValueRef v : nextIds) {
+        ItemSnapable *t = tileById(QUuid(v.toString()));
+        if (!t) continue;
+        if (!tile->next.contains(t)) tile->addNext(t);
+        if (!t->prev.contains(tile)) t->addPrev(tile);
+        touchedOut.insert(t->uniqueId());
+    }
+    const QJsonArray prevIds = json["prev"].toArray();
+    for (const QJsonValueRef v : prevIds) {
+        ItemSnapable *s = tileById(QUuid(v.toString()));
+        if (!s) continue;
+        if (!tile->prev.contains(s)) tile->addPrev(s);
+        if (!s->next.contains(tile)) s->addNext(tile);
+        touchedOut.insert(s->uniqueId());
+    }
+}
+
+void Map::applyDelta(const EditDelta &delta, bool applyBefore, QSet<QUuid> &touchedOut)
 {
     const QJsonObject &jsonState = applyBefore ? delta.before : delta.after;
 
@@ -199,25 +265,26 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore)
     case EditDeltaType::TileModified: {
         ItemSnapable *tile = tileById(delta.tileId);
         if (tile) {
-            ItemSnapable tmp(jsonState);
-            tile->copyFrom(&tmp);
+            tile->applyJson(jsonState);
+            rewireLinks(tile, jsonState, touchedOut);
             tile->commitCurrentState();
         }
         break;
     }
     case EditDeltaType::TileAdded: {
         if (applyBefore) {
-            // undo an addition = remove the tile
-            // Retirer de m_tiles AVANT le signal pour que removeMapTile() c�t� QML soit un no-op s�r
+            // undo addition = remove the tile (et désabonne ses voisins)
             ItemSnapable *toDelete = tileById(delta.tileId);
+            if (toDelete) unwireLinks(toDelete, touchedOut);
             removeTile(delta.tileId);
             emit tileRemovedFromHistory(delta.tileId);
-            if (toDelete) toDelete->deleteLater();
+            finalizeTile(delta.tileId);
         } else {
-            // redo an addition = re-add the tile
+            // redo addition = re-add the tile, puis résoudre ses liens
             ItemSnapable *tile = new ItemSnapable(jsonState);
             QQmlEngine::setObjectOwnership(tile, QQmlEngine::CppOwnership);
             addTile(tile);
+            rewireLinks(tile, jsonState, touchedOut);
             tile->commitCurrentState();
             emit tileRestoredFromHistory(tile);
         }
@@ -225,19 +292,20 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore)
     }
     case EditDeltaType::TileDeleted: {
         if (applyBefore) {
-            // undo a deletion = restore the tile
+            // undo deletion = restore the tile
             ItemSnapable *tile = new ItemSnapable(jsonState);
             QQmlEngine::setObjectOwnership(tile, QQmlEngine::CppOwnership);
             addTile(tile);
+            rewireLinks(tile, jsonState, touchedOut);
             tile->commitCurrentState();
             emit tileRestoredFromHistory(tile);
         } else {
-            // redo a deletion = remove the tile again
-            // M�me logique : retirer de m_tiles AVANT le signal
+            // redo deletion = remove again
             ItemSnapable *toDelete = tileById(delta.tileId);
+            if (toDelete) unwireLinks(toDelete, touchedOut);
             removeTile(delta.tileId);
             emit tileRemovedFromHistory(delta.tileId);
-            if (toDelete) toDelete->deleteLater();
+            finalizeTile(delta.tileId);
         }
         break;
     }
@@ -271,10 +339,12 @@ bool Map::undo(){
     emit forceUnselectAll();
     emit canSaveChanged();
 
+    QSet<QUuid> touched;
     for (const EditDelta &delta : group) {
-        applyDelta(delta, true);
+        applyDelta(delta, true, touched);
         m_redoStack.push(delta);
     }
+    emit afterRestoration(touched.values());
     return true;
 }
 
@@ -298,10 +368,11 @@ bool Map::redo()
     emit canSaveChanged();
     emit forceUnselectAll();
 
+    QSet<QUuid> touched;
     for (const EditDelta &delta : group) {
-        applyDelta(delta, false);
+        applyDelta(delta, false, touched);
         m_undoStack.push(delta);
     }
-
+    emit afterRestoration(touched.values());
     return true;
 }

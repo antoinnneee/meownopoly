@@ -35,7 +35,7 @@ MouseLogic_Base {
         var placed = logic.tileLogic.placeSelectedAsset(gridPos.x, gridPos.y)
         mouse.accepted = true
         if (placed && placed.snapableParameters)
-            Game.updateEditState(EditDelta.TileAdded, placed.snapableParameters)
+            Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
     }
 
     function pressAndHold(mouse, drag)

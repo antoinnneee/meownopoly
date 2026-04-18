@@ -100,7 +100,7 @@ MouseLogic_Base {
                 var txId = Game.beginTransaction()
                 for (var j = 0; j < selectedElements.length; j++) {
                     if (selectedElements[j] && selectedElements[j].snapableParameters)
-                        Game.updateEditState(EditDelta.TileModified, selectedElements[j].snapableParameters, txId)
+                        Game.updateMap(EditDelta.TileModified, selectedElements[j].snapableParameters, txId)
                 }
                 Game.commitTransaction()
             }

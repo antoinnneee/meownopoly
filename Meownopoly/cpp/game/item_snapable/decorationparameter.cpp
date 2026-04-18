@@ -39,6 +39,13 @@ QString DecorationParameter::getAnimePath(QString imagePath)
     }
 }
 
+void DecorationParameter::applyJson(const QJsonObject &json)
+{
+    setDecorationCategory(json["decorationCategory"].toString());
+    setDecorationType(json["decorationType"].toString());
+    setDecorationId(json["decorationId"].toString());
+}
+
 QString DecorationParameter::toJSON()
 {
     QString json;

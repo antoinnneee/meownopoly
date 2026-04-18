@@ -81,7 +81,7 @@ Rectangle {
             }
             
             // Sauvegarder après redimensionnement
-            Game.updateEditState(EditDelta.TileModified, targetElement.snapableParameters)
+            Game.updateMap(EditDelta.TileModified, targetElement.snapableParameters)
         }
         
         onPositionChanged: {

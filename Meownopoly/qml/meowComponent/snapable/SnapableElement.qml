@@ -39,8 +39,6 @@ Rectangle {
     property var generalMA: null
     property bool displayLinkEnable: false
 
-    property bool shouldSaveOnDelete: true
-
     // Calcul des coordonnées globales du centre dans le référentiel workArea
     // Si on est dans groupeSelection, on ajoute sa position pour obtenir les coordonnées dans workArea
     property point globalCenter: {
@@ -171,9 +169,7 @@ Rectangle {
         id: deleteAnimation
         onFinished: {
             elementDeleted(snapableElement)
-            if (shouldSaveOnDelete) {
-                logic.saveMap(MapTypes.UNDOREDO)
-            }
+            // La save est orchestrée par Game.updateMap/commitTransaction.
         }
     }
     SnapableElementCreateAnimation {
@@ -233,7 +229,6 @@ Rectangle {
     // --- Functions ---
     function deleteRequest(saveAfter)
     {
-        shouldSaveOnDelete = (saveAfter === undefined || saveAfter === true)
         deleteAnimation.start()
     }
 

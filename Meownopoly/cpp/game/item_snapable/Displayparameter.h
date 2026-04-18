@@ -64,6 +64,7 @@ public:
 
 
     QString toJSON();
+    void applyJson(const QJsonObject &json);
 
 
     int unitSizeWidth() const;

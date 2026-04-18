@@ -73,7 +73,7 @@ Item {
         onAccepted: {
             var before = mapInfo.toJSON()
             mapInfo.backgroundPath = customFileDialog.selectedFile
-            Game.updateEditMetadata(before, mapInfo.toJSON())
+            Game.updateMapMetadata(before, mapInfo.toJSON())
         }
     }
 }

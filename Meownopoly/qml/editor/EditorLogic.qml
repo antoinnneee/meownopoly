@@ -111,8 +111,8 @@ Base_logic {
 
     function saveMap(saveType){
         if (saveType === MapTypes.UNDOREDO) {
-            // UNDOREDO est géré individuellement par Game.updateEditState()
-            console.log("Sauvegarde UNDOREDO : gérée individuellement par Game.updateEditState(), ne devrait pas être appelée ici.")
+            // UNDOREDO est géré individuellement par Game.updateMap()
+            console.log("Sauvegarde UNDOREDO : gérée par Game.updateMap(), ne devrait pas être appelée ici.")
             return
         }
 

@@ -58,6 +58,31 @@ ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
 {
 }
 
+void ZoneParameter::applyJson(const QJsonObject &json)
+{
+    QVariantList newPoints;
+    if (json.contains("polygonPoints")) {
+        QJsonArray pointsArray = json["polygonPoints"].toArray();
+        for (const QJsonValue &val : pointsArray) {
+            QJsonObject pointObj = val.toObject();
+            QVariantMap point;
+            point["x"] = pointObj["x"].toDouble();
+            point["y"] = pointObj["y"].toDouble();
+            newPoints.append(point);
+        }
+    }
+    setPolygonPoints(newPoints);
+    setZoneColor(json.value("zoneColor").toString("#FF5722"));
+    setZoneName(json.value("zoneName").toString(""));
+    QJsonObject velDir = json.value("velocityDirection").toObject();
+    setVelocityDirection(QVector2D(velDir.value("x").toDouble(), velDir.value("y").toDouble()));
+    setVelocityStrenght(json.value("velocityStrenght").toDouble(0));
+    setFrictionStrenght(json.value("frictionStrenght").toDouble(0.5));
+    setExclusion(json.value("exclusion").toBool(true));
+    setSpeedMultiplier(json.value("speedMultiplier").toDouble(1));
+    setAccelerationMultiplier(json.value("accelerationMultiplier").toDouble(1));
+}
+
 QString ZoneParameter::toJSON()
 {
     QString json;

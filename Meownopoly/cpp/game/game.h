@@ -84,13 +84,18 @@ public:
     Q_INVOKABLE void askPreview();
     Q_INVOKABLE void askNext();
 
-    // ---- Delta undo/redo API ----
+    // ---- Delta undo/redo + save orchestration ----
     static bool saveOnEdit();
-    Q_INVOKABLE void updateEditState(int type, ItemSnapable* tile, QUuid groupId = {});
-    Q_INVOKABLE void updateEditMetadata(const QString& beforeJson, const QString& afterJson);
+    // Orchestre : mutation de m_tiles + push delta + commit shadow + save
+    // (différée si en transaction). Remplace l'ancien updateEditState.
+    Q_INVOKABLE void updateMap(int type, ItemSnapable* tile, QUuid groupId = {});
+    // Idem pour les métadonnées. Remplace updateEditMetadata.
+    Q_INVOKABLE void updateMapMetadata(const QString& beforeJson, const QString& afterJson);
     Q_INVOKABLE QUuid beginTransaction();
     Q_INVOKABLE void  commitTransaction();
-    Q_INVOKABLE void  removeMapTile(const QUuid &tileId);
+    // Libère le C++ ItemSnapable stashé par map->removeTile (appelé par QML
+    // à la fin de l'animation de suppression).
+    Q_INVOKABLE void  finalizeDeletedTile(const QUuid &tileId);
 
     // Template saving/loading
     Q_INVOKABLE bool saveTemplate(QString name, QJsonArray elementsJson);
@@ -116,6 +121,8 @@ signals:
     // Delta undo/redo signals relayed to QML
     void tileRemoved(QUuid tileId);
     void forceUnselectAll();
+    // Relayé depuis Map::afterRestoration
+    void afterRestoration(const QList<QUuid> &tileIds);
 
 
 private:
@@ -130,6 +137,7 @@ private:
     int m_currentPlayerIndex = 0;
 
     QUuid m_currentTransaction;
+    bool  m_txDirty = false;
 };
 
 #endif // GAME_H
