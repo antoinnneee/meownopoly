@@ -23,7 +23,7 @@ QtObject {
     property real currentZOrder: 0.00001
 
     property bool displayLinkEnable :false
-        
+
     function placeSelectedAsset(gridX, gridY) {
         var snapableParameters
         gridX = gridX - Math.trunc(currentElementWidth/2)
@@ -70,23 +70,23 @@ QtObject {
             console.warn("TileLogic: Ratio invalide", ratioWidth, ratioHeight)
             return
         }
-        
+
         // Utiliser la largeur actuelle comme référence
         var referenceWidth = currentElementWidth
-        
+
         // Calculer la nouvelle hauteur en respectant le ratio natif
         // ratio = width/height => height = width/ratio
         var nativeRatio = ratioWidth / ratioHeight
         var newHeight = Math.round(referenceWidth / nativeRatio)
-        
+
         // S'assurer qu'on a au moins 1 de hauteur
         newHeight = Math.max(1, newHeight)
-        
-        console.log("TileLogic: Ajustement au ratio natif", ratioWidth + ":" + ratioHeight, 
+
+        console.log("TileLogic: Ajustement au ratio natif", ratioWidth + ":" + ratioHeight,
                     "(" + nativeRatio.toFixed(2) + ")",
-                    "de", currentElementWidth + "x" + currentElementHeight, 
+                    "de", currentElementWidth + "x" + currentElementHeight,
                     "vers", referenceWidth + "x" + newHeight)
-        
+
         currentElementHeight = newHeight
     }
 
@@ -108,7 +108,7 @@ QtObject {
             "snapableParameters": itemSnapableData
         }) : null
 
-        if (newTile) {            
+        if (newTile) {
             snapableTilesList.push(newTile)
             logic.snapableTilesListUpdated()
             if (newTile.snapToGridFromGridPos) {
@@ -168,7 +168,7 @@ QtObject {
         } else if (kind === "next") {
             source.connectionManager.addNextElement(target)
         }
-        
+
         // Enregistrer la modification de connexion dans l'historique undo
         if (source.snapableParameters)
             Game.updateEditState(EditDelta.TileModified, source.snapableParameters)

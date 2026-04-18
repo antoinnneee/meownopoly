@@ -6,6 +6,9 @@
 
 #include "qmlapp.h"
 
+#include <QQuickWindow>
+#include <QSGRendererInterface>
+
 int main(int argc, char *argv[])
 {
     qInstallMessageHandler(0);
@@ -23,6 +26,22 @@ int main(int argc, char *argv[])
     format.setRenderableType(QSurfaceFormat::OpenGL);
     QSurfaceFormat::setDefaultFormat(format);
     */
+
+    QQuickWindow w;
+    const auto api = w.rendererInterface()->graphicsApi();
+
+    QString apiName = "Unknown";
+    switch (api) {
+    case QSGRendererInterface::OpenGL: apiName = "OpenGL"; break;
+    case QSGRendererInterface::Vulkan: apiName = "Vulkan"; break;
+    case QSGRendererInterface::Direct3D11: apiName = "D3D11"; break;
+    case QSGRendererInterface::Direct3D12: apiName = "D3D12"; break;
+    case QSGRendererInterface::Metal: apiName = "Metal"; break;
+    case QSGRendererInterface::Null: apiName = "Null"; break;
+    default: break;
+    }
+
+    qDebug() << "Qt Quick backend =" << apiName;
 
     QmlApp a;
     qInstallMessageHandler(0);

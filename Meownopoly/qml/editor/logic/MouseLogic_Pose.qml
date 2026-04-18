@@ -32,7 +32,6 @@ MouseLogic_Base {
     {
         var realPos = mainMa.mapToItem(grid, mouse.x, mouse.y)
         var gridPos = grid.getGridPosition(realPos.x, realPos.y)
-        console.log("Placing selected asset at:", gridPos)
         var placed = logic.tileLogic.placeSelectedAsset(gridPos.x, gridPos.y)
         mouse.accepted = true
         if (placed && placed.snapableParameters)

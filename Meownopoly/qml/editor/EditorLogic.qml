@@ -46,9 +46,6 @@ Base_logic {
 
     Loader {
         id: mouseLogicLoader
-        onSourceComponentChanged: {
-            console.log("MouseLogicLoader - Loaded component for mode:", logic.editorMouseMode)
-        }
         sourceComponent: (logic.editorMouseMode === EditorEnum.EM_NORMAL) ? editorDynamicComponent.mouseLogic_selection_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_POSE) ? editorDynamicComponent.mouseLogic_pose_comp
                                     : (logic.editorMouseMode === EditorEnum.EM_GAME) ? editorDynamicComponent.mouseLogic_game_comp
@@ -115,11 +112,13 @@ Base_logic {
     function saveMap(saveType){
         if (saveType === MapTypes.UNDOREDO) {
             // UNDOREDO est géré individuellement par Game.updateEditState()
+            console.log("Sauvegarde UNDOREDO : gérée individuellement par Game.updateEditState(), ne devrait pas être appelée ici.")
             return
         }
 
         // Vérifier si on peut sauvegarder (pas en cours de restauration)
         if (!(MapFileManager.currentMap ? MapFileManager.currentMap.canSave : true)) {
+            console.log("Sauvegarde impossible : une restauration est en cours.")
             return
         }
 

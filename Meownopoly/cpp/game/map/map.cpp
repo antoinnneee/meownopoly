@@ -251,8 +251,7 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore)
     }
 }
 
-bool Map::undo()
-{
+bool Map::undo(){
     if (m_undoStack.isEmpty())
         return false;
 

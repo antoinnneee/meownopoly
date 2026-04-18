@@ -44,12 +44,7 @@ QtObject {
         
         // S'assurer qu'on a au moins 1 de hauteur
         newHeight = Math.max(1, newHeight)
-        
-        console.log("TileLogic: Ajustement au ratio natif", ratioWidth + ":" + ratioHeight, 
-                    "(" + nativeRatio.toFixed(2) + ")",
-                    "de", currentElementWidth + "x" + currentElementHeight, 
-                    "vers", referenceWidth + "x" + newHeight)
-        
+                
         currentElementHeight = newHeight
     }
 
