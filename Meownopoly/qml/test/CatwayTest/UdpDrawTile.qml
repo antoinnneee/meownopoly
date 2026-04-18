@@ -16,6 +16,13 @@ Rectangle {
     border.color: host.cardBorder
     border.width: 1
 
+    function reliablePayloadToString(data) {
+        if (typeof data === "string")
+            return data
+        // QByteArray arrive comme objet en QML — toString() le convertit en UTF-8
+        return String(data)
+    }
+
     function applyDrawMessage(senderId, message) {
         if (!udpDrawTileRoot.targetPlayer || senderId !== udpDrawTileRoot.targetPlayer.playerId)
             return
@@ -36,8 +43,8 @@ Rectangle {
         function onUdpMessageReceived(senderId, message) {
             applyDrawMessage(senderId, message)
         }
-        function onReliableMessageReceivedString(senderId, message) {
-            applyDrawMessage(senderId, message)
+        function onReliableMessageReceived(senderId, data) {
+            applyDrawMessage(senderId, reliablePayloadToString(data))
         }
     }
 

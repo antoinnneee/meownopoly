@@ -45,11 +45,15 @@ QtObject {
     property string downloadStatus: LauncherManager.downloadStatus
     property bool packageCreated: LauncherManager.packageCreated
     property var modelsList: LauncherManager.modelsList
-    
+    property real bytesReceived: LauncherManager.bytesReceived
+    property real bytesTotal: LauncherManager.bytesTotal
+    property string versionDescription: LauncherManager.versionDescription
+
     // Settings
     property Settings settings: Settings {
         property string serverUrl: "https://pattounecorp.ovh"
         property string lastVersion: "0.0.0"
+        property string uploadToken: ""
     }
     
     // Signals pour communication avec l'interface
@@ -61,6 +65,7 @@ QtObject {
     signal updateAvailable();
     signal downloadSucess();
     signal modelsListUpdated();
+    signal connectionTestResult(bool success, string message);
 
     // Helper pour calculer la version suivante
     function getNextVersion(currentVersion) {
@@ -121,10 +126,14 @@ QtObject {
     }
 
     function updateServerUrl(newUrl) {
-        root.serverUrl = newUrl
         root.settings.serverUrl = newUrl
     }
-    
+
+    function updateUploadToken(token) {
+        root.settings.uploadToken = token
+        LauncherManager.setUploadToken(token)
+    }
+
     function resetDownloadState() {
         LauncherManager.resetDownloadState()
     }
@@ -174,12 +183,16 @@ QtObject {
         }
         
         function onConnectionTestResult(success, message) {
-            // Ce signal est déjà géré directement par les composants si nécessaire
+            root.connectionTestResult(success, message)
         }
     }
     
     // Initialisation
     Component.onCompleted: {
         root.logMessage("Launcher Logic initialisé")
+        // Charger le token depuis les settings
+        if (root.settings.uploadToken.length > 0) {
+            LauncherManager.setUploadToken(root.settings.uploadToken)
+        }
     }
 }

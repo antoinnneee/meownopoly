@@ -114,6 +114,7 @@ QtObject {
             if (newTile.snapToGridFromGridPos) {
                 newTile.snapToGridFromGridPos()
             }
+            // Broadcast réseau (si collab) piloté par Game.updateMap du côté appelant.
         }
         return newTile
     }
@@ -172,6 +173,7 @@ QtObject {
 
         // Enregistrer la modification de connexion dans l'historique undo.
         // rewireLinks côté C++ restaurera symétriquement target.prev sur undo.
+        // Broadcast réseau (si collab) orchestré par Game.updateMap.
         if (source.snapableParameters)
             Game.updateMap(EditDelta.TileModified, source.snapableParameters)
     }

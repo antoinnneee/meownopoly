@@ -20,101 +20,11 @@ Popup {
         border.width: 1
     }
 
-    // Confirmation régénération identifiant
-    Popup {
-        id: confirmRegenIdPopup
-        width: 380
-        height: 320
-        modal: true
-        focus: true
-        closePolicy: Popup.CloseOnEscape
-        anchors.centerIn: parent
-
-        background: Rectangle {
-            color: "#333333"
-            radius: 12
-            border.color: "#ff6b6b"
-            border.width: 2
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 20
-            spacing: 16
-
-            Text {
-                text: "⚠️ Changer d'identifiant"
-                color: "#ff6b6b"
-                font.pixelSize: 18
-                font.bold: true
-                Layout.alignment: Qt.AlignHCenter
-            }
-
-            Text {
-                text: "Vous serez considéré comme un nouveau joueur dans le chat. Vos anciens messages resteront affichés avec l'ancien identifiant.\n\nToute donnée liée à cet ID (parties, sauvegardes) pourrait ne plus vous être associée.\n\nCette action est irréversible."
-                color: "#cccccc"
-                font.pixelSize: 12
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 12
-
-                Button {
-                    text: "Annuler"
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 40
-                    background: Rectangle {
-                        color: parent.pressed ? "#444444" : "#555555"
-                        radius: 6
-                    }
-                    contentItem: Text {
-                        text: parent.text
-                        color: "#cccccc"
-                        font.pixelSize: 13
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    onClicked: confirmRegenIdPopup.close()
-                }
-
-                Button {
-                    text: "Régénérer"
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 40
-                    background: Rectangle {
-                        color: parent.pressed ? "#c62828" : "#e53935"
-                        radius: 6
-                    }
-                    contentItem: Text {
-                        text: parent.text
-                        color: "white"
-                        font.pixelSize: 13
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    onClicked: {
-                        if (AccountManager.regenerateUniqueId()) {
-                            confirmRegenIdPopup.close()
-                            idRegeneratedAnimation.start()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 25
         spacing: 20
 
-        // Header
         RowLayout {
             Layout.fillWidth: true
 
@@ -131,7 +41,6 @@ Popup {
                 Layout.fillWidth: true
             }
 
-            // Close button
             Rectangle {
                 width: 32
                 height: 32
@@ -154,14 +63,12 @@ Popup {
             }
         }
 
-        // Separator
         Rectangle {
             Layout.fillWidth: true
             height: 1
             color: "#444444"
         }
 
-        // Unique ID section
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -199,7 +106,6 @@ Popup {
                         Layout.fillWidth: true
                     }
 
-                    // Copy button
                     Rectangle {
                         width: 30
                         height: 30
@@ -217,7 +123,6 @@ Popup {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
-                                // Copy to clipboard would require C++ integration
                                 copyConfirmText.visible = true
                                 copyConfirmTimer.restart()
                             }
@@ -294,7 +199,6 @@ Popup {
             }
         }
 
-        // Nickname section
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -387,7 +291,6 @@ Popup {
             }
         }
 
-        // STUN Server section
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -441,7 +344,7 @@ Popup {
                     }
 
                     onPaint: {
-                        var ctx = getContext("2d");
+                        const ctx = getContext("2d");
                         if (!ctx) return;
                         ctx.reset();
                         ctx.moveTo(0, 0);
@@ -496,20 +399,19 @@ Popup {
 
                 onActivated: {
                     if (currentText !== "Custom") {
-                        var item = stunPopupModel.get(currentIndex);
+                        const item = stunPopupModel.get(currentIndex);
                         AccountManager.setStunServerURL(item.value);
                         AccountManager.setStunPort(item.port);
                     }
                 }
 
                 Component.onCompleted: {
-                    // Initialize selection based on current settings
-                    var currentServer = AccountManager.stunServer;
-                    var currentPort = AccountManager.stunPort;
-                    var found = false;
+                    const currentServer = AccountManager.stunServer;
+                    const currentPort = AccountManager.stunPort;
+                    let found = false;
 
-                    for (var i = 0; i < stunPopupModel.count; i++) {
-                        var item = stunPopupModel.get(i);
+                    for (let i = 0; i < stunPopupModel.count; i++) {
+                        const item = stunPopupModel.get(i);
                         if (item.value === currentServer && item.port === currentPort) {
                             currentIndex = i;
                             found = true;
@@ -518,18 +420,16 @@ Popup {
                     }
 
                     if (!found) {
-                        currentIndex = 2; // Custom
+                        currentIndex = 2
                     }
                 }
             }
 
-            // Custom STUN Details (Visible only if Custom is selected)
             RowLayout {
                 Layout.fillWidth: true
                 visible: stunPopupComboBox.currentText === "Custom"
                 spacing: 10
 
-                // Custom Host
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
@@ -552,14 +452,13 @@ Popup {
                         background: null
 
                         onEditingFinished: {
-                             if (stunPopupComboBox.currentText === "Custom") {
+                            if (stunPopupComboBox.currentText === "Custom") {
                                 AccountManager.setStunServerURL(text)
-                             }
+                            }
                         }
                     }
                 }
 
-                // Custom Port
                 Rectangle {
                     Layout.preferredWidth: 80
                     Layout.preferredHeight: 40
@@ -584,9 +483,9 @@ Popup {
                         background: null
 
                         onEditingFinished: {
-                             if (stunPopupComboBox.currentText === "Custom") {
+                            if (stunPopupComboBox.currentText === "Custom") {
                                 AccountManager.setStunPort(parseInt(text))
-                             }
+                            }
                         }
                     }
                 }
@@ -594,5 +493,93 @@ Popup {
         }
 
         Item { Layout.fillHeight: true }
+    }
+
+    Popup {
+        id: confirmRegenIdPopup
+        width: 380
+        height: 320
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape
+        anchors.centerIn: parent
+
+        background: Rectangle {
+            color: "#333333"
+            radius: 12
+            border.color: "#ff6b6b"
+            border.width: 2
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 20
+            spacing: 16
+
+            Text {
+                text: "⚠️ Changer d'identifiant"
+                color: "#ff6b6b"
+                font.pixelSize: 18
+                font.bold: true
+                Layout.alignment: Qt.AlignHCenter
+            }
+
+            Text {
+                text: "Vous serez considéré comme un nouveau joueur dans le chat. Vos anciens messages resteront affichés avec l'ancien identifiant.\n\nToute donnée liée à cet ID (parties, sauvegardes) pourrait ne plus vous être associée.\n\nCette action est irréversible."
+                color: "#cccccc"
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+
+                Button {
+                    text: "Annuler"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    background: Rectangle {
+                        color: parent.pressed ? "#444444" : "#555555"
+                        radius: 6
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#cccccc"
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: confirmRegenIdPopup.close()
+                }
+
+                Button {
+                    text: "Régénérer"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    background: Rectangle {
+                        color: parent.pressed ? "#c62828" : "#e53935"
+                        radius: 6
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        color: "white"
+                        font.pixelSize: 13
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onClicked: {
+                        if (AccountManager.regenerateUniqueId()) {
+                            confirmRegenIdPopup.close()
+                            idRegeneratedAnimation.start()
+                        }
+                    }
+                }
+            }
+        }
     }
 }

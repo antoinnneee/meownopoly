@@ -46,6 +46,12 @@ public:
     bool redo();
     bool canSave() const { return !m_isRestoringState; }
 
+    // Deltas traités lors du dernier undo()/redo(). Peuplés à chaque appel.
+    // Utilisé par Game::askPreview/askNext pour broadcaster les ops inverses
+    // (Pattern B en mode collab).
+    QList<EditDelta> lastRevertedBatch() const { return m_lastRevertedBatch; }
+    bool lastRevertedWasUndo() const { return m_lastRevertedWasUndo; }
+
     void clearHistory();
 
     ItemSnapable* tileById(const QUuid &id) const;
@@ -96,6 +102,9 @@ private:
     QStack<EditDelta> m_undoStack;
     QStack<EditDelta> m_redoStack;
     bool m_isRestoringState = false;
+
+    QList<EditDelta> m_lastRevertedBatch;
+    bool m_lastRevertedWasUndo = false;
 };
 
 #endif // MAP_H

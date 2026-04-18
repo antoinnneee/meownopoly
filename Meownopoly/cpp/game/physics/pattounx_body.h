@@ -42,6 +42,7 @@ class PattounX_body : public QObject
     Q_PROPERTY(bool isColliding READ isColliding NOTIFY isCollidingChanged)
     Q_PROPERTY(QVector2D lastCollisionNormal READ lastCollisionNormal NOTIFY lastCollisionNormalChanged)
     Q_PROPERTY(QVector2D inputVector READ inputVector WRITE setInputVector NOTIFY inputVectorChanged)
+    Q_PROPERTY(bool isSleeping READ isSleeping NOTIFY isSleepingChanged)
 
 public:
     explicit PattounX_body(QObject* parent = nullptr);
@@ -60,6 +61,7 @@ public:
     bool isStatic() const { return m_isStatic; }
     bool collisionEnabled() const { return m_collisionEnabled; }
     bool isColliding() const { return m_isColliding; }
+    bool isSleeping() const { return m_isSleeping; }
     QVector2D lastCollisionNormal() const { return m_lastCollisionNormal; }
     QVector2D previousPosition() const { return m_previousPosition; }
     
@@ -106,7 +108,12 @@ public:
      * @brief Met à jour l'état de collision
      */
     void setCollidingState(bool colliding, const QVector2D& normal);
-    
+
+    /**
+     * @brief Déplace le body sans réinitialiser previousPosition (usage solver)
+     */
+    void movePosition(const QVector2D& pos);
+
     /**
      * @brief Référence vers le moteur physique parent
      */
@@ -152,7 +159,7 @@ signals:
     void exitedZone(PattounX_zone* zone);
 
     void inputVectorChanged();
-
+    void isSleepingChanged();
 
     void invMassChanged();
 
@@ -194,12 +201,18 @@ private:
 
 
 
+    // Sleep (mise en veille des bodies quasi-immobiles)
+    bool m_isSleeping = false;
+    int m_sleepFrameCount = 0;
+    static constexpr qreal SLEEP_VELOCITY_THRESHOLD = 0.5;
+    static constexpr int SLEEP_FRAMES_REQUIRED = 30;
+
     // Référence au moteur
     PattounX_engine* m_engine = nullptr;
     QVector2D m_inputVector;
-    qreal m_restitution;
-    qreal m_staticFriction;
-    qreal m_dynamicFriction;
+    qreal m_restitution = 0.3;
+    qreal m_staticFriction = 0.4;
+    qreal m_dynamicFriction = 0.2;
 };
 
 #endif // PATTOUNX_BODY_H

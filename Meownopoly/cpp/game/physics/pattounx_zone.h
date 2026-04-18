@@ -31,6 +31,7 @@ public:
 
     ItemSnapable* snapable() const { return m_snapable; }
     ZoneParameter* zoneParameter() const;
+    const QRectF& boundingBox() const { return m_polygon.boundingBox; }
 
     
     // --- API Publique ---
@@ -48,7 +49,7 @@ public:
      * @param radius Rayon du cercle
      * @return Résultat de collision
      */
-    CollisionResult checkCollision(const QVector2D& center, qreal radius) const;
+    CollisionResult checkCollision(const QVector2D& center, qreal radius);
 
     /**
      * @brief Vérifie collision continue cercle-zone (sweep test)
@@ -57,10 +58,10 @@ public:
      * @param radius Rayon du cercle
      * @return Résultat de collision avec paramètre t
      */
-    CollisionResult checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const;
+    CollisionResult checkCollisionSweep(const QVector2D& startPos, const QVector2D& endPos, qreal radius);
 
-    QVector<CollisionResult> checkCollisionAll(const QVector2D& center, qreal radius) const;
-    QVector<CollisionResult> checkCollisionSweepAll(const QVector2D& startPos, const QVector2D& endPos, qreal radius) const;
+    QVector<CollisionResult> checkCollisionAll(const QVector2D& center, qreal radius);
+    QVector<CollisionResult> checkCollisionSweepAll(const QVector2D& startPos, const QVector2D& endPos, qreal radius);
 
     /**
      * @brief Accès aux paramètres de la zone

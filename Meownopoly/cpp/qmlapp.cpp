@@ -58,6 +58,8 @@
 #include "communication/player_network.h"
 #include "game/network/game_session.h"
 #include "game/network/minigame_sync.h"
+#include "editor/network/editor_session.h"
+#include "editor/ops/editor_op_bus.h"
 
 #include <QImageWriter>
 
@@ -93,6 +95,8 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     PlayerNetwork::registerQml();
     GameSession::registerQml();
     MinigameSync::registerQml();
+    EditorSession::registerQml();
+    EditorOpBus::registerQml();
 
 
     // Register MapTypes namespace for QML

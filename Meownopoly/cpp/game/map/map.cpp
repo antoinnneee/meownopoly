@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QHash>
 #include <QDebug>
 #include <QQmlEngine>
 
@@ -14,15 +15,40 @@ Map::Map(QObject *parent) : QObject(parent)
 
 Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 {
+    if (!jsonObject.contains("snapableTiles") || !jsonObject["snapableTiles"].isArray()) {
+        qWarning() << "MAP_LOADING: Clé 'snapableTiles' manquante ou invalide dans le JSON de la map";
+        return;
+    }
+
     QJsonArray snapableTilesArray = jsonObject["snapableTiles"].toArray();
 
-    for (const QJsonValueRef value : snapableTilesArray) {
-        const QJsonObject tileObject = value.toObject();
+    for (int i = 0; i < snapableTilesArray.size(); ++i) {
+        if (!snapableTilesArray[i].isObject()) {
+            qWarning() << "MAP_LOADING: Entrée snapableTiles[" << i << "] n'est pas un objet JSON - ignorée";
+            continue;
+        }
+        const QJsonObject tileObject = snapableTilesArray[i].toObject();
+
+        if (!tileObject.contains("uniqueId") || !tileObject.contains("tileType")) {
+            qWarning() << "MAP_LOADING: Tile[" << i << "] sans uniqueId ou tileType - ignorée";
+            continue;
+        }
+
         ItemSnapable *is = new ItemSnapable(tileObject);
         QQmlEngine::setObjectOwnership(is, QQmlEngine::CppOwnership);
         m_tiles.append(is);
     }
     updateTileCounts();
+
+    // Index UUID → tile pour une résolution O(1) des liens
+    QHash<QString, ItemSnapable*> tileIndex;
+    for (ItemSnapable *tile : std::as_const(m_tiles)) {
+        QString id = tile->uniqueId().toString();
+        if (tileIndex.contains(id)) {
+            qWarning() << "MAP_LOADING: UUID dupliqué détecté:" << id << "- seule la dernière tile sera référencée";
+        }
+        tileIndex[id] = tile;
+    }
 
     for (ItemSnapable *is : std::as_const(m_tiles)) {
         QJsonObject originalJson = is->getOriginalJson();
@@ -30,11 +56,18 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 
         for (const QJsonValueRef value : nextIdArray) {
             QString nextId = value.toString();
-            for (ItemSnapable *targetTile : m_tiles) {
-                if (targetTile->uniqueId().toString() == nextId) {
-                    is->addNext(targetTile);
-                    targetTile->addPrev(is);
-                }
+            if (nextId.isEmpty()) {
+                qWarning() << "MAP_LOADING: UUID vide dans next[] de la tile" << is->uniqueId().toString();
+                continue;
+            }
+            ItemSnapable *targetTile = tileIndex.value(nextId, nullptr);
+            if (targetTile) {
+                is->addNext(targetTile);
+                targetTile->addPrev(is);
+            } else {
+                qWarning() << "MAP_LOADING: Référence next invalide:" << nextId
+                           << "depuis la tile" << is->uniqueId().toString()
+                           << "- connexion ignorée";
             }
         }
     }
@@ -124,9 +157,14 @@ Map *Map::loadMap(QJsonObject newEdit)
     QJsonObject jsonObject = newEdit;
     Map *map = new Map(jsonObject);
 
-    QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
-    MapInfo *mi = new MapInfo(mapInfoObject);
-    map->setMapInfo(mi);
+    if (jsonObject.contains("mapInfo") && jsonObject["mapInfo"].isObject()) {
+        QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
+        MapInfo *mapInfo = new MapInfo(mapInfoObject);
+        map->setMapInfo(mapInfo);
+    } else {
+        qWarning() << "MAP_LOADING: Clé 'mapInfo' manquante ou invalide - map chargée sans métadonnées";
+    }
+
     return map;
 }
 
@@ -148,9 +186,14 @@ Map *Map::loadMap(QString mapName, MapTypes::MapType mapType)
 
     Map *map = new Map(jsonObject);
 
-    QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
-    MapInfo *mi = new MapInfo(mapInfoObject);
-    map->setMapInfo(mi);
+    if (jsonObject.contains("mapInfo") && jsonObject["mapInfo"].isObject()) {
+        QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();
+        MapInfo *mapInfo = new MapInfo(mapInfoObject);
+        map->setMapInfo(mapInfo);
+    } else {
+        qWarning() << "MAP_LOADING: Clé 'mapInfo' manquante ou invalide - map chargée sans métadonnées";
+    }
+
     return map;
 }
 
@@ -273,14 +316,16 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore, QSet<QUuid> &touc
     }
     case EditDeltaType::TileAdded: {
         if (applyBefore) {
-            // undo addition = remove the tile (et désabonne ses voisins)
+            // undo addition = remove the tile (idempotent si déjà retirée par remote)
             ItemSnapable *toDelete = tileById(delta.tileId);
-            if (toDelete) unwireLinks(toDelete, touchedOut);
+            if (!toDelete) break;
+            unwireLinks(toDelete, touchedOut);
             removeTile(delta.tileId);
             emit tileRemovedFromHistory(delta.tileId);
             finalizeTile(delta.tileId);
         } else {
-            // redo addition = re-add the tile, puis résoudre ses liens
+            // redo addition = re-add the tile (idempotent si recréée par remote)
+            if (tileById(delta.tileId)) break;
             ItemSnapable *tile = new ItemSnapable(jsonState);
             QQmlEngine::setObjectOwnership(tile, QQmlEngine::CppOwnership);
             addTile(tile);
@@ -292,7 +337,8 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore, QSet<QUuid> &touc
     }
     case EditDeltaType::TileDeleted: {
         if (applyBefore) {
-            // undo deletion = restore the tile
+            // undo deletion = restore the tile (idempotent si déjà restaurée par remote)
+            if (tileById(delta.tileId)) break;
             ItemSnapable *tile = new ItemSnapable(jsonState);
             QQmlEngine::setObjectOwnership(tile, QQmlEngine::CppOwnership);
             addTile(tile);
@@ -300,9 +346,10 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore, QSet<QUuid> &touc
             tile->commitCurrentState();
             emit tileRestoredFromHistory(tile);
         } else {
-            // redo deletion = remove again
+            // redo deletion = remove again (idempotent si déjà retirée par remote)
             ItemSnapable *toDelete = tileById(delta.tileId);
-            if (toDelete) unwireLinks(toDelete, touchedOut);
+            if (!toDelete) break;
+            unwireLinks(toDelete, touchedOut);
             removeTile(delta.tileId);
             emit tileRemovedFromHistory(delta.tileId);
             finalizeTile(delta.tileId);
@@ -320,13 +367,14 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore, QSet<QUuid> &touc
 }
 
 bool Map::undo(){
+    m_lastRevertedBatch.clear();
+    m_lastRevertedWasUndo = true;
     if (m_undoStack.isEmpty())
         return false;
 
     m_isRestoringState = true;
     emit canSaveChanged();
 
-    // Collect all deltas in the same group
     QUuid groupId = m_undoStack.top().groupId;
     QList<EditDelta> group;
     while   (!m_undoStack.isEmpty() &&((groupId.isNull() && group.isEmpty()) ||
@@ -344,12 +392,15 @@ bool Map::undo(){
         applyDelta(delta, true, touched);
         m_redoStack.push(delta);
     }
+    m_lastRevertedBatch = group;
     emit afterRestoration(touched.values());
     return true;
 }
 
 bool Map::redo()
 {
+    m_lastRevertedBatch.clear();
+    m_lastRevertedWasUndo = false;
     if (m_redoStack.isEmpty())
         return false;
 
@@ -373,6 +424,7 @@ bool Map::redo()
         applyDelta(delta, false, touched);
         m_undoStack.push(delta);
     }
+    m_lastRevertedBatch = group;
     emit afterRestoration(touched.values());
     return true;
 }

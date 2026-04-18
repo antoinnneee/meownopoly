@@ -93,9 +93,25 @@ Case *CaseFactory::createCase(CaseType type)
 Case* CaseFactory::createCase(const QJsonObject &caseJson)
 {
     Case* newCase = nullptr;
-    
+
+    // Validation de la structure JSON minimale
+    if (caseJson.isEmpty()) {
+        qWarning() << "CASE_FACTORY: JSON vide reçu - impossible de créer une Case";
+        return nullptr;
+    }
+    if (!caseJson.contains("type")) {
+        qWarning() << "CASE_FACTORY: Clé 'type' manquante dans caseData"
+                    << "- name:" << caseJson["name"].toString("(absent)");
+        return nullptr;
+    }
+
     // Extract type from JSON and convert to enum
     Case::CaseType type = Case::intToCaseType(caseJson["type"].toInt());
+    if (type == Case::CS_Unknow) {
+        qWarning() << "CASE_FACTORY: Type de case inconnu:" << caseJson["type"].toInt()
+                    << "- création d'une Case par défaut";
+    }
+
     switch (type) {
     case Case::CS_RestArea:
         newCase = new CaseRestArea(caseJson);

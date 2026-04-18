@@ -38,11 +38,6 @@ Guides pratiques pour les utilisateurs et développeurs.
 - [Guide de Gameplay](./guides/GAMEPLAY_GUIDE.md) - Règles et mécaniques de jeu
 - [Guide de l'Éditeur de Maps](./guides/MAP_EDITOR_GUIDE.md) - Création de plateaux personnalisés
 
-### Pour les Développeurs
-- [Guide du Développeur](./guides/DEVELOPER_GUIDE.md) - Guide complet pour les développeurs
-- [Directives de Contribution](./guides/CONTRIBUTION_GUIDELINES.md) - Comment contribuer au projet
-
----
 
 ## 🎨 Design & UI ([/design](./design/))
 
@@ -102,8 +97,11 @@ Documentation sur les fonctionnalités spécifiques.
 
 | Date | Document | Modification |
 |------|----------|--------------|
+| 2026-04-10 | Architecture/Launcher | Ajout queue, retry, checksum, timeout, modèles 3D, auth |
+| 2026-04-10 | Architecture/Asset Manager | Ajout section modèles 3D |
+| 2026-04-10 | Features/Serveur Ressources | Routes modèles 3D, sécurité, Range, async I/O |
 | 2025-10-12 | INDEX | Réorganisation avec sous-dossiers (architecture/, guides/, design/, features/) |
-| 2025-10-12 | Architecture/Éditeur | **🆕 Création de 3 documents sur l'architecture de l'éditeur** |
+| 2025-10-12 | Architecture/Éditeur | Création de 3 documents sur l'architecture de l'éditeur |
 | 2025-10-12 | Tous | Déplacement des fichiers dans la nouvelle structure |
 | 2025-09-30 | Tous | Création initiale de la documentation complète |
 | 2025-09-30 | README | Mise à jour et amélioration de la structure |

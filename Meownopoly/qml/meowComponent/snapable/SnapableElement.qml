@@ -13,6 +13,7 @@ import ItemSnapableFactory
 
 import MapTypes
 import MapFileManager
+import EditorSession 1.0
 
 Rectangle {
     id: snapableElement
@@ -350,5 +351,44 @@ Rectangle {
         snapableParameters.zoneParameter.velocityStrenght = physicSettings.velocityStrength
         snapableParameters.zoneParameter.frictionStrenght = physicSettings.frictionStrength
         snapableParameters.zoneParameter.accelerationMultiplier = physicSettings.accelerationMultiplier
+    }
+
+    // ─── Phase 5b : liserés des sélections distantes ───────────────────────
+    //
+    // Recalculé sur remoteSelectionsChanged (NOTIFY de la Q_PROPERTY C++).
+    // Retourne la liste des playerIds qui ont cette tuile dans leur sélection.
+    readonly property var _foreignSelectors: {
+        if (!snapableParameters) return []
+        if (!EditorSession.active) return []
+        const myUuid = String(snapableParameters.uniqueId)
+        const rs = EditorSession.remoteSelections
+        const result = []
+        for (const pid in rs) {
+            const uuids = rs[pid] || []
+            for (let i = 0; i < uuids.length; i++) {
+                if (uuids[i] === myUuid) { result.push(pid); break }
+            }
+        }
+        return result
+    }
+
+    function _foreignColor(pid) {
+        let h = 0
+        for (let i = 0; i < pid.length; i++) h = (h * 131 + pid.charCodeAt(i)) & 0xFFFF
+        return Qt.hsla((h % 360) / 360.0, 0.7, 0.55, 1.0)
+    }
+
+    Repeater {
+        model: snapableElement._foreignSelectors
+        delegate: Rectangle {
+            anchors.fill: parent
+            anchors.margins: -(2 + 3 * index)
+            color: "transparent"
+            border.width: 2
+            border.color: snapableElement._foreignColor(modelData)
+            radius: 4
+            z: 50 + index
+            visible: EditorSession.active
+        }
     }
 }

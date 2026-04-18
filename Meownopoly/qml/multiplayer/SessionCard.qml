@@ -16,18 +16,30 @@ Rectangle {
      property int maxPlayers
      property string hostNickname // Nouveau
      property int onlineCount     // Nouveau
+
+     // Phase 7 : détection du prefix "[EDIT:<hostId>]" pour décorer la carte
+     // et afficher un nom propre à l'utilisateur.
+     readonly property var _editInfo: {
+         const re = /^\[EDIT:([^\]]+)\]\s*(.*)$/
+         const m = re.exec(root.name || "")
+         return m ? { isEdit: true, hostId: m[1], cleanName: m[2] || "" }
+                  : { isEdit: false, hostId: "", cleanName: root.name || "" }
+     }
+     readonly property bool isEditorSession: _editInfo.isEdit
+     readonly property string displayName: _editInfo.cleanName
     
     width: ListView.view.width - 32
     height: 90
     color: "#2a2a2a"
     radius: 12
     
-    // Bordure colorée selon disponibilité
+    // Bordure colorée selon disponibilité (ou violette pour session éditeur).
     border.width: 2
     border.color: {
-        if (players === maxPlayers) return "#ff9800"  // Orange: pleine
-        if (players >= maxPlayers * 0.75) return "#ffeb3b"  // Jaune: presque pleine
-        return "#4caf50"  // Vert: disponible
+        if (root.isEditorSession) return "#a78bfa"           // Violet: session éditeur
+        if (players === maxPlayers) return "#ff9800"          // Orange: pleine
+        if (players >= maxPlayers * 0.75) return "#ffeb3b"    // Jaune: presque pleine
+        return "#4caf50"                                       // Vert: disponible
     }
     
     // Animation de bordure
@@ -50,9 +62,10 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 6
             
-            // Nom de la session
+            // Nom de la session (prefix "[EDIT:...]" stripé, 🛠️ ajouté).
             Text {
-                text: "Name: " +  root.name
+                text: (root.isEditorSession ? "🛠️ " : "")
+                      + "Name: " + root.displayName
                 color: "#ffffff"
                 font.pixelSize: 18
                 font.bold: true

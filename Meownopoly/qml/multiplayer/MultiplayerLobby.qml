@@ -6,21 +6,113 @@ import Meownopoly.Chat 1.0
 import Meownopoly.Account 1.0
 
 import Catway 1.0
-
 /**
  * Conteneur principal du lobby multijoueur
  * Gère la navigation interne entre SessionList et SessionDetails
- * La gestion des sessions est déléguée à ChatSessionManager (singleton).
  */
-
 Rectangle {
     id: root
 
     color: "#1a1a1a"
 
     signal backToTitleScreen()
-    signal lunchNewSession(bool isEdition)
-    signal lunchExistingSession(bool isEdition)
+
+    // Phase 7 : le hostId (playerId du créateur) est transmis pour que le
+    // client puisse appeler EditorSession.startAsClient avec le bon pair.
+    signal lunchNewSession(bool isEdition, string hostId)
+    signal lunchExistingSession(bool isEdition, string hostId)
+
+    // ── Encodage du mode éditeur dans le nom de session ─────────────────────
+    // Format : "[EDIT:<hostPlayerId>] <nom affiché>". Évite de modifier le
+    // serveur chat ; le champ name est déjà transmis nativement.
+    readonly property var _editPrefixRe: /^\[EDIT:([^\]]+)\]\s*(.*)$/
+
+    function _wrapEditorName(userName, hostId) {
+        return "[EDIT:" + hostId + "] " + userName
+    }
+
+    function _parseEditorPrefix(rawName) {
+        if (!rawName) return { isEdit: false, hostId: "", cleanName: rawName || "" }
+        const m = _editPrefixRe.exec(rawName)
+        if (!m) return { isEdit: false, hostId: "", cleanName: rawName }
+        return { isEdit: true, hostId: m[1], cleanName: m[2] || "" }
+    }
+
+    // État d'un join en cours : on mémorise le hostId extrait du nom quand
+    // l'utilisateur sélectionne une session, pour émettre lunchExistingSession
+    // une fois la connexion chat établie.
+    property bool _pendingJoinEdit: false
+    property string _pendingJoinHostId: ""
+    property string _pendingJoinSessionId: ""
+
+    // ChatClient mutualisé pour tout le lobbyD
+    ChatClient {
+        id: lobbyChatClient
+
+        onConnectedChanged: {
+            if (connected) {
+                console.log("✅ Lobby connected, requesting sessions...")
+                lobbyChatClient.requestSessionsList()
+                refreshTimer.start()
+            } else {
+                console.log("❌ Lobby disconnected")
+                refreshTimer.stop()
+            }
+        }
+
+        onAvailableSessionsChanged: {
+            console.log("📋 Sessions updated:", lobbyChatClient.availableSessions.length)
+        }
+
+        onErrorOccurred: function(error, errorType) {
+            if (errorType === ChatClient.INVALID_PASSWORD) {
+                sessionPasswordDialog.sessionIdForJoin = lobbyChatClient.sessionId
+                sessionPasswordDialog.open()
+                return
+            }
+            console.error("❌ Lobby error:", error)
+        }
+
+        onSessionCreated: function(sessionId, sessionName) {
+            console.log("✅ Session créée:", sessionName, "(id:", sessionId + ")")
+            lobbyChatClient.requestSessionsList()
+            // Phase 7 : le créateur est l'hôte. Si c'est une session éditeur,
+            // on cable Catway sur ce ChatClient avant de déclencher la nav
+            // (sinon les REQUEST_CONNECTION_INFO reçus plus tard ne seraient
+            // pas routés vers la bonne session chat).
+            const parsed = root._parseEditorPrefix(sessionName)
+            if (parsed.isEdit) {
+                console.log("🛠️ Session éditeur créée (host =", parsed.hostId + ") → lunchNewSession")
+                Catway.setChatClient(lobbyChatClient)
+                root.lunchNewSession(true, parsed.hostId)
+            } else {
+                root.lunchNewSession(false, AccountManager.uniqueId)
+            }
+        }
+
+        // Phase 7 : détection de fin de join côté client. sessionIdChanged fire
+        // quand connectToSessionDirect passe par setSessionId() — indispensable
+        // de câbler Catway sur ce ChatClient AVANT lunchExistingSession.
+        onSessionIdChanged: {
+            if (!lobbyChatClient.sessionId) return
+            if (!root._pendingJoinEdit) return
+            if (root._pendingJoinSessionId
+                    && lobbyChatClient.sessionId !== root._pendingJoinSessionId) return
+
+            console.log("🛠️ Session éditeur rejointe (host =", root._pendingJoinHostId + ") → lunchExistingSession")
+            Catway.setChatClient(lobbyChatClient)
+            const hid = root._pendingJoinHostId
+            root._pendingJoinEdit = false
+            root._pendingJoinHostId = ""
+            root._pendingJoinSessionId = ""
+            root.lunchExistingSession(true, hid)
+        }
+
+        Component.onCompleted: {
+            console.log("🚀 MultiplayerLobby ChatClient connecting...")
+            lobbyChatClient.connectToServer("ws://pattounecorp.ovh:3000")
+        }
+    }
 
     // Popup mot de passe lorsque INVALID_PASSWORD (session protégée)
     Dialog {
@@ -80,11 +172,23 @@ Rectangle {
 
         function acceptAndJoin() {
             if (sessionIdForJoin.length === 0) return
-            const client = ChatSessionManager.joinSession(sessionIdForJoin, sessionPasswordField.text)
-            ChatSessionManager.setActiveSession(client)
+            lobbyChatClient.connectToSessionDirect(sessionIdForJoin, sessionPasswordField.text)
             sessionPasswordField.text = ""
             sessionIdForJoin = ""
             close()
+        }
+    }
+
+    // Timer de rafraîchissement automatique
+    Timer {
+        id: refreshTimer
+        interval: 10000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (lobbyChatClient.connected) {
+                lobbyChatClient.requestSessionsList()
+            }
         }
     }
 
@@ -92,9 +196,16 @@ Rectangle {
     Component {
         id: sessionListComponent
         SessionList {
+            // Passer le ChatClient mutualisé
+            chatClient: lobbyChatClient
             onSessionSelected: function(sessionData) {
-                const client = ChatSessionManager.joinSession(sessionData.sessionId, sessionData.password ?? "")
-                ChatSessionManager.setActiveSession(client)
+                // Phase 7 : si c'est une session éditeur, on arme l'état de
+                // join pour que onSessionIdChanged déclenche la navigation.
+                const parsed = root._parseEditorPrefix(sessionData.name || sessionData.sessionName || "")
+                root._pendingJoinEdit     = parsed.isEdit
+                root._pendingJoinHostId   = parsed.hostId
+                root._pendingJoinSessionId = sessionData.sessionId
+                lobbyChatClient.connectToSessionDirect(sessionData.sessionId, sessionData.password)
             }
         }
     }
@@ -114,33 +225,26 @@ Rectangle {
     Component {
         id: sessionCreationComponent
         SessionCreation {
+            // Passer le ChatClient mutualisé
+            chatClient: lobbyChatClient
+
             onBackRequested: {
                 multiplayerStackView.pop()
             }
 
             onSessionCreateRequested: function(sessionData) {
-                console.log("📝 Création de session:", sessionData.name)
-                const client = ChatSessionManager.createAndJoinSession(sessionData.name, sessionData.password)
-                ChatSessionManager.setActiveSession(client)
+                // Phase 7 : encoder le mode édition dans le nom via prefix
+                // "[EDIT:<hostId>]" — évite toute modification du serveur chat.
+                let finalName = sessionData.name
+                if (sessionData.isEditionMode) {
+                    finalName = root._wrapEditorName(sessionData.name, AccountManager.uniqueId)
+                    console.log("🛠️ Création session éditeur — nom encodé :", finalName)
+                } else {
+                    console.log("📝 Création de session:", sessionData.name)
+                }
+                lobbyChatClient.createSession(finalName, sessionData.password)
                 multiplayerStackView.pop()
             }
-        }
-    }
-
-    // Gestion des erreurs remontées par les clients de session du manager
-    Connections {
-        target: ChatSessionManager
-        function onSessionError(sessionId, error, errorType) {
-            if (errorType === 1) { // ChatClient.INVALID_PASSWORD = 1
-                sessionPasswordDialog.sessionIdForJoin = sessionId
-                sessionPasswordDialog.open()
-                return
-            }
-            console.error("❌ Lobby session error [" + sessionId + "]:", error)
-        }
-        function onSessionJoined(client, sessionId) {
-            console.log("✅ Session rejointe:", sessionId)
-            ChatSessionManager.requestSessionsRefresh()
         }
     }
 
@@ -179,7 +283,7 @@ Rectangle {
 
                 // StatusIndicator
                 StatusIndicator {
-                    isOnline: ChatSessionManager.serverConnected
+                    isOnline: true
                     ping: 38
                 }
             }

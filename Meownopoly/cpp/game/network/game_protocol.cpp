@@ -22,7 +22,15 @@ bool GameProtocol::unpack(const QByteArray &data,
 {
     if (data.isEmpty()) return false;
 
-    outType = static_cast<GameMessageType::Value>(static_cast<quint8>(data.at(0)));
+    const quint8 rawType = static_cast<quint8>(data.at(0));
+
+    // Valider que le type est dans les plages définies
+    const bool validReliable = (rawType >= GameMessageType::GameStart && rawType <= GameMessageType::MapSync);
+    const bool validRealtime = (rawType >= GameMessageType::MinigameInput && rawType <= GameMessageType::MinigameSnapshot);
+    if (!validReliable && !validRealtime)
+        return false;
+
+    outType = static_cast<GameMessageType::Value>(rawType);
 
     if (data.size() > 1) {
         QJsonParseError err;

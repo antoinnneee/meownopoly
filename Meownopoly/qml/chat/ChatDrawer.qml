@@ -285,5 +285,13 @@ Drawer {
             internalChatClient.connectToServer("ws://pattounecorp.ovh:3000")
             internalChatClient.connectToSession(playerId, "123", playerNickname)
         }
+        // Force le retour en bas à chaque ouverture du drawer : la ListView peut
+        // contenir des messages avec des images dont le chargement asynchrone vient
+        // tout juste de se terminer (ou est encore en cours). Le re-stick + re-snap
+        // garantit qu'on apparaît au dernier message, pas au milieu.
+        if (messagesList.messageList) {
+            messagesList.messageList.stickToBottom = true
+            messagesList.messageList.snapToBottom()
+        }
     }
 }

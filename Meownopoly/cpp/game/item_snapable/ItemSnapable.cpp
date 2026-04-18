@@ -55,20 +55,61 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
     : QObject(parent)
 {
     m_json = json;
-    if (m_json.contains("caseData")) {
-        m_caseData = CaseFactory::createCase(m_json["caseData"].toObject());
+
+    // Valider et parser le tileType
+    int rawTileType = m_json["tileType"].toInt(-1);
+    if (rawTileType < CaseTile || rawTileType > PhysicZoneTile) {
+        qWarning() << "ITEM_SNAPABLE: tileType invalide:" << rawTileType
+                    << "pour la tile" << m_json["uniqueId"].toString() << "- défaut à DecorationTile";
+        m_tileType = DecorationTile;
+    } else {
+        m_tileType = TileType(rawTileType);
     }
+
+    // Valider et parser l'UUID
+    QUuid parsedId = QUuid(m_json["uniqueId"].toString());
+    if (parsedId.isNull()) {
+        qWarning() << "ITEM_SNAPABLE: uniqueId invalide ou manquant - génération d'un nouvel UUID";
+        m_uniqueId = QUuid::createUuid();
+    } else {
+        m_uniqueId = parsedId;
+    }
+
+    // Parser les sous-objets avec validation du type JSON
+    if (m_json.contains("caseData")) {
+        if (m_json["caseData"].isObject()) {
+            m_caseData = CaseFactory::createCase(m_json["caseData"].toObject());
+            if (!m_caseData && m_tileType == CaseTile) {
+                qWarning() << "ITEM_SNAPABLE: CaseFactory a retourné null pour CaseTile" << m_uniqueId.toString();
+            }
+        } else {
+            qWarning() << "ITEM_SNAPABLE: 'caseData' n'est pas un objet JSON pour tile" << m_uniqueId.toString();
+        }
+    } else if (m_tileType == CaseTile) {
+        qWarning() << "ITEM_SNAPABLE: CaseTile sans 'caseData' pour tile" << m_uniqueId.toString();
+    }
+
     if (m_json.contains("displayParameter")) {
-        m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
+        if (m_json["displayParameter"].isObject()) {
+            m_displayParameter = new DisplayParameter(m_json["displayParameter"].toObject(), this);
+        } else {
+            qWarning() << "ITEM_SNAPABLE: 'displayParameter' invalide pour tile" << m_uniqueId.toString();
+        }
     }
     if (m_json.contains("decorationParameter")) {
-        m_decorationParameter = new DecorationParameter(m_json["decorationParameter"].toObject(), this);
+        if (m_json["decorationParameter"].isObject()) {
+            m_decorationParameter = new DecorationParameter(m_json["decorationParameter"].toObject(), this);
+        } else {
+            qWarning() << "ITEM_SNAPABLE: 'decorationParameter' invalide pour tile" << m_uniqueId.toString();
+        }
     }
     if (m_json.contains("zoneParameter")) {
-        m_zoneParameter = new ZoneParameter(m_json["zoneParameter"].toObject(), this);
+        if (m_json["zoneParameter"].isObject()) {
+            m_zoneParameter = new ZoneParameter(m_json["zoneParameter"].toObject(), this);
+        } else {
+            qWarning() << "ITEM_SNAPABLE: 'zoneParameter' invalide pour tile" << m_uniqueId.toString();
+        }
     }
-    m_uniqueId = QUuid(m_json["uniqueId"].toString());
-    m_tileType = TileType(m_json["tileType"].toInt());
     commitCurrentState();
 }
 

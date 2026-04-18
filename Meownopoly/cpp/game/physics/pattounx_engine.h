@@ -46,7 +46,6 @@ public:
     bool debugMode() const { return m_debugMode; }
     
     // --- Setters ---
-    void setFriction(qreal friction);
     void setEnabled(bool enabled);
     void setDebugMode(bool debug);
     
@@ -149,7 +148,6 @@ public:
 signals:
     void bodyCountChanged();
     void zoneCountChanged();
-    void frictionChanged();
     void enabledChanged();
     void debugModeChanged();
     

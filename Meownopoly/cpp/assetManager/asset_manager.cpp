@@ -6,8 +6,7 @@
 #include <QDir>
 #include <QImageReader>
 #include <QRandomGenerator>
-#include <algorithm>
-#include <type_traits>
+#include <QUrl>
 #include "tools/metadata_generator.h"
 
 AssetManager* AssetManager::m_pThis = nullptr;
@@ -57,6 +56,10 @@ QVariant AssetModel::data(const QModelIndex &index, int role) const
         return asset.animated;
     case FrameCountRole:
         return asset.frameCount;
+    case TagsRole:
+        return asset.tags;
+    case DescriptionRole:
+        return asset.description;
     default:
         return QVariant();
     }
@@ -77,12 +80,15 @@ QHash<int, QByteArray> AssetModel::roleNames() const
     roles[ExtensionRole] = "extension";
     roles[AnimatedRole] = "animated";
     roles[FrameCountRole] = "frameCount";
+    roles[TagsRole] = "tags";
+    roles[DescriptionRole] = "description";
     return roles;
 }
 
 void AssetModel::addAsset(const QString &path, const QString &type, const QString &category,
-                         int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename, 
-                         const QString &extension, bool animated, int frameCount)
+                         int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename,
+                         const QString &extension, bool animated, int frameCount,
+                         const QStringList &tags, const QString &description)
 {
     beginInsertRows(QModelIndex(), m_assets.size(), m_assets.size());
     Asset asset;
@@ -98,6 +104,8 @@ void AssetModel::addAsset(const QString &path, const QString &type, const QStrin
     asset.extension = extension;
     asset.animated = animated;
     asset.frameCount = frameCount;
+    asset.tags = tags;
+    asset.description = description;
     m_assets.append(asset);
     endInsertRows();
 }
@@ -118,17 +126,16 @@ AssetModel* AssetModel::createFilteredModel(const QString &type) const
     }
 
     AssetModel *filteredModel = new AssetModel();
-    if (!filteredModel) {
-        ASSET_ERROR("Failed to create filtered model");
-        return nullptr;
-    }
+    // Ownership explicite pour QML — évite fuite mémoire si le modèle est réassigné
+    QQmlEngine::setObjectOwnership(filteredModel, QQmlEngine::JavaScriptOwnership);
 
     int matchCount = 0;
     for (const Asset &asset : m_assets) {
         if (asset.type == type) {
             filteredModel->addAsset(asset.path, asset.type, asset.category,
                                   asset.ratioWidth, asset.ratioHeight, asset.width, asset.height,
-                                  asset.id, asset.filename, asset.extension, asset.animated, asset.frameCount);
+                                  asset.id, asset.filename, asset.extension, asset.animated, asset.frameCount,
+                                  asset.tags, asset.description);
             matchCount++;
         }
     }
@@ -172,7 +179,6 @@ QObject* AssetManager::qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 AssetModel* AssetManager::getAssetModel(const QString &category, const QString &type)
 {
-    // Vérification des paramEtres
     if (category.isEmpty() || type.isEmpty()) {
         ASSET_ERROR("Invalid parameters - category:" << category << "type:" << type);
         return nullptr;
@@ -181,33 +187,25 @@ AssetModel* AssetManager::getAssetModel(const QString &category, const QString &
     QString key = category + "_" + type;
     ASSET_DEBUG("Looking for key:" << key);
 
-    // Vérifier si le modèle filtré existe déj�
-    for (int i = m_models.size() - 1; i >= 0; --i) { // Parcourir à l'envers pour éviter les problèmes d'index
-        if (m_models[i].first == key) {
-            AssetModel* existingModel = m_models[i].second;
-                    if (existingModel && existingModel->parent()) { // Vérifier que le pointeur est valide
+    auto it = m_models.find(key);
+    if (it != m_models.end()) {
+        AssetModel* existingModel = it.value();
+        if (existingModel && existingModel->parent()) {
             ASSET_INFO("Found existing model with" << existingModel->rowCount() << "assets");
             return existingModel;
-        } else {
-            // Le modèle existe mais est null ou invalide, le supprimer du cache
-            ASSET_ERROR("Removing invalid model from cache for key:" << key);
-                if (existingModel) {
-                    existingModel->deleteLater(); // Suppression sécurisée
-                }
-                m_models.removeAt(i);
-                break;
-            }
         }
+        // Modèle invalide, le supprimer du cache
+        ASSET_ERROR("Removing invalid model from cache for key:" << key);
+        if (existingModel) {
+            existingModel->deleteLater();
+        }
+        m_models.erase(it);
     }
 
-    AssetModel *filteredModel = nullptr;
-
-    filteredModel = new AssetModel(this); // Avec parent directement
-    if (filteredModel) {
-        m_models.append(QPair<QString, AssetModel*>(key, filteredModel));
-        ASSET_INFO("Created empty model for category:" << category);
-    }
-    return filteredModel;
+    AssetModel *newModel = new AssetModel(this);
+    m_models.insert(key, newModel);
+    ASSET_INFO("Created empty model for category:" << category);
+    return newModel;
 }
 
 // Helper function to create a fallback Asset
@@ -226,6 +224,8 @@ Asset createFallbackAsset()
     fallback.extension = QStringLiteral("webp");
     fallback.animated = false;
     fallback.frameCount = 1;
+    fallback.tags = {};
+    fallback.description = QString();
     return fallback;
 }
 
@@ -268,6 +268,8 @@ QVariantMap assetToVariantMap(const Asset &asset)
     map["extension"] = asset.extension;
     map["animated"] = asset.animated;
     map["frameCount"] = asset.frameCount;
+    map["tags"] = asset.tags;
+    map["description"] = asset.description;
     return map;
 }
 
@@ -287,6 +289,8 @@ QVariantMap createFallbackAssetMap(const QString &defaultPath)
     map["extension"] = "webp";
     map["animated"] = false;
     map["frameCount"] = 1;
+    map["tags"] = QStringList();
+    map["description"] = QString();
     return map;
 }
 
@@ -368,9 +372,7 @@ QVariantMap AssetManager::getRandomAsset(const QString &category, const QString 
 QString AssetManager::getAssetPath(const QString &category, const QString &type, const QString &id)
 {
     ASSET_DEBUG("Requesting" << category << type << id);
-    qDebug() << "Building asset path for category:" << category << "type:" << type << "id:" << id;
 
-    
     AssetModel *model = getAssetModel(category, type);
     if (model == nullptr) {
         ASSET_ERROR("Asset not valid, returning fallback for" << category << type << id);
@@ -390,23 +392,16 @@ QString AssetManager::getAssetPath(const QString &category, const QString &type,
 
 QString AssetManager::getAnimatedGifPath(const QString &category, const QString &type, const QString &id)
 {
-    qDebug() << "Getting animated GIF path for category:" << category << "type:" << type << "id:" << id;
-    
+    ASSET_DEBUG("Getting animated GIF path for category:" << category << "type:" << type << "id:" << id);
+
     QString animatedPath = buildAssetPath(category, type, id + "-animated.webp");
-    
-    // Vérifier si le fichier animé existe
-    QString localPath = animatedPath;
-    if (localPath.startsWith("file:///")) {
-        localPath = localPath.mid(8);
-    }
-    
-    QFile animatedFile(localPath);
-    if (!animatedFile.exists()) {
+
+    QString localPath = QUrl(animatedPath).toLocalFile();
+    if (!QFile::exists(localPath)) {
         ASSET_ERROR("Animated asset not found:" << animatedPath << ", returning fallback");
         return getDefaultAssetPath();
     }
-    
-    qDebug() << animatedPath;
+
     return animatedPath;
 }
 
@@ -426,15 +421,14 @@ void AssetManager::loadAssets()
 {
     ASSET_INFO("Starting asset loading...");
 
-
-    // Clear filtered models cache
-    cleanupInvalidModels(); // Nettoyer d'abord les modèles invalides
-    for (const QPair<QString, AssetModel*> &pair : m_models) {
-        if (pair.second) {
-            pair.second->deleteLater(); // Suppression sécurisée
+    // Supprimer tous les modèles existants
+    for (auto it = m_models.begin(); it != m_models.end(); ++it) {
+        if (it.value()) {
+            it.value()->deleteLater();
         }
     }
     m_models.clear();
+    m_imageCache.clear();
 
     QDir assetsDir(m_assetsBasePath);
     if (!assetsDir.exists()) {
@@ -479,15 +473,37 @@ void AssetManager::loadCategory(const QString &categoryPath, const QString &cate
 {
     QDir categoryDir(categoryPath);
 
+    // Charger tags.json pour cette catégorie
+    QHash<QString, QPair<QStringList, QString>> tagsData;
+    QString tagsFilePath = categoryDir.absoluteFilePath("tags.json");
+    QFile tagsFile(tagsFilePath);
+    if (tagsFile.open(QIODevice::ReadOnly)) {
+        QJsonParseError parseError;
+        QJsonDocument tagsDoc = QJsonDocument::fromJson(tagsFile.readAll(), &parseError);
+        if (parseError.error == QJsonParseError::NoError) {
+            QJsonObject tagsObj = tagsDoc.object();
+            for (auto it = tagsObj.begin(); it != tagsObj.end(); ++it) {
+                QJsonObject entry = it.value().toObject();
+                QStringList tags;
+                for (const QJsonValue &tag : entry["tags"].toArray()) {
+                    tags.append(tag.toString());
+                }
+                QString description = entry["description"].toString();
+                tagsData.insert(it.key(), {tags, description});
+            }
+        }
+        tagsFile.close();
+    }
+
     QStringList typeDirectories = categoryDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
     for (const QString &typeName : typeDirectories) {
         QString typePath = categoryDir.absoluteFilePath(typeName);
-        loadTypeFromDirectory(typePath, typeName, categoryName);
+        loadTypeFromDirectory(typePath, typeName, categoryName, tagsData);
     }
 }
 
-void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName)
+void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName, const QHash<QString, QPair<QStringList, QString>> &tagsData)
 {
     QDir typeDir(typePath);
     QString metadataPath = typeDir.absoluteFilePath("metadata.json");
@@ -533,54 +549,35 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
         bool animated = assetObj["animated"].toBool(false);
         int frameCount = assetObj["frameCount"].toInt(1);
 
-        QString fullPath = buildAssetPath(categoryName, typeName, filename);
-        
-        // Vérifier que le fichier existe, sinon utiliser l'asset par défaut
-        QString localPath = fullPath;
-        if (localPath.startsWith("file:///")) {
-            localPath = localPath.mid(8);
+        // Rechercher les tags et description pour cet asset
+        QStringList tags;
+        QString description;
+        QString tagsKey = typeName + "/" + filename;
+        if (tagsData.contains(tagsKey)) {
+            tags = tagsData[tagsKey].first;
+            description = tagsData[tagsKey].second;
         }
-        
-        QFile assetFile(localPath);
-        if (!assetFile.exists()) {
+
+        QString fullPath = buildAssetPath(categoryName, typeName, filename);
+
+        // Vérifier que le fichier existe, sinon utiliser l'asset par défaut
+        QString localPath = QUrl(fullPath).toLocalFile();
+        if (!QFile::exists(localPath)) {
             ASSET_ERROR("Asset file not found:" << localPath << ", using fallback");
             fullPath = getDefaultAssetPath();
         }
 
-        // Add to appropriate model
-        // todo: select model from variable, list with type and model
-        AssetModel *targetModel = nullptr;
-
+        // Récupérer ou créer le modèle pour cette catégorie/type
         QString key = categoryName + "_" + typeName;
-        targetModel = nullptr;
+        AssetModel *targetModel = m_models.value(key, nullptr);
 
-        // Chercher le modèle existant
-        for (const QPair<QString, AssetModel*> &pair : m_models) {
-            if (pair.first == key) {
-                targetModel = pair.second;
-                // Vérifier que le modèle est toujours valide
-                if (targetModel && targetModel->parent()) {
-                    break;
-                } else {
-                    // Modèle invalide, on va en créer un nouveau
-                    targetModel = nullptr;
-                    break;
-                }
-            }
-        }
-
-        // Créer un nouveau modèle si pas trouvé ou invalide
         if (!targetModel) {
-            targetModel = new AssetModel(this); // Avec parent pour gestion mémoire
-            m_models.append(QPair<QString, AssetModel*>(key, targetModel));
+            targetModel = new AssetModel(this);
+            m_models.insert(key, targetModel);
             ASSET_INFO("Created new model for" << key);
         }
 
-
-        if (targetModel) {
-
-            targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename, extension, animated, frameCount);
-        }
+        targetModel->addAsset(fullPath, typeName, categoryName, ratioWidth, ratioHeight, width, height, id, filename, extension, animated, frameCount, tags, description);
     }
 }
 
@@ -588,13 +585,13 @@ void AssetManager::loadTypeFromDirectory(const QString &typePath, const QString 
 QString AssetManager::buildAssetPath(const QString &category, const QString &type, const QString &filename) const
 {
     QDir assetsDir(m_assetsBasePath);
+    QString localPath;
     if (type.isEmpty()) {
-        // For categories without types (like player_icons)
-        return "file:///" + assetsDir.absoluteFilePath(category + "/" + filename);
+        localPath = assetsDir.absoluteFilePath(category + "/" + filename);
     } else {
-        // For categories with types (like decoration/grass, decoration/tree)
-        return "file:///" + assetsDir.absoluteFilePath(category + "/" + type + "/" + filename);
+        localPath = assetsDir.absoluteFilePath(category + "/" + type + "/" + filename);
     }
+    return QUrl::fromLocalFile(localPath).toString();
 }
 
 bool AssetManager::generateMetadataForDirectory(const QString &directoryPath)
@@ -623,9 +620,12 @@ QStringList AssetManager::scanAvailableAssets()
         return result;
     }
 
-    loadAssets(); // load assets to get categories
+    // Utiliser les catégories déjà chargées, ou scanner le dossier directement
+    QStringList categories = m_categories.isEmpty()
+        ? assetsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)
+        : m_categories;
 
-    for (const QString &category : m_categories) {
+    for (const QString &category : categories) {
         QString categoryPath = assetsDir.absoluteFilePath(category);
         QDir categoryDir(categoryPath);
         if (categoryDir.exists()) {
@@ -669,8 +669,7 @@ QStringList AssetManager::getAvailableBackgrounds() const
     // Récupérer la liste des fichiers avec leurs chemins absolus
     QFileInfoList fileList = directory.entryInfoList();
     for (const QFileInfo &fileInfo : fileList) {
-        // Ajouter le chemin absolu avec le préfixe file:///
-        backgrounds.append("file:///" + fileInfo.absoluteFilePath());
+        backgrounds.append(QUrl::fromLocalFile(fileInfo.absoluteFilePath()).toString());
     }
     
     return backgrounds;
@@ -678,15 +677,26 @@ QStringList AssetManager::getAvailableBackgrounds() const
 
 bool AssetManager::isTransparent(float px, float py, QString path)
 {
-    if (path.startsWith("file:///"))
-        path = path.right(path.length() - 8);
-    QImage image(path);
-    if (image.isNull()) {
-        ASSET_ERROR("Failed to load image:" << path);
-        return false; // or true, depending on how you want to handle errors
+    QString localPath = path.startsWith("file:") ? QUrl(path).toLocalFile() : path;
+
+    // Utiliser le cache d'images pour éviter de recharger à chaque appel
+    if (!m_imageCache.contains(localPath)) {
+        QImage image(localPath);
+        if (image.isNull()) {
+            ASSET_ERROR("Failed to load image:" << localPath);
+            return false;
+        }
+        m_imageCache.insert(localPath, image);
     }
 
-    QColor color = image.pixelColor(image.width()/px, image.height()/py);
+    const QImage &image = m_imageCache[localPath];
+    int pixelX = static_cast<int>(image.width() / px);
+    int pixelY = static_cast<int>(image.height() / py);
+
+    if (pixelX < 0 || pixelX >= image.width() || pixelY < 0 || pixelY >= image.height())
+        return true;
+
+    QColor color = image.pixelColor(pixelX, pixelY);
     if (!color.isValid())
         return true;
     return (color.alpha() == 0);
@@ -760,6 +770,46 @@ QStringList AssetManager::getAvailableCategories() const
     return m_categories;
 }
 
+// Supprime les accents/diacritiques d'une chaîne pour une recherche insensible aux accents
+static QString removeAccents(const QString &str)
+{
+    QString normalized = str.normalized(QString::NormalizationForm_D);
+    QString result;
+    result.reserve(normalized.size());
+    for (const QChar &ch : normalized) {
+        if (ch.category() != QChar::Mark_NonSpacing)
+            result.append(ch);
+    }
+    return result;
+}
+
+bool AssetManager::hasMatchingAsset(const QString &category, const QString &type, const QString &searchText)
+{
+    if (category.isEmpty() || type.isEmpty() || searchText.isEmpty())
+        return false;
+
+    AssetModel *model = getAssetModel(category, type);
+    if (!model)
+        return false;
+
+    const QString searchNorm = removeAccents(searchText.toLower());
+    for (const Asset &asset : model->getAssetList()) {
+        // Chercher dans l'id et le filename
+        if (removeAccents(asset.id.toLower()).contains(searchNorm) ||
+            removeAccents(asset.filename.toLower()).contains(searchNorm))
+            return true;
+        // Chercher dans la description
+        if (removeAccents(asset.description.toLower()).contains(searchNorm))
+            return true;
+        // Chercher dans les tags
+        for (const QString &tag : asset.tags) {
+            if (removeAccents(tag.toLower()).contains(searchNorm))
+                return true;
+        }
+    }
+    return false;
+}
+
 bool AssetManager::isAssetValid(const QString &category, const QString &type, const QString &id)
 {
     // Vérifications de base
@@ -805,14 +855,16 @@ void AssetManager::cleanupInvalidModels()
 {
     ASSET_DEBUG("Cleaning up invalid models...");
 
-    for (int i = m_models.size() - 1; i >= 0; --i) {
-        AssetModel* model = m_models[i].second;
+    for (auto it = m_models.begin(); it != m_models.end(); ) {
+        AssetModel* model = it.value();
         if (!model || !model->parent()) {
-            ASSET_ERROR("Removing invalid model for key:" << m_models[i].first);
+            ASSET_ERROR("Removing invalid model for key:" << it.key());
             if (model) {
                 model->deleteLater();
             }
-            m_models.removeAt(i);
+            it = m_models.erase(it);
+        } else {
+            ++it;
         }
     }
 

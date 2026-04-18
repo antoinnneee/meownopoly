@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import MapTypes
 import ui_item
+import EditorOpBus 1.0
 
 pragma ComponentBehavior: Bound
 
@@ -229,13 +230,21 @@ CollapsableGroupBox {
                     
                     onRemoveElement: function(element, index) {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
+                            // Phase 3+6 : unlink + inverse (link) pour undo.
+                            if (root.targetSnapableElement.snapableParameters && element && element.snapableParameters) {
+                                const sid = String(root.targetSnapableElement.snapableParameters.uniqueId)
+                                const tid = String(element.snapableParameters.uniqueId)
+                                EditorOpBus.submitOpWithUndo(
+                                    EditorOpBus.makeUnlinkOp(sid, tid, "previous"),
+                                    EditorOpBus.makeLinkOp(sid, tid, "previous"))
+                            }
                             root.targetSnapableElement.connectionManager.removePreviousElement(element)
                             if (logic) {
                                 logic.saveMap(MapTypes.UNDOREDO)
                             }
                         }
                     }
-                    
+
                     onElementHovered: function(element) {
                         root.hoveredConnectionElement = element
                         // Pour les éléments précédents, c'est leur connectionManager qui crée l'overlay
@@ -273,13 +282,21 @@ CollapsableGroupBox {
                     
                     onRemoveElement: function(element, index) {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
+                            // Phase 3+6 : unlink + inverse (link) pour undo.
+                            if (root.targetSnapableElement.snapableParameters && element && element.snapableParameters) {
+                                const sid = String(root.targetSnapableElement.snapableParameters.uniqueId)
+                                const tid = String(element.snapableParameters.uniqueId)
+                                EditorOpBus.submitOpWithUndo(
+                                    EditorOpBus.makeUnlinkOp(sid, tid, "next"),
+                                    EditorOpBus.makeLinkOp(sid, tid, "next"))
+                            }
                             root.targetSnapableElement.connectionManager.removeNextElement(element)
                             if (logic) {
                                 logic.saveMap(MapTypes.UNDOREDO)
                             }
                         }
                     }
-                    
+
                     onElementHovered: function(element) {
                         root.hoveredConnectionElement = element
                         // Pour les éléments suivants, c'est le targetSnapableElement.connectionManager qui crée l'overlay

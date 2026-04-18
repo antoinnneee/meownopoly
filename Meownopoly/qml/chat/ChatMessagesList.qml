@@ -157,6 +157,23 @@ Rectangle {
         spacing: 4
         highlightFollowsCurrentItem: false
         reuseItems: true
+        // Matérialise plus d'items hors écran pour que ListView mesure leur vraie hauteur
+        // et que la ScrollBar reflète mieux la taille réelle du contenu (en particulier
+        // quand un item « grand » — image, fichier texte — change la hauteur globale).
+        cacheBuffer: 2000
+
+        // Vrai tant que la vue est « collée » au dernier message. Devient false dès que
+        // l'utilisateur fait un scroll manuel vers le haut, et redevient true dès qu'il
+        // remonte au bas. Sert à décider si on doit re-snapper en bas à chaque changement
+        // de contentHeight (chargements async d'images, mesure tardive de TextEdit, etc.).
+        property bool stickToBottom: true
+
+        function snapToBottom() {
+            // positionViewAtEnd() ne suffit pas seul si une image vient d'être ajoutée :
+            // sa hauteur est encore en cours de calcul. On planifie via un Timer pour
+            // laisser au layout le temps de se stabiliser, puis on retente plusieurs fois.
+            scrollToBottomTimer.restart()
+        }
 
         Behavior on contentY {
             SmoothedAnimation {
@@ -164,6 +181,21 @@ Rectangle {
                 duration: 200
                 easing.type: Easing.OutQuad
             }
+        }
+
+        // Re-stick à chaque changement de hauteur du contenu : c'est ce qui rattrape les
+        // chargements asynchrones (Image, TextEdit) qui font « grandir » des delegates
+        // déjà visibles APRÈS le premier positionViewAtEnd().
+        onContentHeightChanged: {
+            if (stickToBottom)
+                positionViewAtEnd()
+        }
+
+        // Détection du scroll utilisateur. On ne change stickToBottom que sur les
+        // mouvements pilotés par l'utilisateur (flick / drag), pas sur les
+        // repositionnements programmatiques.
+        onMovementEnded: {
+            stickToBottom = atYEnd
         }
 
         ScrollBar.vertical: ScrollBar {
@@ -210,15 +242,45 @@ Rectangle {
         }
 
         onCountChanged: {
-            scrollToBottomTimer.restart()
+            // Nouveau message → si on était collé en bas, y rester. On force aussi
+            // stickToBottom à true au tout premier rendu (count passe de 0 à N) pour
+            // que l'ouverture du chat parte bien sur le dernier message.
+            if (stickToBottom)
+                scrollToBottomTimer.restart()
             messagesContainer.countChanged(messageList.count)
         }
 
+        // Plusieurs « tirs » différés pour rattraper les chargements asynchrones.
+        // Le premier (50 ms) gère le cas habituel ; les suivants (200/600 ms)
+        // attrapent les images qui mettent plus de temps à se décoder/mesurer.
         Timer {
             id: scrollToBottomTimer
             interval: 50
             repeat: false
-            onTriggered: messageList.positionViewAtEnd()
+            onTriggered: {
+                messageList.positionViewAtEnd()
+                scrollToBottomLateTimer.restart()
+            }
+        }
+        Timer {
+            id: scrollToBottomLateTimer
+            interval: 200
+            repeat: false
+            onTriggered: {
+                if (messageList.stickToBottom) {
+                    messageList.positionViewAtEnd()
+                    scrollToBottomVeryLateTimer.restart()
+                }
+            }
+        }
+        Timer {
+            id: scrollToBottomVeryLateTimer
+            interval: 400
+            repeat: false
+            onTriggered: {
+                if (messageList.stickToBottom)
+                    messageList.positionViewAtEnd()
+            }
         }
 
         Rectangle {

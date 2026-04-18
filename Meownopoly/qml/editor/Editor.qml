@@ -26,6 +26,9 @@ import AssetManager
 import ItemSnapableFactory
 import ui_item
 import Catway 1.0
+import EditorSession 1.0
+import EditorOpBus 1.0
+import Meownopoly.Account 1.0
 
 import utils
 import chat
@@ -45,6 +48,11 @@ Base_Board {
 
     property int appPositionX: 0
     property int appPositionY: 0
+
+    // Mode collaboratif : tant que false, l'éditeur reste strictement monoposte.
+    // Les interceptions réseau ultérieures checkeront ce flag avant d'agir.
+    readonly property bool collaborative: EditorSession.active
+
     property int availableHeight: height - selectionPanel.height
     property alias groupeSelection: workArea.groupeSelection
 
@@ -77,7 +85,18 @@ Base_Board {
 
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
-        // chatClient est désormais lié à Catway.chatClient via binding déclaratif dans ChatDrawer
+
+        // Phase 4 : si la session collab est déjà active lors de l'ouverture
+        // de l'éditeur (cas usuel : startAsClient déclenché depuis le panel
+        // de test avant navigation), le signal `activeChanged` est déjà passé
+        // → on déclenche manuellement le Hello côté client.
+        if (EditorSession.active && !EditorSession.isHost) {
+            console.log("[FullSync] client → envoi Hello (déjà actif au chargement)")
+            EditorSession.sendEvent(EditorMessageType.Hello, {
+                "nickname": AccountManager.nickname || "",
+                "assetPackHash": ""
+            })
+        }
     }
 
     onUpdateSettings: {
@@ -216,9 +235,17 @@ Base_Board {
         onClosed: root.forceActiveFocus()
         onFocusReleased: root.forceActiveFocus()
 
-        // Component.onCompleted: {
-        //     Catway.setChatClient(chatDrawer.chatClient)
-        // }
+        Component.onCompleted: {
+            // En mode collab, le ChatClient de Catway est déjà celui du lobby
+            // (pointant sur la session collab). Ne pas l'écraser avec celui
+            // de ChatDrawer (qui parle à la session "Pattoune" générale),
+            // sinon REQUEST_CONNECTION_INFO partirait dans le mauvais canal.
+            if (!EditorSession.active) {
+                Catway.setChatClient(chatDrawer.chatClient)
+            } else {
+                console.log("[Editor] collab actif — Catway.chatClient laissé tel quel (lobby)")
+            }
+        }
     }
 
     MenuMapAtStart {
@@ -318,6 +345,425 @@ Base_Board {
         }
     }
 
+    // Phase 3: applier distant. EditorOpBus positionne `isApplyingRemote=true`
+    // pendant l'émission — les mutations déclenchées ci-dessous passeront par
+    // submitOp mais seront droppées (pas de re-broadcast, pas de boucle).
+    Connections {
+        target: EditorOpBus
+        function onRemoteOpReceived(op) {
+
+            function findByUuid(uuid) {
+                return snapableTilesList.find(function(t) {
+                    return t && t.snapableParameters
+                        && String(t.snapableParameters.uniqueId) === uuid
+                })
+            }
+
+            switch (op.op) {
+            case EditorOpType.CreateItem: {
+                const newItem = ItemSnapableFactory.createItemSnapableFromJson(op.item)
+                logic.tileLogic.createItemSnapableTile(newItem)
+                break
+            }
+
+            case EditorOpType.DeleteItem: {
+                const victim = findByUuid(op.target)
+                if (victim) logic.tileLogic.deleteElement(victim)
+                break
+            }
+
+            case EditorOpType.MoveItem: {
+                const mover = findByUuid(op.target)
+                if (mover && mover.snapableParameters) {
+                    mover.snapableParameters.displayParameter.gridRelativePositionX = op.gridX
+                    mover.snapableParameters.displayParameter.gridRelativePositionY = op.gridY
+                    if (mover.snapToGridFromGridPos) mover.snapToGridFromGridPos()
+                }
+                break
+            }
+
+            case EditorOpType.ResizeItem: {
+                const rsz = findByUuid(op.target)
+                if (rsz && rsz.snapableParameters) {
+                    rsz.snapableParameters.displayParameter.unitSizeWidth  = op.w
+                    rsz.snapableParameters.displayParameter.unitSizeHeight = op.h
+                }
+                break
+            }
+
+            case EditorOpType.SetDisplayParameter: {
+                const dt = findByUuid(op.target)
+                if (dt && dt.snapableParameters && op.fields) {
+                    const dp = dt.snapableParameters.displayParameter
+                    for (const key in op.fields) {
+                        dp[key] = op.fields[key]
+                    }
+                }
+                break
+            }
+
+            case EditorOpType.SetZoneParameter: {
+                const zt = findByUuid(op.target)
+                if (zt && zt.applyPhysicSettings && op.fields) {
+                    zt.applyPhysicSettings(op.fields)
+                }
+                break
+            }
+
+            case EditorOpType.SetCaseData: {
+                const ct = findByUuid(op.target)
+                if (ct && ct.snapableParameters && ct.snapableParameters.caseData && op.fields) {
+                    const cd = ct.snapableParameters.caseData
+                    for (const k in op.fields) {
+                        // Changement de type = remplacement du sous-objet ;
+                        // on délègue à la méthode dédiée pour préserver les invariants.
+                        if (k === "type" && ct.snapableParameters.changeCaseDataType) {
+                            if (op.fields[k] !== cd.type) {
+                                ct.snapableParameters.changeCaseDataType(op.fields[k])
+                            }
+                        } else {
+                            cd[k] = op.fields[k]
+                        }
+                    }
+                }
+                break
+            }
+
+            case EditorOpType.LinkItems: {
+                const linkSrc = findByUuid(op.source)
+                const linkDst = findByUuid(op.target)
+                if (linkSrc && linkDst && linkSrc.connectionManager) {
+                    if (op.kind === "next") {
+                        linkSrc.connectionManager.addNextElement(linkDst)
+                    } else if (op.kind === "previous") {
+                        linkSrc.connectionManager.addPreviousElement(linkDst)
+                    }
+                }
+                break
+            }
+
+            case EditorOpType.UnlinkItems: {
+                const unSrc = findByUuid(op.source)
+                const unDst = findByUuid(op.target)
+                if (unSrc && unDst && unSrc.connectionManager) {
+                    if (op.kind === "next") {
+                        unSrc.connectionManager.removeNextElement(unDst)
+                    } else if (op.kind === "previous") {
+                        unSrc.connectionManager.removePreviousElement(unDst)
+                    }
+                }
+                break
+            }
+
+            case EditorOpType.ApplyState: {
+                // Pattern B : delta Map applyBefore/after sur le peer.
+                // Supporte à la fois un op unique et un batch (transactions).
+                if (op.batch && Array.isArray(op.ops)) {
+                    for (let i = 0; i < op.ops.length; i++) {
+                        const subOp = op.ops[i]
+                        Game.applyRemoteDelta(subOp.type, subOp.tileId, subOp.groupId,
+                                              subOp.before, subOp.after, subOp.applyBefore)
+                    }
+                } else {
+                    Game.applyRemoteDelta(op.type, op.tileId, op.groupId,
+                                          op.before, op.after, op.applyBefore)
+                }
+                break
+            }
+
+            default:
+                console.log("[Editor] remote op inconnue:", JSON.stringify(op))
+                break
+            }
+        }
+    }
+
+    // ─── Phase 4 : full-sync à la connexion ─────────────────────────────────
+    //
+    // Protocole :
+    //   1. Client devient actif → envoie Hello à l'hôte.
+    //   2. Hôte reçoit Hello → snapshot atomique de la liste des tuiles, split
+    //      en chunks (~20 KB chacun, sous le plafond reliable 32 KB), chaque
+    //      chunk envoyé en point-à-point au seul senderId.
+    //   3. Client accumule les chunks dans un buffer indexé ; quand tous sont
+    //      là, wipe l'état local et reconstruit depuis le snapshot (tout ça
+    //      dans un beginApplyRemote/endApplyRemote pour bloquer la remontée).
+    //
+    // Pas de serverSeq en v1 : reliable.io garantit l'ordre par endpoint, donc
+    // les ops qui arrivent après les chunks s'appliquent sur l'état reconstruit.
+    QtObject {
+        id: fullSyncBuffer
+        property var chunks: ({})   // index → string
+        property int expected: -1
+    }
+
+    function _fullSyncChunkSize() { return 20000 }
+
+    function _sendFullSyncTo(senderId) {
+        // Sérialise la liste des tuiles courante. On passe par snapableTiles
+        // comme format (cohérent avec MapFileManager), mais sans mapInfo
+        // car le client conserve son propre mapInfo courant.
+        console.log("[FullSync] host scan snapableTilesList.length =",
+                    snapableTilesList.length)
+        const tiles = []
+        for (let i = 0; i < snapableTilesList.length; i++) {
+            const t = snapableTilesList[i]
+            if (!t) {
+                console.warn("[FullSync] tile", i, "null/undefined — skipping")
+                continue
+            }
+            if (!t.snapableParameters) {
+                console.warn("[FullSync] tile", i, "has no snapableParameters — skipping")
+                continue
+            }
+            try {
+                const raw = t.snapableParameters.toJSON()
+                if (i === 0) console.log("[FullSync] sample tile[0] JSON:", raw)
+                tiles.push(JSON.parse(raw))
+            } catch (e) {
+                console.warn("[FullSync] tile", i, "JSON error:", e,
+                             "raw=", t.snapableParameters.toJSON())
+            }
+        }
+        const payload = JSON.stringify({ snapableTiles: tiles })
+        const CHUNK = _fullSyncChunkSize()
+        const count = Math.max(1, Math.ceil(payload.length / CHUNK))
+        console.log("[FullSync] host → " + senderId
+                    + " : " + tiles.length + " tuiles sérialisées, "
+                    + payload.length + " octets, " + count + " chunks")
+        for (let c = 0; c < count; c++) {
+            EditorSession.sendEventTo(senderId, EditorMessageType.FullSync, {
+                "chunkIndex": c,
+                "chunkCount": count,
+                "payload":    payload.substr(c * CHUNK, CHUNK)
+            })
+        }
+    }
+
+    function _receiveFullSyncChunk(payload) {
+        const idx   = payload.chunkIndex
+        const count = payload.chunkCount
+        if (fullSyncBuffer.expected !== count) {
+            // Nouveau stream ou premier chunk — reset.
+            fullSyncBuffer.chunks = ({})
+            fullSyncBuffer.expected = count
+        }
+        fullSyncBuffer.chunks[idx] = payload.payload
+        // Tous reçus ?
+        let got = 0
+        for (const k in fullSyncBuffer.chunks) got++
+        if (got < count) return
+
+        // Réassemble dans l'ordre.
+        let joined = ""
+        for (let i = 0; i < count; i++) {
+            joined += fullSyncBuffer.chunks[i] || ""
+        }
+        fullSyncBuffer.chunks = ({})
+        fullSyncBuffer.expected = -1
+
+        let snapshot
+        try { snapshot = JSON.parse(joined) }
+        catch (e) {
+            console.warn("[FullSync] JSON parse failed:", e)
+            return
+        }
+
+        _applyFullSyncSnapshot(snapshot)
+    }
+
+    function _applyFullSyncSnapshot(snapshot) {
+        const tiles = (snapshot && snapshot.snapableTiles) || []
+        console.log("[FullSync] applying snapshot —", tiles.length, "tuiles reçues")
+        if (tiles.length > 0) {
+            console.log("[FullSync] sample incoming tile[0]:",
+                        JSON.stringify(tiles[0]).substring(0, 300))
+        }
+
+        EditorOpBus.beginApplyRemote()
+        try {
+            // 1) Wipe local (copie défensive, deleteElement modifie la liste).
+            const toDelete = snapableTilesList.slice()
+            console.log("[FullSync] wiping", toDelete.length, "tuiles locales")
+            for (let i = 0; i < toDelete.length; i++) {
+                if (toDelete[i]) logic.tileLogic.deleteElement(toDelete[i])
+            }
+            // 2) Reconstruit depuis le snapshot.
+            let rebuilt = 0
+            for (let j = 0; j < tiles.length; j++) {
+                const item = ItemSnapableFactory.createItemSnapableFromJson(tiles[j])
+                if (!item) {
+                    console.warn("[FullSync] createItemSnapableFromJson returned null for tile", j)
+                    continue
+                }
+                const newTile = logic.tileLogic.createItemSnapableTile(item)
+                if (newTile) rebuilt++
+                else console.warn("[FullSync] createItemSnapableTile returned null for tile", j)
+            }
+            console.log("[FullSync] rebuilt", rebuilt, "/", tiles.length, "tuiles")
+            // 3) Rétablit les connexions (next/prev) depuis les JSON.
+            logic.tileLogic.builtConnections()
+        } finally {
+            EditorOpBus.endApplyRemote()
+        }
+    }
+
+    Connections {
+        target: EditorSession
+
+        // Client qui vient de devenir actif → salue l'hôte pour réclamer un
+        // FullSync. Hôte n'envoie pas Hello.
+        function onActiveChanged() {
+            if (EditorSession.active && !EditorSession.isHost) {
+                console.log("[FullSync] client → envoi Hello (activeChanged)")
+                EditorSession.sendEvent(EditorMessageType.Hello, {
+                    "nickname": AccountManager.nickname || "",
+                    "assetPackHash": ""   // TODO phase 4b : calculer
+                })
+            }
+        }
+
+        function onEditorEventReceived(type, senderId, payload) {
+            const hex = "0x" + type.toString(16)
+            switch (type) {
+            case EditorMessageType.Hello:
+                console.log("[FullSync] host ← Hello from", senderId)
+                if (EditorSession.isHost) {
+                    _sendFullSyncTo(senderId)
+                }
+                break
+            case EditorMessageType.FullSync:
+                console.log("[FullSync] client ← chunk", payload.chunkIndex,
+                            "/", payload.chunkCount)
+                if (!EditorSession.isHost) {
+                    _receiveFullSyncChunk(payload)
+                }
+                break
+            default:
+                console.log("[EditorSession] event non implémenté:", hex)
+                break
+            }
+        }
+
+        // Phase 5a : curseur distant reçu (UDP brut, ~20 Hz).
+        function onCursorReceived(senderId, x, y) {
+            root._upsertRemoteCursor(senderId, x, y)
+        }
+    }
+
+    // ─── Phase 5a : présence curseurs ───────────────────────────────────────
+    //
+    // Envoi : timer 20 Hz qui pousse la position `mainMa` (mappée en workArea
+    // coords) via EditorSession.sendCursor. La position côté pair s'affiche
+    // dans ses propres workArea coords — scroll/zoom indépendants.
+    //
+    // Réception : upsert dans une map playerId → {x, y, lastSeen} + signal
+    // cursorsChanged pour forcer le Repeater à se mettre à jour. Prune auto
+    // toutes les 500 ms des entrées sans nouvelles depuis 2 s.
+
+    property var remoteCursors: ({})
+    property var _remoteCursorKeys: []
+
+    // Position courante du pointeur dans le référentiel workArea, alimentée
+    // par le HoverHandler ci-dessous (qui capte aussi le hover sans clic).
+    property real _hoverX: -99999
+    property real _hoverY: -99999
+
+    signal _cursorsChanged()
+
+    function _colorForPlayer(pid) {
+        let h = 0
+        for (let i = 0; i < pid.length; i++)
+            h = (h * 131 + pid.charCodeAt(i)) & 0xFFFF
+        return Qt.hsla((h % 360) / 360.0, 0.7, 0.55, 1.0)
+    }
+
+    function _upsertRemoteCursor(pid, x, y) {
+        // Important : réassigner un nouvel objet (pas de mutation en place)
+        // pour que le binding `_entry` du delegate Repeater se ré-évalue.
+        // QML ne détecte pas les mutations de champs sur un var existant.
+        const copy = {}
+        for (const k in remoteCursors) copy[k] = remoteCursors[k]
+        copy[pid] = { "x": x, "y": y, "lastSeen": Date.now() }
+        remoteCursors = copy
+        _remoteCursorKeys = Object.keys(copy)
+    }
+
+    Timer {
+        id: cursorSendTimer
+        interval: 50        // 20 Hz
+        repeat: true
+        running: EditorSession.active
+        property real lastX: -99999
+        property real lastY: -99999
+        onTriggered: {
+            // Utilise _hoverX/_hoverY (alimenté par le HoverHandler de workArea)
+            // plutôt que mainMa.mouseX/mouseY — ces derniers sont masqués par
+            // les MouseAreas enfants (tuiles, grille) qui consomment le hover.
+            const x = root._hoverX
+            const y = root._hoverY
+            if (x === -99999) return                 // pas encore de position
+            if (x === lastX && y === lastY) return   // pas bougé
+            lastX = x
+            lastY = y
+            EditorSession.sendCursor(x, y)
+        }
+    }
+
+    Timer {
+        id: cursorPruneTimer
+        interval: 500
+        repeat: true
+        running: EditorSession.active
+        onTriggered: {
+            const now = Date.now()
+            let changed = false
+            const kept = {}
+            for (const pid in remoteCursors) {
+                if (now - remoteCursors[pid].lastSeen < 2000) {
+                    kept[pid] = remoteCursors[pid]
+                } else {
+                    changed = true
+                }
+            }
+            if (changed) {
+                remoteCursors = kept
+                _remoteCursorKeys = Object.keys(kept)
+            }
+        }
+    }
+
+    // ─── Phase 5b : broadcast de la sélection locale ────────────────────────
+    //
+    // Connectée sur selectedElementsChanged de mouseLogic : debounce 100 ms,
+    // puis envoie SelectionUpdate{uuids} en reliable. L'hôte rebroadcast
+    // aux autres clients via EditorSession::onReliableReceived.
+
+    Timer {
+        id: selectionBroadcastDebounce
+        interval: 100
+        repeat: false
+        onTriggered: {
+            if (!EditorSession.active) return
+            const els = logic.mouseLogic ? logic.mouseLogic.selectedElements : []
+            const uuids = []
+            for (let i = 0; i < els.length; i++) {
+                if (els[i] && els[i].snapableParameters) {
+                    uuids.push(String(els[i].snapableParameters.uniqueId))
+                }
+            }
+            EditorSession.sendEvent(EditorMessageType.SelectionUpdate, { "uuids": uuids })
+        }
+    }
+
+    Connections {
+        target: logic.mouseLogic
+        ignoreUnknownSignals: true
+        function onSelectedElementsChanged() {
+            if (EditorSession.active) selectionBroadcastDebounce.restart()
+        }
+    }
+
     Connections {
         target: Game
 
@@ -377,11 +823,63 @@ Base_Board {
 
     mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
 
+    // Badge de statut collaboratif. Visible uniquement quand EditorSession.active.
+    // Sert de confirmation visuelle à côté des logs console pendant les tests.
+    Rectangle {
+        id: collabBadge
+        visible: EditorSession.active
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 12
+        anchors.rightMargin: 12
+        z: 10000
+        width: badgeRow.implicitWidth + 20
+        height: badgeRow.implicitHeight + 10
+        radius: 6
+        color: EditorSession.isHost ? "#1e4d3a" : "#1e3a5f"
+        border.color: EditorSession.isHost ? "#22c55e" : "#3b82f6"
+        border.width: 1
+
+        Row {
+            id: badgeRow
+            anchors.centerIn: parent
+            spacing: 8
+            Rectangle {
+                width: 10
+                height: 10
+                radius: 5
+                anchors.verticalCenter: parent.verticalCenter
+                color: EditorSession.isHost ? "#22c55e" : "#3b82f6"
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: (EditorSession.isHost ? "Collab · Hôte" : "Collab · Client")
+                      + (EditorSession.sessionId ? "  (" + EditorSession.sessionId + ")" : "")
+                color: "#f4f4f5"
+                font.pixelSize: 12
+                font.bold: true
+            }
+        }
+    }
+
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {
         id: workArea
         z: UiStyle.z_WORKAREA
         anchors.fill: gameGrid
+
+        // Phase 5a : tracking position souris en mode hover (sans clic).
+        // HoverHandler coexiste avec les MouseAreas des tuiles/grille et
+        // reporte une position même quand un enfant capte les évènements.
+        HoverHandler {
+            id: cursorHoverHandler
+            enabled: EditorSession.active
+            onPointChanged: {
+                root._hoverX = point.position.x
+                root._hoverY = point.position.y
+            }
+        }
+
         GameScene {
             id: gameScene
             x: -gameGrid.x
@@ -398,6 +896,72 @@ Base_Board {
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, fullScreenMsgPopup,
                                   adminCommandPanel)
+        }
+
+        // Phase 5a : overlay des curseurs distants. Enfant de workArea pour
+        // suivre scroll/zoom du grid. Les coordonnées reçues sont locales à
+        // workArea (envoyées via mapToItem côté pair).
+        Item {
+            id: remoteCursorsOverlay
+            anchors.fill: parent
+            z: 100000
+            visible: EditorSession.active
+
+            Repeater {
+                model: root._remoteCursorKeys
+                delegate: Item {
+                    readonly property var _entry: root.remoteCursors[modelData]
+                    readonly property color _color: root._colorForPlayer(modelData)
+                    x: _entry ? _entry.x : 0
+                    y: _entry ? _entry.y : 0
+                    width: 1; height: 1
+                    visible: !!_entry
+
+                    // Flèche de curseur stylisée
+                    Canvas {
+                        width: 20; height: 22
+                        onPaint: {
+                            const ctx = getContext("2d")
+                            ctx.clearRect(0, 0, width, height)
+                            ctx.fillStyle = parent._color
+                            ctx.strokeStyle = "white"
+                            ctx.lineWidth = 1.5
+                            ctx.beginPath()
+                            ctx.moveTo(1, 1)
+                            ctx.lineTo(1, 18)
+                            ctx.lineTo(6, 13)
+                            ctx.lineTo(10, 20)
+                            ctx.lineTo(13, 18)
+                            ctx.lineTo(9, 11)
+                            ctx.lineTo(16, 11)
+                            ctx.closePath()
+                            ctx.fill()
+                            ctx.stroke()
+                        }
+                        Connections {
+                            target: parent
+                            function on_ColorChanged() { parent.requestPaint() }
+                        }
+                    }
+
+                    // Étiquette playerId tronqué
+                    Rectangle {
+                        x: 18; y: 14
+                        radius: 3
+                        color: parent._color
+                        width: label.implicitWidth + 10
+                        height: label.implicitHeight + 4
+                        Text {
+                            id: label
+                            anchors.centerIn: parent
+                            text: modelData.length > 8 ? modelData.substring(0, 8) : modelData
+                            color: "white"
+                            font.pixelSize: 10
+                            font.bold: true
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -624,6 +1188,53 @@ Base_Board {
         Timer {
             id: saveMapDelayer
             interval: 200
+
+            // Phase 2: au commit debouncé, émettre les ops correspondant à l'état
+            // courant des panels (effets visuels, settings physiques), une par
+            // élément sélectionné. Log-only.
+            property string pendingOpKind: ""  // "display" | "zone" | ""
+
+            function flushOps() {
+                const els = logic.mouseLogic.selectedElements
+                if (!els || els.length === 0) { pendingOpKind = ""; return }
+
+                if (pendingOpKind === "display") {
+                    const effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
+                    const fields = {
+                        "effectBrightness":   effects.brightness,
+                        "effectContrast":     effects.contrast,
+                        "effectSaturation":   effects.saturation,
+                        "effectColorization": effects.colorization,
+                        "effectBlurEnabled":  effects.blurEnabled,
+                        "effectBlur":         effects.blur,
+                        "effectShadowEnabled": effects.shadowEnabled,
+                        "effectShadowBlur":   effects.shadowBlur,
+                        "rotationAngle":      effects.rotationAngle,
+                        "mirrorHorizontal":   effects.mirrorHorizontal,
+                        "mirrorVertical":     effects.mirrorVertical
+                    }
+                    for (var i = 0; i < els.length; i++) {
+                        if (!els[i] || !els[i].snapableParameters) continue
+                        EditorOpBus.recordOp({
+                            "op":     EditorOpType.SetDisplayParameter,
+                            "target": String(els[i].snapableParameters.uniqueId),
+                            "fields": fields
+                        })
+                    }
+                } else if (pendingOpKind === "zone") {
+                    const physic = root.editorSidePanel.zoneConfigurationPanel.getCurrentPhysicSettings()
+                    for (var j = 0; j < els.length; j++) {
+                        if (!els[j] || !els[j].snapableParameters) continue
+                        EditorOpBus.recordOp({
+                            "op":     EditorOpType.SetZoneParameter,
+                            "target": String(els[j].snapableParameters.uniqueId),
+                            "fields": physic
+                        })
+                    }
+                }
+                pendingOpKind = ""
+            }
+
             onTriggered: {
                 var txId = Game.beginTransaction()
                 for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
@@ -642,6 +1253,7 @@ Base_Board {
             for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
+            saveMapDelayer.pendingOpKind = "display"
             if (saveMapDelayer.running)
                 saveMapDelayer.restart()
             else
@@ -677,6 +1289,7 @@ Base_Board {
                 logic.mouseLogic.selectedElements[i].applyPhysicSettings(
                             physicSettings)
             }
+            saveMapDelayer.pendingOpKind = "zone"
             if (saveMapDelayer.running)
                 saveMapDelayer.restart()
             else

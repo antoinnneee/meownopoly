@@ -10,11 +10,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QUuid>
-#include "game/case/Case.h"
-#include "game/case/CaseRestArea.h"
 
-#include "card.h"
-#include "game/player.h"
 #include "game/item_snapable/ItemSnapable.h"
 #include "map/mapinfo.h"
 #include "map/map.h"
@@ -25,12 +21,6 @@
 class Game : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int boardSize READ boardSize CONSTANT)
-    Q_PROPERTY(int currentPlayerIndex READ currentPlayerIndex NOTIFY currentPlayerIndexChanged)
-
-    Q_PROPERTY(QList<Player*> players READ players NOTIFY playersChanged)
-    Q_PROPERTY(QList<Player *> listPlayers READ listPlayers CONSTANT FINAL)
-    Q_PROPERTY(QList<Card *> listCards READ listCards CONSTANT FINAL)
 
 public:
 
@@ -45,30 +35,6 @@ public:
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
 
     Q_INVOKABLE void startGame();
-    Q_INVOKABLE void checkSaveSettings();
-
-    Q_INVOKABLE Player *createPlayer(const QString name, QColor color, int indexLogo, int kibbles);
-    Q_INVOKABLE void setupPlayers(const QVariantList &playerData);
-
-    Q_INVOKABLE void nextPlayer();
-    Q_INVOKABLE Player *getPlayer();
-    
-    // Case library functions for UI
-    Q_INVOKABLE QList<Case*> getPurchasableCases() const;
-
-    QList<Player*> players() const { return m_listPlayers; }
-    int boardSize() const { return 40; }
-    int currentPlayerIndex() const;
-
-    Q_INVOKABLE Case* getNewCaseType(Case::CaseType type);
-    Q_INVOKABLE Player* getNewPlayer();
-
-
-    QList<Player *> listPlayers() const;
-
-    Case **listCases() const;
-
-    QList<Card *> listCards() const;
 
     // Map saving/loading
     DisplayParameter *getDisplayerParameter(const QVariantMap &displayInfoMap);
@@ -97,6 +63,13 @@ public:
     // à la fin de l'animation de suppression).
     Q_INVOKABLE void  finalizeDeletedTile(const QUuid &tileId);
 
+    // Applique un EditDelta reçu d'un peer (Pattern B). Ne pushe PAS le delta
+    // sur la pile undo locale (chacun son gestionnaire). Le flag
+    // beginApplyRemote/endApplyRemote est déjà actif dans le signal réception.
+    Q_INVOKABLE void applyRemoteDelta(int type, const QString &tileId, const QString &groupId,
+                                      const QJsonObject &before, const QJsonObject &after,
+                                      bool applyBefore);
+
     // Template saving/loading
     Q_INVOKABLE bool saveTemplate(QString name, QJsonArray elementsJson);
     Q_INVOKABLE bool deleteTemplate(QString name);
@@ -111,10 +84,6 @@ signals:
 
     void clearCurrentMap();
 
-    void playersChanged();
-    void currentPlayerIndexChanged();
-    void propertyPurchased(int position, Player* newOwner);
-
     void mapLoaded(Map *map);
     void foundItemSnapableTile(ItemSnapable *itemSnapable);
 
@@ -128,13 +97,6 @@ signals:
 private:
     explicit Game(QObject *parent = nullptr);
     static Game *m_pThis;
-    QList<Case*> m_board;
-    QList<Player*> m_listPlayers;
-    Player* m_players;
-    QList<Card*>  m_listCards;
-    QList<CaseRestArea*>    m_family[CaseRestArea::FT_COUNT];
-
-    int m_currentPlayerIndex = 0;
 
     QUuid m_currentTransaction;
     bool  m_txDirty = false;

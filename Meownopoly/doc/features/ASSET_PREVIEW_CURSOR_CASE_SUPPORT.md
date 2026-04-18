@@ -80,7 +80,6 @@ AssetPreviewCursor {
 
 1. Le composant charge automatiquement le bon type de prévisualisation selon la valeur de `isCasePreview`
 2. Pour les cases, il utilise `Game.getNewCaseType(caseType)` pour créer une instance temporaire
-3. L'icône affichée dans le curseur est déterminée par la fonction `getCaseTypeIcon()`
 4. Les effets visuels sont appliqués de la même manière que pour les décorations
 
 ## Avantages
@@ -93,5 +92,4 @@ AssetPreviewCursor {
 ## Notes techniques
 
 - Les cases créées pour la prévisualisation sont temporaires et ne sont pas ajoutées au jeu
-- La fonction `getCaseTypeIcon()` retourne des chemins d'icônes basés sur le type de case
 - Le composant gère automatiquement le basculement entre les deux modes de prévisualisation

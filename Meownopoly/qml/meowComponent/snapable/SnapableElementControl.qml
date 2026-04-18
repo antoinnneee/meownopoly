@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import ui_item
 
 import MapTypes
+import EditorOpBus 1.0
 
 Item {
     id: controlsRoot
@@ -45,6 +46,14 @@ Item {
                 onLayerClicked: function(index){
                     console.log("layer " + index + "clicked")
                     layerChanged(index +1)
+                    // Phase 2: SetDisplayParameter{zLayer} (log-only).
+                    if (targetElement && targetElement.snapableParameters) {
+                        EditorOpBus.recordOp({
+                            "op":     EditorOpType.SetDisplayParameter,
+                            "target": String(targetElement.snapableParameters.uniqueId),
+                            "fields": { "zLayer": index + 1 }
+                        })
+                    }
                     logic.saveMap(MapTypes.UNDOREDO)
                 }
 

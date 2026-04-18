@@ -49,6 +49,11 @@ ScrollView {
         }
     }
     
+    // Supprime les accents/diacritiques pour une recherche insensible aux accents
+    function removeAccents(str) {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    }
+
     Component.onCompleted: updateModel()
 
     
@@ -80,15 +85,29 @@ ScrollView {
                            root.currentSelectedType === root.type && 
                            root.currentSelectedId === (model.id || "").toString()
                 
+                // Description pour le tooltip
+                assetDescription: model.description || ""
+
                 // Filter by search text
                 visible: {
                     if (root.searchText === "") return true
-                    
-                    var searchLower = root.searchText.toLowerCase()
-                    var idMatch = (model.id || "").toString().toLowerCase().includes(searchLower)
-                    var filenameMatch = (model.filename || "").toLowerCase().includes(searchLower)
-                    
-                    return idMatch || filenameMatch
+
+                    const searchNorm = root.removeAccents(root.searchText.toLowerCase())
+                    const idMatch = root.removeAccents((model.id || "").toString().toLowerCase()).includes(searchNorm)
+                    const filenameMatch = root.removeAccents((model.filename || "").toLowerCase()).includes(searchNorm)
+                    const descriptionMatch = root.removeAccents((model.description || "").toLowerCase()).includes(searchNorm)
+
+                    // Recherche dans les tags
+                    let tagsMatch = false
+                    const tags = model.tags || []
+                    for (let i = 0; i < tags.length; i++) {
+                        if (root.removeAccents(tags[i].toLowerCase()).includes(searchNorm)) {
+                            tagsMatch = true
+                            break
+                        }
+                    }
+
+                    return idMatch || filenameMatch || descriptionMatch || tagsMatch
                 }
                 
                 onAssetClicked: function(id) {

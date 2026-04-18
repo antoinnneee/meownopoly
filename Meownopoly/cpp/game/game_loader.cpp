@@ -13,6 +13,7 @@
 #include "map/maptypes.h"
 #include "map/map.h"
 #include "map/editdelta.h"
+#include "editor/ops/editor_op_bus.h"
 #include "qsettings.h"
 #include "tools/logger.h"
 
@@ -130,6 +131,31 @@ QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
     return listItems;
 }
 
+// Broadcast aux peers les deltas du dernier batch revert/redo du Map local.
+// applyBefore=true pour undo, false pour redo — les peers appliqueront dans
+// le même sens.
+static void broadcastLastBatch(Map *map)
+{
+    const QList<EditDelta> batch = map->lastRevertedBatch();
+    if (batch.isEmpty()) return;
+
+    const bool wasUndo = map->lastRevertedWasUndo();
+    // Pour undo local → peers doivent appliquer applyBefore=true aussi.
+    // Pour redo local → applyBefore=false.
+    const bool applyBefore = wasUndo;
+
+    // Si le batch est groupé (groupId non nul), on accumule puis flush.
+    // Sinon on submit directement (chaque delta indépendant).
+    const QUuid gid = batch.first().groupId;
+    for (const EditDelta &d : batch) {
+        EditorOpBus::instance()->submitFromDelta(
+            static_cast<int>(d.type), d.tileId, d.groupId,
+            d.before, d.after, applyBefore);
+    }
+    if (!gid.isNull())
+        EditorOpBus::instance()->flushGroup(gid);
+}
+
 void Game::askPreview()
 {
     qDebug() << "[GAME] askPreview() appelé";
@@ -137,6 +163,7 @@ void Game::askPreview()
     if (!map){ qDebug() << "Current map is Null, returning;"; return;}
 
     map->undo();
+    broadcastLastBatch(map);
 
     if (saveOnEdit())
         qDebug() << "saveOnEdit is enabled, saving current map return " << Game::saveCurrentMap();
@@ -148,6 +175,7 @@ void Game::askNext()
     if (!map){ qDebug() << "Current map is Null, returning;"; return;}
 
     map->redo();
+    broadcastLastBatch(map);
 
     if (saveOnEdit())
         qDebug() << "saveOnEdit is enabled, saving current map return " << Game::saveCurrentMap();
@@ -175,6 +203,10 @@ void Game::updateMap(int type, ItemSnapable* tile, QUuid groupId)
                  << (tile ? "tile is valid." : "tile is null.") << " Returning.";
         return;
     }
+    // En mode remote replay, la mutation vient d'un peer : applyRemoteDelta s'en
+    // charge directement, pas de delta local ni de broadcast. On bail si QML
+    // appelle updateMap pendant un beginApplyRemote (ex: syncs de bindings).
+    if (EditorOpBus::instance()->isApplyingRemote()) return;
 
     const auto deltaType = static_cast<EditDeltaType::Type>(type);
 
@@ -211,6 +243,11 @@ void Game::updateMap(int type, ItemSnapable* tile, QUuid groupId)
     if (deltaType != EditDeltaType::TileDeleted)
         tile->commitCurrentState();
 
+    // Pattern B : broadcast l'ApplyState si session collab active
+    EditorOpBus::instance()->submitFromDelta(
+        static_cast<int>(delta.type), delta.tileId, delta.groupId,
+        delta.before, delta.after, /*applyBefore=*/false);
+
     // Sauvegarde : différée si en transaction, sinon immédiate si saveOnEdit
     if (!m_currentTransaction.isNull()) {
         m_txDirty = true;
@@ -224,6 +261,7 @@ void Game::updateMapMetadata(const QString& beforeJson, const QString& afterJson
     Map *map = MapFileManager::instance()->getCurrentMap();
     if (!map || !map->canSave())
         return;
+    if (EditorOpBus::instance()->isApplyingRemote()) return;
 
     EditDelta delta;
     delta.type   = EditDeltaType::MetadataChanged;
@@ -231,6 +269,10 @@ void Game::updateMapMetadata(const QString& beforeJson, const QString& afterJson
     delta.after  = QJsonDocument::fromJson(afterJson.toUtf8()).object();
     delta.groupId = m_currentTransaction;
     map->pushDelta(delta);
+
+    EditorOpBus::instance()->submitFromDelta(
+        static_cast<int>(delta.type), delta.tileId, delta.groupId,
+        delta.before, delta.after, /*applyBefore=*/false);
 
     if (!m_currentTransaction.isNull()) {
         m_txDirty = true;
@@ -248,7 +290,13 @@ QUuid Game::beginTransaction()
 
 void Game::commitTransaction()
 {
+    const QUuid txId = m_currentTransaction;
     m_currentTransaction = QUuid();
+
+    // Flush le batch accumulé pendant la transaction vers les peers (Pattern B).
+    if (!txId.isNull())
+        EditorOpBus::instance()->flushGroup(txId);
+
     if (m_txDirty && saveOnEdit()) {
         qDebug() << Q_FUNC_INFO << "saveOnEdit -> save return " << Game::saveCurrentMap();
     }
@@ -260,4 +308,26 @@ void Game::finalizeDeletedTile(const QUuid &tileId)
     Map *map = MapFileManager::instance()->getCurrentMap();
     if (!map) return;
     map->finalizeTile(tileId);  // no-op si déjà finalisé
+}
+
+void Game::applyRemoteDelta(int type, const QString &tileId, const QString &groupId,
+                            const QJsonObject &before, const QJsonObject &after,
+                            bool applyBefore)
+{
+    Map *map = MapFileManager::instance()->getCurrentMap();
+    if (!map) return;
+
+    EditDelta delta;
+    delta.type    = static_cast<EditDeltaType::Type>(type);
+    delta.tileId  = QUuid(tileId);
+    delta.groupId = QUuid(groupId);
+    delta.before  = before;
+    delta.after   = after;
+
+    QSet<QUuid> touched;
+    map->applyDelta(delta, applyBefore, touched);
+    // Pas de pushDelta — c'est un op distant, pas une action locale.
+    // Pas de save ici : la politique save locale s'applique via
+    // l'accumulation isApplyingRemote (suppress in applyRemote batch),
+    // et on laisse l'appelant QML gérer la fin du batch si besoin.
 }

@@ -16,6 +16,9 @@ Rectangle {
     property string downloadStatus: "Prêt"
     property bool isDownloading: false
     property real downloadProgress: 0.0
+    property real bytesReceived: 0
+    property real bytesTotal: 0
+    property string versionDescription: ""
     
     ColumnLayout {
         anchors.fill: parent
@@ -55,14 +58,28 @@ Rectangle {
                 font.bold: true
             }
             
-            Text { 
+            Text {
                 text: "Statut:"
                 color: "#cccccc"
             }
-            Text { 
+            Text {
                 text: root.downloadStatus
                 color: root.isDownloading ? "#2196F3" : "#4CAF50"
                 font.bold: true
+            }
+
+            Text {
+                text: "Description:"
+                color: "#cccccc"
+                visible: root.versionDescription.length > 0
+            }
+            Text {
+                text: root.versionDescription
+                color: "#aaaaaa"
+                font.italic: true
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                visible: root.versionDescription.length > 0
             }
         }
         
@@ -90,7 +107,15 @@ Rectangle {
                 
                 Text {
                     anchors.centerIn: parent
-                    text: Math.round(root.downloadProgress * 100) + "%"
+                    text: {
+                        let percent = Math.round(root.downloadProgress * 100) + "%"
+                        if (root.bytesTotal > 0) {
+                            let received = (root.bytesReceived / (1024*1024)).toFixed(1)
+                            let total = (root.bytesTotal / (1024*1024)).toFixed(1)
+                            return percent + " (" + received + " / " + total + " Mo)"
+                        }
+                        return percent
+                    }
                     color: "#ffffff"
                     font.bold: true
                 }

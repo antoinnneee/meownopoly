@@ -12,6 +12,8 @@
 #include <QQmlEngine>
 #include <QImageReader>
 #include <QJsonDocument>
+#include <QHash>
+#include <QUrl>
 
 // Debug defines
 #define ENABLE_ASSET_DEBUG 0
@@ -39,6 +41,8 @@ struct Asset {
     QString extension;
     bool animated;
     int frameCount;
+    QStringList tags;
+    QString description;
 };
 
 class AssetModel : public QAbstractListModel
@@ -61,7 +65,9 @@ public:
         FilenameRole,
         ExtensionRole,
         AnimatedRole,
-        FrameCountRole
+        FrameCountRole,
+        TagsRole,
+        DescriptionRole
     };
 
     explicit AssetModel(QObject *parent = nullptr);
@@ -73,8 +79,9 @@ public:
 
     // Asset management
     void addAsset(const QString &path, const QString &type, const QString &category,
-                  int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename, 
-                  const QString &extension = "png", bool animated = false, int frameCount = 1);
+                  int ratioWidth, int ratioHeight, int width, int height, const QString &id, const QString &filename,
+                  const QString &extension = "png", bool animated = false, int frameCount = 1,
+                  const QStringList &tags = {}, const QString &description = "");
     void clear();
     
     // Filtering
@@ -194,6 +201,15 @@ public:
     Q_INVOKABLE QStringList getAvailableCategories() const;
     
     /**
+     * @brief Vérifie si au moins un asset d'une catégorie/type a un tag ou une description contenant le texte recherché
+     * @param category Catégorie de l'asset
+     * @param type Type de l'asset
+     * @param searchText Texte à rechercher (insensible à la casse)
+     * @return true si au moins un asset matche
+     */
+    Q_INVOKABLE bool hasMatchingAsset(const QString &category, const QString &type, const QString &searchText);
+
+    /**
      * @brief Vérifie si un asset existe
      * @param category Catégorie de l'asset
      * @param type Type de l'asset
@@ -250,13 +266,16 @@ signals:
 
 private:
     void loadCategory(const QString &categoryPath, const QString &categoryName);
-    void loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName);
+    void loadTypeFromDirectory(const QString &typePath, const QString &typeName, const QString &categoryName, const QHash<QString, QPair<QStringList, QString>> &tagsData);
     void cleanupInvalidModels();
 
     QString m_assetsBasePath;
     static AssetManager *m_pThis;
     
-    QList<QPair<QString, AssetModel*>> m_models;
+    QHash<QString, AssetModel*> m_models;
+
+    // Cache d'images pour isTransparent (évite de recharger l'image à chaque appel)
+    QHash<QString, QImage> m_imageCache;
 
     QStringList m_categories;
 };

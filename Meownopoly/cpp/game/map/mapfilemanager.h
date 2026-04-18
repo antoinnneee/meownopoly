@@ -1,10 +1,11 @@
-﻿#ifndef MAPFILEMANAGER_H
+#ifndef MAPFILEMANAGER_H
 #define MAPFILEMANAGER_H
 
 #include <QObject>
 #include <QJsonObject>
 #include <QStringList>
 #include <QQmlEngine>
+#include <QLockFile>
 #include "maptypes.h"
 #include "map.h"
 
@@ -14,10 +15,9 @@ class MapFileManager : public QObject
 {
     Q_OBJECT
 
-public:
-
     Q_PROPERTY(Map *currentMap READ getCurrentMap WRITE setCurrentMap NOTIFY currentMapChanged FINAL)
 
+public:
     explicit MapFileManager(QObject *parent = nullptr);
     ~MapFileManager();
 
@@ -40,7 +40,7 @@ public:
     static QJsonObject readMapFile(const QString &mapName, MapTypes::MapType mapType);
     static bool saveMap(const QJsonObject &mapData, const QString &mapName, MapTypes::MapType mapType);
     static bool removeMapFile(const QString &mapName, MapTypes::MapType mapType);
-    
+
     // Utility methods (static)
     static QString normalizeMapName(const QString &mapName);
     static QString getMapFilePath(const QString &mapName, MapTypes::MapType mapType);

@@ -112,6 +112,7 @@ void GameSession::disconnectFromCatway()
 
 void GameSession::sendEvent(int type, const QJsonObject &payload)
 {
+    if (!m_active) return;
     const auto msgType = static_cast<GameMessageType::Value>(type);
     const QByteArray packet = GameProtocol::pack(msgType, payload);
     Catway *catway = Catway::instance();
@@ -132,7 +133,7 @@ void GameSession::sendEvent(int type, const QJsonObject &payload)
 
 void GameSession::broadcastEvent(int type, const QJsonObject &payload)
 {
-    if (!m_isHost) {
+    if (!m_active || !m_isHost) {
         qWarning() << "[GameSession] broadcastEvent called by non-host — ignoring.";
         return;
     }
@@ -171,70 +172,61 @@ void GameSession::broadcastMinigameSnapshot(const QJsonObject &snapshot)
     Catway::instance()->broadcastReliable(packet);
 }
 
+// ── Relay host ────────────────────────────────────────────────────────────────
+
+void GameSession::relayReliableToOthers(const QString &senderId, const QByteArray &packet)
+{
+    if (!m_isHost) return;
+    Catway *catway = Catway::instance();
+    const int count = catway->playersCount();
+    for (int i = 0; i < count; ++i) {
+        PlayerNetwork *p = catway->playerAt(i);
+        if (p && p->playerId() != senderId && p->isP2pConnected())
+            catway->sendReliableToPlayer(p, packet);
+    }
+}
+
+void GameSession::relayRawToOthers(const QString &senderId, const QString &message)
+{
+    if (!m_isHost) return;
+    Catway *catway = Catway::instance();
+    const int count = catway->playersCount();
+    for (int i = 0; i < count; ++i) {
+        PlayerNetwork *p = catway->playerAt(i);
+        if (p && p->playerId() != senderId && p->isP2pConnected())
+            catway->sendUdpDatagram(p, message);
+    }
+}
+
 // ── Réception ─────────────────────────────────────────────────────────────────
 
 void GameSession::onReliableReceived(const QString &senderId, const QByteArray &data)
 {
-    qDebug() << "[GameSession] onReliableReceived:" << senderId << "data:" << data;
     GameMessageType::Value type;
     QJsonObject payload;
 
-    if (!GameProtocol::unpack(data, type, payload)) {
-        qWarning() << "[GameSession] Failed to unpack reliable packet from" << senderId;
+    // Ignorer silencieusement les paquets non-GameProtocol (ex: "DRAW:..." du test dessin)
+    if (!GameProtocol::unpack(data, type, payload))
         return;
-    }
 
     if (type == GameMessageType::MapSync) {
         emit mapSyncReceived(senderId, payload.value("map").toObject());
 
     } else if (type == GameMessageType::MinigameSnapshot) {
         emit minigameSnapshotReceived(senderId, payload);
-
-        // Hôte : re-broadcast le snapshot aux autres joueurs
-        if (m_isHost) {
-            const QByteArray packet = GameProtocol::pack(type, payload);
-            Catway *catway = Catway::instance();
-            const int count = catway->playersCount();
-            for (int i = 0; i < count; ++i) {
-                PlayerNetwork *p = catway->playerAt(i);
-                if (p && p->playerId() != senderId && p->isP2pConnected())
-                    catway->sendReliableToPlayer(p, packet);
-            }
-        }
+        relayReliableToOthers(senderId, GameProtocol::pack(type, payload));
 
     } else {
         emit boardEventReceived(static_cast<int>(type), senderId, payload);
-
-        // Hôte : relay l'événement à tous les autres joueurs
-        if (m_isHost) {
-            const QByteArray packet = GameProtocol::pack(type, payload);
-            Catway *catway = Catway::instance();
-            const int count = catway->playersCount();
-            for (int i = 0; i < count; ++i) {
-                PlayerNetwork *p = catway->playerAt(i);
-                if (p && p->playerId() != senderId && p->isP2pConnected())
-                    catway->sendReliableToPlayer(p, packet);
-            }
-        }
+        relayReliableToOthers(senderId, GameProtocol::pack(type, payload));
     }
 }
 
 void GameSession::onUdpReceived(const QString &senderId, const QString &message)
 {
-    // qDebug() << "[GameSession] onUdpReceived:" << senderId << "message:" << message;
     qreal x, y, vx, vy;
     if (GameProtocol::unpackMinigameInput(message, x, y, vx, vy)) {
         emit minigameInputReceived(senderId, x, y, vx, vy);
-
-        // Hôte : re-broadcast la position aux autres joueurs
-        if (m_isHost) {
-            Catway *catway = Catway::instance();
-            const int count = catway->playersCount();
-            for (int i = 0; i < count; ++i) {
-                PlayerNetwork *p = catway->playerAt(i);
-                if (p && p->playerId() != senderId && p->isP2pConnected())
-                    catway->sendUdpDatagram(p, message);
-            }
-        }
+        relayRawToOthers(senderId, message);
     }
 }

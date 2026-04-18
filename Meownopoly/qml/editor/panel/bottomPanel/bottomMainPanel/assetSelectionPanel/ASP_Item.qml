@@ -15,6 +15,7 @@ Rectangle {
     property int assetRatioHeight: 1
     property bool isSelected: false
     property bool isFavorite: false
+    property string assetDescription: ""
     
     // Signals
     signal assetClicked(string id)
@@ -199,6 +200,16 @@ Rectangle {
                 color: "#CCCCCC"
                 font.pixelSize: 10
                 visible: root.assetRatioWidth !== 1 || root.assetRatioHeight !== 1
+            }
+
+            Text {
+                text: root.assetDescription
+                color: "#CCCCCC"
+                font.pixelSize: 10
+                font.italic: true
+                visible: root.assetDescription !== ""
+                wrapMode: Text.Wrap
+                width: 200
             }
         }
         

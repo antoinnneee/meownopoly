@@ -2,12 +2,9 @@
     <qresource prefix="/">
         <file>qml/test/TEST_VIEW_0.qml</file>
         <file>qml/test/TEST_VIEW_1.qml</file>
-        <file>qml/test/TEST_CASE.qml</file>
         <file>qml/test/TEST_PARTICLE_BUTTON.qml</file>
         <file>qml/test/TEST_PARTICLE_BUTTON_SIMPLE.qml</file>
-        <file>qml/test/TEST_VIEW_3.qml</file>
         <file>qml/test/TEST_ASSET_MANAGER.qml</file>
-        <file>qml/test/TEST_BOARD.qml</file>
         <file>qml/test/TEST_3D.qml</file>
         <file>qml/test/TEST_PAW_MENU.qml</file>
         <file>qml/test/Test_Comp.qml</file>
@@ -32,5 +29,8 @@
         <file>qml/test/CatwayTest/MinigameSyncPanel.qml</file>
         <file>qml/test/CatwayTest/MapSyncCard.qml</file>
         <file>qml/test/CatwayTest/BoardEventsCard.qml</file>
+        <file>qml/test/CatwayTest/EditorSessionPanel.qml</file>
+        <file>qml/test/CatwayTest/EditorOpsCard.qml</file>
+        <file>qml/test/CatwayTest/EditorNetworkTestTab.qml</file>
     </qresource>
 </RCC>
