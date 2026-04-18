@@ -137,6 +137,13 @@ public:
     /// Retourne le joueur dont le playerId correspond, ou null.
     Q_INVOKABLE PlayerNetwork *playerById(const QString &playerId) const;
 
+    /// Accès QML aux sockets STUN-assignés (après takeStunSocket).
+    /// Le dernier est typiquement celui qu'on vient de générer via setupNewPort,
+    /// utilisable pour sendRequestConnectionInfo.
+    Q_INVOKABLE QObject *localPortAt(int index) const;
+    Q_INVOKABLE int      localPortCount() const;
+    Q_INVOKABLE QObject *lastLocalPort() const;
+
     Q_INVOKABLE void initiateHolePunch(PlayerNetwork *player);
     Q_INVOKABLE void sendUdpMessageToPlayer(PlayerNetwork *player, const QString &message);
     void sendUdpDatagram(PlayerNetwork *player, const QByteArray &data);

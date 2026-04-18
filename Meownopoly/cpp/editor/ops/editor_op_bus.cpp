@@ -94,6 +94,66 @@ void EditorOpBus::endApplyRemote()
     }
 }
 
+// ── Undo/Redo ────────────────────────────────────────────────────────────────
+
+void EditorOpBus::submitOpWithUndo(const QJsonObject &op, const QJsonObject &inverseOp)
+{
+    // Soumettre d'abord l'op à la couche normale (loggue + réseau).
+    // Si m_isApplyingRemote, submitOp drop ; on ne pousse pas non plus d'undo.
+    if (m_isApplyingRemote) return;
+
+    submitOp(op);
+
+    // Nouvelle action utilisateur : pousse sur undoStack, vide redoStack.
+    // Skip si on est en train de rejouer un undo/redo (le flag ci-dessous).
+    if (m_isUndoingLocal) return;
+
+    m_undoStack.append({ op, inverseOp });
+    if (!m_redoStack.isEmpty()) m_redoStack.clear();
+}
+
+void EditorOpBus::undo()
+{
+    if (m_undoStack.isEmpty()) {
+        qDebug() << "[EditorOpBus] undo: pile vide";
+        return;
+    }
+    const UndoEntry entry = m_undoStack.takeLast();
+
+    // Le submit de l'inverse ne doit pas re-pusher sur undoStack, mais doit
+    // en revanche être envoyé au réseau. On garde redo de l'op originale.
+    m_isUndoingLocal = true;
+    submitOp(entry.inverseOp);
+    m_isUndoingLocal = false;
+
+    m_redoStack.append(entry);
+    qDebug() << "[EditorOpBus] undo (undo=" << m_undoStack.size()
+             << "redo=" << m_redoStack.size() << ")";
+}
+
+void EditorOpBus::redo()
+{
+    if (m_redoStack.isEmpty()) {
+        qDebug() << "[EditorOpBus] redo: pile vide";
+        return;
+    }
+    const UndoEntry entry = m_redoStack.takeLast();
+
+    m_isUndoingLocal = true;
+    submitOp(entry.op);
+    m_isUndoingLocal = false;
+
+    m_undoStack.append(entry);
+    qDebug() << "[EditorOpBus] redo (undo=" << m_undoStack.size()
+             << "redo=" << m_redoStack.size() << ")";
+}
+
+void EditorOpBus::clearUndo()
+{
+    m_undoStack.clear();
+    m_redoStack.clear();
+}
+
 QString EditorOpBus::newUuid() const
 {
     return QUuid::createUuid().toString(QUuid::WithoutBraces);

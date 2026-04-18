@@ -120,7 +120,10 @@ void ChatClient::connectToSessionDirect(const QString &sessionId, const QString 
 
     m_playerId = AccountManager::instance()->uniqueId();
     m_nickname = AccountManager::instance()->nickname();
-    m_sessionId = sessionId;
+    // Passe par le setter pour émettre sessionIdChanged — indispensable pour
+    // que les consommateurs QML (ex: lobby → navigation vers éditeur collab)
+    // détectent la bascule de session.
+    setSessionId(sessionId);
     m_password = password;
 
     joinSession();

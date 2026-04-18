@@ -188,6 +188,23 @@ void Catway::onPlayerNetworkPlayerIdChanged()
         ctx->playerId = newId;
 }
 
+QObject *Catway::localPortAt(int index) const
+{
+    if (index < 0 || index >= m_localSocketInfos.size()) return nullptr;
+    return m_localSocketInfos.at(index);
+}
+
+int Catway::localPortCount() const
+{
+    return m_localSocketInfos.size();
+}
+
+QObject *Catway::lastLocalPort() const
+{
+    if (m_localSocketInfos.isEmpty()) return nullptr;
+    return m_localSocketInfos.last();
+}
+
 PlayerNetwork *Catway::getOrCreatePlayer(const QString &playerId)
 {
     PlayerNetwork *player = playerById(playerId);

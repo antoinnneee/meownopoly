@@ -230,12 +230,13 @@ CollapsableGroupBox {
                     
                     onRemoveElement: function(element, index) {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
-                            // Phase 2: UnlinkItems (log-only) avant la mutation.
+                            // Phase 3+6 : unlink + inverse (link) pour undo.
                             if (root.targetSnapableElement.snapableParameters && element && element.snapableParameters) {
-                                EditorOpBus.recordOp(EditorOpBus.makeUnlinkOp(
-                                    String(root.targetSnapableElement.snapableParameters.uniqueId),
-                                    String(element.snapableParameters.uniqueId),
-                                    "previous"))
+                                const sid = String(root.targetSnapableElement.snapableParameters.uniqueId)
+                                const tid = String(element.snapableParameters.uniqueId)
+                                EditorOpBus.submitOpWithUndo(
+                                    EditorOpBus.makeUnlinkOp(sid, tid, "previous"),
+                                    EditorOpBus.makeLinkOp(sid, tid, "previous"))
                             }
                             root.targetSnapableElement.connectionManager.removePreviousElement(element)
                             if (logic) {
@@ -281,12 +282,13 @@ CollapsableGroupBox {
                     
                     onRemoveElement: function(element, index) {
                         if (root.targetSnapableElement && root.targetSnapableElement.connectionManager) {
-                            // Phase 2: UnlinkItems (log-only) avant la mutation.
+                            // Phase 3+6 : unlink + inverse (link) pour undo.
                             if (root.targetSnapableElement.snapableParameters && element && element.snapableParameters) {
-                                EditorOpBus.recordOp(EditorOpBus.makeUnlinkOp(
-                                    String(root.targetSnapableElement.snapableParameters.uniqueId),
-                                    String(element.snapableParameters.uniqueId),
-                                    "next"))
+                                const sid = String(root.targetSnapableElement.snapableParameters.uniqueId)
+                                const tid = String(element.snapableParameters.uniqueId)
+                                EditorOpBus.submitOpWithUndo(
+                                    EditorOpBus.makeUnlinkOp(sid, tid, "next"),
+                                    EditorOpBus.makeLinkOp(sid, tid, "next"))
                             }
                             root.targetSnapableElement.connectionManager.removeNextElement(element)
                             if (logic) {

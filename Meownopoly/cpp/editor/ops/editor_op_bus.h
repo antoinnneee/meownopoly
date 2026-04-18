@@ -55,6 +55,30 @@ public:
     Q_INVOKABLE void beginApplyRemote();
     Q_INVOKABLE void endApplyRemote();
 
+    // ── Undo/Redo (v1, mode collaboratif uniquement) ─────────────────────────
+
+    /// Variante de submitOp qui empile aussi l'op inverse dans la pile d'undo.
+    /// À utiliser depuis QML pour les actions utilisateur locales dont on peut
+    /// construire un inverse au moment du submit (Create/Delete/Link/Unlink v1).
+    /// `inverseOp` est purement local — jamais envoyé au réseau.
+    Q_INVOKABLE void submitOpWithUndo(const QJsonObject &op,
+                                      const QJsonObject &inverseOp);
+
+    /// Déclenche l'annulation de la dernière action locale en mode collaboratif.
+    /// Pop de undoStack, submit de l'inverse au réseau, push sur redoStack.
+    /// No-op si la pile est vide ou si EditorSession est inactif.
+    Q_INVOKABLE void undo();
+
+    /// Déclenche le refaire : pop de redoStack, submit de l'op originale,
+    /// push sur undoStack.
+    Q_INVOKABLE void redo();
+
+    /// Vide les deux piles. Appelé automatiquement quand EditorSession stop.
+    Q_INVOKABLE void clearUndo();
+
+    Q_INVOKABLE int undoDepth() const { return m_undoStack.size(); }
+    Q_INVOKABLE int redoDepth() const { return m_redoStack.size(); }
+
     // ── Helpers de construction d'op (pour QML) ──────────────────────────────
 
     /// Génère un nouvel UUID sérialisé (utilisé pour pré-minter un item côté
@@ -104,9 +128,19 @@ private:
     /// Handler de réception — posée en slot privé pour éviter une lambda-connect.
     void onSessionOpReceived(const QString &senderId, const QJsonObject &op);
 
+    /// Entrée d'undo : op originale + inverse. L'originale est conservée
+    /// pour pouvoir "refaire" (redo) après un undo.
+    struct UndoEntry {
+        QJsonObject op;
+        QJsonObject inverseOp;
+    };
+
     bool m_isApplyingRemote = false;
     int  m_applyDepth       = 0;  // compteur pour begin/end imbriqués
     bool m_sessionConnected = false;
+    bool m_isUndoingLocal   = false;  // suppresseur d'ajout undo pendant undo/redo
+    QList<UndoEntry> m_undoStack;
+    QList<UndoEntry> m_redoStack;
 };
 
 #endif // EDITOR_OP_BUS_H

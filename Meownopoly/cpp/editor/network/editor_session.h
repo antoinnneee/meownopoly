@@ -34,6 +34,12 @@ class EditorSession : public QObject
     /// Identifiant de la session (transmis dans Welcome, utile pour les chemins d'autosave).
     Q_PROPERTY(QString sessionId READ sessionId NOTIFY sessionIdChanged)
 
+    /// Sélections en cours des autres participants (présence).
+    /// Format : { playerId -> [uuid, uuid, ...] } en valeurs QStringList.
+    /// Mis à jour par onReliableReceived sur SelectionUpdate ; purgé quand un
+    /// pair se déconnecte (best-effort, timeouts non implémentés en v1).
+    Q_PROPERTY(QVariantMap remoteSelections READ remoteSelections NOTIFY remoteSelectionsChanged)
+
 public:
     static void registerQml();
     static EditorSession *instance();
@@ -44,6 +50,7 @@ public:
     QString localPlayerId() const { return m_localPlayerId; }
     QString hostPlayerId() const  { return m_hostPlayerId; }
     QString sessionId() const     { return m_sessionId; }
+    QVariantMap remoteSelections() const { return m_remoteSelections; }
 
     // ── Initialisation ───────────────────────────────────────────────────────
 
@@ -109,6 +116,7 @@ signals:
     void localPlayerIdChanged();
     void hostPlayerIdChanged();
     void sessionIdChanged();
+    void remoteSelectionsChanged();
 
 private slots:
     void onReliableReceived(const QString &senderId, const QByteArray &data);
@@ -129,6 +137,7 @@ private:
     QString m_localPlayerId;
     QString m_hostPlayerId;
     QString m_sessionId;
+    QVariantMap m_remoteSelections;  // playerId → QStringList d'uuids
 
     QMetaObject::Connection m_reliableConn;
     QMetaObject::Connection m_udpConn;

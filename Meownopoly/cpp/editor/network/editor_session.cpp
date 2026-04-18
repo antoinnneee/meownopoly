@@ -103,6 +103,10 @@ void EditorSession::stop()
     m_localPlayerId.clear();
     m_hostPlayerId.clear();
     m_sessionId.clear();
+    if (!m_remoteSelections.isEmpty()) {
+        m_remoteSelections.clear();
+        emit remoteSelectionsChanged();
+    }
 
     emit activeChanged();
     emit isHostChanged();
@@ -237,12 +241,27 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
         }
         break;
 
-    case EditorMessageType::SelectionUpdate:
+    case EditorMessageType::SelectionUpdate: {
+        // Met à jour la map de présence (QVariantMap playerId → [uuid,...])
+        // avant de ré-émettre, pour que les consumers QML via binding sur
+        // `remoteSelections` voient la nouvelle valeur au moment du signal.
+        QStringList uuids;
+        const QJsonArray arr = payload.value("uuids").toArray();
+        uuids.reserve(arr.size());
+        for (const QJsonValue &v : arr) uuids.append(v.toString());
+        if (uuids.isEmpty()) {
+            m_remoteSelections.remove(senderId);
+        } else {
+            m_remoteSelections.insert(senderId, QVariant::fromValue(uuids));
+        }
+        emit remoteSelectionsChanged();
+
         emit selectionReceived(senderId, payload);
         if (m_isHost) {
             relayReliableToOthers(senderId, EditorProtocol::pack(type, payload));
         }
         break;
+    }
 
     case EditorMessageType::OpReject:
         emit opRejected(payload);

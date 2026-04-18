@@ -4,6 +4,8 @@ import EditorEnum
 import MapTypes
 import Game
 import Logger
+import EditorSession 1.0
+import EditorOpBus 1.0
 
     Item {
     id: keyController
@@ -87,8 +89,13 @@ import Logger
         case (Qt.Key_Y) :
             if (logic.mouseLogic.isControlPressed)
             {
-                console.log("Redo requested via Ctrl+Y")
-                Game.askNext()
+                if (EditorSession.active) {
+                    console.log("Redo (collab) via Ctrl+Y, redoDepth =", EditorOpBus.redoDepth())
+                    EditorOpBus.redo()
+                } else {
+                    console.log("Redo requested via Ctrl+Y")
+                    Game.askNext()
+                }
                 event.accepted = true
             }
             break;
@@ -96,8 +103,13 @@ import Logger
         case (Qt.Key_Z) :
             if (logic.mouseLogic.isControlPressed)
             {
-                console.log("Undo requested via Ctrl+Z")
-                Game.askPreview()
+                if (EditorSession.active) {
+                    console.log("Undo (collab) via Ctrl+Z, undoDepth =", EditorOpBus.undoDepth())
+                    EditorOpBus.undo()
+                } else {
+                    console.log("Undo requested via Ctrl+Z")
+                    Game.askPreview()
+                }
                 event.accepted = true
             }
             break;

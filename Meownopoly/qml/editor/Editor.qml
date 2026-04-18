@@ -224,7 +224,15 @@ Base_Board {
         onFocusReleased: root.forceActiveFocus()
 
         Component.onCompleted: {
-            Catway.setChatClient(chatDrawer.chatClient)
+            // En mode collab, le ChatClient de Catway est déjà celui du lobby
+            // (pointant sur la session collab). Ne pas l'écraser avec celui
+            // de ChatDrawer (qui parle à la session "Pattoune" générale),
+            // sinon REQUEST_CONNECTION_INFO partirait dans le mauvais canal.
+            if (!EditorSession.active) {
+                Catway.setChatClient(chatDrawer.chatClient)
+            } else {
+                console.log("[Editor] collab actif — Catway.chatClient laissé tel quel (lobby)")
+            }
         }
     }
 
@@ -598,6 +606,124 @@ Base_Board {
                 break
             }
         }
+
+        // Phase 5a : curseur distant reçu (UDP brut, ~20 Hz).
+        function onCursorReceived(senderId, x, y) {
+            root._upsertRemoteCursor(senderId, x, y)
+        }
+    }
+
+    // ─── Phase 5a : présence curseurs ───────────────────────────────────────
+    //
+    // Envoi : timer 20 Hz qui pousse la position `mainMa` (mappée en workArea
+    // coords) via EditorSession.sendCursor. La position côté pair s'affiche
+    // dans ses propres workArea coords — scroll/zoom indépendants.
+    //
+    // Réception : upsert dans une map playerId → {x, y, lastSeen} + signal
+    // cursorsChanged pour forcer le Repeater à se mettre à jour. Prune auto
+    // toutes les 500 ms des entrées sans nouvelles depuis 2 s.
+
+    property var remoteCursors: ({})
+    property var _remoteCursorKeys: []
+
+    // Position courante du pointeur dans le référentiel workArea, alimentée
+    // par le HoverHandler ci-dessous (qui capte aussi le hover sans clic).
+    property real _hoverX: -99999
+    property real _hoverY: -99999
+
+    signal _cursorsChanged()
+
+    function _colorForPlayer(pid) {
+        let h = 0
+        for (let i = 0; i < pid.length; i++)
+            h = (h * 131 + pid.charCodeAt(i)) & 0xFFFF
+        return Qt.hsla((h % 360) / 360.0, 0.7, 0.55, 1.0)
+    }
+
+    function _upsertRemoteCursor(pid, x, y) {
+        // Important : réassigner un nouvel objet (pas de mutation en place)
+        // pour que le binding `_entry` du delegate Repeater se ré-évalue.
+        // QML ne détecte pas les mutations de champs sur un var existant.
+        const copy = {}
+        for (const k in remoteCursors) copy[k] = remoteCursors[k]
+        copy[pid] = { "x": x, "y": y, "lastSeen": Date.now() }
+        remoteCursors = copy
+        _remoteCursorKeys = Object.keys(copy)
+    }
+
+    Timer {
+        id: cursorSendTimer
+        interval: 50        // 20 Hz
+        repeat: true
+        running: EditorSession.active
+        property real lastX: -99999
+        property real lastY: -99999
+        onTriggered: {
+            // Utilise _hoverX/_hoverY (alimenté par le HoverHandler de workArea)
+            // plutôt que mainMa.mouseX/mouseY — ces derniers sont masqués par
+            // les MouseAreas enfants (tuiles, grille) qui consomment le hover.
+            const x = root._hoverX
+            const y = root._hoverY
+            if (x === -99999) return                 // pas encore de position
+            if (x === lastX && y === lastY) return   // pas bougé
+            lastX = x
+            lastY = y
+            EditorSession.sendCursor(x, y)
+        }
+    }
+
+    Timer {
+        id: cursorPruneTimer
+        interval: 500
+        repeat: true
+        running: EditorSession.active
+        onTriggered: {
+            const now = Date.now()
+            let changed = false
+            const kept = {}
+            for (const pid in remoteCursors) {
+                if (now - remoteCursors[pid].lastSeen < 2000) {
+                    kept[pid] = remoteCursors[pid]
+                } else {
+                    changed = true
+                }
+            }
+            if (changed) {
+                remoteCursors = kept
+                _remoteCursorKeys = Object.keys(kept)
+            }
+        }
+    }
+
+    // ─── Phase 5b : broadcast de la sélection locale ────────────────────────
+    //
+    // Connectée sur selectedElementsChanged de mouseLogic : debounce 100 ms,
+    // puis envoie SelectionUpdate{uuids} en reliable. L'hôte rebroadcast
+    // aux autres clients via EditorSession::onReliableReceived.
+
+    Timer {
+        id: selectionBroadcastDebounce
+        interval: 100
+        repeat: false
+        onTriggered: {
+            if (!EditorSession.active) return
+            const els = logic.mouseLogic ? logic.mouseLogic.selectedElements : []
+            const uuids = []
+            for (let i = 0; i < els.length; i++) {
+                if (els[i] && els[i].snapableParameters) {
+                    uuids.push(String(els[i].snapableParameters.uniqueId))
+                }
+            }
+            EditorSession.sendEvent(EditorMessageType.SelectionUpdate, { "uuids": uuids })
+        }
+    }
+
+    Connections {
+        target: logic.mouseLogic
+        ignoreUnknownSignals: true
+        function onSelectedElementsChanged() {
+            if (EditorSession.active) selectionBroadcastDebounce.restart()
+        }
     }
 
     Connections {
@@ -701,6 +827,19 @@ Base_Board {
         id: workArea
         z: UiStyle.z_WORKAREA
         anchors.fill: gameGrid
+
+        // Phase 5a : tracking position souris en mode hover (sans clic).
+        // HoverHandler coexiste avec les MouseAreas des tuiles/grille et
+        // reporte une position même quand un enfant capte les évènements.
+        HoverHandler {
+            id: cursorHoverHandler
+            enabled: EditorSession.active
+            onPointChanged: {
+                root._hoverX = point.position.x
+                root._hoverY = point.position.y
+            }
+        }
+
         GameScene {
             id: gameScene
             x: -gameGrid.x
@@ -717,6 +856,72 @@ Base_Board {
             // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, fullScreenMsgPopup,
                                   adminCommandPanel)
+        }
+
+        // Phase 5a : overlay des curseurs distants. Enfant de workArea pour
+        // suivre scroll/zoom du grid. Les coordonnées reçues sont locales à
+        // workArea (envoyées via mapToItem côté pair).
+        Item {
+            id: remoteCursorsOverlay
+            anchors.fill: parent
+            z: 100000
+            visible: EditorSession.active
+
+            Repeater {
+                model: root._remoteCursorKeys
+                delegate: Item {
+                    readonly property var _entry: root.remoteCursors[modelData]
+                    readonly property color _color: root._colorForPlayer(modelData)
+                    x: _entry ? _entry.x : 0
+                    y: _entry ? _entry.y : 0
+                    width: 1; height: 1
+                    visible: !!_entry
+
+                    // Flèche de curseur stylisée
+                    Canvas {
+                        width: 20; height: 22
+                        onPaint: {
+                            const ctx = getContext("2d")
+                            ctx.clearRect(0, 0, width, height)
+                            ctx.fillStyle = parent._color
+                            ctx.strokeStyle = "white"
+                            ctx.lineWidth = 1.5
+                            ctx.beginPath()
+                            ctx.moveTo(1, 1)
+                            ctx.lineTo(1, 18)
+                            ctx.lineTo(6, 13)
+                            ctx.lineTo(10, 20)
+                            ctx.lineTo(13, 18)
+                            ctx.lineTo(9, 11)
+                            ctx.lineTo(16, 11)
+                            ctx.closePath()
+                            ctx.fill()
+                            ctx.stroke()
+                        }
+                        Connections {
+                            target: parent
+                            function on_ColorChanged() { parent.requestPaint() }
+                        }
+                    }
+
+                    // Étiquette playerId tronqué
+                    Rectangle {
+                        x: 18; y: 14
+                        radius: 3
+                        color: parent._color
+                        width: label.implicitWidth + 10
+                        height: label.implicitHeight + 4
+                        Text {
+                            id: label
+                            anchors.centerIn: parent
+                            text: modelData.length > 8 ? modelData.substring(0, 8) : modelData
+                            color: "white"
+                            font.pixelSize: 10
+                            font.bold: true
+                        }
+                    }
+                }
+            }
         }
     }
 

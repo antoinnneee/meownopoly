@@ -121,11 +121,13 @@ QtObject {
             } catch (e) {
                 console.warn("TileLogic: toJSON parse error", e)
             }
-            EditorOpBus.submitOp({
-                "op":       EditorOpType.CreateItem,
-                "target":   String(itemSnapableData.uniqueId),
-                "item":     itemJson
-            })
+            const createOp = {
+                "op":     EditorOpType.CreateItem,
+                "target": String(itemSnapableData.uniqueId),
+                "item":   itemJson
+            }
+            const inverseOp = EditorOpBus.makeDeleteOp(String(itemSnapableData.uniqueId))
+            EditorOpBus.submitOpWithUndo(createOp, inverseOp)
         }
         return newTile
     }
@@ -144,11 +146,27 @@ QtObject {
         }
 
         if (index !== -1) {
-            // Phase 2: enregistrement d'op avant la suppression (log-only).
+            // Phase 3+6 : capture le JSON complet AVANT destroy pour pouvoir
+            // reconstruire en undo. L'op Delete elle-même n'embarque que
+            // l'uuid pour rester légère ; l'inverse porte le JSON complet.
             const deletedUuid = element.snapableParameters
                                 ? String(element.snapableParameters.uniqueId)
                                 : ""
-            EditorOpBus.recordOp(EditorOpBus.makeDeleteOp(deletedUuid))
+            let capturedJson = {}
+            if (element.snapableParameters) {
+                try {
+                    capturedJson = JSON.parse(element.snapableParameters.toJSON())
+                } catch (e) {
+                    console.warn("TileLogic: toJSON pré-delete erreur", e)
+                }
+            }
+            const deleteOp = EditorOpBus.makeDeleteOp(deletedUuid)
+            const inverseCreate = {
+                "op":     EditorOpType.CreateItem,
+                "target": deletedUuid,
+                "item":   capturedJson
+            }
+            EditorOpBus.submitOpWithUndo(deleteOp, inverseCreate)
 
             // Supprimer l'élément de la liste
             snapableTilesList.splice(index, 1)
@@ -188,11 +206,12 @@ QtObject {
             source.connectionManager.addNextElement(target)
         }
 
-        // Phase 2: enregistrement d'op avant la sauvegarde (log-only).
-        EditorOpBus.recordOp(EditorOpBus.makeLinkOp(
-            source.snapableParameters ? String(source.snapableParameters.uniqueId) : "",
-            target.snapableParameters ? String(target.snapableParameters.uniqueId) : "",
-            kind))
+        // Phase 3+6 : op + inverse pour undo. Le bus loggue, envoie, et push.
+        const srcUuid = source.snapableParameters ? String(source.snapableParameters.uniqueId) : ""
+        const dstUuid = target.snapableParameters ? String(target.snapableParameters.uniqueId) : ""
+        EditorOpBus.submitOpWithUndo(
+            EditorOpBus.makeLinkOp(srcUuid, dstUuid, kind),
+            EditorOpBus.makeUnlinkOp(srcUuid, dstUuid, kind))
 
         // Sauvegarder après création de la connexion
         logic.saveMap(MapTypes.UNDOREDO)
