@@ -161,7 +161,7 @@ function handleCommand(ws, msg) {
     const sessionCommands = [
         'PUBLISH_KEY', 'SEND_MSG', 'SEND_COMMAND', 'GET_HISTORY',
         'CLEAR_HISTORY', 'GET_PARTICIPANTS', 'LEAVE_SESSION',
-        'DELETE_SESSION', 'KICK'
+        'DELETE_SESSION', 'KICK', 'RENAME_SESSION'
     ];
 
     if (sessionCommands.includes(type)) {
@@ -205,6 +205,9 @@ function handleCommand(ws, msg) {
             break;
         case 'KICK':
             handleKick(ws, payload);
+            break;
+        case 'RENAME_SESSION':
+            handleRenameSession(ws, payload);
             break;
         case 'LIST_SESSIONS':
         case 'GET_SESSION_LIST':
@@ -871,6 +874,34 @@ function handleKick(ws, payload) {
     debug(`Host ${hostId} kicked ${target_player_id} from session ${session_id}`);
 }
 
+// Phase 8 — host migration : rename une session existante (même session_id).
+// Utilisé quand un client élu se promeut hôte et réécrit le prefix
+// `[EDIT:<hostId>]` dans le nom affiché au lobby. Tous les clients reçoivent
+// un broadcast SESSION_RENAMED pour mettre à jour leur availableSessions.
+function handleRenameSession(ws, payload) {
+    const { session_id, session_name } = payload;
+    if (!session_id) return sendError(ws, 'MISSING_PARAMETER', 'session_id is required');
+    if (typeof session_name !== 'string') return sendError(ws, 'MISSING_PARAMETER', 'session_name required');
+
+    const existing = db.getSession(session_id);
+    if (!existing) return sendError(ws, 'SESSION_NOT_FOUND', 'Session not found');
+
+    const result = db.renameSession(session_id, session_name);
+    if (!result || result.changes === 0) {
+        return sendError(ws, 'RENAME_FAILED', 'Unable to rename session');
+    }
+
+    debug(`Session ${session_id} renamed to "${session_name}" by ${ws.player_id || 'unknown'}`);
+
+    const broadcastMsg = JSON.stringify({
+        type: 'SESSION_RENAMED',
+        payload: { session_id, session_name }
+    });
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) client.send(broadcastMsg);
+    });
+}
+
 function sendError(ws, code, message) {
     ws.send(JSON.stringify({
         type: 'ERROR',
@@ -895,13 +926,43 @@ function removeFromRooms(ws) {
 
         if (room.size === 0) {
             rooms.delete(sessionId);
-            // We do NOT delete keyRotationRequired here immediately if we want persistent state, 
-            // but for now, if no one is online, no one can rotate. 
-            // When someone joins, they will see if they are new or known.
+            keyRotationRequired.delete(sessionId);
+            // Phase 8 : si plus personne n'est connecté, on purge la session
+            // en DB (participants + messages + session). Laisse ainsi le lobby
+            // propre et évite l'accumulation après toutes les déconnexions.
+            // Note : si un joueur revient ensuite avec le même session_id, il
+            // créera une nouvelle session (ou recevra SESSION_NOT_FOUND).
+            try {
+                db.deleteSession(sessionId);
+                debug(`Session ${sessionId} empty — purged from DB`);
+                // Broadcast à tous les clients restants pour rafraîchir leur
+                // liste (la session disparaît du lobby).
+                const msg = JSON.stringify({
+                    type: 'SESSION_DELETED',
+                    payload: { session_id: sessionId }
+                });
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) client.send(msg);
+                });
+            } catch (err) {
+                console.error(`[Cleanup] Failed to purge empty session ${sessionId}:`, err);
+            }
         } else if (playerId) {
-            // Disconnection does NOT trigger PARTICIPANT_LEFT broadcast
-            // nor does it remove them from the DB.
-            debug(`Participant ${playerId} disconnected from session ${sessionId} (still in DB)`);
+            // Phase 8 : retirer le participant de la DB quand il se déconnecte
+            // (avant: on laissait tout en DB). Évite d'avoir des fantômes dans
+            // `participants` qui comptent pour le quota `max_players`.
+            try {
+                if (db.removeParticipant) db.removeParticipant(sessionId, playerId);
+            } catch (_) { /* ignore */ }
+            // Notification aux autres membres.
+            const msg = JSON.stringify({
+                type: 'PARTICIPANT_LEFT',
+                payload: { session_id: sessionId, player_id: playerId }
+            });
+            room.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) client.send(msg);
+            });
+            debug(`Participant ${playerId} disconnected from session ${sessionId}`);
         }
     }
 }

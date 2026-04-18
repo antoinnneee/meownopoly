@@ -52,6 +52,37 @@ void PlayerNetwork::registerQml()
     qmlRegisterType<PlayerNetwork>("Catway", 1, 0, "PlayerNetwork");
 }
 
+QVariantMap PlayerNetwork::stats() const
+{
+    QVariantMap m;
+    if (!m_endpoint) return m;
+
+    m.insert("rtt",       reliable_endpoint_rtt(m_endpoint));
+    m.insert("rttMin",    reliable_endpoint_rtt_min(m_endpoint));
+    m.insert("rttMax",    reliable_endpoint_rtt_max(m_endpoint));
+    m.insert("rttAvg",    reliable_endpoint_rtt_avg(m_endpoint));
+    m.insert("packetLoss", reliable_endpoint_packet_loss(m_endpoint));
+
+    float sentKbps = 0, recvKbps = 0, ackedKbps = 0;
+    reliable_endpoint_bandwidth(m_endpoint, &sentKbps, &recvKbps, &ackedKbps);
+    m.insert("sentBwKbps",  sentKbps);
+    m.insert("recvBwKbps",  recvKbps);
+    m.insert("ackedBwKbps", ackedKbps);
+
+    const uint64_t *c = reliable_endpoint_counters(m_endpoint);
+    if (c) {
+        m.insert("packetsSent",       quint64(c[RELIABLE_ENDPOINT_COUNTER_NUM_PACKETS_SENT]));
+        m.insert("packetsReceived",   quint64(c[RELIABLE_ENDPOINT_COUNTER_NUM_PACKETS_RECEIVED]));
+        m.insert("packetsAcked",      quint64(c[RELIABLE_ENDPOINT_COUNTER_NUM_PACKETS_ACKED]));
+        m.insert("packetsStale",      quint64(c[RELIABLE_ENDPOINT_COUNTER_NUM_PACKETS_STALE]));
+        m.insert("packetsInvalid",    quint64(c[RELIABLE_ENDPOINT_COUNTER_NUM_PACKETS_INVALID]));
+        m.insert("fragmentsSent",     quint64(c[RELIABLE_ENDPOINT_COUNTER_NUM_FRAGMENTS_SENT]));
+        m.insert("fragmentsReceived", quint64(c[RELIABLE_ENDPOINT_COUNTER_NUM_FRAGMENTS_RECEIVED]));
+        m.insert("fragmentsInvalid",  quint64(c[RELIABLE_ENDPOINT_COUNTER_NUM_FRAGMENTS_INVALID]));
+    }
+    return m;
+}
+
 void PlayerNetwork::setPlayerId(const QString &id)
 {
     if (m_playerId != id) {

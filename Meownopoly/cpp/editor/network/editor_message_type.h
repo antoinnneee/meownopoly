@@ -20,6 +20,9 @@ enum Value : quint8 {
     CursorUpdate      = 0x26,  // broadcast UDP brut : { playerId, x, y } (lossy, ~20 Hz)
     SelectionUpdate   = 0x27,  // broadcast reliable : { playerId, uuids, dragging }
     PlayerRoster      = 0x28,  // hôte → tous : { players: [{playerId, nickname, color}] }
+    // transport chunké pour ops dont le JSON dépasse le plafond reliable (~28 KB).
+    // Payload : { opId, chunkIndex, chunkCount, payloadB64, origType }.
+    OpChunk           = 0x29,
 };
 Q_ENUM_NS(Value)
 

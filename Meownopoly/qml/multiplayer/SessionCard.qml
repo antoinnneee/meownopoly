@@ -17,7 +17,7 @@ Rectangle {
      property string hostNickname // Nouveau
      property int onlineCount     // Nouveau
 
-     // Phase 7 : détection du prefix "[EDIT:<hostId>]" pour décorer la carte
+     // détection du prefix "[EDIT:<hostId>]" pour décorer la carte
      // et afficher un nom propre à l'utilisateur.
      readonly property var _editInfo: {
          const re = /^\[EDIT:([^\]]+)\]\s*(.*)$/

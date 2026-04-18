@@ -126,7 +126,7 @@ ApplicationWindow {
             appPositionY: root.y
             escMenu.onReturnToMainMenu: {
                 console.log("Retour au menu principal demandé")
-                // Phase 7 : si on est en session collaborative, couper proprement
+                // si on est en session collaborative, couper proprement
                 // avant de quitter l'éditeur (stop libère Catway et clear undo).
                 if (EditorSession.active) {
                     console.log("[main] EditorSession.stop (retour menu)")
@@ -134,6 +134,29 @@ ApplicationWindow {
                     EditorSession.stop()
                 }
                 stackView.pop()
+            }
+            // l'éditeur a détecté la nouvelle session lobby du
+            // nouvel hôte (après host migration) → on relance le p2pStateMachine
+            // existant avec skipPush (l'éditeur est déjà au-dessus de la pile).
+            onReconnectRequested: function(sessionId, hostId) {
+                console.log("[main] reconnect editor → host =", hostId,
+                            "session =", sessionId)
+                if (!Catway.chatClient) {
+                    console.warn("[main] Catway.chatClient null — abandon reconnect")
+                    return
+                }
+                // session_id inchangé (le nouvel hôte a juste
+                // renommé la session côté serveur). Pas de re-join WS — on
+                // garde la même connexion, ses participants, son historique.
+                // Juste relancer le p2p state machine vers le nouvel hôte.
+                p2pStateMachine.targetHostId = hostId
+                p2pStateMachine.state = "STUN"
+                p2pStateMachine.attempts = 0
+                p2pStateMachine.requestSent = false
+                p2pStateMachine.holePunchSent = false
+                p2pStateMachine.skipPush = true
+                if (Catway.localPortCount() === 0) Catway.setupNewPort()
+                p2pStateMachine.start()
             }
         }
     }
@@ -213,11 +236,11 @@ ApplicationWindow {
                 stackView.pop()
             }
 
-            // Phase 7 : host vient de créer une session (éditeur ou jeu).
+            // host vient de créer une session (éditeur ou jeu).
             // Si éditeur, on démarre EditorSession.startAsHost et on push l'éditeur.
-            onLunchNewSession: function(isEdition, hostId) {
+            onLaunchNewSession: function(isEdition, hostId) {
                 if (!isEdition) {
-                    console.log("[main] lunchNewSession (jeu) — pas encore câblé")
+                    console.log("[main] launchNewSession (jeu) — pas encore câblé")
                     return
                 }
                 console.log("[main] Host démarre EditorSession, playerId =", AccountManager.uniqueId)
@@ -242,9 +265,9 @@ ApplicationWindow {
             //      + HP:STRIKE (sans ça, seul le heartbeat essaie, ~10 s).
             //   5. Attendre isP2pConnected.
             //   6. Démarrer EditorSession.startAsClient et push editor.
-            onLunchExistingSession: function(isEdition, hostId) {
+            onLaunchExistingSession: function(isEdition, hostId) {
                 if (!isEdition) {
-                    console.log("[main] lunchExistingSession (jeu) — pas encore câblé")
+                    console.log("[main] launchExistingSession (jeu) — pas encore câblé")
                     return
                 }
                 if (!hostId || hostId === AccountManager.uniqueId) {
@@ -269,6 +292,41 @@ ApplicationWindow {
         }
     }
 
+    // quand le pair local se promeut hôte (host migration), on
+    // publie une nouvelle session lobby "[EDIT:<localId>] Map". Les clients
+    // survivants la verront apparaître dans `availableSessions` et se
+    // reconnecteront automatiquement (cf. Editor.onReconnectRequested).
+    Connections {
+        target: EditorSession
+        function onPromotedToHost() {
+            if (!Catway.chatClient) {
+                console.warn("[main] promoteToHost: Catway.chatClient null — skip publish")
+                return
+            }
+            // on GARDE le même session_id pour que les survivants
+            // restent sur le même canal de chat (même historique, même clé).
+            // On renomme juste le prefix [EDIT:...] pour que le lobby affiche
+            // le nouvel hôte. Les survivants reconnaissent directement via
+            // hole-punch sur la session existante — aucun re-join chat nécessaire.
+            const pid = EditorSession.localPlayerId
+            const sid = Catway.chatClient.sessionId
+            // Cherche le nom courant dans availableSessions pour préserver la
+            // partie "user" après le prefix [EDIT:...].
+            let oldName = ""
+            const list = Catway.chatClient.availableSessions || []
+            for (let i = 0; i < list.length; ++i) {
+                if (list[i].sessionId === sid) {
+                    oldName = list[i].name || ""
+                    break
+                }
+            }
+            const stripped = oldName.replace(/^\[EDIT:[^\]]+\]\s*/, "")
+            const newName = "[EDIT:" + pid + "] " + (stripped || "Session")
+            console.log("[main] promotion — renameSession:", oldName, "→", newName)
+            Catway.chatClient.renameSession(newName)
+        }
+    }
+
     // Machine à états du hole-punch client.
     // Poll à 300 ms avec timeout global ~15 s. Chaque état avance dès que
     // la condition passe.
@@ -281,6 +339,9 @@ ApplicationWindow {
         property int attempts: 0
         property bool requestSent: false
         property bool holePunchSent: false
+        // true quand on se reconnecte à un nouvel hôte (editor déjà
+        // dans la pile) — on n'empile pas un 2e Editor à la fin.
+        property bool skipPush: false
         readonly property int maxAttempts: 50   // ~15 s
 
         onTriggered: {
@@ -356,10 +417,16 @@ ApplicationWindow {
                     const ok = EditorSession.startAsClient(AccountManager.uniqueId, targetHostId)
                     if (!ok) {
                         console.warn("[main] EditorSession.startAsClient a échoué")
+                        skipPush = false
                         return
                     }
-                    // Garde le lobby + son ChatClient vivant sous l'éditeur.
-                    stackView.push(editor)
+                    if (skipPush) {
+                        console.log("[main] reconnect post-migration — skip push editor")
+                        skipPush = false
+                    } else {
+                        // Garde le lobby + son ChatClient vivant sous l'éditeur.
+                        stackView.push(editor)
+                    }
                 }
             }
         }

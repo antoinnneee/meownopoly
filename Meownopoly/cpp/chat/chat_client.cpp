@@ -115,6 +115,28 @@ void ChatClient::createSession(QString nameSession, QString pwdSession, QString 
         "ChatClient");
 }
 
+void ChatClient::renameSession(const QString &newName)
+{
+    if (!m_connected) {
+        emit errorOccurred("Non connecté au serveur");
+        return;
+    }
+    if (m_sessionId.isEmpty()) {
+        Logger::instance()->warn("renameSession: no active session", "ChatClient");
+        return;
+    }
+    QJsonObject msg;
+    msg["type"] = "RENAME_SESSION";
+    QJsonObject payload;
+    payload["session_id"]   = m_sessionId;
+    payload["session_name"] = newName;
+    msg["payload"] = payload;
+    sendWebSocketMessage(msg);
+    Logger::instance()->info(
+        QString("Requesting rename of session %1 → \"%2\"").arg(m_sessionId, newName),
+        "ChatClient");
+}
+
 void ChatClient::connectToSessionDirect(const QString &sessionId, const QString &password)
 {
 

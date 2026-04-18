@@ -8,6 +8,9 @@
 
 #include <QDebug>
 #include <QStringList>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QUuid>
 
 EditorSession *EditorSession::m_pThis = nullptr;
 
@@ -107,6 +110,10 @@ void EditorSession::stop()
         m_remoteSelections.clear();
         emit remoteSelectionsChanged();
     }
+    if (!m_knownRoster.isEmpty()) {
+        m_knownRoster.clear();
+        emit knownRosterChanged();
+    }
 
     emit activeChanged();
     emit isHostChanged();
@@ -126,12 +133,20 @@ void EditorSession::connectToCatway()
                              this,   &EditorSession::onReliableReceived);
     m_udpConn      = connect(catway, &Catway::udpMessageReceived,
                              this,   &EditorSession::onUdpReceived);
+    // détection de perte de pair.
+    m_timeoutConn  = connect(catway, &Catway::playerTimedOut,
+                             this,   &EditorSession::onPlayerTimedOut);
+    if (!m_rateClock.isValid()) m_rateClock.start();
 }
 
 void EditorSession::disconnectFromCatway()
 {
     disconnect(m_reliableConn);
     disconnect(m_udpConn);
+    disconnect(m_timeoutConn);
+    m_opBuckets.clear();
+    m_chunkBuffers.clear();
+    m_serverSeq = 0;
 }
 
 // ── Envoi ──────────────────────────────────────────────────────────────────────
@@ -140,18 +155,10 @@ void EditorSession::sendEvent(int type, const QJsonObject &payload)
 {
     if (!m_active) return;
     const auto msgType = static_cast<EditorMessageType::Value>(type);
-    const QByteArray packet = EditorProtocol::pack(msgType, payload);
-    Catway *catway = Catway::instance();
-
     if (m_isHost) {
-        catway->broadcastReliable(packet);
+        sendReliableOrChunked(QString{}, msgType, payload, /*broadcast=*/true);
     } else {
-        PlayerNetwork *host = catway->playerById(m_hostPlayerId);
-        if (host) {
-            catway->sendReliableToPlayer(host, packet);
-        } else {
-            qWarning() << "[EditorSession] sendEvent: host player not found:" << m_hostPlayerId;
-        }
+        sendReliableOrChunked(m_hostPlayerId, msgType, payload, /*broadcast=*/false);
     }
 }
 
@@ -161,9 +168,9 @@ void EditorSession::broadcastEvent(int type, const QJsonObject &payload)
         qWarning() << "[EditorSession] broadcastEvent called by non-host — ignoring.";
         return;
     }
-    const QByteArray packet = EditorProtocol::pack(
-        static_cast<EditorMessageType::Value>(type), payload);
-    Catway::instance()->broadcastReliable(packet);
+    sendReliableOrChunked(QString{},
+                          static_cast<EditorMessageType::Value>(type),
+                          payload, /*broadcast=*/true);
 }
 
 void EditorSession::sendEventTo(const QString &playerId, int type, const QJsonObject &payload)
@@ -173,15 +180,83 @@ void EditorSession::sendEventTo(const QString &playerId, int type, const QJsonOb
         qWarning() << "[EditorSession] sendEventTo: empty playerId";
         return;
     }
-    const QByteArray packet = EditorProtocol::pack(
-        static_cast<EditorMessageType::Value>(type), payload);
+    sendReliableOrChunked(playerId,
+                          static_cast<EditorMessageType::Value>(type),
+                          payload, /*broadcast=*/false);
+}
+
+// envoi reliable avec fallback chunké OpChunk si le paquet dépasse
+// k_chunkThresholdBytes. Le chunking ne s'applique qu'aux messages d'éditeur
+// dont la perte de framing peut être contournée (on n'entoure pas Hello).
+void EditorSession::sendReliableOrChunked(const QString &playerId,
+                                          EditorMessageType::Value type,
+                                          const QJsonObject &payload,
+                                          bool broadcast)
+{
     Catway *catway = Catway::instance();
-    PlayerNetwork *p = catway->playerById(playerId);
-    if (p) {
-        catway->sendReliableToPlayer(p, packet);
-    } else {
-        qWarning() << "[EditorSession] sendEventTo: player not found:" << playerId;
+    const QByteArray packet = EditorProtocol::pack(type, payload);
+
+    auto dispatch = [&](const QByteArray &bytes) {
+        if (broadcast) {
+            catway->broadcastReliable(bytes);
+        } else {
+            PlayerNetwork *p = catway->playerById(playerId);
+            if (p) catway->sendReliableToPlayer(p, bytes);
+            else   qWarning() << "[EditorSession] dispatch: player not found:" << playerId;
+        }
+    };
+
+    if (packet.size() <= k_chunkThresholdBytes) {
+        dispatch(packet);
+        return;
     }
+
+    // Chunking : on sérialise le payload original en JSON compact, on
+    // fragmente en base64 pour survivre au transport texte, puis on envoie
+    // N paquets OpChunk { opId, chunkIndex, chunkCount, origType, payloadB64 }.
+    const QByteArray full = QJsonDocument(payload).toJson(QJsonDocument::Compact);
+    const QByteArray b64  = full.toBase64();
+    const int capacity    = k_chunkThresholdBytes - 512; // marge header
+    const int count       = (b64.size() + capacity - 1) / capacity;
+    const QString opId    = QUuid::createUuid().toString(QUuid::WithoutBraces);
+
+    qDebug().noquote() << "[EditorSession] chunking type" << Qt::hex << int(type)
+                       << Qt::dec << "size=" << packet.size()
+                       << "→" << count << "chunks (opId=" << opId << ")";
+
+    for (int i = 0; i < count; ++i) {
+        const QByteArray frag = b64.mid(i * capacity, capacity);
+        QJsonObject chunkPayload{
+            { "opId",       opId },
+            { "chunkIndex", i },
+            { "chunkCount", count },
+            { "origType",   int(type) },
+            { "payloadB64", QString::fromLatin1(frag) },
+        };
+        const QByteArray chunkPacket =
+            EditorProtocol::pack(EditorMessageType::OpChunk, chunkPayload);
+        dispatch(chunkPacket);
+    }
+}
+
+// retourne true si l'op est autorisée, false si rate-limitée.
+bool EditorSession::consumeOpToken(const QString &senderId)
+{
+    const qint64 nowMs = m_rateClock.isValid() ? m_rateClock.elapsed() : 0;
+    TokenBucket &b = m_opBuckets[senderId];
+    if (b.lastRefillMs == 0) {
+        b.tokens = k_opBurst;
+        b.lastRefillMs = nowMs;
+    } else {
+        const double dt = (nowMs - b.lastRefillMs) / 1000.0;
+        b.tokens = qMin(k_opBurst, b.tokens + dt * k_opRatePerSec);
+        b.lastRefillMs = nowMs;
+    }
+    if (b.tokens >= 1.0) {
+        b.tokens -= 1.0;
+        return true;
+    }
+    return false;
 }
 
 void EditorSession::sendOp(const QJsonObject &op)
@@ -232,14 +307,69 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
         return;
 
     switch (type) {
-    case EditorMessageType::Op:
-        emit opReceived(senderId, payload);
+    case EditorMessageType::Op: {
+        QJsonObject opPayload = payload;
+        // côté hôte, rate-limit par expéditeur et tag d'un _seq monotone
+        // avant rebroadcast — les clients loggent le _seq pour corrélation.
+        if (m_isHost) {
+            if (!consumeOpToken(senderId)) {
+                qWarning() << "[EditorSession] op rate-limited from" << senderId;
+                emit opRateLimited(senderId, 1);
+                QJsonObject rej{
+                    { "reason", "rate_limited" },
+                    { "op",     opPayload.value("op").toInt() },
+                };
+                sendEventTo(senderId, EditorMessageType::OpReject, rej);
+                break;
+            }
+            opPayload.insert("_seq", double(++m_serverSeq));
+            opPayload.insert("_by",  senderId);
+        }
+        qDebug().noquote() << "[EditorOps] recv seq="
+                           << opPayload.value("_seq").toDouble(0)
+                           << "from=" << senderId
+                           << "type=" << opPayload.value("op").toInt();
+        emit opReceived(senderId, opPayload);
         // Hôte : rebroadcast aux autres clients (l'auteur reçoit via son propre
         // chemin local ; voir note dans le plan sur le design apply-on-rebroadcast).
         if (m_isHost) {
-            relayReliableToOthers(senderId, EditorProtocol::pack(type, payload));
+            relayReliableToOthers(senderId, EditorProtocol::pack(type, opPayload));
         }
         break;
+    }
+
+    case EditorMessageType::OpChunk:
+        handleOpChunk(senderId, payload);
+        break;
+
+    case EditorMessageType::Hello:
+        // l'hôte agrège le roster à la volée. Le premier Hello
+        // d'un client l'ajoute ; on rediffuse à tous pour que chacun puisse
+        // élire un successeur déterministe en cas de perte de l'hôte.
+        if (m_isHost && !senderId.isEmpty() && !m_knownRoster.contains(senderId)) {
+            m_knownRoster.append(senderId);
+            emit knownRosterChanged();
+            broadcastRoster();
+        }
+        emit editorEventReceived(static_cast<int>(type), senderId, payload);
+        break;
+
+    case EditorMessageType::PlayerRoster: {
+        // côté client, cacher la nouvelle snapshot du roster.
+        if (!m_isHost) {
+            QStringList newRoster;
+            const QJsonArray arr = payload.value("players").toArray();
+            newRoster.reserve(arr.size());
+            for (const QJsonValue &v : arr) newRoster.append(v.toString());
+            if (newRoster != m_knownRoster) {
+                m_knownRoster = newRoster;
+                emit knownRosterChanged();
+                qDebug() << "[EditorSession] roster mis à jour :" << m_knownRoster;
+            }
+        }
+        emit editorEventReceived(static_cast<int>(type), senderId, payload);
+        break;
+    }
 
     case EditorMessageType::SelectionUpdate: {
         // Met à jour la map de présence (QVariantMap playerId → [uuid,...])
@@ -289,4 +419,136 @@ void EditorSession::onUdpReceived(const QString &senderId, const QString &messag
 
     // senderId vient de Catway ; on ignore parts[0] (redondant avec senderId).
     emit cursorReceived(senderId, x, y);
+}
+
+// réassemblage des ops chunkées. Une fois tous les fragments reçus,
+// on reconstruit le paquet original et on le ré-injecte dans onReliableReceived
+// pour suivre le même chemin que les ops non-chunkées (rate-limit, seq, etc.).
+void EditorSession::handleOpChunk(const QString &senderId, const QJsonObject &payload)
+{
+    const QString opId = payload.value("opId").toString();
+    const int idx      = payload.value("chunkIndex").toInt(-1);
+    const int count    = payload.value("chunkCount").toInt(0);
+    const int origType = payload.value("origType").toInt(0);
+    const QByteArray frag = payload.value("payloadB64").toString().toLatin1();
+    if (opId.isEmpty() || idx < 0 || count <= 0) {
+        qWarning() << "[EditorSession] OpChunk payload invalide";
+        return;
+    }
+    const QString key = senderId + QLatin1Char('/') + opId;
+    ChunkBuffer &buf = m_chunkBuffers[key];
+    if (buf.chunkCount == 0) {
+        buf.chunkCount = count;
+        buf.origType   = origType;
+    }
+    buf.chunks.insert(idx, frag);
+    if (buf.chunks.size() < buf.chunkCount) return;
+
+    // Tous reçus : concaténer dans l'ordre + décoder.
+    QByteArray b64;
+    for (int i = 0; i < buf.chunkCount; ++i) b64.append(buf.chunks.value(i));
+    const QByteArray full = QByteArray::fromBase64(b64);
+    m_chunkBuffers.remove(key);
+
+    QJsonParseError err;
+    const QJsonDocument doc = QJsonDocument::fromJson(full, &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+        qWarning() << "[EditorSession] OpChunk reassembly JSON error:" << err.errorString();
+        return;
+    }
+    // Ré-injection via le chemin normal : on reconstruit le paquet du type d'origine.
+    const QByteArray rebuilt = EditorProtocol::pack(
+        static_cast<EditorMessageType::Value>(origType), doc.object());
+    qDebug() << "[EditorSession] OpChunk reassembled — replaying type"
+             << Qt::hex << origType << Qt::dec << "from" << senderId
+             << "(" << rebuilt.size() << "bytes)";
+    onReliableReceived(senderId, rebuilt);
+}
+
+// diffuse le roster courant à tous les clients.
+void EditorSession::broadcastRoster()
+{
+    if (!m_isHost) return;
+    QJsonArray arr;
+    for (const QString &p : m_knownRoster) arr.append(p);
+    broadcastEvent(EditorMessageType::PlayerRoster,
+                   QJsonObject{{ "players", arr }});
+}
+
+// élection déterministe. Candidats = roster cache ∪ {self} privé
+// de l'ancien hôte. Gagnant = plus petit id lexicographique.
+QString EditorSession::electNewHost() const
+{
+    QStringList candidates = m_knownRoster;
+    if (!m_localPlayerId.isEmpty() && !candidates.contains(m_localPlayerId))
+        candidates.append(m_localPlayerId);
+    candidates.removeAll(m_hostPlayerId);
+    if (candidates.isEmpty()) return QString{};
+    std::sort(candidates.begin(), candidates.end());
+    return candidates.first();
+}
+
+// bascule du rôle client → hôte en préservant l'état local.
+bool EditorSession::promoteToHost()
+{
+    if (!m_active) {
+        qWarning() << "[EditorSession] promoteToHost: session inactive";
+        return false;
+    }
+    if (m_isHost) return true;
+    const QString me = m_localPlayerId;
+    qDebug() << "[EditorSession] promotion hôte — pair local =" << me;
+    // On garde les tuiles locales (pas touché par stop/startAsHost).
+    stop();
+    const bool ok = startAsHost(me);
+    if (ok) emit promotedToHost();
+    return ok;
+}
+
+// perte d'un pair détectée par Catway. Côté client, si c'est l'hôte
+// qui tombe → on arrête la session (le QML reprend en mode monoposte avec son
+// snapshot local). Côté hôte, on purge la présence et notifie les clients.
+void EditorSession::onPlayerTimedOut(const QString &playerId)
+{
+    if (!m_active) return;
+    if (!m_isHost && playerId == m_hostPlayerId) {
+        // élection déterministe sur la base du dernier roster cache
+        // reçu de l'ancien hôte. Tous les survivants qui partagent le même
+        // roster élisent le même gagnant → pas de négociation nécessaire.
+        //
+        // IMPORTANT : on N'APPELLE PAS `stop()` ici. Le signal est émis
+        // synchroniquement, et le handler QML décide : soit `promoteToHost()`
+        // (qui fait stop+startAsHost atomiquement), soit `stop()`. Si on
+        // enchaînait `stop()` ici, il annulerait la promotion juste faite par
+        // le handler → le client perdrait le rôle d'hôte.
+        const QString elected = electNewHost();
+        qWarning() << "[EditorSession] hôte perdu (timeout) — élection →" << elected;
+        emit hostLost(elected);
+        return;
+    }
+    if (m_isHost) {
+        qWarning() << "[EditorSession] pair perdu:" << playerId;
+        bool purged = false;
+        if (m_remoteSelections.contains(playerId)) {
+            m_remoteSelections.remove(playerId);
+            purged = true;
+        }
+        m_opBuckets.remove(playerId);
+        // Supprimer les chunks en cours de ce sender.
+        QStringList toDrop;
+        for (auto it = m_chunkBuffers.begin(); it != m_chunkBuffers.end(); ++it) {
+            if (it.key().startsWith(playerId + QLatin1Char('/')))
+                toDrop.append(it.key());
+        }
+        for (const QString &k : toDrop) m_chunkBuffers.remove(k);
+
+        // retirer du roster + rediffuser la nouvelle liste.
+        if (m_knownRoster.removeAll(playerId) > 0) {
+            emit knownRosterChanged();
+            broadcastRoster();
+        }
+
+        if (purged) emit remoteSelectionsChanged();
+        emit peerLeft(playerId);
+    }
 }

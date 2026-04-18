@@ -7,18 +7,14 @@
 #include <QHash>
 #include <QUuid>
 #include <QQmlEngine>
+#include <QElapsedTimer>
 
 #include "editor_op_type.h"
 
 /// Chokepoint unique par lequel transitent toutes les intentions de
-/// mutation de l'éditeur de carte.
-///
-/// Phase 2 (actuelle) : simple enregistreur. `recordOp` loggue et réémet
-///   un signal `opRecorded` ; la mutation réelle est toujours faite par QML
-///   immédiatement après. Aucun changement de comportement pour l'utilisateur.
-///
-/// Phase 3+ : quand `EditorSession::active()` est vrai, `submitOp` décidera
-///   d'envoyer au host et d'attendre le rebroadcast avant d'appliquer, etc.
+/// mutation de l'éditeur de carte. En monoposte, `submitOp` loggue et émet
+/// `opRecorded` ; en collaboratif (EditorSession active), il envoie aussi
+/// l'op au host (ou broadcast si host) et attend le rebroadcast pour l'apply.
 ///
 /// Exposé à QML comme singleton pour pouvoir être invoqué depuis n'importe
 /// quel handler (TileLogic, MouseLogic_Selection, panels CCP_/ASP_/VEP_).
@@ -38,17 +34,16 @@ public:
 
     bool isApplyingRemote() const { return m_isApplyingRemote; }
 
-    // ── Soumission locale (Phases 2+) ────────────────────────────────────────
+    // ── Soumission locale ─────────────────────────────────────────────────────
 
-    /// Soumet une op locale produite par une action utilisateur.
-    /// - Phase 2 (EditorSession inactive) : loggue uniquement, via `opRecorded`.
-    /// - Phase 3 (EditorSession active)  : loggue ET envoie l'op via
-    ///   EditorSession::sendOp (client → host, ou broadcast si host).
+    /// Soumet une op locale produite par une action utilisateur. Loggue via
+    /// `opRecorded`, et si la session collaborative est active, envoie l'op
+    /// à EditorSession (client → host, ou broadcast si host).
     /// Si `isApplyingRemote` est vrai (replay d'une op distante), drop silencieux
     /// pour casser la boucle réseau.
     Q_INVOKABLE void submitOp(const QJsonObject &op);
 
-    /// Alias historique (Phase 2). Équivalent à `submitOp`.
+    /// Alias historique. Équivalent à `submitOp`.
     Q_INVOKABLE void recordOp(const QJsonObject &op) { submitOp(op); }
 
     /// Entre manuellement en mode "apply-remote" pour un bloc de mutations
@@ -85,7 +80,7 @@ public:
     // ── Helpers de construction d'op (pour QML) ──────────────────────────────
 
     /// Génère un nouvel UUID sérialisé (utilisé pour pré-minter un item côté
-    /// client avant envoi réseau, cf. Phase 3).
+    /// client avant envoi réseau).
     Q_INVOKABLE QString newUuid() const;
 
     /// Construit une op CreateItem { op, item }.
@@ -131,6 +126,10 @@ signals:
     /// Émis pour chaque op enregistrée localement (utile pour logs/tests).
     void opRecorded(const QJsonObject &op);
 
+    /// une soumission locale a été rejetée par le rate-limit client
+    /// (avant même d'atteindre le réseau). QML peut afficher un toast.
+    void localThrottled(const QJsonObject &op);
+
     /// Émis quand une op distante est reçue et doit être appliquée par QML.
     /// QML doit mettre isApplyingRemote=true via beginApplyRemote() avant la
     /// mutation, et endApplyRemote() juste après — automatique via le flag
@@ -166,6 +165,14 @@ private:
     // Ops en attente, indexées par groupId de transaction (Game::beginTransaction).
     // Vidées en un seul batch via flushGroup(groupId) à commitTransaction.
     QHash<QUuid, QList<QJsonObject>> m_pendingGroups;
+
+    // Rate-limit local (token bucket). Évite de noyer la file réseau quand
+    // un script QML boucle sur submitOp.
+    double m_localTokens   = 60.0;
+    qint64 m_localLastMs   = 0;
+    QElapsedTimer m_localClock;
+    static constexpr double k_localRatePerSec = 30.0;
+    static constexpr double k_localBurst      = 60.0;
 };
 
 #endif // EDITOR_OP_BUS_H

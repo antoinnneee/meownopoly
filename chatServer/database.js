@@ -88,6 +88,13 @@ module.exports = {
       return { changes: 1, version: newVersion };
     })();
   },
+  // Phase 8 — host migration : renommer une session existante sans toucher à
+  // son id, ses participants ni ses messages. Utilisé quand le nouveau host
+  // adopte la session pour mettre à jour le prefix `[EDIT:<hostId>]`.
+  renameSession: (sessionId, newName) => {
+    return db.prepare('UPDATE sessions SET session_name = ? WHERE session_id = ?')
+      .run(newName || '', sessionId);
+  },
   deleteSession: (sessionId) => {
     db.transaction(() => {
       db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);

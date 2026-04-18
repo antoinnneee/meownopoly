@@ -71,6 +71,12 @@ Base_Board {
     signal openNewMapMenu
     property alias entity: gameScene.entity
 
+    // la reconnexion auto après host migration est pilotée par main.qml
+    // (qui possède le p2pStateMachine). Émis depuis `onHostLost` quand le pair
+    // local n'est pas élu — la session de chat reste la MÊME (le nouvel hôte
+    // l'a juste renommée côté serveur), donc pas de re-join chat nécessaire.
+    signal reconnectRequested(string sessionId, string hostId)
+
     // MapInfo est déjà défini dans Base_Board, on met juste à jour le nom ici
     Component.onCompleted: {
         initializeEditor()
@@ -86,7 +92,7 @@ Base_Board {
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
 
-        // Phase 4 : si la session collab est déjà active lors de l'ouverture
+        // si la session collab est déjà active lors de l'ouverture
         // de l'éditeur (cas usuel : startAsClient déclenché depuis le panel
         // de test avant navigation), le signal `activeChanged` est déjà passé
         // → on déclenche manuellement le Hello côté client.
@@ -345,7 +351,7 @@ Base_Board {
         }
     }
 
-    // Phase 3: applier distant. EditorOpBus positionne `isApplyingRemote=true`
+    // applier distant. EditorOpBus positionne `isApplyingRemote=true`
     // pendant l'émission — les mutations déclenchées ci-dessous passeront par
     // submitOp mais seront droppées (pas de re-broadcast, pas de boucle).
     Connections {
@@ -489,7 +495,7 @@ Base_Board {
         }
     }
 
-    // ─── Phase 4 : full-sync à la connexion ─────────────────────────────────
+    // ─── full-sync à la connexion ─────────────────────────────────
     //
     // Protocole :
     //   1. Client devient actif → envoie Hello à l'hôte.
@@ -629,7 +635,7 @@ Base_Board {
                 console.log("[FullSync] client → envoi Hello (activeChanged)")
                 EditorSession.sendEvent(EditorMessageType.Hello, {
                     "nickname": AccountManager.nickname || "",
-                    "assetPackHash": ""   // TODO phase 4b : calculer
+                    "assetPackHash": ""   // TODO: calculer
                 })
             }
         }
@@ -656,13 +662,64 @@ Base_Board {
             }
         }
 
-        // Phase 5a : curseur distant reçu (UDP brut, ~20 Hz).
+        // curseur distant reçu (UDP brut, ~20 Hz).
         function onCursorReceived(senderId, x, y) {
             root._upsertRemoteCursor(senderId, x, y)
         }
+
+        // hôte perdu. L'élection détermine le nouvel hôte de façon
+        // déterministe (plus petit playerId du roster cache, ancien hôte exclu).
+        // - Si `electedHostId === localPlayerId` : promotion auto, l'état local
+        //   est préservé et le pair devient hôte (les autres doivent rejoindre
+        //   via le lobby pour reprendre la collab).
+        // - Sinon : fallback monoposte. L'état est conservé mais la session
+        //   collab est terminée jusqu'à une nouvelle entrée par le lobby.
+        function onHostLost(electedHostId) {
+            console.warn("[EditorSession] hôte perdu — élu :", electedHostId,
+                         "(moi =", EditorSession.localPlayerId + ")")
+            if (electedHostId && electedHostId === EditorSession.localPlayerId) {
+                // `promoteToHost` fait stop+startAsHost en interne, préserve l'état.
+                // main.qml reçoit `promotedToHost` et renomme la session chat
+                // (MÊME sessionId) — aucun re-join nécessaire pour les autres.
+                console.log("[EditorSession] Je suis le nouvel hôte — promotion.")
+                EditorSession.promoteToHost()
+            } else if (electedHostId) {
+                // le nouvel hôte a conservé la MÊME session de chat
+                // (rename côté serveur, pas de createSession). Donc on peut
+                // relancer P2P directement sur la session actuelle — pas de
+                // polling, pas d'attente de découverte.
+                const sid = Catway.chatClient ? Catway.chatClient.sessionId : ""
+                if (!sid) {
+                    console.warn("[Reconnect] pas de session chat active — stop")
+                    EditorSession.stop()
+                    return
+                }
+                console.log("[Reconnect] auto →", electedHostId, "via session", sid)
+                EditorSession.stop()
+                root.reconnectRequested(sid, electedHostId)
+            } else {
+                console.log("[EditorSession] Aucun candidat — monoposte.")
+                EditorSession.stop()
+            }
+        }
+
+        // un pair a quitté → purge curseur/sélection locale.
+        function onPeerLeft(playerId) {
+            console.log("[EditorSession] pair parti:", playerId)
+            const copy = {}
+            for (const k in root.remoteCursors)
+                if (k !== playerId) copy[k] = root.remoteCursors[k]
+            root.remoteCursors = copy
+            root._remoteCursorKeys = Object.keys(copy)
+        }
+
+        // op rejetée (rate-limit ou autre) → log côté auteur.
+        function onOpRejected(reject) {
+            console.warn("[EditorSession] op rejetée:", JSON.stringify(reject))
+        }
     }
 
-    // ─── Phase 5a : présence curseurs ───────────────────────────────────────
+    // ─── présence curseurs ───────────────────────────────────────
     //
     // Envoi : timer 20 Hz qui pousse la position `mainMa` (mappée en workArea
     // coords) via EditorSession.sendCursor. La position côté pair s'affiche
@@ -711,13 +768,37 @@ Base_Board {
             // Utilise _hoverX/_hoverY (alimenté par le HoverHandler de workArea)
             // plutôt que mainMa.mouseX/mouseY — ces derniers sont masqués par
             // les MouseAreas enfants (tuiles, grille) qui consomment le hover.
+            //
+            // conversion en unités de grille avant envoi. Le
+            // repère commun entre pairs est la position en cases (fractionnelle),
+            // invariante par zoom (gridSize local) et résolution d'écran. Les
+            // coords workArea en pixels dépendent de `mmSize` qui peut différer
+            // entre pairs. Division par gameGrid.gridSize → la case `N` est à
+            // la valeur `N` quel que soit le zoom local.
+            const gs = gameGrid ? gameGrid.gridSize : 0
+            if (!gs) return
             const x = root._hoverX
             const y = root._hoverY
             if (x === -99999) return                 // pas encore de position
             if (x === lastX && y === lastY) return   // pas bougé
             lastX = x
             lastY = y
-            EditorSession.sendCursor(x, y)
+            EditorSession.sendCursor(x / gs, y / gs)
+        }
+    }
+
+    // pendant un drag-select, le HoverHandler de workArea
+    // cesse d'émettre (pointeur grabbed par mainMa). On complète la source de
+    // position avec mainMa.onPositionChanged — qui fire aussi pendant le press —
+    // en mappant les coords root→workArea. Les deux sources coexistent sans
+    // conflit (dernière vue écrase).
+    Connections {
+        target: mainMa
+        enabled: EditorSession.active
+        function onPositionChanged(mouse) {
+            const p = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+            root._hoverX = p.x
+            root._hoverY = p.y
         }
     }
 
@@ -744,7 +825,7 @@ Base_Board {
         }
     }
 
-    // ─── Phase 5b : broadcast de la sélection locale ────────────────────────
+    // ─── broadcast de la sélection locale ────────────────────────
     //
     // Connectée sur selectedElementsChanged de mouseLogic : debounce 100 ms,
     // puis envoie SelectionUpdate{uuids} en reliable. L'hôte rebroadcast
@@ -781,7 +862,14 @@ Base_Board {
         function onFoundItemSnapableTile(itemSnapableData) {
             Logger.info("Found itemSnapable tile:" + itemSnapableData,
                         "MAP_LOADING")
-            logic.tileLogic.createItemSnapableTile(itemSnapableData)
+            // load disque ne doit JAMAIS émettre d'op réseau.
+            // Filet de sécurité : wrap begin/endApplyRemote → submitOp drop.
+            EditorOpBus.beginApplyRemote()
+            try {
+                logic.tileLogic.createItemSnapableTile(itemSnapableData)
+            } finally {
+                EditorOpBus.endApplyRemote()
+            }
         }
 
         function onMapLoaded(map) {
@@ -871,6 +959,151 @@ Base_Board {
                 font.bold: true
             }
         }
+
+        // Click sur le badge → toggle du panneau de stats réseau.
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: netStatsPanel.open = !netStatsPanel.open
+            acceptedButtons: Qt.LeftButton
+        }
+    }
+
+    // panneau de stats de transmission (reliable.io par pair).
+    // Toggle via clic sur le badge collab. Poll @ 2 Hz.
+    Rectangle {
+        id: netStatsPanel
+        property bool open: false
+        visible: EditorSession.active && open
+        anchors.top: collabBadge.bottom
+        anchors.right: parent.right
+        anchors.topMargin: 6
+        anchors.rightMargin: 12
+        z: 10000
+        width: Math.max(320, statsCol.implicitWidth + 20)
+        height: statsCol.implicitHeight + 16
+        radius: 8
+        color: "#0f172a"
+        border.color: "#334155"
+        border.width: 1
+        opacity: 0.95
+
+        // Snapshot rafraîchi par le timer. Clé = playerId, valeur = map stats.
+        property var snapshots: ({})
+        property int tick: 0  // force ré-évaluation du Repeater
+
+        Timer {
+            interval: 500
+            repeat: true
+            running: netStatsPanel.visible
+            onTriggered: {
+                const snap = {}
+                const n = Catway.playersCount()
+                for (let i = 0; i < n; ++i) {
+                    const p = Catway.playerAt(i)
+                    if (p && p.p2pConnected && p.playerId)
+                        snap[p.playerId] = p.stats()
+                }
+                netStatsPanel.snapshots = snap
+                netStatsPanel.tick += 1
+            }
+        }
+
+        function _fmt(n, digits) {
+            if (n === undefined || n === null) return "—"
+            return Number(n).toFixed(digits === undefined ? 1 : digits)
+        }
+
+        function _playerIds() {
+            const k = []
+            for (const id in netStatsPanel.snapshots) k.push(id)
+            k.sort()
+            return k
+        }
+
+        Column {
+            id: statsCol
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 8
+
+            Row {
+                spacing: 6
+                Text {
+                    text: "📊 Réseau (reliable.io)"
+                    color: "#f1f5f9"
+                    font.pixelSize: 12
+                    font.bold: true
+                }
+                Text {
+                    text: "pairs: " + Object.keys(netStatsPanel.snapshots).length
+                    color: "#94a3b8"
+                    font.pixelSize: 11
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: "#1e293b" }
+
+            Repeater {
+                model: (netStatsPanel.tick, netStatsPanel._playerIds())
+                delegate: Column {
+                    width: statsCol.width
+                    spacing: 3
+                    readonly property var s: netStatsPanel.snapshots[modelData] || ({})
+
+                    Text {
+                        text: modelData.substring(0, 12)
+                              + (EditorSession.hostPlayerId === modelData ? "  🛡️ hôte" : "")
+                        color: "#cbd5e1"
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.family: "Consolas, Monaco, monospace"
+                    }
+                    Grid {
+                        columns: 4
+                        columnSpacing: 10
+                        rowSpacing: 2
+                        Text { text: "RTT";    color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: netStatsPanel._fmt(s.rtt) + " ms";    color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "loss";   color: "#64748b"; font.pixelSize: 10 }
+                        Text {
+                            text: netStatsPanel._fmt((s.packetLoss || 0) * 100) + " %"
+                            color: (s.packetLoss || 0) > 0.05 ? "#f87171" : "#e2e8f0"
+                            font.pixelSize: 10
+                            font.family: "Consolas, Monaco, monospace"
+                        }
+                        Text { text: "sent";   color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: netStatsPanel._fmt(s.sentBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "recv";   color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: netStatsPanel._fmt(s.recvBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "acked";  color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: netStatsPanel._fmt(s.ackedBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "pkts";   color: "#64748b"; font.pixelSize: 10 }
+                        Text {
+                            text: (s.packetsSent || 0) + "↑ / " + (s.packetsAcked || 0) + "✓"
+                            color: "#e2e8f0"
+                            font.pixelSize: 10
+                            font.family: "Consolas, Monaco, monospace"
+                        }
+                        Text { text: "frag";   color: "#64748b"; font.pixelSize: 10 }
+                        Text {
+                            text: (s.fragmentsSent || 0) + "↑ / " + (s.fragmentsReceived || 0) + "↓"
+                            color: "#e2e8f0"
+                            font.pixelSize: 10
+                            font.family: "Consolas, Monaco, monospace"
+                        }
+                    }
+                }
+            }
+
+            Text {
+                visible: Object.keys(netStatsPanel.snapshots).length === 0
+                text: "Aucun pair P2P connecté."
+                color: "#64748b"
+                font.pixelSize: 10
+                font.italic: true
+            }
+        }
     }
 
     // Zone de travail de l'éditeur (par-dessus la grille)
@@ -879,7 +1112,7 @@ Base_Board {
         z: UiStyle.z_WORKAREA
         anchors.fill: gameGrid
 
-        // Phase 5a : tracking position souris en mode hover (sans clic).
+        // tracking position souris en mode hover (sans clic).
         // HoverHandler coexiste avec les MouseAreas des tuiles/grille et
         // reporte une position même quand un enfant capte les évènements.
         HoverHandler {
@@ -909,9 +1142,14 @@ Base_Board {
                                   adminCommandPanel)
         }
 
-        // Phase 5a : overlay des curseurs distants. Enfant de workArea pour
-        // suivre scroll/zoom du grid. Les coordonnées reçues sont locales à
-        // workArea (envoyées via mapToItem côté pair).
+        // overlay des curseurs distants. Enfant de workArea pour
+        // suivre scroll/zoom du grid.
+        //
+        // les coordonnées reçues sont en UNITÉS DE GRILLE
+        // (fractionnelles), pas en pixels. Conversion locale via
+        // `gameGrid.gridSize` — invariant par zoom : case N s'affiche à la
+        // même position-case quel que soit mmSize. Rebinding automatique
+        // quand l'utilisateur local zoome (gridSize change → x/y recalculés).
         Item {
             id: remoteCursorsOverlay
             anchors.fill: parent
@@ -923,10 +1161,21 @@ Base_Board {
                 delegate: Item {
                     readonly property var _entry: root.remoteCursors[modelData]
                     readonly property color _color: root._colorForPlayer(modelData)
-                    x: _entry ? _entry.x : 0
-                    y: _entry ? _entry.y : 0
+                    readonly property real _gs: gameGrid ? gameGrid.gridSize : 0
+                    x: _entry ? _entry.x * _gs : 0
+                    y: _entry ? _entry.y * _gs : 0
                     width: 1; height: 1
-                    visible: !!_entry
+                    visible: !!_entry && _gs > 0
+
+                    // Lissage visuel — le timer d'envoi tourne à 20 Hz (50 ms)
+                    // donc une interpolation ~60 ms OutQuad couvre un cycle
+                    // sans retard perceptible. OutQuad évite le rebond.
+                    Behavior on x {
+                        NumberAnimation { duration: 60; easing.type: Easing.OutQuad }
+                    }
+                    Behavior on y {
+                        NumberAnimation { duration: 60; easing.type: Easing.OutQuad }
+                    }
 
                     // Flèche de curseur stylisée
                     Canvas {
@@ -1200,7 +1449,7 @@ Base_Board {
             id: saveMapDelayer
             interval: 200
 
-            // Phase 2: au commit debouncé, émettre les ops correspondant à l'état
+            // au commit debouncé, émettre les ops correspondant à l'état
             // courant des panels (effets visuels, settings physiques), une par
             // élément sélectionné. Log-only.
             property string pendingOpKind: ""  // "display" | "zone" | ""
@@ -1212,17 +1461,22 @@ Base_Board {
                 if (pendingOpKind === "display") {
                     const effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
                     const fields = {
-                        "effectBrightness":   effects.brightness,
-                        "effectContrast":     effects.contrast,
-                        "effectSaturation":   effects.saturation,
-                        "effectColorization": effects.colorization,
-                        "effectBlurEnabled":  effects.blurEnabled,
-                        "effectBlur":         effects.blur,
-                        "effectShadowEnabled": effects.shadowEnabled,
-                        "effectShadowBlur":   effects.shadowBlur,
-                        "rotationAngle":      effects.rotationAngle,
-                        "mirrorHorizontal":   effects.mirrorHorizontal,
-                        "mirrorVertical":     effects.mirrorVertical
+                        "effectBrightness":        effects.brightness,
+                        "effectContrast":          effects.contrast,
+                        "effectSaturation":        effects.saturation,
+                        "effectColorization":      effects.colorization,
+                        // la couleur de colorization était absente
+                        // → les pairs voyaient l'intensité changer mais pas la
+                        // teinte choisie. On envoie la string #RRGGBB, que le
+                        // QColor côté remote accepte via assignation.
+                        "effectColorizationColor": String(effects.colorizationColor),
+                        "effectBlurEnabled":       effects.blurEnabled,
+                        "effectBlur":              effects.blur,
+                        "effectShadowEnabled":     effects.shadowEnabled,
+                        "effectShadowBlur":        effects.shadowBlur,
+                        "rotationAngle":           effects.rotationAngle,
+                        "mirrorHorizontal":        effects.mirrorHorizontal,
+                        "mirrorVertical":          effects.mirrorVertical
                     }
                     for (var i = 0; i < els.length; i++) {
                         if (!els[i] || !els[i].snapableParameters) continue
@@ -1345,7 +1599,18 @@ Base_Board {
     }
 
     function initializeEditor() {
-        if (!MapFileManager.mapExists(mapInfo.autosaveMapName,MapTypes.AUTOSAVE)) {
+        // Client en mode collab → ne PAS charger la carte locale, la FullSync
+        // de l'hôte va la fournir. Autrement, les tuiles chargées déclencheraient
+        // `onFoundItemSnapableTile` qui soumet des CreateItem ops, rebroadcastées
+        // par l'hôte à tous les pairs (bug: items du client chez l'hôte).
+        if (EditorSession.active && !EditorSession.isHost) {
+            Logger.info("Collab client — skip local map load (waiting for FullSync)",
+                        "MAP FILE MANAGER")
+            tmpSaver.setSaveTimer()
+            return
+        }
+
+        if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)) {
             Logger.info("Creating autosave map", "MAP FILE MANAGER")
             MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
             logic.saveMap(MapTypes.AUTOSAVE)

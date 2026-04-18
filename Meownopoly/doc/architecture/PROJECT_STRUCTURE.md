@@ -86,14 +86,25 @@ Ce module gère toute la couche réseau P2P entre les joueurs.
 **Composants clés :**
 - `Catway.h/cpp` : ⭐ Cœur du système réseau. Gère les sockets UDP, les requêtes STUN et orchestre le **Hole Punching**.
 - `StunManager.h/cpp` : Gère l'interaction avec les serveurs STUN pour récupérer l'IP publique.
-- `PlayerNetwork.h/cpp` : Représente un joueur distant avec ses informations de connexion UDP.
-- `chat/chat_client.h/cpp` : Client WebSocket pour les messages de chat et le signalement P2P.
+- `PlayerNetwork.h/cpp` : Représente un joueur distant avec ses informations de connexion UDP. Expose aussi `stats()` pour les compteurs reliable.io (RTT, loss, bandwidth).
+- `chat/chat_client.h/cpp` : Client WebSocket pour les messages de chat et le signalement P2P. Gère aussi `RENAME_SESSION` et le handler de `SESSION_DELETED` pour la migration d'hôte.
 
 **Flux de connexion (Hole Punching) :**
 1. Signalement via le serveur de Chat (WebSocket).
 2. Récupération des IPs publiques via STUN.
 3. Échange de requêtes de "Punch" UDP pour ouvrir les pare-feu.
 4. Passage en communication UDP directe une fois le lien établi.
+
+### 4b. Session de jeu et d'édition (dossiers `cpp/game/network/`, `cpp/editor/network/`, `cpp/editor/ops/`)
+
+Couche au-dessus de Catway qui formalise le protocole applicatif.
+
+**Composants clés :**
+- `cpp/game/network/` : `GameSession`, `GameProtocol`, `GameMessageType` (frame `0x01–0x11`).
+- `cpp/editor/network/` : `EditorSession`, `EditorProtocol`, `EditorMessageType` (frame `0x20+`). Coexiste avec GameSession sur le même canal Catway (filtrage par plage de type-byte). Implémente le rate-limit par sender, le chunking d'ops > 20 KB, la détection de timeout d'hôte (élection déterministe, `promoteToHost`), le roster broadcast.
+- `cpp/editor/ops/` : `EditorOpBus` (chokepoint unique des mutations, pile d'undo, rate-limit local), `EditorOpType` (enum des ops : Create/Delete/Move/Resize/Set*/Link/Unlink).
+
+Voir [COLLABORATIVE_EDITOR.md](./COLLABORATIVE_EDITOR.md) pour le détail complet.
 
 ### 5. interface QML (dossier `qml/`)
 

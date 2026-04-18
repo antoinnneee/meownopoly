@@ -121,6 +121,8 @@ QObject vivant sur le thread GUI, exposé en QML. Contient :
 
 Le worker n’accède plus directement à ces membres depuis son thread : il utilise les **snapshots** (`PlayerSnapshot`) poussés depuis le GUI (voir P1 / P8, section 4).
 
+**Stats de transmission** : `PlayerNetwork::stats()` (Q_INVOKABLE) retourne un `QVariantMap` avec RTT (moyenne exponentielle, min/max/avg), packet loss, bande passante sent/recv/acked (kbps), et compteurs de paquets et fragments. Lecture sans verrou des champs de `reliable_endpoint_t` — OK pour polling UI à ~2 Hz. Utilisé par l'overlay stats de l'éditeur collaboratif.
+
 ### 2.5 `UdpSocketInfo` — Propriété partagée (GUI/Réseau)
 
 Fichiers : `udp_socket_info.h` / `udp_socket_info.cpp`
@@ -166,7 +168,7 @@ Fonctions statiques en portée fichier, définies dans `[catway_player.cpp](../.
 
 `QTimer` créé dans le constructeur de `CatwayWorker`, **démarré dans `initReliable()`** (sur le network thread). Toutes les 10 secondes :
 
-- **Joueurs `p2pConnected`** : envoie `HP:PING` pour maintenir les trous NAT ouverts. Si aucun paquet n'a été reçu depuis **30 secondes**, émet `playerTimedOut(playerId)` et le joueur est marqué déconnecté côté GUI.
+- **Joueurs `p2pConnected`** : envoie `HP:PING` pour maintenir les trous NAT ouverts. Si aucun paquet n'a été reçu depuis **30 secondes**, émet `playerTimedOut(playerId)` (relayé ensuite par `Catway::playerTimedOut` sur le thread GUI, consommé notamment par `EditorSession` pour détecter la perte de l'hôte et déclencher l'élection de migration).
 - **Joueurs non connectés** (avec IP/port connus) : renvoie `HP:STRIKE` automatiquement (retry hole punch, max **15 essais** soit ~150s avant abandon).
 
 Les timestamps de réception sont persistés dans `m_lastReceivedByPlayer` (QHash) pour survivre aux rebuilds de snapshots. Les compteurs de retry HP:STRIKE sont persistés dans `m_strikeRetryByPlayer`.

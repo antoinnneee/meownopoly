@@ -199,9 +199,9 @@ Rectangle {
                             playerConfigurationApplied(targetPlayer)
                         } else {
                             configurationApplied(targetCase)
-                            // Phase 2: SetCaseData (log-only) au commit Appliquer.
+                            // SetCaseData (log-only) au commit Appliquer.
                             // On sérialise l'état complet de targetCase pour l'op ;
-                            // Phase 3 fera mieux (diff de champs).
+                            // fera mieux (diff de champs).
                             if (targetSnapableCase && targetSnapableCase.snapableParameters && targetCase) {
                                 EditorOpBus.recordOp({
                                     "op":     EditorOpType.SetCaseData,

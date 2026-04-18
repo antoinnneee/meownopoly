@@ -6,6 +6,7 @@ import Meownopoly.Chat 1.0
 import Meownopoly.Account 1.0
 
 import Catway 1.0
+import EditorSession 1.0
 /**
  * Conteneur principal du lobby multijoueur
  * Gère la navigation interne entre SessionList et SessionDetails
@@ -17,10 +18,10 @@ Rectangle {
 
     signal backToTitleScreen()
 
-    // Phase 7 : le hostId (playerId du créateur) est transmis pour que le
+    // le hostId (playerId du créateur) est transmis pour que le
     // client puisse appeler EditorSession.startAsClient avec le bon pair.
-    signal lunchNewSession(bool isEdition, string hostId)
-    signal lunchExistingSession(bool isEdition, string hostId)
+    signal launchNewSession(bool isEdition, string hostId)
+    signal launchExistingSession(bool isEdition, string hostId)
 
     // ── Encodage du mode éditeur dans le nom de session ─────────────────────
     // Format : "[EDIT:<hostPlayerId>] <nom affiché>". Évite de modifier le
@@ -39,7 +40,7 @@ Rectangle {
     }
 
     // État d'un join en cours : on mémorise le hostId extrait du nom quand
-    // l'utilisateur sélectionne une session, pour émettre lunchExistingSession
+    // l'utilisateur sélectionne une session, pour émettre launchExistingSession
     // une fois la connexion chat établie.
     property bool _pendingJoinEdit: false
     property string _pendingJoinHostId: ""
@@ -76,36 +77,44 @@ Rectangle {
         onSessionCreated: function(sessionId, sessionName) {
             console.log("✅ Session créée:", sessionName, "(id:", sessionId + ")")
             lobbyChatClient.requestSessionsList()
-            // Phase 7 : le créateur est l'hôte. Si c'est une session éditeur,
+            // le créateur est l'hôte. Si c'est une session éditeur,
             // on cable Catway sur ce ChatClient avant de déclencher la nav
             // (sinon les REQUEST_CONNECTION_INFO reçus plus tard ne seraient
             // pas routés vers la bonne session chat).
             const parsed = root._parseEditorPrefix(sessionName)
             if (parsed.isEdit) {
-                console.log("🛠️ Session éditeur créée (host =", parsed.hostId + ") → lunchNewSession")
+                // si EditorSession est déjà hôte actif, c'est une
+                // re-publication faite par un client qui vient de se promouvoir
+                // (host migration) — ne PAS re-déclencher launchNewSession, sinon
+                // main.qml empilerait un nouvel Editor et relancerait startAsHost.
+                if (EditorSession.active && EditorSession.isHost) {
+                    console.log("🛠️ Publication pendant promotion host — skip launchNewSession")
+                    return
+                }
+                console.log("🛠️ Session éditeur créée (host =", parsed.hostId + ") → launchNewSession")
                 Catway.setChatClient(lobbyChatClient)
-                root.lunchNewSession(true, parsed.hostId)
+                root.launchNewSession(true, parsed.hostId)
             } else {
-                root.lunchNewSession(false, AccountManager.uniqueId)
+                root.launchNewSession(false, AccountManager.uniqueId)
             }
         }
 
-        // Phase 7 : détection de fin de join côté client. sessionIdChanged fire
+        // détection de fin de join côté client. sessionIdChanged fire
         // quand connectToSessionDirect passe par setSessionId() — indispensable
-        // de câbler Catway sur ce ChatClient AVANT lunchExistingSession.
+        // de câbler Catway sur ce ChatClient AVANT launchExistingSession.
         onSessionIdChanged: {
             if (!lobbyChatClient.sessionId) return
             if (!root._pendingJoinEdit) return
             if (root._pendingJoinSessionId
                     && lobbyChatClient.sessionId !== root._pendingJoinSessionId) return
 
-            console.log("🛠️ Session éditeur rejointe (host =", root._pendingJoinHostId + ") → lunchExistingSession")
+            console.log("🛠️ Session éditeur rejointe (host =", root._pendingJoinHostId + ") → launchExistingSession")
             Catway.setChatClient(lobbyChatClient)
             const hid = root._pendingJoinHostId
             root._pendingJoinEdit = false
             root._pendingJoinHostId = ""
             root._pendingJoinSessionId = ""
-            root.lunchExistingSession(true, hid)
+            root.launchExistingSession(true, hid)
         }
 
         Component.onCompleted: {
@@ -199,7 +208,7 @@ Rectangle {
             // Passer le ChatClient mutualisé
             chatClient: lobbyChatClient
             onSessionSelected: function(sessionData) {
-                // Phase 7 : si c'est une session éditeur, on arme l'état de
+                // si c'est une session éditeur, on arme l'état de
                 // join pour que onSessionIdChanged déclenche la navigation.
                 const parsed = root._parseEditorPrefix(sessionData.name || sessionData.sessionName || "")
                 root._pendingJoinEdit     = parsed.isEdit
@@ -233,7 +242,7 @@ Rectangle {
             }
 
             onSessionCreateRequested: function(sessionData) {
-                // Phase 7 : encoder le mode édition dans le nom via prefix
+                // encoder le mode édition dans le nom via prefix
                 // "[EDIT:<hostId>]" — évite toute modification du serveur chat.
                 let finalName = sessionData.name
                 if (sessionData.isEditionMode) {

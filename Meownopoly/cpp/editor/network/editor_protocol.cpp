@@ -19,7 +19,7 @@ bool EditorProtocol::isEditorPacket(const QByteArray &data)
 {
     if (data.isEmpty()) return false;
     const quint8 rawType = static_cast<quint8>(data.at(0));
-    return rawType >= EditorMessageType::Hello && rawType <= EditorMessageType::PlayerRoster;
+    return rawType >= EditorMessageType::Hello && rawType <= EditorMessageType::OpChunk;
 }
 
 bool EditorProtocol::unpack(const QByteArray &data,
