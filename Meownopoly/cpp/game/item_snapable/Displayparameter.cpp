@@ -161,6 +161,8 @@ int DisplayParameter::gridRelativePositionX() const
 
 void DisplayParameter::setGridRelativePositionX(int gridRelativePositionX)
 {
+    if (m_gridRelativePositionX != gridRelativePositionX)
+        qDebug() << "[DP] setGridRelativePositionX" << m_gridRelativePositionX << "->" << gridRelativePositionX;
     m_gridRelativePositionX = gridRelativePositionX;
     emit gridRelativePositionXChanged();
 }

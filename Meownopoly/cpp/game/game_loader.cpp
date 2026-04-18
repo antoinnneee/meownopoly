@@ -114,8 +114,22 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
             emit foundItemSnapableTile(tile);
         emit mapLoaded(map);
     }
-    MapFileManager::instance()->setCurrentMap(map);    
+    MapFileManager::instance()->setCurrentMap(map);
     return map;
+}
+
+void Game::initEmptyCollabMap()
+{
+    Map *existing = MapFileManager::instance()->getCurrentMap();
+    if (existing) return;   // déjà prêt
+
+    Map *map = new Map(this);
+    connect(map, &Map::tileRemovedFromHistory, this, &Game::tileRemoved);
+    connect(map, &Map::tileRestoredFromHistory, this, &Game::foundItemSnapableTile);
+    connect(map, &Map::forceUnselectAll, this, &Game::forceUnselectAll);
+    connect(map, &Map::afterRestoration, this, &Game::afterRestoration);
+    MapFileManager::instance()->setCurrentMap(map);
+    qDebug() << "[Game] initEmptyCollabMap — Map vide créée pour session collab";
 }
 
 QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)

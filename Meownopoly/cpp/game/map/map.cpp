@@ -307,6 +307,8 @@ void Map::applyDelta(const EditDelta &delta, bool applyBefore, QSet<QUuid> &touc
     switch (delta.type) {
     case EditDeltaType::TileModified: {
         ItemSnapable *tile = tileById(delta.tileId);
+        qDebug() << "[Map] applyDelta TileModified uuid=" << delta.tileId.toString()
+                 << " tile=" << (tile ? "found" : "NULL (m_tiles size=" + QString::number(m_tiles.size()) + ")");
         if (tile) {
             tile->applyJson(jsonState);
             rewireLinks(tile, jsonState, touchedOut);

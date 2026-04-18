@@ -70,6 +70,12 @@ public:
                                       const QJsonObject &before, const QJsonObject &after,
                                       bool applyBefore);
 
+    // Crée une Map vide, la connecte et la définit comme current. Utilisé par
+    // le client collaboratif qui rejoint une session : il n'a pas de fichier
+    // local à loadMap, mais a besoin d'un Map pour que updateMap/applyRemoteDelta
+    // puissent muter m_tiles.
+    Q_INVOKABLE void initEmptyCollabMap();
+
     // Template saving/loading
     Q_INVOKABLE bool saveTemplate(QString name, QJsonArray elementsJson);
     Q_INVOKABLE bool deleteTemplate(QString name);

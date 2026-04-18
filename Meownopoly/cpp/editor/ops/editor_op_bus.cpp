@@ -243,8 +243,18 @@ void EditorOpBus::submitFromDelta(int type,
                                   const QJsonObject &after,
                                   bool applyBefore)
 {
-    if (m_isApplyingRemote) return;
-    if (!EditorSession::instance()->active()) return;
+    if (m_isApplyingRemote) {
+        qDebug() << "[OpBus] submitFromDelta dropped — isApplyingRemote";
+        return;
+    }
+    if (!EditorSession::instance()->active()) {
+        qDebug() << "[OpBus] submitFromDelta dropped — EditorSession inactive";
+        return;
+    }
+    qDebug() << "[OpBus] submitFromDelta type=" << type
+             << " uuid=" << tileId.toString()
+             << " groupId=" << groupId.toString()
+             << " (pending queue)";
 
     QJsonObject op{
         { "op",          static_cast<int>(EditorOpType::ApplyState) },
