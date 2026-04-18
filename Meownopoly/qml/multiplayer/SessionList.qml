@@ -2,23 +2,26 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../ui_item"
-import Meownopoly.Chat 1.0
 
 /**
  * Vue complète de la liste des sessions disponibles
- * Les données de sessions proviennent de ChatSessionManager (singleton).
+ * Utilise le ChatClient mutualisé du parent
  */
 Rectangle {
     id: root
 
     color: "#1a1a1a"
 
+    // Propriété pour recevoir le ChatClient du parent
+    required property var chatClient
+
     signal sessionSelected(var sessionData)
 
     Component.onCompleted: {
-        console.log("🚀 SessionList loaded, server connected:", ChatSessionManager.serverConnected)
-        if (ChatSessionManager.serverConnected) {
-            ChatSessionManager.requestSessionsRefresh()
+        console.log("🚀 SessionList loaded, chatClient ready:", chatClient !== null)
+        // Le ChatClient est déjà connecté depuis MultiplayerLobby
+        if (chatClient && chatClient.connected) {
+            chatClient.requestSessionsList()
         }
     }
 
@@ -41,10 +44,10 @@ Rectangle {
             }
 
             Text {
-                text: ChatSessionManager.serverConnected ?
-                          ("🐱 " + ChatSessionManager.availableSessions.length + " parties en cours") :
+                text: chatClient.connected ?
+                          ("🐱 " + chatClient.availableSessions.length + " parties en cours") :
                           "🔌 Connexion au serveur..."
-                color: ChatSessionManager.serverConnected ? "#888888" : "#ff9800"
+                color: chatClient.connected ? "#888888" : "#ff9800"
                 font.pixelSize: 18
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -57,7 +60,7 @@ Rectangle {
             Layout.preferredHeight: 40
             color: "#2a2a2a"
             radius: 20
-            border.color: ChatSessionManager.serverConnected ? "#4caf50" : "#666666"
+            border.color: chatClient.connected ? "#4caf50" : "#666666"
             border.width: 2
 
             Row {
@@ -65,14 +68,14 @@ Rectangle {
                 spacing: 10
 
                 Text {
-                    text: ChatSessionManager.serverConnected ? "🌐" : "⏳"
+                    text: chatClient.connected ? "🌐" : "⏳"
                     font.pixelSize: 18
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
-                    text: ChatSessionManager.serverConnected ? "Serveur connecté" : "Connexion..."
-                    color: ChatSessionManager.serverConnected ? "#4caf50" : "#888888"
+                    text: chatClient.connected ? "Serveur connecté" : "Connexion..."
+                    color: chatClient.connected ? "#4caf50" : "#888888"
                     font.pixelSize: 14
                     font.bold: true
                     anchors.verticalCenter: parent.verticalCenter
@@ -97,13 +100,13 @@ Rectangle {
                     spacing: 16
 
                     Text {
-                        text: ChatSessionManager.serverConnected ? "😿" : "⏳"
+                        text: chatClient.connected ? "😿" : "⏳"
                         font.pixelSize: 48
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
 
                     Text {
-                        text: ChatSessionManager.serverConnected ?
+                        text: chatClient.connected ?
                                   "Aucune partie disponible pour l'instant" :
                                   "Connexion au serveur..."
                         color: "#888888"
@@ -116,24 +119,24 @@ Rectangle {
                         color: "#666666"
                         font.pixelSize: 14
                         anchors.horizontalCenter: parent.horizontalCenter
-                        visible: ChatSessionManager.serverConnected
+                        visible: chatClient.connected
                     }
                 }
             }
 
             ListView {
                 id: sessionsListView
-                model: ChatSessionManager.availableSessions
+                model: chatClient.availableSessions
                 spacing: 12
                 width: parent.width
                 height: parent.height
                 delegate: SessionCard {
-                    name:         modelData.name         ?? ""
-                    sessionId:    modelData.sessionId    ?? ""
-                    players:      modelData.players      ?? 0
-                    maxPlayers:   modelData.maxPlayers   ?? 4
+                    name:         modelData.name        ?? ""
+                    sessionId:    modelData.sessionId   ?? ""
+                    players:      modelData.players     ?? 0
+                    maxPlayers:   modelData.maxPlayers  ?? 4
                     hostNickname: modelData.hostNickname ?? ""
-                    onlineCount:  modelData.onlineCount  ?? 0
+                    onlineCount:  modelData.onlineCount ?? 0
 
                     onClicked: {
                         console.log("Session sélectionnée:", sessionId, "-", name)
@@ -155,7 +158,7 @@ Rectangle {
             Layout.preferredWidth: 250
             Layout.preferredHeight: 55
 
-            enabled: ChatSessionManager.serverConnected
+            enabled: chatClient.connected
 
             particleColor: "#E67E22"
             particleColorVariation: "#ff9800"
@@ -231,7 +234,9 @@ Rectangle {
                 }
 
                 onClicked: {
-                    ChatSessionManager.requestSessionsRefresh()
+                    if (chatClient.connected) {
+                        chatClient.requestSessionsList()
+                    }
                 }
 
                 ToolTip {

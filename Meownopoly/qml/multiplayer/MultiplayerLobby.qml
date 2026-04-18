@@ -196,9 +196,8 @@ Rectangle {
     Component {
         id: sessionListComponent
         SessionList {
-            // SessionList lit depuis ChatSessionManager (singleton), pas besoin
-            // d'injecter le ChatClient ici — l'action de join est portée par
-            // lobbyChatClient du parent via onSessionSelected.
+            // Passer le ChatClient mutualisé
+            chatClient: lobbyChatClient
             onSessionSelected: function(sessionData) {
                 // Phase 7 : si c'est une session éditeur, on arme l'état de
                 // join pour que onSessionIdChanged déclenche la navigation.
@@ -226,8 +225,9 @@ Rectangle {
     Component {
         id: sessionCreationComponent
         SessionCreation {
-            // SessionCreation émet sessionCreateRequested ; c'est le parent
-            // qui dispatche sur lobbyChatClient, pas besoin d'injection.
+            // Passer le ChatClient mutualisé
+            chatClient: lobbyChatClient
+
             onBackRequested: {
                 multiplayerStackView.pop()
             }
