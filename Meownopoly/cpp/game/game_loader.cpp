@@ -187,7 +187,13 @@ void Game::updateEditState(int type, ItemSnapable* tile, QUuid groupId)
     delta.after  = QJsonDocument::fromJson(tile->toJSON().toUtf8()).object();
 
     if (delta.type == EditDeltaType::TileDeleted) delta.after  = {};
-    if (delta.type == EditDeltaType::TileAdded)   delta.before = {};
+    if (delta.type == EditDeltaType::TileAdded) {
+        delta.before = {};
+        if (!map->tileById(tile->uniqueId())) {
+            QQmlEngine::setObjectOwnership(tile, QQmlEngine::CppOwnership);
+            map->addTile(tile);
+        }
+    }
 
     tile->commitCurrentState();
     map->pushDelta(delta);
