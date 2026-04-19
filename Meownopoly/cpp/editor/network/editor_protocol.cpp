@@ -19,7 +19,10 @@ bool EditorProtocol::isEditorPacket(const QByteArray &data)
 {
     if (data.isEmpty()) return false;
     const quint8 rawType = static_cast<quint8>(data.at(0));
-    return rawType >= EditorMessageType::Hello && rawType <= EditorMessageType::OpChunk;
+    // Plage éditeur : de Hello (0x20) au dernier type défini. Attention :
+    // toute nouvelle valeur ajoutée dans editor_message_type.h doit ÊTRE
+    // la plus haute, sinon elle serait droppée ici.
+    return rawType >= EditorMessageType::Hello && rawType <= EditorMessageType::HostLeaving;
 }
 
 bool EditorProtocol::unpack(const QByteArray &data,

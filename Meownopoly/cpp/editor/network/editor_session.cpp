@@ -404,6 +404,32 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
         emit opRejected(payload);
         break;
 
+    case EditorMessageType::HostLeaving:
+        // l'hôte annonce son départ volontaire → élection immédiate.
+        // Même flow que onPlayerTimedOut sur l'hôte, sans attendre les ~10 s.
+        if (!m_isHost && senderId == m_hostPlayerId) {
+            // Remplace le roster local par celui embarqué dans le message
+            // (source de vérité autoritaire), pour que tous les clients
+            // élisent le même successeur même si le dernier broadcastRoster
+            // n'était pas parvenu à tout le monde.
+            const QJsonArray arr = payload.value("roster").toArray();
+            if (!arr.isEmpty()) {
+                QStringList newRoster;
+                newRoster.reserve(arr.size());
+                for (const QJsonValue &v : arr) newRoster.append(v.toString());
+                if (newRoster != m_knownRoster) {
+                    m_knownRoster = newRoster;
+                    emit knownRosterChanged();
+                    qDebug() << "[EditorSession] roster remplacé depuis HostLeaving :"
+                             << m_knownRoster;
+                }
+            }
+            const QString elected = electNewHost();
+            qWarning() << "[EditorSession] hôte quitte — élection →" << elected;
+            emit hostLost(elected);
+        }
+        break;
+
     default:
         emit editorEventReceived(static_cast<int>(type), senderId, payload);
         // Hello / Welcome / FullSync / PlayerRoster / OpAck : pas de relay par défaut.
@@ -511,6 +537,23 @@ QString EditorSession::electNewHost() const
     if (candidates.isEmpty()) return QString{};
     std::sort(candidates.begin(), candidates.end());
     return candidates.first();
+}
+
+// annonce volontaire : l'hôte quitte. Broadcast reliable à tous les clients
+// pour qu'ils déclenchent l'élection tout de suite (pas d'attente timeout).
+// Le roster autoritaire est embarqué dans le payload pour que tous les clients
+// élisent à partir de la même source de vérité (évite un split-brain si un
+// client vient juste de rejoindre et n'a pas encore reçu le dernier PlayerRoster).
+void EditorSession::announceHostLeaving()
+{
+    if (!m_active || !m_isHost) return;
+    QJsonArray arr;
+    for (const QString &pid : m_knownRoster) arr.append(pid);
+    QJsonObject payload;
+    payload["roster"] = arr;
+    qDebug() << "[EditorSession] host leaving — broadcast HostLeaving, roster ="
+             << m_knownRoster;
+    broadcastEvent(EditorMessageType::HostLeaving, payload);
 }
 
 // bascule du rôle client → hôte en préservant l'état local.

@@ -47,6 +47,29 @@ ApplicationWindow {
     visibility: (Qt.platform.os === "android") ? Window.FullScreen
         : ((stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true) ? Window.FullScreen : Window.Windowed)
 
+    // Fermeture de la fenêtre (X, Alt+F4…) : si on est hôte d'une session
+    // collab active, annoncer le départ pour que les clients élisent un
+    // successeur immédiatement. broadcastReliable est queued sur le worker
+    // Catway ; on retarde la fermeture de 300 ms le temps que le paquet UDP
+    // parte effectivement.
+    onClosing: function(close) {
+        if (closeDelayTimer.running) return
+        if (EditorSession.active && EditorSession.isHost) {
+            console.log("[main] window closing — announce HostLeaving + delay close")
+            close.accepted = false
+            EditorSession.announceHostLeaving()
+            EditorSession.stop()
+            closeDelayTimer.start()
+        }
+    }
+
+    Timer {
+        id: closeDelayTimer
+        interval: 300
+        repeat: false
+        onTriggered: Qt.quit()
+    }
+
     StackView {
         id: stackView
         anchors.fill: parent
@@ -129,6 +152,13 @@ ApplicationWindow {
                 // si on est en session collaborative, couper proprement
                 // avant de quitter l'éditeur (stop libère Catway et clear undo).
                 if (EditorSession.active) {
+                    // l'hôte annonce son départ AVANT de stopper Catway, pour
+                    // que les clients déclenchent l'élection immédiatement
+                    // (sans attendre le timeout ~10 s).
+                    if (EditorSession.isHost) {
+                        console.log("[main] host quits — announce HostLeaving")
+                        EditorSession.announceHostLeaving()
+                    }
                     console.log("[main] EditorSession.stop (retour menu)")
                     EditorOpBus.clearUndo()
                     EditorSession.stop()
