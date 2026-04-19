@@ -1,5 +1,6 @@
 #include "player_network.h"
 #include <QQmlEngine>
+#include <QDebug>
 
 PlayerNetwork::PlayerNetwork(QObject *parent)
     : QObject(parent)
@@ -57,14 +58,28 @@ QVariantMap PlayerNetwork::stats() const
     QVariantMap m;
     if (!m_endpoint) return m;
 
-    m.insert("rtt",       reliable_endpoint_rtt(m_endpoint));
-    m.insert("rttMin",    reliable_endpoint_rtt_min(m_endpoint));
-    m.insert("rttMax",    reliable_endpoint_rtt_max(m_endpoint));
-    m.insert("rttAvg",    reliable_endpoint_rtt_avg(m_endpoint));
-    m.insert("packetLoss", reliable_endpoint_packet_loss(m_endpoint));
+    const float rtt    = reliable_endpoint_rtt(m_endpoint);
+    const float rttMin = reliable_endpoint_rtt_min(m_endpoint);
+    const float rttMax = reliable_endpoint_rtt_max(m_endpoint);
+    const float rttAvg = reliable_endpoint_rtt_avg(m_endpoint);
+    const float loss   = reliable_endpoint_packet_loss(m_endpoint);
 
     float sentKbps = 0, recvKbps = 0, ackedKbps = 0;
     reliable_endpoint_bandwidth(m_endpoint, &sentKbps, &recvKbps, &ackedKbps);
+
+    qDebug().nospace() << "[stats] " << m_playerId
+                       << " rtt=" << rtt
+                       << " min=" << rttMin << " max=" << rttMax << " avg=" << rttAvg
+                       << " loss=" << loss
+                       << " bw sent=" << sentKbps << " recv=" << recvKbps
+                       << " acked=" << ackedKbps;
+
+    m.insert("rtt",        rtt);
+    m.insert("rttMin",     rttMin);
+    m.insert("rttMax",     rttMax);
+    m.insert("rttAvg",     rttAvg);
+    m.insert("packetLoss", loss);
+
     m.insert("sentBwKbps",  sentKbps);
     m.insert("recvBwKbps",  recvKbps);
     m.insert("ackedBwKbps", ackedKbps);

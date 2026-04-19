@@ -1093,6 +1093,7 @@ Base_Board {
                 }
                 Text {
                     text: "pairs: " + Object.keys(netStatsPanel.snapshots).length
+                          + "  (tick " + netStatsPanel.tick + ")"
                     color: "#94a3b8"
                     font.pixelSize: 11
                 }
