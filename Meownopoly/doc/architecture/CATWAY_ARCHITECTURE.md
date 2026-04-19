@@ -121,7 +121,9 @@ QObject vivant sur le thread GUI, exposé en QML. Contient :
 
 Le worker n’accède plus directement à ces membres depuis son thread : il utilise les **snapshots** (`PlayerSnapshot`) poussés depuis le GUI (voir P1 / P8, section 4).
 
-**Stats de transmission** : `PlayerNetwork::stats()` (Q_INVOKABLE) retourne un `QVariantMap` avec RTT (moyenne exponentielle, min/max/avg), packet loss, bande passante sent/recv/acked (kbps), et compteurs de paquets et fragments. Lecture sans verrou des champs de `reliable_endpoint_t` — OK pour polling UI à ~2 Hz. Utilisé par l'overlay stats de l'éditeur collaboratif.
+**Stats de transmission** : `PlayerNetwork::stats()` (Q_INVOKABLE) retourne un `QVariantMap` avec RTT (moyenne exponentielle, min/max/avg), packet loss, bande passante sent/recv/acked (kbps), et compteurs de paquets et fragments. Lecture sans verrou des champs de `reliable_endpoint_t` — OK pour polling UI à ~2 Hz. Utilisé par l’overlay stats de l’éditeur collaboratif.
+
+**Configuration reliable** : `sent_packets_buffer_size` et `received_packets_buffer_size` sont fixés à **128** (défaut lib : 256). La fenêtre de calcul du bandwidth dans `reliable_endpoint_update` ne produit des valeurs non-nulles qu’après `buffer_size` paquets ; 128 est un compromis entre délai d’apparition des stats et fiabilité de la fenêtre ACK.
 
 ### 2.5 `UdpSocketInfo` — Propriété partagée (GUI/Réseau)
 
@@ -158,11 +160,18 @@ Stockage dans `Catway::m_reliableContexts` (`QHash<PlayerNetwork*, CatwayReliabl
 Fonctions statiques en portée fichier, définies dans `[catway_player.cpp](../../cpp/communication/catway_player.cpp)`. Passées à `player->initReliable()` comme callbacks C de la lib `reliable`. Elles sont appelées **depuis le thread réseau** lors des opérations d'envoi ou de réception de paquets fiables.
 
 - `catway_transmit_packet` : lit ip/port/socket via `ctx->worker->findSnapshot(playerId)` puis sérialise le paquet reliable (préfixe `\x01`) et écrit sur le socket (même thread ✓).
-- `catway_process_packet` : reçoit un paquet acquitté et émet `reliableMessageReceived(senderId, QByteArray)` sur le thread GUI via `QMetaObject::invokeMethod(..., Qt::QueuedConnection)` (un seul signal ; pas de doublon QString).
+- `catway_process_packet` : reçoit un paquet acquitté. Si le paquet est un **keepalive ACK** (`packet_bytes == 1 && packet_data[0] == 0x00`), il est ignoré silencieusement. Sinon, émet `reliableMessageReceived(senderId, QByteArray)` sur le thread GUI via `QMetaObject::invokeMethod(..., Qt::QueuedConnection)`.
 
 ### 2.8 Timer reliable (~60 Hz) — Thread Réseau
 
-`QTimer` créé dans `CatwayWorker::startReliableTimer()`. Appelle `reliable_endpoint_update()` et `reliable_endpoint_clear_acks()` pour chaque joueur à chaque tick. Démarre dès que `m_networkThread` envoie le signal `started`.
+`QTimer` créé dans `CatwayWorker::startReliableTimer()`. À chaque tick (~16 ms) :
+
+1. Appelle `reliable_endpoint_update()` et `reliable_endpoint_clear_acks()` pour chaque joueur (même non connecté).
+2. Toutes les **6 ticks (~100 ms)**, envoie un paquet **keepalive ACK** d'un octet (`0x00`) à chaque joueur `p2pConnected`. Ce paquet force le piggyback des ACKs accumulés côté destinataire, ce qui permet :
+   - De confirmer rapidement la réception des bursts d'ops (évite la fausse packet_loss transitoire).
+   - De maintenir le RTT à jour même si seul un côté envoie des ops métier.
+
+Démarre dès que `m_networkThread` envoie le signal `started`.
 
 ### 2.9 Timer heartbeat (10 s) — Thread Réseau
 
@@ -222,10 +231,15 @@ sequenceDiagram
     Worker->>Worker: onSocketReadyRead()
     alt datagram[0] == 0x01 paquet reliable
         Worker->>Worker: vérification sécurité IP+port
+        Worker->>Lib: reliable_endpoint_update() horodatage précis
         Worker->>Lib: reliable_endpoint_receive_packet()
         Lib->>Worker: catway_process_packet() callback
-        Worker->>Catway: invokeMethod lambda QueuedConnection
-        Catway->>Catway: emit reliableMessageReceived
+        alt paquet keepalive 0x00
+            Worker->>Worker: ignoré silencieusement
+        else paquet normal
+            Worker->>Catway: invokeMethod lambda QueuedConnection
+            Catway->>Catway: emit reliableMessageReceived
+        end
     else datagram brut
         Worker->>Catway: emit datagramReceived QueuedConnection
         Catway->>Catway: onDatagramReceived()
@@ -261,6 +275,7 @@ sequenceDiagram
 
     Caller->>Catway: sendReliableToPlayer(player, data)
     Catway->>Worker: invokeMethod sendReliablePacket async
+    Worker->>Lib: reliable_endpoint_update() horodatage précis avant send
     Worker->>Lib: reliable_endpoint_send_packet(endpoint, data)
     Lib->>Lib: catway_transmit_packet() callback
     Lib->>QUdpSocket: writeDatagram() même thread OK

@@ -86,6 +86,11 @@ private:
     QTimer *m_heartbeatTimer = nullptr;
     int m_heartbeatInterval = 10000;
 
+    // Suivi ACK-flush et keepalive (ms depuis m_reliableClock.start)
+    qint64 m_lastKeepaliveMs = 0;
+    QHash<QString, qint64> m_lastReliableReceivedMs; // réception d'un paquet reliable
+    QHash<QString, qint64> m_lastReliableSentMs;     // dernier envoi reliable (op ou keepalive)
+
     QList<PlayerSnapshot> m_playerSnapshots;
     /// Timestamps persistés par playerId (survit aux rebuilds de snapshots)
     QHash<QString, qint64> m_lastReceivedByPlayer;

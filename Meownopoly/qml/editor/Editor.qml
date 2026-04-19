@@ -1058,7 +1058,9 @@ Base_Board {
                 for (let i = 0; i < n; ++i) {
                     const p = Catway.playerAt(i)
                     if (p && p.p2pConnected && p.playerId)
+                    {
                         snap[p.playerId] = p.stats()
+                    }
                 }
                 netStatsPanel.snapshots = snap
                 netStatsPanel.tick += 1
@@ -1129,7 +1131,7 @@ Base_Board {
                         Text { text: netStatsPanel._fmt(s.rtt) + " ms";    color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
                         Text { text: "loss";   color: "#64748b"; font.pixelSize: 10 }
                         Text {
-                            text: netStatsPanel._fmt((s.packetLoss || 0) * 100) + " %"
+                            text: netStatsPanel._fmt(s.packetLoss || 0) + " %"
                             color: (s.packetLoss || 0) > 0.05 ? "#f87171" : "#e2e8f0"
                             font.pixelSize: 10
                             font.family: "Consolas, Monaco, monospace"

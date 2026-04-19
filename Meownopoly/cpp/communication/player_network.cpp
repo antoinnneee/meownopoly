@@ -36,6 +36,8 @@ void PlayerNetwork::initReliable(
     config.fragment_above  = 1200;
     config.max_fragments   = 32;
     config.fragment_size   = 1024;
+    config.sent_packets_buffer_size     = 128;
+    config.received_packets_buffer_size = 128;
 
     m_endpoint = reliable_endpoint_create(&config, 0.0);
 }
@@ -66,13 +68,6 @@ QVariantMap PlayerNetwork::stats() const
 
     float sentKbps = 0, recvKbps = 0, ackedKbps = 0;
     reliable_endpoint_bandwidth(m_endpoint, &sentKbps, &recvKbps, &ackedKbps);
-
-    qDebug().nospace() << "[stats] " << m_playerId
-                       << " rtt=" << rtt
-                       << " min=" << rttMin << " max=" << rttMax << " avg=" << rttAvg
-                       << " loss=" << loss
-                       << " bw sent=" << sentKbps << " recv=" << recvKbps
-                       << " acked=" << ackedKbps;
 
     m.insert("rtt",        rtt);
     m.insert("rttMin",     rttMin);

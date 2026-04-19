@@ -77,6 +77,12 @@ void CatwayWorker::setPlayerSnapshots(QList<PlayerSnapshot> snapshots)
         else
             ++it;
     }
+    for (auto it = m_lastReliableReceivedMs.begin(); it != m_lastReliableReceivedMs.end(); ) {
+        it = activeIds.contains(it.key()) ? ++it : m_lastReliableReceivedMs.erase(it);
+    }
+    for (auto it = m_lastReliableSentMs.begin(); it != m_lastReliableSentMs.end(); ) {
+        it = activeIds.contains(it.key()) ? ++it : m_lastReliableSentMs.erase(it);
+    }
     m_playerSnapshots = std::move(snapshots);
 }
 
@@ -136,12 +142,42 @@ UdpSocketInfo* CatwayWorker::takeStunSocket()
 
 void CatwayWorker::onReliableUpdate()
 {
-    const double timeSeconds = m_reliableClock.nsecsElapsed() / 1e9;
+    const qint64 nowMs       = m_reliableClock.elapsed();
+    const double timeSeconds = nowMs / 1000.0;
 
     for (const PlayerSnapshot &s : m_playerSnapshots) {
         if (!s.endpoint) continue;
         reliable_endpoint_update(s.endpoint, timeSeconds);
         reliable_endpoint_clear_acks(s.endpoint);
+    }
+
+    static const uint8_t kKeepalive[1] = { 0x00 };
+
+    // ACK-flush : 100 ms après réception d'un paquet reliable, si aucun
+    // envoi n'a eu lieu depuis → envoyer un keepalive pour piggyback les ACKs.
+    for (const PlayerSnapshot &s : m_playerSnapshots) {
+        if (!s.p2pConnected || !s.endpoint) continue;
+        const qint64 lastRecv = m_lastReliableReceivedMs.value(s.playerId, 0);
+        const qint64 lastSent = m_lastReliableSentMs.value(s.playerId, 0);
+        if (lastRecv > lastSent && (nowMs - lastRecv) >= 100) {
+            reliable_endpoint_update(s.endpoint, timeSeconds);
+            reliable_endpoint_send_packet(s.endpoint,
+                                          const_cast<uint8_t *>(kKeepalive), 1);
+            m_lastReliableSentMs[s.playerId] = nowMs;
+        }
+    }
+
+    // Keepalive périodique toutes les 10 s pour maintenir les stats reliable
+    // actives même en l'absence d'ops métier.
+    if (nowMs - m_lastKeepaliveMs >= 10000) {
+        m_lastKeepaliveMs = nowMs;
+        for (const PlayerSnapshot &s : m_playerSnapshots) {
+            if (!s.p2pConnected || !s.endpoint) continue;
+            reliable_endpoint_update(s.endpoint, timeSeconds);
+            reliable_endpoint_send_packet(s.endpoint,
+                                          const_cast<uint8_t *>(kKeepalive), 1);
+            m_lastReliableSentMs[s.playerId] = nowMs;
+        }
     }
 }
 
@@ -183,6 +219,7 @@ void CatwayWorker::onSocketReadyRead()
                 const double timeSeconds = m_reliableClock.nsecsElapsed() / 1e9;
                 reliable_endpoint_update(targetSnap->endpoint, timeSeconds);
                 reliable_endpoint_receive_packet(targetSnap->endpoint, const_cast<uint8_t *>(reliableData), reliableSize);
+                m_lastReliableReceivedMs[targetSnap->playerId] = m_reliableClock.elapsed();
                 continue;
             } else if (targetSnap) {
                 qDebug() << "[reliable] Received reliable packet from" << targetSnap->playerId
@@ -250,13 +287,15 @@ void CatwayWorker::broadcastReliable(const QByteArray &data)
     // `time`, ce qui donne rtt=0 et bandwidth=0 en local (où les ACKs
     // reviennent dans le même tick). `reliable_endpoint_update` écrit time
     // et recalcule les stats — coût négligeable vs l'erreur de mesure.
-    const double timeSeconds = m_reliableClock.nsecsElapsed() / 1e9;
+    const qint64 nowMs       = m_reliableClock.elapsed();
+    const double timeSeconds = nowMs / 1000.0;
     for (const PlayerSnapshot &s : m_playerSnapshots) {
         if (!s.p2pConnected || !s.endpoint) continue;
         reliable_endpoint_update(s.endpoint, timeSeconds);
         reliable_endpoint_send_packet(s.endpoint,
                                       toReliableBytes(data),
                                       data.size());
+        m_lastReliableSentMs[s.playerId] = nowMs;
     }
 }
 
@@ -280,13 +319,13 @@ void CatwayWorker::sendReliablePacket(const QString &playerId, const QByteArray 
                  << (snap ? (snap->p2pConnected ? "no endpoint" : "not p2pConnected") : "no snapshot");
         return;
     }
-    // Même logique que broadcastReliable : time précis avant send pour
-    // des stats RTT/bandwidth non nulles en local (voir commentaire là-bas).
-    const double timeSeconds = m_reliableClock.nsecsElapsed() / 1e9;
+    const qint64 nowMs       = m_reliableClock.elapsed();
+    const double timeSeconds = nowMs / 1000.0;
     reliable_endpoint_update(snap->endpoint, timeSeconds);
     reliable_endpoint_send_packet(snap->endpoint,
                                   toReliableBytes(data),
                                   data.size());
+    m_lastReliableSentMs[playerId] = nowMs;
 }
 
 void CatwayWorker::tearDown()
