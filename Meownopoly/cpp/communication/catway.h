@@ -46,6 +46,9 @@ public:
     /// Recherche un snapshot par playerId. Doit être appelé depuis le thread réseau uniquement.
     const PlayerSnapshot *findSnapshot(const QString &playerId) const;
 
+    /// Appelé depuis catway_process_packet (thread réseau) pour les paquets non-keepalive.
+    void markReliableReceived(const QString &playerId);
+
 public slots:
     void initReliable();
     void startReliableTimer();

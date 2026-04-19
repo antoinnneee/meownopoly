@@ -37,7 +37,9 @@ static int catway_process_packet(
     auto *ctx = static_cast<CatwayReliableContext *>(context);
     if (!ctx || !ctx->catway) return 0;
     // Keepalive ACK : paquet 1 octet 0x00, ignoré silencieusement.
+    // Ne pas mettre à jour lastReliableReceivedMs pour éviter le ping-pong.
     if (packet_bytes == 1 && packet_data[0] == 0x00) return 1;
+    ctx->worker->markReliableReceived(ctx->playerId);
     QByteArray data(reinterpret_cast<const char *>(packet_data), packet_bytes);
     const QString senderId = ctx->playerId;
     QMetaObject::invokeMethod(ctx->catway, [ctx, senderId, data]() {

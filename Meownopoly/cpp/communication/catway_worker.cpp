@@ -95,6 +95,11 @@ const PlayerSnapshot *CatwayWorker::findSnapshot(const QString &playerId) const
     return nullptr;
 }
 
+void CatwayWorker::markReliableReceived(const QString &playerId)
+{
+    m_lastReliableReceivedMs[playerId] = m_reliableClock.elapsed();
+}
+
 void CatwayWorker::initReliable()
 {
     reliable_init();
@@ -219,7 +224,6 @@ void CatwayWorker::onSocketReadyRead()
                 const double timeSeconds = m_reliableClock.nsecsElapsed() / 1e9;
                 reliable_endpoint_update(targetSnap->endpoint, timeSeconds);
                 reliable_endpoint_receive_packet(targetSnap->endpoint, const_cast<uint8_t *>(reliableData), reliableSize);
-                m_lastReliableReceivedMs[targetSnap->playerId] = m_reliableClock.elapsed();
                 continue;
             } else if (targetSnap) {
                 qDebug() << "[reliable] Received reliable packet from" << targetSnap->playerId
