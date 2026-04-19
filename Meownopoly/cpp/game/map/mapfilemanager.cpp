@@ -47,8 +47,8 @@ MapFileManager::~MapFileManager()
 {
     if (currentMap) {
         delete currentMap;
-        currentMap = nullptr;
     }
+    currentMap = nullptr;
 }
 
 Map *MapFileManager::getCurrentMap() const
