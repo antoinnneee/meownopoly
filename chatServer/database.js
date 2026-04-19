@@ -57,6 +57,13 @@ try {
 try {
   db.prepare('ALTER TABLE sessions ADD COLUMN is_public INTEGER DEFAULT 1').run();
 } catch (e) { }
+// Host explicite. Avant cette colonne, `isHost` reposait uniquement sur
+// `MIN(joined_at)`, ce qui gardait l'ancien hôte comme propriétaire même
+// après une migration P2P (élection d'un successeur). On stocke maintenant
+// l'hôte courant de façon explicite, mis à jour par TRANSFER_HOST.
+try {
+  db.prepare('ALTER TABLE sessions ADD COLUMN host_player_id TEXT').run();
+} catch (e) { }
 
 module.exports = {
   // Session methods
@@ -69,12 +76,12 @@ module.exports = {
   },
   getAllSessions: () => {
     return db.prepare(
-      'SELECT session_id, session_name, password_hash, version, created_at, max_players, is_public FROM sessions ORDER BY created_at DESC'
+      'SELECT session_id, session_name, password_hash, version, created_at, max_players, is_public, host_player_id FROM sessions ORDER BY created_at DESC'
     ).all();
   },
-  createSession: (sessionId, sessionName, passwordHash, keyPackage, keyNonce, maxPlayers = 4, isPublic = 1) => {
-    db.prepare('INSERT OR IGNORE INTO sessions (session_id, session_name, password_hash, key_package, key_nonce, version, max_players, is_public) VALUES (?, ?, ?, ?, ?, 1, ?, ?)')
-      .run(sessionId, sessionName || '', passwordHash, keyPackage, keyNonce, maxPlayers, isPublic ? 1 : 0);
+  createSession: (sessionId, sessionName, passwordHash, keyPackage, keyNonce, maxPlayers = 4, isPublic = 1, hostPlayerId = null) => {
+    db.prepare('INSERT OR IGNORE INTO sessions (session_id, session_name, password_hash, key_package, key_nonce, version, max_players, is_public, host_player_id) VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)')
+      .run(sessionId, sessionName || '', passwordHash, keyPackage, keyNonce, maxPlayers, isPublic ? 1 : 0, hostPlayerId || null);
   },
   updateSession: (sessionId, keyPackage, keyNonce) => {
     return db.transaction(() => {
@@ -94,6 +101,14 @@ module.exports = {
   renameSession: (sessionId, newName) => {
     return db.prepare('UPDATE sessions SET session_name = ? WHERE session_id = ?')
       .run(newName || '', sessionId);
+  },
+  // Migration d'hôte P2P : bascule le propriétaire de la session sur
+  // un autre participant. Appelé par TRANSFER_HOST. Sans cet UPDATE,
+  // l'ancien hôte (premier joined_at) garderait les droits admin
+  // même après élection d'un successeur.
+  setHost: (sessionId, hostPlayerId) => {
+    return db.prepare('UPDATE sessions SET host_player_id = ? WHERE session_id = ?')
+      .run(hostPlayerId || null, sessionId);
   },
   deleteSession: (sessionId) => {
     db.transaction(() => {
@@ -195,13 +210,30 @@ module.exports = {
     return db.prepare('SELECT player_id, nickname FROM participants WHERE session_id = ? ORDER BY joined_at ASC').all(sessionId);
   },
   /**
-   * Le host est le premier participant à avoir rejoint la session.
+   * Host de la session. Priorité à sessions.host_player_id (mis à jour
+   * par TRANSFER_HOST lors d'une migration P2P), fallback au premier
+   * participant à avoir rejoint (legacy, pour les sessions créées avant
+   * la migration de schéma).
    * Retourne null si aucun participant.
    */
   getHost: (sessionId) => {
+    const session = db.prepare('SELECT host_player_id FROM sessions WHERE session_id = ?').get(sessionId);
+    if (session && session.host_player_id) {
+      const part = db.prepare('SELECT player_id, nickname FROM participants WHERE session_id = ? AND player_id = ?')
+        .get(sessionId, session.host_player_id);
+      if (part) return part;
+      // host_player_id pointe sur quelqu'un qui n'est plus là : on retombe sur
+      // le plus ancien participant et on ne corrige PAS ici — le prochain
+      // TRANSFER_HOST (ou renameSession) ajustera.
+    }
     return db.prepare('SELECT player_id, nickname FROM participants WHERE session_id = ? ORDER BY joined_at ASC LIMIT 1').get(sessionId) || null;
   },
   isHost: (sessionId, playerId) => {
+    const session = db.prepare('SELECT host_player_id FROM sessions WHERE session_id = ?').get(sessionId);
+    if (session && session.host_player_id) {
+      return session.host_player_id === playerId;
+    }
+    // Legacy fallback : premier joined_at.
     const host = db.prepare('SELECT player_id FROM participants WHERE session_id = ? ORDER BY joined_at ASC LIMIT 1').get(sessionId);
     return !!host && host.player_id === playerId;
   },

@@ -161,7 +161,7 @@ function handleCommand(ws, msg) {
     const sessionCommands = [
         'PUBLISH_KEY', 'SEND_MSG', 'SEND_COMMAND', 'GET_HISTORY',
         'CLEAR_HISTORY', 'GET_PARTICIPANTS', 'LEAVE_SESSION',
-        'DELETE_SESSION', 'KICK', 'RENAME_SESSION'
+        'DELETE_SESSION', 'KICK', 'RENAME_SESSION', 'TRANSFER_HOST'
     ];
 
     if (sessionCommands.includes(type)) {
@@ -208,6 +208,9 @@ function handleCommand(ws, msg) {
             break;
         case 'RENAME_SESSION':
             handleRenameSession(ws, payload);
+            break;
+        case 'TRANSFER_HOST':
+            handleTransferHost(ws, payload);
             break;
         case 'LIST_SESSIONS':
         case 'GET_SESSION_LIST':
@@ -260,6 +263,14 @@ function handleJoinSession(ws, payload) {
     // If new, add to DB
     if (isNewParticipant) {
         db.addParticipant(session_id, player_id, player_nickname);
+    }
+
+    // Si la session n'a pas d'hôte explicite (session_id fraîchement créée,
+    // ou legacy pré-migration schéma), on désigne le premier participant
+    // comme hôte. Les appels TRANSFER_HOST ultérieurs peuvent écraser.
+    if (!session.host_player_id) {
+        db.setHost(session_id, player_id);
+        debug(`Session ${session_id}: host initialisé sur ${player_id} (premier join)`);
     }
 
     let keys = [];
@@ -327,10 +338,13 @@ function handleCreateSession(ws, payload) {
             `Server has reached maximum capacity (${MAX_SESSIONS} sessions). Please try again later.`);
     }
 
-    // Créer la session dans la DB (sans participants pour l'instant)
+    // Créer la session dans la DB (sans participants pour l'instant).
+    // host_player_id reste null ici : il sera désigné au premier JOIN_SESSION
+    // (typiquement le créateur qui enchaîne create→join). TRANSFER_HOST peut
+    // ensuite l'écraser lors d'une migration P2P.
     debug(`Creating new session: ${session_id} (name: ${session_name || 'N/A'})`);
 
-    db.createSession(session_id, session_name || '', password_hash, null, null, max_players || 4, is_public !== false ? 1 : 0);
+    db.createSession(session_id, session_name || '', password_hash, null, null, max_players || 4, is_public !== false ? 1 : 0, null);
 
     // Répondre au client
     ws.send(JSON.stringify({
@@ -674,12 +688,19 @@ function getDetailedSessionList() {
             }
         }
 
+        // Host explicite si présent (post-TRANSFER_HOST), sinon fallback sur
+        // le premier participant (legacy pré-migration de schéma).
+        const explicitHost = session.host_player_id
+            ? participants.find(p => p.player_id === session.host_player_id)
+            : null;
+        const hostEntry = explicitHost || (participants.length > 0 ? participants[0] : null);
+
         // Construire l'objet session
         const sessionData = {
             session_id: sessionId,
             session_name: session.session_name || sessionId,
-            host_id: participants.length > 0 ? participants[0].player_id : null,
-            host_nickname: participants.length > 0 ? (participants[0].nickname || participants[0].player_id) : 'En attente',
+            host_id: hostEntry ? hostEntry.player_id : null,
+            host_nickname: hostEntry ? (hostEntry.nickname || hostEntry.player_id) : 'En attente',
             player_count: participants.length,
             max_players: session.max_players || 4,
             created_at: session.created_at,
@@ -896,6 +917,53 @@ function handleRenameSession(ws, payload) {
     const broadcastMsg = JSON.stringify({
         type: 'SESSION_RENAMED',
         payload: { session_id, session_name }
+    });
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) client.send(broadcastMsg);
+    });
+}
+
+// Migration P2P : transfert d'hôte. Appelé par le client élu (ou par l'ancien
+// hôte avant qu'il parte) pour mettre à jour l'ownership serveur. Sans ça,
+// `isHost` continuerait à renvoyer l'ancien hôte via son joined_at initial,
+// et son retour éventuel lui rendrait les droits admin (DELETE_SESSION,
+// CLEAR_HISTORY…) sur la session qu'il a pourtant quittée.
+//
+// Autorisation : l'hôte courant OU le nouvel hôte désigné (self). Le cas "new
+// host désigne self" est nécessaire car après l'élection, l'ancien hôte n'est
+// souvent plus connecté.
+function handleTransferHost(ws, payload) {
+    const { session_id, new_host_id } = payload;
+    if (!session_id) return sendError(ws, 'MISSING_PARAMETER', 'session_id is required');
+    if (!new_host_id) return sendError(ws, 'MISSING_PARAMETER', 'new_host_id is required');
+
+    const existing = db.getSession(session_id);
+    if (!existing) return sendError(ws, 'SESSION_NOT_FOUND', 'Session not found');
+
+    const callerId = ws.player_id;
+    const isCurrentHost = callerId && db.isHost(session_id, callerId);
+    const isSelfPromotion = callerId && callerId === new_host_id;
+    if (!isCurrentHost && !isSelfPromotion) {
+        return sendError(ws, 'FORBIDDEN', 'Only current host or the new host (self) can transfer host');
+    }
+
+    // Vérifier que le nouvel hôte est participant actuel de la session.
+    if (!db.isParticipant(session_id, new_host_id)) {
+        return sendError(ws, 'NOT_PARTICIPANT', 'new_host_id is not a participant of this session');
+    }
+
+    const result = db.setHost(session_id, new_host_id);
+    if (!result || result.changes === 0) {
+        return sendError(ws, 'TRANSFER_FAILED', 'Unable to transfer host');
+    }
+
+    debug(`Session ${session_id} host transferred to ${new_host_id} by ${callerId || 'unknown'}`);
+
+    // Broadcast aux membres de la session (et au lobby pour rafraîchir les
+    // listes si l'UI expose l'hôte). On broadcast global comme rename.
+    const broadcastMsg = JSON.stringify({
+        type: 'HOST_CHANGED',
+        payload: { session_id, host_player_id: new_host_id }
     });
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) client.send(broadcastMsg);

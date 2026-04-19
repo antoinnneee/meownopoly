@@ -424,6 +424,17 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
                              << m_knownRoster;
                 }
             }
+            // Purge le PlayerNetwork de l'ancien hôte pour libérer socket/
+                // endpoint et éviter les paquets fantômes ("Paquet UDP spoofé"
+                // avec provenance vide — socket fermé côté pair). Sans ça, le
+                // nouvel hôte élu pollue son journal tant que le timeout Catway
+                // n'a pas purgé l'ancien pair (~10 s).
+            Catway *catway = Catway::instance();
+            if (PlayerNetwork *oldHost = catway->playerById(senderId)) {
+                qDebug() << "[EditorSession] purge ancien hôte PlayerNetwork :"
+                         << senderId;
+                catway->removePlayer(oldHost);
+            }
             const QString elected = electNewHost();
             qWarning() << "[EditorSession] hôte quitte — élection →" << elected;
             emit hostLost(elected);

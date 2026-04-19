@@ -138,6 +138,32 @@ void ChatClient::renameSession(const QString &newName)
         "ChatClient");
 }
 
+void ChatClient::transferHost(const QString &newHostId)
+{
+    if (!m_connected) {
+        emit errorOccurred("Non connecté au serveur");
+        return;
+    }
+    if (m_sessionId.isEmpty()) {
+        Logger::instance()->warn("transferHost: no active session", "ChatClient");
+        return;
+    }
+    if (newHostId.isEmpty()) {
+        Logger::instance()->warn("transferHost: empty newHostId", "ChatClient");
+        return;
+    }
+    QJsonObject msg;
+    msg["type"] = "TRANSFER_HOST";
+    QJsonObject payload;
+    payload["session_id"]  = m_sessionId;
+    payload["new_host_id"] = newHostId;
+    msg["payload"] = payload;
+    sendWebSocketMessage(msg);
+    Logger::instance()->info(
+        QString("Requesting host transfer of session %1 → %2").arg(m_sessionId, newHostId),
+        "ChatClient");
+}
+
 void ChatClient::connectToSessionDirect(const QString &sessionId, const QString &password)
 {
 

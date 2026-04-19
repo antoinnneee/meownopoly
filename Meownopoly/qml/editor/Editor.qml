@@ -745,6 +745,20 @@ Base_Board {
                 }
                 console.log("[Reconnect] auto →", electedHostId, "via session", sid)
                 EditorSession.stop()
+                // Wipe les tuiles QML locales ET réinitialise la Map C++ pour
+                // que le FullSync reçu du nouvel hôte reconstruise proprement
+                // (sinon applyRemoteDelta(TileAdded) no-ope sur les uuids déjà
+                // présents dans Game.m_tiles → carte vide visuellement).
+                EditorOpBus.beginApplyRemote()
+                try {
+                    const toDelete = snapableTilesList.slice()
+                    for (let i = 0; i < toDelete.length; i++) {
+                        if (toDelete[i]) logic.tileLogic.deleteElement(toDelete[i])
+                    }
+                } finally {
+                    EditorOpBus.endApplyRemote()
+                }
+                Game.initEmptyCollabMap()
                 root.reconnectRequested(sid, electedHostId)
             } else {
                 console.log("[EditorSession] Aucun candidat — monoposte.")

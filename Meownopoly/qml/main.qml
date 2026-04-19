@@ -305,6 +305,18 @@ ApplicationWindow {
                     return
                 }
                 console.log("[main] Client → négociation P2P avec host =", hostId)
+                // Purge un éventuel PlayerNetwork résiduel pour ce hostId :
+                // cas typique où l'ancien hôte rejoint après migration (il garde
+                // en cache l'IP/port/p2pConnected du pair devenu hôte). Sans
+                // purge, p2pStateMachine voit p2pConnected=true instantanément,
+                // skip le hole-punch, et envoie Hello vers un port mort → pas
+                // de FullSync. On laisse REPLY_CONNECTION_INFO recréer le pair
+                // avec les bonnes coordonnées.
+                const stale = Catway.playerById(hostId)
+                if (stale) {
+                    console.log("[main] purge PlayerNetwork résiduel pour", hostId)
+                    Catway.removePlayer(stale)
+                }
                 p2pStateMachine.targetHostId = hostId
                 p2pStateMachine.state = "STUN"
                 p2pStateMachine.attempts = 0
@@ -354,6 +366,12 @@ ApplicationWindow {
             const newName = "[EDIT:" + pid + "] " + (stripped || "Session")
             console.log("[main] promotion — renameSession:", oldName, "→", newName)
             Catway.chatClient.renameSession(newName)
+            // Transfert d'ownership côté serveur : sans ça, l'ancien hôte
+            // (premier joined_at) garderait isHost=true, et son retour
+            // éventuel dans la session lui redonnerait les droits admin
+            // + confusion UI ("badge hôte" alors qu'il est client P2P).
+            console.log("[main] promotion — transferHost → " + pid)
+            Catway.chatClient.transferHost(pid)
         }
     }
 

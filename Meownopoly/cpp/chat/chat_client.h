@@ -62,6 +62,12 @@ public:
     /// réécrire le prefix `[EDIT:<hostId>]` sans casser le canal chat.
     Q_INVOKABLE void renameSession(const QString &newName);
 
+    /// Transfert d'ownership côté serveur. Appelé par le client élu juste
+    /// après `renameSession`, pour que `host_player_id` en DB reflète le
+    /// nouvel hôte P2P. Sans ça, l'ancien hôte garderait les droits admin
+    /// (CLEAR_HISTORY, DELETE_SESSION) à son retour éventuel.
+    Q_INVOKABLE void transferHost(const QString &newHostId);
+
     Q_INVOKABLE void connectToSessionDirect(const QString &sessionId, const QString &password);
     Q_INVOKABLE void connectToSession(const QString &playerId, const QString &password, const QString &nickname = QString());
     Q_INVOKABLE void joinSession();
@@ -111,6 +117,11 @@ signals:
     /// — host migration : broadcast du chat server quand une session a
     /// été renommée. availableSessions est déjà rafraîchi au moment de l'émission.
     void sessionRenamed(const QString &sessionId, const QString &sessionName);
+
+    /// Broadcast serveur après TRANSFER_HOST : l'hôte serveur de la session
+    /// a changé (post-migration P2P ou transfert admin). availableSessions
+    /// est déjà rafraîchi avec le nouveau hostId.
+    void hostChanged(const QString &sessionId, const QString &hostPlayerId);
     /** Émis quand on a été expulsé de la session par le host. */
     void kicked(const QString &sessionId, const QString &reason);
     /** Émis quand un autre participant a été expulsé. */
@@ -153,6 +164,7 @@ private:
     void handleServerReset(const QJsonObject &payload);
     void handleSessionCreatedBroadcast(const QJsonObject &payload);
     void handleSessionRenamed(const QJsonObject &payload);
+    void handleHostChanged(const QJsonObject &payload);
     void handleSessionDeleted(const QJsonObject &payload);
     /** Vide totalement l'état de session côté client (clés, participants, messages). */
     void resetSessionState();
