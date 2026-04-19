@@ -23,6 +23,7 @@ Documentation technique sur l'architecture du système et les composants.
 - [📋 Résumé](./architecture/RESUME_ARCHITECTURE_EDITEUR.md) - Vue d'ensemble rapide avec points clés
 - [📊 Diagrammes](./architecture/DIAGRAMMES_ARCHITECTURE_EDITEUR.md) - Diagrammes visuels ASCII
 - [🌐 Éditeur Collaboratif](./architecture/COLLABORATIVE_EDITOR.md) - Stack réseau collab, op bus, host migration, stats transmission
+- [🧩 Pattern Session Collab](./architecture/COLLAB_SESSION_PATTERN.md) - Pattern générique host-authoritative pour réimplémenter dans d'autres modes
 
 ### Réseau
 - [Architecture Catway](./architecture/CATWAY_ARCHITECTURE.md) - Threading, I/O, reliable.io
