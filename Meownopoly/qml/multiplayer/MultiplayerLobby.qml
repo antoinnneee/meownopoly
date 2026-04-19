@@ -211,6 +211,17 @@ Rectangle {
                 // si c'est une session éditeur, on arme l'état de
                 // join pour que onSessionIdChanged déclenche la navigation.
                 const parsed = root._parseEditorPrefix(sessionData.name || sessionData.sessionName || "")
+                // Cas rejoin même session (ex: retour d'éditeur collab) :
+                // ChatClient::setSessionId est no-op si l'id n'a pas changé,
+                // donc sessionIdChanged ne fire pas. On déclenche la nav direct.
+                if (parsed.isEdit
+                        && lobbyChatClient.sessionId === sessionData.sessionId
+                        && lobbyChatClient.connected) {
+                    console.log("🛠️ Rejoin même session éditeur (host =", parsed.hostId + ") → launchExistingSession direct")
+                    Catway.setChatClient(lobbyChatClient)
+                    root.launchExistingSession(true, parsed.hostId)
+                    return
+                }
                 root._pendingJoinEdit     = parsed.isEdit
                 root._pendingJoinHostId   = parsed.hostId
                 root._pendingJoinSessionId = sessionData.sessionId
