@@ -243,8 +243,18 @@ void EditorOpBus::submitFromDelta(int type,
                                   const QJsonObject &after,
                                   bool applyBefore)
 {
-    if (m_isApplyingRemote) return;
-    if (!EditorSession::instance()->active()) return;
+    if (m_isApplyingRemote) {
+        qDebug() << "[OpBus] submitFromDelta dropped — isApplyingRemote";
+        return;
+    }
+    if (!EditorSession::instance()->active()) {
+        qDebug() << "[OpBus] submitFromDelta dropped — EditorSession inactive";
+        return;
+    }
+    qDebug() << "[OpBus] submitFromDelta type=" << type
+             << " uuid=" << tileId.toString()
+             << " groupId=" << groupId.toString()
+             << " (pending queue)";
 
     // Économie de bande passante : on n'envoie que le côté qu'on va appliquer.
     // applyBefore=false (forward: pose/modif/suppr/undo-redo forward) → only `after`.

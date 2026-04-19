@@ -471,12 +471,16 @@ Base_Board {
                     const after  = sub.after  || ({})
                     Game.applyRemoteDelta(sub.type, sub.tileId, sub.groupId,
                                           before, after, !!sub.applyBefore)
-                    // Re-sync visuel : les bindings QML sur gridRelativePositionX/Y
-                    // peuvent avoir été cassés par un drag local précédent ; re-snap
-                    // positionne la tile visuellement même si le binding est inerte.
-                    const target = findByUuid(String(sub.tileId))
-                    if (target && target.snapToGridFromGridPos)
-                        target.snapToGridFromGridPos()
+                    // Rebind x/y des tiles sélectionnées (qui auraient un binding
+                    // cassé par un drag local). _rebindTileIfSelected d'Antoine ;
+                    // fallback snapToGridFromGridPos si non défini.
+                    if (typeof _rebindTileIfSelected === "function") {
+                        _rebindTileIfSelected(sub.tileId)
+                    } else {
+                        const target = findByUuid(String(sub.tileId))
+                        if (target && target.snapToGridFromGridPos)
+                            target.snapToGridFromGridPos()
+                    }
                 }
 
                 if (op.batch === true) {
@@ -492,6 +496,46 @@ Base_Board {
                 console.log("[Editor] remote op inconnue:", JSON.stringify(op))
                 break
             }
+        }
+    }
+
+    // Après qu'un delta remote ait été appliqué au Map, on force un rebind x/y
+    // sur la tile QML correspondante. Raison : le binding de base
+    // `x: gridRelativePositionX * gridSize` peut avoir été cassé (sélection
+    // locale → MouseLogic_Base.createBindingsForElement remplace par
+    // `groupeSelection.x + offset`, resize direct targetElement.x = ...).
+    // Si la tile est sélectionnée localement, on la désélectionne aussi.
+    function _rebindTileIfSelected(tileId) {
+        if (!tileId) return
+        const tiles = snapableTilesList
+        for (let i = 0; i < tiles.length; i++) {
+            const el = tiles[i]
+            if (!el || !el.snapableParameters) continue
+            if (String(el.snapableParameters.uniqueId) !== tileId) continue
+            const elRef = el
+            // Désélectionner d'abord si sélectionné (sinon le rebind sera
+            // ré-écrasé par MouseLogic au prochain event).
+            if (logic && logic.mouseLogic && logic.mouseLogic.selectedElements) {
+                const sel = logic.mouseLogic.selectedElements
+                if (sel.indexOf(elRef) !== -1) {
+                    logic.mouseLogic.selectedElements =
+                        sel.filter(function(x) { return x !== elRef })
+                    if (elRef.elementReleased) elRef.elementReleased()
+                }
+            }
+            elRef.x = Qt.binding(function() {
+                return elRef.snapableParameters.displayParameter.gridRelativePositionX
+                     * elRef.gridManager.gridSize
+            })
+            elRef.y = Qt.binding(function() {
+                return elRef.snapableParameters.displayParameter.gridRelativePositionY
+                     * elRef.gridManager.gridSize
+            })
+            console.log("[Editor] remote delta → rebind x/y for",
+                        tileId, "→",
+                        elRef.snapableParameters.displayParameter.gridRelativePositionX,
+                        elRef.snapableParameters.displayParameter.gridRelativePositionY)
+            return
         }
     }
 
@@ -599,23 +643,28 @@ Base_Board {
 
         EditorOpBus.beginApplyRemote()
         try {
-            // 1) Wipe local (copie défensive, deleteElement modifie la liste).
+            // 1) Wipe local (QML) — les tiles reconstruites ci-dessous sont
+            //    de toute façon de nouvelles instances.
             const toDelete = snapableTilesList.slice()
             console.log("[FullSync] wiping", toDelete.length, "tuiles locales")
             for (let i = 0; i < toDelete.length; i++) {
                 if (toDelete[i]) logic.tileLogic.deleteElement(toDelete[i])
             }
-            // 2) Reconstruit depuis le snapshot.
+            // 2) Reconstruit via Game.applyRemoteDelta(TileAdded) — ajoute au
+            //    m_tiles C++ ET émet `tileRestoredFromHistory` qui est
+            //    consommé par `onFoundItemSnapableTile` pour créer le QML.
+            //    Un seul code path, m_tiles cohérent avec les tiles QML,
+            //    donc les ops TileModified entrantes pourront être appliquées.
             let rebuilt = 0
             for (let j = 0; j < tiles.length; j++) {
-                const item = ItemSnapableFactory.createItemSnapableFromJson(tiles[j])
-                if (!item) {
-                    console.warn("[FullSync] createItemSnapableFromJson returned null for tile", j)
+                const t = tiles[j]
+                const uuid = t && t.uniqueId ? String(t.uniqueId) : ""
+                if (!uuid) {
+                    console.warn("[FullSync] tile sans uniqueId — skip", j)
                     continue
                 }
-                const newTile = logic.tileLogic.createItemSnapableTile(item)
-                if (newTile) rebuilt++
-                else console.warn("[FullSync] createItemSnapableTile returned null for tile", j)
+                Game.applyRemoteDelta(EditDelta.TileAdded, uuid, "", {}, t, false)
+                rebuilt++
             }
             console.log("[FullSync] rebuilt", rebuilt, "/", tiles.length, "tuiles")
             // 3) Rétablit les connexions (next/prev) depuis les JSON.
@@ -1606,6 +1655,10 @@ Base_Board {
         if (EditorSession.active && !EditorSession.isHost) {
             Logger.info("Collab client — skip local map load (waiting for FullSync)",
                         "MAP FILE MANAGER")
+            // Crée un Map vide côté C++ pour que updateMap/applyRemoteDelta
+            // puissent muter m_tiles. Sans ça, `getCurrentMap()` retourne null
+            // et toute tentative de pose/déplacement local fait un early-return.
+            Game.initEmptyCollabMap()
             tmpSaver.setSaveTimer()
             return
         }
