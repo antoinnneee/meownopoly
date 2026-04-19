@@ -1039,10 +1039,17 @@ Base_Board {
 
         // Snapshot rafraîchi par le timer. Clé = playerId, valeur = map stats.
         property var snapshots: ({})
-        property int tick: 0  // force ré-évaluation du Repeater
+        // Incrémenté à chaque poll ; utilisé comme dépendance explicite des
+        // bindings de delegate pour forcer la ré-évaluation. Sans ça, le
+        // binding `snapshots[modelData]` ne se re-déclenche pas de manière
+        // fiable quand le Repeater garde ses delegates (model inchangé) et
+        // que seule la valeur mappée change — les RTT/bandwidth/loss qui
+        // évoluent peu paraissent figées alors que les counters monotones
+        // semblent bouger par effet de bord des re-évaluations partielles.
+        property int tick: 0
 
         Timer {
-            interval: 500
+            interval: 250
             repeat: true
             running: netStatsPanel.visible
             onTriggered: {
@@ -1098,7 +1105,12 @@ Base_Board {
                 delegate: Column {
                     width: statsCol.width
                     spacing: 3
-                    readonly property var s: netStatsPanel.snapshots[modelData] || ({})
+                    // `tick` est invoqué via l'opérateur virgule pour forcer
+                    // une dépendance : sans ça, Qt 6 ne re-déclenche pas
+                    // toujours le binding `snapshots[modelData]` quand la
+                    // valeur change mais la clé reste la même.
+                    readonly property var s: (netStatsPanel.tick,
+                                              netStatsPanel.snapshots[modelData] || ({}))
 
                     Text {
                         text: modelData.substring(0, 12)
