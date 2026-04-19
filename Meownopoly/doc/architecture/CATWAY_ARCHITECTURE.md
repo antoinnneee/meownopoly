@@ -167,9 +167,10 @@ Fonctions statiques en portée fichier, définies dans `[catway_player.cpp](../.
 `QTimer` créé dans `CatwayWorker::startReliableTimer()`. À chaque tick (~16 ms) :
 
 1. Appelle `reliable_endpoint_update()` et `reliable_endpoint_clear_acks()` pour chaque joueur (même non connecté).
-2. Toutes les **6 ticks (~100 ms)**, envoie un paquet **keepalive ACK** d'un octet (`0x00`) à chaque joueur `p2pConnected`. Ce paquet force le piggyback des ACKs accumulés côté destinataire, ce qui permet :
-   - De confirmer rapidement la réception des bursts d'ops (évite la fausse packet_loss transitoire).
-   - De maintenir le RTT à jour même si seul un côté envoie des ops métier.
+2. **ACK-flush conditionnel** : pour chaque joueur `p2pConnected`, si un paquet reliable a été reçu **après** le dernier envoi (`m_lastReliableReceivedMs[id] > m_lastReliableSentMs[id]`) et que ≥ 100 ms se sont écoulés depuis cette réception → envoie un paquet `0x00` pour piggyback les ACKs accumulés. Aucun envoi superflu si le pair envoie déjà ses propres ops (ses ACKs sont piggybacked naturellement).
+3. **Keepalive périodique (10 s)** : envoie un `0x00` à tous les joueurs `p2pConnected` pour maintenir les stats reliable actives (`rtt`, `sent_bandwidth`) même sans ops métier.
+
+`m_lastReliableReceivedMs` et `m_lastReliableSentMs` sont des `QHash<QString, qint64>` (ms depuis `m_reliableClock.start()`), nettoyés dans `setPlayerSnapshots` quand un joueur quitte. `broadcastReliable` et `sendReliablePacket` mettent `m_lastReliableSentMs` à jour à chaque envoi.
 
 Démarre dès que `m_networkThread` envoie le signal `started`.
 
