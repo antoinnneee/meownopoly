@@ -34,7 +34,16 @@ QJsonArray Game::formatTileDataToJson(ItemSnapable &is, QJsonArray snapableTiles
 bool Game::saveCurrentMap(){
 
     Map *currentMap = MapFileManager::instance()->getCurrentMap();
+    if (!currentMap) {
+        qWarning() << "[Game::saveCurrentMap] no current map — abort save";
+        return false;
+    }
     MapInfo *currentMapInfo = currentMap->getMapInfo();
+    if (!currentMapInfo) {
+        qWarning() << "[Game::saveCurrentMap] currentMap has no MapInfo — abort save"
+                   << "(client collab sans fullsync de mapInfo ?)";
+        return false;
+    }
     MapTypes::MapType currentType = currentMapInfo->getType();
 
     QJsonObject jsonObject;
@@ -121,15 +130,26 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 void Game::initEmptyCollabMap()
 {
     Map *existing = MapFileManager::instance()->getCurrentMap();
-    if (existing) return;   // déjà prêt
+    if (existing) {
+        // Déjà prêt. Si jamais MapInfo manque (cas legacy), on en injecte un
+        // par défaut pour éviter le crash saveOnEdit côté client collab.
+        if (!existing->getMapInfo()) {
+            qWarning() << "[Game] initEmptyCollabMap — map existante sans MapInfo, injection d'un MapInfo par défaut";
+            existing->setMapInfo(new MapInfo());
+        }
+        return;
+    }
 
     Map *map = new Map(this);
+    // MapInfo par défaut : name=autosave_tmp, type=AUTOSAVE. Sans ça, le client
+    // en mode collab crashe dès qu'une politique saveOnEdit tente de sérialiser.
+    map->setMapInfo(new MapInfo());
     connect(map, &Map::tileRemovedFromHistory, this, &Game::tileRemoved);
     connect(map, &Map::tileRestoredFromHistory, this, &Game::foundItemSnapableTile);
     connect(map, &Map::forceUnselectAll, this, &Game::forceUnselectAll);
     connect(map, &Map::afterRestoration, this, &Game::afterRestoration);
     MapFileManager::instance()->setCurrentMap(map);
-    qDebug() << "[Game] initEmptyCollabMap — Map vide créée pour session collab";
+    qDebug() << "[Game] initEmptyCollabMap — Map vide + MapInfo par défaut créée pour session collab";
 }
 
 QList<ItemSnapable*> Game::generateItems(QJsonObject jsonObject)
