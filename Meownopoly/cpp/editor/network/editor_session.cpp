@@ -372,23 +372,30 @@ void EditorSession::onReliableReceived(const QString &senderId, const QByteArray
     }
 
     case EditorMessageType::SelectionUpdate: {
-        // Met à jour la map de présence (QVariantMap playerId → [uuid,...])
-        // avant de ré-émettre, pour que les consumers QML via binding sur
-        // `remoteSelections` voient la nouvelle valeur au moment du signal.
+        // L'auteur réel doit être préservé lors du relay hôte : le paquet
+        // rebroadcastée arrive chez les autres clients avec senderId = hôte,
+        // donc on tague `_by` côté hôte (autoritaire). Côté client qui reçoit
+        // du relay, on lit `_by` pour la clé de m_remoteSelections.
+        QJsonObject selPayload = payload;
+        if (m_isHost) {
+            selPayload.insert("_by", senderId);
+        }
+        const QString author = selPayload.value("_by").toString(senderId);
+
         QStringList uuids;
-        const QJsonArray arr = payload.value("uuids").toArray();
+        const QJsonArray arr = selPayload.value("uuids").toArray();
         uuids.reserve(arr.size());
         for (const QJsonValue &v : arr) uuids.append(v.toString());
         if (uuids.isEmpty()) {
-            m_remoteSelections.remove(senderId);
+            m_remoteSelections.remove(author);
         } else {
-            m_remoteSelections.insert(senderId, QVariant::fromValue(uuids));
+            m_remoteSelections.insert(author, QVariant::fromValue(uuids));
         }
         emit remoteSelectionsChanged();
 
-        emit selectionReceived(senderId, payload);
+        emit selectionReceived(author, selPayload);
         if (m_isHost) {
-            relayReliableToOthers(senderId, EditorProtocol::pack(type, payload));
+            relayReliableToOthers(senderId, EditorProtocol::pack(type, selPayload));
         }
         break;
     }
@@ -417,8 +424,26 @@ void EditorSession::onUdpReceived(const QString &senderId, const QString &messag
     const qreal y = parts[2].toDouble(&okY);
     if (!okX || !okY) return;
 
-    // senderId vient de Catway ; on ignore parts[0] (redondant avec senderId).
-    emit cursorReceived(senderId, x, y);
+    // En P2P, les clients ne sont connectés qu'à l'hôte : le client B ne
+    // recevra jamais directement le datagramme UDP du client A. On utilise
+    // donc parts[0] (l'auteur embarqué par sendCursor) comme véritable id.
+    const QString author = parts[0].isEmpty() ? senderId : parts[0];
+    emit cursorReceived(author, x, y);
+
+    // Relay hôte : forward le datagramme brut aux autres pairs P2P, pour que
+    // les clients voient les curseurs des autres clients. senderId = id Catway
+    // du pair direct (l'auteur si reçu par l'hôte, l'hôte si reçu par un
+    // client d'un relay — dans ce second cas on n'entre pas ici, m_isHost=false).
+    if (m_isHost && !senderId.isEmpty()) {
+        Catway *catway = Catway::instance();
+        const int count = catway->playersCount();
+        for (int i = 0; i < count; ++i) {
+            PlayerNetwork *p = catway->playerAt(i);
+            if (!p || !p->isP2pConnected()) continue;
+            if (p->playerId() == senderId) continue;   // pas à l'auteur
+            catway->sendUdpMessageToPlayer(p, message);
+        }
+    }
 }
 
 // réassemblage des ops chunkées. Une fois tous les fragments reçus,
