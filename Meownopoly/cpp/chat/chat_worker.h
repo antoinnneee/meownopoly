@@ -6,6 +6,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QTimer>
 
 class ChatWorker : public QObject
 {
@@ -26,15 +27,20 @@ signals:
     void disconnected();
     void textMessageReceived(const QString &message);
     void errorOccurred(const QString &error);
+    /// RTT mesuré par un WebSocket ping frame. Emis à chaque pong reçu.
+    void pongReceived(quint64 elapsedMs);
 
 private slots:
     void onConnected();
     void onDisconnected();
     void onTextMessageReceived(const QString &message);
     void onError(QAbstractSocket::SocketError error);
+    void onPong(quint64 elapsedTime, const QByteArray &payload);
+    void sendPingFrame();
 
 private:
     QWebSocket *m_webSocket;
+    QTimer *m_pingTimer = nullptr;
 };
 
 #endif // CHAT_WORKER_H

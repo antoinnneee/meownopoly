@@ -32,6 +32,7 @@ ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     connect(m_worker, &ChatWorker::disconnected, this, &ChatClient::onDisconnected);
     connect(m_worker, &ChatWorker::textMessageReceived, this, &ChatClient::onTextMessageReceived);
     connect(m_worker, &ChatWorker::errorOccurred, this, &ChatClient::onWorkerError);
+    connect(m_worker, &ChatWorker::pongReceived, this, &ChatClient::onPongReceived);
 
     // Connect client signals to worker slots (cross-thread)
     connect(this, &ChatClient::destroyed, m_worker, &ChatWorker::deleteLater);
@@ -217,10 +218,22 @@ void ChatClient::onDisconnected() {
     m_retryPending = false;
     emit connectedChanged();
     emit participantsChanged();
+    if (m_pingMs != -1) {
+        m_pingMs = -1;
+        emit pingMsChanged();
+    }
 }
 
 void ChatClient::onWorkerError(const QString &error) {
     emit errorOccurred(error, ChatClient::OTHER);
+}
+
+void ChatClient::onPongReceived(quint64 elapsedMs) {
+    const int ms = static_cast<int>(elapsedMs);
+    if (m_pingMs != ms) {
+        m_pingMs = ms;
+        emit pingMsChanged();
+    }
 }
 
 void ChatClient::sendWebSocketMessage(const QJsonObject &message) {

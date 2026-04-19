@@ -29,6 +29,8 @@ class ChatClient : public QObject
     Q_PROPERTY(QVariantList participants READ participants NOTIFY participantsChanged)
     Q_PROPERTY(int participantCount READ participantCount NOTIFY participantsChanged)
     Q_PROPERTY(QVariantList availableSessions READ availableSessions NOTIFY availableSessionsChanged)
+    /// RTT WebSocket vers le serveur de chat en ms. -1 si non mesuré / déconnecté.
+    Q_PROPERTY(int pingMs READ pingMs NOTIFY pingMsChanged)
 
 public:
 
@@ -49,6 +51,7 @@ public:
     QVariantList participants() const { return m_participants; }
     int participantCount() const { return m_participants.size(); }
     QVariantList availableSessions() const { return m_availableSessions; }
+    int pingMs() const { return m_pingMs; }
 
     Q_INVOKABLE void connectToServer(const QString &url);
 
@@ -99,6 +102,7 @@ signals:
     void participantLeft(const QString &playerId);
     void errorOccurred(const QString &error, ChatClient::ErrorSession errorType = ChatClient::OTHER);
     void availableSessionsChanged();
+    void pingMsChanged();
     void commandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void sessionCreated(const QString &sessionId, const QString &sessionName);
     /** Émis quand le serveur indique qu'une session a été créée par un autre client. */
@@ -123,6 +127,7 @@ private slots:
     void onDisconnected();
     void onTextMessageReceived(const QString &message);
     void onWorkerError(const QString &error);
+    void onPongReceived(quint64 elapsedMs);
 
 private:
     void handleInitSession(const QJsonObject &payload);
@@ -181,6 +186,7 @@ private:
     QThreadPool m_chatPool;
     
     bool m_connected = false;
+    int m_pingMs = -1;
     QString m_sessionId;
     QString m_playerId;
     QString m_nickname;

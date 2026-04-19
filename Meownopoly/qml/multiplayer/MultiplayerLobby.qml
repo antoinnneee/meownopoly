@@ -222,6 +222,7 @@ Rectangle {
     Component {
         id: sessionDetailsComponent
         SessionDetails {
+            chatClient: lobbyChatClient
             onBackRequested: {
                 multiplayerStackView.pop()
             }
@@ -292,8 +293,8 @@ Rectangle {
 
                 // StatusIndicator
                 StatusIndicator {
-                    isOnline: true
-                    ping: 38
+                    isOnline: lobbyChatClient.connected
+                    ping: lobbyChatClient.pingMs
                 }
             }
 
