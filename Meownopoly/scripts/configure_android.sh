@@ -126,8 +126,8 @@ set(Vulkan_INCLUDE_DIR       "" CACHE PATH "" FORCE)
 set(VulkanHeaders_INCLUDE_DIR "" CACHE PATH "" FORCE)
 set(WrapVulkanHeaders_INCLUDE_DIR "" CACHE PATH "" FORCE)
 # Libraries aussi — pointer directement sur le .so évite search path parasite
-set(EGL_LIBRARY     "$ENV{ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/28/libEGL.so" CACHE FILEPATH "" FORCE)
-set(GLESv2_LIBRARY  "$ENV{ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/28/libGLESv2.so" CACHE FILEPATH "" FORCE)
+set(EGL_LIBRARY     "$NDK_SYSROOT/usr/lib/aarch64-linux-android/28/libEGL.so" CACHE FILEPATH "" FORCE)
+set(GLESv2_LIBRARY  "$NDK_SYSROOT/usr/lib/aarch64-linux-android/28/libGLESv2.so" CACHE FILEPATH "" FORCE)
 CMAKE_EOF
 
 "$QT_CMAKE" \
