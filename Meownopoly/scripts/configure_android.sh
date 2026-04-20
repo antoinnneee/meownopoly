@@ -33,30 +33,61 @@ echo
 rm -rf "$BUILD_DIR"
 
 # --- Configure --------------------------------------------------------------
-# CMake 3.30 + NDK r27 sur Asahi : CMAKE_CXX_COMPILER_TARGET est bien défini
-# par le toolchain mais n'atteint pas la phase de détection d'ABI ni les
-# try_compile, d'où les échecs silencieux sous FEX. Contournement robuste :
-# utiliser les wrappers NDK aarch64-linux-android28-clang{,++} qui injectent
-# --target et --sysroot eux-mêmes, indépendamment de CMake.
-NDK_BIN="${ANDROID_NDK_ROOT:-$HOME/Android/Sdk/ndk/27.2.12479018}/toolchains/llvm/prebuilt/linux-x86_64/bin"
-CC_WRAPPER="$NDK_BIN/aarch64-linux-android28-clang"
-CXX_WRAPPER="$NDK_BIN/aarch64-linux-android28-clang++"
+# Sur Asahi aarch64 + FEX/muvm, CMake 3.30 ne peut pas compiler le fichier
+# CMakeCXXCompilerId.cpp (clang NDK sort 248 silencieusement via émulation).
+# Solution : pré-remplir *tous* les faits de détection dans le cache initial
+# pour que CMake skip les try_compile qui plantent.
+NDK_ROOT="${ANDROID_NDK_ROOT:-$HOME/Android/Sdk/ndk/27.2.12479018}"
+NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
+NDK_SYSROOT="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+ANDROID_TARGET="aarch64-linux-android28"
 
-[[ -x "$CC_WRAPPER" ]] || { echo "Wrapper C introuvable : $CC_WRAPPER"; exit 1; }
-[[ -x "$CXX_WRAPPER" ]] || { echo "Wrapper C++ introuvable : $CXX_WRAPPER"; exit 1; }
+# Cache initial pour skipper toute la détection
+INIT_CACHE="$BUILD_DIR/init_cache.cmake"
+mkdir -p "$BUILD_DIR"
+cat > "$INIT_CACHE" <<CMAKE_EOF
+# Bypass compiler detection (clang NDK plante via FEX sur ce test)
+set(CMAKE_C_COMPILER_WORKS   TRUE  CACHE BOOL "" FORCE)
+set(CMAKE_CXX_COMPILER_WORKS TRUE  CACHE BOOL "" FORCE)
+set(CMAKE_C_COMPILER_FORCED   TRUE CACHE BOOL "" FORCE)
+set(CMAKE_CXX_COMPILER_FORCED TRUE CACHE BOOL "" FORCE)
+
+set(CMAKE_C_COMPILER_ID   "Clang" CACHE STRING "" FORCE)
+set(CMAKE_CXX_COMPILER_ID "Clang" CACHE STRING "" FORCE)
+set(CMAKE_C_COMPILER_VERSION   "18.0.3" CACHE STRING "" FORCE)
+set(CMAKE_CXX_COMPILER_VERSION "18.0.3" CACHE STRING "" FORCE)
+set(CMAKE_C_COMPILER_ID_RUN   TRUE CACHE BOOL "" FORCE)
+set(CMAKE_CXX_COMPILER_ID_RUN TRUE CACHE BOOL "" FORCE)
+
+# ABI facts (aarch64 LP64)
+set(CMAKE_C_COMPILER_ABI   "ELF" CACHE STRING "" FORCE)
+set(CMAKE_CXX_COMPILER_ABI "ELF" CACHE STRING "" FORCE)
+set(CMAKE_C_SIZEOF_DATA_PTR   8 CACHE STRING "" FORCE)
+set(CMAKE_CXX_SIZEOF_DATA_PTR 8 CACHE STRING "" FORCE)
+
+# Threads : Android bionic a pthread dans libc, pas besoin de -lpthread
+set(CMAKE_HAVE_LIBC_PTHREAD     TRUE CACHE BOOL "" FORCE)
+set(CMAKE_USE_PTHREADS_INIT     TRUE CACHE BOOL "" FORCE)
+set(THREADS_FOUND               TRUE CACHE BOOL "" FORCE)
+set(Threads_FOUND               TRUE CACHE BOOL "" FORCE)
+set(CMAKE_THREAD_LIBS_INIT      "" CACHE STRING "" FORCE)
+set(THREADS_PREFER_PTHREAD_FLAG FALSE CACHE BOOL "" FORCE)
+CMAKE_EOF
 
 "$QT_CMAKE" \
     -S "$PROJECT_DIR" \
     -B "$BUILD_DIR" \
     -G Ninja \
+    -C "$INIT_CACHE" \
     -DCMAKE_BUILD_TYPE=Release \
     -DQT_HOST_PATH="$QT_HOST" \
     -DANDROID_ABI=arm64-v8a \
     -DANDROID_PLATFORM=android-28 \
-    -DCMAKE_C_COMPILER="$CC_WRAPPER" \
-    -DCMAKE_CXX_COMPILER="$CXX_WRAPPER" \
-    -DCMAKE_C_COMPILER_WORKS=1 \
-    -DCMAKE_CXX_COMPILER_WORKS=1
+    -DCMAKE_C_COMPILER_TARGET="$ANDROID_TARGET" \
+    -DCMAKE_CXX_COMPILER_TARGET="$ANDROID_TARGET" \
+    -DCMAKE_SYSROOT="$NDK_SYSROOT" \
+    -DCMAKE_C_FLAGS="--target=$ANDROID_TARGET --sysroot=$NDK_SYSROOT" \
+    -DCMAKE_CXX_FLAGS="--target=$ANDROID_TARGET --sysroot=$NDK_SYSROOT"
 
 echo
 echo "=== Configuration OK. Build dir : $BUILD_DIR ==="
