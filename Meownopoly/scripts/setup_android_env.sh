@@ -197,9 +197,75 @@ export QT_HOST_PATH="$QT_HOST"
 export QT_ANDROID_PATH="$QT_ANDROID"
 
 export PATH="\$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:\$ANDROID_SDK_ROOT/platform-tools:\$PATH"
+
+# Box64 : émulation x86_64 in-process pour faire tourner le clang NDK.
+# Le NDK r27 ne fournit pas de toolchain aarch64 natif sous dl.google.com ;
+# sdkmanager installe donc le clang x86_64 qu'on doit émuler.
+# Ces libs sont extraites depuis Debian amd64 pool par setup_android_env.sh.
+export BOX64_LD_LIBRARY_PATH="\$HOME/x86_64-libs/usr/lib/x86_64-linux-gnu"
 EOF
     echo "Fichier d'environnement : $envfile"
     echo "Ajoute à ton ~/.bashrc :  source ~/.meownopoly_android.env"
+}
+
+# --- 7. Box64 + libs x86_64 pour émuler le clang NDK -------------------------
+# Sur Asahi, binfmt_misc route x86_64 via FEX+muvm par défaut, qui n'est pas
+# utilisable pour un build (VM laggée, pas de visibilité des fichiers
+# récemment créés, plantage en parallèle). Box64 (émulation in-process,
+# même FS que le host) est la solution. Nécessite des libs x86_64 (libgcc_s,
+# libstdc++, etc.) que Fedora aarch64 ne livre pas → on les extrait depuis
+# le pool Debian amd64.
+install_box64() {
+    if ! command -v box64 >/dev/null 2>&1; then
+        case "$PKG_MGR" in
+            dnf) run "sudo dnf install -y box64-asahi box64-binfmts" ;;
+            *)   echo "Installe box64 manuellement pour ta distro." ; return 1 ;;
+        esac
+    else
+        echo "box64 déjà installé."
+    fi
+
+    # Désactive les dispatchers FEX qui ont priorité sur box64
+    if [[ -f /proc/sys/fs/binfmt_misc/binfmt-dispatcher-x86_64 ]]; then
+        run "sudo sh -c 'echo 0 > /proc/sys/fs/binfmt_misc/binfmt-dispatcher-x86_64'"
+    fi
+    if [[ -f /proc/sys/fs/binfmt_misc/FEX-x86_64 ]]; then
+        run "sudo sh -c 'echo 0 > /proc/sys/fs/binfmt_misc/FEX-x86_64'"
+    fi
+}
+
+install_x86_64_libs() {
+    local dest="$HOME/x86_64-libs"
+    local target="$dest/usr/lib/x86_64-linux-gnu"
+
+    if [[ -f "$target/libgcc_s.so.1" && -f "$target/libstdc++.so.6" ]]; then
+        echo "libs x86_64 déjà présentes : $target"
+        return
+    fi
+
+    echo ">>> Téléchargement libs x86_64 depuis Debian pool"
+    [[ $DRY_RUN -eq 1 ]] && return
+
+    mkdir -p "$dest"
+    cd "$dest"
+
+    local debs=(
+        "http://ftp.debian.org/debian/pool/main/g/gcc-14/libgcc-s1_14.2.0-19_amd64.deb"
+        "http://ftp.debian.org/debian/pool/main/g/gcc-14/libstdc++6_14.2.0-19_amd64.deb"
+    )
+
+    for url in "${debs[@]}"; do
+        local deb="$(basename "$url")"
+        echo "  -> $deb"
+        curl -sL -o "$deb" "$url"
+        ar x "$deb"
+        tar xf data.tar.xz
+        rm -f control.tar.* data.tar.* debian-binary "$deb"
+    done
+
+    echo "Libs x86_64 installées dans $target"
+    ls "$target" | head
+    cd - >/dev/null
 }
 
 # --- Main --------------------------------------------------------------------
@@ -215,6 +281,8 @@ install_host_tools
 install_cmdline_tools
 install_sdk_packages
 verify_ndk
+install_box64
+install_x86_64_libs
 write_envfile
 
 echo
