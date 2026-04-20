@@ -11,7 +11,8 @@ Row {
     spacing: 8
     
     property bool isOnline: true
-    property int ping: 45
+    // ping en ms ; -1 = pas encore mesuré
+    property int ping: -1
     
     // Emoji de connexion avec animation pulse
     Text {
@@ -31,7 +32,9 @@ Row {
     
     // Texte de statut
     Text {
-        text: root.isOnline ? "En ligne (" + root.ping + "ms)" : "Hors ligne"
+        text: root.isOnline
+              ? (root.ping >= 0 ? "En ligne (" + root.ping + "ms)" : "En ligne (…)")
+              : "Hors ligne"
         color: root.isOnline ? "#4caf50" : "#f44336"
         font.pixelSize: 14
         anchors.verticalCenter: parent.verticalCenter

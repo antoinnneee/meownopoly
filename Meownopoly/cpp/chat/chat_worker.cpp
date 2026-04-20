@@ -9,6 +9,19 @@ ChatWorker::ChatWorker(QObject *parent)
     qDebug() << "[ChatWorker] Created in thread:" << QThread::currentThread();
 }
 
+void ChatWorker::sendPingFrame()
+{
+    if (m_webSocket && m_webSocket->state() == QAbstractSocket::ConnectedState) {
+        m_webSocket->ping();
+    }
+}
+
+void ChatWorker::onPong(quint64 elapsedTime, const QByteArray &payload)
+{
+    Q_UNUSED(payload);
+    emit pongReceived(elapsedTime);
+}
+
 ChatWorker::~ChatWorker()
 {
     if (m_webSocket) {
@@ -26,12 +39,19 @@ void ChatWorker::connectToServer(const QString &url)
     
     if (!m_webSocket) {
         m_webSocket = new QWebSocket();
-        
+
         connect(m_webSocket, &QWebSocket::connected, this, &ChatWorker::onConnected);
         connect(m_webSocket, &QWebSocket::disconnected, this, &ChatWorker::onDisconnected);
         connect(m_webSocket, &QWebSocket::textMessageReceived, this, &ChatWorker::onTextMessageReceived);
         connect(m_webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
                 this, &ChatWorker::onError);
+        connect(m_webSocket, &QWebSocket::pong, this, &ChatWorker::onPong);
+    }
+
+    if (!m_pingTimer) {
+        m_pingTimer = new QTimer(this);
+        m_pingTimer->setInterval(2000);
+        connect(m_pingTimer, &QTimer::timeout, this, &ChatWorker::sendPingFrame);
     }
     
     if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
@@ -69,12 +89,18 @@ void ChatWorker::disconnectFromServer()
 void ChatWorker::onConnected()
 {
     qDebug() << "[ChatWorker] Connected to server in thread:" << QThread::currentThread();
+    if (m_pingTimer) {
+        sendPingFrame();
+        m_pingTimer->start();
+    }
     emit connected();
 }
 
 void ChatWorker::onDisconnected()
 {
     qDebug() << "[ChatWorker] Disconnected from server";
+    if (m_pingTimer)
+        m_pingTimer->stop();
     emit disconnected();
 }
 

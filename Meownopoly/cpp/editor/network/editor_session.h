@@ -75,6 +75,12 @@ public:
     /// Retourne false si la session n'était pas active.
     Q_INVOKABLE bool promoteToHost();
 
+    /// (hôte uniquement) annonce aux clients que l'hôte quitte proprement.
+    /// À appeler AVANT `stop()` dans le flow de sortie volontaire. Les clients
+    /// reçoivent `HostLeaving` et déclenchent l'élection immédiatement (sans
+    /// attendre le timeout Catway ~10 s).
+    Q_INVOKABLE void announceHostLeaving();
+
     // ── Initialisation ───────────────────────────────────────────────────────
 
     /// Démarre la session en tant qu'hôte autoritaire.

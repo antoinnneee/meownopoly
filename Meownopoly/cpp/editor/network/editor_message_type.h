@@ -23,6 +23,9 @@ enum Value : quint8 {
     // transport chunké pour ops dont le JSON dépasse le plafond reliable (~28 KB).
     // Payload : { opId, chunkIndex, chunkCount, payloadB64, origType }.
     OpChunk           = 0x29,
+    // hôte → tous : l'hôte quitte proprement. Permet aux clients de déclencher
+    // l'élection d'un nouvel hôte immédiatement (sans attendre le timeout ~10 s).
+    HostLeaving       = 0x2A,
 };
 Q_ENUM_NS(Value)
 

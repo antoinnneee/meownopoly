@@ -29,6 +29,8 @@ class ChatClient : public QObject
     Q_PROPERTY(QVariantList participants READ participants NOTIFY participantsChanged)
     Q_PROPERTY(int participantCount READ participantCount NOTIFY participantsChanged)
     Q_PROPERTY(QVariantList availableSessions READ availableSessions NOTIFY availableSessionsChanged)
+    /// RTT WebSocket vers le serveur de chat en ms. -1 si non mesuré / déconnecté.
+    Q_PROPERTY(int pingMs READ pingMs NOTIFY pingMsChanged)
 
 public:
 
@@ -49,6 +51,7 @@ public:
     QVariantList participants() const { return m_participants; }
     int participantCount() const { return m_participants.size(); }
     QVariantList availableSessions() const { return m_availableSessions; }
+    int pingMs() const { return m_pingMs; }
 
     Q_INVOKABLE void connectToServer(const QString &url);
 
@@ -58,6 +61,12 @@ public:
     /// session_id, même participants). Utilisé par le client élu pour
     /// réécrire le prefix `[EDIT:<hostId>]` sans casser le canal chat.
     Q_INVOKABLE void renameSession(const QString &newName);
+
+    /// Transfert d'ownership côté serveur. Appelé par le client élu juste
+    /// après `renameSession`, pour que `host_player_id` en DB reflète le
+    /// nouvel hôte P2P. Sans ça, l'ancien hôte garderait les droits admin
+    /// (CLEAR_HISTORY, DELETE_SESSION) à son retour éventuel.
+    Q_INVOKABLE void transferHost(const QString &newHostId);
 
     Q_INVOKABLE void connectToSessionDirect(const QString &sessionId, const QString &password);
     Q_INVOKABLE void connectToSession(const QString &playerId, const QString &password, const QString &nickname = QString());
@@ -99,6 +108,7 @@ signals:
     void participantLeft(const QString &playerId);
     void errorOccurred(const QString &error, ChatClient::ErrorSession errorType = ChatClient::OTHER);
     void availableSessionsChanged();
+    void pingMsChanged();
     void commandReceived(const QString &senderId, const QString &commandType, const QJsonObject &data);
     void sessionCreated(const QString &sessionId, const QString &sessionName);
     /** Émis quand le serveur indique qu'une session a été créée par un autre client. */
@@ -107,6 +117,11 @@ signals:
     /// — host migration : broadcast du chat server quand une session a
     /// été renommée. availableSessions est déjà rafraîchi au moment de l'émission.
     void sessionRenamed(const QString &sessionId, const QString &sessionName);
+
+    /// Broadcast serveur après TRANSFER_HOST : l'hôte serveur de la session
+    /// a changé (post-migration P2P ou transfert admin). availableSessions
+    /// est déjà rafraîchi avec le nouveau hostId.
+    void hostChanged(const QString &sessionId, const QString &hostPlayerId);
     /** Émis quand on a été expulsé de la session par le host. */
     void kicked(const QString &sessionId, const QString &reason);
     /** Émis quand un autre participant a été expulsé. */
@@ -123,6 +138,7 @@ private slots:
     void onDisconnected();
     void onTextMessageReceived(const QString &message);
     void onWorkerError(const QString &error);
+    void onPongReceived(quint64 elapsedMs);
 
 private:
     void handleInitSession(const QJsonObject &payload);
@@ -148,6 +164,7 @@ private:
     void handleServerReset(const QJsonObject &payload);
     void handleSessionCreatedBroadcast(const QJsonObject &payload);
     void handleSessionRenamed(const QJsonObject &payload);
+    void handleHostChanged(const QJsonObject &payload);
     void handleSessionDeleted(const QJsonObject &payload);
     /** Vide totalement l'état de session côté client (clés, participants, messages). */
     void resetSessionState();
@@ -181,6 +198,7 @@ private:
     QThreadPool m_chatPool;
     
     bool m_connected = false;
+    int m_pingMs = -1;
     QString m_sessionId;
     QString m_playerId;
     QString m_nickname;

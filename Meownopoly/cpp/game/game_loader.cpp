@@ -129,15 +129,16 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 
 void Game::initEmptyCollabMap()
 {
+    // Rejoin collab : une Map d'une session précédente peut persister (Game
+    // + MapFileManager sont des singletons, seul le QML Editor est recréé).
+    // Si on garde m_tiles, applyRemoteDelta(TileAdded) du FullSync no-ope sur
+    // les uuids existants → aucune tuile QML reconstruite → éditeur vide.
+    // On repart donc systématiquement d'une Map neuve. setCurrentMap gère le
+    // deleteLater de l'ancienne.
     Map *existing = MapFileManager::instance()->getCurrentMap();
     if (existing) {
-        // Déjà prêt. Si jamais MapInfo manque (cas legacy), on en injecte un
-        // par défaut pour éviter le crash saveOnEdit côté client collab.
-        if (!existing->getMapInfo()) {
-            qWarning() << "[Game] initEmptyCollabMap — map existante sans MapInfo, injection d'un MapInfo par défaut";
-            existing->setMapInfo(new MapInfo());
-        }
-        return;
+        qDebug() << "[Game] initEmptyCollabMap — reset map existante ("
+                 << existing->tiles().size() << "tuiles) pour nouvelle FullSync";
     }
 
     Map *map = new Map(this);

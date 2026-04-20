@@ -32,6 +32,7 @@ ChatClient::ChatClient(QObject *parent) : QObject(parent) {
     connect(m_worker, &ChatWorker::disconnected, this, &ChatClient::onDisconnected);
     connect(m_worker, &ChatWorker::textMessageReceived, this, &ChatClient::onTextMessageReceived);
     connect(m_worker, &ChatWorker::errorOccurred, this, &ChatClient::onWorkerError);
+    connect(m_worker, &ChatWorker::pongReceived, this, &ChatClient::onPongReceived);
 
     // Connect client signals to worker slots (cross-thread)
     connect(this, &ChatClient::destroyed, m_worker, &ChatWorker::deleteLater);
@@ -104,7 +105,11 @@ void ChatClient::createSession(QString nameSession, QString pwdSession, QString 
     QJsonObject payload;
     payload["session_id"]    = m_sessionId;
     payload["session_name"]  = nameSession;
-    payload["password_hash"] = QString(m_passwordHash.toBase64());
+    // `derivePasswordProof` retourne déjà la forme hex (64 chars) via `.toHex()`.
+    // Avant on ré-encodait en base64 au-dessus du hex → 88 chars "b64 of hex",
+    // un double encodage inutile que le serveur refuse désormais (validation
+    // stricte 64-hex | 44-b64). On envoie la forme hex canonique.
+    payload["password_hash"] = QString::fromLatin1(m_passwordHash);
     payload["max_players"]   = 4;
     payload["is_public"]     = true;
     msg["payload"] = payload;
@@ -134,6 +139,32 @@ void ChatClient::renameSession(const QString &newName)
     sendWebSocketMessage(msg);
     Logger::instance()->info(
         QString("Requesting rename of session %1 → \"%2\"").arg(m_sessionId, newName),
+        "ChatClient");
+}
+
+void ChatClient::transferHost(const QString &newHostId)
+{
+    if (!m_connected) {
+        emit errorOccurred("Non connecté au serveur");
+        return;
+    }
+    if (m_sessionId.isEmpty()) {
+        Logger::instance()->warn("transferHost: no active session", "ChatClient");
+        return;
+    }
+    if (newHostId.isEmpty()) {
+        Logger::instance()->warn("transferHost: empty newHostId", "ChatClient");
+        return;
+    }
+    QJsonObject msg;
+    msg["type"] = "TRANSFER_HOST";
+    QJsonObject payload;
+    payload["session_id"]  = m_sessionId;
+    payload["new_host_id"] = newHostId;
+    msg["payload"] = payload;
+    sendWebSocketMessage(msg);
+    Logger::instance()->info(
+        QString("Requesting host transfer of session %1 → %2").arg(m_sessionId, newHostId),
         "ChatClient");
 }
 
@@ -192,7 +223,8 @@ void ChatClient::joinSession(){
         payload["session_id"]     = m_sessionId;
         payload["player_id"]      = m_playerId;
         payload["player_nickname"] = m_nickname;
-        payload["password_hash"]  = QString(m_passwordHash.toBase64());
+        // Voir CREATE_SESSION : on envoie la forme hex pure (pas de b64 au-dessus).
+        payload["password_hash"]  = QString::fromLatin1(m_passwordHash);
         join["payload"] = payload;
 
         sendWebSocketMessage(join);
@@ -217,10 +249,22 @@ void ChatClient::onDisconnected() {
     m_retryPending = false;
     emit connectedChanged();
     emit participantsChanged();
+    if (m_pingMs != -1) {
+        m_pingMs = -1;
+        emit pingMsChanged();
+    }
 }
 
 void ChatClient::onWorkerError(const QString &error) {
     emit errorOccurred(error, ChatClient::OTHER);
+}
+
+void ChatClient::onPongReceived(quint64 elapsedMs) {
+    const int ms = static_cast<int>(elapsedMs);
+    if (m_pingMs != ms) {
+        m_pingMs = ms;
+        emit pingMsChanged();
+    }
 }
 
 void ChatClient::sendWebSocketMessage(const QJsonObject &message) {

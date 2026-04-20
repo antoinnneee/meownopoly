@@ -47,6 +47,29 @@ ApplicationWindow {
     visibility: (Qt.platform.os === "android") ? Window.FullScreen
         : ((stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true) ? Window.FullScreen : Window.Windowed)
 
+    // Fermeture de la fenêtre (X, Alt+F4…) : si on est hôte d'une session
+    // collab active, annoncer le départ pour que les clients élisent un
+    // successeur immédiatement. broadcastReliable est queued sur le worker
+    // Catway ; on retarde la fermeture de 300 ms le temps que le paquet UDP
+    // parte effectivement.
+    onClosing: function(close) {
+        if (closeDelayTimer.running) return
+        if (EditorSession.active && EditorSession.isHost) {
+            console.log("[main] window closing — announce HostLeaving + delay close")
+            close.accepted = false
+            EditorSession.announceHostLeaving()
+            EditorSession.stop()
+            closeDelayTimer.start()
+        }
+    }
+
+    Timer {
+        id: closeDelayTimer
+        interval: 300
+        repeat: false
+        onTriggered: Qt.quit()
+    }
+
     StackView {
         id: stackView
         anchors.fill: parent
@@ -129,6 +152,13 @@ ApplicationWindow {
                 // si on est en session collaborative, couper proprement
                 // avant de quitter l'éditeur (stop libère Catway et clear undo).
                 if (EditorSession.active) {
+                    // l'hôte annonce son départ AVANT de stopper Catway, pour
+                    // que les clients déclenchent l'élection immédiatement
+                    // (sans attendre le timeout ~10 s).
+                    if (EditorSession.isHost) {
+                        console.log("[main] host quits — announce HostLeaving")
+                        EditorSession.announceHostLeaving()
+                    }
                     console.log("[main] EditorSession.stop (retour menu)")
                     EditorOpBus.clearUndo()
                     EditorSession.stop()
@@ -275,6 +305,18 @@ ApplicationWindow {
                     return
                 }
                 console.log("[main] Client → négociation P2P avec host =", hostId)
+                // Purge un éventuel PlayerNetwork résiduel pour ce hostId :
+                // cas typique où l'ancien hôte rejoint après migration (il garde
+                // en cache l'IP/port/p2pConnected du pair devenu hôte). Sans
+                // purge, p2pStateMachine voit p2pConnected=true instantanément,
+                // skip le hole-punch, et envoie Hello vers un port mort → pas
+                // de FullSync. On laisse REPLY_CONNECTION_INFO recréer le pair
+                // avec les bonnes coordonnées.
+                const stale = Catway.playerById(hostId)
+                if (stale) {
+                    console.log("[main] purge PlayerNetwork résiduel pour", hostId)
+                    Catway.removePlayer(stale)
+                }
                 p2pStateMachine.targetHostId = hostId
                 p2pStateMachine.state = "STUN"
                 p2pStateMachine.attempts = 0
@@ -324,6 +366,12 @@ ApplicationWindow {
             const newName = "[EDIT:" + pid + "] " + (stripped || "Session")
             console.log("[main] promotion — renameSession:", oldName, "→", newName)
             Catway.chatClient.renameSession(newName)
+            // Transfert d'ownership côté serveur : sans ça, l'ancien hôte
+            // (premier joined_at) garderait isHost=true, et son retour
+            // éventuel dans la session lui redonnerait les droits admin
+            // + confusion UI ("badge hôte" alors qu'il est client P2P).
+            console.log("[main] promotion — transferHost → " + pid)
+            Catway.chatClient.transferHost(pid)
         }
     }
 

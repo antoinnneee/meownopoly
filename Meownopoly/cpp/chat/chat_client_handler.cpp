@@ -120,6 +120,8 @@ void ChatClient::onTextMessageReceived(const QString &message) {
         handleSessionCreatedBroadcast(payload);
     } else if (type == "SESSION_RENAMED") {
         handleSessionRenamed(payload);
+    } else if (type == "HOST_CHANGED") {
+        handleHostChanged(payload);
     } else if (type == "SESSION_DELETED") {
         handleSessionDeleted(payload);
     } else {
@@ -225,6 +227,40 @@ void ChatClient::handleSessionRenamed(const QJsonObject &payload) {
     if (changed) emit availableSessionsChanged();
 
     emit sessionRenamed(sessionId, sessionName);
+}
+
+void ChatClient::handleHostChanged(const QJsonObject &payload) {
+    const QString sessionId = payload["session_id"].toString();
+    const QString hostId    = payload["host_player_id"].toString();
+    Logger::instance()->debug(
+        QString("Session %1 host changed to %2").arg(sessionId, hostId),
+        "ChatClient");
+
+    // Mise à jour in-place du hostId dans availableSessions. Le nickname
+    // sera rafraîchi au prochain LIST_SESSIONS (round-trip acceptable ici,
+    // mais on peut essayer de trouver le nickname dans les participants si
+    // c'est notre session courante).
+    bool changed = false;
+    for (int i = 0; i < m_availableSessions.size(); ++i) {
+        QVariantMap m = m_availableSessions[i].toMap();
+        if (m.value("sessionId").toString() == sessionId) {
+            m.insert("hostId", hostId);
+            // Tenter de deviner le nickname depuis les participants locaux.
+            if (sessionId == m_sessionId) {
+                int idx = indexOfParticipant(hostId);
+                if (idx >= 0) {
+                    m.insert("hostNickname",
+                             m_participants[idx].toMap().value("nickname").toString());
+                }
+            }
+            m_availableSessions[i] = m;
+            changed = true;
+            break;
+        }
+    }
+    if (changed) emit availableSessionsChanged();
+
+    emit hostChanged(sessionId, hostId);
 }
 
 void ChatClient::handleSessionCreatedBroadcast(const QJsonObject &payload) {
@@ -378,6 +414,7 @@ void ChatClient::handleSessionsList(const QJsonObject &payload) {
         sessionMap["sessionId"] = session["session_id"].toString();
         sessionMap["players"] = session["player_count"].toInt();
         sessionMap["maxPlayers"] = session["max_players"].toInt();
+        sessionMap["hostId"] = session["host_id"].toString();
         sessionMap["hostNickname"] = session["host_nickname"].toString();
         sessionMap["onlineCount"] = session["online_count"].toInt();
         sessionMap["status"] = session["status"].toString();

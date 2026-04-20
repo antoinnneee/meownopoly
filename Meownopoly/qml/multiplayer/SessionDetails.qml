@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Meownopoly.Chat 1.0
 import "../ui_item"
 import "./components"
 
@@ -18,6 +19,8 @@ Rectangle {
     required property string sessionId
     required property int players
     required property int maxPlayers
+    // ChatClient mutualisé (injecté par le lobby) pour suivre l'état de connexion / ping.
+    property ChatClient chatClient: null
     
     signal backRequested()
     signal joinRequested()
@@ -94,8 +97,8 @@ Rectangle {
             StatusIndicator {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                isOnline: true
-                ping: 42
+                isOnline: root.chatClient ? root.chatClient.connected : false
+                ping: root.chatClient ? root.chatClient.pingMs : -1
             }
         }
         
