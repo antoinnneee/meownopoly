@@ -113,6 +113,21 @@ set(HAVE_GLESv2              TRUE CACHE BOOL "" FORCE)
 set(HAVE_GLESv3              TRUE CACHE BOOL "" FORCE)
 set(HAVE_OPENGL_ES_2         TRUE CACHE BOOL "" FORCE)
 set(HAVE_OPENGL_ES_3         TRUE CACHE BOOL "" FORCE)
+
+# Ne PAS ajouter sysroot/usr/include comme -isystem : les headers NDK sont
+# déjà résolus par clang via --target + --sysroot, et si on les ajoute
+# explicitement ils court-circuitent libc++ (cstdint cherche libc++/stdint.h
+# mais trouve le C stdint.h d'abord).
+# EGL.h et GLES[23]/gl*.h sont dans <sysroot>/usr/include/EGL/ et /GLES2,
+# mais clang les résout sans besoin d'-isystem explicite.
+set(EGL_INCLUDE_DIR          "" CACHE PATH "" FORCE)
+set(GLESv2_INCLUDE_DIR       "" CACHE PATH "" FORCE)
+set(Vulkan_INCLUDE_DIR       "" CACHE PATH "" FORCE)
+set(VulkanHeaders_INCLUDE_DIR "" CACHE PATH "" FORCE)
+set(WrapVulkanHeaders_INCLUDE_DIR "" CACHE PATH "" FORCE)
+# Libraries aussi — pointer directement sur le .so évite search path parasite
+set(EGL_LIBRARY     "$ENV{ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/28/libEGL.so" CACHE FILEPATH "" FORCE)
+set(GLESv2_LIBRARY  "$ENV{ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/28/libGLESv2.so" CACHE FILEPATH "" FORCE)
 CMAKE_EOF
 
 "$QT_CMAKE" \
