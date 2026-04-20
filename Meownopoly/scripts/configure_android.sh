@@ -33,12 +33,17 @@ echo
 rm -rf "$BUILD_DIR"
 
 # --- Configure --------------------------------------------------------------
-# On force --target et --sysroot explicitement : le NDK r27 + CMake 3.30
-# sur Asahi ne propage pas ces flags aux try_compile, d'où l'échec silencieux
-# sous FEX. En les passant via CMAKE_{C,CXX}_COMPILER_TARGET + CMAKE_SYSROOT,
-# tous les tests (compiler, Threads, etc.) reçoivent les bons flags.
-ANDROID_SYSROOT="${ANDROID_NDK_ROOT:-$HOME/Android/Sdk/ndk/27.2.12479018}/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
-ANDROID_TARGET="aarch64-linux-android28"
+# CMake 3.30 + NDK r27 sur Asahi : CMAKE_CXX_COMPILER_TARGET est bien défini
+# par le toolchain mais n'atteint pas la phase de détection d'ABI ni les
+# try_compile, d'où les échecs silencieux sous FEX. Contournement robuste :
+# utiliser les wrappers NDK aarch64-linux-android28-clang{,++} qui injectent
+# --target et --sysroot eux-mêmes, indépendamment de CMake.
+NDK_BIN="${ANDROID_NDK_ROOT:-$HOME/Android/Sdk/ndk/27.2.12479018}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+CC_WRAPPER="$NDK_BIN/aarch64-linux-android28-clang"
+CXX_WRAPPER="$NDK_BIN/aarch64-linux-android28-clang++"
+
+[[ -x "$CC_WRAPPER" ]] || { echo "Wrapper C introuvable : $CC_WRAPPER"; exit 1; }
+[[ -x "$CXX_WRAPPER" ]] || { echo "Wrapper C++ introuvable : $CXX_WRAPPER"; exit 1; }
 
 "$QT_CMAKE" \
     -S "$PROJECT_DIR" \
@@ -48,13 +53,10 @@ ANDROID_TARGET="aarch64-linux-android28"
     -DQT_HOST_PATH="$QT_HOST" \
     -DANDROID_ABI=arm64-v8a \
     -DANDROID_PLATFORM=android-28 \
+    -DCMAKE_C_COMPILER="$CC_WRAPPER" \
+    -DCMAKE_CXX_COMPILER="$CXX_WRAPPER" \
     -DCMAKE_C_COMPILER_WORKS=1 \
-    -DCMAKE_CXX_COMPILER_WORKS=1 \
-    -DCMAKE_C_COMPILER_TARGET="$ANDROID_TARGET" \
-    -DCMAKE_CXX_COMPILER_TARGET="$ANDROID_TARGET" \
-    -DCMAKE_SYSROOT="$ANDROID_SYSROOT" \
-    -DCMAKE_C_FLAGS_INIT="--target=$ANDROID_TARGET --sysroot=$ANDROID_SYSROOT" \
-    -DCMAKE_CXX_FLAGS_INIT="--target=$ANDROID_TARGET --sysroot=$ANDROID_SYSROOT"
+    -DCMAKE_CXX_COMPILER_WORKS=1
 
 echo
 echo "=== Configuration OK. Build dir : $BUILD_DIR ==="
