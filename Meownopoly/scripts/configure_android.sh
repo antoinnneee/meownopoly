@@ -78,6 +78,18 @@ set(THREADS_FOUND               TRUE CACHE BOOL "" FORCE)
 set(Threads_FOUND               TRUE CACHE BOOL "" FORCE)
 set(CMAKE_THREAD_LIBS_INIT      "" CACHE STRING "" FORCE)
 set(THREADS_PREFER_PTHREAD_FLAG FALSE CACHE BOOL "" FORCE)
+
+# Atomic (stdatomic dans libc sur Android)
+set(HAVE_STDATOMIC           TRUE CACHE BOOL "" FORCE)
+set(HAVE_STDATOMIC_WITH_LIB  TRUE CACHE BOOL "" FORCE)
+
+# EGL / GLES : présents dans le sysroot NDK (libEGL.so, libGLESv2.so)
+# check_cxx_source_compiles plante sur link stage via FEX → on bypass
+set(HAVE_EGL                 TRUE CACHE BOOL "" FORCE)
+set(HAVE_GLESv2              TRUE CACHE BOOL "" FORCE)
+set(HAVE_GLESv3              TRUE CACHE BOOL "" FORCE)
+set(HAVE_OPENGL_ES_2         TRUE CACHE BOOL "" FORCE)
+set(HAVE_OPENGL_ES_3         TRUE CACHE BOOL "" FORCE)
 CMAKE_EOF
 
 "$QT_CMAKE" \
