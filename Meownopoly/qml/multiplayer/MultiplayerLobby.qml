@@ -217,9 +217,18 @@ Rectangle {
                 if (parsed.isEdit
                         && lobbyChatClient.sessionId === sessionData.sessionId
                         && lobbyChatClient.connected) {
-                    console.log("🛠️ Rejoin même session éditeur (host =", parsed.hostId + ") → launchExistingSession direct")
                     Catway.setChatClient(lobbyChatClient)
-                    root.launchExistingSession(true, parsed.hostId)
+                    if (parsed.hostId === AccountManager.uniqueId) {
+                        if (EditorSession.active && EditorSession.isHost) {
+                            console.log("🛠️ Rejoin propre session éditeur — EditorSession déjà hôte, skip launchNewSession")
+                            return
+                        }
+                        console.log("🛠️ Rejoin propre session éditeur (host =", parsed.hostId + ") → launchNewSession (resume host)")
+                        root.launchNewSession(true, parsed.hostId)
+                    } else {
+                        console.log("🛠️ Rejoin même session éditeur (host =", parsed.hostId + ") → launchExistingSession direct")
+                        root.launchExistingSession(true, parsed.hostId)
+                    }
                     return
                 }
                 root._pendingJoinEdit     = parsed.isEdit
