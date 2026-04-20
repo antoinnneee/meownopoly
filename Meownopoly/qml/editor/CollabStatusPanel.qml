@@ -9,9 +9,9 @@ Item {
     id: root
 
     anchors.top: parent.top
-    anchors.right: parent.right
+    anchors.left: parent.left
     anchors.topMargin: 12
-    anchors.rightMargin: 12
+    anchors.leftMargin: 12
 
     z: 10000
     width: Math.max(collabBadge.width, netStatsPanel.width)
@@ -22,7 +22,7 @@ Item {
     Rectangle {
         id: collabBadge
         anchors.top: parent.top
-        anchors.right: parent.right
+        anchors.left: parent.left
         width: badgeRow.implicitWidth + 20
         height: badgeRow.implicitHeight + 10
         radius: 6
@@ -66,7 +66,7 @@ Item {
         property bool open: false
         visible: EditorSession.active && open
         anchors.top: collabBadge.bottom
-        anchors.right: parent.right
+        anchors.left: parent.left
         anchors.topMargin: 6
         width: Math.max(320, statsCol.implicitWidth + 20)
         height: statsCol.implicitHeight + 16
