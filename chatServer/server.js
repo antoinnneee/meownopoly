@@ -23,7 +23,38 @@ const STUN_PORT = parseInt(process.env.STUN_PORT) || 3478;
 const DEBUG_MODE = process.env.DEBUG_MODE === 'true';
 const ENABLE_DASHBOARD = process.env.ENABLE_DASHBOARD === 'true';
 const MAX_SESSIONS = parseInt(process.env.MAX_SESSIONS) || 500; // Limite de sessions actives
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || ''; // Si défini, requis pour les commandes admin (CLEAR_ALL_SESSIONS)
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || ''; // Si défini, requis pour les commandes admin (CLEAR_ALL_SESSIONS) et /api/stats
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+// Rate-limit par IP (token bucket). Défauts : 60 tokens, refill 10/s.
+const RATE_LIMIT_BUCKET = parseInt(process.env.RATE_LIMIT_BUCKET) || 60;
+const RATE_LIMIT_REFILL = parseFloat(process.env.RATE_LIMIT_REFILL) || 10;
+const HEARTBEAT_INTERVAL_MS = parseInt(process.env.HEARTBEAT_INTERVAL_MS) || 30000;
+
+// Limites de taille / format pour l'input utilisateur.
+const MAX_ID_LEN = 64;
+const MAX_NAME_LEN = 128;
+const MAX_NICKNAME_LEN = 64;
+const MAX_MAX_PLAYERS = 16;
+const ID_REGEX = /^[A-Za-z0-9_.:\-]{1,64}$/; // UUIDs, timestamps, ids composites OK
+// SHA-256 = 32 octets. Le client C++ envoie le hash en base64 (44 chars, 1 `=`)
+// via `ChatCrypto::derivePasswordProof().toBase64()`. On accepte aussi la
+// forme hex canonique (64 chars) pour la compat dashboard / futurs clients.
+const HASH_HEX_REGEX = /^[0-9a-fA-F]{64}$/;
+const HASH_B64_REGEX = /^[A-Za-z0-9+/]{43}=$/;
+
+function isNonEmptyString(v, maxLen) {
+    return typeof v === 'string' && v.length > 0 && v.length <= maxLen;
+}
+function isValidId(v) {
+    return typeof v === 'string' && ID_REGEX.test(v);
+}
+function isValidHash(v) {
+    if (typeof v !== 'string') return false;
+    return HASH_HEX_REGEX.test(v) || HASH_B64_REGEX.test(v);
+}
+function isValidMaxPlayers(v) {
+    return Number.isInteger(v) && v >= 1 && v <= MAX_MAX_PLAYERS;
+}
 
 function debug(...args) {
     if (DEBUG_MODE) {
@@ -37,6 +68,19 @@ debug('Server starting in DEBUG mode...');
 const server = http.createServer((req, res) => {
     // API pour les statistiques du serveur
     if (req.url === '/api/stats' && ENABLE_DASHBOARD) {
+        // Si ADMIN_TOKEN est configuré, on exige `Authorization: Bearer <token>`.
+        // Sinon on log un warning au boot (cf. `startupChecks`) et on sert
+        // en ouvert pour préserver le dev local. /api/stats expose les
+        // session_id, participants, usage mémoire → info disclosure si public.
+        if (ADMIN_TOKEN) {
+            const auth = req.headers['authorization'] || '';
+            const expected = `Bearer ${ADMIN_TOKEN}`;
+            if (auth !== expected) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'unauthorized' }));
+                return;
+            }
+        }
         res.writeHead(200, {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
@@ -117,7 +161,22 @@ const server = http.createServer((req, res) => {
     }
 });
 
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({
+    server,
+    // Drop les frames oversized au parser avant allocation (protège contre
+    // un client qui envoie 100 MB : le default de ws est 100 MiB).
+    maxPayload: MAX_PAYLOAD_SIZE,
+    // Origin check opt-in via ALLOWED_ORIGINS="https://a,https://b". Si vide,
+    // on laisse tout passer (compat dev + clients C++ qui n'envoient pas
+    // d'Origin). En prod, configurer pour mitiger les détournements CSWSH.
+    verifyClient: ALLOWED_ORIGINS.length > 0
+        ? (info) => {
+            const origin = info.origin || info.req.headers['origin'] || '';
+            if (!origin) return true; // clients natifs (C++) n'envoient pas Origin
+            return ALLOWED_ORIGINS.includes(origin);
+        }
+        : undefined
+});
 
 // Room management: Map<SessionID, Set<Socket>>
 const rooms = new Map();
@@ -125,33 +184,111 @@ const rooms = new Map();
 // Sessions bloquées en attente d'une rotation de clé (nouveau participant)
 const keyRotationRequired = new Set();
 
-wss.on('connection', (ws) => {
-    debug('New client connected');
+// Rate-limit par IP (token bucket). Map<ip, { tokens, last }>.
+// La consommation se fait à la réception de chaque frame WebSocket.
+const rateBuckets = new Map();
+
+function getClientIp(req) {
+    const xff = req.headers['x-forwarded-for'];
+    if (xff) return String(xff).split(',')[0].trim();
+    return (req.socket && req.socket.remoteAddress) || 'unknown';
+}
+
+function rateLimit(ip) {
+    const now = Date.now();
+    let bucket = rateBuckets.get(ip);
+    if (!bucket) {
+        bucket = { tokens: RATE_LIMIT_BUCKET, last: now };
+        rateBuckets.set(ip, bucket);
+    } else {
+        const elapsed = (now - bucket.last) / 1000;
+        bucket.tokens = Math.min(RATE_LIMIT_BUCKET, bucket.tokens + elapsed * RATE_LIMIT_REFILL);
+        bucket.last = now;
+    }
+    if (bucket.tokens < 1) return false;
+    bucket.tokens -= 1;
+    return true;
+}
+
+// GC périodique des buckets inactifs pour éviter la fuite mémoire si des IPs
+// se connectent ponctuellement puis disparaissent.
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, bucket] of rateBuckets) {
+        if (now - bucket.last > 5 * 60 * 1000 && bucket.tokens >= RATE_LIMIT_BUCKET) {
+            rateBuckets.delete(ip);
+        }
+    }
+}, 60 * 1000).unref();
+
+wss.on('connection', (ws, req) => {
+    ws.clientIp = getClientIp(req);
+    ws.isAlive = true;
+    debug(`New client connected from ${ws.clientIp}`);
+
+    // Capture toute erreur socket pour éviter un uncaughtException (crash process)
+    // sur un ws.send vers une socket fermée entre deux ticks.
+    ws.on('error', (err) => {
+        debug(`WS error from ${ws.clientIp}: ${err.message}`);
+    });
+
+    ws.on('pong', () => { ws.isAlive = true; });
 
     ws.on('message', (data) => {
-        try {
-            debug(`Received raw data: ${data.length} bytes`);
-            if (data.length > MAX_PAYLOAD_SIZE) {
-                return sendError(ws, 'PAYLOAD_TOO_LARGE', `Message exceeds ${MAX_PAYLOAD_SIZE / (1024 * 1024)}MB limit`);
-            }
+        // Rate-limit : drop + error si le bucket est vide. Pas de disconnect
+        // automatique — on laisse le client ralentir.
+        if (!rateLimit(ws.clientIp)) {
+            return sendError(ws, 'RATE_LIMITED', 'Too many requests, slow down');
+        }
 
-            const message = JSON.parse(data);
+        debug(`Received raw data from ${ws.clientIp}: ${data.length} bytes`);
+        // `maxPayload` a déjà rejeté les frames trop grosses, mais on garde
+        // le check pour les clients qui ne respectent pas le close code 1009.
+        if (data.length > MAX_PAYLOAD_SIZE) {
+            return sendError(ws, 'PAYLOAD_TOO_LARGE', `Message exceeds ${MAX_PAYLOAD_SIZE / (1024 * 1024)}MB limit`);
+        }
+
+        let message;
+        try {
+            message = JSON.parse(data);
+        } catch (err) {
+            return sendError(ws, 'INVALID_FORMAT', 'Message must be valid JSON');
+        }
+        if (!message || typeof message !== 'object' || typeof message.type !== 'string') {
+            return sendError(ws, 'INVALID_FORMAT', 'Message must have a string `type`');
+        }
+
+        try {
             debug(`Received command: ${message.type}`, message.payload);
             handleCommand(ws, message);
-
-            // Periodic check of DB size after a message is processed
             checkDbSize();
         } catch (err) {
-            console.error('Error processing message:', err);
-            sendError(ws, 'INVALID_FORMAT', 'Message must be valid JSON');
+            console.error(`[ERR] while handling ${message.type} for ${ws.player_id || 'unknown'}:`, err);
+            sendError(ws, 'INTERNAL_ERROR', 'Server error while processing command');
         }
     });
 
     ws.on('close', () => {
-        debug('Client disconnected');
+        debug(`Client disconnected: ${ws.clientIp}`);
         removeFromRooms(ws);
     });
 });
+
+// Heartbeat : détecte les sockets mortes (TCP bloqué, NAT timeout) que
+// `ws` ne notifie pas spontanément. Sans ça, un participant "online" peut
+// rester fantôme dans `rooms` pendant plusieurs heures.
+const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+        if (ws.isAlive === false) {
+            debug(`Heartbeat: terminating dead socket ${ws.clientIp || '?'}`);
+            return ws.terminate();
+        }
+        ws.isAlive = false;
+        try { ws.ping(); } catch (_) { /* ignore */ }
+    });
+}, HEARTBEAT_INTERVAL_MS);
+heartbeatInterval.unref();
+wss.on('close', () => clearInterval(heartbeatInterval));
 
 function handleCommand(ws, msg) {
     const { type, payload } = msg;
@@ -225,13 +362,30 @@ function handleCommand(ws, msg) {
 }
 
 function handleJoinSession(ws, payload) {
+    if (!payload || typeof payload !== 'object') {
+        return sendError(ws, 'MISSING_PARAMETER', 'payload is required');
+    }
     const { session_id, player_id, player_nickname, password_hash } = payload;
-    if (!session_id || !player_id) return;
+    if (!isValidId(session_id)) {
+        return sendError(ws, 'MISSING_PARAMETER', 'session_id invalid or missing');
+    }
+    if (!isValidId(player_id)) {
+        return sendError(ws, 'MISSING_PARAMETER', 'player_id invalid or missing');
+    }
+    if (player_nickname != null && !isNonEmptyString(player_nickname, MAX_NICKNAME_LEN)) {
+        return sendError(ws, 'MISSING_PARAMETER', `player_nickname must be a string ≤ ${MAX_NICKNAME_LEN} chars`);
+    }
+    if (password_hash != null && !isValidHash(password_hash)) {
+        return sendError(ws, 'MISSING_PARAMETER', 'password_hash must be a SHA-256 (64-char hex or 44-char base64)');
+    }
 
-    // VÉRIFICATION: Limite de sessions en mémoire
-    if (!rooms.has(session_id) && rooms.size >= MAX_SESSIONS) {
+    // VÉRIFICATION: Limite de sessions (même métrique que CREATE_SESSION → DB).
+    // `rooms.size` comptait les sessions en mémoire et divergeait : on pouvait
+    // rejoindre une 11e session DB alors que CREATE en refusait une nouvelle.
+    const allSessionsCount = db.getAllSessions ? db.getAllSessions().length : rooms.size;
+    if (!rooms.has(session_id) && allSessionsCount >= MAX_SESSIONS) {
         return sendError(ws, 'MAX_SESSIONS_REACHED',
-            `Server has reached maximum capacity (${MAX_SESSIONS} active sessions). Please try again later.`);
+            `Server has reached maximum capacity (${MAX_SESSIONS} sessions). Please try again later.`);
     }
 
     const session = db.getSession(session_id);
@@ -245,6 +399,21 @@ function handleJoinSession(ws, payload) {
     if (session.password_hash && session.password_hash !== password_hash) {
         debug(`Join denied for ${player_id} in session ${session_id}: Invalid password proof`);
         return sendError(ws, 'INVALID_PASSWORD', 'The password for this session is incorrect.');
+    }
+
+    // VÉRIFICATION: Aucune autre socket OPEN ne revendique déjà ce player_id
+    // dans la session. Mitige (sans authentifier) l'usurpation : un second
+    // client qui tenterait de se faire passer pour un membre actif est refusé.
+    // Un client qui rejoint après un disconnect propre passe car l'ancienne
+    // socket n'est plus dans `rooms`.
+    const existingRoom = rooms.get(session_id);
+    if (existingRoom) {
+        for (const client of existingRoom) {
+            if (client !== ws && client.player_id === player_id && client.readyState === WebSocket.OPEN) {
+                return sendError(ws, 'PLAYER_ID_IN_USE',
+                    'Another active connection already claims this player_id in this session');
+            }
+        }
     }
 
     ws.player_id = player_id;
@@ -315,14 +484,22 @@ function handleJoinSession(ws, payload) {
 }
 
 function handleCreateSession(ws, payload) {
+    if (!payload || typeof payload !== 'object') {
+        return sendError(ws, 'MISSING_PARAMETER', 'payload is required');
+    }
     const { session_id, session_name, password_hash, max_players, is_public } = payload;
 
-    if (!session_id) {
-        return sendError(ws, 'MISSING_PARAMETER', 'session_id is required');
+    if (!isValidId(session_id)) {
+        return sendError(ws, 'MISSING_PARAMETER', 'session_id invalid or missing');
     }
-
-    if (!password_hash) {
-        return sendError(ws, 'MISSING_PARAMETER', 'password_hash is required');
+    if (!isValidHash(password_hash)) {
+        return sendError(ws, 'MISSING_PARAMETER', 'password_hash must be a SHA-256 (64-char hex or 44-char base64)');
+    }
+    if (session_name != null && (typeof session_name !== 'string' || session_name.length > MAX_NAME_LEN)) {
+        return sendError(ws, 'MISSING_PARAMETER', `session_name must be a string ≤ ${MAX_NAME_LEN} chars`);
+    }
+    if (max_players != null && !isValidMaxPlayers(max_players)) {
+        return sendError(ws, 'MISSING_PARAMETER', `max_players must be an integer in [1, ${MAX_MAX_PLAYERS}]`);
     }
 
     // Vérifier si la session existe déjà
@@ -410,21 +587,28 @@ function handlePublishKey(ws, payload) {
 }
 
 function handleSendMessage(ws, payload) {
-    const { session_id, sender_nickname, payload: ciphertext, nonce, key_v, recipient_id } = payload;
-    if (!session_id || !ciphertext || !nonce) return;
+    const { session_id, payload: ciphertext, nonce, key_v, recipient_id } = payload;
+    if (!session_id || !ciphertext || !nonce) {
+        return sendError(ws, 'MISSING_PARAMETER', 'session_id, payload and nonce are required');
+    }
 
-    // SECURITY: ne JAMAIS faire confiance à payload.sender_id (spoofable).
-    // L'identité d'expéditeur est celle attachée à la socket par JOIN_SESSION.
+    // SECURITY: ne JAMAIS faire confiance à payload.sender_id ni
+    // payload.sender_nickname (tous deux spoofables). L'identité et le pseudo
+    // d'expéditeur sont ceux attachés à la socket par JOIN_SESSION.
     const sender_id = ws.player_id;
     if (!sender_id) {
         return sendError(ws, 'UNAUTHORIZED', 'You must join a session before sending messages');
+    }
+
+    if (recipient_id != null && !isValidId(recipient_id)) {
+        return sendError(ws, 'MISSING_PARAMETER', 'recipient_id must be a valid player id');
     }
 
     if (keyRotationRequired.has(session_id)) {
         return sendError(ws, 'KEY_ROTATION_REQUIRED', 'A new participant joined; a client must publish a new key before sending messages');
     }
 
-    const nickname = sender_nickname || (ws.player_nickname || '');
+    const nickname = ws.player_nickname || '';
     const room = rooms.get(session_id);
     if (!room) return;
 
@@ -751,41 +935,60 @@ function getDetailedSessionList() {
 
 function handleLeaveSession(ws, payload) {
     const { session_id, player_id } = payload;
-    if (!session_id || !player_id) return;
+    if (!session_id || !player_id) {
+        return sendError(ws, 'MISSING_PARAMETER', 'session_id and player_id are required');
+    }
 
-    // Verify identity (optional but good practice: ensure ws.player_id matches)
     if (ws.player_id !== player_id) {
         return sendError(ws, 'FORBIDDEN', 'Cannot leave session for another player');
     }
 
     db.removeParticipant(session_id, player_id);
+    // Si le partant était l'hôte désigné, on libère le champ. Sans ça, son
+    // retour éventuel dans la session lui rendrait les droits admin
+    // (CLEAR_HISTORY, DELETE_SESSION) via un `isHost` qui continuait à
+    // matcher. L'élection Phase 8 côté client enverra TRANSFER_HOST.
+    try { db.clearHostIfMatches(session_id, player_id); } catch (_) { /* ignore */ }
 
-    // Broadcast leave logic
+    // Remove socket from room AVANT le broadcast pour ne pas notifier le
+    // partant de son propre départ (le client recevait un PARTICIPANT_LEFT
+    // avec son propre player_id, générant du bruit UI).
     const room = rooms.get(session_id);
+    if (room && room.has(ws)) {
+        room.delete(ws);
+    }
+
     if (room) {
-        // Notify remaining participants
         const leftMsg = JSON.stringify({
             type: 'PARTICIPANT_LEFT',
-            payload: {
-                session_id,
-                player_id
-            }
+            payload: { session_id, player_id }
         });
-
         room.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(leftMsg);
             }
         });
 
-        // Remove socket from room if present
-        if (room.has(ws)) {
-            room.delete(ws);
-        }
-
         if (room.size === 0) {
             rooms.delete(session_id);
             keyRotationRequired.delete(session_id);
+            // Cohérence avec `removeFromRooms` (disconnect brut) : on purge
+            // la session DB quand elle devient vide. Sinon, un LEAVE propre
+            // laissait la session orpheline en DB jusqu'au TTL 24 h, alors
+            // qu'un disconnect la supprimait immédiatement.
+            try {
+                db.deleteSession(session_id);
+                debug(`Session ${session_id} empty after LEAVE — purged from DB`);
+                const delMsg = JSON.stringify({
+                    type: 'SESSION_DELETED',
+                    payload: { session_id }
+                });
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) client.send(delMsg);
+                });
+            } catch (err) {
+                console.error(`[Cleanup] Failed to purge empty session ${session_id}:`, err);
+            }
         }
     }
 
@@ -839,22 +1042,19 @@ function handleDeleteSession(ws, payload) {
 
 function handleKick(ws, payload) {
     const { session_id, target_player_id } = payload;
-    if (!session_id || !target_player_id) return;
+    if (!session_id || !target_player_id) {
+        return sendError(ws, 'MISSING_PARAMETER', 'session_id and target_player_id are required');
+    }
 
-    const participants = db.getParticipants(session_id);
-    if (!participants || participants.length === 0) return;
-
-    // The host is the first participant in the database
-    const hostId = participants[0].player_id;
-    debug(`Host ID: ${hostId}`);
-    debug(`Player ID: ${ws.player_id}`);
-    debug(`Target player ID: ${target_player_id}`);
-
-    if (ws.player_id !== hostId) {
+    // Use db.isHost (qui lit sessions.host_player_id en priorité) pour
+    // rester cohérent avec CLEAR_HISTORY / DELETE_SESSION. Avant, KICK
+    // reposait sur participants[0] → le nouvel hôte post-TRANSFER_HOST
+    // ne pouvait pas kick, et l'ancien hôte (si de retour) gardait le droit.
+    if (!db.isHost(session_id, ws.player_id)) {
         return sendError(ws, 'FORBIDDEN', 'Only the host can kick participants');
     }
 
-    if (target_player_id === hostId) {
+    if (target_player_id === ws.player_id) {
         return sendError(ws, 'INVALID_OPERATION', 'Host cannot kick themselves');
     }
 
@@ -947,6 +1147,14 @@ function handleTransferHost(ws, payload) {
         return sendError(ws, 'FORBIDDEN', 'Only current host or the new host (self) can transfer host');
     }
 
+    // Note : on ne peut pas refuser l'auto-promotion "si l'ancien hôte est
+    // encore connecté" côté serveur — la WS chat lobby peut rester ouverte
+    // alors que le client a quitté l'éditeur P2P (timeout / HostLeaving).
+    // L'élection Phase 8 est déterministe côté client (min lexico du roster),
+    // tous les pairs convergent ; faire confiance au caller est le design
+    // voulu. La limite de surface d'attaque reste : seuls les participants
+    // de la session peuvent s'auto-promouvoir (check `isParticipant` ci-bas).
+
     // Vérifier que le nouvel hôte est participant actuel de la session.
     if (!db.isParticipant(session_id, new_host_id)) {
         return sendError(ws, 'NOT_PARTICIPANT', 'new_host_id is not a participant of this session');
@@ -971,17 +1179,26 @@ function handleTransferHost(ws, payload) {
 }
 
 function sendError(ws, code, message) {
-    ws.send(JSON.stringify({
-        type: 'ERROR',
-        payload: { code, message }
-    }));
+    // Protège contre un send vers une socket fermée entre deux ticks
+    // (remonterait sinon en uncaughtException → crash process).
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    try {
+        ws.send(JSON.stringify({
+            type: 'ERROR',
+            payload: { code, message }
+        }));
+    } catch (err) {
+        debug(`sendError swallowed: ${err.message}`);
+    }
 }
 
 function checkDbSize() {
     const size = db.getDbSize();
     if (size > MAX_DB_SIZE) {
         console.log(`[Database] Size limit reached (${(size / 1024 / 1024).toFixed(2)}MB > ${(MAX_DB_SIZE / 1024 / 1024).toFixed(2)}MB). Cleaning up...`);
-        db.deleteOldestMessages(50);
+        // Purge proportionnelle (cf. database.js). `50` fixé était insuffisant
+        // sur spam : on restait en permanence au-dessus du seuil.
+        db.deleteOldestMessages();
     }
 }
 
@@ -1022,6 +1239,11 @@ function removeFromRooms(ws) {
             try {
                 if (db.removeParticipant) db.removeParticipant(sessionId, playerId);
             } catch (_) { /* ignore */ }
+            // Libère host_player_id si le partant était l'hôte désigné.
+            // Sans ça, `isHost` continuait à matcher son player_id et lui
+            // redonnait les droits admin s'il revenait. L'élection Phase 8
+            // côté client enverra TRANSFER_HOST pour le nouvel hôte.
+            try { db.clearHostIfMatches(sessionId, playerId); } catch (_) { /* ignore */ }
             // Notification aux autres membres.
             const msg = JSON.stringify({
                 type: 'PARTICIPANT_LEFT',
@@ -1054,12 +1276,30 @@ function getSessionMessageCount(sessionId) {
     }
 }
 
+function startupChecks() {
+    const warnings = [];
+    if (ENABLE_DASHBOARD && !ADMIN_TOKEN) {
+        warnings.push('ENABLE_DASHBOARD=true sans ADMIN_TOKEN : /api/stats est public (info disclosure).');
+    }
+    if (!ADMIN_TOKEN) {
+        warnings.push('ADMIN_TOKEN non défini : CLEAR_ALL_SESSIONS est désactivé (fail-closed).');
+    }
+    if (ALLOWED_ORIGINS.length === 0) {
+        warnings.push('ALLOWED_ORIGINS vide : aucun check d\'origine WebSocket (OK pour clients C++ natifs).');
+    }
+    warnings.forEach(w => console.warn(`[Startup] ${w}`));
+    console.log(`[Startup] Limits: MAX_SESSIONS=${MAX_SESSIONS}, MAX_PAYLOAD=${MAX_PAYLOAD_SIZE}B, MAX_DB=${MAX_DB_SIZE}B`);
+    console.log(`[Startup] Rate-limit: bucket=${RATE_LIMIT_BUCKET}, refill=${RATE_LIMIT_REFILL}/s`);
+    console.log(`[Startup] Heartbeat: interval=${HEARTBEAT_INTERVAL_MS}ms`);
+}
+
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
     if (ENABLE_DASHBOARD) {
         console.log(`Dashboard disponible sur http://localhost:${PORT}/dashboard.html`);
         console.log(`Labo disponible sur http://localhost:${PORT}/labo.html`);
     }
+    startupChecks();
 
     // Start STUN server
     try {

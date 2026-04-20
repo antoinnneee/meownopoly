@@ -105,7 +105,11 @@ void ChatClient::createSession(QString nameSession, QString pwdSession, QString 
     QJsonObject payload;
     payload["session_id"]    = m_sessionId;
     payload["session_name"]  = nameSession;
-    payload["password_hash"] = QString(m_passwordHash.toBase64());
+    // `derivePasswordProof` retourne déjà la forme hex (64 chars) via `.toHex()`.
+    // Avant on ré-encodait en base64 au-dessus du hex → 88 chars "b64 of hex",
+    // un double encodage inutile que le serveur refuse désormais (validation
+    // stricte 64-hex | 44-b64). On envoie la forme hex canonique.
+    payload["password_hash"] = QString::fromLatin1(m_passwordHash);
     payload["max_players"]   = 4;
     payload["is_public"]     = true;
     msg["payload"] = payload;
@@ -219,7 +223,8 @@ void ChatClient::joinSession(){
         payload["session_id"]     = m_sessionId;
         payload["player_id"]      = m_playerId;
         payload["player_nickname"] = m_nickname;
-        payload["password_hash"]  = QString(m_passwordHash.toBase64());
+        // Voir CREATE_SESSION : on envoie la forme hex pure (pas de b64 au-dessus).
+        payload["password_hash"]  = QString::fromLatin1(m_passwordHash);
         join["payload"] = payload;
 
         sendWebSocketMessage(join);

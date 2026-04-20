@@ -5,6 +5,12 @@ const fs = require('fs');
 const dbPath = path.join(__dirname, 'chat.db');
 const db = new Database(dbPath);
 
+// WAL : lectures concurrentes pendant une écriture, plus robuste aux crashes,
+// performance correcte pour notre charge (single-writer Node.js).
+db.pragma('journal_mode = WAL');
+db.pragma('synchronous = NORMAL');
+db.pragma('foreign_keys = ON');
+
 // Initialize tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS sessions (
@@ -110,6 +116,17 @@ module.exports = {
     return db.prepare('UPDATE sessions SET host_player_id = ? WHERE session_id = ?')
       .run(hostPlayerId || null, sessionId);
   },
+  // Clear host_player_id si l'hôte désigné est ce joueur. Appelé quand un
+  // participant part : évite que `isHost` continue de retourner `true` pour
+  // lui s'il revient (il regagnerait les droits admin sur la session qu'il a
+  // pourtant quittée). Le fallback legacy (MIN(joined_at) sur participants
+  // restants) prend le relais jusqu'au prochain TRANSFER_HOST client-side
+  // (élection Phase 8).
+  clearHostIfMatches: (sessionId, playerId) => {
+    return db.prepare(
+      'UPDATE sessions SET host_player_id = NULL WHERE session_id = ? AND host_player_id = ?'
+    ).run(sessionId, playerId);
+  },
   deleteSession: (sessionId) => {
     db.transaction(() => {
       db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
@@ -141,18 +158,28 @@ module.exports = {
   },
 
   // Cleanup
+  // Purge en cascade : messages vieux → sessions sans messages & vieilles →
+  // participants et messages orphelins (sessions déjà supprimées). Sans la
+  // purge des participants orphelins, la table grossit indéfiniment au fil
+  // des TTL successifs.
   cleanupOldData: (hours = 24) => {
     const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
     db.transaction(() => {
-      // Delete old messages
       db.prepare('DELETE FROM messages WHERE server_timestamp < ?').run(cutoff);
-      // Delete sessions with no messages and older than cutoff
       db.prepare(`
-        DELETE FROM sessions 
-        WHERE created_at < ? 
+        DELETE FROM sessions
+        WHERE created_at < ?
         AND session_id NOT IN (SELECT DISTINCT session_id FROM messages)
       `).run(cutoff);
+      db.prepare(`
+        DELETE FROM participants
+        WHERE session_id NOT IN (SELECT session_id FROM sessions)
+      `).run();
+      db.prepare(`
+        DELETE FROM messages
+        WHERE session_id NOT IN (SELECT session_id FROM sessions)
+      `).run();
     })();
   },
 
@@ -166,15 +193,24 @@ module.exports = {
       return 0;
     }
   },
-  deleteOldestMessages: (count = 50) => {
+  // Purge proportionnelle : sur gros spam, `count=50` ne suffisait pas à
+  // repasser sous MAX_DB_SIZE entre deux messages → boucle d'évincement
+  // permanente. On purge désormais un pourcentage du total (par défaut 10 %),
+  // borné par un minimum pour les petites DB.
+  deleteOldestMessages: (count = null, fraction = 0.1, minCount = 100) => {
+    let toDelete = count;
+    if (toDelete == null) {
+      const total = db.prepare('SELECT COUNT(*) AS c FROM messages').get().c || 0;
+      toDelete = Math.max(minCount, Math.floor(total * fraction));
+    }
     return db.prepare(`
-            DELETE FROM messages 
-            WHERE id IN (
-                SELECT id FROM messages 
-                ORDER BY id ASC 
-                LIMIT ?
-            )
-        `).run(count);
+      DELETE FROM messages
+      WHERE id IN (
+        SELECT id FROM messages
+        ORDER BY id ASC
+        LIMIT ?
+      )
+    `).run(toDelete);
   },
   vacuum: () => {
     db.exec('VACUUM');
@@ -194,9 +230,16 @@ module.exports = {
   },
 
   // Participant methods
+  // UPSERT : un participant qui rejoint avec un nouveau pseudo voit son nickname
+  // mis à jour (sinon INSERT OR IGNORE gelait l'ancien pseudo pour toujours).
+  // joined_at n'est PAS touché sur conflit → l'ordre d'arrivée historique est
+  // préservé pour le fallback legacy `getHost`.
   addParticipant: (sessionId, playerId, nickname) => {
-    return db.prepare('INSERT OR IGNORE INTO participants (session_id, player_id, nickname) VALUES (?, ?, ?)')
-      .run(sessionId, playerId, nickname || '');
+    return db.prepare(`
+      INSERT INTO participants (session_id, player_id, nickname)
+      VALUES (?, ?, ?)
+      ON CONFLICT(session_id, player_id) DO UPDATE SET nickname = excluded.nickname
+    `).run(sessionId, playerId, nickname || '');
   },
   removeParticipant: (sessionId, playerId) => {
     return db.prepare('DELETE FROM participants WHERE session_id = ? AND player_id = ?')
