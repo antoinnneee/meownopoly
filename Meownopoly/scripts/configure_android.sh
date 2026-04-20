@@ -136,8 +136,12 @@ echo "=== Configuration OK. Build dir : $BUILD_DIR ==="
 # --- Build optionnel --------------------------------------------------------
 if [[ "${1:-}" == "build" ]]; then
     echo
-    echo "=== Build ==="
-    cmake --build "$BUILD_DIR" 2>&1 | tee /tmp/meow-android-build.log
+    echo "=== Build (j=1 pour éviter les plantages concurrents muvm/FEX) ==="
+    # Parallélisme = 1 obligatoire sur Asahi : le serveur muvm ne supporte
+    # pas plusieurs clients x86_64 concurrents (ECONNREFUSED / ENOENT socket).
+    # Override possible : MEOW_JOBS=4 bash configure_android.sh build.
+    JOBS="${MEOW_JOBS:-1}"
+    cmake --build "$BUILD_DIR" -j "$JOBS" 2>&1 | tee /tmp/meow-android-build.log
     echo
     echo "=== Build fini (log : /tmp/meow-android-build.log) ==="
 fi
