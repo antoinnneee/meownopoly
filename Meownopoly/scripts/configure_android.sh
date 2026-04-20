@@ -71,6 +71,14 @@ set(CMAKE_CXX_STANDARD_COMPUTED_DEFAULT     "17" CACHE STRING "" FORCE)
 set(CMAKE_C_EXTENSIONS_COMPUTED_DEFAULT     "ON" CACHE STRING "" FORCE)
 set(CMAKE_CXX_EXTENSIONS_COMPUTED_DEFAULT   "ON" CACHE STRING "" FORCE)
 
+# Features supportées par Clang 18 (normalement peuplé par la détection)
+set(CMAKE_C_COMPILE_FEATURES
+    "c_std_90;c_std_99;c_std_11;c_std_17;c_std_23"
+    CACHE STRING "" FORCE)
+set(CMAKE_CXX_COMPILE_FEATURES
+    "cxx_std_98;cxx_std_11;cxx_std_14;cxx_std_17;cxx_std_20;cxx_std_23;cxx_std_26"
+    CACHE STRING "" FORCE)
+
 # Threads : Android bionic a pthread dans libc, pas besoin de -lpthread
 set(CMAKE_HAVE_LIBC_PTHREAD     TRUE CACHE BOOL "" FORCE)
 set(CMAKE_USE_PTHREADS_INIT     TRUE CACHE BOOL "" FORCE)
