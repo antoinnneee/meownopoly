@@ -49,17 +49,68 @@ else
 fi
 
 # --- 1. JDK 17 ---------------------------------------------------------------
+# Ordre : paquet distro -> repo Adoptium (dnf) -> tarball Adoptium dans ~/opt.
+JDK_TARBALL_URL="https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.13%2B11/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.13_11.tar.gz"
+JDK_TARBALL_DIR="$HOME/opt/jdk-17.0.13+11"
+CUSTOM_JAVA_HOME=""
+
+_java17_present() {
+    command -v java >/dev/null 2>&1 && java -version 2>&1 | grep -q "\"$JDK_MAJOR\."
+}
+
+install_jdk_distro() {
+    case "$PKG_MGR" in
+        dnf)    sudo dnf install -y "java-${JDK_MAJOR}-openjdk-devel" 2>/dev/null ;;
+        pacman) sudo pacman -S --needed --noconfirm "jdk${JDK_MAJOR}-openjdk" 2>/dev/null ;;
+        apt)    sudo apt update -qq && sudo apt install -y "openjdk-${JDK_MAJOR}-jdk" 2>/dev/null ;;
+        *)      return 1 ;;
+    esac
+}
+
+install_jdk_adoptium_repo() {
+    [[ "$PKG_MGR" != "dnf" ]] && return 1
+    echo ">>> Ajout du repo Adoptium"
+    if [[ $DRY_RUN -eq 0 ]]; then
+        sudo tee /etc/yum.repos.d/adoptium.repo >/dev/null <<'EOF'
+[Adoptium]
+name=Adoptium
+baseurl=https://packages.adoptium.net/artifactory/rpm/fedora/$releasever/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.adoptium.net/artifactory/api/gpg/key/public
+EOF
+        sudo dnf install -y temurin-17-jdk
+    fi
+}
+
+install_jdk_tarball() {
+    echo ">>> Téléchargement Adoptium Temurin 17 (tarball aarch64)"
+    if [[ $DRY_RUN -eq 0 ]]; then
+        mkdir -p "$HOME/opt"
+        local tmp="/tmp/jdk17-aarch64.tar.gz"
+        curl -L -o "$tmp" "$JDK_TARBALL_URL"
+        tar xzf "$tmp" -C "$HOME/opt"
+        rm -f "$tmp"
+    fi
+    CUSTOM_JAVA_HOME="$JDK_TARBALL_DIR"
+}
+
 install_jdk() {
-    if command -v java >/dev/null 2>&1 && java -version 2>&1 | grep -q "\"$JDK_MAJOR\."; then
+    if _java17_present; then
         echo "JDK $JDK_MAJOR déjà installé."
         return
     fi
-    case "$PKG_MGR" in
-        dnf)    run "sudo dnf install -y java-${JDK_MAJOR}-openjdk-devel" ;;
-        pacman) run "sudo pacman -S --needed jdk${JDK_MAJOR}-openjdk" ;;
-        apt)    run "sudo apt update && sudo apt install -y openjdk-${JDK_MAJOR}-jdk" ;;
-        *)      echo "Installe manuellement OpenJDK $JDK_MAJOR." ;;
-    esac
+    echo ">>> Tentative JDK via paquet distro"
+    if install_jdk_distro && _java17_present; then
+        return
+    fi
+    echo ">>> Distro KO. Tentative repo Adoptium"
+    if install_jdk_adoptium_repo && [[ -x /usr/lib/jvm/temurin-17-jdk/bin/java ]]; then
+        CUSTOM_JAVA_HOME="/usr/lib/jvm/temurin-17-jdk"
+        return
+    fi
+    echo ">>> Repo Adoptium KO. Fallback tarball dans ~/opt"
+    install_jdk_tarball
 }
 
 # --- 2. adb / fastboot (facultatif, via distro) ------------------------------
@@ -133,7 +184,14 @@ export ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT"
 export ANDROID_HOME="\$ANDROID_SDK_ROOT"
 export ANDROID_NDK_ROOT="$ANDROID_NDK_ROOT"
 export ANDROID_NDK_HOME="\$ANDROID_NDK_ROOT"
-export JAVA_HOME="\$(readlink -f /usr/bin/java | sed 's|/jre/bin/java||;s|/bin/java||')"
+EOF
+    if [[ -n "$CUSTOM_JAVA_HOME" ]]; then
+        echo "export JAVA_HOME=\"$CUSTOM_JAVA_HOME\"" >> "$envfile"
+        echo "export PATH=\"\$JAVA_HOME/bin:\$PATH\"" >> "$envfile"
+    else
+        echo "export JAVA_HOME=\"\$(readlink -f \$(command -v java) | sed 's|/jre/bin/java||;s|/bin/java||')\"" >> "$envfile"
+    fi
+    cat >> "$envfile" <<EOF
 
 export QT_HOST_PATH="$QT_HOST"
 export QT_ANDROID_PATH="$QT_ANDROID"
