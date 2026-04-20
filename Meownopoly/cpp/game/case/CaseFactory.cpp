@@ -108,8 +108,6 @@ Case* CaseFactory::createCase(const QJsonObject &caseJson)
     // Extract type from JSON and convert to enum
     Case::CaseType type = Case::intToCaseType(caseJson["type"].toInt());
     if (type == Case::CS_Unknow) {
-        qWarning() << "CASE_FACTORY: Type de case inconnu:" << caseJson["type"].toInt()
-                    << "- création d'une Case par défaut";
     }
 
     switch (type) {
