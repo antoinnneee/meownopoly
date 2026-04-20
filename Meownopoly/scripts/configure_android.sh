@@ -42,6 +42,20 @@ NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
 NDK_SYSROOT="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 ANDROID_TARGET="aarch64-linux-android28"
 
+# Crée un répertoire "clean" d'includes EGL/GLES/vulkan sans les headers C.
+# Objectif : donner à find_package(EGL) un INCLUDE_DIR valide qui contient
+# EGL/*, GLES2/*, GLES3/*, vulkan/* mais PAS stdint.h etc., ce qui évite
+# d'ajouter sysroot/usr/include comme -isystem (qui court-circuite libc++).
+GFX_INCLUDE="$HOME/android-gfx-include"
+if [[ ! -d "$GFX_INCLUDE/EGL" ]]; then
+    mkdir -p "$GFX_INCLUDE"
+    for sub in EGL GLES GLES2 GLES3 vulkan KHR; do
+        if [[ -d "$NDK_SYSROOT/usr/include/$sub" ]]; then
+            ln -sfn "$NDK_SYSROOT/usr/include/$sub" "$GFX_INCLUDE/$sub"
+        fi
+    done
+fi
+
 # Cache initial pour skipper toute la détection
 INIT_CACHE="$BUILD_DIR/init_cache.cmake"
 mkdir -p "$BUILD_DIR"
@@ -120,11 +134,11 @@ set(HAVE_OPENGL_ES_3         TRUE CACHE BOOL "" FORCE)
 # mais trouve le C stdint.h d'abord).
 # EGL.h et GLES[23]/gl*.h sont dans <sysroot>/usr/include/EGL/ et /GLES2,
 # mais clang les résout sans besoin d'-isystem explicite.
-set(EGL_INCLUDE_DIR          "" CACHE PATH "" FORCE)
-set(GLESv2_INCLUDE_DIR       "" CACHE PATH "" FORCE)
-set(Vulkan_INCLUDE_DIR       "" CACHE PATH "" FORCE)
-set(VulkanHeaders_INCLUDE_DIR "" CACHE PATH "" FORCE)
-set(WrapVulkanHeaders_INCLUDE_DIR "" CACHE PATH "" FORCE)
+set(EGL_INCLUDE_DIR              "$GFX_INCLUDE" CACHE PATH "" FORCE)
+set(GLESv2_INCLUDE_DIR           "$GFX_INCLUDE" CACHE PATH "" FORCE)
+set(Vulkan_INCLUDE_DIR           "$GFX_INCLUDE" CACHE PATH "" FORCE)
+set(VulkanHeaders_INCLUDE_DIR    "$GFX_INCLUDE" CACHE PATH "" FORCE)
+set(WrapVulkanHeaders_INCLUDE_DIR "$GFX_INCLUDE" CACHE PATH "" FORCE)
 # Libraries aussi — pointer directement sur le .so évite search path parasite
 set(EGL_LIBRARY     "$NDK_SYSROOT/usr/lib/aarch64-linux-android/28/libEGL.so" CACHE FILEPATH "" FORCE)
 set(GLESv2_LIBRARY  "$NDK_SYSROOT/usr/lib/aarch64-linux-android/28/libGLESv2.so" CACHE FILEPATH "" FORCE)
