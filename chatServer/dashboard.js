@@ -1,978 +1,337 @@
-// Configuration - Détection automatique de l'URL WebSocket
-const WS_URL = window.location.protocol === 'https:'
-    ? `wss://${window.location.host}`
-    : `ws://${window.location.host}`;
+// Meownopoly Chat — dev dashboard
+// REST client sur /api/*, pas de WebSocket.
+// Token (si ADMIN_TOKEN défini côté serveur) stocké dans localStorage.
 
-// État global
-let ws = null;
-let reconnectInterval = null;
-let startTime = Date.now();
-let stats = {
-    connections: 0,
-    rooms: 0,
-    messages: 0
+const STORAGE_TOKEN_KEY = 'meownopoly-dev-dashboard-token';
+const POLL_INTERVAL_MS = 3000;
+
+const state = {
+    token: localStorage.getItem(STORAGE_TOKEN_KEY) || '',
+    sessions: [],
+    filter: '',
+    pollTimer: null,
+    adminRequired: null, // null unknown, true if server demands a token
 };
 
-// Connexions et salons simulés (car le serveur n'expose pas ces données directement)
-let activeConnections = new Map();
-let activeRooms = new Map();
+// ────────── DOM helpers ──────────
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+function el(tag, attrs = {}, children = []) {
+    const n = document.createElement(tag);
+    for (const k in attrs) {
+        if (k === 'class') n.className = attrs[k];
+        else if (k === 'dataset') Object.assign(n.dataset, attrs[k]);
+        else if (k.startsWith('on')) n.addEventListener(k.slice(2), attrs[k]);
+        else if (attrs[k] !== undefined && attrs[k] !== null) n.setAttribute(k, attrs[k]);
+    }
+    (Array.isArray(children) ? children : [children]).forEach(c => {
+        if (c == null) return;
+        if (typeof c === 'string') n.appendChild(document.createTextNode(c));
+        else n.appendChild(c);
+    });
+    return n;
+}
 
-// État du mini chat client
-let chatWs = null;
-let currentSession = null;
-let currentNickname = null;
-let currentPlayerId = null;
-let currentPassword = null;
-let lockKey = null;
-let sessionKeys = new Map(); // version -> decrypted session key
-let currentKeyVersion = 0;
-let chatMessages = [];
+// ────────── Log ──────────
+function log(msg, kind = '') {
+    const ts = new Date().toLocaleTimeString();
+    const entry = el('span', { class: `log-entry ${kind}` }, [
+        el('span', { class: 'ts' }, `[${ts}]`),
+        msg,
+    ]);
+    const logEl = $('#log');
+    logEl.appendChild(entry);
+    logEl.appendChild(document.createTextNode('\n'));
+    logEl.scrollTop = logEl.scrollHeight;
+}
 
-// Initialisation
-document.addEventListener('DOMContentLoaded', () => {
-    initWebSocket();
-    updateUptime();
-    setInterval(updateUptime, 1000);
+// ────────── API ──────────
+async function api(path, opts = {}) {
+    const headers = Object.assign(
+        { 'Content-Type': 'application/json' },
+        state.token ? { 'Authorization': `Bearer ${state.token}` } : {},
+        opts.headers || {}
+    );
+    const res = await fetch(path, { ...opts, headers });
+    const text = await res.text();
+    let data;
+    try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+    if (!res.ok) {
+        const msg = data.error || `HTTP ${res.status}`;
+        throw new Error(msg);
+    }
+    return data;
+}
 
-    // Récupérer les stats du serveur toutes les 3 secondes
-    fetchServerStats();
-    setInterval(fetchServerStats, 3000);
-
-    document.getElementById('clearLogsBtn').addEventListener('click', clearLogs);
-
-    // Toggle du journal d'activité
-    document.getElementById('activityLogHeader').addEventListener('click', toggleActivityLog);
-
-    // Tout nettoyer (Salles + Messages)
-    document.getElementById('clearAllRoomsBtn').addEventListener('click', clearAllRooms);
-
-    // Initialiser le mini chat client
-    initChatClient();
-});
-
-// Récupérer les statistiques du serveur via API REST
-async function fetchServerStats() {
+// ────────── Stats + sessions polling ──────────
+async function refresh() {
     try {
-        const protocol = window.location.protocol;
-        const host = window.location.host;
-        const response = await fetch(`${protocol}//${host}/api/stats`);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Mettre à jour les statistiques
-        stats.connections = data.connections || 0;
-        stats.rooms = data.rooms || 0;
-        stats.messages = data.messages || 0;
-        updateStats();
-
-        // Mettre à jour les salons avec les données réelles
-        if (data.sessions && data.sessions.length > 0) {
-            activeRooms.clear();
-            data.sessions.forEach(session => {
-                if (session.id !== '__dashboard_monitor__') {
-                    activeRooms.set(session.id, {
-                        id: session.id,
-                        participants: new Set(),
-                        participantCount: session.participants,
-                        messageCount: session.messages,
-                        createdAt: new Date()
-                    });
-                }
-            });
-            renderRooms();
-        } else if (data.rooms === 0) {
-            activeRooms.clear();
-            renderRooms();
-        }
-
-        // Uptime du serveur
-        if (data.uptime) {
-            startTime = Date.now() - (data.uptime * 1000);
-        }
-
+        const stats = await api('/api/stats');
+        setServerStatus('online');
+        state.adminRequired = !!stats.adminTokenRequired;
+        updateTokenStatus();
+        updateStats(stats);
+        state.sessions = stats.sessions || [];
+        renderSessions();
     } catch (err) {
-        console.error('Erreur lors de la récupération des stats:', err);
+        if (err.message === 'unauthorized') {
+            setServerStatus('partial', 'unauthorized');
+            state.adminRequired = true;
+            updateTokenStatus('token required');
+        } else {
+            setServerStatus('offline', err.message);
+        }
     }
 }
 
-// WebSocket
-function initWebSocket() {
-    addLog('Tentative de connexion au serveur...', 'info');
+function setServerStatus(kind, text) {
+    const s = $('#serverStatus');
+    s.className = `status ${kind}`;
+    s.textContent = text || kind;
+}
 
+function updateStats(stats) {
+    $('#statConnections').textContent = stats.connections;
+    $('#statRooms').textContent = stats.rooms;
+    $('#statSessionsDb').textContent = stats.sessions.length;
+    $('#statMessages').textContent = stats.messages;
+    $('#statDbSize').textContent = formatBytes(stats.dbSize);
+    $('#statUptime').textContent = formatUptime(stats.uptime);
+    $('#statMemory').textContent = formatBytes(stats.memory?.rss || 0);
+    $('#statMaxSessions').textContent = stats.maxSessions;
+}
+
+function updateTokenStatus(msg) {
+    const t = $('#tokenStatus');
+    if (msg) t.textContent = msg;
+    else if (state.adminRequired && !state.token) t.textContent = 'token required';
+    else if (state.adminRequired) t.textContent = 'token active';
+    else t.textContent = 'open mode (no ADMIN_TOKEN)';
+}
+
+function formatBytes(n) {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+    return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`;
+}
+function formatUptime(sec) {
+    sec = Math.floor(sec || 0);
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+function relTime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60) return `${Math.floor(diff)}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+}
+
+// ────────── Sessions table ──────────
+function renderSessions() {
+    const body = $('#sessionsBody');
+    body.innerHTML = '';
+    const filter = state.filter.toLowerCase();
+    const filtered = state.sessions.filter(s =>
+        !filter
+        || (s.session_id || '').toLowerCase().includes(filter)
+        || (s.session_name || '').toLowerCase().includes(filter)
+    );
+    $('#sessionsCount').textContent = `${filtered.length} / ${state.sessions.length}`;
+    if (filtered.length === 0) {
+        body.appendChild(el('tr', { class: 'empty' }, el('td', { colspan: '9' }, 'no session')));
+        return;
+    }
+    for (const s of filtered) {
+        body.appendChild(renderSessionRow(s));
+    }
+}
+
+function renderSessionRow(s) {
+    const sid = s.session_id;
+    const online = s.online_count ?? 0;
+    const onlineBadge = online > 0
+        ? el('span', { class: 'badge online' }, String(online))
+        : el('span', { class: 'badge offline' }, '0');
+    const actions = el('td', { class: 'actions-cell' }, [
+        el('button', { class: 'btn small', onclick: () => openSessionDetails(sid) }, 'inspect'),
+        el('button', { class: 'btn small danger', onclick: () => deleteSession(sid) }, 'del'),
+    ]);
+    return el('tr', { dataset: { id: sid } }, [
+        el('td', {}, ''),
+        el('td', { class: 'col-id', onclick: () => openSessionDetails(sid), title: sid }, sid),
+        el('td', { class: 'col-name', title: s.session_name || '' }, s.session_name || ''),
+        el('td', {}, s.host_nickname || '—'),
+        el('td', { class: 'num' }, `${s.player_count ?? 0}/${s.max_players ?? 0}`),
+        el('td', { class: 'num' }, onlineBadge),
+        el('td', { class: 'num' }, String(s.message_count ?? 0)),
+        el('td', {}, relTime(s.created_at)),
+        actions,
+    ]);
+}
+
+// ────────── Session modal ──────────
+async function openSessionDetails(sessionId) {
     try {
-        ws = new WebSocket(WS_URL);
-
-        ws.onopen = () => {
-            addLog('✓ Connecté au serveur WebSocket', 'success');
-            updateServerStatus(true);
-            if (reconnectInterval) {
-                clearInterval(reconnectInterval);
-                reconnectInterval = null;
-            }
-
-            // Joindre une session de monitoring fictive
-            ws.send(JSON.stringify({
-                type: 'JOIN_SESSION',
-                payload: {
-                    session_id: '__dashboard_monitor__',
-                    player_id: 'dashboard',
-                    player_nickname: 'Dashboard Monitor'
-                }
-            }));
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data);
-                handleServerMessage(message);
-            } catch (err) {
-                console.error('Erreur de parsing du message:', err);
-            }
-        };
-
-        ws.onerror = (error) => {
-            addLog('✗ Erreur de connexion WebSocket', 'error');
-            console.error('WebSocket error:', error);
-        };
-
-        ws.onclose = () => {
-            addLog('✗ Déconnecté du serveur', 'warning');
-            updateServerStatus(false);
-
-            if (!reconnectInterval) {
-                reconnectInterval = setInterval(() => {
-                    addLog('Tentative de reconnexion...', 'info');
-                    initWebSocket();
-                }, 5000);
-            }
-        };
+        const [info, messages] = await Promise.all([
+            api(`/api/sessions/${encodeURIComponent(sessionId)}`),
+            api(`/api/sessions/${encodeURIComponent(sessionId)}/messages?limit=20`),
+        ]);
+        renderSessionModal(info, messages);
     } catch (err) {
-        addLog(`✗ Impossible de se connecter: ${err.message}`, 'error');
-        updateServerStatus(false);
+        log(`inspect ${sessionId} failed: ${err.message}`, 'err');
     }
 }
 
-function handleServerMessage(message) {
-    const { type, payload } = message;
+function renderSessionModal(info, messages) {
+    const s = info.session;
+    const title = `Session ${s.id}`;
+    const badges = [];
+    if (s.key_rotation_required) badges.push(el('span', { class: 'badge rot' }, 'key rotation required'));
+    if (s.is_public) badges.push(el('span', { class: 'badge' }, 'public')); else badges.push(el('span', { class: 'badge' }, 'private'));
 
-    switch (type) {
-        case 'INIT_SESSION':
-            addLog(`Session initialisée (version: ${payload.current_version})`, 'info');
-            break;
+    const kv = el('dl', { class: 'kv' }, [
+        el('dt', {}, 'ID'), el('dd', {}, s.id),
+        el('dt', {}, 'Name'), el('dd', {}, s.name || '—'),
+        el('dt', {}, 'Host'), el('dd', {}, s.host_player_id || '— (fallback joined_at)'),
+        el('dt', {}, 'Key version'), el('dd', {}, String(s.version)),
+        el('dt', {}, 'Players'), el('dd', {}, `${info.participants.length}/${s.max_players}`),
+        el('dt', {}, 'Messages'), el('dd', {}, String(s.message_count)),
+        el('dt', {}, 'Created'), el('dd', {}, `${s.created_at} (${relTime(s.created_at)})`),
+        el('dt', {}, 'Flags'), el('dd', {}, badges.length ? badges : el('span', {}, '—')),
+    ]);
 
-        case 'NEW_MESSAGE':
-            addLog(`💬 Nouveau message de ${payload.sender_nickname || payload.sender_id}`, 'info');
-            break;
+    const pTable = el('table', {}, [
+        el('thead', {}, el('tr', {}, [
+            el('th', {}, 'Player ID'), el('th', {}, 'Nickname'), el('th', {}, 'Status'), el('th', {}, ''),
+        ])),
+        el('tbody', {}, info.participants.map(p => el('tr', {}, [
+            el('td', {}, p.player_id + (p.player_id === s.host_player_id ? ' 👑' : '')),
+            el('td', {}, p.nickname || '—'),
+            el('td', {}, p.online ? el('span', { class: 'badge online' }, 'online') : el('span', { class: 'badge offline' }, 'offline')),
+            el('td', {}, ''),
+        ]))),
+    ]);
 
-        case 'NEW_PARTICIPANT':
-            addLog(`👤 Nouveau participant: ${payload.player_id} dans la session ${payload.session_id}`, 'success');
-            setTimeout(fetchServerStats, 500);
-            break;
+    const mTable = el('table', {}, [
+        el('thead', {}, el('tr', {}, [
+            el('th', {}, '#'), el('th', {}, 'Sender'), el('th', {}, 'Nick'), el('th', {}, 'KeyV'), el('th', {}, 'Size'), el('th', {}, 'Time'),
+        ])),
+        el('tbody', {}, messages.messages.length ? messages.messages.map(m => el('tr', {}, [
+            el('td', {}, String(m.id)),
+            el('td', {}, m.sender_id || '—'),
+            el('td', {}, m.sender_nickname || '—'),
+            el('td', {}, String(m.key_version ?? '—')),
+            el('td', {}, `${m.payload_len} B`),
+            el('td', {}, relTime(m.server_timestamp)),
+        ])) : [el('tr', { class: 'empty' }, el('td', { colspan: '6' }, 'no messages'))]),
+    ]);
 
-        case 'KEY_UPDATE':
-            addLog(`🔑 Clé mise à jour (version: ${payload.version})`, 'info');
-            break;
+    const actionsRow = el('div', { class: 'modal-actions' }, [
+        el('button', { class: 'btn small', onclick: () => openSessionDetails(s.id) }, 'refresh'),
+        el('button', { class: 'btn small danger', onclick: () => clearHistory(s.id) }, 'clear history'),
+        el('button', { class: 'btn small danger', onclick: () => deleteSession(s.id, true) }, 'delete session'),
+    ]);
 
-        case 'HISTORY_CLEARED':
-            addLog(`🗑️ Historique effacé pour ${payload.session_id}`, 'warning');
-            setTimeout(fetchServerStats, 500);
-            break;
-
-        case 'SERVER_RESET':
-            addLog(`🚨 SERVEUR RÉINITIALISÉ : ${payload.message}`, 'error');
-            setTimeout(fetchServerStats, 500);
-            break;
-
-        case 'ERROR':
-            addLog(`❌ Erreur: ${payload.message} (${payload.code})`, 'error');
-            break;
-
-        default:
-            addLog(`Message reçu: ${type}`, 'info');
-    }
+    $('#modalTitle').textContent = title;
+    const content = $('#modalContent');
+    content.innerHTML = '';
+    content.appendChild(el('h4', {}, 'Session'));
+    content.appendChild(kv);
+    content.appendChild(actionsRow);
+    content.appendChild(el('h4', {}, `Participants (${info.participants.length})`));
+    content.appendChild(pTable);
+    content.appendChild(el('h4', {}, `Recent messages (${messages.messages.length}, ciphertext metadata only)`));
+    content.appendChild(mTable);
+    $('#modal').classList.remove('hidden');
 }
 
-function clearAllRooms() {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer TOUS les salons, TOUS les messages et TOUS les participants ? Cette action est irréversible.')) {
-        return;
-    }
+function closeModal() { $('#modal').classList.add('hidden'); }
 
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-        alert('Non connecté au serveur WebSocket.');
-        return;
-    }
-
-    addLog('Demande de réinitialisation complète du serveur...', 'warning');
-    ws.send(JSON.stringify({
-        type: 'CLEAR_ALL_SESSIONS',
-        payload: {}
-    }));
-}
-
-// Gestion des connexions (affichage simplifié)
-function renderConnections() {
-    const container = document.getElementById('connectionsList');
-
-    if (stats.connections === 0) {
-        container.innerHTML = '<div class="empty-state">Aucune connexion active</div>';
-        return;
-    }
-
-    container.innerHTML = `
-        <div class="connection-item">
-            <div class="connection-header">
-                <div class="connection-id">Connexions WebSocket actives</div>
-                <div class="connection-badge">${stats.connections} clients</div>
-            </div>
-            <div class="connection-details">
-                <div>🌐 Clients connectés en temps réel</div>
-                <div>📊 Données mises à jour automatiquement</div>
-            </div>
-        </div>
-    `;
-}
-
-function renderRooms() {
-    const container = document.getElementById('roomsList');
-
-    if (activeRooms.size === 0) {
-        container.innerHTML = '<div class="empty-state">Aucun salon actif</div>';
-        return;
-    }
-
-    container.innerHTML = Array.from(activeRooms.values())
-        .filter(room => room.id !== '__dashboard_monitor__')
-        .sort((a, b) => b.messageCount - a.messageCount)
-        .map(room => `
-            <div class="room-item">
-                <div class="room-header">
-                    <div class="room-id">${room.id}</div>
-                    <div class="room-badge">${room.participantCount || room.participants.size} participant(s)</div>
-                </div>
-                <div class="room-details">
-                    <div>💬 Messages: ${room.messageCount}</div>
-                    <div>🕐 Actif</div>
-                    ${room.participants && room.participants.size > 0 ? `
-                        <div class="room-participants">
-                            ${Array.from(room.participants).map(p =>
-            `<span class="participant-tag">${p}</span>`
-        ).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `).join('');
-}
-
-function updateStats() {
-    document.getElementById('totalConnections').textContent = stats.connections;
-    document.getElementById('totalRooms').textContent = stats.rooms;
-    document.getElementById('totalMessages').textContent = stats.messages;
-    renderConnections();
-}
-
-function updateServerStatus(connected) {
-    const badge = document.getElementById('serverStatus');
-    const statusText = badge.querySelector('.status-text');
-
-    if (connected) {
-        badge.classList.add('connected');
-        statusText.textContent = 'Connecté';
-    } else {
-        badge.classList.remove('connected');
-        statusText.textContent = 'Déconnecté';
-    }
-}
-
-function updateUptime() {
-    const uptime = Date.now() - startTime;
-    const hours = Math.floor(uptime / 3600000);
-    const minutes = Math.floor((uptime % 3600000) / 60000);
-    const seconds = Math.floor((uptime % 60000) / 1000);
-
-    document.getElementById('uptime').textContent =
-        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-// Journal d'activité
-function addLog(message, type = 'info') {
-    const logContainer = document.getElementById('activityLog');
-    const timestamp = new Date().toLocaleTimeString('fr-FR');
-    const autoScroll = document.getElementById('autoScrollCheck').checked;
-
-    const logEntry = document.createElement('div');
-    logEntry.className = `log-entry ${type}`;
-    logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span>${message}`;
-
-    logContainer.appendChild(logEntry);
-
-    // Limiter à 100 entrées
-    while (logContainer.children.length > 100) {
-        logContainer.removeChild(logContainer.firstChild);
-    }
-
-    if (autoScroll) {
-        logContainer.scrollTop = logContainer.scrollHeight;
-    }
-}
-
-function clearLogs() {
-    document.getElementById('activityLog').innerHTML = '';
-    addLog('Journal effacé', 'info');
-}
-
-function toggleActivityLog() {
-    const section = document.getElementById('activityLogSection');
-    const icon = document.querySelector('.toggle-icon');
-
-    if (section.style.display === 'none') {
-        section.style.display = 'block';
-        icon.classList.add('open');
-    } else {
-        section.style.display = 'none';
-        icon.classList.remove('open');
-    }
-}
-
-// Utilitaires
-function formatTime(date) {
-    return date.toLocaleTimeString('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-}
-
-// ============================================
-// MINI CHAT CLIENT
-// ============================================
-
-function initChatClient() {
-    // Générer un ID unique pour ce client
-    currentPlayerId = 'dashboard_' + Math.random().toString(36).substr(2, 9);
-
-    // Événements
-    document.getElementById('joinBtn').addEventListener('click', joinChatSession);
-    document.getElementById('sendBtn').addEventListener('click', sendChatMessage);
-    document.getElementById('clearChatBtn').addEventListener('click', clearChatMessages);
-    document.getElementById('fileBtn').addEventListener('click', () => {
-        document.getElementById('fileInput').click();
-    });
-    document.getElementById('fileInput').addEventListener('change', handleFileUpload);
-
-    document.getElementById('messageInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendChatMessage();
-        }
-    });
-
-    // Cliquer sur un salon pour le rejoindre
-    document.getElementById('roomsList').addEventListener('click', (e) => {
-        const roomItem = e.target.closest('.room-item');
-        if (roomItem) {
-            const roomId = roomItem.querySelector('.room-id').textContent;
-            document.getElementById('sessionInput').value = roomId;
-        }
-    });
-
-    // Drag & drop de fichiers sur la zone de chat
-    const chatMessages = document.getElementById('chatMessages');
-
-    chatMessages.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        chatMessages.classList.add('drag-over');
-    });
-
-    chatMessages.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // Ne retirer que si on quitte vraiment la zone
-        if (!chatMessages.contains(e.relatedTarget)) {
-            chatMessages.classList.remove('drag-over');
-        }
-    });
-
-    chatMessages.addEventListener('drop', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        chatMessages.classList.remove('drag-over');
-
-        if (!currentSession) {
-            alert('Rejoignez une session avant de déposer un fichier');
-            return;
-        }
-
-        const files = e.dataTransfer.files;
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            // Vérifier si c'est un fichier texte (pas binaire)
-            if (file.type.startsWith('text/') || isTextExtension(file.name)) {
-                await handleFileUpload(file);
-            } else if (file.type.startsWith('image/')) {
-                // Aussi supporter le drop d'images
-                await handleImageDrop(file);
-            } else {
-                addLog(`⚠️ Type de fichier non supporté: ${file.name}`, 'warning');
-            }
-        }
-    });
-}
-
-function isTextExtension(filename) {
-    const textExts = [
-        'txt', 'md', 'json', 'xml', 'csv', 'log', 'yml', 'yaml', 'toml', 'ini', 'cfg',
-        'js', 'ts', 'py', 'cpp', 'c', 'h', 'hpp', 'java', 'cs', 'go', 'rs', 'rb',
-        'php', 'swift', 'kt', 'qml', 'html', 'css', 'sql', 'sh', 'bat', 'jsx', 'tsx',
-        'vue', 'svelte', 'scss', 'less', 'sass', 'env', 'gitignore', 'dockerfile'
-    ];
-    const ext = filename.split('.').pop().toLowerCase();
-    return textExts.includes(ext);
-}
-
-async function handleImageDrop(file) {
-    if (file.size > 5 * 1024 * 1024) {
-        alert('Image trop volumineuse (max 5MB)');
-        return;
-    }
-
+// ────────── Actions ──────────
+async function deleteSession(sessionId, closeModalAfter = false) {
+    if (!confirm(`Delete session ${sessionId} and all its data?`)) return;
     try {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            await sendRawMessage(e.target.result);
-            addLog(`📤 Image "${file.name}" envoyée`, 'success');
-        };
-        reader.readAsDataURL(file);
+        const r = await api(`/api/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
+        log(`deleted ${sessionId} (disconnected ${r.disconnected} sockets)`, 'ok');
+        if (closeModalAfter) closeModal();
+        refresh();
     } catch (err) {
-        console.error('Erreur envoi image:', err);
+        log(`delete ${sessionId} failed: ${err.message}`, 'err');
     }
 }
 
-async function handleFileUpload(event) {
-    const file = event.target.files ? event.target.files[0] : event;
-    if (!file) return;
-
-    // Vérifier la taille
-    const maxSize = 1024 * 1024; // 1MB max
-    if (file.size > maxSize) {
-        alert('Le fichier est trop volumineux (max 1MB)');
-        return;
-    }
-
+async function clearHistory(sessionId) {
+    if (!confirm(`Clear all messages of session ${sessionId}?`)) return;
     try {
-        const text = await file.text();
-
-        // Format: 📄FILE:extension:nom_fichier\n\ncontenu
-        const extension = file.name.split('.').pop().toLowerCase();
-        const content = `📄FILE:${extension}:${file.name}\n\n${text}`;
-
-        // Envoyer directement (ne pas passer par l'input qui perd les \n)
-        await sendRawMessage(content);
-
-        // Réinitialiser l'input file si c'est un event
-        if (event.target && event.target.files) {
-            event.target.value = '';
-        }
-
-        addLog(`📤 Fichier "${file.name}" envoyé (${extension.toUpperCase()})`, 'success');
+        await api(`/api/sessions/${encodeURIComponent(sessionId)}/messages`, { method: 'DELETE' });
+        log(`history cleared: ${sessionId}`, 'ok');
+        openSessionDetails(sessionId); // refresh modal
+        refresh();
     } catch (err) {
-        console.error('Erreur lecture fichier:', err);
-        alert('Erreur lors de la lecture du fichier');
+        log(`clear history failed: ${err.message}`, 'err');
     }
 }
 
-function clearChatMessages() {
-    if (!currentSession) return;
-
-    if (confirm(`Voulez-vous vraiment effacer tous les messages de la session "${currentSession}" ?\n\nCette action est irréversible et affectera tous les participants.`)) {
-        // Effacer immédiatement l'affichage local
-        const messagesContainer = document.getElementById('chatMessages');
-        messagesContainer.innerHTML = '<div class="chat-empty">Effacement en cours...</div>';
-
-        // Envoyer la demande au serveur
-        chatWs.send(JSON.stringify({
-            type: 'CLEAR_HISTORY',
-            payload: {
-                session_id: currentSession
-            }
-        }));
-
-        addLog(`🗑️ Historique effacé pour "${currentSession}"`, 'warning');
-    }
+async function wipeDb() {
+    if (!confirm('WIPE entire DB? This deletes ALL sessions, participants, messages, and disconnects everyone.')) return;
+    if (!confirm('Really? There is no undo.')) return;
+    try {
+        await api('/api/db', { method: 'DELETE' });
+        log('DB wiped', 'ok');
+        refresh();
+    } catch (err) { log(`wipe failed: ${err.message}`, 'err'); }
 }
 
-function joinChatSession() {
-    const sessionId = document.getElementById('sessionInput').value.trim();
-    const nickname = document.getElementById('nicknameInput').value.trim() || 'Dashboard';
-    const password = document.getElementById('passwordInput').value.trim();
+async function runCleanup() {
+    try {
+        const r = await api('/api/db/cleanup', { method: 'POST' });
+        log(`cleanup done (size: ${formatBytes(r.size)})`, 'ok');
+        refresh();
+    } catch (err) { log(`cleanup failed: ${err.message}`, 'err'); }
+}
 
-    if (!sessionId) {
-        alert('Veuillez entrer un ID de session');
-        return;
-    }
+async function runVacuum() {
+    try {
+        const r = await api('/api/db/vacuum', { method: 'POST' });
+        log(`vacuum done (size: ${formatBytes(r.size)})`, 'ok');
+        refresh();
+    } catch (err) { log(`vacuum failed: ${err.message}`, 'err'); }
+}
 
-    if (!password) {
-        alert('Veuillez entrer le mot de passe de la session');
-        return;
-    }
+// ────────── Bindings ──────────
+function saveToken() {
+    state.token = $('#tokenInput').value.trim();
+    if (state.token) localStorage.setItem(STORAGE_TOKEN_KEY, state.token);
+    else localStorage.removeItem(STORAGE_TOKEN_KEY);
+    log('token saved', 'ok');
+    refresh();
+}
 
-    // Fermer la connexion précédente si elle existe
-    if (chatWs) {
-        chatWs.close();
-    }
-
-    currentSession = sessionId;
-    currentNickname = nickname;
-    currentPassword = password;
-    chatMessages = [];
-    sessionKeys.clear();
-    currentKeyVersion = 0;
-
-    // Dériver la Lock Key de manière asynchrone
-    ChatCrypto.deriveLockKey(sessionId, password).then(key => {
-        lockKey = key;
-
-        // Créer une nouvelle connexion WebSocket
-        chatWs = new WebSocket(WS_URL);
-
-        chatWs.onopen = () => {
-            // Rejoindre la session
-            chatWs.send(JSON.stringify({
-                type: 'JOIN_SESSION',
-                payload: {
-                    session_id: sessionId,
-                    player_id: currentPlayerId,
-                    player_nickname: nickname
-                }
-            }));
-
-            updateChatStatus('Connexion...', false);
-        };
-
-        chatWs.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data);
-                handleChatMessage(message);
-            } catch (err) {
-                console.error('Erreur chat:', err);
-            }
-        };
-
-        chatWs.onerror = (error) => {
-            console.error('Erreur WebSocket chat:', error);
-            updateChatStatus('Erreur de connexion', false);
-        };
-
-        chatWs.onclose = () => {
-            updateChatStatus('Déconnecté', false);
-            document.getElementById('chatArea').style.display = 'none';
-        };
-    }).catch(err => {
-        alert('Erreur lors de la dérivation de la clé: ' + err.message);
+function init() {
+    $('#tokenInput').value = state.token;
+    $('#saveTokenBtn').addEventListener('click', saveToken);
+    $('#tokenInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveToken(); });
+    $('#refreshBtn').addEventListener('click', refresh);
+    $('#filterInput').addEventListener('input', e => { state.filter = e.target.value; renderSessions(); });
+    $('#actCleanup').addEventListener('click', runCleanup);
+    $('#actVacuum').addEventListener('click', runVacuum);
+    $('#actWipeDb').addEventListener('click', wipeDb);
+    $('#clearLogBtn').addEventListener('click', () => { $('#log').innerHTML = ''; });
+    $('#modalClose').addEventListener('click', closeModal);
+    $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+        if (e.key === 'r' && !e.target.matches('input')) refresh();
     });
+
+    refresh();
+    state.pollTimer = setInterval(refresh, POLL_INTERVAL_MS);
+    log('dashboard ready — polling every 3s');
 }
 
-async function handleChatMessage(message) {
-    const { type, payload } = message;
-
-    switch (type) {
-        case 'INIT_SESSION':
-            // Session rejointe avec succès
-            updateChatStatus(`Connecté à "${currentSession}"`, true);
-            document.getElementById('chatArea').style.display = 'block';
-
-            // Traiter les clés du serveur
-            if (payload.keys && payload.keys.length > 0) {
-                for (const keyData of payload.keys) {
-                    try {
-                        const encryptedKeyBytes = ChatCrypto.base64ToBytes(keyData.key_package);
-                        const nonceBytes = ChatCrypto.base64ToBytes(keyData.nonce);
-                        const version = keyData.version;
-
-                        // Déchiffrer la clé de session avec la Lock Key
-                        const sessionKey = await ChatCrypto.decrypt(encryptedKeyBytes, lockKey, nonceBytes);
-
-                        if (sessionKey) {
-                            sessionKeys.set(version, sessionKey);
-                            if (version > currentKeyVersion) {
-                                currentKeyVersion = version;
-                            }
-                            addLog(`🔑 Clé v${version} déchiffrée`, 'success');
-                        } else {
-                            addLog(`❌ Clé v${version} - Mauvais mot de passe?`, 'error');
-                        }
-                    } catch (err) {
-                        console.error('Erreur déchiffrement clé:', err);
-                    }
-                }
-            }
-
-            // Si aucune clé et pas un nouveau participant, créer une clé
-            const isNewJoiner = payload.new_joiner;
-            if (!isNewJoiner && sessionKeys.size === 0) {
-                addLog('💡 Nouvelle session - génération clé...', 'info');
-                await publishNewKey();
-            }
-
-            // Charger l'historique
-            if (payload.history && payload.history.length > 0) {
-                for (const msg of payload.history) {
-                    await displayServerMessage(msg);
-                }
-            }
-            break;
-
-        case 'HISTORY_RESULT':
-            if (payload.history && payload.history.length > 0) {
-                for (const msg of payload.history) {
-                    await displayServerMessage(msg);
-                }
-            }
-            break;
-
-        case 'NEW_MESSAGE':
-            await displayServerMessage(payload);
-            break;
-
-        case 'NEW_PARTICIPANT':
-            addLog(`👋 ${payload.player_id} a rejoint`, 'success');
-            break;
-
-        case 'KEY_UPDATE':
-            addLog(`🔑 Nouvelle clé v${payload.version}`, 'info');
-            try {
-                const encryptedKeyBytes = ChatCrypto.base64ToBytes(payload.key_package);
-                const nonceBytes = ChatCrypto.base64ToBytes(payload.nonce);
-                const version = payload.version;
-
-                const sessionKey = await ChatCrypto.decrypt(encryptedKeyBytes, lockKey, nonceBytes);
-                if (sessionKey) {
-                    sessionKeys.set(version, sessionKey);
-                    if (version > currentKeyVersion) {
-                        currentKeyVersion = version;
-                    }
-                    addLog(`✅ Clé v${version} installée`, 'success');
-                }
-            } catch (err) {
-                console.error('Erreur KEY_UPDATE:', err);
-            }
-            break;
-
-        case 'ERROR':
-            addLog(`❌ ${payload.message}`, 'error');
-            if (payload.code === 'KEY_ROTATION_REQUIRED') {
-                await publishNewKey();
-            }
-            break;
-
-        case 'HISTORY_CLEARED':
-            addLog(`🗑️ Historique effacé`, 'warning');
-            clearChatMessages();
-            break;
-
-        case 'SERVER_RESET':
-            addLog(`🚨 Le serveur a été réinitialisé.`, 'error');
-            alert('Le serveur a été réinitialisé par un administrateur. Vous avez été déconnecté.');
-            document.getElementById('chatArea').style.display = 'none';
-            document.getElementById('chatStatus').innerText = 'Serveur réinitialisé';
-            document.getElementById('chatStatus').className = 'chat-client-status';
-            currentSessionId = null;
-            if (chatWs) chatWs.close();
-            break;
-    }
-}
-
-async function sendChatMessage() {
-    const input = document.getElementById('messageInput');
-    const content = input.value.trim();
-
-    if (!content) return;
-
-    await sendRawMessage(content);
-    input.value = '';
-}
-
-// Envoyer un message brut (sans passer par l'input field)
-async function sendRawMessage(content) {
-    if (!content || !chatWs || chatWs.readyState !== WebSocket.OPEN) {
-        return;
-    }
-
-    if (currentKeyVersion === 0 || !sessionKeys.has(currentKeyVersion)) {
-        addLog('❌ Aucune clé de session disponible', 'error');
-        return;
-    }
-
-    try {
-        // Chiffrer le message avec la clé de session actuelle
-        const plainBytes = ChatCrypto.stringToBytes(content);
-        const sessionKey = sessionKeys.get(currentKeyVersion);
-        const nonce = ChatCrypto.generateNonce();
-
-        const cipherBytes = await ChatCrypto.encrypt(plainBytes, sessionKey, nonce);
-
-        // Envoyer au serveur
-        chatWs.send(JSON.stringify({
-            type: 'SEND_MSG',
-            payload: {
-                session_id: currentSession,
-                sender_id: currentPlayerId,
-                sender_nickname: currentNickname,
-                payload: ChatCrypto.bytesToBase64(cipherBytes),
-                nonce: ChatCrypto.bytesToBase64(nonce),
-                key_v: currentKeyVersion
-            }
-        }));
-    } catch (err) {
-        console.error('Erreur envoi message:', err);
-        addLog('❌ Échec d\'envoi du message', 'error');
-    }
-}
-
-// Afficher un message du serveur (déchiffré)
-async function displayServerMessage(msgData) {
-    try {
-        const keyVersion = msgData.key_version || 1;
-        const cipherBytes = ChatCrypto.base64ToBytes(msgData.payload);
-        const nonceBytes = ChatCrypto.base64ToBytes(msgData.nonce);
-
-        let content = '[Message chiffré - clé manquante]';
-        let isDecrypted = false;
-
-        if (sessionKeys.has(keyVersion)) {
-            const sessionKey = sessionKeys.get(keyVersion);
-            const plainBytes = await ChatCrypto.decrypt(cipherBytes, sessionKey, nonceBytes);
-
-            if (plainBytes) {
-                content = ChatCrypto.bytesToString(plainBytes);
-                isDecrypted = true;
-            } else {
-                content = '[Échec du déchiffrement]';
-            }
-        }
-
-        displayChatMessage({
-            sender: msgData.sender_nickname || msgData.sender_id,
-            content: content,
-            time: new Date(msgData.timestamp || msgData.server_timestamp),
-            isOwn: msgData.sender_id === currentPlayerId,
-            isEncrypted: !isDecrypted
-        });
-    } catch (err) {
-        console.error('Erreur affichage message:', err);
-    }
-}
-
-// Publier une nouvelle clé de session
-async function publishNewKey() {
-    if (!lockKey) {
-        addLog('❌ Impossible de publier une clé', 'error');
-        return;
-    }
-
-    try {
-        const sessionKey = ChatCrypto.generateSessionKey();
-        const nonce = ChatCrypto.generateNonce();
-        const encryptedKey = await ChatCrypto.encrypt(sessionKey, lockKey, nonce);
-
-        chatWs.send(JSON.stringify({
-            type: 'PUBLISH_KEY',
-            payload: {
-                session_id: currentSession,
-                blob: ChatCrypto.bytesToBase64(encryptedKey),
-                nonce: ChatCrypto.bytesToBase64(nonce)
-            }
-        }));
-
-        addLog('📤 Nouvelle clé publiée', 'info');
-    } catch (err) {
-        console.error('Erreur publication clé:', err);
-    }
-}
-
-function displayChatMessage({ sender, content, time, isOwn, isEncrypted }) {
-    const messagesContainer = document.getElementById('chatMessages');
-
-    // Supprimer le message "Aucun message" si présent
-    const emptyState = messagesContainer.querySelector('.chat-empty');
-    if (emptyState) {
-        emptyState.remove();
-    }
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'chat-message' + (isOwn ? ' own' : '');
-
-    // Détecter les messages très longs (> 500 caractères)
-    const isLongMessage = content.length > 500;
-
-    // Détecter si c'est une image (supporte WEBP, PNG, JPEG, GIF, etc.)
-    const isImage = content.match(/^data:image\/(webp|png|jpeg|jpg|gif|bmp|svg\+xml);base64,/i);
-
-    // Détecter si c'est un fichier texte (nouveau format: 📄FILE:ext:filename)
-    const isTextFile = content.startsWith('📄FILE:');
-
-    let contentClass = 'chat-message-content';
-    let displayContent = content;
-
-    if (isImage && !isEncrypted) {
-        // Extraire le type d'image
-        const imageType = isImage[1].toUpperCase();
-        const sizeKB = Math.round(content.length / 1024);
-
-        // Afficher l'image avec des informations
-        displayContent = `
-            <div style="margin-bottom: 8px; color: #666; font-style: italic;">
-                🖼️ Image ${imageType} (${sizeKB} KB)
-            </div>
-            <div style="position: relative; display: inline-block;">
-                <img src="${content}" 
-                     alt="Image ${imageType}" 
-                     style="max-width: 100%; max-height: 400px; border-radius: 8px; cursor: pointer; display: block;" 
-                     onclick="openImageModal(this.src)"
-                     onload="this.style.opacity='1'"
-                     onerror="this.parentElement.innerHTML='<div style=\\'color: red;\\'>❌ Erreur de chargement de l\\'image</div>'"
-                     loading="lazy"
-                     title="Cliquez pour agrandir">
-                <div style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">
-                    ${sizeKB} KB
-                </div>
-            </div>
-        `;
-    } else if (isTextFile && !isEncrypted) {
-        // Parser le format: 📄FILE:ext:filename\n\ncontenu (robuste)
-        const firstLine = content.split('\n')[0];
-        const fileIdx = firstLine.indexOf('FILE:');
-        const afterPrefix = fileIdx !== -1 ? firstLine.substring(fileIdx + 5) : '';
-        const parts = afterPrefix.split(':');
-        const extension = parts[0] || 'txt';
-        const fileName = parts[1] || 'Unknown';
-
-        // Extraire le contenu via \n\n (robuste)
-        const sepIdx = content.indexOf('\n\n');
-        const fileContent = sepIdx !== -1 ? content.substring(sepIdx + 2) : content;
-
-        // Icônes par extension
-        const extensionIcons = {
-            'txt': '📄', 'md': '📝', 'json': '📊', 'xml': '🏷️',
-            'js': '📜', 'ts': '📜', 'py': '🐍', 'cpp': '⚙️', 'c': '⚙️', 'h': '⚙️',
-            'java': '☕', 'html': '🌐', 'css': '🎨', 'log': '📋',
-            'csv': '📊', 'sql': '🗄️', 'sh': '🖥️', 'bat': '🖥️'
-        };
-        const icon = extensionIcons[extension.toLowerCase()] || '📄';
-
-        // Stocker les données pour les boutons (compteur unique)
-        const fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-
-        contentClass += ' long-message text-file-display';
-        const escapedContent = fileContent.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        displayContent = `
-            <div class="text-file-header">
-                <span class="text-file-name">${icon} ${fileName}</span>
-                <div class="text-file-actions">
-                    <span class="text-file-ext">${extension.toUpperCase()}</span>
-                    <button class="text-file-btn" onclick="copyFileContent('${fileId}')" title="Copier le contenu">📋</button>
-                    <button class="text-file-btn" onclick="downloadFile('${fileId}')" title="Télécharger le fichier">💾</button>
-                </div>
-            </div>
-            <pre id="${fileId}" class="text-file-content" data-filename="${fileName}">${escapedContent}</pre>
-        `;
-    } else if (isLongMessage) {
-        // Message long non-image
-        contentClass += ' long-message';
-        displayContent = `<div style="margin-bottom: 8px; color: #666; font-style: italic;">📎 Message long (${content.length} caractères)</div>${content}`;
-    }
-
-    messageDiv.innerHTML = `
-        <div class="chat-message-header">
-            <span class="chat-message-sender">${sender}</span>
-            <span class="chat-message-time">${formatTime(time)}</span>
-        </div>
-        <div class="${contentClass}">
-            ${isEncrypted && !isImage ? '🔒 ' : ''}${displayContent}
-        </div>
-    `;
-
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function updateChatStatus(text, isConnected) {
-    const statusEl = document.getElementById('chatStatus');
-    statusEl.textContent = text;
-    statusEl.className = 'chat-client-status' + (isConnected ? ' joined' : '');
-}
-
-// Fonctions pour la modale d'image
-function openImageModal(src) {
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImage');
-    modal.style.display = 'block';
-    modalImg.src = src;
-}
-
-function closeImageModal() {
-    document.getElementById('imageModal').style.display = 'none';
-}
-
-// Fermer avec la touche Echap
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeImageModal();
-    }
-});
-
-// Copier le contenu d'un fichier texte
-function copyFileContent(fileId) {
-    const pre = document.getElementById(fileId);
-    if (!pre) return;
-
-    const text = pre.textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        // Feedback visuel
-        const btn = pre.parentElement.querySelector('.text-file-btn');
-        if (btn) {
-            const original = btn.textContent;
-            btn.textContent = '✅';
-            setTimeout(() => { btn.textContent = original; }, 1500);
-        }
-    }).catch(err => {
-        // Fallback pour les contextes non-sécurisés
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-    });
-}
-
-// Télécharger un fichier texte
-function downloadFile(fileId) {
-    const pre = document.getElementById(fileId);
-    if (!pre) return;
-
-    const text = pre.textContent;
-    const fileName = pre.dataset.filename || 'file.txt';
-
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-
-    setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }, 100);
-}
-
+document.addEventListener('DOMContentLoaded', init);

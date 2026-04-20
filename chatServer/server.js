@@ -65,100 +65,230 @@ function debug(...args) {
 
 debug('Server starting in DEBUG mode...');
 
-const server = http.createServer((req, res) => {
-    // API pour les statistiques du serveur
-    if (req.url === '/api/stats' && ENABLE_DASHBOARD) {
-        // Si ADMIN_TOKEN est configuré, on exige `Authorization: Bearer <token>`.
-        // Sinon on log un warning au boot (cf. `startupChecks`) et on sert
-        // en ouvert pour préserver le dev local. /api/stats expose les
-        // session_id, participants, usage mémoire → info disclosure si public.
-        if (ADMIN_TOKEN) {
-            const auth = req.headers['authorization'] || '';
-            const expected = `Bearer ${ADMIN_TOKEN}`;
-            if (auth !== expected) {
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'unauthorized' }));
-                return;
-            }
-        }
-        res.writeHead(200, {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        });
+// ─────────────────────────────────────────────────────────────────────────
+// HTTP server — static dashboard + REST admin API (dev-only).
+// Toutes les routes `/api/*` sont gatées par `ADMIN_TOKEN` si défini ; sinon
+// ouvertes (dev local). Le dashboard n'est jamais destiné à la prod.
+// ─────────────────────────────────────────────────────────────────────────
 
-        const detailedSessions = getDetailedSessionList();
-        const stats = {
+function sendJson(res, status, body) {
+    res.writeHead(status, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+    });
+    res.end(JSON.stringify(body));
+}
+
+function requireAdmin(req, res) {
+    if (!ADMIN_TOKEN) return true; // mode dev : pas de token requis
+    const auth = req.headers['authorization'] || '';
+    if (auth !== `Bearer ${ADMIN_TOKEN}`) {
+        sendJson(res, 401, { error: 'unauthorized', hint: 'set Authorization: Bearer <token>' });
+        return false;
+    }
+    return true;
+}
+
+function readJsonBody(req) {
+    return new Promise((resolve, reject) => {
+        let raw = '';
+        req.on('data', chunk => { raw += chunk; if (raw.length > 1024 * 1024) { req.destroy(); reject(new Error('body too large')); } });
+        req.on('end', () => {
+            if (!raw) return resolve({});
+            try { resolve(JSON.parse(raw)); } catch (e) { reject(e); }
+        });
+        req.on('error', reject);
+    });
+}
+
+function disconnectSessionClients(sessionId, reason) {
+    const room = rooms.get(sessionId);
+    if (!room) return 0;
+    let n = 0;
+    const msg = JSON.stringify({ type: 'SESSION_ENDED', payload: { session_id: sessionId, reason } });
+    for (const client of room) {
+        if (client.readyState === WebSocket.OPEN) { try { client.send(msg); } catch (_) {} }
+        client.session_id = null;
+        client.player_id = null;
+        n++;
+    }
+    rooms.delete(sessionId);
+    keyRotationRequired.delete(sessionId);
+    return n;
+}
+
+function broadcastSessionDeleted(sessionId) {
+    const msg = JSON.stringify({ type: 'SESSION_DELETED', payload: { session_id: sessionId } });
+    wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) { try { c.send(msg); } catch (_) {} } });
+}
+
+async function handleApi(req, res, pathname) {
+    if (!requireAdmin(req, res)) return;
+
+    // GET /api/stats — stats globales + sessions détaillées (même shape que
+    // /api/sessions pour éviter les appels redondants côté dashboard).
+    if (pathname === '/api/stats' && req.method === 'GET') {
+        const sessions = getDetailedSessionList().map(s => ({
+            ...s,
+            message_count: getSessionMessageCount(s.session_id)
+        }));
+        return sendJson(res, 200, {
             connections: wss.clients.size,
             rooms: rooms.size,
             messages: getTotalMessages(),
-            sessions: detailedSessions.map(s => ({
-                id: s.session_id,
-                participants: s.player_count,
-                messages: getSessionMessageCount(s.session_id)
-            })),
+            sessions,
             uptime: process.uptime(),
             memory: process.memoryUsage(),
-            dbSize: db.getDbSize()
-        };
+            dbSize: db.getDbSize(),
+            adminTokenRequired: !!ADMIN_TOKEN,
+            maxSessions: MAX_SESSIONS,
+            rateLimit: { bucket: RATE_LIMIT_BUCKET, refill: RATE_LIMIT_REFILL }
+        });
+    }
 
-        res.end(JSON.stringify(stats));
+    // GET /api/sessions — même shape, endpoint séparé pour clarté.
+    if (pathname === '/api/sessions' && req.method === 'GET') {
+        const list = getDetailedSessionList().map(s => ({
+            ...s,
+            message_count: getSessionMessageCount(s.session_id)
+        }));
+        return sendJson(res, 200, { sessions: list, total: list.length });
+    }
+
+    // Routes paramétrées /api/sessions/:id[/messages]
+    const sessionMatch = pathname.match(/^\/api\/sessions\/([^/]+)(\/messages)?$/);
+    if (sessionMatch) {
+        const sessionId = decodeURIComponent(sessionMatch[1]);
+        const isMessages = !!sessionMatch[2];
+        const existing = db.getSession(sessionId);
+        if (!existing) return sendJson(res, 404, { error: 'session not found', session_id: sessionId });
+
+        if (!isMessages && req.method === 'GET') {
+            const participants = db.getParticipants(sessionId);
+            const room = rooms.get(sessionId);
+            const online = new Set();
+            if (room) for (const c of room) if (c.player_id && c.readyState === WebSocket.OPEN) online.add(c.player_id);
+            return sendJson(res, 200, {
+                session: {
+                    id: sessionId,
+                    name: existing.session_name,
+                    host_player_id: existing.host_player_id,
+                    version: existing.version,
+                    max_players: existing.max_players,
+                    is_public: existing.is_public !== 0,
+                    created_at: existing.created_at,
+                    message_count: getSessionMessageCount(sessionId),
+                    key_rotation_required: keyRotationRequired.has(sessionId)
+                },
+                participants: participants.map(p => ({
+                    player_id: p.player_id,
+                    nickname: p.nickname,
+                    online: online.has(p.player_id)
+                }))
+            });
+        }
+
+        if (!isMessages && req.method === 'DELETE') {
+            const disconnected = disconnectSessionClients(sessionId, 'Session deleted by admin');
+            try { db.deleteSession(sessionId); } catch (e) { return sendJson(res, 500, { error: e.message }); }
+            broadcastSessionDeleted(sessionId);
+            return sendJson(res, 200, { ok: true, session_id: sessionId, disconnected });
+        }
+
+        if (isMessages && req.method === 'GET') {
+            const urlObj = new URL(req.url, 'http://x');
+            const limit = Math.min(parseInt(urlObj.searchParams.get('limit')) || 50, 500);
+            // Métadonnées seulement — on n'envoie pas tout le ciphertext (peut être lourd).
+            // Server-side on reste aveugle : on expose juste taille + timestamps.
+            const rows = db.db.prepare(
+                'SELECT id, sender_id, sender_nickname, key_version, server_timestamp, LENGTH(payload) AS payload_len FROM messages WHERE session_id = ? ORDER BY id DESC LIMIT ?'
+            ).all(sessionId, limit);
+            return sendJson(res, 200, { messages: rows.reverse(), limit });
+        }
+
+        if (isMessages && req.method === 'DELETE') {
+            try { db.clearMessages(sessionId); } catch (e) { return sendJson(res, 500, { error: e.message }); }
+            const room = rooms.get(sessionId);
+            if (room) {
+                const msg = JSON.stringify({ type: 'HISTORY_CLEARED', payload: { session_id: sessionId } });
+                room.forEach(c => { if (c.readyState === WebSocket.OPEN) { try { c.send(msg); } catch (_) {} } });
+            }
+            return sendJson(res, 200, { ok: true, session_id: sessionId });
+        }
+    }
+
+    // Actions DB globales
+    if (pathname === '/api/db/cleanup' && req.method === 'POST') {
+        try { db.cleanupOldData(24); return sendJson(res, 200, { ok: true, action: 'cleanup', size: db.getDbSize() }); }
+        catch (e) { return sendJson(res, 500, { error: e.message }); }
+    }
+    if (pathname === '/api/db/vacuum' && req.method === 'POST') {
+        try { db.vacuum(); return sendJson(res, 200, { ok: true, action: 'vacuum', size: db.getDbSize() }); }
+        catch (e) { return sendJson(res, 500, { error: e.message }); }
+    }
+    if (pathname === '/api/db' && req.method === 'DELETE') {
+        // Reset total. Détruit tout comme CLEAR_ALL_SESSIONS mais via REST.
+        // Équivaut à un wipe manuel de `chat.db`.
+        try { db.clearAllData(); } catch (e) { return sendJson(res, 500, { error: e.message }); }
+        const resetMsg = JSON.stringify({ type: 'SERVER_RESET', payload: { message: 'DB wiped by admin' } });
+        wss.clients.forEach(c => {
+            if (c.readyState === WebSocket.OPEN) { try { c.send(resetMsg); } catch (_) {} }
+            c.session_id = null; c.player_id = null;
+        });
+        rooms.clear();
+        keyRotationRequired.clear();
+        return sendJson(res, 200, { ok: true, action: 'db-wipe' });
+    }
+
+    sendJson(res, 404, { error: 'not found', path: pathname, method: req.method });
+}
+
+const DASHBOARD_ALLOWED = new Set(['/dashboard.html', '/dashboard.css', '/dashboard.js', '/chat_crypto.js', '/labo.html']);
+const MIME_TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json' };
+
+function serveStatic(req, res) {
+    const urlPath = req.url === '/' ? '/dashboard.html' : req.url.split('?')[0];
+    if (!DASHBOARD_ALLOWED.has(urlPath)) {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        return res.end('<h1>Meownopoly Chat Server</h1><p><a href="/dashboard.html">Dashboard</a> · <a href="/labo.html">Labo</a></p>');
+    }
+    const filePath = path.join(__dirname, urlPath.substring(1));
+    const contentType = MIME_TYPES[path.extname(filePath)] || 'text/plain';
+    fs.readFile(filePath, (err, content) => {
+        if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end(`Not found: ${urlPath}`); }
+        res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache' });
+        res.end(content);
+    });
+}
+
+const server = http.createServer((req, res) => {
+    // CORS preflight for dev usage from other origins (dashboard served from file://, etc.)
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204, {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        });
+        return res.end();
+    }
+
+    const pathname = (req.url || '').split('?')[0];
+
+    if (pathname.startsWith('/api/')) {
+        if (!ENABLE_DASHBOARD) return sendJson(res, 404, { error: 'dashboard disabled' });
+        handleApi(req, res, pathname).catch(err => {
+            console.error('[API] Uncaught error:', err);
+            sendJson(res, 500, { error: err.message || 'internal' });
+        });
         return;
     }
 
-    // Servir le dashboard si activé
     if (ENABLE_DASHBOARD) {
-        const url = req.url === '/' ? '/dashboard.html' : req.url;
-
-        const mimeTypes = {
-            '.html': 'text/html',
-            '.css': 'text/css',
-            '.js': 'text/javascript',
-            '.json': 'application/json',
-            '.png': 'image/png',
-            '.jpg': 'image/jpg',
-            '.gif': 'image/gif',
-            '.svg': 'image/svg+xml',
-            '.ico': 'image/x-icon'
-        };
-
-        // Servir uniquement les fichiers du dashboard et labo
-        const allowedFiles = ['/dashboard.html', '/dashboard.css', '/dashboard.js', '/chat_crypto.js', '/labo.html'];
-        if (allowedFiles.includes(url)) {
-            // Construire le chemin complet du fichier
-            const fileName = url.substring(1); // Enlever le '/' initial
-            const filePath = path.join(__dirname, fileName);
-            const extname = path.extname(filePath);
-            const contentType = mimeTypes[extname] || 'text/plain';
-
-            // Vérifier que le fichier existe
-            fs.access(filePath, fs.constants.F_OK, (err) => {
-                if (err) {
-                    console.error(`[Dashboard] Fichier introuvable: ${filePath}`);
-                    res.writeHead(404, { 'Content-Type': 'text/plain' });
-                    res.end(`Fichier non trouvé: ${fileName}\nChemin recherché: ${filePath}`);
-                    return;
-                }
-
-                // Lire et servir le fichier
-                fs.readFile(filePath, (err, content) => {
-                    if (err) {
-                        console.error(`[Dashboard] Erreur de lecture: ${err.message}`);
-                        res.writeHead(500, { 'Content-Type': 'text/plain' });
-                        res.end(`Erreur serveur: ${err.code}\nFichier: ${fileName}`);
-                    } else {
-                        res.writeHead(200, { 'Content-Type': contentType });
-                        res.end(content, 'utf-8');
-                    }
-                });
-            });
-        } else {
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end('<html><body><h1>Meownopoly Chat Server</h1><p>Dashboard disponible sur <a href="/dashboard.html">/dashboard.html</a></p><p>Labo disponible sur <a href="/labo.html">/labo.html</a></p></body></html>');
-        }
-    } else {
-        res.writeHead(200);
-        res.end('Blind Relay Chat Server is running.');
+        return serveStatic(req, res);
     }
+    res.writeHead(200);
+    res.end('Blind Relay Chat Server is running.');
+    return;
 });
 
 const wss = new WebSocket.Server({

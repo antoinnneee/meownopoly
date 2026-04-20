@@ -2,136 +2,100 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meownopoly Chat Server - Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Meownopoly Chat — Dev Dashboard</title>
     <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🐱 Meownopoly Chat Server</h1>
-            <div class="status-badge" id="serverStatus">
-                <span class="status-dot"></span>
-                <span class="status-text">Déconnecté</span>
+    <header>
+        <div class="brand">
+            <span class="logo">🐾</span>
+            <span class="title">Meownopoly Chat <em>— dev dashboard</em></span>
+        </div>
+        <div class="header-right">
+            <span id="serverStatus" class="status offline">offline</span>
+            <button id="refreshBtn" title="Refresh (R)">↻</button>
+        </div>
+    </header>
+
+    <section class="token-bar">
+        <label for="tokenInput">Admin token</label>
+        <input id="tokenInput" type="password" placeholder="(empty if ADMIN_TOKEN not set)" autocomplete="off">
+        <button id="saveTokenBtn">Save</button>
+        <span id="tokenStatus" class="muted"></span>
+    </section>
+
+    <section class="stats">
+        <div class="stat"><div class="label">Connections</div><div class="value" id="statConnections">—</div></div>
+        <div class="stat"><div class="label">Rooms</div><div class="value" id="statRooms">—</div></div>
+        <div class="stat"><div class="label">Sessions (DB)</div><div class="value" id="statSessionsDb">—</div></div>
+        <div class="stat"><div class="label">Messages</div><div class="value" id="statMessages">—</div></div>
+        <div class="stat"><div class="label">DB size</div><div class="value" id="statDbSize">—</div></div>
+        <div class="stat"><div class="label">Uptime</div><div class="value" id="statUptime">—</div></div>
+        <div class="stat"><div class="label">Memory RSS</div><div class="value" id="statMemory">—</div></div>
+        <div class="stat"><div class="label">Max sessions</div><div class="value" id="statMaxSessions">—</div></div>
+    </section>
+
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Sessions</h2>
+            <div class="controls">
+                <input id="filterInput" type="search" placeholder="filter by id or name…" autocomplete="off">
+                <span id="sessionsCount" class="muted">0</span>
             </div>
         </header>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🌐</div>
-                <div class="stat-info">
-                    <div class="stat-value" id="totalConnections">0</div>
-                    <div class="stat-label">Connexions actives</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">🏠</div>
-                <div class="stat-info">
-                    <div class="stat-value" id="totalRooms">0</div>
-                    <div class="stat-label">Salons actifs</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">💬</div>
-                <div class="stat-info">
-                    <div class="stat-value" id="totalMessages">0</div>
-                    <div class="stat-label">Messages reçus</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">⏱️</div>
-                <div class="stat-info">
-                    <div class="stat-value" id="uptime">00:00:00</div>
-                    <div class="stat-label">Temps de fonctionnement</div>
-                </div>
-            </div>
+        <div class="table-wrap">
+            <table id="sessionsTable">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Host</th>
+                        <th class="num">Players</th>
+                        <th class="num">Online</th>
+                        <th class="num">Messages</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsBody">
+                    <tr class="empty"><td colspan="9">no session</td></tr>
+                </tbody>
+            </table>
         </div>
+    </section>
 
-        <div class="main-content">
-            <div class="section">
-                <h2>🔌 Connexions actives</h2>
-                <div id="connectionsList" class="connections-list">
-                    <div class="empty-state">Aucune connexion active</div>
-                </div>
-            </div>
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Server actions</h2>
+        </header>
+        <div class="actions">
+            <button id="actCleanup" class="btn">Run TTL cleanup</button>
+            <button id="actVacuum" class="btn">Vacuum DB</button>
+            <button id="actWipeDb" class="btn danger">Wipe entire DB</button>
+            <p class="hint">Actions are dev-only. « Wipe » supprime toutes les sessions, participants, messages, et ferme toutes les sockets.</p>
+        </div>
+    </section>
 
-            <div class="section">
-                <div class="section-header">
-                    <h2>🏠 Salons de chat</h2>
-                    <button id="clearAllRoomsBtn" class="btn-danger">🗑️ Tout nettoyer</button>
-                </div>
-                <div id="roomsList" class="rooms-list">
-                    <div class="empty-state">Aucun salon actif</div>
-                </div>
-            </div>
+    <section class="panel log-panel">
+        <header class="panel-header">
+            <h2>Log</h2>
+            <div class="controls"><button id="clearLogBtn" class="btn small">clear</button></div>
+        </header>
+        <pre id="log" class="log"></pre>
+    </section>
 
-            <!-- Mini Client de Chat - Plus visible -->
-            <div class="section chat-section">
-                <h2>💬 Client de Chat E2EE</h2>
-                
-                <div class="chat-client" id="chatClient">
-                    <div class="chat-client-header">
-                        <div class="chat-client-title">Test Client</div>
-                        <div class="chat-client-status" id="chatStatus">Non connecté</div>
-                    </div>
-                    
-                    <div class="chat-form">
-                        <input type="text" id="sessionInput" placeholder="ID de session (ex: Pattoune)">
-                        <input type="text" id="nicknameInput" placeholder="Votre pseudo" value="Dashboard">
-                        <input type="password" id="passwordInput" placeholder="Mot de passe" value="123">
-                        <button id="joinBtn">Rejoindre</button>
-                    </div>
-                    
-                    <div id="chatArea" style="display: none;">
-                        <div class="chat-controls">
-                            <button id="clearChatBtn" class="btn-warning">🗑️ Effacer le chat</button>
-                        </div>
-                        
-                        <div class="chat-messages" id="chatMessages">
-                            <div class="chat-empty">Aucun message</div>
-                        </div>
-                        
-                        <div class="chat-input-area">
-                            <input type="text" id="messageInput" placeholder="Tapez votre message..." autocomplete="off">
-                            <input type="file" id="fileInput" style="display: none;" accept=".txt,.md,.json,.log,.xml,.csv,.yml,.yaml,.toml,.ini,.cfg,.js,.ts,.py,.cpp,.c,.h,.hpp,.java,.cs,.go,.rs,.rb,.php,.swift,.kt,.qml,.html,.css,.sql,.sh,.bat,.jsx,.tsx">
-                            <button id="fileBtn" title="Envoyer un fichier texte">📎</button>
-                            <button id="sendBtn">Envoyer</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="collapsible-header" id="activityLogHeader">
-                    📋 Journal d'activité
-                    <span class="toggle-icon">▼</span>
-                </h2>
-                <div id="activityLogSection" class="collapsible-content" style="display: none;">
-                    <div class="log-controls">
-                        <button id="clearLogsBtn" class="btn-secondary">Effacer le journal</button>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="autoScrollCheck" checked>
-                            Défilement automatique
-                        </label>
-                    </div>
-                    <div id="activityLog" class="activity-log"></div>
-                </div>
-            </div>
+    <div id="modal" class="modal hidden">
+        <div class="modal-body">
+            <header class="modal-header">
+                <h3 id="modalTitle">Session</h3>
+                <button id="modalClose" class="btn small">×</button>
+            </header>
+            <div id="modalContent" class="modal-content"></div>
         </div>
     </div>
 
-    <!-- Modale pour afficher les images en plein écran -->
-    <div id="imageModal" class="image-modal" style="display: none;" onclick="closeImageModal()">
-        <span class="close-modal">&times;</span>
-        <img id="modalImage" class="modal-image" src="" alt="Image">
-    </div>
-
-    <!-- Crypto-js pour fallback SHA-256 en HTTP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="chat_crypto.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>

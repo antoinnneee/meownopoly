@@ -923,8 +923,6 @@ Base_Board {
         target: Game
 
         function onFoundItemSnapableTile(itemSnapableData) {
-            Logger.info("Found itemSnapable tile:" + itemSnapableData,
-                        "MAP_LOADING")
             // load disque ne doit JAMAIS émettre d'op réseau.
             // Filet de sécurité : wrap begin/endApplyRemote → submitOp drop.
             EditorOpBus.beginApplyRemote()
