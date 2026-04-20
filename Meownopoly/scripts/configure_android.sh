@@ -128,7 +128,7 @@ CMAKE_EOF
     -DCMAKE_CXX_COMPILER_TARGET="$ANDROID_TARGET" \
     -DCMAKE_SYSROOT="$NDK_SYSROOT" \
     -DCMAKE_C_FLAGS="--target=$ANDROID_TARGET --sysroot=$NDK_SYSROOT" \
-    -DCMAKE_CXX_FLAGS="--target=$ANDROID_TARGET --sysroot=$NDK_SYSROOT"
+    -DCMAKE_CXX_FLAGS="--target=$ANDROID_TARGET --sysroot=$NDK_SYSROOT -cxx-isystem $NDK_SYSROOT/usr/include/c++/v1"
 
 echo
 echo "=== Configuration OK. Build dir : $BUILD_DIR ==="
