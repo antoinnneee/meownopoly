@@ -45,19 +45,62 @@ cmd="${1:-all}"
 build_apk() {
     echo "=== Build APK via androiddeployqt + Gradle ==="
 
-    # Garantit le debug keystore (~/.android/debug.keystore). Sans lui,
-    # l'APK sort non-signé → INSTALL_PARSE_FAILED_NO_CERTIFICATES.
+    # Garantit le debug keystore (~/.android/debug.keystore).
     bash "$(dirname "${BASH_SOURCE[0]}")/ensure_keystore.sh"
 
-    # Force la régénération de l'APK — si l'APK existe, ninja le considère
-    # up-to-date même si la signature a échoué silencieusement au run précédent.
+    # Force la régénération : sans ça ninja considère l'APK up-to-date.
     rm -f "$BUILD_DIR/android-build/$TARGET_NAME.apk"
 
-    # La cible CMake 'apk' appelle androiddeployqt qui :
-    #  - copie le .so dans l'Android project
-    #  - appelle Gradle pour packager + signer (debug keystore par défaut)
     cmake --build "$BUILD_DIR" --target "${TARGET_NAME}_make_apk" 2>&1 | tee /tmp/meow-apk.log
+
+    # Qt build en Release → Gradle produit *-release-unsigned.apk (Gradle ne
+    # signe auto que les Debug builds). androiddeployqt copie l'unsigned tel
+    # quel vers Meownopoly.apk → INSTALL_PARSE_FAILED_NO_CERTIFICATES à
+    # l'install. On signe manuellement avec le debug keystore.
+    sign_apk
     echo
+}
+
+sign_apk() {
+    local apk="$BUILD_DIR/android-build/$TARGET_NAME.apk"
+    local unsigned
+    # Trouve l'APK unsigned produit par Gradle (release ou debug)
+    unsigned="$(find "$BUILD_DIR/android-build/build/outputs/apk" -name "*-unsigned.apk" 2>/dev/null | head -1)"
+    [[ -z "$unsigned" ]] && unsigned="$(find "$BUILD_DIR/android-build/build/outputs/apk" -name "*.apk" 2>/dev/null | head -1)"
+
+    if [[ -z "$unsigned" || ! -f "$unsigned" ]]; then
+        echo "Pas d'APK Gradle à signer — sortie."
+        return 1
+    fi
+
+    # Outils SDK build-tools
+    local buildtools
+    buildtools="$(find "${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}/build-tools" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort -V | tail -1)"
+    local apksigner="$buildtools/apksigner"
+    local zipalign="$buildtools/zipalign"
+
+    if [[ ! -x "$apksigner" ]]; then
+        echo "apksigner introuvable dans $buildtools — install 'build-tools;36.0.0' via sdkmanager"
+        return 1
+    fi
+
+    local aligned="/tmp/${TARGET_NAME}-aligned.apk"
+    echo "=== zipalign ==="
+    "$zipalign" -f -p 4 "$unsigned" "$aligned"
+
+    echo "=== apksigner (debug keystore) ==="
+    "$apksigner" sign \
+        --ks "$HOME/.android/debug.keystore" \
+        --ks-pass pass:android \
+        --key-pass pass:android \
+        --out "$apk" \
+        "$aligned"
+
+    rm -f "$aligned"
+
+    echo "=== Vérification signature ==="
+    "$apksigner" verify --print-certs "$apk" 2>&1 | head -5 || true
+    echo "APK signé : $apk"
 }
 
 find_apk() {
