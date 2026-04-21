@@ -241,9 +241,14 @@ install_box64() {
 install_x86_64_libs() {
     local dest="$HOME/x86_64-libs"
     local target="$dest/usr/lib/x86_64-linux-gnu"
+    # Ajouts : libc6 (contient libc.so.6, libdl, libpthread, libm, librt, libresolv)
+    # nécessaire parce que le wrapper libc.so.6 de box64 ne connaît pas certains
+    # symboles comme nftw utilisé par aapt2. Avec la lib x86_64 complète dans
+    # BOX64_LD_LIBRARY_PATH, box64 charge la version emulée qui a le symbole.
+    local force_refresh="${1:-0}"
 
-    if [[ -f "$target/libgcc_s.so.1" && -f "$target/libstdc++.so.6" ]]; then
-        echo "libs x86_64 déjà présentes : $target"
+    if [[ "$force_refresh" != "force" && -f "$target/libgcc_s.so.1" && -f "$target/libstdc++.so.6" && -f "$target/libc.so.6" ]]; then
+        echo "libs x86_64 déjà présentes (incl. libc.so.6) : $target"
         return
     fi
 
@@ -256,6 +261,8 @@ install_x86_64_libs() {
     local debs=(
         "http://ftp.debian.org/debian/pool/main/g/gcc-14/libgcc-s1_14.2.0-19_amd64.deb"
         "http://ftp.debian.org/debian/pool/main/g/gcc-14/libstdc++6_14.2.0-19_amd64.deb"
+        # libc6 — fournit libc.so.6, libdl, libpthread, libm, librt, libresolv
+        "http://ftp.debian.org/debian/pool/main/g/glibc/libc6_2.40-6_amd64.deb"
     )
 
     for url in "${debs[@]}"; do
@@ -263,12 +270,22 @@ install_x86_64_libs() {
         echo "  -> $deb"
         curl -sL -o "$deb" "$url"
         ar x "$deb"
-        tar xf data.tar.xz
+        # glibc deb utilise data.tar.zst, gcc utilise data.tar.xz
+        if [[ -f data.tar.zst ]]; then
+            tar xf data.tar.zst
+        else
+            tar xf data.tar.xz
+        fi
         rm -f control.tar.* data.tar.* debian-binary "$deb"
     done
 
-    echo "Libs x86_64 installées dans $target"
-    ls "$target" | head
+    # Symlinks vers les noms attendus si glibc pose les libs avec versions spécifiques
+    (cd "$target" && for f in libc.so.6 libm.so.6 libdl.so.2 libpthread.so.0 librt.so.1 libresolv.so.2; do
+        [[ -e "$f" ]] || ln -sf "$(ls "$f"* 2>/dev/null | head -1)" "$f" 2>/dev/null || true
+    done)
+
+    echo "Libs x86_64 installées dans $target :"
+    ls "$target" | grep -E "\.so" | head -20
     cd - >/dev/null
 }
 
