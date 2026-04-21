@@ -205,8 +205,15 @@ export PATH="/usr/bin:/usr/sbin:\$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:\$AN
 # Box64 : émulation x86_64 in-process pour faire tourner le clang NDK.
 # Le NDK r27 ne fournit pas de toolchain aarch64 natif sous dl.google.com ;
 # sdkmanager installe donc le clang x86_64 qu'on doit émuler.
-# Ces libs sont extraites depuis Debian amd64 pool par setup_android_env.sh.
 export BOX64_LD_LIBRARY_PATH="\$HOME/x86_64-libs/usr/lib/x86_64-linux-gnu"
+export BOX64_DYNAREC=0
+
+# qemu-user-static : fallback pour les binaires que box64 ne gère pas
+# (aapt2 utilise des symboles libc comme nftw non wrappés par box64 v0.3.6).
+# \$HOME/x86_64-libs doit contenir un rootfs x86_64 minimal (extrait via
+# podman par setup_android_env.sh : debian:bookworm-slim → lib64, lib,
+# usr/lib/x86_64-linux-gnu + symlink lib64/ld-linux-x86-64.so.2).
+export QEMU_LD_PREFIX="\$HOME/x86_64-libs"
 EOF
     echo "Fichier d'environnement : $envfile"
     echo "Ajoute à ton ~/.bashrc :  source ~/.meownopoly_android.env"
@@ -229,13 +236,66 @@ install_box64() {
         echo "box64 déjà installé."
     fi
 
-    # Désactive les dispatchers FEX qui ont priorité sur box64
-    if [[ -f /proc/sys/fs/binfmt_misc/binfmt-dispatcher-x86_64 ]]; then
-        run "sudo sh -c 'echo 0 > /proc/sys/fs/binfmt_misc/binfmt-dispatcher-x86_64'"
+    # Box64 gère bien le clang NDK mais pas aapt2 (symboles libc manquants
+    # dans son wrapper) → on installe aussi qemu-user-static pour aapt2
+    if ! command -v qemu-x86_64-static >/dev/null 2>&1; then
+        case "$PKG_MGR" in
+            dnf) run "sudo dnf install -y qemu-user-static" ;;
+        esac
+    else
+        echo "qemu-user-static déjà installé."
     fi
-    if [[ -f /proc/sys/fs/binfmt_misc/FEX-x86_64 ]]; then
-        run "sudo sh -c 'echo 0 > /proc/sys/fs/binfmt_misc/FEX-x86_64'"
+
+    # Désactive tous les handlers x86_64 sauf qemu (plus compatible que box64
+    # pour les tools Gradle). Box64 reste dispo en standalone (via invocation
+    # directe) pour le clang NDK si nécessaire.
+    for h in binfmt-dispatcher-x86_64 FEX-x86_64 box64; do
+        if [[ -f /proc/sys/fs/binfmt_misc/$h ]]; then
+            run "sudo sh -c 'echo 0 > /proc/sys/fs/binfmt_misc/$h'"
+        fi
+    done
+    if [[ -f /proc/sys/fs/binfmt_misc/qemu-x86_64 ]]; then
+        run "sudo sh -c 'echo 1 > /proc/sys/fs/binfmt_misc/qemu-x86_64' || true"
     fi
+}
+
+# Rootfs x86_64 minimal pour qemu-user-static — extrait d'une image debian
+# via podman. Ca fournit libc.so.6, ld-linux, libm, libdl, libpthread, etc.
+# avec les bons chemins (/lib64/ld-linux-x86-64.so.2 que qemu cherche en dur).
+install_x86_64_rootfs() {
+    local dest="$HOME/x86_64-libs"
+    if [[ -L "$dest/lib64/ld-linux-x86-64.so.2" || -f "$dest/lib64/ld-linux-x86-64.so.2" ]]; then
+        echo "Rootfs x86_64 déjà présent : $dest/lib64/ld-linux-x86-64.so.2"
+        return
+    fi
+    if ! command -v podman >/dev/null 2>&1; then
+        echo "podman manquant — 'sudo dnf install podman' puis relance."
+        return 1
+    fi
+    [[ $DRY_RUN -eq 1 ]] && return
+    mkdir -p "$dest"
+    cd "$dest"
+
+    echo ">>> Pull debian:bookworm-slim (amd64) via podman"
+    podman pull --platform=linux/amd64 debian:bookworm-slim >/dev/null
+
+    local cid
+    cid="$(podman create --platform=linux/amd64 debian:bookworm-slim)"
+    echo "container : $cid"
+    podman export "$cid" | tar -xf - lib64 lib/x86_64-linux-gnu usr/lib/x86_64-linux-gnu 2>/dev/null || true
+    podman rm "$cid" >/dev/null
+
+    # Le linker x86_64 vient extrait par defaut sous usr/lib/x86_64-linux-gnu
+    # mais qemu le cherche à /lib64/ld-linux-x86-64.so.2 (chemin hardcodé ELF).
+    mkdir -p "$dest/lib64"
+    local ld
+    ld="$(find "$dest" -name 'ld-linux-x86-64.so.2' -not -path '*/lib64/*' | head -1)"
+    if [[ -n "$ld" ]]; then
+        ln -sf "$ld" "$dest/lib64/ld-linux-x86-64.so.2"
+        echo "Symlink : $dest/lib64/ld-linux-x86-64.so.2 -> $ld"
+    fi
+
+    cd - >/dev/null
 }
 
 install_x86_64_libs() {
@@ -304,6 +364,7 @@ install_sdk_packages
 verify_ndk
 install_box64
 install_x86_64_libs
+install_x86_64_rootfs
 write_envfile
 
 # Debug keystore pour que le premier build APK ne sorte pas non-signé
