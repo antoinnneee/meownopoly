@@ -104,9 +104,19 @@ cmd_status() {
     "$ADB" devices -l
 }
 
+cmd_apk() {
+    # Délègue la construction signée à deploy_android.sh (keystore + rebuild)
+    bash "$(dirname "${BASH_SOURCE[0]}")/deploy_android.sh" apk
+}
+
 cmd_deploy() {
     local addr
-    addr="$(normalize_addr "${1:?Usage: deploy <IP>[:PORT]}")"
+    addr="$(normalize_addr "${1:?Usage: deploy <IP>[:PORT] [--rebuild]}")"
+    local rebuild=0
+    shift || true
+    [[ "${1:-}" == "--rebuild" ]] && rebuild=1
+
+    [[ $rebuild -eq 1 ]] && cmd_apk
 
     cmd_connect "$addr" >/dev/null
     # Vérifie que le device est bien connecté
@@ -119,7 +129,14 @@ cmd_deploy() {
     local apk
     apk="$(find_apk)"
     echo "=== Install APK ($apk) sur $addr ==="
-    "$ADB" -s "$addr" install -r -t -g "$apk"
+    if ! "$ADB" -s "$addr" install -r -t -g "$apk"; then
+        echo
+        echo "Install failed. Si INSTALL_PARSE_FAILED_NO_CERTIFICATES :"
+        echo "  bash $0 deploy $addr --rebuild    # re-build APK signé"
+        echo "Si INSTALL_FAILED_UPDATE_INCOMPATIBLE (autre signature installée) :"
+        echo "  $ADB -s $addr uninstall $PACKAGE_NAME"
+        exit 1
+    fi
 
     echo "=== Launch $PACKAGE_NAME ==="
     "$ADB" -s "$addr" shell monkey -p "$PACKAGE_NAME" -c android.intent.category.LAUNCHER 1
@@ -139,6 +156,7 @@ case "$cmd" in
     pair-usb)   cmd_pair_usb ;;
     connect)    cmd_connect "$@" ;;
     disconnect) cmd_disconnect ;;
+    apk)        cmd_apk ;;
     deploy)     cmd_deploy "$@" ;;
     status)     cmd_status ;;
     logcat)     cmd_logcat "$@" ;;

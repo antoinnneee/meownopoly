@@ -289,6 +289,12 @@ install_box64
 install_x86_64_libs
 write_envfile
 
+# Debug keystore pour que le premier build APK ne sorte pas non-signé
+echo
+if [[ $DRY_RUN -eq 0 ]]; then
+    bash "$(dirname "${BASH_SOURCE[0]}")/ensure_keystore.sh" || true
+fi
+
 echo
 echo "=== Terminé. ==="
 echo "Vérifie avec :"

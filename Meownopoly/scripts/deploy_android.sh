@@ -44,10 +44,19 @@ cmd="${1:-all}"
 # --- Étape 1 : build APK ----------------------------------------------------
 build_apk() {
     echo "=== Build APK via androiddeployqt + Gradle ==="
+
+    # Garantit le debug keystore (~/.android/debug.keystore). Sans lui,
+    # l'APK sort non-signé → INSTALL_PARSE_FAILED_NO_CERTIFICATES.
+    bash "$(dirname "${BASH_SOURCE[0]}")/ensure_keystore.sh"
+
+    # Force la régénération de l'APK — si l'APK existe, ninja le considère
+    # up-to-date même si la signature a échoué silencieusement au run précédent.
+    rm -f "$BUILD_DIR/android-build/$TARGET_NAME.apk"
+
     # La cible CMake 'apk' appelle androiddeployqt qui :
     #  - copie le .so dans l'Android project
     #  - appelle Gradle pour packager + signer (debug keystore par défaut)
-    cmake --build "$BUILD_DIR" --target apk 2>&1 | tee /tmp/meow-apk.log
+    cmake --build "$BUILD_DIR" --target "${TARGET_NAME}_make_apk" 2>&1 | tee /tmp/meow-apk.log
     echo
 }
 
