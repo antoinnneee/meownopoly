@@ -27,7 +27,7 @@
 #include <QTimer>
 #include <QDateTime>
 #ifdef Q_OS_ANDROID
-#include <QJniObject.h>
+#include <QJniObject>
 #endif
 #include "tools/QtFolderCompressor/FolderCompressor.h"
 #include "assetManager/asset_manager.h"
