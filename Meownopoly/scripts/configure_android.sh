@@ -29,8 +29,25 @@ echo "Qt host : $QT_HOST"
 echo "Qt cible: $QT_ANDROID"
 echo
 
-# --- Clean ------------------------------------------------------------------
-rm -rf "$BUILD_DIR"
+# --- Clean (seulement si --clean ou première config) -----------------------
+# ATTENTION : ne PAS wiper le build dir par défaut ! On veut que les builds
+# soient incrémentaux (box64 interpréter = 1-2h pour from-scratch).
+#   ./configure_android.sh            → reconfigure si pas de CMakeCache, sinon skip
+#   ./configure_android.sh build      → build incrémental (reconfigure si besoin)
+#   ./configure_android.sh clean      → wipe + reconfigure from scratch
+#   ./configure_android.sh clean build → wipe + reconfigure + build
+NEED_CONFIGURE=1
+NEED_BUILD=0
+for arg in "$@"; do
+    case "$arg" in
+        clean) rm -rf "$BUILD_DIR"; echo "=== Build dir wiped ===" ;;
+        build) NEED_BUILD=1 ;;
+    esac
+done
+if [[ -f "$BUILD_DIR/CMakeCache.txt" && ! " $* " =~ " clean " ]]; then
+    NEED_CONFIGURE=0
+    echo "=== Cache CMake existant → skip reconfigure (use 'clean' pour forcer) ==="
+fi
 
 # --- Configure --------------------------------------------------------------
 # Sur Asahi aarch64 + FEX/muvm, CMake 3.30 ne peut pas compiler le fichier
@@ -59,6 +76,7 @@ fi
 # Cache initial pour skipper toute la détection
 INIT_CACHE="$BUILD_DIR/init_cache.cmake"
 mkdir -p "$BUILD_DIR"
+if [[ $NEED_CONFIGURE -eq 1 ]]; then
 cat > "$INIT_CACHE" <<CMAKE_EOF
 # Bypass compiler detection (clang NDK plante via FEX sur ce test)
 set(CMAKE_C_COMPILER_WORKS   TRUE  CACHE BOOL "" FORCE)
@@ -158,12 +176,13 @@ CMAKE_EOF
     -DCMAKE_SYSROOT="$NDK_SYSROOT" \
     -DCMAKE_C_FLAGS="--target=$ANDROID_TARGET --sysroot=$NDK_SYSROOT" \
     -DCMAKE_CXX_FLAGS="--target=$ANDROID_TARGET --sysroot=$NDK_SYSROOT -cxx-isystem $NDK_SYSROOT/usr/include/c++/v1"
+fi  # NEED_CONFIGURE
 
 echo
 echo "=== Configuration OK. Build dir : $BUILD_DIR ==="
 
 # --- Build optionnel --------------------------------------------------------
-if [[ "${1:-}" == "build" ]]; then
+if [[ $NEED_BUILD -eq 1 ]]; then
     echo
     echo "=== Build (j=1 pour éviter les plantages concurrents muvm/FEX) ==="
     # Parallélisme = 1 obligatoire sur Asahi : le serveur muvm ne supporte
