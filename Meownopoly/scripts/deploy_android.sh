@@ -53,13 +53,15 @@ build_apk() {
 
 find_apk() {
     local apk
+    # Qt 6 androiddeployqt pose l'APK ici :
+    apk="$BUILD_DIR/android-build/$TARGET_NAME.apk"
+    [[ -f "$apk" ]] && { echo "$apk"; return; }
+    # Fallbacks : Gradle outputs path ou debug APK
     apk="$(find "$BUILD_DIR" -name "*.apk" -path "*/outputs/apk/debug/*" 2>/dev/null | head -1)"
-    if [[ -z "$apk" ]]; then
-        apk="$(find "$BUILD_DIR" -name "*-debug.apk" 2>/dev/null | head -1)"
-    fi
+    [[ -z "$apk" ]] && apk="$(find "$BUILD_DIR/android-build" -name "*.apk" 2>/dev/null | head -1)"
+    [[ -z "$apk" ]] && apk="$(find "$BUILD_DIR" -name "*.apk" 2>/dev/null | head -1)"
     if [[ -z "$apk" ]]; then
         echo "APK introuvable sous $BUILD_DIR — le build a-t-il réussi ?" >&2
-        find "$BUILD_DIR" -name "*.apk" 2>/dev/null >&2
         exit 1
     fi
     echo "$apk"
