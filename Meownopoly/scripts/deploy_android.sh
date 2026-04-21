@@ -23,7 +23,21 @@ TARGET_NAME="Meownopoly"
 
 # --- Sanity checks ----------------------------------------------------------
 [[ -d "$BUILD_DIR" ]] || { echo "Build dir manquant : $BUILD_DIR — lance configure_android.sh build d'abord"; exit 1; }
-command -v adb >/dev/null 2>&1 || { echo "adb introuvable — installe android-tools"; exit 1; }
+
+# Force le adb natif aarch64 (Fedora android-tools) — le adb du SDK Google est
+# x86_64 et crashe via box64 (symbole nftw manquant + SIGSEGV dans libc).
+if [[ -x /usr/bin/adb ]]; then
+    ADB=/usr/bin/adb
+elif command -v adb >/dev/null 2>&1; then
+    ADB="$(command -v adb)"
+    case "$(file -b "$ADB" 2>/dev/null)" in
+        *x86-64*) echo "ATTENTION : adb x86_64 ($ADB) crashe sous box64. Installe 'sudo dnf install android-tools'." ; exit 1 ;;
+    esac
+else
+    echo "adb introuvable — 'sudo dnf install android-tools'"
+    exit 1
+fi
+echo "Utilisation de $ADB"
 
 cmd="${1:-all}"
 
@@ -58,7 +72,7 @@ install_apk() {
     echo "=== APK : $apk ==="
 
     local devices
-    devices="$(adb devices | awk 'NR>1 && /device$/ {print $1}')"
+    devices="$("$ADB" devices | awk 'NR>1 && /device$/ {print $1}')"
     if [[ -z "$devices" ]]; then
         echo "Aucun device Android détecté par adb."
         echo "Vérifie : USB branché, débogage USB activé, et lance 'adb devices' manuellement."
@@ -72,7 +86,7 @@ install_apk() {
     # -r = reinstall en gardant les données si possible
     # -t = autorise les APK testOnly (APK debug le sont souvent)
     # -g = grant toutes les permissions runtime auto (dev only)
-    adb install -r -t -g "$apk"
+    "$ADB" install -r -t -g "$apk"
     echo "Installé."
 }
 
@@ -87,17 +101,17 @@ launch_app() {
         extracted="$(aapt dump badging "$apk" 2>/dev/null | awk -F"'" '/^package: name=/ {print $2}')"
         [[ -n "$extracted" ]] && PACKAGE_NAME="$extracted"
     fi
-    adb shell monkey -p "$PACKAGE_NAME" -c android.intent.category.LAUNCHER 1 || {
+    "$ADB" shell monkey -p "$PACKAGE_NAME" -c android.intent.category.LAUNCHER 1 || {
         echo "Échec launch — vérifie le package name : $PACKAGE_NAME"
         echo "Liste des packages installés contenant 'meow' :"
-        adb shell pm list packages | grep -i meow || true
+        "$ADB" shell pm list packages | grep -i meow || true
     }
 }
 
 # --- Logcat suivi ----------------------------------------------------------
 follow_logcat() {
     echo "=== Logcat filtré sur Meownopoly (Ctrl-C pour quitter) ==="
-    adb logcat -v time | grep -iE "meownopoly|qt|libc|chromium|fatal"
+    "$ADB" logcat -v time | grep -iE "meownopoly|qt|libc|chromium|fatal"
 }
 
 # --- Main ------------------------------------------------------------------

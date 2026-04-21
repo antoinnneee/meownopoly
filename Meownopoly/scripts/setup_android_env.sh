@@ -196,7 +196,11 @@ EOF
 export QT_HOST_PATH="$QT_HOST"
 export QT_ANDROID_PATH="$QT_ANDROID"
 
-export PATH="\$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:\$ANDROID_SDK_ROOT/platform-tools:\$PATH"
+# platform-tools du SDK Google sont x86_64 → crashent via box64 (adb SIGSEGV).
+# On met le PATH système EN PREMIER pour que /usr/bin/adb (natif aarch64, paquet
+# android-tools de Fedora) soit prioritaire. Le SDK platform-tools reste
+# accessible en fallback pour fastboot/sqlite3/etc.
+export PATH="/usr/bin:/usr/sbin:\$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:\$ANDROID_SDK_ROOT/platform-tools:\$PATH"
 
 # Box64 : émulation x86_64 in-process pour faire tourner le clang NDK.
 # Le NDK r27 ne fournit pas de toolchain aarch64 natif sous dl.google.com ;
