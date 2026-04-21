@@ -153,15 +153,39 @@ if(WIN32)
     )
 endif()
 if (ANDROID)
-    set(OPENSSL_PATH_PRIMARY "C:/Users/Antoine/AppData/Local/Android/Sdk/android_openssl/CMakeLists.txt")
-    set(OPENSSL_PATH_FALLBACK "C:/AndroidSetup/android_openssl/CMakeLists.txt")
+    # Repo KDAB android_openssl cloné par Meownopoly/scripts/setup_android_openssl.sh
+    # Priorité : variable d'env → user home Linux → vieux chemins Windows d'Antoine
+    set(OPENSSL_CANDIDATES
+        "$ENV{ANDROID_OPENSSL_PATH}/CMakeLists.txt"
+        "$ENV{HOME}/android_openssl/CMakeLists.txt"
+        "C:/Users/Antoine/AppData/Local/Android/Sdk/android_openssl/CMakeLists.txt"
+        "C:/AndroidSetup/android_openssl/CMakeLists.txt"
+    )
 
-    if(EXISTS "${OPENSSL_PATH_PRIMARY}")
-        include(${OPENSSL_PATH_PRIMARY})
-    elseif(EXISTS "${OPENSSL_PATH_FALLBACK}")
-        include(${OPENSSL_PATH_FALLBACK})
-    else()
-        message(WARNING "Android OpenSSL CMakeLists.txt not found at either path!")
+    set(_openssl_found FALSE)
+    foreach(_cand IN LISTS OPENSSL_CANDIDATES)
+        if(_cand AND EXISTS "${_cand}")
+            message(STATUS "Android OpenSSL : ${_cand}")
+            include("${_cand}")
+            set(_openssl_found TRUE)
+            break()
+        endif()
+    endforeach()
+
+    # Les versions récentes de KDAB/android_openssl définissent une fonction
+    # add_android_openssl_libraries(<target>) qui attache les .so à la cible
+    # via QT_ANDROID_EXTRA_LIBS (androiddeployqt les embarque dans l'APK).
+    # Les anciennes versions settaient seulement une variable globale.
+    if(_openssl_found AND COMMAND add_android_openssl_libraries)
+        add_android_openssl_libraries(${PROJECT_NAME})
+    endif()
+
+    if(NOT _openssl_found)
+        message(WARNING
+            "Android OpenSSL CMakeLists.txt introuvable. "
+            "Sans lui, QNetworkAccessManager/QtWebSockets échouera avec "
+            "'TLS initialization failed'. "
+            "Lance : bash Meownopoly/scripts/setup_android_openssl.sh")
     endif()
 endif()
 
