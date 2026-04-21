@@ -153,12 +153,19 @@ if(WIN32)
     )
 endif()
 if (ANDROID)
-    # Repo KDAB android_openssl cloné par Meownopoly/scripts/setup_android_openssl.sh
-    # Priorité : variable d'env → user home Linux → vieux chemins Windows d'Antoine
+    # Repo KDAB android_openssl cloné par Meownopoly/scripts/setup_android_openssl.sh.
+    # API moderne : android_openssl.cmake définit add_android_openssl_libraries().
+    # API legacy (pre-2022) : CMakeLists.txt faisait tout. On priorise la
+    # moderne car le repo courant du user a les 2 fichiers mais seul
+    # android_openssl.cmake définit la fonction.
     set(OPENSSL_CANDIDATES
+        "$ENV{ANDROID_OPENSSL_PATH}/android_openssl.cmake"
+        "$ENV{HOME}/android_openssl/android_openssl.cmake"
         "$ENV{ANDROID_OPENSSL_PATH}/CMakeLists.txt"
         "$ENV{HOME}/android_openssl/CMakeLists.txt"
+        "C:/Users/Antoine/AppData/Local/Android/Sdk/android_openssl/android_openssl.cmake"
         "C:/Users/Antoine/AppData/Local/Android/Sdk/android_openssl/CMakeLists.txt"
+        "C:/AndroidSetup/android_openssl/android_openssl.cmake"
         "C:/AndroidSetup/android_openssl/CMakeLists.txt"
     )
 
@@ -178,11 +185,23 @@ if (ANDROID)
     # Les anciennes versions settaient seulement une variable globale.
     if(_openssl_found AND COMMAND add_android_openssl_libraries)
         add_android_openssl_libraries(${PROJECT_NAME})
+    elseif(_openssl_found)
+        # Garde-fou : fichier trouvé mais pas la bonne API → silent failure
+        # passait sans warning dans la version précédente. Maintenant on crie.
+        message(WARNING
+            "Le fichier OpenSSL inclus ne définit pas "
+            "add_android_openssl_libraries(). Probablement la mauvaise "
+            "version du repo KDAB/android_openssl (API pre-2022 ou build "
+            "system interne). Vérifie que $HOME/android_openssl/android_openssl.cmake "
+            "existe et est bien le point d'entrée officiel. Sans attachement "
+            "explicite, les libs libssl_3.so/libcrypto_3.so ne seront PAS "
+            "embarquées dans l'APK → QSslSocket::supportsSsl()=false à "
+            "l'exécution → toute requête HTTPS tombera en UnknownNetworkError.")
     endif()
 
     if(NOT _openssl_found)
         message(WARNING
-            "Android OpenSSL CMakeLists.txt introuvable. "
+            "Android OpenSSL introuvable dans tous les candidats. "
             "Sans lui, QNetworkAccessManager/QtWebSockets échouera avec "
             "'TLS initialization failed'. "
             "Lance : bash Meownopoly/scripts/setup_android_openssl.sh")
