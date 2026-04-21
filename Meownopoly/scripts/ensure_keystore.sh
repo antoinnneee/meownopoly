@@ -26,8 +26,11 @@ fi
 # --- Skip si déjà présent ---------------------------------------------------
 if [[ -f "$KEYSTORE" ]]; then
     echo "Debug keystore déjà présent : $KEYSTORE"
+    # Info optionnelle — || true évite que pipefail tue le script si le
+    # pattern ne matche pas (formats locale différents).
     "$KEYTOOL" -list -v -keystore "$KEYSTORE" -storepass "$STOREPASS" 2>/dev/null \
-        | grep -E "^Alias name:|^Creation date:|^Valid from:" | head -3
+        | grep -E "^(Alias name|Creation date|Valid from|Nom d'alias|Date de création)" \
+        | head -3 || true
     exit 0
 fi
 
