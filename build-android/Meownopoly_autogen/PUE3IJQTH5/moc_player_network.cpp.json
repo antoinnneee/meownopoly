@@ -1,0 +1,170 @@
+{
+    "classes": [
+        {
+            "className": "PlayerNetwork",
+            "lineNumber": 10,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 6,
+                    "isConst": true,
+                    "lineNumber": 67,
+                    "name": "stats",
+                    "returnType": "QVariantMap"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 13,
+                    "name": "playerId",
+                    "notify": "playerIdChanged",
+                    "read": "playerId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setPlayerId"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 14,
+                    "name": "nickname",
+                    "notify": "nicknameChanged",
+                    "read": "nickname",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setNickname"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 16,
+                    "name": "socketInfo",
+                    "notify": "socketInfoChanged",
+                    "read": "socketInfo",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "UdpSocketInfo*",
+                    "user": false,
+                    "write": "setSocketInfo"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 18,
+                    "name": "ip",
+                    "notify": "ipChanged",
+                    "read": "ip",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setIp"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 4,
+                    "lineNumber": 20,
+                    "name": "port",
+                    "notify": "portChanged",
+                    "read": "port",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "quint16",
+                    "user": false,
+                    "write": "setPort"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 5,
+                    "lineNumber": 23,
+                    "name": "p2pConnected",
+                    "notify": "p2pConnectedChanged",
+                    "read": "isP2pConnected",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false,
+                    "write": "setP2pConnected"
+                }
+            ],
+            "qualifiedClassName": "PlayerNetwork",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 70,
+                    "name": "playerIdChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 71,
+                    "name": "nicknameChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 72,
+                    "name": "socketInfoChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 73,
+                    "name": "ipChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 74,
+                    "name": "portChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 75,
+                    "name": "p2pConnectedChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "player_network.h",
+    "outputRevision": 69
+}

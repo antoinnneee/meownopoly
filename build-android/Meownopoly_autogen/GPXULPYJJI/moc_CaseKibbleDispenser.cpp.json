@@ -1,0 +1,54 @@
+{
+    "classes": [
+        {
+            "className": "CaseKibbleDispenser",
+            "lineNumber": 7,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 19,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 9,
+                    "name": "reward",
+                    "notify": "rewardChanged",
+                    "read": "reward",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setReward"
+                }
+            ],
+            "qualifiedClassName": "CaseKibbleDispenser",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 22,
+                    "name": "rewardChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "Case"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseKibbleDispenser.h",
+    "outputRevision": 69
+}

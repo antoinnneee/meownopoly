@@ -1,0 +1,378 @@
+{
+    "classes": [
+        {
+            "className": "Game",
+            "lineNumber": 21,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 37,
+                    "name": "startGame",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 8,
+                    "lineNumber": 43,
+                    "name": "saveCurrentMap",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapInfo",
+                            "type": "MapInfo*"
+                        },
+                        {
+                            "name": "itemSnapableList",
+                            "type": "QVariantList"
+                        },
+                        {
+                            "name": "mapType",
+                            "type": "MapTypes::MapType"
+                        }
+                    ],
+                    "index": 9,
+                    "lineNumber": 44,
+                    "name": "saveMap",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "mapType",
+                            "type": "MapTypes::MapType"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 45,
+                    "name": "deleteMap",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "mapType",
+                            "type": "MapTypes::MapType"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 46,
+                    "name": "loadMap",
+                    "returnType": "Map*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "jsonObject",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 48,
+                    "name": "generateItems",
+                    "returnType": "QList<ItemSnapable*>"
+                },
+                {
+                    "access": "public",
+                    "index": 13,
+                    "lineNumber": 50,
+                    "name": "askPreview",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 14,
+                    "lineNumber": 51,
+                    "name": "askNext",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "tile",
+                            "type": "ItemSnapable*"
+                        },
+                        {
+                            "name": "groupId",
+                            "type": "QUuid"
+                        }
+                    ],
+                    "index": 15,
+                    "lineNumber": 57,
+                    "name": "updateMap",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "tile",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 16,
+                    "isCloned": true,
+                    "lineNumber": 57,
+                    "name": "updateMap",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "beforeJson",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "afterJson",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 17,
+                    "lineNumber": 59,
+                    "name": "updateMapMetadata",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 18,
+                    "lineNumber": 60,
+                    "name": "beginTransaction",
+                    "returnType": "QUuid"
+                },
+                {
+                    "access": "public",
+                    "index": 19,
+                    "lineNumber": 61,
+                    "name": "commitTransaction",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "tileId",
+                            "type": "QUuid"
+                        }
+                    ],
+                    "index": 20,
+                    "lineNumber": 64,
+                    "name": "finalizeDeletedTile",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "tileId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "groupId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "before",
+                            "type": "QJsonObject"
+                        },
+                        {
+                            "name": "after",
+                            "type": "QJsonObject"
+                        },
+                        {
+                            "name": "applyBefore",
+                            "type": "bool"
+                        }
+                    ],
+                    "index": 21,
+                    "lineNumber": 69,
+                    "name": "applyRemoteDelta",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 22,
+                    "lineNumber": 77,
+                    "name": "initEmptyCollabMap",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "elementsJson",
+                            "type": "QJsonArray"
+                        }
+                    ],
+                    "index": 23,
+                    "lineNumber": 80,
+                    "name": "saveTemplate",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 24,
+                    "lineNumber": 81,
+                    "name": "deleteTemplate",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 25,
+                    "lineNumber": 82,
+                    "name": "loadTemplate",
+                    "returnType": "QJsonObject"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "targetX",
+                            "type": "int"
+                        },
+                        {
+                            "name": "targetY",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 26,
+                    "lineNumber": 83,
+                    "name": "getTemplateElementsForPlacement",
+                    "returnType": "QJsonArray"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "Game",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 89,
+                    "name": "gameStarted",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 91,
+                    "name": "clearCurrentMap",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "map",
+                            "type": "Map*"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 93,
+                    "name": "mapLoaded",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "itemSnapable",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 94,
+                    "name": "foundItemSnapableTile",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "tileId",
+                            "type": "QUuid"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 97,
+                    "name": "tileRemoved",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 98,
+                    "name": "forceUnselectAll",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "tileIds",
+                            "type": "QList<QUuid>"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 100,
+                    "name": "afterRestoration",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "game.h",
+    "outputRevision": 69
+}

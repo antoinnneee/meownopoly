@@ -1,0 +1,259 @@
+{
+    "classes": [
+        {
+            "className": "ChatSessionManager",
+            "lineNumber": 20,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 6,
+                    "isConst": true,
+                    "lineNumber": 35,
+                    "name": "sessionNameForId",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "isConst": true,
+                    "lineNumber": 51,
+                    "name": "serverClient",
+                    "returnType": "ChatClient*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "password",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 58,
+                    "name": "joinSession",
+                    "returnType": "ChatClient*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "password",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 9,
+                    "lineNumber": 65,
+                    "name": "createAndJoinSession",
+                    "returnType": "ChatClient*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "client",
+                            "type": "ChatClient*"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 68,
+                    "name": "leaveSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "client",
+                            "type": "ChatClient*"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 71,
+                    "name": "setActiveSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 12,
+                    "isConst": true,
+                    "lineNumber": 74,
+                    "name": "clientForSession",
+                    "returnType": "ChatClient*"
+                },
+                {
+                    "access": "public",
+                    "index": 13,
+                    "lineNumber": 77,
+                    "name": "requestSessionsRefresh",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 24,
+                    "name": "availableSessions",
+                    "notify": "availableSessionsChanged",
+                    "read": "availableSessions",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 25,
+                    "name": "totalPlayerCount",
+                    "notify": "statsChanged",
+                    "read": "totalPlayerCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 26,
+                    "name": "activeSessionCount",
+                    "notify": "statsChanged",
+                    "read": "activeSessionCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 27,
+                    "name": "serverConnected",
+                    "notify": "serverConnectedChanged",
+                    "read": "serverConnected",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "ChatSessionManager",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 80,
+                    "name": "availableSessionsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 81,
+                    "name": "statsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 82,
+                    "name": "serverConnectedChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "client",
+                            "type": "ChatClient*"
+                        },
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 83,
+                    "name": "sessionJoined",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 84,
+                    "name": "sessionLeft",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "error",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "errorType",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 86,
+                    "name": "sessionError",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "chat_session_manager.h",
+    "outputRevision": 69
+}

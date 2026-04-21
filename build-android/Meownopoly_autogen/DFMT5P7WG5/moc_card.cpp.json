@@ -1,0 +1,18 @@
+{
+    "classes": [
+        {
+            "className": "Card",
+            "lineNumber": 6,
+            "object": true,
+            "qualifiedClassName": "Card",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "card.h",
+    "outputRevision": 69
+}

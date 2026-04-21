@@ -1,0 +1,53 @@
+{
+    "classes": [
+        {
+            "className": "TemplateFileManager",
+            "lineNumber": 13,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "templateName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 24,
+                    "name": "templateExists",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 25,
+                    "name": "getAvailableTemplates",
+                    "returnType": "QStringList"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "templateName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 26,
+                    "name": "getTemplatePath",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "TemplateFileManager",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "templatefilemanager.h",
+    "outputRevision": 69
+}

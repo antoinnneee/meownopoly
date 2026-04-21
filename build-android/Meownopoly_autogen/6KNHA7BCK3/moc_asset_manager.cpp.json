@@ -1,0 +1,415 @@
+{
+    "classes": [
+        {
+            "className": "AssetModel",
+            "lineNumber": 48,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 0,
+                    "isConst": true,
+                    "lineNumber": 88,
+                    "name": "createFilteredModel",
+                    "returnType": "AssetModel*"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "AssetModel",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QAbstractListModel"
+                }
+            ]
+        },
+        {
+            "className": "AssetManager",
+            "lineNumber": 97,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "filename",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 2,
+                    "isConst": true,
+                    "lineNumber": 119,
+                    "name": "buildAssetPath",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 129,
+                    "name": "getAssetPath",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 138,
+                    "name": "getAnimatedGifPath",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "isConst": true,
+                    "lineNumber": 140,
+                    "name": "categories",
+                    "returnType": "QStringList"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 151,
+                    "name": "getAssetModel",
+                    "returnType": "AssetModel*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "filename",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 164,
+                    "name": "getAssetByFilename",
+                    "returnType": "QVariantMap"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 175,
+                    "name": "getAssetById",
+                    "returnType": "QVariantMap"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 9,
+                    "lineNumber": 185,
+                    "name": "getRandomAsset",
+                    "returnType": "QVariantMap"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 187,
+                    "name": "loadAssets",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "basePath",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 188,
+                    "name": "setAssetsBasePath",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 12,
+                    "isConst": true,
+                    "lineNumber": 195,
+                    "name": "getAvailableTypes",
+                    "returnType": "QStringList"
+                },
+                {
+                    "access": "public",
+                    "index": 13,
+                    "isConst": true,
+                    "lineNumber": 201,
+                    "name": "getAvailableCategories",
+                    "returnType": "QStringList"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "searchText",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 14,
+                    "lineNumber": 210,
+                    "name": "hasMatchingAsset",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "category",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 15,
+                    "lineNumber": 219,
+                    "name": "isAssetValid",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 16,
+                    "lineNumber": 221,
+                    "name": "reloadAssets",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 17,
+                    "isConst": true,
+                    "lineNumber": 228,
+                    "name": "getDefaultAssetPath",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "directoryPath",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 18,
+                    "lineNumber": 239,
+                    "name": "generateMetadataForDirectory",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 19,
+                    "lineNumber": 245,
+                    "name": "generateAllMetadata",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 20,
+                    "lineNumber": 251,
+                    "name": "scanAvailableAssets",
+                    "returnType": "QStringList"
+                },
+                {
+                    "access": "public",
+                    "index": 21,
+                    "isConst": true,
+                    "lineNumber": 253,
+                    "name": "getAvailableBackgrounds",
+                    "returnType": "QStringList"
+                },
+                {
+                    "access": "public",
+                    "index": 22,
+                    "isConst": true,
+                    "lineNumber": 256,
+                    "name": "getAvailableModels",
+                    "returnType": "QStringList"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "px",
+                            "type": "float"
+                        },
+                        {
+                            "name": "py",
+                            "type": "float"
+                        },
+                        {
+                            "name": "path",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 23,
+                    "lineNumber": 257,
+                    "name": "isTransparent",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 24,
+                    "isConst": true,
+                    "lineNumber": 259,
+                    "name": "getAppDataPath",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 100,
+                    "name": "categories",
+                    "notify": "categoriesChanged",
+                    "read": "categories",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QStringList",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 101,
+                    "name": "assetsBasePath",
+                    "notify": "assetsBasePathChanged",
+                    "read": "assetsBasePath",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "AssetManager",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 264,
+                    "name": "assetsBasePathChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 265,
+                    "name": "categoriesChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "asset_manager.h",
+    "outputRevision": 69
+}

@@ -1,0 +1,16 @@
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/apk.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/aab.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/aar.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_copy_apk_dependencies.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/_qt_internal_apk_dependencies.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/apk_all.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/qt_internal_plugins.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_prepare_apk_dir.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_make_apk.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_make_aar.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_make_aab.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/edit_cache.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/rebuild_cache.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_autogen_timestamp_deps.dir
+/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_autogen.dir

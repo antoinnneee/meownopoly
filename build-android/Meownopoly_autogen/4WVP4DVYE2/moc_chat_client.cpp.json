@@ -1,0 +1,964 @@
+{
+    "classes": [
+        {
+            "className": "ChatClient",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 37,
+                    "name": "ErrorSession",
+                    "values": [
+                        "SESSION_DOES_NOT_EXIST",
+                        "INVALID_PASSWORD",
+                        "OTHER"
+                    ]
+                }
+            ],
+            "lineNumber": 20,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "url",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 25,
+                    "lineNumber": 56,
+                    "name": "connectToServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "nameSession",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "pwdSession",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "idSession",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 26,
+                    "lineNumber": 58,
+                    "name": "createSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "nameSession",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "pwdSession",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 27,
+                    "isCloned": true,
+                    "lineNumber": 58,
+                    "name": "createSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "newName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 28,
+                    "lineNumber": 63,
+                    "name": "renameSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "newHostId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 29,
+                    "lineNumber": 69,
+                    "name": "transferHost",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "password",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 30,
+                    "lineNumber": 71,
+                    "name": "connectToSessionDirect",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "password",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "nickname",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 31,
+                    "lineNumber": 72,
+                    "name": "connectToSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "password",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 32,
+                    "isCloned": true,
+                    "lineNumber": 72,
+                    "name": "connectToSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 33,
+                    "lineNumber": 73,
+                    "name": "joinSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "text",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "recipientId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "recipientNickname",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 34,
+                    "lineNumber": 75,
+                    "name": "sendMessage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "text",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "recipientId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 35,
+                    "isCloned": true,
+                    "lineNumber": 75,
+                    "name": "sendMessage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "text",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 36,
+                    "isCloned": true,
+                    "lineNumber": 75,
+                    "name": "sendMessage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "filePath",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 37,
+                    "lineNumber": 76,
+                    "name": "sendImage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "filePath",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 38,
+                    "lineNumber": 77,
+                    "name": "sendTextFile",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "filePath",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "content",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 39,
+                    "lineNumber": 78,
+                    "name": "saveTextToFile",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 40,
+                    "lineNumber": 79,
+                    "name": "loadHistory",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "beforeId",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 41,
+                    "lineNumber": 80,
+                    "name": "requestHistory",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 42,
+                    "isCloned": true,
+                    "lineNumber": 80,
+                    "name": "requestHistory",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 43,
+                    "lineNumber": 82,
+                    "name": "clearHistory",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "imageId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "filePath",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 44,
+                    "lineNumber": 83,
+                    "name": "saveImageToFile",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "imageId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 45,
+                    "lineNumber": 84,
+                    "name": "copyImageToClipboard",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 46,
+                    "lineNumber": 85,
+                    "name": "requestParticipants",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 47,
+                    "lineNumber": 87,
+                    "name": "requestSessionsList",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "targetPlayerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 48,
+                    "lineNumber": 89,
+                    "name": "kickPlayer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "targetPlayerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 49,
+                    "lineNumber": 90,
+                    "name": "sendPing",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 50,
+                    "isCloned": true,
+                    "lineNumber": 90,
+                    "name": "sendPing",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "recipientId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        },
+                        {
+                            "name": "localPort",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 51,
+                    "lineNumber": 91,
+                    "name": "sendRequestConnectionInfo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "recipientId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 52,
+                    "isCloned": true,
+                    "lineNumber": 91,
+                    "name": "sendRequestConnectionInfo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "recipientId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 53,
+                    "isCloned": true,
+                    "lineNumber": 91,
+                    "name": "sendRequestConnectionInfo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "recipientId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 54,
+                    "isCloned": true,
+                    "lineNumber": 91,
+                    "name": "sendRequestConnectionInfo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 55,
+                    "isCloned": true,
+                    "lineNumber": 91,
+                    "name": "sendRequestConnectionInfo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "recipientId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 56,
+                    "lineNumber": 92,
+                    "name": "sendShareConnection",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 57,
+                    "isCloned": true,
+                    "lineNumber": 92,
+                    "name": "sendShareConnection",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "commandType",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QJsonObject"
+                        },
+                        {
+                            "name": "recipientId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 58,
+                    "lineNumber": 93,
+                    "name": "sendCommand",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "commandType",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 59,
+                    "isCloned": true,
+                    "lineNumber": 93,
+                    "name": "sendCommand",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 26,
+                    "name": "connected",
+                    "notify": "connectedChanged",
+                    "read": "isConnected",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 27,
+                    "name": "sessionId",
+                    "notify": "sessionIdChanged",
+                    "read": "sessionId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setSessionId"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 28,
+                    "name": "messages",
+                    "notify": "messagesChanged",
+                    "read": "messages",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 29,
+                    "name": "participants",
+                    "notify": "participantsChanged",
+                    "read": "participants",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 4,
+                    "lineNumber": 30,
+                    "name": "participantCount",
+                    "notify": "participantsChanged",
+                    "read": "participantCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 5,
+                    "lineNumber": 31,
+                    "name": "availableSessions",
+                    "notify": "availableSessionsChanged",
+                    "read": "availableSessions",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 6,
+                    "lineNumber": 33,
+                    "name": "pingMs",
+                    "notify": "pingMsChanged",
+                    "read": "pingMs",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "ChatClient",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 103,
+                    "name": "connectedChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 104,
+                    "name": "sessionIdChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 105,
+                    "name": "messagesChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 106,
+                    "name": "participantsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "playerNickname",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 107,
+                    "name": "participantJoined",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 108,
+                    "name": "participantLeft",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "error",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "errorType",
+                            "type": "ChatClient::ErrorSession"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 109,
+                    "name": "errorOccurred",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "error",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 7,
+                    "isCloned": true,
+                    "lineNumber": 109,
+                    "name": "errorOccurred",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 8,
+                    "lineNumber": 110,
+                    "name": "availableSessionsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 111,
+                    "name": "pingMsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "commandType",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 112,
+                    "name": "commandReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "sessionName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 113,
+                    "name": "sessionCreated",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "sessionName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 115,
+                    "name": "sessionCreatedBroadcast",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "sessionName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 13,
+                    "lineNumber": 119,
+                    "name": "sessionRenamed",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "hostPlayerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 14,
+                    "lineNumber": 124,
+                    "name": "hostChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "reason",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 15,
+                    "lineNumber": 126,
+                    "name": "kicked",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 16,
+                    "lineNumber": 128,
+                    "name": "participantKicked",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "reason",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 17,
+                    "lineNumber": 130,
+                    "name": "sessionEnded",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 18,
+                    "lineNumber": 132,
+                    "name": "leftSession",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 19,
+                    "lineNumber": 134,
+                    "name": "serverReset",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "private",
+                    "index": 20,
+                    "lineNumber": 137,
+                    "name": "onConnected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 21,
+                    "lineNumber": 138,
+                    "name": "onDisconnected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 22,
+                    "lineNumber": 139,
+                    "name": "onTextMessageReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "error",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 23,
+                    "lineNumber": 140,
+                    "name": "onWorkerError",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "elapsedMs",
+                            "type": "quint64"
+                        }
+                    ],
+                    "index": 24,
+                    "lineNumber": 141,
+                    "name": "onPongReceived",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "chat_client.h",
+    "outputRevision": 69
+}

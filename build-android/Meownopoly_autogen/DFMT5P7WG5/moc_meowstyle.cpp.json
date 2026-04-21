@@ -1,0 +1,64 @@
+{
+    "classes": [
+        {
+            "className": "MeowStyle",
+            "lineNumber": 9,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "caseType",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 0,
+                    "isConst": true,
+                    "lineNumber": 28,
+                    "name": "getCaseTypeName",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 14,
+                    "name": "familyColors",
+                    "read": "familyColors",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QStringList",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 16,
+                    "name": "caseTypeNames",
+                    "read": "caseTypeNames",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QMap<int,QString>",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "MeowStyle",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "meowstyle.h",
+    "outputRevision": 69
+}

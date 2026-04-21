@@ -1,0 +1,270 @@
+{
+    "classes": [
+        {
+            "className": "ZoneParameter",
+            "lineNumber": 11,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "x",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 9,
+                    "lineNumber": 50,
+                    "name": "addPoint",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 51,
+                    "name": "removeLastPoint",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 11,
+                    "lineNumber": 52,
+                    "name": "clearPoints",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 12,
+                    "isConst": true,
+                    "lineNumber": 53,
+                    "name": "pointCount",
+                    "returnType": "int"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 14,
+                    "name": "zoneColor",
+                    "notify": "zoneColorChanged",
+                    "read": "zoneColor",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setZoneColor"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 15,
+                    "name": "zoneName",
+                    "notify": "zoneNameChanged",
+                    "read": "zoneName",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setZoneName"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 16,
+                    "name": "polygonPoints",
+                    "notify": "polygonPointsChanged",
+                    "read": "polygonPoints",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false,
+                    "write": "setPolygonPoints"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 3,
+                    "lineNumber": 17,
+                    "name": "velocityDirection",
+                    "notify": "velocityDirectionChanged",
+                    "read": "velocityDirection",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVector2D",
+                    "user": false,
+                    "write": "setVelocityDirection"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 4,
+                    "lineNumber": 18,
+                    "name": "velocityStrenght",
+                    "notify": "velocityStrenghtChanged",
+                    "read": "velocityStrenght",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setVelocityStrenght"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 5,
+                    "lineNumber": 19,
+                    "name": "frictionStrenght",
+                    "notify": "frictionStrenghtChanged",
+                    "read": "frictionStrenght",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setFrictionStrenght"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 6,
+                    "lineNumber": 20,
+                    "name": "speedMultiplier",
+                    "notify": "speedMultiplierChanged",
+                    "read": "speedMultiplier",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setSpeedMultiplier"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 7,
+                    "lineNumber": 21,
+                    "name": "exclusion",
+                    "notify": "exclusionChanged",
+                    "read": "exclusion",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false,
+                    "write": "setExclusion"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 8,
+                    "lineNumber": 22,
+                    "name": "accelerationMultiplier",
+                    "notify": "accelerationMultiplierChanged",
+                    "read": "accelerationMultiplier",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setAccelerationMultiplier"
+                }
+            ],
+            "qualifiedClassName": "ZoneParameter",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 84,
+                    "name": "polygonPointsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 85,
+                    "name": "zoneColorChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 86,
+                    "name": "zoneNameChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 88,
+                    "name": "velocityDirectionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 90,
+                    "name": "velocityStrenghtChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 94,
+                    "name": "frictionStrenghtChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 96,
+                    "name": "exclusionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 98,
+                    "name": "speedMultiplierChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 8,
+                    "lineNumber": 100,
+                    "name": "accelerationMultiplierChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "ZoneParameter.h",
+    "outputRevision": 69
+}

@@ -1,0 +1,114 @@
+{
+    "classes": [
+        {
+            "className": "ItemSnapableFactory",
+            "lineNumber": 11,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 19,
+                    "name": "createItemSnapable",
+                    "returnType": "ItemSnapable*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "caseType",
+                            "type": "Case::CaseType"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 20,
+                    "name": "createItemSnapable",
+                    "returnType": "ItemSnapable*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "json",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 21,
+                    "name": "createItemSnapableFromJson",
+                    "returnType": "ItemSnapable*"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 22,
+                    "name": "createPhysicZone",
+                    "returnType": "ItemSnapable*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "jsonData",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 26,
+                    "name": "requestCreateItem",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "jsonArray",
+                            "type": "QJsonArray"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 29,
+                    "name": "requestCreateItems",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "ItemSnapableFactory",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "jsonData",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 37,
+                    "name": "createItemRequested",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "jsonArray",
+                            "type": "QJsonArray"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 39,
+                    "name": "createItemsRequested",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "itemsnapablefactory.h",
+    "outputRevision": 69
+}

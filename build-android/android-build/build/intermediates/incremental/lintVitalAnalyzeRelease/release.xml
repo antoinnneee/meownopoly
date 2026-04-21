@@ -1,0 +1,32 @@
+<variant
+    name="release"
+    package="org.qtproject.example.Meownopoly"
+    minSdkVersion="28"
+    targetSdkVersion="36"
+    mergedManifest="build/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml"
+    proguardFiles="build/intermediates/default_proguard_files/global/proguard-android.txt-8.10.1"
+    resourceConfigurations="en"
+    partialResultsDir="build/intermediates/lint_vital_partial_results/release/lintVitalAnalyzeRelease/out"
+    desugaredMethodsFiles="/home/don404/.gradle/caches/8.14.3/transforms/bed3f2ad02a78b6fe733ceef29909799/transformed/D8BackportedDesugaredMethods.txt">
+  <buildFeatures
+      namespacing="REQUIRED"/>
+  <sourceProviders>
+    <sourceProvider
+        manifests="AndroidManifest.xml"
+        javaDirectories="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/src:src:java:src/release/java:src/main/java:src/main/kotlin:src/release/kotlin"
+        resDirectories="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res:res:src/release/res"
+        assetsDirectories="assets:src/release/assets"/>
+  </sourceProviders>
+  <testSourceProviders>
+  </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
+  <artifact
+      classOutputs="build/intermediates/javac/release/compileReleaseJavaWithJavac/classes:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/processReleaseResources/R.jar"
+      type="MAIN"
+      applicationId="org.qtproject.example.Meownopoly"
+      generatedSourceFolders="build/generated/ap_generated_sources/release/out"
+      generatedResourceFolders="build/generated/res/resValues/release"
+      desugaredMethodsFiles="/home/don404/.gradle/caches/8.14.3/transforms/bed3f2ad02a78b6fe733ceef29909799/transformed/D8BackportedDesugaredMethods.txt">
+  </artifact>
+</variant>

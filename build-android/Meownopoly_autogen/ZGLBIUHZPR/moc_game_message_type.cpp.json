@@ -1,0 +1,38 @@
+{
+    "classes": [
+        {
+            "className": "GameMessageType",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 12,
+                    "name": "Value",
+                    "type": "quint8",
+                    "values": [
+                        "GameStart",
+                        "GameEnd",
+                        "TurnStart",
+                        "DiceRoll",
+                        "PlayerMove",
+                        "BuyProperty",
+                        "PayRent",
+                        "CardDraw",
+                        "JailEnter",
+                        "JailLeave",
+                        "PlayerJoined",
+                        "PlayerLeft",
+                        "MapSync",
+                        "MinigameInput",
+                        "MinigameSnapshot"
+                    ]
+                }
+            ],
+            "lineNumber": 9,
+            "namespace": true,
+            "qualifiedClassName": "GameMessageType"
+        }
+    ],
+    "inputFile": "game_message_type.h",
+    "outputRevision": 69
+}

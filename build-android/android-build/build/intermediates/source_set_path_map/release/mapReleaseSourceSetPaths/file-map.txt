@@ -1,0 +1,16 @@
+org.qtproject.example.Meownopoly-profileinstaller-1.3.0-0 /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/res
+org.qtproject.example.Meownopoly-tracing-1.2.0-1 /home/don404/.gradle/caches/8.14.3/transforms/5a5cfd5e480d9337816565d9b5988d3b/transformed/tracing-1.2.0/res
+org.qtproject.example.Meownopoly-annotation-experimental-1.4.1-2 /home/don404/.gradle/caches/8.14.3/transforms/7fd03c0b17557b353d5f60992ae82aef/transformed/annotation-experimental-1.4.1/res
+org.qtproject.example.Meownopoly-startup-runtime-1.1.1-3 /home/don404/.gradle/caches/8.14.3/transforms/8278d547b2d082f8156587ac03f419c6/transformed/startup-runtime-1.1.1/res
+org.qtproject.example.Meownopoly-core-runtime-2.2.0-4 /home/don404/.gradle/caches/8.14.3/transforms/ab6c28b52bb3a80044749d1c3fc8cb57/transformed/core-runtime-2.2.0/res
+org.qtproject.example.Meownopoly-core-viewtree-1.0.0-5 /home/don404/.gradle/caches/8.14.3/transforms/c3bfbcbbefe65925648195894f8055de/transformed/core-viewtree-1.0.0/res
+org.qtproject.example.Meownopoly-core-1.16.0-6 /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/res
+org.qtproject.example.Meownopoly-lifecycle-runtime-2.6.2-7 /home/don404/.gradle/caches/8.14.3/transforms/cad77c39876a2c989e8c471525464c32/transformed/lifecycle-runtime-2.6.2/res
+org.qtproject.example.Meownopoly-pngs-8 /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/build/generated/res/pngs/release
+org.qtproject.example.Meownopoly-resValues-9 /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/build/generated/res/resValues/release
+org.qtproject.example.Meownopoly-packageReleaseResources-10 /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/build/intermediates/incremental/release/packageReleaseResources/merged.dir
+org.qtproject.example.Meownopoly-packageReleaseResources-11 /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
+org.qtproject.example.Meownopoly-release-12 /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/build/intermediates/merged_res/release/mergeReleaseResources
+org.qtproject.example.Meownopoly-android-build-13 /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/res
+org.qtproject.example.Meownopoly-release-14 /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/src/release/res
+org.qtproject.example.Meownopoly-java-15 /home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res

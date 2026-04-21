@@ -1,0 +1,25 @@
+{
+    "classes": [
+        {
+            "className": "MapTypes",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 8,
+                    "name": "MapType",
+                    "values": [
+                        "AUTOSAVE",
+                        "CUSTOM",
+                        "UNDOREDO"
+                    ]
+                }
+            ],
+            "lineNumber": 6,
+            "namespace": true,
+            "qualifiedClassName": "MapTypes"
+        }
+    ],
+    "inputFile": "maptypes.h",
+    "outputRevision": 69
+}

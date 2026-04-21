@@ -1,0 +1,18 @@
+{
+    "classes": [
+        {
+            "className": "ChatDatabase",
+            "lineNumber": 8,
+            "object": true,
+            "qualifiedClassName": "ChatDatabase",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "chat_database.h",
+    "outputRevision": 69
+}

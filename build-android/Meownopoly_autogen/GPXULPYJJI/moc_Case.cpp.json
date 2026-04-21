@@ -1,0 +1,164 @@
+{
+    "classes": [
+        {
+            "className": "Case",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 17,
+                    "name": "CaseType",
+                    "values": [
+                        "CS_KibbleDispenser",
+                        "CS_RestArea",
+                        "CS_CardBoardBox",
+                        "CS_CatNip",
+                        "CS_Jail",
+                        "CS_ToJail",
+                        "CS_CatDoor",
+                        "CS_FreeNap",
+                        "CS_Device",
+                        "CS_Taxe",
+                        "CS_Unknow",
+                        "CS_Count"
+                    ]
+                }
+            ],
+            "lineNumber": 12,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 50,
+                    "name": "removePlayer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 51,
+                    "name": "addPlayer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 55,
+                    "name": "onLand",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 56,
+                    "name": "onLeave",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 57,
+                    "name": "onHover",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 59,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 33,
+                    "name": "name",
+                    "notify": "nameChanged",
+                    "read": "name",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setName"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 1,
+                    "lineNumber": 34,
+                    "name": "type",
+                    "notify": "typeChanged",
+                    "read": "getType",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "CaseType",
+                    "user": false,
+                    "write": "setType"
+                }
+            ],
+            "qualifiedClassName": "Case",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 65,
+                    "name": "nameChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 68,
+                    "name": "typeChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "Case.h",
+    "outputRevision": 69
+}

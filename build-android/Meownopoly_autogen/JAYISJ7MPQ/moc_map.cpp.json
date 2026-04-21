@@ -1,0 +1,205 @@
+{
+    "classes": [
+        {
+            "className": "Map",
+            "lineNumber": 13,
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 17,
+                    "name": "caseTileCount",
+                    "notify": "caseTileCountChanged",
+                    "read": "caseTileCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 1,
+                    "lineNumber": 18,
+                    "name": "decorationTileCount",
+                    "notify": "decorationTileCountChanged",
+                    "read": "decorationTileCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 2,
+                    "lineNumber": 19,
+                    "name": "zoneTileCount",
+                    "notify": "zoneTileCountChanged",
+                    "read": "zoneTileCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 3,
+                    "lineNumber": 21,
+                    "name": "mapInfo",
+                    "notify": "mapInfoChanged",
+                    "read": "getMapInfo",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "MapInfo*",
+                    "user": false,
+                    "write": "setMapInfo"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 4,
+                    "lineNumber": 22,
+                    "name": "canSave",
+                    "notify": "canSaveChanged",
+                    "read": "canSave",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "Map",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 72,
+                    "name": "caseTileCountChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 73,
+                    "name": "decorationTileCountChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 74,
+                    "name": "zoneTileCountChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 75,
+                    "name": "mapInfoChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 76,
+                    "name": "canSaveChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "map",
+                            "type": "Map*"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 78,
+                    "name": "mapLoaded",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "itemSnapable",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 79,
+                    "name": "foundItemSnapableTile",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "tileId",
+                            "type": "QUuid"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 82,
+                    "name": "tileRemovedFromHistory",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "tile",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 83,
+                    "name": "tileRestoredFromHistory",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 84,
+                    "name": "forceUnselectAll",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "tileIds",
+                            "type": "QList<QUuid>"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 89,
+                    "name": "afterRestoration",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "map.h",
+    "outputRevision": 69
+}

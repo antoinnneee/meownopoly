@@ -1,0 +1,299 @@
+{
+    "classes": [
+        {
+            "className": "MapInfo",
+            "lineNumber": 12,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 36,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 16,
+                    "name": "mapName",
+                    "notify": "mapNameChanged",
+                    "read": "getMapName",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setMapName"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 17,
+                    "name": "mapDescription",
+                    "notify": "mapDescriptionChanged",
+                    "read": "getMapDescription",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setMapDescription"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 18,
+                    "name": "mapCreationDate",
+                    "notify": "mapCreationDateChanged",
+                    "read": "mapCreationDate",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setMapCreationDate"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 19,
+                    "name": "mapLastModified",
+                    "notify": "mapLastModifiedChanged",
+                    "read": "getMapLastModified",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setMapLastModified"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 4,
+                    "lineNumber": 20,
+                    "name": "version",
+                    "notify": "versionChanged",
+                    "read": "getVersion",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setVersion"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 5,
+                    "lineNumber": 22,
+                    "name": "musicPath",
+                    "notify": "musicPathChanged",
+                    "read": "getMusicPath",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setMusicPath"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 6,
+                    "lineNumber": 23,
+                    "name": "backgroundPath",
+                    "notify": "backgroundPathChanged",
+                    "read": "getBackgroundPath",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setBackgroundPath"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 7,
+                    "lineNumber": 24,
+                    "name": "backgroundScaling",
+                    "notify": "backgroundScalingChanged",
+                    "read": "getBackgroundScaling",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setBackgroundScaling"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 8,
+                    "lineNumber": 25,
+                    "name": "isBackgroundOnGrill",
+                    "notify": "isBackgroundOnGrillChanged",
+                    "read": "getIsBackgroundOnGrill",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false,
+                    "write": "setIsBackgroundOnGrill"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 9,
+                    "lineNumber": 26,
+                    "name": "backgroundTileSize",
+                    "notify": "backgroundTileSizeChanged",
+                    "read": "getBackgroundTileSize",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setBackgroundTileSize"
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 10,
+                    "lineNumber": 27,
+                    "name": "autosaveMapName",
+                    "read": "autosaveMapName",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "MapInfo",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 75,
+                    "name": "mapNameChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapDescription",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 76,
+                    "name": "mapDescriptionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapLastModified",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 77,
+                    "name": "mapLastModifiedChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "version",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 78,
+                    "name": "versionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 80,
+                    "name": "mapCreationDateChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 82,
+                    "name": "musicPathChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 84,
+                    "name": "backgroundPathChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 86,
+                    "name": "backgroundScalingChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 8,
+                    "lineNumber": 88,
+                    "name": "isBackgroundOnGrillChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 90,
+                    "name": "backgroundTileSizeChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "mapinfo.h",
+    "outputRevision": 69
+}

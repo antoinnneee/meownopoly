@@ -1,0 +1,183 @@
+{
+    "classes": [
+        {
+            "className": "UiStyle",
+            "lineNumber": 7,
+            "object": true,
+            "properties": [
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 11,
+                    "name": "z_CONFIG_PANEL",
+                    "read": "z_CONFIG_PANEL",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 1,
+                    "lineNumber": 12,
+                    "name": "z_HUD",
+                    "read": "z_HUD",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 2,
+                    "lineNumber": 13,
+                    "name": "z_SELECTION_RECT",
+                    "read": "z_SELECTION_RECT",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 3,
+                    "lineNumber": 14,
+                    "name": "z_TEMPLATE_PREVIEW",
+                    "read": "z_TEMPLATE_PREVIEW",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 4,
+                    "lineNumber": 15,
+                    "name": "z_CURSOR_TRACKER",
+                    "read": "z_CURSOR_TRACKER",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 5,
+                    "lineNumber": 16,
+                    "name": "z_LINK_TRACKER",
+                    "read": "z_LINK_TRACKER",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 6,
+                    "lineNumber": 17,
+                    "name": "z_WORKAREA",
+                    "read": "z_WORKAREA",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 7,
+                    "lineNumber": 19,
+                    "name": "z_BACKGROUND",
+                    "read": "z_BACKGROUND",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 8,
+                    "lineNumber": 20,
+                    "name": "z_GRID",
+                    "read": "z_GRID",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 9,
+                    "lineNumber": 21,
+                    "name": "z_GLOBAL_MA",
+                    "read": "z_GLOBAL_MA",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": true,
+                    "index": 10,
+                    "lineNumber": 23,
+                    "name": "z_CHAT_DRAWER",
+                    "read": "z_CHAT_DRAWER",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "UiStyle",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 56,
+                    "name": "z_CHAT_DRAWERChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "uistyle.h",
+    "outputRevision": 69
+}

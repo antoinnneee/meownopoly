@@ -1,0 +1,25 @@
+{
+	"BUILD_DIR" : "/home/don404/Informatique/QtProject/meownopoly/build-android/Meownopoly_autogen",
+	"CMAKE_BINARY_DIR" : "/home/don404/Informatique/QtProject/meownopoly/build-android",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/don404/Informatique/QtProject/meownopoly/build-android",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/don404/Informatique/QtProject/meownopoly/Meownopoly",
+	"CMAKE_SOURCE_DIR" : "/home/don404/Informatique/QtProject/meownopoly/Meownopoly",
+	"CROSS_CONFIG" : false,
+	"GENERATOR" : "Ninja",
+	"INCLUDE_DIR" : "/home/don404/Informatique/QtProject/meownopoly/build-android/Meownopoly_autogen/include",
+	"INPUTS" : 
+	[
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/asset/nopic.webp"
+	],
+	"LOCK_FILE" : "/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_autogen.dir/AutoRcc_asset_EWIEGA46WW_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "--no-zstd", "-name", "asset" ],
+	"OUTPUT_CHECKSUM" : "EWIEGA46WW",
+	"OUTPUT_NAME" : "qrc_asset.cpp",
+	"RCC_EXECUTABLE" : "/home/don404/Qt/6.10.3/gcc_arm64/libexec/rcc",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_autogen.dir/AutoRcc_asset_EWIEGA46WW_Used.txt",
+	"SOURCE" : "/home/don404/Informatique/QtProject/meownopoly/Meownopoly/asset.qrc",
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

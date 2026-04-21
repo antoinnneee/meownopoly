@@ -1,0 +1,254 @@
+{
+    "classes": [
+        {
+            "className": "StunManager",
+            "lineNumber": 11,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 8,
+                    "lineNumber": 18,
+                    "name": "startServer",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 19,
+                    "name": "stopServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 20,
+                    "name": "sendStunRequest",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 21,
+                    "name": "setStunServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 12,
+                    "isConst": true,
+                    "lineNumber": 22,
+                    "name": "getStunServer",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "index": 13,
+                    "isConst": true,
+                    "lineNumber": 23,
+                    "name": "getStunPort",
+                    "returnType": "quint16"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 14,
+                    "lineNumber": 24,
+                    "name": "setPublicPort",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 15,
+                    "lineNumber": 25,
+                    "name": "setStunSenderAddress",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 16,
+                    "lineNumber": 26,
+                    "name": "setStunSenderPort",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 17,
+                    "isConst": true,
+                    "lineNumber": 27,
+                    "name": "getExternalIp",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "index": 18,
+                    "isConst": true,
+                    "lineNumber": 28,
+                    "name": "getExternalPort",
+                    "returnType": "quint16"
+                },
+                {
+                    "access": "public",
+                    "index": 19,
+                    "isConst": true,
+                    "lineNumber": 31,
+                    "name": "getSocket",
+                    "returnType": "QUdpSocket*"
+                },
+                {
+                    "access": "public",
+                    "index": 20,
+                    "isConst": true,
+                    "lineNumber": 33,
+                    "name": "currentSocketInfo",
+                    "returnType": "UdpSocketInfo*"
+                },
+                {
+                    "access": "public",
+                    "index": 21,
+                    "lineNumber": 35,
+                    "name": "takeSocket",
+                    "returnType": "UdpSocketInfo*"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "StunManager",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 41,
+                    "name": "log",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "localPort",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 42,
+                    "name": "serverStarted",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 43,
+                    "name": "externalAddressReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 44,
+                    "name": "stunFailed",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "info",
+                            "type": "UdpSocketInfo*"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 45,
+                    "name": "currentSocketInfoChanged",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "datagram",
+                            "type": "QByteArray"
+                        },
+                        {
+                            "name": "sender",
+                            "type": "QHostAddress"
+                        },
+                        {
+                            "name": "senderPort",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 38,
+                    "name": "handleStunResponse",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 6,
+                    "lineNumber": 48,
+                    "name": "onReadyRead",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 7,
+                    "lineNumber": 49,
+                    "name": "onStunTimeout",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "stun_manager.h",
+    "outputRevision": 69
+}

@@ -1,0 +1,9 @@
+-rootPath
+/home/don404/Informatique/QtProject/meownopoly/Meownopoly
+-cmake-output
+-output-file
+/home/don404/Informatique/QtProject/meownopoly/build-android/.qt/qml_imports/Meownopoly_conf.cmake
+-importPath
+/home/don404/Informatique/QtProject/meownopoly/build-android
+-importPath
+/home/don404/Qt/6.10.3/android_arm64_v8a/qml

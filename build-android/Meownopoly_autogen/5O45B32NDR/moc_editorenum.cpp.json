@@ -1,0 +1,34 @@
+{
+    "classes": [
+        {
+            "className": "EditorEnum",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 16,
+                    "name": "EditorMouseMode",
+                    "values": [
+                        "EM_NORMAL",
+                        "EM_POSE",
+                        "EM_SELECTION_LINK",
+                        "EM_TEMPLATE",
+                        "EM_GAME",
+                        "EM_DRAW_POLYGON"
+                    ]
+                }
+            ],
+            "lineNumber": 7,
+            "object": true,
+            "qualifiedClassName": "EditorEnum",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "editorenum.h",
+    "outputRevision": 69
+}

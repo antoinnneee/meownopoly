@@ -1,0 +1,6 @@
+[
+    {
+        "merged": "org.qtproject.example.Meownopoly-release-12:/xml_qtprovider_paths.xml.flat",
+        "source": "org.qtproject.example.Meownopoly-android-build-13:/xml/qtprovider_paths.xml"
+    }
+]

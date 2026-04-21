@@ -1,0 +1,61 @@
+{
+    "classes": [
+        {
+            "className": "AppInfo",
+            "lineNumber": 7,
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 10,
+                    "name": "name",
+                    "notify": "nameChanged",
+                    "read": "name",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setName"
+                }
+            ],
+            "qualifiedClassName": "AppInfo",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 24,
+                    "name": "nameChanged",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 20,
+                    "name": "getVersionName",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 21,
+                    "name": "getVersionNumber",
+                    "returnType": "QString"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "appinfo.h",
+    "outputRevision": 69
+}

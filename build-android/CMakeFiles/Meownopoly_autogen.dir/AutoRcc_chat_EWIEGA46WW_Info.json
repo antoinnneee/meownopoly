@@ -1,0 +1,35 @@
+{
+	"BUILD_DIR" : "/home/don404/Informatique/QtProject/meownopoly/build-android/Meownopoly_autogen",
+	"CMAKE_BINARY_DIR" : "/home/don404/Informatique/QtProject/meownopoly/build-android",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/don404/Informatique/QtProject/meownopoly/build-android",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/don404/Informatique/QtProject/meownopoly/Meownopoly",
+	"CMAKE_SOURCE_DIR" : "/home/don404/Informatique/QtProject/meownopoly/Meownopoly",
+	"CROSS_CONFIG" : false,
+	"GENERATOR" : "Ninja",
+	"INCLUDE_DIR" : "/home/don404/Informatique/QtProject/meownopoly/build-android/Meownopoly_autogen/include",
+	"INPUTS" : 
+	[
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatHeader.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatDrawer.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatParticipantsPanel.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatHeaderSelection.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatMessagesList.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatMessageDelegate.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatStatusBar.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatToastPopup.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/qmldir",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/TextFileDisplay.qml",
+		"/home/don404/Informatique/QtProject/meownopoly/Meownopoly/qml/chat/ChatInputBar.qml"
+	],
+	"LOCK_FILE" : "/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_autogen.dir/AutoRcc_chat_EWIEGA46WW_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "--no-zstd", "-name", "chat" ],
+	"OUTPUT_CHECKSUM" : "EWIEGA46WW",
+	"OUTPUT_NAME" : "qrc_chat.cpp",
+	"RCC_EXECUTABLE" : "/home/don404/Qt/6.10.3/gcc_arm64/libexec/rcc",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "/home/don404/Informatique/QtProject/meownopoly/build-android/CMakeFiles/Meownopoly_autogen.dir/AutoRcc_chat_EWIEGA46WW_Used.txt",
+	"SOURCE" : "/home/don404/Informatique/QtProject/meownopoly/Meownopoly/chat.qrc",
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

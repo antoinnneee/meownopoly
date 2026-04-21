@@ -1,0 +1,36 @@
+{
+    "classes": [
+        {
+            "className": "CaseCatNip",
+            "lineNumber": 6,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 16,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "CaseCatNip",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 19,
+                    "name": "cardDrawn",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "Case"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseCatNip.h",
+    "outputRevision": 69
+}

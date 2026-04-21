@@ -1,0 +1,112 @@
+{
+    "classes": [
+        {
+            "className": "UdpSocketInfo",
+            "lineNumber": 8,
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 11,
+                    "name": "publicAddress",
+                    "notify": "publicAddressChanged",
+                    "read": "publicAddress",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setPublicAddress"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 12,
+                    "name": "publicPort",
+                    "notify": "publicPortChanged",
+                    "read": "publicPort",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "quint16",
+                    "user": false,
+                    "write": "setPublicPort"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 13,
+                    "name": "localPort",
+                    "notify": "localPortChanged",
+                    "read": "localPort",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "quint16",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "UdpSocketInfo",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 32,
+                    "name": "publicAddressChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 33,
+                    "name": "publicPortChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 34,
+                    "name": "socketChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 35,
+                    "name": "localPortChanged",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "state",
+                            "type": "QAbstractSocket::SocketState"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 38,
+                    "name": "onSocketStateChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "udp_socket_info.h",
+    "outputRevision": 69
+}

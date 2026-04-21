@@ -1,0 +1,564 @@
+{
+    "classes": [
+        {
+            "className": "PattounX_body",
+            "lineNumber": 20,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "inputVector",
+                            "type": "QVector2D"
+                        },
+                        {
+                            "name": "inputForce",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 22,
+                    "lineNumber": 87,
+                    "name": "applyForce",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "inputVector",
+                            "type": "QVector2D"
+                        }
+                    ],
+                    "index": 23,
+                    "lineNumber": 88,
+                    "name": "applyForce",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "impulse",
+                            "type": "QVector2D"
+                        }
+                    ],
+                    "index": 24,
+                    "lineNumber": 94,
+                    "name": "applyImpulse",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 25,
+                    "lineNumber": 99,
+                    "name": "stop",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 26,
+                    "lineNumber": 104,
+                    "name": "reset",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": true,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 24,
+                    "name": "bodyId",
+                    "read": "bodyId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 25,
+                    "name": "position",
+                    "notify": "positionChanged",
+                    "read": "position",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVector2D",
+                    "user": false,
+                    "write": "setPosition"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 26,
+                    "name": "velocity",
+                    "notify": "velocityChanged",
+                    "read": "velocity",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVector2D",
+                    "user": false,
+                    "write": "setVelocity"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 27,
+                    "name": "collisionRadius",
+                    "notify": "collisionRadiusChanged",
+                    "read": "collisionRadius",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setCollisionRadius"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 4,
+                    "lineNumber": 28,
+                    "name": "bounceFactor",
+                    "notify": "bounceFactorChanged",
+                    "read": "bounceFactor",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setBounceFactor"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 5,
+                    "lineNumber": 29,
+                    "name": "slideFactor",
+                    "notify": "slideFactorChanged",
+                    "read": "slideFactor",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setSlideFactor"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 6,
+                    "lineNumber": 30,
+                    "name": "acceleration",
+                    "notify": "accelerationChanged",
+                    "read": "acceleration",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setAcceleration"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 7,
+                    "lineNumber": 31,
+                    "name": "maxSpeed",
+                    "notify": "maxSpeedChanged",
+                    "read": "maxSpeed",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setMaxSpeed"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 8,
+                    "lineNumber": 32,
+                    "name": "mass",
+                    "notify": "massChanged",
+                    "read": "mass",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setMass"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 9,
+                    "lineNumber": 33,
+                    "name": "invMass",
+                    "notify": "invMassChanged",
+                    "read": "invMass",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 10,
+                    "lineNumber": 34,
+                    "name": "restitution",
+                    "notify": "restitutionChanged",
+                    "read": "restitution",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 11,
+                    "lineNumber": 35,
+                    "name": "staticFriction",
+                    "notify": "staticFrictionChanged",
+                    "read": "staticFriction",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 12,
+                    "lineNumber": 36,
+                    "name": "dynamicFriction",
+                    "notify": "dynamicFrictionChanged",
+                    "read": "dynamicFriction",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 13,
+                    "lineNumber": 37,
+                    "name": "linearDamping",
+                    "notify": "linearDampingChanged",
+                    "read": "linearDamping",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qreal",
+                    "user": false,
+                    "write": "setLinearDamping"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 14,
+                    "lineNumber": 38,
+                    "name": "isStatic",
+                    "notify": "isStaticChanged",
+                    "read": "isStatic",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false,
+                    "write": "setIsStatic"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 15,
+                    "lineNumber": 39,
+                    "name": "collisionEnabled",
+                    "notify": "collisionEnabledChanged",
+                    "read": "collisionEnabled",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false,
+                    "write": "setCollisionEnabled"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 16,
+                    "lineNumber": 42,
+                    "name": "isColliding",
+                    "notify": "isCollidingChanged",
+                    "read": "isColliding",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 17,
+                    "lineNumber": 43,
+                    "name": "lastCollisionNormal",
+                    "notify": "lastCollisionNormalChanged",
+                    "read": "lastCollisionNormal",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVector2D",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 18,
+                    "lineNumber": 44,
+                    "name": "inputVector",
+                    "notify": "inputVectorChanged",
+                    "read": "inputVector",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVector2D",
+                    "user": false,
+                    "write": "setInputVector"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 19,
+                    "lineNumber": 45,
+                    "name": "isSleeping",
+                    "notify": "isSleepingChanged",
+                    "read": "isSleeping",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "PattounX_body",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 143,
+                    "name": "positionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 144,
+                    "name": "velocityChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 145,
+                    "name": "collisionRadiusChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 146,
+                    "name": "bounceFactorChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 147,
+                    "name": "slideFactorChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 148,
+                    "name": "accelerationChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 149,
+                    "name": "maxSpeedChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 150,
+                    "name": "massChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 8,
+                    "lineNumber": 151,
+                    "name": "isStaticChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 152,
+                    "name": "collisionEnabledChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 153,
+                    "name": "isCollidingChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 11,
+                    "lineNumber": 154,
+                    "name": "lastCollisionNormalChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "zone",
+                            "type": "PattounX_zone*"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 157,
+                    "name": "collisionOccurred",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "zone",
+                            "type": "PattounX_zone*"
+                        }
+                    ],
+                    "index": 13,
+                    "lineNumber": 158,
+                    "name": "enteredZone",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "zone",
+                            "type": "PattounX_zone*"
+                        }
+                    ],
+                    "index": 14,
+                    "lineNumber": 159,
+                    "name": "exitedZone",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 15,
+                    "lineNumber": 161,
+                    "name": "inputVectorChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 16,
+                    "lineNumber": 162,
+                    "name": "isSleepingChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 17,
+                    "lineNumber": 164,
+                    "name": "invMassChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 18,
+                    "lineNumber": 166,
+                    "name": "restitutionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 19,
+                    "lineNumber": 168,
+                    "name": "staticFrictionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 20,
+                    "lineNumber": 170,
+                    "name": "dynamicFrictionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 21,
+                    "lineNumber": 172,
+                    "name": "linearDampingChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "pattounx_body.h",
+    "outputRevision": 69
+}

@@ -1,0 +1,172 @@
+{
+    "classes": [
+        {
+            "className": "ChatWorker",
+            "lineNumber": 11,
+            "object": true,
+            "qualifiedClassName": "ChatWorker",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 26,
+                    "name": "connected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 27,
+                    "name": "disconnected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 28,
+                    "name": "textMessageReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "error",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 29,
+                    "name": "errorOccurred",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "elapsedMs",
+                            "type": "quint64"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 31,
+                    "name": "pongReceived",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "url",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 20,
+                    "name": "connectToServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 21,
+                    "name": "sendTextMessage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 22,
+                    "name": "disconnectFromServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 8,
+                    "lineNumber": 34,
+                    "name": "onConnected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 9,
+                    "lineNumber": 35,
+                    "name": "onDisconnected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 36,
+                    "name": "onTextMessageReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "error",
+                            "type": "QAbstractSocket::SocketError"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 37,
+                    "name": "onError",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "elapsedTime",
+                            "type": "quint64"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QByteArray"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 38,
+                    "name": "onPong",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 13,
+                    "lineNumber": 39,
+                    "name": "sendPingFrame",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "chat_worker.h",
+    "outputRevision": 69
+}

@@ -1,0 +1,18 @@
+{
+    "classes": [
+        {
+            "className": "LiveImage",
+            "lineNumber": 9,
+            "object": true,
+            "qualifiedClassName": "LiveImage",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QQuickPaintedItem"
+                }
+            ]
+        }
+    ],
+    "inputFile": "liveimage.h",
+    "outputRevision": 69
+}

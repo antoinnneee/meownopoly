@@ -1,0 +1,27 @@
+{
+    "classes": [
+        {
+            "className": "CaseToJail",
+            "lineNumber": 7,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 16,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "CaseToJail",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "Case"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseToJail.h",
+    "outputRevision": 69
+}

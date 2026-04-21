@@ -1,0 +1,18 @@
+{
+    "classes": [
+        {
+            "className": "QmlApp",
+            "lineNumber": 22,
+            "object": true,
+            "qualifiedClassName": "QmlApp",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QQmlApplicationEngine"
+                }
+            ]
+        }
+    ],
+    "inputFile": "qmlapp.h",
+    "outputRevision": 69
+}

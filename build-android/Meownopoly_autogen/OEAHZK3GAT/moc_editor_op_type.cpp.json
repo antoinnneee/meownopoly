@@ -1,0 +1,34 @@
+{
+    "classes": [
+        {
+            "className": "EditorOpType",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 13,
+                    "name": "Value",
+                    "type": "quint8",
+                    "values": [
+                        "CreateItem",
+                        "DeleteItem",
+                        "MoveItem",
+                        "ResizeItem",
+                        "SetDisplayParameter",
+                        "SetCaseData",
+                        "SetDecorationParameter",
+                        "SetZoneParameter",
+                        "LinkItems",
+                        "UnlinkItems",
+                        "ApplyState"
+                    ]
+                }
+            ],
+            "lineNumber": 10,
+            "namespace": true,
+            "qualifiedClassName": "EditorOpType"
+        }
+    ],
+    "inputFile": "editor_op_type.h",
+    "outputRevision": 69
+}

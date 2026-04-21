@@ -1,0 +1,67 @@
+{
+    "classes": [
+        {
+            "className": "CaseFreeNap",
+            "lineNumber": 7,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "amount",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 16,
+                    "name": "addToPool",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 23,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 10,
+                    "name": "kibbleAmount",
+                    "notify": "kibbleAmountChanged",
+                    "read": "kibbleAmount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setKibbleAmount"
+                }
+            ],
+            "qualifiedClassName": "CaseFreeNap",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 26,
+                    "name": "kibbleAmountChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "Case"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseFreeNap.h",
+    "outputRevision": 69
+}

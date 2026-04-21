@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3" xmlns:ns1="http://schemas.android.com/tools"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res"/><source path="/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res"><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-zh-rTW/strings.xml" qualifiers="zh-rTW"><string name="fatal_error_msg" ns1:ignore="UnusedResources">您的應用程序遇到一個致命錯誤導致它無法繼續。</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-zh-rCN/strings.xml" qualifiers="zh-rCN"><string name="fatal_error_msg" ns1:ignore="UnusedResources">您的应用程序遇到一个致命错误导致它无法继续。</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-se/strings.xml" qualifiers="se"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Vaša aplikacija je naišla na fatalnu grešku i ne može nastaviti sa radom.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-ru/strings.xml" qualifiers="ru"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Ваше приложение столкнулось с фатальной ошибкой и не может более работать.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-ro/strings.xml" qualifiers="ro"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Aplicaţia dumneavoastră a întâmpinat o eroare fatală şi nu poate continua.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-pt-rBR/strings.xml" qualifiers="pt-rBR"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Sua aplicação encontrou um erro fatal e não pode continuar.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-pl/strings.xml" qualifiers="pl"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Wystąpił błąd krytyczny. Aplikacja zostanie zamknięta.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-nl/strings.xml" qualifiers="nl"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Er is een fatale fout in de applicatie opgetreden. De applicatie kan niet verder gaan.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-nb/strings.xml" qualifiers="nb"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Applikasjonen fikk en kritisk feil og kan ikke fortsette</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-ms/strings.xml" qualifiers="ms"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Aplikasi anda menemui ralat muat dan tidak boleh diteruskan.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-ja/strings.xml" qualifiers="ja"><string name="fatal_error_msg" ns1:ignore="UnusedResources">アプリケーションで致命的なエラーが発生したため続行できません。</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-it/strings.xml" qualifiers="it"><string name="fatal_error_msg" ns1:ignore="UnusedResources">L\'applicazione ha provocato un errore grave e non puo\' continuare.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-in/strings.xml" qualifiers="in"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Aplikasi Anda mengalami kesalahan fatal dan tidak dapat melanjutkan.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-fr/strings.xml" qualifiers="fr"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Votre application a rencontré une erreur fatale et ne peut pas continuer.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-fa/strings.xml" qualifiers="fa"><string name="fatal_error_msg" ns1:ignore="UnusedResources">خطایی اساسی در برنامه‌تان رخ داد و اجرای برنامه نمی‌تواند ادامه یابد.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-et/strings.xml" qualifiers="et"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Programmiga juhtus fataalne viga.\nKahjuks ei saa jätkata.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-es/strings.xml" qualifiers="es"><string name="fatal_error_msg" ns1:ignore="UnusedResources">La aplicación ha causado un error grave y no es posible continuar.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-el/strings.xml" qualifiers="el"><string name="fatal_error_msg" ns1:ignore="UnusedResources">Παρουσιάστηκε ένα κρίσιμο σφάλμα και η εφαρμογή δεν μπορεί να συνεχίσει.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-de/strings.xml" qualifiers="de"><string name="fatal_error_msg" ns1:ignore="UnusedResources">In Ihrer Anwendung ist ein schwerwiegender Fehler aufgetreten, sie kann nicht fortgesetzt werden</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values-ar/strings.xml" qualifiers="ar"><string name="fatal_error_msg" ns1:ignore="UnusedResources">تعرّض تطبيقك لخطأ جسيم ولا يمكنه المتابعة.</string></file><file path="/home/don404/Qt/6.10.3/android_arm64_v8a/src/android/java/res/values/strings.xml" qualifiers=""><string name="fatal_error_msg" ns1:ignore="UnusedResources">Your application encountered a fatal error and cannot continue.</string></file></source><source path="/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/res"><file path="/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/res/values/libs.xml" qualifiers=""><array name="bundled_libs">
+        <item>arm64-v8a;crypto_3</item>
+        <item>arm64-v8a;ssl_3</item>
+    </array><array name="qt_libs">
+        <item>arm64-v8a;c++_shared</item>
+        <item>arm64-v8a;Qt6Core_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Concurrent_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Gui_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Network_arm64-v8a</item>
+        <item>arm64-v8a;Qt6OpenGL_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Qml_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QmlModels_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QmlWorkerScript_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QmlMeta_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Quick_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Quick3DUtils_arm64-v8a</item>
+        <item>arm64-v8a;Qt6ShaderTools_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Quick3DRuntimeRender_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Quick3D_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickTemplates2_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Sql_arm64-v8a</item>
+        <item>arm64-v8a;Qt6WebSockets_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Widgets_arm64-v8a</item>
+        <item>arm64-v8a;crypto_3</item>
+        <item>arm64-v8a;ssl_3</item>
+        <item>arm64-v8a;Qt6Svg_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2Impl_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2BasicStyleImpl_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2Basic_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2FusionStyleImpl_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2Fusion_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2MaterialStyleImpl_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2Material_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2ImagineStyleImpl_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2Imagine_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2UniversalStyleImpl_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2Universal_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickControls2FluentWinUI3StyleImpl_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickEffects_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickLayouts_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickShapes_arm64-v8a</item>
+        <item>arm64-v8a;Qt6LabsPlatform_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QmlCore_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickParticles_arm64-v8a</item>
+        <item>arm64-v8a;Qt6LabsFolderListModel_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickDialogs2Utils_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickDialogs2QuickImpl_arm64-v8a</item>
+        <item>arm64-v8a;Qt6QuickDialogs2_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Quick3DHelpers_arm64-v8a</item>
+        <item>arm64-v8a;Qt6Quick3DHelpersImpl_arm64-v8a</item>
+    </array><array name="load_local_libs">
+        <item>arm64-v8a;libplugins_platforms_qtforandroid_arm64-v8a.so</item>
+    </array><string name="use_local_qt_libs">1</string><string name="bundle_local_qt_libs">1</string><string name="system_libs_prefix"/></file><file name="qtprovider_paths" path="/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/res/xml/qtprovider_paths.xml" qualifiers="" type="xml"/></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="release$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/src/release/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="release" generated-set="release$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/src/release/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/build/generated/res/resValues/release"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/build/generated/res/resValues/release"/></dataSet><mergedItems/></merger>

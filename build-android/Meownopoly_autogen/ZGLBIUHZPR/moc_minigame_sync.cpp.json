@@ -1,0 +1,242 @@
+{
+    "classes": [
+        {
+            "className": "MinigameSync",
+            "lineNumber": 21,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 48,
+                    "name": "start",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 51,
+                    "name": "stop",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "x",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 54,
+                    "name": "setLocalPosition",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "snapshot",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 57,
+                    "name": "setSnapshot",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 26,
+                    "name": "inputRate",
+                    "notify": "inputRateChanged",
+                    "read": "inputRate",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setInputRate"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 29,
+                    "name": "snapshotRate",
+                    "notify": "snapshotRateChanged",
+                    "read": "snapshotRate",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setSnapshotRate"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 32,
+                    "name": "running",
+                    "notify": "runningChanged",
+                    "read": "running",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "MinigameSync",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "x",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 61,
+                    "name": "playerPositionUpdated",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "snapshot",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 64,
+                    "name": "snapshotReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 66,
+                    "name": "inputRateChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 67,
+                    "name": "snapshotRateChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 68,
+                    "name": "runningChanged",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "private",
+                    "index": 5,
+                    "lineNumber": 71,
+                    "name": "onInputTick",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 6,
+                    "lineNumber": 72,
+                    "name": "onSnapshotTick",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "x",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 73,
+                    "name": "onRemotePosition",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 8,
+                    "lineNumber": 74,
+                    "name": "onRenderTick",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "minigame_sync.h",
+    "outputRevision": 69
+}

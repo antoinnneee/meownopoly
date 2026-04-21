@@ -1,0 +1,316 @@
+{
+    "classes": [
+        {
+            "className": "PattounX_engine",
+            "lineNumber": 24,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 59,
+                    "name": "createBody",
+                    "returnType": "PattounX_body*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 66,
+                    "name": "removeBody",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 9,
+                    "isConst": true,
+                    "lineNumber": 73,
+                    "name": "getBody",
+                    "returnType": "PattounX_body*"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 78,
+                    "name": "clearBodies",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "snapable",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 87,
+                    "name": "createZone",
+                    "returnType": "PattounX_zone*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 94,
+                    "name": "removeZone",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 13,
+                    "isConst": true,
+                    "lineNumber": 101,
+                    "name": "getZone",
+                    "returnType": "PattounX_zone*"
+                },
+                {
+                    "access": "public",
+                    "index": 14,
+                    "lineNumber": 106,
+                    "name": "clearZones",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "snapables",
+                            "type": "QVariantList"
+                        }
+                    ],
+                    "index": 15,
+                    "lineNumber": 115,
+                    "name": "setZonesFromSnapables",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "dt",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 16,
+                    "lineNumber": 129,
+                    "name": "updateAll",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "body",
+                            "type": "PattounX_body*"
+                        },
+                        {
+                            "name": "dt",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 17,
+                    "lineNumber": 136,
+                    "name": "updateBody",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "point",
+                            "type": "QVector2D"
+                        }
+                    ],
+                    "index": 18,
+                    "isConst": true,
+                    "lineNumber": 145,
+                    "name": "getZonesAtPoint",
+                    "returnType": "QVariantList"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 28,
+                    "name": "bodyCount",
+                    "notify": "bodyCountChanged",
+                    "read": "bodyCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 29,
+                    "name": "zoneCount",
+                    "notify": "zoneCountChanged",
+                    "read": "zoneCount",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 30,
+                    "name": "enabled",
+                    "notify": "enabledChanged",
+                    "read": "enabled",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false,
+                    "write": "setEnabled"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 31,
+                    "name": "debugMode",
+                    "notify": "debugModeChanged",
+                    "read": "debugMode",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false,
+                    "write": "setDebugMode"
+                }
+            ],
+            "qualifiedClassName": "PattounX_engine",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 149,
+                    "name": "bodyCountChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 150,
+                    "name": "zoneCountChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 151,
+                    "name": "enabledChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 152,
+                    "name": "debugModeChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "body",
+                            "type": "PattounX_body*"
+                        },
+                        {
+                            "name": "zone",
+                            "type": "PattounX_zone*"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 155,
+                    "name": "bodyCollided",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "body",
+                            "type": "PattounX_body*"
+                        },
+                        {
+                            "name": "zone",
+                            "type": "PattounX_zone*"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 156,
+                    "name": "bodyEnteredZone",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "body",
+                            "type": "PattounX_body*"
+                        },
+                        {
+                            "name": "zone",
+                            "type": "PattounX_zone*"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 157,
+                    "name": "bodyExitedZone",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "pattounx_engine.h",
+    "outputRevision": 69
+}

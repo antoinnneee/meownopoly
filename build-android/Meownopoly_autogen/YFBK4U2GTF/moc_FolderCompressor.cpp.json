@@ -1,0 +1,82 @@
+{
+    "classes": [
+        {
+            "classInfos": [
+                {
+                    "name": "QML.Element",
+                    "value": "auto"
+                }
+            ],
+            "className": "FolderCompressor",
+            "lineNumber": 17,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sourceFolder",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "destinationFile",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 27,
+                    "name": "compressFolder",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sourceFile",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "destinationFolder",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "deleteOptions",
+                            "type": "FolderCompressorDeleteOptions"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 31,
+                    "name": "decompressFolder",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "sourceFile",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "destinationFolder",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 2,
+                    "isCloned": true,
+                    "lineNumber": 31,
+                    "name": "decompressFolder",
+                    "returnType": "bool"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "FolderCompressor",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "FolderCompressor.h",
+    "outputRevision": 69
+}

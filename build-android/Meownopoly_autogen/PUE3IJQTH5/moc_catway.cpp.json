@@ -1,0 +1,748 @@
+{
+    "classes": [
+        {
+            "className": "CatwayWorker",
+            "lineNumber": 37,
+            "object": true,
+            "qualifiedClassName": "CatwayWorker",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "socket",
+                            "type": "QUdpSocket*"
+                        },
+                        {
+                            "name": "datagram",
+                            "type": "QByteArray"
+                        },
+                        {
+                            "name": "sender",
+                            "type": "QHostAddress"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 81,
+                    "name": "datagramReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 83,
+                    "name": "playerTimedOut",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 53,
+                    "name": "initReliable",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 54,
+                    "name": "startReliableTimer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 55,
+                    "name": "tearDown",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 57,
+                    "name": "startStunServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 58,
+                    "name": "stopStunServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 59,
+                    "name": "sendStunRequest",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "host",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 60,
+                    "name": "setStunServerInfo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 61,
+                    "name": "takeStunSocket",
+                    "returnType": "UdpSocketInfo*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "socket",
+                            "type": "QUdpSocket*"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QByteArray"
+                        },
+                        {
+                            "name": "address",
+                            "type": "QHostAddress"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 63,
+                    "name": "sendDatagram",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QByteArray"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 64,
+                    "name": "sendReliablePacket",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 12,
+                    "lineNumber": 65,
+                    "name": "onSocketReadyRead",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "data",
+                            "type": "QByteArray"
+                        }
+                    ],
+                    "index": 13,
+                    "lineNumber": 68,
+                    "name": "broadcastReliable",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "snapshots",
+                            "type": "QList<PlayerSnapshot>"
+                        }
+                    ],
+                    "index": 14,
+                    "lineNumber": 71,
+                    "name": "setPlayerSnapshots",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 15,
+                    "lineNumber": 74,
+                    "name": "initLastReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 16,
+                    "lineNumber": 77,
+                    "name": "onReliableUpdate",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 17,
+                    "lineNumber": 78,
+                    "name": "onHeartbeat",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        },
+        {
+            "className": "Catway",
+            "lineNumber": 104,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 18,
+                    "lineNumber": 113,
+                    "name": "startStunServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 19,
+                    "lineNumber": 114,
+                    "name": "stopStunServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 20,
+                    "lineNumber": 115,
+                    "name": "sendStunRequest",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 21,
+                    "isConst": true,
+                    "lineNumber": 118,
+                    "name": "getSocket",
+                    "returnType": "QObject*"
+                },
+                {
+                    "access": "public",
+                    "index": 22,
+                    "isConst": true,
+                    "lineNumber": 120,
+                    "name": "currentSocketInfo",
+                    "returnType": "QObject*"
+                },
+                {
+                    "access": "public",
+                    "index": 23,
+                    "lineNumber": 122,
+                    "name": "takeStunSocket",
+                    "returnType": "UdpSocketInfo*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "client",
+                            "type": "ChatClient*"
+                        }
+                    ],
+                    "index": 24,
+                    "lineNumber": 139,
+                    "name": "setChatClient",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "PlayerNetwork*"
+                        }
+                    ],
+                    "index": 25,
+                    "lineNumber": 141,
+                    "name": "addPlayer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "PlayerNetwork*"
+                        }
+                    ],
+                    "index": 26,
+                    "lineNumber": 142,
+                    "name": "removePlayer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "index",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 27,
+                    "isConst": true,
+                    "lineNumber": 143,
+                    "name": "playerAt",
+                    "returnType": "PlayerNetwork*"
+                },
+                {
+                    "access": "public",
+                    "index": 28,
+                    "isConst": true,
+                    "lineNumber": 144,
+                    "name": "playersCount",
+                    "returnType": "int"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 29,
+                    "isConst": true,
+                    "lineNumber": 146,
+                    "name": "playerById",
+                    "returnType": "PlayerNetwork*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "index",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 30,
+                    "isConst": true,
+                    "lineNumber": 151,
+                    "name": "localPortAt",
+                    "returnType": "QObject*"
+                },
+                {
+                    "access": "public",
+                    "index": 31,
+                    "isConst": true,
+                    "lineNumber": 152,
+                    "name": "localPortCount",
+                    "returnType": "int"
+                },
+                {
+                    "access": "public",
+                    "index": 32,
+                    "isConst": true,
+                    "lineNumber": 153,
+                    "name": "lastLocalPort",
+                    "returnType": "QObject*"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "PlayerNetwork*"
+                        }
+                    ],
+                    "index": 33,
+                    "lineNumber": 155,
+                    "name": "initiateHolePunch",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "PlayerNetwork*"
+                        },
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 34,
+                    "lineNumber": 156,
+                    "name": "sendUdpMessageToPlayer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "player",
+                            "type": "PlayerNetwork*"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QByteArray"
+                        }
+                    ],
+                    "index": 35,
+                    "lineNumber": 162,
+                    "name": "sendReliableToPlayer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "data",
+                            "type": "QByteArray"
+                        }
+                    ],
+                    "index": 36,
+                    "lineNumber": 165,
+                    "name": "broadcastReliable",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 37,
+                    "lineNumber": 168,
+                    "name": "broadcastRaw",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 125,
+                    "name": "localPorts",
+                    "notify": "localPortsChanged",
+                    "read": "localPorts",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QQmlListProperty<UdpSocketInfo>",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 129,
+                    "name": "players",
+                    "notify": "playersChanged",
+                    "read": "players",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QQmlListProperty<PlayerNetwork>",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 137,
+                    "name": "chatClient",
+                    "notify": "chatClientChanged",
+                    "read": "chatClient",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "ChatClient*",
+                    "user": false,
+                    "write": "setChatClient"
+                }
+            ],
+            "qualifiedClassName": "Catway",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 174,
+                    "name": "log",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 175,
+                    "name": "stunServerStarted",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 176,
+                    "name": "externalAddressReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 177,
+                    "name": "udpMessageReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 178,
+                    "name": "localPortsChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 179,
+                    "name": "playersChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QByteArray"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 182,
+                    "name": "reliableMessageReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 183,
+                    "name": "chatClientChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 186,
+                    "name": "playerTimedOut",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 171,
+                    "name": "setupNewPort",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 10,
+                    "lineNumber": 189,
+                    "name": "onAccountStunChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 190,
+                    "name": "onExternalAddressReceivedTakePort",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "commandType",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 191,
+                    "name": "onChatCommandReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 13,
+                    "lineNumber": 192,
+                    "name": "onPendingCommandReady",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "socket",
+                            "type": "QUdpSocket*"
+                        },
+                        {
+                            "name": "datagram",
+                            "type": "QByteArray"
+                        },
+                        {
+                            "name": "sender",
+                            "type": "QHostAddress"
+                        },
+                        {
+                            "name": "port",
+                            "type": "quint16"
+                        }
+                    ],
+                    "index": 14,
+                    "lineNumber": 193,
+                    "name": "onDatagramReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 15,
+                    "lineNumber": 194,
+                    "name": "onStunRequestFailed",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "info",
+                            "type": "UdpSocketInfo*"
+                        }
+                    ],
+                    "index": 16,
+                    "lineNumber": 195,
+                    "name": "onCurrentSocketInfoChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 17,
+                    "lineNumber": 196,
+                    "name": "onPlayerNetworkPlayerIdChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "catway.h",
+    "outputRevision": 69
+}

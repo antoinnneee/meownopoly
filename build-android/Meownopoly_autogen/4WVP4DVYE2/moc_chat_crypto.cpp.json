@@ -1,0 +1,18 @@
+{
+    "classes": [
+        {
+            "className": "ChatCrypto",
+            "lineNumber": 8,
+            "object": true,
+            "qualifiedClassName": "ChatCrypto",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "chat_crypto.h",
+    "outputRevision": 69
+}

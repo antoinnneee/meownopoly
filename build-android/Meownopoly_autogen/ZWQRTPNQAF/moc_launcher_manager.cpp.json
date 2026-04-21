@@ -1,0 +1,496 @@
+{
+    "classes": [
+        {
+            "className": "LauncherManager",
+            "lineNumber": 19,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "serverUrl",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 16,
+                    "lineNumber": 52,
+                    "name": "testServerConnection",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "serverUrl",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 17,
+                    "lineNumber": 53,
+                    "name": "checkForUpdates",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "serverUrl",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "version",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 18,
+                    "lineNumber": 54,
+                    "name": "downloadResources",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "serverUrl",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 19,
+                    "lineNumber": 55,
+                    "name": "forceDownloadResources",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "folderPath",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "version",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 20,
+                    "lineNumber": 56,
+                    "name": "createResourcePackage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "serverUrl",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 21,
+                    "lineNumber": 57,
+                    "name": "uploadPackageToServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 22,
+                    "lineNumber": 58,
+                    "name": "resetDownloadState",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "token",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 23,
+                    "lineNumber": 59,
+                    "name": "setUploadToken",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "serverUrl",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 24,
+                    "lineNumber": 62,
+                    "name": "fetchModelsList",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "serverUrl",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "version",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 25,
+                    "lineNumber": 63,
+                    "name": "downloadModel",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "folderPath",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "version",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 26,
+                    "lineNumber": 64,
+                    "name": "createModelPackage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "serverUrl",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "version",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 27,
+                    "lineNumber": 65,
+                    "name": "uploadModelPackage",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 23,
+                    "name": "currentVersion",
+                    "notify": "currentVersionChanged",
+                    "read": "currentVersion",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 24,
+                    "name": "latestVersion",
+                    "notify": "latestVersionChanged",
+                    "read": "latestVersion",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 25,
+                    "name": "isDownloading",
+                    "notify": "isDownloadingChanged",
+                    "read": "isDownloading",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 26,
+                    "name": "downloadProgress",
+                    "notify": "downloadProgressChanged",
+                    "read": "downloadProgress",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "double",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 4,
+                    "lineNumber": 27,
+                    "name": "downloadStatus",
+                    "notify": "downloadStatusChanged",
+                    "read": "downloadStatus",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 5,
+                    "lineNumber": 28,
+                    "name": "packageCreated",
+                    "notify": "packageCreatedChanged",
+                    "read": "packageCreated",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 6,
+                    "lineNumber": 29,
+                    "name": "modelsList",
+                    "notify": "modelsListChanged",
+                    "read": "modelsList",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantList",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 7,
+                    "lineNumber": 30,
+                    "name": "bytesReceived",
+                    "notify": "downloadProgressChanged",
+                    "read": "bytesReceived",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qint64",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 8,
+                    "lineNumber": 31,
+                    "name": "bytesTotal",
+                    "notify": "downloadProgressChanged",
+                    "read": "bytesTotal",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "qint64",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 9,
+                    "lineNumber": 32,
+                    "name": "versionDescription",
+                    "notify": "latestVersionChanged",
+                    "read": "versionDescription",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "LauncherManager",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 72,
+                    "name": "currentVersionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 73,
+                    "name": "latestVersionChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 74,
+                    "name": "isDownloadingChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 75,
+                    "name": "downloadProgressChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 76,
+                    "name": "downloadStatusChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 77,
+                    "name": "packageCreatedChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 78,
+                    "name": "modelsListChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "success",
+                            "type": "bool"
+                        },
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 79,
+                    "name": "connectionTestResult",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 80,
+                    "name": "logMessage",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 81,
+                    "name": "updateAvailable",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 82,
+                    "name": "downloadSucess",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "private",
+                    "index": 11,
+                    "lineNumber": 85,
+                    "name": "onDownloadFinished",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "bytesReceived",
+                            "type": "qint64"
+                        },
+                        {
+                            "name": "bytesTotal",
+                            "type": "qint64"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 86,
+                    "name": "onDownloadProgress",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 13,
+                    "lineNumber": 87,
+                    "name": "onVersionCheckFinished",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 14,
+                    "lineNumber": 88,
+                    "name": "onConnectionTestFinished",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "index": 15,
+                    "lineNumber": 89,
+                    "name": "onModelsListFinished",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "launcher_manager.h",
+    "outputRevision": 69
+}

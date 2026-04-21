@@ -1,0 +1,80 @@
+{
+    "classes": [
+        {
+            "className": "CaseCatDevice",
+            "lineNumber": 9,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "buyer",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 17,
+                    "name": "buyCase",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "buyer",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 18,
+                    "name": "sellCase",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 24,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 12,
+                    "name": "taxe",
+                    "notify": "taxeChanged",
+                    "read": "taxe",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setTaxe"
+                }
+            ],
+            "qualifiedClassName": "CaseCatDevice",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 27,
+                    "name": "taxeChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "CaseCatPerks"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseCatDevice.h",
+    "outputRevision": 69
+}

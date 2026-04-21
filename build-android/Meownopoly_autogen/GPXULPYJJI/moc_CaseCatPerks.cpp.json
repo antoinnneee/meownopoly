@@ -1,0 +1,135 @@
+{
+    "classes": [
+        {
+            "className": "CaseCatPerks",
+            "lineNumber": 13,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "newOwner",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 41,
+                    "name": "setOwner",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 42,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 16,
+                    "name": "price",
+                    "notify": "priceChanged",
+                    "read": "price",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setPrice"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 1,
+                    "lineNumber": 17,
+                    "name": "sellPrice",
+                    "notify": "sellPriceChanged",
+                    "read": "sellPrice",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setsellPrice"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 2,
+                    "lineNumber": 18,
+                    "name": "morgagePrice",
+                    "notify": "morgagePriceChanged",
+                    "read": "morgagePrice",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setmorgagePrice"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 19,
+                    "name": "owner",
+                    "notify": "ownerChanged",
+                    "read": "owner",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "Player*",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "CaseCatPerks",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 46,
+                    "name": "priceChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 48,
+                    "name": "sellPriceChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 50,
+                    "name": "morgagePriceChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 52,
+                    "name": "ownerChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "Case"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseCatPerks.h",
+    "outputRevision": 69
+}

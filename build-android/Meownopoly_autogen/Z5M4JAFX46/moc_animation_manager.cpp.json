@@ -1,0 +1,230 @@
+{
+    "classes": [
+        {
+            "className": "AnimationManager",
+            "lineNumber": 10,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "framePaths",
+                            "type": "QStringList"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 19,
+                    "name": "loadAnimation",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "frameRate",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 20,
+                    "name": "startAnimation",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 3,
+                    "isCloned": true,
+                    "lineNumber": 20,
+                    "name": "startAnimation",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 21,
+                    "name": "stopAnimation",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "frameIndex",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 22,
+                    "name": "setCurrentFrame",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 23,
+                    "name": "getCurrentFrame",
+                    "returnType": "QImage"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 24,
+                    "name": "getCurrentFrameAsBase64",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 25,
+                    "name": "getCurrentFrameIndex",
+                    "returnType": "int"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 9,
+                    "lineNumber": 26,
+                    "name": "getFrameCount",
+                    "returnType": "int"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 27,
+                    "name": "isAnimationPlaying",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "numFrames",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 30,
+                    "name": "createTestAnimation",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 12,
+                    "isCloned": true,
+                    "lineNumber": 30,
+                    "name": "createTestAnimation",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "folderPath",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 13,
+                    "lineNumber": 33,
+                    "name": "loadAnimationFromFolder",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "AnimationManager",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "animationName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "frameIndex",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 37,
+                    "name": "frameChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "animation_manager.h",
+    "outputRevision": 69
+}

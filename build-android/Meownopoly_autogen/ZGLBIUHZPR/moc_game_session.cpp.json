@@ -1,0 +1,382 @@
+{
+    "classes": [
+        {
+            "className": "GameSession",
+            "lineNumber": 16,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "localPlayerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 45,
+                    "name": "startAsHost",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "localPlayerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "hostPlayerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 49,
+                    "name": "startAsClient",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 12,
+                    "lineNumber": 53,
+                    "name": "stop",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 13,
+                    "lineNumber": 59,
+                    "name": "sendEvent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 14,
+                    "isCloned": true,
+                    "lineNumber": 59,
+                    "name": "sendEvent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 15,
+                    "lineNumber": 62,
+                    "name": "broadcastEvent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 16,
+                    "isCloned": true,
+                    "lineNumber": 62,
+                    "name": "broadcastEvent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapJson",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 17,
+                    "lineNumber": 66,
+                    "name": "sendMapSync",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "x",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 18,
+                    "lineNumber": 69,
+                    "name": "sendMinigameInput",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "snapshot",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 19,
+                    "lineNumber": 72,
+                    "name": "broadcastMinigameSnapshot",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 21,
+                    "name": "active",
+                    "notify": "activeChanged",
+                    "read": "active",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 24,
+                    "name": "isHost",
+                    "notify": "isHostChanged",
+                    "read": "isHost",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 27,
+                    "name": "localPlayerId",
+                    "notify": "localPlayerIdChanged",
+                    "read": "localPlayerId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 30,
+                    "name": "hostPlayerId",
+                    "notify": "hostPlayerIdChanged",
+                    "read": "hostPlayerId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "GameSession",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 76,
+                    "name": "boardEventReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "mapJson",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 79,
+                    "name": "mapSyncReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "x",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vx",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "vy",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 82,
+                    "name": "minigameInputReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "snapshot",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 85,
+                    "name": "minigameSnapshotReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 87,
+                    "name": "activeChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 88,
+                    "name": "isHostChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 89,
+                    "name": "localPlayerIdChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 90,
+                    "name": "hostPlayerIdChanged",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QByteArray"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 93,
+                    "name": "onReliableReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 9,
+                    "lineNumber": 94,
+                    "name": "onUdpReceived",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "game_session.h",
+    "outputRevision": 69
+}

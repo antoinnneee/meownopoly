@@ -1,0 +1,26 @@
+{
+    "classes": [
+        {
+            "className": "EditDeltaType",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 10,
+                    "name": "Type",
+                    "values": [
+                        "TileModified",
+                        "TileAdded",
+                        "TileDeleted",
+                        "MetadataChanged"
+                    ]
+                }
+            ],
+            "lineNumber": 8,
+            "namespace": true,
+            "qualifiedClassName": "EditDeltaType"
+        }
+    ],
+    "inputFile": "editdelta.h",
+    "outputRevision": 69
+}

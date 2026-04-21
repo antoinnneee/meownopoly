@@ -1,0 +1,144 @@
+{
+    "classes": [
+        {
+            "className": "MapFileManager",
+            "lineNumber": 14,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "mapType",
+                            "type": "MapTypes::MapType"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 30,
+                    "name": "mapExists",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "oldMapName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "newMapName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 31,
+                    "name": "renameMap",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 32,
+                    "name": "getAvailableMaps",
+                    "returnType": "QStringList"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "displayName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 33,
+                    "name": "findMapFileByName",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "mapType",
+                            "type": "MapTypes::MapType"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 34,
+                    "name": "createMapFile",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 35,
+                    "name": "isAutosaveMap",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "mapName",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 7,
+                    "lineNumber": 36,
+                    "name": "getMapType",
+                    "returnType": "MapTypes::MapType"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 18,
+                    "name": "currentMap",
+                    "notify": "currentMapChanged",
+                    "read": "getCurrentMap",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "Map*",
+                    "user": false,
+                    "write": "setCurrentMap"
+                }
+            ],
+            "qualifiedClassName": "MapFileManager",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 52,
+                    "name": "currentMapChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "mapfilemanager.h",
+    "outputRevision": 69
+}

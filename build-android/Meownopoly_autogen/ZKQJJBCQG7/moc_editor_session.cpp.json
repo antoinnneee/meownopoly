@@ -1,0 +1,609 @@
+{
+    "classes": [
+        {
+            "className": "EditorSession",
+            "lineNumber": 23,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 19,
+                    "isConst": true,
+                    "lineNumber": 71,
+                    "name": "electNewHost",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "index": 20,
+                    "lineNumber": 76,
+                    "name": "promoteToHost",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 21,
+                    "lineNumber": 82,
+                    "name": "announceHostLeaving",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "localPlayerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 22,
+                    "lineNumber": 88,
+                    "name": "startAsHost",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "localPlayerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 23,
+                    "isCloned": true,
+                    "lineNumber": 88,
+                    "name": "startAsHost",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "localPlayerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "hostPlayerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "sessionId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 24,
+                    "lineNumber": 94,
+                    "name": "startAsClient",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "localPlayerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "hostPlayerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 25,
+                    "isCloned": true,
+                    "lineNumber": 94,
+                    "name": "startAsClient",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 26,
+                    "lineNumber": 99,
+                    "name": "stop",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 27,
+                    "lineNumber": 105,
+                    "name": "sendOp",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 28,
+                    "lineNumber": 108,
+                    "name": "broadcastOp",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 29,
+                    "lineNumber": 111,
+                    "name": "sendEvent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 30,
+                    "isCloned": true,
+                    "lineNumber": 111,
+                    "name": "sendEvent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 31,
+                    "lineNumber": 114,
+                    "name": "broadcastEvent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 32,
+                    "isCloned": true,
+                    "lineNumber": 114,
+                    "name": "broadcastEvent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 33,
+                    "lineNumber": 119,
+                    "name": "sendEventTo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "type",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 34,
+                    "isCloned": true,
+                    "lineNumber": 119,
+                    "name": "sendEventTo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "x",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 35,
+                    "lineNumber": 124,
+                    "name": "sendCursor",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 28,
+                    "name": "active",
+                    "notify": "activeChanged",
+                    "read": "active",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 31,
+                    "name": "isHost",
+                    "notify": "isHostChanged",
+                    "read": "isHost",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 2,
+                    "lineNumber": 34,
+                    "name": "localPlayerId",
+                    "notify": "localPlayerIdChanged",
+                    "read": "localPlayerId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 3,
+                    "lineNumber": 37,
+                    "name": "hostPlayerId",
+                    "notify": "hostPlayerIdChanged",
+                    "read": "hostPlayerId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 4,
+                    "lineNumber": 40,
+                    "name": "sessionId",
+                    "notify": "sessionIdChanged",
+                    "read": "sessionId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 5,
+                    "lineNumber": 46,
+                    "name": "remoteSelections",
+                    "notify": "remoteSelectionsChanged",
+                    "read": "remoteSelections",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QVariantMap",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 6,
+                    "lineNumber": 51,
+                    "name": "knownRoster",
+                    "notify": "knownRosterChanged",
+                    "read": "knownRoster",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QStringList",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "EditorSession",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 129,
+                    "name": "opReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "reject",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 132,
+                    "name": "opRejected",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "type",
+                            "type": "int"
+                        },
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 135,
+                    "name": "editorEventReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 138,
+                    "name": "selectionReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "x",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "y",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 141,
+                    "name": "cursorReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "electedHostId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 147,
+                    "name": "hostLost",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 152,
+                    "name": "promotedToHost",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 154,
+                    "name": "knownRosterChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 158,
+                    "name": "peerLeft",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "dropped",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 9,
+                    "lineNumber": 161,
+                    "name": "opRateLimited",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 163,
+                    "name": "activeChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 11,
+                    "lineNumber": 164,
+                    "name": "isHostChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 12,
+                    "lineNumber": 165,
+                    "name": "localPlayerIdChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 13,
+                    "lineNumber": 166,
+                    "name": "hostPlayerIdChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 14,
+                    "lineNumber": 167,
+                    "name": "sessionIdChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 15,
+                    "lineNumber": 168,
+                    "name": "remoteSelectionsChanged",
+                    "returnType": "void"
+                }
+            ],
+            "slots": [
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QByteArray"
+                        }
+                    ],
+                    "index": 16,
+                    "lineNumber": 171,
+                    "name": "onReliableReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "senderId",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 17,
+                    "lineNumber": 172,
+                    "name": "onUdpReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "private",
+                    "arguments": [
+                        {
+                            "name": "playerId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 18,
+                    "lineNumber": 173,
+                    "name": "onPlayerTimedOut",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "editor_session.h",
+    "outputRevision": 69
+}

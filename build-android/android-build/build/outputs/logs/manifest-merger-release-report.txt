@@ -1,0 +1,235 @@
+-- Merging decision tree log ---
+provider#androidx.core.content.FileProvider
+INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:44:9-52:20
+	android:grantUriPermissions
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:48:13-47
+	android:authorities
+		INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:46:13-62
+	android:exported
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:47:13-37
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:45:13-62
+manifest
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:2:1-54:12
+INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:2:1-54:12
+INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:2:1-54:12
+INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:2:1-54:12
+MERGED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:17:1-30:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/don404/.gradle/caches/8.14.3/transforms/7f2d500b2e0d1d7972587592e2d90e28/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.2] /home/don404/.gradle/caches/8.14.3/transforms/cad77c39876a2c989e8c471525464c32/transformed/lifecycle-runtime-2.6.2/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:17:1-55:12
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/8278d547b2d082f8156587ac03f419c6/transformed/startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
+MERGED from [androidx.tracing:tracing:1.2.0] /home/don404/.gradle/caches/8.14.3/transforms/5a5cfd5e480d9337816565d9b5988d3b/transformed/tracing-1.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/9b38af0c8edde5392ccf6f775a61f1c8/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/don404/.gradle/caches/8.14.3/transforms/ab6c28b52bb3a80044749d1c3fc8cb57/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /home/don404/.gradle/caches/8.14.3/transforms/7fd03c0b17557b353d5f60992ae82aef/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.core:core-viewtree:1.0.0] /home/don404/.gradle/caches/8.14.3/transforms/c3bfbcbbefe65925648195894f8055de/transformed/core-viewtree-1.0.0/AndroidManifest.xml:2:1-7:12
+	package
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:3:5-47
+		INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+	android:versionName
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:6:5-30
+		INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+	xmlns:android
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:2:11-69
+	android:versionCode
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:5:5-28
+		INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+	android:installLocation
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:4:5-35
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:7:5-80
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:7:22-76
+uses-permission#android.permission.INTERNET
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:8:5-68
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:8:22-64
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:9:5-82
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:9:22-78
+supports-screens
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:10:5-14:39
+	android:largeScreens
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:12:9-36
+	android:smallScreens
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:14:9-36
+	android:normalScreens
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:13:9-37
+	android:anyDensity
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:11:9-34
+application
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:15:5-53:19
+INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:15:5-53:19
+MERGED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/8278d547b2d082f8156587ac03f419c6/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/8278d547b2d082f8156587ac03f419c6/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/9b38af0c8edde5392ccf6f775a61f1c8/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/9b38af0c8edde5392ccf6f775a61f1c8/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+	android:extractNativeLibs
+		INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+	android:requestLegacyExternalStorage
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:19:9-52
+	android:appComponentFactory
+		ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:28:18-86
+	android:label
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:18:9-35
+	android:hardwareAccelerated
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:17:9-43
+	android:allowBackup
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:21:9-35
+	android:enableOnBackInvokedCallback
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:20:9-52
+	android:fullBackupOnly
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:22:9-39
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:16:9-71
+activity#org.qtproject.qt.android.bindings.QtActivity
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:23:9-42:20
+	android:screenOrientation
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:28:13-52
+	android:label
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:26:13-39
+	android:launchMode
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:27:13-43
+	android:exported
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:29:13-36
+	android:configChanges
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:25:13-182
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:24:13-72
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:30:13-33:29
+action#android.intent.action.MAIN
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:31:17-69
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:31:25-66
+category#android.intent.category.LAUNCHER
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:32:17-77
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:32:27-74
+meta-data#android.app.lib_name
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:35:11-37:46
+	android:value
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:37:17-43
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:36:17-52
+meta-data#android.app.arguments
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:39:11-41:36
+	android:value
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:41:17-33
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:40:17-53
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:49:13-51:59
+	android:resource
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:51:17-57
+	android:name
+		ADDED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml:50:17-67
+uses-sdk
+INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+MERGED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/don404/.gradle/caches/8.14.3/transforms/7f2d500b2e0d1d7972587592e2d90e28/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/don404/.gradle/caches/8.14.3/transforms/7f2d500b2e0d1d7972587592e2d90e28/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.2] /home/don404/.gradle/caches/8.14.3/transforms/cad77c39876a2c989e8c471525464c32/transformed/lifecycle-runtime-2.6.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.2] /home/don404/.gradle/caches/8.14.3/transforms/cad77c39876a2c989e8c471525464c32/transformed/lifecycle-runtime-2.6.2/AndroidManifest.xml:5:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/8278d547b2d082f8156587ac03f419c6/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/8278d547b2d082f8156587ac03f419c6/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.tracing:tracing:1.2.0] /home/don404/.gradle/caches/8.14.3/transforms/5a5cfd5e480d9337816565d9b5988d3b/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.tracing:tracing:1.2.0] /home/don404/.gradle/caches/8.14.3/transforms/5a5cfd5e480d9337816565d9b5988d3b/transformed/tracing-1.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/9b38af0c8edde5392ccf6f775a61f1c8/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/9b38af0c8edde5392ccf6f775a61f1c8/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/don404/.gradle/caches/8.14.3/transforms/ab6c28b52bb3a80044749d1c3fc8cb57/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/don404/.gradle/caches/8.14.3/transforms/ab6c28b52bb3a80044749d1c3fc8cb57/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /home/don404/.gradle/caches/8.14.3/transforms/7fd03c0b17557b353d5f60992ae82aef/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.1] /home/don404/.gradle/caches/8.14.3/transforms/7fd03c0b17557b353d5f60992ae82aef/transformed/annotation-experimental-1.4.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-viewtree:1.0.0] /home/don404/.gradle/caches/8.14.3/transforms/c3bfbcbbefe65925648195894f8055de/transformed/core-viewtree-1.0.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-viewtree:1.0.0] /home/don404/.gradle/caches/8.14.3/transforms/c3bfbcbbefe65925648195894f8055de/transformed/core-viewtree-1.0.0/AndroidManifest.xml:5:5-44
+	android:targetSdkVersion
+		INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/don404/Informatique/QtProject/meownopoly/build-android/android-build/AndroidManifest.xml
+permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:23:9-81
+permission#org.qtproject.example.Meownopoly.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:23:9-81
+uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:26:22-94
+uses-permission#org.qtproject.example.Meownopoly.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.16.0] /home/don404/.gradle/caches/8.14.3/transforms/c568280f9817ac135c28ceef303183fa/transformed/core-1.16.0/AndroidManifest.xml:26:22-94
+provider#androidx.startup.InitializationProvider
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/8278d547b2d082f8156587ac03f419c6/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/don404/.gradle/caches/8.14.3/transforms/8278d547b2d082f8156587ac03f419c6/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:28:13-31
+	android:authorities
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:26:13-68
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:25:13-67
+meta-data#androidx.profileinstaller.ProfileInstallerInitializer
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+receiver#androidx.profileinstaller.ProfileInstallReceiver
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+	android:enabled
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+	android:permission
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+	android:directBootAware
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+intent-filter#action:name:androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+action#androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+action#androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+action#androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+action#androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/don404/.gradle/caches/8.14.3/transforms/53709ed896e0852fac2488bcffb2c45c/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:25-92

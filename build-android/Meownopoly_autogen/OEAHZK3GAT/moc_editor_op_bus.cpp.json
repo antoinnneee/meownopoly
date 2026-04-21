@@ -1,0 +1,308 @@
+{
+    "classes": [
+        {
+            "className": "EditorOpBus",
+            "lineNumber": 21,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 4,
+                    "lineNumber": 44,
+                    "name": "submitOp",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 47,
+                    "name": "recordOp",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 53,
+                    "name": "beginApplyRemote",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 54,
+                    "name": "endApplyRemote",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        },
+                        {
+                            "name": "inverseOp",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 62,
+                    "name": "submitOpWithUndo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 9,
+                    "lineNumber": 68,
+                    "name": "undo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 10,
+                    "lineNumber": 72,
+                    "name": "redo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 11,
+                    "lineNumber": 75,
+                    "name": "clearUndo",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 12,
+                    "isConst": true,
+                    "lineNumber": 77,
+                    "name": "undoDepth",
+                    "returnType": "int"
+                },
+                {
+                    "access": "public",
+                    "index": 13,
+                    "isConst": true,
+                    "lineNumber": 78,
+                    "name": "redoDepth",
+                    "returnType": "int"
+                },
+                {
+                    "access": "public",
+                    "index": 14,
+                    "isConst": true,
+                    "lineNumber": 84,
+                    "name": "newUuid",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "itemJson",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 15,
+                    "isConst": true,
+                    "lineNumber": 87,
+                    "name": "makeCreateOp",
+                    "returnType": "QJsonObject"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "uuid",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 16,
+                    "isConst": true,
+                    "lineNumber": 90,
+                    "name": "makeDeleteOp",
+                    "returnType": "QJsonObject"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "uuid",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "gridX",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "gridY",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "zOrder",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 17,
+                    "isConst": true,
+                    "lineNumber": 93,
+                    "name": "makeMoveOp",
+                    "returnType": "QJsonObject"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "uuid",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "gridX",
+                            "type": "qreal"
+                        },
+                        {
+                            "name": "gridY",
+                            "type": "qreal"
+                        }
+                    ],
+                    "index": 18,
+                    "isCloned": true,
+                    "isConst": true,
+                    "lineNumber": 93,
+                    "name": "makeMoveOp",
+                    "returnType": "QJsonObject"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "source",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "target",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "kind",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 19,
+                    "isConst": true,
+                    "lineNumber": 98,
+                    "name": "makeLinkOp",
+                    "returnType": "QJsonObject"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "source",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "target",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "kind",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 20,
+                    "isConst": true,
+                    "lineNumber": 103,
+                    "name": "makeUnlinkOp",
+                    "returnType": "QJsonObject"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 28,
+                    "name": "isApplyingRemote",
+                    "notify": "isApplyingRemoteChanged",
+                    "read": "isApplyingRemote",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                }
+            ],
+            "qualifiedClassName": "EditorOpBus",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 127,
+                    "name": "opRecorded",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 131,
+                    "name": "localThrottled",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "op",
+                            "type": "QJsonObject"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 137,
+                    "name": "remoteOpReceived",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 139,
+                    "name": "isApplyingRemoteChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "editor_op_bus.h",
+    "outputRevision": 69
+}

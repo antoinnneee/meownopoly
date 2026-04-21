@@ -1,0 +1,8 @@
+#!/bin/sh
+
+/home/don404/Qt/6.10.3/gcc_arm64/libexec/qt-android-runner.py \
+    --adb "/home/don404/Android/Sdk/platform-tools/adb" \
+    --build-path "/home/don404/Informatique/QtProject/meownopoly/build-android/android-build" \
+    --apk "/home/don404/Informatique/QtProject/meownopoly/build-android/android-build/Meownopoly.apk" \
+    $@
+

@@ -1,0 +1,307 @@
+{
+    "classes": [
+        {
+            "className": "ItemSnapable",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 40,
+                    "name": "TileType",
+                    "values": [
+                        "CaseTile",
+                        "DecorationTile",
+                        "PhysicZoneTile"
+                    ]
+                }
+            ],
+            "lineNumber": 18,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 6,
+                    "lineNumber": 56,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 59,
+                    "name": "print",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "caseType",
+                            "type": "Case::CaseType"
+                        }
+                    ],
+                    "index": 8,
+                    "lineNumber": 70,
+                    "name": "changeCaseDataType",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "newNext",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 9,
+                    "lineNumber": 72,
+                    "name": "addNext",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "caseToRemove",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 10,
+                    "lineNumber": 73,
+                    "name": "removeNext",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "index",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 11,
+                    "lineNumber": 74,
+                    "name": "removeNextAt",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "newPrev",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 12,
+                    "lineNumber": 76,
+                    "name": "addPrev",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "caseToRemove",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 13,
+                    "lineNumber": 77,
+                    "name": "removePrev",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "index",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 14,
+                    "lineNumber": 78,
+                    "name": "removePrevAt",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 15,
+                    "lineNumber": 80,
+                    "name": "getNextList",
+                    "returnType": "QList<ItemSnapable*>"
+                },
+                {
+                    "access": "public",
+                    "index": 16,
+                    "lineNumber": 81,
+                    "name": "getPrevList",
+                    "returnType": "QList<ItemSnapable*>"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "source",
+                            "type": "ItemSnapable*"
+                        }
+                    ],
+                    "index": 17,
+                    "lineNumber": 88,
+                    "name": "copyFrom",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 23,
+                    "name": "caseData",
+                    "notify": "caseDataChanged",
+                    "read": "caseData",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "Case*",
+                    "user": false,
+                    "write": "setCaseData"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 1,
+                    "lineNumber": 24,
+                    "name": "displayParameter",
+                    "notify": "displayParameterChanged",
+                    "read": "displayParameter",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "DisplayParameter*",
+                    "user": false,
+                    "write": "setDisplayParameter"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 2,
+                    "lineNumber": 25,
+                    "name": "decorationParameter",
+                    "notify": "decorationParameterChanged",
+                    "read": "decorationParameter",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "DecorationParameter*",
+                    "user": false,
+                    "write": "setDecorationParameter"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 3,
+                    "lineNumber": 26,
+                    "name": "zoneParameter",
+                    "notify": "zoneParameterChanged",
+                    "read": "zoneParameter",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "ZoneParameter*",
+                    "user": false,
+                    "write": "setZoneParameter"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 4,
+                    "lineNumber": 27,
+                    "name": "uniqueId",
+                    "notify": "uniqueIdChanged",
+                    "read": "uniqueId",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QUuid",
+                    "user": false,
+                    "write": "setUniqueId"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 5,
+                    "lineNumber": 28,
+                    "name": "tileType",
+                    "notify": "tileTypeChanged",
+                    "read": "tileType",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "TileType",
+                    "user": false,
+                    "write": "setTileType"
+                }
+            ],
+            "qualifiedClassName": "ItemSnapable",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 127,
+                    "name": "caseDataChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 128,
+                    "name": "displayParameterChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 129,
+                    "name": "decorationParameterChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 130,
+                    "name": "zoneParameterChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 132,
+                    "name": "uniqueIdChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 134,
+                    "name": "tileTypeChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "ItemSnapable.h",
+    "outputRevision": 69
+}

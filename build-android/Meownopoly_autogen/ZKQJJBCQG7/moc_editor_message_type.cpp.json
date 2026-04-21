@@ -1,0 +1,34 @@
+{
+    "classes": [
+        {
+            "className": "EditorMessageType",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 12,
+                    "name": "Value",
+                    "type": "quint8",
+                    "values": [
+                        "Hello",
+                        "Welcome",
+                        "FullSync",
+                        "Op",
+                        "OpAck",
+                        "OpReject",
+                        "CursorUpdate",
+                        "SelectionUpdate",
+                        "PlayerRoster",
+                        "OpChunk",
+                        "HostLeaving"
+                    ]
+                }
+            ],
+            "lineNumber": 9,
+            "namespace": true,
+            "qualifiedClassName": "EditorMessageType"
+        }
+    ],
+    "inputFile": "editor_message_type.h",
+    "outputRevision": 69
+}

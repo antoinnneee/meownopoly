@@ -1,0 +1,103 @@
+{
+    "classes": [
+        {
+            "className": "CaseCatDoor",
+            "lineNumber": 6,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "buyer",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 2,
+                    "lineNumber": 17,
+                    "name": "buyCase",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "buyer",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 3,
+                    "lineNumber": 18,
+                    "name": "sellCase",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 30,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 0,
+                    "lineNumber": 9,
+                    "name": "indexCatDoor",
+                    "notify": "indexCatDoorChanged",
+                    "read": "indexCatDoor",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setIndexCatDoor"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 1,
+                    "lineNumber": 10,
+                    "name": "travelPrice",
+                    "notify": "travelPriceChanged",
+                    "read": "travelPrice",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setTravelPrice"
+                }
+            ],
+            "qualifiedClassName": "CaseCatDoor",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 33,
+                    "name": "indexCatDoorChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 35,
+                    "name": "travelPriceChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "CaseCatPerks"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseCatDoor.h",
+    "outputRevision": 69
+}

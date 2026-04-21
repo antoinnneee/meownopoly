@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_Meownopoly_FILE /home/don404/Informatique/QtProject/meownopoly/build-android/libMeownopoly_arm64-v8a.so)
+set(__QT_DEPLOY_TARGET_Meownopoly_TYPE MODULE_LIBRARY)

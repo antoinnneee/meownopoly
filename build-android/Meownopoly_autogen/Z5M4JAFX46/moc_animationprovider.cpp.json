@@ -1,0 +1,33 @@
+{
+    "classes": [
+        {
+            "className": "AnimationProvider",
+            "lineNumber": 9,
+            "object": true,
+            "qualifiedClassName": "AnimationProvider",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "imageData",
+                            "type": "const QImage*"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 29,
+                    "name": "frameChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "animationprovider.h",
+    "outputRevision": 69
+}

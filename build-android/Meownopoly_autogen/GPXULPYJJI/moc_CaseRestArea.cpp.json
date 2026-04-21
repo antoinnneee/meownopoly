@@ -1,0 +1,207 @@
+{
+    "classes": [
+        {
+            "className": "CaseRestArea",
+            "enums": [
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 23,
+                    "name": "RestQuality",
+                    "values": [
+                        "RQ_NONE",
+                        "RQ_1STAR",
+                        "RQ_2STAR",
+                        "RQ_3STAR",
+                        "RQ_4STAR",
+                        "RQ_HOTEL",
+                        "RQ_COUNT"
+                    ]
+                },
+                {
+                    "isClass": false,
+                    "isFlag": false,
+                    "lineNumber": 34,
+                    "name": "FamilyType",
+                    "values": [
+                        "FT_NONE",
+                        "FT_BROWN",
+                        "FT_LIGHTBLUE",
+                        "FT_PINK",
+                        "FT_ORANGE",
+                        "FT_RED",
+                        "FT_YELLOW",
+                        "FT_GREEN",
+                        "FT_DARKBLUE",
+                        "FT_COUNT"
+                    ]
+                }
+            ],
+            "lineNumber": 9,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "buyer",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 5,
+                    "lineNumber": 63,
+                    "name": "buyCase",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "buyer",
+                            "type": "Player*"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 64,
+                    "name": "sellCase",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "index": 7,
+                    "lineNumber": 76,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "properties": [
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 0,
+                    "lineNumber": 12,
+                    "name": "restQuality",
+                    "notify": "restQualityChanged",
+                    "read": "restQuality",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "RestQuality",
+                    "user": false,
+                    "write": "setRestQuality"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 1,
+                    "lineNumber": 13,
+                    "name": "family",
+                    "notify": "familyChanged",
+                    "read": "family",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "FamilyType",
+                    "user": false,
+                    "write": "setFamily"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 2,
+                    "lineNumber": 15,
+                    "name": "housePrice",
+                    "notify": "housePriceChanged",
+                    "read": "housePrice",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setHousePrice"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 3,
+                    "lineNumber": 16,
+                    "name": "hotelPrice",
+                    "notify": "hotelPriceChanged",
+                    "read": "hotelPrice",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false,
+                    "write": "setHotelPrice"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": true,
+                    "index": 4,
+                    "lineNumber": 17,
+                    "name": "rentPrice",
+                    "notify": "rentPriceChanged",
+                    "read": "rentPrice",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QList<int>",
+                    "user": false,
+                    "write": "setRentPrice"
+                }
+            ],
+            "qualifiedClassName": "CaseRestArea",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 79,
+                    "name": "restQualityChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 80,
+                    "name": "familyChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 83,
+                    "name": "housePriceChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 85,
+                    "name": "hotelPriceChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 87,
+                    "name": "rentPriceChanged",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "CaseCatPerks"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseRestArea.h",
+    "outputRevision": 69
+}

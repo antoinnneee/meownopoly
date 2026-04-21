@@ -1,0 +1,36 @@
+{
+    "classes": [
+        {
+            "className": "CaseCardBoardBox",
+            "lineNumber": 7,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 16,
+                    "name": "toJSON",
+                    "returnType": "QString"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "CaseCardBoardBox",
+            "signals": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 19,
+                    "name": "cardDrawn",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "Case"
+                }
+            ]
+        }
+    ],
+    "inputFile": "CaseCardBoardBox.h",
+    "outputRevision": 69
+}

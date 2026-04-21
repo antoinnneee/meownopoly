@@ -1,0 +1,18 @@
+{
+    "classes": [
+        {
+            "className": "MouseEventFilter",
+            "lineNumber": 11,
+            "object": true,
+            "qualifiedClassName": "MouseEventFilter",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "mouse_event_filter.h",
+    "outputRevision": 69
+}

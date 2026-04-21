@@ -1,0 +1,79 @@
+{
+    "classes": [
+        {
+            "className": "TestManager",
+            "lineNumber": 8,
+            "methods": [
+                {
+                    "access": "public",
+                    "index": 0,
+                    "lineNumber": 16,
+                    "name": "testAction1",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 1,
+                    "lineNumber": 17,
+                    "name": "testAction2",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "lineNumber": 18,
+                    "name": "testAction3",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 3,
+                    "lineNumber": 19,
+                    "name": "testAction4",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 4,
+                    "lineNumber": 20,
+                    "name": "testUdpServer",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 5,
+                    "lineNumber": 21,
+                    "name": "testSendStun",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "ip",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "port",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 6,
+                    "lineNumber": 22,
+                    "name": "testSetStunServer",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "TestManager",
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "test_manager.h",
+    "outputRevision": 69
+}

@@ -1,0 +1,50 @@
+{
+    "classes": [
+        {
+            "className": "CursorManager",
+            "lineNumber": 8,
+            "object": true,
+            "qualifiedClassName": "CursorManager",
+            "slots": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "x",
+                            "type": "int"
+                        },
+                        {
+                            "name": "y",
+                            "type": "int"
+                        }
+                    ],
+                    "index": 0,
+                    "lineNumber": 18,
+                    "name": "setPos",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "point",
+                            "type": "QPoint"
+                        }
+                    ],
+                    "index": 1,
+                    "lineNumber": 20,
+                    "name": "setPosPoint",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                }
+            ]
+        }
+    ],
+    "inputFile": "cursor_manager.h",
+    "outputRevision": 69
+}
