@@ -95,11 +95,10 @@ CollapsableGroupBox {
             Layout.topMargin: 8
 
             background: Rectangle {
-                color: "#2a2a2a"
+                color: "#1a2a2a2a"
                 radius: 3
                 border.color: "#444444"
                 border.width: 1
-                opacity: 0.1
             }
 
             label: Text {
@@ -145,34 +144,12 @@ CollapsableGroupBox {
                         font.pixelSize: 9
                     }
 
-                    Button {
-                        text: "+"
-                        ToolTip.visible: hovered
-                        ToolTip.text: "Save current color"
+                    component SwatchButton: Button {
+                        property color baseColor: "#4a8a4a"
+                        property color pressedColor: "#569c58"
                         implicitWidth: 26; implicitHeight: 22
-                        onClicked: addPresetFromPicker()
                         background: Rectangle {
-                            color: parent.pressed ? "#569c58" : "#4a8a4a"
-                            radius: 3
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#ffffff"
-                            font.pixelSize: 14; font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    Button {
-                        text: "\u00D7"
-                        ToolTip.visible: hovered
-                        ToolTip.text: "Remove selected swatch"
-                        enabled: activePresetIndex >= 0
-                        implicitWidth: 26; implicitHeight: 22
-                        onClicked: removePreset(activePresetIndex)
-                        background: Rectangle {
-                            color: parent.enabled ? (parent.pressed ? "#cc4444" : "#aa4444") : "#444444"
+                            color: parent.enabled ? (parent.pressed ? parent.pressedColor : parent.baseColor) : "#444444"
                             radius: 3
                         }
                         contentItem: Text {
@@ -182,6 +159,23 @@ CollapsableGroupBox {
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
+                    }
+
+                    SwatchButton {
+                        text: "+"
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Save current color"
+                        onClicked: addPresetFromPicker()
+                    }
+
+                    SwatchButton {
+                        text: "\u00D7"
+                        baseColor: "#aa4444"
+                        pressedColor: "#cc4444"
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Remove selected swatch"
+                        enabled: activePresetIndex >= 0
+                        onClicked: removePreset(activePresetIndex)
                     }
                 }
 

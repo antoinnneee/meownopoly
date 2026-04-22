@@ -63,7 +63,6 @@ Base_Board {
     property alias fullScreenMsgPopup: fullScreenMsgPopup
     property alias view3D: gameScene.view3D
 
-    signal updateSettings
     signal openNewMapMenu
     property alias entity: gameScene.entity
 
@@ -101,10 +100,6 @@ Base_Board {
         }
     }
 
-    onUpdateSettings: {
-        tmpSaver.setSaveTimer()
-    }
-
     Keys.onPressed: function (event) {
         // Pass to EntityEngine
         EntityEngine.keysHandler.Keys.pressed(event)
@@ -126,10 +121,7 @@ Base_Board {
                 root.forceActiveFocus()
             }
         }
-        onIndexSaveEvent: {
-            stEnableAutoSave.sync()
-            root.updateSettings()
-        }
+        onIndexSaveEvent: stEnableAutoSave.sync()
     }
 
     BtSideMenu {
@@ -805,6 +797,13 @@ Base_Board {
         return Qt.hsla((h % 360) / 360.0, 0.7, 0.55, 1.0)
     }
 
+    function _applyToSelectionAndSave(opKind, applyFn) {
+        const sel = logic.mouseLogic.selectedElements
+        for (let i = 0; i < sel.length; ++i) applyFn(sel[i])
+        saveMapDelayer.pendingOpKind = opKind
+        saveMapDelayer.restart()
+    }
+
     function _upsertRemoteCursor(pid, x, y) {
         // Important : réassigner un nouvel objet (pas de mutation en place)
         // pour que le binding `_entry` du delegate Repeater se ré-évalue.
@@ -1389,12 +1388,8 @@ Base_Board {
         onFocusReleased: root.focusReleased()
 
         onEffectChanged: {
-            var effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
-            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
-                logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
-            }
-            saveMapDelayer.pendingOpKind = "display"
-            saveMapDelayer.restart()
+            const effects = root.editorSidePanel.visualEffectsPanel.getCurrentEffects()
+            root._applyToSelectionAndSave("display", function(el) { el.applyVisualEffects(effects) })
         }
 
         onConnectionRequested: function (kind) {
@@ -1421,49 +1416,8 @@ Base_Board {
             gameScene.modelName = name
         }
         onConfigurationChanged: {
-            var physicSettings = root.editorSidePanel.zoneConfigurationPanel.getCurrentPhysicSettings()
-            for (var i = 0; i < logic.mouseLogic.selectedElements.length; i++) {
-                logic.mouseLogic.selectedElements[i].applyPhysicSettings(
-                            physicSettings)
-            }
-            saveMapDelayer.pendingOpKind = "zone"
-            saveMapDelayer.restart()
-        }
-    }
-
-    Timer {
-        id: tmpSaver
-        // repeat: true
-        // property bool isMapCustom: mapInfo.mapName !== mapInfo.autosaveMapName
-        function setSaveTimer() {
-            stEnableAutoSave.sync()
-            // tmpSaver.interval = stEnableAutoSave.value(
-            //             "saveEvent", "1") == 3 ? 500 : stEnableAutoSave.value(
-            //                                          "saveInterval",
-            //                                          "0") * 1000 * 60
-            // tmpSaver.running = stEnableAutoSave.value("saveEvent",
-            //                                           "1") == 1 ? false : true
-        }
-        // onTriggered: {
-        //     console.log("Auto-saving map:", mapInfo.mapName)
-        //     if (isMapCustom)
-        //         logic.saveMap(MapTypes.CUSTOM)
-        //     else
-        //         logic.saveMap(MapTypes.AUTOSAVE)
-
-        //     busyTimer.start()
-        // }
-    }
-
-    Timer {
-        id: busyTimer
-        interval: 1500
-        repeat: false
-        running: false
-        triggeredOnStart: true
-        onTriggered: {
-            stEnableAutoSave.saveEvent === 2 ? (savingIndicator.running
-                                                == savingIndicator.running ? false : true) : null
+            const physicSettings = root.editorSidePanel.zoneConfigurationPanel.getCurrentPhysicSettings()
+            root._applyToSelectionAndSave("zone", function(el) { el.applyPhysicSettings(physicSettings) })
         }
     }
 
@@ -1479,7 +1433,7 @@ Base_Board {
             // puissent muter m_tiles. Sans ça, `getCurrentMap()` retourne null
             // et toute tentative de pose/déplacement local fait un early-return.
             Game.initEmptyCollabMap()
-            tmpSaver.setSaveTimer()
+            stEnableAutoSave.sync()
             return
         }
 
@@ -1507,7 +1461,7 @@ Base_Board {
             mapInfo.mapName = mapInfo.autosaveMapName
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         }
-        tmpSaver.setSaveTimer()
+        stEnableAutoSave.sync()
     }
 
     Component.onDestruction: {
@@ -1516,11 +1470,3 @@ Base_Board {
         }
     }
 }
-
-/*##^##
-Designer {
-    D{i:0}D{i:12;invisible:true}D{i:23;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}D{i:28;cameraSpeed3d:25;cameraSpeed3dMultiplier:1}
-D{i:45;invisible:true}D{i:46;invisible:true}
-}
-##^##*/
-

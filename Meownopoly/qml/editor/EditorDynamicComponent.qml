@@ -20,59 +20,38 @@ Item{
     property alias scrollLogic_normal_comp: scrollLogic_normal_comp
     property alias scrollLogic_pose_comp: scrollLogic_pose_comp
 
+    function _handleElementDeleted(element) {
+        logic.tileLogic.deleteElementsConnections(element)
+        element.connectionManager.deleteLinkedConnection()
+        logic.tileLogic.deleteElement(element)
+        if (logic.editorMouseMode === EditorEnum.EM_TEMPLATE)
+            logic.mouseLogic.removeElementFromTemplateSelection(element)
+    }
 
-    // Composant dynamique pour créer des SnapableCaseTile
     Component {
         id: snapableCaseTileComponent
         SnapableCaseTile {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
-
-            // Gestion de la suppression
-            onElementDeleted: function(element) {
-                console.log("Suppression de l'élément:", element)
-                logic.tileLogic.deleteElementsConnections(element)
-                element.connectionManager.deleteLinkedConnection()
-                logic.tileLogic.deleteElement(element)
-                if (logic.editorMouseMode === EditorEnum.EM_TEMPLATE)
-                    logic.mouseLogic.removeElementFromTemplateSelection(element)
-            }
+            onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }
-    // Composant dynamique pour créer des SnapableDecoration
 
     Component {
         id: snapableDecorationComponent
         SnapableDecoration {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
-
-            // Gestion de la suppression
-            onElementDeleted: function(element) {
-                logic.tileLogic.deleteElementsConnections(element)
-                element.connectionManager.deleteLinkedConnection()
-                logic.tileLogic.deleteElement(element)
-                if (logic.editorMouseMode === EditorEnum.EM_TEMPLATE)
-                    logic.mouseLogic.removeElementFromTemplateSelection(element)
-            }
+            onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }
 
-    // Composant dynamique pour créer des zones d'exclusion
     Component {
         id: snapablePhysicZoneComponent
         SnapableExclusionZone {
             gridManager: gameGrid
-            displayLinkEnable: logic.tileLogic.displayLinkEnable === true // Les zones d'exclusion utilisent maintenant les liens
-
-            // Gestion de la suppression
-            onElementDeleted: function(element) {
-                logic.tileLogic.deleteElementsConnections(element)
-                element.connectionManager.deleteLinkedConnection()
-                logic.tileLogic.deleteElement(element)
-                if (logic.editorMouseMode === EditorEnum.EM_TEMPLATE)
-                    logic.mouseLogic.removeElementFromTemplateSelection(element)
-            }
+            displayLinkEnable: logic.tileLogic.displayLinkEnable === true
+            onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
         }
     }
 

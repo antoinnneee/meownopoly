@@ -60,7 +60,7 @@ Item {
     }
 
     // panneau de stats de transmission (reliable.io par pair).
-    // Toggle via clic sur le badge collab. Poll @ 2 Hz.
+    // Toggle via clic sur le badge collab.
     Rectangle {
         id: netStatsPanel
         property bool open: false
@@ -80,7 +80,7 @@ Item {
         property int tick: 0
 
         Timer {
-            interval: 250
+            interval: 500
             repeat: true
             running: netStatsPanel.visible
             onTriggered: {
