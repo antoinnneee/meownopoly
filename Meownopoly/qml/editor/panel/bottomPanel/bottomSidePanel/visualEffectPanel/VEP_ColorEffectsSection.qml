@@ -26,6 +26,13 @@ CollapsableGroupBox {
         property string lastColor: "#ffffff"
     }
 
+    Timer {
+        id: lastColorSaveTimer
+        interval: 300
+        repeat: false
+        onTriggered: colorPresetSettings.lastColor = control.pickedColor.toString()
+    }
+
     Component.onCompleted: {
         if (!loadColorPresets()) {
             colorPresets = [
@@ -113,7 +120,7 @@ CollapsableGroupBox {
                     pickedColor: control.pickedColor
                     onColorEdited: function(c) {
                         control.pickedColor = c
-                        colorPresetSettings.lastColor = c.toString()
+                        lastColorSaveTimer.restart()
                         control._syncActiveIndex()
                         control.effectChanged()
                     }
@@ -213,9 +220,8 @@ CollapsableGroupBox {
     ]
 
     function _syncActiveIndex() {
-        const target = pickedColor.toString().toLowerCase()
         for (let i = 0; i < colorPresets.length; ++i) {
-            if (colorPresets[i].color.toString().toLowerCase() === target) {
+            if (Qt.colorEqual(colorPresets[i].color, pickedColor)) {
                 activePresetIndex = i
                 return
             }
@@ -224,14 +230,13 @@ CollapsableGroupBox {
     }
 
     function addPresetFromPicker() {
-        const c = pickedColor.toString()
         for (let i = 0; i < colorPresets.length; ++i) {
-            if (colorPresets[i].color.toString().toLowerCase() === c.toLowerCase()) {
+            if (Qt.colorEqual(colorPresets[i].color, pickedColor)) {
                 activePresetIndex = i
                 return
             }
         }
-        colorPresets = colorPresets.concat([{ color: c }])
+        colorPresets = colorPresets.concat([{ color: pickedColor.toString() }])
         activePresetIndex = colorPresets.length - 1
         saveColorPresets()
     }
@@ -247,9 +252,8 @@ CollapsableGroupBox {
 
     function selectPreset(index) {
         if (index < 0 || index >= colorPresets.length) return
-        const c = colorPresets[index].color
-        pickedColor = c
-        colorPresetSettings.lastColor = c.toString()
+        pickedColor = colorPresets[index].color
+        lastColorSaveTimer.restart()
         activePresetIndex = index
         control.effectChanged()
     }

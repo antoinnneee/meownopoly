@@ -45,10 +45,7 @@ MapFileManager::MapFileManager(QObject *parent) : QObject(parent)
 
 MapFileManager::~MapFileManager()
 {
-    if (currentMap) {
-        delete currentMap;
-    }
-    currentMap = nullptr;
+    delete currentMap;
 }
 
 Map *MapFileManager::getCurrentMap() const

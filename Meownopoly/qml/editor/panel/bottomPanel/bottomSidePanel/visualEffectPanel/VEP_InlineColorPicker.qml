@@ -16,7 +16,11 @@ Item {
     implicitHeight: layout.implicitHeight
     implicitWidth: 200
 
-    onPickedColorChanged: _fromColor(pickedColor)
+    onPickedColorChanged: {
+        _fromColor(pickedColor)
+        if (hexField && !hexField.activeFocus)
+            hexField.text = pickedColor.toString().toUpperCase()
+    }
     Component.onCompleted: _fromColor(pickedColor)
 
     function _emit() {
@@ -183,14 +187,6 @@ Item {
                     }
                 }
             }
-        }
-    }
-
-    Connections {
-        target: root
-        function onPickedColorChanged() {
-            if (!hexField.activeFocus)
-                hexField.text = root.pickedColor.toString().toUpperCase()
         }
     }
 }

@@ -218,11 +218,12 @@ Rectangle {
                         && lobbyChatClient.sessionId === sessionData.sessionId
                         && lobbyChatClient.connected) {
                     Catway.setChatClient(lobbyChatClient)
-                    if (parsed.hostId === AccountManager.uniqueId) {
-                        if (EditorSession.active && EditorSession.isHost) {
-                            console.log("🛠️ Rejoin propre session éditeur — EditorSession déjà hôte, skip launchNewSession")
-                            return
-                        }
+                    const isOwnSession = parsed.hostId === AccountManager.uniqueId
+                    if (isOwnSession && EditorSession.active && EditorSession.isHost) {
+                        console.log("🛠️ Rejoin propre session éditeur — EditorSession déjà hôte, skip launchNewSession")
+                        return
+                    }
+                    if (isOwnSession) {
                         console.log("🛠️ Rejoin propre session éditeur (host =", parsed.hostId + ") → launchNewSession (resume host)")
                         root.launchNewSession(true, parsed.hostId)
                     } else {
