@@ -7,6 +7,7 @@ VEP_AdvancedEffectsSection 1.0 VEP_AdvancedEffectsSection.qml
 VEP_ButtonLock 1.0 VEP_ButtonLock.qml
 VEP_ButtonMirror 1.0 VEP_ButtonMirror.qml
 VEP_ColorEffectsSection 1.0 VEP_ColorEffectsSection.qml
+VEP_InlineColorPicker 1.0 VEP_InlineColorPicker.qml
 VEP_ResetButtonsPanel 1.0 VEP_ResetButtonsPanel.qml
 VEP_Rotation 1.0 VEP_Rotation.qml
 VEP_Slider 1.0 VEP_Slider.qml

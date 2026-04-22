@@ -57,9 +57,7 @@ CollapsableGroupBox {
             contrast: colorEffectsSection.contrastSlider.value,
             saturation: colorEffectsSection.saturationSlider.value,
             colorization: colorEffectsSection.colorizationSlider.value,
-            colorizationColor: colorEffectsSection.colorPresets.length > 0 &&
-                              colorEffectsSection.activePresetIndex >= 0 ?
-                              colorEffectsSection.colorPresets[colorEffectsSection.activePresetIndex].color : "#ffffff",
+            colorizationColor: colorEffectsSection.pickedColor,
 
             // Advanced effects
             blurEnabled: advancedEffectsSection.blurEnabledCheck.checked,
