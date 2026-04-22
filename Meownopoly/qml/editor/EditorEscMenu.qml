@@ -86,7 +86,7 @@ Rectangle {
             editor = editor.parent
         }
         if (editor) {
-            editor.forceActiveFocus()()
+            editor.forceActiveFocus()
         }
     }
     

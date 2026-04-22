@@ -49,10 +49,6 @@ Base_Board {
     property int appPositionX: 0
     property int appPositionY: 0
 
-    // Mode collaboratif : tant que false, l'éditeur reste strictement monoposte.
-    // Les interceptions réseau ultérieures checkeront ce flag avant d'agir.
-    readonly property bool collaborative: EditorSession.active
-
     property int availableHeight: height - selectionPanel.height
     property alias groupeSelection: workArea.groupeSelection
 
@@ -1398,10 +1394,7 @@ Base_Board {
                 logic.mouseLogic.selectedElements[i].applyVisualEffects(effects)
             }
             saveMapDelayer.pendingOpKind = "display"
-            if (saveMapDelayer.running)
-                saveMapDelayer.restart()
-            else
-                saveMapDelayer.start()
+            saveMapDelayer.restart()
         }
 
         onConnectionRequested: function (kind) {
@@ -1434,10 +1427,7 @@ Base_Board {
                             physicSettings)
             }
             saveMapDelayer.pendingOpKind = "zone"
-            if (saveMapDelayer.running)
-                saveMapDelayer.restart()
-            else
-                saveMapDelayer.start()
+            saveMapDelayer.restart()
         }
     }
 

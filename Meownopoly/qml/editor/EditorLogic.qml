@@ -144,15 +144,6 @@ Base_logic {
     function createMap(mapName, mapType){
         MapFileManager.createMapFile(mapName, mapType)
     }
-
-
-    Settings {
-        id: stEnableAutoSave
-        category: "Editor/SaveConfig"
-        property var currentMap : value("currentMap", mapInfo.autosaveMapName)
-        property int saveEvent: value("saveEvent", "0")
-        // onCurrentMapChanged: console.log("currentMap :", currentMap, " saveEvent:", saveEvent)
-    }
 }
 
 
