@@ -95,6 +95,7 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ButtonLock.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ButtonMirror.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ColorEffectsSection.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_InlineColorPicker.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ResetButtonsPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_Rotation.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_Slider.qml</file>
