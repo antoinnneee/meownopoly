@@ -93,6 +93,11 @@ CollapsableGroupBox {
             title: "Colorization Color"
             Layout.fillWidth: true
             Layout.topMargin: 8
+            topPadding: 14
+            bottomPadding: 6
+            leftPadding: 6
+            rightPadding: 6
+            spacing: 2
 
             background: Rectangle {
                 color: "#1a2a2a2a"
@@ -107,15 +112,47 @@ CollapsableGroupBox {
                 font.pixelSize: 10
                 font.bold: true
                 x: 4
+                y: 1
             }
 
-            ColumnLayout {
+            component SwatchButton: Rectangle {
+                id: swatchRoot
+                property color baseColor: "#4a8a4a"
+                property color pressedColor: "#569c58"
+                property string text: ""
+                signal clicked()
+                readonly property alias hovered: swatchMouse.containsMouse
+                implicitWidth: 24
+                implicitHeight: 22
+                radius: 3
+                color: swatchRoot.enabled ? (swatchMouse.pressed ? pressedColor : baseColor) : "#444444"
+                opacity: swatchRoot.enabled ? 1.0 : 0.55
+
+                Text {
+                    anchors.centerIn: parent
+                    text: swatchRoot.text
+                    color: swatchRoot.enabled ? "#ffffff" : "#888888"
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+
+                MouseArea {
+                    id: swatchMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: swatchRoot.clicked()
+                }
+            }
+
+            RowLayout {
                 anchors.fill: parent
-                spacing: 6
+                spacing: 8
 
                 VEP_InlineColorPicker {
                     id: picker
                     Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
                     pickedColor: control.pickedColor
                     onColorEdited: function(c) {
                         control.pickedColor = c
@@ -125,85 +162,69 @@ CollapsableGroupBox {
                     }
                 }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.topMargin: 4
-                    spacing: 6
-
-                    Text {
-                        text: "Saved swatches"
-                        color: "#cccccc"
-                        font.pixelSize: 9
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    Text {
-                        text: colorPresets.length + " / right-click to remove"
-                        color: "#888888"
-                        font.pixelSize: 9
-                    }
-
-                    component SwatchButton: Button {
-                        property color baseColor: "#4a8a4a"
-                        property color pressedColor: "#569c58"
-                        implicitWidth: 26; implicitHeight: 22
-                        background: Rectangle {
-                            color: parent.enabled ? (parent.pressed ? parent.pressedColor : parent.baseColor) : "#444444"
-                            radius: 3
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: parent.enabled ? "#ffffff" : "#888888"
-                            font.pixelSize: 14; font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    SwatchButton {
-                        text: "+"
-                        ToolTip.visible: hovered
-                        ToolTip.text: "Save current color"
-                        onClicked: addPresetFromPicker()
-                    }
-
-                    SwatchButton {
-                        text: "\u00D7"
-                        baseColor: "#aa4444"
-                        pressedColor: "#cc4444"
-                        ToolTip.visible: hovered
-                        ToolTip.text: "Remove selected swatch"
-                        enabled: activePresetIndex >= 0
-                        onClicked: removePreset(activePresetIndex)
-                    }
-                }
-
-                Flow {
-                    Layout.fillWidth: true
+                ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
+                    Layout.preferredWidth: 92
                     spacing: 4
 
-                    Repeater {
-                        model: colorPresets
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
 
-                        Rectangle {
-                            width: 26
-                            height: 20
-                            radius: 3
-                            color: modelData.color
-                            border.color: index === activePresetIndex ? "#ffffff" : "#555555"
-                            border.width: index === activePresetIndex ? 2 : 1
+                        Text {
+                            text: "Presets"
+                            color: "#cccccc"
+                            font.pixelSize: 9
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: function(mouse) {
-                                    if (mouse.button === Qt.RightButton)
-                                        removePreset(index)
-                                    else
-                                        selectPreset(index)
+                        SwatchButton {
+                            text: "+"
+                            ToolTip.visible: hovered
+                            ToolTip.text: "Save current color"
+                            onClicked: addPresetFromPicker()
+                        }
+
+                        SwatchButton {
+                            text: "×"
+                            baseColor: "#aa4444"
+                            pressedColor: "#cc4444"
+                            ToolTip.visible: hovered
+                            ToolTip.text: "Remove selected swatch"
+                            enabled: activePresetIndex >= 0
+                            onClicked: removePreset(activePresetIndex)
+                        }
+                    }
+
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Repeater {
+                            model: colorPresets
+
+                            Rectangle {
+                                width: 24
+                                height: 20
+                                radius: 3
+                                color: modelData.color
+                                border.color: index === activePresetIndex ? "#ffffff" : "#555555"
+                                border.width: index === activePresetIndex ? 2 : 1
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                    cursorShape: Qt.PointingHandCursor
+                                    ToolTip.visible: containsMouse
+                                    ToolTip.text: "Right-click to remove"
+                                    onClicked: function(mouse) {
+                                        if (mouse.button === Qt.RightButton)
+                                            removePreset(index)
+                                        else
+                                            selectPreset(index)
+                                    }
                                 }
                             }
                         }
