@@ -73,6 +73,7 @@ Item {
             var mapDisplayName = availableMaps[currentIndex]
             currentMapName = MapFileManager.findMapFileByName(mapDisplayName)
             isCurrentMapAutosave = MapFileManager.isAutosaveMap(currentMapName)
+            // stEnableAutoSave.setValue(currentMapName)
         }
     }
 
@@ -105,6 +106,7 @@ Item {
         mapSettings.setValue("currentMap", normalizedName)
         
         updateCurrentMapInfo()
+        keyArrowPressed()
     }
 
     function navigatePrevious() {
@@ -207,6 +209,7 @@ Item {
         isLeft: true
         onClicked: {
             mapNavigationBar.navigatePrevious()
+            stEnableAutoSave.setValue("currentMap",currentMapName)
             keyArrowPressed()
         }
     }
@@ -292,7 +295,7 @@ Item {
             z: 9000
             enabled: !isCurrentMapAutosave && mapInfo.mapName !== ""
             visible: enabled
-            
+
             property int confirmationStep: 0
 
             onHoveredChanged: {
@@ -307,6 +310,8 @@ Item {
                     mapNavigationBar.deleteCurrentMap()
                     confirmationStep = 0
                 }
+                stEnableAutoSave.setValue("currentMap",currentMapName)
+                keyArrowPressed()
             }
 
             contentItem: Text {
@@ -363,7 +368,9 @@ Item {
         isLeft: false
         onClicked:{
             mapNavigationBar.navigateNext()
+            stEnableAutoSave.setValue("currentMap",currentMapName)
             keyArrowPressed()
+
         }
     }
 
