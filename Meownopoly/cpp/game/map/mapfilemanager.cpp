@@ -163,6 +163,11 @@ bool MapFileManager::isAutosaveMap(const QString &mapName)
     return normalizeMapName(mapName) == AUTOSAVE_MAP_NAME;
 }
 
+bool MapFileManager::isCustomAutosaveMap()
+{
+    return (currentMap->getMapInfo()->getType() == MapTypes::AUTOSAVE);
+}
+
 MapTypes::MapType MapFileManager::getMapType(const QString &mapName)
 {
     if (isAutosaveMap(mapName)) {

@@ -18,7 +18,8 @@ Rectangle {
     radius: 25
     z: 9000
     visible: !selectionPanel.visible
-    
+    // enabled: mapNavigationBar.availableMaps.length > 0
+    enabled : !MapFileManager.isCustomAutosaveMap()
     property string arrowText: ""
     property bool isLeft: true
     signal clicked()
