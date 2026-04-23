@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 
 Item {
     id: root
@@ -15,6 +16,107 @@ Item {
     property real _sat: 0
     property real _val: 1
     property bool _applying: false
+    property bool _eyedropperActive: false
+
+    function _startEyedropper() {
+        if (!root.Window.window) return
+        root._eyedropperActive = true
+    }
+
+    function _cancelEyedropper() {
+        root._eyedropperActive = false
+    }
+
+    function _performPick(xWin, yWin) {
+        // Build ancestor chain (root → top)
+        const chain = []
+        let item = root
+        while (item) { chain.push(item); item = item.parent }
+
+        // Walk from the highest user-declared ancestor down to the picker.
+        // Skip the last 2 entries which are typically Qt internal items
+        // (QQuickContentItem + QQuickRootItem) that reject grabToImage.
+        // Try each candidate until grabToImage returns true.
+        for (let idx = Math.max(0, chain.length - 3); idx >= 0; --idx) {
+            const target = chain[idx]
+            if (!target || target.width <= 0 || target.height <= 0) continue
+
+            const localPos = target.mapFromItem(null, xWin, yWin)
+            if (localPos.x < 0 || localPos.y < 0 ||
+                localPos.x >= target.width || localPos.y >= target.height) continue
+
+            const tw = target.width, th = target.height
+            const lx = localPos.x, ly = localPos.y
+            const ok = target.grabToImage(function(result) {
+                if (!result || !result.url) return
+                pixelReader.width = tw
+                pixelReader.height = th
+                pixelReader._clickX = lx
+                pixelReader._clickY = ly
+                pixelReader._imageUrl = result.url
+                pixelReader.loadImage(result.url)
+            }, Qt.size(tw, th))
+
+            if (ok) { root._cancelEyedropper(); return }
+        }
+        root._cancelEyedropper()
+    }
+
+    Canvas {
+        id: pixelReader
+        visible: false
+        renderTarget: Canvas.Image
+        property string _imageUrl: ""
+        property real _clickX: 0
+        property real _clickY: 0
+
+        onImageLoaded: requestPaint()
+        onPaint: {
+            if (!_imageUrl) return
+            const ctx = getContext("2d")
+            ctx.drawImage(_imageUrl, 0, 0)
+            try {
+                const d = ctx.getImageData(_clickX, _clickY, 1, 1).data
+                const c = Qt.rgba(d[0] / 255, d[1] / 255, d[2] / 255, 1)
+                root.colorEdited(c)
+            } catch (e) {
+                console.error("Eyedropper pick failed:", e)
+            }
+            _imageUrl = ""
+        }
+    }
+
+    Loader {
+        active: root._eyedropperActive
+        parent: Overlay.overlay
+        x: 0
+        y: 0
+        width: parent ? parent.width : 0
+        height: parent ? parent.height : 0
+        z: 99999
+        sourceComponent: MouseArea {
+            cursorShape: Qt.CrossCursor
+            hoverEnabled: true
+            focus: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            Component.onCompleted: forceActiveFocus()
+
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                border.color: "#4a8a4a"
+                border.width: 2
+            }
+
+            onClicked: function(mouse) {
+                if (mouse.button === Qt.RightButton)
+                    root._cancelEyedropper()
+                else
+                    root._performPick(mouse.x, mouse.y)
+            }
+            Keys.onEscapePressed: root._cancelEyedropper()
+        }
+    }
 
     implicitHeight: layout.implicitHeight
     implicitWidth: 180
@@ -398,7 +500,7 @@ Item {
             }
         }
 
-        // Color preview + hex field
+        // Color preview + hex field + eyedropper
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
@@ -409,6 +511,38 @@ Item {
                 radius: 3
                 color: root.pickedColor
                 border.color: "#666"; border.width: 1
+            }
+
+            // TODO: Eyedropper button disabled — grabToImage fails with
+            // "QQuickRootItem: item has no QML engine" when walking up the
+            // ApplicationWindow hierarchy. Re-enable once a working grab
+            // target strategy (or C++ helper) is in place.
+            Rectangle {
+                visible: false
+                Layout.preferredWidth: 0
+                Layout.preferredHeight: 0
+                radius: 3
+                color: root._eyedropperActive ? "#569c58"
+                        : (eyedropMouse.pressed ? "#569c58"
+                        : (eyedropMouse.containsMouse ? "#4a8a4a" : "#3a3a3a"))
+                border.color: root._eyedropperActive ? "#6bcf6d" : "#555"
+                border.width: 1
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "🎨"
+                    font.pixelSize: 14
+                }
+
+                MouseArea {
+                    id: eyedropMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root._startEyedropper()
+                    ToolTip.visible: containsMouse
+                    ToolTip.text: "Pick color from screen (Esc to cancel)"
+                }
             }
 
             TextField {
