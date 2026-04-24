@@ -44,7 +44,11 @@ bool Game::saveCurrentMap(){
                    << "(client collab sans fullsync de mapInfo ?)";
         return false;
     }
-    MapTypes::MapType currentType = currentMapInfo->getType();
+    // Le type source est désormais porté par Map (propriété d'emplacement, pas
+    // de contenu). Avant refactor : MapInfo::getType() renvoyait toujours
+    // AUTOSAVE à cause d'un initialiseur header mal ordonné, ce qui stompait
+    // autosave_tmp.json en save-on-modification pour toute carte custom.
+    MapTypes::MapType currentType = currentMap->sourceType();
 
     QJsonObject jsonObject;
 
@@ -221,11 +225,12 @@ void Game::askNext()
 bool Game::saveOnEdit(){
 
     QSettings setting;
-    bool flag = false;
-
     setting.beginGroup("Editor/SaveConfig");
-    flag = setting.value("saveEvent") == "3";
-    return flag;
+    // toInt() plutôt que comparaison directe à "3" : QSettings peut
+    // stocker la valeur en int (backend natif Windows/Mac) ou en string
+    // (INI). Comparer QVariant(int 3) à const char* "3" renvoie false
+    // sur backend natif → saveOnEdit n'activait jamais la politique 3.
+    return setting.value("saveEvent").toInt() == 3;
 }
 
 void Game::updateMap(int type, ItemSnapable* tile, QUuid groupId)

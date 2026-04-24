@@ -34,6 +34,13 @@ public:
     MapInfo *getMapInfo() const;
     void setMapInfo(MapInfo *newMapInfo);
 
+    // Origine du fichier (AUTOSAVE vs CUSTOM). Déterminée au load par
+    // Map::loadMap(name, type). Utilisée par Game::saveCurrentMap pour
+    // choisir le chemin de sérialisation. Ce n'est PAS une propriété du
+    // contenu (MapInfo) mais de l'emplacement disque d'origine.
+    MapTypes::MapType sourceType() const { return m_sourceType; }
+    void setSourceType(MapTypes::MapType t) { m_sourceType = t; }
+
     QList<ItemSnapable *> tiles() const;
     void setTiles(const QList<ItemSnapable *> &newTiles);
 
@@ -105,6 +112,11 @@ private:
 
     QList<EditDelta> m_lastRevertedBatch;
     bool m_lastRevertedWasUndo = false;
+
+    // Default CUSTOM : toute Map non explicitement chargée depuis un autosave
+    // est traitée comme custom (c.-à-d. écrite sous <mapName>_map.json). Les
+    // deux branches de loadMap peuvent l'écraser au besoin.
+    MapTypes::MapType m_sourceType = MapTypes::CUSTOM;
 };
 
 #endif // MAP_H

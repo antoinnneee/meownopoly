@@ -185,6 +185,7 @@ Map *Map::loadMap(QString mapName, MapTypes::MapType mapType)
     }
 
     Map *map = new Map(jsonObject);
+    map->setSourceType(mapType);
 
     if (jsonObject.contains("mapInfo") && jsonObject["mapInfo"].isObject()) {
         QJsonObject mapInfoObject = jsonObject["mapInfo"].toObject();

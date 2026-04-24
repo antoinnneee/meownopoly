@@ -140,16 +140,6 @@ QString MapInfo::autosaveMapName() const
     return m_autosaveMapName;
 }
 
-MapTypes::MapType MapInfo::getType() const
-{
-    return m_type;
-}
-
-void MapInfo::setType(MapTypes::MapType newType)
-{
-    m_type = newType;
-}
-
 
 void MapInfo::setMapLastModified(const QString &mapLastModified)
 {

@@ -68,9 +68,6 @@ public:
 
     QString autosaveMapName() const;
 
-    MapTypes::MapType getType() const;
-    void setType(MapTypes::MapType newType);
-
 signals:
     void mapNameChanged(const QString &mapName);
     void mapDescriptionChanged(const QString &mapDescription);
@@ -94,7 +91,6 @@ private:
 
     const QString m_autosaveMapName = AUTOSAVE_MAP_NAME;
     QString m_mapName = m_autosaveMapName;
-    MapTypes::MapType m_type = m_mapName == AUTOSAVE_MAP_NAME ? MapTypes::AUTOSAVE : MapTypes::CUSTOM;
 
     QString m_mapDescription = "";
     QString m_mapCreationDate = "";
