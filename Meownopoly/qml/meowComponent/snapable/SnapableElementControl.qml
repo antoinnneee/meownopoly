@@ -8,12 +8,12 @@ import EditorOpBus 1.0
 
 Item {
     id: controlsRoot
-    
+
     // Propriétés requises du parent
     required property var targetElement
     required property bool isVisible
     required property int zLayer
-    
+
     // Signaux
     signal layerChanged(int newLayer)
 
@@ -22,47 +22,36 @@ Item {
 
     visible: isVisible
     z: 200  // Au-dessus de tout
-    
-    // Positionner à droite de l'élément parent
+
+    // Taille dictée par le badge compact (cible tactile ~9 mm)
     anchors.leftMargin: 10
-    width: 40
+    width: controlsColumn.width
     height: controlsColumn.height
-    
-    // Colonne de contrôles
+
     Column {
         id: controlsColumn
         spacing: 5
-        
-        // Sélecteur de plans
-        Column {
-            id: layerSelector
-            spacing: 2
-            width: 40
 
-            LayerVisualizer {
-                id: layerOption
-                width: parent.width
-                selectedLayer: zLayer -1
-                onLayerClicked: function(index){
-                    console.log("layer " + index + "clicked")
-                    layerChanged(index +1)
-                    // SetDisplayParameter{zLayer} (log-only).
-                    if (targetElement && targetElement.snapableParameters) {
-                        EditorOpBus.recordOp({
-                            "op":     EditorOpType.SetDisplayParameter,
-                            "target": String(targetElement.snapableParameters.uniqueId),
-                            "fields": { "zLayer": index + 1 }
-                        })
-                    }
-                    logic.saveMap(MapTypes.UNDOREDO)
+        LayerVisualizer {
+            id: layerOption
+            selectedLayer: controlsRoot.zLayer - 1
+
+            onLayerClicked: function(index) {
+                controlsRoot.layerChanged(index + 1)
+                // SetDisplayParameter{zLayer} (log-only).
+                if (controlsRoot.targetElement && controlsRoot.targetElement.snapableParameters) {
+                    EditorOpBus.recordOp({
+                        "op":     EditorOpType.SetDisplayParameter,
+                        "target": String(controlsRoot.targetElement.snapableParameters.uniqueId),
+                        "fields": { "zLayer": index + 1 }
+                    })
                 }
+                logic.saveMap(MapTypes.UNDOREDO)
+            }
 
-                Behavior on scale {
-                    NumberAnimation { duration: 100 }
-                }
-
+            Behavior on scale {
+                NumberAnimation { duration: 100 }
             }
         }
-
     }
 }
