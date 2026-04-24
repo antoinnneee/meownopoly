@@ -268,12 +268,15 @@ ApplicationWindow {
 
             // host vient de créer une session (éditeur ou jeu).
             // Si éditeur, on démarre EditorSession.startAsHost et on push l'éditeur.
-            onLaunchNewSession: function(isEdition, hostId) {
+            // rawSessionName / initialMap : voir MultiplayerLobby.launchNewSession.
+            onLaunchNewSession: function(isEdition, hostId, rawSessionName, initialMap) {
                 if (!isEdition) {
                     console.log("[main] launchNewSession (jeu) — pas encore câblé")
                     return
                 }
-                console.log("[main] Host démarre EditorSession, playerId =", AccountManager.uniqueId)
+                console.log("[main] Host démarre EditorSession, playerId =", AccountManager.uniqueId,
+                            "session =", rawSessionName,
+                            "initialMap =", JSON.stringify(initialMap))
                 const ok = EditorSession.startAsHost(AccountManager.uniqueId)
                 if (!ok) {
                     console.warn("[main] EditorSession.startAsHost a échoué (GameSession active ?)")
@@ -282,7 +285,15 @@ ApplicationWindow {
                 // Garde le lobby (et son ChatClient collab) vivant en dessous
                 // de l'éditeur — ne pas pop. Retour au menu dépilera Editor
                 // puis Lobby proprement.
-                stackView.push(editor)
+                // initialProperties : Editor.initializeEditor() les lit au
+                // Component.onCompleted pour choisir entre carte vide au
+                // nom de session et carte existante conservant ses méta.
+                stackView.push(editor, {
+                    "hostInitialMap": {
+                        "sessionName": rawSessionName || "",
+                        "initialMap":  initialMap || null
+                    }
+                })
             }
 
             // Client a rejoint une session existante. Si c'est une session

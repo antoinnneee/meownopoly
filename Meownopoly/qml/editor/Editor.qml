@@ -66,6 +66,20 @@ Base_Board {
     signal openNewMapMenu
     property alias entity: gameScene.entity
 
+    // Passé par main.qml au push quand l'utilisateur crée une session collab
+    // en tant qu'hôte. Null si mono ou client. Structure :
+    //   {
+    //     sessionName: "mySession",       // nom saisi dans SessionCreation
+    //     initialMap:  {
+    //       mode:    "new" | "existing",  // new → fichier vide ; existing → load
+    //       mapName: "myExistingMap"      // utilisé seulement si mode=="existing"
+    //     }
+    //   }
+    // initializeEditor s'en sert pour router vers le bon flow (create+load vs
+    // load direct) AVANT que le premier Hello client n'arrive — le FullSync
+    // lira le mapInfo ainsi positionné.
+    property var hostInitialMap: null
+
     // la reconnexion auto après host migration est pilotée par main.qml
     // (qui possède le p2pStateMachine). Émis depuis `onHostLost` quand le pair
     // local n'est pas élu — la session de chat reste la MÊME (le nouvel hôte
@@ -1507,6 +1521,37 @@ Base_Board {
             // puissent muter m_tiles. Sans ça, `getCurrentMap()` retourne null
             // et toute tentative de pose/déplacement local fait un early-return.
             Game.initEmptyCollabMap()
+            stEnableAutoSave.sync()
+            return
+        }
+
+        // Hôte collab avec instruction de carte initiale — route explicite,
+        // distincte du flow mono. Se fait AVANT tout premier Hello pour que
+        // _sendFullSyncTo sérialise le bon mapInfo.
+        if (EditorSession.active && EditorSession.isHost && hostInitialMap) {
+            const sessName    = String(hostInitialMap.sessionName || "")
+            const initialMode = hostInitialMap.initialMap ? hostInitialMap.initialMap.mode : "new"
+            const initialName = hostInitialMap.initialMap ? hostInitialMap.initialMap.mapName : ""
+            Logger.info("Collab host init — mode=" + initialMode
+                        + " session=" + sessName
+                        + " existingMap=" + initialName, "MAP FILE MANAGER")
+            if (initialMode === "existing" && initialName) {
+                // Carte existante : charge le fichier <initialName>_map.json.
+                // Ses tuiles et son mapInfo (nom + background + etc.) sont
+                // conservés — la session édite directement ce fichier.
+                Game.loadMap(initialName, MapTypes.CUSTOM)
+                mapInfo.mapName = initialName
+            } else {
+                // Nouvelle carte vide — nom de fichier = nom de session.
+                // createMapFile ignore silencieusement s'il existe déjà ;
+                // dans ce cas loadMap reprendra son contenu actuel (collision
+                // avec une mono précédente — différenciation future).
+                if (!MapFileManager.mapExists(sessName, MapTypes.CUSTOM)) {
+                    MapFileManager.createMapFile(sessName, MapTypes.CUSTOM)
+                }
+                Game.loadMap(sessName, MapTypes.CUSTOM)
+                mapInfo.mapName = sessName
+            }
             stEnableAutoSave.sync()
             return
         }
