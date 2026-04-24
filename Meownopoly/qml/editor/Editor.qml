@@ -830,6 +830,14 @@ Base_Board {
                 // main.qml reçoit `promotedToHost` et renomme la session chat
                 // (MÊME sessionId) — aucun re-join nécessaire pour les autres.
                 console.log("[EditorSession] Je suis le nouvel hôte — promotion.")
+                // Phase 3.6 : save forcé de l'état courant AVANT promotion,
+                // hors politique. Garantit qu'un crash pendant la fenêtre
+                // stop→startAsHost ne laisse pas le nouvel hôte avec un
+                // fichier local obsolète (le dernier état reçu de l'ancien
+                // hôte peut ne pas être encore sur disque si le peer tournait
+                // en politique Manuel/Intervalle).
+                const savedOk = Game.saveCurrentMap()
+                console.log("[EditorSession] save forcé avant promotion → ok=", savedOk)
                 EditorSession.promoteToHost()
             } else if (electedHostId) {
                 // le nouvel hôte a conservé la MÊME session de chat
