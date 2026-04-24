@@ -78,8 +78,11 @@ Item {
     }
 
     function navigateToMap(index) {
-        if (availableMaps.length === 0) return
-
+        if (availableMaps.length === 0){
+            console.warn("Aucune carte disponible pour la navigation.")
+            console.warn("Just to be sure variable state is : ", availableMaps.length)
+            return
+        }
         // Wrap around
         if (index < 0) {
             index = availableMaps.length - 1
