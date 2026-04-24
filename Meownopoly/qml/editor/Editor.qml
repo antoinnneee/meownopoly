@@ -263,20 +263,17 @@ Base_Board {
         logic: logic
 
         onNewMapSet: {
-            // Level 1a : wipe les QML tiles AVANT tout reload. Sans ça, les
-            // anciennes tuiles restent dans snapableTilesList, pointent sur
-            // les C++ ItemSnapable de l'ancien Map qui sera deleteLater
-            // par setCurrentMap → dangling refs → crash au prochain redraw.
+            // Level 1a : wipe les QML tiles AVANT tout reload pour éviter
+            // que snapableTilesList garde des tuiles pointant sur les
+            // ItemSnapable de l'ancien Map qui sera détruit.
             logic.removeCurrentMap()
-            logic.createMap(newMapInfo.mapName, MapTypes.CUSTOM)
             console.log("New map created:", newMapInfo.mapName)
-            mapInfo.setMapInfo(newMapInfo)
-            // snapableTilesList est désormais vide : saveMap écrit un fichier
-            // avec 0 tuiles + les méta choisies par l'utilisateur. Avant
-            // Level 1a, il écrivait les tuiles de la carte précédente, ce
-            // qui faisait que "nouvelle carte" héritait silencieusement des
-            // tuiles de l'ancienne.
-            logic.saveMap(MapTypes.CUSTOM)
+            // Level 2 — on sérialise directement newMapInfo (saisi dans
+            // le menu) + 0 tuiles. Plus besoin de `createMapFile` (saveMap
+            // crée le fichier atomiquement) ni de `mapInfo.setMapInfo` (la
+            // helper n'existe plus : Base_Board.mapInfo est un binding sur
+            // Map.currentMap.mapInfo, qui sera mis à jour par le loadMap).
+            Game.saveMap(newMapInfo, [], MapTypes.CUSTOM)
             Game.loadMap(newMapInfo.mapName, MapTypes.CUSTOM)
         }
     }
@@ -297,15 +294,10 @@ Base_Board {
         z: UiStyle.z_HUD
     }
 
-    // Connexion pour écouter les changements de carte et mettre à jour les infos
-    Connections {
-        target: MapFileManager.currentMap
-        function onMapInfoChanged() {
-            var cMap = MapFileManager.currentMap
-            if (cMap && cMap.mapInfo)
-                mapInfo.setMapInfo(cMap.mapInfo)
-        }
-    }
+    // Level 2 — la Connections mapInfoChanged qui recopiait Map.mapInfo
+    // dans l'inline Base_Board.mapInfo a été supprimée : Base_Board.mapInfo
+    // est maintenant un binding direct sur MapFileManager.currentMap.mapInfo,
+    // donc la synchro est automatique.
 
     // Connexion pour écouter la demande de création de carte depuis le drawer
     Connections {
@@ -1061,13 +1053,17 @@ Base_Board {
             Logger.success("Map loaded", "MAP_LOADING")
             logic.tileLogic.builtConnections()
 
-            // Copy properties from loaded map to preserve bindings
-            if (map.mapInfo) {
-                mapInfo.setMapInfo(map.mapInfo)
-            }
-
-            if (mapInfo.mapName !== stEnableAutoSave.lastOpenedMap)
-                stEnableAutoSave.setValue("lastOpenedMap", mapInfo.mapName)
+            // Level 2 — plus besoin de recopier map.mapInfo dans
+            // Base_Board.mapInfo : le binding sur MapFileManager.currentMap
+            // .mapInfo s'en occupe dès que setCurrentMap propage le signal.
+            //
+            // Petite subtilité : ce handler fire AVANT setCurrentMap
+            // (cf. Game::loadMap), donc `mapInfo` pointe encore sur
+            // l'ancienne Map (ou _fallback). On lit `map.mapInfo.mapName`
+            // directement via le paramètre pour persister lastOpenedMap.
+            if (map && map.mapInfo &&
+                    map.mapInfo.mapName !== stEnableAutoSave.lastOpenedMap)
+                stEnableAutoSave.setValue("lastOpenedMap", map.mapInfo.mapName)
 
             // Phase 3.4 : si l'hôte change de carte en cours de session,
             // broadcaster la nouvelle carte à tous les peers. Le flag
