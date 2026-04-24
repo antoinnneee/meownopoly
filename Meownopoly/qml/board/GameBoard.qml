@@ -84,10 +84,9 @@ Base_Board {
         {
             Logger.success("Map loaded", "MAP_LOADING")
             logic.tileLogic.builtConnections();
-            // Copy properties from loaded map to preserve bindings
-            if (map.mapInfo) {
-                gameBoard.mapInfo.setMapInfo(map.mapInfo)
-            }
+            // Level 2 — plus de recopie manuelle : gameBoard.mapInfo est
+            // bindé à MapFileManager.currentMap.mapInfo et se ré-évalue
+            // automatiquement quand setCurrentMap émet currentMapChanged.
         }
     }
     

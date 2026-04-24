@@ -33,6 +33,7 @@ public:
     Q_INVOKABLE QString findMapFileByName(const QString &displayName);
     Q_INVOKABLE QString createMapFile(const QString &mapName, MapTypes::MapType mapType);
     Q_INVOKABLE bool isAutosaveMap(const QString &mapName);
+    Q_INVOKABLE bool isCustomAutosaveMap();
     Q_INVOKABLE MapTypes::MapType getMapType(const QString &mapName);
 
 

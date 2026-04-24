@@ -5,6 +5,7 @@ import QtQuick.Particles
 import "./components"
 import ui_item
 import AssetManager
+import MapFileManager
 
 /**
  * Écran de création de session
@@ -21,15 +22,41 @@ Rectangle {
 
     // Signaux pour la navigation
     signal backRequested()
-    // sessionData : { name, password, isEditionMode }
+    // sessionData : { name, password, isEditionMode,
+    //                 initialMap: { mode: "new"|"existing", mapName: "..." } }
     signal sessionCreateRequested(var sessionData)
 
+    // Règles de validation du nom de session :
+    //   - longueur ≥ 3
+    //   - seulement [A-Za-z0-9_] (filtré côté input par le validator)
+    //   - la sous-chaîne "_map" est interdite : elle est réservée par la
+    //     normalisation de fichier (<name>_map.json) pour éviter les
+    //     collisions de noms entre cartes mono et fichiers de session.
+    function _validateSessionName(name) {
+        if (!name || name.length < 3) return "Trop court (min. 3 caractères)"
+        if (name.indexOf("_map") !== -1) return "La séquence « _map » est réservée"
+        // Le validator filtre déjà à l'input, mais double-check si collé.
+        if (/[^A-Za-z0-9_]/.test(name)) return "Seuls A-Z, a-z, 0-9 et _ sont permis"
+        return ""
+    }
+    readonly property string sessionNameError: _validateSessionName(sessionNameInput.text)
+
     // État du formulaire — seul le nom est obligatoire
-    property bool formValid: sessionNameInput.text.length >= 3
+    property bool formValid: sessionNameError === ""
 
     // Mode : Edition ou Jeu — par défaut on crée une session éditeur collab
     // (le mode "Jeu" n'est pas encore câblé sur le networking côté main.qml).
     property bool isEditionMode: true
+
+    // Choix de la carte de départ (Edition uniquement) : soit "new" pour une
+    // carte vierge (le nom utilisé sur disque sera celui de la session), soit
+    // "existing" pour partir d'une carte locale (son mapName et ses
+    // métadonnées sont conservés). La différenciation mono/collab des
+    // fichiers sera traitée plus tard — pour l'instant option "existing"
+    // écrit directement sur le fichier mono d'origine.
+    property string initialMapMode: "new"        // "new" | "existing"
+    property string initialMapName: ""           // valide quand mode == "existing"
+    property var    availableMapsForPicker: []   // peuplé dans onCompleted
 
     // ═══════════════════════════════════════
     // Palette Dynamique (Orange 🎮 <-> Violet 🛠️)
@@ -235,13 +262,20 @@ Rectangle {
                             color: "#f5f0ff"
                             font.pixelSize: 15
                             maximumLength: 50
+                            // Filtre à la frappe : rejette les caractères hors
+                            // [A-Za-z0-9_] (accents, espaces, ponctuation).
+                            // Complément logique dans _validateSessionName
+                            // pour bloquer la sous-chaîne « _map ».
+                            validator: RegularExpressionValidator {
+                                regularExpression: /[A-Za-z0-9_]*/
+                            }
 
                             background: Rectangle {
                                 color: sessionNameInput.focus ? root.bgInputFocus : root.bgInput
                                 radius: 10
                                 border.color: {
                                     if (sessionNameInput.focus) return root.cPrimary
-                                    if (sessionNameInput.text.length > 0 && sessionNameInput.text.length < 3)
+                                    if (sessionNameInput.text.length > 0 && root.sessionNameError !== "")
                                         return "#E74C3C"
                                     return root.borderInput
                                 }
@@ -251,11 +285,25 @@ Rectangle {
                             }
                         }
 
+                        // Bulle-info live : rule hint quand vide, erreur
+                        // précise quand invalide, compteur de caractères.
                         Text {
                             Layout.topMargin: 6
-                            text: sessionNameInput.text.length + "/50" +
-                                  (sessionNameInput.text.length > 0 && sessionNameInput.text.length < 3 ? "  ⚠ min. 3" : "")
-                            color: sessionNameInput.text.length >= 3 ? root.textMuted : "#E74C3C"
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            text: {
+                                const count = sessionNameInput.text.length
+                                if (count === 0)
+                                    return "💡 Lettres, chiffres, `_`. Pas de « _map »."
+                                if (root.sessionNameError !== "")
+                                    return "⚠ " + root.sessionNameError + "  (" + count + "/50)"
+                                return "✓ " + count + "/50"
+                            }
+                            color: {
+                                if (sessionNameInput.text.length === 0) return root.textMuted
+                                if (root.sessionNameError !== "") return "#E74C3C"
+                                return "#4ade80"
+                            }
                             font.pixelSize: 11
                             font.italic: true
                             Behavior on color { ColorAnimation { duration: 300 } }
@@ -479,6 +527,82 @@ Rectangle {
                             }
                         }
 
+                        // ── Carte de départ (mode Édition uniquement) ──
+                        // Choix entre carte vierge (nom = session) ou carte
+                        // existante (nom + méta conservés).
+                        Text {
+                            Layout.topMargin: 16
+                            text: "Carte de départ"
+                            color: root.textHighlight
+                            font.pixelSize: 14
+                            font.bold: true
+                            visible: root.isEditionMode
+                        }
+
+                        RowLayout {
+                            Layout.topMargin: 10
+                            Layout.fillWidth: true
+                            spacing: 14
+                            visible: root.isEditionMode
+
+                            RadioButton {
+                                id: radioNew
+                                text: "Nouvelle (vide)"
+                                checked: root.initialMapMode === "new"
+                                onClicked: root.initialMapMode = "new"
+                                contentItem: Text {
+                                    text: radioNew.text
+                                    color: root.textMuted
+                                    font.pixelSize: 13
+                                    verticalAlignment: Text.AlignVCenter
+                                    leftPadding: radioNew.indicator.width + 6
+                                }
+                            }
+                            RadioButton {
+                                id: radioExisting
+                                text: "Existante"
+                                checked: root.initialMapMode === "existing"
+                                enabled: root.availableMapsForPicker.length > 0
+                                onClicked: root.initialMapMode = "existing"
+                                contentItem: Text {
+                                    text: radioExisting.text +
+                                          (radioExisting.enabled ? "" : " (aucune)")
+                                    color: radioExisting.enabled ? root.textMuted : root.textDim
+                                    font.pixelSize: 13
+                                    verticalAlignment: Text.AlignVCenter
+                                    leftPadding: radioExisting.indicator.width + 6
+                                }
+                            }
+                        }
+
+                        ComboBox {
+                            id: existingMapCombo
+                            Layout.fillWidth: true
+                            Layout.topMargin: 8
+                            Layout.preferredHeight: 40
+                            visible: root.isEditionMode &&
+                                     root.initialMapMode === "existing"
+                            model: root.availableMapsForPicker
+                            currentIndex: Math.max(0, root.availableMapsForPicker.indexOf(root.initialMapName))
+                            onActivated: {
+                                if (currentIndex >= 0 && currentIndex < root.availableMapsForPicker.length)
+                                    root.initialMapName = root.availableMapsForPicker[currentIndex]
+                            }
+                            background: Rectangle {
+                                color: root.bgInput
+                                radius: 8
+                                border.color: existingMapCombo.pressed ? root.cPrimary : root.borderInput
+                                border.width: 1
+                            }
+                            contentItem: Text {
+                                text: existingMapCombo.currentText || "—"
+                                color: "#f5f0ff"
+                                font.pixelSize: 13
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 10
+                            }
+                        }
+
                         // Fill space
                         Item { Layout.fillHeight: true }
 
@@ -556,15 +680,29 @@ Rectangle {
                                 }
 
                                 onClicked: {
+                                    // Carte de départ : mode "existing" n'a
+                                    // de sens que si une carte a été
+                                    // effectivement choisie, sinon fallback
+                                    // "new" (vierge au nom de la session).
+                                    const initialMap = {
+                                        "mode":    (root.isEditionMode &&
+                                                    root.initialMapMode === "existing" &&
+                                                    root.initialMapName !== "")
+                                                        ? "existing" : "new",
+                                        "mapName": (root.initialMapMode === "existing")
+                                                        ? root.initialMapName : ""
+                                    }
                                     console.log("🎉 Création de session demandée")
                                     console.log("  - Nom:", sessionNameInput.text)
                                     console.log("  - Mot de passe:", sessionPasswordInput.text.length > 0 ? "***" : "(vide)")
                                     console.log("  - Mode:", root.isEditionMode ? "Edition" : "Jeu")
+                                    console.log("  - Carte de départ:", JSON.stringify(initialMap))
 
                                     root.sessionCreateRequested({
                                         name:         sessionNameInput.text,
                                         password:     sessionPasswordInput.text,
-                                        isEditionMode: root.isEditionMode
+                                        isEditionMode: root.isEditionMode,
+                                        initialMap:   initialMap
                                     })
                                 }
                             }
@@ -575,9 +713,22 @@ Rectangle {
         }
     }
 
-    // Animation d'entrée
+    // Animation d'entrée + chargement de la liste des cartes locales pour
+    // le picker "Carte existante".
     opacity: 0
-    Component.onCompleted: fadeInAnimation.start()
+    Component.onCompleted: {
+        fadeInAnimation.start()
+        // Exclut l'autosave de la liste sélectionnable (démarrer une session
+        // depuis autosave_tmp n'a pas de sens utilisateur — c'est un
+        // scratch-pad, pas une carte éditoriale).
+        const all = MapFileManager.getAvailableMaps() || []
+        const filtered = []
+        for (let i = 0; i < all.length; i++) {
+            if (!MapFileManager.isAutosaveMap(all[i])) filtered.push(all[i])
+        }
+        availableMapsForPicker = filtered
+        if (filtered.length > 0) initialMapName = filtered[0]
+    }
 
     NumberAnimation {
         id: fadeInAnimation

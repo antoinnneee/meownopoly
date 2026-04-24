@@ -55,7 +55,9 @@ No automated test runner is configured. Manual testing via the executable.
 - Modular panel system with prefix naming: `CCP_` (case config), `ASP_` (asset), `VEP_` (visual effects)
 - Selection uses AABB rectangles with multi-select support
 - Undo/redo with full state management, autosave with debouncing
-- Map files stored in `QStandardPaths::AppDataLocation + "/map/"` (naturally isolated per `--instance N` via `applicationName` in `main.cpp`) — not `./map/` anymore. Helper: `MapFileManager::mapBasePath()`.
+- Map files stored in `./map/` (CWD-relative = `build/<config>/map/` en dev). Défini par `#define MAP_FILE_PATH` dans `cpp/game/map/mapfilemanager.h`. Pas d'isolation par `--instance N` pour les maps (contrairement à QSettings, chat DB, assets qui passent par `AppDataLocation`). **À ré-arbitrer** dans la suite des correctifs save/map.
+- **Persisted "last opened map"** : QSettings `Editor/SaveConfig/lastOpenedMap` (renommé depuis `currentMap` pour lever la confusion avec `MapFileManager.currentMap` qui est un pointeur `Map*` live, sans rapport). Migration one-shot dans `Editor.qml:stEnableAutoSave.Component.onCompleted`.
+- **Save-on-modification** : politique `saveEvent==3` (QSettings `Editor/SaveConfig/saveEvent`). Le fichier cible est `<mapName>_map.json` pour CUSTOM ou `autosave_tmp.json` pour AUTOSAVE. Le type d'origine est porté par `Map::sourceType()` (pas par `MapInfo` — une propriété d'emplacement, pas de contenu).
 
 ### Collaborative Editor (Phases 1-8)
 - `EditorSession` (`cpp/editor/network/`) mirrors `GameSession` pattern on top of Catway. Host-authoritative: clients send ops, host validates/rebroadcasts.

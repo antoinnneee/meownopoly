@@ -66,6 +66,20 @@ Base_Board {
     signal openNewMapMenu
     property alias entity: gameScene.entity
 
+    // Passé par main.qml au push quand l'utilisateur crée une session collab
+    // en tant qu'hôte. Null si mono ou client. Structure :
+    //   {
+    //     sessionName: "mySession",       // nom saisi dans SessionCreation
+    //     initialMap:  {
+    //       mode:    "new" | "existing",  // new → fichier vide ; existing → load
+    //       mapName: "myExistingMap"      // utilisé seulement si mode=="existing"
+    //     }
+    //   }
+    // initializeEditor s'en sert pour router vers le bon flow (create+load vs
+    // load direct) AVANT que le premier Hello client n'arrive — le FullSync
+    // lira le mapInfo ainsi positionné.
+    property var hostInitialMap: null
+
     // la reconnexion auto après host migration est pilotée par main.qml
     // (qui possède le p2pStateMachine). Émis depuis `onHostLost` quand le pair
     // local n'est pas élu — la session de chat reste la MÊME (le nouvel hôte
@@ -249,10 +263,15 @@ Base_Board {
         logic: logic
 
         onNewMapSet: {
-            logic.createMap(newMapInfo.mapName, MapTypes.CUSTOM)
             console.log("New map created:", newMapInfo.mapName)
-            mapInfo.setMapInfo(newMapInfo)
-            logic.saveMap(MapTypes.CUSTOM)
+            // Level 2 — on sérialise directement newMapInfo (saisi dans
+            // le menu) + 0 tuiles. Plus besoin de `createMapFile` (saveMap
+            // crée le fichier atomiquement) ni de `mapInfo.setMapInfo` (la
+            // helper n'existe plus : Base_Board.mapInfo est un binding sur
+            // Map.currentMap.mapInfo, qui sera mis à jour par le loadMap).
+            // Level 4 — plus besoin de logic.removeCurrentMap() :
+            // Game.loadMap en fin de flow émet clearCurrentMap qui wipe.
+            Game.saveMap(newMapInfo, [], MapTypes.CUSTOM)
             Game.loadMap(newMapInfo.mapName, MapTypes.CUSTOM)
         }
     }
@@ -273,15 +292,10 @@ Base_Board {
         z: UiStyle.z_HUD
     }
 
-    // Connexion pour écouter les changements de carte et mettre à jour les infos
-    Connections {
-        target: MapFileManager.currentMap
-        function onMapInfoChanged() {
-            var cMap = MapFileManager.currentMap
-            if (cMap && cMap.mapInfo)
-                mapInfo.setMapInfo(cMap.mapInfo)
-        }
-    }
+    // Level 2 — la Connections mapInfoChanged qui recopiait Map.mapInfo
+    // dans l'inline Base_Board.mapInfo a été supprimée : Base_Board.mapInfo
+    // est maintenant un binding direct sur MapFileManager.currentMap.mapInfo,
+    // donc la synchro est automatique.
 
     // Connexion pour écouter la demande de création de carte depuis le drawer
     Connections {
@@ -303,9 +317,24 @@ Base_Board {
     Settings {
         id: stEnableAutoSave
         category: "Editor/SaveConfig"
-        property var currentMap: value("currentMap", mapInfo.autosaveMapName)
+        // Renommé depuis "currentMap" pour lever la confusion avec
+        // MapFileManager.currentMap (pointeur Map* live, sans rapport).
+        // Cette string persiste uniquement le nom du dernier .json custom
+        // ouvert, pour le recharger au prochain démarrage.
+        property var lastOpenedMap: value("lastOpenedMap", mapInfo.autosaveMapName)
         property int saveEvent: value("saveEvent", "1")
-        Component.onCompleted: sync()
+        Component.onCompleted: {
+            // Migration one-shot : si l'ancienne clé "currentMap" existe et
+            // "lastOpenedMap" pas encore, on copie. L'ancienne clé reste
+            // présente (QML Settings n'expose pas de remove) mais devient
+            // inerte. À purger plus tard si besoin.
+            const legacy = value("currentMap", "")
+            if (legacy !== "" && value("lastOpenedMap", "") === "") {
+                setValue("lastOpenedMap", legacy)
+                lastOpenedMap = legacy
+            }
+            sync()
+        }
     }
 
     BusyIndicator {
@@ -548,10 +577,28 @@ Base_Board {
 
     function _fullSyncChunkSize() { return 20000 }
 
-    function _sendFullSyncTo(senderId) {
-        // Sérialise la liste des tuiles courante. On passe par snapableTiles
-        // comme format (cohérent avec MapFileManager), mais sans mapInfo
-        // car le client conserve son propre mapInfo courant.
+    // Positionné à true pendant initializeEditor pour éviter de broadcaster
+    // FullSync sur les Game.loadMap d'initialisation (pas de pair connecté
+    // de toute façon, mais évite le bruit + la sérialisation gratuite).
+    property bool _suppressFullSyncBroadcast: false
+
+    // Raccourci : broadcast FullSync à tous les peers (reliable).
+    // Utilisé quand l'hôte change de carte en cours de session (Phase 3.4).
+    function _sendFullSyncToAll() {
+        if (!EditorSession.active || !EditorSession.isHost) return
+        if (_suppressFullSyncBroadcast) return
+        _sendFullSync("")
+    }
+
+    // targetId vide → broadcastEvent ; sinon sendEventTo.
+    function _sendFullSync(targetId) {
+        // Sérialise la liste des tuiles courante + mapInfo de l'hôte. Le
+        // mapInfo est nécessaire côté client pour :
+        //   - aligner le nom de carte affiché sur celui que l'hôte édite
+        //   - router les sauvegardes locales vers le bon fichier
+        //     `<mapInfo.mapName>_map.json`
+        // (sans ça, le client saverait sur son propre autosave jusqu'à la
+        // prochaine action explicite).
         console.log("[FullSync] host scan snapableTilesList.length =",
                     snapableTilesList.length)
         const tiles = []
@@ -574,20 +621,41 @@ Base_Board {
                              "raw=", t.snapableParameters.toJSON())
             }
         }
-        const payload = JSON.stringify({ snapableTiles: tiles })
+        // Sérialise le mapInfo courant (nom, description, background, etc.).
+        // 3D/caméra à ajouter plus tard — cf. gap noté dans CLAUDE.md.
+        let mapInfoObj = null
+        try {
+            mapInfoObj = JSON.parse(mapInfo.toJSON())
+        } catch (e) {
+            console.warn("[FullSync] mapInfo JSON error:", e)
+        }
+        const payload = JSON.stringify({
+            snapableTiles: tiles,
+            mapInfo:       mapInfoObj
+        })
         const CHUNK = _fullSyncChunkSize()
         const count = Math.max(1, Math.ceil(payload.length / CHUNK))
-        console.log("[FullSync] host → " + senderId
+        const dest  = targetId ? targetId : "(broadcast)"
+        console.log("[FullSync] host → " + dest
                     + " : " + tiles.length + " tuiles sérialisées, "
+                    + "mapInfo.name=" + (mapInfoObj ? mapInfoObj.name : "null") + ", "
                     + payload.length + " octets, " + count + " chunks")
         for (let c = 0; c < count; c++) {
-            EditorSession.sendEventTo(senderId, EditorMessageType.FullSync, {
+            const chunk = {
                 "chunkIndex": c,
                 "chunkCount": count,
                 "payload":    payload.substr(c * CHUNK, CHUNK)
-            })
+            }
+            if (targetId)
+                EditorSession.sendEventTo(targetId, EditorMessageType.FullSync, chunk)
+            else
+                EditorSession.broadcastEvent(EditorMessageType.FullSync, chunk)
         }
     }
+
+    // Wrapper rétro-compatible — conserve l'ancien nom utilisé par le handler
+    // Hello (réponse ciblée au joiner uniquement).
+    function _sendFullSyncTo(senderId) { _sendFullSync(senderId) }
 
     function _receiveFullSyncChunk(payload) {
         const idx   = payload.chunkIndex
@@ -622,8 +690,16 @@ Base_Board {
     }
 
     function _applyFullSyncSnapshot(snapshot) {
-        const tiles = (snapshot && snapshot.snapableTiles) || []
-        console.log("[FullSync] applying snapshot —", tiles.length, "tuiles reçues")
+        const tiles       = (snapshot && snapshot.snapableTiles) || []
+        const newMapInfo  = (snapshot && snapshot.mapInfo)        || null
+        // mémoriser AVANT toute mutation de mapInfo pour E12 (purge ancien
+        // fichier de session côté client quand l'hôte change de carte).
+        const previousMapName = String(mapInfo.mapName || "")
+        const newMapName      = newMapInfo ? String(newMapInfo.name || "") : ""
+
+        console.log("[FullSync] applying snapshot —", tiles.length,
+                    "tuiles reçues, mapInfo.name=", newMapName,
+                    "previousMapName=", previousMapName)
         if (tiles.length > 0) {
             console.log("[FullSync] sample incoming tile[0]:",
                         JSON.stringify(tiles[0]).substring(0, 300))
@@ -631,14 +707,49 @@ Base_Board {
 
         EditorOpBus.beginApplyRemote()
         try {
-            // 1) Wipe local (QML) — les tiles reconstruites ci-dessous sont
+            // 1) Applique le mapInfo reçu AVANT de reconstruire les tuiles.
+            //    Raison : si une sauvegarde locale se déclenchait entre-temps
+            //    (p.ex. save-on-modification sur l'insertion de tuile), elle
+            //    écrirait avec le bon nom. Passe par
+            //    Game.applyRemoteDelta(MetadataChanged) → Map.setMapInfo →
+            //    signal mapInfoChanged → Connections dans Editor.qml qui
+            //    recopient dans le mapInfo QML (Base_Board inline).
+            if (newMapInfo) {
+                Game.applyRemoteDelta(EditDelta.MetadataChanged, "", "",
+                                      {}, newMapInfo, false)
+            }
+
+            // 2) Phase 3.5 — purge disque côté client.
+            //    E7  : fichier local portant le nouveau mapName (collision
+            //          résiduelle d'une session antérieure ou d'une carte
+            //          mono éponyme) → supprimer avant que les saves ne
+            //          l'écrasent silencieusement.
+            //    E12 : ancien fichier de session (previousMapName différent
+            //          et non-autosave) → supprimer, il est obsolète.
+            //    La différenciation mono/collab (à venir) évitera de toucher
+            //    aux vraies cartes mono. Pour l'instant, comportement brut
+            //    comme validé.
+            if (newMapName &&
+                MapFileManager.mapExists(newMapName, MapTypes.CUSTOM)) {
+                console.log("[FullSync] E7 purge collision locale:", newMapName)
+                Game.deleteMap(newMapName, MapTypes.CUSTOM)
+            }
+            if (previousMapName && previousMapName !== newMapName &&
+                previousMapName !== mapInfo.autosaveMapName &&
+                MapFileManager.mapExists(previousMapName, MapTypes.CUSTOM)) {
+                console.log("[FullSync] E12 purge ancien fichier session:",
+                            previousMapName)
+                Game.deleteMap(previousMapName, MapTypes.CUSTOM)
+            }
+
+            // 3) Wipe local (QML) — les tiles reconstruites ci-dessous sont
             //    de toute façon de nouvelles instances.
             const toDelete = snapableTilesList.slice()
             console.log("[FullSync] wiping", toDelete.length, "tuiles locales")
             for (let i = 0; i < toDelete.length; i++) {
                 if (toDelete[i]) logic.tileLogic.deleteElement(toDelete[i])
             }
-            // 2) Reconstruit via Game.applyRemoteDelta(TileAdded) — ajoute au
+            // 4) Reconstruit via Game.applyRemoteDelta(TileAdded) — ajoute au
             //    m_tiles C++ ET émet `tileRestoredFromHistory` qui est
             //    consommé par `onFoundItemSnapableTile` pour créer le QML.
             //    Un seul code path, m_tiles cohérent avec les tiles QML,
@@ -655,7 +766,7 @@ Base_Board {
                 rebuilt++
             }
             console.log("[FullSync] rebuilt", rebuilt, "/", tiles.length, "tuiles")
-            // 3) Rétablit les connexions (next/prev) depuis les JSON.
+            // 5) Rétablit les connexions (next/prev) depuis les JSON.
             logic.tileLogic.builtConnections()
         } finally {
             EditorOpBus.endApplyRemote()
@@ -719,6 +830,14 @@ Base_Board {
                 // main.qml reçoit `promotedToHost` et renomme la session chat
                 // (MÊME sessionId) — aucun re-join nécessaire pour les autres.
                 console.log("[EditorSession] Je suis le nouvel hôte — promotion.")
+                // Phase 3.6 : save forcé de l'état courant AVANT promotion,
+                // hors politique. Garantit qu'un crash pendant la fenêtre
+                // stop→startAsHost ne laisse pas le nouvel hôte avec un
+                // fichier local obsolète (le dernier état reçu de l'ancien
+                // hôte peut ne pas être encore sur disque si le peer tournait
+                // en politique Manuel/Intervalle).
+                const savedOk = Game.saveCurrentMap()
+                console.log("[EditorSession] save forcé avant promotion → ok=", savedOk)
                 EditorSession.promoteToHost()
             } else if (electedHostId) {
                 // le nouvel hôte a conservé la MÊME session de chat
@@ -932,14 +1051,28 @@ Base_Board {
             Logger.success("Map loaded", "MAP_LOADING")
             logic.tileLogic.builtConnections()
 
-            // Copy properties from loaded map to preserve bindings
-            if (map.mapInfo) {
-                mapInfo.setMapInfo(map.mapInfo)
+            // Level 2 — plus besoin de recopier map.mapInfo dans
+            // Base_Board.mapInfo : le binding sur MapFileManager.currentMap
+            // .mapInfo s'en occupe dès que setCurrentMap propage le signal.
+            //
+            // Petite subtilité : ce handler fire AVANT setCurrentMap
+            // (cf. Game::loadMap), donc `mapInfo` pointe encore sur
+            // l'ancienne Map (ou _fallback). On lit `map.mapInfo.mapName`
+            // directement via le paramètre pour persister lastOpenedMap.
+            if (map && map.mapInfo &&
+                    map.mapInfo.mapName !== stEnableAutoSave.lastOpenedMap)
+                stEnableAutoSave.setValue("lastOpenedMap", map.mapInfo.mapName)
+
+            // Phase 3.4 : si l'hôte change de carte en cours de session,
+            // broadcaster la nouvelle carte à tous les peers. Le flag
+            // _suppressFullSyncBroadcast est à true pendant initializeEditor
+            // pour ne pas tirer sur les Game.loadMap d'initialisation (au
+            // moment desquels personne n'est connecté de toute façon).
+            if (EditorSession.active && EditorSession.isHost &&
+                    !root._suppressFullSyncBroadcast) {
+                console.log("[FullSync] host a changé de carte en session — broadcast")
+                _sendFullSyncToAll()
             }
-
-            if (mapInfo.mapName !== stEnableAutoSave.currentMap)
-                stEnableAutoSave.setValue("currentMap", mapInfo.mapName)
-
         }
 
         function onTileRemoved(tileId) {
@@ -1207,6 +1340,146 @@ Base_Board {
         }
     }
 
+    // Phase 3.7 — popup de fin de session collab : demande à l'utilisateur
+    // s'il conserve le fichier local <mapName>_map.json créé/mis à jour
+    // pendant la session. Ouvert par beginSessionExit(); la continuation
+    // (stop + pop côté main.qml) est appelée après le choix de l'utilisateur.
+    property var _pendingExitContinuation: null
+
+    Popup {
+        id: sessionExitConfirmPopup
+        modal: true
+        dim: true
+        closePolicy: Popup.NoAutoClose   // pas d'esc/click-outside — choix obligatoire
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 420
+        height: 220
+
+        property string mapNameAtExit: ""
+
+        background: Rectangle {
+            color: "#2b2b2b"
+            radius: 10
+            border.color: "#4A90E2"
+            border.width: 1
+        }
+
+        contentItem: Item {
+            anchors.fill: parent
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 14
+
+                Text {
+                    text: "Quitter la session collab"
+                    color: "#4A90E2"
+                    font.pixelSize: 18
+                    font.bold: true
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Conserver le fichier local «" +
+                          sessionExitConfirmPopup.mapNameAtExit + "_map.json» sur votre ordinateur ?"
+                    color: "#e0e0e0"
+                    font.pixelSize: 13
+                    wrapMode: Text.WordWrap
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "« Supprimer » efface la copie locale reçue pendant la session. " +
+                          "« Conserver » la garde — vous pourrez la rouvrir en mode mono."
+                    color: "#888"
+                    font.pixelSize: 11
+                    font.italic: true
+                    wrapMode: Text.WordWrap
+                }
+
+                Item { Layout.fillHeight: true }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        text: "🗑️  Supprimer"
+                        background: Rectangle {
+                            color: parent.pressed ? "#991b1b" : (parent.hovered ? "#ef4444" : "#dc2626")
+                            radius: 6
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: root._resolveSessionExit(false)
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        text: "💾  Conserver"
+                        background: Rectangle {
+                            color: parent.pressed ? "#2E5BBA" : (parent.hovered ? "#3A7BD5" : "#4A90E2")
+                            radius: 6
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: root._resolveSessionExit(true)
+                    }
+                }
+            }
+        }
+    }
+
+    // Appelée par main.qml avant de faire EditorSession.stop() + pop.
+    // Si la session collab est active, affiche le popup et laisse
+    // l'utilisateur choisir. Sinon appelle immédiatement la continuation
+    // (= pas en collab, rien à supprimer).
+    function beginSessionExit(continuation) {
+        if (!EditorSession.active) {
+            if (continuation) continuation(true)
+            return
+        }
+        _pendingExitContinuation = continuation
+        sessionExitConfirmPopup.mapNameAtExit = String(mapInfo.mapName || "")
+        sessionExitConfirmPopup.open()
+    }
+
+    function _resolveSessionExit(keepLocal) {
+        const mapName = sessionExitConfirmPopup.mapNameAtExit
+        if (!keepLocal && mapName && mapName !== mapInfo.autosaveMapName) {
+            // Purge le fichier local <mapName>_map.json avant la continuation.
+            // Note : si la carte existait en tant que mono AVANT la session,
+            // sa suppression ici l'écrase aussi. La différenciation mono/collab
+            // future isolera les deux (note : voir CLAUDE.md).
+            console.log("[SessionExit] user refuse conservation — purge", mapName)
+            Game.deleteMap(mapName, MapTypes.CUSTOM)
+        } else if (keepLocal) {
+            console.log("[SessionExit] user conserve", mapName)
+        }
+        sessionExitConfirmPopup.close()
+        const cont = _pendingExitContinuation
+        _pendingExitContinuation = null
+        if (cont) cont(keepLocal)
+    }
+
     // cursor and link trakers
     Trackers {}
 
@@ -1422,6 +1695,20 @@ Base_Board {
     }
 
     function initializeEditor() {
+        // Flag suppression du broadcast FullSync pendant l'init : les
+        // Game.loadMap ci-dessous déclenchent tous onMapLoaded, qui
+        // autrement rebroadcasterait une carte encore en cours de
+        // construction. Personne n'est connecté à ce stade, mais c'est plus
+        // propre que de spammer broadcastEvent dans le vide.
+        root._suppressFullSyncBroadcast = true
+        try {
+            _initializeEditorImpl()
+        } finally {
+            root._suppressFullSyncBroadcast = false
+        }
+    }
+
+    function _initializeEditorImpl() {
         // Client en mode collab → ne PAS charger la carte locale, la FullSync
         // de l'hôte va la fournir. Autrement, les tuiles chargées déclencheraient
         // `onFoundItemSnapableTile` qui soumet des CreateItem ops, rebroadcastées
@@ -1437,6 +1724,37 @@ Base_Board {
             return
         }
 
+        // Hôte collab avec instruction de carte initiale — route explicite,
+        // distincte du flow mono. Se fait AVANT tout premier Hello pour que
+        // _sendFullSyncTo sérialise le bon mapInfo.
+        if (EditorSession.active && EditorSession.isHost && hostInitialMap) {
+            const sessName    = String(hostInitialMap.sessionName || "")
+            const initialMode = hostInitialMap.initialMap ? hostInitialMap.initialMap.mode : "new"
+            const initialName = hostInitialMap.initialMap ? hostInitialMap.initialMap.mapName : ""
+            Logger.info("Collab host init — mode=" + initialMode
+                        + " session=" + sessName
+                        + " existingMap=" + initialName, "MAP FILE MANAGER")
+            if (initialMode === "existing" && initialName) {
+                // Carte existante : charge le fichier <initialName>_map.json.
+                // Ses tuiles et son mapInfo (nom + background + etc.) sont
+                // conservés — la session édite directement ce fichier.
+                Game.loadMap(initialName, MapTypes.CUSTOM)
+                mapInfo.mapName = initialName
+            } else {
+                // Nouvelle carte vide — nom de fichier = nom de session.
+                // createMapFile ignore silencieusement s'il existe déjà ;
+                // dans ce cas loadMap reprendra son contenu actuel (collision
+                // avec une mono précédente — différenciation future).
+                if (!MapFileManager.mapExists(sessName, MapTypes.CUSTOM)) {
+                    MapFileManager.createMapFile(sessName, MapTypes.CUSTOM)
+                }
+                Game.loadMap(sessName, MapTypes.CUSTOM)
+                mapInfo.mapName = sessName
+            }
+            stEnableAutoSave.sync()
+            return
+        }
+
         if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)) {
             Logger.info("Creating autosave map", "MAP FILE MANAGER")
             MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
@@ -1445,14 +1763,14 @@ Base_Board {
             Logger.info("Autosave map already exists", "MAP FILE MANAGER")
         }
 
-        if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
-            Logger.info("Loading custom map:" + stEnableAutoSave.currentMap, "MAP FILE MANAGER")
-            if (MapFileManager.mapExists(stEnableAutoSave.currentMap,
+        if (stEnableAutoSave.lastOpenedMap !== mapInfo.autosaveMapName) {
+            Logger.info("Loading custom map:" + stEnableAutoSave.lastOpenedMap, "MAP FILE MANAGER")
+            if (MapFileManager.mapExists(stEnableAutoSave.lastOpenedMap,
                                          MapTypes.CUSTOM)) {
-                Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)
-                mapInfo.mapName = stEnableAutoSave.currentMap
+                Game.loadMap(stEnableAutoSave.lastOpenedMap, MapTypes.CUSTOM)
+                mapInfo.mapName = stEnableAutoSave.lastOpenedMap
             } else {
-                stEnableAutoSave.setValue("currentMap", mapInfo.autosaveMapName)
+                stEnableAutoSave.setValue("lastOpenedMap", mapInfo.autosaveMapName)
                 mapInfo.mapName = mapInfo.autosaveMapName
                 Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
             }

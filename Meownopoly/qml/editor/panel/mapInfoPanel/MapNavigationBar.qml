@@ -23,11 +23,11 @@ Item {
 
     signal keyArrowPressed()
 
-    // Settings pour persister la carte courante
+    // Settings pour persister le nom du dernier .json custom ouvert.
     Settings {
         id: mapSettings
         category: "Editor/SaveConfig"
-        property string currentMap: value("currentMap", mapInfo.autosaveMapName)
+        property string lastOpenedMap: value("lastOpenedMap", mapInfo.autosaveMapName)
     }
 
     // Signals
@@ -73,6 +73,7 @@ Item {
             var mapDisplayName = availableMaps[currentIndex]
             currentMapName = MapFileManager.findMapFileByName(mapDisplayName)
             isCurrentMapAutosave = MapFileManager.isAutosaveMap(currentMapName)
+            // stEnableAutoSave.setValue(currentMapName)
         }
     }
 
@@ -97,14 +98,15 @@ Item {
 
         // Déterminer le type de carte
         var mapType = MapFileManager.getMapType(normalizedName)
-        
-        // Nettoyer et charger la nouvelle carte
-        logic.removeCurrentMap()
+
+        // Level 4 — Game.loadMap émet clearCurrentMap en entrée ; plus
+        // besoin d'appeler logic.removeCurrentMap() manuellement.
         Game.loadMap(normalizedName, mapType)
         mapInfo.mapName = normalizedName
-        mapSettings.setValue("currentMap", normalizedName)
+        mapSettings.setValue("lastOpenedMap", normalizedName)
         
         updateCurrentMapInfo()
+        keyArrowPressed()
     }
 
     function navigatePrevious() {
@@ -121,16 +123,17 @@ Item {
 
         var mapToDelete = currentMapName
         var indexToDelete = currentIndex
-        
+
         console.log("Deleting map:", mapToDelete)
-        
+
         // Supprimer la carte
         logic.deleteMap(mapToDelete)
-        logic.removeCurrentMap()
-        
+        // Level 4 — le wipe des tuiles QML arrive via Game.loadMap ci-dessous
+        // (navigateToMap ou fallback autosave) qui émet clearCurrentMap.
+
         // Rafraîchir la liste AVANT de naviguer
         refreshMapList()
-        
+
         // Naviguer vers la carte suivante (ou précédente si c'était la dernière)
         if (availableMaps.length > 0) {
             // Ajuster l'index si nécessaire
@@ -139,6 +142,18 @@ Item {
                 newIndex = availableMaps.length - 1
             }
             navigateToMap(newIndex)
+        } else {
+            // Level 1d : plus aucune carte → retomber sur l'autosave.
+            // Sans ce fallback, MapFileManager.currentMap pointait encore
+            // sur la Map dont le fichier venait d'être supprimé ; toute
+            // save-on-mod ultérieure recréait silencieusement le fichier.
+            console.log("MapNavigationBar: plus de cartes, fallback autosave")
+            if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)) {
+                MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
+            }
+            Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+            mapInfo.mapName = mapInfo.autosaveMapName
+            refreshMapList()
         }
     }
 
@@ -292,7 +307,7 @@ Item {
             z: 9000
             enabled: !isCurrentMapAutosave && mapInfo.mapName !== ""
             visible: enabled
-            
+
             property int confirmationStep: 0
 
             onHoveredChanged: {
@@ -307,6 +322,7 @@ Item {
                     mapNavigationBar.deleteCurrentMap()
                     confirmationStep = 0
                 }
+                keyArrowPressed()
             }
 
             contentItem: Text {

@@ -44,7 +44,11 @@ bool Game::saveCurrentMap(){
                    << "(client collab sans fullsync de mapInfo ?)";
         return false;
     }
-    MapTypes::MapType currentType = currentMapInfo->getType();
+    // Le type source est désormais porté par Map (propriété d'emplacement, pas
+    // de contenu). Avant refactor : MapInfo::getType() renvoyait toujours
+    // AUTOSAVE à cause d'un initialiseur header mal ordonné, ce qui stompait
+    // autosave_tmp.json en save-on-modification pour toute carte custom.
+    MapTypes::MapType currentType = currentMap->sourceType();
 
     QJsonObject jsonObject;
 
@@ -96,6 +100,14 @@ bool Game::deleteMap(QString mapName, MapTypes::MapType mapType)
 
 Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 {
+    // Level 4 — émet clearCurrentMap AVANT tout. Éditeur.qml l'écoute
+    // et fait logic.removeCurrentMap() : wipe des tuiles QML qui vont
+    // devenir orphelines quand setCurrentMap (plus bas) détruit l'ancien
+    // Map C++. Rend l'appelant insensible à l'oubli d'un
+    // logic.removeCurrentMap() manuel (source historique du crash
+    // sur MenuMapAtStart, notamment).
+    emit clearCurrentMap();
+
     Map *map = nullptr;
     switch (mapType) {
     case MapTypes::CUSTOM:
@@ -221,11 +233,12 @@ void Game::askNext()
 bool Game::saveOnEdit(){
 
     QSettings setting;
-    bool flag = false;
-
     setting.beginGroup("Editor/SaveConfig");
-    flag = setting.value("saveEvent") == "3";
-    return flag;
+    // toInt() plutôt que comparaison directe à "3" : QSettings peut
+    // stocker la valeur en int (backend natif Windows/Mac) ou en string
+    // (INI). Comparer QVariant(int 3) à const char* "3" renvoie false
+    // sur backend natif → saveOnEdit n'activait jamais la politique 3.
+    return setting.value("saveEvent").toInt() == 3;
 }
 
 void Game::updateMap(int type, ItemSnapable* tile, QUuid groupId)
@@ -305,6 +318,14 @@ void Game::updateMapMetadata(const QString& beforeJson, const QString& afterJson
     delta.groupId = m_currentTransaction;
     map->pushDelta(delta);
 
+    // Level 1c : sync Map.mapInfo avec l'état "après". Avant ce fix,
+    // l'UI mutait Base_Board.mapInfo (instance A) et on poussait juste un
+    // delta, sans toucher à Map.mapInfo (instance B). Du coup
+    // saveCurrentMap (qui sérialise depuis B) persistait l'état AVANT
+    // modification. Avec setMapInfo, B est alignée sur A pour toute
+    // sauvegarde subséquente.
+    map->setMapInfo(new MapInfo(delta.after));
+
     EditorOpBus::instance()->submitFromDelta(
         static_cast<int>(delta.type), delta.tileId, delta.groupId,
         delta.before, delta.after, /*applyBefore=*/false);
@@ -369,7 +390,12 @@ void Game::applyRemoteDelta(int type, const QString &tileId, const QString &grou
     QSet<QUuid> touched;
     map->applyDelta(delta, applyBefore, touched);
     // Pas de pushDelta — c'est un op distant, pas une action locale.
-    // Pas de save ici : la politique save locale s'applique via
-    // l'accumulation isApplyingRemote (suppress in applyRemote batch),
-    // et on laisse l'appelant QML gérer la fin du batch si besoin.
+    // Phase 4 — si la politique save-on-mod est active, restart le
+    // debounceur (~500 ms). Chaque op remote repousse l'échéance : une
+    // rafale (ex: FullSync avec N tuiles) se solde par UN write sur disque.
+    // start() sur un QTimer singleShot en cours de run = restart. Pas de
+    // souci de thread : Game + QTimer vivent sur le GUI thread.
+    if (saveOnEdit() && m_remoteSaveDebounce) {
+        m_remoteSaveDebounce->start();
+    }
 }

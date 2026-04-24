@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QUuid>
+#include <QTimer>
 
 #include "game/item_snapable/ItemSnapable.h"
 #include "map/mapinfo.h"
@@ -106,6 +107,11 @@ private:
 
     QUuid m_currentTransaction;
     bool  m_txDirty = false;
+
+    // Phase 4 — coalesce les saveCurrentMap déclenchés par applyRemoteDelta
+    // (ex. FullSync → N TileAdded d'affilée). start() restartable ; émet un
+    // seul write ~500 ms après la dernière op distante.
+    QTimer *m_remoteSaveDebounce = nullptr;
 };
 
 #endif // GAME_H

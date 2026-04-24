@@ -20,8 +20,17 @@ Rectangle {
 
     // le hostId (playerId du créateur) est transmis pour que le
     // client puisse appeler EditorSession.startAsClient avec le bon pair.
-    signal launchNewSession(bool isEdition, string hostId)
+    // rawSessionName = nom utilisateur (sans prefix [EDIT:...]) ; utilisé
+    // par main.qml pour nommer la carte collab côté hôte.
+    // initialMap peut être null (rejoin de session existante ou non-éditeur).
+    signal launchNewSession(bool isEdition, string hostId, string rawSessionName, var initialMap)
     signal launchExistingSession(bool isEdition, string hostId)
+
+    // Stash du payload sessionCreateRequested en attente du callback
+    // sessionCreated (round-trip serveur). Permet de retrouver le nom brut
+    // et l'initialMap choisis par l'utilisateur pour les faire remonter à
+    // main.qml via launchNewSession.
+    property var _pendingCreation: null
 
     // ── Encodage du mode éditeur dans le nom de session ─────────────────────
     // Format : "[EDIT:<hostPlayerId>] <nom affiché>". Évite de modifier le
@@ -82,6 +91,13 @@ Rectangle {
             // (sinon les REQUEST_CONNECTION_INFO reçus plus tard ne seraient
             // pas routés vers la bonne session chat).
             const parsed = root._parseEditorPrefix(sessionName)
+            // Récupère le payload SessionCreation stashé. On le consomme ici
+            // (même si branche ignorée) pour ne pas qu'il traîne.
+            const pending = root._pendingCreation
+            root._pendingCreation = null
+            const rawName     = pending ? String(pending.name || "") :
+                                           String(parsed.cleanName || "")
+            const initialMap  = pending ? pending.initialMap : null
             if (parsed.isEdit) {
                 // si EditorSession est déjà hôte actif, c'est une
                 // re-publication faite par un client qui vient de se promouvoir
@@ -93,9 +109,9 @@ Rectangle {
                 }
                 console.log("🛠️ Session éditeur créée (host =", parsed.hostId + ") → launchNewSession")
                 Catway.setChatClient(lobbyChatClient)
-                root.launchNewSession(true, parsed.hostId)
+                root.launchNewSession(true, parsed.hostId, rawName, initialMap)
             } else {
-                root.launchNewSession(false, AccountManager.uniqueId)
+                root.launchNewSession(false, AccountManager.uniqueId, rawName, null)
             }
         }
 
@@ -225,7 +241,11 @@ Rectangle {
                     }
                     if (isOwnSession) {
                         console.log("🛠️ Rejoin propre session éditeur (host =", parsed.hostId + ") → launchNewSession (resume host)")
-                        root.launchNewSession(true, parsed.hostId)
+                        // rejoin : le fichier local <cleanName>_map.json existe
+                        // déjà. Editor.qml en mode "new" refait un mapExists
+                        // check et loadMap directement si présent, donc pas
+                        // besoin d'initialMap explicite.
+                        root.launchNewSession(true, parsed.hostId, parsed.cleanName, null)
                     } else {
                         console.log("🛠️ Rejoin même session éditeur (host =", parsed.hostId + ") → launchExistingSession direct")
                         root.launchExistingSession(true, parsed.hostId)
@@ -273,6 +293,9 @@ Rectangle {
                 } else {
                     console.log("📝 Création de session:", sessionData.name)
                 }
+                // Stash pour récupérer le nom brut + initialMap au callback
+                // sessionCreated (round-trip serveur).
+                root._pendingCreation = sessionData
                 lobbyChatClient.createSession(finalName, sessionData.password)
                 multiplayerStackView.pop()
             }

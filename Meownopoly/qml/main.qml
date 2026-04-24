@@ -149,21 +149,31 @@ ApplicationWindow {
             appPositionY: root.y
             escMenu.onReturnToMainMenu: {
                 console.log("Retour au menu principal demandé")
-                // si on est en session collaborative, couper proprement
-                // avant de quitter l'éditeur (stop libère Catway et clear undo).
-                if (EditorSession.active) {
-                    // l'hôte annonce son départ AVANT de stopper Catway, pour
-                    // que les clients déclenchent l'élection immédiatement
-                    // (sans attendre le timeout ~10 s).
-                    if (EditorSession.isHost) {
-                        console.log("[main] host quits — announce HostLeaving")
-                        EditorSession.announceHostLeaving()
+                // Phase 3.7 — si collab, l'éditeur affiche d'abord un popup
+                // "conserver la carte locale ?". La continuation ci-dessous
+                // tourne APRÈS le choix utilisateur (ou immédiatement si
+                // pas en collab). Elle couple la coupure propre Catway/undo
+                // au pop de l'Editor sur le StackView.
+                function _doExit(keep) {
+                    if (EditorSession.active) {
+                        // l'hôte annonce son départ AVANT de stopper Catway, pour
+                        // que les clients déclenchent l'élection immédiatement
+                        // (sans attendre le timeout ~10 s).
+                        if (EditorSession.isHost) {
+                            console.log("[main] host quits — announce HostLeaving")
+                            EditorSession.announceHostLeaving()
+                        }
+                        console.log("[main] EditorSession.stop (retour menu) — keep =", keep)
+                        EditorOpBus.clearUndo()
+                        EditorSession.stop()
                     }
-                    console.log("[main] EditorSession.stop (retour menu)")
-                    EditorOpBus.clearUndo()
-                    EditorSession.stop()
+                    stackView.pop()
                 }
-                stackView.pop()
+                // beginSessionExit gère popup+purge éventuelle ; hors collab
+                // il invoque la continuation immédiatement avec keep=true.
+                // Résolu via scoping chain — la fonction est sur l'Editor qui
+                // englobe ce handler.
+                beginSessionExit(_doExit)
             }
             // l'éditeur a détecté la nouvelle session lobby du
             // nouvel hôte (après host migration) → on relance le p2pStateMachine
@@ -268,12 +278,15 @@ ApplicationWindow {
 
             // host vient de créer une session (éditeur ou jeu).
             // Si éditeur, on démarre EditorSession.startAsHost et on push l'éditeur.
-            onLaunchNewSession: function(isEdition, hostId) {
+            // rawSessionName / initialMap : voir MultiplayerLobby.launchNewSession.
+            onLaunchNewSession: function(isEdition, hostId, rawSessionName, initialMap) {
                 if (!isEdition) {
                     console.log("[main] launchNewSession (jeu) — pas encore câblé")
                     return
                 }
-                console.log("[main] Host démarre EditorSession, playerId =", AccountManager.uniqueId)
+                console.log("[main] Host démarre EditorSession, playerId =", AccountManager.uniqueId,
+                            "session =", rawSessionName,
+                            "initialMap =", JSON.stringify(initialMap))
                 const ok = EditorSession.startAsHost(AccountManager.uniqueId)
                 if (!ok) {
                     console.warn("[main] EditorSession.startAsHost a échoué (GameSession active ?)")
@@ -282,7 +295,15 @@ ApplicationWindow {
                 // Garde le lobby (et son ChatClient collab) vivant en dessous
                 // de l'éditeur — ne pas pop. Retour au menu dépilera Editor
                 // puis Lobby proprement.
-                stackView.push(editor)
+                // initialProperties : Editor.initializeEditor() les lit au
+                // Component.onCompleted pour choisir entre carte vide au
+                // nom de session et carte existante conservant ses méta.
+                stackView.push(editor, {
+                    "hostInitialMap": {
+                        "sessionName": rawSessionName || "",
+                        "initialMap":  initialMap || null
+                    }
+                })
             }
 
             // Client a rejoint une session existante. Si c'est une session
