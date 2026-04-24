@@ -209,7 +209,6 @@ Item {
         isLeft: true
         onClicked: {
             mapNavigationBar.navigatePrevious()
-            stEnableAutoSave.setValue("lastOpenedMap",currentMapName)
             keyArrowPressed()
         }
     }
@@ -310,7 +309,6 @@ Item {
                     mapNavigationBar.deleteCurrentMap()
                     confirmationStep = 0
                 }
-                stEnableAutoSave.setValue("lastOpenedMap",currentMapName)
                 keyArrowPressed()
             }
 
@@ -368,9 +366,7 @@ Item {
         isLeft: false
         onClicked:{
             mapNavigationBar.navigateNext()
-            stEnableAutoSave.setValue("lastOpenedMap",currentMapName)
             keyArrowPressed()
-
         }
     }
 
