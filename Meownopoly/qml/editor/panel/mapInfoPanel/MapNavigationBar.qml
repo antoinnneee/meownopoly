@@ -278,7 +278,7 @@ Item {
                 Text {
                     id: mapNameText
                     text: {
-                        if (mapInfo.mapName === "" || mapInfo.mapName === mapInfo.autosaveMapName) {
+                        if (mapIfo.mapName === "" || mapInfo.mapName === mapInfo.autosaveMapName) {
                             return "Autosave"
                         }
                         return mapInfo.mapName
