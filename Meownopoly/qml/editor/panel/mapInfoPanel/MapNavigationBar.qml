@@ -278,7 +278,7 @@ Item {
                 Text {
                     id: mapNameText
                     text: {
-                        if (mapIfo.mapName === "" || mapInfo.mapName === mapInfo.autosaveMapName) {
+                        if (mapInfo.mapName === "" || mapInfo.mapName === mapInfo.autosaveMapName) {
                             return "Autosave"
                         }
                         return mapInfo.mapName
@@ -383,13 +383,27 @@ Item {
         }
     }
 
-    // Connexion pour rafraîchir la liste quand le panneau devient visible
+    // Refresh auto à chaque changement de Map active.
+    // Ancienne version écoutait parent.onVisibleChanged, mais MapInfoPanel
+    // (le parent) n'est jamais masqué/ré-affiché : le signal ne fire jamais.
+    //
+    // currentMapChanged de MapFileManager est émis par setCurrentMap, donc
+    // couvre tous les chemins de "la carte active a changé" :
+    //   - initial load (Editor.qml:initializeEditor)
+    //   - navigation via flèches (navigateToMap → Game.loadMap)
+    //   - création nouvelle carte (MenuMapAtStart.onNewMapSet → Game.loadMap)
+    //   - load depuis EscMenu
+    //   - fallback autosave après delete (Level 1d)
+    //   - FullSync collab qui swap la Map
+    //
+    // refreshMapList() re-lit le disque + re-synchronise currentIndex contre
+    // mapInfo.mapName courant (binding Level 2 live). Résout le bug
+    // "counter affiche 3/3 au lieu de 4/4 après création" + "flèches ne
+    // peuvent atteindre la nouvelle carte".
     Connections {
-        target: mapNavigationBar.parent
-        function onVisibleChanged() {
-            if (mapNavigationBar.parent.visible) {
-                mapNavigationBar.refreshMapList()
-            }
+        target: MapFileManager
+        function onCurrentMapChanged() {
+            mapNavigationBar.refreshMapList()
         }
     }
 }

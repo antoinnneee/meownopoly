@@ -144,7 +144,10 @@ Drawer {
                 }
                 
                 onClicked: {
-                    mapNavigationBar.refreshMapList()
+                    // refreshMapList() pré-création retiré : inutile puisque
+                    // MapNavigationBar écoute désormais
+                    // MapFileManager.currentMapChanged et se re-sync
+                    // automatiquement quand la nouvelle carte est chargée.
                     mapInfoDrawer.requestNewMap()
                 }
             }
