@@ -1336,6 +1336,146 @@ Base_Board {
         }
     }
 
+    // Phase 3.7 — popup de fin de session collab : demande à l'utilisateur
+    // s'il conserve le fichier local <mapName>_map.json créé/mis à jour
+    // pendant la session. Ouvert par beginSessionExit(); la continuation
+    // (stop + pop côté main.qml) est appelée après le choix de l'utilisateur.
+    property var _pendingExitContinuation: null
+
+    Popup {
+        id: sessionExitConfirmPopup
+        modal: true
+        dim: true
+        closePolicy: Popup.NoAutoClose   // pas d'esc/click-outside — choix obligatoire
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 420
+        height: 220
+
+        property string mapNameAtExit: ""
+
+        background: Rectangle {
+            color: "#2b2b2b"
+            radius: 10
+            border.color: "#4A90E2"
+            border.width: 1
+        }
+
+        contentItem: Item {
+            anchors.fill: parent
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 14
+
+                Text {
+                    text: "Quitter la session collab"
+                    color: "#4A90E2"
+                    font.pixelSize: 18
+                    font.bold: true
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Conserver le fichier local «" +
+                          sessionExitConfirmPopup.mapNameAtExit + "_map.json» sur votre ordinateur ?"
+                    color: "#e0e0e0"
+                    font.pixelSize: 13
+                    wrapMode: Text.WordWrap
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "« Supprimer » efface la copie locale reçue pendant la session. " +
+                          "« Conserver » la garde — vous pourrez la rouvrir en mode mono."
+                    color: "#888"
+                    font.pixelSize: 11
+                    font.italic: true
+                    wrapMode: Text.WordWrap
+                }
+
+                Item { Layout.fillHeight: true }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        text: "🗑️  Supprimer"
+                        background: Rectangle {
+                            color: parent.pressed ? "#991b1b" : (parent.hovered ? "#ef4444" : "#dc2626")
+                            radius: 6
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: root._resolveSessionExit(false)
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                        text: "💾  Conserver"
+                        background: Rectangle {
+                            color: parent.pressed ? "#2E5BBA" : (parent.hovered ? "#3A7BD5" : "#4A90E2")
+                            radius: 6
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "white"
+                            font.pixelSize: 14
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: root._resolveSessionExit(true)
+                    }
+                }
+            }
+        }
+    }
+
+    // Appelée par main.qml avant de faire EditorSession.stop() + pop.
+    // Si la session collab est active, affiche le popup et laisse
+    // l'utilisateur choisir. Sinon appelle immédiatement la continuation
+    // (= pas en collab, rien à supprimer).
+    function beginSessionExit(continuation) {
+        if (!EditorSession.active) {
+            if (continuation) continuation(true)
+            return
+        }
+        _pendingExitContinuation = continuation
+        sessionExitConfirmPopup.mapNameAtExit = String(mapInfo.mapName || "")
+        sessionExitConfirmPopup.open()
+    }
+
+    function _resolveSessionExit(keepLocal) {
+        const mapName = sessionExitConfirmPopup.mapNameAtExit
+        if (!keepLocal && mapName && mapName !== mapInfo.autosaveMapName) {
+            // Purge le fichier local <mapName>_map.json avant la continuation.
+            // Note : si la carte existait en tant que mono AVANT la session,
+            // sa suppression ici l'écrase aussi. La différenciation mono/collab
+            // future isolera les deux (note : voir CLAUDE.md).
+            console.log("[SessionExit] user refuse conservation — purge", mapName)
+            Game.deleteMap(mapName, MapTypes.CUSTOM)
+        } else if (keepLocal) {
+            console.log("[SessionExit] user conserve", mapName)
+        }
+        sessionExitConfirmPopup.close()
+        const cont = _pendingExitContinuation
+        _pendingExitContinuation = null
+        if (cont) cont(keepLocal)
+    }
+
     // cursor and link trakers
     Trackers {}
 

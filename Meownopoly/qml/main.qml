@@ -149,21 +149,31 @@ ApplicationWindow {
             appPositionY: root.y
             escMenu.onReturnToMainMenu: {
                 console.log("Retour au menu principal demandé")
-                // si on est en session collaborative, couper proprement
-                // avant de quitter l'éditeur (stop libère Catway et clear undo).
-                if (EditorSession.active) {
-                    // l'hôte annonce son départ AVANT de stopper Catway, pour
-                    // que les clients déclenchent l'élection immédiatement
-                    // (sans attendre le timeout ~10 s).
-                    if (EditorSession.isHost) {
-                        console.log("[main] host quits — announce HostLeaving")
-                        EditorSession.announceHostLeaving()
+                // Phase 3.7 — si collab, l'éditeur affiche d'abord un popup
+                // "conserver la carte locale ?". La continuation ci-dessous
+                // tourne APRÈS le choix utilisateur (ou immédiatement si
+                // pas en collab). Elle couple la coupure propre Catway/undo
+                // au pop de l'Editor sur le StackView.
+                function _doExit(keep) {
+                    if (EditorSession.active) {
+                        // l'hôte annonce son départ AVANT de stopper Catway, pour
+                        // que les clients déclenchent l'élection immédiatement
+                        // (sans attendre le timeout ~10 s).
+                        if (EditorSession.isHost) {
+                            console.log("[main] host quits — announce HostLeaving")
+                            EditorSession.announceHostLeaving()
+                        }
+                        console.log("[main] EditorSession.stop (retour menu) — keep =", keep)
+                        EditorOpBus.clearUndo()
+                        EditorSession.stop()
                     }
-                    console.log("[main] EditorSession.stop (retour menu)")
-                    EditorOpBus.clearUndo()
-                    EditorSession.stop()
+                    stackView.pop()
                 }
-                stackView.pop()
+                // beginSessionExit gère popup+purge éventuelle ; hors collab
+                // il invoque la continuation immédiatement avec keep=true.
+                // Résolu via scoping chain — la fonction est sur l'Editor qui
+                // englobe ce handler.
+                beginSessionExit(_doExit)
             }
             // l'éditeur a détecté la nouvelle session lobby du
             // nouvel hôte (après host migration) → on relance le p2pStateMachine
