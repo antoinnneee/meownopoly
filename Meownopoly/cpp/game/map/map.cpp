@@ -36,6 +36,8 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 
         ItemSnapable *is = new ItemSnapable(tileObject);
         QQmlEngine::setObjectOwnership(is, QQmlEngine::CppOwnership);
+        is->setParent(this);   // Level 3 — parent-child Qt : Map gère la
+                               // cleanup des tuiles à sa destruction.
         m_tiles.append(is);
     }
     updateTileCounts();
@@ -75,17 +77,12 @@ Map::Map(QJsonObject jsonObject, QObject *parent) : QObject(parent)
 
 Map::~Map()
 {
-    if (mapInfo) {
-        delete mapInfo;
-        mapInfo = nullptr;
-    }
-    for (int i = 0; i < m_tiles.size(); i++){
-        delete m_tiles.at(i);
-    }
+    // Level 3 — plus de delete manuel : mapInfo et toutes les tuiles
+    // (m_tiles + m_pendingDestroy) sont des QObject-children de `this`
+    // (cf. setParent dans Map::Map/addTile/setMapInfo). QObject::~QObject
+    // les détruit automatiquement. On vide juste les listes pour éviter
+    // qu'un utilisateur extérieur n'observe des pointeurs invalides.
     m_tiles.clear();
-    // Les tiles stashées en attente de destruction (déjà retirées de m_tiles)
-    for (ItemSnapable *t : std::as_const(m_pendingDestroy))
-        delete t;
     m_pendingDestroy.clear();
 }
 
@@ -224,6 +221,10 @@ ItemSnapable* Map::tileById(const QUuid &id) const
 void Map::addTile(ItemSnapable* tile)
 {
     if (!tile) return;
+    // Level 3 — garantit parent-child. Les appelants qui allouent
+    // directement une ItemSnapable (ex: Map::applyDelta TileAdded) ne
+    // mettent pas toujours setParent ; on le fait ici pour homogénéiser.
+    tile->setParent(this);
     m_tiles.append(tile);
     updateTileCounts();
 }
