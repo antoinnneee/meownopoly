@@ -124,7 +124,7 @@ Drawer {
                 anchors.verticalCenter: parent.verticalCenter
                 
                 contentItem: Text {
-                    text: "+"
+                    text: "NOUVELLE CARTE"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 14
@@ -144,6 +144,10 @@ Drawer {
                 }
                 
                 onClicked: {
+                    // refreshMapList() pré-création retiré : inutile puisque
+                    // MapNavigationBar écoute désormais
+                    // MapFileManager.currentMapChanged et se re-sync
+                    // automatiquement quand la nouvelle carte est chargée.
                     mapInfoDrawer.requestNewMap()
                 }
             }
@@ -367,7 +371,7 @@ Drawer {
                         background: Rectangle {
                             anchors.fill: parent
                             color: {
-                                if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == ""){
+                                if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName === ""){
                                     "#5E5A66"
                                 }
                                 else if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM)){

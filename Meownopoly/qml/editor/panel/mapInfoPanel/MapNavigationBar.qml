@@ -51,20 +51,32 @@ Item {
             return
         }
 
-        // Trouver l'index de la carte actuellement chargée
+        // Normalisation symétrique : `findMapFileByName` renvoie toujours un
+        // nom en lowercase+`_` (c.f. MapFileManager::normalizeMapName), alors
+        // que `mapInfo.mapName` garde la casse d'origine (ex: "MapA" saisi
+        // par l'utilisateur). Sans normaliser le second côté, un map nommé
+        // "MapA" ne match jamais la ligne "mapa" de availableMaps, et le
+        // fallback `currentIndex=0` faisait sauter la navigation juste
+        // après chaque load (bug 1/3-2/3-jamais-3/3).
+        var currentNormalized = MapFileManager.normalizeMapName(mapInfo.mapName || "")
         for (var i = 0; i < availableMaps.length; i++) {
             var mapDisplayName = availableMaps[i]
             var normalizedName = MapFileManager.findMapFileByName(mapDisplayName)
-            
-            if (normalizedName === mapInfo.mapName) {
+
+            if (normalizedName === currentNormalized) {
                 currentIndex = i
                 updateCurrentMapInfo()
                 return
             }
         }
-        
-        // Si la carte courante n'est pas trouvée, sélectionner la première
-        currentIndex = 0
+
+        // Fallback : carte courante introuvable dans la liste disque.
+        // Garder currentIndex s'il est encore dans les bornes (stabilise
+        // l'affichage) ; sinon 0. updateCurrentMapInfo remet à jour le nom
+        // affiché côté stats.
+        if (currentIndex < 0 || currentIndex >= availableMaps.length) {
+            currentIndex = 0
+        }
         updateCurrentMapInfo()
     }
 
@@ -90,7 +102,7 @@ Item {
         currentIndex = index
         var mapDisplayName = availableMaps[currentIndex]
         var normalizedName = MapFileManager.findMapFileByName(mapDisplayName)
-        
+
         if (normalizedName === "") {
             console.warn("Map not found:", mapDisplayName)
             return
@@ -104,7 +116,7 @@ Item {
         Game.loadMap(normalizedName, mapType)
         mapInfo.mapName = normalizedName
         mapSettings.setValue("lastOpenedMap", normalizedName)
-        
+
         updateCurrentMapInfo()
         keyArrowPressed()
     }
@@ -167,11 +179,11 @@ Item {
         radius: 25
         z: 9000
         // visible: !selectionPanel.visible
-        
+
         property string arrowText: ""
         property bool isLeft: true
         signal clicked()
-        
+
         // Gradient de base
         gradient: Gradient {
             orientation: Gradient.Vertical
@@ -184,7 +196,7 @@ Item {
                 color: navButtonMa.containsMouse ? "#38bdf8" : "#2563eb"
             }
         }
-        
+
         border.color: navButtonMa.containsMouse ? "#0ea5e9" : "#6AB0F2"
         border.width: 2
 
@@ -203,7 +215,7 @@ Item {
             hoverEnabled: enabled
             onClicked: navButton.clicked()
         }
-        
+
         // Animation de scale au hover
         scale: navButtonMa.containsMouse ? 1.1 : 1.0
         Behavior on scale {
@@ -243,21 +255,21 @@ Item {
             height: 50
             radius: 8
             z: 9000
-            
+
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: "#1e293b" }
                 GradientStop { position: 0.5; color: "#334155" }
                 GradientStop { position: 1.0; color: "#1e293b" }
             }
-            
+
             border.color: isCurrentMapAutosave ? "#f59e0b" : "#64748b"
             border.width: 1
 
             Row {
                 anchors.centerIn: parent
                 spacing: 8
-                
+
                 // Indicateur autosave
                 Rectangle {
                     visible: isCurrentMapAutosave
@@ -266,7 +278,7 @@ Item {
                     radius: 4
                     color: "#f59e0b"
                     anchors.verticalCenter: parent.verticalCenter
-                    
+
                     SequentialAnimation on opacity {
                         running: isCurrentMapAutosave
                         loops: Animation.Infinite
@@ -274,7 +286,7 @@ Item {
                         NumberAnimation { to: 1.0; duration: 800 }
                     }
                 }
-                
+
                 Text {
                     id: mapNameText
                     text: {
@@ -334,7 +346,7 @@ Item {
 
             background: Rectangle {
                 radius: 8
-                
+
                 gradient: Gradient {
                     orientation: Gradient.Vertical
                     GradientStop {
@@ -348,10 +360,10 @@ Item {
                                                                    deleteButton.hovered ? "#ef4444" : "#991b1b"
                     }
                 }
-                
+
                 border.color: deleteButton.confirmationStep > 0 ? "#fca5a5" : "#f87171"
                 border.width: deleteButton.confirmationStep > 0 ? 2 : 1
-                
+
                 // Animation pulsation lors de la confirmation
                 SequentialAnimation on scale {
                     running: deleteButton.confirmationStep > 0
@@ -360,7 +372,7 @@ Item {
                     NumberAnimation { to: 1.0; duration: 300 }
                 }
             }
-            
+
             scale: hovered ? 1.1 : 1.0
             Behavior on scale {
                 NumberAnimation { duration: 150; easing.type: Easing.OutBack }
@@ -383,13 +395,27 @@ Item {
         }
     }
 
-    // Connexion pour rafraîchir la liste quand le panneau devient visible
+    // Refresh auto à chaque changement de Map active.
+    // Ancienne version écoutait parent.onVisibleChanged, mais MapInfoPanel
+    // (le parent) n'est jamais masqué/ré-affiché : le signal ne fire jamais.
+    //
+    // currentMapChanged de MapFileManager est émis par setCurrentMap, donc
+    // couvre tous les chemins de "la carte active a changé" :
+    //   - initial load (Editor.qml:initializeEditor)
+    //   - navigation via flèches (navigateToMap → Game.loadMap)
+    //   - création nouvelle carte (MenuMapAtStart.onNewMapSet → Game.loadMap)
+    //   - load depuis EscMenu
+    //   - fallback autosave après delete (Level 1d)
+    //   - FullSync collab qui swap la Map
+    //
+    // refreshMapList() re-lit le disque + re-synchronise currentIndex contre
+    // mapInfo.mapName courant (binding Level 2 live). Résout le bug
+    // "counter affiche 3/3 au lieu de 4/4 après création" + "flèches ne
+    // peuvent atteindre la nouvelle carte".
     Connections {
-        target: mapNavigationBar.parent
-        function onVisibleChanged() {
-            if (mapNavigationBar.parent.visible) {
-                mapNavigationBar.refreshMapList()
-            }
+        target: MapFileManager
+        function onCurrentMapChanged() {
+            mapNavigationBar.refreshMapList()
         }
     }
 }

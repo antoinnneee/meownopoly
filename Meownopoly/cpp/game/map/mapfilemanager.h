@@ -42,8 +42,12 @@ public:
     static bool saveMap(const QJsonObject &mapData, const QString &mapName, MapTypes::MapType mapType);
     static bool removeMapFile(const QString &mapName, MapTypes::MapType mapType);
 
-    // Utility methods (static)
-    static QString normalizeMapName(const QString &mapName);
+    // Utility methods (static). normalizeMapName est également Q_INVOKABLE
+    // parce que la QML `MapNavigationBar.syncCurrentIndex` en a besoin pour
+    // comparer `mapInfo.mapName` (casse d'origine) aux noms de fichier
+    // (toujours en lowercase + `_`). Sans normalisation symétrique, le match
+    // échoue et currentIndex retombe à 0.
+    Q_INVOKABLE static QString normalizeMapName(const QString &mapName);
     static QString getMapFilePath(const QString &mapName, MapTypes::MapType mapType);
 
     Map *getCurrentMap() const;
