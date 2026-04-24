@@ -263,16 +263,14 @@ Base_Board {
         logic: logic
 
         onNewMapSet: {
-            // Level 1a : wipe les QML tiles AVANT tout reload pour éviter
-            // que snapableTilesList garde des tuiles pointant sur les
-            // ItemSnapable de l'ancien Map qui sera détruit.
-            logic.removeCurrentMap()
             console.log("New map created:", newMapInfo.mapName)
             // Level 2 — on sérialise directement newMapInfo (saisi dans
             // le menu) + 0 tuiles. Plus besoin de `createMapFile` (saveMap
             // crée le fichier atomiquement) ni de `mapInfo.setMapInfo` (la
             // helper n'existe plus : Base_Board.mapInfo est un binding sur
             // Map.currentMap.mapInfo, qui sera mis à jour par le loadMap).
+            // Level 4 — plus besoin de logic.removeCurrentMap() :
+            // Game.loadMap en fin de flow émet clearCurrentMap qui wipe.
             Game.saveMap(newMapInfo, [], MapTypes.CUSTOM)
             Game.loadMap(newMapInfo.mapName, MapTypes.CUSTOM)
         }

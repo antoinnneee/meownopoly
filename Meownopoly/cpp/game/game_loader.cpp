@@ -100,6 +100,14 @@ bool Game::deleteMap(QString mapName, MapTypes::MapType mapType)
 
 Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
 {
+    // Level 4 — émet clearCurrentMap AVANT tout. Éditeur.qml l'écoute
+    // et fait logic.removeCurrentMap() : wipe des tuiles QML qui vont
+    // devenir orphelines quand setCurrentMap (plus bas) détruit l'ancien
+    // Map C++. Rend l'appelant insensible à l'oubli d'un
+    // logic.removeCurrentMap() manuel (source historique du crash
+    // sur MenuMapAtStart, notamment).
+    emit clearCurrentMap();
+
     Map *map = nullptr;
     switch (mapType) {
     case MapTypes::CUSTOM:

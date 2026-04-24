@@ -98,9 +98,9 @@ Item {
 
         // Déterminer le type de carte
         var mapType = MapFileManager.getMapType(normalizedName)
-        
-        // Nettoyer et charger la nouvelle carte
-        logic.removeCurrentMap()
+
+        // Level 4 — Game.loadMap émet clearCurrentMap en entrée ; plus
+        // besoin d'appeler logic.removeCurrentMap() manuellement.
         Game.loadMap(normalizedName, mapType)
         mapInfo.mapName = normalizedName
         mapSettings.setValue("lastOpenedMap", normalizedName)
@@ -128,7 +128,8 @@ Item {
 
         // Supprimer la carte
         logic.deleteMap(mapToDelete)
-        logic.removeCurrentMap()
+        // Level 4 — le wipe des tuiles QML arrive via Game.loadMap ci-dessous
+        // (navigateToMap ou fallback autosave) qui émet clearCurrentMap.
 
         // Rafraîchir la liste AVANT de naviguer
         refreshMapList()

@@ -385,7 +385,10 @@ Rectangle {
                             onClicked: {
                                 console.log("Chargement de la carte:", modelData)
                                 if (typeof logic !== 'undefined') {
-                                    logic.removeCurrentMap()
+                                    // Level 4 — plus besoin d'appeler
+                                    // logic.removeCurrentMap() : Game.loadMap
+                                    // émet clearCurrentMap en entrée et
+                                    // Editor.qml le convertit en wipe.
                                     var normalizedMapName = MapFileManager.findMapFileByName(modelData)
                                     if (normalizedMapName !== "") {
                                         Game.loadMap(normalizedMapName, MapTypes.CUSTOM)
