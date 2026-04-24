@@ -23,11 +23,11 @@ Item {
 
     signal keyArrowPressed()
 
-    // Settings pour persister la carte courante
+    // Settings pour persister le nom du dernier .json custom ouvert.
     Settings {
         id: mapSettings
         category: "Editor/SaveConfig"
-        property string currentMap: value("currentMap", mapInfo.autosaveMapName)
+        property string lastOpenedMap: value("lastOpenedMap", mapInfo.autosaveMapName)
     }
 
     // Signals
@@ -103,7 +103,7 @@ Item {
         logic.removeCurrentMap()
         Game.loadMap(normalizedName, mapType)
         mapInfo.mapName = normalizedName
-        mapSettings.setValue("currentMap", normalizedName)
+        mapSettings.setValue("lastOpenedMap", normalizedName)
         
         updateCurrentMapInfo()
         keyArrowPressed()
@@ -209,7 +209,7 @@ Item {
         isLeft: true
         onClicked: {
             mapNavigationBar.navigatePrevious()
-            stEnableAutoSave.setValue("currentMap",currentMapName)
+            stEnableAutoSave.setValue("lastOpenedMap",currentMapName)
             keyArrowPressed()
         }
     }
@@ -310,7 +310,7 @@ Item {
                     mapNavigationBar.deleteCurrentMap()
                     confirmationStep = 0
                 }
-                stEnableAutoSave.setValue("currentMap",currentMapName)
+                stEnableAutoSave.setValue("lastOpenedMap",currentMapName)
                 keyArrowPressed()
             }
 
@@ -368,7 +368,7 @@ Item {
         isLeft: false
         onClicked:{
             mapNavigationBar.navigateNext()
-            stEnableAutoSave.setValue("currentMap",currentMapName)
+            stEnableAutoSave.setValue("lastOpenedMap",currentMapName)
             keyArrowPressed()
 
         }

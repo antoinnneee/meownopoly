@@ -238,7 +238,7 @@ Rectangle {
             Settings {
                 id: stEnableAutoSave
                 category: "Editor/SaveConfig"
-                property var currentMap : value("currentMap", mapInfo.autosaveMapName)
+                property var lastOpenedMap : value("lastOpenedMap", mapInfo.autosaveMapName)
                 property var enableAutoSave: value("enableAutoSave", 0)
             }
 
@@ -346,7 +346,7 @@ Rectangle {
                                 var mapInfoLocal = logic.mapInfo
                                 logic.saveMap(logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == "" ? MapTypes.AUTOSAVE : MapTypes.CUSTOM)
 
-                                stEnableAutoSave.setValue("currentMap", mapInfoLocal.mapName)
+                                stEnableAutoSave.setValue("lastOpenedMap", mapInfoLocal.mapName)
                             } else {
                                 console.error("La fonction saveMap n'est pas accessible. Verifiez que la variable 'logic' est definie.")
                             }

@@ -165,7 +165,10 @@ bool MapFileManager::isAutosaveMap(const QString &mapName)
 
 bool MapFileManager::isCustomAutosaveMap()
 {
-    return (currentMap->getMapInfo()->getType() == MapTypes::AUTOSAVE);
+    // sourceType désormais porté par Map (pas MapInfo). Null-guard au passage
+    // pour éviter le crash si appelé avant qu'une map soit chargée.
+    if (!currentMap) return false;
+    return currentMap->sourceType() == MapTypes::AUTOSAVE;
 }
 
 MapTypes::MapType MapFileManager::getMapType(const QString &mapName)

@@ -303,9 +303,24 @@ Base_Board {
     Settings {
         id: stEnableAutoSave
         category: "Editor/SaveConfig"
-        property var currentMap: value("currentMap", mapInfo.autosaveMapName)
+        // Renommé depuis "currentMap" pour lever la confusion avec
+        // MapFileManager.currentMap (pointeur Map* live, sans rapport).
+        // Cette string persiste uniquement le nom du dernier .json custom
+        // ouvert, pour le recharger au prochain démarrage.
+        property var lastOpenedMap: value("lastOpenedMap", mapInfo.autosaveMapName)
         property int saveEvent: value("saveEvent", "1")
-        Component.onCompleted: sync()
+        Component.onCompleted: {
+            // Migration one-shot : si l'ancienne clé "currentMap" existe et
+            // "lastOpenedMap" pas encore, on copie. L'ancienne clé reste
+            // présente (QML Settings n'expose pas de remove) mais devient
+            // inerte. À purger plus tard si besoin.
+            const legacy = value("currentMap", "")
+            if (legacy !== "" && value("lastOpenedMap", "") === "") {
+                setValue("lastOpenedMap", legacy)
+                lastOpenedMap = legacy
+            }
+            sync()
+        }
     }
 
     BusyIndicator {
@@ -937,8 +952,8 @@ Base_Board {
                 mapInfo.setMapInfo(map.mapInfo)
             }
 
-            if (mapInfo.mapName !== stEnableAutoSave.currentMap)
-                stEnableAutoSave.setValue("currentMap", mapInfo.mapName)
+            if (mapInfo.mapName !== stEnableAutoSave.lastOpenedMap)
+                stEnableAutoSave.setValue("lastOpenedMap", mapInfo.mapName)
 
         }
 
@@ -1445,14 +1460,14 @@ Base_Board {
             Logger.info("Autosave map already exists", "MAP FILE MANAGER")
         }
 
-        if (stEnableAutoSave.currentMap !== mapInfo.autosaveMapName) {
-            Logger.info("Loading custom map:" + stEnableAutoSave.currentMap, "MAP FILE MANAGER")
-            if (MapFileManager.mapExists(stEnableAutoSave.currentMap,
+        if (stEnableAutoSave.lastOpenedMap !== mapInfo.autosaveMapName) {
+            Logger.info("Loading custom map:" + stEnableAutoSave.lastOpenedMap, "MAP FILE MANAGER")
+            if (MapFileManager.mapExists(stEnableAutoSave.lastOpenedMap,
                                          MapTypes.CUSTOM)) {
-                Game.loadMap(stEnableAutoSave.currentMap, MapTypes.CUSTOM)
-                mapInfo.mapName = stEnableAutoSave.currentMap
+                Game.loadMap(stEnableAutoSave.lastOpenedMap, MapTypes.CUSTOM)
+                mapInfo.mapName = stEnableAutoSave.lastOpenedMap
             } else {
-                stEnableAutoSave.setValue("currentMap", mapInfo.autosaveMapName)
+                stEnableAutoSave.setValue("lastOpenedMap", mapInfo.autosaveMapName)
                 mapInfo.mapName = mapInfo.autosaveMapName
                 Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
             }
