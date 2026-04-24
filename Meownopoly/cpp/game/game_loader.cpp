@@ -319,6 +319,14 @@ void Game::updateMapMetadata(const QString& beforeJson, const QString& afterJson
         return;
     if (EditorOpBus::instance()->isApplyingRemote()) return;
 
+    // Short-circuit : certains handlers QML (CheckBox.onCheckedChanged,
+    // Slider.onValueChanged) fire sur ré-évaluation de leur binding, pas
+    // uniquement sur action utilisateur. Résultat : appel à updateMapMetadata
+    // avec before == after à chaque reconfig de mapInfo, ce qui créait un
+    // cycle setMapInfo → Base_Board._syncMapInfo → binding update → …
+    // Si le JSON est identique, rien à persister ni à broadcaster.
+    if (beforeJson == afterJson) return;
+
     EditDelta delta;
     delta.type   = EditDeltaType::MetadataChanged;
     delta.before = QJsonDocument::fromJson(beforeJson.toUtf8()).object();
