@@ -51,20 +51,32 @@ Item {
             return
         }
 
-        // Trouver l'index de la carte actuellement chargée
+        // Normalisation symétrique : `findMapFileByName` renvoie toujours un
+        // nom en lowercase+`_` (c.f. MapFileManager::normalizeMapName), alors
+        // que `mapInfo.mapName` garde la casse d'origine (ex: "MapA" saisi
+        // par l'utilisateur). Sans normaliser le second côté, un map nommé
+        // "MapA" ne match jamais la ligne "mapa" de availableMaps, et le
+        // fallback `currentIndex=0` faisait sauter la navigation juste
+        // après chaque load (bug 1/3-2/3-jamais-3/3).
+        var currentNormalized = MapFileManager.normalizeMapName(mapInfo.mapName || "")
         for (var i = 0; i < availableMaps.length; i++) {
             var mapDisplayName = availableMaps[i]
             var normalizedName = MapFileManager.findMapFileByName(mapDisplayName)
 
-            if (normalizedName === mapInfo.mapName) {
+            if (normalizedName === currentNormalized) {
                 currentIndex = i
                 updateCurrentMapInfo()
                 return
             }
         }
 
-        // Si la carte courante n'est pas trouvée, sélectionner la première
-        currentIndex = 0
+        // Fallback : carte courante introuvable dans la liste disque.
+        // Garder currentIndex s'il est encore dans les bornes (stabilise
+        // l'affichage) ; sinon 0. updateCurrentMapInfo remet à jour le nom
+        // affiché côté stats.
+        if (currentIndex < 0 || currentIndex >= availableMaps.length) {
+            currentIndex = 0
+        }
         updateCurrentMapInfo()
     }
 
