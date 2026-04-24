@@ -134,6 +134,7 @@ QStringList MapFileManager::getAvailableMaps()
         maps.append(fileName);
     }
     
+    qDebug() << "Available maps found:" << maps;
     return maps;
 }
 
@@ -154,6 +155,8 @@ QString MapFileManager::findMapFileByName(const QString &displayName)
     if (QFile::exists(filePath)) {
         return normalizedName;
     }
+
+    qDebug() << "Map file not found for display name:" << displayName;
     
     return QString();
 }

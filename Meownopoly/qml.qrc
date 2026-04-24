@@ -39,7 +39,6 @@
         <file>qml/editor/EditorController.qml</file>
         <file>qml/editor/qmldir</file>
         <file>qml/editor/panel/mapInfoPanel/MapInfoPanel.qml</file>
-        <file>qml/editor/panel/mapInfoPanel/MapNavigationBar.qml</file>
         <file>qml/editor/panel/mapInfoPanel/MapSidePanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_CategoryGrid.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_ClearButton.qml</file>
