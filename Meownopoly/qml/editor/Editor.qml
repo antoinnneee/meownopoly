@@ -1505,8 +1505,12 @@ Base_Board {
         gridManager: gameGrid
         templateData: logic.mouseLogic
                       && logic.mouseLogic.isPlacementMode ? logic.mouseLogic.placementTemplateData : null
-        mouseX: 0
-        mouseY: 0
+        // Binding déclaratif : suit previewMouseX/Y du MouseLogic_Template
+        // (mis à jour par templatePlacementTracker dans Trackers.qml).
+        mouseX: logic.mouseLogic && logic.mouseLogic.previewMouseX !== undefined
+                ? logic.mouseLogic.previewMouseX : 0
+        mouseY: logic.mouseLogic && logic.mouseLogic.previewMouseY !== undefined
+                ? logic.mouseLogic.previewMouseY : 0
     }
 
     // Prévisualisation du polygone pendant le dessin
@@ -1570,14 +1574,47 @@ Base_Board {
         }
 
         onAssetSelected: function (category, type, id) {
+            // Ne pas écraser un mode spécialisé : sélectionner un asset en
+            // mode TEMPLATE/DRAW_POLYGON/SELECTION_LINK/GAME n'a pas de sens,
+            // et le tab switch vers Template émet assetCleared comme side-effect.
+            var mode = logic.editorMouseMode
+            if (mode === EditorEnum.EM_TEMPLATE
+                || mode === EditorEnum.EM_DRAW_POLYGON
+                || mode === EditorEnum.EM_SELECTION_LINK
+                || mode === EditorEnum.EM_GAME) {
+                return
+            }
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
         }
 
         onAssetCleared: function () {
+            // Même garde que onAssetSelected : SelectionPanel.clearAssetSelection()
+            // émet assetCleared en fin de fonction, ce qui ramenait à EM_NORMAL
+            // juste après être entré dans le tab Template.
+            var mode = logic.editorMouseMode
+            if (mode === EditorEnum.EM_TEMPLATE
+                || mode === EditorEnum.EM_DRAW_POLYGON
+                || mode === EditorEnum.EM_SELECTION_LINK
+                || mode === EditorEnum.EM_GAME) {
+                return
+            }
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
         }
 
         onCaseTypeSelectedChanged: {
+            // Ne pas piétiner un mode spécialisé (TEMPLATE, DRAW_POLYGON,
+            // SELECTION_LINK, GAME) : le changement de tab dans
+            // AssetSelectionPanel déclenche `clearAssetSelection` via scope
+            // resolution, ce qui clear aussi la case selection et force
+            // caseTypeSelected → -1 — sans ce garde, on revient en EM_NORMAL
+            // juste après être entré dans le tab Template.
+            var mode = logic.editorMouseMode
+            if (mode === EditorEnum.EM_TEMPLATE
+                || mode === EditorEnum.EM_DRAW_POLYGON
+                || mode === EditorEnum.EM_SELECTION_LINK
+                || mode === EditorEnum.EM_GAME) {
+                return
+            }
             if (selectionPanel.caseTypeSelected !== -1)
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
             else

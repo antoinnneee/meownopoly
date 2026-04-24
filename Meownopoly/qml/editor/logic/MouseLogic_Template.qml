@@ -53,7 +53,12 @@ MouseLogic_Selection {
     function pressedLeft(mouse, drag) {
         // ===== MODE PLACEMENT =====
         if (isPlacementMode) {
-            // Rien à faire au pressed en mode placement (attendre clicked)
+            // Neutraliser drag.target : sinon drag.target hérité (grid/
+            // groupeSelection) absorbe le geste et onClicked n'est pas émis.
+            drag.target = null
+            hadPressWithoutElement = false
+            isRectangleSelecting = false
+            clickElement = []
             mouse.accepted = true
             return
         }
@@ -111,7 +116,10 @@ MouseLogic_Selection {
     function clickedLeft(mouse, drag) {
         // ===== MODE PLACEMENT =====
         if (isPlacementMode) {
-            placeTemplateAtCursor()
+            // Source primaire : coord du clic mappées en workArea (fiable
+            // même si le tracker n'a pas encore reçu de positionChanged).
+            var workAreaPos = mainMa.mapToItem(workArea, mouse.x, mouse.y)
+            placeTemplateAtCursor(workAreaPos.x, workAreaPos.y)
             mouse.accepted = true
             return  // RESTE EN MODE PLACEMENT pour poser à nouveau
         }
@@ -448,11 +456,9 @@ MouseLogic_Selection {
      * Entrer en mode placement avec un template spécifique
      */
     function enterPlacementMode(templateName) {
-        console.log("[TEMPLATE] Entering PLACEMENT mode for:", templateName)
-        
         // Nettoyer la sélection création
         unselectAllTemplateElements()
-        
+
         // force reload model
         placementTemplateData = []
         // Charger le template
@@ -461,11 +467,11 @@ MouseLogic_Selection {
             console.error("[TEMPLATE] Failed to load template:", templateName)
             return false
         }
-        
+
         placementTemplateData = templateData
         placementTemplateName = templateName
         isPlacementMode = true
-        
+
         return true
     }
     
@@ -480,30 +486,28 @@ MouseLogic_Selection {
     }
     
     /**
-     * Placer le template à la position actuelle du curseur
+     * Placer le template à la position du curseur.
+     * @param workAreaX/Y coord workArea (optionnel — fallback sur previewMouseX/Y)
      */
-    function placeTemplateAtCursor() {
+    function placeTemplateAtCursor(workAreaX, workAreaY) {
         if (!placementTemplateData || !placementTemplateName) return
-        
-        // previewMouseX/Y sont déjà en coordonnées workArea (définis par le tracker parent: workArea)
-        var workAreaPos = Qt.point(previewMouseX, previewMouseY)
-        var gridPos = grid.getGridPosition(workAreaPos.x, workAreaPos.y)
+        if (!placementTemplateData.templateInfo) return
+
+        // Fallback sur previewMouseX/Y si workAreaX/Y non fournis
+        var px = (workAreaX !== undefined) ? workAreaX : previewMouseX
+        var py = (workAreaY !== undefined) ? workAreaY : previewMouseY
+        var gridPos = grid.getGridPosition(px, py)
 
         // Utiliser le même calcul de centrage que TemplatePreviewCursor.updateGridPosition()
         var adjustedGridX = gridPos.x - Math.trunc(placementTemplateData.templateInfo.boundingBoxWidth / 2)
         var adjustedGridY = gridPos.y - Math.trunc(placementTemplateData.templateInfo.boundingBoxHeight / 2)
-        
-        console.log("[TEMPLATE] Placing template at grid:", adjustedGridX, adjustedGridY, "(centered)")
-        
+
         var elementsArray = Game.getTemplateElementsForPlacement(placementTemplateName, adjustedGridX, adjustedGridY)
-        if (!elementsArray || elementsArray.length === 0) {
-            console.error("[TEMPLATE] Failed to get elements for placement")
-            return
-        }
-        
+        if (!elementsArray || elementsArray.length === 0) return
+
         var jsonObj = { "snapableTiles": elementsArray }
         var itemSnapableList = Game.generateItems(jsonObj)
-        
+
         var txId = Game.beginTransaction()
         for (var i = 0; i < itemSnapableList.length; i++) {
             logic.tileLogic.createItemSnapableTile(itemSnapableList[i])
@@ -511,7 +515,6 @@ MouseLogic_Selection {
                 Game.updateMap(EditDelta.TileAdded, itemSnapableList[i], txId)
         }
         Game.commitTransaction()
-        console.log("[TEMPLATE] Placed", itemSnapableList.length, "elements")
     }
     
 }

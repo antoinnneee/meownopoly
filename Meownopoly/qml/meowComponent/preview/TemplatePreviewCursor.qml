@@ -24,6 +24,14 @@ Item {
     
     visible: templateData !== null && templateData.elements
     enabled: false
+
+    onVisibleChanged: {
+        console.log("[TemplatePreviewCursor] visible=" + visible
+                    + " templateData=" + (templateData ? "set" : "null")
+                    + " elements=" + (templateData && templateData.elements
+                                        ? templateData.elements.length : "N/A")
+                    + " mouseX=" + mouseX + " mouseY=" + mouseY)
+    }
     
     property int gridXPosition: 0
     property int gridYPosition: 0
@@ -171,23 +179,6 @@ Item {
             gridManager: root.gridManager
             opacity: 0.5
             z: UiStyle.z_TEMPLATE_PREVIEW + 1
-            Text{
-                text: snapableDecoration.elementIndex
-                anchors.centerIn: parent
-                color: "white"
-                font.pixelSize: 22
-                font.bold: true
-                z:100
-            }
-            
-            Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                border.color: "#4CAF50"
-                border.width: 2
-                radius: 4
-            }
-            
             Component.onCompleted: {
                 if (!elementData) return
                 copyDisplayParameterFromTemplateData(snapableParameters, elementData)
@@ -206,22 +197,6 @@ Item {
             opacity: 0.5
             z: UiStyle.z_TEMPLATE_PREVIEW + 1
 
-            Text{
-                text: snapableCaseTile.elementIndex
-                anchors.centerIn: parent
-                color: "white"
-                font.pixelSize: 22
-                font.bold: true
-                z:100
-            }
-            
-            Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                border.color: "#4CAF50"
-                border.width: 2
-                radius: 4
-            }
             
             Component.onCompleted: {
                 if (!elementData || !elementData.displayParameter) return
@@ -241,14 +216,6 @@ Item {
             opacity: 0.5
             z: UiStyle.z_TEMPLATE_PREVIEW + 1
 
-            Text{
-                text: snapableExclusion.elementIndex
-                anchors.centerIn: parent
-                color: "white"
-                font.pixelSize: 22
-                font.bold: true
-                z:100
-            }
             Component.onCompleted: {
                 if (!elementData) return
                 copyDisplayParameterFromTemplateData(snapableParameters, elementData)

@@ -429,9 +429,17 @@ EBP_Content {
                             hoverEnabled: true
                             onClicked: {
                                 root.selectedTemplateName = templateName
-                                console.log("Template sélectionné: " + templateName)
-                                
-                                // Activer le mode placement
+
+                                // Filet de sécurité : si le mode a dérivé (side-effects
+                                // de tab switch etc.), reforcer EM_TEMPLATE avant
+                                // d'appeler enterPlacementMode (dispo uniquement sur
+                                // MouseLogic_Template).
+                                if (logic.editorMouseMode !== EditorEnum.EM_TEMPLATE
+                                        && logic && logic.mouseLogic
+                                        && logic.mouseLogic.changeMouseMode) {
+                                    logic.mouseLogic.changeMouseMode(EditorEnum.EM_TEMPLATE)
+                                }
+
                                 if (logic && logic.mouseLogic && logic.mouseLogic.enterPlacementMode) {
                                     var success = logic.mouseLogic.enterPlacementMode(templateName)
                                     if (!success) {

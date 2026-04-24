@@ -50,31 +50,24 @@ Item {
         parent: workArea
         anchors.fill: parent
         hoverEnabled: true
-        onEnabledChanged: {
-            console.log("onEnabledChanged - logic.editorMouseMode ", logic.editorMouseMode)
-            console.log("onEnabledChanged - EditorEnum.EM_TEMPLATE ", EditorEnum.EM_TEMPLATE)
-            console.log("onEnabledChanged - logic.mouseLogic ", logic.mouseLogic)
-            console.log("onEnabledChanged - logic.mouseLogic.isPlacementMode ", logic.mouseLogic ? logic.mouseLogic.isPlacementMode : "N/A")
-        }
 
         enabled: logic.editorMouseMode !== undefined &&
                  logic.editorMouseMode === EditorEnum.EM_TEMPLATE &&
                  logic.mouseLogic !== undefined &&
                  logic.mouseLogic.isPlacementMode === true
 
-
         acceptedButtons: Qt.NoButton
         propagateComposedEvents: true
         preventStealing: true
         z: 50
-        
+
         onPositionChanged: function(mouse) {
+            // templatePreview.mouseX/mouseY sont liés à mouseLogic.previewMouseX/Y
+            // via binding déclarative dans Editor.qml — une seule écriture suffit.
             if (logic.mouseLogic) {
                 logic.mouseLogic.previewMouseX = mouse.x
                 logic.mouseLogic.previewMouseY = mouse.y
             }
-            templatePreview.mouseX = mouse.x
-            templatePreview.mouseY = mouse.y
         }
     }
 
