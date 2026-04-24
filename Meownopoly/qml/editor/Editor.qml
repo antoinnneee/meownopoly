@@ -564,9 +564,13 @@ Base_Board {
     function _fullSyncChunkSize() { return 20000 }
 
     function _sendFullSyncTo(senderId) {
-        // Sérialise la liste des tuiles courante. On passe par snapableTiles
-        // comme format (cohérent avec MapFileManager), mais sans mapInfo
-        // car le client conserve son propre mapInfo courant.
+        // Sérialise la liste des tuiles courante + mapInfo de l'hôte. Le
+        // mapInfo est nécessaire côté client pour :
+        //   - aligner le nom de carte affiché sur celui que l'hôte édite
+        //   - router les sauvegardes locales vers le bon fichier
+        //     `<mapInfo.mapName>_map.json`
+        // (sans ça, le client saverait sur son propre autosave jusqu'à la
+        // prochaine action explicite).
         console.log("[FullSync] host scan snapableTilesList.length =",
                     snapableTilesList.length)
         const tiles = []
@@ -589,11 +593,23 @@ Base_Board {
                              "raw=", t.snapableParameters.toJSON())
             }
         }
-        const payload = JSON.stringify({ snapableTiles: tiles })
+        // Sérialise le mapInfo courant (nom, description, background, etc.).
+        // 3D/caméra à ajouter plus tard — cf. gap noté dans CLAUDE.md.
+        let mapInfoObj = null
+        try {
+            mapInfoObj = JSON.parse(mapInfo.toJSON())
+        } catch (e) {
+            console.warn("[FullSync] mapInfo JSON error:", e)
+        }
+        const payload = JSON.stringify({
+            snapableTiles: tiles,
+            mapInfo:       mapInfoObj
+        })
         const CHUNK = _fullSyncChunkSize()
         const count = Math.max(1, Math.ceil(payload.length / CHUNK))
         console.log("[FullSync] host → " + senderId
                     + " : " + tiles.length + " tuiles sérialisées, "
+                    + "mapInfo.name=" + (mapInfoObj ? mapInfoObj.name : "null") + ", "
                     + payload.length + " octets, " + count + " chunks")
         for (let c = 0; c < count; c++) {
             EditorSession.sendEventTo(senderId, EditorMessageType.FullSync, {
@@ -637,8 +653,16 @@ Base_Board {
     }
 
     function _applyFullSyncSnapshot(snapshot) {
-        const tiles = (snapshot && snapshot.snapableTiles) || []
-        console.log("[FullSync] applying snapshot —", tiles.length, "tuiles reçues")
+        const tiles       = (snapshot && snapshot.snapableTiles) || []
+        const newMapInfo  = (snapshot && snapshot.mapInfo)        || null
+        // mémoriser AVANT toute mutation de mapInfo pour E12 (purge ancien
+        // fichier de session côté client quand l'hôte change de carte).
+        const previousMapName = String(mapInfo.mapName || "")
+        const newMapName      = newMapInfo ? String(newMapInfo.name || "") : ""
+
+        console.log("[FullSync] applying snapshot —", tiles.length,
+                    "tuiles reçues, mapInfo.name=", newMapName,
+                    "previousMapName=", previousMapName)
         if (tiles.length > 0) {
             console.log("[FullSync] sample incoming tile[0]:",
                         JSON.stringify(tiles[0]).substring(0, 300))
@@ -646,14 +670,49 @@ Base_Board {
 
         EditorOpBus.beginApplyRemote()
         try {
-            // 1) Wipe local (QML) — les tiles reconstruites ci-dessous sont
+            // 1) Applique le mapInfo reçu AVANT de reconstruire les tuiles.
+            //    Raison : si une sauvegarde locale se déclenchait entre-temps
+            //    (p.ex. save-on-modification sur l'insertion de tuile), elle
+            //    écrirait avec le bon nom. Passe par
+            //    Game.applyRemoteDelta(MetadataChanged) → Map.setMapInfo →
+            //    signal mapInfoChanged → Connections dans Editor.qml qui
+            //    recopient dans le mapInfo QML (Base_Board inline).
+            if (newMapInfo) {
+                Game.applyRemoteDelta(EditDelta.MetadataChanged, "", "",
+                                      {}, newMapInfo, false)
+            }
+
+            // 2) Phase 3.5 — purge disque côté client.
+            //    E7  : fichier local portant le nouveau mapName (collision
+            //          résiduelle d'une session antérieure ou d'une carte
+            //          mono éponyme) → supprimer avant que les saves ne
+            //          l'écrasent silencieusement.
+            //    E12 : ancien fichier de session (previousMapName différent
+            //          et non-autosave) → supprimer, il est obsolète.
+            //    La différenciation mono/collab (à venir) évitera de toucher
+            //    aux vraies cartes mono. Pour l'instant, comportement brut
+            //    comme validé.
+            if (newMapName &&
+                MapFileManager.mapExists(newMapName, MapTypes.CUSTOM)) {
+                console.log("[FullSync] E7 purge collision locale:", newMapName)
+                Game.deleteMap(newMapName, MapTypes.CUSTOM)
+            }
+            if (previousMapName && previousMapName !== newMapName &&
+                previousMapName !== mapInfo.autosaveMapName &&
+                MapFileManager.mapExists(previousMapName, MapTypes.CUSTOM)) {
+                console.log("[FullSync] E12 purge ancien fichier session:",
+                            previousMapName)
+                Game.deleteMap(previousMapName, MapTypes.CUSTOM)
+            }
+
+            // 3) Wipe local (QML) — les tiles reconstruites ci-dessous sont
             //    de toute façon de nouvelles instances.
             const toDelete = snapableTilesList.slice()
             console.log("[FullSync] wiping", toDelete.length, "tuiles locales")
             for (let i = 0; i < toDelete.length; i++) {
                 if (toDelete[i]) logic.tileLogic.deleteElement(toDelete[i])
             }
-            // 2) Reconstruit via Game.applyRemoteDelta(TileAdded) — ajoute au
+            // 4) Reconstruit via Game.applyRemoteDelta(TileAdded) — ajoute au
             //    m_tiles C++ ET émet `tileRestoredFromHistory` qui est
             //    consommé par `onFoundItemSnapableTile` pour créer le QML.
             //    Un seul code path, m_tiles cohérent avec les tiles QML,
@@ -670,7 +729,7 @@ Base_Board {
                 rebuilt++
             }
             console.log("[FullSync] rebuilt", rebuilt, "/", tiles.length, "tuiles")
-            // 3) Rétablit les connexions (next/prev) depuis les JSON.
+            // 5) Rétablit les connexions (next/prev) depuis les JSON.
             logic.tileLogic.builtConnections()
         } finally {
             EditorOpBus.endApplyRemote()
