@@ -374,7 +374,12 @@ void Game::applyRemoteDelta(int type, const QString &tileId, const QString &grou
     QSet<QUuid> touched;
     map->applyDelta(delta, applyBefore, touched);
     // Pas de pushDelta — c'est un op distant, pas une action locale.
-    // Pas de save ici : la politique save locale s'applique via
-    // l'accumulation isApplyingRemote (suppress in applyRemote batch),
-    // et on laisse l'appelant QML gérer la fin du batch si besoin.
+    // Phase 4 — si la politique save-on-mod est active, restart le
+    // debounceur (~500 ms). Chaque op remote repousse l'échéance : une
+    // rafale (ex: FullSync avec N tuiles) se solde par UN write sur disque.
+    // start() sur un QTimer singleShot en cours de run = restart. Pas de
+    // souci de thread : Game + QTimer vivent sur le GUI thread.
+    if (saveOnEdit() && m_remoteSaveDebounce) {
+        m_remoteSaveDebounce->start();
+    }
 }

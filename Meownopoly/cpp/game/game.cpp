@@ -23,6 +23,18 @@
 Game *Game::m_pThis = nullptr;
 
 Game::Game(QObject *parent) : QObject(parent) {
+    // Phase 4 — debounceur save-on-mod pour ops distantes (coalesce le burst
+    // de N TileAdded d'un FullSync en un seul write ~500 ms après le dernier
+    // applyRemoteDelta). Sans ça, un FullSync de 500 tuiles = 500 writes
+    // disque identiques en sortie.
+    m_remoteSaveDebounce = new QTimer(this);
+    m_remoteSaveDebounce->setSingleShot(true);
+    m_remoteSaveDebounce->setInterval(500);
+    connect(m_remoteSaveDebounce, &QTimer::timeout, this, [this]() {
+        if (saveOnEdit()) {
+            qDebug() << "[Game] debounced remote-delta save → " << saveCurrentMap();
+        }
+    });
 }
 
 Game::~Game()
