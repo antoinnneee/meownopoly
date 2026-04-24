@@ -17,8 +17,6 @@ QtObject {
     property int currentElementWidth: 3
     property int currentElementHeight: 4
 
-    property real currentZOrder: 0.00001
-
     property bool displayLinkEnable :false
     
     /**
@@ -50,8 +48,7 @@ QtObject {
 
 
     function createItemSnapableTile(itemSnapableData) {
-        currentZOrder = currentZOrder + 0.00001
-        itemSnapableData.displayParameter.zOrder  = currentZOrder;
+        // zOrder respecté : valeur provenant du fichier ou d'une op réseau.
         // Choisir le bon composant selon le tileType
         var tileComponent
         if (itemSnapableData.tileType === ItemSnapable.CaseTile) {

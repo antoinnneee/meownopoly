@@ -83,6 +83,22 @@ public:
     Q_INVOKABLE QJsonObject loadTemplate(QString name);
     Q_INVOKABLE QJsonArray getTemplateElementsForPlacement(QString name, int targetX, int targetY);
 
+    // ---- Lamport clock pour zOrder des tiles ----
+    // Un compteur logique monotone commun à toutes les créations de tile.
+    // En local : tickLamport() fournit un zOrder monotone (plus de float drift).
+    // En collab : chaque peer fait tickLamport() localement, broadcast avec la
+    // tuile (le zOrder transporte la valeur). À réception, syncLamport() garde
+    // le compteur local ≥ au maximum vu. Les ties concurrents (deux peers qui
+    // tickent avant échange) sont cassés au rendu par (playerId, uniqueId) :
+    // c'est à l'appelant du sort de l'intégrer si nécessaire.
+    Q_INVOKABLE double tickLamport();
+    Q_INVOKABLE void   syncLamport(double remote);
+    Q_INVOKABLE void   resetLamport();
+    // Scanne une Map et sync le compteur au max des zOrder trouvés. Appelé
+    // après loadMap pour qu'une nouvelle création ne collisionne pas avec
+    // l'historique du fichier.
+    void syncLamportFromMap(Map *map);
+
 
     ~Game();
 
@@ -112,6 +128,12 @@ private:
     // (ex. FullSync → N TileAdded d'affilée). start() restartable ; émet un
     // seul write ~500 ms après la dernière op distante.
     QTimer *m_remoteSaveDebounce = nullptr;
+
+    // Lamport clock — int64 monotone, partie entière du zOrder assigné.
+    // La partie fractionnaire (m_lamportJitter) est fixe par session et
+    // désambigue les ticks concurrents entre peers lors du rendu.
+    qint64 m_lamportClock  = 0;
+    double m_lamportJitter = 0.0;
 };
 
 #endif // GAME_H

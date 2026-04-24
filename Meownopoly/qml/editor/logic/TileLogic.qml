@@ -20,8 +20,6 @@ QtObject {
     property int currentElementWidth: 3
     property int currentElementHeight: 4
 
-    property real currentZOrder: 0.00001
-
     property bool displayLinkEnable :false
 
     function placeSelectedAsset(gridX, gridY) {
@@ -43,6 +41,9 @@ QtObject {
         snapableParameters.displayParameter.unitSizeWidth = currentElementWidth
         snapableParameters.displayParameter.unitSizeHeight = currentElementHeight
         snapableParameters.displayParameter.zLayer = 5
+        // Lamport tick — zOrder unique monotone + jitter sub-1.0 par peer
+        // pour désambigüer les ticks concurrents en collab.
+        snapableParameters.displayParameter.zOrder = Game.tickLamport()
         snapableParameters.decorationParameter.decorationCategory = selectionPanel.currentSelectedAssetCategory
         snapableParameters.decorationParameter.decorationType = selectionPanel.currentSelectedAssetType
         snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
@@ -92,8 +93,11 @@ QtObject {
 
 
     function createItemSnapableTile(itemSnapableData) {
-        currentZOrder = currentZOrder + 0.00001
-        itemSnapableData.displayParameter.zOrder  = currentZOrder;
+        // Le zOrder est désormais fixé par l'appelant (placeSelectedAsset,
+        // placeTemplateAtCursor, applyRemoteDelta, loadMap…) via Game.tickLamport()
+        // ou la valeur transportée dans les ops/fichier. On n'écrase plus ici :
+        // sinon la pose de template perdait l'ordre relatif sauvé (bug observé
+        // où les tiles prenaient l'ordre de sélection au lieu du zOrder d'origine).
         // Choisir le bon composant selon le tileType
         var tileComponent
         if (itemSnapableData.tileType === ItemSnapable.CaseTile) {

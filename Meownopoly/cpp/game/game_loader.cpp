@@ -125,6 +125,11 @@ Map *Game::loadMap(QString mapName, MapTypes::MapType mapType)
             tile->commitCurrentState();
         map->clearHistory();
 
+        // Lamport : sync le compteur au max des zOrder chargés. Une nouvelle
+        // création après loadMap ne collisionnera pas avec l'historique du
+        // fichier.
+        syncLamportFromMap(map);
+
         // Relay Map signals to Game
         connect(map, &Map::tileRemovedFromHistory, this, &Game::tileRemoved);
         connect(map, &Map::tileRestoredFromHistory, this, &Game::foundItemSnapableTile);
@@ -162,6 +167,9 @@ void Game::initEmptyCollabMap()
     connect(map, &Map::forceUnselectAll, this, &Game::forceUnselectAll);
     connect(map, &Map::afterRestoration, this, &Game::afterRestoration);
     MapFileManager::instance()->setCurrentMap(map);
+    // Reset Lamport : la map précédente n'a plus cours, le FullSync à venir
+    // réalimentera le compteur via applyRemoteDelta.
+    resetLamport();
     qDebug() << "[Game] initEmptyCollabMap — Map vide + MapInfo par défaut créée pour session collab";
 }
 
@@ -386,6 +394,16 @@ void Game::applyRemoteDelta(int type, const QString &tileId, const QString &grou
     const bool tilePresent = map->tileById(delta.tileId) != nullptr;
     qDebug() << "[Game::applyRemoteDelta] type=" << type << "tileId=" << tileId
              << "applyBefore=" << applyBefore << "tilePresent=" << tilePresent;
+
+    // Lamport sync : si l'op transporte un zOrder (après = création /
+    // modification d'une tile), garder le compteur local ≥ à celui vu.
+    // Le prochain tick local ne collisionnera pas avec ce peer.
+    const QJsonObject &carry = applyBefore ? before : after;
+    if (carry.contains("displayParameter")) {
+        QJsonObject dp = carry["displayParameter"].toObject();
+        if (dp.contains("zOrder"))
+            syncLamport(dp["zOrder"].toDouble());
+    }
 
     QSet<QUuid> touched;
     map->applyDelta(delta, applyBefore, touched);

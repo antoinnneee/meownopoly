@@ -508,6 +508,22 @@ MouseLogic_Selection {
         var jsonObj = { "snapableTiles": elementsArray }
         var itemSnapableList = Game.generateItems(jsonObj)
 
+        // Rerank via Lamport : on préserve l'ordre relatif sauvé dans le
+        // template (sort par zOrder ascendant), puis on réassigne des valeurs
+        // fraîches de Game.tickLamport() dans cet ordre. Sans ça, on conserve
+        // les zOrder historiques du moment où le template a été sauvé —
+        // potentiellement en conflit avec l'état courant ou d'autres peers.
+        var ordered = itemSnapableList.slice()
+        ordered.sort(function(a, b) {
+            var za = (a && a.displayParameter) ? a.displayParameter.zOrder : 0
+            var zb = (b && b.displayParameter) ? b.displayParameter.zOrder : 0
+            return za - zb
+        })
+        for (var k = 0; k < ordered.length; k++) {
+            if (ordered[k] && ordered[k].displayParameter)
+                ordered[k].displayParameter.zOrder = Game.tickLamport()
+        }
+
         var txId = Game.beginTransaction()
         for (var i = 0; i < itemSnapableList.length; i++) {
             logic.tileLogic.createItemSnapableTile(itemSnapableList[i])
