@@ -43,22 +43,106 @@ EBP_Content {
     property var pendingSaveElementsJson: []
 
     /**
+     * Sélection capturée avant le changement de mode vers EM_TEMPLATE.
+     * Le Loader détruit l'ancien MouseLogic → son `selectedElements` est perdu,
+     * alors qu'une nouvelle MouseLogic_Template démarre vide. On réinjecte cette
+     * liste dans `templateSelectedElements` dès que le nouveau mouseLogic est prêt.
+     */
+    property var _capturedPreviousSelection: []
+
+    /** Capture la sélection courante (avant swap du MouseLogic) */
+    function _capturePreviousSelection() {
+        _capturedPreviousSelection = []
+        if (!logic || !logic.mouseLogic) return
+        var src = logic.mouseLogic.selectedElements
+        if (!src || src.length === 0) return
+        var copy = []
+        for (var i = 0; i < src.length; i++) {
+            if (src[i]) copy.push(src[i])
+        }
+        _capturedPreviousSelection = copy
+    }
+
+    /** Importe la sélection capturée dans le nouveau MouseLogic_Template */
+    function _importCapturedSelectionIntoTemplate() {
+        if (!_capturedPreviousSelection || _capturedPreviousSelection.length === 0) return
+        var ml = logic ? logic.mouseLogic : null
+        if (!ml || typeof ml.getTemplateSelectedElements !== "function") return
+
+        // Si l'utilisateur a déjà fait une sélection en mode template, ne pas écraser
+        var existing = ml.getTemplateSelectedElements() || []
+        if (existing.length > 0) {
+            _capturedPreviousSelection = []
+            return
+        }
+
+        var tSel = []
+        var sSel = []
+        for (var i = 0; i < _capturedPreviousSelection.length; i++) {
+            var el = _capturedPreviousSelection[i]
+            if (!el) continue
+            tSel.push(el)
+            sSel.push(el)
+            // Recréer les bindings x/y dans le nouveau MouseLogic (l'ancien a été détruit)
+            if (typeof ml.createBindingsForElement === "function") {
+                ml.createBindingsForElement(el)
+            }
+        }
+        ml.templateSelectedElements = tSel
+        ml.selectedElements = sSel
+        if (typeof ml.updateTemplateBoundingBox === "function") {
+            ml.updateTemplateBoundingBox()
+        }
+        console.log("[TP_Content] Imported", tSel.length, "element(s) from previous selection into template mode")
+        _capturedPreviousSelection = []
+    }
+
+    // Réinjecter la sélection capturée dès que le mouseLogic bascule sur le nouveau
+    Connections {
+        target: logic
+        function onMouseLogicChanged() {
+            if (!root.visible) return
+            if (!logic || !logic.mouseLogic) return
+            if (logic.editorMouseMode !== EditorEnum.EM_TEMPLATE) return
+            root._importCapturedSelectionIntoTemplate()
+        }
+    }
+
+    /**
      * Construit un tableau d'objets JSON à partir des éléments sélectionnés.
      * Chaque objet a gridRelativePositionX/Y en top-level pour le C++.
+     *
+     * Résout la sélection selon le mode courant :
+     *  - EM_TEMPLATE → templateSelectedElements (via getTemplateSelectedElements)
+     *  - autres      → selectedElements (sélection classique MouseLogic_Selection)
      */
     function buildElementsJsonFromSelection() {
-        if (!logic || !logic.mouseLogic || !logic.mouseLogic.getTemplateSelectedElements){
-            console.log("Error : buildElementsJsonFromSelection() Can't access logic or its content")
+        if (!logic) {
+            console.warn("[TP_Content] buildElementsJsonFromSelection: logic is null")
             return []
         }
-        var elements = logic.mouseLogic.getTemplateSelectedElements()
+        if (!logic.mouseLogic) {
+            console.warn("[TP_Content] buildElementsJsonFromSelection: logic.mouseLogic is null (mode=" + logic.editorMouseMode + ")")
+            return []
+        }
+
+        var ml = logic.mouseLogic
+        var elements = []
+        if (typeof ml.getTemplateSelectedElements === "function") {
+            elements = ml.getTemplateSelectedElements() || []
+        }
+        // Fallback : si pas en mode TEMPLATE ou templateSelectedElements vide, utiliser selectedElements
+        if ((!elements || elements.length === 0) && ml.selectedElements) {
+            console.log("[TP_Content] Fallback sur selectedElements (mode=" + logic.editorMouseMode + ")")
+            elements = ml.selectedElements
+        }
+
         var arr = []
         for (var i = 0; i < elements.length; i++) {
             var el = elements[i]
             var isParam = el && el.snapableParameters
             if (!isParam || typeof isParam.toJSON !== "function") continue
             var jsonStr = isParam.toJSON()
-            console.log("===================", jsonStr)
             var obj = {}
             try {
                 obj = JSON.parse(jsonStr)
@@ -113,15 +197,24 @@ EBP_Content {
 
     Component.onCompleted: {
         refreshTemplateList()
+        // onVisibleChanged ne tire pas si visible est déjà true à la création
+        // (signal change-only) — activer explicitement le mode template si c'est le cas.
+        if (visible && logic && logic.mouseLogic && logic.mouseLogic.changeMouseMode) {
+            _capturePreviousSelection()
+            logic.mouseLogic.changeMouseMode(EditorEnum.EM_TEMPLATE)
+        }
     }
 
     // Activer le mode template quand le panneau devient visible
     onVisibleChanged: {
         if (!logic || !logic.mouseLogic) return
-        
+
         if (visible) {
             console.log("[TP_Content] Activating TEMPLATE mode")
             refreshTemplateList()
+            // Capturer la sélection AVANT le swap : le Loader va détruire
+            // l'ancien MouseLogic et sa liste selectedElements avec.
+            _capturePreviousSelection()
             logic.mouseLogic.changeMouseMode(EditorEnum.EM_TEMPLATE)
         } else {
             console.log("[TP_Content] Deactivating TEMPLATE mode")
