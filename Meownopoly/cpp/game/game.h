@@ -23,6 +23,11 @@ class Game : public QObject
 {
     Q_OBJECT
 
+    // Valeur que Game::tickLamport() retournerait au prochain appel, sans
+    // incrémenter. Utilisé par les previews (AssetPreviewCursor, etc.) pour
+    // se rendre à la z-height exacte qu'aura la tile après pose.
+    Q_PROPERTY(double previewZOrder READ previewZOrder NOTIFY lamportClockChanged FINAL)
+
 public:
 
     enum GAME_CONDITION {
@@ -94,6 +99,7 @@ public:
     Q_INVOKABLE double tickLamport();
     Q_INVOKABLE void   syncLamport(double remote);
     Q_INVOKABLE void   resetLamport();
+    double previewZOrder() const;
     // Scanne une Map et sync le compteur au max des zOrder trouvés. Appelé
     // après loadMap pour qu'une nouvelle création ne collisionne pas avec
     // l'historique du fichier.
@@ -115,6 +121,10 @@ signals:
     void forceUnselectAll();
     // Relayé depuis Map::afterRestoration
     void afterRestoration(const QList<QUuid> &tileIds);
+
+    // Émis à chaque mutation de m_lamportClock (tick/sync/reset). Alimente
+    // la Q_PROPERTY previewZOrder pour que les previews suivent.
+    void lamportClockChanged();
 
 
 private:

@@ -132,6 +132,17 @@ Item {
 
     // Make it non-interactive
     enabled: false
+    // Bind la zOrder des previews sur la valeur que tickLamport() retournera
+    // au prochain clic de pose : la preview se rend à la z-height exacte qu'aura
+    // la tile placée (z = zOrder + zLayer via le binding de SnapableElement).
+    // Sans ça, le z hardcodé restait derrière les tuiles à zOrder élevé.
+    Binding {
+        when: root.snapablePreview !== undefined && root.snapablePreview !== null
+        target: root.snapablePreview ? root.snapablePreview.snapableParameters.displayParameter : null
+        property: "zOrder"
+        value: Game.previewZOrder
+    }
+
     Component {
         id: decorationPreviewComponent
         SnapableDecoration {
@@ -151,7 +162,8 @@ Item {
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            z: 5.01
+            // z hérité de SnapableElement : zOrder + zLayer. zOrder est bindé
+            // au-dessus sur Game.previewZOrder → matche la future placement z.
             gridManager: root.gridManager
             Component.onCompleted: {
                 root.snapablePreview = snapableDecoration
@@ -184,7 +196,7 @@ Item {
             visible: root.visible
             x:gridXPosition * gridManager.gridSize
             y:gridYPosition * gridManager.gridSize
-            z: 5.01
+            // z hérité de SnapableElement (zOrder bindé sur Game.previewZOrder)
             gridManager: root.gridManager
             Component.onCompleted: {
                 root.snapablePreview = snapableCaseTile
