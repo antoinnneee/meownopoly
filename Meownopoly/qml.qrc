@@ -39,7 +39,6 @@
         <file>qml/editor/EditorController.qml</file>
         <file>qml/editor/qmldir</file>
         <file>qml/editor/panel/mapInfoPanel/MapInfoPanel.qml</file>
-        <file>qml/editor/panel/mapInfoPanel/MapSidePanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_CategoryGrid.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_ClearButton.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_ContentArea.qml</file>
@@ -134,5 +133,6 @@
         <file>qml/multiplayer/SessionCreation.qml</file>
         <file>qml/multiplayer/SessionDetails.qml</file>
         <file>qml/multiplayer/SessionList.qml</file>
+        <file>qml/editor/panel/mapInfoPanel/MapNavigationBar.qml</file>
     </qresource>
 </RCC>
