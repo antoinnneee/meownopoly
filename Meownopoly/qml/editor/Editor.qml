@@ -577,7 +577,21 @@ Base_Board {
 
     function _fullSyncChunkSize() { return 20000 }
 
-    function _sendFullSyncTo(senderId) {
+    // Positionné à true pendant initializeEditor pour éviter de broadcaster
+    // FullSync sur les Game.loadMap d'initialisation (pas de pair connecté
+    // de toute façon, mais évite le bruit + la sérialisation gratuite).
+    property bool _suppressFullSyncBroadcast: false
+
+    // Raccourci : broadcast FullSync à tous les peers (reliable).
+    // Utilisé quand l'hôte change de carte en cours de session (Phase 3.4).
+    function _sendFullSyncToAll() {
+        if (!EditorSession.active || !EditorSession.isHost) return
+        if (_suppressFullSyncBroadcast) return
+        _sendFullSync("")
+    }
+
+    // targetId vide → broadcastEvent ; sinon sendEventTo.
+    function _sendFullSync(targetId) {
         // Sérialise la liste des tuiles courante + mapInfo de l'hôte. Le
         // mapInfo est nécessaire côté client pour :
         //   - aligner le nom de carte affiché sur celui que l'hôte édite
@@ -621,18 +635,27 @@ Base_Board {
         })
         const CHUNK = _fullSyncChunkSize()
         const count = Math.max(1, Math.ceil(payload.length / CHUNK))
-        console.log("[FullSync] host → " + senderId
+        const dest  = targetId ? targetId : "(broadcast)"
+        console.log("[FullSync] host → " + dest
                     + " : " + tiles.length + " tuiles sérialisées, "
                     + "mapInfo.name=" + (mapInfoObj ? mapInfoObj.name : "null") + ", "
                     + payload.length + " octets, " + count + " chunks")
         for (let c = 0; c < count; c++) {
-            EditorSession.sendEventTo(senderId, EditorMessageType.FullSync, {
+            const chunk = {
                 "chunkIndex": c,
                 "chunkCount": count,
                 "payload":    payload.substr(c * CHUNK, CHUNK)
-            })
+            }
+            if (targetId)
+                EditorSession.sendEventTo(targetId, EditorMessageType.FullSync, chunk)
+            else
+                EditorSession.broadcastEvent(EditorMessageType.FullSync, chunk)
         }
     }
+
+    // Wrapper rétro-compatible — conserve l'ancien nom utilisé par le handler
+    // Hello (réponse ciblée au joiner uniquement).
+    function _sendFullSyncTo(senderId) { _sendFullSync(senderId) }
 
     function _receiveFullSyncChunk(payload) {
         const idx   = payload.chunkIndex
@@ -1028,6 +1051,16 @@ Base_Board {
             if (mapInfo.mapName !== stEnableAutoSave.lastOpenedMap)
                 stEnableAutoSave.setValue("lastOpenedMap", mapInfo.mapName)
 
+            // Phase 3.4 : si l'hôte change de carte en cours de session,
+            // broadcaster la nouvelle carte à tous les peers. Le flag
+            // _suppressFullSyncBroadcast est à true pendant initializeEditor
+            // pour ne pas tirer sur les Game.loadMap d'initialisation (au
+            // moment desquels personne n'est connecté de toute façon).
+            if (EditorSession.active && EditorSession.isHost &&
+                    !root._suppressFullSyncBroadcast) {
+                console.log("[FullSync] host a changé de carte en session — broadcast")
+                _sendFullSyncToAll()
+            }
         }
 
         function onTileRemoved(tileId) {
@@ -1510,6 +1543,20 @@ Base_Board {
     }
 
     function initializeEditor() {
+        // Flag suppression du broadcast FullSync pendant l'init : les
+        // Game.loadMap ci-dessous déclenchent tous onMapLoaded, qui
+        // autrement rebroadcasterait une carte encore en cours de
+        // construction. Personne n'est connecté à ce stade, mais c'est plus
+        // propre que de spammer broadcastEvent dans le vide.
+        root._suppressFullSyncBroadcast = true
+        try {
+            _initializeEditorImpl()
+        } finally {
+            root._suppressFullSyncBroadcast = false
+        }
+    }
+
+    function _initializeEditorImpl() {
         // Client en mode collab → ne PAS charger la carte locale, la FullSync
         // de l'hôte va la fournir. Autrement, les tuiles chargées déclencheraient
         // `onFoundItemSnapableTile` qui soumet des CreateItem ops, rebroadcastées
