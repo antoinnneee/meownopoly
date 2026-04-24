@@ -123,16 +123,16 @@ Item {
 
         var mapToDelete = currentMapName
         var indexToDelete = currentIndex
-        
+
         console.log("Deleting map:", mapToDelete)
-        
+
         // Supprimer la carte
         logic.deleteMap(mapToDelete)
         logic.removeCurrentMap()
-        
+
         // Rafraîchir la liste AVANT de naviguer
         refreshMapList()
-        
+
         // Naviguer vers la carte suivante (ou précédente si c'était la dernière)
         if (availableMaps.length > 0) {
             // Ajuster l'index si nécessaire
@@ -141,6 +141,18 @@ Item {
                 newIndex = availableMaps.length - 1
             }
             navigateToMap(newIndex)
+        } else {
+            // Level 1d : plus aucune carte → retomber sur l'autosave.
+            // Sans ce fallback, MapFileManager.currentMap pointait encore
+            // sur la Map dont le fichier venait d'être supprimé ; toute
+            // save-on-mod ultérieure recréait silencieusement le fichier.
+            console.log("MapNavigationBar: plus de cartes, fallback autosave")
+            if (!MapFileManager.mapExists(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)) {
+                MapFileManager.createMapFile("", MapTypes.AUTOSAVE)
+            }
+            Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
+            mapInfo.mapName = mapInfo.autosaveMapName
+            refreshMapList()
         }
     }
 

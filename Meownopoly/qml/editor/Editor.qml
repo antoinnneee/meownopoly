@@ -263,9 +263,19 @@ Base_Board {
         logic: logic
 
         onNewMapSet: {
+            // Level 1a : wipe les QML tiles AVANT tout reload. Sans ça, les
+            // anciennes tuiles restent dans snapableTilesList, pointent sur
+            // les C++ ItemSnapable de l'ancien Map qui sera deleteLater
+            // par setCurrentMap → dangling refs → crash au prochain redraw.
+            logic.removeCurrentMap()
             logic.createMap(newMapInfo.mapName, MapTypes.CUSTOM)
             console.log("New map created:", newMapInfo.mapName)
             mapInfo.setMapInfo(newMapInfo)
+            // snapableTilesList est désormais vide : saveMap écrit un fichier
+            // avec 0 tuiles + les méta choisies par l'utilisateur. Avant
+            // Level 1a, il écrivait les tuiles de la carte précédente, ce
+            // qui faisait que "nouvelle carte" héritait silencieusement des
+            // tuiles de l'ancienne.
             logic.saveMap(MapTypes.CUSTOM)
             Game.loadMap(newMapInfo.mapName, MapTypes.CUSTOM)
         }

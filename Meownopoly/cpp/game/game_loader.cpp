@@ -310,6 +310,14 @@ void Game::updateMapMetadata(const QString& beforeJson, const QString& afterJson
     delta.groupId = m_currentTransaction;
     map->pushDelta(delta);
 
+    // Level 1c : sync Map.mapInfo avec l'état "après". Avant ce fix,
+    // l'UI mutait Base_Board.mapInfo (instance A) et on poussait juste un
+    // delta, sans toucher à Map.mapInfo (instance B). Du coup
+    // saveCurrentMap (qui sérialise depuis B) persistait l'état AVANT
+    // modification. Avec setMapInfo, B est alignée sur A pour toute
+    // sauvegarde subséquente.
+    map->setMapInfo(new MapInfo(delta.after));
+
     EditorOpBus::instance()->submitFromDelta(
         static_cast<int>(delta.type), delta.tileId, delta.groupId,
         delta.before, delta.after, /*applyBefore=*/false);
