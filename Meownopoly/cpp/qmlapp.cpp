@@ -37,6 +37,7 @@
 #include "tools/test_manager.h"
 
 #include "game/physics/pattounx_engine.h"
+#include "game/physics/physics_world.h"
 
 #include "game/map/map.h"
 #include "game/map/maptypes.h"
@@ -87,6 +88,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     TestManager::registerQml();
     
     PattounX_engine::registerQml();
+    PhysicsWorld::registerQml();
     ChatClient::registerQml(this);
     ChatSlashCommands::registerQml();
     ChatSessionManager::registerQml();

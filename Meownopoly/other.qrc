@@ -32,5 +32,6 @@
         <file>qml/test/CatwayTest/EditorSessionPanel.qml</file>
         <file>qml/test/CatwayTest/EditorOpsCard.qml</file>
         <file>qml/test/CatwayTest/EditorNetworkTestTab.qml</file>
+        <file>qml/test/CatwayTest/PhysicsTestTab.qml</file>
     </qresource>
 </RCC>

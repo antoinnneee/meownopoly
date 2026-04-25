@@ -1,0 +1,140 @@
+/*
+ *      PattounX v2 — PhysicsWorld
+ *
+ * Façade QML qui pilote un `PhysicsWorker` exécuté dans un QThread
+ * dédié. Lecture lock-free des snapshots via un triple buffer
+ * (Fraser-Harris) ; mutations sérialisées vers le worker via signaux
+ * QueuedConnection.
+ */
+#ifndef PHYSICS_WORLD_H
+#define PHYSICS_WORLD_H
+
+#include "pattounx_types.h"
+
+#include <QByteArray>
+#include <QObject>
+#include <QString>
+#include <QStringList>
+#include <QVariantList>
+#include <QVariantMap>
+#include <QVector2D>
+#include <atomic>
+
+class QThread;
+class PhysicsWorker;
+
+class PhysicsWorld : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool running READ isRunning NOTIFY runningChanged)
+    Q_PROPERTY(int tickRate READ tickRate WRITE setTickRate NOTIFY tickRateChanged)
+    Q_PROPERTY(bool simulationEnabled READ simulationEnabled
+                   WRITE setSimulationEnabled NOTIFY simulationEnabledChanged)
+    Q_PROPERTY(quint64 currentTick READ currentTick NOTIFY snapshotAvailable)
+    Q_PROPERTY(qint64 currentTimestampNs READ currentTimestampNs NOTIFY snapshotAvailable)
+
+public:
+    explicit PhysicsWorld(QObject *parent = nullptr);
+    ~PhysicsWorld() override;
+
+    static void registerQml();
+
+    bool isRunning() const { return m_running; }
+    int tickRate() const { return m_tickRate; }
+    bool simulationEnabled() const { return m_simEnabled; }
+    quint64 currentTick() const;
+    qint64 currentTimestampNs() const;
+
+    void setTickRate(int hz);
+    void setSimulationEnabled(bool on);
+
+    Q_INVOKABLE void start();
+    Q_INVOKABLE void stop();
+
+    // --- Bodies ---
+    Q_INVOKABLE void createKinematicActor(const QString &actorId,
+                                          QVector2D position,
+                                          qreal radius = 0.2,
+                                          QVariantMap params = {});
+    Q_INVOKABLE void createDynamicCircle(const QString &id,
+                                         QVector2D position,
+                                         qreal radius,
+                                         qreal mass,
+                                         QVariantMap params = {});
+    Q_INVOKABLE void createStaticCircle(const QString &id,
+                                        QVector2D position,
+                                        qreal radius);
+    Q_INVOKABLE void removeBody(const QString &id);
+    Q_INVOKABLE void setBodyPosition(const QString &id, QVector2D pos);
+    Q_INVOKABLE void applyImpulse(const QString &id, QVector2D impulse);
+
+    // --- Inputs ---
+    Q_INVOKABLE void pushInput(const QString &actorId, QVector2D input);
+
+    // --- Zones ---
+    Q_INVOKABLE void upsertZone(const QString &zoneId,
+                                const QVariantList &polygonAbsolute,
+                                QVariantMap params);
+    Q_INVOKABLE void removeZone(const QString &zoneId);
+    Q_INVOKABLE void clearZones();
+
+    // --- Lecture snapshot (lock-free, GUI thread uniquement) ---
+    Q_INVOKABLE QVariantMap bodyState(const QString &id);
+    Q_INVOKABLE QStringList allBodyIds();
+    Q_INVOKABLE qint64 stepDurationNs() const;
+
+    // Signal de cycle GUI : à appeler une fois par frame (FrameAnimation)
+    // pour autoriser l'avancement vers la frame physique la plus récente.
+    Q_INVOKABLE void beginFrame();
+
+signals:
+    void runningChanged();
+    void tickRateChanged();
+    void simulationEnabledChanged();
+    void actorEnteredZone(const QString &actorId, const QString &zoneId);
+    void actorExitedZone(const QString &actorId, const QString &zoneId);
+    void actorCollided(const QString &actorId, const QString &other,
+                       QVector2D normal, qreal impactSpeed);
+    void snapshotAvailable(quint64 tick);
+
+    // Internes : pilotent le worker via QueuedConnection
+    void startLoop();
+    void cmdUpsertBody(pattounx::BodySpec spec);
+    void cmdRemoveBody(QString id);
+    void cmdSetBodyPosition(QString id, QVector2D pos);
+    void cmdApplyImpulse(QString id, QVector2D impulse);
+    void cmdPushInput(QString actorId, QVector2D input);
+    void cmdUpsertZone(pattounx::ZoneSpec spec);
+    void cmdRemoveZone(QString id);
+    void cmdClearZones();
+    void cmdRequestStop();
+    void cmdSetTickRate(int hz);
+    void cmdSetSimulationEnabled(bool on);
+
+private:
+    void onSnapshotPublished(quint64 tick, qint64 timestampNs, qint64 stepDurationNs);
+    void tryAdvanceGuiBuffer();
+
+    QThread *m_thread = nullptr;
+    PhysicsWorker *m_worker = nullptr;
+
+    bool m_running = false;
+    int m_tickRate = 60;
+    bool m_simEnabled = true;
+
+    // Triple buffer Fraser-Harris.
+    pattounx::WorldSnapshot m_buffers[3];
+    std::atomic<pattounx::WorldSnapshot *> m_pending { nullptr };
+    pattounx::WorldSnapshot *m_guiInUse = nullptr;
+
+    // Empêche `bodyState` de consommer plusieurs frames pendant le même
+    // rendu : reset à chaque appel `beginFrame()`.
+    bool m_guiAdvancedThisFrame = false;
+
+    // Métadonnées de la frame GUI active (pour QML)
+    quint64 m_lastTick = 0;
+    qint64 m_lastTimestampNs = 0;
+    qint64 m_lastStepDurationNs = 16'666'667; // 60 Hz par défaut
+};
+
+#endif // PHYSICS_WORLD_H

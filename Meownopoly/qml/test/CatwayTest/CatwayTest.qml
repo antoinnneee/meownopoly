@@ -116,6 +116,22 @@ Rectangle {
                         border.width: 1
                     }
                 }
+                TabButton {
+                    text: "Physics"
+                    font.pixelSize: 14
+                    contentItem: Text {
+                        text: parent.text
+                        color: parent.checked ? root.accent : root.textSecondary
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.checked ? root.cardBg : "transparent"
+                        radius: 8
+                        border.color: parent.checked ? root.accent : root.cardBorder
+                        border.width: 1
+                    }
+                }
             }
             Text {
                 text: "Test Catway"
@@ -282,6 +298,26 @@ Rectangle {
                     EditorNetworkTestTab {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 700
+                        host: root
+                    }
+                }
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                contentWidth: availableWidth
+                contentHeight: physicsContent.implicitHeight
+                ColumnLayout {
+                    id: physicsContent
+                    width: root.width - 32
+                    spacing: 12
+                    PhysicsTestTab {
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 600
                         host: root
                     }
                 }
