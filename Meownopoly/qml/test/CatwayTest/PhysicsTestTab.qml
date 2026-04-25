@@ -104,12 +104,13 @@ Item {
     // L'éditeur ou d'autres consommateurs peuvent en avoir besoin. Le bouton
     // Stop reste disponible si l'utilisateur veut explicitement l'arrêter.
 
-    Timer {
+    // FrameAnimation = synchro vsync (~60 Hz sur la plupart des écrans).
+    // L'ancien Timer interval=16 (62.5 Hz) battait avec le vsync et
+    // produisait un jitter visuel indépendant de la simulation physique.
+    FrameAnimation {
         id: refreshTimer
-        interval: 16
         running: world.running
-        repeat: true
-        property int bodyTick: 0  // incrémenté à chaque frame pour repaint canvas
+        property int bodyTick: 0
         onTriggered: {
             world.beginFrame()
             const s = world.bodyState(root.actorId)
@@ -123,7 +124,59 @@ Item {
                                    + "   sleep = " + s.isSleeping
             }
             bodyTick++
+
+            if (root._traceFramesLeft > 0) root._logTrace(s)
         }
+    }
+
+    // ---- Debug jitter : logger la position physique pendant N frames -----
+    // Vise à distinguer (a) jitter côté worker physique [position s/tick]
+    // de (b) jitter côté rendu [tick GUI sauté ou doublé].
+    property int _traceFramesLeft: 0
+    property int _traceFrameIdx: 0
+    property real _traceLastMs: 0
+    property int _traceLastTick: -1
+    property real _traceLastX: 0
+    property real _traceLastY: 0
+
+    function startTrace(frames) {
+        _traceFramesLeft = frames > 0 ? frames : 180
+        _traceFrameIdx   = 0
+        _traceLastMs     = Date.now()
+        _traceLastTick   = -1
+        _traceLastX      = 0
+        _traceLastY      = 0
+        console.log("[PHYS-TRACE] start frames=" + _traceFramesLeft
+                    + " actor=" + root.actorId)
+        console.log("[PHYS-TRACE] CSV: frame,tick,dTick,frameMs,"
+                    + "px,py,vx,vy,dx,dy,dist")
+    }
+    function _logTrace(s) {
+        const nowMs = Date.now()
+        const dtMs  = _traceLastMs > 0 ? (nowMs - _traceLastMs) : 0
+        _traceLastMs = nowMs
+        const tick = world.currentGuiTick ? world.currentGuiTick() : 0
+        const dTick = _traceLastTick < 0 ? 0 : (tick - _traceLastTick)
+        _traceLastTick = tick
+        const px = s && s.id ? s.position.x : 0
+        const py = s && s.id ? s.position.y : 0
+        const vx = s && s.id ? s.velocity.x : 0
+        const vy = s && s.id ? s.velocity.y : 0
+        const dx = px - _traceLastX
+        const dy = py - _traceLastY
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        _traceLastX = px
+        _traceLastY = py
+        console.log("[PHYS-TRACE] " + _traceFrameIdx
+            + "," + tick + "," + dTick + "," + dtMs.toFixed(2)
+            + "," + px.toFixed(5) + "," + py.toFixed(5)
+            + "," + vx.toFixed(3) + "," + vy.toFixed(3)
+            + "," + dx.toFixed(5) + "," + dy.toFixed(5)
+            + "," + dist.toFixed(5))
+        _traceFrameIdx++
+        _traceFramesLeft--
+        if (_traceFramesLeft === 0)
+            console.log("[PHYS-TRACE] end")
     }
 
     ColumnLayout {
@@ -208,6 +261,11 @@ Item {
                 text: "Reset actor pos"
                 enabled: world.running
                 onClicked: world.setBodyPosition(root.actorId, Qt.vector2d(0, 0))
+            }
+            Button {
+                text: "Trace 3s (jitter)"
+                enabled: world.running
+                onClicked: root.startTrace(180)
             }
         }
 

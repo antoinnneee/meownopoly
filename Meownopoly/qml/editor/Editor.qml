@@ -122,6 +122,11 @@ Base_Board {
     Keys.onPressed: function (event) {
         // Phase 4 : InputController remplace EntityEngine.keysHandler
         inputController.handlePress(event)
+        // Debug jitter : J = trace 3 sec sur le PhysicsActor du joueur.
+        // Logs CSV "[JITTER]" dans la console (grep + analyse tableur).
+        if (event.key === Qt.Key_J && !event.isAutoRepeat) {
+            playerActor.startJitterTrace(180)
+        }
         // Pass to EditorController
         EditorController.keysHandler.Keys.pressed(event)
     }

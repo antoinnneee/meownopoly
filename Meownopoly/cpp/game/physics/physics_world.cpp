@@ -311,13 +311,25 @@ void PhysicsWorld::tryAdvanceGuiBuffer()
 
     if (!m_guiInUse) return;
 
+    // Peek d'abord, swap ensuite. CRUCIAL quand le rendu tire plus vite
+    // que le worker physique (ex : moniteur 144 Hz vs tick 60 Hz). Sans
+    // ce peek, deux exchanges successifs sans publication entre les deux
+    // récupèrent le buffer qu'on venait de déposer = un tick antérieur,
+    // donnant l'illusion que la position physique régresse → jitter.
+    //
+    // Avec le peek, on ne consomme que si pending->tick > m_guiInUse->tick.
+    // Sinon on rejoue la même frame (correct : pas de nouvelle physique).
+    //
+    // Race possible : entre load et exchange, le worker peut publier. Mais
+    // le worker dépose toujours un tick ≥ celui qui était dans pending
+    // (worker_back contient le tick qu'il vient d'écrire, > publication
+    // précédente). Donc l'exchange ne peut que ramener un tick ≥ peek.
+    pattounx::WorldSnapshot *peek = m_pending.load(std::memory_order_acquire);
+    if (!peek || peek->tick <= m_guiInUse->tick) return;
+
     pattounx::WorldSnapshot *fresh
         = m_pending.exchange(m_guiInUse, std::memory_order_acq_rel);
-    if (fresh) {
-        m_guiInUse = fresh;
-    }
-    // Sinon on garde m_guiInUse — pas de nouvelle frame depuis la dernière
-    // lecture, ce qui est OK : on rejoue les positions antérieures.
+    if (fresh) m_guiInUse = fresh;
 }
 
 void PhysicsWorld::onSnapshotPublished(quint64 tick, qint64 timestampNs,
