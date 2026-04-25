@@ -138,7 +138,7 @@ def build_batch_prompt(
         f"Lis chacune des {len(image_paths)} images suivantes avec l'outil Read :\n"
         f"{reads}\n\n"
         "Pour CHAQUE image, génère :\n"
-        "1) 'style_tags' : entre 5 et 10 tags de style choisis EXCLUSIVEMENT "
+        "1) 'style_tags' : entre 3 et 10 tags de style choisis EXCLUSIVEMENT "
         f"dans cette liste contrôlée : [{styles_list}]. "
         "Ne choisis QUE les styles qui s'appliquent réellement à l'image. "
         "Aucun style hors liste n'est autorisé.\n"
