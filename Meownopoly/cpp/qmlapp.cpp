@@ -38,6 +38,7 @@
 
 #include "game/physics/pattounx_engine.h"
 #include "game/physics/physics_world.h"
+#include "game/physics/item_snapable_events.h"
 
 #include "game/map/map.h"
 #include "game/map/maptypes.h"
@@ -89,6 +90,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     
     PattounX_engine::registerQml();
     PhysicsWorld::registerQml();
+    ItemSnapableEvents::registerQml();
     ChatClient::registerQml(this);
     ChatSlashCommands::registerQml();
     ChatSessionManager::registerQml();
@@ -117,6 +119,19 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     // Create and expose AssetManager instance to QML
     assetManager = AssetManager::instance();
 
+    // Instance globale du moteur physique. Exposée via contextProperty
+    // `pattounxWorld` accessible depuis tout QML (éditeur, CatwayTest, etc.)
+    // et survivant aux navigations entre scènes — sinon le worker thread
+    // serait recréé à chaque ouverture de tab et il faudrait re-poser zones
+    // et bodies à chaque fois.
+    //
+    // Nom préfixé `pattounx` volontaire : éviter la collision de scope QML
+    // dans des bindings comme `EditorPhysicsBridge { physicsWorld: pattounxWorld }`
+    // où le LHS du binding masquerait un RHS homonyme (résolution circulaire
+    // → undefined). Cf. mémoire feedback_qml_scope_resolution.
+    physicsWorld = new PhysicsWorld(this);
+    rootContext()->setContextProperty("pattounxWorld", physicsWorld);
+
     //To declare module in QML
 
     //1) Create a qmldir file in the resource folder. The qmldir is wrote like this:
@@ -131,7 +146,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     // ** In order to respect the current typo, folder/module has to be named with lowercase letters, and the file's name with uppercase letters **
     // ** the module-system of Qt IS case sensitive **
 
-    addImportPath("qrc:/qml");  // Contains: ui_item, utils
+    addImportPath("qrc:/qml");  // Contains: ui_item, utils, world3d
     addImportPath("qrc:/qml/editor");  // Contains: editor qmldir
     addImportPath("qrc:/qml/editor/panel");  // Contains: mapInfoPanel qmldir, bottomPanel qmldir, zonePanel qmldir
     addImportPath("qrc:/qml/editor/panel/bottomPanel");  // Contains: bottomMainPanel, bottomSidePanel

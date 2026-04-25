@@ -1,7 +1,10 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Shapes
 import Pattounx 1.0
+import world3d 1.0
+import ItemSnapable
 
 Item {
     id: root
@@ -13,31 +16,100 @@ Item {
     property int eventCount: 0
     property string lastEvent: "—"
 
-    PhysicsWorld {
-        id: world
-        tickRate: 60
-        onActorEnteredZone: function(actor, zone) {
+    // Visualisation : map id → { points: [Qt.vector2d], exclusion, color }
+    // Alimenté par les boutons "Create wall/trigger" (zones de test) et par
+    // le bridge ItemSnapableEvents (zones venant de l'éditeur).
+    property var viewZones: ({})
+    property real pxPerUnit: 32.0
+    property int viewTick: 0     // incrémenté pour forcer repaint
+    function _bumpView() { root.viewTick++ }
+    function _registerViewZone(id, points, exclusion, color) {
+        const next = Object.assign({}, root.viewZones)
+        next[id] = { points: points, exclusion: exclusion, color: color }
+        root.viewZones = next
+        _bumpView()
+    }
+    function _unregisterViewZone(id) {
+        if (!root.viewZones[id]) return
+        const next = Object.assign({}, root.viewZones)
+        delete next[id]
+        root.viewZones = next
+        _bumpView()
+    }
+
+    // Recalcule l'entrée viewZones pour une tile éditeur (PhysicZoneTile).
+    function _syncTileToView(tile) {
+        if (!tile || tile.tileType !== ItemSnapable.PhysicZoneTile) return
+        const zp = tile.zoneParameter
+        const dp = tile.displayParameter
+        if (!zp || !dp) return
+        const local = zp.polygonPoints || []
+        if (local.length < 3) { _unregisterViewZone(tile.uniqueId.toString()); return }
+        const abs = []
+        for (let i = 0; i < local.length; i++)
+            abs.push(Qt.vector2d(dp.gridRelativePositionX + local[i].x,
+                                 dp.gridRelativePositionY + local[i].y))
+        const col = zp.zoneColor && zp.zoneColor !== "" ? zp.zoneColor : "#FF5722"
+        _registerViewZone(tile.uniqueId.toString(), abs, zp.exclusion, col)
+    }
+
+    Connections {
+        target: ItemSnapableEvents
+        function onTileCreated(tile) { root._syncTileToView(tile) }
+        function onTileMoved(tile) { root._syncTileToView(tile) }
+        function onZoneParameterChanged(tile) { root._syncTileToView(tile) }
+        function onTileDeleted(tileId, tileType) {
+            if (tileType !== ItemSnapable.PhysicZoneTile) return
+            root._unregisterViewZone(tileId.toString())
+        }
+    }
+
+    // Bootstrap : si le tab est ouvert APRÈS la pose de zones dans
+    // l'éditeur, ItemSnapableEvents a déjà émis tileCreated et le tab
+    // n'était pas là pour l'écouter. On rejoue l'état courant.
+    Component.onCompleted: {
+        const tiles = ItemSnapableEvents.currentTiles()
+        for (let i = 0; i < tiles.length; i++) root._syncTileToView(tiles[i])
+        console.log("[PhysicsTestTab] bootstrap: ", tiles.length, "tiles depuis ItemSnapableEvents")
+    }
+
+    // Instance globale partagée — exposée par C++ (qmlapp.cpp) via
+    // contextProperty `pattounxWorld`. Pas de PhysicsWorld local : sinon
+    // le worker thread serait recréé à chaque navigation entre tabs/scènes
+    // et il faudrait re-poser zones/bodies à chaque ouverture.
+    property var world: pattounxWorld
+
+    Connections {
+        target: pattounxWorld
+        function onActorEnteredZone(actor, zone) {
             root.eventCount++
             root.lastEvent = "ENTER " + actor + " → " + zone
         }
-        onActorExitedZone: function(actor, zone) {
+        function onActorExitedZone(actor, zone) {
             root.eventCount++
             root.lastEvent = "EXIT  " + actor + " ← " + zone
         }
-        onActorCollided: function(actor, other, normal, speed) {
+        function onActorCollided(actor, other, normal, speed) {
             root.eventCount++
             root.lastEvent = "HIT   " + actor + " vs " + other
                             + " v=" + speed.toFixed(2)
         }
     }
 
-    Component.onDestruction: if (world.running) world.stop()
+    // Pas de EditorPhysicsBridge ici : Editor.qml en instancie un sur le
+    // même `physicsWorld` global. Ce tab ne fait que visualiser les zones
+    // (viewZones tracké directement via ItemSnapableEvents ci-dessous).
+
+    // Pas de stop sur destruction : `physicsWorld` est partagé globalement.
+    // L'éditeur ou d'autres consommateurs peuvent en avoir besoin. Le bouton
+    // Stop reste disponible si l'utilisateur veut explicitement l'arrêter.
 
     Timer {
         id: refreshTimer
         interval: 16
         running: world.running
         repeat: true
+        property int bodyTick: 0  // incrémenté à chaque frame pour repaint canvas
         onTriggered: {
             world.beginFrame()
             const s = world.bodyState(root.actorId)
@@ -50,6 +122,7 @@ Item {
                                    + s.velocity.y.toFixed(2) + ")"
                                    + "   sleep = " + s.isSleeping
             }
+            bodyTick++
         }
     }
 
@@ -112,6 +185,7 @@ Item {
                     ]
                     world.upsertZone(root.wallId, points,
                                      { exclusion: true, trigger: false })
+                    root._registerViewZone(root.wallId, points, true, "#94a3b8")
                 }
             }
             Button {
@@ -127,6 +201,7 @@ Item {
                     world.upsertZone(root.trigId, points,
                                      { exclusion: false, trigger: true,
                                        speedMultiplier: 0.5 })
+                    root._registerViewZone(root.trigId, points, false, "#22c55e")
                 }
             }
             Button {
@@ -248,6 +323,7 @@ Item {
                 }
                 Text {
                     text: "events: " + root.eventCount + "   last: " + root.lastEvent
+                            + "   zones: " + Object.keys(root.viewZones).length
                     color: host.textSecondary
                     font.family: "Consolas"
                     font.pixelSize: 12
@@ -255,6 +331,155 @@ Item {
             }
         }
 
-        Item { Layout.fillHeight: true }
+        // Visualisation 2D top-down (origine au centre, +x = droite, +y = bas)
+        GroupBox {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            title: "Visualisation 2D — origine au centre"
+            label: Text {
+                text: parent.title
+                color: host.textPrimary
+                font.pixelSize: 13
+                font.bold: true
+            }
+            background: Rectangle { color: host.cardBg; radius: 8;
+                                    border.color: host.cardBorder; border.width: 1 }
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 6
+                RowLayout {
+                    spacing: 8
+                    Text {
+                        text: "px / unité world : " + root.pxPerUnit.toFixed(0)
+                        color: host.textSecondary
+                        font.pixelSize: 12
+                    }
+                    Slider {
+                        Layout.preferredWidth: 220
+                        from: 4; to: 80; stepSize: 1
+                        value: root.pxPerUnit
+                        onValueChanged: { root.pxPerUnit = value; root._bumpView() }
+                    }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: "● actor   ▰ wall   ▱ trigger"
+                        color: host.textSecondary
+                        font.pixelSize: 11
+                        font.family: "Consolas"
+                    }
+                }
+
+                Rectangle {
+                    id: vizFrame
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: "#0f1015"
+                    border.color: host.cardBorder
+                    border.width: 1
+                    radius: 6
+                    clip: true
+
+                    Canvas {
+                        id: vizCanvas
+                        anchors.fill: parent
+
+                        // Repaint dépendances : viewTick (zones), bodySig (frame physique)
+                        property int sigZones: root.viewTick
+                        property int sigBody: refreshTimer.bodyTick
+                        onSigZonesChanged: requestPaint()
+                        onSigBodyChanged: requestPaint()
+                        onWidthChanged: requestPaint()
+                        onHeightChanged: requestPaint()
+
+                        onPaint: {
+                            const ctx = getContext("2d")
+                            ctx.reset()
+                            const w = width, h = height
+                            const cx = w / 2, cy = h / 2
+                            const k  = root.pxPerUnit
+
+                            function W2P(p) { return Qt.point(cx + p.x * k, cy + p.y * k) }
+
+                            // Grille (1 unit = k px)
+                            ctx.strokeStyle = "#1c1d24"
+                            ctx.lineWidth = 1
+                            const stepW = Math.max(1, Math.floor(w / k) + 2)
+                            const stepH = Math.max(1, Math.floor(h / k) + 2)
+                            for (let i = -stepW; i <= stepW; i++) {
+                                const x = cx + i * k
+                                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke()
+                            }
+                            for (let j = -stepH; j <= stepH; j++) {
+                                const y = cy + j * k
+                                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke()
+                            }
+
+                            // Axes
+                            ctx.strokeStyle = "#2b2c36"
+                            ctx.lineWidth = 1.5
+                            ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke()
+                            ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke()
+
+                            // Zones
+                            const ids = Object.keys(root.viewZones)
+                            for (let i = 0; i < ids.length; i++) {
+                                const z = root.viewZones[ids[i]]
+                                if (!z || !z.points || z.points.length < 3) continue
+                                ctx.beginPath()
+                                let p0 = W2P(z.points[0])
+                                ctx.moveTo(p0.x, p0.y)
+                                for (let j = 1; j < z.points.length; j++) {
+                                    const pj = W2P(z.points[j])
+                                    ctx.lineTo(pj.x, pj.y)
+                                }
+                                ctx.closePath()
+                                // Fill
+                                const col = z.color || "#FF5722"
+                                ctx.fillStyle = z.exclusion
+                                              ? Qt.rgba(0.58, 0.64, 0.72, 0.18)
+                                              : Qt.rgba(0.13, 0.77, 0.37, 0.12)
+                                ctx.fill()
+                                // Stroke
+                                ctx.strokeStyle = col
+                                ctx.lineWidth = z.exclusion ? 2 : 1.5
+                                ctx.stroke()
+
+                                // Label id (tronqué)
+                                const lbl = ids[i].length > 10 ? ids[i].substring(0, 10) + "…" : ids[i]
+                                ctx.fillStyle = "#cbd5e1"
+                                ctx.font = "11px Consolas"
+                                ctx.fillText(lbl, p0.x + 4, p0.y - 4)
+                            }
+
+                            // Actor
+                            const s = world.running ? world.bodyState(root.actorId) : null
+                            if (s && s.id) {
+                                const ap = W2P(s.position)
+                                const r = 0.3 * k  // rayon par défaut de l'actor de test
+                                ctx.beginPath()
+                                ctx.arc(ap.x, ap.y, r, 0, Math.PI * 2)
+                                ctx.fillStyle = s.isColliding ? "#fb7185" : "#60a5fa"
+                                ctx.fill()
+                                ctx.strokeStyle = "#0b1020"
+                                ctx.lineWidth = 1.5
+                                ctx.stroke()
+                                // Vélocité
+                                if (s.velocity) {
+                                    const vx = ap.x + s.velocity.x * k * 0.15
+                                    const vy = ap.y + s.velocity.y * k * 0.15
+                                    ctx.beginPath()
+                                    ctx.moveTo(ap.x, ap.y)
+                                    ctx.lineTo(vx, vy)
+                                    ctx.strokeStyle = "#fde68a"
+                                    ctx.lineWidth = 1.5
+                                    ctx.stroke()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

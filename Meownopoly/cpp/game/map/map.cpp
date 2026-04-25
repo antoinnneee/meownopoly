@@ -227,6 +227,7 @@ void Map::addTile(ItemSnapable* tile)
     tile->setParent(this);
     m_tiles.append(tile);
     updateTileCounts();
+    emit tileAddedToMap(tile);
 }
 
 void Map::removeTile(const QUuid &tileId)
@@ -234,9 +235,11 @@ void Map::removeTile(const QUuid &tileId)
     for (int i = 0; i < m_tiles.size(); ++i) {
         if (m_tiles[i]->uniqueId() == tileId) {
             ItemSnapable *t = m_tiles[i];
+            const int type = static_cast<int>(t->tileType());
             m_tiles.removeAt(i);
             updateTileCounts();
             m_pendingDestroy.append(t);
+            emit tileRemovedFromMap(tileId, type);
             return;
         }
     }

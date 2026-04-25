@@ -32,6 +32,7 @@ import Meownopoly.Account 1.0
 
 import utils
 import chat
+import world3d 1.0
 
 import QtQuick3D
 import QtQuick3D.Helpers
@@ -1112,6 +1113,16 @@ Base_Board {
     mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
 
     CollabStatusPanel {}
+    PhysicsStatusPanel {}
+
+    // Phase 3 — sync live des zones physiques. Reçoit les events de
+    // ItemSnapableEvents (singleton C++) et pousse upsertZone/removeZone
+    // vers le `physicsWorld` global. Reste inerte tant que le moteur n'est
+    // pas démarré (badge PhysicsStatusPanel).
+    EditorPhysicsBridge {
+        id: editorPhysicsBridge
+        physicsWorld: pattounxWorld
+    }
 
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {

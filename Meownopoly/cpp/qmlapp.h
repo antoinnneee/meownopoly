@@ -15,6 +15,7 @@
 #include <QTimer>
 #include <QStandardPaths>
 #include "game/game.h"
+#include "game/physics/physics_world.h"
 #include "tools/QtFolderCompressor/FolderCompressor.h"
 #include "assetManager/asset_manager.h"
 
@@ -40,6 +41,11 @@ private:
     FolderCompressor *folderCompressor = nullptr;
     AssetManager *assetManager = nullptr;
     QNetworkAccessManager *networkManager = nullptr;
+    // Instance globale du moteur physique partagée par toutes les scènes QML
+    // (éditeur, CatwayTest, futurs World3D). Décision actée Phase 4 : un
+    // PhysicsWorld par scène — cette instance unique est transitoire le temps
+    // que le World3D arrive et que chaque scène en instancie le sien.
+    PhysicsWorld *physicsWorld = nullptr;
     static void registerQml();
 };
 

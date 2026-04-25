@@ -85,6 +85,15 @@ signals:
     void mapLoaded(Map *map);
     void foundItemSnapableTile(ItemSnapable *itemSnapable);
 
+    // Phase 3 — flux unifié de "vie" des tuiles, consommé par
+    // ItemSnapableEvents : couvre toutes les voies d'entrée (load fichier,
+    // Game::updateMap, applyDelta undo/redo, applyRemoteDelta collab).
+    // tileType est l'int de ItemSnapable::TileType (la valeur n'est pas
+    // accessible une fois la tile détruite, donc on la transporte au moment
+    // de la suppression).
+    void tileAddedToMap(ItemSnapable *tile);
+    void tileRemovedFromMap(QUuid tileId, int tileType);
+
     // Emitted by undo/redo to let Game relay to QML
     void tileRemovedFromHistory(QUuid tileId);
     void tileRestoredFromHistory(ItemSnapable *tile);
