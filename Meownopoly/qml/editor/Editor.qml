@@ -30,7 +30,6 @@ import EditorSession 1.0
 import EditorOpBus 1.0
 import Meownopoly.Account 1.0
 
-import utils
 import chat
 import world3d 1.0
 
@@ -91,13 +90,18 @@ Base_Board {
     Component.onCompleted: {
         initializeEditor()
 
-        // Initialize Entity Controller (avec la liste des tiles pour la collision)
-        World3DTools.init(view3D, gameGrid, gameScene.camera)
-        // EntityEngine.setTarget(entity, view3D, gameGrid, logic, snapableTilesList)
-        EntityEngine.setContext(view3D, gameGrid, logic)
-        EntityEngine.setZone(snapableTilesList)
-        EntityEngine.setCameraTarget(entity)
-        // EditorController.init(logic, selectionPanel, escMenu, adminCommandPanel)
+        // Phase 4 — World3D + LocalPlayerSpawner + CameraRig + InputController
+        // remplacent les anciens singletons EntityEngine / CameraController /
+        // World3DTools. La création du body "player" est faite par
+        // LocalPlayerSpawner (déclaratif) ; le PhysicsActor positionne
+        // l'entity 3D en lisant bodyState chaque frame.
+        cameraRig.setTarget(entity, gameGrid, logic ? logic.mouseLogic : null)
+
+        // Démarrage auto du moteur physique : sans ça, les cmds des
+        // spawners/bridges sont perdues (QueuedConnection sans worker
+        // récepteur). Le badge PhysicsStatusPanel reste utile pour
+        // toggle stop/start manuellement.
+        if (pattounxWorld && !pattounxWorld.running) pattounxWorld.start()
 
         // Activer le mode édition pour les zones d'exclusion
         gameGrid.isEdit = true
@@ -116,13 +120,13 @@ Base_Board {
     }
 
     Keys.onPressed: function (event) {
-        // Pass to EntityEngine
-        EntityEngine.keysHandler.Keys.pressed(event)
+        // Phase 4 : InputController remplace EntityEngine.keysHandler
+        inputController.handlePress(event)
         // Pass to EditorController
         EditorController.keysHandler.Keys.pressed(event)
     }
     Keys.onReleased: function (event) {
-        EntityEngine.keysHandler.Keys.released(event)
+        inputController.handleRelease(event)
         EditorController.keysHandler.Keys.released(event)
     }
 
@@ -1142,7 +1146,7 @@ Base_Board {
             }
         }
 
-        GameScene {
+        World3D {
             id: gameScene
             x: -gameGrid.x
             y: -gameGrid.y
@@ -1154,8 +1158,78 @@ Base_Board {
             cameraMagnification: gameGrid.scaleLevel
             gridManager: gameGrid
         }
+
+        // Phase 4 — joueur local. Body créé/détruit par le spawner ; le
+        // PhysicsActor lit bodyState et positionne `gameScene.entity`.
+        LocalPlayerSpawner {
+            id: localPlayerSpawner
+            physicsWorld: pattounxWorld
+            actorId: "player"
+            radius: 0.2
+            params: ({ acceleration: 30.0, maxSpeed: 30.0, linearDamping: 0.1 })
+        }
+
+        PhysicsActor {
+            id: playerActor
+            world3D: gameScene
+            bodyId: "player"
+            node3D: gameScene.entity
+        }
+
+        // Touches → physicsWorld.pushInput. Le toggle FreeCam (Key_F) bascule
+        // le mode du CameraRig (Follow ↔ FreeCam) et synchronise enabled de
+        // l'input "personnage" — en FreeCam, l'input pilote la caméra (via
+        // CameraRig.moveManual côté FrameAnimation freeCamLoop).
+        InputController {
+            id: inputController
+            actorId: "player"
+            physicsWorld: pattounxWorld
+            // En démarrage, on est en mode FreeCam (cohérent avec ancien
+            // EntityEngine.freeCamMode = true par défaut). Donc input
+            // personnage désactivé, input caméra actif.
+            enabled: cameraRig.mode === CameraRig.Follow
+            onToggleFreeCamRequested: {
+                cameraRig.mode = (cameraRig.mode === CameraRig.Follow)
+                                   ? CameraRig.FreeCam
+                                   : CameraRig.Follow
+                inputController.releaseAll()
+                console.log("[Editor] FreeCam",
+                            cameraRig.mode === CameraRig.FreeCam ? "ON" : "OFF")
+            }
+        }
+
+        CameraRig {
+            id: cameraRig
+            world3D: gameScene
+            mode: CameraRig.FreeCam   // démarre en FreeCam (ancien comportement)
+            smoothSpeed: 2.0
+        }
+
+        // Boucle FreeCam : si on est en FreeCam, l'input ZQSD pilote la caméra
+        // au lieu du joueur (pas de pushInput). On reproduit la branche
+        // EntityEngine.movementLoop.freeCamMode.
+        FrameAnimation {
+            running: cameraRig.mode === CameraRig.FreeCam
+            onTriggered: {
+                if (!cameraRig.world3D || !cameraRig.world3D.camera) return
+                // Vecteur d'input reconstruit depuis l'état des touches du
+                // controller (les touches restent trackées même quand
+                // enabled=false côté pushInput personnage).
+                const ix = (inputController._r ? 1 : 0) - (inputController._l ? 1 : 0)
+                const iy = (inputController._d ? 1 : 0) - (inputController._u ? 1 : 0)
+                if (ix === 0 && iy === 0) return
+                let vx = ix, vy = iy
+                const lenSq = vx * vx + vy * vy
+                if (lenSq > 1) {
+                    const len = Math.sqrt(lenSq)
+                    vx /= len; vy /= len
+                }
+                // 30 unités/s × 10 = vitesse FreeCam de l'ancien EntityEngine
+                cameraRig.moveManual(vx, vy, 300, frameTime)
+            }
+        }
+
         Component.onCompleted: {
-            // EntityEngine.setTarget(sphere, view3D, gameGrid, logic, snapableTilesList)
             EditorController.init(logic, selectionPanel, escMenu, fullScreenMsgPopup,
                                   adminCommandPanel)
         }

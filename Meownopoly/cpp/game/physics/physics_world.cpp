@@ -355,3 +355,9 @@ QStringList PhysicsWorld::allBodyIds()
         out.append(it.key());
     return out;
 }
+
+quint64 PhysicsWorld::currentGuiTick()
+{
+    tryAdvanceGuiBuffer();
+    return m_guiInUse ? m_guiInUse->tick : 0;
+}

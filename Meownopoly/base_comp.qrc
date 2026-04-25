@@ -56,7 +56,6 @@
         <file>qml/meowComponent/Base_logic.qml</file>
         <file>qml/meowComponent/Base_WheelHandler.qml</file>
         <file>qml/meowComponent/Base_WorkArea.qml</file>
-        <file>qml/meowComponent/GameScene.qml</file>
         <file>qml/meowComponent/GlobalMa.qml</file>
         <file>qml/meowComponent/qmldir</file>
         <file>qml/meowComponent/SelectionRect.qml</file>

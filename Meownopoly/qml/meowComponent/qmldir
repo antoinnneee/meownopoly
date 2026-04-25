@@ -2,7 +2,6 @@ module meowComponent
 AdminCommandPanel 1.0 AdminCommandPanel.qml
 GlobalMa 1.0 GlobalMa.qml
 Background 1.0 Background.qml
-GameScene 1.0 GameScene.qml
 Base_Board 1.0 Base_Board.qml
 Base_logic 1.0 Base_logic.qml
 Base_WorkArea 1.0 Base_WorkArea.qml

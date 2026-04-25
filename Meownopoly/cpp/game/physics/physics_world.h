@@ -82,6 +82,12 @@ public:
     Q_INVOKABLE QVariantMap bodyState(const QString &id);
     Q_INVOKABLE QStringList allBodyIds();
     Q_INVOKABLE qint64 stepDurationNs() const;
+    // Tick de la frame physique actuellement lue par bodyState (=
+    // m_guiInUse->tick). À utiliser pour détecter une nouvelle frame
+    // côté QML : `currentTick` (la Q_PROPERTY) est mise à jour via
+    // signal queued depuis le worker → désynchronisée avec ce que
+    // bodyState retourne réellement.
+    Q_INVOKABLE quint64 currentGuiTick();
 
     // Signal de cycle GUI : à appeler une fois par frame (FrameAnimation)
     // pour autoriser l'avancement vers la frame physique la plus récente.

@@ -5,7 +5,6 @@ import QtQuick.Layouts
 import "titleScreen/"
 import "test/"
 import "launcher/"
-import "board"
 import "editor"
 import "account/"
 import "multiplayer/"

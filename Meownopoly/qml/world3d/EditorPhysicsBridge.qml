@@ -17,7 +17,7 @@
  * Le PhysicsWorld n'impose aucun système d'unités — on reste cohérent
  * avec PhysicsTestTab qui utilise déjà des Qt.vector2d(gridX, gridY).
  */
-import QtQuick 2.15
+import QtQuick
 import Pattounx 1.0
 import ItemSnapable
 
