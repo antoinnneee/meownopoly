@@ -1194,9 +1194,11 @@ Base_Board {
             // personnage désactivé, input caméra actif.
             enabled: cameraRig.mode === CameraRig.Follow
             onToggleFreeCamRequested: {
-                cameraRig.mode = (cameraRig.mode === CameraRig.Follow)
-                                   ? CameraRig.FreeCam
-                                   : CameraRig.Follow
+                // setMode gère les transitions proprement (recompute offset
+                // au passage en Follow, pas de saut visuel).
+                cameraRig.setMode(cameraRig.mode === CameraRig.Follow
+                                  ? CameraRig.FreeCam
+                                  : CameraRig.Follow)
                 inputController.releaseAll()
                 console.log("[Editor] FreeCam",
                             cameraRig.mode === CameraRig.FreeCam ? "ON" : "OFF")

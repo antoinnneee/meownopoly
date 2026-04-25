@@ -1,19 +1,26 @@
 /*
- * CameraRig — Phase 4 (stratégies Follow + FreeCam)
+ * CameraRig — Phase 5 (Follow / FreeCam / FixedTopDown / OrbitDebug)
  *
- * Port de l'ancien CameraController singleton vers un composant
- * instanciable, avec un mode énuméré. Phase 5 ajoutera FixedTopDown,
- * OrbitDebug et le switch à chaud propre.
+ * Composant instanciable, hérite de l'ancien CameraController singleton.
+ *
+ * Modes :
+ *  - Follow        : suit `target` avec lerp frame-rate independent ; sync
+ *                    grid 2D côté éditeur (gameGrid suit la caméra).
+ *  - FreeCam       : pas de suivi ; déplacement manuel via `moveManual`
+ *                    (boucle externe qui lit l'input).
+ *  - FixedTopDown  : caméra figée (snap top-down 90°), pas de suivi, pas de
+ *                    mouvement automatique. Utile pour inspection statique.
+ *  - OrbitDebug    : orbite autour de `target` (orbitYaw / orbitPitch /
+ *                    orbitDistance). Pas de sync grid 2D. Pour debug 3D.
+ *
+ * Switch à chaud : `setMode(newMode)` gère les transitions (snap des
+ * valeurs caméra utiles, recompute offset au passage en Follow).
  *
  * Dépendances :
- *  - `world3D`  : référence au World3D parent (pour view3D + grid sync)
- *  - `target`   : Node 3D que la caméra doit suivre (ex: entity du joueur)
- *  - `grid2D`   : Item 2D (la grille) à décaler en synchronisation
- *  - `mouseLogicRef` : optionnel, pour rafraîchir lastGridPos après déplacement
- *
- * Mode :
- *  - Follow : suit `target` avec lerp frame-rate independent ; sync grid 2D
- *  - FreeCam : moveManual depuis input externe ; pas de suivi
+ *  - `world3D`        : référence au World3D parent (view3D + caméra)
+ *  - `target`         : Node à suivre / orbiter
+ *  - `grid2D`         : Item 2D (la grille) à décaler en Follow
+ *  - `mouseLogicRef`  : optionnel, pour rafraîchir lastGridPos
  */
 import QtQuick
 import QtQuick3D
@@ -21,7 +28,7 @@ import QtQuick3D
 Item {
     id: root
 
-    enum Mode { Follow, FreeCam }
+    enum Mode { Follow, FreeCam, FixedTopDown, OrbitDebug }
 
     required property var world3D
     property Node target: null
@@ -32,8 +39,16 @@ Item {
     property real smoothSpeed: 2.0
     property vector3d offset: Qt.vector3d(0, 0, 0)
 
+    // --- Paramètres du mode OrbitDebug ---
+    // Yaw en degrés autour de l'axe Y du target ; pitch en degrés (clamp
+    // -89..89 pour éviter le gimbal). Distance horizontale projetée au sol.
+    property real orbitYaw: 0
+    property real orbitPitch: -55
+    property real orbitDistance: 600
+
     // Recalcule un offset qui centre `target` à l'écran sous l'angle
     // actuel de la caméra. Appelé à `setTarget` et toujours réutilisable.
+    // (Anciennement `setOffsetFromCameraAngle` dans le plan §5.10.)
     function recomputeOffset() {
         const cam = world3D ? world3D.camera : null
         if (!cam) return
@@ -58,6 +73,38 @@ Item {
         cam.x = target.x + offset.x
         cam.y = target.y + offset.y
         cam.z = target.z + offset.z
+    }
+
+    // Switch à chaud propre : initialise les paramètres internes du mode
+    // entrant à partir de l'état actuel de la caméra (pas de saut visuel),
+    // et arrête naturellement la boucle Follow / Orbit du mode sortant
+    // via le `running` binding des FrameAnimation.
+    function setMode(newMode) {
+        if (newMode === mode) return
+        const cam = world3D ? world3D.camera : null
+        if (!cam) { mode = newMode; return }
+
+        if (newMode === CameraRig.Follow) {
+            recomputeOffset()
+        } else if (newMode === CameraRig.FixedTopDown) {
+            // Snap top-down strict : caméra droit dessus, regard vertical.
+            // On capture la position XZ actuelle pour ne pas téléporter.
+            cam.eulerRotation.x = -90
+            cam.eulerRotation.y = 0
+            cam.eulerRotation.z = 0
+        } else if (newMode === CameraRig.OrbitDebug && target) {
+            // Initialise yaw/pitch/distance à partir du delta target↔cam
+            // pour ne pas téléporter au switch.
+            const dx = cam.x - target.x
+            const dy = cam.y - target.y
+            const dz = cam.z - target.z
+            const horizDist = Math.sqrt(dx * dx + dz * dz)
+            orbitDistance = Math.max(horizDist, 50)
+            orbitYaw   = Math.atan2(dx, dz) * 180 / Math.PI
+            orbitPitch = -Math.atan2(dy, horizDist) * 180 / Math.PI
+            // L'orbit applique sa propre rotation chaque frame.
+        }
+        mode = newMode
     }
 
     // FreeCam : déplacement manuel par input (vecteur 2D), avec sync grid 2D.
@@ -88,7 +135,15 @@ Item {
             mouseLogicRef.lastGridPos = Qt.point(grid2D.x, grid2D.y)
     }
 
-    // Loop Follow : lerp + sync grid 2D.
+    // OrbitDebug : applique un delta yaw/pitch/distance (boucle externe ou
+    // input direct). Le `clampPitch` évite la singularité du pôle.
+    function orbitDelta(deltaYaw, deltaPitch, deltaDist) {
+        orbitYaw   += deltaYaw
+        orbitPitch = Math.max(-89, Math.min(89, orbitPitch + deltaPitch))
+        orbitDistance = Math.max(20, orbitDistance + deltaDist)
+    }
+
+    // --- Boucle Follow : lerp + sync grid 2D ---
     FrameAnimation {
         running: root.mode === CameraRig.Follow
                  && root.target !== null
@@ -126,6 +181,29 @@ Item {
                     root.mouseLogicRef.lastGridPos = Qt.point(root.grid2D.x,
                                                               root.grid2D.y)
             }
+        }
+    }
+
+    // --- Boucle OrbitDebug : pose la caméra depuis yaw/pitch/distance ---
+    // Pas de sync grid 2D : c'est un mode debug, la grille n'a pas à suivre.
+    FrameAnimation {
+        running: root.mode === CameraRig.OrbitDebug
+                 && root.target !== null
+                 && root.world3D !== null
+                 && root.world3D.camera !== null
+
+        onTriggered: {
+            const cam = root.world3D.camera
+            const yawRad   = root.orbitYaw   * Math.PI / 180
+            const pitchRad = root.orbitPitch * Math.PI / 180
+            const horiz = root.orbitDistance * Math.cos(pitchRad)
+            const vert  = -root.orbitDistance * Math.sin(pitchRad)
+            cam.x = root.target.x + horiz * Math.sin(yawRad)
+            cam.z = root.target.z + horiz * Math.cos(yawRad)
+            cam.y = root.target.y + vert
+            cam.eulerRotation.x = root.orbitPitch
+            cam.eulerRotation.y = root.orbitYaw
+            cam.eulerRotation.z = 0
         }
     }
 }
