@@ -187,6 +187,33 @@ public:
     );
 
     /**
+     * @brief Sweep analytique cercle vs cercle (deux cercles en mouvement).
+     * @param startA Position de départ du cercle A
+     * @param endA Position d'arrivée du cercle A
+     * @param radiusA Rayon du cercle A
+     * @param startB Position de départ du cercle B
+     * @param endB Position d'arrivée du cercle B
+     * @param radiusB Rayon du cercle B
+     * @param outNormal Normale de collision au point d'impact, du cercle B vers A
+     * @return t dans [0,1] de la première collision, ou -1 si aucune
+     *
+     * Résolution : on cherche t tel que |P_A(t) - P_B(t)| = r_A + r_B avec
+     * P_X(t) = startX + t*(endX - startX). Cela aboutit à une équation
+     * quadratique en t. La plus petite racine dans [0,1] est retournée.
+     * Si les deux cercles sont déjà en interpénétration à t=0 (cas où les
+     * positions de départ sont déjà trop proches), on retourne 0.
+     */
+    static qreal sweepCircleCircle(
+        const QVector2D& startA,
+        const QVector2D& endA,
+        qreal radiusA,
+        const QVector2D& startB,
+        const QVector2D& endB,
+        qreal radiusB,
+        QVector2D& outNormal
+    );
+
+    /**
      * @brief Constantes pour les calculs
      */
     static constexpr qreal EPSILON = 0.0001;

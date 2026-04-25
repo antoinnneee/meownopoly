@@ -28,6 +28,9 @@ find_package(Qt6 REQUIRED COMPONENTS
     WebSockets
     Concurrent
 )
+
+# Tests : optionnel (Qt6::Test pas toujours disponible selon l'install)
+find_package(Qt6 QUIET COMPONENTS Test)
 # ============================================================================
 # Collecter les fichiers sources
 # ============================================================================
@@ -193,6 +196,18 @@ if(WIN32)
         COMMENT "Lancement du test P2P dual-instance..."
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
+endif()
+
+# ============================================================================
+# Tests unitaires (PattounX)
+# ============================================================================
+option(MEOWNOPOLY_BUILD_TESTS "Build PattounX unit tests" ON)
+
+if(MEOWNOPOLY_BUILD_TESTS AND Qt6Test_FOUND)
+    enable_testing()
+    add_subdirectory(tests)
+elseif(MEOWNOPOLY_BUILD_TESTS)
+    message(STATUS "Qt6::Test introuvable — tests désactivés")
 endif()
 
 # ============================================================================

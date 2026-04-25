@@ -412,6 +412,57 @@ QVector<CollisionResult> Collision2D::checkCirclePolygonSweepAll(
     return results;
 }
 
+qreal Collision2D::sweepCircleCircle(
+    const QVector2D& startA,
+    const QVector2D& endA,
+    qreal radiusA,
+    const QVector2D& startB,
+    const QVector2D& endB,
+    qreal radiusB,
+    QVector2D& outNormal)
+{
+    // Mouvement relatif : on traite A comme statique en posant
+    //   relStart = startA - startB ; relMov = (endA - startA) - (endB - startB)
+    // On cherche le plus petit t dans [0,1] tel que
+    //   |relStart + t*relMov|² = (rA + rB)²
+    QVector2D relStart = startA - startB;
+    QVector2D movA = endA - startA;
+    QVector2D movB = endB - startB;
+    QVector2D relMov = movA - movB;
+
+    qreal r = radiusA + radiusB;
+
+    qreal a = QVector2D::dotProduct(relMov, relMov);
+    qreal b = 2.0 * QVector2D::dotProduct(relStart, relMov);
+    qreal c = QVector2D::dotProduct(relStart, relStart) - r * r;
+
+    // Déjà en interpénétration au temps 0 : on déclenche un contact à t=0
+    if (c <= 0) {
+        qreal len = relStart.length();
+        outNormal = (len > EPSILON) ? relStart / len : QVector2D(1, 0);
+        return 0.0;
+    }
+
+    // Mouvement relatif négligeable et pas de pénétration → pas de collision
+    if (a < EPSILON * EPSILON) {
+        return -1.0;
+    }
+
+    qreal disc = b * b - 4.0 * a * c;
+    if (disc < 0) return -1.0;
+
+    qreal sqrtDisc = std::sqrt(disc);
+    qreal t = (-b - sqrtDisc) / (2.0 * a);
+
+    if (t < -EPSILON || t > 1.0 + EPSILON) return -1.0;
+    t = std::clamp(t, 0.0, 1.0);
+
+    QVector2D contactRel = relStart + t * relMov;
+    qreal len = contactRel.length();
+    outNormal = (len > EPSILON) ? contactRel / len : QVector2D(1, 0);
+    return t;
+}
+
 QVector2D Collision2D::applyBounce(
     const QVector2D& velocity,
     const QVector2D& normal,
