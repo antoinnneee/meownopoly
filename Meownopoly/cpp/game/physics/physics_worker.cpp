@@ -119,6 +119,17 @@ void PhysicsWorker::runLoop()
     emit stopped();
 }
 
+// INVARIANT (load-bearing pour la GUI) : chaque publication dépose dans
+// `m_pending` un buffer dont le `tick` est strictement plus récent que la
+// publication précédente — autrement dit, le tick monotone du worker
+// (`m_tick++`) est intégralement reflété dans la séquence des buffers
+// publiés. Cet invariant est exploité par `PhysicsWorld::tryAdvanceGuiBuffer`
+// (peek + swap conditionnel) pour garantir que le tick observé côté GUI
+// est strictement croissant, même quand le rendu tire plus vite que la
+// publication. Si on introduit un jour un mécanisme qui republierait un
+// tick antérieur (ex : keyframe de resync, rollback, lockstep…), il
+// faudra revoir le contrat côté GUI — sinon on retombe dans le bug
+// "GUI tick oscille" résolu par fix(physics): GUI triple buffer regression.
 void PhysicsWorker::runStep()
 {
     qreal dt = 1.0 / static_cast<qreal>(m_tickHz.load());
@@ -128,10 +139,14 @@ void PhysicsWorker::runStep()
         qint64 nowNs = QDateTime::currentMSecsSinceEpoch() * 1'000'000LL;
         m_engine.writeSnapshot(*m_workerBack, m_tick, nowNs);
 
-        // Atomic swap : on dépose m_workerBack dans m_pending et on récupère
-        // ce qui s'y trouvait. En régime établi le résultat est non-null —
-        // soit le buffer que la GUI vient de céder, soit notre publication
-        // précédente que la GUI n'a pas encore consommée.
+        // Atomic swap : on dépose m_workerBack (qui contient le tick le plus
+        // récent qu'on vienne d'écrire) dans m_pending et on récupère ce qui
+        // s'y trouvait. En régime établi le résultat est non-null — soit le
+        // buffer que la GUI vient de céder, soit notre publication précédente
+        // que la GUI n'a pas encore consommée. Dans tous les cas, le buffer
+        // récupéré porte un tick STRICTEMENT INFÉRIEUR à `m_tick` (preuve :
+        // m_workerBack était l'antéprédécesseur publié, donc tick < m_tick - 1
+        // ou tick == m_tick - 1).
         pattounx::WorldSnapshot *prev
             = m_pending->exchange(m_workerBack, std::memory_order_acq_rel);
         if (prev) {

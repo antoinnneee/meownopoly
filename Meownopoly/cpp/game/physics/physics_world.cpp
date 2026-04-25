@@ -327,9 +327,23 @@ void PhysicsWorld::tryAdvanceGuiBuffer()
     pattounx::WorldSnapshot *peek = m_pending.load(std::memory_order_acquire);
     if (!peek || peek->tick <= m_guiInUse->tick) return;
 
+    const quint64 prevTick = m_guiInUse->tick;
     pattounx::WorldSnapshot *fresh
         = m_pending.exchange(m_guiInUse, std::memory_order_acq_rel);
-    if (fresh) m_guiInUse = fresh;
+    if (fresh) {
+        // Garde-fou : l'invariant côté worker (cf. PhysicsWorker::runStep)
+        // dit que toute publication a un tick > publication précédente.
+        // Couplé au peek ci-dessus, l'exchange ne doit JAMAIS ramener un
+        // tick antérieur à celui qu'on avait juste avant. Si ça se produit,
+        // soit l'invariant worker a été cassé (cf. commentaire bloc dans
+        // runStep), soit il y a une corruption mémoire. En debug on plante
+        // tout de suite ; en release on laisse passer pour ne pas crasher
+        // l'app (le pire qui arrive est un retour au comportement bugué).
+        Q_ASSERT_X(fresh->tick >= prevTick,
+                   "PhysicsWorld::tryAdvanceGuiBuffer",
+                   "GUI tick regression — worker invariant violated");
+        m_guiInUse = fresh;
+    }
 }
 
 void PhysicsWorld::onSnapshotPublished(quint64 tick, qint64 timestampNs,
