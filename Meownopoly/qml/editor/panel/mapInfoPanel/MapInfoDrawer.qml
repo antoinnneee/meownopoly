@@ -875,9 +875,14 @@ Drawer {
                         id: snapToGridCheckBox
                         text: "Fixé à la grille ?"
                         width: parent.width
-                        checked: logic.mapInfo.isBackgroundOnGrill
+                        checked: logic.mapInfo ? logic.mapInfo.isBackgroundOnGrill : false
 
-                        onCheckedChanged: {
+                        // onToggled (action utilisateur) plutôt que
+                        // onCheckedChanged (qui fire aussi sur re-eval du binding).
+                        // Évite un appel parasite à updateMapMetadata à l'init
+                        // qui créait un cycle setMapInfo → _syncMapInfo → binding.
+                        onToggled: {
+                            if (!logic.mapInfo) return
                             var before = logic.mapInfo.toJSON()
                             logic.mapInfo.isBackgroundOnGrill = checked
                             Game.updateMapMetadata(before, logic.mapInfo.toJSON())
@@ -983,15 +988,19 @@ Drawer {
                             from: 20
                             to: 400
                             stepSize: 20
-                            value: logic.mapInfo.backgroundTileSize || 100
+                            value: (logic.mapInfo ? logic.mapInfo.backgroundTileSize : 0) || 100
                             property string _beforeJson: ""
 
-                            onValueChanged: {
-                                if (typeof logic !== 'undefined' && typeof logic.mapInfo !== 'undefined')
+                            // onMoved (action utilisateur) — onValueChanged
+                            // fire aussi sur re-eval du binding value, ce qui
+                            // causait un write-back parasite à l'init.
+                            onMoved: {
+                                if (logic.mapInfo)
                                     logic.mapInfo.backgroundTileSize = value
                             }
 
                             onPressedChanged: {
+                                if (!logic.mapInfo) return
                                 if (pressed) {
                                     _beforeJson = logic.mapInfo.toJSON()
                                 } else {

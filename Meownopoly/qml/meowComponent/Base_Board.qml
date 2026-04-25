@@ -13,29 +13,52 @@ Rectangle {
         console.log("logic changed")
     }
 
-    // Level 2 — `mapInfo` est désormais un *alias dynamique* vers le MapInfo
-    // de Map::currentMap côté C++, pas une copie locale. Conséquences :
-    //  - Toute mutation d'UI (ex. `mapInfo.backgroundPath = x`) écrit
-    //    directement sur le MapInfo de la Map active → plus aucune
-    //    divergence entre l'état UI et ce que saveCurrentMap sérialise.
-    //  - La fonction QML `setMapInfo(info)` d'antan disparaît : la
-    //    synchro post-loadMap se fait automatiquement via la ré-évaluation
-    //    du binding sur `MapFileManager.currentMap.mapInfo`.
+    // Level 2 — `mapInfo` pointe vers le MapInfo de Map::currentMap côté C++.
+    // Toute mutation d'UI (ex. `mapInfo.backgroundPath = x`) écrit directement
+    // sur le MapInfo actif → plus de divergence avec ce que saveCurrentMap
+    // sérialise.
     //
-    // Fallback : au tout début de l'app (avant le premier Game.loadMap)
-    // currentMap peut être null. On renvoie alors une instance vide
-    // `_fallbackMapInfo` pour éviter les déréférencements null dans les
-    // lecteurs (Background.qml, panels, etc.). Les mutations sur le
-    // fallback sont volatiles (pas persistées) — ne devraient pas arriver
-    // en pratique puisque l'UI qui écrit n'est montée qu'après init.
+    // Implémentation : initialement un binding déclaratif
+    // `readonly property MapInfo mapInfo: currentMap ? currentMap.mapInfo : _fallback`.
+    // Ça déclenchait un *binding loop* de QML (symptôme : "Binding loop
+    // detected for property mapInfo" + une cascade de "TypeError: Cannot read
+    // property 'X' of null" sur tous les lecteurs). Cause profonde : la
+    // double-indirection `currentMap.mapInfo` combinée au re-ciblage de
+    // `mapInfoChanged` quand currentMap change rend le binding instable ;
+    // QML stoppe l'évaluation → la propriété reste à null → tous les lecteurs
+    // déréfèrencent null.
+    //
+    // Solution imperative : la propriété est initialisée au fallback ; on la
+    // met à jour via Connections sur les deux signaux qui peuvent affecter
+    // la valeur (currentMapChanged et mapInfoChanged de la Map en cours).
+    // Garde contre les re-entrée avec `!==`.
     MapInfo {
         id: _fallbackMapInfo
     }
 
-    readonly property MapInfo mapInfo: (MapFileManager.currentMap
-                                         && MapFileManager.currentMap.mapInfo)
-                                        ? MapFileManager.currentMap.mapInfo
-                                        : _fallbackMapInfo
+    property MapInfo mapInfo: _fallbackMapInfo
+
+    function _syncMapInfo() {
+        var cMap = MapFileManager.currentMap
+        var next = (cMap && cMap.mapInfo) ? cMap.mapInfo : _fallbackMapInfo
+        if (board.mapInfo !== next) board.mapInfo = next
+    }
+
+    Component.onCompleted: _syncMapInfo()
+
+    Connections {
+        target: MapFileManager
+        function onCurrentMapChanged() { _syncMapInfo() }
+    }
+
+    // target: binding live — se ré-évalue quand currentMap change et
+    // attache onMapInfoChanged au nouveau Map. ignoreUnknownSignals tolère
+    // le cas currentMap === null (signal introuvable, ignoré silencieusement).
+    Connections {
+        target: MapFileManager.currentMap
+        ignoreUnknownSignals: true
+        function onMapInfoChanged() { _syncMapInfo() }
+    }
 
     property WheelHandler wheelHandler
 
