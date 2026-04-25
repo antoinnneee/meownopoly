@@ -11,7 +11,6 @@ Rectangle {
     color: "#1a1a1a"  // Dark background for modern look
 
 
-    signal startGameRequested()  // Add this signal
     signal testViewRequested()  // Add this signal
     signal editorRequested();
     signal caseCreatorRequested(); // Add signal for case creator
