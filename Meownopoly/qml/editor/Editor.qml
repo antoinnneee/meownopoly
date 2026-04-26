@@ -1123,6 +1123,7 @@ Base_Board {
 
     CollabStatusPanel {}
     PhysicsStatusPanel {}
+    CameraTestPanel { cameraRig: cameraRig }
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de
     // ItemSnapableEvents (singleton C++) et pousse upsertZone/removeZone

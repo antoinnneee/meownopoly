@@ -23,6 +23,7 @@
         <file>qml/editor/EditorEscMenu.qml</file>
         <file>qml/editor/CollabStatusPanel.qml</file>
         <file>qml/editor/PhysicsStatusPanel.qml</file>
+        <file>qml/editor/CameraTestPanel.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/editor/logic/MouseLogic_DrawPolygon.qml</file>
         <file>qml/editor/logic/MouseLogic_Game.qml</file>

@@ -1,0 +1,336 @@
+/*
+ * CameraTestPanel — outil de test des modes caméra (Phase 5).
+ *
+ * Panneau flottant top-right (sous PhysicsStatusPanel) : badge collapsé
+ * affichant le mode courant ; clic → déplie le panneau complet :
+ *  - sélecteur de mode (Follow / FreeCam / FixedTopDown / OrbitDebug)
+ *  - sliders OrbitDebug : yaw / pitch / distance
+ *  - slider smoothSpeed (Follow)
+ *  - actions : snapToTarget(), recomputeOffset()
+ *  - lecture live de la position caméra (x, y, z, eulerRotation.x)
+ *
+ * Le panneau ne possède pas le cameraRig — il reçoit une référence en
+ * property et appelle setMode() / orbitDelta() / snapToTarget() dessus.
+ * Pas de manipulation directe de la caméra : tout passe par le rig.
+ */
+import QtQuick 2.15
+import QtQuick.Controls
+import QtQuick.Layouts
+
+import world3d 1.0
+
+Item {
+    id: root
+
+    // Référence au CameraRig à piloter. Si null, le panneau s'affiche en
+    // mode dégradé (badge "Camera · n/a", contrôles désactivés).
+    property var cameraRig: null
+
+    anchors.top: parent.top
+    anchors.right: parent.right
+    anchors.topMargin: 48      // sous le badge PhysicsStatusPanel (12 + ~24)
+    anchors.rightMargin: 12
+
+    z: 10000
+
+    width: expanded ? panel.width : badge.width
+    height: expanded ? panel.height : badge.height
+
+    property bool expanded: false
+
+    // Compteur incrémenté à 10 Hz pendant que le panneau est déplié, pour
+    // forcer la ré-évaluation du readout caméra (cam.x/y/z n'émettent pas
+    // de signal lors d'écritures imperatives depuis CameraRig).
+    property int _readoutTick: 0
+
+    // --- Helpers ---------------------------------------------------------
+
+    function _modeName(m) {
+        if (!cameraRig) return "n/a"
+        switch (m) {
+        case CameraRig.Follow:       return "Follow"
+        case CameraRig.FreeCam:      return "FreeCam"
+        case CameraRig.FixedTopDown: return "FixedTopDown"
+        case CameraRig.OrbitDebug:   return "OrbitDebug"
+        }
+        return "?"
+    }
+
+    // --- Badge (collapsed) ----------------------------------------------
+
+    Rectangle {
+        id: badge
+        visible: !root.expanded
+        anchors.top: parent.top
+        anchors.right: parent.right
+        width: badgeRow.implicitWidth + 20
+        height: badgeRow.implicitHeight + 10
+        radius: 6
+        color: "#2a2a2e"
+        border.color: "#71717a"
+        border.width: 1
+
+        Row {
+            id: badgeRow
+            anchors.centerIn: parent
+            spacing: 8
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "📷"
+                font.pixelSize: 14
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Caméra · " + (root.cameraRig
+                                     ? root._modeName(root.cameraRig.mode)
+                                     : "n/a")
+                color: "#f4f4f5"
+                font.pixelSize: 12
+                font.bold: true
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.expanded = true
+        }
+    }
+
+    // --- Panel (expanded) -----------------------------------------------
+
+    Rectangle {
+        id: panel
+        visible: root.expanded
+        anchors.top: parent.top
+        anchors.right: parent.right
+        width: 280
+        height: panelLayout.implicitHeight + 16
+        radius: 8
+        color: "#1f1f23"
+        border.color: "#52525b"
+        border.width: 1
+
+        ColumnLayout {
+            id: panelLayout
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: 8
+            spacing: 6
+
+            // --- Header ---
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    Layout.fillWidth: true
+                    text: "Caméra — test"
+                    color: "#f4f4f5"
+                    font.pixelSize: 13
+                    font.bold: true
+                }
+                Text {
+                    text: "✕"
+                    color: "#a1a1aa"
+                    font.pixelSize: 14
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.expanded = false
+                    }
+                }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+
+            // --- Mode buttons ---
+            Text {
+                text: "Mode"
+                color: "#a1a1aa"
+                font.pixelSize: 11
+            }
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 2
+                columnSpacing: 4
+                rowSpacing: 4
+
+                Repeater {
+                    model: cameraRig ? [
+                        { label: "Follow",       value: CameraRig.Follow },
+                        { label: "FreeCam",      value: CameraRig.FreeCam },
+                        { label: "FixedTopDown", value: CameraRig.FixedTopDown },
+                        { label: "OrbitDebug",   value: CameraRig.OrbitDebug }
+                    ] : []
+                    delegate: Rectangle {
+                        Layout.fillWidth: true
+                        height: 26
+                        radius: 4
+                        readonly property bool active:
+                            cameraRig && cameraRig.mode === modelData.value
+                        color: active ? "#2563eb" : "#27272a"
+                        border.color: active ? "#60a5fa" : "#52525b"
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData.label
+                            color: "#f4f4f5"
+                            font.pixelSize: 11
+                            font.bold: parent.active
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: if (cameraRig) cameraRig.setMode(modelData.value)
+                        }
+                    }
+                }
+            }
+
+            // --- Follow params ---
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            Text {
+                text: "Follow — smoothSpeed: " + (cameraRig
+                        ? cameraRig.smoothSpeed.toFixed(2) : "n/a")
+                color: "#a1a1aa"
+                font.pixelSize: 11
+            }
+            Slider {
+                Layout.fillWidth: true
+                enabled: cameraRig !== null
+                from: 0.1
+                to: 10.0
+                stepSize: 0.1
+                value: cameraRig ? cameraRig.smoothSpeed : 2.0
+                onMoved: if (cameraRig) cameraRig.smoothSpeed = value
+            }
+
+            // --- Orbit params ---
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            Text {
+                text: "OrbitDebug"
+                color: "#a1a1aa"
+                font.pixelSize: 11
+            }
+
+            Text {
+                text: "Yaw: " + (cameraRig ? cameraRig.orbitYaw.toFixed(1) : "n/a") + "°"
+                color: "#d4d4d8"
+                font.pixelSize: 10
+            }
+            Slider {
+                Layout.fillWidth: true
+                enabled: cameraRig !== null
+                from: -180; to: 180; stepSize: 1
+                value: cameraRig ? cameraRig.orbitYaw : 0
+                onMoved: if (cameraRig) cameraRig.orbitYaw = value
+            }
+
+            Text {
+                text: "Pitch: " + (cameraRig ? cameraRig.orbitPitch.toFixed(1) : "n/a") + "°"
+                color: "#d4d4d8"
+                font.pixelSize: 10
+            }
+            Slider {
+                Layout.fillWidth: true
+                enabled: cameraRig !== null
+                from: -89; to: 89; stepSize: 1
+                value: cameraRig ? cameraRig.orbitPitch : -55
+                onMoved: if (cameraRig) cameraRig.orbitPitch = value
+            }
+
+            Text {
+                text: "Distance: " + (cameraRig ? cameraRig.orbitDistance.toFixed(0) : "n/a")
+                color: "#d4d4d8"
+                font.pixelSize: 10
+            }
+            Slider {
+                Layout.fillWidth: true
+                enabled: cameraRig !== null
+                from: 50; to: 3000; stepSize: 10
+                value: cameraRig ? cameraRig.orbitDistance : 600
+                onMoved: if (cameraRig) cameraRig.orbitDistance = value
+            }
+
+            // --- Actions ---
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 4
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 26
+                    radius: 4
+                    color: "#27272a"
+                    border.color: "#52525b"
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Snap"
+                        color: "#f4f4f5"
+                        font.pixelSize: 11
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: if (cameraRig) cameraRig.snapToTarget()
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 26
+                    radius: 4
+                    color: "#27272a"
+                    border.color: "#52525b"
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Recompute offset"
+                        color: "#f4f4f5"
+                        font.pixelSize: 10
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: if (cameraRig) cameraRig.recomputeOffset()
+                    }
+                }
+            }
+
+            // --- Live readout ---
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            Text {
+                Layout.fillWidth: true
+                // Référence à _readoutTick pour forcer la ré-évaluation
+                // périodique (cf. Timer ci-dessous).
+                text: {
+                    root._readoutTick    // dépendance pour binding
+                    const cam = cameraRig && cameraRig.world3D
+                                ? cameraRig.world3D.camera : null
+                    if (!cam) return "Caméra : n/a"
+                    return "pos: ("
+                         + cam.x.toFixed(0) + ", "
+                         + cam.y.toFixed(0) + ", "
+                         + cam.z.toFixed(0) + ")\n"
+                         + "rot: ("
+                         + cam.eulerRotation.x.toFixed(1) + "°, "
+                         + cam.eulerRotation.y.toFixed(1) + "°, "
+                         + cam.eulerRotation.z.toFixed(1) + "°)"
+                }
+                color: "#a1a1aa"
+                font.pixelSize: 10
+                font.family: "monospace"
+            }
+        }
+    }
+
+    // Tick périodique pour rafraîchir le readout (la caméra n'émet pas
+    // de signal sur x/y/z, donc on poll). 10 Hz = suffisant pour debug.
+    Timer {
+        running: root.expanded
+        interval: 100
+        repeat: true
+        onTriggered: root._readoutTick++
+    }
+}
