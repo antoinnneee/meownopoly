@@ -119,9 +119,19 @@ Base_Board {
         }
     }
 
+    // Phase 6 — toggle multi-actors local (P2). Quand true, le Loader
+    // active spawn + actor + 2e InputController (flèches). Piloté par
+    // MultiActorTestPanel.
+    property bool multiActorEnabled: false
+
     Keys.onPressed: function (event) {
         // Phase 4 : InputController remplace EntityEngine.keysHandler
         inputController.handlePress(event)
+        // Phase 6 — 2e InputController (flèches → P2). Inactif si
+        // multiActor désactivé : sans ça, les flèches enverraient quand
+        // même un pushInput pour un body inexistant.
+        if (multiActorEnabled && multiActorLoader.item)
+            multiActorLoader.item.inputController2.handlePress(event)
         // Debug jitter : J = trace 3 sec sur le PhysicsActor du joueur.
         // Logs CSV "[JITTER]" dans la console (grep + analyse tableur).
         if (event.key === Qt.Key_J && !event.isAutoRepeat) {
@@ -132,6 +142,8 @@ Base_Board {
     }
     Keys.onReleased: function (event) {
         inputController.handleRelease(event)
+        if (multiActorEnabled && multiActorLoader.item)
+            multiActorLoader.item.inputController2.handleRelease(event)
         EditorController.keysHandler.Keys.released(event)
     }
 
@@ -1124,6 +1136,7 @@ Base_Board {
     CollabStatusPanel {}
     PhysicsStatusPanel {}
     CameraTestPanel { cameraRig: cameraRig }
+    MultiActorTestPanel { editor: root }
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de
     // ItemSnapableEvents (singleton C++) et pousse upsertZone/removeZone
@@ -1190,6 +1203,16 @@ Base_Board {
             id: inputController
             actorId: "player"
             physicsWorld: pattounxWorld
+            // Phase 6 — keymap restreinte à ZQSD (les flèches sont
+            // réservées au 2e joueur quand multiActor est actif).
+            keymap: ({
+                up:            Qt.Key_Z,
+                down:          Qt.Key_S,
+                left:          Qt.Key_Q,
+                right:         Qt.Key_D,
+                sprint:        Qt.Key_Shift,
+                freeCamToggle: Qt.Key_F
+            })
             // En démarrage, on est en mode FreeCam (cohérent avec ancien
             // EntityEngine.freeCamMode = true par défaut). Donc input
             // personnage désactivé, input caméra actif.
@@ -1203,6 +1226,62 @@ Base_Board {
                 inputController.releaseAll()
                 console.log("[Editor] FreeCam",
                             cameraRig.mode === CameraRig.FreeCam ? "ON" : "OFF")
+            }
+        }
+
+        // Phase 6 — bloc P2 (spawner + actor + input flèches). Loader pour
+        // que le body soit créé/détruit proprement quand on toggle. Initial
+        // position offset de +2 cases en X pour ne pas spawn sur P1.
+        Loader {
+            id: multiActorLoader
+            active: root.multiActorEnabled
+            sourceComponent: Component {
+                Item {
+                    // Exposé au parent pour permettre handlePress/Release
+                    // depuis les Keys handlers de root.
+                    property alias inputController2: ic2
+
+                    LocalPlayerSpawner {
+                        physicsWorld: pattounxWorld
+                        actorId: "player2"
+                        radius: 0.2
+                        initialPosition: Qt.vector2d(2, 0)
+                        params: ({ acceleration: 30.0, maxSpeed: 30.0,
+                                   linearDamping: 0.1 })
+                    }
+
+                    PhysicsActor {
+                        world3D: gameScene
+                        bodyId: "player2"
+                        node3D: gameScene.entity2
+                    }
+
+                    InputController {
+                        id: ic2
+                        actorId: "player2"
+                        physicsWorld: pattounxWorld
+                        keymap: ({
+                            up:            Qt.Key_Up,
+                            down:          Qt.Key_Down,
+                            left:          Qt.Key_Left,
+                            right:         Qt.Key_Right,
+                            sprint:        Qt.Key_Control,
+                            freeCamToggle: -1   // pas de toggle pour P2
+                        })
+                        // P2 ne pilote jamais la caméra → pas conditionné
+                        // par le mode du rig.
+                        enabled: true
+                    }
+
+                    Component.onCompleted: {
+                        gameScene.entity2.visible = true
+                        console.log("[Editor] multi-actor P2 ON")
+                    }
+                    Component.onDestruction: {
+                        gameScene.entity2.visible = false
+                        console.log("[Editor] multi-actor P2 OFF")
+                    }
+                }
             }
         }
 

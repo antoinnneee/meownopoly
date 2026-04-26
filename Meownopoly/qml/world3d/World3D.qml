@@ -27,6 +27,10 @@ Item {
     property alias scene: sceneNode
     property alias camera: cameraOrthographic
     property alias entity: entityNode
+    // Phase 6 : 2e entité pour le multi-actors local. Visuel volontairement
+    // distinct (Cube blanc) pour différencier P2 du joueur principal.
+    // `visible` géré côté Editor via la property `multiActorEnabled`.
+    property alias entity2: entity2Node
     property alias environment: sceneEnvironment
     required property GridManager gridManager
 
@@ -257,6 +261,22 @@ Item {
                         console.error("Erreur chargement modèle 3D:",
                                       sourceComponent ? sourceComponent.errorString() : "")
                 }
+            }
+        }
+
+        // Phase 6 — 2e entité (test multi-actors local). Cube orange pour
+        // bien voir P2 vs Princess (P1). `visible: false` par défaut, le
+        // Editor.qml l'allume quand multiActor est activé via le panneau.
+        Node {
+            id: entity2Node
+            x: 0
+            y: 0
+            z: 0
+            visible: false
+            Model {
+                source: "#Cube"
+                scale: Qt.vector3d(0.5, 0.5, 0.5)
+                materials: PrincipledMaterial { baseColor: "#f97316" }
             }
         }
 
