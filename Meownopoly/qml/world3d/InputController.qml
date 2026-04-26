@@ -21,12 +21,19 @@
  * associée est elle aussi configurable via `keymap.freeCamToggle`.
  */
 import QtQuick
+import Pattounx 1.0
 
 Item {
     id: root
 
     required property string actorId
     required property var physicsWorld
+
+    // Phase 7 — routage réseau. Quand PhysicsSession est active en client,
+    // les inputs partent en InputUpdate reliable vers l'hôte au lieu d'un
+    // pushInput direct dans la sim locale. Quand inactive ou hôte → push direct.
+    // Centralisé dans PhysicsSession.pushOrSendInput().
+    property bool routeViaSession: true
 
     // Activation : si false, les events sont ignorés (pas d'input poussé).
     property bool enabled: true
@@ -67,8 +74,16 @@ Item {
         return mapping === key
     }
 
+    function _dispatch(v) {
+        if (routeViaSession && PhysicsSession.active) {
+            PhysicsSession.pushOrSendInput(actorId, v)
+        } else if (physicsWorld) {
+            physicsWorld.pushInput(actorId, v)
+        }
+    }
+
     function _push() {
-        if (!physicsWorld || !enabled) return
+        if (!enabled) return
         let v = Qt.vector2d((_r ? 1 : 0) - (_l ? 1 : 0),
                             (_d ? 1 : 0) - (_u ? 1 : 0))
         const lenSq = v.x * v.x + v.y * v.y
@@ -76,7 +91,7 @@ Item {
             const len = Math.sqrt(lenSq)
             v = Qt.vector2d(v.x / len, v.y / len)
         }
-        physicsWorld.pushInput(actorId, v)
+        _dispatch(v)
     }
 
     // Reset propre des touches (utile quand on perd le focus, ou bascule de
@@ -85,7 +100,7 @@ Item {
     function releaseAll() {
         _u = _d = _l = _r = false
         sprint = false
-        if (physicsWorld) physicsWorld.pushInput(actorId, Qt.vector2d(0, 0))
+        _dispatch(Qt.vector2d(0, 0))
     }
 
     // `enabled` ne stoppe que le `_push` vers physicsWorld — l'état des

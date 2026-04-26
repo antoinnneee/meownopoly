@@ -38,6 +38,7 @@
 
 #include "game/physics/pattounx_engine.h"
 #include "game/physics/physics_world.h"
+#include "game/physics/physics_session.h"
 #include "game/physics/item_snapable_events.h"
 
 #include "game/map/map.h"
@@ -90,6 +91,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     
     PattounX_engine::registerQml();
     PhysicsWorld::registerQml();
+    PhysicsSession::registerQml();
     ItemSnapableEvents::registerQml();
     ChatClient::registerQml(this);
     ChatSlashCommands::registerQml();
@@ -131,6 +133,10 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     // → undefined). Cf. mémoire feedback_qml_scope_resolution.
     physicsWorld = new PhysicsWorld(this);
     rootContext()->setContextProperty("pattounxWorld", physicsWorld);
+
+    // PhysicsSession (singleton) a besoin du pointeur PhysicsWorld pour
+    // piloter la simu locale et lire/écrire les snapshots.
+    PhysicsSession::instance()->setPhysicsWorld(physicsWorld);
 
     //To declare module in QML
 

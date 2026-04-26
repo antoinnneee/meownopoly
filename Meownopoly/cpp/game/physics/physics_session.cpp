@@ -1,0 +1,347 @@
+#include "physics_session.h"
+
+#include "physics_protocol.h"
+#include "physics_world.h"
+
+#include "communication/catway.h"
+#include "communication/player_network.h"
+
+#include <QDebug>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QtQml>
+
+PhysicsSession *PhysicsSession::m_pThis = nullptr;
+
+// ── Singleton ────────────────────────────────────────────────────────────────
+
+PhysicsSession::PhysicsSession(QObject *parent) : QObject(parent)
+{
+    m_snapshotTimer.setTimerType(Qt::PreciseTimer);
+    connect(&m_snapshotTimer, &QTimer::timeout,
+            this, &PhysicsSession::onSnapshotTimerFired);
+
+    // Re-broadcast périodique de la table complète (1 Hz). Couvre :
+    //  - late-join : un client qui rejoint reçoit la table sans Hello dédié
+    //  - paquets perdus : reliable.io a son propre ACK mais on est ceinture+bretelles
+    m_fullTableTimer.setInterval(1000);
+    connect(&m_fullTableTimer, &QTimer::timeout, this, [this]() {
+        if (m_active && m_isHost) broadcastFullBodyTable();
+    });
+}
+
+PhysicsSession *PhysicsSession::instance()
+{
+    if (!m_pThis) m_pThis = new PhysicsSession();
+    return m_pThis;
+}
+
+QObject *PhysicsSession::qmlInstance(QQmlEngine *, QJSEngine *) { return instance(); }
+
+void PhysicsSession::registerQml()
+{
+    qmlRegisterSingletonType<PhysicsSession>("Pattounx", 1, 0, "PhysicsSession",
+                                             &PhysicsSession::qmlInstance);
+}
+
+void PhysicsSession::setSnapshotHz(int hz)
+{
+    if (hz < 1)   hz = 1;
+    if (hz > 240) hz = 240;
+    if (m_snapshotHz == hz) return;
+    m_snapshotHz = hz;
+    if (m_snapshotTimer.isActive()) {
+        m_snapshotTimer.setInterval(1000 / m_snapshotHz);
+    }
+    emit snapshotHzChanged();
+}
+
+void PhysicsSession::setClaimedActorId(const QString &actorId)
+{
+    if (m_claimedActorId == actorId) return;
+    m_claimedActorId = actorId;
+    emit claimedActorIdChanged();
+}
+
+void PhysicsSession::setPhysicsWorld(QObject *world)
+{
+    m_world = qobject_cast<PhysicsWorld *>(world);
+    if (!m_world)
+        qWarning() << "[PhysicsSession] setPhysicsWorld: pointeur invalide";
+}
+
+// ── Cycle de vie ────────────────────────────────────────────────────────────
+
+bool PhysicsSession::startAsHost(const QString &localPlayerId)
+{
+    if (!m_world) {
+        qWarning() << "[PhysicsSession] startAsHost: physicsWorld non assigné";
+        return false;
+    }
+    if (m_active) stop();
+
+    m_localPlayerId = localPlayerId;
+    m_hostPlayerId.clear();
+    m_isHost = true;
+    m_active = true;
+
+    connectToCatway();
+
+    // Pump initial des announcements pour la table déjà existante.
+    flushPendingAnnouncements();
+
+    m_snapshotTimer.start(1000 / m_snapshotHz);
+    m_fullTableTimer.start();
+
+    emit localPlayerIdChanged();
+    emit hostPlayerIdChanged();
+    emit isHostChanged();
+    emit activeChanged();
+    qDebug() << "[PhysicsSession] HOST start, playerId =" << localPlayerId
+             << "snapshotHz =" << m_snapshotHz;
+    return true;
+}
+
+bool PhysicsSession::startAsClient(const QString &localPlayerId,
+                                   const QString &hostPlayerId)
+{
+    if (!m_world) {
+        qWarning() << "[PhysicsSession] startAsClient: physicsWorld non assigné";
+        return false;
+    }
+    if (m_active) stop();
+
+    m_localPlayerId = localPlayerId;
+    m_hostPlayerId  = hostPlayerId;
+    m_isHost = false;
+    m_active = true;
+
+    connectToCatway();
+
+    // Sim locale OFF + buffer remote ON. Côté client, c'est le snapshot de
+    // l'hôte qui dicte les positions.
+    m_world->setSimulationEnabled(false);
+    m_world->setUseRemoteBuffer(true);
+
+    emit localPlayerIdChanged();
+    emit hostPlayerIdChanged();
+    emit isHostChanged();
+    emit activeChanged();
+    qDebug() << "[PhysicsSession] CLIENT start, playerId =" << localPlayerId
+             << "host =" << hostPlayerId;
+    return true;
+}
+
+void PhysicsSession::stop()
+{
+    disconnectFromCatway();
+    m_snapshotTimer.stop();
+    m_fullTableTimer.stop();
+
+    if (m_world) {
+        // Repasse en mode local. Le caller décide s'il veut relancer la sim.
+        if (!m_isHost) {
+            m_world->setUseRemoteBuffer(false);
+            m_world->setSimulationEnabled(true);
+        }
+    }
+
+    m_active = false;
+    m_isHost = false;
+    m_localPlayerId.clear();
+    m_hostPlayerId.clear();
+    m_snapshotsSent = 0;
+    m_snapshotsReceived = 0;
+
+    emit activeChanged();
+    emit isHostChanged();
+    emit localPlayerIdChanged();
+    emit hostPlayerIdChanged();
+    emit snapshotsSentChanged();
+    emit snapshotsReceivedChanged();
+    qDebug() << "[PhysicsSession] stopped";
+}
+
+// ── Connexion Catway ────────────────────────────────────────────────────────
+
+void PhysicsSession::connectToCatway()
+{
+    Catway *catway = Catway::instance();
+    m_reliableConn = connect(catway, &Catway::reliableMessageReceived,
+                             this,   &PhysicsSession::onReliableReceived);
+    m_timeoutConn  = connect(catway, &Catway::playerTimedOut,
+                             this,   &PhysicsSession::onPlayerTimedOut);
+}
+
+void PhysicsSession::disconnectFromCatway()
+{
+    disconnect(m_reliableConn);
+    disconnect(m_timeoutConn);
+}
+
+// ── Inputs ──────────────────────────────────────────────────────────────────
+
+void PhysicsSession::pushOrSendInput(const QString &actorId, QVector2D input)
+{
+    if (!m_world) return;
+    if (!m_active || m_isHost) {
+        // Mode local OU hôte : push direct dans la sim.
+        m_world->pushInput(actorId, input);
+        return;
+    }
+    // Client : si le pair a déclaré un actor revendiqué, on filtre tout le
+    // reste — sinon on enverrait des inputs concurrents au host pour des
+    // actors que d'autres pairs (ou l'host lui-même) contrôlent déjà.
+    if (!m_claimedActorId.isEmpty() && actorId != m_claimedActorId) return;
+    // Client : envoyer InputUpdate reliable au host.
+    if (m_hostPlayerId.isEmpty()) return;
+    QJsonObject payload{
+        { "actorId", actorId },
+        { "x", input.x() },
+        { "y", input.y() },
+    };
+    const QByteArray packet = PhysicsProtocol::packJson(
+        PhysicsMessageType::InputUpdate, payload);
+    PlayerNetwork *host = Catway::instance()->playerById(m_hostPlayerId);
+    if (host) Catway::instance()->sendReliableToPlayer(host, packet);
+}
+
+// ── Hôte : broadcast snapshot ───────────────────────────────────────────────
+
+void PhysicsSession::onSnapshotTimerFired()
+{
+    if (!m_active || !m_isHost || !m_world) return;
+
+    // 1) Sérialise (et synchronise la table d'idIndex côté hôte).
+    const QByteArray payload = m_world->serializeSnapshot();
+    if (payload.isEmpty()) return;
+
+    // 2) Envoie BodiesAnnounce AVANT le snapshot si delta non vide.
+    flushPendingAnnouncements();
+
+    // 3) Broadcast du snapshot (reliable pour Phase 7 — cf. note dans
+    //    physics_message_type.h : migration vers raw possible si le budget
+    //    bande passante le justifie).
+    const QByteArray packet = PhysicsProtocol::packBinary(
+        PhysicsMessageType::Snapshot, payload);
+    Catway::instance()->broadcastReliable(packet);
+    ++m_snapshotsSent;
+    if ((m_snapshotsSent & 0x1F) == 0) // throttle log
+        emit snapshotsSentChanged();
+}
+
+void PhysicsSession::flushPendingAnnouncements()
+{
+    if (!m_active || !m_isHost || !m_world) return;
+    const QVariantMap delta = m_world->takePendingAnnouncements();
+    const QVariantMap added = delta.value(QStringLiteral("added")).toMap();
+    const QVariantList removed = delta.value(QStringLiteral("removed")).toList();
+    if (added.isEmpty() && removed.isEmpty()) return;
+
+    const QJsonObject payload = buildAnnouncePayload(added, removed);
+    const QByteArray packet = PhysicsProtocol::packJson(
+        PhysicsMessageType::BodiesAnnounce, payload);
+    Catway::instance()->broadcastReliable(packet);
+    qDebug() << "[PhysicsSession] BodiesAnnounce delta : added =" << added.size()
+             << ", removed =" << removed.size();
+}
+
+void PhysicsSession::broadcastFullBodyTable()
+{
+    if (!m_active || !m_isHost || !m_world) return;
+    const QVariantMap full = m_world->currentBodyTable();
+    if (full.isEmpty()) return; // rien à annoncer
+    const QJsonObject payload = buildAnnouncePayloadFromMap(full);
+    const QByteArray packet = PhysicsProtocol::packJson(
+        PhysicsMessageType::BodiesAnnounce, payload);
+    Catway::instance()->broadcastReliable(packet);
+}
+
+QJsonObject PhysicsSession::buildAnnouncePayload(const QVariantMap &added,
+                                                 const QVariantList &removed)
+{
+    QJsonObject addedJson;
+    for (auto it = added.constBegin(); it != added.constEnd(); ++it)
+        addedJson.insert(it.key(), it.value().toString());
+    QJsonArray removedJson;
+    for (const QVariant &v : removed) removedJson.append(v.toString());
+    QJsonObject payload;
+    payload.insert(QStringLiteral("added"), addedJson);
+    payload.insert(QStringLiteral("removed"), removedJson);
+    return payload;
+}
+
+QJsonObject PhysicsSession::buildAnnouncePayloadFromMap(const QVariantMap &fullTable)
+{
+    QJsonObject addedJson;
+    for (auto it = fullTable.constBegin(); it != fullTable.constEnd(); ++it)
+        addedJson.insert(it.key(), it.value().toString());
+    QJsonObject payload;
+    payload.insert(QStringLiteral("added"), addedJson);
+    payload.insert(QStringLiteral("removed"), QJsonArray{});
+    return payload;
+}
+
+// ── Réception ───────────────────────────────────────────────────────────────
+
+void PhysicsSession::onReliableReceived(const QString &senderId,
+                                        const QByteArray &data)
+{
+    if (!m_active || !m_world) return;
+    PhysicsMessageType::Value type;
+    if (!PhysicsProtocol::peekType(data, type)) return; // pas pour nous
+
+    switch (type) {
+    case PhysicsMessageType::Snapshot:
+        if (!m_isHost && senderId == m_hostPlayerId) {
+            m_world->applyRemoteSnapshot(PhysicsProtocol::payloadBytes(data));
+            ++m_snapshotsReceived;
+            if ((m_snapshotsReceived & 0x1F) == 0)
+                emit snapshotsReceivedChanged();
+        }
+        break;
+
+    case PhysicsMessageType::BodiesAnnounce: {
+        if (m_isHost) break; // réservé au client
+        QJsonObject payload;
+        PhysicsMessageType::Value t;
+        if (!PhysicsProtocol::unpackJson(data, t, payload)) break;
+        const QJsonObject addedObj = payload.value(QStringLiteral("added")).toObject();
+        const QJsonArray  removedArr = payload.value(QStringLiteral("removed")).toArray();
+        QVariantMap addedMap;
+        for (auto it = addedObj.constBegin(); it != addedObj.constEnd(); ++it)
+            addedMap.insert(it.key(), it.value().toString());
+        QStringList removed;
+        removed.reserve(removedArr.size());
+        for (const QJsonValue &v : removedArr) removed.append(v.toString());
+        m_world->applyBodiesAnnounce(addedMap, removed);
+        break;
+    }
+
+    case PhysicsMessageType::InputUpdate: {
+        if (!m_isHost) break; // réservé à l'hôte
+        QJsonObject payload;
+        PhysicsMessageType::Value t;
+        if (!PhysicsProtocol::unpackJson(data, t, payload)) break;
+        const QString actorId = payload.value(QStringLiteral("actorId")).toString();
+        if (actorId.isEmpty()) break;
+        const float x = static_cast<float>(payload.value(QStringLiteral("x")).toDouble());
+        const float y = static_cast<float>(payload.value(QStringLiteral("y")).toDouble());
+        m_world->pushInput(actorId, QVector2D(x, y));
+        break;
+    }
+    }
+}
+
+void PhysicsSession::onPlayerTimedOut(const QString &playerId)
+{
+    if (!m_active) return;
+    if (!m_isHost && playerId == m_hostPlayerId) {
+        qWarning() << "[PhysicsSession] hôte perdu (timeout)";
+        // Pour Phase 7 : repasse en mode local. La récupération multi-saut
+        // (élection, promotion) sera ajoutée au-dessus de l'éditeur collab si
+        // nécessaire (cf. EditorSession::promoteToHost).
+        stop();
+    }
+}

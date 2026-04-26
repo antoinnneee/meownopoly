@@ -12,6 +12,7 @@
 #include "pattounx_types.h"
 
 #include <QByteArray>
+#include <QHash>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -93,6 +94,45 @@ public:
     // pour autoriser l'avancement vers la frame physique la plus récente.
     Q_INVOKABLE void beginFrame();
 
+    // ── Réseau (state-sync host-authoritative, cf. PHYSICS_REFACTOR_PLAN §5.5) ──
+
+    /// Hôte : sérialise le snapshot GUI courant au format binaire compact.
+    /// Effet de bord : assigne un idIndex aux bodies nouveaux et marque
+    /// les bodies disparus → cf. takePendingAnnouncements() pour récupérer
+    /// le delta à envoyer en BodiesAnnounce reliable AVANT le snapshot.
+    Q_INVOKABLE QByteArray serializeSnapshot();
+
+    /// Client : applique un snapshot reçu de l'hôte. Active automatiquement
+    /// le mode "remote buffer" (bodyState/allBodyIds lisent depuis le snapshot
+    /// distant ; la simu locale est typiquement désactivée via
+    /// setSimulationEnabled(false) côté client).
+    /// Les bodies dont l'idIndex n'est pas connu (BodiesAnnounce pas encore
+    /// reçu) sont droppés silencieusement de cette frame.
+    Q_INVOKABLE void applyRemoteSnapshot(const QByteArray &payload);
+
+    /// Hôte : table {idIndex → actorId} pour broadcast initial / re-announce
+    /// périodique aux clients. Format QVariantMap avec clés en string décimale
+    /// pour passer en QML/JSON.
+    Q_INVOKABLE QVariantMap currentBodyTable() const;
+
+    /// Hôte : delta cumulé depuis le dernier appel. Format :
+    /// { added: [{i:int, id:str}], removed: [str] }. Vidé après lecture.
+    Q_INVOKABLE QVariantMap takePendingAnnouncements();
+
+    /// Client : applique un BodiesAnnounce reçu (mise à jour de la table
+    /// idIndex → actorId). `addedMap` : {string idIndex → string actorId}.
+    Q_INVOKABLE void applyBodiesAnnounce(const QVariantMap &addedMap,
+                                         const QStringList &removed);
+
+    /// Client : true si un snapshot remote a été appliqué au moins une fois
+    /// (bodyState/allBodyIds lisent depuis m_remoteBuffer plutôt que le triple
+    /// buffer du worker).
+    Q_INVOKABLE bool useRemoteBuffer() const { return m_useRemoteBuffer; }
+
+    /// Force la bascule du mode remote (true) ou local (false). Utile pour
+    /// repasser en local après une déconnexion réseau côté client.
+    Q_INVOKABLE void setUseRemoteBuffer(bool on);
+
 signals:
     void runningChanged();
     void tickRateChanged();
@@ -141,6 +181,28 @@ private:
     quint64 m_lastTick = 0;
     qint64 m_lastTimestampNs = 0;
     qint64 m_lastStepDurationNs = 16'666'667; // 60 Hz par défaut
+
+    // ── État réseau (host & client) ─────────────────────────────────────────
+    // Hôte : table idIndex ↔ actorId attribuée incrémentalement à mesure que
+    // les bodies apparaissent dans le snapshot. Rebuild à zéro entre sessions.
+    // Client : peuplée via applyBodiesAnnounce. Indispensable pour décoder
+    // les Snapshot reçus (qui n'embarquent que des idIndex u16).
+    QHash<QString, quint16> m_idIndexByActor;
+    QHash<quint16, QString> m_actorByIdIndex;
+    quint16 m_nextIdIndex = 1; // 0 réservé sentinel "non assigné"
+
+    // Hôte : delta cumulé entre serializeSnapshot() consécutifs. Vidé par
+    // takePendingAnnouncements().
+    struct PendingAnn {
+        QHash<quint16, QString> added;
+        QStringList removed;
+    } m_pendingAnnouncements;
+
+    // Client : buffer de réception du snapshot distant. Quand m_useRemoteBuffer
+    // est true, bodyState/allBodyIds/currentGuiTick lisent depuis ce buffer
+    // au lieu du triple buffer worker (qui peut être inactif si simEnabled=false).
+    bool m_useRemoteBuffer = false;
+    pattounx::WorldSnapshot m_remoteBuffer;
 };
 
 #endif // PHYSICS_WORLD_H

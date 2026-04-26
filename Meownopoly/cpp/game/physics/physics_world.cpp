@@ -2,12 +2,18 @@
 
 #include "physics_worker.h"
 
+#include <QDataStream>
+#include <QDateTime>
 #include <QDebug>
 #include <QEventLoop>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QMetaType>
+#include <QSet>
 #include <QThread>
 #include <QTimer>
 #include <QtQml>
+#include <cmath>
 
 using namespace pattounx;
 
@@ -357,22 +363,38 @@ void PhysicsWorld::onSnapshotPublished(quint64 tick, qint64 timestampNs,
 
 QVariantMap PhysicsWorld::bodyState(const QString &id)
 {
-    tryAdvanceGuiBuffer();
     QVariantMap out;
-    if (!m_guiInUse) return out;
-    auto it = m_guiInUse->bodies.find(id);
-    if (it == m_guiInUse->bodies.end()) return out;
-    const pattounx::BodySnapshot &s = it.value();
-    out.insert(QStringLiteral("id"), s.id);
-    out.insert(QStringLiteral("position"), QVariant::fromValue(s.position));
-    out.insert(QStringLiteral("velocity"), QVariant::fromValue(s.velocity));
-    out.insert(QStringLiteral("isSleeping"), s.isSleeping);
-    out.insert(QStringLiteral("isColliding"), s.isColliding);
+    const pattounx::BodySnapshot *src = nullptr;
+    if (m_useRemoteBuffer) {
+        // Côté client en mode remote : pas d'avancement GUI/triple buffer
+        // (le worker est typiquement off via setSimulationEnabled(false)).
+        auto it = m_remoteBuffer.bodies.find(id);
+        if (it != m_remoteBuffer.bodies.end()) src = &it.value();
+    } else {
+        tryAdvanceGuiBuffer();
+        if (!m_guiInUse) return out;
+        auto it = m_guiInUse->bodies.find(id);
+        if (it != m_guiInUse->bodies.end()) src = &it.value();
+    }
+    if (!src) return out;
+    out.insert(QStringLiteral("id"), src->id);
+    out.insert(QStringLiteral("position"), QVariant::fromValue(src->position));
+    out.insert(QStringLiteral("velocity"), QVariant::fromValue(src->velocity));
+    out.insert(QStringLiteral("isSleeping"), src->isSleeping);
+    out.insert(QStringLiteral("isColliding"), src->isColliding);
     return out;
 }
 
 QStringList PhysicsWorld::allBodyIds()
 {
+    if (m_useRemoteBuffer) {
+        QStringList out;
+        out.reserve(m_remoteBuffer.bodies.size());
+        for (auto it = m_remoteBuffer.bodies.begin();
+             it != m_remoteBuffer.bodies.end(); ++it)
+            out.append(it.key());
+        return out;
+    }
     tryAdvanceGuiBuffer();
     QStringList out;
     if (!m_guiInUse) return out;
@@ -384,6 +406,216 @@ QStringList PhysicsWorld::allBodyIds()
 
 quint64 PhysicsWorld::currentGuiTick()
 {
+    if (m_useRemoteBuffer) return m_remoteBuffer.tick;
     tryAdvanceGuiBuffer();
     return m_guiInUse ? m_guiInUse->tick : 0;
+}
+
+// ── Réseau (sérialisation snapshot, table idIndex) ──────────────────────────
+
+namespace {
+constexpr float k_quantScale = 1000.0f; // 3 décimales (cf. plan §5.5)
+}
+
+QByteArray PhysicsWorld::serializeSnapshot()
+{
+    // Force la promotion vers la frame physique la plus récente puis snapshot
+    // l'état GUI courant. On ne touche jamais m_workerBack — read-only ici.
+    tryAdvanceGuiBuffer();
+    QByteArray out;
+    if (!m_guiInUse) return out;
+
+    QDataStream ds(&out, QIODevice::WriteOnly);
+    ds.setByteOrder(QDataStream::BigEndian);
+    ds.setVersion(QDataStream::Qt_6_5);
+
+    // Détecte les bodies actifs côté snapshot et synchronise la table
+    // idIndex. Cible : un idIndex stable par actorId tant que le body existe.
+    QSet<QString> liveIds;
+    liveIds.reserve(m_guiInUse->bodies.size());
+    for (auto it = m_guiInUse->bodies.begin(); it != m_guiInUse->bodies.end(); ++it) {
+        const QString &actorId = it.key();
+        liveIds.insert(actorId);
+        if (!m_idIndexByActor.contains(actorId)) {
+            const quint16 idx = m_nextIdIndex++;
+            m_idIndexByActor.insert(actorId, idx);
+            m_actorByIdIndex.insert(idx, actorId);
+            m_pendingAnnouncements.added.insert(idx, actorId);
+            // Si le même actorId avait été marqué removed précédemment dans
+            // le même cycle (rare mais possible), annule le removal.
+            m_pendingAnnouncements.removed.removeAll(actorId);
+        }
+    }
+    // Bodies disparus depuis le dernier serialize → marquer removed.
+    QStringList toErase;
+    for (auto it = m_idIndexByActor.begin(); it != m_idIndexByActor.end(); ++it) {
+        if (!liveIds.contains(it.key())) toErase.append(it.key());
+    }
+    for (const QString &actorId : toErase) {
+        const quint16 idx = m_idIndexByActor.take(actorId);
+        m_actorByIdIndex.remove(idx);
+        if (m_pendingAnnouncements.added.remove(idx) == 0) {
+            // Pas dans added (le body avait déjà été annoncé) → publier removal.
+            m_pendingAnnouncements.removed.append(actorId);
+        }
+    }
+
+    const quint32 tick = static_cast<quint32>(m_guiInUse->tick & 0xFFFFFFFFULL);
+    const qint64 ts    = m_guiInUse->timestampNs;
+    const quint16 count = static_cast<quint16>(
+        std::min<int>(m_guiInUse->bodies.size(), 0xFFFF));
+
+    ds << tick << ts << count;
+
+    int written = 0;
+    for (auto it = m_guiInUse->bodies.begin();
+         it != m_guiInUse->bodies.end() && written < count; ++it, ++written) {
+        const BodySnapshot &b = it.value();
+        const quint16 idx = m_idIndexByActor.value(b.id, 0);
+        const qint32 px = static_cast<qint32>(std::lround(b.position.x() * k_quantScale));
+        const qint32 py = static_cast<qint32>(std::lround(b.position.y() * k_quantScale));
+        const qint32 vx = static_cast<qint32>(std::lround(b.velocity.x() * k_quantScale));
+        const qint32 vy = static_cast<qint32>(std::lround(b.velocity.y() * k_quantScale));
+        quint8 flags = 0;
+        if (b.isSleeping)  flags |= 0x01;
+        if (b.isColliding) flags |= 0x02;
+        ds << idx << px << py << vx << vy << flags;
+    }
+
+    return out;
+}
+
+void PhysicsWorld::applyRemoteSnapshot(const QByteArray &payload)
+{
+    QDataStream ds(payload);
+    ds.setByteOrder(QDataStream::BigEndian);
+    ds.setVersion(QDataStream::Qt_6_5);
+
+    quint32 tick = 0;
+    qint64 ts = 0;
+    quint16 count = 0;
+    ds >> tick >> ts >> count;
+    if (ds.status() != QDataStream::Ok) {
+        qWarning() << "[PhysicsWorld] applyRemoteSnapshot: header parse error";
+        return;
+    }
+
+    // On reconstruit intégralement m_remoteBuffer.bodies à chaque snapshot
+    // — les bodies absents disparaissent naturellement (équivalent removeBody).
+    pattounx::WorldSnapshot fresh;
+    fresh.tick = tick;
+    fresh.timestampNs = ts;
+    fresh.bodies.reserve(count);
+
+    int dropped = 0;
+    for (int i = 0; i < count; ++i) {
+        quint16 idx = 0;
+        qint32 px = 0, py = 0, vx = 0, vy = 0;
+        quint8 flags = 0;
+        ds >> idx >> px >> py >> vx >> vy >> flags;
+        if (ds.status() != QDataStream::Ok) {
+            qWarning() << "[PhysicsWorld] applyRemoteSnapshot: body" << i << "parse error";
+            return;
+        }
+        const auto it = m_actorByIdIndex.constFind(idx);
+        if (it == m_actorByIdIndex.constEnd()) {
+            // BodiesAnnounce pas encore reçu pour cet idIndex → drop ce body
+            // de cette frame. Sera visible au prochain snapshot une fois la
+            // table à jour.
+            ++dropped;
+            continue;
+        }
+        BodySnapshot b;
+        b.id = it.value();
+        b.position = QVector2D(px / k_quantScale, py / k_quantScale);
+        b.velocity = QVector2D(vx / k_quantScale, vy / k_quantScale);
+        b.isSleeping  = (flags & 0x01) != 0;
+        b.isColliding = (flags & 0x02) != 0;
+        fresh.bodies.insert(b.id, b);
+    }
+    if (dropped > 0) {
+        qDebug() << "[PhysicsWorld] applyRemoteSnapshot: dropped" << dropped
+                 << "bodies (idIndex inconnu)";
+    }
+
+    m_remoteBuffer = std::move(fresh);
+    m_lastTick = tick;
+    m_lastTimestampNs = ts;
+    if (!m_useRemoteBuffer) {
+        m_useRemoteBuffer = true;
+        qDebug() << "[PhysicsWorld] mode remote buffer activé";
+    }
+    emit snapshotAvailable(tick);
+}
+
+QVariantMap PhysicsWorld::currentBodyTable() const
+{
+    QVariantMap out;
+    for (auto it = m_actorByIdIndex.constBegin();
+         it != m_actorByIdIndex.constEnd(); ++it) {
+        out.insert(QString::number(it.key()), it.value());
+    }
+    return out;
+}
+
+QVariantMap PhysicsWorld::takePendingAnnouncements()
+{
+    QVariantMap added;
+    for (auto it = m_pendingAnnouncements.added.constBegin();
+         it != m_pendingAnnouncements.added.constEnd(); ++it) {
+        added.insert(QString::number(it.key()), it.value());
+    }
+    QVariantList removed;
+    for (const QString &id : m_pendingAnnouncements.removed) removed.append(id);
+
+    m_pendingAnnouncements.added.clear();
+    m_pendingAnnouncements.removed.clear();
+
+    QVariantMap out;
+    out.insert(QStringLiteral("added"), added);
+    out.insert(QStringLiteral("removed"), removed);
+    return out;
+}
+
+void PhysicsWorld::applyBodiesAnnounce(const QVariantMap &addedMap,
+                                       const QStringList &removed)
+{
+    for (auto it = addedMap.constBegin(); it != addedMap.constEnd(); ++it) {
+        bool ok = false;
+        const quint32 idx32 = it.key().toUInt(&ok);
+        if (!ok || idx32 == 0 || idx32 > 0xFFFF) {
+            qWarning() << "[PhysicsWorld] applyBodiesAnnounce: idIndex invalide" << it.key();
+            continue;
+        }
+        const quint16 idx = static_cast<quint16>(idx32);
+        const QString actorId = it.value().toString();
+        if (actorId.isEmpty()) continue;
+        // Réécrit toujours : les BodiesAnnounce ré-envoyés en re-broadcast
+        // périodique doivent rester idempotents.
+        m_actorByIdIndex.insert(idx, actorId);
+        m_idIndexByActor.insert(actorId, idx);
+    }
+    for (const QString &actorId : removed) {
+        const quint16 idx = m_idIndexByActor.take(actorId);
+        if (idx != 0) m_actorByIdIndex.remove(idx);
+        m_remoteBuffer.bodies.remove(actorId);
+    }
+}
+
+void PhysicsWorld::setUseRemoteBuffer(bool on)
+{
+    if (m_useRemoteBuffer == on) return;
+    m_useRemoteBuffer = on;
+    if (!on) {
+        // Repasse en local : purge la table d'idIndex et le buffer remote
+        // pour repartir d'une page propre. La sim locale est attendue
+        // comme déjà reprise (setSimulationEnabled(true) côté caller).
+        m_remoteBuffer = pattounx::WorldSnapshot();
+        m_idIndexByActor.clear();
+        m_actorByIdIndex.clear();
+        m_nextIdIndex = 1;
+        m_pendingAnnouncements.added.clear();
+        m_pendingAnnouncements.removed.clear();
+    }
+    qDebug() << "[PhysicsWorld] setUseRemoteBuffer →" << on;
 }

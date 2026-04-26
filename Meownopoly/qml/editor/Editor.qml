@@ -1137,6 +1137,7 @@ Base_Board {
     PhysicsStatusPanel {}
     CameraTestPanel { cameraRig: cameraRig }
     MultiActorTestPanel { editor: root }
+    PhysicsNetworkPanel {}
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de
     // ItemSnapableEvents (singleton C++) et pousse upsertZone/removeZone
