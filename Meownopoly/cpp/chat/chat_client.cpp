@@ -295,7 +295,7 @@ void ChatClient::requestSessionsList() {
         return;
     }
 
-    Logger::instance()->debug("Requesting sessions list", "ChatClient");
+    // Logger::instance()->debug("Requesting sessions list", "ChatClient");
     
     QJsonObject msg;
     msg["type"] = "LIST_SESSIONS";

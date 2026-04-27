@@ -71,7 +71,6 @@ Rectangle {
         }
 
         onAvailableSessionsChanged: {
-            console.log("📋 Sessions updated:", lobbyChatClient.availableSessions.length)
         }
 
         onErrorOccurred: function(error, errorType) {

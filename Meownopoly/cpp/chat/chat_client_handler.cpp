@@ -392,7 +392,7 @@ void ChatClient::handleParticipantsList(const QJsonObject &payload) {
 }
 
 void ChatClient::handleSessionsList(const QJsonObject &payload) {
-    Logger::instance()->debug("Received sessions list", "ChatClient");
+    // Logger::instance()->debug("Received sessions list", "ChatClient");
 
     m_availableSessions.clear();
 
@@ -423,7 +423,7 @@ void ChatClient::handleSessionsList(const QJsonObject &payload) {
         m_availableSessions.append(sessionMap);
     }
 
-    Logger::instance()->debug(QString("Sessions list updated: %1 sessions").arg(m_availableSessions.size()), "ChatClient");
+    // Logger::instance()->debug(QString("Sessions list updated: %1 sessions").arg(m_availableSessions.size()), "ChatClient");
     emit availableSessionsChanged();
 }
 

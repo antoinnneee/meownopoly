@@ -106,7 +106,7 @@ void ChatWorker::onDisconnected()
 
 void ChatWorker::onTextMessageReceived(const QString &message)
 {
-    qDebug() << "[ChatWorker] Message received in thread:" << QThread::currentThread();
+    // qDebug() << "[ChatWorker] Message received in thread:" << QThread::currentThread();
     emit textMessageReceived(message);
 }
 
