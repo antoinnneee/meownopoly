@@ -33,6 +33,13 @@ enum Value : quint8 {
     /// client → hôte : input du clavier d'un client distant, à appliquer côté
     /// hôte via `pushInput(actorId, vec)` avant le prochain step.
     InputUpdate      = 0x42,
+
+    /// client → hôte : "je viens de basculer en CLIENT, envoie-moi la full
+    /// table d'idIndex sans attendre le timer 1 Hz". Évite la course où le
+    /// BodiesAnnounce delta initial est envoyé par l'host AVANT que le client
+    /// n'écoute reliableMessageReceived → tous les snapshots suivants
+    /// "droppent" leurs bodies pour idIndex inconnu.
+    Hello            = 0x43,
 };
 Q_ENUM_NS(Value)
 

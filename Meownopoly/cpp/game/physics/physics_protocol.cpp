@@ -31,7 +31,7 @@ bool PhysicsProtocol::isPhysicsPacket(const QByteArray &data)
     // Plage physique : Snapshot (0x40) → InputUpdate (0x42). À étendre quand
     // de nouveaux types apparaissent (cf. note dans physics_message_type.h).
     return rawType >= PhysicsMessageType::Snapshot
-        && rawType <= PhysicsMessageType::InputUpdate;
+        && rawType <= PhysicsMessageType::Hello;
 }
 
 bool PhysicsProtocol::peekType(const QByteArray &data,

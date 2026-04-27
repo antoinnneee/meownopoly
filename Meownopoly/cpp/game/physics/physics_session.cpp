@@ -124,6 +124,19 @@ bool PhysicsSession::startAsClient(const QString &localPlayerId,
     m_world->setSimulationEnabled(false);
     m_world->setUseRemoteBuffer(true);
 
+    // Hello explicite à l'host : demande la full table d'idIndex sans
+    // attendre le timer 1 Hz. Sinon course possible où les snapshots arrivent
+    // avant que le client n'ait reçu le BodiesAnnounce → drop en boucle.
+    if (PlayerNetwork *host = Catway::instance()->playerById(hostPlayerId)) {
+        const QByteArray pkt = PhysicsProtocol::packJson(
+            PhysicsMessageType::Hello, QJsonObject{});
+        Catway::instance()->sendReliableToPlayer(host, pkt);
+        qDebug() << "[PhysicsSession] CLIENT → Hello envoyé à" << hostPlayerId;
+    } else {
+        qWarning() << "[PhysicsSession] CLIENT start : host introuvable dans Catway"
+                   << hostPlayerId << "— Hello non envoyé, attendra le timer 1 Hz";
+    }
+
     emit localPlayerIdChanged();
     emit hostPlayerIdChanged();
     emit isHostChanged();
@@ -315,6 +328,8 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         QStringList removed;
         removed.reserve(removedArr.size());
         for (const QJsonValue &v : removedArr) removed.append(v.toString());
+        qDebug() << "[PhysicsSession] CLIENT ← BodiesAnnounce de" << senderId
+                 << ": added =" << addedMap.size() << ", removed =" << removed.size();
         m_world->applyBodiesAnnounce(addedMap, removed);
         break;
     }
@@ -329,6 +344,27 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
         const float x = static_cast<float>(payload.value(QStringLiteral("x")).toDouble());
         const float y = static_cast<float>(payload.value(QStringLiteral("y")).toDouble());
         m_world->pushInput(actorId, QVector2D(x, y));
+        break;
+    }
+
+    case PhysicsMessageType::Hello: {
+        // Côté hôte : un client vient de démarrer, lui pousser la full table
+        // d'idIndex en point-à-point pour qu'il puisse interpréter les
+        // snapshots qui arrivent.
+        if (!m_isHost) break;
+        const QVariantMap full = m_world->currentBodyTable();
+        const QJsonObject payload = buildAnnouncePayloadFromMap(full);
+        const QByteArray pkt = PhysicsProtocol::packJson(
+            PhysicsMessageType::BodiesAnnounce, payload);
+        if (PlayerNetwork *peer = Catway::instance()->playerById(senderId)) {
+            Catway::instance()->sendReliableToPlayer(peer, pkt);
+            qDebug() << "[PhysicsSession] HOST ← Hello de" << senderId
+                     << "→ envoi BodiesAnnounce full table (" << full.size()
+                     << "bodies)";
+        } else {
+            qWarning() << "[PhysicsSession] Hello reçu mais sender introuvable :"
+                       << senderId;
+        }
         break;
     }
     }
