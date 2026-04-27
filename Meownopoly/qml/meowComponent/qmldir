@@ -12,6 +12,7 @@ GridManager 1.0 grid/GridManager.qml
 SnapableElement 1.0 snapable/SnapableElement.qml
 SnapableDecoration 1.0 snapable/SnapableDecoration.qml
 SnapableExclusionZone 1.0 snapable/SnapableExclusionZone.qml
+SnapablePhysicalObject 1.0 snapable/SnapablePhysicalObject.qml
 SnapableCaseTile 1.0 snapable/SnapableCaseTile.qml
 AssetPreviewCursor 1.0 preview/AssetPreviewCursor.qml
 LinkPreviewCursor 1.0 preview/LinkPreviewCursor.qml

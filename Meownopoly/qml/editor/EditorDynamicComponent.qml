@@ -11,6 +11,7 @@ Item{
     property alias snapableCaseTileComponent: snapableCaseTileComponent
     property alias snapableDecorationComponent: snapableDecorationComponent
     property alias snapablePhysicZoneComponent: snapablePhysicZoneComponent
+    property alias snapablePhysicalObjectComponent: snapablePhysicalObjectComponent
     property alias mouseLogic_selection_comp: mouseLogic_selection_comp
     property alias mouseLogic_pose_comp: mouseLogic_pose_comp
     property alias mouseLogic_game_comp: mouseLogic_game_comp
@@ -49,6 +50,15 @@ Item{
     Component {
         id: snapablePhysicZoneComponent
         SnapableExclusionZone {
+            gridManager: gameGrid
+            displayLinkEnable: logic.tileLogic.displayLinkEnable === true
+            onElementDeleted: editorDynamicComponent._handleElementDeleted(element)
+        }
+    }
+
+    Component {
+        id: snapablePhysicalObjectComponent
+        SnapablePhysicalObject {
             gridManager: gameGrid
             displayLinkEnable: logic.tileLogic.displayLinkEnable === true
             onElementDeleted: editorDynamicComponent._handleElementDeleted(element)

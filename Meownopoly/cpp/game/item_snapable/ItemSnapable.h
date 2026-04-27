@@ -41,6 +41,7 @@ public:
         CaseTile,
         DecorationTile,
         PhysicZoneTile,
+        PhysicalObjectTile,
     };
     Q_ENUM(TileType)
 
@@ -110,6 +111,12 @@ public:
             if (m_caseData && other.m_caseData)
                 if (m_caseData->toJSON() != other.m_caseData->toJSON())
                     return false;
+            break;
+        case PhysicalObjectTile:
+            // Phase 9 — pas (encore) de PhysicalObjectParameter dédié.
+            // Le contenu est entièrement porté par displayParameter (pos+taille)
+            // qui est comparé plus haut. Egalité de tileType + displayParameter
+            // suffit donc.
             break;
         }
         if (next.size() != other.next.size() || prev.size() != other.prev.size())

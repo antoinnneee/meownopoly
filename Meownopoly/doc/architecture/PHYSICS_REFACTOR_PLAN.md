@@ -1051,21 +1051,58 @@ collision change. ✅
   registry pour éviter qu'une anim continue à modifier `visualY` après
   démontage du PhysicsActor.
 
-### Phase 9 — `PhysicsObject` (caisse à pousser)
+### Phase 9 — `PhysicsObject` (caisse à pousser) ✅
 
 **Livrables** :
-- Nouveau `tileType` `ItemSnapable::PhysicalObjectTile` côté C++
-- Snapable QML correspondant `SnapablePhysicalObject.qml` instancié par
-  `EditorDynamicComponent` (factory existante, cf. ANALYSE_ARCHITECTURE_EDITEUR.md
-  section 7.2)
-- Bridge `EditorPhysicsBridge` étendu : route `PhysicalObjectTile` vers
-  `physicsWorld.createDynamicCircleFromSnapable` à la création,
-  `setBodyPosition` au move, `removeBody` à la suppression (cf. 5.11
-  mis à jour)
-- `PhysicsObject` QML (présentateur, cf. 5.8) lit la position depuis le
-  snapshot et place le `node3D` de la caisse
+- Nouveau `tileType` `ItemSnapable::PhysicalObjectTile = 3` côté C++
+  (`cpp/game/item_snapable/ItemSnapable.h`). Range de validation JSON
+  étendue (`ItemSnapable.cpp:61`). `operator==` couvre le nouveau cas
+  via egalité de `displayParameter` (pas de `PhysicalObjectParameter`
+  dédié pour l'instant — cf. note ci-dessous).
+- `ItemSnapableFactory::createPhysicalObject()` qui pose un default 1×1
+  case (cercle inscrit de rayon 0.5). Pas de paramètre `mass`/`bounce`
+  exposé (defaults en dur côté bridge).
+- `qml/meowComponent/snapable/SnapablePhysicalObject.qml` : présentation
+  éditeur 2D (cercle orange hatché, croix centrale, label rayon en
+  sélection). `isResizable: false` pour garder la cohérence
+  édition↔physique.
+- `EditorDynamicComponent.qml` : `snapablePhysicalObjectComponent` ;
+  `TileLogic.createItemSnapableTile` étendu pour router le nouveau
+  type vers ce composant.
+- `EditorPhysicsBridge` étendu : `_isPhysicalObject(tile)` filtre +
+  `_upsertObjectNow(tile)` qui appelle `physicsWorld.createDynamicCircle`
+  (centre = origine + (W/2, H/2), radius = min(W,H)/2, mass = 1.0). Au
+  `tileMoved`, on ré-upsert (équivalent à `setBodyPosition`). Au
+  `tileDeleted`, on appelle `removeBody`. Le bridge gère désormais ZONE
+  + OBJECT en parallèle, dispatchés dans `_flushPending` selon
+  `_isPhysicZone` / `_isPhysicalObject`.
+- `qml/world3d/PhysicsObject.qml` : présentateur 3D minimal (lit
+  `bodyState`, place `node3D.x/z` avec lissage, `node3D.y = visualY`).
+  Identique à `PhysicsActor` côté lecture, sans helpers Y visuel /
+  orientation auto.
+- `qml/world3d/PhysicsObjectSpawner.qml` : écoute `ItemSnapableEvents`,
+  instancie un `Model` (cube `#Cube` orange scalé sur `unitSizeWidth *
+  gridSize`) + un `PhysicsObject` pour chaque `PhysicalObjectTile`. Le
+  spawner posse le `visualY = halfSide` pour que la base du cube touche
+  le sol Y=0. À la suppression, détruit Model + presenter.
+- `qml/editor/CrateTestPanel.qml` : badge top-right (sous JumpTestPanel,
+  topMargin 192) avec deux boutons "Spawn" (pose une caisse 1.5 case
+  devant le joueur) et "Clear" (supprime toutes les
+  `PhysicalObjectTile` de la map courante). Passe par
+  `TileLogic.createItemSnapableTile` + `Game.updateMap(EditDelta.TileAdded)`
+  donc compatible collab et undo.
 
 **Critère de sortie** : démo "chat pousse caisse sur glace" fonctionnelle.
+Build + 4/4 ctest verts. Validation interactive en main (l'agent ne
+peut pas piloter la GUI).
+
+**Note pragmatique — pas de `PhysicalObjectParameter` Phase 9** :
+Pour rester minimal, on n'a PAS créé de `PhysicalObjectParameter` C++.
+Le rayon du body Dynamic est dérivé du `displayParameter.unitSizeWidth`
+(cercle inscrit), la masse est fixée à 1.0 dans le bridge. Une future
+itération exposera `mass`/`bounce`/`friction` via un nouveau parameter
+type, et changera la `shape` configurable (Circle / Box) côté
+`BodySpec`. La piste est ouverte mais pas encore implémentée.
 
 ## 7. Tests
 

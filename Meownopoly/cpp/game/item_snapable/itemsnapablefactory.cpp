@@ -66,6 +66,17 @@ ItemSnapable *ItemSnapableFactory::createPhysicZone()
     return snap;
 }
 
+ItemSnapable *ItemSnapableFactory::createPhysicalObject()
+{
+    ItemSnapable *snap = new ItemSnapable();
+    snap->setTileType(ItemSnapable::PhysicalObjectTile);
+    // Taille initiale 1×1 case = cercle de rayon 0.5 case (cf. EditorPhysicsBridge).
+    snap->displayParameter()->setUnitSizeWidth(1);
+    snap->displayParameter()->setUnitSizeHeight(1);
+    QQmlEngine::setObjectOwnership(snap, QQmlEngine::JavaScriptOwnership);
+    return snap;
+}
+
 void ItemSnapableFactory::requestCreateItem(const QJsonObject &jsonData)
 {
     emit createItemRequested(jsonData);

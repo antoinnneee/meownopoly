@@ -50,6 +50,7 @@
         <file>qml/meowComponent/snapable/SnapableElementDeleteAnimation.qml</file>
         <file>qml/meowComponent/snapable/SnapableElementResizeHandles.qml</file>
         <file>qml/meowComponent/snapable/SnapableExclusionZone.qml</file>
+        <file>qml/meowComponent/snapable/SnapablePhysicalObject.qml</file>
         <file>qml/meowComponent/AdminCommandPanel.qml</file>
         <file>qml/meowComponent/Background.qml</file>
         <file>qml/meowComponent/Base_Board.qml</file>

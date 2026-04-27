@@ -58,7 +58,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
 
     // Valider et parser le tileType
     int rawTileType = m_json["tileType"].toInt(-1);
-    if (rawTileType < CaseTile || rawTileType > PhysicZoneTile) {
+    if (rawTileType < CaseTile || rawTileType > PhysicalObjectTile) {
         qWarning() << "ITEM_SNAPABLE: tileType invalide:" << rawTileType
                     << "pour la tile" << m_json["uniqueId"].toString() << "- défaut à DecorationTile";
         m_tileType = DecorationTile;

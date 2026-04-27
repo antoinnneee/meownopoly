@@ -1139,6 +1139,11 @@ Base_Board {
     MultiActorTestPanel { editor: root }
     PhysicsNetworkPanel {}
     JumpTestPanel { actor: playerActor }
+    CrateTestPanel {
+        logic: root.logic
+        actor: playerActor
+        physicsWorld: pattounxWorld
+    }
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de
     // ItemSnapableEvents (singleton C++) et pousse upsertZone/removeZone
@@ -1147,6 +1152,15 @@ Base_Board {
     EditorPhysicsBridge {
         id: editorPhysicsBridge
         physicsWorld: pattounxWorld
+    }
+
+    // Phase 9 — pour chaque PhysicalObjectTile posée, instancie un Model 3D
+    // (cube orange) + un PhysicsObject (présentateur) qui lit le snapshot
+    // physique. La création du body Dynamic est faite par EditorPhysicsBridge
+    // ci-dessus, donc les deux écoutent le même flux ItemSnapableEvents.
+    PhysicsObjectSpawner {
+        id: physicsObjectSpawner
+        world3D: gameScene
     }
 
     // Zone de travail de l'éditeur (par-dessus la grille)
