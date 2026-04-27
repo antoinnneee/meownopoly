@@ -58,8 +58,23 @@ target_link_libraries(tst_physics_worker PRIVATE
     Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml)
 add_test(NAME tst_physics_worker COMMAND tst_physics_worker)
 
+# Test : codec snapshot réseau (round-trip serialize/applyRemoteSnapshot)
+qt_add_executable(tst_snapshot_codec
+    tst_snapshot_codec.cpp
+    ${PATTOUNX_TEST_SOURCES}
+    ${PATTOUNX_WORKER_SOURCES}
+    ${PATTOUNX_WORKER_HEADERS}
+)
+target_include_directories(tst_snapshot_codec PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cpp"
+    "${PHYSICS_DIR}"
+)
+target_link_libraries(tst_snapshot_codec PRIVATE
+    Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml)
+add_test(NAME tst_snapshot_codec COMMAND tst_snapshot_codec)
+
 # Cible agrégée demandée par le plan : pattounx_tests
 add_custom_target(pattounx_tests
-    DEPENDS tst_collision2d tst_pattounx_engine tst_physics_worker
+    DEPENDS tst_collision2d tst_pattounx_engine tst_physics_worker tst_snapshot_codec
     COMMENT "Build all PattounX unit tests"
 )
