@@ -105,6 +105,31 @@ Item {
         border.color: "#71717a"
         border.width: 1
 
+        // Button stylé sombre/lisible — évite que le style Material par défaut
+        // tronque le label sur les petits boutons du panel.
+        component PillBtn: Button {
+            id: btn
+            implicitHeight: 26
+            padding: 4
+            leftPadding: 8; rightPadding: 8
+            contentItem: Text {
+                text: btn.text
+                color: btn.enabled ? "#f4f4f5" : "#71717a"
+                font.pixelSize: 11
+                font.bold: true
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+            }
+            background: Rectangle {
+                color: btn.pressed ? "#3f3f46" : (btn.hovered ? "#33333a" : "#2a2a2e")
+                radius: 4
+                border.color: "#52525b"
+                border.width: 1
+                opacity: btn.enabled ? 1.0 : 0.5
+            }
+        }
+
         ColumnLayout {
             id: contentColumn
             anchors.fill: parent
@@ -166,9 +191,9 @@ Item {
                     color: "#f4f4f5"
                     background: Rectangle { color: "#0e0e13"; radius: 4; border.color: "#3f3f46"; border.width: 1 }
                 }
-                Button {
-                    text: "📥"
-                    implicitWidth: 28; implicitHeight: 28
+                PillBtn {
+                    text: "↓"
+                    implicitWidth: 28
                     ToolTip.visible: hovered
                     ToolTip.text: "Pré-remplir avec le 1er peer P2P connecté"
                     onClicked: {
@@ -181,13 +206,13 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 6
-                Button {
+                PillBtn {
                     Layout.fillWidth: true
                     text: "HOST"
                     enabled: !PhysicsSession.active
                     onClicked: PhysicsSession.startAsHost(localIdField.text)
                 }
-                Button {
+                PillBtn {
                     Layout.fillWidth: true
                     text: "CLIENT"
                     enabled: !PhysicsSession.active && hostIdField.text.length > 0
@@ -201,7 +226,7 @@ Item {
                         PhysicsSession.startAsClient(localIdField.text, hostIdField.text)
                     }
                 }
-                Button {
+                PillBtn {
                     Layout.fillWidth: true
                     text: "STOP"
                     enabled: PhysicsSession.active
@@ -224,7 +249,7 @@ Item {
                 background: Rectangle { color: "#0e0e13"; radius: 4; border.color: "#3f3f46"; border.width: 1 }
             }
 
-            Button {
+            PillBtn {
                 Layout.fillWidth: true
                 visible: PhysicsSession.active && PhysicsSession.isHost
                 text: "Spawn body 'player2'"
@@ -273,7 +298,7 @@ Item {
                 wrapMode: Text.WordWrap
             }
 
-            Button {
+            PillBtn {
                 Layout.fillWidth: true
                 visible: PhysicsSession.active && PhysicsSession.isHost
                 text: "Re-broadcast table complète"
