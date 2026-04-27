@@ -1138,6 +1138,7 @@ Base_Board {
     CameraTestPanel { cameraRig: cameraRig }
     MultiActorTestPanel { editor: root }
     PhysicsNetworkPanel {}
+    JumpTestPanel { actor: playerActor }
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de
     // ItemSnapableEvents (singleton C++) et pousse upsertZone/removeZone

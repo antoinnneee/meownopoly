@@ -1018,15 +1018,38 @@ et glissent comme prévu.
 l'instance 2 contrôlé via clavier de l'instance 2, vu en quasi-temps
 réel sur l'instance 1 (latence ~1 RTT/2 + 33 ms).
 
-### Phase 8 — Y visuel (2.5D présentation)
+### Phase 8 — Y visuel (2.5D présentation) ✅
 
 **Livrables** :
-- `PhysicsActor.visualY` animé via `NumberAnimation` (saut, vague)
-- API helper `actor.jump(height, duration)`
-- Aucune modification du moteur : `visualY` est purement GUI
+- `PhysicsActor.visualY` animé via `SequentialAnimation` (deux
+  `NumberAnimation` chaînés). Property `restY` (default 0) pour la
+  hauteur de repos.
+- API helpers : `actor.jump(height, duration)` (parabole OutQuad/InQuad,
+  défauts 1.0 / 600 ms), `actor.wave(amplitude, period)` (sinusoïde
+  InOutSine infinie, défauts 0.5 / 800 ms), `actor.stopVisualY()`
+  (stop + reset à `restY`).
+- `qml/editor/JumpTestPanel.qml` : badge top-right (sous
+  PhysicsNetworkPanel, topMargin 156) avec boutons "Jump" + "Wave"
+  (toggle). Cible le `playerActor` (P1) passé en property.
+- Aucune modification du moteur : `visualY` est purement GUI ; les
+  helpers ne touchent pas `pattounxWorld`. La collision (rayon, position
+  grille) est déterminée par le snapshot du body, qui ne dépend pas de
+  `visualY`. `pullAndApply` ré-écrit simplement `node3D.y = visualY`
+  chaque frame.
 
 **Critère de sortie** : un chat peut sauter visuellement sans que la
-collision change.
+collision change. ✅
+
+**Notes d'implémentation** :
+- Les `Component`-templates (`_jumpAnim`, `_waveAnim`) utilisent un `id`
+  sur la `SequentialAnimation` plutôt que `parent.X` depuis les
+  `NumberAnimation` enfants — la sémantique `parent` n'est pas garantie
+  pour les `Animation` (pas des `Item`).
+- L'anim courante est stockée dans `_yAnim` puis `destroy()` à
+  l'arrêt — sinon les instances éphémères s'accumulent à chaque clic.
+- `Component.onDestruction` appelle `stopVisualY()` avant de retirer du
+  registry pour éviter qu'une anim continue à modifier `visualY` après
+  démontage du PhysicsActor.
 
 ### Phase 9 — `PhysicsObject` (caisse à pousser)
 
