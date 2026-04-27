@@ -133,6 +133,12 @@ public:
     /// repasser en local après une déconnexion réseau côté client.
     Q_INVOKABLE void setUseRemoteBuffer(bool on);
 
+    /// Purge l'état réseau (table idIndex, pending, remote buffer, nextIdIndex).
+    /// À appeler à stop() côté hôte ET client pour repartir d'une page propre
+    /// si on relance une session — sinon on rebroadcaste/réutilise des
+    /// idIndex de la session précédente.
+    Q_INVOKABLE void resetNetworkState();
+
 signals:
     void runningChanged();
     void tickRateChanged();

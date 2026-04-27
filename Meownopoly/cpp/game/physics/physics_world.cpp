@@ -606,16 +606,16 @@ void PhysicsWorld::setUseRemoteBuffer(bool on)
 {
     if (m_useRemoteBuffer == on) return;
     m_useRemoteBuffer = on;
-    if (!on) {
-        // Repasse en local : purge la table d'idIndex et le buffer remote
-        // pour repartir d'une page propre. La sim locale est attendue
-        // comme déjà reprise (setSimulationEnabled(true) côté caller).
-        m_remoteBuffer = pattounx::WorldSnapshot();
-        m_idIndexByActor.clear();
-        m_actorByIdIndex.clear();
-        m_nextIdIndex = 1;
-        m_pendingAnnouncements.added.clear();
-        m_pendingAnnouncements.removed.clear();
-    }
+    if (!on) resetNetworkState();
     qDebug() << "[PhysicsWorld] setUseRemoteBuffer →" << on;
+}
+
+void PhysicsWorld::resetNetworkState()
+{
+    m_remoteBuffer = pattounx::WorldSnapshot();
+    m_idIndexByActor.clear();
+    m_actorByIdIndex.clear();
+    m_nextIdIndex = 1;
+    m_pendingAnnouncements.added.clear();
+    m_pendingAnnouncements.removed.clear();
 }

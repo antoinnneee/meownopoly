@@ -125,13 +125,17 @@ bool PhysicsSession::startAsClient(const QString &localPlayerId,
     m_world->setUseRemoteBuffer(true);
 
     // Hello explicite à l'host : demande la full table d'idIndex sans
-    // attendre le timer 1 Hz. Sinon course possible où les snapshots arrivent
-    // avant que le client n'ait reçu le BodiesAnnounce → drop en boucle.
+    // attendre le timer 1 Hz, et embarque le claim local pour que l'host
+    // sache quel actor il ne doit plus pousser localement.
     if (PlayerNetwork *host = Catway::instance()->playerById(hostPlayerId)) {
+        QJsonObject helloPayload;
+        if (!m_claimedActorId.isEmpty())
+            helloPayload.insert(QStringLiteral("claim"), m_claimedActorId);
         const QByteArray pkt = PhysicsProtocol::packJson(
-            PhysicsMessageType::Hello, QJsonObject{});
+            PhysicsMessageType::Hello, helloPayload);
         Catway::instance()->sendReliableToPlayer(host, pkt);
-        qDebug() << "[PhysicsSession] CLIENT → Hello envoyé à" << hostPlayerId;
+        qDebug() << "[PhysicsSession] CLIENT → Hello envoyé à" << hostPlayerId
+                 << "claim =" << m_claimedActorId;
     } else {
         qWarning() << "[PhysicsSession] CLIENT start : host introuvable dans Catway"
                    << hostPlayerId << "— Hello non envoyé, attendra le timer 1 Hz";
@@ -153,10 +157,16 @@ void PhysicsSession::stop()
     m_fullTableTimer.stop();
 
     if (m_world) {
-        // Repasse en mode local. Le caller décide s'il veut relancer la sim.
         if (!m_isHost) {
+            // Repasse en local + relance la sim. setUseRemoteBuffer(false)
+            // appelle resetNetworkState() en interne (purge table + buffer).
             m_world->setUseRemoteBuffer(false);
             m_world->setSimulationEnabled(true);
+        } else {
+            // Host : pas de mode remote à toggle, mais on purge quand même
+            // pour ne pas réutiliser les idIndex de la session précédente
+            // si on relance startAsHost.
+            m_world->resetNetworkState();
         }
     }
 
@@ -164,6 +174,7 @@ void PhysicsSession::stop()
     m_isHost = false;
     m_localPlayerId.clear();
     m_hostPlayerId.clear();
+    m_remoteClaims.clear();
     m_snapshotsSent = 0;
     m_snapshotsReceived = 0;
 
@@ -198,8 +209,16 @@ void PhysicsSession::disconnectFromCatway()
 void PhysicsSession::pushOrSendInput(const QString &actorId, QVector2D input)
 {
     if (!m_world) return;
-    if (!m_active || m_isHost) {
-        // Mode local OU hôte : push direct dans la sim.
+    if (!m_active) {
+        m_world->pushInput(actorId, input);
+        return;
+    }
+    if (m_isHost) {
+        // Côté hôte : si un client distant a déjà claim cet actor, on
+        // ignore le push local — sinon les deux claviers se battent.
+        for (auto it = m_remoteClaims.constBegin(); it != m_remoteClaims.constEnd(); ++it) {
+            if (it.value() == actorId) return;
+        }
         m_world->pushInput(actorId, input);
         return;
     }
@@ -265,7 +284,7 @@ void PhysicsSession::broadcastFullBodyTable()
     if (!m_active || !m_isHost || !m_world) return;
     const QVariantMap full = m_world->currentBodyTable();
     if (full.isEmpty()) return; // rien à annoncer
-    const QJsonObject payload = buildAnnouncePayloadFromMap(full);
+    const QJsonObject payload = buildAnnouncePayload(full);
     const QByteArray packet = PhysicsProtocol::packJson(
         PhysicsMessageType::BodiesAnnounce, payload);
     Catway::instance()->broadcastReliable(packet);
@@ -282,17 +301,6 @@ QJsonObject PhysicsSession::buildAnnouncePayload(const QVariantMap &added,
     QJsonObject payload;
     payload.insert(QStringLiteral("added"), addedJson);
     payload.insert(QStringLiteral("removed"), removedJson);
-    return payload;
-}
-
-QJsonObject PhysicsSession::buildAnnouncePayloadFromMap(const QVariantMap &fullTable)
-{
-    QJsonObject addedJson;
-    for (auto it = fullTable.constBegin(); it != fullTable.constEnd(); ++it)
-        addedJson.insert(it.key(), it.value().toString());
-    QJsonObject payload;
-    payload.insert(QStringLiteral("added"), addedJson);
-    payload.insert(QStringLiteral("removed"), QJsonArray{});
     return payload;
 }
 
@@ -350,10 +358,21 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
     case PhysicsMessageType::Hello: {
         // Côté hôte : un client vient de démarrer, lui pousser la full table
         // d'idIndex en point-à-point pour qu'il puisse interpréter les
-        // snapshots qui arrivent.
+        // snapshots. On enregistre aussi son claim pour filtrer les pushInput
+        // locaux conflictuels.
         if (!m_isHost) break;
+        QJsonObject helloPayload;
+        PhysicsMessageType::Value t;
+        if (PhysicsProtocol::unpackJson(data, t, helloPayload)) {
+            const QString claim = helloPayload.value(QStringLiteral("claim")).toString();
+            if (!claim.isEmpty()) {
+                m_remoteClaims.insert(senderId, claim);
+                qDebug() << "[PhysicsSession] HOST : claim enregistré"
+                         << senderId << "→" << claim;
+            }
+        }
         const QVariantMap full = m_world->currentBodyTable();
-        const QJsonObject payload = buildAnnouncePayloadFromMap(full);
+        const QJsonObject payload = buildAnnouncePayload(full);
         const QByteArray pkt = PhysicsProtocol::packJson(
             PhysicsMessageType::BodiesAnnounce, payload);
         if (PlayerNetwork *peer = Catway::instance()->playerById(senderId)) {
@@ -379,5 +398,13 @@ void PhysicsSession::onPlayerTimedOut(const QString &playerId)
         // (élection, promotion) sera ajoutée au-dessus de l'éditeur collab si
         // nécessaire (cf. EditorSession::promoteToHost).
         stop();
+        return;
+    }
+    if (m_isHost) {
+        // Un client est tombé : libère son claim, le host peut re-pousser
+        // localement l'actor s'il en a envie.
+        if (m_remoteClaims.remove(playerId) > 0) {
+            qDebug() << "[PhysicsSession] HOST : claim libéré pour" << playerId;
+        }
     }
 }

@@ -120,9 +120,9 @@ private:
     void broadcastSnapshot();
 
     /// Construit le payload JSON BodiesAnnounce { added: {idx → id}, removed: [id] }.
+    /// `removed` peut être omis (cas re-broadcast full table).
     static QJsonObject buildAnnouncePayload(const QVariantMap &added,
-                                            const QVariantList &removed);
-    static QJsonObject buildAnnouncePayloadFromMap(const QVariantMap &fullTable);
+                                            const QVariantList &removed = {});
 
     QPointer<PhysicsWorld> m_world;
 
@@ -136,6 +136,13 @@ private:
     QTimer m_fullTableTimer; // re-broadcast périodique de la table (couvre late-join + paquets perdus)
 
     QString m_claimedActorId;
+
+    // Hôte uniquement : suivi des actorId revendiqués par chaque client
+    // distant. Renseigné via le payload du Hello reçu d'un peer. Sert à
+    // ignorer les pushInput locaux pour des actors qu'un client contrôle
+    // déjà — sinon les flèches du host se battent avec les InputUpdate du
+    // client. Purgé à playerTimedOut + stop.
+    QHash<QString, QString> m_remoteClaims; // senderId → actorId
 
     quint64 m_snapshotsSent = 0;
     quint64 m_snapshotsReceived = 0;
