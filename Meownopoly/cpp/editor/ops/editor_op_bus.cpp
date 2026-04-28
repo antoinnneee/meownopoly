@@ -234,6 +234,55 @@ QJsonObject EditorOpBus::makeUnlinkOp(const QString &source,
     };
 }
 
+// ── Player Config Panel (PCP_*) ──────────────────────────────────────────────
+
+QJsonObject EditorOpBus::makeAddPlayerProfileOp(const QJsonObject &profile) const
+{
+    return QJsonObject{
+        { "op",      static_cast<int>(EditorOpType::AddPlayerProfile) },
+        { "profile", profile },
+    };
+}
+
+QJsonObject EditorOpBus::makeRemovePlayerProfileOp(const QString &id) const
+{
+    return QJsonObject{
+        { "op", static_cast<int>(EditorOpType::RemovePlayerProfile) },
+        { "id", id },
+    };
+}
+
+QJsonObject EditorOpBus::makeUpdatePlayerProfileOp(const QString &id,
+                                                   const QJsonObject &fields) const
+{
+    return QJsonObject{
+        { "op",     static_cast<int>(EditorOpType::UpdatePlayerProfile) },
+        { "id",     id },
+        { "fields", fields },
+    };
+}
+
+QJsonObject EditorOpBus::makeReorderPlayerProfileOp(const QString &id,
+                                                    int newIndex) const
+{
+    return QJsonObject{
+        { "op",       static_cast<int>(EditorOpType::ReorderPlayerProfile) },
+        { "id",       id },
+        { "newIndex", newIndex },
+    };
+}
+
+QJsonObject EditorOpBus::makeSetMapPlayerLimitsOp(const QJsonObject &fields) const
+{
+    QJsonObject op{
+        { "op", static_cast<int>(EditorOpType::SetMapPlayerLimits) },
+    };
+    // On ne recopie que les champs reconnus pour éviter de polluer la wire.
+    if (fields.contains("minPlayers")) op.insert("minPlayers", fields.value("minPlayers"));
+    if (fields.contains("maxPlayers")) op.insert("maxPlayers", fields.value("maxPlayers"));
+    return op;
+}
+
 // ── Pattern B : broadcast d'un EditDelta générique ───────────────────────────
 
 void EditorOpBus::submitFromDelta(int type,

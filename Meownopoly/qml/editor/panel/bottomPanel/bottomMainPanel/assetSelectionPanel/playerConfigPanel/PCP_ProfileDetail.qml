@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import PlayerProfile
 import Game
 import MapInfo
+import EditorOpBus
 
 /*
  * Panneau d'édition d'un PlayerProfile. Visible quand un profil est
@@ -13,9 +14,10 @@ import MapInfo
  *  - gauche : Mode de sélection + Nom + ModelPicker + Presets
  *  - droite : onglets Simple/Expert avec sliders (scrollables)
  *
- * Pattern d'écriture (Phase 2b — pré-collab) : mutation directe sur le
- * profil + capture avant/après via mapInfo.toJSON() + Game.updateMapMetadata.
- * Phase 4 routera tout via EditorOpBus.makeUpdatePlayerProfileOp.
+ * Pattern d'écriture (Phase 4) : mutation locale immédiate + autosave
+ * via Game.updateMapMetadata + EditorOpBus.submitOp(UpdatePlayerProfile)
+ * pour broadcast collab. Le payload `fields` ne contient que les champs
+ * effectivement changés (delta minimal sur la wire).
  */
 Item {
     id: root
@@ -23,11 +25,16 @@ Item {
     property var profile: null
     property var mapInfo: null
 
-    function _mutate(applyFn) {
+    /// Mute un champ du profil, déclenche autosave et broadcast l'op
+    /// UpdatePlayerProfile correspondante. `fields` est un objet partiel
+    /// {name: value, ...} qui sera appliqué côté peer via applyJson.
+    function _mutateFields(fields, applyFn) {
         if (!root.profile || !root.mapInfo) return
         const before = root.mapInfo.toJSON()
         applyFn()
         Game.updateMapMetadata(before, root.mapInfo.toJSON())
+        EditorOpBus.submitOp(EditorOpBus.makeUpdatePlayerProfileOp(
+                                root.profile.id, fields))
     }
 
     // Placeholder quand aucune classe n'est sélectionnée.
@@ -74,11 +81,13 @@ Item {
                 minOccurrences: root.profile ? root.profile.minOccurrences : 1
                 onPickModeRequested: function(mode) {
                     if (!root.profile || mode === root.profile.pickMode) return
-                    root._mutate(() => { root.profile.pickMode = mode })
+                    root._mutateFields({ "pickMode": mode },
+                                       () => { root.profile.pickMode = mode })
                 }
                 onMinOccurrencesRequested: function(n) {
                     if (!root.profile || n === root.profile.minOccurrences) return
-                    root._mutate(() => { root.profile.minOccurrences = n })
+                    root._mutateFields({ "minOccurrences": n },
+                                       () => { root.profile.minOccurrences = n })
                 }
             }
 
@@ -113,7 +122,8 @@ Item {
                             if (!root.profile) return
                             const v = text.trim()
                             if (!v || v === root.profile.name) return
-                            root._mutate(() => { root.profile.name = v })
+                            root._mutateFields({ "name": v },
+                                               () => { root.profile.name = v })
                         }
                     }
                 }
@@ -134,7 +144,8 @@ Item {
                         currentModel: root.profile ? root.profile.modelName : ""
                         onModelSelected: function(name) {
                             if (!root.profile || name === root.profile.modelName) return
-                            root._mutate(() => { root.profile.modelName = name })
+                            root._mutateFields({ "modelName": name },
+                                               () => { root.profile.modelName = name })
                         }
                     }
                 }
@@ -158,6 +169,21 @@ Item {
                         const before = root.mapInfo.toJSON()
                         root.profile.applyPreset(name)
                         Game.updateMapMetadata(before, root.mapInfo.toJSON())
+                        // Le preset touche 8 champs physiques d'un coup ; on
+                        // les capture après application et on broadcast via
+                        // UpdatePlayerProfile avec tous les champs.
+                        const fields = {
+                            "radius":          root.profile.radius,
+                            "mass":            root.profile.mass,
+                            "acceleration":    root.profile.acceleration,
+                            "maxSpeed":        root.profile.maxSpeed,
+                            "linearDamping":   root.profile.linearDamping,
+                            "staticFriction":  root.profile.staticFriction,
+                            "dynamicFriction": root.profile.dynamicFriction,
+                            "bounceFactor":    root.profile.bounceFactor
+                        }
+                        EditorOpBus.submitOp(EditorOpBus.makeUpdatePlayerProfileOp(
+                                                root.profile.id, fields))
                     }
                 }
             }

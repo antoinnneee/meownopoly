@@ -104,6 +104,26 @@ public:
                                          const QString &target,
                                          const QString &kind) const;
 
+    // ── Player Config Panel (PCP_*) ──────────────────────────────────────────
+
+    /// Construit une op AddPlayerProfile { op, profile }.
+    Q_INVOKABLE QJsonObject makeAddPlayerProfileOp(const QJsonObject &profile) const;
+
+    /// Construit une op RemovePlayerProfile { op, id }.
+    Q_INVOKABLE QJsonObject makeRemovePlayerProfileOp(const QString &id) const;
+
+    /// Construit une op UpdatePlayerProfile { op, id, fields }.
+    Q_INVOKABLE QJsonObject makeUpdatePlayerProfileOp(const QString &id,
+                                                      const QJsonObject &fields) const;
+
+    /// Construit une op ReorderPlayerProfile { op, id, newIndex }.
+    Q_INVOKABLE QJsonObject makeReorderPlayerProfileOp(const QString &id,
+                                                       int newIndex) const;
+
+    /// Construit une op SetMapPlayerLimits { op, ...fields }.
+    /// `fields` peut contenir minPlayers et/ou maxPlayers.
+    Q_INVOKABLE QJsonObject makeSetMapPlayerLimitsOp(const QJsonObject &fields) const;
+
     // ── Pattern B : broadcast d'un EditDelta générique ───────────────────────
 
     /// Construit une op ApplyState depuis un delta. Si `groupId` n'est pas

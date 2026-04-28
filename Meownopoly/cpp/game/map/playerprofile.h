@@ -79,6 +79,10 @@ public:
     QJsonObject toJSON() const;
     void        applyJson(const QJsonObject &j);
 
+    /// Sérialisation JSON pour QML (QJsonObject n'est pas convertible
+    /// directement vers JS, mais une string l'est via JSON.parse).
+    Q_INVOKABLE QString toJsonString() const;
+
     Q_INVOKABLE void        applyPreset(const QString &presetName);
     Q_INVOKABLE QStringList availablePresets() const;
 

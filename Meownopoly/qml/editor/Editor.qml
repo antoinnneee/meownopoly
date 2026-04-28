@@ -500,6 +500,39 @@ Base_Board {
                 break
             }
 
+            case EditorOpType.AddPlayerProfile: {
+                if (mapInfo && op.profile)
+                    mapInfo.addPlayerProfileFromJson(JSON.stringify(op.profile))
+                break
+            }
+
+            case EditorOpType.RemovePlayerProfile: {
+                if (mapInfo && op.id) mapInfo.removePlayerProfile(op.id)
+                break
+            }
+
+            case EditorOpType.UpdatePlayerProfile: {
+                if (mapInfo && op.id) {
+                    mapInfo.updatePlayerProfile(op.id,
+                        JSON.stringify(op.fields || ({})))
+                }
+                break
+            }
+
+            case EditorOpType.ReorderPlayerProfile: {
+                if (mapInfo && op.id !== undefined && op.newIndex !== undefined)
+                    mapInfo.reorderPlayerProfile(op.id, op.newIndex)
+                break
+            }
+
+            case EditorOpType.SetMapPlayerLimits: {
+                if (mapInfo) {
+                    if (op.minPlayers !== undefined) mapInfo.minPlayers = op.minPlayers
+                    if (op.maxPlayers !== undefined) mapInfo.maxPlayers = op.maxPlayers
+                }
+                break
+            }
+
             case EditorOpType.ApplyState: {
                 // Pattern B : delta Map applyBefore/after sur le peer.
                 // Supporte à la fois un op unique et un batch (transactions).

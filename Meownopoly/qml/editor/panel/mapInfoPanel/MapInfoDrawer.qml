@@ -16,6 +16,7 @@ import MapFileManager
 import MapTypes
 import MapInfo
 import EditorEnum
+import EditorOpBus
 import Logger
 import DisplayParameter
 import DecorationParameter
@@ -625,6 +626,8 @@ Drawer {
                                     var before = logic.mapInfo.toJSON()
                                     logic.mapInfo.minPlayers = value
                                     Game.updateMapMetadata(before, logic.mapInfo.toJSON())
+                                    EditorOpBus.submitOp(EditorOpBus.makeSetMapPlayerLimitsOp(
+                                                            { "minPlayers": logic.mapInfo.minPlayers }))
                                 }
 
                                 contentItem: TextInput {
@@ -684,6 +687,8 @@ Drawer {
                                     var before = logic.mapInfo.toJSON()
                                     logic.mapInfo.maxPlayers = value
                                     Game.updateMapMetadata(before, logic.mapInfo.toJSON())
+                                    EditorOpBus.submitOp(EditorOpBus.makeSetMapPlayerLimitsOp(
+                                                            { "maxPlayers": logic.mapInfo.maxPlayers }))
                                 }
 
                                 contentItem: TextInput {

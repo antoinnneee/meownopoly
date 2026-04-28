@@ -1,5 +1,6 @@
 #include "playerprofile.h"
 
+#include <QJsonDocument>
 #include <QQmlEngine>
 #include <QUuid>
 #include <QtMath>
@@ -190,6 +191,11 @@ QJsonObject PlayerProfile::toJSON() const
     j["dynamicFriction"] = m_dynamicFriction;
     j["bounceFactor"]    = m_bounceFactor;
     return j;
+}
+
+QString PlayerProfile::toJsonString() const
+{
+    return QJsonDocument(toJSON()).toJson(QJsonDocument::Compact);
 }
 
 void PlayerProfile::applyJson(const QJsonObject &j)

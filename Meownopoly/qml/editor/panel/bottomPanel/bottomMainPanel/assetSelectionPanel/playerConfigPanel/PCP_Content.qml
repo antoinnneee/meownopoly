@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Game
+import EditorOpBus
 
 import "../"
 import editorBottomPanel
@@ -12,9 +13,11 @@ import editorBottomPanel
  * Layout : ColumnLayout (rangée horizontale de cards en haut + panneau
  * d'édition en dessous, conditionnel à la sélection).
  *
- * Édition v1 : mutation directe sur PlayerProfile / MapInfo, capture
- * before/after JSON via mapInfo.toJSON() + Game.updateMapMetadata. Phase 4
- * routera tout via EditorOpBus.
+ * Édition (Phase 4) : mutation locale immédiate (UI réactive + autosave
+ * via Game.updateMapMetadata) + EditorOpBus.submitOp pour broadcast
+ * collaboratif. En mode solo (EditorSession inactive), submitOp ne
+ * fait que logger. En mode collab, l'auteur ne reçoit pas son op
+ * rebroadcastée — d'où la mutation locale préservée.
  */
 EBP_Content {
     id: root
@@ -57,13 +60,20 @@ EBP_Content {
                     const before = root.mapInfo.toJSON()
                     const p = root.mapInfo.addPlayerProfile()
                     Game.updateMapMetadata(before, root.mapInfo.toJSON())
-                    if (p) root.selectedProfileId = p.id
+                    if (p) {
+                        // Broadcast collab : l'op transporte le JSON complet
+                        // du profil (avec son UUID) pour reproduction à l'identique.
+                        EditorOpBus.submitOp(EditorOpBus.makeAddPlayerProfileOp(
+                                                JSON.parse(p.toJsonString())))
+                        root.selectedProfileId = p.id
+                    }
                 }
                 onProfileRemoveRequested: function(id) {
                     if (!root.mapInfo) return
                     const before = root.mapInfo.toJSON()
                     root.mapInfo.removePlayerProfile(id)
                     Game.updateMapMetadata(before, root.mapInfo.toJSON())
+                    EditorOpBus.submitOp(EditorOpBus.makeRemovePlayerProfileOp(id))
                     if (root.selectedProfileId === id) root.selectedProfileId = ""
                 }
                 onProfileDuplicateRequested: function(id) {
@@ -71,13 +81,22 @@ EBP_Content {
                     const before = root.mapInfo.toJSON()
                     const p = root.mapInfo.duplicatePlayerProfile(id)
                     Game.updateMapMetadata(before, root.mapInfo.toJSON())
-                    if (p) root.selectedProfileId = p.id
+                    if (p) {
+                        // Le duplicate génère un nouvel UUID ; on broadcast le
+                        // JSON résultant pour que les peers créent l'exact même.
+                        EditorOpBus.submitOp(EditorOpBus.makeAddPlayerProfileOp(
+                                                JSON.parse(p.toJsonString())))
+                        root.selectedProfileId = p.id
+                    }
                 }
                 onProfileMoveRequested: function(id, newIndex) {
                     if (!root.mapInfo) return
                     const before = root.mapInfo.toJSON()
-                    if (root.mapInfo.reorderPlayerProfile(id, newIndex))
+                    if (root.mapInfo.reorderPlayerProfile(id, newIndex)) {
                         Game.updateMapMetadata(before, root.mapInfo.toJSON())
+                        EditorOpBus.submitOp(EditorOpBus.makeReorderPlayerProfileOp(
+                                                id, newIndex))
+                    }
                 }
                 onProfileRenameRequested: function(id, newName) {
                     if (!root.mapInfo) return
@@ -86,6 +105,8 @@ EBP_Content {
                     const before = root.mapInfo.toJSON()
                     p.name = newName
                     Game.updateMapMetadata(before, root.mapInfo.toJSON())
+                    EditorOpBus.submitOp(EditorOpBus.makeUpdatePlayerProfileOp(
+                                            id, { "name": newName }))
                 }
             }
 

@@ -34,6 +34,13 @@ enum Value : quint8 {
     // Utilisé par Game::updateMap et Game::askPreview/askNext pour la sync
     // bi-directionnelle sans décomposer les mutations en ops fines.
     ApplyState              = 11,
+
+    // Player config panel (PCP_*) — roster de PlayerProfile sur MapInfo.
+    AddPlayerProfile        = 12,  // payload: { profile: {id, name, modelName, pickMode, minOccurrences, ...} }
+    RemovePlayerProfile     = 13,  // payload: { id }
+    UpdatePlayerProfile     = 14,  // payload: { id, fields: {...} }  // partial
+    ReorderPlayerProfile    = 15,  // payload: { id, newIndex }
+    SetMapPlayerLimits      = 16,  // payload: { minPlayers?, maxPlayers? }
 };
 Q_ENUM_NS(Value)
 
