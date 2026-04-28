@@ -15,6 +15,7 @@
  *  - tileDeleted(id, tileType) : tile supprimée ou map démontée
  *  - tileMoved(tile)           : gridRelativePositionX/Y ou unitSize* changé
  *  - zoneParameterChanged(tile): polygon, friction, exclusion, vitesses, etc.
+ *  - physicalObjectParameterChanged(tile): mass, bounce, friction, damping
  *
  * Singleton C++ exposé via QML `Pattounx.ItemSnapableEvents`.
  */
@@ -49,6 +50,7 @@ signals:
     void tileDeleted(const QUuid &tileId, int tileType);
     void tileMoved(ItemSnapable *tile);
     void zoneParameterChanged(ItemSnapable *tile);
+    void physicalObjectParameterChanged(ItemSnapable *tile);
 
 private slots:
     void onCurrentMapChanged();

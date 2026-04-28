@@ -48,6 +48,11 @@ Item {
     width: badge.width
     height: badge.height
 
+    // Masse de la prochaine caisse spawnée. Lue par _spawnCrate. Slider
+    // 0.5 → 5.0 (le mapping couleur de SnapablePhysicalObject couvre cette
+    // plage : orange clair → brun-rouge foncé).
+    property real spawnMass: 1.0
+
     Rectangle {
         id: badge
         width: badgeRow.implicitWidth + 16
@@ -143,6 +148,61 @@ Item {
                 ToolTip.delay: 400
                 ToolTip.text: "Supprime toutes les caisses de la map."
             }
+
+            Rectangle {
+                width: 1; height: 14
+                color: "#52525b"
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            // Slider de masse pour la prochaine caisse. Discret : 5 crans
+            // 0.5 / 1.0 / 2.0 / 3.5 / 5.0 (cliquable, pas un Slider Qt
+            // pour éviter la dépendance et garder le badge compact).
+            Row {
+                spacing: 2
+                anchors.verticalCenter: parent.verticalCenter
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "m=" + root.spawnMass.toFixed(1)
+                    color: "#f4f4f5"
+                    font.pixelSize: 10
+                    font.bold: true
+                    rightPadding: 4
+                }
+
+                Repeater {
+                    model: [0.5, 1.0, 2.0, 3.5, 5.0]
+                    delegate: Rectangle {
+                        readonly property real value: modelData
+                        readonly property bool active: Math.abs(root.spawnMass - value) < 0.01
+                        width: 18; height: 18
+                        radius: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: active
+                            ? "#fb923c"
+                            : (massMa.containsMouse
+                                ? (massMa.pressed ? "#3f3f46" : "#33333a")
+                                : "transparent")
+                        border.color: active ? "#fdba74" : "#52525b"
+                        border.width: 1
+                        Text {
+                            anchors.centerIn: parent
+                            text: value.toFixed(value < 1 ? 1 : 0)
+                            color: "#f4f4f5"
+                            font.pixelSize: 9
+                            font.bold: true
+                        }
+                        MouseArea {
+                            id: massMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.spawnMass = value
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -168,6 +228,12 @@ Item {
         params.displayParameter.unitSizeWidth  = 1
         params.displayParameter.unitSizeHeight = 1
         params.displayParameter.zLayer = 2
+
+        // Masse choisie via le slider — pour les autres coefs on garde
+        // les defaults de PhysicalObjectParameter (bounce 0.3, friction 0.4,
+        // damping 0.1).
+        if (params.physicalObjectParameter)
+            params.physicalObjectParameter.mass = root.spawnMass
 
         const tile = logic.tileLogic.createItemSnapableTile(params)
         if (tile && tile.snapableParameters)

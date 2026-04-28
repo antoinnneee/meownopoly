@@ -14,6 +14,7 @@
 #include "Displayparameter.h"
 #include "decorationparameter.h"
 #include "ZoneParameter.h"
+#include "physicalobjectparameter.h"
 
 class ItemSnapable : public QObject
 {
@@ -24,6 +25,7 @@ class ItemSnapable : public QObject
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
     Q_PROPERTY(ZoneParameter * zoneParameter READ zoneParameter WRITE setZoneParameter NOTIFY zoneParameterChanged FINAL)
+    Q_PROPERTY(PhysicalObjectParameter * physicalObjectParameter READ physicalObjectParameter WRITE setPhysicalObjectParameter NOTIFY physicalObjectParameterChanged FINAL)
     Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(TileType tileType READ tileType WRITE setTileType NOTIFY tileTypeChanged FINAL)
 
@@ -53,6 +55,8 @@ public:
     void setDecorationParameter(DecorationParameter * decorationParameter);
     ZoneParameter * zoneParameter() const;
     void setZoneParameter(ZoneParameter * zoneParameter);
+    PhysicalObjectParameter * physicalObjectParameter() const;
+    void setPhysicalObjectParameter(PhysicalObjectParameter * physicalObjectParameter);
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
     void applyJson(const QJsonObject &json);
@@ -113,10 +117,9 @@ public:
                     return false;
             break;
         case PhysicalObjectTile:
-            // Phase 9 — pas (encore) de PhysicalObjectParameter dédié.
-            // Le contenu est entièrement porté par displayParameter (pos+taille)
-            // qui est comparé plus haut. Egalité de tileType + displayParameter
-            // suffit donc.
+            if (m_physicalObjectParameter && other.m_physicalObjectParameter)
+                if (!(*m_physicalObjectParameter == *other.m_physicalObjectParameter))
+                    return false;
             break;
         }
         if (next.size() != other.next.size() || prev.size() != other.prev.size())
@@ -135,6 +138,7 @@ signals:
     void displayParameterChanged();
     void decorationParameterChanged();
     void zoneParameterChanged();
+    void physicalObjectParameterChanged();
 
     void uniqueIdChanged();
 
@@ -145,6 +149,7 @@ private :
     DisplayParameter * m_displayParameter = new DisplayParameter;
     DecorationParameter * m_decorationParameter = new DecorationParameter;
     ZoneParameter * m_zoneParameter = new ZoneParameter;
+    PhysicalObjectParameter * m_physicalObjectParameter = new PhysicalObjectParameter;
     QJsonObject m_json;
     QString m_lastKnownJson;
     QUuid m_uniqueId;

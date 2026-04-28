@@ -34,7 +34,21 @@ SnapableElement {
     visible: gridManager.isEdit
     opacity: isSelected ? 1.0 : 0.85
 
-    property color crateColor: "#fb923c"   // orange chaud, distinct des zones
+    // Couleur dérivée de la masse : interpolation orange clair (mass=0.5)
+    // → rouge foncé (mass=5+). Lecture défensive : si la tile n'a pas
+    // de physicalObjectParameter (vieux JSON), on retombe sur orange.
+    readonly property real _mass: snapableParameters.physicalObjectParameter
+                                    ? snapableParameters.physicalObjectParameter.mass
+                                    : 1.0
+    readonly property real _massT: Math.max(0, Math.min(1, (_mass - 0.5) / 4.5))
+    property color crateColor: Qt.rgba(
+        // R : 0.98 → 0.78 (rouge foncé garde du rouge)
+        0.98 - 0.20 * _massT,
+        // G : 0.57 → 0.18 (passage de orange à brun-rouge)
+        0.57 - 0.39 * _massT,
+        // B : 0.24 → 0.18 (peu de bleu, garde la chaleur)
+        0.24 - 0.06 * _massT,
+        1.0)
     property color outlineColor: Qt.darker(crateColor, 1.5)
 
     // Cercle représentant la bounding shape physique. Centre = centre de
@@ -73,10 +87,11 @@ SnapableElement {
         }
     }
 
-    // Étiquette du rayon en mode sélection (debug visuel).
+    // Étiquette debug en mode sélection : rayon + masse.
     Text {
         visible: root.isSelected
-        text: "r = " + (root.snapableParameters.displayParameter.unitSizeWidth / 2.0).toFixed(2)
+        text: "r=" + (root.snapableParameters.displayParameter.unitSizeWidth / 2.0).toFixed(2)
+            + "  m=" + root._mass.toFixed(1)
         color: "white"
         font.pixelSize: 12
         font.bold: true

@@ -21,6 +21,8 @@ ItemSnapable::~ItemSnapable() {
         delete m_decorationParameter;
     if (m_zoneParameter)
         delete m_zoneParameter;
+    if (m_physicalObjectParameter)
+        delete m_physicalObjectParameter;
 }
 
 void ItemSnapable::registerQml()
@@ -30,6 +32,7 @@ void ItemSnapable::registerQml()
     qmlRegisterType<DisplayParameter>("DisplayParameter", 1, 0, "DisplayParameter"); // Register DisplayParameter class
     qmlRegisterType<DecorationParameter>("DecorationParameter", 1, 0, "DecorationParameter"); // Register DecorationParameter class
     qmlRegisterType<ZoneParameter>("ZoneParameter", 1, 0, "ZoneParameter"); // Register ZoneParameter class
+    qmlRegisterType<PhysicalObjectParameter>("PhysicalObjectParameter", 1, 0, "PhysicalObjectParameter");
 }
 
 ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent)
@@ -110,6 +113,18 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
             qWarning() << "ITEM_SNAPABLE: 'zoneParameter' invalide pour tile" << m_uniqueId.toString();
         }
     }
+    if (m_json.contains("physicalObjectParameter")) {
+        if (m_json["physicalObjectParameter"].isObject()) {
+            // Le default-constructed dans le member init list est leak-free :
+            // on le remplace par celui issu du JSON. Pour rester cohérent
+            // avec les autres parameters, on libère l'ancien.
+            delete m_physicalObjectParameter;
+            m_physicalObjectParameter = new PhysicalObjectParameter(
+                m_json["physicalObjectParameter"].toObject(), this);
+        } else {
+            qWarning() << "ITEM_SNAPABLE: 'physicalObjectParameter' invalide pour tile" << m_uniqueId.toString();
+        }
+    }
     commitCurrentState();
 }
 
@@ -171,6 +186,16 @@ void ItemSnapable::setZoneParameter(ZoneParameter * zoneParameter) {
         delete m_zoneParameter;
     m_zoneParameter = zoneParameter; emit zoneParameterChanged();
 }
+
+PhysicalObjectParameter *ItemSnapable::physicalObjectParameter() const {
+    return m_physicalObjectParameter;
+}
+
+void ItemSnapable::setPhysicalObjectParameter(PhysicalObjectParameter * p) {
+    if (m_physicalObjectParameter)
+        delete m_physicalObjectParameter;
+    m_physicalObjectParameter = p; emit physicalObjectParameterChanged();
+}
 QString ItemSnapable::toJSON()
 {
     QString json;
@@ -185,6 +210,9 @@ QString ItemSnapable::toJSON()
     }
     if (m_zoneParameter != nullptr && m_tileType == PhysicZoneTile) {
         json += "    \"zoneParameter\": " + m_zoneParameter->toJSON() + ",\n";
+    }
+    if (m_physicalObjectParameter != nullptr && m_tileType == PhysicalObjectTile) {
+        json += "    \"physicalObjectParameter\": " + m_physicalObjectParameter->toJSON() + ",\n";
     }
     json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
     json += "    \"next\": [ ";
@@ -319,6 +347,9 @@ void ItemSnapable::applyJson(const QJsonObject &json)
 
     if (json.contains("zoneParameter"))
         m_zoneParameter->applyJson(json["zoneParameter"].toObject());
+
+    if (json.contains("physicalObjectParameter"))
+        m_physicalObjectParameter->applyJson(json["physicalObjectParameter"].toObject());
 
     // NB: uniqueId jamais override (identité de la tile) ;
     // next/prev gérés par Map::rewireLinks après applyJson.

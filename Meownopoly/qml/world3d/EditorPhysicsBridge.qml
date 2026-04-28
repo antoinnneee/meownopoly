@@ -63,6 +63,10 @@ Item {
             if (!root._isPhysicZone(tile)) return
             root._enqueueUpsert(tile)
         }
+        function onPhysicalObjectParameterChanged(tile) {
+            if (!root._isPhysicalObject(tile)) return
+            root._enqueueUpsert(tile)
+        }
         function onTileDeleted(tileId, tileType) {
             if (tileType === ItemSnapable.PhysicZoneTile) {
                 root._removeZoneNow(tileId)
@@ -176,18 +180,30 @@ Item {
         const radius = Math.max(0.05, Math.min(w, h) / 2.0)
         const center = Qt.vector2d(dp.gridRelativePositionX + w / 2.0,
                                    dp.gridRelativePositionY + h / 2.0)
+
+        // PhysicalObjectParameter : extension post-Phase-9. Si présent,
+        // on lit mass/bounceFactor/frictionStrength/linearDamping ; sinon
+        // on tombe sur les defaults câblés dans physics_world (specFromKinematic).
+        const pop = tile.physicalObjectParameter
+        const params = pop ? {
+            bounceFactor:  pop.bounceFactor,
+            linearDamping: pop.linearDamping,
+            staticFriction:  pop.frictionStrength,
+            dynamicFriction: pop.frictionStrength * 0.5
+        } : {}
+        const mass = pop ? pop.mass : 1.0
+
         // upsertBody (via createDynamicCircle) : si déjà présent, le worker
         // ne réécrit que la spec (rayon/masse), la position courante est
         // préservée → on appelle setBodyPosition explicitement après pour
         // recoller à la grille.
         const id = _idForTile(tile)
-        const mass = 1.0   // Phase 9 — defaults en dur ; PhysicalObjectParameter
-                           // exposera la masse à l'utilisateur plus tard.
         if (root.verbose) {
             console.log("[EditorPhysicsBridge] upsert object", id,
-                        "center=", center.x, center.y, "radius=", radius)
+                        "center=", center.x, center.y,
+                        "radius=", radius, "mass=", mass)
         }
-        root.physicsWorld.createDynamicCircle(id, center, radius, mass, {})
+        root.physicsWorld.createDynamicCircle(id, center, radius, mass, params)
         root.physicsWorld.setBodyPosition(id, center)
     }
 
