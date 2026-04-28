@@ -42,8 +42,9 @@ EBP_Content {
             PCP_ProfileRow {
                 id: profileRow
                 orientation: Qt.Vertical
-                // ~3.5 cm de large : 1 card portrait + scrollbar et marges.
-                Layout.preferredWidth: Screen.pixelDensity * 35
+                // ~5 cm de large : assez pour afficher en ligne les 4 boutons
+                // d'overlay (↑↓⎘✕) sans débordement, plus la marge / scrollbar.
+                Layout.preferredWidth: Screen.pixelDensity * 50
                 Layout.fillHeight: true
                 mapInfo: root.mapInfo
                 selectedProfileId: root.selectedProfileId

@@ -144,9 +144,11 @@ Rectangle {
     }
 
     // ----- Overlay actions (haut-droit, visible au survol) -----
+    // z: 10 → au-dessus du MouseArea de la preview qui sinon vole les clics.
     HoverHandler { id: hover }
 
     Row {
+        z: 10
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: Screen.pixelDensity * 1

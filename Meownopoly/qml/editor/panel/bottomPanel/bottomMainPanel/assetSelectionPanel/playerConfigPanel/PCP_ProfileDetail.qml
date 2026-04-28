@@ -9,6 +9,10 @@ import MapInfo
  * Panneau d'édition d'un PlayerProfile. Visible quand un profil est
  * sélectionné dans PCP_ProfileRow.
  *
+ * Layout : 2 colonnes via RowLayout
+ *  - gauche : Nom + ModelPicker + Presets
+ *  - droite : Mode de sélection + onglets Simple/Expert avec sliders
+ *
  * Pattern d'écriture (Phase 2b — pré-collab) : mutation directe sur le
  * profil + capture avant/après via mapInfo.toJSON() + Game.updateMapMetadata.
  * Phase 4 routera tout via EditorOpBus.makeUpdatePlayerProfileOp.
@@ -19,7 +23,6 @@ Item {
     property var profile: null
     property var mapInfo: null
 
-    // Helpers de mutation : capture avant, mute, capture après, déclare
     function _mutate(applyFn) {
         if (!root.profile || !root.mapInfo) return
         const before = root.mapInfo.toJSON()
@@ -27,6 +30,7 @@ Item {
         Game.updateMapMetadata(before, root.mapInfo.toJSON())
     }
 
+    // Placeholder quand aucune classe n'est sélectionnée.
     Rectangle {
         anchors.fill: parent
         color: "#1a1a1a"
@@ -44,35 +48,33 @@ Item {
         }
     }
 
-    Flickable {
-        id: flick
+    // Contenu d'édition.
+    RowLayout {
         anchors.fill: parent
-        contentHeight: contentCol.implicitHeight + Screen.pixelDensity * 4
-        clip: true
+        anchors.margins: Screen.pixelDensity * 2
+        spacing: Screen.pixelDensity * 3
         visible: !!root.profile
-        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
+        // ============ Colonne gauche : Identité + Presets ============
         ColumnLayout {
-            id: contentCol
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Screen.pixelDensity * 2
+            Layout.fillHeight: true
+            Layout.preferredWidth: parent.width * 0.40
             spacing: Screen.pixelDensity * 2
 
-            // ----- Ligne haut : Nom + ModelPicker -----
-            RowLayout {
+            // --- Nom ---
+            ColumnLayout {
                 Layout.fillWidth: true
-                spacing: Screen.pixelDensity * 3
+                spacing: Screen.pixelDensity * 1
 
                 Label {
                     text: "Nom"
                     color: "#cccccc"
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
+                    font.bold: true
                 }
                 PCP_StyledTextField {
                     id: nameField
-                    Layout.preferredWidth: Screen.pixelDensity * 50
+                    Layout.fillWidth: true
                     text: root.profile ? root.profile.name : ""
                     Connections {
                         target: root.profile
@@ -88,11 +90,21 @@ Item {
                         root._mutate(() => { root.profile.name = v })
                     }
                 }
+            }
 
-                Item { Layout.fillWidth: true }
+            // --- Modèle 3D ---
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Screen.pixelDensity * 1
 
+                Label {
+                    text: "Modèle 3D"
+                    color: "#cccccc"
+                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
+                    font.bold: true
+                }
                 PCP_ModelPicker {
-                    Layout.preferredWidth: Screen.pixelDensity * 60
+                    Layout.fillWidth: true
                     currentModel: root.profile ? root.profile.modelName : ""
                     onModelSelected: function(name) {
                         if (!root.profile || name === root.profile.modelName) return
@@ -101,7 +113,39 @@ Item {
                 }
             }
 
-            // ----- PickMode + minOccurrences -----
+            // --- Presets ---
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Screen.pixelDensity * 1
+
+                Label {
+                    text: "Presets"
+                    color: "#cccccc"
+                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
+                    font.bold: true
+                }
+                PCP_PresetButtons {
+                    Layout.fillWidth: true
+                    onPresetChosen: function(name) {
+                        if (!root.profile || !root.mapInfo) return
+                        const before = root.mapInfo.toJSON()
+                        root.profile.applyPreset(name)
+                        Game.updateMapMetadata(before, root.mapInfo.toJSON())
+                    }
+                }
+            }
+
+            // Pousse le contenu vers le haut quand la zone est plus grande.
+            Item { Layout.fillHeight: true }
+        }
+
+        // ============ Colonne droite : Mode + Sliders ============
+        ColumnLayout {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            spacing: Screen.pixelDensity * 2
+
+            // --- Mode de sélection ---
             PCP_PickModeSelector {
                 Layout.fillWidth: true
                 pickMode: root.profile ? root.profile.pickMode : PlayerProfile.Unique
@@ -116,30 +160,7 @@ Item {
                 }
             }
 
-            // ----- Presets (toujours accessibles, indépendants des tabs) -----
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Screen.pixelDensity * 2
-
-                Label {
-                    text: "Presets"
-                    color: "#cccccc"
-                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
-                    font.bold: true
-                }
-
-                PCP_PresetButtons {
-                    Layout.fillWidth: true
-                    onPresetChosen: function(name) {
-                        if (!root.profile || !root.mapInfo) return
-                        const before = root.mapInfo.toJSON()
-                        root.profile.applyPreset(name)
-                        Game.updateMapMetadata(before, root.mapInfo.toJSON())
-                    }
-                }
-            }
-
-            // ----- Onglets Simple / Expert -----
+            // --- Onglets Simple / Expert ---
             PCP_StyledTabBar {
                 id: physTabs
                 Layout.fillWidth: true
@@ -147,18 +168,32 @@ Item {
                 PCP_StyledTabButton { text: "Expert" }
             }
 
-            StackLayout {
+            // --- Sliders (scrollables si Expert déborde) ---
+            Flickable {
+                id: physFlick
                 Layout.fillWidth: true
-                currentIndex: physTabs.currentIndex
+                Layout.fillHeight: true
+                contentWidth: width
+                contentHeight: physStack.implicitHeight + Screen.pixelDensity * 2
+                clip: true
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-                PCP_PhysicsSimpleSection {
-                    profile: root.profile
-                    mapInfo: root.mapInfo
-                }
+                StackLayout {
+                    id: physStack
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    currentIndex: physTabs.currentIndex
 
-                PCP_PhysicsExpertSection {
-                    profile: root.profile
-                    mapInfo: root.mapInfo
+                    PCP_PhysicsSimpleSection {
+                        profile: root.profile
+                        mapInfo: root.mapInfo
+                    }
+
+                    PCP_PhysicsExpertSection {
+                        profile: root.profile
+                        mapInfo: root.mapInfo
+                    }
                 }
             }
         }
