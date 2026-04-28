@@ -160,6 +160,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomMainPanel");  // Contains: assetSelectionPanel, caseSelectionPanel, editorBottomPanel, mapSelectionPanel, menuSelectionPanel
     addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomSidePanel");  // Contains: caseConfigPanel, connectionConfigPanel, sidePanel, visualEffectPanel
     addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel");  // Contains: caseSelectionPanelMain
+    addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel");  // Contains: assetSelectionPanel
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
 
