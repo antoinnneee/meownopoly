@@ -9,9 +9,9 @@ import MapInfo
  * Panneau d'édition d'un PlayerProfile. Visible quand un profil est
  * sélectionné dans PCP_ProfileRow.
  *
- * Layout : 2 colonnes via RowLayout
- *  - gauche : Nom + ModelPicker + Presets
- *  - droite : Mode de sélection + onglets Simple/Expert avec sliders
+ * Layout : RowLayout 2 colonnes
+ *  - gauche : Mode de sélection + Nom + ModelPicker + Presets
+ *  - droite : onglets Simple/Expert avec sliders (scrollables)
  *
  * Pattern d'écriture (Phase 2b — pré-collab) : mutation directe sur le
  * profil + capture avant/après via mapInfo.toJSON() + Game.updateMapMetadata.
@@ -55,21 +55,36 @@ Item {
         spacing: Screen.pixelDensity * 3
         visible: !!root.profile
 
-        // ============ Colonne gauche : Identité + Presets ============
+        // ============ Colonne gauche : Mode + Identité + Presets ============
         ColumnLayout {
+            id: leftCol
             Layout.fillHeight: true
             Layout.preferredWidth: parent.width * 0.40
             spacing: Screen.pixelDensity * 2
+
+            // --- Mode de sélection (en haut de la colonne gauche) ---
+            PCP_PickModeSelector {
+                Layout.fillWidth: true
+                pickMode: root.profile ? root.profile.pickMode : PlayerProfile.Unique
+                minOccurrences: root.profile ? root.profile.minOccurrences : 1
+                onPickModeRequested: function(mode) {
+                    if (!root.profile || mode === root.profile.pickMode) return
+                    root._mutate(() => { root.profile.pickMode = mode })
+                }
+                onMinOccurrencesRequested: function(n) {
+                    if (!root.profile || n === root.profile.minOccurrences) return
+                    root._mutate(() => { root.profile.minOccurrences = n })
+                }
+            }
 
             // --- Nom + Modèle 3D côte à côte ---
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Screen.pixelDensity * 2
 
-                // Bloc Nom
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.preferredWidth: 1   // pour ratio fillWidth équilibré
+                    Layout.preferredWidth: 1
                     spacing: Screen.pixelDensity * 1
 
                     Label {
@@ -98,7 +113,6 @@ Item {
                     }
                 }
 
-                // Bloc Modèle 3D
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
@@ -147,26 +161,11 @@ Item {
             Item { Layout.fillHeight: true }
         }
 
-        // ============ Colonne droite : Mode + Sliders ============
+        // ============ Colonne droite : Tabs + Sliders ============
         ColumnLayout {
             Layout.fillHeight: true
             Layout.fillWidth: true
             spacing: Screen.pixelDensity * 2
-
-            // --- Mode de sélection ---
-            PCP_PickModeSelector {
-                Layout.fillWidth: true
-                pickMode: root.profile ? root.profile.pickMode : PlayerProfile.Unique
-                minOccurrences: root.profile ? root.profile.minOccurrences : 1
-                onPickModeRequested: function(mode) {
-                    if (!root.profile || mode === root.profile.pickMode) return
-                    root._mutate(() => { root.profile.pickMode = mode })
-                }
-                onMinOccurrencesRequested: function(n) {
-                    if (!root.profile || n === root.profile.minOccurrences) return
-                    root._mutate(() => { root.profile.minOccurrences = n })
-                }
-            }
 
             // --- Onglets Simple / Expert ---
             PCP_StyledTabBar {
