@@ -579,6 +579,126 @@ Drawer {
                             }
 
                         }
+
+                        // ============ CHAMPS ÉDITABLES ============
+
+                        // Min joueurs
+                        Text {
+                            text: "Min joueurs"
+                            color: "#cccccc"
+                            font.pixelSize: 12
+                            Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 36
+                            color: "#2a2a2a"
+                            border.color: "#444444"
+                            border.width: 1
+                            radius: 3
+
+                            SpinBox {
+                                id: minPlayersSpinBox
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                from: 1
+                                to: logic.mapInfo ? logic.mapInfo.maxPlayers : 8
+                                value: logic.mapInfo ? logic.mapInfo.minPlayers : 2
+                                editable: true
+
+                                property bool _syncing: false
+                                Connections {
+                                    target: logic.mapInfo
+                                    function onMinPlayersChanged() {
+                                        if (minPlayersSpinBox.value !== logic.mapInfo.minPlayers) {
+                                            minPlayersSpinBox._syncing = true
+                                            minPlayersSpinBox.value = logic.mapInfo.minPlayers
+                                            minPlayersSpinBox._syncing = false
+                                        }
+                                    }
+                                }
+
+                                onValueModified: {
+                                    if (_syncing || !logic.mapInfo) return
+                                    if (logic.mapInfo.minPlayers === value) return
+                                    var before = logic.mapInfo.toJSON()
+                                    logic.mapInfo.minPlayers = value
+                                    Game.updateMapMetadata(before, logic.mapInfo.toJSON())
+                                }
+
+                                contentItem: TextInput {
+                                    text: minPlayersSpinBox.displayText
+                                    color: "#cccccc"
+                                    font.pixelSize: 12
+                                    horizontalAlignment: Qt.AlignHCenter
+                                    verticalAlignment: Qt.AlignVCenter
+                                    readOnly: !minPlayersSpinBox.editable
+                                    validator: minPlayersSpinBox.validator
+                                    inputMethodHints: Qt.ImhFormattedNumbersOnly
+                                }
+                                background: Rectangle { color: "transparent" }
+                            }
+                        }
+
+                        // Max joueurs
+                        Text {
+                            text: "Max joueurs"
+                            color: "#cccccc"
+                            font.pixelSize: 12
+                            Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 36
+                            color: "#2a2a2a"
+                            border.color: "#444444"
+                            border.width: 1
+                            radius: 3
+
+                            SpinBox {
+                                id: maxPlayersSpinBox
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                from: logic.mapInfo ? logic.mapInfo.minPlayers : 1
+                                to: 8
+                                value: logic.mapInfo ? logic.mapInfo.maxPlayers : 8
+                                editable: true
+
+                                property bool _syncing: false
+                                Connections {
+                                    target: logic.mapInfo
+                                    function onMaxPlayersChanged() {
+                                        if (maxPlayersSpinBox.value !== logic.mapInfo.maxPlayers) {
+                                            maxPlayersSpinBox._syncing = true
+                                            maxPlayersSpinBox.value = logic.mapInfo.maxPlayers
+                                            maxPlayersSpinBox._syncing = false
+                                        }
+                                    }
+                                }
+
+                                onValueModified: {
+                                    if (_syncing || !logic.mapInfo) return
+                                    if (logic.mapInfo.maxPlayers === value) return
+                                    var before = logic.mapInfo.toJSON()
+                                    logic.mapInfo.maxPlayers = value
+                                    Game.updateMapMetadata(before, logic.mapInfo.toJSON())
+                                }
+
+                                contentItem: TextInput {
+                                    text: maxPlayersSpinBox.displayText
+                                    color: "#cccccc"
+                                    font.pixelSize: 12
+                                    horizontalAlignment: Qt.AlignHCenter
+                                    verticalAlignment: Qt.AlignVCenter
+                                    readOnly: !maxPlayersSpinBox.editable
+                                    validator: maxPlayersSpinBox.validator
+                                    inputMethodHints: Qt.ImhFormattedNumbersOnly
+                                }
+                                background: Rectangle { color: "transparent" }
+                            }
+                        }
                     }
                 }
             }
