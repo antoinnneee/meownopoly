@@ -1,11 +1,23 @@
 #include "mapinfo.h"
 #include <QQmlEngine>
+#include <QDebug>
 
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QJsonValueRef>
+
+namespace {
+
+inline int clampInt(int v, int lo, int hi)
+{
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+} // namespace
 
 MapInfo::MapInfo() {}
 
@@ -24,6 +36,34 @@ MapInfo::MapInfo(const QJsonObject &json)
 
     m_musicPath = json["musicPath"].toString();
 
+    // ---- Player config ----
+    const int loadedVersion = json.value("playerConfigVersion").toInt(0);
+    m_minPlayers = clampInt(json.value("minPlayers").toInt(2), 1, MAX_PLAYERS_HARD_CAP);
+    m_maxPlayers = clampInt(json.value("maxPlayers").toInt(MAX_PLAYERS_HARD_CAP),
+                            qMax(1, m_minPlayers), MAX_PLAYERS_HARD_CAP);
+
+    if (loadedVersion > CURRENT_PLAYER_CONFIG_VERSION) {
+        qWarning() << "[MapInfo] playerConfigVersion" << loadedVersion
+                   << "is newer than supported" << CURRENT_PLAYER_CONFIG_VERSION
+                   << "- resetting roster, fallback profile will be created.";
+        m_playerConfigVersion = CURRENT_PLAYER_CONFIG_VERSION;
+        // Roster vidé : un profil "Princess" par défaut sera injecté.
+        adoptProfile(new PlayerProfile(this));
+    } else {
+        m_playerConfigVersion = CURRENT_PLAYER_CONFIG_VERSION;
+        if (json.contains("playerProfiles") && json.value("playerProfiles").isArray()) {
+            const QJsonArray arr = json.value("playerProfiles").toArray();
+            for (const QJsonValue &v : arr) {
+                if (!v.isObject()) continue;
+                adoptProfile(new PlayerProfile(v.toObject(), this));
+            }
+        }
+    }
+}
+
+MapInfo::~MapInfo()
+{
+    clearProfilesNoEmit();
 }
 
 QString MapInfo::toJSON()
@@ -41,6 +81,16 @@ QString MapInfo::toJSON()
     json["isBackgroundOnGrill"] = m_isBackgroundOnGrill;
 
     json["musicPath"] = m_musicPath;
+
+    json["minPlayers"] = m_minPlayers;
+    json["maxPlayers"] = m_maxPlayers;
+    json["playerConfigVersion"] = m_playerConfigVersion;
+
+    QJsonArray profiles;
+    for (const PlayerProfile *p : m_playerProfiles) {
+        if (p) profiles.append(p->toJSON());
+    }
+    json["playerProfiles"] = profiles;
 
     return QJsonDocument(json).toJson(QJsonDocument::Indented);
 }
@@ -177,4 +227,164 @@ int MapInfo::getVersion() const
 QString MapInfo::mapCreationDate() const
 {
     return m_mapCreationDate;
+}
+
+// ============================================================================
+// Player config
+// ============================================================================
+
+void MapInfo::setMinPlayers(int v)
+{
+    const int clamped = clampInt(v, 1, m_maxPlayers);
+    if (m_minPlayers == clamped) return;
+    m_minPlayers = clamped;
+    emit minPlayersChanged();
+}
+
+void MapInfo::setMaxPlayers(int v)
+{
+    const int clamped = clampInt(v, qMax(1, m_minPlayers), MAX_PLAYERS_HARD_CAP);
+    if (m_maxPlayers == clamped) return;
+    m_maxPlayers = clamped;
+    emit maxPlayersChanged();
+}
+
+void MapInfo::setPlayerConfigVersion(int v)
+{
+    if (m_playerConfigVersion == v) return;
+    m_playerConfigVersion = v;
+    emit playerConfigVersionChanged();
+}
+
+qsizetype MapInfo::profilesCountCb(QQmlListProperty<PlayerProfile> *p)
+{
+    auto *self = qobject_cast<MapInfo *>(p->object);
+    return self ? self->m_playerProfiles.size() : 0;
+}
+
+PlayerProfile *MapInfo::profilesAtCb(QQmlListProperty<PlayerProfile> *p, qsizetype i)
+{
+    auto *self = qobject_cast<MapInfo *>(p->object);
+    if (!self || i < 0 || i >= self->m_playerProfiles.size()) return nullptr;
+    return self->m_playerProfiles.at(i);
+}
+
+QQmlListProperty<PlayerProfile> MapInfo::playerProfilesQml()
+{
+    return QQmlListProperty<PlayerProfile>(this, nullptr,
+                                           &MapInfo::profilesCountCb,
+                                           &MapInfo::profilesAtCb);
+}
+
+PlayerProfile *MapInfo::adoptProfile(PlayerProfile *p)
+{
+    if (!p) return nullptr;
+    p->setParent(this);
+    m_playerProfiles.append(p);
+    return p;
+}
+
+void MapInfo::clearProfilesNoEmit()
+{
+    qDeleteAll(m_playerProfiles);
+    m_playerProfiles.clear();
+}
+
+PlayerProfile *MapInfo::addPlayerProfile()
+{
+    auto *p = adoptProfile(new PlayerProfile(this));
+    emit playerProfilesChanged();
+    return p;
+}
+
+PlayerProfile *MapInfo::addPlayerProfileFromJson(const QString &json)
+{
+    QJsonParseError err;
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+        qWarning() << "[MapInfo] addPlayerProfileFromJson: parse error" << err.errorString();
+        return nullptr;
+    }
+    auto *p = adoptProfile(new PlayerProfile(doc.object(), this));
+    emit playerProfilesChanged();
+    return p;
+}
+
+PlayerProfile *MapInfo::duplicatePlayerProfile(const QString &id)
+{
+    PlayerProfile *src = playerProfileById(id);
+    if (!src) return nullptr;
+    QJsonObject j = src->toJSON();
+    j.remove("id"); // force nouveau UUID
+    auto *p = adoptProfile(new PlayerProfile(j, this));
+    emit playerProfilesChanged();
+    return p;
+}
+
+void MapInfo::removePlayerProfile(const QString &id)
+{
+    for (int i = 0; i < m_playerProfiles.size(); ++i) {
+        PlayerProfile *p = m_playerProfiles.at(i);
+        if (p && p->id() == id) {
+            m_playerProfiles.removeAt(i);
+            p->deleteLater();
+            emit playerProfilesChanged();
+            return;
+        }
+    }
+}
+
+bool MapInfo::updatePlayerProfile(const QString &id, const QString &fieldsJson)
+{
+    PlayerProfile *p = playerProfileById(id);
+    if (!p) return false;
+    QJsonParseError err;
+    const QJsonDocument doc = QJsonDocument::fromJson(fieldsJson.toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+        qWarning() << "[MapInfo] updatePlayerProfile: parse error" << err.errorString();
+        return false;
+    }
+    p->applyJson(doc.object());
+    return true;
+}
+
+bool MapInfo::reorderPlayerProfile(const QString &id, int newIndex)
+{
+    int oldIndex = -1;
+    for (int i = 0; i < m_playerProfiles.size(); ++i) {
+        if (m_playerProfiles.at(i) && m_playerProfiles.at(i)->id() == id) {
+            oldIndex = i;
+            break;
+        }
+    }
+    if (oldIndex < 0) return false;
+    const int clamped = clampInt(newIndex, 0, m_playerProfiles.size() - 1);
+    if (clamped == oldIndex) return true;
+    m_playerProfiles.move(oldIndex, clamped);
+    emit playerProfilesChanged();
+    return true;
+}
+
+PlayerProfile *MapInfo::playerProfileById(const QString &id) const
+{
+    for (PlayerProfile *p : m_playerProfiles) {
+        if (p && p->id() == id) return p;
+    }
+    return nullptr;
+}
+
+PlayerProfile *MapInfo::playerProfileAt(int i) const
+{
+    if (i < 0 || i >= m_playerProfiles.size()) return nullptr;
+    return m_playerProfiles.at(i);
+}
+
+void MapInfo::clearPlayerProfiles()
+{
+    if (m_playerProfiles.isEmpty()) return;
+    for (PlayerProfile *p : m_playerProfiles) {
+        if (p) p->deleteLater();
+    }
+    m_playerProfiles.clear();
+    emit playerProfilesChanged();
 }

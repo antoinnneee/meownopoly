@@ -3,8 +3,11 @@
 
 #include <QString>
 #include <QObject>
+#include <QList>
+#include <QQmlListProperty>
 
 #include "maptypes.h"
+#include "playerprofile.h"
 
 #define AUTOSAVE_MAP_NAME "autosave_tmp"
 
@@ -26,16 +29,23 @@ class MapInfo : public QObject
     Q_PROPERTY(int backgroundTileSize READ getBackgroundTileSize WRITE setBackgroundTileSize NOTIFY backgroundTileSizeChanged FINAL)
     Q_PROPERTY(QString autosaveMapName READ autosaveMapName CONSTANT FINAL)
 
-public:
+    Q_PROPERTY(int minPlayers READ minPlayers WRITE setMinPlayers NOTIFY minPlayersChanged FINAL)
+    Q_PROPERTY(int maxPlayers READ maxPlayers WRITE setMaxPlayers NOTIFY maxPlayersChanged FINAL)
+    Q_PROPERTY(int playerConfigVersion READ playerConfigVersion WRITE setPlayerConfigVersion NOTIFY playerConfigVersionChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<PlayerProfile> playerProfiles READ playerProfilesQml NOTIFY playerProfilesChanged FINAL)
 
+public:
+    static constexpr int MAX_PLAYERS_HARD_CAP   = 8;
+    static constexpr int CURRENT_PLAYER_CONFIG_VERSION = 1;
 
     MapInfo();
     MapInfo(const QJsonObject &json);
+    ~MapInfo();
     static void registerQml();
 
     Q_INVOKABLE QString toJSON();
 
-    
+
     void setMapName(const QString &mapName);
     void setMapDescription(const QString &mapDescription);
     void setMapLastModified(const QString &mapLastModified);
@@ -68,6 +78,29 @@ public:
 
     QString autosaveMapName() const;
 
+    // ---- Player config ----
+    int minPlayers() const { return m_minPlayers; }
+    int maxPlayers() const { return m_maxPlayers; }
+    int playerConfigVersion() const { return m_playerConfigVersion; }
+
+    void setMinPlayers(int v);
+    void setMaxPlayers(int v);
+    void setPlayerConfigVersion(int v);
+
+    QList<PlayerProfile *> playerProfiles() const { return m_playerProfiles; }
+    QQmlListProperty<PlayerProfile> playerProfilesQml();
+
+    Q_INVOKABLE PlayerProfile* addPlayerProfile();
+    Q_INVOKABLE PlayerProfile* addPlayerProfileFromJson(const QString &json);
+    Q_INVOKABLE PlayerProfile* duplicatePlayerProfile(const QString &id);
+    Q_INVOKABLE void           removePlayerProfile(const QString &id);
+    Q_INVOKABLE bool           updatePlayerProfile(const QString &id, const QString &fieldsJson);
+    Q_INVOKABLE bool           reorderPlayerProfile(const QString &id, int newIndex);
+    Q_INVOKABLE PlayerProfile* playerProfileById(const QString &id) const;
+    Q_INVOKABLE int            playerProfileCount() const { return m_playerProfiles.size(); }
+    Q_INVOKABLE PlayerProfile* playerProfileAt(int i) const;
+    Q_INVOKABLE void           clearPlayerProfiles();
+
 signals:
     void mapNameChanged(const QString &mapName);
     void mapDescriptionChanged(const QString &mapDescription);
@@ -86,8 +119,18 @@ signals:
 
     void backgroundTileSizeChanged();
 
+    void minPlayersChanged();
+    void maxPlayersChanged();
+    void playerConfigVersionChanged();
+    void playerProfilesChanged();
 
 private:
+    // QQmlListProperty static callbacks (read-only)
+    static qsizetype profilesCountCb(QQmlListProperty<PlayerProfile> *p);
+    static PlayerProfile *profilesAtCb(QQmlListProperty<PlayerProfile> *p, qsizetype i);
+
+    PlayerProfile *adoptProfile(PlayerProfile *p);
+    void clearProfilesNoEmit();
 
     const QString m_autosaveMapName = AUTOSAVE_MAP_NAME;
     QString m_mapName = m_autosaveMapName;
@@ -103,6 +146,11 @@ private:
     bool m_isBackgroundOnGrill = false;
 
     QString m_musicPath = "";
+
+    int m_minPlayers = 2;
+    int m_maxPlayers = MAX_PLAYERS_HARD_CAP;
+    int m_playerConfigVersion = CURRENT_PLAYER_CONFIG_VERSION;
+    QList<PlayerProfile *> m_playerProfiles;
 };
 
 #endif // MAPINFO_H

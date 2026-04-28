@@ -44,6 +44,7 @@
 #include "game/map/maptypes.h"
 #include "game/map/editdelta.h"
 #include "game/map/mapinfo.h"
+#include "game/map/playerprofile.h"
 #include "game/map/mapfilemanager.h"
 #include "game/map/templatefilemanager.h"
 #include "tools/mouse_event_filter.h"
@@ -82,6 +83,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     MapFileManager::registerQml();
     TemplateFileManager::registerQml();
     MapInfo::registerQml();
+    PlayerProfile::registerQml();
     EditorEnum::registerQml();
     ItemSnapableFactory::registerQml();
     Logger::registerQml();
