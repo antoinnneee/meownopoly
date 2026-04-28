@@ -66,16 +66,6 @@ ColumnLayout {
         Game.updateMapMetadata(beforeJson, root.mapInfo.toJSON())
     }
 
-    PCP_PresetButtons {
-        Layout.fillWidth: true
-        onPresetChosen: function(name) {
-            if (!root.profile || !root.mapInfo) return
-            const before = root.mapInfo.toJSON()
-            root.profile.applyPreset(name)
-            Game.updateMapMetadata(before, root.mapInfo.toJSON())
-        }
-    }
-
     LabelledSlider {
         Layout.fillWidth: true
         label: "Taille (radius)"

@@ -55,6 +55,11 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PhysicsExpertSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PresetButtons.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_Profile3DPreview.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledTextField.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledRadioButton.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledButton.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledTabBar.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledTabButton.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/caseSelectionPanelMain/CSP_CaseTypeCell.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/caseSelectionPanelMain/CSP_CaseTypeSelector.qml</file>

@@ -45,10 +45,11 @@ RowLayout {
         }
     }
 
-    ToolButton {
+    PCP_StyledButton {
         text: "↻"
         ToolTip.visible: hovered
         ToolTip.text: "Recharger la liste de modèles"
+        Layout.preferredWidth: 32
         onClicked: {
             const cur = combo.currentText
             combo.model = AssetManager.availablePlayerModels()

@@ -17,10 +17,8 @@ Flow {
     Repeater {
         model: root.presets
 
-        delegate: Button {
+        delegate: PCP_StyledButton {
             text: modelData
-            font.pixelSize: Math.round(Screen.pixelDensity * 2.8)
-            padding: Screen.pixelDensity * 1.5
             onClicked: root.presetChosen(modelData)
         }
     }

@@ -70,7 +70,7 @@ Item {
                     color: "#cccccc"
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
                 }
-                TextField {
+                PCP_StyledTextField {
                     id: nameField
                     Layout.preferredWidth: Screen.pixelDensity * 50
                     text: root.profile ? root.profile.name : ""
@@ -116,12 +116,35 @@ Item {
                 }
             }
 
+            // ----- Presets (toujours accessibles, indépendants des tabs) -----
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Screen.pixelDensity * 2
+
+                Label {
+                    text: "Presets"
+                    color: "#cccccc"
+                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
+                    font.bold: true
+                }
+
+                PCP_PresetButtons {
+                    Layout.fillWidth: true
+                    onPresetChosen: function(name) {
+                        if (!root.profile || !root.mapInfo) return
+                        const before = root.mapInfo.toJSON()
+                        root.profile.applyPreset(name)
+                        Game.updateMapMetadata(before, root.mapInfo.toJSON())
+                    }
+                }
+            }
+
             // ----- Onglets Simple / Expert -----
-            TabBar {
+            PCP_StyledTabBar {
                 id: physTabs
                 Layout.fillWidth: true
-                TabButton { text: "Simple" }
-                TabButton { text: "Expert" }
+                PCP_StyledTabButton { text: "Simple" }
+                PCP_StyledTabButton { text: "Expert" }
             }
 
             StackLayout {

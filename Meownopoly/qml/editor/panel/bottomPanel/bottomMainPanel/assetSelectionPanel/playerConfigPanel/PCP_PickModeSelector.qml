@@ -35,21 +35,21 @@ ColumnLayout {
 
         ButtonGroup { id: modeGroup }
 
-        RadioButton {
+        PCP_StyledRadioButton {
             id: rbUnique
             text: "Unique"
             ButtonGroup.group: modeGroup
             checked: root.pickMode === PlayerProfile.Unique
             onToggled: if (checked) root.pickModeRequested(PlayerProfile.Unique)
         }
-        RadioButton {
+        PCP_StyledRadioButton {
             id: rbShared
             text: "Shared"
             ButtonGroup.group: modeGroup
             checked: root.pickMode === PlayerProfile.Shared
             onToggled: if (checked) root.pickModeRequested(PlayerProfile.Shared)
         }
-        RadioButton {
+        PCP_StyledRadioButton {
             id: rbMandatory
             text: "Mandatory"
             ButtonGroup.group: modeGroup
