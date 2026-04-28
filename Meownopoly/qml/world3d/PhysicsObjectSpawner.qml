@@ -20,6 +20,7 @@
  */
 import QtQuick
 import QtQuick3D
+import Pattounx 1.0
 import ItemSnapable
 
 Item {
