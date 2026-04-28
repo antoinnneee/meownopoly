@@ -59,7 +59,12 @@ Item {
         ColumnLayout {
             id: leftCol
             Layout.fillHeight: true
-            Layout.preferredWidth: parent.width * 0.40
+            Layout.fillWidth: true
+            // Ratio relatif à la colonne droite (4:6 = 40:60). Avec
+            // fillWidth: true sur les deux colonnes, RowLayout distribue
+            // l'espace selon les preferredWidth comme stretch factors.
+            Layout.preferredWidth: 4
+            Layout.minimumWidth: Screen.pixelDensity * 60   // 6 cm minimum
             spacing: Screen.pixelDensity * 2
 
             // --- Mode de sélection (en haut de la colonne gauche) ---
@@ -165,6 +170,7 @@ Item {
         ColumnLayout {
             Layout.fillHeight: true
             Layout.fillWidth: true
+            Layout.preferredWidth: 6
             spacing: Screen.pixelDensity * 2
 
             // --- Onglets Simple / Expert ---

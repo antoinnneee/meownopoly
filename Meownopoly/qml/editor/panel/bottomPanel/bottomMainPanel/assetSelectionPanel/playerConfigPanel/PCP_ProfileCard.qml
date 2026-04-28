@@ -34,7 +34,12 @@ Rectangle {
     readonly property real _minW: Screen.pixelDensity * 30   // 3 cm
     readonly property real _ratio: 1.6                       // h / w
 
-    implicitWidth: Math.max(_minW, height / _ratio)
+    // implicitWidth indépendant de height : utilisé seulement quand le parent
+    // ne fixe pas width (cas Row horizontal). En mode vertical, le delegate
+    // impose width + height = width*ratio explicitement, donc implicitWidth
+    // est ignoré. Auparavant la formule `Math.max(_minW, height/_ratio)`
+    // créait un binding loop width → implicitWidth → height → width.
+    implicitWidth: _minW
     color: "#262626"
     border.color: root.isSelected ? "#4A90E2" : "#3a3a3a"
     border.width: root.isSelected ? 2 : 1
