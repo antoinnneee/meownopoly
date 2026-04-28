@@ -3,6 +3,16 @@
 > Statut : **Plan v3** — finalisé après arbitrage des 6 questions.
 > Branche : `V2Antoine`.
 > Changements clés vs v2 : `pickMode` est maintenant **par profil** (enum `Unique | Shared | Mandatory`) avec `minOccurrences` ; UI panel scindée en deux : **min/max dans `MapInfoDrawer` vue Cartes**, **roster dans bottom panel `AssetSelectionPanel` 5e onglet** ; prefix `PCP_`.
+>
+> ### Avancement (mise à jour 2026-04-28)
+> - ✅ **Phase 0** — nettoyage `MapInfoDrawer` (double imports + qmldir mort).
+> - ✅ **Phase 1** — `PlayerProfile` + extension `MapInfo` (roster, min/max, version, helpers, JSON, clamping).
+> - ✅ **Phase 2a** — SpinBox min/max joueurs dans `MapInfoDrawer` (vue Cartes).
+> - ✅ **Phase 3** — `AssetManager::availablePlayerModels()` (QRC + AppData + primitives).
+> - ✅ **Phase 2b** — 5e onglet "Joueurs" + 11 composants `PCP_*`. Drag & drop horizontal **différé** : remplacé en v1 par boutons `←/→` dans l'overlay des cards.
+> - ⏳ **Phase 4** — collab editor (ops 12-16, helpers `EditorOpBus`, apply remote, borne `isEditorPacket`).
+> - ⏳ **Phase 5** — migration & persistance (fallback "Princess" sur roster vide à la création de partie).
+> - ⏳ **Phase 6** — documentation (CLAUDE.md + ANALYSE_ARCHITECTURE_EDITEUR).
 
 ---
 
