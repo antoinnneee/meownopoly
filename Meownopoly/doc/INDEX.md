@@ -32,7 +32,9 @@ Documentation technique sur l'architecture du système et les composants.
 ### Systèmes
 - [Gestionnaire d'Assets](./architecture/ASSET_MANAGER.md) - Système de gestion des ressources
 - [Système d'Effets Visuels](./architecture/VISUAL_EFFECTS_SYSTEM.md) - Effets post-processing
-- [Moteur Physique PattounX](./architecture/PHYSICS_ENGINE.md) - Documentation du moteur de collisions 2D PattounX
+- [Moteur Physique Pattounx v2](./architecture/PHYSICS_ENGINE_V2.md) - Doc fonctionnelle actuelle (post-refactor : thread dédié, multi-actors, body-body, sync live)
+- [Plan refactor physique](./architecture/PHYSICS_REFACTOR_PLAN.md) - Décisions, phases, roadmap (référence historique)
+- [Moteur Physique V1 (legacy)](./architecture/PHYSICS_ENGINE.md) - Doc V1, conservée pour archive — contient des erreurs (cf. §10.4 du plan refactor)
 
 ---
 

@@ -1,4 +1,11 @@
-# 🐾 Moteur Physique PattounX (The Feline Physics Solver)
+# 🐾 Moteur Physique PattounX (The Feline Physics Solver) — V1 LEGACY
+
+> ⚠️ **Document V1 obsolète.** Le moteur a été remplacé par **Pattounx v2**
+> (Phases 1–9 du refactor, code en place dans `cpp/game/physics/`). Pour
+> la doc à jour : [PHYSICS_ENGINE_V2.md](./PHYSICS_ENGINE_V2.md).
+> Cette page est conservée pour archive ; elle contient des erreurs
+> factuelles listées au §10.4 de `PHYSICS_REFACTOR_PLAN.md` — ne pas
+> s'y référer aveuglément.
 
 **PattounX** est le moteur physique 2D dédié de Meownopoly. Conçu pour être léger, performant et facile d'utilisation depuis C++ et QML, il prend en charge des collisions 2D continues (cercles-polygones) et divers types d'interactions environnementales (zones d'effet, zones d'exclusion).
 
