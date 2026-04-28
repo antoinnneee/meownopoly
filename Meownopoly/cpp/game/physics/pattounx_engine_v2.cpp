@@ -441,20 +441,33 @@ void PattounX_engine::resolveBodyBodyCCD()
                 continue;
             }
 
-            qreal invA = A.invMass();
-            qreal invB = B.invMass();
+            // Masse inertielle pour le calcul d'impulsion : un Kinematic
+            // contribue avec sa vraie masse (≠ `invMass()` qui retourne 0
+            // pour Kinematic dans les passes statiques où on n'écrit pas
+            // sa velocity). Sans ça, Kinematic = masse infinie et la masse
+            // de l'autre body s'annule mathématiquement → toutes les
+            // caisses, légères ou lourdes, reçoivent la même delta-vélocité.
+            auto effInvMass = [](const InternalBody &b) -> qreal {
+                if (b.spec.type == BodyType::Static) return 0.0;
+                return b.spec.mass > 0.0 ? 1.0 / b.spec.mass : 0.0;
+            };
+            qreal invA = effInvMass(A);
+            qreal invB = effInvMass(B);
 
-            // Pour Kinematic, invMass = 0 → pas de réponse newton classique.
-            // On retombe sur un push positionnel (déjà fait), et on conserve
-            // la vélocité Kinematic intacte (input-driven).
+            // Application : seul un Dynamic reçoit la modification de
+            // velocity. Un Kinematic conserve la sienne (input-driven), un
+            // Static ne bouge jamais.
+            qreal applyA = (A.spec.type == BodyType::Dynamic) ? invA : 0.0;
+            qreal applyB = (B.spec.type == BodyType::Dynamic) ? invB : 0.0;
+
             qreal totalInv = invA + invB;
             if (totalInv > 0.0) {
                 qreal e = std::min(A.spec.restitution, B.spec.restitution);
                 qreal jMag = -(1.0 + e) * velAlongNormal / totalInv;
                 QVector2D impulse = normal * jMag;
 
-                A.velocity += impulse * invA;
-                B.velocity -= impulse * invB;
+                A.velocity += impulse * applyA;
+                B.velocity -= impulse * applyB;
 
                 // Friction Coulomb (moyenne géométrique)
                 QVector2D vRelAfter = A.velocity - B.velocity;
@@ -472,8 +485,8 @@ void PattounX_engine::resolveBodyBodyCCD()
                         qreal muD = std::sqrt(A.spec.dynamicFriction * B.spec.dynamicFriction);
                         frictionImpulse = -jMag * tangent * muD;
                     }
-                    A.velocity += frictionImpulse * invA;
-                    B.velocity -= frictionImpulse * invB;
+                    A.velocity += frictionImpulse * applyA;
+                    B.velocity -= frictionImpulse * applyB;
                 }
             }
 

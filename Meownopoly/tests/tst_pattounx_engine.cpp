@@ -183,6 +183,48 @@ private slots:
                  qPrintable(QString("crate.x = %1").arg(snap.bodies["crate"].position.x())));
     }
 
+    void bodyBody_kinematicPush_massAffectsResponse()
+    {
+        // Régression : avant le fix, Kinematic avait `invMass() = 0`, ce qui
+        // annulait la masse de la caisse dans le calcul d'impulsion (les
+        // caisses lourdes étaient poussées comme les légères). Avec la
+        // masse inertielle correcte, une caisse 5× plus lourde se déplace
+        // significativement moins qu'une caisse de masse 1.
+        auto runScenario = [](qreal crateMass) -> qreal {
+            PattounX_engine eng;
+            BodySpec p = kinematicAt("player", V(0, 0), 0.3);
+            p.maxSpeed = 5.0;
+            p.acceleration = 50.0;
+            p.mass = 1.0;
+            BodySpec crate = dynamicAt("crate", V(2, 0), 0.4, crateMass);
+            crate.linearDamping = 0.2;   // friction modérée pour limiter l'inertie
+            eng.upsertBody(p);
+            eng.upsertBody(crate);
+            eng.setBodyInput("player", V(1, 0));
+
+            const qreal dt = 1.0 / 60.0;
+            for (int i = 0; i < 60; ++i) eng.step(dt); // 1s
+
+            WorldSnapshot snap;
+            eng.writeSnapshot(snap, 0, 0);
+            return snap.bodies["crate"].position.x() - 2.0;
+        };
+
+        const qreal lightDx = runScenario(1.0);
+        const qreal heavyDx = runScenario(5.0);
+
+        QVERIFY2(lightDx > 0.05,
+                 qPrintable(QString("light crate didn't move: dx=%1").arg(lightDx)));
+        QVERIFY2(heavyDx > 0.0,
+                 qPrintable(QString("heavy crate didn't move at all: dx=%1").arg(heavyDx)));
+        // La caisse lourde doit clairement bouger moins. Marge volontairement
+        // large (1.4×) pour absorber les variations dues au damping et au
+        // re-contact répété frame par frame.
+        QVERIFY2(lightDx > heavyDx * 1.4,
+                 qPrintable(QString("mass had no significant effect: light=%1, heavy=%2")
+                                .arg(lightDx).arg(heavyDx)));
+    }
+
     void bodyBody_noOverlap_noEvent()
     {
         PattounX_engine eng;
