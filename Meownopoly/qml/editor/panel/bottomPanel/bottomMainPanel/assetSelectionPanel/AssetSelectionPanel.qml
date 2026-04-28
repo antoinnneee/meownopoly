@@ -9,6 +9,7 @@ import editorBottomPanel
 import caseSelectionPanel
 import zonePanel
 import templatePanel
+import playerConfigPanel
 
 EditorBottomPanel {
     id: root
@@ -242,6 +243,19 @@ EditorBottomPanel {
         }
         TP_Content {
             id: templatePanelContent
+
+            logic: root.logic
+            isExpanded: true
+
+            currentView: root.currentView
+            activeFilter: "All"
+            Layout.preferredWidth: parent.width
+            Layout.preferredHeight: parent.height
+        }
+
+        // 5e onglet "Joueurs" — panel de configuration des profils joueurs.
+        PCP_Content {
+            id: playerConfigPanelContent
 
             logic: root.logic
             isExpanded: true

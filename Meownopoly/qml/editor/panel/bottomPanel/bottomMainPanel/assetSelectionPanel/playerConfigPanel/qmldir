@@ -1,0 +1,12 @@
+module playerConfigPanel
+PCP_Content 1.0 PCP_Content.qml
+PCP_ProfileRow 1.0 PCP_ProfileRow.qml
+PCP_ProfileCard 1.0 PCP_ProfileCard.qml
+PCP_AddProfileCard 1.0 PCP_AddProfileCard.qml
+PCP_ProfileDetail 1.0 PCP_ProfileDetail.qml
+PCP_PickModeSelector 1.0 PCP_PickModeSelector.qml
+PCP_ModelPicker 1.0 PCP_ModelPicker.qml
+PCP_PhysicsSimpleSection 1.0 PCP_PhysicsSimpleSection.qml
+PCP_PhysicsExpertSection 1.0 PCP_PhysicsExpertSection.qml
+PCP_PresetButtons 1.0 PCP_PresetButtons.qml
+PCP_Profile3DPreview 1.0 PCP_Profile3DPreview.qml
