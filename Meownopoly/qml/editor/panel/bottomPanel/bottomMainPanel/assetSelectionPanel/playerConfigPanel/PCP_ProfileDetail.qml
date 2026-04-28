@@ -61,54 +61,62 @@ Item {
             Layout.preferredWidth: parent.width * 0.40
             spacing: Screen.pixelDensity * 2
 
-            // --- Nom ---
-            ColumnLayout {
+            // --- Nom + Modèle 3D côte à côte ---
+            RowLayout {
                 Layout.fillWidth: true
-                spacing: Screen.pixelDensity * 1
+                spacing: Screen.pixelDensity * 2
 
-                Label {
-                    text: "Nom"
-                    color: "#cccccc"
-                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
-                    font.bold: true
-                }
-                PCP_StyledTextField {
-                    id: nameField
+                // Bloc Nom
+                ColumnLayout {
                     Layout.fillWidth: true
-                    text: root.profile ? root.profile.name : ""
-                    Connections {
-                        target: root.profile
-                        function onNameChanged() {
-                            if (nameField.text !== root.profile.name)
-                                nameField.text = root.profile.name
+                    Layout.preferredWidth: 1   // pour ratio fillWidth équilibré
+                    spacing: Screen.pixelDensity * 1
+
+                    Label {
+                        text: "Nom"
+                        color: "#cccccc"
+                        font.pixelSize: Math.round(Screen.pixelDensity * 3)
+                        font.bold: true
+                    }
+                    PCP_StyledTextField {
+                        id: nameField
+                        Layout.fillWidth: true
+                        text: root.profile ? root.profile.name : ""
+                        Connections {
+                            target: root.profile
+                            function onNameChanged() {
+                                if (nameField.text !== root.profile.name)
+                                    nameField.text = root.profile.name
+                            }
+                        }
+                        onEditingFinished: {
+                            if (!root.profile) return
+                            const v = text.trim()
+                            if (!v || v === root.profile.name) return
+                            root._mutate(() => { root.profile.name = v })
                         }
                     }
-                    onEditingFinished: {
-                        if (!root.profile) return
-                        const v = text.trim()
-                        if (!v || v === root.profile.name) return
-                        root._mutate(() => { root.profile.name = v })
-                    }
                 }
-            }
 
-            // --- Modèle 3D ---
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Screen.pixelDensity * 1
-
-                Label {
-                    text: "Modèle 3D"
-                    color: "#cccccc"
-                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
-                    font.bold: true
-                }
-                PCP_ModelPicker {
+                // Bloc Modèle 3D
+                ColumnLayout {
                     Layout.fillWidth: true
-                    currentModel: root.profile ? root.profile.modelName : ""
-                    onModelSelected: function(name) {
-                        if (!root.profile || name === root.profile.modelName) return
-                        root._mutate(() => { root.profile.modelName = name })
+                    Layout.preferredWidth: 1
+                    spacing: Screen.pixelDensity * 1
+
+                    Label {
+                        text: "Modèle 3D"
+                        color: "#cccccc"
+                        font.pixelSize: Math.round(Screen.pixelDensity * 3)
+                        font.bold: true
+                    }
+                    PCP_ModelPicker {
+                        Layout.fillWidth: true
+                        currentModel: root.profile ? root.profile.modelName : ""
+                        onModelSelected: function(name) {
+                            if (!root.profile || name === root.profile.modelName) return
+                            root._mutate(() => { root.profile.modelName = name })
+                        }
                     }
                 }
             }

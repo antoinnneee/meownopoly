@@ -65,7 +65,7 @@ ColumnLayout {
             font.pixelSize: Math.round(Screen.pixelDensity * 3)
             visible: root.pickMode === PlayerProfile.Mandatory
         }
-        SpinBox {
+        PCP_StyledSpinBox {
             id: minOccSpin
             from: 1
             to: 8

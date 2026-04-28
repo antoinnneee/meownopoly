@@ -4,7 +4,8 @@ import QtQuick.Layouts
 import AssetManager
 
 /*
- * ComboBox de sélection du modèle 3D pour un PlayerProfile.
+ * Sélecteur de modèle 3D : PCP_StyledComboBox + bouton ↻ pour rescanner.
+ * Le label "Modèle 3D" est laissé au parent (variable selon le layout).
  * Source : AssetManager.availablePlayerModels() (QRC + AppData + primitives).
  */
 RowLayout {
@@ -13,15 +14,9 @@ RowLayout {
     property string currentModel: ""
     signal modelSelected(string name)
 
-    spacing: Screen.pixelDensity * 2
+    spacing: 4
 
-    Label {
-        text: "Modèle 3D"
-        color: "#cccccc"
-        font.pixelSize: Math.round(Screen.pixelDensity * 3)
-    }
-
-    ComboBox {
+    PCP_StyledComboBox {
         id: combo
         Layout.fillWidth: true
         model: AssetManager.availablePlayerModels()
@@ -50,10 +45,6 @@ RowLayout {
         ToolTip.visible: hovered
         ToolTip.text: "Recharger la liste de modèles"
         Layout.preferredWidth: 32
-        onClicked: {
-            const cur = combo.currentText
-            combo.model = AssetManager.availablePlayerModels()
-            combo._syncToCurrent()
-        }
+        onClicked: combo.model = AssetManager.availablePlayerModels()
     }
 }

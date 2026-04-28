@@ -15,3 +15,5 @@ PCP_StyledRadioButton 1.0 PCP_StyledRadioButton.qml
 PCP_StyledButton 1.0 PCP_StyledButton.qml
 PCP_StyledTabBar 1.0 PCP_StyledTabBar.qml
 PCP_StyledTabButton 1.0 PCP_StyledTabButton.qml
+PCP_StyledComboBox 1.0 PCP_StyledComboBox.qml
+PCP_StyledSpinBox 1.0 PCP_StyledSpinBox.qml

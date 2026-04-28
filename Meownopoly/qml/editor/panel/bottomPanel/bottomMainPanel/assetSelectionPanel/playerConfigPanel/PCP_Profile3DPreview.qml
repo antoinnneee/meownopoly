@@ -31,6 +31,10 @@ Item {
     // parent si on veut adapter (ex: gros boss).
     property real   modelHeight: 160
 
+    // Marge verticale autour du model (1.0 = pile la hauteur du model
+    // visible ; > 1 = plus d'espace autour, donc model plus petit).
+    property real   verticalMargin: 1.6
+
     clip: true
 
     Rectangle {
@@ -72,7 +76,7 @@ Item {
                 clipNear: 1
                 clipFar: 5000
                 horizontalMagnification: view3D.height > 0
-                                          ? (view3D.height / (root.modelHeight * 1.15))
+                                          ? (view3D.height / (root.modelHeight * root.verticalMargin))
                                           : 1
                 verticalMagnification:   horizontalMagnification
             }
