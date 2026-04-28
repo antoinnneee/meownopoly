@@ -1267,18 +1267,24 @@ Module C++ : `Pattounx 1.0` (enregistre `PhysicsWorld` + meta-types).
 
 ### 10.3 Liens
 
-- Doc fonctionnelle moteur actuel : `PHYSICS_ENGINE.md` (legacy V1, voir 10.4)
-- Conversions et caméra actuelles : `CAMERA_ET_DEPLACEMENT.md` (legacy V1, voir 10.4)
+- Doc fonctionnelle moteur actuel : `PHYSICS_ENGINE_V2.md` (post-refactor)
+- Doc fonctionnelle moteur legacy : `PHYSICS_ENGINE.md` (V1, archivée — voir 10.4 pour les erreurs à ignorer)
+- Conversions et caméra : `CAMERA_ET_DEPLACEMENT.md` (V2, réécrit post-Phase 9)
 - Architecture éditeur : `ANALYSE_ARCHITECTURE_EDITEUR.md`
 - Pattern collab session : `COLLAB_SESSION_PATTERN.md`
 
-### 10.4 Audit de la doc V1 (à NE PAS suivre aveuglément)
+### 10.4 Audit de la doc V1 (état post-refactor)
 
-> Décision : on **ne corrige pas** les docs V1 (`PHYSICS_ENGINE.md` et
-> `CAMERA_ET_DEPLACEMENT.md`). Elles seront supprimées en Phase 4 et
-> remplacées par `PHYSICS_ENGINE_V2.md` + `WORLD3D_V2.md`. Cette section
-> liste leurs erreurs pour ne pas s'y référer par accident pendant la
-> transition (Phases 1 à 3 où l'ancien moteur tourne encore).
+> **Mise à jour 2026-04-28 (post-Phase 9)** : `CAMERA_ET_DEPLACEMENT.md`
+> a été **réécrit** pour refléter l'architecture V2 (chemins
+> `qml/meowComponent/` corrigés, `World3D` + `CameraRig` + `InputController`
+> + `PhysicsActor` documentés à la place de `GameScene` / `CameraController`
+> / `EntityEngine`). Les erreurs ci-dessous sont conservées comme trace
+> historique de ce qui a été corrigé.
+>
+> `PHYSICS_ENGINE.md` reste **non corrigé** par décision : remplacé par
+> `PHYSICS_ENGINE_V2.md`. La section ci-dessous liste ses erreurs pour
+> que personne ne s'y réfère par accident.
 
 #### `PHYSICS_ENGINE.md` — erreurs à ignorer
 
@@ -1336,56 +1342,43 @@ Module C++ : `Pattounx 1.0` (enregistre `PhysicsWorld` + meta-types).
   intégré…" (section 3).
 - "Lorsque qu'un objet" → "Lorsqu'un".
 
-#### `CAMERA_ET_DEPLACEMENT.md` — erreurs à ignorer
+#### `CAMERA_ET_DEPLACEMENT.md` — erreurs corrigées (réécrit 2026-04-28)
 
-**Erreurs factuelles**
+> ✅ **Résolu** : la doc a été intégralement réécrite pour la V2. Les points
+> ci-dessous décrivent ce qui était cassé dans la version V1 originale et
+> qui est désormais corrigé dans le fichier actuel.
 
-1. **Tous les chemins `qml/component/` sont faux** : le dossier réel
-   est `qml/meowComponent/`. Affecte `GridManager`, `GameScene`,
-   `GlobalMa`, `Base_Board` dans toute la doc (sections 1, 2, 4, et
-   tableau récap "Fichiers importants").
+**Erreurs factuelles (résolues)**
 
-2. **`qml/utils/EntityController.qml` n'existe pas**. Le fichier réel
-   est `qml/utils/EntityEngine.qml`. Référencé en titre de section 7,
-   dans le flux "Mode Jeu", et dans le tableau récapitulatif. Le code
-   présenté en section 7 correspond en fait à un mélange de
-   `EntityEngine.qml:297-317` (FrameAnimation, déplacement) et
-   `CameraController.qml:111-155` (lerp caméra + sync grid 2D) — la
-   doc fusionne deux singletons distincts dans une entité fictive.
+1. ✅ **Chemins `qml/component/` → `qml/meowComponent/`** : tous corrigés
+   (sections GridManager, Base_Board, GlobalMa, tableau récap).
 
-3. **Le code du `MouseLogic_Base` (section 5) est illustratif** mais
-   le vrai fichier n'a pas été audité ligne à ligne — à vérifier en
-   Phase 5 si on a besoin d'extraire des invariants.
+2. ✅ **`qml/utils/EntityController.qml`** n'existait pas : la pipeline
+   d'input + déplacement est désormais documentée correctement comme
+   trois composants instanciables (`InputController` + `PhysicsActor` +
+   `CameraRig`) au lieu d'une entité fictive qui fusionnait deux
+   singletons V1 (`EntityEngine` + `CameraController`).
 
-**Lacunes majeures**
+3. ✅ **Code `MouseLogic_Base`** : vérifié contre le fichier réel
+   `qml/editor/logic/MouseLogic_Base.qml`.
 
-4. **`World3DTools` jamais mentionné** alors que c'est LE singleton
-   de conversion 2D ↔ 3D (`position3dToGridRealPosition`,
-   `gridPositionTo3D`, `world3DToGrid2D`, `grid2DToWorld3D`,
-   `getGroundIntersection`, `radius3DToGridRadius`). 6 fonctions de
-   conversion dont 2 paires redondantes (mapTo3DScene-based vs
-   gridSize-based) — confusion notable à clarifier dans la doc V2.
+**Lacunes majeures (résolues)**
 
-5. **`CameraController` (singleton) jamais mentionné** alors qu'il
-   gère le suivi caméra avec lerp et la sync grille 2D inverse,
-   utilisé par `EntityEngine` (`EntityEngine.qml:82, 90`). Toute la
-   logique de "follow mode" décrite section 7 est en fait là.
+4. ✅ **Helpers de conversion 2D ↔ 3D** documentés dans la section 2
+   (World3D) et un tableau récap point #3 ("quelle helper utiliser").
+   Les méthodes ex-`World3DTools` ont été absorbées dans `World3D.qml`
+   et la dualité stable / non-stable est maintenant explicitée
+   (jitter caméra-induit + `gridToWorldStable`).
 
-6. **Pas de mention du couplage `EntityEngine ↔ CameraController ↔
-   World3DTools`** : l'init en cascade (`World3DTools.init` →
-   `EntityEngine.setContext/setZone/setCameraTarget` →
-   `CameraController.setTarget` en interne) qui rend le démarrage
-   fragile.
+5. ✅ **`CameraRig`** documenté section 9 (modes `Follow` / `FreeCam` /
+   `FixedTopDown` / `OrbitDebug`, lerp frame-rate independent, sync
+   grid 2D, `setMode` snap propre).
 
-#### Politique pendant la transition (Phases 1-3)
-
-- Pour comprendre le **comportement** du moteur actuel, lire
-  directement `pattounx_engine.cpp` / `pattounx_body.cpp` / `EntityEngine.qml`,
-  pas la doc V1.
-- Pour comprendre les **conversions 2D/3D**, lire `World3DTools.qml`
-  et `CameraController.qml` directement.
-- La doc V1 reste utile uniquement pour le pipeline pédagogique
-  (intégration → CCD → solver → corrections) qui est correct.
+6. ✅ **Pipeline V2** documentée section "Mode Jeu — pipeline V2" :
+   décorrélation simu (worker thread 60 Hz) / rendu (FrameAnimation) /
+   caméra (FrameAnimation indépendante du `CameraRig`). Plus de
+   couplage god-object — chaque composant a une responsabilité
+   unique et est instanciable.
 
 #### `ANALYSE_ARCHITECTURE_EDITEUR.md` — vérifié, largement fidèle
 
@@ -1399,13 +1392,13 @@ Module C++ : `Pattounx 1.0` (enregistre `PhysicsWorld` + meta-types).
 
 **Lacunes structurelles (pas des erreurs)**
 
-1. **La couche 3D et physique est totalement absente** : aucune mention
-   de `GameScene`, `EntityEngine`, `World3DTools`, `CameraController`,
-   `PattounX_engine`, ni de l'init en cascade dans `Editor.qml:90-115`
-   (`World3DTools.init` → `EntityEngine.setContext/setZone/setCameraTarget`).
-   Acceptable parce que ce scope est censé être dans
-   `CAMERA_ET_DEPLACEMENT.md` (qui ne le couvre pas correctement non
-   plus, cf. ci-dessus). À combler dans `WORLD3D_V2.md` post-refactor.
+1. **La couche 3D et physique est absente de cette doc** (par scoping
+   volontaire) : aucune mention de `World3D`, `PhysicsActor`,
+   `CameraRig`, `InputController`, `pattounx::PattounX_engine`. Ce scope
+   est désormais couvert ailleurs : `CAMERA_ET_DEPLACEMENT.md` (V2,
+   réécrit) pour la pipeline présentation 3D + caméra, et
+   `PHYSICS_ENGINE_V2.md` pour le moteur physique. Pas de doublon à
+   ajouter ici — éventuellement un pointeur explicite vers ces deux docs.
 
 2. **Collab éditeur invisible** : `EditorOpBus`, `EditorSession`,
    `Catway`, `EditorMessageType` non mentionnés alors que c'est la grosse
@@ -1423,12 +1416,16 @@ Module C++ : `Pattounx 1.0` (enregistre `PhysicsWorld` + meta-types).
 
 - Côté QML, le composant snapable s'appelle **`SnapableExclusionZone.qml`**.
 - Côté C++ moteur, le tileType est **`ItemSnapable::PhysicZoneTile`**
-  (cf. `pattounx_engine.cpp:183`).
+  (cf. `cpp/game/item_snapable/ItemSnapable.h:45`). L'ancien
+  `pattounx_engine.cpp:183` (V1) a été supprimé en commit `328e263` ; le
+  bridge V2 vit dans `EditorPhysicsBridge.qml` qui appelle
+  `physicsWorld.upsertZone` / `removeZone` (cf. tableau §3.5 de
+  `PHYSICS_ENGINE_V2.md`).
 - Côté `EditorDynamicComponent`, le Component s'appelle
   **`snapablePhysicZoneComponent`** (cf. doc section 7.2).
 
-Trois noms pour la même chose. À unifier ou documenter explicitement
-dans le bridge sync live de la Phase 3 pour éviter les confusions de
+Trois noms pour la même chose. Documenté explicitement dans le bridge
+sync live (cf. `PHYSICS_ENGINE_V2.md` §3) pour éviter les confusions de
 filtrage.
 
 **Bilan : pas de modifications urgentes nécessaires sur cette doc.**

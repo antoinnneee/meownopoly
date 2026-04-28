@@ -87,14 +87,21 @@ No automated test runner is configured. Manual testing via the executable.
 - Coproperty system (shared ownership), anonymous auctions (blind bidding)
 - Maps stored as JSON
 
-### Physics
-- Custom 2D engine ("PattounX") in `cpp/game/physics/`
-- `PhysicsZone2D` + `ZoneParameter` define interaction volumes
-- Circle collision with continuous collision detection (CCD)
+### Physics (Pattounx v2)
+- Moteur 2D maison **Pattounx v2**, dédié à Meownopoly. V1 (`PattounX_engine`/`PattounX_body`/`PattounX_zone` QObject) supprimée (commit `328e263`).
+- Cœur Qt-free `pattounx::PattounX_engine` dans `cpp/game/physics/pattounx_engine_v2.{h,cpp}` ; types POD partagés (`BodySpec`, `ZoneSpec`, `BodySnapshot`, `WorldSnapshot`, enums `BodyType`/`ShapeType`) dans `pattounx_types.h`.
+- **Thread physique dédié** : `PhysicsWorker` (`physics_worker.{h,cpp}`) tourne dans son `QThread` à 60 Hz. Façade GUI `PhysicsWorld` (`physics_world.{h,cpp}`) expose API QML, fait le triple buffer Fraser-Harris lock-free pour les snapshots, et code/décode pour le réseau. Toutes les commandes GUI → worker passent par signaux `Qt::QueuedConnection`. Aucune mutation directe du moteur depuis le GUI.
+- **Bodies multi-types** : `Static` (figé), `Kinematic` (input-driven, `invMass==0`, pousse les Dynamic mais ne reçoit pas de réponse), `Dynamic` (forces, masse, body-body). Plusieurs actors instantiables (player principal + P2 toggleable, caisses).
+- **Collisions** : cercle-polygone (zones d'exclusion/effet) avec CCD analytique sweep cercle-segment + cercle-vertex, body-body cercle-cercle avec sweep + résolution d'impulsion (caisses). Friction Coulomb (statique + dynamique), `linearDamping` exponentiel framerate-indep, "sleep system".
+- **Bridge éditeur** : `ItemSnapableEvents` (singleton agrégateur de signaux tile-by-tile) + `EditorPhysicsBridge.qml` ; sync live des zones (`upsertZone`/`removeZone` debounce 30 Hz). Caisses (`SnapablePhysicalObject`) paramétrables via `PhysicalObjectParameter` (`mass`/`bounceFactor`/`frictionStrength`/`linearDamping`) — porté par `ItemSnapable`, exposé en QML, sérialisé dans le JSON de map (commit `56195cb`).
+- **Réseau** : `PhysicsSession` (`physics_session.{h,cpp}`, singleton QML module `Pattounx`) host-authoritative, broadcast snapshot 30 Hz reliable (plage `physics_message_type.h` 0x40+ : `Snapshot`, `BodiesAnnounce`, `InputUpdate`, `Hello`/`Welcome`). Clients route leurs inputs reliable vers l'hôte qui simule pour tout le monde.
+- **Présentation 3D** : `qml/world3d/World3D.qml` (View3D + helpers grid↔world), `PhysicsActor.qml` (présentateur 3D, pull `bodyState(id)` chaque tick FrameAnimation, lissage, **Y visuel 2.5D** via `visualY` + `jump()`/`wave()`), `PhysicsObjectSpawner.qml` (spawn auto sur tiles `PhysicalObjectTile`), `LocalPlayerSpawner.qml`, `EditorPhysicsBridge.qml`, `InputController.qml` (clavier → `pushInput(actorId, vec)`), `CameraRig.qml` (modes `Follow`/`Free`/`FixedTopDown`).
+- `PhysicsObject` a été absorbé dans `PhysicsActor` (commit `750d4f8`) — un seul présentateur 3D pour joueurs et caisses.
+- Doc complète : `doc/architecture/PHYSICS_ENGINE_V2.md` (post-Phase 9). `PHYSICS_ENGINE.md` est l'archive V1 legacy (à ignorer pour le code actuel). `PHYSICS_REFACTOR_PLAN.md` garde l'historique des décisions et phases.
 
 ## Key Patterns
 
-- **Singletons**: `Catway`, `AssetManager`, `MapFileManager`, `LauncherManager`, `GameSession`, `EditorSession`, `EditorOpBus` — registered as QML singletons
+- **Singletons**: `Catway`, `AssetManager`, `MapFileManager`, `LauncherManager`, `GameSession`, `EditorSession`, `EditorOpBus`, `PhysicsSession`, `ItemSnapableEvents` — registered as QML singletons. `PhysicsWorld` est exposé via `contextProperty("pattounxWorld")` (pas singleton QML, mais instance globale unique survivant aux navigations).
 - **C++/QML bridge**: `Q_PROPERTY` for data binding, `Q_INVOKABLE` for method calls
 - **Resource files**: `qml.qrc`, `asset.qrc`, `base_comp.qrc`, `chat.qrc`, `launcher.qrc`, `other.qrc`
 
@@ -131,10 +138,12 @@ No automated test runner is configured. Manual testing via the executable.
 
 - `Meownopoly/cpp/` — C++ source (game logic, networking, chat, assets, physics, editor)
   - `cpp/communication/` — Catway, PlayerNetwork, StunManager, UdpSocketInfo
-  - `cpp/game/network/` — GameSession, GameProtocol, GameMessageType
+  - `cpp/game/network/` — GameSession, GameProtocol, GameMessageType, MinigameSync
+  - `cpp/game/physics/` — Pattounx v2 (engine_v2, types, worker, world, session, protocol, message_type, item_snapable_events, collision2d)
   - `cpp/editor/network/` — EditorSession, EditorProtocol, EditorMessageType (frame `0x20+`)
   - `cpp/editor/ops/` — EditorOpBus (chokepoint mutations + undo stacks), EditorOpType
 - `Meownopoly/qml/` — QML UI (editor, board, chat, menu, launcher, account, components)
+  - `qml/world3d/` — Présentation 3D physique (World3D, PhysicsActor, PhysicsObjectSpawner, LocalPlayerSpawner, EditorPhysicsBridge, InputController, CameraRig)
   - `qml/test/CatwayTest/` — dev harness incl. `EditorSessionPanel`, `EditorOpsCard`, `EditorNetworkTestTab`
   - `qml/multiplayer/` — lobby (MultiplayerLobby, SessionList, SessionCard, SessionCreation, SessionDetails)
 - `Meownopoly/doc/` — Comprehensive project documentation (40+ files)
@@ -155,3 +164,5 @@ Extensive docs exist in `Meownopoly/doc/` — check `doc/INDEX.md` for the full 
 - `doc/architecture/ANALYSE_ARCHITECTURE_EDITEUR.md` — Editor architecture (detailed)
 - `doc/architecture/CATWAY_ARCHITECTURE.md` — P2P/UDP communication
 - `doc/architecture/PROJECT_STRUCTURE.md` — Code organization
+- `doc/architecture/PHYSICS_ENGINE_V2.md` — Moteur physique Pattounx v2 (post-refactor) ; **ne pas se fier** à `PHYSICS_ENGINE.md` (V1 archivée, contient des erreurs)
+- `doc/architecture/PHYSICS_REFACTOR_PLAN.md` — Décisions, phases et roadmap du refactor physique
