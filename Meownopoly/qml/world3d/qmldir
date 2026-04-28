@@ -2,7 +2,6 @@ module world3d
 EditorPhysicsBridge 1.0 EditorPhysicsBridge.qml
 World3D 1.0 World3D.qml
 PhysicsActor 1.0 PhysicsActor.qml
-PhysicsObject 1.0 PhysicsObject.qml
 PhysicsObjectSpawner 1.0 PhysicsObjectSpawner.qml
 LocalPlayerSpawner 1.0 LocalPlayerSpawner.qml
 InputController 1.0 InputController.qml

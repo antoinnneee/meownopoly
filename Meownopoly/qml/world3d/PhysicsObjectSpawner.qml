@@ -2,8 +2,8 @@
  * PhysicsObjectSpawner — Phase 9
  *
  * Écoute `ItemSnapableEvents` et instancie/détruit côté 3D un
- * `Model` + `PhysicsObject` (présentateur) pour chaque
- * `PhysicalObjectTile` posée dans l'éditeur.
+ * `Model` + `PhysicsActor` (présentateur partagé joueur ↔ caisse) pour
+ * chaque `PhysicalObjectTile` posée dans l'éditeur.
  *
  * Le bridge (`EditorPhysicsBridge`) s'occupe en parallèle de pousser le
  * body Dynamic correspondant côté worker physique. Les deux écoutent
@@ -28,8 +28,12 @@ Item {
 
     required property var world3D
 
-    // Map<bodyId(string), {model: Model, presenter: PhysicsObject}> pour
-    // démontage à la suppression d'une tile.
+    // Map<bodyId(string), {model: Model, presenter: PhysicsActor}> pour
+    // démontage à la suppression d'une tile. On réutilise `PhysicsActor`
+    // tel quel pour le rendu (avec `autoOrient: false` pour ne pas faire
+    // tourner la caisse selon la velocity) — la sémantique Dynamic vs
+    // Kinematic est portée côté worker via `BodyType` dans la `BodySpec`,
+    // pas côté présentateur QML.
     property var _spawned: ({})
 
     // Component templates inline. Évite un fichier additionnel pour la box +
@@ -55,8 +59,9 @@ Item {
 
     Component {
         id: physicsObjectComponent
-        PhysicsObject {
+        PhysicsActor {
             // node3D + bodyId + world3D définis lors du createObject.
+            autoOrient: false   // une caisse ne pivote pas selon la velocity
         }
     }
 

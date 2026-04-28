@@ -82,7 +82,7 @@ Limites bloquantes :
 | 16 | Namespace `pattounx`, module QML `Pattounx 1.0` | |
 | 17 | `GameBoard.qml` retiré de la build | Mort, ébauche obsolète |
 | 18 | `ItemSnapable.uniqueId` confirmé stable | Vérifié, sert de zoneId |
-| 19 | **Bodies créés par orchestrateur externe**, composants QML sont des **présentateurs** | Cohérent avec le pattern actuel (`SnapableElement` ne crée pas le `ItemSnapable`). `PhysicsActor`/`PhysicsObject` QML lisent juste `bodyState(id)` ; la création passe par `EditorPhysicsBridge` (zones, caisses) ou par un `LocalPlayerSpawner` (joueur local). |
+| 19 | **Bodies créés par orchestrateur externe**, composants QML sont des **présentateurs** | Cohérent avec le pattern actuel (`SnapableElement` ne crée pas le `ItemSnapable`). Un seul présentateur QML `PhysicsActor` (post-Phase-9 : pas de `PhysicsObject` séparé, `autoOrient: false` suffit pour les caisses) lit `bodyState(id)` ; la création passe par `EditorPhysicsBridge` (zones, caisses) ou par un `LocalPlayerSpawner` (joueur local). La sémantique Kinematic vs Dynamic est portée côté worker par `BodyType`. |
 | 20 | **`PhysicsMessageType` séparé** (pas dans Editor/Game) | Header `cpp/game/physics/physics_message_type.h` ; types réutilisables par éditeur ET futur mode jeu. |
 
 ## 4. Architecture cible
@@ -666,16 +666,20 @@ Item {
 }
 ```
 
-### 5.8 QML — `PhysicsObject.qml` (présentateur)
+### 5.8 QML — présentateur unifié (post-Phase-9)
 
-Identique à `PhysicsActor` côté QML : un présentateur qui lit
-`bodyState(bodyId)` et positionne un `node3D`. La différence est sémantique
-(et dans le `BodyType` du body côté worker, fixé à création par le bridge :
-`Kinematic` pour `PhysicsActor`, `Dynamic` pour `PhysicsObject`).
+> **Décision finale** : pas de `PhysicsObject.qml` séparé. `PhysicsActor`
+> est utilisé pour les caisses Dynamic comme pour les joueurs Kinematic.
+> Pour les caisses, on instancie `PhysicsActor { autoOrient: false }`
+> (la caisse ne pivote pas selon la velocity). La sémantique
+> Kinematic vs Dynamic est portée par le `BodyType` côté worker, pas
+> par le présentateur QML — qui ne fait que lire le snapshot et placer
+> le `node3D`.
 
-Cas d'usage : caisse posée par l'éditeur. Le bridge crée le `Dynamic` body
-quand la `PhysicalObjectTile` est posée, et un `PhysicsObject` QML est
-instancié en parallèle pour afficher le node3D de la caisse.
+Cas d'usage : caisse posée par l'éditeur. Le bridge crée le `Dynamic`
+body quand la `PhysicalObjectTile` est posée ; le `PhysicsObjectSpawner`
+instancie en parallèle un `Model` 3D + un `PhysicsActor` pour afficher
+le `node3D` de la caisse.
 
 À terme : `shape` configurable (Circle / Box) côté `BodySpec` à la création.
 
@@ -1076,15 +1080,15 @@ collision change. ✅
   `tileDeleted`, on appelle `removeBody`. Le bridge gère désormais ZONE
   + OBJECT en parallèle, dispatchés dans `_flushPending` selon
   `_isPhysicZone` / `_isPhysicalObject`.
-- `qml/world3d/PhysicsObject.qml` : présentateur 3D minimal (lit
-  `bodyState`, place `node3D.x/z` avec lissage, `node3D.y = visualY`).
-  Identique à `PhysicsActor` côté lecture, sans helpers Y visuel /
-  orientation auto.
 - `qml/world3d/PhysicsObjectSpawner.qml` : écoute `ItemSnapableEvents`,
   instancie un `Model` (cube `#Cube` orange scalé sur `unitSizeWidth *
-  gridSize`) + un `PhysicsObject` pour chaque `PhysicalObjectTile`. Le
-  spawner posse le `visualY = halfSide` pour que la base du cube touche
-  le sol Y=0. À la suppression, détruit Model + presenter.
+  gridSize`) + un `PhysicsActor` (avec `autoOrient: false`) pour chaque
+  `PhysicalObjectTile`. Le spawner pose `visualY = halfSide` pour que
+  la base du cube touche le sol Y=0. À la suppression, détruit Model +
+  presenter. Décision post-Phase-9 : pas de `PhysicsObject.qml` séparé
+  — `PhysicsActor` joue le rôle de présentateur unifié pour
+  Kinematic/Dynamic. La sémantique est portée côté worker via
+  `BodyType`, pas côté QML (cf. décision §19 mise à jour).
 - `qml/editor/CrateTestPanel.qml` : badge top-right (sous JumpTestPanel,
   topMargin 192) avec deux boutons "Spawn" (pose une caisse 1.5 case
   devant le joueur) et "Clear" (supprime toutes les
@@ -1180,7 +1184,7 @@ Nouveau `qmldir` `qml/world3d/` :
 module world3d
 World3D 1.0 World3D.qml
 PhysicsActor 1.0 PhysicsActor.qml
-PhysicsObject 1.0 PhysicsObject.qml
+PhysicsObjectSpawner 1.0 PhysicsObjectSpawner.qml
 CameraRig 1.0 CameraRig.qml
 InputController 1.0 InputController.qml
 LocalPlayerSpawner 1.0 LocalPlayerSpawner.qml
