@@ -33,17 +33,18 @@ EBP_Content {
         anchors.fill: parent
         clip: true
 
-        ColumnLayout {
+        RowLayout {
             anchors.fill: parent
             anchors.margins: Screen.pixelDensity * 2
             spacing: Screen.pixelDensity * 2
 
-            // ----- Rangée horizontale des cards (haut) -----
+            // ----- Sélection des personnages (gauche, colonne verticale) -----
             PCP_ProfileRow {
                 id: profileRow
-                Layout.fillWidth: true
-                Layout.preferredHeight: Math.max(Screen.pixelDensity * 50,
-                                                 root.height * 0.55)
+                orientation: Qt.Vertical
+                // ~3.5 cm de large : 1 card portrait + scrollbar et marges.
+                Layout.preferredWidth: Screen.pixelDensity * 35
+                Layout.fillHeight: true
                 mapInfo: root.mapInfo
                 selectedProfileId: root.selectedProfileId
 
@@ -87,7 +88,7 @@ EBP_Content {
                 }
             }
 
-            // ----- Panneau d'édition (bas) -----
+            // ----- Panneau d'édition (droite) -----
             PCP_ProfileDetail {
                 Layout.fillWidth: true
                 Layout.fillHeight: true

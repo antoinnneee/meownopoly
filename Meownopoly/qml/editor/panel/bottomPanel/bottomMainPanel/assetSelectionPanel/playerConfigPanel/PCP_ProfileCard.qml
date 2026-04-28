@@ -22,6 +22,7 @@ Rectangle {
 
     property var profile: null
     property bool isSelected: false
+    property bool verticalLayout: false   // true → flèches ↑/↓, sinon ←/→
 
     signal selected()
     signal duplicateRequested()
@@ -153,17 +154,17 @@ Rectangle {
         visible: hover.hovered
 
         ToolButton {
-            text: "←"
+            text: root.verticalLayout ? "↑" : "←"
             ToolTip.visible: hovered
-            ToolTip.text: "Déplacer à gauche"
+            ToolTip.text: root.verticalLayout ? "Monter" : "Déplacer à gauche"
             onClicked: root.moveLeftRequested()
             implicitWidth: Screen.pixelDensity * 5
             implicitHeight: Screen.pixelDensity * 5
         }
         ToolButton {
-            text: "→"
+            text: root.verticalLayout ? "↓" : "→"
             ToolTip.visible: hovered
-            ToolTip.text: "Déplacer à droite"
+            ToolTip.text: root.verticalLayout ? "Descendre" : "Déplacer à droite"
             onClicked: root.moveRightRequested()
             implicitWidth: Screen.pixelDensity * 5
             implicitHeight: Screen.pixelDensity * 5
