@@ -254,6 +254,16 @@ public:
 
 
     Q_INVOKABLE QStringList getAvailableModels() const;
+
+    /**
+     * @brief Liste des modèles 3D utilisables pour un PlayerProfile.
+     * Source double : scan QRC `:/asset/models/` (built-in) + scan
+     * `<AppData>/models/` (téléchargés). Ne retient que les dossiers contenant
+     * un `<name>.qml`. Dédup par nom (priorité QRC). Inclut aussi les primitives
+     * "Cube" et "Sphere" (toujours disponibles, utilisées en fallback).
+     */
+    Q_INVOKABLE QStringList availablePlayerModels() const;
+
     Q_INVOKABLE bool isTransparent(float px, float py, QString path);
 
     Q_INVOKABLE QString getAppDataPath() const;

@@ -4,6 +4,7 @@
 #include <QFileInfo>
 #include <QQmlEngine>
 #include <QDir>
+#include <QDirIterator>
 #include <QImageReader>
 #include <QRandomGenerator>
 #include <QUrl>
@@ -716,6 +717,52 @@ QStringList AssetManager::getAvailableModels() const
     // On liste les sous-répertoires, chacun représentant un modèle
     QStringList subDirs = modelsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     return subDirs;
+}
+
+QStringList AssetManager::availablePlayerModels() const
+{
+    // Primitives toujours disponibles (utilisées en fallback par World3D).
+    QStringList result;
+    result << QStringLiteral("Cube") << QStringLiteral("Sphere");
+
+    auto isValidModelDir = [](const QDir &dir) {
+        const QString name = dir.dirName();
+        if (name.isEmpty() || name.startsWith('.')) return false;
+        // Doit contenir un <name>.qml
+        return dir.exists(name + QStringLiteral(".qml"));
+    };
+
+    auto pushUnique = [&result](const QString &name) {
+        if (!result.contains(name, Qt::CaseInsensitive)) result << name;
+    };
+
+    // 1) Built-in : scan QRC `:/asset/models/`. Si rien n'est embarqué (cas
+    //    actuel du projet), QDirIterator retourne juste rien — pas d'erreur.
+    {
+        QDirIterator it(QStringLiteral(":/asset/models"),
+                        QDir::Dirs | QDir::NoDotAndDotDot,
+                        QDirIterator::NoIteratorFlags);
+        while (it.hasNext()) {
+            it.next();
+            const QDir dir(it.filePath());
+            if (isValidModelDir(dir)) pushUnique(dir.dirName());
+        }
+    }
+
+    // 2) Téléchargés : `<AppData>/models/`.
+    {
+        const QString appData = getAppDataPath() + QStringLiteral("/models");
+        QDir modelsDir(appData);
+        if (modelsDir.exists()) {
+            const QStringList subs = modelsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+            for (const QString &sub : subs) {
+                const QDir dir(modelsDir.absoluteFilePath(sub));
+                if (isValidModelDir(dir)) pushUnique(sub);
+            }
+        }
+    }
+
+    return result;
 }
 
 QString AssetManager::getAppDataPath() const
