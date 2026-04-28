@@ -1147,9 +1147,10 @@ type, et changera la `shape` configurable (Circle / Box) côté
 | `qml/utils/EntityEngine.qml` | Phase 4 | `World3D` + `PhysicsActor` + `InputController` + `LocalPlayerSpawner` |
 | `qml/utils/World3DTools.qml` | Phase 4 | méthodes de `World3D` |
 | `qml/utils/CameraController.qml` | Phase 4 | `CameraRig` (créé en Phase 4, enrichi en Phase 5) |
-| `cpp/game/physics/pattounx_engine.{h,cpp}` (ancien) | Phase 4 | `pattounx::PattounX_engine` (v2, créé en Phase 1) |
-| `cpp/game/physics/pattounx_body.{h,cpp}` (QObject) | Phase 4 | type interne POD du moteur |
-| `cpp/game/physics/pattounx_zone.{h,cpp}` (QObject) | Phase 4 | type interne POD du moteur |
+| `cpp/game/physics/pattounx_engine.{h,cpp}` (ancien) | ✅ post-Phase-9 | `pattounx::PattounX_engine` (v2, namespace) |
+| `cpp/game/physics/pattounx_body.{h,cpp}` (QObject) | ✅ post-Phase-9 | `BodySpec` POD + `InternalBody` interne au v2 |
+| `cpp/game/physics/pattounx_zone.{h,cpp}` (QObject) | ✅ post-Phase-9 | `ZoneSpec` POD + `InternalZone` interne au v2 |
+| `CollisionResult.zone` / `.body` (forward-decl legacy) | ✅ post-Phase-9 | retirés du struct (jamais lus par v2) |
 
 ### 8.2 Étapes prudentes
 

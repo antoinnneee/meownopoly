@@ -52,9 +52,6 @@ SOURCES += \
     cpp/chat/chat_command_helper.cpp \
     cpp/game/item_snapable/ZoneParameter.cpp \
     cpp/game/physics/collision2d.cpp \
-    cpp/game/physics/pattounx_body.cpp \
-    cpp/game/physics/pattounx_zone.cpp \
-    cpp/game/physics/pattounx_engine.cpp \
     cpp/communication/udp_socket_info.cpp \
     cpp/communication/stun_manager.cpp \
     cpp/tools/test_manager.cpp \
@@ -112,9 +109,6 @@ HEADERS += \
     cpp/chat/chat_command_helper.h \
     cpp/game/item_snapable/ZoneParameter.h \
     cpp/game/physics/collision2d.h \
-    cpp/game/physics/pattounx_body.h \
-    cpp/game/physics/pattounx_zone.h \
-    cpp/game/physics/pattounx_engine.h \
     cpp/communication/udp_socket_info.h \
     cpp/communication/stun_manager.h \
     cpp/tools/test_manager.h \

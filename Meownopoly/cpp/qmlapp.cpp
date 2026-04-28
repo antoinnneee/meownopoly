@@ -36,7 +36,6 @@
 #include "tools/uistyle.h"
 #include "tools/test_manager.h"
 
-#include "game/physics/pattounx_engine.h"
 #include "game/physics/physics_world.h"
 #include "game/physics/physics_session.h"
 #include "game/physics/item_snapable_events.h"
@@ -89,7 +88,6 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     CursorManager::registerQml();
     TestManager::registerQml();
     
-    PattounX_engine::registerQml();
     PhysicsWorld::registerQml();
     PhysicsSession::registerQml();
     ItemSnapableEvents::registerQml();

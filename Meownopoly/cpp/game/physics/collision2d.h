@@ -8,9 +8,6 @@
 #include <QVariantList>
 #include <cmath>
 
-// Forward declaration
-class PattounX_zone;
-class PattounX_body;
 /**
  * @brief Structure représentant un polygone optimisé pour la collision
  */
@@ -45,8 +42,6 @@ struct CollisionResult {
     QVector2D closestPoint;         // Point le plus proche sur le polygone
     qreal penetration = 0.0;        // Profondeur de pénétration
     qreal t = 1.0;                  // Paramètre d'intersection [0,1] pour sweep tests
-    PattounX_zone* zone = nullptr;  // Zone touchée (si applicable)
-    PattounX_body* body = nullptr;  // Body touché (si applicable)
 };
 
 /**
