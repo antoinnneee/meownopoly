@@ -11,13 +11,7 @@ import QtQuick.Controls
 Item {
     id: root
 
-    anchors.top: parent.top
-    anchors.right: parent.right
-    anchors.topMargin: 12
-    anchors.rightMargin: 12
-
-    z: 10000
-
+    // Placement dans la Column `leftBadgeStack` d'Editor.qml.
     width: badge.width
     height: badge.height
 

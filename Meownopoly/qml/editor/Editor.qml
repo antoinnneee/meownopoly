@@ -1133,16 +1133,33 @@ Base_Board {
 
     mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
 
-    CollabStatusPanel {}
-    PhysicsStatusPanel {}
-    CameraTestPanel { cameraRig: cameraRig }
-    MultiActorTestPanel { editor: root }
-    PhysicsNetworkPanel {}
-    JumpTestPanel { actor: playerActor }
-    CrateTestPanel {
-        logic: root.logic
-        actor: playerActor
-        physicsWorld: pattounxWorld
+    // Stack vertical des badges, ancré top-left.
+    // CollabStatusPanel (visible uniquement si EditorSession.active) en
+    // tête ; il a un comportement spécial : Column saute les enfants
+    // `visible: false`, donc en mono les test panels remontent naturellement
+    // à la place du badge collab. Les panels expanded de CameraTestPanel et
+    // PhysicsNetworkPanel s'ancrent à `parent.top/right` du badge → ils
+    // dépassent à droite du badge dans son slot Column (comportement OK).
+    Column {
+        id: leftBadgeStack
+        z: 10000
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.topMargin: 12
+        anchors.leftMargin: 12
+        spacing: 6
+
+        CollabStatusPanel {}
+        PhysicsStatusPanel {}
+        CameraTestPanel { cameraRig: cameraRig }
+        MultiActorTestPanel { editor: root }
+        PhysicsNetworkPanel {}
+        JumpTestPanel { actor: playerActor }
+        CrateTestPanel {
+            logic: root.logic
+            actor: playerActor
+            physicsWorld: pattounxWorld
+        }
     }
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de

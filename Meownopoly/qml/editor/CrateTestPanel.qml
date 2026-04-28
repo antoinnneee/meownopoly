@@ -37,14 +37,7 @@ Item {
     // joueur (en grille). Optionnel — sans, on spawn à (0,0).
     required property var physicsWorld
 
-    // Stack vertical : sous JumpTestPanel (topMargin 156 + ~24 + 12 = 192).
-    anchors.top: parent.top
-    anchors.right: parent.right
-    anchors.topMargin: 192
-    anchors.rightMargin: 12
-
-    z: 10000
-
+    // Placement dans la Column `leftBadgeStack` d'Editor.qml.
     width: badge.width
     height: badge.height
 

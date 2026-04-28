@@ -20,14 +20,7 @@ Item {
     // ciblé séparément via la touche "+" du panel quand multi-actor est ON.
     required property var actor
 
-    // Stack vertical : sous PhysicsNetworkPanel (topMargin 120 + ~24 + 12 = 156).
-    anchors.top: parent.top
-    anchors.right: parent.right
-    anchors.topMargin: 156
-    anchors.rightMargin: 12
-
-    z: 10000
-
+    // Placement dans la Column `leftBadgeStack` d'Editor.qml.
     width: badge.width
     height: badge.height
 

@@ -21,15 +21,7 @@ Item {
     // Référence à Editor.qml (pour lire/écrire `multiActorEnabled`).
     required property var editor
 
-    anchors.top: parent.top
-    anchors.right: parent.right
-    // Stack vertical : 12 (PhysicsStatusPanel) + ~24 (panel height) +
-    // 12 (CameraTestPanel) + ~24 + marge = 84
-    anchors.topMargin: 84
-    anchors.rightMargin: 12
-
-    z: 10000
-
+    // Placement dans la Column `leftBadgeStack` d'Editor.qml.
     width: badge.width
     height: badge.height
 

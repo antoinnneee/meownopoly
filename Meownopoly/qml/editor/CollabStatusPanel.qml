@@ -8,12 +8,7 @@ import EditorSession 1.0
 Item {
     id: root
 
-    anchors.top: parent.top
-    anchors.left: parent.left
-    anchors.topMargin: 12
-    anchors.leftMargin: 12
-
-    z: 10000
+    // Placement dans la Column `leftBadgeStack` d'Editor.qml.
     width: Math.max(collabBadge.width, netStatsPanel.width)
     height: collabBadge.height + (netStatsPanel.visible ? 6 + netStatsPanel.height : 0)
 

@@ -24,15 +24,7 @@ import Meownopoly.Account 1.0
 Item {
     id: root
 
-    anchors.top: parent.top
-    anchors.right: parent.right
-    // Stack vertical sous CameraTestPanel + MultiActorTestPanel.
-    // 12 (PhysicsStatusPanel) + 24 + 12 (Camera) + 24 + 12 (MultiActor) + 24 + 12 = 120
-    anchors.topMargin: 120
-    anchors.rightMargin: 12
-
-    z: 10000
-
+    // Placement dans la Column `leftBadgeStack` d'Editor.qml.
     width: open ? expanded.width : badge.width
     height: open ? expanded.height : badge.height
 

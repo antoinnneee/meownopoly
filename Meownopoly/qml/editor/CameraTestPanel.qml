@@ -26,13 +26,7 @@ Item {
     // mode dégradé (badge "Camera · n/a", contrôles désactivés).
     property var cameraRig: null
 
-    anchors.top: parent.top
-    anchors.right: parent.right
-    anchors.topMargin: 48      // sous le badge PhysicsStatusPanel (12 + ~24)
-    anchors.rightMargin: 12
-
-    z: 10000
-
+    // Placement dans la Column `leftBadgeStack` d'Editor.qml.
     width: expanded ? panel.width : badge.width
     height: expanded ? panel.height : badge.height
 
