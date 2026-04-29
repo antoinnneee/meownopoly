@@ -154,7 +154,14 @@ void PattounX_engine::integrateBodies(qreal dt)
 void PattounX_engine::applyGroundFrictionAndZones(InternalBody &body)
 {
     QSet<QString> currentZones;
-    qreal currentDamping = DEFAULT_GROUND_DAMPING;
+    // Base = damping de la spec du body. Avant le fix, on initialisait à
+    // DEFAULT_GROUND_DAMPING (constante 0.05), ce qui faisait que
+    // body.spec.linearDamping était ignoré côté QML/JSON et que tous les
+    // bodies se comportaient comme s'ils avaient damping=0.05 hors zones
+    // (cf. PCP test : sliders linearDamping/static/dynamic friction sans
+    // effet observable). Une zone à frictionStrength plus forte continue à
+    // surclasser via le max ci-dessous.
+    qreal currentDamping = body.spec.linearDamping;
     qreal currentAccelMul = 1.0;
     qreal currentSpeedMul = 1.0;
 
