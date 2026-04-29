@@ -32,7 +32,7 @@ Rectangle {
     signal moveRightRequested()
     signal nameEditRequested(string newName)
 
-    readonly property real _minW: Screen.pixelDensity * 30   // 3 cm
+    readonly property real _minW: Screen.pixelDensity * 25   // 3 cm
     readonly property real _ratio: 1.6                       // h / w
 
     // implicitWidth indépendant de height : utilisé seulement quand le parent
