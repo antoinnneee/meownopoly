@@ -43,7 +43,7 @@ public:
     static constexpr qreal  DEFAULT_RADIUS           = 0.4;
     static constexpr qreal  DEFAULT_MASS             = 1.0;
     static constexpr qreal  DEFAULT_ACCELERATION     = 30.0;
-    static constexpr qreal  DEFAULT_MAX_SPEED        = 300.0;
+    static constexpr qreal  DEFAULT_MAX_SPEED        = 30.0;
     static constexpr qreal  DEFAULT_LINEAR_DAMPING   = 0.1;
     static constexpr qreal  DEFAULT_STATIC_FRICTION  = 0.4;
     static constexpr qreal  DEFAULT_DYNAMIC_FRICTION = 0.2;

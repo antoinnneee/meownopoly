@@ -247,7 +247,7 @@ void PlayerProfile::applyPreset(const QString &presetName)
         setRadius(0.3);
         setMass(0.5);
         setAcceleration(50.0);
-        setMaxSpeed(450.0);
+        setMaxSpeed(70.0);
         setLinearDamping(0.05);
         setStaticFriction(DEFAULT_STATIC_FRICTION);
         setDynamicFriction(DEFAULT_DYNAMIC_FRICTION);
@@ -256,7 +256,7 @@ void PlayerProfile::applyPreset(const QString &presetName)
         setRadius(0.55);
         setMass(3.0);
         setAcceleration(15.0);
-        setMaxSpeed(200.0);
+        setMaxSpeed(20.0);
         setLinearDamping(0.2);
         setStaticFriction(DEFAULT_STATIC_FRICTION);
         setDynamicFriction(DEFAULT_DYNAMIC_FRICTION);
