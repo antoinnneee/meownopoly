@@ -55,6 +55,7 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PhysicsExpertSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PresetButtons.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_Profile3DPreview.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_TestController.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledTextField.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledRadioButton.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledButton.qml</file>

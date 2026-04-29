@@ -1,4 +1,5 @@
 module playerConfigPanel
+singleton PCP_TestController 1.0 PCP_TestController.qml
 PCP_Content 1.0 PCP_Content.qml
 PCP_ProfileRow 1.0 PCP_ProfileRow.qml
 PCP_ProfileCard 1.0 PCP_ProfileCard.qml

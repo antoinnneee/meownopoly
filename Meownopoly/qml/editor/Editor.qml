@@ -37,6 +37,7 @@ import QtQuick3D
 import QtQuick3D.Helpers
 
 import editor
+import playerConfigPanel 1.0
 import "."
 
 Base_Board {
@@ -1243,16 +1244,94 @@ Base_Board {
             // Bind camera magnification to grid scale level
             cameraMagnification: gameGrid.scaleLevel
             gridManager: gameGrid
+
+            // Quand un profil est en test (panel Player Config), le modèle
+            // 3D du player principal devient celui du profil. Sinon Princess.
+            // `modelName` ne dépend que de `_testedProfile.modelName`. Comme
+            // _testedProfile est ré-évalué à chaque update du MapInfo, on
+            // récupère toujours l'instance courante (Game.updateMapMetadata
+            // recrée les PlayerProfile à chaque commit).
+            modelName: workArea._testedProfile
+                         ? workArea._testedProfile.modelName
+                         : "Princess"
         }
 
         // Phase 4 — joueur local. Body créé/détruit par le spawner ; le
         // PhysicsActor lit bodyState et positionne `gameScene.entity`.
+        // Quand un profil est en test, ses params remplacent les défauts via
+        // `_resyncMainPlayer()` (re-upsert manuel — LocalPlayerSpawner ne
+        // réagit pas aux changements de `params`/`radius`). Le body est le
+        // même ("player"), seule la spec évolue ; upsertBody C++ préserve
+        // position et velocity (cf. pattounx_engine_v2.cpp:31-44).
         LocalPlayerSpawner {
             id: localPlayerSpawner
             physicsWorld: pattounxWorld
             actorId: "player"
             radius: 0.2
             params: ({ acceleration: 30.0, maxSpeed: 30.0, linearDamping: 0.1 })
+        }
+
+        // Profil actuellement en test, résolu via l'id stable. Re-évalué à
+        // chaque update du mapInfo (Game.updateMapMetadata recrée
+        // PlayerProfile* à chaque commit). Si pas en test ou map non chargée
+        // → null.
+        readonly property var _testedProfile: {
+            const id = PCP_TestController.profileId
+            if (!id) return null
+            const m = MapFileManager.currentMap
+            if (!m || !m.mapInfo) return null
+            return m.mapInfo.playerProfileById(id)
+        }
+
+        function _resyncMainPlayer() {
+            if (!pattounxWorld || !pattounxWorld.running) return
+            const p = workArea._testedProfile
+            if (p) {
+                pattounxWorld.createKinematicActor("player",
+                    Qt.vector2d(0, 0),   // ignoré : upsertBody préserve la pos
+                    p.radius,
+                    {
+                        mass:            p.mass,
+                        acceleration:    p.acceleration,
+                        maxSpeed:        p.maxSpeed,
+                        linearDamping:   p.linearDamping,
+                        staticFriction:  p.staticFriction,
+                        dynamicFriction: p.dynamicFriction,
+                        bounceFactor:    p.bounceFactor
+                    })
+            } else {
+                // Restaurer les défauts du player de test de l'éditeur.
+                pattounxWorld.createKinematicActor("player",
+                    Qt.vector2d(0, 0),
+                    0.2,
+                    { acceleration: 30.0, maxSpeed: 30.0, linearDamping: 0.1 })
+            }
+        }
+
+        // Bascule on/off du test (start/stop) ou recréation du PlayerProfile
+        // après update mapInfo → re-upsert avec les params courants. Pas de
+        // handler `on_TestedProfileChanged` direct (capitalisation casse-tête
+        // avec préfixe `_`) — on passe par Connections sur l'id du singleton.
+        Connections {
+            target: PCP_TestController
+            function onProfileIdChanged() { workArea._resyncMainPlayer() }
+        }
+
+        // Live update : la cible Connections suit `_testedProfile`. Quand le
+        // profile est recréé (nouvelle instance même id) ou que les sliders
+        // mutent ses Q_PROPERTY, on re-upsert. ignoreUnknownSignals couvre le
+        // cas target=null entre détachement/rattachement.
+        Connections {
+            target: workArea._testedProfile
+            ignoreUnknownSignals: true
+            function onRadiusChanged()          { workArea._resyncMainPlayer() }
+            function onMassChanged()            { workArea._resyncMainPlayer() }
+            function onAccelerationChanged()    { workArea._resyncMainPlayer() }
+            function onMaxSpeedChanged()        { workArea._resyncMainPlayer() }
+            function onLinearDampingChanged()   { workArea._resyncMainPlayer() }
+            function onStaticFrictionChanged()  { workArea._resyncMainPlayer() }
+            function onDynamicFrictionChanged() { workArea._resyncMainPlayer() }
+            function onBounceFactorChanged()    { workArea._resyncMainPlayer() }
         }
 
         PhysicsActor {

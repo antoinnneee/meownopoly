@@ -5,6 +5,7 @@ import PlayerProfile
 import Game
 import MapInfo
 import EditorOpBus
+import playerConfigPanel 1.0
 
 /*
  * Panneau d'édition d'un PlayerProfile. Visible quand un profil est
@@ -24,6 +25,19 @@ Item {
 
     property var profile: null
     property var mapInfo: null
+
+    // True ssi PCP_TestController teste actuellement CE profil. La
+    // comparaison se fait par id (string stable), pas par pointeur :
+    // Game.updateMapMetadata recrée le PlayerProfile à chaque commit donc
+    // un pointeur deviendrait null après la 1re modif (cf. PCP_TestController).
+    readonly property bool _isTestingThisProfile:
+        !!root.profile && PCP_TestController.isTestingId(root.profile.id)
+
+    function _toggleTest() {
+        if (!root.profile) return
+        if (_isTestingThisProfile) PCP_TestController.stopTesting()
+        else                       PCP_TestController.startTesting(root.profile)
+    }
 
     /// Mute un champ du profil, déclenche autosave et broadcast l'op
     /// UpdatePlayerProfile correspondante. `fields` est un objet partiel
@@ -162,6 +176,15 @@ Item {
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
                     font.bold: true
                 }
+                PCP_StyledButton {
+                    Layout.fillWidth: true
+                    accent: true
+                    text: root._isTestingThisProfile ? "Arrêter le test"
+                                                     : "Tester en 3D"
+                    enabled: !!root.profile
+                    onClicked: root._toggleTest()
+                }
+
                 PCP_PresetButtons {
                     Layout.fillWidth: true
                     onPresetChosen: function(name) {
