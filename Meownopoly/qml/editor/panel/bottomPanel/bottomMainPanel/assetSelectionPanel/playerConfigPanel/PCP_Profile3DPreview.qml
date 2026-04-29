@@ -35,6 +35,10 @@ Item {
     // visible ; > 1 = plus d'espace autour, donc model plus petit).
     property real   verticalMargin: 1.6
 
+    // Inclinaison verticale de la caméra (degrés vers le bas).
+    // 0 = vue strictement horizontale ; positif = légère vue plongeante.
+    property real   cameraPitchDeg: 15
+
     clip: true
 
     Rectangle {
@@ -66,13 +70,20 @@ Item {
                 brightness: 1.3
             }
 
-            // Caméra ortho centrée sur le milieu du model. Magnification
-            // calée pour que `modelHeight * 1.15` (15% de marge) tienne
-            // dans la vue.
+            // Caméra ortho qui pivote autour du milieu du model pour
+            // donner une légère vue plongeante (cf. cameraPitchDeg).
+            // Le centre de cadrage reste le point (0, modelHeight*0.5, 0)
+            // quel que soit le pitch — la caméra tourne autour de la
+            // cible à distance _dist constante.
             OrthographicCamera {
                 id: camera
-                position: Qt.vector3d(0, root.modelHeight * 0.5, 400)
-                eulerRotation.x: 0
+                readonly property real _pitchRad: root.cameraPitchDeg * Math.PI / 180
+                readonly property real _dist: 400
+                readonly property real _targetY: root.modelHeight * 0.5
+                position: Qt.vector3d(0,
+                                      _targetY + _dist * Math.sin(_pitchRad),
+                                      _dist * Math.cos(_pitchRad))
+                eulerRotation.x: -root.cameraPitchDeg
                 clipNear: 1
                 clipFar: 5000
                 horizontalMagnification: view3D.height > 0
