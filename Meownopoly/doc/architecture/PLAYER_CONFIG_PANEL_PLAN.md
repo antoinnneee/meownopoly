@@ -11,8 +11,8 @@
 > - ✅ **Phase 3** — `AssetManager::availablePlayerModels()` (QRC + AppData + primitives).
 > - ✅ **Phase 2b** — 5e onglet "Joueurs" + 11 composants `PCP_*`. Drag & drop horizontal **différé** : remplacé en v1 par boutons `←/→` dans l'overlay des cards.
 > - ✅ **Phase 4** — collab editor : ops 12-16 (`AddPlayerProfile`/`RemovePlayerProfile`/`UpdatePlayerProfile`/`ReorderPlayerProfile`/`SetMapPlayerLimits`), helpers `EditorOpBus.make*Op`, apply remote dans `Editor.qml`, écritures `PCP_*` + `MapInfoDrawer` re-routées via `submitOp`. La borne `isEditorPacket` n'a **pas** été modifiée : elle filtre `EditorMessageType` (0x20+), pas `EditorOpType` — les ops 12-16 transitent via `EditorMessageType::Op` (0x23) déjà couvert. Test 2 instances (`dual_test_p2p`) restant.
-> - ⏳ **Phase 5** — migration & persistance (fallback "Princess" sur roster vide à la création de partie).
-> - ⏳ **Phase 6** — documentation (CLAUDE.md + ANALYSE_ARCHITECTURE_EDITEUR).
+> - ✅ **Phase 5** — migration & persistance : helper privé `MapInfo::ensureFallbackProfile()` appelé par les deux ctors. Default ctor injecte Princess automatiquement (couvre `Game::initEmptyCollabMap` — Princess transitoire écrasé par le `setMapInfo` du FullSync). Ctor JSON injecte Princess si roster vide après chargement (couvre les anciennes maps pré-Phase 1, JSON sans clé `playerProfiles`, tableau vide, ou wipe via `playerConfigVersion > current`). `playerConfigVersion=1` déjà bumpé. Pas d'injection au save (le user peut volontairement vider, Princess revient au prochain reload).
+> - ✅ **Phase 6** — documentation : section "Roster joueurs" ajoutée à `MapInfo` dans `CLAUDE.md` (Game Logic) + ops 12-16 listées dans la section "Collaborative Editor" avec gap "pas d'undo profils". Sous-section §10.5 "Roster Joueurs (Player Config Panel)" complète dans `doc/architecture/ANALYSE_ARCHITECTURE_EDITEUR.md`.
 
 ---
 
@@ -463,13 +463,13 @@ La Phase 4 envoie déjà `Map.toJSON()`. `MapInfo` étendue suit naturellement, 
 - [ ] Test à 2 instances (`dual_test_p2p`).
 
 ### Phase 5 — Persistance & migration
-- [ ] Maps existantes (sans `playerProfiles`) chargent avec defaults.
-- [ ] Au save, si roster vide → injecter automatiquement profil "Princess".
-- [ ] `playerConfigVersion` bumpé à 1.
+- [x] Maps existantes (sans `playerProfiles`) chargent avec defaults : `MapInfo(json)` ctor + `ensureFallbackProfile()` injectent Princess si la clé est absente, le tableau vide, ou la version trop récente.
+- [x] Au load, si roster vide → injecter automatiquement profil "Princess" (couvre l'intention initiale "au save" : la map sera persistée avec Princess au prochain save). Le default ctor `MapInfo()` injecte aussi pour les maps neuves / `Game::initEmptyCollabMap`.
+- [x] `playerConfigVersion` bumpé à 1 (`MapInfo::CURRENT_PLAYER_CONFIG_VERSION = 1`, déjà en place depuis Phase 1).
 
 ### Phase 6 — Documentation
-- [ ] CLAUDE.md : section "Editor Collaboratif" → ops 12-16 listées + "gap connu : pas d'undo profils".
-- [ ] `doc/architecture/ANALYSE_ARCHITECTURE_EDITEUR.md` : section "Roster joueurs".
+- [x] CLAUDE.md : section "Collaborative Editor" → ops 12-16 listées + gap connu "pas d'undo sur les profils en v1" + précision sur la borne `isEditorPacket`. Section "Game Logic" → entrée "Roster joueurs" pointant vers le plan.
+- [x] `doc/architecture/ANALYSE_ARCHITECTURE_EDITEUR.md` : sous-section §10.5 "Roster Joueurs (Player Config Panel)" complète (modèle de données, UI `PCP_*`, op bus, migration & fallback, runtime PR ultérieures).
 
 ---
 

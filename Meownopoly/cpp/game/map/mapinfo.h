@@ -131,6 +131,10 @@ private:
 
     PlayerProfile *adoptProfile(PlayerProfile *p);
     void clearProfilesNoEmit();
+    /// Injecte un profil "Princess" par défaut si le roster est vide.
+    /// Appelé par les ctors pour garantir qu'une map a toujours au moins un
+    /// profil sélectionnable (cf. PLAYER_CONFIG_PANEL_PLAN.md §6.6).
+    void ensureFallbackProfile();
 
     const QString m_autosaveMapName = AUTOSAVE_MAP_NAME;
     QString m_mapName = m_autosaveMapName;

@@ -755,6 +755,59 @@ MouseArea {
 
 Essentiel pour que les éléments enfants gardent le contrôle de leurs interactions.
 
+### 10.5 Roster Joueurs (Player Config Panel)
+
+Le **Player Config Panel** étend `MapInfo` avec la configuration des joueurs autorisés sur une carte. Plan complet : `doc/architecture/PLAYER_CONFIG_PANEL_PLAN.md`.
+
+**Modèle de données (C++)** :
+
+- `MapInfo` (cf. `cpp/game/map/mapinfo.{h,cpp}`) porte :
+  - `int minPlayers` / `int maxPlayers` (placeholders 2/8, indicatifs — pas de check bloquant runtime).
+  - `int playerConfigVersion` (courant : 1, monotone). `version > current` au load → roster wipé + warning.
+  - `QQmlListProperty<PlayerProfile> playerProfiles` + helpers `addPlayerProfile`/`addPlayerProfileFromJson`/`updatePlayerProfile`/`removePlayerProfile`/`reorderPlayerProfile`/`duplicatePlayerProfile`/`playerProfileById`/`playerProfileAt`/`playerProfileCount`/`clearPlayerProfiles`.
+- `PlayerProfile` (`cpp/game/map/playerprofile.{h,cpp}`) :
+  - Identité : `id` (UUID stable, CONSTANT), `name`, `modelName` (dossier modèle 3D).
+  - `pickMode` (`Unique` / `Shared` / `Mandatory`) + `minOccurrences` (utilisé seulement si `Mandatory`, clampé à `[1, MAX_PLAYERS_HARD_CAP]`).
+  - Physique : `radius`, `mass`, `acceleration`, `maxSpeed`, `linearDamping`, `staticFriction`, `dynamicFriction`, `bounceFactor`.
+  - Presets : `applyPreset("Standard"|"Léger"|"Lourd"|"Glissant"|"Adhérent")` (touche uniquement la physique, jamais `pickMode`/`minOccurrences`/`name`/`modelName`).
+  - Sérialisation : `toJSON()` / `applyJson()` ; `pickMode` sérialisé en string (lisibilité human-diff), parsing tolérant string ou int.
+
+**UI (QML)** :
+
+- **Vue "Cartes" du `MapInfoDrawer`** : 2 SpinBox `minPlayers` / `maxPlayers` ajoutés au `GridLayout` (pattern `Game.updateMapMetadata(before, after)`).
+- **5e onglet "Joueurs" du `AssetSelectionPanel`** : composants `PCP_*` dans `qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/`.
+  - `PCP_Content` : racine, tient `selectedProfileId`.
+  - `PCP_ProfileRow` : Flickable horizontal des cards.
+  - `PCP_ProfileCard` : preview 3D + nom inline-éditable (double-clic) + badge `pickMode` + overlay actions (Dupliquer / Supprimer) + boutons `←/→` pour réordonner (drag & drop reporté en v2).
+  - `PCP_AddProfileCard` : "+" en queue de rangée → crée profil et le sélectionne.
+  - `PCP_ProfileDetail` : panneau d'édition conditionnel (visible si une card sélectionnée).
+  - `PCP_PickModeSelector`, `PCP_ModelPicker`, `PCP_PhysicsSimpleSection`, `PCP_PhysicsExpertSection`, `PCP_PresetButtons`, `PCP_Profile3DPreview`.
+- **Convention de tailles** : aucun pixel fixe ; `Screen.pixelDensity * X` pour mm/cm ou proportions du parent.
+
+**Catalogue de modèles** : `AssetManager::availablePlayerModels()` scanne `qrc:/asset/models/` + `<AppData>/models/`, filtre les dossiers contenant `<name>.qml`, dédupe par nom (priorité QRC).
+
+**Op bus collab (ops 12-16)** : ajoutés à `EditorOpType` :
+
+| ID | Op | Champs |
+|---|---|---|
+| 12 | `AddPlayerProfile` | `profile: {...}` complet |
+| 13 | `RemovePlayerProfile` | `id` |
+| 14 | `UpdatePlayerProfile` | `id`, `fields: {...}` partiel |
+| 15 | `ReorderPlayerProfile` | `id`, `newIndex` |
+| 16 | `SetMapPlayerLimits` | `minPlayers?`, `maxPlayers?` |
+
+Helpers `EditorOpBus.make{Add,Remove,Update,Reorder}PlayerProfileOp` + `makeSetMapPlayerLimitsOp`. Apply remote dans `Editor.qml` (cases 12-16). Toutes les écritures `PCP_*` + le SpinBox du `MapInfoDrawer` passent par `EditorOpBus.submitOp(...)`. **Pas d'undo en v1** (les ops 12-16 utilisent `submitOp`, pas `submitOpWithUndo`).
+
+> **Gotcha** : la borne `EditorProtocol::isEditorPacket` filtre par plage `EditorMessageType` (0x20+), pas par `EditorOpType`. Les ops 12-16 transitent via `EditorMessageType::Op` (0x23) déjà couvert — la borne **n'a pas** été modifiée par cette extension.
+
+**Migration & fallback** :
+
+- Toute `MapInfo` (default ctor ou JSON) garantit ≥ 1 profil via `ensureFallbackProfile()` (injecte un "Princess" si roster vide après chargement).
+- Cas `playerConfigVersion > current` : roster wipé + Princess réinjecté + warning log.
+- Cas JSON sans clé `playerProfiles` (ancienne map pré-Phase 1) : Princess auto-injecté au load, persisté au prochain save.
+
+**Runtime (PR ultérieures, hors panel)** : choix profil par joueur en lobby pré-partie (respect `Unique`/`Shared`/`Mandatory`), peuplement `LocalPlayerSpawner.params`/`World3D.modelName` depuis le profil choisi.
+
 ---
 
 ## 11. Points d'Extension Future

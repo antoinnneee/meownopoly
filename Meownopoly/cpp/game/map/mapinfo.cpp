@@ -19,7 +19,10 @@ inline int clampInt(int v, int lo, int hi)
 
 } // namespace
 
-MapInfo::MapInfo() {}
+MapInfo::MapInfo()
+{
+    ensureFallbackProfile();
+}
 
 MapInfo::MapInfo(const QJsonObject &json)
 {
@@ -47,8 +50,6 @@ MapInfo::MapInfo(const QJsonObject &json)
                    << "is newer than supported" << CURRENT_PLAYER_CONFIG_VERSION
                    << "- resetting roster, fallback profile will be created.";
         m_playerConfigVersion = CURRENT_PLAYER_CONFIG_VERSION;
-        // Roster vidé : un profil "Princess" par défaut sera injecté.
-        adoptProfile(new PlayerProfile(this));
     } else {
         m_playerConfigVersion = CURRENT_PLAYER_CONFIG_VERSION;
         if (json.contains("playerProfiles") && json.value("playerProfiles").isArray()) {
@@ -59,6 +60,9 @@ MapInfo::MapInfo(const QJsonObject &json)
             }
         }
     }
+    // Couvre : version trop récente (roster wipé), JSON sans clé
+    // "playerProfiles" (ancienne map pré-Phase 1), ou tableau vide.
+    ensureFallbackProfile();
 }
 
 MapInfo::~MapInfo()
@@ -288,6 +292,16 @@ void MapInfo::clearProfilesNoEmit()
 {
     qDeleteAll(m_playerProfiles);
     m_playerProfiles.clear();
+}
+
+void MapInfo::ensureFallbackProfile()
+{
+    if (!m_playerProfiles.isEmpty()) return;
+    // PlayerProfile() initialise déjà m_name/m_modelName à "Princess"
+    // (cf. playerprofile.h). Pas d'émission de signal ici : le ctor MapInfo
+    // n'a pas encore de listeners QML attachés. Si appelé hors ctor à l'avenir,
+    // l'appelant devra émettre playerProfilesChanged.
+    adoptProfile(new PlayerProfile(this));
 }
 
 PlayerProfile *MapInfo::addPlayerProfile()
