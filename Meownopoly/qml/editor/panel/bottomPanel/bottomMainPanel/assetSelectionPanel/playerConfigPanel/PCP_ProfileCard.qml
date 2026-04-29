@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 import PlayerProfile
 
@@ -46,24 +47,27 @@ Rectangle {
     radius: 6
     clip: true
 
-    // ----- Preview 3D (75% top) -----
+    // ----- Preview 3D (85% top) -----
     PCP_Profile3DPreview {
         id: preview
         anchors.left: parent.left
+        anchors.leftMargin: 3
         anchors.right: parent.right
+        anchors.rightMargin: 3
         anchors.top: parent.top
-        height: parent.height * 0.75
+        anchors.topMargin: 3
+        height: parent.height * 0.85
         modelName: root.profile ? root.profile.modelName : "Cube"
         spinning: hover.hovered
     }
 
-    // ----- Nom (25% bottom) -----
+    // ----- Nom (15% bottom) -----
     Item {
         id: nameRow
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        height: parent.height * 0.25
+        height: parent.height * 0.15
 
         Label {
             id: nameLabel
@@ -162,6 +166,7 @@ Rectangle {
 
         ToolButton {
             text: root.verticalLayout ? "↑" : "←"
+            Material.foreground: "white"
             ToolTip.visible: hovered
             ToolTip.text: root.verticalLayout ? "Monter" : "Déplacer à gauche"
             onClicked: root.moveLeftRequested()
@@ -170,6 +175,7 @@ Rectangle {
         }
         ToolButton {
             text: root.verticalLayout ? "↓" : "→"
+            Material.foreground: "white"
             ToolTip.visible: hovered
             ToolTip.text: root.verticalLayout ? "Descendre" : "Déplacer à droite"
             onClicked: root.moveRightRequested()
@@ -178,6 +184,7 @@ Rectangle {
         }
         ToolButton {
             text: "⎘"
+            Material.foreground: "white"
             ToolTip.visible: hovered
             ToolTip.text: "Dupliquer"
             onClicked: root.duplicateRequested()
@@ -186,6 +193,7 @@ Rectangle {
         }
         ToolButton {
             text: "✕"
+            Material.foreground: "white"
             ToolTip.visible: hovered
             ToolTip.text: "Supprimer"
             onClicked: root.removeRequested()

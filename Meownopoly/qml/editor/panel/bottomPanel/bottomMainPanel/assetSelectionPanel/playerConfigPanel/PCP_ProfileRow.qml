@@ -106,8 +106,8 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.leftMargin: Screen.pixelDensity * 2
-            anchors.rightMargin: Screen.pixelDensity * 2
+            anchors.leftMargin: Screen.pixelDensity * 4
+            anchors.rightMargin: Screen.pixelDensity * 4
             anchors.topMargin: Screen.pixelDensity * 1
             spacing: Screen.pixelDensity * 2
 
