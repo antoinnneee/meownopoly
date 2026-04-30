@@ -31,6 +31,11 @@ find_package(Qt6 REQUIRED COMPONENTS
 
 # Tests : optionnel (Qt6::Test pas toujours disponible selon l'install)
 find_package(Qt6 QUIET COMPONENTS Test)
+
+# CanvasPainter : optionnel (Tech Preview Qt 6.11+, indisponible avant).
+# Quand présent, on compile le composant ZoneCanvasPainter (rendu GPU 2D
+# via QRhi) et on définit MEOW_HAS_CANVAS_PAINTER pour le code C++ et QML.
+find_package(Qt6 QUIET COMPONENTS CanvasPainter)
 # ============================================================================
 # Collecter les fichiers sources
 # ============================================================================
@@ -131,6 +136,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::WebSockets
     Qt6::Concurrent
 )
+
+# Lien + flag pour le composant ZoneCanvasPainter quand le module est dispo.
+if (TARGET Qt6::CanvasPainter)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::CanvasPainter)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE MEOW_HAS_CANVAS_PAINTER)
+    message(STATUS "Qt6::CanvasPainter trouvé — ZoneCanvasPainter activé.")
+else()
+    message(STATUS "Qt6::CanvasPainter absent (nécessite Qt 6.11+) — ZoneCanvasPainter désactivé.")
+endif()
 
 # ============================================================================
 # Chemins d'import QML (pour Qt Creator et le code model)

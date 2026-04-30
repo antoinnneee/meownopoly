@@ -33,5 +33,6 @@
         <file>qml/test/CatwayTest/EditorOpsCard.qml</file>
         <file>qml/test/CatwayTest/EditorNetworkTestTab.qml</file>
         <file>qml/test/CatwayTest/PhysicsTestTab.qml</file>
+        <file>qml/test/CatwayTest/ZoneCanvasPainterTest.qml</file>
     </qresource>
 </RCC>
