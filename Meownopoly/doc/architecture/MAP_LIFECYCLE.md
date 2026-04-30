@@ -345,15 +345,28 @@ Les tests gelant le contrat décrit ici vivent dans
 
 | Suite                   | Cas couverts                                                                                  |
 |-------------------------|-----------------------------------------------------------------------------------------------|
-| `tst_mapinfo`           | JSON round-trip ; fallback profile (toujours ≥ 1) ; versioning roster ; setters guard (G2) ; bornes min/max ; add/remove/duplicate/reorder/update/clear profile. |
-| `tst_mapfilemanager`    | normalize ; path resolution AUTOSAVE/CUSTOM ; saveMap atomique ; readMapFile robustesse JSON ; mapExists round-trip ; createMapFile mapName key (G1) ; getMapType ; setCurrentMap deleteLater + signal ; renameMap supprimé (G3). |
+| `tst_mapinfo`           | JSON round-trip ; fallback profile (toujours ≥ 1) ; versioning roster ; setters guard (**G2**) ; bornes min/max ; add/remove/duplicate/reorder/update/clear profile. |
 
-### Couverture différée (avec ItemSnapable + deps)
+### Couverture différée
+
+`MapFileManager`, `Map`, et les scénarios bout-en-bout dépendent transitivement
+de `ItemSnapable` → `Case` → `game.h` → tout le projet (singletons, réseau,
+QML). Sans refactor en *object library* CMake ou stubs massifs, ces tests ne
+sont pas linkables en isolation. Reportés à une itération future :
 
 | Suite                | Cas                                                     |
 |----------------------|---------------------------------------------------------|
+| `tst_mapfilemanager` | normalize, path resolution, atomicité, saveMap/readMapFile round-trip, mapExists, createMapFile (**G1**), getMapType, setCurrentMap signal & deleteLater. |
 | `tst_map_undoredo`   | pushDelta clears redoStack ; undo group atomic ; applyDelta TileAdded/Deleted/Modified/Metadata ; canSave gate ; idempotence applyRemote ; signaux `tileAddedToMap`/`tileRemovedFromMap`. |
 | `tst_lifecycle`      | scénarios §A à §M de bout en bout, avec mocks `EditorOpBus`/`EditorSession`. |
+
+Les fixes **G1** (createMapFile écrit la mauvaise clé) et **G3** (renameMap
+cassé/mort) sont appliqués sans test automatisé dans cette itération —
+vérification par revue de code et le test contractuel
+`tst_mapinfo::jsonCtor_readsNameKey_notMapNameKey` qui gèle l'attente côté
+lecteur (`MapInfo::MapInfo(json)` lit `"name"`). Le fix **G2** est validé par
+`tst_mapinfo::setMapName_emitsEvenIfSame_REPRO_G2` (XFAIL pré-fix → XPASS
+post-fix → retrait du `QEXPECT_FAIL`).
 
 ### Isolation disque
 

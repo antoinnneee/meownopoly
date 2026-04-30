@@ -78,3 +78,8 @@ add_custom_target(pattounx_tests
     DEPENDS tst_collision2d tst_pattounx_engine tst_physics_worker tst_snapshot_codec
     COMMENT "Build all PattounX unit tests"
 )
+
+# ============================================================================
+# Tests cycle de vie currentMap (voir doc/architecture/MAP_LIFECYCLE.md)
+# ============================================================================
+add_subdirectory(map_lifecycle)
