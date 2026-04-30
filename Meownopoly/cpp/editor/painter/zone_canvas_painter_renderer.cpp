@@ -5,6 +5,9 @@
 #include "zone_canvas_painter.h"
 
 #include <QtCanvasPainter/QCanvasPainter>
+#include <QLineF>
+#include <QVector>
+#include <QtConcurrent/QtConcurrent>
 
 #include <algorithm>
 #include <cmath>
@@ -93,22 +96,27 @@ void ZoneCanvasPainterRenderer::drawHatches(QCanvasPainter *painter) const
     const qreal cMin = minY - maxX;
     const qreal cMax = maxY - minX;
 
-    painter->setGlobalAlpha(0.6f);
-    painter->setStrokeStyle(m_zoneColor);
-    painter->setLineWidth(1.5f);
-
-    // Pour chaque ligne diagonale, calculer ses intersections avec les
-    // arêtes du polygone, trier par abscisse, puis tracer les segments
-    // entre paires successives (même règle que ScanLine fill).
+    // Liste des constantes c (une par hachure)
+    QVector<qreal> cValues;
+    cValues.reserve(static_cast<int>((cMax - cMin) / spacing) + 2);
     for (qreal c = cMin; c <= cMax; c += spacing) {
-        QList<qreal> xs;
+        cValues.append(c);
+    }
+    if (cValues.isEmpty()) return;
+
+    // Phase 1 (parallèle) : pour chaque c, calculer les intersections avec
+    // les arêtes du polygone et générer les paires de segments visibles.
+    // QCanvasPainter n'est pas thread-safe, donc seul le calcul est //isé,
+    // pas le draw. Sous threshold (peu de hachures), le coût d'overhead
+    // dépasse le gain — on tombe en mono-thread.
+    auto pointsRef = m_points; // copie pour capture lambda thread-safe
+    auto computeSegmentsForLine = [pointsRef, n](qreal c) -> QVector<QLineF> {
+        QVector<QLineF> segs;
+        QVarLengthArray<qreal, 16> xs;
         for (int i = 0; i < n; ++i) {
-            const QPointF &p1 = m_points[i];
-            const QPointF &p2 = m_points[(i + 1) % n];
-            // Intersection segment p1-p2 avec y = x + c.
-            // Paramétrer p = p1 + t(p2-p1), t ∈ [0,1].
-            // (p1.y + t dy) = (p1.x + t dx) + c
-            // t (dy - dx) = (p1.x - p1.y) + c
+            const QPointF &p1 = pointsRef[i];
+            const QPointF &p2 = pointsRef[(i + 1) % n];
+            // Intersection segment p1-p2 avec y = x + c (paramétrage t∈[0,1]).
             const qreal dx = p2.x() - p1.x();
             const qreal dy = p2.y() - p1.y();
             const qreal denom = dy - dx;
@@ -117,20 +125,45 @@ void ZoneCanvasPainterRenderer::drawHatches(QCanvasPainter *painter) const
             if (t < 0.0 || t > 1.0) continue;
             xs.append(p1.x() + t * dx);
         }
-        if (xs.size() < 2) continue;
+        if (xs.size() < 2) return segs;
         std::sort(xs.begin(), xs.end());
-        // Tracer segments par paires (i, i+1)
         for (int i = 0; i + 1 < xs.size(); i += 2) {
             const qreal x0 = xs[i];
             const qreal x1 = xs[i + 1];
-            const qreal y0 = x0 + c;
-            const qreal y1 = x1 + c;
-            painter->beginPath();
-            painter->moveTo(QPointF(x0, y0));
-            painter->lineTo(QPointF(x1, y1));
-            painter->stroke();
+            segs.append(QLineF(x0, x0 + c, x1, x1 + c));
+        }
+        return segs;
+    };
+
+    constexpr int kParallelThreshold = 32;
+    QVector<QVector<QLineF>> allSegments;
+    if (cValues.size() >= kParallelThreshold) {
+        // QtConcurrent::blockingMapped distribue computeSegmentsForLine sur
+        // QThreadPool::globalInstance() — gère le partage entre toutes les
+        // zones rendues en parallèle, pas de saturation manuelle à faire.
+        allSegments = QtConcurrent::blockingMapped<QVector<QVector<QLineF>>>(
+            cValues, computeSegmentsForLine);
+    } else {
+        allSegments.reserve(cValues.size());
+        for (qreal c : std::as_const(cValues)) {
+            allSegments.append(computeSegmentsForLine(c));
         }
     }
+
+    // Phase 2 (séquentielle, render thread) : un seul beginPath/stroke pour
+    // toutes les hachures de la zone. Beaucoup plus efficace côté GPU que
+    // beginPath+stroke par segment (un seul vertex buffer, un seul draw call).
+    painter->setGlobalAlpha(0.6f);
+    painter->setStrokeStyle(m_zoneColor);
+    painter->setLineWidth(1.5f);
+    painter->beginPath();
+    for (const QVector<QLineF> &segs : std::as_const(allSegments)) {
+        for (const QLineF &seg : segs) {
+            painter->moveTo(seg.p1());
+            painter->lineTo(seg.p2());
+        }
+    }
+    painter->stroke();
 }
 
 #endif // MEOW_HAS_CANVAS_PAINTER

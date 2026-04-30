@@ -1434,6 +1434,7 @@ Drawer {
                                         anchors.margins: 2
                                         source: modelData
                                         fillMode: Image.PreserveAspectCrop
+                                        asynchronous: true
 
                                         Rectangle {
                                             anchors.bottom: parent.bottom

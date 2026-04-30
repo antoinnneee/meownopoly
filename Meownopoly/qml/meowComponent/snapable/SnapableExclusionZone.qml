@@ -11,12 +11,11 @@ import MeowPainter 1.0
  * Visible uniquement en mode édition. Hérite de SnapableElement pour être
  * compatible avec snapableTilesList.
  *
- * Le rendu (fill + contour + hachures) est délégué à ZoneCanvasPainter (C++,
- * QtCanvasPainter Qt 6.11+) — rendu GPU natif via QRhi, ~100x plus rapide
- * que l'ancienne combinaison Shape + Canvas QPainter quand il y a beaucoup
- * de zones. Plus besoin de cache, ni de timer débounce, ni de gestion
- * spéciale du zoom : le composant C++ se met à jour automatiquement quand
- * polygonPoints ou gridSize changent.
+ * Le rendu (fill + contour + hachures) est délégué à un ZoneCanvasPainter
+ * (C++, QtCanvasPainter Qt 6.11+) interne — rendu GPU natif via QRhi avec
+ * hachures pré-calculées en parallèle (QtConcurrent). Pas de cache, pas
+ * de timer débounce : le composant se met à jour automatiquement quand
+ * polygonPoints, gridSize ou les couleurs changent.
  */
 SnapableElement {
     id: root

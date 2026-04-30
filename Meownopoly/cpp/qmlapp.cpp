@@ -110,8 +110,8 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
 
 
 #ifdef MEOW_HAS_CANVAS_PAINTER
-    // Composant ZoneCanvasPainter (rendu GPU 2D via QtCanvasPainter Qt 6.11+).
-    // Importable depuis QML via `import MeowPainter 1.0`.
+    // ZoneCanvasPainter : rendu GPU 2D d'une zone via QtCanvasPainter
+    // (Qt 6.11+). Importable depuis QML via `import MeowPainter 1.0`.
     qmlRegisterType<ZoneCanvasPainter>("MeowPainter", 1, 0, "ZoneCanvasPainter");
 #endif
 
