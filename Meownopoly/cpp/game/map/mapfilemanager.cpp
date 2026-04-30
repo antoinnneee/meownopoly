@@ -188,6 +188,46 @@ bool MapFileManager::mapExists(const QString &mapName, MapTypes::MapType mapType
     return QFile::exists(filePath);
 }
 
+bool MapFileManager::mapNameCollidesIgnoringCase(const QString &mapName,
+                                                 MapTypes::MapType mapType)
+{
+    // `normalizeMapName` (appelé par `getMapFilePath`) fait `toLower()` +
+    // remplace les espaces par `_`. Donc deux noms qui ne diffèrent que
+    // par la casse (ou par espaces vs underscores) résolvent au même chemin
+    // disque, et `mapExists` les détecte comme collisionnant. On expose
+    // ici un wrapper sémantiquement clair pour les call sites UI.
+    return mapExists(mapName, mapType);
+}
+
+bool MapFileManager::copyMap(const QString &fromName,
+                             const QString &toName,
+                             MapTypes::MapType mapType)
+{
+    if (fromName.isEmpty() || toName.isEmpty()) {
+        qWarning() << "[MapFileManager::copyMap] fromName ou toName vide — abort";
+        return false;
+    }
+    if (!mapExists(fromName, mapType)) {
+        qWarning() << "[MapFileManager::copyMap] source introuvable :" << fromName;
+        return false;
+    }
+    QJsonObject json = readMapFile(fromName, mapType);
+    if (json.isEmpty()) {
+        qWarning() << "[MapFileManager::copyMap] readMapFile a retourné un objet vide pour"
+                   << fromName;
+        return false;
+    }
+    // Re-écrit `mapInfo.name` pour que MapInfo restauré depuis le copy
+    // ait le nom de destination, pas celui de la source. Cohérent avec
+    // le contrat lecteur fixé en G1 (clé `name`).
+    if (json.contains("mapInfo") && json["mapInfo"].isObject()) {
+        QJsonObject mi = json["mapInfo"].toObject();
+        mi["name"] = toName;
+        json["mapInfo"] = mi;
+    }
+    return saveMap(json, toName, mapType);
+}
+
 // G3 : `renameMap` supprimée — l'implémentation utilisait `oldMapName` brut au
 // lieu d'un chemin résolu via `getMapFilePath`, retournait toujours false même
 // en cas de succès, et n'était appelée par aucun call site (QML ou C++).

@@ -2086,15 +2086,45 @@ Base_Board {
             const sessName    = String(hostInitialMap.sessionName || "")
             const initialMode = hostInitialMap.initialMap ? hostInitialMap.initialMap.mode : "new"
             const initialName = hostInitialMap.initialMap ? hostInitialMap.initialMap.mapName : ""
+            // G9 : par défaut on copie en mode existing pour ne pas écraser
+            // la carte mono. Le SessionCreation pose le flag explicitement.
+            // L'absence du champ est traitée comme `false` (rétro-compat).
+            const useCopy     = hostInitialMap.initialMap
+                                && hostInitialMap.initialMap.useCopy === true
             Logger.info("Collab host init — mode=" + initialMode
                         + " session=" + sessName
-                        + " existingMap=" + initialName, "MAP FILE MANAGER")
+                        + " existingMap=" + initialName
+                        + " useCopy=" + useCopy, "MAP FILE MANAGER")
             if (initialMode === "existing" && initialName) {
-                // Carte existante : charge le fichier <initialName>_map.json.
-                // Ses tuiles et son mapInfo (nom + background + etc.) sont
-                // conservés — la session édite directement ce fichier.
-                Game.loadMap(initialName, MapTypes.CUSTOM)
-                mapInfo.mapName = initialName
+                if (useCopy && sessName) {
+                    // G9 : crée une copie du fichier mono sous le nom de la
+                    // session. La session édite <sessName>_map.json ; la
+                    // carte d'origine <initialName>_map.json est intacte
+                    // même si la sortie collab purge le fichier de session.
+                    if (MapFileManager.copyMap(initialName, sessName, MapTypes.CUSTOM)) {
+                        Logger.info("Collab host : copie " + initialName + " → " + sessName,
+                                    "MAP FILE MANAGER")
+                        Game.loadMap(sessName, MapTypes.CUSTOM)
+                        mapInfo.mapName = sessName
+                    } else {
+                        // Fallback : si la copie échoue (collision, lock disque),
+                        // on retombe sur le comportement use-as-is plutôt que
+                        // de bloquer la création de session.
+                        console.warn("[Collab host] copyMap échec, fallback use-as-is sur",
+                                     initialName)
+                        Game.loadMap(initialName, MapTypes.CUSTOM)
+                        mapInfo.mapName = initialName
+                    }
+                } else {
+                    // Carte existante use-as-is : charge le fichier
+                    // <initialName>_map.json. Ses tuiles et son mapInfo
+                    // sont conservés — la session édite directement ce
+                    // fichier (l'utilisateur a décoché "créer une copie"
+                    // dans SessionCreation, donc il accepte que la sortie
+                    // collab "ne pas conserver" puisse purger le fichier).
+                    Game.loadMap(initialName, MapTypes.CUSTOM)
+                    mapInfo.mapName = initialName
+                }
             } else {
                 // Nouvelle carte vide — nom de fichier = nom de session.
                 // createMapFile ignore silencieusement s'il existe déjà ;
