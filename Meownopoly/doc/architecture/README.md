@@ -26,6 +26,12 @@ Documentation complète sur l'architecture de l'éditeur de cartes :
    - Flux de données et cycles de vie
    - Parfait pour la compréhension visuelle
 
+4. **[MAP_LIFECYCLE.md](./MAP_LIFECYCLE.md)** - **Cycle de vie de `currentMap`**
+   - Variables centrales (V1-V19) et leur persistance
+   - Inventaire des interactions utilisateur (solo + collab)
+   - Tableaux scénarios état/effets de bord (§A à §M)
+   - Bugs connus G1-G10 et plan de tests `tests/map_lifecycle/`
+
 **Sujets couverts** :
 - ✅ Génération et fonctionnement de la grille
 - ✅ Système "snapable" (accrochage à la grille)
