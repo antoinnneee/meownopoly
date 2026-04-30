@@ -321,11 +321,11 @@ Légende : **CM** = V1, **MI** = V3.mapName, **ST** = V5, **U/R** = tailles V4,
 | **G3** | `mapfilemanager.cpp` / `.h` (`renameMap`)                          | `QFile newMap(oldMapName)` utilisait des noms bruts (pas de chemin) ; `flag` restait `false` même en succès                  | ✅ **Supprimé** — code mort, aucun appelant. Note de réintroduction laissée dans `mapfilemanager.cpp`. |
 | G4    | `mapfilemanager.cpp:48` (dtor)                                     | `delete currentMap` mais `setCurrentMap` fait `deleteLater`                                                                  | Risque double-delete théorique. Bénin : singleton dtor au shutdown. |
 | **G5** | `Editor.qml:1734-1820` (`_initializeEditorImpl`)                   | re-lit toujours depuis disque au push, écrase l'état mémoire                                                                 | Si `saveEvent != 3` : perte des modifications non sauvées sur retour menu→éditeur (§F, §G). **Comportement accepté** (utilisateur informé). |
-| G6    | `game.cpp` (`initEmptyCollabMap`)                                  | `new Map(this)` + `new MapInfo()` → mapName = "autosave_tmp", sourceType = CUSTOM (default)                                  | Une save accidentelle avant FullSync écrirait `autosave_tmp_map.json` (CUSTOM), pas l'autosave réel. Masqué par le skip local-load. |
-| G7    | `MenuMapAtStart.qml:602` (validation Confirm)                       | `mapExists` + `normalizeMapName` : `"My Map"` et `"my map"` collisionnent sur `my_map_map.json`                              | Création silencieuse possible sur fichier existant. À couvrir test. |
-| G8    | `Game::askPreview/askNext`                                          | `broadcastLastBatch` appelé même si `applyDelta` a no-opé (idempotence côté remote applique aussi à local)                   | En collab, undo broadcast peut envoyer des inverses redondants. Pas grave. |
-| G9    | `Editor.qml:1467` `_resolveSessionExit(false)`                       | supprime `<mapName>_map.json` même si la carte existait avant la session collab                                              | Une carte mono éponyme à une session collab sera supprimée à la sortie collab. CLAUDE.md le note "à isoler". |
-| G10   | `Editor.qml:265-276` (newMapSet)                                    | `Game.saveMap(newMapInfo, [], CUSTOM)` puis `Game.loadMap(newMapInfo.mapName, CUSTOM)` ; `getMapFilePath` normalise, mais `MapInfo.mapName` garde la casse d'origine | Cohérence affichage UI vs nom de fichier. |
+| **G6** | `game_loader.cpp::initEmptyCollabMap`                              | `new Map(this)` + `new MapInfo()` → mapName = "autosave_tmp", sourceType = CUSTOM (default)                                  | ✅ **Fixé** — sentinel `mapName=""` posé par `initEmptyCollabMap` ; `Game::saveCurrentMap` et `Game::saveMap` early-return sur empty. Levé par FullSync via `applyDelta(MetadataChanged)`. |
+| **G7** | `MenuMapAtStart.qml`                                               | `mapExists` + `normalizeMapName` : `"My Map"` et `"my map"` collisionnent sur `my_map_map.json`. Le placeholder rouge n'est visible qu'à champ vide → utilisateur n'a pas l'explication | ✅ **Fixé** — `Text` d'erreur explicite sous le `TextField` qui affiche la clé normalisée du fichier en collision. Validation au clic Confirm inchangée (déjà bloquante). |
+| **G8** | `Game::askPreview/askNext`                                          | `broadcastLastBatch` appelé même si `applyDelta` a no-opé (idempotence côté remote applique aussi à local)                   | **Accepté** pour l'instant — bruit réseau négligeable sur cartes courantes. À revisiter si le canal s'embouteille en pratique (solution chirurgicale : filtrer par `touched.empty()` retourné par `applyDelta`). |
+| G9    | `Editor.qml::_resolveSessionExit(false)`                            | supprime `<mapName>_map.json` même si la carte existait avant la session collab                                              | En cours de spec — extension proposée du flow `SessionCreation` pour expliciter "copie / use-as-is" avec collision detection en mode `new`. |
+| **G10** | `Editor.qml::onNewMapSet`, `MapFileManager::normalizeMapName`     | `MapInfo.mapName` garde la casse d'origine, le fichier est `<normalize(name)>_map.json` ; UI vs disque divergent             | **Status quo accepté** — voir §10 *Direction future* ci-dessous : le refactor planifié vers identifiants UUID résout aussi G7/G10 d'un coup. |
 
 **Décisions retenues** :
 - G1, G2 : fixés. Tests dans `tests/map_lifecycle/` qui passent du rouge (pré-fix) au vert.
@@ -393,3 +393,52 @@ relatif au CWD, donc l'isolation est totale sans toucher au `#define`.
 | Édition métadonnées                           | `qml/editor/panel/mapInfoPanel/MapInfoDrawer.qml`, `MapInfoPanel.qml` |
 | Push/pop Editor + onClosing                    | `qml/main.qml`                                                      |
 | Sortie session collab                          | `qml/editor/Editor.qml` (`beginSessionExit`, `_resolveSessionExit`) |
+
+---
+
+## 10. Direction future — IDs canoniques (refactor planifié)
+
+Plusieurs bugs résiduels (G7 collisions de normalisation, G10 divergence
+display vs fichier, et indirectement G9 collisions mono ↔ collab) partagent
+une racine commune : **le nom utilisateur joue à la fois le rôle d'identité
+visuelle et d'identité disque**. Toute mutation de l'un casse l'autre, et
+deux noms qui normalisent vers la même clé deviennent indistinguables côté
+fichier.
+
+### Refactor proposé
+
+Introduire un identifiant UUID stable par carte, indépendant du nom
+utilisateur :
+
+- **Disque** : `./map/<uuid>.json` (exemple `./map/3f2c8e1a-...-b7c9.json`).
+- **`MapInfo`** : nouveau champ `id` (string, UUID v4), généré à la
+  création (`MapFileManager::createMapFile`) ou hydraté depuis le JSON.
+  `mapName` reste libre côté affichage, sans impact sur le chemin disque.
+- **API `MapFileManager`** : remplacer la signature `(name, type)` par
+  `(uuid)` ou `(MapInfo*)`. Helpers `findIdByName(displayName)` pour les
+  flux de navigation existants.
+- **QSettings `lastOpenedMap`** : stocker l'UUID au lieu du nom.
+- **FullSync** : le snapshot host transporte `id` + `mapInfo.toJSON()` ;
+  le client peut renommer librement sans collision côté disque.
+
+### Problèmes que ça résout
+
+| Bug actuel | Devient |
+|------------|---------|
+| **G1** déjà fixé | obsolète (UUID déjà séparé du JSON metadata) |
+| **G7** | obsolète (`normalize` n'est plus la clé d'identité) |
+| **G9** | encore présent côté UX (host peut éditer la carte mono d'un client), mais résolu côté **disque** : la session collab a son propre `<uuid>` qui ne peut pas écraser un fichier mono |
+| **G10** | obsolète (display name est libre, file key est l'UUID) |
+
+### Effort estimé
+
+- Refactor `MapFileManager` + `MapInfo` : ~½ jour
+- Migration des fichiers existants (script qui scanne `./map/*.json`,
+  génère un UUID par fichier, renomme, met à jour le `mapInfo.id`) : ~½
+  jour
+- Tests dédiés (`tst_mapfilemanager` revisité — facilité par la
+  séparation cleaner) : ~½ jour
+- Total : **~1.5 jour**, **non bloquant** pour l'usage actuel.
+
+À programmer après stabilisation des autres chantiers en cours
+(physique v2, player config panel).
