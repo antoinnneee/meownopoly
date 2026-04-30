@@ -188,29 +188,14 @@ bool MapFileManager::mapExists(const QString &mapName, MapTypes::MapType mapType
     return QFile::exists(filePath);
 }
 
-bool MapFileManager::renameMap(QString oldMapName, QString newMapName)
-{
-    bool flag = false;
-
-    if (!mapExists(oldMapName, MapTypes::CUSTOM)){
-        Logger::instance()->error("Old map name doesen't exist ", Q_FUNC_INFO);
-        return flag;
-    }
-    if (mapExists(newMapName, MapTypes::CUSTOM)){
-        Logger::instance()->error("New map name already exist ", Q_FUNC_INFO);
-        return flag;
-    }
-    if (newMapName.isEmpty() || oldMapName.isEmpty()){
-        Logger::instance()->error("Map name empty", Q_FUNC_INFO);
-        return flag;
-    }
-    QFile newMap(oldMapName);
-    if (!newMap.rename(newMapName)){
-        Logger::instance()->error("Can't rename map", Q_FUNC_INFO);
-        return flag;
-    }
-    return flag;
-}
+// G3 : `renameMap` supprimée — l'implémentation utilisait `oldMapName` brut au
+// lieu d'un chemin résolu via `getMapFilePath`, retournait toujours false même
+// en cas de succès, et n'était appelée par aucun call site (QML ou C++).
+// Si une fonctionnalité de renommage est nécessaire à l'avenir, la
+// réintroduire avec : (1) résolution via `getMapFilePath`, (2) usage de
+// QLockFile pour la concurrence, (3) re-écriture de `mapInfo.name` dans le
+// fichier renommé pour conserver la cohérence (ne pas se contenter de bouger
+// le fichier — la clé `name` interne doit suivre).
 
 bool MapFileManager::saveMap(const QJsonObject &mapData, const QString &mapName, MapTypes::MapType mapType)
 {
@@ -273,7 +258,12 @@ QString MapFileManager::createMapFile(const QString &mapName, MapTypes::MapType 
     // Create empty JSON object
     QJsonObject emptyMap;
     QJsonObject emptyMapInfo;
-    emptyMapInfo["mapName"] = mapName;
+    // G1 fix : MapInfo::MapInfo(json) lit la clé `name` (pas `mapName`).
+    // Avant ce fix, un fichier créé via createMapFile était re-chargé avec
+    // mapName=="" — le call site de cette fonction (Editor.qml ::1786 et
+    // MenuMapAtStart.qml::274) compensait avec une réassignation explicite,
+    // mais le contenu disque restait incohérent côté lecture brute.
+    emptyMapInfo["name"] = mapName;
     emptyMapInfo["description"] = "";
     emptyMapInfo["author"] = "";
     emptyMap["mapInfo"] = emptyMapInfo;

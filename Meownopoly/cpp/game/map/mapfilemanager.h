@@ -28,7 +28,6 @@ public:
 
     // Méthodes QML (instance, Q_INVOKABLE)
     Q_INVOKABLE bool mapExists(const QString &mapName, MapTypes::MapType mapType);
-    Q_INVOKABLE bool renameMap(QString oldMapName, QString newMapName);
     Q_INVOKABLE QStringList getAvailableMaps();
     Q_INVOKABLE QString findMapFileByName(const QString &displayName);
     Q_INVOKABLE QString createMapFile(const QString &mapName, MapTypes::MapType mapType);

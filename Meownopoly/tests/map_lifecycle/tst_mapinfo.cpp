@@ -174,15 +174,13 @@ void tst_MapInfo::jsonRoundTrip_preservesProfileCount()
 
 void tst_MapInfo::setMapName_emitsEvenIfSame_REPRO_G2()
 {
+    // G2 fixé : setMapName a maintenant un guard d'égalité, comme les autres
+    // setters (background, music, etc.). Aucune émission attendue sur valeur
+    // identique.
     MapInfo mi;
     mi.setMapName("SameName");
     QSignalSpy spy(&mi, &MapInfo::mapNameChanged);
     mi.setMapName("SameName");
-
-    QEXPECT_FAIL("",
-                 "G2 (mapinfo.cpp:107) : setMapName n'a pas de garde d'égalité ; "
-                 "à fixer en Étape D — alors retirer ce QEXPECT_FAIL.",
-                 Continue);
     QCOMPARE(spy.count(), 0);
 }
 
