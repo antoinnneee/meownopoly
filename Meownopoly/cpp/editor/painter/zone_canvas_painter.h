@@ -58,7 +58,14 @@ signals:
     void hatchSpacingChanged();
 
 private:
+    void rebuildGridCache();
+
     QVariantList m_polygonPoints;
+    // Cache des points en coords grille (post-conversion variant→QPointF).
+    // Invalidé quand m_polygonPoints change. La multiplication par gridSize
+    // se fait au moment de polygonPointsPx() — ~10× moins cher que repasser
+    // par les QVariant à chaque sync.
+    QList<QPointF> m_pointsGrid;
     qreal m_gridSize = 1.0;
     QColor m_zoneColor = QColor("#FF5722");
     QColor m_strokeColor = QColor("#B23F1A");

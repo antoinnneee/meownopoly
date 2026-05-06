@@ -38,6 +38,8 @@ void ZoneCanvasPainterRenderer::synchronize(QCanvasPainterItem *item)
 
 void ZoneCanvasPainterRenderer::buildPolygonPath(QCanvasPainter *painter) const
 {
+    // Conservé pour compat : non utilisé en pratique (le code paint() construit
+    // un QCanvasPath et le réutilise pour fill+stroke, plus efficace).
     const int n = m_points.size();
     if (n < 3) return;
     painter->beginPath();
@@ -110,74 +112,83 @@ void ZoneCanvasPainterRenderer::drawHatches(QCanvasPainter *painter) const
     // Hachures diagonales à 45° : direction (1,1), pente 1.
     // Une ligne diagonale s'écrit y = x + c ; on parcourt c de minY-maxX
     // à maxY-minX par pas de spacing*sqrt(2) (espacement perpendiculaire).
-    const qreal spacing = m_hatchSpacing * std::sqrt(2.0);
+    static const qreal kSqrt2 = std::sqrt(2.0);
+    const qreal spacing = m_hatchSpacing * kSqrt2;
     const qreal cMin = minY - maxX;
     const qreal cMax = maxY - minX;
+
+    // G3 — Early-out : si la diagonale du bbox est plus petite que l'écart
+    // entre 2 hachures, aucune hachure ne traversera le polygone. Évite tout
+    // le calcul scanline pour des zones zoomées-out / minuscules.
+    if (cMax - cMin < spacing) return;
+
     const int hatchCount = static_cast<int>((cMax - cMin) / spacing) + 1;
     if (hatchCount <= 0) return;
 
-    // Pré-calcul des arêtes : on stocke uniquement les 4 coefficients utilisés
-    // dans l'intersection avec y = x + c. 32 octets/arête → tient dans une
-    // ligne de cache pour 2 arêtes consécutives. Permet :
-    //  - une seule passe O(n) au lieu de n par hachure
-    //  - aucune copie de m_points dans la boucle
-    //  - pas d'appels QPointF.x()/.y() virtuels répétés
+    // Pré-calcul des arêtes en `float` : 16 octets/arête → 4 arêtes par ligne
+    // de cache (vs 2 en double). Précision 7 digits suffisante pour des
+    // coords pixels (< 100k px). Conversion en QPointF (double) au moment
+    // du draw final.
     struct EdgeCoef {
-        qreal x1;           // p1.x
-        qreal dx;           // p2.x - p1.x
-        qreal invDenom;     // 1.0 / (dy - dx) ; 0 si arête parallèle
-        qreal numConst;     // p1.x - p1.y (partie indépendante de c)
+        float x1;           // p1.x
+        float dx;           // p2.x - p1.x
+        float invDenom;     // 1.0 / (dy - dx) ; 0 si arête parallèle
+        float numConst;     // p1.x - p1.y (partie indépendante de c)
     };
-    QVarLengthArray<EdgeCoef, 64> edges;
+    QVarLengthArray<EdgeCoef, 128> edges;
     edges.reserve(n);
+    // G2 — On évite le `% n` dans la boucle en gardant `prev` rolling.
+    float prevX = static_cast<float>(m_points[n - 1].x());
+    float prevY = static_cast<float>(m_points[n - 1].y());
     for (int i = 0; i < n; ++i) {
-        const QPointF &p1 = m_points[i];
-        const QPointF &p2 = m_points[(i + 1) % n];
-        const qreal dx = p2.x() - p1.x();
-        const qreal dy = p2.y() - p1.y();
-        const qreal denom = dy - dx;
+        const float x2 = static_cast<float>(m_points[i].x());
+        const float y2 = static_cast<float>(m_points[i].y());
+        const float dx = x2 - prevX;
+        const float dy = y2 - prevY;
+        const float denom = dy - dx;
         EdgeCoef e;
-        e.x1 = p1.x();
+        e.x1 = prevX;
         e.dx = dx;
-        e.invDenom = (std::abs(denom) < 1e-9) ? 0.0 : 1.0 / denom;
-        e.numConst = p1.x() - p1.y();
+        e.invDenom = (std::abs(denom) < 1e-6f) ? 0.0f : 1.0f / denom;
+        e.numConst = prevX - prevY;
         edges.append(e);
+        prevX = x2;
+        prevY = y2;
     }
 
-    // Buffer plat pour les segments : 4 reals par segment (x0,y0,x1,y1).
-    // Pré-allouer pour le pire cas : (n/2) intersections × hachures = au
-    // plus n/2 segments par hachure (en pratique 1 pour convexe).
-    QVarLengthArray<qreal, 4096> segs;
+    const float spacingF = static_cast<float>(spacing);
+    const float cMinF = static_cast<float>(cMin);
+
+    // Buffer plat pour les segments : 4 floats par segment.
+    QVarLengthArray<float, 4096> segs;
     segs.reserve(hatchCount * 4);
 
-    QVarLengthArray<qreal, 32> xs;
+    QVarLengthArray<float, 32> xs;
     for (int h = 0; h < hatchCount; ++h) {
-        const qreal c = cMin + h * spacing;
+        const float c = cMinF + h * spacingF;
         xs.clear();
         for (const EdgeCoef &e : edges) {
-            if (e.invDenom == 0.0) continue;
-            const qreal t = (e.numConst + c) * e.invDenom;
-            if (t < 0.0 || t > 1.0) continue;
+            if (e.invDenom == 0.0f) continue;
+            const float t = (e.numConst + c) * e.invDenom;
+            if (t < 0.0f || t > 1.0f) continue;
             xs.append(e.x1 + t * e.dx);
         }
         const int sz = xs.size();
         if (sz < 2) continue;
-        // Fast path : polygone convexe → exactement 2 intersections, pas de tri
-        // nécessaire (on sait juste qu'il faut min,max).
+        // Fast path : polygone convexe → exactement 2 intersections, pas de tri.
         if (sz == 2) {
-            const qreal a = xs[0];
-            const qreal b = xs[1];
-            const qreal x0 = a < b ? a : b;
-            const qreal x1 = a < b ? b : a;
+            const float a = xs[0];
+            const float b = xs[1];
+            const float x0 = a < b ? a : b;
+            const float x1 = a < b ? b : a;
             segs.append(x0); segs.append(x0 + c);
             segs.append(x1); segs.append(x1 + c);
             continue;
         }
-        // Concave / multi-intersections : tri + paires
         std::sort(xs.begin(), xs.end());
         for (int i = 0; i + 1 < sz; i += 2) {
-            const qreal x0 = xs[i];
-            const qreal x1 = xs[i + 1];
+            const float x0 = xs[i];
+            const float x1 = xs[i + 1];
             segs.append(x0); segs.append(x0 + c);
             segs.append(x1); segs.append(x1 + c);
         }
@@ -194,7 +205,7 @@ void ZoneCanvasPainterRenderer::drawHatches(QCanvasPainter *painter) const
     painter->beginPath();
     const int segCount = segs.size() / 4;
     for (int i = 0; i < segCount; ++i) {
-        const qreal *p = segs.data() + i * 4;
+        const float *p = segs.data() + i * 4;
         painter->moveTo(QPointF(p[0], p[1]));
         painter->lineTo(QPointF(p[2], p[3]));
     }

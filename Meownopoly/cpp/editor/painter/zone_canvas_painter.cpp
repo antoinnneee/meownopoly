@@ -24,20 +24,33 @@ QCanvasPainterItemRenderer *ZoneCanvasPainter::createItemRenderer() const
     return new ZoneCanvasPainterRenderer;
 }
 
-QList<QPointF> ZoneCanvasPainter::polygonPointsPx() const
+void ZoneCanvasPainter::rebuildGridCache()
 {
-    QList<QPointF> out;
-    out.reserve(m_polygonPoints.size());
+    m_pointsGrid.clear();
+    m_pointsGrid.reserve(m_polygonPoints.size());
     for (const QVariant &v : m_polygonPoints) {
         // Accepte point Qt natif (QPointF) ou QVariantMap {x, y} JS.
         if (v.canConvert<QPointF>()) {
-            const QPointF p = v.toPointF();
-            out.append(QPointF(p.x() * m_gridSize, p.y() * m_gridSize));
+            m_pointsGrid.append(v.toPointF());
         } else {
             const QVariantMap m = v.toMap();
-            out.append(QPointF(m.value("x").toReal() * m_gridSize,
-                               m.value("y").toReal() * m_gridSize));
+            m_pointsGrid.append(QPointF(m.value("x").toReal(),
+                                        m.value("y").toReal()));
         }
+    }
+}
+
+QList<QPointF> ZoneCanvasPainter::polygonPointsPx() const
+{
+    // Multiplie le cache grille par m_gridSize. Évite de retraverser les
+    // QVariant à chaque sync (test canConvert + lookup map = ~60 ns/point).
+    QList<QPointF> out;
+    const int n = m_pointsGrid.size();
+    out.reserve(n);
+    const qreal g = m_gridSize;
+    for (int i = 0; i < n; ++i) {
+        const QPointF &p = m_pointsGrid[i];
+        out.append(QPointF(p.x() * g, p.y() * g));
     }
     return out;
 }
@@ -46,6 +59,7 @@ void ZoneCanvasPainter::setPolygonPoints(const QVariantList &v)
 {
     if (m_polygonPoints == v) return;
     m_polygonPoints = v;
+    rebuildGridCache();
     emit polygonPointsChanged();
     update();
 }
