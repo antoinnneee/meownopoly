@@ -6,6 +6,8 @@
 #include <QColor>
 #include <QList>
 #include <QPointF>
+#include <atomic>
+#include <cstdint>
 
 class ZoneCanvasPainter;
 class QCanvasPainter;
@@ -17,6 +19,21 @@ public:
 
     void synchronize(QCanvasPainterItem *item) override;
     void paint(QCanvasPainter *painter) override;
+
+    // Instrumentation perf : compteur CPU global de tous les paint() en cours.
+    // Utilisé par tst_zone_render_perf pour mesurer indépendamment du vsync.
+    // Pas thread-safe au sens strict (lecture/reset depuis un autre thread)
+    // mais atomic 64 bits sur x86-64 = OK.
+    static std::atomic<std::int64_t> s_totalPaintNs;
+    static std::atomic<int> s_paintCalls;
+    static std::atomic<std::int64_t> s_totalSyncNs;
+    static std::atomic<int> s_syncCalls;
+    static void resetPaintStats() {
+        s_totalPaintNs.store(0, std::memory_order_relaxed);
+        s_paintCalls.store(0, std::memory_order_relaxed);
+        s_totalSyncNs.store(0, std::memory_order_relaxed);
+        s_syncCalls.store(0, std::memory_order_relaxed);
+    }
 
 private:
     // Construit le path du polygone dans `painter` (beginPath + moveTo +
