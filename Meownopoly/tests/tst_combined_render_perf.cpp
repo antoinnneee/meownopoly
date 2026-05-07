@@ -345,17 +345,35 @@ void TstCombinedRenderPerf::zoomBurst()
     // course. En scène de test, `gridSize = mmSize` (pas de
     // Screen.pixelDensity), donc on cible mmSize=200. Spacing log
     // uniforme de 1 → 200 sur `steps` itérations.
-    // Zoom recompute les zones (gridSize change → invalide cache +
-    // recompute hatch segments en async). Stresse le pipeline complet.
+    //
+    // Reproduit le comportement réel de ScrollLogic.scrollGrid : à
+    // chaque cran, gridX/Y sont recalibrés pour ancrer le zoom sous un
+    // point fixe du viewport (ici son centre). Sans ça, la grille
+    // s'étire depuis (0,0) pendant que les zones glissent vers le coin
+    // opposé — donne l'illusion que les deux ne zooment pas ensemble.
     const double startMmSize = 1.0;
     const double endMmSize = 200.0;
     const int steps = 30;
+    const double anchorX = 640.0; // centre viewport 1280×720
+    const double anchorY = 360.0;
+    double curMmSize = startMmSize;
+    double curGridX = 0.0;
+    double curGridY = 0.0;
     const FrameStats s = measureBurst(steps,
-        [this, startMmSize, endMmSize, steps](int i) {
-        // mm[steps-1] = endMmSize ; mm[0] ≈ startMmSize * (end/start)^(1/steps).
+        [this, &curMmSize, &curGridX, &curGridY,
+         startMmSize, endMmSize, steps, anchorX, anchorY](int i) {
         const double mm = startMmSize *
             std::pow(endMmSize / startMmSize, (i + 1.0) / steps);
+        const double ratio = mm / curMmSize;
+        // Formule éditeur : newGridX = anchor - (anchor - oldGridX) * ratio.
+        const double newGridX = anchorX - (anchorX - curGridX) * ratio;
+        const double newGridY = anchorY - (anchorY - curGridY) * ratio;
+        curMmSize = mm;
+        curGridX = newGridX;
+        curGridY = newGridY;
         setProp("mmSize", QVariant(mm));
+        setProp("gridX", QVariant(newGridX));
+        setProp("gridY", QVariant(newGridY));
     });
     printStats(QString("zoomBurst/%1z").arg(m_zones.size()), s);
     QVERIFY(s.frames > 0);
@@ -378,14 +396,32 @@ void TstCombinedRenderPerf::zoomBurstWide()
     // 100 étapes log-uniformes. Sollicite le pipeline sur ~1.5 s pour
     // détecter d'éventuelles pathologies (allocations, fragmentation
     // GPU, accumulation lock-free) qu'un burst court masquerait.
+    //
+    // Reproduit le centrage du zoom sous le centre du viewport (cf.
+    // zoomBurst). Sans ça, grille et zones semblent zoomer dans des
+    // directions opposées — illusion d'un décalage temporel.
     const double startMmSize = 5.0;
     const double endMmSize = 1000.0;
     const int steps = 100;
+    const double anchorX = 640.0;
+    const double anchorY = 360.0;
+    double curMmSize = startMmSize;
+    double curGridX = 0.0;
+    double curGridY = 0.0;
     const FrameStats s = measureBurst(steps,
-        [this, startMmSize, endMmSize, steps](int i) {
+        [this, &curMmSize, &curGridX, &curGridY,
+         startMmSize, endMmSize, steps, anchorX, anchorY](int i) {
         const double mm = startMmSize *
             std::pow(endMmSize / startMmSize, (i + 1.0) / steps);
+        const double ratio = mm / curMmSize;
+        const double newGridX = anchorX - (anchorX - curGridX) * ratio;
+        const double newGridY = anchorY - (anchorY - curGridY) * ratio;
+        curMmSize = mm;
+        curGridX = newGridX;
+        curGridY = newGridY;
         setProp("mmSize", QVariant(mm));
+        setProp("gridX", QVariant(newGridX));
+        setProp("gridY", QVariant(newGridY));
     });
     printStats(QString("zoomBurstWide/%1z").arg(m_zones.size()), s);
     QVERIFY(s.frames > 0);
