@@ -38,6 +38,7 @@
 
 #ifdef MEOW_HAS_CANVAS_PAINTER
 #include "editor/painter/zone_canvas_painter.h"
+#include "editor/painter/grid_canvas_painter.h"
 #endif
 
 #include "game/physics/physics_world.h"
@@ -113,6 +114,25 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     // ZoneCanvasPainter : rendu GPU 2D d'une zone via QtCanvasPainter
     // (Qt 6.11+). Importable depuis QML via `import MeowPainter 1.0`.
     qmlRegisterType<ZoneCanvasPainter>("MeowPainter", 1, 0, "ZoneCanvasPainter");
+    qmlRegisterType<GridCanvasPainter>("MeowPainter", 1, 0, "GridCanvasPainter");
+
+    // Toggle Repeater (legacy) vs GridCanvasPainter pour la grille de l'éditeur.
+    // Lu UNE fois ici, exposé en context property pour le QML. Bypass via
+    // MEOW_GRID_RENDERER=repeater (ou =canvas pour forcer canvas explicitement).
+    {
+        const QByteArray raw = qgetenv("MEOW_GRID_RENDERER").toLower();
+        bool useCanvas = true; // défaut : canvas (gain attendu sur burst zoom/pan)
+        if (raw == "repeater") useCanvas = false;
+        else if (raw == "canvas") useCanvas = true;
+        rootContext()->setContextProperty(
+            "_gridRendererUseCanvas", QVariant(useCanvas));
+    }
+#else
+    // Pas de CanvasPainter dispo (Qt < 6.11) → forcer le mode Repeater
+    // côté QML pour que GridManager.qml ne tente pas d'instancier un
+    // GridCanvasPainter introuvable.
+    rootContext()->setContextProperty(
+        "_gridRendererUseCanvas", QVariant(false));
 #endif
 
     // Register MapTypes namespace for QML

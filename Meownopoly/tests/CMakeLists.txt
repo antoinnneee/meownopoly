@@ -118,4 +118,34 @@ if (TARGET Qt6::CanvasPainter)
     # Le test ouvre une fenêtre — pas adapté à un CI headless. Marqué pour
     # exécution manuelle uniquement.
     set_tests_properties(tst_zone_render_perf PROPERTIES LABELS "manual;perf")
+
+    # ────────────────────────────────────────────────────────────────────
+    # Benchmark : rendu de la grille (GridManager / GridCanvasPainter)
+    # ────────────────────────────────────────────────────────────────────
+    # Compare Repeater (legacy) vs GridCanvasPainter (Qt 6.11) avec viewport
+    # culling. Toggle via env var MEOW_GRID_RENDERER=repeater|canvas.
+    qt_add_executable(tst_grid_render_perf
+        tst_grid_render_perf.cpp
+        "${PAINTER_DIR}/grid_canvas_painter.cpp"
+        "${PAINTER_DIR}/grid_canvas_painter.h"
+        "${PAINTER_DIR}/grid_canvas_painter_renderer.cpp"
+        "${PAINTER_DIR}/grid_canvas_painter_renderer.h"
+    )
+    target_compile_definitions(tst_grid_render_perf PRIVATE MEOW_HAS_CANVAS_PAINTER)
+    target_include_directories(tst_grid_render_perf PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/../cpp"
+    )
+    target_link_libraries(tst_grid_render_perf PRIVATE
+        Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick Qt6::CanvasPainter)
+
+    # Le test charge grid_render_scene.qml + GridManager.qml par chemin
+    # filesystem (pas qrc) pour mesurer le code QML en cours.
+    add_custom_command(TARGET tst_grid_render_perf POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/grid_render_scene.qml"
+            "$<TARGET_FILE_DIR:tst_grid_render_perf>/grid_render_scene.qml"
+    )
+
+    add_test(NAME tst_grid_render_perf COMMAND tst_grid_render_perf)
+    set_tests_properties(tst_grid_render_perf PROPERTIES LABELS "manual;perf")
 endif()
