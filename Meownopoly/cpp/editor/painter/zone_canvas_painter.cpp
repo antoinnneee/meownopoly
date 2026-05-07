@@ -3,8 +3,10 @@
 #ifdef MEOW_HAS_CANVAS_PAINTER
 
 #include "zone_canvas_painter_renderer.h"
+#include "zone_hatch_compute.h"
 
 #include <QPointF>
+#include <QtConcurrent/QtConcurrent>
 
 ZoneCanvasPainter::ZoneCanvasPainter(QQuickItem *parent)
     : QCanvasPainterItem(parent)
@@ -17,6 +19,16 @@ ZoneCanvasPainter::ZoneCanvasPainter(QQuickItem *parent)
 
     // Clear color du canvas en transparent (en plus de alphaBlending).
     setFillColor(Qt::transparent);
+}
+
+ZoneCanvasPainter::~ZoneCanvasPainter()
+{
+    if (m_asyncWatcher) {
+        m_asyncWatcher->disconnect(this);
+        m_asyncWatcher->waitForFinished();
+        delete m_asyncWatcher;
+        m_asyncWatcher = nullptr;
+    }
 }
 
 QCanvasPainterItemRenderer *ZoneCanvasPainter::createItemRenderer() const
@@ -55,11 +67,59 @@ QList<QPointF> ZoneCanvasPainter::polygonPointsPx() const
     return out;
 }
 
+void ZoneCanvasPainter::invalidateSegmentCache()
+{
+    m_segmentsValid = false;
+    const auto mode = zone_painter::currentParallelMode();
+    if (mode == zone_painter::ParallelMode::Precompute) {
+        recomputeSegmentsSync();
+    } else if (mode == zone_painter::ParallelMode::PrecomputeAsync) {
+        recomputeSegmentsAsync();
+    }
+    // Modes Baseline / QtcHatches / QtcEdges : pas de cache, calcul dans
+    // paint() à chaque frame.
+}
+
+void ZoneCanvasPainter::recomputeSegmentsSync()
+{
+    m_cachedSegments = zone_painter::computeHatchSegments(
+        polygonPointsPx(), m_hatchSpacing);
+    m_segmentsValid = true;
+}
+
+void ZoneCanvasPainter::recomputeSegmentsAsync()
+{
+    if (!m_asyncWatcher) {
+        m_asyncWatcher = new QFutureWatcher<QVector<float>>(this);
+        connect(m_asyncWatcher, &QFutureWatcher<QVector<float>>::finished,
+                this, [this]() {
+            if (!m_asyncWatcher->isCanceled()) {
+                m_cachedSegments = m_asyncWatcher->result();
+                m_segmentsValid = true;
+                update();
+            }
+        });
+    }
+    // Si un calcul précédent est encore en flight, on l'annule (résultat
+    // périmé). Le watcher sera recyclé pour le nouveau Future.
+    if (m_asyncWatcher->isRunning()) {
+        m_asyncWatcher->cancel();
+        m_asyncWatcher->waitForFinished();
+    }
+    QList<QPointF> pts = polygonPointsPx();
+    qreal spacing = m_hatchSpacing;
+    auto future = QtConcurrent::run([pts = std::move(pts), spacing]() {
+        return zone_painter::computeHatchSegments(pts, spacing);
+    });
+    m_asyncWatcher->setFuture(future);
+}
+
 void ZoneCanvasPainter::setPolygonPoints(const QVariantList &v)
 {
     if (m_polygonPoints == v) return;
     m_polygonPoints = v;
     rebuildGridCache();
+    invalidateSegmentCache();
     emit polygonPointsChanged();
     update();
 }
@@ -68,6 +128,7 @@ void ZoneCanvasPainter::setGridSize(qreal v)
 {
     if (qFuzzyCompare(m_gridSize, v)) return;
     m_gridSize = v;
+    invalidateSegmentCache();
     emit gridSizeChanged();
     update();
 }
@@ -100,6 +161,7 @@ void ZoneCanvasPainter::setHatchSpacing(qreal v)
 {
     if (qFuzzyCompare(m_hatchSpacing, v)) return;
     m_hatchSpacing = v;
+    invalidateSegmentCache();
     emit hatchSpacingChanged();
     update();
 }

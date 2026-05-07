@@ -6,6 +6,7 @@
 #include <QColor>
 #include <QList>
 #include <QPointF>
+#include <QVector>
 #include <atomic>
 #include <cstdint>
 
@@ -40,17 +41,23 @@ private:
     // lineTo + closePath). Réutilisé pour fill puis stroke.
     void buildPolygonPath(QCanvasPainter *painter) const;
 
-    // Trace les hachures diagonales clippées au polygone. Comme
-    // QCanvasPainter ne supporte pas clip(path) (seulement clip rect),
-    // on calcule manuellement les segments visibles via intersections
-    // ligne/arêtes.
-    void drawHatches(QCanvasPainter *painter) const;
+    // Trace les hachures sur le painter à partir d'un buffer plat de segments
+    // (4 floats par segment). Utilisé par tous les modes — la différence est
+    // juste où le buffer a été calculé (intra-paint vs cache item).
+    void strokeSegments(QCanvasPainter *painter,
+                        const float *segs, int segCount) const;
 
     QList<QPointF> m_points;
     QColor m_zoneColor;
     QColor m_strokeColor;
     qreal m_strokeWidth = 2.0;
     qreal m_hatchSpacing = 12.0;
+    // Buffer de segments à dessiner pour cette frame. En mode Precompute /
+    // PrecomputeAsync, copié depuis l'item dans synchronize(). En mode
+    // Baseline / Qtc*, calculé dans paint() et stocké ici juste pour éviter
+    // une allocation locale.
+    QVector<float> m_segments;
+    bool m_segmentsFromItem = false;
 };
 
 #endif // MEOW_HAS_CANVAS_PAINTER

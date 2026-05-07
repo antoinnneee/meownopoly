@@ -95,6 +95,8 @@ if (TARGET Qt6::CanvasPainter)
         "${PAINTER_DIR}/zone_canvas_painter.h"
         "${PAINTER_DIR}/zone_canvas_painter_renderer.cpp"
         "${PAINTER_DIR}/zone_canvas_painter_renderer.h"
+        "${PAINTER_DIR}/zone_hatch_compute.cpp"
+        "${PAINTER_DIR}/zone_hatch_compute.h"
     )
     target_compile_definitions(tst_zone_render_perf PRIVATE MEOW_HAS_CANVAS_PAINTER)
     target_include_directories(tst_zone_render_perf PRIVATE

@@ -12,8 +12,10 @@
 
 #include <QtCanvasPainter/QCanvasPainterItem>
 #include <QColor>
+#include <QFutureWatcher>
 #include <QPointF>
 #include <QVariantList>
+#include <QVector>
 
 class ZoneCanvasPainter : public QCanvasPainterItem
 {
@@ -27,6 +29,7 @@ class ZoneCanvasPainter : public QCanvasPainterItem
 
 public:
     explicit ZoneCanvasPainter(QQuickItem *parent = nullptr);
+    ~ZoneCanvasPainter() override;
 
     QCanvasPainterItemRenderer *createItemRenderer() const override;
 
@@ -41,6 +44,15 @@ public:
     // QVariantList pour rester compatible JSON/QML, le renderer convertit
     // en QList<QPointF> pixel pour le draw.
     QList<QPointF> polygonPointsPx() const;
+
+    // Cache pré-calculé des segments de hachures (pixels locaux). 4 floats
+    // par segment (x0, y0, x1, y1). Utilisé par les modes Precompute /
+    // PrecomputeAsync. Vide en mode Baseline / Qtc*.
+    // Lue depuis le render thread (synchronize()) → on s'assure côté item
+    // que le buffer est complet AVANT d'émettre update() (sync précompute,
+    // ou attente de QFutureWatcher::finished pour async).
+    const QVector<float> &cachedHatchSegments() const { return m_cachedSegments; }
+    bool hasCachedSegments() const { return m_segmentsValid; }
 
     void setPolygonPoints(const QVariantList &v);
     void setGridSize(qreal v);
@@ -59,6 +71,14 @@ signals:
 
 private:
     void rebuildGridCache();
+    // Invalide + (selon mode actif) recalcule le cache de segments.
+    void invalidateSegmentCache();
+    // Calcul synchrone (Precompute) : exécute computeHatchSegments sur le
+    // main thread, stocke dans m_cachedSegments.
+    void recomputeSegmentsSync();
+    // Calcul asynchrone (PrecomputeAsync) : poste le boulot au QThreadPool
+    // global, puis update() depuis le watcher quand ready.
+    void recomputeSegmentsAsync();
 
     QVariantList m_polygonPoints;
     // Cache des points en coords grille (post-conversion variant→QPointF).
@@ -71,6 +91,12 @@ private:
     QColor m_strokeColor = QColor("#B23F1A");
     qreal m_strokeWidth = 2.0;
     qreal m_hatchSpacing = 12.0;
+
+    // Cache de segments pour Precompute / PrecomputeAsync.
+    QVector<float> m_cachedSegments;
+    bool m_segmentsValid = false;
+    // Watcher pour le mode async. nullptr si non utilisé. Owned par l'item.
+    QFutureWatcher<QVector<float>> *m_asyncWatcher = nullptr;
 };
 
 #endif // MEOW_HAS_CANVAS_PAINTER
