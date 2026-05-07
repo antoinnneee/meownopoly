@@ -40,6 +40,8 @@ import editor
 import playerConfigPanel 1.0
 import "."
 
+import MeowPainter 1.0
+
 Base_Board {
     id: root
 
@@ -1185,6 +1187,7 @@ Base_Board {
 
         CollabStatusPanel {}
         PhysicsStatusPanel {}
+
         CameraTestPanel { cameraRig: cameraRig }
         MultiActorTestPanel { editor: root }
         PhysicsNetworkPanel {}
@@ -1214,6 +1217,64 @@ Base_Board {
         id: physicsObjectSpawner
         world3D: gameScene
     }
+
+    // Layer GPU qui dessine TOUTES les zones d'exclusion en un seul item
+    // viewport-cullé. Remplace les ZoneCanvasPainter individuels (1 par
+    // tile) qui freezaient au zoom extrême — leur backing texture suivait
+    // la taille de la zone × gridSize → centaines de MB par tile à
+    // mmSize=200+. Le canvas couvre seulement le Base_Board visible et
+    // skipe les zones hors-viewport. Activé par défaut quand
+    // _useZonesOverlay (cf. qmlapp.cpp), bypass via env MEOW_ZONES_RENDERER=per-tile.
+    readonly property bool _useZonesOverlayActive:
+        (typeof _useZonesOverlay !== "undefined") && _useZonesOverlay
+
+    ZonesOverlayPainter {
+        id: zonesOverlay
+        anchors.fill: parent
+        z: UiStyle.z_BACKGROUND + 1 // au-dessus du background, sous workArea
+        visible: root._useZonesOverlayActive
+        enabled: false // pas d'interception clic
+        gridSize: gameGrid.gridSize
+        viewportOffsetX: gameGrid.x
+        viewportOffsetY: gameGrid.y
+        // Itère snapableTilesList et lit chaque tile.zoneParameter.* :
+        // QML enregistre une dépendance par accès → réévaluation au moindre
+        // change (drag, polygon edit, color change, selection).
+        //
+        // IMPORTANT : on lit `t.x` / `t.y` (PIXELS courants du
+        // SnapableElement) plutôt que `dp.gridRelativePositionX/Y`. Pendant
+        // un drag, x/y suivent la souris en continu alors que la position
+        // grille n'est mise à jour qu'au snap (release). Sans ça l'overlay
+        // restait figé à l'ancienne position grille pendant tout le drag.
+        zones: {
+            const list = []
+            const tiles = root.snapableTilesList
+            if (!tiles) return list
+            const gs = gameGrid.gridSize
+            const invGs = gs > 0 ? 1.0 / gs : 0
+            for (let i = 0; i < tiles.length; i++) {
+                const t = tiles[i]
+                if (!t || !t.snapableParameters) continue
+                if (t.snapableParameters.tileType !== ItemSnapable.PhysicZoneTile) continue
+                const zp = t.snapableParameters.zoneParameter
+                if (!zp) continue
+                const pts = zp.polygonPoints
+                if (!pts || pts.length < 3) continue
+                list.push({
+                    posGridX: t.x * invGs,
+                    posGridY: t.y * invGs,
+                    points: pts,
+                    color: zp.zoneColor,
+                    strokeColor: Qt.darker(zp.zoneColor, 1.3),
+                    strokeWidth: t.isSelected ? 3 : 2,
+                    opacity: t.isSelected ? 1.0 : 0.7,
+                    hatchSpacing: 12
+                })
+            }
+            return list
+        }
+    }
+
 
     // Zone de travail de l'éditeur (par-dessus la grille)
     Base_WorkArea {

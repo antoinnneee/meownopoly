@@ -44,23 +44,43 @@ SnapableElement {
     property real gridPosY: snapableParameters.displayParameter.gridRelativePositionY
 
     // ─── Rendu GPU ──────────────────────────────────────────────────────
-    ZoneCanvasPainter {
-        id: zonePainter
+    // Délégué à un `ZonesOverlayPainter` global instancié dans Editor.qml :
+    // un seul canvas viewport-cullé pour TOUTES les zones, au lieu d'un
+    // par tile. Sans ça, à mmSize élevé chaque ZoneCanvasPainter alloue
+    // un backing texture énorme (zone × gridSize) que Qt re-alloue à
+    // chaque cran de zoom → freezes ponctuels.
+    //
+    // Le ZoneCanvasPainter local est conservé sous Loader pour les
+    // contextes hors-éditeur (preview cursors, game runtime) ET comme
+    // fallback `MEOW_ZONES_RENDERER=per-tile`. Important : utiliser un
+    // Loader (pas juste `visible: false`) pour ne PAS instancier l'item
+    // quand l'overlay est actif — un canvas painter invisible mais
+    // existant continue de réallouer son backing texture au zoom (`width`
+    // suit `gridSize`), ce qui annulerait le gain de l'overlay.
+    readonly property bool _useGlobalOverlay:
+        (typeof _useZonesOverlay !== "undefined") && _useZonesOverlay
+
+    Loader {
+        id: zonePainterLoader
         anchors.fill: parent
         z: 0
+        active: !root._useGlobalOverlay
+        sourceComponent: zonePainterComponent
+    }
 
-        // Bindings directs sur le zoneParameter — pas de cache, pas de
-        // timer débounce. ZoneCanvasPainter::synchronize() fait la
-        // conversion grille→pixel côté renderer GPU à chaque update().
-        // Transparence + alphaBlending sont configurés dans le ctor C++.
-        polygonPoints: snapableParameters.zoneParameter
-                       ? snapableParameters.zoneParameter.polygonPoints
-                       : []
-        gridSize: gridManager.gridSize
-        zoneColor: root.zoneColor
-        strokeColor: root.strokeColor
-        strokeWidth: root.zoneStrokeWidth
-        hatchSpacing: root.hatchSpacing
+    Component {
+        id: zonePainterComponent
+        ZoneCanvasPainter {
+            anchors.fill: parent
+            polygonPoints: snapableParameters.zoneParameter
+                           ? snapableParameters.zoneParameter.polygonPoints
+                           : []
+            gridSize: gridManager.gridSize
+            zoneColor: root.zoneColor
+            strokeColor: root.strokeColor
+            strokeWidth: root.zoneStrokeWidth
+            hatchSpacing: root.hatchSpacing
+        }
     }
 
     // ─── Hit-testing ────────────────────────────────────────────────────

@@ -35,6 +35,7 @@
         <file>qml/meowComponent/case/TileContent.qml</file>
         <file>qml/meowComponent/case/TileDetailsPopup.qml</file>
         <file>qml/meowComponent/grid/GridManager.qml</file>
+        <file>qml/meowComponent/grid/GridCanvasLayer.qml</file>
         <file>qml/meowComponent/preview/AssetPreviewCursor.qml</file>
         <file>qml/meowComponent/preview/LinkPreviewCursor.qml</file>
         <file>qml/meowComponent/preview/PolygonPreviewCursor.qml</file>

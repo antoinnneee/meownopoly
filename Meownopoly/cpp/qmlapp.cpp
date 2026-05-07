@@ -38,6 +38,8 @@
 
 #ifdef MEOW_HAS_CANVAS_PAINTER
 #include "editor/painter/zone_canvas_painter.h"
+#include "editor/painter/zones_overlay_painter.h"
+#include "editor/painter/grid_canvas_painter.h"
 #endif
 
 #include "game/physics/physics_world.h"
@@ -113,6 +115,40 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     // ZoneCanvasPainter : rendu GPU 2D d'une zone via QtCanvasPainter
     // (Qt 6.11+). Importable depuis QML via `import MeowPainter 1.0`.
     qmlRegisterType<ZoneCanvasPainter>("MeowPainter", 1, 0, "ZoneCanvasPainter");
+    qmlRegisterType<ZonesOverlayPainter>("MeowPainter", 1, 0, "ZonesOverlayPainter");
+    qmlRegisterType<GridCanvasPainter>("MeowPainter", 1, 0, "GridCanvasPainter");
+
+    // Toggle Repeater (legacy) vs GridCanvasPainter pour la grille de l'éditeur.
+    // Lu UNE fois ici, exposé en context property pour le QML. Bypass via
+    // MEOW_GRID_RENDERER=repeater (ou =canvas pour forcer canvas explicitement).
+    {
+        const QByteArray raw = qgetenv("MEOW_GRID_RENDERER").toLower();
+        bool useCanvas = true; // défaut : canvas (gain attendu sur burst zoom/pan)
+        if (raw == "repeater") useCanvas = false;
+        else if (raw == "canvas") useCanvas = true;
+        rootContext()->setContextProperty(
+            "_gridRendererUseCanvas", QVariant(useCanvas));
+    }
+
+    // Toggle overlay zones global (un seul canvas viewport-cullé, défaut)
+    // vs canvas par tile (legacy). MEOW_ZONES_RENDERER=per-tile pour forcer
+    // l'ancien mode. L'overlay résout les freezes GPU au zoom extrême.
+    {
+        const QByteArray raw = qgetenv("MEOW_ZONES_RENDERER").toLower();
+        bool useOverlay = true;
+        if (raw == "per-tile") useOverlay = false;
+        else if (raw == "overlay") useOverlay = true;
+        rootContext()->setContextProperty(
+            "_useZonesOverlay", QVariant(useOverlay));
+    }
+#else
+    // Pas de CanvasPainter dispo (Qt < 6.11) → forcer le mode Repeater
+    // côté QML pour que GridManager.qml ne tente pas d'instancier un
+    // GridCanvasPainter introuvable.
+    rootContext()->setContextProperty(
+        "_gridRendererUseCanvas", QVariant(false));
+    rootContext()->setContextProperty(
+        "_useZonesOverlay", QVariant(false));
 #endif
 
     // Register MapTypes namespace for QML

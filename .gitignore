@@ -47,3 +47,4 @@ chatServer/*.backup
 /.cache
 .claude/skills/chat-server.md
 .claude/skills/build.md
+/map

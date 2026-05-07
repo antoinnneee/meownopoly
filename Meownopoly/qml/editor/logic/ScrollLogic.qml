@@ -7,21 +7,32 @@ QtObject {
     property GridManager editorGrid
     property var logic
 
+    // Facteur multiplicatif appliqué à mmSize par cran de molette.
+    // 1.1 = +10% par cran : confortable, ~7 crans pour doubler le zoom.
+    // Borne inférieure pour éviter des mmSize ridiculement petits qui
+    // rendraient gridSize sub-pixel.
+    readonly property real zoomFactor: 1.1
+    readonly property real minMmSize: 0.5
+
     function scrollGrid(wheel, deltaSize) {
         if (wheel.modifiers & Qt.ControlModifier) {
             // Sauvegarder les valeurs actuelles pour la caméra
             logic.mouseLogic.lastGridPos = Qt.point(editorGrid.x, editorGrid.y)
-            
+
             var oldMmSize = editorGrid.mmSize;
             var oldWidth = logic.tileLogic.currentElementWidth;
             var oldHeight = logic.tileLogic.currentElementHeight;
-            
+
             // Sauvegarder le ratio largeur/hauteur
             var aspectRatio = oldWidth / oldHeight;
-            
-            // Mettre à jour mmSize
-            var newMmSize = oldMmSize + deltaSize;
-            
+
+            // Mettre à jour mmSize de façon multiplicative — un cran molette
+            // = ×zoomFactor ou ÷zoomFactor (zoom-in/out symétriques).
+            // deltaSize > 0 = zoom in ; deltaSize < 0 = zoom out.
+            var step = deltaSize > 0 ? zoomFactor : 1.0 / zoomFactor;
+            var newMmSize = oldMmSize * step;
+            if (newMmSize < minMmSize) newMmSize = minMmSize;
+
             if (newMmSize > 0) {
                 // 0. Capturer l'état 3D AVANT le zoom
                 logic.mouseLogic.prepareZoom(wheel.x, wheel.y)

@@ -5,19 +5,31 @@ import ".."
 
 
 /**
- * GridManager simple et réactif pour l'éditeur
+ * GridManager simple et réactif pour l'éditeur.
+ *
+ * Deux modes de rendu sont supportés via le context property
+ * `_gridRendererUseCanvas` (set par qmlapp.cpp depuis l'env var
+ * `MEOW_GRID_RENDERER` — défaut canvas, override repeater) :
+ *   - canvas (défaut Qt 6.11+) : un seul GridCanvasPainter GPU + viewport
+ *     culling. `O(1)` items dans le scene graph.
+ *   - repeater (legacy, fallback Qt 6.10) : 1202 Rectangle pour 600
+ *     croisillons, gérés par le scene graph standard. Plus lourd au resize
+ *     et au panning, mais sans dépendance Qt 6.11.
  */
 Item {
     id: gridManager
 
     property int croisillons: 600
-    property int mmSize: 12
+    // mmSize est `real` pour permettre un zoom multiplicatif continu
+    // (×1.1 par cran de molette). Avec `int`, l'arrondi à chaque cran
+    // empêchait un zoom-in fluide au-delà de mmSize=12. Voir ScrollLogic.
+    property real mmSize: 12.0
     property real defaultMmSize: 12.0
     property real scaleLevel: mmSize / defaultMmSize
-    property int gridSizeCalc: Screen.pixelDensity * mmSize
-    property int gridSize: gridSizeCalc
+    property real gridSizeCalc: Screen.pixelDensity * mmSize
+    property real gridSize: gridSizeCalc
 
-    property int boardSize:  gridSize * croisillons // 600 croisillons
+    property real boardSize:  gridSize * croisillons // 600 croisillons
     // Propriétés configurables
     width: boardSize
     height: boardSize
@@ -48,11 +60,11 @@ Item {
     // Fonction alternative qui snap directement un élément (plus pratique)
     function snapElement2(element) {
         if (!snapToGrid) return
-        
+
         // Calculer la position snappée en pixels
         var snappedX = element.snapableParameters.displayParameter.gridRelativePositionX * gridSize
         var snappedY = element.snapableParameters.displayParameter.gridRelativePositionY * gridSize
-        
+
         if (element.isSelected) {
             // Élément sélectionné : émettre un signal pour que MouseLogic recréée les bindings
             // après avoir mis à jour la position directement
@@ -98,45 +110,81 @@ Item {
         resizeMode = false
     }
 
-    // Grille ultra-optimisée avec un seul Repeater
-    Item {
-        id: gridContainer
+    // Le toggle de rendu vient d'un context property posé par qmlapp.cpp
+    // (MEOW_GRID_RENDERER → bool). Si la property n'existe pas (ex: chargé
+    // hors qmlapp), on retombe sur le mode legacy via `typeof`.
+    readonly property bool _useCanvasGrid:
+        (typeof _gridRendererUseCanvas !== "undefined") && _gridRendererUseCanvas
+
+    // ─── Mode Canvas (défaut Qt 6.11+) ──────────────────────────────────
+    // Le Loader est positionné pour COUVRIR le viewport visible (i.e. la
+    // taille du parent du GridManager, qui est le Base_Board) ET aligné en
+    // coords écran avec ce parent. Comme le Loader est enfant du GridManager
+    // (qui peut être à `gridManager.x ≠ 0` après scroll/zoom), on contre
+    // l'offset par `x: -gridManager.x` pour que le canvas couvre toujours
+    // le viewport quoi qu'il arrive.
+    //
+    // Le tracé des lignes en coords canvas-locales utilise `viewportOffsetX/Y`
+    // = `gridManager.x/y` pour positionner correctement les lignes par
+    // rapport au viewport.
+    Loader {
+        id: canvasLoader
+        active: gridManager._useCanvasGrid && gridManager.showGrid
+        source: active ? "GridCanvasLayer.qml" : ""
+
+        x: -gridManager.x
+        y: -gridManager.y
+        width: gridManager.parent ? gridManager.parent.width : 0
+        height: gridManager.parent ? gridManager.parent.height : 0
+    }
+
+    // ─── Mode Repeater (legacy, fallback) ───────────────────────────────
+    // Loader avec `active: !_useCanvasGrid` : quand le canvas est utilisé,
+    // l'Item gridContainer ET ses 1202 Rectangle ne sont JAMAIS instanciés
+    // (sourceComponent jamais évalué). Évite tout risque de superposition
+    // canvas + Repeater pendant une transition de binding.
+    Loader {
+        id: repeaterLoader
         anchors.fill: parent
+        active: !gridManager._useCanvasGrid && gridManager.showGrid
+        sourceComponent: repeaterComponent
+    }
 
-        property color lightColor:  Qt.lighter(gridManager.gridColor, 1.2)
+    Component {
+        id: repeaterComponent
+        Item {
+            id: gridContainer
+            anchors.fill: parent
 
-        property int verticalLinesCount: (gridManager.showGrid) ? croisillons + 1
-                                                                : 0
-        property int horizontalLinesCount: (gridManager.showGrid) ? croisillons + 1
-                                                                  :0
+            property color lightColor:  Qt.lighter(gridManager.gridColor, 1.2)
 
-        property int totalLineCount:verticalLinesCount+horizontalLinesCount
+            property int verticalLinesCount: croisillons + 1
+            property int horizontalLinesCount: croisillons + 1
+            property int totalLineCount: verticalLinesCount + horizontalLinesCount
 
-        Repeater {
-            id: gridLinesRepeater
-            model:  gridContainer.totalLineCount
+            Repeater {
+                id: gridLinesRepeater
+                model: gridContainer.totalLineCount
 
-            Rectangle {
-                // Propriétés communes
-                color: gridManager.resizeMode ? gridContainer.lightColor: gridManager.gridColor
-                opacity: gridManager.resizeMode ? 1 : gridManager.gridOpacity
-                visible: gridManager.showGrid
+                Rectangle {
+                    color: gridManager.resizeMode ? gridContainer.lightColor : gridManager.gridColor
+                    opacity: gridManager.resizeMode ? 1 : gridManager.gridOpacity
+                    visible: gridManager.showGrid
 
-                // Déterminer si c'est une ligne verticale ou horizontale
-                readonly property bool isVertical: index < gridContainer.verticalLinesCount
-                readonly property int verticalIndex: isVertical ? index : 0
-                readonly property int horizontalIndex: isVertical ? 0 : index - gridContainer.verticalLinesCount
+                    readonly property bool isVertical: index < gridContainer.verticalLinesCount
+                    readonly property int verticalIndex: isVertical ? index : 0
+                    readonly property int horizontalIndex: isVertical ? 0 : index - gridContainer.verticalLinesCount
 
-                // Position et taille selon le type de ligne
-                x: isVertical ? verticalIndex * gridManager.gridSize : 0
-                y: isVertical ? 0 : horizontalIndex * gridManager.gridSize
+                    x: isVertical ? verticalIndex * gridManager.gridSize : 0
+                    y: isVertical ? 0 : horizontalIndex * gridManager.gridSize
 
-                width: isVertical ?
-                       (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth) :
-                       parent.width
-                height: isVertical ?
-                        parent.height :
-                        (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth)
+                    width: isVertical ?
+                           (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth) :
+                           parent.width
+                    height: isVertical ?
+                            parent.height :
+                            (gridManager.resizeMode ? gridManager.lineWidth + 1 : gridManager.lineWidth)
+                }
             }
         }
     }
