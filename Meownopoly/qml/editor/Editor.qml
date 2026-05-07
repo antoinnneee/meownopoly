@@ -1240,10 +1240,18 @@ Base_Board {
         // Itère snapableTilesList et lit chaque tile.zoneParameter.* :
         // QML enregistre une dépendance par accès → réévaluation au moindre
         // change (drag, polygon edit, color change, selection).
+        //
+        // IMPORTANT : on lit `t.x` / `t.y` (PIXELS courants du
+        // SnapableElement) plutôt que `dp.gridRelativePositionX/Y`. Pendant
+        // un drag, x/y suivent la souris en continu alors que la position
+        // grille n'est mise à jour qu'au snap (release). Sans ça l'overlay
+        // restait figé à l'ancienne position grille pendant tout le drag.
         zones: {
             const list = []
             const tiles = root.snapableTilesList
             if (!tiles) return list
+            const gs = gameGrid.gridSize
+            const invGs = gs > 0 ? 1.0 / gs : 0
             for (let i = 0; i < tiles.length; i++) {
                 const t = tiles[i]
                 if (!t || !t.snapableParameters) continue
@@ -1252,10 +1260,9 @@ Base_Board {
                 if (!zp) continue
                 const pts = zp.polygonPoints
                 if (!pts || pts.length < 3) continue
-                const dp = t.snapableParameters.displayParameter
                 list.push({
-                    posGridX: dp.gridRelativePositionX,
-                    posGridY: dp.gridRelativePositionY,
+                    posGridX: t.x * invGs,
+                    posGridY: t.y * invGs,
                     points: pts,
                     color: zp.zoneColor,
                     strokeColor: Qt.darker(zp.zoneColor, 1.3),
