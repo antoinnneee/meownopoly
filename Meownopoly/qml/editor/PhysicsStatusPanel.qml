@@ -55,13 +55,6 @@ Item {
                 else                       pattounxWorld.start()
             }
         }
-
-        ToolTip.visible: hover.hovered
-        ToolTip.delay: 400
-        ToolTip.text: pattounxWorld.running
-                      ? ("tick=" + pattounxWorld.currentTick
-                         + "  ·  click pour arrêter le moteur")
-                      : "click pour démarrer le moteur physique"
         HoverHandler { id: hover }
     }
 }

@@ -83,3 +83,45 @@ add_custom_target(pattounx_tests
 # Tests cycle de vie currentMap (voir doc/architecture/MAP_LIFECYCLE.md)
 # ============================================================================
 add_subdirectory(map_lifecycle)
+
+
+
+# Benchmark : rendu des zones d'exclusion (ZoneCanvasPainter)
+# ============================================================================
+# Compile uniquement quand Qt6::CanvasPainter est dispo (Qt 6.11+). Le test
+# instancie N ZoneCanvasPainter dans une QQuickView offscreen et mesure le
+# frame time pour différents scénarios (count, complexité polygone, zoom burst).
+# Sert à comparer objectivement plusieurs implémentations de rendu.
+
+if (TARGET Qt6::CanvasPainter)
+    set(PAINTER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../cpp/editor/painter")
+    qt_add_executable(tst_zone_render_perf
+        tst_zone_render_perf.cpp
+        "${PAINTER_DIR}/zone_canvas_painter.cpp"
+        "${PAINTER_DIR}/zone_canvas_painter.h"
+        "${PAINTER_DIR}/zone_canvas_painter_renderer.cpp"
+        "${PAINTER_DIR}/zone_canvas_painter_renderer.h"
+        "${PAINTER_DIR}/zone_hatch_compute.cpp"
+        "${PAINTER_DIR}/zone_hatch_compute.h"
+    )
+    target_compile_definitions(tst_zone_render_perf PRIVATE MEOW_HAS_CANVAS_PAINTER)
+    target_include_directories(tst_zone_render_perf PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/../cpp"
+    )
+    target_link_libraries(tst_zone_render_perf PRIVATE
+        Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick
+        Qt6::Concurrent Qt6::CanvasPainter)
+
+    # Le test charge zone_render_scene.qml via QFINDTESTDATA — copier le
+    # QML à côté du binaire pour que le helper le trouve.
+    add_custom_command(TARGET tst_zone_render_perf POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/zone_render_scene.qml"
+            "$<TARGET_FILE_DIR:tst_zone_render_perf>/zone_render_scene.qml"
+    )
+
+    add_test(NAME tst_zone_render_perf COMMAND tst_zone_render_perf)
+    # Le test ouvre une fenêtre — pas adapté à un CI headless. Marqué pour
+    # exécution manuelle uniquement.
+    set_tests_properties(tst_zone_render_perf PROPERTIES LABELS "manual;perf")
+endif()

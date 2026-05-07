@@ -36,6 +36,10 @@
 #include "tools/uistyle.h"
 #include "tools/test_manager.h"
 
+#ifdef MEOW_HAS_CANVAS_PAINTER
+#include "editor/painter/zone_canvas_painter.h"
+#endif
+
 #include "game/physics/physics_world.h"
 #include "game/physics/physics_session.h"
 #include "game/physics/item_snapable_events.h"
@@ -104,6 +108,12 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     EditorSession::registerQml();
     EditorOpBus::registerQml();
 
+
+#ifdef MEOW_HAS_CANVAS_PAINTER
+    // ZoneCanvasPainter : rendu GPU 2D d'une zone via QtCanvasPainter
+    // (Qt 6.11+). Importable depuis QML via `import MeowPainter 1.0`.
+    qmlRegisterType<ZoneCanvasPainter>("MeowPainter", 1, 0, "ZoneCanvasPainter");
+#endif
 
     // Register MapTypes namespace for QML
     qmlRegisterUncreatableMetaObject(MapTypes::staticMetaObject, "MapTypes", 1, 0, "MapTypes", "Error: only enums");

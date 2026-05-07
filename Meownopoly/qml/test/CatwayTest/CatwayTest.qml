@@ -132,6 +132,22 @@ Rectangle {
                         border.width: 1
                     }
                 }
+                TabButton {
+                    text: "Painter"
+                    font.pixelSize: 14
+                    contentItem: Text {
+                        text: parent.text
+                        color: parent.checked ? root.accent : root.textSecondary
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.checked ? root.cardBg : "transparent"
+                        radius: 8
+                        border.color: parent.checked ? root.accent : root.cardBorder
+                        border.width: 1
+                    }
+                }
             }
             Text {
                 text: "Test Catway"
@@ -320,6 +336,17 @@ Rectangle {
                         Layout.minimumHeight: 600
                         host: root
                     }
+                }
+            }
+
+            // Onglet Painter : test isolé du composant ZoneCanvasPainter
+            // (rendu GPU 2D via QtCanvasPainter, Qt 6.11+).
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                ZoneCanvasPainterTest {
+                    anchors.fill: parent
+                    anchors.margins: 12
                 }
             }
         }

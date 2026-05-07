@@ -1,5 +1,7 @@
 Meownopoly/debug/
 /Meownopoly/build
+/build
+/build_perf
 /Meownopoly/Meownopoly.pro.user.8506b9e
 /image_tools/convertir_webp.py
 /image_tools/data/*/*.png

@@ -1,15 +1,21 @@
 import QtQuick 2.15
 import QtQuick.Controls
-import QtQuick.Shapes
 import "../grid"
 
 import ItemSnapable
 import ZoneParameter
+import MeowPainter 1.0
 
 /**
- * Zone d'exclusion polygonale avec hachures
- * Visible uniquement en mode édition
- * Hérite de SnapableElement pour être compatible avec snapableTilesList
+ * Zone d'exclusion polygonale avec hachures.
+ * Visible uniquement en mode édition. Hérite de SnapableElement pour être
+ * compatible avec snapableTilesList.
+ *
+ * Le rendu (fill + contour + hachures) est délégué à un ZoneCanvasPainter
+ * (C++, QtCanvasPainter Qt 6.11+) interne — rendu GPU natif via QRhi avec
+ * hachures pré-calculées en parallèle (QtConcurrent). Pas de cache, pas
+ * de timer débounce : le composant se met à jour automatiquement quand
+ * polygonPoints, gridSize ou les couleurs changent.
  */
 SnapableElement {
     id: root
@@ -17,312 +23,107 @@ SnapableElement {
     // Désactiver le redimensionnement classique (on utilise les points du polygone)
     isResizable: false
     autoSnap: false
-    
+
     // Visibilité conditionnelle : uniquement en mode édition
     visible: gridManager.isEdit
     opacity: isSelected ? 1.0 : 0.7
-    
+
     // Couleur transparente pour le rectangle de base
     elementColor: "transparent"
     borderWidth: 0
-    
+
     // Propriétés de style
     property color zoneColor: snapableParameters.zoneParameter ?
                               snapableParameters.zoneParameter.zoneColor : "#FF5722"
     property color strokeColor: Qt.darker(zoneColor, 1.3)
     property int zoneStrokeWidth: isSelected ? 3 : 2
     property real hatchSpacing: 12
-    
-    // Offset de l'élément en pixels (position de l'élément dans la grille)
-    property real offsetX: snapableParameters.displayParameter.gridRelativePositionX * gridManager.gridSize
-    property real offsetY: snapableParameters.displayParameter.gridRelativePositionY * gridManager.gridSize
-    
+
     // Position de grille de l'élément
     property real gridPosX: snapableParameters.displayParameter.gridRelativePositionX
     property real gridPosY: snapableParameters.displayParameter.gridRelativePositionY
-    
-    // Calcul des bounds du polygone (en coordonnées locales)
-    property var polygonBounds: ({ minX: 0, minY: 0, maxX: 100, maxY: 100 })
-    
-    // Bounds en coordonnées de grille (caching pour éviter de recalculer à chaque zoom/scroll)
-    property var gridBounds: ({ minX: 0, minY: 0, maxX: 0, maxY: 0 })
-    
-    // Cache pour les points locaux en pixels
-    property var localPointsCache: []
-    
-    // Forcer le redraw au chargement
-    Component.onCompleted: {
-        forceRedraw()
+
+    // ─── Rendu GPU ──────────────────────────────────────────────────────
+    ZoneCanvasPainter {
+        id: zonePainter
+        anchors.fill: parent
+        z: 0
+
+        // Bindings directs sur le zoneParameter — pas de cache, pas de
+        // timer débounce. ZoneCanvasPainter::synchronize() fait la
+        // conversion grille→pixel côté renderer GPU à chaque update().
+        // Transparence + alphaBlending sont configurés dans le ctor C++.
+        polygonPoints: snapableParameters.zoneParameter
+                       ? snapableParameters.zoneParameter.polygonPoints
+                       : []
+        gridSize: gridManager.gridSize
+        zoneColor: root.zoneColor
+        strokeColor: root.strokeColor
+        strokeWidth: root.zoneStrokeWidth
+        hatchSpacing: root.hatchSpacing
     }
-    function forceRedraw()
-    {
-        root.gridBounds = root.calculateGridBounds()
-        root.updateRecalculate()
-        hatchCanvas.requestPaint()
-    }
-    
-    function calculateGridBounds() {
-        if (!snapableParameters.zoneParameter) return { minX: 0, minY: 0, maxX: 0, maxY: 0 }
-        var points = snapableParameters.zoneParameter.polygonPoints
-        if (points.length === 0) return { minX: 0, minY: 0, maxX: 0, maxY: 0 }
-        
-        var minX = points[0].x, maxX = points[0].x
-        var minY = points[0].y, maxY = points[0].y
-        
-        for (var i = 1; i < points.length; i++) {
-            minX = Math.min(minX, points[i].x)
-            maxX = Math.max(maxX, points[i].x)
-            minY = Math.min(minY, points[i].y)
-            maxY = Math.max(maxY, points[i].y)
-        }
-        
-        return { minX: minX, minY: minY, maxX: maxX, maxY: maxY }
-    }
-    
-    function updatePixelBounds() {
-        var gs = gridManager.gridSize
-        // Points déjà relatifs à la tile : bounds en pixels locaux = gridBounds * gridSize
-        root.polygonBounds = {
-            minX: gridBounds.minX * gs,
-            minY: gridBounds.minY * gs,
-            maxX: gridBounds.maxX * gs,
-            maxY: gridBounds.maxY * gs
-        }
-    }
-    
-    // Convertir les points de grille (relatifs à la tile) en pixels locaux
-    function getPolygonPointsLocal() {
-        var points = []
-        if (!snapableParameters.zoneParameter) return points
-        
-        var gridPoints = snapableParameters.zoneParameter.polygonPoints
-        var gs = gridManager.gridSize
-        for (var i = 0; i < gridPoints.length; i++) {
-            var pt = gridPoints[i]
-            points.push(Qt.point(pt.x * gs, pt.y * gs))
-        }
-        return points
-    }
-    
-    // Obtenir les points pour le ShapePath (fermé)
-    function getClosedPolygonPoints() {
-        var points = localPointsCache
-        if (points.length > 0) {
-            // Créer une copie pour ne pas corrompre le cache si on ajoute un point
-            var closed = points.slice()
-            closed.push(points[0]) 
-            return closed
-        }
-        return points
-    }
-    
+
+    // ─── Hit-testing ────────────────────────────────────────────────────
     // Override isTransparent pour utiliser la détection polygonale
     function isTransparent(mouse) {
         return !isPointInPolygon(mouse.x, mouse.y)
     }
-    
-    // Fonction pour vérifier si un point est dans le polygone (ray casting)
+
+    // Ray casting sur les points en pixels locaux. Recalcule à la volée
+    // (pas de cache) — appelée seulement au clic, pas hot path.
     function isPointInPolygon(px, py) {
-        var points = localPointsCache
-        if (points.length < 3) return false
-        
+        var zp = snapableParameters.zoneParameter
+        if (!zp) return false
+        var gridPoints = zp.polygonPoints
+        var n = gridPoints.length
+        if (n < 3) return false
+        var gs = gridManager.gridSize
+
         var inside = false
-        var j = points.length - 1
-        
-        for (var i = 0; i < points.length; i++) {
-            var xi = points[i].x, yi = points[i].y
-            var xj = points[j].x, yj = points[j].y
-            
-            if (((yi > py) !== (yj > py)) && 
+        var j = n - 1
+        for (var i = 0; i < n; i++) {
+            var xi = gridPoints[i].x * gs, yi = gridPoints[i].y * gs
+            var xj = gridPoints[j].x * gs, yj = gridPoints[j].y * gs
+            if (((yi > py) !== (yj > py)) &&
                 (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
                 inside = !inside
             }
             j = i
         }
-        
         return inside
     }
-    
-    // Compteur pour forcer la mise à jour de la Shape
-    property int shapeUpdateTrigger: 0
-    
-    // Fonction pour regrouper le recalcul et le trigger de mise à jour
-    function updateRecalculate() {
-        // Mettre à jour les points locaux et les pixel bounds (O(1) transformation)
-        root.localPointsCache = root.getPolygonPointsLocal()
-        root.updatePixelBounds()
-        root.shapeUpdateTrigger++
+
+    // Bounds pixel min du polygone (pour le label de zone). Bindé sur
+    // polygonPoints + gridSize → se met à jour automatiquement. Calculé
+    // seulement quand le label est visible (isSelected).
+    readonly property point polygonMinPx: {
+        var zp = snapableParameters.zoneParameter
+        if (!zp) return Qt.point(0, 0)
+        var pts = zp.polygonPoints
+        var n = pts.length
+        if (n === 0) return Qt.point(0, 0)
+        var gs = gridManager.gridSize
+        var mnx = pts[0].x, mny = pts[0].y
+        for (var i = 1; i < n; i++) {
+            if (pts[i].x < mnx) mnx = pts[i].x
+            if (pts[i].y < mny) mny = pts[i].y
+        }
+        return Qt.point(mnx * gs, mny * gs)
     }
 
-    // Timer pour débouncer le recalcul et le repaint
-    Timer {
-        id: redrawTimer
-        interval: 10
-        repeat: false
-        
-        onTriggered: {
-            root.updateRecalculate()
-            hatchCanvas.requestPaint()
-        }
-    }
-    
-    // Shape pour le polygone
-    Shape {
-        id: polygonShape
-        anchors.fill: parent
-        z: 1
-        
-        // Propriété pour forcer la mise à jour
-        property int updateTrigger: root.shapeUpdateTrigger
-        
-        // Contour du polygone
-        ShapePath {
-            id: outlinePath
-            strokeColor: root.strokeColor
-            strokeWidth: root.zoneStrokeWidth
-            fillColor: "transparent"
-            capStyle: ShapePath.RoundCap
-            joinStyle: ShapePath.RoundJoin
-            
-            PathPolyline {
-                path: {
-                    // Dépendance explicite pour forcer le recalcul
-                    var trigger = polygonShape.updateTrigger
-                    var gs = root.gridManager.gridSize
-                    var ox = root.offsetX
-                    var oy = root.offsetY
-                    return root.getClosedPolygonPoints()
-                }
-            }
-        }
-    }
-    
-    // Canvas pour les hachures diagonales
-    Canvas {
-        id: hatchCanvas
-        anchors.fill: parent
-        z: 0
-        
-        onPaint: {
-            // Si le timer est en cours, on le stoppe et on fait le calcul maintenant
-            // car on est déjà en train de peindre (probablement dû à un resize système)
-            if (redrawTimer.running) {
-                root.updateRecalculate()
-                redrawTimer.stop()
-            }
-            
-            var ctx = getContext("2d")
-            ctx.reset()
-            
-            var points = root.getPolygonPointsLocal()
-            if (points.length < 3) return
-            
-            // Créer le chemin du polygone pour le clipping
-            ctx.beginPath()
-            ctx.moveTo(points[0].x, points[0].y)
-            for (var i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x, points[i].y)
-            }
-            ctx.closePath()
-            
-            // Remplissage semi-transparent
-            ctx.fillStyle = Qt.rgba(
-                root.zoneColor.r, 
-                root.zoneColor.g, 
-                root.zoneColor.b, 
-                0.15
-            )
-            ctx.fill()
-            
-            // Appliquer le clip pour les hachures
-            ctx.save()
-            ctx.clip()
-            
-            // Dessiner les hachures diagonales (batching)
-            ctx.strokeStyle = root.zoneColor
-            ctx.lineWidth = 1.5
-            ctx.globalAlpha = 0.6
-            
-            var bounds = root.polygonBounds
-            var diagonal = Math.sqrt(Math.pow(bounds.maxX - bounds.minX, 2) + 
-                                    Math.pow(bounds.maxY - bounds.minY, 2))
-            var spacing = root.hatchSpacing
-            
-            ctx.beginPath()
-            // Hachures de gauche à droite (/)
-            for (var offset = -diagonal; offset < diagonal * 2; offset += spacing) {
-                ctx.moveTo(bounds.minX + offset, bounds.minY)
-                ctx.lineTo(bounds.minX + offset - diagonal, bounds.minY + diagonal)
-            }
-            ctx.stroke()
-            
-            ctx.restore()
-        }
-        
-        // Redessiner quand les points changent
-        Connections {
-            target: root.snapableParameters.zoneParameter
-            function onPolygonPointsChanged() {
-                root.gridBounds = root.calculateGridBounds()
-                root.updateRecalculate()
-                hatchCanvas.requestPaint()
-            }
-        }
-        
-        // Redessiner quand la couleur change
-        Connections {
-            target: root.snapableParameters.zoneParameter
-            function onZoneColorChanged() {
-                hatchCanvas.requestPaint()
-            }
-        }
-        
-        // Redessiner quand la grille change (taille ou scale)
-        Connections {
-            target: root.gridManager
-            function onGridSizeChanged() {
-                redrawTimer.restart()
-            }
-            function onScaleLevelChanged() {
-                redrawTimer.restart()
-            }
-        }
-        
-        // Redessiner quand l'offset change (scroll/déplacement)
-        Connections {
-            target: root
-            function onOffsetXChanged() {
-                redrawTimer.restart()
-            }
-            function onOffsetYChanged() {
-                redrawTimer.restart()
-            }
-        }
-    }
-    
-    // Points de contrôle pour l'édition (visibles quand sélectionné)
-    // Utiliser un modèle basé sur le nombre de points pour éviter la recréation pendant le drag
+    // ─── Points de contrôle pour l'édition ──────────────────────────────
     Repeater {
         id: controlPointsRepeater
         model: root.isSelected ? root.getPointCount() : 0
-        
+
         delegate: Rectangle {
             id: controlPoint
-            
-            // Index du point
+
             readonly property int pointIndex: index
-            
-            // Position du point (relue à chaque changement)
             property real pointGridX: root.getPointX(pointIndex)
             property real pointGridY: root.getPointY(pointIndex)
-            
-            // Position initiale pour le drag
-            property real dragStartX: 0
-            property real dragStartY: 0
-            property real dragStartGridX: 0
-            property real dragStartGridY: 0
             property bool isDragging: false
-            
+
             width: 12
             height: 12
             radius: 6
@@ -330,52 +131,44 @@ SnapableElement {
             border.color: "white"
             border.width: 2
             z: 100
-            
-            // Position en coordonnées locales (points déjà relatifs à la tile)
+
             x: isDragging ? x : (pointGridX * root.gridManager.gridSize - width / 2)
             y: isDragging ? y : (pointGridY * root.gridManager.gridSize - height / 2)
-            
+
             Drag.active: dragArea.drag.active
-            
+
             MouseArea {
                 id: dragArea
                 anchors.fill: parent
                 cursorShape: Qt.SizeAllCursor
                 drag.target: parent
                 drag.threshold: 0
-                
+
                 onPressed: function(mouse) {
                     controlPoint.isDragging = true
-                    controlPoint.dragStartX = controlPoint.x
-                    controlPoint.dragStartY = controlPoint.y
-                    controlPoint.dragStartGridX = controlPoint.pointGridX
-                    controlPoint.dragStartGridY = controlPoint.pointGridY
                     mouse.accepted = true
                 }
-                
+
                 onReleased: function(mouse) {
                     if (controlPoint.isDragging) {
-                        // Nouvelle position en coordonnées relatives (local / gridSize)
                         var newLocalX = controlPoint.x + controlPoint.width / 2
                         var newLocalY = controlPoint.y + controlPoint.height / 2
                         var newGridX = newLocalX / root.gridManager.gridSize
                         var newGridY = newLocalY / root.gridManager.gridSize
-                        
                         root.updatePointPosition(controlPoint.pointIndex, newGridX, newGridY)
-                        
                         controlPoint.isDragging = false
                     }
                 }
             }
         }
     }
-    
-    // Fonctions helper pour accéder aux points sans déclencher de binding loops
+
+    // ─── Helpers d'accès aux points (utilisés par le Repeater) ──────────
     function getPointCount() {
         if (!snapableParameters.zoneParameter) return 0
         return snapableParameters.zoneParameter.polygonPoints.length
     }
-    
+
     function getPointX(idx) {
         if (!snapableParameters.zoneParameter) return 0
         var points = snapableParameters.zoneParameter.polygonPoints
@@ -384,7 +177,7 @@ SnapableElement {
         }
         return 0
     }
-    
+
     function getPointY(idx) {
         if (!snapableParameters.zoneParameter) return 0
         var points = snapableParameters.zoneParameter.polygonPoints
@@ -393,7 +186,7 @@ SnapableElement {
         }
         return 0
     }
-    
+
     function updatePointPosition(idx, newX, newY) {
         if (!snapableParameters.zoneParameter) return
         var points = snapableParameters.zoneParameter.polygonPoints
@@ -407,32 +200,27 @@ SnapableElement {
                 }
             }
             snapableParameters.zoneParameter.polygonPoints = newPoints
-            
-            // Recalculer les grid bounds
-            root.gridBounds = root.calculateGridBounds()
-            
-            // Recalculer la bounding box de l'élément
             updateDisplayBounds()
             snapToGridFromGridPos(gridPosX, gridPosY)
         }
     }
-    
-    // Mettre à jour les bounds du displayParameter après modification des points (relatifs)
+
+    // Mettre à jour les bounds du displayParameter après modification des points
     function updateDisplayBounds() {
         if (!snapableParameters.zoneParameter) return
         var points = snapableParameters.zoneParameter.polygonPoints
         if (points.length === 0) return
-        
+
         var minX = points[0].x, maxX = points[0].x
         var minY = points[0].y, maxY = points[0].y
-        
+
         for (var i = 1; i < points.length; i++) {
             minX = Math.min(minX, points[i].x)
             maxX = Math.max(maxX, points[i].x)
             minY = Math.min(minY, points[i].y)
             maxY = Math.max(maxY, points[i].y)
         }
-        
+
         var shiftX = Math.floor(minX)
         var shiftY = Math.floor(minY)
         if (shiftX !== 0 || shiftY !== 0) {
@@ -448,12 +236,12 @@ SnapableElement {
             minY -= shiftY
             maxY -= shiftY
         }
-        
+
         snapableParameters.displayParameter.unitSizeWidth = Math.ceil(maxX) - Math.floor(minX)
         snapableParameters.displayParameter.unitSizeHeight = Math.ceil(maxY) - Math.floor(minY)
     }
-    
-    // Indicateur de nom de zone (optionnel)
+
+    // ─── Label de zone (visible quand sélectionné) ──────────────────────
     Text {
         id: zoneLabel
         visible: root.isSelected && root.snapableParameters.zoneParameter &&
@@ -463,10 +251,10 @@ SnapableElement {
         font.pixelSize: 14
         font.bold: true
         z: 101
-        
-        x: root.polygonBounds.minX + 5
-        y: root.polygonBounds.minY + 5
-        
+
+        x: root.polygonMinPx.x + 5
+        y: root.polygonMinPx.y + 5
+
         Rectangle {
             anchors.fill: parent
             anchors.margins: -3
