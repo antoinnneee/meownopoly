@@ -16,7 +16,8 @@ Item {
 
     // Pilotés par le test C++ via setProperty.
     property int croisillons: 600
-    property int mmSize: 12
+    // mmSize en real pour permettre le zoom multiplicatif (×1.2 par cran).
+    property real mmSize: 12.0
     property real gridX: 0
     property real gridY: 0
 
@@ -24,8 +25,8 @@ Item {
     // Posx/posY/w/h sont en pixels (déjà multipliés par gridSize côté C++).
     property var zonesData: []
 
-    readonly property int gridSize: mmSize
-    readonly property int boardSize: gridSize * croisillons
+    readonly property real gridSize: mmSize
+    readonly property real boardSize: gridSize * croisillons
 
     readonly property bool useCanvas:
         (typeof _gridRendererUseCanvas !== "undefined") && _gridRendererUseCanvas

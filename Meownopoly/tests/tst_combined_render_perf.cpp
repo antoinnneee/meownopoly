@@ -32,6 +32,7 @@
 #include <QVariantList>
 #include <QVariantMap>
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 
 #ifdef MEOW_HAS_CANVAS_PAINTER
@@ -333,17 +334,21 @@ void TstCombinedRenderPerf::zoomBurst()
 {
 #ifdef MEOW_HAS_CANVAS_PAINTER
     setProp("croisillons", 600);
-    setProp("mmSize", 12);
+    setProp("mmSize", 1.0);
     setProp("gridX", 0.0);
     setProp("gridY", 0.0);
 
     measureIdle(15);
 
-    const FrameStats s = measureBurst(30, [this](int i) {
-        // mmSize int 6..36 ~ scroll user. Zoom recompute les zones (le
-        // gridSize de chaque ZoneCanvasPainter change → invalide cache
-        // + recompute hatch segments).
-        setProp("mmSize", QVariant(6 + i));
+    // Burst multiplicatif identique à tst_grid_render_perf : mmSize=1
+    // → mmSize≈237 en 30 crans à ×1.2. Zoom recompute les zones (le
+    // gridSize de chaque ZoneCanvasPainter change → invalide cache +
+    // recompute hatch segments en async). Stresse le pipeline complet.
+    const double startMmSize = 1.0;
+    const double factor = 1.2;
+    const FrameStats s = measureBurst(30, [this, startMmSize, factor](int i) {
+        const double mm = startMmSize * std::pow(factor, i + 1);
+        setProp("mmSize", QVariant(mm));
     });
     printStats(QString("zoomBurst/%1z").arg(m_zones.size()), s);
     QVERIFY(s.frames > 0);

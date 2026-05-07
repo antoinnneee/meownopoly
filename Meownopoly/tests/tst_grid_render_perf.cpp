@@ -308,15 +308,22 @@ void TstGridRenderPerf::zoomBurst()
 #ifdef MEOW_HAS_CANVAS_PAINTER
     QFETCH(int, croisillons);
     setProp("croisillons", croisillons);
-    setProp("mmSize", 12);
+    setProp("mmSize", 1.0);
     setProp("gridX", 0.0);
     setProp("gridY", 0.0);
 
     measureIdle(15); // warmup
 
-    const FrameStats s = measureBurst(30, [this](int i) {
-        // mmSize est int côté GridManager. Variation 6..36 (~scroll user).
-        setProp("mmSize", QVariant(6 + i));
+    // Burst multiplicatif : on part très dézoomé (mmSize=1, gridSize≈1px,
+    // viewport contient quasi toute la grille) puis on zoome ×1.2 par cran,
+    // 30 crans → ratio final ~237× → mmSize final ~237 (gridSize ~237px,
+    // viewport ne contient plus que ~5 cellules). Couvre toute la plage
+    // que l'utilisateur peut atteindre en pratique.
+    const double startMmSize = 1.0;
+    const double factor = 1.2;
+    const FrameStats s = measureBurst(30, [this, startMmSize, factor](int i) {
+        const double mm = startMmSize * std::pow(factor, i + 1);
+        setProp("mmSize", QVariant(mm));
     });
     printStats(QString("zoomBurst/%1c").arg(croisillons), s, currentMode());
     QVERIFY(s.frames > 0);

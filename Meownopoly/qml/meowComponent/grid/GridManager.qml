@@ -20,13 +20,16 @@ Item {
     id: gridManager
 
     property int croisillons: 600
-    property int mmSize: 12
+    // mmSize est `real` pour permettre un zoom multiplicatif continu
+    // (×1.1 par cran de molette). Avec `int`, l'arrondi à chaque cran
+    // empêchait un zoom-in fluide au-delà de mmSize=12. Voir ScrollLogic.
+    property real mmSize: 12.0
     property real defaultMmSize: 12.0
     property real scaleLevel: mmSize / defaultMmSize
-    property int gridSizeCalc: Screen.pixelDensity * mmSize
-    property int gridSize: gridSizeCalc
+    property real gridSizeCalc: Screen.pixelDensity * mmSize
+    property real gridSize: gridSizeCalc
 
-    property int boardSize:  gridSize * croisillons // 600 croisillons
+    property real boardSize:  gridSize * croisillons // 600 croisillons
     // Propriétés configurables
     width: boardSize
     height: boardSize

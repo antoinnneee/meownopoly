@@ -22,7 +22,8 @@ Item {
 
     // Pilotés par le test C++ via setProperty.
     property int croisillons: 600
-    property int mmSize: 12
+    // mmSize en real pour permettre le zoom multiplicatif (×1.2 par cran).
+    property real mmSize: 12.0
     property color gridColor: "#80808080"
     property real gridOpacity: 0.5
     property int lineWidth: 1
@@ -34,8 +35,8 @@ Item {
     // Reproduit le calcul de GridManager (Screen.pixelDensity * mmSize).
     // En offscreen, la pixel density peut varier selon la machine ;
     // pour un bench reproductible on prend une valeur fixe = mmSize.
-    readonly property int gridSize: mmSize
-    readonly property int boardSize: gridSize * croisillons
+    readonly property real gridSize: mmSize
+    readonly property real boardSize: gridSize * croisillons
 
     readonly property bool useCanvas:
         (typeof _gridRendererUseCanvas !== "undefined") && _gridRendererUseCanvas
