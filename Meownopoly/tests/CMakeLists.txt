@@ -148,4 +148,45 @@ if (TARGET Qt6::CanvasPainter)
 
     add_test(NAME tst_grid_render_perf COMMAND tst_grid_render_perf)
     set_tests_properties(tst_grid_render_perf PROPERTIES LABELS "manual;perf")
+
+    # ────────────────────────────────────────────────────────────────────
+    # Benchmark : grille + zones combinées sur map JSON réelle
+    # ────────────────────────────────────────────────────────────────────
+    # Charge tests/test_map.json (~22 zones polygonales), instancie la
+    # grille + tous les ZoneCanvasPainter dans la même scène et mesure le
+    # coût combiné. Toggle grille via MEOW_GRID_RENDERER, mode zones via
+    # MEOW_ZONE_PARALLEL_MODE (défaut precompute-async).
+    qt_add_executable(tst_combined_render_perf
+        tst_combined_render_perf.cpp
+        "${PAINTER_DIR}/grid_canvas_painter.cpp"
+        "${PAINTER_DIR}/grid_canvas_painter.h"
+        "${PAINTER_DIR}/grid_canvas_painter_renderer.cpp"
+        "${PAINTER_DIR}/grid_canvas_painter_renderer.h"
+        "${PAINTER_DIR}/zone_canvas_painter.cpp"
+        "${PAINTER_DIR}/zone_canvas_painter.h"
+        "${PAINTER_DIR}/zone_canvas_painter_renderer.cpp"
+        "${PAINTER_DIR}/zone_canvas_painter_renderer.h"
+        "${PAINTER_DIR}/zone_hatch_compute.cpp"
+        "${PAINTER_DIR}/zone_hatch_compute.h"
+    )
+    target_compile_definitions(tst_combined_render_perf PRIVATE MEOW_HAS_CANVAS_PAINTER)
+    target_include_directories(tst_combined_render_perf PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/../cpp"
+    )
+    target_link_libraries(tst_combined_render_perf PRIVATE
+        Qt6::Core Qt6::Test Qt6::Gui Qt6::Qml Qt6::Quick
+        Qt6::Concurrent Qt6::CanvasPainter)
+
+    # Copier QML scene + map JSON à côté du binaire pour QFINDTESTDATA.
+    add_custom_command(TARGET tst_combined_render_perf POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/combined_render_scene.qml"
+            "$<TARGET_FILE_DIR:tst_combined_render_perf>/combined_render_scene.qml"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_map.json"
+            "$<TARGET_FILE_DIR:tst_combined_render_perf>/test_map.json"
+    )
+
+    add_test(NAME tst_combined_render_perf COMMAND tst_combined_render_perf)
+    set_tests_properties(tst_combined_render_perf PROPERTIES LABELS "manual;perf")
 endif()
