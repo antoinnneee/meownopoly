@@ -340,14 +340,20 @@ void TstCombinedRenderPerf::zoomBurst()
 
     measureIdle(15);
 
-    // Burst multiplicatif identique à tst_grid_render_perf : mmSize=1
-    // → mmSize≈237 en 30 crans à ×1.2. Zoom recompute les zones (le
-    // gridSize de chaque ZoneCanvasPainter change → invalide cache +
+    // Burst multiplicatif visant exactement gridSize=200 px en fin de
+    // course. En scène de test, `gridSize = mmSize` (pas de
+    // Screen.pixelDensity), donc on cible mmSize=200. Spacing log
+    // uniforme de 1 → 200 sur `steps` itérations.
+    // Zoom recompute les zones (gridSize change → invalide cache +
     // recompute hatch segments en async). Stresse le pipeline complet.
     const double startMmSize = 1.0;
-    const double factor = 1.2;
-    const FrameStats s = measureBurst(30, [this, startMmSize, factor](int i) {
-        const double mm = startMmSize * std::pow(factor, i + 1);
+    const double endMmSize = 200.0;
+    const int steps = 30;
+    const FrameStats s = measureBurst(steps,
+        [this, startMmSize, endMmSize, steps](int i) {
+        // mm[steps-1] = endMmSize ; mm[0] ≈ startMmSize * (end/start)^(1/steps).
+        const double mm = startMmSize *
+            std::pow(endMmSize / startMmSize, (i + 1.0) / steps);
         setProp("mmSize", QVariant(mm));
     });
     printStats(QString("zoomBurst/%1z").arg(m_zones.size()), s);
