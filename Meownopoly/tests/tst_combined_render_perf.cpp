@@ -154,6 +154,7 @@ private slots:
 
     void staticIdle();
     void zoomBurst();
+    void zoomBurstWide();
     void panBurst();
 
 private:
@@ -357,6 +358,36 @@ void TstCombinedRenderPerf::zoomBurst()
         setProp("mmSize", QVariant(mm));
     });
     printStats(QString("zoomBurst/%1z").arg(m_zones.size()), s);
+    QVERIFY(s.frames > 0);
+#else
+    QSKIP("MEOW_HAS_CANVAS_PAINTER non défini.");
+#endif
+}
+
+void TstCombinedRenderPerf::zoomBurstWide()
+{
+#ifdef MEOW_HAS_CANVAS_PAINTER
+    setProp("croisillons", 600);
+    setProp("mmSize", 5.0);
+    setProp("gridX", 0.0);
+    setProp("gridY", 0.0);
+
+    measureIdle(15);
+
+    // Plage très large : mmSize 5 → 1000 (gridSize 5 px → 1000 px) en
+    // 100 étapes log-uniformes. Sollicite le pipeline sur ~1.5 s pour
+    // détecter d'éventuelles pathologies (allocations, fragmentation
+    // GPU, accumulation lock-free) qu'un burst court masquerait.
+    const double startMmSize = 5.0;
+    const double endMmSize = 1000.0;
+    const int steps = 100;
+    const FrameStats s = measureBurst(steps,
+        [this, startMmSize, endMmSize, steps](int i) {
+        const double mm = startMmSize *
+            std::pow(endMmSize / startMmSize, (i + 1.0) / steps);
+        setProp("mmSize", QVariant(mm));
+    });
+    printStats(QString("zoomBurstWide/%1z").arg(m_zones.size()), s);
     QVERIFY(s.frames > 0);
 #else
     QSKIP("MEOW_HAS_CANVAS_PAINTER non défini.");
