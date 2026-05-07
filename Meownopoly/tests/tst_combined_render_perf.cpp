@@ -42,6 +42,8 @@
 #include "editor/painter/zone_canvas_painter_renderer.h"
 #endif
 
+#include "game/physics/physics_world.h"
+
 namespace {
 
 struct FrameStats {
@@ -168,6 +170,12 @@ private:
     QQuickView *m_view = nullptr;
     QVariantList m_zones;
     int m_tick = 0;
+    // PhysicsWorld optionnel (toggle MEOW_BENCH_PHYSICS=on). Quand actif,
+    // le worker tourne à 60 Hz dans son thread, snapshot publié en
+    // continu. Permet de mesurer l'impact réel de la physique sur le
+    // frame time du GUI thread pendant un zoom intense.
+    PhysicsWorld *m_physics = nullptr;
+    bool m_physicsEnabled = false;
 };
 
 void TstCombinedRenderPerf::initTestCase()
@@ -197,6 +205,59 @@ void TstCombinedRenderPerf::initTestCase()
     QVERIFY2(!m_zones.isEmpty(), "Aucune zone parsée depuis test_map.json");
     qInfo().noquote() << QString("Zones chargées : %1").arg(m_zones.size());
 
+    // PhysicsWorld optionnel — démarré uniquement si MEOW_BENCH_PHYSICS=on
+    // (ou =1, =true). Reproduit l'éditeur réel où le worker tourne en
+    // continu et publie ses snapshots, ce qui peut interagir avec le GUI
+    // thread pendant un zoom intense.
+    {
+        const QByteArray phy = qgetenv("MEOW_BENCH_PHYSICS").toLower();
+        m_physicsEnabled = (phy == "on" || phy == "1" || phy == "true");
+    }
+    if (m_physicsEnabled) {
+        m_physics = new PhysicsWorld;
+        // Upsert toutes les zones du JSON dans le moteur physique. Coords
+        // grille absolues (cf. EditorPhysicsBridge._upsertZoneNow).
+        m_physics->start();
+        // Lecture json brute pour récupérer gridRelativePosition + zoneParameter
+        // tels qu'EditorPhysicsBridge les pousserait.
+        QFile f(mapPath);
+        if (f.open(QIODevice::ReadOnly)) {
+            const auto doc = QJsonDocument::fromJson(f.readAll());
+            const auto tiles = doc.object().value("snapableTiles").toArray();
+            for (const QJsonValue &tv : tiles) {
+                const QJsonObject tile = tv.toObject();
+                if (tile.value("tileType").toInt() != 2) continue;
+                const QJsonObject zp = tile.value("zoneParameter").toObject();
+                const QJsonObject dp = tile.value("displayParameter").toObject();
+                if (zp.isEmpty()) continue;
+                const double ox = dp.value("gridRelativePositionX").toDouble();
+                const double oy = dp.value("gridRelativePositionY").toDouble();
+                QVariantList absPoints;
+                for (const QJsonValue &pv : zp.value("polygonPoints").toArray()) {
+                    const QJsonObject po = pv.toObject();
+                    absPoints.append(QVariant::fromValue(QVector2D(
+                        ox + po.value("x").toDouble(),
+                        oy + po.value("y").toDouble())));
+                }
+                if (absPoints.size() < 3) continue;
+                QVariantMap params;
+                params.insert("exclusion", zp.value("exclusion").toBool(true));
+                params.insert("trigger", !zp.value("exclusion").toBool(true));
+                params.insert("frictionStrength",
+                              zp.value("frictionStrenght").toDouble());
+                params.insert("speedMultiplier",
+                              zp.value("speedMultiplier").toDouble(1.0));
+                params.insert("accelerationMultiplier",
+                              zp.value("accelerationMultiplier").toDouble(1.0));
+                m_physics->upsertZone(tile.value("uniqueId").toString(),
+                                      absPoints, params);
+            }
+        }
+        qInfo() << "PhysicsWorld actif — zones uploadées au worker, simu 60 Hz.";
+    } else {
+        qInfo() << "PhysicsWorld inactif (MEOW_BENCH_PHYSICS=on pour activer).";
+    }
+
     loadScene();
     setProp("zonesData", m_zones);
     m_view->show();
@@ -208,6 +269,11 @@ void TstCombinedRenderPerf::initTestCase()
 
 void TstCombinedRenderPerf::cleanupTestCase()
 {
+    if (m_physics) {
+        m_physics->stop();
+        delete m_physics;
+        m_physics = nullptr;
+    }
     delete m_view;
     m_view = nullptr;
 }

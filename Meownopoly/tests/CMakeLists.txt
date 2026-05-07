@@ -168,6 +168,16 @@ if (TARGET Qt6::CanvasPainter)
         "${PAINTER_DIR}/zone_canvas_painter_renderer.h"
         "${PAINTER_DIR}/zone_hatch_compute.cpp"
         "${PAINTER_DIR}/zone_hatch_compute.h"
+        # Moteur physique (toggle via MEOW_BENCH_PHYSICS=on côté runtime).
+        "${PHYSICS_DIR}/physics_world.cpp"
+        "${PHYSICS_DIR}/physics_world.h"
+        "${PHYSICS_DIR}/physics_worker.cpp"
+        "${PHYSICS_DIR}/physics_worker.h"
+        "${PHYSICS_DIR}/pattounx_engine_v2.cpp"
+        "${PHYSICS_DIR}/pattounx_engine_v2.h"
+        "${PHYSICS_DIR}/collision2d.cpp"
+        "${PHYSICS_DIR}/collision2d.h"
+        "${PHYSICS_DIR}/pattounx_types.h"
     )
     target_compile_definitions(tst_combined_render_perf PRIVATE MEOW_HAS_CANVAS_PAINTER)
     target_include_directories(tst_combined_render_perf PRIVATE

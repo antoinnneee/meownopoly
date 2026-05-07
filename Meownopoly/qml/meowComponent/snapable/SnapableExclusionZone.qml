@@ -44,16 +44,26 @@ SnapableElement {
     property real gridPosY: snapableParameters.displayParameter.gridRelativePositionY
 
     // ─── Rendu GPU ──────────────────────────────────────────────────────
+    // Désactivé par défaut : le rendu de toutes les zones est délégué à
+    // un `ZonesOverlayPainter` global instancié dans Editor.qml, qui
+    // couvre le viewport visible et fait du viewport culling. Sans ça,
+    // chaque ZoneCanvasPainter avait un backing texture proportionnel
+    // à la taille de la zone × gridSize → freeze GPU >1 s par cran de
+    // zoom à mmSize=200+ (centaines de MB par tile).
+    //
+    // Fallback (si le context property est absent ou false) : on garde le
+    // canvas par tile pour ne pas régresser hors-éditeur (preview cursors,
+    // game runtime, etc.).
+    readonly property bool _useGlobalOverlay:
+        (typeof _useZonesOverlay !== "undefined") && _useZonesOverlay
+
     ZoneCanvasPainter {
         id: zonePainter
         anchors.fill: parent
         z: 0
+        visible: !root._useGlobalOverlay
 
-        // Bindings directs sur le zoneParameter — pas de cache, pas de
-        // timer débounce. ZoneCanvasPainter::synchronize() fait la
-        // conversion grille→pixel côté renderer GPU à chaque update().
-        // Transparence + alphaBlending sont configurés dans le ctor C++.
-        polygonPoints: snapableParameters.zoneParameter
+        polygonPoints: visible && snapableParameters.zoneParameter
                        ? snapableParameters.zoneParameter.polygonPoints
                        : []
         gridSize: gridManager.gridSize
