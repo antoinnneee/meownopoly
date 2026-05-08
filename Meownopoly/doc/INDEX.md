@@ -26,8 +26,12 @@ Documentation technique sur l'architecture du système et les composants.
 - [🧩 Pattern Session Collab](./architecture/COLLAB_SESSION_PATTERN.md) - Pattern générique host-authoritative pour réimplémenter dans d'autres modes
 
 ### Réseau
+- [🔭 Patterns réseau (synthèse)](./architecture/NETWORK_PATTERNS.md) - Vue d'ensemble + raisons des choix de techno (UDP/reliable.io, host-authoritative, host migration, chat E2E, triple buffer)
 - [Architecture Catway](./architecture/CATWAY_ARCHITECTURE.md) - Threading, I/O, reliable.io
 - [Réseau P2P](./architecture/P2P_NETWORK_ARCHITECTURE.md) - UDP hole-punching, signaling, reliable
+
+### Performance & Rendu
+- [⚡ Rendu & Performance](./architecture/RENDERING_PERF.md) - Récap des passes d'optim (grille, zones, hachures, drag/zoom, triple buffer physique) avec raisons techno
 
 ### Systèmes
 - [Gestionnaire d'Assets](./architecture/ASSET_MANAGER.md) - Système de gestion des ressources
