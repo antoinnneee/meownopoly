@@ -91,8 +91,36 @@ Item {
 
     // Recalibrage manuel si jamais l'API publique en a besoin (ex: changement
     // de gridSize à chaud, ou repositionnement de la caméra hors d'un suivi
-    // continu). Pour le moment, personne n'appelle.
+    // continu). Aussi appelé automatiquement par les Connections plus bas
+    // dès qu'un input du mapping affine bouge (resize, zoom, gridSize).
     function invalidateGridBasis() { _gridBasis = null }
+
+    // Invalidation réactive du basis. La translation de caméra (pan/follow)
+    // est absorbée par construction : b1/b2 sont des deltas, donc invariants
+    // sous translation. En revanche, ces inputs **changent** la projection
+    // ortho (ratio pixels écran ↔ unités monde) ou la grille elle-même :
+    //  - resize de view3D (largeur/hauteur du viewport ortho)
+    //  - changement de magnification (zoom multiplicatif ×1.1 par cran)
+    //  - changement de gridSize (mmSize × pixelDensity)
+    // Sans recapture, l'actor 3D dérive lentement par rapport à la collision
+    // physique (qui reste en coords grille), d'où l'écart visuel/physique
+    // observé au redimensionnement de la fenêtre depuis le refactor v2.
+    Connections {
+        target: view3D
+        function onWidthChanged()  { root.invalidateGridBasis() }
+        function onHeightChanged() { root.invalidateGridBasis() }
+    }
+    Connections {
+        target: cameraOrthographic
+        function onHorizontalMagnificationChanged() { root.invalidateGridBasis() }
+        function onVerticalMagnificationChanged()   { root.invalidateGridBasis() }
+    }
+    Connections {
+        target: gridManager
+        enabled: gridManager !== null
+        ignoreUnknownSignals: true
+        function onGridSizeChanged() { root.invalidateGridBasis() }
+    }
 
     function gridToWorldStable(gx, gy) {
         const b = _ensureGridBasis()
