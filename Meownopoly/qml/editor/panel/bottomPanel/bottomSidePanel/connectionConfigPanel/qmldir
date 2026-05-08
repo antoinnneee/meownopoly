@@ -1,12 +1,3 @@
 module connectionConfigPanel
-ConnectionsPanel 1.0 ConnectionsPanel.qml
 ConnectionListSection 1.0 ConnectionListSection.qml
 ConnectionsConfigurationSection 1.0 ConnectionsConfigurationSection.qml
-
-
-
-
-
-
-
-

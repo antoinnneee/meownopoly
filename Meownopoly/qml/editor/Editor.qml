@@ -2,13 +2,11 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import QtQuick.Shapes
 import QtQml
 import QtCore
 
 import UiStyle
 
-import Case
 import ItemSnapable
 
 import meowComponent
@@ -547,15 +545,8 @@ Base_Board {
                     Game.applyRemoteDelta(sub.type, sub.tileId, sub.groupId,
                                           before, after, !!sub.applyBefore)
                     // Rebind x/y des tiles sélectionnées (qui auraient un binding
-                    // cassé par un drag local). _rebindTileIfSelected d'Antoine ;
-                    // fallback snapToGridFromGridPos si non défini.
-                    if (typeof _rebindTileIfSelected === "function") {
-                        _rebindTileIfSelected(sub.tileId)
-                    } else {
-                        const target = findByUuid(String(sub.tileId))
-                        if (target && target.snapToGridFromGridPos)
-                            target.snapToGridFromGridPos()
-                    }
+                    // cassé par un drag local).
+                    _rebindTileIfSelected(sub.tileId)
                 }
 
                 if (op.batch === true) {

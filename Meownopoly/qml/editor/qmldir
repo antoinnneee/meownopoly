@@ -4,7 +4,6 @@ EditorLogic 1.0 EditorLogic.qml
 Editor 1.0 Editor.qml
 Trackers 1.0 Trackers.qml
 VisualEffectsPanel 1.0 panel/bottomPanel/bottomSidePanel/visualEffectPanel/VisualEffectsPanel.qml
-ConnectionsPanel 1.0 panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionsPanel.qml
 CaseConfigurationPanelSection 1.0 panel/bottomPanel/bottomSidePanel/caseConfigPanel/CaseConfigurationPanelSection.qml
 ConnectionsConfigurationSection 1.0 panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionsConfigurationSection.qml
 ZoneConfigurationPanelSection 1.0 panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZoneConfigurationPanelSection.qml
