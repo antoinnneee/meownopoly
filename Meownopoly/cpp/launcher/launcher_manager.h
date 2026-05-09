@@ -104,8 +104,18 @@ public:
     // balsamFinished(success, qmlPath, errorMessage) à la fin.
     // - sourceFile : .obj/.glb/etc
     // - outputDir  : dossier où balsam va générer ; sera créé si absent.
+    // - options    : map clé→bool/real des flags balsam (cf.
+    //   balsamOptionDefinitions). Une clé absente = flag non passé.
     // Si balsamPath n'est pas configuré ou introuvable, échoue immédiat.
-    Q_INVOKABLE void runBalsamImport(const QString &sourceFile, const QString &outputDir);
+    Q_INVOKABLE void runBalsamImport(const QString &sourceFile,
+                                     const QString &outputDir,
+                                     const QVariantMap &options = QVariantMap());
+
+    // Description des options balsam exposables côté UI : retourne une
+    // liste de { key, flag, label, type ("bool"|"real"), default, group,
+    // dependsOn? } afin que le QML puisse générer dynamiquement les
+    // contrôles si besoin. Les types acceptés sont "bool" et "real".
+    Q_INVOKABLE QVariantList balsamOptionDefinitions() const;
 
     // Utilitaire de comparaison sémantique de versions
     // Retourne -1 si v1 < v2, 0 si égales, 1 si v1 > v2

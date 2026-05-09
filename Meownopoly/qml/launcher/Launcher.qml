@@ -162,8 +162,11 @@ Rectangle {
         sourceComponent: ModelConfigurator {
             serverUrl: logic.serverUrl
             balsamPath: logic.settings.balsamPath
+            balsamOptions: logic.balsamOptions
             onCloseRequested: root.currentView = "launcher"
             onBalsamPathRequested: function(p) { logic.setBalsamPath(p) }
+            onBalsamOptionRequested: function(k, v) { logic.setBalsamOption(k, v) }
+            onBalsamOptionsResetRequested: logic.resetBalsamOptions()
         }
     }
 

@@ -34,6 +34,16 @@ Rectangle {
     property string balsamPath: LauncherManager.balsamPath
     signal balsamPathRequested(string newPath)
 
+    // Options balsam : map clé→bool/real injectée par le parent et
+    // remontée via signal balsamOptionRequested(key, value).
+    property var balsamOptions: ({})
+    signal balsamOptionRequested(string key, var value)
+    signal balsamOptionsResetRequested()
+    function getBalsamOpt(key, def) {
+        return (balsamOptions !== undefined && balsamOptions[key] !== undefined)
+               ? balsamOptions[key] : def
+    }
+
     // URL du serveur de ressources, à passer depuis le Launcher (logic.serverUrl).
     property string serverUrl: ""
 
@@ -216,21 +226,39 @@ Rectangle {
         const outDir = dir + "/" + basename + "_qml"
 
         statusBar.message = "balsam : conversion en cours vers " + outDir + "..."
-        LauncherManager.runBalsamImport(src, outDir)
+        LauncherManager.runBalsamImport(src, outDir, root.balsamOptions)
     }
 
-    // Popup de configuration balsam
+    // Définitions des options balsam, fournies par le C++ (clé/flag/
+    // label/type/default/group/dependsOn). Cf. balsamOptionDefinitions().
+    readonly property var _balsamDefs: LauncherManager.balsamOptionDefinitions()
+    readonly property var _balsamGroups: {
+        // Groupement des défs par "group" (Géométrie / Échelle / etc.)
+        const out = {}
+        const order = []
+        for (let i = 0; i < _balsamDefs.length; ++i) {
+            const d = _balsamDefs[i]
+            const g = d.group || "Autre"
+            if (!out[g]) { out[g] = []; order.push(g) }
+            out[g].push(d)
+        }
+        return { groups: out, order: order }
+    }
+
+    // Popup de configuration balsam (path + options de conversion)
     Popup {
         id: balsamConfigPopup
         anchors.centerIn: Overlay.overlay
         modal: true
         focus: true
-        width: 600
-        padding: 16
+        width: Math.min(720, root.width - 80)
+        height: Math.min(620, root.height - 80)
+        padding: 0
         background: Rectangle { color: "#27272a"; border.color: "#3f3f46"; radius: 8 }
 
         ColumnLayout {
             anchors.fill: parent
+            anchors.margins: 16
             spacing: 10
 
             Text {
@@ -246,6 +274,8 @@ Rectangle {
                 Layout.fillWidth: true
                 font.pixelSize: 11
             }
+
+            // --- Path
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 6
@@ -267,13 +297,142 @@ Rectangle {
             }
             Text {
                 text: root.balsamPath.length > 0
-                      ? "Chemin actuel : " + root.balsamPath
+                      ? "✓ " + root.balsamPath
                       : "(aucun chemin configuré)"
                 color: root.balsamPath.length > 0 ? "#22c55e" : "#9ca3af"
                 font.pixelSize: 10
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: "#3f3f46"
+            }
+
+            // --- Options
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Options de conversion"; color: "#e5e7eb"; font.bold: true }
+                Item { Layout.fillWidth: true }
+                Button {
+                    id: btnResetOpts
+                    text: "Réinitialiser"
+                    onClicked: root.balsamOptionsResetRequested()
+                    background: Rectangle { color: btnResetOpts.pressed ? "#374151" : "#4b5563"; radius: 4 }
+                    contentItem: Text { text: btnResetOpts.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 4 }
+                }
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                contentWidth: optionsCol.width
+                ColumnLayout {
+                    id: optionsCol
+                    width: balsamConfigPopup.width - 32
+                    spacing: 10
+
+                    Repeater {
+                        model: root._balsamGroups.order
+                        delegate: GroupBox {
+                            required property string modelData
+                            Layout.fillWidth: true
+                            title: modelData
+                            background: Rectangle { color: "#1f1f23"; radius: 6; border.color: "#3a3a3a" }
+                            label: Text { text: parent.title; color: "#d1d5db"; font.bold: true }
+
+                            ColumnLayout {
+                                anchors.fill: parent
+                                spacing: 4
+                                Repeater {
+                                    model: root._balsamGroups.groups[modelData]
+                                    delegate: RowLayout {
+                                        id: optRow
+                                        required property var modelData
+                                        Layout.fillWidth: true
+                                        spacing: 6
+                                        readonly property bool depEnabled:
+                                            !modelData.dependsOn
+                                            || root.getBalsamOpt(modelData.dependsOn, false)
+                                        readonly property string ttText:
+                                            (modelData.tooltip || modelData.label)
+                                            + (modelData.dependsOn
+                                               ? " (nécessite : « " + modelData.dependsOn + " »)"
+                                               : "")
+
+                                        // bool → CheckBox
+                                        CheckBox {
+                                            id: optCheck
+                                            visible: modelData.type === "bool"
+                                            enabled: optRow.depEnabled
+                                            text: modelData.label
+                                            checked: root.getBalsamOpt(modelData.key, modelData.default)
+                                            onClicked: root.balsamOptionRequested(modelData.key, checked)
+                                            ToolTip.visible: hovered
+                                            ToolTip.delay: 500
+                                            ToolTip.timeout: 8000
+                                            ToolTip.text: optRow.ttText
+                                            contentItem: Text {
+                                                text: optCheck.text
+                                                color: optCheck.enabled ? "#d1d5db" : "#6b7280"
+                                                leftPadding: optCheck.indicator.width + 6
+                                                verticalAlignment: Text.AlignVCenter
+                                                font.pixelSize: 11
+                                            }
+                                        }
+
+                                        // real → label cliquable (avec tooltip) + TextField
+                                        Item {
+                                            visible: modelData.type === "real"
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: realLabel.implicitHeight + 6
+                                            Text {
+                                                id: realLabel
+                                                anchors.left: parent.left
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: modelData.label
+                                                color: optRow.depEnabled ? "#d1d5db" : "#6b7280"
+                                                font.pixelSize: 11
+                                            }
+                                            HoverHandler {
+                                                id: realHover
+                                                cursorShape: Qt.WhatsThisCursor
+                                            }
+                                            ToolTip.visible: realHover.hovered
+                                            ToolTip.delay: 500
+                                            ToolTip.timeout: 8000
+                                            ToolTip.text: optRow.ttText
+                                        }
+                                        TextField {
+                                            id: optReal
+                                            visible: modelData.type === "real"
+                                            enabled: optRow.depEnabled
+                                            Layout.preferredWidth: 100
+                                            text: Number(root.getBalsamOpt(modelData.key, modelData.default)).toString()
+                                            color: enabled ? "white" : "#6b7280"
+                                            background: Rectangle { color: "#0f0f12"; border.color: "#3a3a3a"; radius: 3 }
+                                            validator: DoubleValidator {}
+                                            ToolTip.visible: hovered
+                                            ToolTip.delay: 500
+                                            ToolTip.timeout: 8000
+                                            ToolTip.text: optRow.ttText
+                                            onEditingFinished: {
+                                                const v = parseFloat(text.replace(",", "."))
+                                                if (!isNaN(v)) root.balsamOptionRequested(modelData.key, v)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- Footer
             RowLayout {
                 Layout.fillWidth: true
                 Item { Layout.fillWidth: true }

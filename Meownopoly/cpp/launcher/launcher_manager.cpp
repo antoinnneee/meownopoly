@@ -568,7 +568,161 @@ void LauncherManager::setBalsamPath(const QString &p)
     }
 }
 
-void LauncherManager::runBalsamImport(const QString &sourceFile, const QString &outputDir)
+QVariantList LauncherManager::balsamOptionDefinitions() const
+{
+    // Référence : `balsam --help` (Qt 6.11). Convention : chaque flag a sa
+    // forme inverse `--disable-<flag>`. Les défauts ci-dessous reflètent
+    // ceux de balsamui.
+    auto mk = [](const QString &key, const QString &flag, const QString &label,
+                 const QString &type, const QVariant &def, const QString &group,
+                 const QString &tooltip,
+                 const QString &dependsOn = QString()) {
+        QVariantMap m;
+        m["key"] = key;
+        m["flag"] = flag;
+        m["label"] = label;
+        m["type"] = type;
+        m["default"] = def;
+        m["group"] = group;
+        m["tooltip"] = tooltip;
+        if (!dependsOn.isEmpty()) m["dependsOn"] = dependsOn;
+        return m;
+    };
+
+    QVariantList list;
+
+    // --- Géométrie
+    list << mk("joinIdenticalVertices", "--joinIdenticalVertices",
+               "Fusionner les vertices identiques", "bool", true, "Géométrie",
+               "Identifie et fusionne les sommets dupliqués pour réduire la taille du mesh et améliorer les perfs GPU.");
+    list << mk("generateNormals", "--generateNormals",
+               "Générer les normales (face)", "bool", false, "Géométrie",
+               "Calcule les normales par face. Utile si le .obj n'en exporte pas. Désactive `Generate Smooth Normals`.");
+    list << mk("generateSmoothNormals", "--generateSmoothNormals",
+               "Générer les normales lissées", "bool", true, "Géométrie",
+               "Calcule des normales lissées par sommet (averaging). Donne un rendu doux pour les surfaces courbes.");
+    list << mk("calculateTangentSpace", "--calculateTangentSpace",
+               "Calculer l'espace tangent", "bool", false, "Géométrie",
+               "Calcule tangentes/bitangentes pour les meshes. Nécessaire pour le bon rendu des normalMaps.");
+    list << mk("optimizeMeshes", "--optimizeMeshes",
+               "Optimiser les meshes", "bool", false, "Géométrie",
+               "Étape de post-traitement qui réduit le nombre de meshes par fusion logique.");
+    list << mk("optimizeGraph", "--optimizeGraph",
+               "Optimiser le graphe de scène", "bool", false, "Géométrie",
+               "Étape de post-traitement qui simplifie la hiérarchie de la scène (collapse de nodes inutiles).");
+    list << mk("improveCacheLocality", "--improveCacheLocality",
+               "Améliorer la localité de cache", "bool", true, "Géométrie",
+               "Réordonne les triangles pour mieux exploiter le cache vertex GPU.");
+    list << mk("preTransformVertices", "--preTransformVertices",
+               "Pré-transformer les vertices", "bool", false, "Géométrie",
+               "Supprime le graphe de nodes et applique les matrices de transformation locales aux vertices. Casse l'animation et la hiérarchie.");
+    list << mk("splitLargeMeshes", "--splitLargeMeshes",
+               "Découper les gros meshes", "bool", true, "Géométrie",
+               "Découpe les meshes volumineux en sous-meshes plus petits pour respecter les limites GPU.");
+    list << mk("findInstances", "--findInstances",
+               "Détecter les instances", "bool", false, "Géométrie",
+               "Recherche les meshes dupliqués et les remplace par des références au premier (instancing).");
+    list << mk("removeRedundantMaterials", "--removeRedundantMaterials",
+               "Retirer les matériaux redondants", "bool", false, "Géométrie",
+               "Recherche et supprime les matériaux dupliqués ou non référencés.");
+    list << mk("fixInfacingNormals", "--fixInfacingNormals",
+               "Corriger les normales internes", "bool", false, "Géométrie",
+               "Détecte les meshes dont les normales pointent vers l'intérieur et les inverse.");
+    list << mk("findDegenerates", "--findDegenerates",
+               "Détecter les primitives dégénérées", "bool", true, "Géométrie",
+               "Recherche les triangles dégénérés (aire nulle) et les convertit en lignes ou points propres.");
+    list << mk("findInvalidData", "--findInvalidData",
+               "Détecter les données invalides", "bool", true, "Géométrie",
+               "Recherche dans tous les meshes des données invalides (normales nulles, UVs invalides…) et les corrige. Évite les erreurs courantes des exporteurs.");
+    list << mk("transformUVCoordinates", "--transformUVCoordinates",
+               "Appliquer les transformations UV", "bool", false, "Géométrie",
+               "Applique les transformations UV par texture et les bake dans des canaux UV indépendants.");
+
+    // --- Échelle
+    list << mk("globalScale", "--globalScale",
+               "Activer le scale global", "bool", false, "Échelle",
+               "Applique un facteur d'échelle global au modèle entier au moment de l'import (alternative au scale du marker).");
+    list << mk("globalScaleValue", "--globalScaleValue",
+               "Valeur du scale global", "real", 1.0, "Échelle",
+               "Facteur multiplicatif appliqué quand `Activer le scale global` est coché.",
+               "globalScale");
+
+    // --- Textures
+    list << mk("generateMipMaps", "--generateMipMaps",
+               "Générer les mipmaps", "bool", true, "Textures",
+               "Force la génération de mipmaps pour toutes les textures importées (filtrage trilinéaire/anisotrope plus propre).");
+
+    // --- Animations
+    list << mk("useBinaryKeyframes", "--useBinaryKeyframes",
+               "Keyframes binaires", "bool", true, "Animations",
+               "Stocke les keyframes d'animation en binaire externe (chargement plus rapide, .qml plus léger).");
+    list << mk("manualAnimations", "--manualAnimations",
+               "Animations manuelles", "bool", false, "Animations",
+               "Pas de TimelineAnimation auto-générée — les Timelines doivent être déclenchées manuellement depuis le code.");
+    list << mk("removeComponentAnimations", "--removeComponentAnimations",
+               "Retirer les composants d'animation", "bool", false, "Animations",
+               "Supprime tous les composants d'animation des meshes.");
+
+    // --- LODs (les 3 angles dépendent de generateMeshLevelsOfDetail)
+    list << mk("generateMeshLevelsOfDetail", "--generateMeshLevelsOfDetail",
+               "Générer les LODs de mesh", "bool", false, "LODs",
+               "Crée automatiquement des Levels Of Detail (versions simplifiées) du mesh source.");
+    list << mk("recalculateLodNormals", "--recalculateLodNormals",
+               "Recalculer normales pour LODs", "bool", true, "LODs",
+               "Recalcule de nouvelles normales si nécessaire pour les LODs générés (sinon les normales d'origine sont conservées).",
+               "generateMeshLevelsOfDetail");
+    list << mk("recalculateLodNormalsMergeAngle", "--recalculateLodNormalsMergeAngle",
+               "Angle de fusion (merge angle) des normales LOD", "real", 60.0, "LODs",
+               "Angle maximum (en degrés) pour fusionner/lisser des normales sur les LODs.",
+               "generateMeshLevelsOfDetail");
+    list << mk("recalculateLodNormalsSplitAngle", "--recalculateLodNormalsSplitAngle",
+               "Angle de séparation (split angle) des normales LOD", "real", 25.0, "LODs",
+               "Angle maximum (en degrés) au-delà duquel on sépare les normales (création de nouveaux vertices).",
+               "generateMeshLevelsOfDetail");
+
+    // --- Composants à retirer (rare usage, économise de la mémoire)
+    list << mk("dropNormals", "--dropNormals",
+               "Supprimer les normales", "bool", false, "Composants",
+               "Supprime toutes les normales de toutes les faces. À combiner avec generateNormals si on veut les recalculer.");
+    list << mk("removeComponentUVs", "--removeComponentUVs",
+               "Retirer les UVs", "bool", false, "Composants",
+               "Supprime les composants UV des meshes (utile uniquement pour modèles non-texturés).");
+    list << mk("removeComponentColors", "--removeComponentColors",
+               "Retirer les couleurs vertex", "bool", false, "Composants",
+               "Supprime les couleurs par vertex.");
+    list << mk("removeComponentNormals", "--removeComponentNormals",
+               "Retirer les normales", "bool", false, "Composants",
+               "Supprime le composant normal des meshes.");
+    list << mk("removeComponentTangentsAndBitangents", "--removeComponentTangentsAndBitangents",
+               "Retirer tangentes/bitangentes", "bool", false, "Composants",
+               "Supprime tangentes et bitangentes des meshes (économise mémoire si pas de normalMap).");
+    list << mk("removeComponentBoneWeights", "--removeComponentBoneWeights",
+               "Retirer les bone weights", "bool", false, "Composants",
+               "Supprime les poids d'os des meshes (à activer si pas de skinning).");
+    list << mk("removeComponentTextures", "--removeComponentTextures",
+               "Retirer les textures embarquées", "bool", false, "Composants",
+               "Supprime les composants texture intégrés au fichier source.");
+
+    // --- Avancé
+    list << mk("useFloatJointIndices", "--useFloatJointIndices",
+               "Indices d'articulation en float", "bool", false, "Avancé",
+               "Stocke les indices d'articulation en flottants (compatibilité GLES 2.0).");
+    list << mk("fbxPreservePivots", "--fbxPreservePivots",
+               "Préserver les pivots FBX", "bool", false, "Avancé",
+               "Pour les .fbx : conserve les pivots comme nodes supplémentaires dans la hiérarchie.");
+    list << mk("expandValueComponents", "--expandValueComponents",
+               "Décomposer les value types", "bool", false, "Avancé",
+               "Décompose les types valeur (vector3d, quaternion) en propriétés scalaires séparées.");
+    list << mk("designStudioWorkarounds", "--designStudioWorkarounds",
+               "Compatibilité Qt Design Studio", "bool", false, "Avancé",
+               "Active des contournements nécessaires pour générer des composants compatibles avec Qt Design Studio.");
+
+    return list;
+}
+
+void LauncherManager::runBalsamImport(const QString &sourceFile,
+                                      const QString &outputDir,
+                                      const QVariantMap &options)
 {
     if (m_balsamProcess) {
         emit balsamFinished(false, QString(), "Une conversion balsam est deja en cours");
@@ -616,7 +770,55 @@ void LauncherManager::runBalsamImport(const QString &sourceFile, const QString &
         for (const QString &n : existing) beforeQmls.insert(n);
     }
 
-    QStringList args = { "--outputPath", cleanOutput, cleanSource };
+    // Construction des args. Pour les bool, balsam supporte la convention
+    // `--flag` (active) / `--disable-flag` (désactive). Pour les options
+    // qui n'apparaissent pas dans la map utilisateur, on ne passe rien :
+    // balsam appliquera son défaut (qu'on s'efforce de garder cohérent
+    // avec celui exposé en UI). Pour celles présentes, on passe la forme
+    // explicite correspondant à la valeur — comme ça l'utilisateur voit
+    // toujours le résultat attendu de la checkbox.
+    auto disableFlagOf = [](const QString &flag) {
+        // "--joinIdenticalVertices" → "--disable-joinIdenticalVertices"
+        if (flag.startsWith("--")) return QStringLiteral("--disable-") + flag.mid(2);
+        return QStringLiteral("--disable-") + flag;
+    };
+
+    // Helper pour résoudre la dépendance (présence dans options en
+    // priorité, sinon défaut de la définition).
+    const QVariantList defs = balsamOptionDefinitions();
+    auto resolveBool = [&](const QString &key, const QVariantMap &fallbackDef) {
+        if (options.contains(key)) return options.value(key).toBool();
+        // Cherche le default dans defs
+        for (const QVariant &dv : defs) {
+            const QVariantMap dd = dv.toMap();
+            if (dd.value("key").toString() == key)
+                return dd.value("default").toBool();
+        }
+        return fallbackDef.value("default").toBool();
+    };
+
+    QStringList args;
+    for (const QVariant &v : defs) {
+        const QVariantMap def = v.toMap();
+        const QString key = def.value("key").toString();
+        const QString flag = def.value("flag").toString();
+        const QString type = def.value("type").toString();
+        const QString dep = def.value("dependsOn").toString();
+
+        if (!options.contains(key)) continue;
+        const QVariant val = options.value(key);
+
+        if (type == "bool") {
+            if (val.toBool()) args << flag;
+            else              args << disableFlagOf(flag);
+        } else if (type == "real") {
+            // Ne pas passer si la dépendance n'est pas active.
+            if (!dep.isEmpty() && !resolveBool(dep, def)) continue;
+            args << flag << QString::number(val.toDouble(), 'f', 6);
+        }
+    }
+    args << "--outputPath" << cleanOutput;
+    args << cleanSource;
     emit logMessage("balsam: " + balsam + " " + args.join(" "));
 
     m_balsamProcess = new QProcess(this);
