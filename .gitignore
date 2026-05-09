@@ -48,3 +48,4 @@ chatServer/*.backup
 .claude/skills/build.md
 /map
 /exemple
+.claude/scheduled_tasks.lock
