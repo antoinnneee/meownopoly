@@ -35,7 +35,7 @@ import QtQuick.Dialogs
 Rectangle {
     id: root
     Layout.fillWidth: true
-    Layout.preferredHeight: 180
+    Layout.preferredHeight: 220
     color: "#3a3a3a"
     radius: 10
     border.color: "#555555"
@@ -53,6 +53,7 @@ Rectangle {
     signal createModelPackageRequested(string folderPath, string name, string version)
     signal uploadPackageRequested()
     signal uploadModelRequested(string name, string version)
+    signal openModelConfiguratorRequested()
     
     ColumnLayout {
         anchors.fill: parent
@@ -67,9 +68,26 @@ Rectangle {
                 font.bold: true
                 color: "#ffffff"
             }
-            
+
             Item { Layout.fillWidth: true }
-            
+
+            Button {
+                text: "🧩 Configurer un modèle 3D"
+                onClicked: root.openModelConfiguratorRequested()
+                background: Rectangle {
+                    color: parent.pressed ? "#1976d2" : "#2196f3"
+                    radius: 4
+                }
+                contentItem: Text {
+                    text: parent.text
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: 12
+                    padding: 6
+                }
+            }
+
             Text {
                 text: "Assets Jeu"
                 color: !typeSwitch.checked ? "white" : "#888"

@@ -80,10 +80,15 @@ Item {
             snapableDest.decorationParameter.decorationId = templateData.decorationParameter.decorationId || ""
         }
 
-        if (templateData.zoneParameter && templateData.zoneParameter.polygonPoints) {
-            var points = templateData.zoneParameter.polygonPoints
-            for (var i = 0; i < points.length; i++) {
-                snapableDest.zoneParameter.addPoint(points[i].x, points[i].y)
+        if (templateData.zoneParameter) {
+            var zp = templateData.zoneParameter
+            if (zp.zoneColor !== undefined) snapableDest.zoneParameter.zoneColor = zp.zoneColor
+            if (zp.zoneName !== undefined) snapableDest.zoneParameter.zoneName = zp.zoneName
+            if (zp.polygonPoints) {
+                var points = zp.polygonPoints
+                for (var i = 0; i < points.length; i++) {
+                    snapableDest.zoneParameter.addPoint(points[i].x, points[i].y)
+                }
             }
         }
     }
@@ -213,14 +218,15 @@ Item {
             property int elementIndex: parent && parent.elementIndex !== undefined ? parent.elementIndex : -1
             snapableParameters: ItemSnapableFactory.createPhysicZone()
             gridManager: root.gridManager
+            // Le preview n'est pas dans snapableTilesList → ZonesOverlayPainter
+            // global ne le voit pas. Forcer le rendu via le ZoneCanvasPainter local.
+            forceLocalRenderer: true
             opacity: 0.5
             z: UiStyle.z_TEMPLATE_PREVIEW + 1
 
             Component.onCompleted: {
                 if (!elementData) return
                 copyDisplayParameterFromTemplateData(snapableParameters, elementData)
-
-                forceRedraw()
             }
         }
     }

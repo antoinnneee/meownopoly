@@ -62,7 +62,10 @@ Rectangle {
     color: "#1e1e1e"
 
     property bool autoUpdate : true
-    
+    // Bascule entre la vue principale du launcher et le configurateur 3D.
+    // "launcher" (défaut) | "modelConfigurator"
+    property string currentView: "launcher"
+
     signal launchGame()
     signal backRequested()
     
@@ -149,6 +152,24 @@ Rectangle {
         }
     }
 
+    // Configurateur de modèle 3D (plein écran, masque le launcher)
+    Loader {
+        id: modelConfigLoader
+        anchors.fill: parent
+        active: root.currentView === "modelConfigurator"
+        visible: active
+        z: 100
+        sourceComponent: ModelConfigurator {
+            serverUrl: logic.serverUrl
+            balsamPath: logic.settings.balsamPath
+            balsamOptions: logic.balsamOptions
+            onCloseRequested: root.currentView = "launcher"
+            onBalsamPathRequested: function(p) { logic.setBalsamPath(p) }
+            onBalsamOptionRequested: function(k, v) { logic.setBalsamOption(k, v) }
+            onBalsamOptionsResetRequested: logic.resetBalsamOptions()
+        }
+    }
+
     ScrollView {
         anchors.fill: parent
         anchors.topMargin: updateBanner.visible ? updateBanner.height + 10 : 10
@@ -156,6 +177,7 @@ Rectangle {
         anchors.rightMargin: 10
         anchors.bottomMargin: 10
         contentWidth: availableWidth
+        visible: root.currentView === "launcher"
 
         ColumnLayout {
             width: parent.width
@@ -232,6 +254,8 @@ Rectangle {
                 onUploadModelRequested: function(name, version) {
                     logic.uploadModelPackage(name, version)
                 }
+
+                onOpenModelConfiguratorRequested: root.currentView = "modelConfigurator"
             }
 
             // Section Modèles (Nouveau)

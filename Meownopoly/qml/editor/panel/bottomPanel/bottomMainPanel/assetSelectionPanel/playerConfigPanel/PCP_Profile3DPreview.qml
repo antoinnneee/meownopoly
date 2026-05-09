@@ -130,7 +130,6 @@ Item {
 
     NumberAnimation on _spinAngle {
         running: root.spinning
-        from: 0
         to: 360
         duration: 360 / Math.max(1, root.spinDegPerSec) * 1000
         loops: Animation.Infinite

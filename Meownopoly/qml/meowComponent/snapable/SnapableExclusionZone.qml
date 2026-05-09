@@ -57,8 +57,11 @@ SnapableElement {
     // quand l'overlay est actif — un canvas painter invisible mais
     // existant continue de réallouer son backing texture au zoom (`width`
     // suit `gridSize`), ce qui annulerait le gain de l'overlay.
+    // Override pour forcer le rendu local (preview cursors hors snapableTilesList,
+    // que l'overlay global ne voit pas).
+    property bool forceLocalRenderer: false
     readonly property bool _useGlobalOverlay:
-        (typeof _useZonesOverlay !== "undefined") && _useZonesOverlay
+        !forceLocalRenderer && (typeof _useZonesOverlay !== "undefined") && _useZonesOverlay
 
     Loader {
         id: zonePainterLoader

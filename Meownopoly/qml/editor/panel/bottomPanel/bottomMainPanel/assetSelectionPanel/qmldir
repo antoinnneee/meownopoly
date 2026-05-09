@@ -5,5 +5,4 @@ ASP_ClearButton 1.0 ASP_ClearButton.qml
 ASP_ContentArea 1.0 ASP_ContentArea.qml
 ASP_Grid 1.0 ASP_Grid.qml
 ASP_Item 1.0 ASP_Item.qml
-ASP_StatusIndicator 1.0 ASP_StatusIndicator.qml
 ASP_TitleBar 1.0 ASP_TitleBar.qml

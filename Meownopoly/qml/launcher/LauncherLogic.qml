@@ -54,6 +54,22 @@ QtObject {
         property string serverUrl: "https://pattounecorp.ovh"
         property string lastVersion: "0.0.0"
         property string uploadToken: ""
+        property string balsamPath: ""
+        // Options balsam : map clé→valeur sérialisée en JSON. Cf.
+        // LauncherManager::balsamOptionDefinitions() pour les clés.
+        property string balsamOptionsJson: "{}"
+    }
+
+    // Map réactive parsée depuis settings.balsamOptionsJson : se ré-évalue
+    // chaque fois que la chaîne JSON change.
+    property var balsamOptions: {
+        try {
+            return root.settings.balsamOptionsJson.length > 0
+                   ? JSON.parse(root.settings.balsamOptionsJson)
+                   : ({})
+        } catch (e) {
+            return ({})
+        }
     }
     
     // Signals pour communication avec l'interface
@@ -125,6 +141,23 @@ QtObject {
         LauncherManager.uploadModelPackage(root.serverUrl, name, version)
     }
 
+    // --- Configurateur de modèle 3D ---
+    function findModelQml(folderPath) {
+        return LauncherManager.findModelQml(folderPath)
+    }
+
+    function readModelManifest(folderPath) {
+        return LauncherManager.readModelManifest(folderPath)
+    }
+
+    function readModelTransform(folderPath, modelName) {
+        return LauncherManager.readModelTransform(folderPath, modelName)
+    }
+
+    function writeModelTransform(folderPath, modelName, sx, sy, sz, rx, ry, rz, px, py, pz) {
+        return LauncherManager.writeModelTransform(folderPath, modelName, sx, sy, sz, rx, ry, rz, px, py, pz)
+    }
+
     function updateServerUrl(newUrl) {
         root.settings.serverUrl = newUrl
     }
@@ -187,12 +220,30 @@ QtObject {
         }
     }
     
+    function setBalsamPath(p) {
+        root.settings.balsamPath = p
+        LauncherManager.balsamPath = p
+    }
+
+    function setBalsamOption(key, value) {
+        const o = Object.assign({}, root.balsamOptions)
+        o[key] = value
+        root.settings.balsamOptionsJson = JSON.stringify(o)
+    }
+
+    function resetBalsamOptions() {
+        root.settings.balsamOptionsJson = "{}"
+    }
+
     // Initialisation
     Component.onCompleted: {
         root.logMessage("Launcher Logic initialisé")
         // Charger le token depuis les settings
         if (root.settings.uploadToken.length > 0) {
             LauncherManager.setUploadToken(root.settings.uploadToken)
+        }
+        if (root.settings.balsamPath.length > 0) {
+            LauncherManager.balsamPath = root.settings.balsamPath
         }
     }
 }

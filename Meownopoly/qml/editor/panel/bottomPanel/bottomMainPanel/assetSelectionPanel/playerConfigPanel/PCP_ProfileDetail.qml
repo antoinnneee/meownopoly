@@ -12,8 +12,8 @@ import playerConfigPanel 1.0
  * sélectionné dans PCP_ProfileRow.
  *
  * Layout : RowLayout 2 colonnes
- *  - gauche : Mode de sélection + Nom + ModelPicker + Presets
- *  - droite : onglets Simple/Expert avec sliders (scrollables)
+ *  - gauche  : Nom + Preview 3D (≤ 3 cm) + ModelPicker + Mode + bouton Test
+ *  - droite  : Presets + CheckBox "Mode expert" + Sliders (Simple ou Expert)
  *
  * Pattern d'écriture (Phase 4) : mutation locale immédiate + autosave
  * via Game.updateMapMetadata + EditorOpBus.submitOp(UpdatePlayerProfile)
@@ -76,19 +76,76 @@ Item {
         spacing: Screen.pixelDensity * 3
         visible: !!root.profile
 
-        // ============ Colonne gauche : Mode + Identité + Presets ============
+        // ============ Colonne gauche : Identité + Preview + Mode + Test ============
         ColumnLayout {
             id: leftCol
             Layout.fillHeight: true
-            Layout.fillWidth: true
-            // Ratio 8:12 cm = 40:60 entre les deux colonnes. RowLayout
-            // distribue l'espace selon les preferredWidth quand fillWidth
-            // est true sur les deux. Valeurs en mm via Screen.pixelDensity.
-            Layout.preferredWidth: Screen.pixelDensity * 80    // 8 cm
-            Layout.minimumWidth:   Screen.pixelDensity * 60    // 6 cm
-            spacing: Screen.pixelDensity * 2
+            Layout.preferredWidth: Screen.pixelDensity * 70    // 7 cm
+            Layout.minimumWidth:   Screen.pixelDensity * 55    // 5.5 cm
+            spacing: Screen.pixelDensity * 1.5
 
-            // --- Mode de sélection (en haut de la colonne gauche) ---
+            // --- Nom de la classe (gros titre éditable) ---
+            PCP_StyledTextField {
+                id: nameField
+                Layout.fillWidth: true
+                text: root.profile ? root.profile.name : ""
+                horizontalAlignment: TextInput.AlignHCenter
+                font.pixelSize: Math.round(Screen.pixelDensity * 4.5)
+                font.bold: true
+                Connections {
+                    target: root.profile
+                    function onNameChanged() {
+                        if (nameField.text !== root.profile.name)
+                            nameField.text = root.profile.name
+                    }
+                }
+                onEditingFinished: {
+                    if (!root.profile) return
+                    const v = text.trim()
+                    if (!v || v === root.profile.name) return
+                    root._mutateFields({ "name": v },
+                                       () => { root.profile.name = v })
+                }
+            }
+
+            // --- Preview 3D : capé à 3 cm de hauteur, centré horizontalement.
+            // Le pane reste carré-ish ; la container Item gère le centrage
+            // horizontal (Layout.alignment ne suffit pas avec un fillWidth).
+            Item {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Screen.pixelDensity * 30   // 3 cm
+
+                PCP_ProfilePreviewPane {
+                    anchors.centerIn: parent
+                    width: Math.min(parent.width, Screen.pixelDensity * 30)
+                    height: parent.height
+                    profile: root.profile
+                }
+            }
+
+            // --- ModelPicker ---
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Screen.pixelDensity * 1
+
+                Label {
+                    text: "Modèle 3D"
+                    color: "#cccccc"
+                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
+                    font.bold: true
+                }
+                PCP_ModelPicker {
+                    Layout.fillWidth: true
+                    currentModel: root.profile ? root.profile.modelName : ""
+                    onModelSelected: function(name) {
+                        if (!root.profile || name === root.profile.modelName) return
+                        root._mutateFields({ "modelName": name },
+                                           () => { root.profile.modelName = name })
+                    }
+                }
+            }
+
+            // --- Mode de sélection (Unique / Shared / Mandatory) ---
             PCP_PickModeSelector {
                 Layout.fillWidth: true
                 pickMode: root.profile ? root.profile.pickMode : PlayerProfile.Unique
@@ -105,65 +162,28 @@ Item {
                 }
             }
 
-            // --- Nom + Modèle 3D côte à côte ---
-            RowLayout {
+            // --- Bouton Tester en 3D (en bas de colonne) ---
+            PCP_StyledButton {
                 Layout.fillWidth: true
-                spacing: Screen.pixelDensity * 2
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 1
-                    spacing: Screen.pixelDensity * 1
-
-                    Label {
-                        text: "Nom"
-                        color: "#cccccc"
-                        font.pixelSize: Math.round(Screen.pixelDensity * 3)
-                        font.bold: true
-                    }
-                    PCP_StyledTextField {
-                        id: nameField
-                        Layout.fillWidth: true
-                        text: root.profile ? root.profile.name : ""
-                        Connections {
-                            target: root.profile
-                            function onNameChanged() {
-                                if (nameField.text !== root.profile.name)
-                                    nameField.text = root.profile.name
-                            }
-                        }
-                        onEditingFinished: {
-                            if (!root.profile) return
-                            const v = text.trim()
-                            if (!v || v === root.profile.name) return
-                            root._mutateFields({ "name": v },
-                                               () => { root.profile.name = v })
-                        }
-                    }
-                }
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 1
-                    spacing: Screen.pixelDensity * 1
-
-                    Label {
-                        text: "Modèle 3D"
-                        color: "#cccccc"
-                        font.pixelSize: Math.round(Screen.pixelDensity * 3)
-                        font.bold: true
-                    }
-                    PCP_ModelPicker {
-                        Layout.fillWidth: true
-                        currentModel: root.profile ? root.profile.modelName : ""
-                        onModelSelected: function(name) {
-                            if (!root.profile || name === root.profile.modelName) return
-                            root._mutateFields({ "modelName": name },
-                                               () => { root.profile.modelName = name })
-                        }
-                    }
-                }
+                accent: true
+                text: root._isTestingThisProfile ? "Arrêter le test"
+                                                 : "Tester en 3D"
+                enabled: !!root.profile
+                onClicked: root._toggleTest()
             }
+
+            // Pousse le contenu vers le haut quand la zone est plus grande.
+            Item { Layout.fillHeight: true }
+        }
+
+        // ============ Colonne droite : Presets + Mode expert + Sliders ============
+        ColumnLayout {
+            id: rightCol
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            Layout.preferredWidth: Screen.pixelDensity * 130   // 13 cm
+            Layout.minimumWidth:   Screen.pixelDensity * 90    // 9 cm
+            spacing: Screen.pixelDensity * 2
 
             // --- Presets ---
             ColumnLayout {
@@ -176,15 +196,6 @@ Item {
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
                     font.bold: true
                 }
-                PCP_StyledButton {
-                    Layout.fillWidth: true
-                    accent: true
-                    text: root._isTestingThisProfile ? "Arrêter le test"
-                                                     : "Tester en 3D"
-                    enabled: !!root.profile
-                    onClicked: root._toggleTest()
-                }
-
                 PCP_PresetButtons {
                     Layout.fillWidth: true
                     onPresetChosen: function(name) {
@@ -211,24 +222,19 @@ Item {
                 }
             }
 
-            // Pousse le contenu vers le haut quand la zone est plus grande.
-            Item { Layout.fillHeight: true }
-        }
-
-        // ============ Colonne droite : Tabs + Sliders ============
-        ColumnLayout {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            Layout.preferredWidth: Screen.pixelDensity * 120   // 12 cm
-            Layout.minimumWidth:   Screen.pixelDensity * 80    // 8 cm
-            spacing: Screen.pixelDensity * 2
-
-            // --- Onglets Simple / Expert ---
-            PCP_StyledTabBar {
-                id: physTabs
+            // --- Mode expert (CheckBox remplace les onglets Simple/Expert) ---
+            CheckBox {
+                id: expertCheck
                 Layout.fillWidth: true
-                PCP_StyledTabButton { text: "Simple" }
-                PCP_StyledTabButton { text: "Expert" }
+                text: "Mode expert (afficher tous les paramètres physiques)"
+                checked: false
+                contentItem: Label {
+                    text: expertCheck.text
+                    color: "#cccccc"
+                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
+                    verticalAlignment: Text.AlignVCenter
+                    leftPadding: expertCheck.indicator.width + expertCheck.spacing
+                }
             }
 
             // --- Sliders (scrollables si Expert déborde) ---
@@ -246,7 +252,7 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    currentIndex: physTabs.currentIndex
+                    currentIndex: expertCheck.checked ? 1 : 0
 
                     PCP_PhysicsSimpleSection {
                         profile: root.profile

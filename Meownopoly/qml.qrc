@@ -40,7 +40,6 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_ContentArea.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_Grid.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_Item.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_StatusIndicator.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/ASP_TitleBar.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/AssetSelectionPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/qmldir</file>
@@ -55,6 +54,7 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PhysicsExpertSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PresetButtons.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_Profile3DPreview.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_ProfilePreviewPane.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_TestController.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledTextField.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledRadioButton.qml</file>
@@ -78,21 +78,13 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector_Button.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CaseConfigurationPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CaseConfigurationPanelSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_CardBoardBoxSpecificConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_CatDeviceSpecificConfig.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_GeneralConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_Header.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_KibbleDispenserSpecificConfig.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_PanelElement.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RentConfig.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RestAreaSpecificConfig.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_StyledSpinBox.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_TypeSelector.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_CardBoardBoxSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_CatDeviceSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_GeneralSection.qml</file>
@@ -101,21 +93,15 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_TypeSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionListSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionsConfigurationSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionsPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/BottomSidePanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/BottomSidePanel_Content.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/TransformPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_AdvancedEffectsSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ButtonLock.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ButtonMirror.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ColorEffectsSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_InlineColorPicker.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ResetButtonsPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_Rotation.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_Slider.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VisualEffectsPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VisualEffectsPanel_old.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VisualTransformPanel.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/caseSelectionPanelMain/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/editorBottomPanel/qmldir</file>
@@ -125,7 +111,6 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/qmldir</file>
         <file>qml/editor/panel/mapInfoPanel/qmldir</file>
-        <file>qml/editor/panel/mapInfoPanel/NavArrowButton.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/zonePanel/ZP_Content.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/zonePanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/ModelSelectionPanel.qml</file>
