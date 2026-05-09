@@ -64,6 +64,34 @@ public:
     Q_INVOKABLE void createModelPackage(const QString &folderPath, const QString &name, const QString &version);
     Q_INVOKABLE void uploadModelPackage(const QString &serverUrl, const QString &name, const QString &version);
 
+    // Model 3D Configurator helpers (préparation upload)
+    // findModelQml : scanne <folderPath> et retourne le nom de base du
+    // premier .qml trouvé (sans extension), ou "" si aucun. Utilisé pour
+    // pré-remplir le champ Nom dans le configurateur.
+    Q_INVOKABLE QString findModelQml(const QString &folderPath);
+    // readModelManifest : lit <folderPath>/model_manifest.json s'il existe
+    // et retourne { name, version, timestamp, type }. Map vide si absent.
+    Q_INVOKABLE QVariantMap readModelManifest(const QString &folderPath);
+    // readModelTransform : lit le bloc marker injecté par le configurateur
+    // dans <folderPath>/<modelName>.qml. Retourne {
+    //   scale: [sx,sy,sz], eulerRotation: [rx,ry,rz], position: [px,py,pz]
+    // }. Si pas de marker (ou bloc ancien sans position), retourne identité
+    // pour les champs manquants. Compatible rétro avec l'ancien format
+    // 2-lignes (scale + eulerRotation seulement).
+    Q_INVOKABLE QVariantMap readModelTransform(const QString &folderPath, const QString &modelName);
+    // writeModelTransform : insère/remplace dans <folderPath>/<modelName>.qml
+    // un bloc :
+    //     // __MODEL_TRANSFORM_BEGIN__
+    //     position: Qt.vector3d(px, py, pz)
+    //     eulerRotation: Qt.vector3d(rx, ry, rz)
+    //     scale: Qt.vector3d(sx, sy, sz)
+    //     // __MODEL_TRANSFORM_END__
+    // juste après l'`id:` du premier Node racine. Retourne true si OK.
+    Q_INVOKABLE bool writeModelTransform(const QString &folderPath, const QString &modelName,
+                                         double sx, double sy, double sz,
+                                         double rx, double ry, double rz,
+                                         double px, double py, double pz);
+
     // Utilitaire de comparaison sémantique de versions
     // Retourne -1 si v1 < v2, 0 si égales, 1 si v1 > v2
     static int compareVersions(const QString &v1, const QString &v2);

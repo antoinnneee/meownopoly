@@ -9,5 +9,7 @@
     <file>qml/launcher/LogsSection.qml</file>
     <file>qml/launcher/LauncherLogic.qml</file>
     <file>qml/launcher/ModelsSection.qml</file>
+    <file>qml/launcher/Model3DPreview.qml</file>
+    <file>qml/launcher/ModelConfigurator.qml</file>
     </qresource>
 </RCC>

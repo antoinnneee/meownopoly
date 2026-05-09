@@ -125,6 +125,23 @@ QtObject {
         LauncherManager.uploadModelPackage(root.serverUrl, name, version)
     }
 
+    // --- Configurateur de modèle 3D ---
+    function findModelQml(folderPath) {
+        return LauncherManager.findModelQml(folderPath)
+    }
+
+    function readModelManifest(folderPath) {
+        return LauncherManager.readModelManifest(folderPath)
+    }
+
+    function readModelTransform(folderPath, modelName) {
+        return LauncherManager.readModelTransform(folderPath, modelName)
+    }
+
+    function writeModelTransform(folderPath, modelName, sx, sy, sz, rx, ry, rz, px, py, pz) {
+        return LauncherManager.writeModelTransform(folderPath, modelName, sx, sy, sz, rx, ry, rz, px, py, pz)
+    }
+
     function updateServerUrl(newUrl) {
         root.settings.serverUrl = newUrl
     }

@@ -556,6 +556,163 @@ void LauncherManager::uploadModelPackage(const QString &serverUrl, const QString
     });
 }
 
+// ---------------------------------------------------------
+// MODEL 3D CONFIGURATOR HELPERS
+// ---------------------------------------------------------
+
+static QString sanitizeFolderPath(const QString &p)
+{
+    QString cleaned = p;
+    if (cleaned.startsWith("file:///")) cleaned = cleaned.mid(8);
+    else if (cleaned.startsWith("file://")) cleaned = cleaned.mid(7);
+    return cleaned;
+}
+
+QString LauncherManager::findModelQml(const QString &folderPath)
+{
+    QString cleanPath = sanitizeFolderPath(folderPath);
+    QDir dir(cleanPath);
+    if (!dir.exists()) return QString();
+
+    const QStringList qmls = dir.entryList(QStringList{"*.qml"}, QDir::Files);
+    if (qmls.isEmpty()) return QString();
+
+    // Heuristique : on prend le 1er .qml. Pour des dossiers exportés
+    // depuis Balsam (Princess/Princess.qml), il n'y en a en général qu'un.
+    return QFileInfo(qmls.first()).completeBaseName();
+}
+
+QVariantMap LauncherManager::readModelManifest(const QString &folderPath)
+{
+    QVariantMap result;
+    QString cleanPath = sanitizeFolderPath(folderPath);
+    QFile f(cleanPath + "/model_manifest.json");
+    if (!f.open(QIODevice::ReadOnly)) return result;
+
+    QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+    f.close();
+    if (!doc.isObject()) return result;
+    QJsonObject obj = doc.object();
+    for (auto it = obj.begin(); it != obj.end(); ++it) {
+        result.insert(it.key(), it.value().toVariant());
+    }
+    return result;
+}
+
+QVariantMap LauncherManager::readModelTransform(const QString &folderPath, const QString &modelName)
+{
+    QVariantMap result;
+    QVariantList scaleDefault = { 1.0, 1.0, 1.0 };
+    QVariantList rotDefault   = { 0.0, 0.0, 0.0 };
+    QVariantList posDefault   = { 0.0, 0.0, 0.0 };
+    result["scale"] = scaleDefault;
+    result["eulerRotation"] = rotDefault;
+    result["position"] = posDefault;
+
+    if (modelName.isEmpty()) return result;
+
+    QString cleanPath = sanitizeFolderPath(folderPath);
+    QFile f(cleanPath + "/" + modelName + ".qml");
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return result;
+    QString content = QString::fromUtf8(f.readAll());
+    f.close();
+
+    // Format actuel (3 lignes : position + eulerRotation + scale)
+    QRegularExpression blockV2(
+        R"(//\s*__MODEL_TRANSFORM_BEGIN__\s*\r?\n\s*position:\s*Qt\.vector3d\(\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*\)\s*\r?\n\s*eulerRotation:\s*Qt\.vector3d\(\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*\)\s*\r?\n\s*scale:\s*Qt\.vector3d\(\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*\)\s*\r?\n\s*//\s*__MODEL_TRANSFORM_END__)"
+    );
+    QRegularExpressionMatch m2 = blockV2.match(content);
+    if (m2.hasMatch()) {
+        result["position"]      = QVariantList{ m2.captured(1).toDouble(), m2.captured(2).toDouble(), m2.captured(3).toDouble() };
+        result["eulerRotation"] = QVariantList{ m2.captured(4).toDouble(), m2.captured(5).toDouble(), m2.captured(6).toDouble() };
+        result["scale"]         = QVariantList{ m2.captured(7).toDouble(), m2.captured(8).toDouble(), m2.captured(9).toDouble() };
+        return result;
+    }
+
+    // Format ancien (2 lignes : eulerRotation + scale, position implicite 0)
+    QRegularExpression blockV1(
+        R"(//\s*__MODEL_TRANSFORM_BEGIN__\s*\r?\n\s*eulerRotation:\s*Qt\.vector3d\(\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*\)\s*\r?\n\s*scale:\s*Qt\.vector3d\(\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*,\s*([\-\d.eE+]+)\s*\)\s*\r?\n\s*//\s*__MODEL_TRANSFORM_END__)"
+    );
+    QRegularExpressionMatch m1 = blockV1.match(content);
+    if (m1.hasMatch()) {
+        result["eulerRotation"] = QVariantList{ m1.captured(1).toDouble(), m1.captured(2).toDouble(), m1.captured(3).toDouble() };
+        result["scale"]         = QVariantList{ m1.captured(4).toDouble(), m1.captured(5).toDouble(), m1.captured(6).toDouble() };
+        // position laissée à (0,0,0)
+    }
+    return result;
+}
+
+bool LauncherManager::writeModelTransform(const QString &folderPath, const QString &modelName,
+                                          double sx, double sy, double sz,
+                                          double rx, double ry, double rz,
+                                          double px, double py, double pz)
+{
+    if (modelName.isEmpty()) {
+        emit logMessage("writeModelTransform: nom du modele vide");
+        return false;
+    }
+
+    QString cleanPath = sanitizeFolderPath(folderPath);
+    QString qmlPath = cleanPath + "/" + modelName + ".qml";
+    QFile f(qmlPath);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        emit logMessage("writeModelTransform: impossible d'ouvrir " + qmlPath);
+        return false;
+    }
+    QString content = QString::fromUtf8(f.readAll());
+    f.close();
+
+    auto fmt = [](double v) {
+        // Évite la notation scientifique pour rester lisible dans le QML.
+        return QString::number(v, 'f', 6);
+    };
+
+    QString blockText = QStringLiteral(
+        "// __MODEL_TRANSFORM_BEGIN__\n"
+        "    position: Qt.vector3d(%1, %2, %3)\n"
+        "    eulerRotation: Qt.vector3d(%4, %5, %6)\n"
+        "    scale: Qt.vector3d(%7, %8, %9)\n"
+        "    // __MODEL_TRANSFORM_END__"
+    ).arg(fmt(px), fmt(py), fmt(pz),
+          fmt(rx), fmt(ry), fmt(rz),
+          fmt(sx), fmt(sy), fmt(sz));
+
+    QRegularExpression existingBlock(
+        R"(//\s*__MODEL_TRANSFORM_BEGIN__[\s\S]*?//\s*__MODEL_TRANSFORM_END__)"
+    );
+
+    QString updated;
+    if (existingBlock.match(content).hasMatch()) {
+        // Remplacement in-place
+        updated = content;
+        updated.replace(existingBlock, blockText);
+    } else {
+        // Insertion après l'`id: <name>` du premier Node racine.
+        QRegularExpression rootIdRe(
+            R"((Node\s*\{\s*\r?\n\s*id:\s*\w+))"
+        );
+        QRegularExpressionMatch rootMatch = rootIdRe.match(content);
+        if (!rootMatch.hasMatch()) {
+            emit logMessage("writeModelTransform: Node racine introuvable dans " + qmlPath);
+            return false;
+        }
+        const int insertPos = rootMatch.capturedEnd(1);
+        updated = content.left(insertPos)
+                + "\n    " + blockText
+                + content.mid(insertPos);
+    }
+
+    QFile out(qmlPath);
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        emit logMessage("writeModelTransform: impossible d'ecrire " + qmlPath);
+        return false;
+    }
+    out.write(updated.toUtf8());
+    out.close();
+    emit logMessage("Transform applique a " + qmlPath);
+    return true;
+}
+
 void LauncherManager::onModelsListFinished()
 {
     if (!m_modelsListReply) return;

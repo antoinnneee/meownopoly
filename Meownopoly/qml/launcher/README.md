@@ -19,6 +19,36 @@ Le launcher a été divisé en plusieurs composants modulaires pour améliorer l
 - **`ActionsSection.qml`** - Boutons d'actions (vérifier, télécharger, etc.)
 - **`PackagingSection.qml`** - Création et upload de paquets de ressources
 - **`LogsSection.qml`** - Zone d'affichage des logs avec bouton d'effacement
+- **`ModelsSection.qml`** - Liste des modèles 3D disponibles côté serveur (téléchargement, comparaison de versions installées vs distantes)
+- **`ModelConfigurator.qml`** - Vue plein écran de configuration d'un modèle 3D : sélection dossier source, édition scale/rotation avec preview live, comparaison avec un modèle installé, upload final
+- **`Model3DPreview.qml`** - Viewport 3D réutilisable utilisé par le configurateur (View3D + AxisHelper + caméras Game/Face turntable)
+
+### 🧩 Configurateur de modèle 3D — flux de persistance
+
+L'éditeur de scale/rotation injecte un bloc marker dans le `.qml` du modèle pour
+mémoriser la transformation choisie (sans toucher aux transforms du `Model`
+interne, qui restent ceux issus de l'export Balsam) :
+
+```qml
+Node {
+    id: node2
+    // __MODEL_TRANSFORM_BEGIN__
+    eulerRotation: Qt.vector3d(0, 90, 0)
+    scale: Qt.vector3d(0.5, 0.5, 0.5)
+    // __MODEL_TRANSFORM_END__
+    ...
+}
+```
+
+- Au chargement d'un dossier, le configurateur lit ce bloc pour pré-remplir les
+  sliders, puis le neutralise (identité) le temps de l'édition pour que le
+  wrapper du viewport applique seul le transform — pas de double-apply.
+- Au "Sauvegarder & Uploader", le bloc est ré-écrit avec les valeurs courantes,
+  puis le `.meow` est généré et uploadé. Le `.qml` distribué porte donc bien
+  la transformation choisie sans dépendre d'un manifest annexe.
+
+Helpers C++ correspondants dans `LauncherManager` : `findModelQml`,
+`readModelManifest`, `readModelTransform`, `writeModelTransform`.
 
 ## Communication entre composants
 
