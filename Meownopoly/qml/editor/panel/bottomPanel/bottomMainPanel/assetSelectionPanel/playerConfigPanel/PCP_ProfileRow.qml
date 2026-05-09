@@ -22,6 +22,7 @@ Item {
     readonly property bool _isVertical: root.orientation === Qt.Vertical
 
     signal profileSelected(string id)
+    signal profileEditRequested(string id)
     signal profileAddRequested()
     signal profileRemoveRequested(string id)
     signal profileDuplicateRequested(string id)
@@ -75,6 +76,7 @@ Item {
                     isSelected: profile && profile.id === root.selectedProfileId
 
                     onSelected: if (profile) root.profileSelected(profile.id)
+                    onEditRequested: if (profile) root.profileEditRequested(profile.id)
                     onDuplicateRequested: if (profile) root.profileDuplicateRequested(profile.id)
                     onRemoveRequested: if (profile) root.profileRemoveRequested(profile.id)
                     onMoveLeftRequested: if (profile && index > 0)
@@ -126,6 +128,7 @@ Item {
                     isSelected: profile && profile.id === root.selectedProfileId
 
                     onSelected: if (profile) root.profileSelected(profile.id)
+                    onEditRequested: if (profile) root.profileEditRequested(profile.id)
                     onDuplicateRequested: if (profile) root.profileDuplicateRequested(profile.id)
                     onRemoveRequested: if (profile) root.profileRemoveRequested(profile.id)
                     onMoveLeftRequested: if (profile && index > 0)

@@ -12,6 +12,7 @@ import PlayerProfile
  *
  * Signaux :
  *  - selected()                — clic simple
+ *  - editRequested()           — bouton ⚙ (ouvre le panneau de configuration)
  *  - duplicateRequested()      — bouton ⎘
  *  - removeRequested()         — bouton ✕
  *  - moveLeftRequested()       — flèche ←
@@ -26,6 +27,7 @@ Rectangle {
     property bool verticalLayout: false   // true → flèches ↑/↓, sinon ←/→
 
     signal selected()
+    signal editRequested()
     signal duplicateRequested()
     signal removeRequested()
     signal moveLeftRequested()
@@ -179,6 +181,15 @@ Rectangle {
             ToolTip.visible: hovered
             ToolTip.text: root.verticalLayout ? "Descendre" : "Déplacer à droite"
             onClicked: root.moveRightRequested()
+            implicitWidth: Screen.pixelDensity * 5
+            implicitHeight: Screen.pixelDensity * 5
+        }
+        ToolButton {
+            text: "⚙"
+            Material.foreground: "white"
+            ToolTip.visible: hovered
+            ToolTip.text: "Configurer"
+            onClicked: root.editRequested()
             implicitWidth: Screen.pixelDensity * 5
             implicitHeight: Screen.pixelDensity * 5
         }
