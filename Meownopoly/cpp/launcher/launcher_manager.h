@@ -13,6 +13,7 @@
 #include <QJsonDocument>
 #include <QDateTime>
 #include <QCryptographicHash>
+#include <QProcess>
 #include <QQueue>
 #include "tools/QtFolderCompressor/FolderCompressor.h"
 
@@ -30,6 +31,8 @@ class LauncherManager : public QObject
     Q_PROPERTY(qint64 bytesReceived READ bytesReceived NOTIFY downloadProgressChanged)
     Q_PROPERTY(qint64 bytesTotal READ bytesTotal NOTIFY downloadProgressChanged)
     Q_PROPERTY(QString versionDescription READ versionDescription NOTIFY latestVersionChanged)
+    Q_PROPERTY(QString balsamPath READ balsamPath WRITE setBalsamPath NOTIFY balsamPathChanged)
+    Q_PROPERTY(bool    balsamRunning READ balsamRunning NOTIFY balsamRunningChanged)
 
 public:
     static void registerQml();
@@ -47,6 +50,9 @@ public:
     qint64 bytesReceived() const { return m_bytesReceived; }
     qint64 bytesTotal() const { return m_bytesTotal; }
     QString versionDescription() const { return m_versionDescription; }
+    QString balsamPath() const { return m_balsamPath; }
+    bool    balsamRunning() const { return m_balsamProcess != nullptr; }
+    void    setBalsamPath(const QString &p);
     
     // Launcher methods invokable from QML
     Q_INVOKABLE void testServerConnection(const QString &serverUrl);
@@ -92,6 +98,15 @@ public:
                                          double rx, double ry, double rz,
                                          double px, double py, double pz);
 
+    // runBalsamImport : invoque l'exécutable balsam (Qt Quick3D) pour
+    // convertir un .obj/.glb/.gltf/.fbx en un dossier Qt-friendly avec
+    // .qml + .mesh + textures. Lance QProcess en async ; émet
+    // balsamFinished(success, qmlPath, errorMessage) à la fin.
+    // - sourceFile : .obj/.glb/etc
+    // - outputDir  : dossier où balsam va générer ; sera créé si absent.
+    // Si balsamPath n'est pas configuré ou introuvable, échoue immédiat.
+    Q_INVOKABLE void runBalsamImport(const QString &sourceFile, const QString &outputDir);
+
     // Utilitaire de comparaison sémantique de versions
     // Retourne -1 si v1 < v2, 0 si égales, 1 si v1 > v2
     static int compareVersions(const QString &v1, const QString &v2);
@@ -108,6 +123,9 @@ signals:
     void logMessage(const QString &message);
     void updateAvailable();
     void downloadSucess();
+    void balsamPathChanged();
+    void balsamRunningChanged();
+    void balsamFinished(bool success, const QString &qmlPath, const QString &errorMessage);
 
 private slots:
     void onDownloadFinished();
@@ -188,6 +206,10 @@ private:
     QString getLocalModelVersion(const QString &modelName);
 
     QString m_basePath;
+
+    // Balsam (import .obj/.glb → .qml)
+    QString m_balsamPath;
+    QProcess *m_balsamProcess = nullptr;
 };
 
 #endif // LAUNCHER_MANAGER_H

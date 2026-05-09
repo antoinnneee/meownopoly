@@ -557,6 +557,121 @@ void LauncherManager::uploadModelPackage(const QString &serverUrl, const QString
 }
 
 // ---------------------------------------------------------
+// BALSAM (import .obj/.glb/.gltf/.fbx → .qml)
+// ---------------------------------------------------------
+
+void LauncherManager::setBalsamPath(const QString &p)
+{
+    if (m_balsamPath != p) {
+        m_balsamPath = p;
+        emit balsamPathChanged();
+    }
+}
+
+void LauncherManager::runBalsamImport(const QString &sourceFile, const QString &outputDir)
+{
+    if (m_balsamProcess) {
+        emit balsamFinished(false, QString(), "Une conversion balsam est deja en cours");
+        return;
+    }
+
+    QString balsam = m_balsamPath;
+    if (balsam.startsWith("file:///")) balsam = balsam.mid(8);
+    else if (balsam.startsWith("file://")) balsam = balsam.mid(7);
+
+    if (balsam.isEmpty()) {
+        emit balsamFinished(false, QString(), "Path balsam non configure");
+        return;
+    }
+    if (!QFile::exists(balsam)) {
+        emit balsamFinished(false, QString(), "Executable balsam introuvable : " + balsam);
+        return;
+    }
+
+    QString cleanSource = sourceFile;
+    if (cleanSource.startsWith("file:///")) cleanSource = cleanSource.mid(8);
+    else if (cleanSource.startsWith("file://")) cleanSource = cleanSource.mid(7);
+    if (!QFile::exists(cleanSource)) {
+        emit balsamFinished(false, QString(), "Source introuvable : " + cleanSource);
+        return;
+    }
+
+    QString cleanOutput = outputDir;
+    if (cleanOutput.startsWith("file:///")) cleanOutput = cleanOutput.mid(8);
+    else if (cleanOutput.startsWith("file://")) cleanOutput = cleanOutput.mid(7);
+    if (cleanOutput.isEmpty()) {
+        emit balsamFinished(false, QString(), "Dossier de sortie non specifie");
+        return;
+    }
+    if (!QDir().mkpath(cleanOutput)) {
+        emit balsamFinished(false, QString(), "Impossible de creer le dossier de sortie : " + cleanOutput);
+        return;
+    }
+
+    // Snapshot des .qml préexistants pour identifier le nouveau après run.
+    QSet<QString> beforeQmls;
+    {
+        QDir d(cleanOutput);
+        const QStringList existing = d.entryList(QStringList{"*.qml"}, QDir::Files);
+        for (const QString &n : existing) beforeQmls.insert(n);
+    }
+
+    QStringList args = { "--outputPath", cleanOutput, cleanSource };
+    emit logMessage("balsam: " + balsam + " " + args.join(" "));
+
+    m_balsamProcess = new QProcess(this);
+    emit balsamRunningChanged();
+
+    connect(m_balsamProcess, &QProcess::errorOccurred, this,
+            [this](QProcess::ProcessError err) {
+        emit logMessage("balsam errorOccurred: " + QString::number(err));
+    });
+
+    connect(m_balsamProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this, cleanOutput, beforeQmls](int exitCode, QProcess::ExitStatus status) {
+        const QString stdoutText = QString::fromLocal8Bit(m_balsamProcess->readAllStandardOutput());
+        const QString stderrText = QString::fromLocal8Bit(m_balsamProcess->readAllStandardError());
+        if (!stdoutText.isEmpty()) emit logMessage("balsam stdout: " + stdoutText.trimmed());
+        if (!stderrText.isEmpty()) emit logMessage("balsam stderr: " + stderrText.trimmed());
+
+        bool ok = (status == QProcess::NormalExit) && (exitCode == 0);
+        QString qmlPath, error;
+
+        if (!ok) {
+            error = stderrText.isEmpty()
+                ? QString("balsam a termine en erreur (code %1)").arg(exitCode)
+                : stderrText.trimmed();
+        } else {
+            // Cherche un .qml apparu après le run
+            QDir d(cleanOutput);
+            const QStringList nowQmls = d.entryList(QStringList{"*.qml"}, QDir::Files, QDir::Time);
+            QString chosen;
+            for (const QString &n : nowQmls) {
+                if (!beforeQmls.contains(n)) { chosen = n; break; }
+            }
+            if (chosen.isEmpty() && !nowQmls.isEmpty()) {
+                // Fallback : pas de delta (cas overwrite) → on prend le plus récent
+                chosen = nowQmls.first();
+            }
+            if (chosen.isEmpty()) {
+                ok = false;
+                error = "balsam OK mais aucun .qml dans " + cleanOutput;
+            } else {
+                qmlPath = d.absoluteFilePath(chosen);
+                emit logMessage("balsam OK : " + qmlPath);
+            }
+        }
+
+        m_balsamProcess->deleteLater();
+        m_balsamProcess = nullptr;
+        emit balsamRunningChanged();
+        emit balsamFinished(ok, qmlPath, error);
+    });
+
+    m_balsamProcess->start(balsam, args);
+}
+
+// ---------------------------------------------------------
 // MODEL 3D CONFIGURATOR HELPERS
 // ---------------------------------------------------------
 

@@ -54,6 +54,7 @@ QtObject {
         property string serverUrl: "https://pattounecorp.ovh"
         property string lastVersion: "0.0.0"
         property string uploadToken: ""
+        property string balsamPath: ""
     }
     
     // Signals pour communication avec l'interface
@@ -204,12 +205,20 @@ QtObject {
         }
     }
     
+    function setBalsamPath(p) {
+        root.settings.balsamPath = p
+        LauncherManager.balsamPath = p
+    }
+
     // Initialisation
     Component.onCompleted: {
         root.logMessage("Launcher Logic initialisé")
         // Charger le token depuis les settings
         if (root.settings.uploadToken.length > 0) {
             LauncherManager.setUploadToken(root.settings.uploadToken)
+        }
+        if (root.settings.balsamPath.length > 0) {
+            LauncherManager.balsamPath = root.settings.balsamPath
         }
     }
 }

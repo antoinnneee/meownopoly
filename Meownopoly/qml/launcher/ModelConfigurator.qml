@@ -29,6 +29,11 @@ Rectangle {
 
     signal closeRequested()
 
+    // Path balsam.exe persistant : binding bidirectionnel via signal
+    // (le parent persiste dans QSettings via LauncherLogic).
+    property string balsamPath: LauncherManager.balsamPath
+    signal balsamPathRequested(string newPath)
+
     // URL du serveur de ressources, à passer depuis le Launcher (logic.serverUrl).
     property string serverUrl: ""
 
@@ -38,6 +43,9 @@ Rectangle {
     property string modelVersion: "1.0.0"
     property string comparisonName: ""
     property string cameraMode: "game"
+
+    // Aperçu .obj externe (drop&drag ou bouton)
+    property url auxObjUrl: ""
 
     // Transform live (édité par les sliders)
     property real scaleX: 1
@@ -154,6 +162,130 @@ Rectangle {
         id: folderDialog
         title: "Sélectionner le dossier du modèle 3D"
         onAccepted: root.loadFromFolder(selectedFolder.toString())
+    }
+
+    FileDialog {
+        id: objDialog
+        title: "Sélectionner un fichier .obj à prévisualiser"
+        nameFilters: ["Modèles 3D (*.obj *.gltf *.glb *.fbx)", "Fichiers OBJ (*.obj)", "Tous les fichiers (*)"]
+        onAccepted: root.auxObjUrl = selectedFile.toString()
+    }
+
+    FileDialog {
+        id: balsamPathDialog
+        title: "Sélectionner balsam.exe"
+        nameFilters: ["Exécutables (*.exe)", "Tous les fichiers (*)"]
+        onAccepted: {
+            let p = selectedFile.toString()
+            if (p.startsWith("file:///")) p = p.substring(8)
+            else if (p.startsWith("file://")) p = p.substring(7)
+            root.balsamPathRequested(p)
+        }
+    }
+
+    // Connexion au signal C++ : quand balsam termine, on charge le .qml
+    // résultat dans le configurateur (= il devient le nouveau sujet).
+    Connections {
+        target: LauncherManager
+        function onBalsamFinished(success, qmlPath, errorMessage) {
+            if (success) {
+                statusBar.message = "balsam OK : " + qmlPath
+                // qmlPath = .../<dossier>/<Name>.qml → on charge le dossier
+                let folder = qmlPath
+                const lastSlash = Math.max(folder.lastIndexOf("/"), folder.lastIndexOf("\\"))
+                if (lastSlash > 0) folder = folder.substring(0, lastSlash)
+                root.loadFromFolder(folder)
+            } else {
+                statusBar.message = "balsam : ERREUR — " + errorMessage
+            }
+        }
+    }
+
+    function runBalsamOnAuxObj() {
+        if (!root.auxObjUrl || root.auxObjUrl.toString().length === 0) return
+        let src = root.auxObjUrl.toString()
+        if (src.startsWith("file:///")) src = src.substring(8)
+        else if (src.startsWith("file://")) src = src.substring(7)
+
+        // Output : <dossier du .obj>/<basename>_qml/
+        const lastSlash = Math.max(src.lastIndexOf("/"), src.lastIndexOf("\\"))
+        const dir = lastSlash > 0 ? src.substring(0, lastSlash) : "."
+        let basename = lastSlash > 0 ? src.substring(lastSlash + 1) : src
+        const dot = basename.lastIndexOf(".")
+        if (dot > 0) basename = basename.substring(0, dot)
+        const outDir = dir + "/" + basename + "_qml"
+
+        statusBar.message = "balsam : conversion en cours vers " + outDir + "..."
+        LauncherManager.runBalsamImport(src, outDir)
+    }
+
+    // Popup de configuration balsam
+    Popup {
+        id: balsamConfigPopup
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        focus: true
+        width: 600
+        padding: 16
+        background: Rectangle { color: "#27272a"; border.color: "#3f3f46"; radius: 8 }
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 10
+
+            Text {
+                text: "Configuration balsam"
+                color: "#e5e7eb"
+                font.pixelSize: 16
+                font.bold: true
+            }
+            Text {
+                text: "balsam est l'outil Qt Quick3D qui convertit .obj/.glb/.gltf/.fbx en .qml + .mesh + textures. Habituellement situé dans <Qt>/<version>/<compiler>/bin/balsam.exe."
+                color: "#9ca3af"
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+                font.pixelSize: 11
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                TextField {
+                    Layout.fillWidth: true
+                    text: root.balsamPath
+                    placeholderText: "C:/Qt/6.11.0/mingw_64/bin/balsam.exe"
+                    color: "white"
+                    background: Rectangle { color: "#1f1f23"; border.color: "#3a3a3a"; radius: 3 }
+                    onEditingFinished: if (text !== root.balsamPath) root.balsamPathRequested(text)
+                }
+                Button {
+                    id: btnBrowseBalsam
+                    text: "Parcourir..."
+                    onClicked: balsamPathDialog.open()
+                    background: Rectangle { color: btnBrowseBalsam.pressed ? "#5d4037" : "#795548"; radius: 4 }
+                    contentItem: Text { text: btnBrowseBalsam.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                }
+            }
+            Text {
+                text: root.balsamPath.length > 0
+                      ? "Chemin actuel : " + root.balsamPath
+                      : "(aucun chemin configuré)"
+                color: root.balsamPath.length > 0 ? "#22c55e" : "#9ca3af"
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                Button {
+                    id: btnCloseBalsamCfg
+                    text: "Fermer"
+                    onClicked: balsamConfigPopup.close()
+                    background: Rectangle { color: btnCloseBalsamCfg.pressed ? "#374151" : "#4b5563"; radius: 4 }
+                    contentItem: Text { text: btnCloseBalsamCfg.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                }
+            }
+        }
     }
 
     // ============================================================
@@ -284,6 +416,24 @@ Rectangle {
                 background: Rectangle { color: parent.pressed ? "#374151" : "#4b5563"; radius: 4 }
                 contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
             }
+
+            Button {
+                id: btnBalsamCfg
+                text: "⚙ Balsam"
+                onClicked: balsamConfigPopup.open()
+                ToolTip.visible: hovered
+                ToolTip.delay: 400
+                ToolTip.text: root.balsamPath.length > 0
+                              ? "Configuré : " + root.balsamPath
+                              : "Configurer le chemin de balsam.exe"
+                background: Rectangle {
+                    color: root.balsamPath.length > 0
+                           ? (btnBalsamCfg.pressed ? "#16a34a" : "#22c55e")
+                           : (btnBalsamCfg.pressed ? "#7c2d12" : "#b45309")
+                    radius: 4
+                }
+                contentItem: Text { text: btnBalsamCfg.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+            }
         }
 
         // ---- Body : viewport + panneau droit
@@ -311,6 +461,7 @@ Rectangle {
                     subjectPosition: Qt.vector3d(root.posX, root.posY, root.posZ)
                     comparisonName: root.comparisonName
                     cameraMode: root.cameraMode
+                    auxObjUrl: root.auxObjUrl
                 }
 
                 Rectangle {
@@ -322,8 +473,54 @@ Rectangle {
                     width: 360; height: 80
                     Text {
                         anchors.centerIn: parent
-                        text: "Sélectionnez un dossier de modèle pour commencer"
+                        text: "Sélectionnez un dossier de modèle ou déposez un .obj"
                         color: "#a1a1aa"
+                    }
+                }
+
+                // Drag & drop d'un .obj (ou autre format supporté par
+                // RuntimeLoader) directement sur le viewport.
+                DropArea {
+                    id: objDropArea
+                    anchors.fill: parent
+                    onEntered: (drag) => {
+                        if (drag.hasUrls && drag.urls.length > 0) {
+                            const u = drag.urls[0].toString().toLowerCase()
+                            if (u.endsWith(".obj") || u.endsWith(".gltf")
+                                || u.endsWith(".glb") || u.endsWith(".fbx")) {
+                                drag.accept()
+                            }
+                        }
+                    }
+                    onDropped: (drop) => {
+                        if (drop.hasUrls && drop.urls.length > 0) {
+                            const u = drop.urls[0].toString()
+                            const ul = u.toLowerCase()
+                            if (ul.endsWith(".obj") || ul.endsWith(".gltf")
+                                || ul.endsWith(".glb") || ul.endsWith(".fbx")) {
+                                root.auxObjUrl = u
+                                statusBar.message = "Modèle aperçu chargé : " + u
+                                drop.accept()
+                            }
+                        }
+                    }
+                }
+
+                // Overlay visuel pendant un drag valide
+                Rectangle {
+                    anchors.fill: parent
+                    visible: objDropArea.containsDrag
+                    color: "#3322c55e"
+                    border.color: "#22c55e"
+                    border.width: 3
+                    radius: 6
+                    z: 50
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Déposer pour prévisualiser"
+                        color: "#22c55e"
+                        font.pixelSize: 24
+                        font.bold: true
                     }
                 }
             }
@@ -456,6 +653,146 @@ Rectangle {
                                     onMoved: viewport.comparisonOffsetX = value
                                 }
                                 Text { text: viewport.comparisonOffsetX.toFixed(0); color: "#9ca3af"; Layout.preferredWidth: 36 }
+                            }
+                        }
+                    }
+
+                    // --- Aperçu .obj
+                    GroupBox {
+                        Layout.fillWidth: true
+                        title: "Aperçu .obj (drag&drop ou bouton)"
+                        background: Rectangle { color: "#2a2a2e"; radius: 6; border.color: "#3a3a3a" }
+                        label: Text { text: parent.title; color: "#e5e7eb"; font.bold: true }
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: 6
+
+                            Text {
+                                text: root.auxObjUrl.toString().length > 0
+                                      ? root.auxObjUrl.toString()
+                                      : "Aucun .obj chargé"
+                                color: root.auxObjUrl.toString().length > 0 ? "#d1d5db" : "#6b7280"
+                                Layout.fillWidth: true
+                                elide: Text.ElideMiddle
+                                wrapMode: Text.NoWrap
+                                font.pixelSize: 11
+                            }
+
+                            Text {
+                                visible: root.auxObjUrl.toString().length > 0
+                                text: "Statut : " + viewport.auxObjStatus
+                                      + (viewport.auxObjStatus === "erreur" && viewport.auxObjError
+                                         ? " — " + viewport.auxObjError
+                                         : "")
+                                color: viewport.auxObjStatus === "erreur" ? "#ef4444"
+                                     : viewport.auxObjStatus === "prêt"   ? "#22c55e"
+                                     : "#9ca3af"
+                                font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 6
+                                Button {
+                                    id: btnPickObj
+                                    text: "Importer .obj..."
+                                    Layout.fillWidth: true
+                                    onClicked: objDialog.open()
+                                    background: Rectangle { color: btnPickObj.pressed ? "#5d4037" : "#795548"; radius: 4 }
+                                    contentItem: Text { text: btnPickObj.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                                }
+                                Button {
+                                    id: btnClearObj
+                                    text: "Effacer"
+                                    enabled: root.auxObjUrl.toString().length > 0
+                                    onClicked: root.auxObjUrl = ""
+                                    background: Rectangle { color: btnClearObj.enabled ? (btnClearObj.pressed ? "#374151" : "#4b5563") : "#3a3a3a"; radius: 4 }
+                                    contentItem: Text { text: btnClearObj.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                                }
+                            }
+
+                            // Conversion via balsam → bascule sur le .qml généré
+                            Button {
+                                id: btnBalsamConvert
+                                text: LauncherManager.balsamRunning
+                                      ? "⏳ Conversion en cours..."
+                                      : "🔧 Convertir avec balsam"
+                                Layout.fillWidth: true
+                                enabled: root.auxObjUrl.toString().length > 0
+                                         && root.balsamPath.length > 0
+                                         && !LauncherManager.balsamRunning
+                                onClicked: root.runBalsamOnAuxObj()
+                                ToolTip.visible: hovered && !enabled
+                                ToolTip.delay: 400
+                                ToolTip.text: root.balsamPath.length === 0
+                                              ? "Configure d'abord le chemin de balsam (bouton ⚙ Balsam en haut)"
+                                              : (root.auxObjUrl.toString().length === 0
+                                                 ? "Importe d'abord un .obj/.glb"
+                                                 : "Conversion déjà en cours")
+                                background: Rectangle {
+                                    color: btnBalsamConvert.enabled
+                                           ? (btnBalsamConvert.pressed ? "#16a34a" : "#22c55e")
+                                           : "#3a3a3a"
+                                    radius: 4
+                                }
+                                contentItem: Text { text: btnBalsamConvert.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                            }
+                            Text {
+                                visible: btnBalsamConvert.enabled
+                                text: "Génère <dossier_du_.obj>/<basename>_qml/ et le charge ici"
+                                color: "#9ca3af"
+                                font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text { text: "Décalage X"; color: "#d1d5db" }
+                                Slider {
+                                    Layout.fillWidth: true
+                                    from: -1000; to: 1000
+                                    value: viewport.auxObjOffsetX
+                                    onMoved: viewport.auxObjOffsetX = value
+                                }
+                                Text { text: viewport.auxObjOffsetX.toFixed(0); color: "#9ca3af"; Layout.preferredWidth: 40 }
+                            }
+
+                            // Scale uniforme — utile car les .obj arrivent
+                            // souvent à des échelles très variables (mm/cm/m).
+                            // Slider [0.05, 100] step 0.05 + boutons ÷10/×10
+                            // pour atteindre les ordres de grandeur extrêmes
+                            // sans saturer le slider linéaire.
+                            AxisSlider {
+                                Layout.fillWidth: true
+                                axisLabel: "S"
+                                minValue: 0.05; maxValue: 100; stepValue: 0.05; decimals: 2
+                                defaultValue: 1
+                                boundValue: viewport.auxObjScale
+                                onValueEdited: (v) => viewport.auxObjScale = v
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 6
+                                Button {
+                                    id: btnObjScaleDown
+                                    text: "÷ 10"
+                                    Layout.fillWidth: true
+                                    onClicked: viewport.auxObjScale = Math.max(0.0001, viewport.auxObjScale / 10)
+                                    background: Rectangle { color: btnObjScaleDown.pressed ? "#374151" : "#4b5563"; radius: 4 }
+                                    contentItem: Text { text: btnObjScaleDown.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 4 }
+                                }
+                                Button {
+                                    id: btnObjScaleUp
+                                    text: "× 10"
+                                    Layout.fillWidth: true
+                                    onClicked: viewport.auxObjScale = Math.min(10000, viewport.auxObjScale * 10)
+                                    background: Rectangle { color: btnObjScaleUp.pressed ? "#374151" : "#4b5563"; radius: 4 }
+                                    contentItem: Text { text: btnObjScaleUp.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 4 }
+                                }
                             }
                         }
                     }

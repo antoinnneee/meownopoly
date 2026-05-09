@@ -23,6 +23,7 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
+import QtQuick3D.AssetUtils
 import AssetManager
 
 Item {
@@ -40,6 +41,19 @@ Item {
     property string comparisonName: ""
     // décalage en X (unités monde) entre sujet et modèle de comparaison
     property real   comparisonOffsetX: 200
+
+    // Aperçu d'un .obj externe (ex: avant de l'importer comme nouveau
+    // modèle). Chargé via RuntimeLoader de QtQuick3D.AssetUtils, qui
+    // gère obj/gltf/glb/fbx via balsamruntime.
+    property url    auxObjUrl: ""
+    property real   auxObjOffsetX: -200
+    property real   auxObjScale: 1.0   // scale uniforme appliqué au wrapper
+    // Statut/erreur exposés pour que le panneau puisse les afficher.
+    readonly property string auxObjStatus: auxLoader.status === RuntimeLoader.Empty ? "vide"
+                                         : auxLoader.status === RuntimeLoader.Loading ? "chargement..."
+                                         : auxLoader.status === RuntimeLoader.Ready   ? "prêt"
+                                         : auxLoader.status === RuntimeLoader.Error   ? "erreur" : "?"
+    readonly property string auxObjError: auxLoader.errorString
 
     property string cameraMode: "game"              // "game" | "face"
     property color  bgColor: "#1f1f23"
@@ -157,6 +171,24 @@ Item {
                         if (status === Loader3D.Error)
                             console.error("Model3DPreview: erreur chargement sujet:",
                                           source, sourceComponent ? sourceComponent.errorString() : "")
+                    }
+                }
+            }
+
+            // Aperçu .obj (RuntimeLoader)
+            Node {
+                id: auxObjWrapper
+                x: root.auxObjOffsetX
+                scale: Qt.vector3d(root.auxObjScale, root.auxObjScale, root.auxObjScale)
+                visible: root.auxObjUrl.toString().length > 0
+
+                RuntimeLoader {
+                    id: auxLoader
+                    source: root.auxObjUrl
+                    onStatusChanged: {
+                        if (status === RuntimeLoader.Error)
+                            console.error("Model3DPreview: erreur RuntimeLoader:",
+                                          source, errorString)
                     }
                 }
             }
