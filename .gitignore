@@ -49,3 +49,5 @@ chatServer/*.backup
 /map
 /exemple
 .claude/scheduled_tasks.lock
+/Meownopoly/graphify-out/cache
+/graphify-out/cache
