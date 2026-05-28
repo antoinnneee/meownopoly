@@ -141,5 +141,6 @@
         <file>qml/world3d/LocalPlayerSpawner.qml</file>
         <file>qml/world3d/InputController.qml</file>
         <file>qml/world3d/CameraRig.qml</file>
+        <file>qml/multiplayer/components/DirectConnexionPopup.qml</file>
     </qresource>
 </RCC>

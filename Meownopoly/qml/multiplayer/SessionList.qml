@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../ui_item"
-
+import "components"
 /**
  * Vue complète de la liste des sessions disponibles
  * Utilise le ChatClient mutualisé du parent
@@ -23,6 +23,10 @@ Rectangle {
         if (chatClient && chatClient.connected) {
             chatClient.requestSessionsList()
         }
+    }
+
+    DirectConnexionPopup {
+        id: directConnexionPopup
     }
 
     ColumnLayout {
@@ -141,11 +145,11 @@ Rectangle {
                     onClicked: {
                         console.log("Session sélectionnée:", sessionId, "-", name)
                         root.sessionSelected({
-                            name:       name,
-                            sessionId:  sessionId,
-                            players:    players,
-                            maxPlayers: maxPlayers
-                        })
+                                                 name:       name,
+                                                 sessionId:  sessionId,
+                                                 players:    players,
+                                                 maxPlayers: maxPlayers
+                                             })
                     }
                 }
             }
@@ -182,10 +186,6 @@ Rectangle {
                     }
                 }
             }
-
-
-
-
             contentItem: Text {
                 text: parent.text
                 font.pixelSize: 16
@@ -194,9 +194,51 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-
             onClicked: {
                 multiplayerStackView.push(sessionCreationComponent)
+            }
+        }
+
+        ParticleButton {
+            text: "📡 Connexion directe"
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: 250
+            Layout.preferredHeight: 55
+
+            enabled: chatClient.connected
+
+            particleColor: "#E67E22"
+            particleColorVariation: "#ff9800"
+            particleCount: 25
+
+            background: Rectangle {
+                color: parent.enabled ?
+                           (parent.down ? "#1A5276" : "#2E86C1") : "#555555"
+                border.color: parent.enabled ?
+                                  (parent.hovered ? "#FFFFFF" : "#1A5276") : "#666666"
+                radius: 8
+                border.width: 2
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    radius: 6
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.2) }
+                        GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
+                    }
+                }
+            }
+            contentItem: Text {
+                text: parent.text
+                font.pixelSize: 16
+                font.bold: true
+                color: parent.enabled ? "white" : "#888888"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            onClicked: {
+                directConnexionPopup.open()
             }
         }
 
