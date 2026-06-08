@@ -2,7 +2,7 @@
 
 Documentation complète de l'organisation des fichiers de documentation du projet.
 
-**Date de mise à jour** : 12 octobre 2025
+**Date de mise à jour** : 8 juin 2026
 
 ---
 
@@ -13,6 +13,11 @@ doc/
 │
 ├── 📄 INDEX.md                    # Index principal - COMMENCEZ ICI
 ├── 📄 README.md                   # Aperçu général du projet
+├── 📄 QUICK_START.md              # Navigation rapide dans la doc
+├── 📄 PROJECT_HISTORY.md          # Historique du projet
+├── 📄 README_ASSET_SYSTEM.md     # Système d'assets (aperçu)
+├── 📄 UNDOREDO_SYSTEM.md          # Système d'annulation/rétablissement
+├── 📄 STRUCTURE_DOCUMENTATION.md  # Ce document
 ├── 📊 monop.ods                   # Données et statistiques
 │
 ├── 🏗️ architecture/               # Documentation technique d'architecture
@@ -20,12 +25,30 @@ doc/
 │   │
 │   ├── Architecture Générale
 │   ├── PROJECT_STRUCTURE.md              # Organisation des fichiers
+│   ├── CPP_CLASSES.md                    # Classes C++ du projet
 │   ├── LAUNCHER_ARCHITECTURE.md          # Architecture du launcher
 │   │
 │   ├── 🆕 Architecture de l'Éditeur ⭐
 │   ├── ANALYSE_ARCHITECTURE_EDITEUR.md   # 📖 Analyse complète (500 lignes)
 │   ├── RESUME_ARCHITECTURE_EDITEUR.md    # 📋 Résumé concis
 │   ├── DIAGRAMMES_ARCHITECTURE_EDITEUR.md # 📊 Diagrammes visuels
+│   ├── COLLABORATIVE_EDITOR.md           # Éditeur collaboratif
+│   ├── COLLAB_SESSION_PATTERN.md         # Pattern de session collaborative
+│   ├── PLAYER_CONFIG_PANEL_PLAN.md       # Panneau de configuration joueurs
+│   ├── COLOR_ID_MAP_INTEGRATION_PLAN.md  # Intégration Color ID Map
+│   │
+│   ├── Réseau
+│   ├── CATWAY_ARCHITECTURE.md            # Architecture Catway (P2P/UDP)
+│   ├── P2P_NETWORK_ARCHITECTURE.md       # Réseau P2P (détails)
+│   ├── NETWORK_PATTERNS.md               # Patterns réseau
+│   ├── websocket_protocol.md             # Protocole WebSocket (chat)
+│   │
+│   ├── Physique & Rendu
+│   ├── PHYSICS_ENGINE_V2.md              # Moteur physique Pattounx v2
+│   ├── PHYSICS_ENGINE.md                 # Moteur physique (archive V1)
+│   ├── PHYSICS_REFACTOR_PLAN.md          # Plan de refactor physique
+│   ├── CAMERA_ET_DEPLACEMENT.md          # Caméra et déplacement
+│   ├── RENDERING_PERF.md                 # Performances de rendu
 │   │
 │   └── Systèmes
 │       ├── ASSET_MANAGER.md              # Gestion des ressources
@@ -33,24 +56,18 @@ doc/
 │
 ├── 📘 guides/                     # Guides pratiques
 │   ├── 📘 README.md              
-│   │
-│   ├── Pour les Utilisateurs
 │   ├── GAMEPLAY_GUIDE.md                 # Règles du jeu
-│   ├── MAP_EDITOR_GUIDE.md               # Création de cartes
-│   │
-│   └── Pour les Développeurs
-│       ├── DEVELOPER_GUIDE.md            # Guide développeur
-│       └── CONTRIBUTION_GUIDELINES.md    # Comment contribuer
+│   └── MAP_EDITOR_GUIDE.md               # Création de cartes
 │
 ├── 🎨 design/                     # Design et interface
 │   ├── 📘 README.md              
-│   ├── UI_STYLE_GUIDE.md                 # Standards UI
 │   └── INHERITANCE_QML.md                # Patterns QML
 │
 └── ✨ features/                   # Fonctionnalités spécifiques
     ├── 📘 README.md              
     ├── ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md  # Aperçu des assets
-    └── SERVEUR_RESSOURCES.md                  # Serveur de ressources
+    ├── SERVEUR_RESSOURCES.md                  # Serveur de ressources
+    └── TEMPLATE_SYSTEM.md                      # Système de templates
 ```
 
 ---
@@ -61,14 +78,18 @@ doc/
 
 | Catégorie | Nombre de fichiers | Description |
 |-----------|-------------------|-------------|
-| 🏗️ Architecture | 7 documents | Documentation technique et architecture |
-| 📘 Guides | 4 documents | Guides utilisateur et développeur |
-| 🎨 Design | 2 documents | Design UI et patterns QML |
-| ✨ Features | 2 documents | Fonctionnalités spécifiques |
-| 📄 Racine | 3 fichiers | Index, README, données |
-| **TOTAL** | **18 fichiers** | Documentation complète |
+| 🏗️ Architecture | 22 documents | Documentation technique et architecture (README inclus) |
+| 📘 Guides | 3 documents | Guides utilisateur (README inclus) |
+| 🎨 Design | 2 documents | Patterns QML (README inclus) |
+| ✨ Features | 4 documents | Fonctionnalités spécifiques (README inclus) |
+| 📄 Racine | 7 fichiers .md + monop.ods | Index, README, guides racine, données |
+| **TOTAL** | **39 fichiers** (38 .md + monop.ods) | Documentation complète |
 
-### 🆕 Nouveautés (12 octobre 2025)
+### 🆕 Nouveautés
+
+> **Note** : le bloc ci-dessous est un instantané historique daté du **12 octobre 2025**, conservé pour mémoire. Depuis, l'arborescence a fortement grandi (sous-systèmes physique, réseau, éditeur collaboratif, Color ID Map…) pour atteindre **38 documents Markdown + monop.ods** ; voir le tableau « Fichiers par Catégorie » ci-dessus pour le décompte actuel.
+
+Instantané du 12 octobre 2025 :
 
 - ✅ **3 nouveaux documents** sur l'architecture de l'éditeur
 - ✅ **4 sous-dossiers** créés (architecture/, guides/, design/, features/)
@@ -98,9 +119,8 @@ doc/INDEX.md
 #### 👨‍💻 Je suis un **Nouveau Développeur**
 ```
 doc/INDEX.md
-  → guides/CONTRIBUTION_GUIDELINES.md
-  → guides/DEVELOPER_GUIDE.md
   → architecture/PROJECT_STRUCTURE.md
+  → architecture/CPP_CLASSES.md
 ```
 
 #### 🔬 Je suis un **Expert Technique**
@@ -113,7 +133,6 @@ doc/INDEX.md
 #### 🎨 Je suis un **Designer UI/UX**
 ```
 doc/INDEX.md
-  → design/UI_STYLE_GUIDE.md
   → design/INHERITANCE_QML.md
 ```
 
@@ -155,14 +174,12 @@ guides/GAMEPLAY_GUIDE.md
 
 #### 🛠️ **Développement**
 ```
-guides/DEVELOPER_GUIDE.md
-guides/CONTRIBUTION_GUIDELINES.md
 architecture/PROJECT_STRUCTURE.md
+architecture/CPP_CLASSES.md
 ```
 
 #### 🎨 **Design et UI**
 ```
-design/UI_STYLE_GUIDE.md
 design/INHERITANCE_QML.md
 ```
 
@@ -177,8 +194,7 @@ design/INHERITANCE_QML.md
 | Asset Manager | ████████░░ 80% | ASSET_MANAGER.md |
 | Effets Visuels | ████████░░ 80% | VISUAL_EFFECTS_SYSTEM.md |
 | Gameplay | ██████░░░░ 60% | GAMEPLAY_GUIDE.md |
-| UI/Design | ███████░░░ 70% | 2 docs design/ |
-| Contribution | █████████░ 90% | CONTRIBUTION_GUIDELINES.md |
+| UI/Design | ███████░░░ 70% | design/INHERITANCE_QML.md |
 
 ---
 
@@ -194,10 +210,11 @@ design/INHERITANCE_QML.md
 | **Connexions** | architecture/ANALYSE_ARCHITECTURE_EDITEUR.md §5 |
 | **Sélection rectangle** | architecture/ANALYSE_ARCHITECTURE_EDITEUR.md §6 |
 | **Asset** | architecture/ASSET_MANAGER.md |
-| **UI** | design/UI_STYLE_GUIDE.md |
+| **UI** | design/INHERITANCE_QML.md |
 | **QML** | design/INHERITANCE_QML.md |
 | **Launcher** | architecture/LAUNCHER_ARCHITECTURE.md |
-| **Contribution** | guides/CONTRIBUTION_GUIDELINES.md |
+| **Physique** | architecture/PHYSICS_ENGINE_V2.md |
+| **Réseau / P2P** | architecture/CATWAY_ARCHITECTURE.md |
 
 ### Par Niveau de Difficulté
 
@@ -208,10 +225,9 @@ design/INHERITANCE_QML.md
 - architecture/RESUME_ARCHITECTURE_EDITEUR.md
 
 #### 📘 Intermédiaire
-- guides/DEVELOPER_GUIDE.md
-- guides/CONTRIBUTION_GUIDELINES.md
 - architecture/PROJECT_STRUCTURE.md
-- design/UI_STYLE_GUIDE.md
+- architecture/CPP_CLASSES.md
+- design/INHERITANCE_QML.md
 
 #### 📕 Avancé
 - architecture/ANALYSE_ARCHITECTURE_EDITEUR.md
@@ -325,10 +341,10 @@ Si vous ne trouvez pas l'information recherchée :
 - Analyse exhaustive de l'éditeur
 
 ### 🥈 Plus Pratique
-**[DEVELOPER_GUIDE.md](./guides/DEVELOPER_GUIDE.md)**
-- Setup complet
-- Conventions
-- Workflows
+**[MAP_EDITOR_GUIDE.md](./guides/MAP_EDITOR_GUIDE.md)**
+- Prise en main de l'éditeur de cartes
+- Création et édition pas à pas
+- Astuces et raccourcis
 
 ### 🥉 Plus Visuel
 **[DIAGRAMMES_ARCHITECTURE_EDITEUR.md](./architecture/DIAGRAMMES_ARCHITECTURE_EDITEUR.md)**

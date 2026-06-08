@@ -88,9 +88,9 @@ Conventions actuelles :
 | Plage | Réservé |
 |---|---|
 | `0x01–0x1F` | `GameMessageType` (partie en cours) |
-| `0x20–0x2F` | `EditorMessageType` |
-| `0x30–0x3F` | *libre* — nouveau mode A |
-| `0x40–0x4F` | *libre* — nouveau mode B |
+| `0x20–0x3F` | `EditorMessageType` (croissance réservée, actuellement ≤ 0x2A) |
+| `0x40–0x4F` | `PhysicsMessageType` (PhysicsSession — moteur Pattounx v2) |
+| `0x50–0x5F` | *libre* — nouveau mode |
 
 Règle : chaque session **filtre** sur sa plage dans `unpack()`. Un paquet hors plage est ignoré silencieusement — pas d'erreur. C'est ce qui permet la coexistence pacifique sur un même canal Catway.
 

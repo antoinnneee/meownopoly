@@ -231,8 +231,12 @@ asset_server/
 ├── uploads/                   # Dossier temporaire pour uploads
 ├── server.js                  # Serveur Express principal
 ├── package.json               # Dépendances Node.js
-├── .env                       # Configuration (non versionné)
+├── package-lock.json          # Lockfile npm
+├── README.md                  # Documentation du serveur
+├── .env                       # Configuration locale (créé par l'utilisateur depuis .env.example, absent par défaut)
 ├── .env.example               # Template de configuration
+├── deploy.sh                  # Déploiement (scp + npm install --production + systemctl restart, lit .deployEnv)
+├── .deployEnv                 # Config de déploiement (non versionné)
 ├── setup-domain.sh            # Script de déploiement (Nginx + SSL + systemd)
 ├── start_server.sh            # Script de démarrage Linux
 └── start_server.bat           # Script de démarrage Windows
@@ -263,7 +267,16 @@ Chaque fichier dans `versions/` doit contenir :
 
 ## Configuration Réseau
 
-### Serveur Local
+### Serveur déployé (configuration active)
+
+Le serveur déployé écoute en **HTTPS sur le port 443**. Au démarrage, `server.js` lit les certificats Let's Encrypt du domaine `pattounecorp.ovh` (`/etc/letsencrypt/live/pattounecorp.ovh/privkey.pem` et `fullchain.pem`, cf. `server.js:511-512`) puis lance `https.createServer(sslOptions, app).listen(443, '0.0.0.0', ...)`. C'est le seul listener actif.
+
+Côté client, le launcher C++ préfixe les URLs avec `https://` par défaut : `reformat_server_url` (`launcher_manager.cpp:65-67`) ajoute `https://` si l'URL ne commence ni par `https://` ni par `http://`.
+
+### Fallback local en HTTP (optionnel, désactivé par défaut)
+
+Pour un usage purement local, un serveur HTTP simple sur le port 8080 peut être réactivé. Le code correspondant existe dans `server.js` mais **le bloc `app.listen(8080, '0.0.0.0', ...)` est entièrement commenté** (`server.js:542-560`), tout comme la variable `const port = 8080` (`server.js:16`) qui n'est plus utilisée. Configuration de référence pour ce mode :
+
 ```json
 {
     "host": "0.0.0.0",
@@ -276,7 +289,7 @@ Chaque fichier dans `versions/` doit contenir :
 ```
 
 ### Accès depuis le réseau local
-Pour permettre l'accès depuis d'autres machines :
+Pour permettre l'accès depuis d'autres machines (en réactivant le fallback HTTP local) :
 1. Configurer le firewall pour autoriser le port 8080
 2. Utiliser l'IP locale (ex: `http://192.168.1.100:8080`)
 3. Optionnel : Configurer un nom DNS local
@@ -337,6 +350,20 @@ pm2 save
 ## Tests
 
 ### Test du serveur avec curl :
+
+Le serveur déployé répond en HTTPS sur le port 443. Cibler le domaine :
+```bash
+# Test ping
+curl https://pattounecorp.ovh/api/ping
+
+# Test version
+curl https://pattounecorp.ovh/api/version
+
+# Test download
+curl -O https://pattounecorp.ovh/api/download/1.0.0
+```
+
+Les exemples ci-dessous ne valent que si le fallback HTTP local (port 8080) a été réactivé dans `server.js` (bloc `app.listen` commenté par défaut) :
 ```bash
 # Test ping
 curl http://localhost:8080/api/ping
@@ -370,7 +397,7 @@ app.use((req, res, next) => {
 - **Modèles 3D** : Routes dédiées pour les packs de modèles (`/api/models/*`)
 - **Reprise de téléchargement** : Support HTTP Range (réponse 206) pour reprendre les downloads interrompus
 - **Vérification d'intégrité** : Header `X-Checksum-Sha256` sur les téléchargements, checksum SHA-256 dans les métadonnées de version
-- **I/O asynchrone** : Toutes les opérations fichier utilisent `fs.promises` pour ne pas bloquer le serveur
+- **I/O asynchrone** : La plupart des opérations fichier (lecture/écriture de versions, `rename`, `unlink`, `readdir`) utilisent `fs.promises` pour ne pas bloquer le serveur ; les vérifications d'existence (`fs.existsSync`/`fs.statSync`) et le chargement des certificats SSL au démarrage (`fs.readFileSync`) restent synchrones
 - **Checksum streaming** : Le calcul de hash utilise `createReadStream` au lieu de charger le fichier entier en mémoire
 
 ## Extension Future

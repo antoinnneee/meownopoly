@@ -50,14 +50,19 @@ Le projet utilise un système **hybride 2D/3D** où :
 
 **Propriétés clés** :
 ```qml
-property int mmSize: 12                              // Taille en mm (contrôle le zoom)
-property real scaleLevel: mmSize / defaultMmSize     // Niveau de zoom (1.0 = 100%)
-property int gridSize: Screen.pixelDensity * mmSize  // Taille d'une case en pixels
-property int boardSize: gridSize * croisillons       // Taille totale
+property real mmSize: 12.0                            // Taille en mm (contrôle le zoom)
+property real scaleLevel: mmSize / defaultMmSize      // Niveau de zoom (1.0 = 100%)
+property real gridSize: Screen.pixelDensity * mmSize  // Taille d'une case en pixels
+property real boardSize: gridSize * croisillons       // Taille totale
 
 x: ...  // Position X de la grille dans le board
 y: ...  // Position Y de la grille dans le board
 ```
+
+> **Note** : `mmSize` et `gridSize` sont délibérément typés `real` (et non `int`).
+> C'est indispensable pour le zoom multiplicatif continu (×1.1 par cran) : un
+> typage `int` ré-arrondirait `mmSize * 1.1` à chaque cran et le zoom ne
+> progresserait que par paliers d'une unité de `mmSize`.
 
 **Fonctions utilitaires** :
 - `getGridPosition(x, y)` → Convertit pixels en coordonnées grille (entières)
@@ -167,7 +172,7 @@ Le zoom est contrôlé par `magnification`, pas par la distance Z (contrairement
 **Fonctionnement** :
 ```qml
 MouseArea {
-    drag.target: gameGrid     // La grille est la cible du drag
+    drag.target: null          // assigné par Base_Board via Component.onCompleted: drag.target = gameGrid
 
     onPressed → mouseLogic.pressedLeft/Right()
     onReleased → mouseLogic.release()
@@ -261,7 +266,7 @@ property var keymap: ({                     // configurable (multi-joueurs local
     freeCamToggle: Qt.Key_F
 })
 
-signal freeCamToggleRequested()             // au CameraRig de switcher
+signal toggleFreeCamRequested()             // au CameraRig de switcher
 ```
 
 **Fonctionnement** :
@@ -311,7 +316,7 @@ function pullAndApply(alpha) {
 
 La création du body est de la responsabilité de l'orchestrateur :
 - **`LocalPlayerSpawner.qml`** pour le joueur local (Kinematic).
-- **`EditorPhysicsBridge.qml`** pour les caisses Dynamic posées en éditeur (`PhysicalObjectTile` → `createDynamicActor` + zones d'exclusion via `upsertZone`).
+- **`EditorPhysicsBridge.qml`** pour les caisses Dynamic posées en éditeur (`PhysicalObjectTile` → `createDynamicCircle` + zones d'exclusion via `upsertZone`).
 
 ---
 

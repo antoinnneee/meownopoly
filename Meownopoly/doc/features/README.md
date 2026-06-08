@@ -18,6 +18,12 @@ Documentation sur le serveur de ressources.
 - Gestion des assets distants
 - Téléchargement et mise en cache
 
+### [TEMPLATE_SYSTEM.md](./TEMPLATE_SYSTEM.md)
+Documentation sur le système de templates de l'éditeur (groupes de SnapableElements réutilisables).
+- Création et sauvegarde de templates
+- Sérialisation JSON (positions relatives)
+- Placement en un clic sur la carte
+
 ## 🎯 Utilisation
 
 Ces documents sont des références techniques pour des fonctionnalités spécifiques.

@@ -18,29 +18,44 @@ Case (classe de base)
 
 ### 1. Enregistrement complet de la hiérarchie
 
-Dans `game.cpp`, tous les niveaux de la hiérarchie sont maintenant enregistrés :
+Les enregistrements vivent dans `CaseFactory::registerCaseQml()` (`cpp/game/case/CaseFactory.cpp`), appelée depuis `Game::registerQml()` (`cpp/game/game.cpp`). Tous les niveaux de la hiérarchie y sont enregistrés :
 
 ```cpp
-void Game::registerQml() {
+void CaseFactory::registerCaseQml() {
     // Classe de base (non-créable)
-    qmlRegisterUncreatableType<Case>("Case", 1, 0, "Case", 
+    qmlRegisterUncreatableType<Case>("Case", 1, 0, "Case",
                                      "Case is an abstract base class");
-    
+
     // Classe intermédiaire (non-créable)
-    qmlRegisterUncreatableType<CaseCatPerks>("CaseCatPerks", 1, 0, "CaseCatPerks", 
+    qmlRegisterUncreatableType<CaseCatPerks>("CaseCatPerks", 1, 0, "CaseCatPerks",
                                             "CaseCatPerks is an intermediate base class");
-    
-    // Classe finale (créable)
+
+    // Classes finales (créables)
     qmlRegisterType<CaseRestArea>("CaseRestArea", 1, 0, "CaseRestArea");
+    qmlRegisterType<CaseKibbleDispenser>("CaseKibbleDispenser", 1, 0, "CaseKibbleDispenser");
+    qmlRegisterType<CaseCardBoardBox>("CaseCardBoardBox", 1, 0, "CaseCardBoardBox");
+    qmlRegisterType<CaseCatNip>("CaseCatNip", 1, 0, "CaseCatNip");
+    qmlRegisterType<CaseJail>("CaseJail", 1, 0, "CaseJail");
+    qmlRegisterType<CaseToJail>("CaseToJail", 1, 0, "CaseToJail");
+    qmlRegisterType<CaseCatDoor>("CaseCatDoor", 1, 0, "CaseCatDoor");
+    qmlRegisterType<CaseFreeNap>("CaseFreeNap", 1, 0, "CaseFreeNap");
+    qmlRegisterType<CaseCatDevice>("CaseCatDevice", 1, 0, "CaseCatDevice");
 }
 ```
 
 ### 2. Includes ajoutés
 
-Dans `game.h` :
+Dans `CaseFactory.cpp` :
 ```cpp
-#include "case/CaseCatPerks.h"
-#include "case/CaseRestArea.h"
+#include "CaseRestArea.h"  // tire transitivement CaseCatPerks.h puis Case.h
+#include "CaseCardBoardBox.h"
+#include "CaseCatNip.h"
+#include "CaseJail.h"
+#include "CaseToJail.h"
+#include "CaseCatDoor.h"
+#include "CaseFreeNap.h"
+#include "CaseCatDevice.h"
+#include "CaseKibbleDispenser.h"
 ```
 
 ## Utilisation en QML
@@ -59,10 +74,6 @@ CaseRestArea {
     }
     
     // Autres signaux hérités
-    onPositionChanged: {
-        console.log("Position:", position)
-    }
-    
     onTypeChanged: {
         console.log("Type:", type)
     }
@@ -74,7 +85,6 @@ CaseRestArea {
 ```qml
 // Toutes ces propriétés sont héritées de Case
 Text { text: restArea.name }      // Hérité de Case
-Text { text: restArea.position }  // Hérité de Case  
 Text { text: restArea.type }      // Hérité de Case
 
 // Propriétés de CaseCatPerks
@@ -93,18 +103,13 @@ Text { text: restArea.price }     // Hérité de CaseCatPerks
 
 5. **Namespace cohérent** : Utiliser le même module/namespace pour toute la hiérarchie.
 
-## Fichiers de test
-
-- `qml/test/TEST_INHERITANCE.qml` : Test basique de l'héritage
-- `qml/test/TEST_CASE_INHERITANCE.qml` : Exemple pratique avec animations
-
 ## Vérification
 
 Pour vérifier que l'héritage fonctionne :
 
 1. Compilez le projet
-2. Ouvrez un des fichiers de test
-3. Changez le nom d'une `CaseRestArea`
+2. Instanciez une `CaseRestArea` dans une scène existante
+3. Changez le nom de la `CaseRestArea`
 4. Vérifiez que le signal `nameChanged` se déclenche dans la console
 
 Le signal `nameChanged` est maintenant accessible dans tous les objets `CaseRestArea` en QML ! 

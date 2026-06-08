@@ -615,7 +615,7 @@ En une journee : serveur + support images + compression + historique + script de
 - `generateRandomKey()` : cle 256 bits
 - `generateNonce()` : nonce aleatoire
 - `deriveLockKey(sessionId, password)` : cle de verrou locale (jamais transmise)
-- `derivePasswordProof(password, sessionId)` : preuve de mot de passe pour le serveur
+- `derivePasswordProof(sessionId, password)` : preuve de mot de passe pour le serveur
 - `decrypt()` : verification MAC a temps constant (ajoute 7 fevrier)
 
 **Protocole blind relay** :
@@ -969,7 +969,7 @@ Editor.qml
  |-- EditorDynamicComponent.qml (Component factories)
  |-- GridManager.qml (grille, snap, zoom)
  |-- SelectionPanel (ASP + CSP + VEP + CCP)
- |-- EditorSidePanel (redimensionnable, collapsable)
+ |-- BottomSidePanel (qml/editor/panel/bottomPanel/bottomSidePanel/)
 ```
 
 ---
@@ -981,7 +981,7 @@ Editor.qml
 | Domaine | Classes/fichiers cles |
 |---|---|
 | Reseau P2P | `Catway`, `CatwayWorker`, `StunManager`, `PlayerNetwork` |
-| Moteur physique | `PattounX_body`, `PattounX_zone`, `Collision2D`, `EntityEngine` |
+| Moteur physique | `PattounX_engine` (pattounx_engine_v2), `PhysicsWorld`, `PhysicsWorker`, `PhysicsSession`, `Collision2D` |
 | Chat backend | `chatServer/server.js`, `ChatClient`, `ChatWorker`, `ChatCrypto` |
 | Editeur core | `GridManager`, `EditorLogic`, `MouseLogic_*`, `ConnectionOverlay` |
 | Assets | `AssetManager`, `AssetModel`, `LauncherManager`, `asset_server/` |
@@ -992,7 +992,7 @@ Editor.qml
 
 | Domaine | Classes/fichiers cles |
 |---|---|
-| UI editeur | `ASP_*`, `CSP_*`, `MSP_*`, `VEP_*`, `EditorSidePanel` |
+| UI editeur | `ASP_*`, `CSP_*`, `MSP_*`, `VEP_*`, `BottomSidePanel` |
 | Cases | `CaseFactory`, `CaseCatPerks`, `CaseCatDevice`, hierarchie complete |
 | Board | `GameBoard.qml`, `GameDynamicComponent`, deplacement joueur |
 | Persistance | `Map`, `MapLoader`, `MapFileManager`, `UndoRedoManager` -> `EditDelta` |

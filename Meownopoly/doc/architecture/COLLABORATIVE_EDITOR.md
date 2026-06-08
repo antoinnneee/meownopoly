@@ -47,7 +47,7 @@ Singleton QML (`import EditorOpBus 1.0`). Chokepoint **unique** par lequel passe
 - `beginApplyRemote()` / `endApplyRemote()` — garde qui fait droper tous les `submitOp` déclenchés par l'application d'ops distantes (empêche la boucle réseau).
 - `onSessionOpReceived(senderId, op)` — émet `remoteOpReceived(op)` pour que QML applique, entouré de begin/endApplyRemote. Log structuré `[EditorOpBus] apply seq=X by=Y type=Z`.
 
-Helpers de construction : `makeCreateOp`, `makeDeleteOp`, `makeMoveOp`, `makeLinkOp`, `makeUnlinkOp`, `newUuid`.
+Helpers de construction : `makeCreateOp`, `makeDeleteOp`, `makeMoveOp`, `makeLinkOp`, `makeUnlinkOp`, `newUuid` ; côté player-config : `makeAddPlayerProfileOp`, `makeRemovePlayerProfileOp`, `makeUpdatePlayerProfileOp`, `makeReorderPlayerProfileOp`, `makeSetMapPlayerLimitsOp` ; et `submitFromDelta` / `flushGroup` pour le transport `ApplyState` (liste non exhaustive).
 
 ### 2.3 Types de messages (`editor_message_type.h`)
 
@@ -63,8 +63,9 @@ Helpers de construction : `makeCreateOp`, `makeDeleteOp`, `makeMoveOp`, `makeLin
 | `0x27` | `SelectionUpdate` | Broadcast reliable | `{uuids}` |
 | `0x28` | `PlayerRoster` | Host → Tous | `{players: [pid, …]}` |
 | `0x29` | `OpChunk` | Reliable | `{opId, chunkIndex, chunkCount, origType, payloadB64}` pour ops > 20 KB |
+| `0x2A` | `HostLeaving` | Host → Tous | `{ roster: [...] }` — annonce de départ volontaire de l'hôte ; déclenche l'élection immédiate côté clients (sans attendre le timeout Catway) |
 
-### 2.4 Op set (v1)
+### 2.4 Op set v1 — ops items de base
 
 Chaque op est un `QJsonObject` avec au moins `{op: <EditorOpType>, …}`.
 
@@ -77,6 +78,8 @@ Chaque op est un `QJsonObject` avec au moins `{op: <EditorOpType>, …}`.
 | `SetDisplayParameter` | `{target, fields: {field: value, …}}` | `displayParameter` (brightness, contrast, saturation, `colorization`, `colorizationColor`, blur, shadow, rotation, miroirs, zLayer…) |
 | `SetCaseData` / `SetDecorationParameter` / `SetZoneParameter` | `{target, fields: {…}}` | sous-objet typé |
 | `LinkItems` / `UnlinkItems` | `{source, target, kind}` | lien inter-items |
+
+Ops additionnelles courantes (non listées ci-dessus) : `ApplyState` (11, transport générique d'un EditDelta — `Game::updateMap` / `askPreview` / `askNext`), et les ops player-config `AddPlayerProfile` (12), `RemovePlayerProfile` (13), `UpdatePlayerProfile` (14), `ReorderPlayerProfile` (15), `SetMapPlayerLimits` (16). Cf. `editor_op_type.h` et `PLAYER_CONFIG_PANEL_PLAN.md`.
 
 Undo supporté v1 : `CreateItem`, `DeleteItem`, `LinkItems`, `UnlinkItems` seulement. `MoveItem` / `ResizeItem` / `Set*` sont reportés (demandent une capture pré-image au submit).
 
@@ -92,7 +95,7 @@ Dans `Editor.qml`, `Connections { target: EditorOpBus; function onRemoteOpReceiv
 
 Encodage du mode éditeur dans le nom de session : prefix `[EDIT:<hostPlayerId>] <nom user>`. Évite toute modif du serveur chat.
 
-- `MultiplayerLobby` détecte le prefix dans `onSessionCreated` (hôte) et `onSessionIdChanged` (client) → émet `launchNewSession(isEdition=true, hostId)` / `launchExistingSession(…)`.
+- `MultiplayerLobby` détecte le prefix dans `onSessionCreated` (hôte) et `onSessionIdChanged` (client) → émet `launchNewSession(isEdition, hostId, rawSessionName, initialMap)` / `launchExistingSession(isEdition, hostId)`.
 - `main.qml` pilote la state machine P2P côté client : `setupNewPort → STUN → sendRequestConnectionInfo → initiateHolePunch → p2pConnected → startAsClient + push editor`.
 - Le lobby reste dans la `StackView` sous l'éditeur pour garder `lobbyChatClient` vivant (Catway en dépend pour le signaling chat).
 
@@ -118,13 +121,18 @@ Encodage du mode éditeur dans le nom de session : prefix `[EDIT:<hostPlayerId>]
 
 ### 3.5 Host migration (détection + élection + reconnexion)
 
-Détection : `Catway::playerTimedOut(playerId)` (30 s sans paquet, signal relayé depuis `CatwayWorker`). `EditorSession::onPlayerTimedOut` branche selon le rôle :
+Détection (2 chemins) :
+
+1. **Chemin rapide volontaire** — l'hôte appelle `EditorSession.announceHostLeaving()` qui broadcaste `HostLeaving` (0x2A) en reliable avec le roster autoritaire embarqué (`main.qml` l'appelle à la fermeture de la fenêtre et lorsque l'hôte quitte). À la réception, les clients purgent le `PlayerNetwork` de l'ancien hôte (via `Catway::removePlayer`) et élisent immédiatement, sans attendre le timeout.
+2. **Fallback** — `Catway::playerTimedOut(playerId)` (~30 s sans paquet, signal relayé depuis `CatwayWorker`) déclenche le même flow via `onPlayerTimedOut`.
+
+`EditorSession::onPlayerTimedOut` branche selon le rôle :
 
 - **Client** + pid == hostPlayerId :
   1. `electNewHost()` : candidats = `m_knownRoster ∪ {localPlayerId}` moins `m_hostPlayerId`. Gagnant = plus petit id lexicographique. Tous les survivants qui ont la même snapshot roster élisent le même.
   2. Émet `hostLost(electedHostId)`.
   3. Le handler QML (`Editor.qml`) décide :
-     - Si `electedId == localPlayerId` → appelle `promoteToHost()` (stop+startAsHost, préserve l'état local). Signal `promotedToHost()` → `main.qml` appelle `Catway.chatClient.renameSession("[EDIT:<newHostId>] …")` pour rafraîchir le lobby **sans changer le sessionId** (même canal chat, mêmes participants, même historique).
+     - Si `electedId == localPlayerId` → appelle `promoteToHost()` (stop+startAsHost, préserve l'état local). Signal `promotedToHost()` → `main.qml` appelle `Catway.chatClient.renameSession("[EDIT:<newHostId>] …")` pour rafraîchir le lobby **sans changer le sessionId** (même canal chat, mêmes participants, même historique). En plus de `renameSession` (rafraîchissement de l'affichage lobby), `main.qml` appelle `Catway.chatClient.transferHost(newHostId)` → commande serveur `TRANSFER_HOST` → broadcast `HOST_CHANGED`, qui met à jour `sessions.host_player_id` côté serveur pour que l'ancien hôte perde ses droits admin (`CLEAR_HISTORY` / `DELETE_SESSION`).
      - Sinon → `EditorSession.stop()` + émission `reconnectRequested(sessionId, electedHostId)`. `main.qml` relance le `p2pStateMachine` avec `skipPush=true` (l'éditeur est déjà empilé). Au retour de `p2pConnected`, `startAsClient(newHostId)` → `Hello` → `FullSync` du nouvel hôte.
 
 - **Host** + pid == (un client) :
@@ -158,8 +166,8 @@ Limitations connues :
 
 ## 5. Persistance & isolation
 
-- Chemin des cartes : `QStandardPaths::AppDataLocation + "/map/"`. Chaque instance a un `applicationName` distinct (via `--instance N` dans `main.cpp`) → dossiers séparés `Meownopoly/` vs `Meownopoly_2/`. Helper : `MapFileManager::mapBasePath()`.
-- En mode collab, l'autosave locale d'un client écrit dans son propre `AppDataLocation` et ne peut **pas** écraser la map réelle de l'hôte.
+- Chemin des cartes : CWD-relatif `./map/` via `#define MAP_FILE_PATH` dans `cpp/game/map/mapfilemanager.h` (= `build/<config>/map/` en dev). Ce dossier n'est **pas** sous `AppDataLocation` et n'est **pas** isolé par `--instance N` (contrairement à QSettings / DB chat / assets, qui passent par `AppDataLocation`). L'isolation inter-instances des maps repose uniquement sur des répertoires de travail distincts.
+- En mode collab, l'autosave locale d'un client écrit dans son propre répertoire de travail `./map/` (pas dans `AppDataLocation`). Tant que l'hôte et le client tournent dans des répertoires de travail distincts, le client ne peut **pas** écraser la map réelle de l'hôte.
 
 ---
 
@@ -185,7 +193,7 @@ Limitations connues :
 | `cpp/communication/catway.{h,cpp}` | Signaux `playerTimedOut`, `reliableMessageReceived` |
 | `cpp/communication/player_network.{h,cpp}` | `stats()` getter reliable.io |
 | `cpp/chat/chat_client.{h,cpp}` | `renameSession`, `handleSessionRenamed`, `handleSessionDeleted` |
-| `chatServer/server.js` | Handlers `RENAME_SESSION`, purge session vide |
+| `../chatServer/server.js` (racine du dépôt) | Handlers `RENAME_SESSION` / `SESSION_RENAMED`, `TRANSFER_HOST` / `HOST_CHANGED`, purge session vide |
 | `qml/editor/Editor.qml` | Apply remote, FullSync, curseurs, sélections, stats overlay |
 | `qml/main.qml` | p2pStateMachine, promotion → renameSession, reconnexion |
 | `qml/multiplayer/MultiplayerLobby.qml` | Encodage `[EDIT:...]`, signaux `launchNewSession`/`launchExistingSession` |

@@ -6,26 +6,38 @@ Meownopoly est organisé selon une architecture modulaire qui sépare la logique
 
 ## Hiérarchie des dossiers
 
+> Aperçu non exhaustif des principaux dossiers (certains sous-dossiers secondaires sont omis pour la lisibilité).
+
 ```
 Meownopoly/
 ├── cpp/                     # Code source C++
+│   ├── account/             # Gestion des comptes utilisateurs
+│   ├── assetManager/        # Gestion et distribution des assets
 │   ├── communication/       # Communication réseaux (Catway, UDP)
 │   ├── chat/                # Client Chat WebSocket
+│   ├── editor/              # Réseau collaboratif & ops de l'éditeur
+│   │   ├── network/         # EditorSession, EditorProtocol
+│   │   ├── ops/             # EditorOpBus, EditorOpType
+│   │   └── painter/         # Rendu GPU 2D (grille, zones)
 │   ├── game/                # Logique de jeu principale
 │   │   ├── case/            # Classes des différents types de cases
 │   │   ├── item_snapable/   # Éléments plaçables dans l'éditeur
 │   │   ├── map/             # Gestion et chargement des cartes
-│   │   └── physics/         # Moteur physique et zones
+│   │   ├── network/         # GameSession, GameProtocol
+│   │   └── physics/         # Moteur physique et zones (Pattounx v2)
 │   ├── launcher/            # Logique du lanceur
+│   ├── reliable/            # Bibliothèque reliable.io (fiabilité UDP)
 │   └── tools/               # Outil globaux (MouseEventFilter, Logger, etc.)
-├── qml/                     # Interface utilisateur QML
-│   ├── case/            # Représentation visuelle des cases
-│   ├── chat/            # Interface du chat et des participants
-│   ├── editor/          # Éditeur de cartes complet
-│   ├── launcher/        # Interface du lanceur
-│   ├── menu/            # Menu principal
-│   └── meowComponent/   # Composants réutilisables (Base_Board, Grid, etc.)
-└── config/              # Fichiers de configuration
+└── qml/                     # Interface utilisateur QML
+    ├── account/         # Interface de compte utilisateur
+    ├── chat/            # Interface du chat et des participants
+    ├── editor/          # Éditeur de cartes complet
+    ├── launcher/        # Interface du lanceur
+    ├── menu/            # Menu principal
+    ├── meowComponent/   # Composants réutilisables (Base_Board, Grid, cases, etc.)
+    ├── multiplayer/     # Lobby et sessions multijoueurs
+    ├── ui_item/         # Composants UI réutilisables
+    └── world3d/         # Présentation 3D physique
 ```
 
 ## Modules Principaux
@@ -37,11 +49,15 @@ Ce module définit tous les types de cases du jeu avec une hiérarchie d'hérita
 ```
 Case (classe de base abstraite)
 ├── CaseCatPerks
-│   ├── CaseRestArea
-│   └── ...
-├── CaseCatDevice
-├── CaseCatDoor
-├── ...
+│   ├── CaseCatDevice
+│   ├── CaseCatDoor
+│   └── CaseRestArea
+├── CaseCardBoardBox
+├── CaseCatNip
+├── CaseJail
+├── CaseKibbleDispenser
+├── CaseToJail
+└── CaseFreeNap
 ```
 
 **Fichiers importants :**
@@ -53,9 +69,11 @@ Case (classe de base abstraite)
 Ces classes représentent les éléments qui peuvent être placés sur la grille de l'éditeur.
 
 **Classes principales :**
-- `ItemSnapable` : Classe de base pour tous les éléments plaçables
-- `SnapableCase` : Élément représentant une case sur la grille
-- `SnapableDeco` : Élément représentant une décoration
+- `ItemSnapable` : classe de base pour tous les éléments plaçables.
+- Classes de paramètres par fonctionnalité : `DisplayParameter`, `DecorationParameter`, `ZoneParameter`, `PhysicalObjectParameter`.
+- `ItemSnapableFactory` : fabrique d'instances (création depuis JSON notamment).
+
+Les variantes visuelles « case » et « décoration » ne sont pas des classes C++ : ce sont des composants QML situés dans `qml/meowComponent/snapable/` (`SnapableCaseTile.qml`, `SnapableDecoration.qml`).
 
 ### 3. Système de Maps (dossier `cpp/game/map/`)
 
@@ -64,7 +82,8 @@ Gère le chargement, la sauvegarde et la structure des cartes de jeu.
 **Composants importants :**
 - `map.h/cpp` : Définit la structure d'une carte
 - `mapinfo.h/cpp` : Métadonnées d'une carte (nom, auteur, etc.)
-- `maploader.h/cpp` : Chargement/sauvegarde des cartes depuis/vers JSON
+- `mapfilemanager.h/cpp` : gestion des fichiers de carte (lecture/écriture JSON via `readMapFile`/`saveMap`, liste des maps disponibles)
+- `game_loader.cpp` / `templatefilemanager.h/cpp` : points d'entrée de (dé)sérialisation JSON des cartes (`Game::saveCurrentMap`/`saveMap`/`loadMap`)
 
 ### 4. Interface QML (dossier `qml/`)
 
@@ -84,9 +103,9 @@ L'interface utilisateur est organisée en plusieurs sections :
 Ce module gère toute la couche réseau P2P entre les joueurs.
 
 **Composants clés :**
-- `Catway.h/cpp` : ⭐ Cœur du système réseau. Gère les sockets UDP, les requêtes STUN et orchestre le **Hole Punching**.
-- `StunManager.h/cpp` : Gère l'interaction avec les serveurs STUN pour récupérer l'IP publique.
-- `PlayerNetwork.h/cpp` : Représente un joueur distant avec ses informations de connexion UDP. Expose aussi `stats()` pour les compteurs reliable.io (RTT, loss, bandwidth).
+- `catway.h/cpp` (classe `Catway`) : ⭐ Cœur du système réseau. Gère les sockets UDP, les requêtes STUN et orchestre le **Hole Punching**.
+- `stun_manager.h/cpp` (classe `StunManager`) : Gère l'interaction avec les serveurs STUN pour récupérer l'IP publique.
+- `player_network.h/cpp` (classe `PlayerNetwork`) : Représente un joueur distant avec ses informations de connexion UDP. Expose aussi `stats()` pour les compteurs reliable.io (RTT, loss, bandwidth).
 - `chat/chat_client.h/cpp` : Client WebSocket pour les messages de chat et le signalement P2P. Gère aussi `RENAME_SESSION` et le handler de `SESSION_DELETED` pour la migration d'hôte.
 
 **Flux de connexion (Hole Punching) :**
@@ -112,10 +131,10 @@ Voir [COLLABORATIVE_EDITOR.md](./COLLABORATIVE_EDITOR.md) pour le détail comple
 
 L'architecture utilise plusieurs mécanismes pour exposer les fonctionnalités C++ à QML :
 
-1. **Enregistrement de types :** Classes C++ exposées à QML via `qmlRegisterType` (ex: `Game`, `MapFileManager`)
+1. **Enregistrement de types :** Classes C++ instanciables depuis QML via `qmlRegisterType` (ex: `Player`, `MapInfo`, `PlayerNetwork`)
 2. **Propriétés :** Utilisation intensive de `Q_PROPERTY` pour l'exposition bidirectionnelle des données
 3. **Invokables :** Méthodes C++ appelables depuis QML avec `Q_INVOKABLE`
-4. **Singletons QML :** Plusieurs modules sont exposés comme des singletons accessibles partout (ex: `UiStyle`, `MapInfo`)
+4. **Singletons QML :** Plusieurs modules sont exposés comme des singletons accessibles partout via `qmlRegisterSingletonType` (ex: `UiStyle`, `Game`, `MapFileManager`, `Catway`, `AssetManager`)
 
 ## Système de Construction
 

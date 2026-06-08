@@ -35,8 +35,17 @@
 {AppDataPath}/models/
   ├── NomDuPack/
   │   ├── version.json          # {"version": "1.0.0", "timestamp": "..."}
-  │   ├── model1.glb
-  │   └── textures/
+  │   ├── model_manifest.json   # name, version, transform, colorId…
+  │   ├── NomDuPack.qml         # composant chargé au runtime
+  │   ├── base/
+  │   │   ├── <model>.glb
+  │   │   └── skin_base.png
+  │   └── skins/
+  │       └── <skin>/
+  │           ├── colorMap.png
+  │           ├── skin.json
+  │           ├── textures/
+  │           └── variants/
   └── AutrePack/
       └── ...
 ```
@@ -138,7 +147,7 @@ Singleton enregistré en QML via `AssetManager.registerQml()`.
 - Fallback automatique vers `qrc:/asset/nopic.webp` quand un asset n'est pas trouvé
 - Cache interne des modèles par clé `{category}_{type}`
 
-### API complète
+### API principale
 
 #### Accès aux assets (méthodes recommandées)
 
@@ -229,6 +238,26 @@ Q_INVOKABLE void setAssetsBasePath(basePath);
 ```cpp
 // Vérifie si un pixel est transparent (cache d'images interne)
 Q_INVOKABLE bool isTransparent(float px, float py, QString path);
+```
+
+#### Modèles 3D et Color ID Map
+
+```cpp
+// Vérifie qu'au moins un asset d'une catégorie/type matche un texte (tag, description, id, filename)
+Q_INVOKABLE bool hasMatchingAsset(category, type, searchText);
+
+// Modèles 3D utilisables pour un PlayerProfile (scan QRC :/asset/models/ + <AppData>/models/,
+// dossiers possédant un <name>.qml ; inclut les primitives Cube/Sphere)
+Q_INVOKABLE QStringList availablePlayerModels();
+
+// Résolution runtime Color ID Map (cf. doc/architecture/COLOR_ID_MAP_INTEGRATION_PLAN.md)
+Q_INVOKABLE QString     modelDir(modelName);            // dossier du modèle (AppData prioritaire, QRC fallback)
+Q_INVOKABLE QVariantMap readModelManifest(modelName);   // model_manifest.json → QVariantMap
+Q_INVOKABLE QStringList listModelSkins(modelName);      // sous-dossiers de <model>/skins
+Q_INVOKABLE QStringList listSkinTextures(modelName, skin);
+Q_INVOKABLE QString     readSkinJson(modelName, skin);  // contenu de skins/<skin>/skin.json
+Q_INVOKABLE QStringList listSkinVariants(modelName, skin);
+Q_INVOKABLE QString     loadSkinVariant(modelName, skin, variant);
 ```
 
 ### Propriétés QML
@@ -377,7 +406,7 @@ Les modèles 3D sont gérés séparément des assets 2D, via le `LauncherManager
 ### Format des packs
 - Extension : `.meow` (archive compressée)
 - Nommage : `{nom}_v{version}.meow` (ex: `PionChat_v1.0.0.meow`)
-- Contenu : dossier compressé avec un `model_manifest.json`
+- Contenu : layout kura / Color ID Map (`base/<model>.glb`, `skins/<skin>/`, `<nom>.qml`) accompagné d'un `model_manifest.json` (cf. `doc/architecture/COLOR_ID_MAP_INTEGRATION_PLAN.md`)
 
 ### Manifest modèle
 ```json

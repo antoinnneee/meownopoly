@@ -103,7 +103,7 @@ Limites bloquantes :
 │                                                                 │
 │  EditorPhysicsBridge (auto)                                     │
 │    └─ écoute ItemSnapable PhysicZone create/move/resize/edit    │
-│       → physics.upsertZoneFromSnapable / removeZone             │
+│       → physics.upsertZone(id, absPoints, params) / removeZone  │
 │                                                                 │
 │  Pull snapshot chaque FrameAnimation tick →                     │
 │    actor.pullAndApply(alpha)                                    │
@@ -422,7 +422,9 @@ public:
     Q_INVOKABLE void pushInput(const QString &actorId, QVector2D input);
 
     // --- Zones (sync live) ---
-    Q_INVOKABLE void upsertZoneFromSnapable(QObject *snapable);   // adaptateur
+    // Les points du polygone sont calculés en absolu côté GUI
+    // (EditorPhysicsBridge) avant d'être passés ici. Pas d'adaptateur
+    // QObject* : aucun pointeur ItemSnapable ne traverse vers le C++.
     Q_INVOKABLE void upsertZone(const QString &zoneId,
                                 const QVariantList &polygonAbsolute,
                                 QVariantMap params);
@@ -774,8 +776,12 @@ Item {
 
 Le bridge **centralise toute la création de bodies** depuis l'éditeur (cf.
 décision #19) : zones d'exclusion (`PhysicZoneTile`) ET objets dynamiques
-(`PhysicalObjectTile`, futur). Les composants QML `PhysicsActor` /
-`PhysicsObject` ne font qu'afficher.
+(`PhysicalObjectTile`). Les composants QML `PhysicsActor` ne font
+qu'afficher. C'est le bridge — en QML, pas un adaptateur C++ — qui calcule
+les coordonnées absolues du polygone (`absX = displayParameter.gridRelativePositionX + point.x`,
+`absY = … + point.y`) ainsi que le centre/rayon du cercle Dynamic, puis
+appelle `physicsWorld.upsertZone(id, absPoints, params)` /
+`physicsWorld.createDynamicCircle(id, center, radius, mass, params)`.
 
 ```qml
 import QtQuick
@@ -789,12 +795,20 @@ Item {
         function onTileCreated(tile) {
             const id = tile.snapableParameters.uniqueId.toString()
             switch (tile.tileType) {
-            case ItemSnapable.PhysicZoneTile:
-                physicsWorld.upsertZoneFromSnapable(tile.snapableParameters)
+            case ItemSnapable.PhysicZoneTile: {
+                // points absolus calculés ici (relatifs + gridRelativePosition)
+                const absPoints = _buildAbsolutePolygon(tile)
+                physicsWorld.upsertZone(id, absPoints, _zoneParams(tile))
                 break
-            case ItemSnapable.PhysicalObjectTile:   // Phase 9
-                physicsWorld.createDynamicCircleFromSnapable(tile.snapableParameters)
+            }
+            case ItemSnapable.PhysicalObjectTile: {  // Phase 9
+                const center = _objectCenter(tile)
+                const radius = _objectRadius(tile)
+                physicsWorld.createDynamicCircle(id, center, radius,
+                                                 _objectMass(tile),
+                                                 _objectParams(tile))
                 break
+            }
             }
         }
         function onTileDeleted(tileId, tileType) {
@@ -809,26 +823,34 @@ Item {
             const id = tile.snapableParameters.uniqueId.toString()
             switch (tile.tileType) {
             case ItemSnapable.PhysicZoneTile:
-                physicsWorld.upsertZoneFromSnapable(tile.snapableParameters)
+                physicsWorld.upsertZone(id, _buildAbsolutePolygon(tile),
+                                        _zoneParams(tile))
                 break
             case ItemSnapable.PhysicalObjectTile:
-                physicsWorld.setBodyPosition(id, tile.snapableParameters.gridPosition)
+                physicsWorld.setBodyPosition(id, _objectCenter(tile))
                 break
             }
         }
         function onZoneParameterChanged(tile) {
-            if (tile.tileType === ItemSnapable.PhysicZoneTile)
-                physicsWorld.upsertZoneFromSnapable(tile.snapableParameters)
+            if (tile.tileType === ItemSnapable.PhysicZoneTile) {
+                const id = tile.snapableParameters.uniqueId.toString()
+                physicsWorld.upsertZone(id, _buildAbsolutePolygon(tile),
+                                        _zoneParams(tile))
+            }
         }
     }
 }
 ```
 
-`upsertZoneFromSnapable` côté C++ extrait :
-- `polygonPoints` (relatifs) + `gridRelativePosition{X,Y}` → calcul absolu côté GUI
+Extraction des données de zone, faite **en QML dans le bridge** (pas dans un
+adaptateur C++) :
+- `polygonPoints` (relatifs) + `gridRelativePosition{X,Y}` → calcul du polygone
+  absolu côté GUI (`absX/absY`), passé en `QVariantList` à `upsertZone`.
 - `exclusion`, `frictionStrenght`, `velocityStrenght`/`velocityDirection`,
-  `accelerationMultiplier`, `speedMultiplier` → recopiés dans `ZoneSpec`
-- Construit `ZoneSpec`, appelle `cmdUpsertZone(spec)` queued au worker.
+  `accelerationMultiplier`, `speedMultiplier` → empaquetés dans le `QVariantMap`
+  `params`.
+- `PhysicsWorld::upsertZone(zoneId, polygonAbsolute, params)` construit alors le
+  `ZoneSpec` côté C++ et appelle `cmdUpsertZone(spec)` queued au worker.
 
 Aucun pointeur vers `ItemSnapable` ne traverse vers le thread physique.
 
@@ -1060,9 +1082,10 @@ collision change. ✅
 **Livrables** :
 - Nouveau `tileType` `ItemSnapable::PhysicalObjectTile = 3` côté C++
   (`cpp/game/item_snapable/ItemSnapable.h`). Range de validation JSON
-  étendue (`ItemSnapable.cpp:61`). `operator==` couvre le nouveau cas
-  via egalité de `displayParameter` (pas de `PhysicalObjectParameter`
-  dédié pour l'instant — cf. note ci-dessous).
+  étendue (`ItemSnapable.cpp:64`). `operator==` couvre le nouveau cas
+  via egalité de `displayParameter` (le `PhysicalObjectParameter`
+  dédié, ajouté depuis, n'était pas encore présent à la Phase 9 — cf.
+  note ci-dessous).
 - `ItemSnapableFactory::createPhysicalObject()` qui pose un default 1×1
   case (cercle inscrit de rayon 0.5). Pas de paramètre `mass`/`bounce`
   exposé (defaults en dur côté bridge).
@@ -1107,6 +1130,14 @@ Le rayon du body Dynamic est dérivé du `displayParameter.unitSizeWidth`
 itération exposera `mass`/`bounce`/`friction` via un nouveau parameter
 type, et changera la `shape` configurable (Circle / Box) côté
 `BodySpec`. La piste est ouverte mais pas encore implémentée.
+
+> **Mise à jour post-Phase 9** : `PhysicalObjectParameter`
+> (`cpp/game/item_snapable/physicalobjectparameter.{h,cpp}`) a depuis été
+> ajouté — `mass`/`bounceFactor`/`frictionStrength`/`linearDamping`,
+> sérialisé dans le JSON (`ItemSnapable.cpp:214-216`) et lu par
+> `EditorPhysicsBridge.qml:187-194` (fallback `mass = 1.0` uniquement quand
+> le paramètre est absent). Le rayon reste dérivé de
+> `displayParameter.unitSizeWidth`.
 
 ## 7. Tests
 
