@@ -268,6 +268,28 @@ public:
 
     Q_INVOKABLE QString getAppDataPath() const;
 
+    // ==================== Color ID Map (résolution runtime) ====================
+    // Lecture des ressources Color ID Map d'un modèle installé, par nom
+    // (<AppData>/models/<name>/ prioritaire, QRC :/asset/models/<name>/ en
+    // fallback). Utilisé par SkinnedModel/PCP_SkinPicker (runtime/éditeur).
+    // Cf. doc/architecture/COLOR_ID_MAP_INTEGRATION_PLAN.md.
+
+    // Résout le dossier d'un modèle (AppData prioritaire, QRC fallback).
+    Q_INVOKABLE QString modelDir(const QString &modelName) const;
+    // model_manifest.json du modèle → QVariantMap (vide si absent).
+    Q_INVOKABLE QVariantMap readModelManifest(const QString &modelName) const;
+    // Sous-dossiers de <model>/skins (= skins disponibles), triés.
+    Q_INVOKABLE QStringList listModelSkins(const QString &modelName) const;
+    // Fichiers image de <model>/skins/<skin>/textures.
+    Q_INVOKABLE QStringList listSkinTextures(const QString &modelName, const QString &skin) const;
+    // Contenu de <model>/skins/<skin>/skin.json ("" si absent).
+    Q_INVOKABLE QString readSkinJson(const QString &modelName, const QString &skin) const;
+    // Variantes (basenames) de <model>/skins/<skin>/variants.
+    Q_INVOKABLE QStringList listSkinVariants(const QString &modelName, const QString &skin) const;
+    // Contenu d'une variante <model>/skins/<skin>/variants/<name>.json ("" si absent).
+    Q_INVOKABLE QString loadSkinVariant(const QString &modelName, const QString &skin,
+                                        const QString &variant) const;
+
 public slots:
 
 signals:

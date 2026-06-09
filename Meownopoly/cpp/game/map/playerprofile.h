@@ -22,6 +22,10 @@ private:
     Q_PROPERTY(QString  id              READ id              CONSTANT)
     Q_PROPERTY(QString  name            READ name            WRITE setName            NOTIFY nameChanged)
     Q_PROPERTY(QString  modelName       READ modelName       WRITE setModelName       NOTIFY modelNameChanged)
+    // colorVariant : choix de re-skin du joueur, JSON sérialisé
+    // { "skin": "...", "variant": "...", "teamColor": "#rrggbb" } ("" = défaut neutre).
+    // Cf. doc/architecture/COLOR_ID_MAP_INTEGRATION_PLAN.md (Color ID Map).
+    Q_PROPERTY(QString  colorVariant    READ colorVariant    WRITE setColorVariant    NOTIFY colorVariantChanged)
     Q_PROPERTY(PickMode pickMode        READ pickMode        WRITE setPickMode        NOTIFY pickModeChanged)
     Q_PROPERTY(int      minOccurrences  READ minOccurrences  WRITE setMinOccurrences  NOTIFY minOccurrencesChanged)
 
@@ -52,6 +56,7 @@ public:
     QString  id() const              { return m_id; }
     QString  name() const            { return m_name; }
     QString  modelName() const       { return m_modelName; }
+    QString  colorVariant() const    { return m_colorVariant; }
     PickMode pickMode() const        { return m_pickMode; }
     int      minOccurrences() const  { return m_minOccurrences; }
     qreal    radius() const          { return m_radius; }
@@ -65,6 +70,7 @@ public:
 
     void setName(const QString &v);
     void setModelName(const QString &v);
+    void setColorVariant(const QString &v);
     void setPickMode(PickMode v);
     void setMinOccurrences(int v);
     void setRadius(qreal v);
@@ -94,6 +100,7 @@ public:
 signals:
     void nameChanged();
     void modelNameChanged();
+    void colorVariantChanged();
     void pickModeChanged();
     void minOccurrencesChanged();
     void radiusChanged();
@@ -109,6 +116,7 @@ private:
     QString  m_id;
     QString  m_name           = QStringLiteral("Princess");
     QString  m_modelName      = QStringLiteral("Princess");
+    QString  m_colorVariant;   // JSON re-skin, "" = défaut neutre
     PickMode m_pickMode       = PickMode::Unique;
     int      m_minOccurrences = 1;
 

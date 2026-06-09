@@ -20,6 +20,7 @@ Rectangle {
     
     signal refreshRequested()
     signal downloadRequested(string name, string version)
+    signal editRequested(string name)
 
     ColumnLayout {
         anchors.fill: parent
@@ -117,6 +118,25 @@ Rectangle {
                     }
 
                     Item { Layout.fillWidth: true } // Spacer
+
+                    // Éditer : ouvre le configurateur sur le dossier installé du modèle.
+                    Button {
+                        id: editButton
+                        visible: modelData.isInstalled
+                        text: "Éditer"
+                        onClicked: root.editRequested(modelData.name)
+                        background: Rectangle {
+                            color: editButton.pressed ? "#6d28d9" : "#7c3aed"
+                            radius: 4
+                        }
+                        contentItem: Text {
+                            text: editButton.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: 12
+                        }
+                    }
 
                     Button {
                         id: actionButton

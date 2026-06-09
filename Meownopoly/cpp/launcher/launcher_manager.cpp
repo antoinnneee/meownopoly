@@ -7,6 +7,7 @@
 #include <QUrl>
 #include <QString>
 #include <QJsonArray>
+#include <QImage>
 #include <algorithm>
 
 #include <iostream>
@@ -23,6 +24,7 @@ LauncherManager::LauncherManager(QObject *parent)
     QDir().mkpath(m_basePath + "/download");
     QDir().mkpath(m_basePath + "/assets");
     QDir().mkpath(m_basePath + "/models");
+    QDir().mkpath(m_basePath + "/model_textures");   // bibliothèque de textures partagée
 
     // Download timeout (5 minutes sans activité)
     m_downloadTimer = new QTimer(this);
@@ -557,323 +559,6 @@ void LauncherManager::uploadModelPackage(const QString &serverUrl, const QString
 }
 
 // ---------------------------------------------------------
-// BALSAM (import .obj/.glb/.gltf/.fbx → .qml)
-// ---------------------------------------------------------
-
-void LauncherManager::setBalsamPath(const QString &p)
-{
-    if (m_balsamPath != p) {
-        m_balsamPath = p;
-        emit balsamPathChanged();
-    }
-}
-
-QVariantList LauncherManager::balsamOptionDefinitions() const
-{
-    // Référence : `balsam --help` (Qt 6.11). Convention : chaque flag a sa
-    // forme inverse `--disable-<flag>`. Les défauts ci-dessous reflètent
-    // ceux de balsamui.
-    auto mk = [](const QString &key, const QString &flag, const QString &label,
-                 const QString &type, const QVariant &def, const QString &group,
-                 const QString &tooltip,
-                 const QString &dependsOn = QString()) {
-        QVariantMap m;
-        m["key"] = key;
-        m["flag"] = flag;
-        m["label"] = label;
-        m["type"] = type;
-        m["default"] = def;
-        m["group"] = group;
-        m["tooltip"] = tooltip;
-        if (!dependsOn.isEmpty()) m["dependsOn"] = dependsOn;
-        return m;
-    };
-
-    QVariantList list;
-
-    // --- Géométrie
-    list << mk("joinIdenticalVertices", "--joinIdenticalVertices",
-               "Fusionner les vertices identiques", "bool", true, "Géométrie",
-               "Identifie et fusionne les sommets dupliqués pour réduire la taille du mesh et améliorer les perfs GPU.");
-    list << mk("generateNormals", "--generateNormals",
-               "Générer les normales (face)", "bool", false, "Géométrie",
-               "Calcule les normales par face. Utile si le .obj n'en exporte pas. Désactive `Generate Smooth Normals`.");
-    list << mk("generateSmoothNormals", "--generateSmoothNormals",
-               "Générer les normales lissées", "bool", true, "Géométrie",
-               "Calcule des normales lissées par sommet (averaging). Donne un rendu doux pour les surfaces courbes.");
-    list << mk("calculateTangentSpace", "--calculateTangentSpace",
-               "Calculer l'espace tangent", "bool", false, "Géométrie",
-               "Calcule tangentes/bitangentes pour les meshes. Nécessaire pour le bon rendu des normalMaps.");
-    list << mk("optimizeMeshes", "--optimizeMeshes",
-               "Optimiser les meshes", "bool", false, "Géométrie",
-               "Étape de post-traitement qui réduit le nombre de meshes par fusion logique.");
-    list << mk("optimizeGraph", "--optimizeGraph",
-               "Optimiser le graphe de scène", "bool", false, "Géométrie",
-               "Étape de post-traitement qui simplifie la hiérarchie de la scène (collapse de nodes inutiles).");
-    list << mk("improveCacheLocality", "--improveCacheLocality",
-               "Améliorer la localité de cache", "bool", true, "Géométrie",
-               "Réordonne les triangles pour mieux exploiter le cache vertex GPU.");
-    list << mk("preTransformVertices", "--preTransformVertices",
-               "Pré-transformer les vertices", "bool", false, "Géométrie",
-               "Supprime le graphe de nodes et applique les matrices de transformation locales aux vertices. Casse l'animation et la hiérarchie.");
-    list << mk("splitLargeMeshes", "--splitLargeMeshes",
-               "Découper les gros meshes", "bool", true, "Géométrie",
-               "Découpe les meshes volumineux en sous-meshes plus petits pour respecter les limites GPU.");
-    list << mk("findInstances", "--findInstances",
-               "Détecter les instances", "bool", false, "Géométrie",
-               "Recherche les meshes dupliqués et les remplace par des références au premier (instancing).");
-    list << mk("removeRedundantMaterials", "--removeRedundantMaterials",
-               "Retirer les matériaux redondants", "bool", false, "Géométrie",
-               "Recherche et supprime les matériaux dupliqués ou non référencés.");
-    list << mk("fixInfacingNormals", "--fixInfacingNormals",
-               "Corriger les normales internes", "bool", false, "Géométrie",
-               "Détecte les meshes dont les normales pointent vers l'intérieur et les inverse.");
-    list << mk("findDegenerates", "--findDegenerates",
-               "Détecter les primitives dégénérées", "bool", true, "Géométrie",
-               "Recherche les triangles dégénérés (aire nulle) et les convertit en lignes ou points propres.");
-    list << mk("findInvalidData", "--findInvalidData",
-               "Détecter les données invalides", "bool", true, "Géométrie",
-               "Recherche dans tous les meshes des données invalides (normales nulles, UVs invalides…) et les corrige. Évite les erreurs courantes des exporteurs.");
-    list << mk("transformUVCoordinates", "--transformUVCoordinates",
-               "Appliquer les transformations UV", "bool", false, "Géométrie",
-               "Applique les transformations UV par texture et les bake dans des canaux UV indépendants.");
-
-    // --- Échelle
-    list << mk("globalScale", "--globalScale",
-               "Activer le scale global", "bool", false, "Échelle",
-               "Applique un facteur d'échelle global au modèle entier au moment de l'import (alternative au scale du marker).");
-    list << mk("globalScaleValue", "--globalScaleValue",
-               "Valeur du scale global", "real", 1.0, "Échelle",
-               "Facteur multiplicatif appliqué quand `Activer le scale global` est coché.",
-               "globalScale");
-
-    // --- Textures
-    list << mk("generateMipMaps", "--generateMipMaps",
-               "Générer les mipmaps", "bool", true, "Textures",
-               "Force la génération de mipmaps pour toutes les textures importées (filtrage trilinéaire/anisotrope plus propre).");
-
-    // --- Animations
-    list << mk("useBinaryKeyframes", "--useBinaryKeyframes",
-               "Keyframes binaires", "bool", true, "Animations",
-               "Stocke les keyframes d'animation en binaire externe (chargement plus rapide, .qml plus léger).");
-    list << mk("manualAnimations", "--manualAnimations",
-               "Animations manuelles", "bool", false, "Animations",
-               "Pas de TimelineAnimation auto-générée — les Timelines doivent être déclenchées manuellement depuis le code.");
-    list << mk("removeComponentAnimations", "--removeComponentAnimations",
-               "Retirer les composants d'animation", "bool", false, "Animations",
-               "Supprime tous les composants d'animation des meshes.");
-
-    // --- LODs (les 3 angles dépendent de generateMeshLevelsOfDetail)
-    list << mk("generateMeshLevelsOfDetail", "--generateMeshLevelsOfDetail",
-               "Générer les LODs de mesh", "bool", false, "LODs",
-               "Crée automatiquement des Levels Of Detail (versions simplifiées) du mesh source.");
-    list << mk("recalculateLodNormals", "--recalculateLodNormals",
-               "Recalculer normales pour LODs", "bool", true, "LODs",
-               "Recalcule de nouvelles normales si nécessaire pour les LODs générés (sinon les normales d'origine sont conservées).",
-               "generateMeshLevelsOfDetail");
-    list << mk("recalculateLodNormalsMergeAngle", "--recalculateLodNormalsMergeAngle",
-               "Angle de fusion (merge angle) des normales LOD", "real", 60.0, "LODs",
-               "Angle maximum (en degrés) pour fusionner/lisser des normales sur les LODs.",
-               "generateMeshLevelsOfDetail");
-    list << mk("recalculateLodNormalsSplitAngle", "--recalculateLodNormalsSplitAngle",
-               "Angle de séparation (split angle) des normales LOD", "real", 25.0, "LODs",
-               "Angle maximum (en degrés) au-delà duquel on sépare les normales (création de nouveaux vertices).",
-               "generateMeshLevelsOfDetail");
-
-    // --- Composants à retirer (rare usage, économise de la mémoire)
-    list << mk("dropNormals", "--dropNormals",
-               "Supprimer les normales", "bool", false, "Composants",
-               "Supprime toutes les normales de toutes les faces. À combiner avec generateNormals si on veut les recalculer.");
-    list << mk("removeComponentUVs", "--removeComponentUVs",
-               "Retirer les UVs", "bool", false, "Composants",
-               "Supprime les composants UV des meshes (utile uniquement pour modèles non-texturés).");
-    list << mk("removeComponentColors", "--removeComponentColors",
-               "Retirer les couleurs vertex", "bool", false, "Composants",
-               "Supprime les couleurs par vertex.");
-    list << mk("removeComponentNormals", "--removeComponentNormals",
-               "Retirer les normales", "bool", false, "Composants",
-               "Supprime le composant normal des meshes.");
-    list << mk("removeComponentTangentsAndBitangents", "--removeComponentTangentsAndBitangents",
-               "Retirer tangentes/bitangentes", "bool", false, "Composants",
-               "Supprime tangentes et bitangentes des meshes (économise mémoire si pas de normalMap).");
-    list << mk("removeComponentBoneWeights", "--removeComponentBoneWeights",
-               "Retirer les bone weights", "bool", false, "Composants",
-               "Supprime les poids d'os des meshes (à activer si pas de skinning).");
-    list << mk("removeComponentTextures", "--removeComponentTextures",
-               "Retirer les textures embarquées", "bool", false, "Composants",
-               "Supprime les composants texture intégrés au fichier source.");
-
-    // --- Avancé
-    list << mk("useFloatJointIndices", "--useFloatJointIndices",
-               "Indices d'articulation en float", "bool", false, "Avancé",
-               "Stocke les indices d'articulation en flottants (compatibilité GLES 2.0).");
-    list << mk("fbxPreservePivots", "--fbxPreservePivots",
-               "Préserver les pivots FBX", "bool", false, "Avancé",
-               "Pour les .fbx : conserve les pivots comme nodes supplémentaires dans la hiérarchie.");
-    list << mk("expandValueComponents", "--expandValueComponents",
-               "Décomposer les value types", "bool", false, "Avancé",
-               "Décompose les types valeur (vector3d, quaternion) en propriétés scalaires séparées.");
-    list << mk("designStudioWorkarounds", "--designStudioWorkarounds",
-               "Compatibilité Qt Design Studio", "bool", false, "Avancé",
-               "Active des contournements nécessaires pour générer des composants compatibles avec Qt Design Studio.");
-
-    return list;
-}
-
-void LauncherManager::runBalsamImport(const QString &sourceFile,
-                                      const QString &outputDir,
-                                      const QVariantMap &options)
-{
-    if (m_balsamProcess) {
-        emit balsamFinished(false, QString(), "Une conversion balsam est deja en cours");
-        return;
-    }
-
-    QString balsam = m_balsamPath;
-    if (balsam.startsWith("file:///")) balsam = balsam.mid(8);
-    else if (balsam.startsWith("file://")) balsam = balsam.mid(7);
-
-    if (balsam.isEmpty()) {
-        emit balsamFinished(false, QString(), "Path balsam non configure");
-        return;
-    }
-    if (!QFile::exists(balsam)) {
-        emit balsamFinished(false, QString(), "Executable balsam introuvable : " + balsam);
-        return;
-    }
-
-    QString cleanSource = sourceFile;
-    if (cleanSource.startsWith("file:///")) cleanSource = cleanSource.mid(8);
-    else if (cleanSource.startsWith("file://")) cleanSource = cleanSource.mid(7);
-    if (!QFile::exists(cleanSource)) {
-        emit balsamFinished(false, QString(), "Source introuvable : " + cleanSource);
-        return;
-    }
-
-    QString cleanOutput = outputDir;
-    if (cleanOutput.startsWith("file:///")) cleanOutput = cleanOutput.mid(8);
-    else if (cleanOutput.startsWith("file://")) cleanOutput = cleanOutput.mid(7);
-    if (cleanOutput.isEmpty()) {
-        emit balsamFinished(false, QString(), "Dossier de sortie non specifie");
-        return;
-    }
-    if (!QDir().mkpath(cleanOutput)) {
-        emit balsamFinished(false, QString(), "Impossible de creer le dossier de sortie : " + cleanOutput);
-        return;
-    }
-
-    // Snapshot des .qml préexistants pour identifier le nouveau après run.
-    QSet<QString> beforeQmls;
-    {
-        QDir d(cleanOutput);
-        const QStringList existing = d.entryList(QStringList{"*.qml"}, QDir::Files);
-        for (const QString &n : existing) beforeQmls.insert(n);
-    }
-
-    // Construction des args. Pour les bool, balsam supporte la convention
-    // `--flag` (active) / `--disable-flag` (désactive). Pour les options
-    // qui n'apparaissent pas dans la map utilisateur, on ne passe rien :
-    // balsam appliquera son défaut (qu'on s'efforce de garder cohérent
-    // avec celui exposé en UI). Pour celles présentes, on passe la forme
-    // explicite correspondant à la valeur — comme ça l'utilisateur voit
-    // toujours le résultat attendu de la checkbox.
-    auto disableFlagOf = [](const QString &flag) {
-        // "--joinIdenticalVertices" → "--disable-joinIdenticalVertices"
-        if (flag.startsWith("--")) return QStringLiteral("--disable-") + flag.mid(2);
-        return QStringLiteral("--disable-") + flag;
-    };
-
-    // Helper pour résoudre la dépendance (présence dans options en
-    // priorité, sinon défaut de la définition).
-    const QVariantList defs = balsamOptionDefinitions();
-    auto resolveBool = [&](const QString &key, const QVariantMap &fallbackDef) {
-        if (options.contains(key)) return options.value(key).toBool();
-        // Cherche le default dans defs
-        for (const QVariant &dv : defs) {
-            const QVariantMap dd = dv.toMap();
-            if (dd.value("key").toString() == key)
-                return dd.value("default").toBool();
-        }
-        return fallbackDef.value("default").toBool();
-    };
-
-    QStringList args;
-    for (const QVariant &v : defs) {
-        const QVariantMap def = v.toMap();
-        const QString key = def.value("key").toString();
-        const QString flag = def.value("flag").toString();
-        const QString type = def.value("type").toString();
-        const QString dep = def.value("dependsOn").toString();
-
-        if (!options.contains(key)) continue;
-        const QVariant val = options.value(key);
-
-        if (type == "bool") {
-            if (val.toBool()) args << flag;
-            else              args << disableFlagOf(flag);
-        } else if (type == "real") {
-            // Ne pas passer si la dépendance n'est pas active.
-            if (!dep.isEmpty() && !resolveBool(dep, def)) continue;
-            args << flag << QString::number(val.toDouble(), 'f', 6);
-        }
-    }
-    args << "--outputPath" << cleanOutput;
-    args << cleanSource;
-    emit logMessage("balsam: " + balsam + " " + args.join(" "));
-
-    m_balsamProcess = new QProcess(this);
-    emit balsamRunningChanged();
-
-    connect(m_balsamProcess, &QProcess::errorOccurred, this,
-            [this](QProcess::ProcessError err) {
-        emit logMessage("balsam errorOccurred: " + QString::number(err));
-    });
-
-    connect(m_balsamProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
-            [this, cleanOutput, beforeQmls](int exitCode, QProcess::ExitStatus status) {
-        const QString stdoutText = QString::fromLocal8Bit(m_balsamProcess->readAllStandardOutput());
-        const QString stderrText = QString::fromLocal8Bit(m_balsamProcess->readAllStandardError());
-        if (!stdoutText.isEmpty()) emit logMessage("balsam stdout: " + stdoutText.trimmed());
-        if (!stderrText.isEmpty()) emit logMessage("balsam stderr: " + stderrText.trimmed());
-
-        bool ok = (status == QProcess::NormalExit) && (exitCode == 0);
-        QString qmlPath, error;
-
-        if (!ok) {
-            error = stderrText.isEmpty()
-                ? QString("balsam a termine en erreur (code %1)").arg(exitCode)
-                : stderrText.trimmed();
-        } else {
-            // Cherche un .qml apparu après le run
-            QDir d(cleanOutput);
-            const QStringList nowQmls = d.entryList(QStringList{"*.qml"}, QDir::Files, QDir::Time);
-            QString chosen;
-            for (const QString &n : nowQmls) {
-                if (!beforeQmls.contains(n)) { chosen = n; break; }
-            }
-            if (chosen.isEmpty() && !nowQmls.isEmpty()) {
-                // Fallback : pas de delta (cas overwrite) → on prend le plus récent
-                chosen = nowQmls.first();
-            }
-            if (chosen.isEmpty()) {
-                ok = false;
-                error = "balsam OK mais aucun .qml dans " + cleanOutput;
-            } else {
-                qmlPath = d.absoluteFilePath(chosen);
-                emit logMessage("balsam OK : " + qmlPath);
-            }
-        }
-
-        m_balsamProcess->deleteLater();
-        m_balsamProcess = nullptr;
-        emit balsamRunningChanged();
-        emit balsamFinished(ok, qmlPath, error);
-    });
-
-    m_balsamProcess->start(balsam, args);
-}
-
-// ---------------------------------------------------------
 // MODEL 3D CONFIGURATOR HELPERS
 // ---------------------------------------------------------
 
@@ -914,6 +599,81 @@ QVariantMap LauncherManager::readModelManifest(const QString &folderPath)
         result.insert(it.key(), it.value().toVariant());
     }
     return result;
+}
+
+bool LauncherManager::writeModelManifest(const QString &folderPath, const QString &json) const
+{
+    const QString cleanPath = sanitizeFolderPath(folderPath);
+    QFile f(cleanPath + "/model_manifest.json");
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+        return false;
+    f.write(json.toUtf8());
+    f.close();
+    return true;
+}
+
+QString LauncherManager::createModelFromGlb(const QString &parentDir, const QString &name,
+                                            const QString &glbSource, const QString &skinBaseSource)
+{
+    const QString safe = name.trimmed();
+    if (safe.isEmpty()) { emit logMessage("createModelFromGlb: nom vide"); return QString(); }
+
+    const QString src = sanitizeFolderPath(glbSource);
+    if (src.isEmpty() || !QFile::exists(src)) {
+        emit logMessage("createModelFromGlb: .glb introuvable: " + src);
+        return QString();
+    }
+
+    QString parent = sanitizeFolderPath(parentDir);
+    if (parent.isEmpty()) parent = m_basePath + QStringLiteral("/model_drafts");
+    const QString folder = parent + "/" + safe;
+    QDir().mkpath(folder + "/base");
+    QDir().mkpath(folder + "/skins");
+
+    const QString glbName = safe + QStringLiteral(".glb");
+    const QString dstGlb = folder + "/base/" + glbName;
+    QFile::remove(dstGlb);
+    if (!QFile::copy(src, dstGlb)) {
+        emit logMessage("createModelFromGlb: échec copie du .glb vers " + dstGlb);
+        return QString();
+    }
+
+    bool hasSkinBase = false;
+    const QString sb = sanitizeFolderPath(skinBaseSource);
+    if (!sb.isEmpty() && QFile::exists(sb)) {
+        const QString dstSb = folder + "/base/skin_base.png";
+        QFile::remove(dstSb);
+        hasSkinBase = QFile::copy(sb, dstSb);
+    }
+
+    // Échelle par défaut 100 : les modèles importés sont minuscules à l'échelle
+    // native, on les met d'emblée à une taille visible (cohérent avec le slider).
+    QJsonArray s; s.append(100); s.append(100); s.append(100);
+    QJsonArray e; e.append(0); e.append(0); e.append(0);
+    QJsonArray p; p.append(0); p.append(0); p.append(0);
+    QJsonObject tr; tr["scale"] = s; tr["eulerRotation"] = e; tr["position"] = p;
+
+    QJsonObject colorId;
+    colorId["version"] = 1;
+    colorId["defaultSkin"] = "";
+    colorId["defaultVariant"] = "";
+
+    QJsonObject m;
+    m["name"] = safe;
+    m["version"] = "1.0.0";
+    m["type"] = "model";
+    m["glb"] = "base/" + glbName;
+    m["skinBase"] = hasSkinBase ? "base/skin_base.png" : "";
+    m["transform"] = tr;
+    m["colorId"] = colorId;
+
+    QFile f(folder + "/model_manifest.json");
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        f.write(QJsonDocument(m).toJson());
+        f.close();
+    }
+    emit logMessage("Modèle créé depuis .glb : " + folder);
+    return folder;
 }
 
 QVariantMap LauncherManager::readModelTransform(const QString &folderPath, const QString &modelName)
@@ -1028,6 +788,317 @@ bool LauncherManager::writeModelTransform(const QString &folderPath, const QStri
     out.close();
     emit logMessage("Transform applique a " + qmlPath);
     return true;
+}
+
+// ====================================================================
+// Color ID Map — créateur de skin (port du pont C++ Catalog de kura).
+// Arborescence : <folder>/skins/<skin>/{colorMap.png, skin.json,
+// textures/*.png, variants/*.json}.
+// ====================================================================
+
+// Garde lettres/chiffres/espace/-/_ (évite toute traversée de chemin).
+static QString sanitizeAssetName(const QString &name)
+{
+    QString out;
+    for (const QChar c : name.trimmed()) {
+        if (c.isLetterOrNumber() || c == QLatin1Char('_')
+            || c == QLatin1Char('-') || c == QLatin1Char(' '))
+            out += c;
+    }
+    return out.trimmed();
+}
+
+static QString skinDirPath(const QString &folderPath, const QString &skin)
+{
+    return sanitizeFolderPath(folderPath) + QStringLiteral("/skins/") + sanitizeAssetName(skin);
+}
+
+static QStringList imageNameFilters()
+{
+    return QStringList{ "*.png", "*.jpg", "*.jpeg", "*.tga", "*.bmp" };
+}
+
+// Détecte le nombre de zones d'une color ID map : compte les pixels qui
+// matchent chacune des 20 couleurs de palette (COLOR_ID_MAP.md §2, 0-255
+// linéaire brut), puis ne retient un slot que s'il couvre une AIRE
+// significative (filtre l'anti-aliasing/compression/pixels parasites qui,
+// sinon, gonflent le compte). Renvoie (index max retenu + 1), ou 1 si rien.
+// Tolérance de comptage volontairement stricte (~28/255 ; distance min entre
+// IDs voisins ≈ 153/255, donc aucune confusion entre zones réelles).
+static int detectColorMapZoneCountImpl(const QString &imagePath)
+{
+    QImage img(imagePath);
+    if (img.isNull()) { qDebug() << "[colorId] image illisible:" << imagePath; return 1; }
+    img = img.convertToFormat(QImage::Format_RGB888);
+
+    static const int PAL[20][3] = {
+        {242, 24, 24},  {24, 242, 242}, {133, 242, 24}, {133, 24, 242},
+        {242, 188, 24}, {24, 79, 242},  {24, 242, 79},  {242, 24, 188},
+        {242, 106, 24}, {24, 161, 242}, {52, 242, 24},  {215, 24, 242},
+        {215, 242, 24}, {52, 24, 242},  {24, 242, 161}, {242, 24, 106},
+        {242, 65, 24},  {24, 201, 242}, {92, 242, 24},  {174, 24, 242}
+    };
+    const int TOL2 = 28 * 28;
+
+    qint64 counts[20] = { 0 };
+    qint64 sampled = 0;
+    const int W = img.width(), H = img.height();
+    const int step = qMax(1, qMin(W, H) / 400); // sous-échantillonnage gros fichiers
+
+    for (int y = 0; y < H; y += step) {
+        const uchar *line = img.constScanLine(y);
+        for (int x = 0; x < W; x += step) {
+            const uchar *p = line + x * 3;
+            const int r = p[0], g = p[1], b = p[2];
+            ++sampled;
+            if (r < 24 && g < 24 && b < 24) continue; // fond noir = aucune zone
+            for (int i = 0; i < 20; ++i) {
+                const int dr = r - PAL[i][0], dg = g - PAL[i][1], db = b - PAL[i][2];
+                if (dr * dr + dg * dg + db * db <= TOL2) { counts[i]++; break; }
+            }
+        }
+    }
+
+    // Seuil d'aire : une zone réelle couvre une surface notable. ≥ 0.2 % des
+    // pixels échantillonnés (plancher absolu 8) → ignore le bruit épars.
+    const qint64 thresh = qMax<qint64>(8, sampled / 500);
+    int highest = -1;
+    QStringList dbg;
+    for (int i = 0; i < 20; ++i) {
+        if (counts[i] >= thresh) highest = i;
+        if (counts[i] > 0) dbg << QStringLiteral("%1:%2").arg(i).arg(counts[i]);
+    }
+    qDebug().noquote() << "[colorId] détection zones — échantillonnés" << sampled
+                       << "seuil" << thresh << "| counts" << dbg.join(" ")
+                       << "=> zones =" << (highest + 1);
+    return highest >= 0 ? highest + 1 : 1;
+}
+
+int LauncherManager::detectColorMapZones(const QString &colorMapSource) const
+{
+    return detectColorMapZoneCountImpl(sanitizeFolderPath(colorMapSource));
+}
+
+bool LauncherManager::createModelSkin(const QString &folderPath, const QString &skinName,
+                                      const QString &colorMapSource)
+{
+    const QString skin = sanitizeAssetName(skinName);
+    if (skin.isEmpty()) {
+        emit logMessage("createModelSkin: nom de skin vide/invalide");
+        return false;
+    }
+    const QString dir = skinDirPath(folderPath, skin);
+    QDir().mkpath(dir);
+    QDir().mkpath(dir + "/textures");
+    QDir().mkpath(dir + "/variants");
+
+    // Copie la color map (si fournie) vers colorMap.png + détecte les zones.
+    int zoneCount = 1;
+    const QString src = sanitizeFolderPath(colorMapSource);
+    if (!src.isEmpty() && QFile::exists(src)) {
+        const QString dst = dir + "/colorMap.png";
+        QFile::remove(dst);
+        if (!QFile::copy(src, dst)) {
+            emit logMessage("createModelSkin: échec copie colorMap depuis " + src);
+            return false;
+        }
+        zoneCount = detectColorMapZoneCountImpl(dst);
+        emit logMessage(QStringLiteral("createModelSkin: %1 zone(s) détectée(s) dans la color map").arg(zoneCount));
+    }
+
+    // skin.json (zones détectées) s'il n'existe pas déjà.
+    const QString skinJson = dir + "/skin.json";
+    if (!QFile::exists(skinJson)) {
+        QJsonObject zones;
+        for (int i = 0; i < zoneCount; ++i) {
+            QJsonObject z; z["name"] = QStringLiteral("zone %1").arg(i);
+            zones[QString::number(i)] = z;
+        }
+        QJsonObject root; root["name"] = skin; root["zones"] = zones;
+        QFile f(skinJson);
+        if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            f.write(QJsonDocument(root).toJson());
+            f.close();
+        }
+    }
+    emit logMessage("Skin créé : " + dir + QStringLiteral(" (%1 zones)").arg(zoneCount));
+    return true;
+}
+
+QStringList LauncherManager::listModelSkins(const QString &folderPath) const
+{
+    QDir d(sanitizeFolderPath(folderPath) + QStringLiteral("/skins"));
+    if (!d.exists()) return {};
+    return d.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+}
+
+QStringList LauncherManager::listSkinTextures(const QString &folderPath, const QString &skin) const
+{
+    QDir d(skinDirPath(folderPath, skin) + QStringLiteral("/textures"));
+    if (!d.exists()) return {};
+    return d.entryList(imageNameFilters(), QDir::Files, QDir::Name);
+}
+
+bool LauncherManager::importSkinTexture(const QString &folderPath, const QString &skin,
+                                        const QString &textureSource)
+{
+    const QString src = sanitizeFolderPath(textureSource);
+    if (src.isEmpty() || !QFile::exists(src)) {
+        emit logMessage("importSkinTexture: source introuvable " + src);
+        return false;
+    }
+    const QString dir = skinDirPath(folderPath, skin) + QStringLiteral("/textures");
+    QDir().mkpath(dir);
+    const QString dst = dir + "/" + QFileInfo(src).fileName();
+    QFile::remove(dst);
+    if (!QFile::copy(src, dst)) {
+        emit logMessage("importSkinTexture: échec copie vers " + dst);
+        return false;
+    }
+    return true;
+}
+
+QString LauncherManager::readSkinJson(const QString &folderPath, const QString &skin) const
+{
+    QFile f(skinDirPath(folderPath, skin) + QStringLiteral("/skin.json"));
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return QString();
+    const QString s = QString::fromUtf8(f.readAll());
+    f.close();
+    return s;
+}
+
+bool LauncherManager::writeSkinJson(const QString &folderPath, const QString &skin,
+                                    const QString &json) const
+{
+    const QString dir = skinDirPath(folderPath, skin);
+    QDir().mkpath(dir);
+    QFile f(dir + QStringLiteral("/skin.json"));
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+        return false;
+    f.write(json.toUtf8());
+    f.close();
+    return true;
+}
+
+QStringList LauncherManager::listSkinVariants(const QString &folderPath, const QString &skin) const
+{
+    QDir d(skinDirPath(folderPath, skin) + QStringLiteral("/variants"));
+    if (!d.exists()) return {};
+    QStringList names;
+    for (const QString &f : d.entryList(QStringList() << QStringLiteral("*.json"),
+                                        QDir::Files, QDir::Name))
+        names << QFileInfo(f).completeBaseName();
+    return names;
+}
+
+bool LauncherManager::saveSkinVariant(const QString &folderPath, const QString &skin,
+                                      const QString &name, const QString &json) const
+{
+    const QString safe = sanitizeAssetName(name);
+    if (safe.isEmpty()) return false;
+    const QString dir = skinDirPath(folderPath, skin) + QStringLiteral("/variants");
+    QDir().mkpath(dir);
+    QFile f(dir + "/" + safe + QStringLiteral(".json"));
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+        return false;
+    f.write(json.toUtf8());
+    f.close();
+    return true;
+}
+
+QString LauncherManager::loadSkinVariant(const QString &folderPath, const QString &skin,
+                                         const QString &name) const
+{
+    QFile f(skinDirPath(folderPath, skin) + QStringLiteral("/variants/")
+            + sanitizeAssetName(name) + QStringLiteral(".json"));
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return QString();
+    const QString s = QString::fromUtf8(f.readAll());
+    f.close();
+    return s;
+}
+
+bool LauncherManager::deleteSkinVariant(const QString &folderPath, const QString &skin,
+                                        const QString &name) const
+{
+    const QString safe = sanitizeAssetName(name);
+    if (safe.isEmpty()) return false;
+    return QFile::remove(skinDirPath(folderPath, skin) + QStringLiteral("/variants/")
+                         + safe + QStringLiteral(".json"));
+}
+
+bool LauncherManager::deleteSkinTexture(const QString &folderPath, const QString &skin,
+                                        const QString &file) const
+{
+    const QString name = QFileInfo(file).fileName();   // garde-fou : pas de traversée
+    if (name.isEmpty()) return false;
+    return QFile::remove(skinDirPath(folderPath, skin)
+                         + QStringLiteral("/textures/") + name);
+}
+
+// --- Bibliothèque de textures générales (<AppData>/model_textures) ----------
+
+QString LauncherManager::generalTextureDir() const
+{
+    return m_basePath + QStringLiteral("/model_textures");
+}
+
+QStringList LauncherManager::listGeneralTextures() const
+{
+    QDir d(generalTextureDir());
+    if (!d.exists()) return {};
+    return d.entryList(imageNameFilters(), QDir::Files, QDir::Name);
+}
+
+bool LauncherManager::importGeneralTexture(const QString &source)
+{
+    const QString src = sanitizeFolderPath(source);
+    if (src.isEmpty() || !QFile::exists(src)) {
+        emit logMessage("importGeneralTexture: source introuvable " + src);
+        return false;
+    }
+    const QString dir = generalTextureDir();
+    QDir().mkpath(dir);
+    const QString dst = dir + "/" + QFileInfo(src).fileName();
+    QFile::remove(dst);
+    if (!QFile::copy(src, dst)) {
+        emit logMessage("importGeneralTexture: échec copie vers " + dst);
+        return false;
+    }
+    return true;
+}
+
+bool LauncherManager::deleteGeneralTexture(const QString &file) const
+{
+    const QString name = QFileInfo(file).fileName();
+    if (name.isEmpty()) return false;
+    return QFile::remove(generalTextureDir() + "/" + name);
+}
+
+bool LauncherManager::copyGeneralTextureToSkin(const QString &folderPath, const QString &skin,
+                                               const QString &file)
+{
+    const QString name = QFileInfo(file).fileName();
+    const QString src = generalTextureDir() + "/" + name;
+    if (name.isEmpty() || !QFile::exists(src)) {
+        emit logMessage("copyGeneralTextureToSkin: texture générale introuvable " + src);
+        return false;
+    }
+    const QString dir = skinDirPath(folderPath, skin) + QStringLiteral("/textures");
+    QDir().mkpath(dir);
+    const QString dst = dir + "/" + name;
+    QFile::remove(dst);
+    if (!QFile::copy(src, dst)) {
+        emit logMessage("copyGeneralTextureToSkin: échec copie vers " + dst);
+        return false;
+    }
+    return true;
+}
+
+QString LauncherManager::installedModelDir(const QString &name) const
+{
+    const QString safe = QFileInfo(name.trimmed()).fileName();
+    if (safe.isEmpty()) return QString();
+    return m_basePath + QStringLiteral("/models/") + safe;
 }
 
 void LauncherManager::onModelsListFinished()

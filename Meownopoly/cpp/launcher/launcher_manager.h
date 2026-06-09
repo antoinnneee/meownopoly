@@ -13,7 +13,6 @@
 #include <QJsonDocument>
 #include <QDateTime>
 #include <QCryptographicHash>
-#include <QProcess>
 #include <QQueue>
 #include "tools/QtFolderCompressor/FolderCompressor.h"
 
@@ -31,8 +30,6 @@ class LauncherManager : public QObject
     Q_PROPERTY(qint64 bytesReceived READ bytesReceived NOTIFY downloadProgressChanged)
     Q_PROPERTY(qint64 bytesTotal READ bytesTotal NOTIFY downloadProgressChanged)
     Q_PROPERTY(QString versionDescription READ versionDescription NOTIFY latestVersionChanged)
-    Q_PROPERTY(QString balsamPath READ balsamPath WRITE setBalsamPath NOTIFY balsamPathChanged)
-    Q_PROPERTY(bool    balsamRunning READ balsamRunning NOTIFY balsamRunningChanged)
 
 public:
     static void registerQml();
@@ -50,9 +47,6 @@ public:
     qint64 bytesReceived() const { return m_bytesReceived; }
     qint64 bytesTotal() const { return m_bytesTotal; }
     QString versionDescription() const { return m_versionDescription; }
-    QString balsamPath() const { return m_balsamPath; }
-    bool    balsamRunning() const { return m_balsamProcess != nullptr; }
-    void    setBalsamPath(const QString &p);
     
     // Launcher methods invokable from QML
     Q_INVOKABLE void testServerConnection(const QString &serverUrl);
@@ -78,6 +72,19 @@ public:
     // readModelManifest : lit <folderPath>/model_manifest.json s'il existe
     // et retourne { name, version, timestamp, type }. Map vide si absent.
     Q_INVOKABLE QVariantMap readModelManifest(const QString &folderPath);
+    // writeModelManifest : écrit <folderPath>/model_manifest.json à partir
+    // d'une string JSON (transform + colorId migrent ici, plus de marker .qml).
+    Q_INVOKABLE bool writeModelManifest(const QString &folderPath, const QString &json) const;
+
+    // createModelFromGlb : crée un nouveau dossier de modèle au format kura
+    // (remplace l'ancien import .obj → balsam). Copie le .glb dans
+    //   <parentDir>/<name>/base/<name>.glb
+    // (+ base/skin_base.png si skinBaseSource fourni) et écrit un
+    // model_manifest.json squelette. Si parentDir est vide, crée sous
+    // <AppData>/model_drafts/. Retourne le chemin (clean) du dossier, ou "".
+    Q_INVOKABLE QString createModelFromGlb(const QString &parentDir, const QString &name,
+                                           const QString &glbSource,
+                                           const QString &skinBaseSource = QString());
     // readModelTransform : lit le bloc marker injecté par le configurateur
     // dans <folderPath>/<modelName>.qml. Retourne {
     //   scale: [sx,sy,sz], eulerRotation: [rx,ry,rz], position: [px,py,pz]
@@ -98,24 +105,69 @@ public:
                                          double rx, double ry, double rz,
                                          double px, double py, double pz);
 
-    // runBalsamImport : invoque l'exécutable balsam (Qt Quick3D) pour
-    // convertir un .obj/.glb/.gltf/.fbx en un dossier Qt-friendly avec
-    // .qml + .mesh + textures. Lance QProcess en async ; émet
-    // balsamFinished(success, qmlPath, errorMessage) à la fin.
-    // - sourceFile : .obj/.glb/etc
-    // - outputDir  : dossier où balsam va générer ; sera créé si absent.
-    // - options    : map clé→bool/real des flags balsam (cf.
-    //   balsamOptionDefinitions). Une clé absente = flag non passé.
-    // Si balsamPath n'est pas configuré ou introuvable, échoue immédiat.
-    Q_INVOKABLE void runBalsamImport(const QString &sourceFile,
-                                     const QString &outputDir,
-                                     const QVariantMap &options = QVariantMap());
+    // ===================================================================
+    // Color ID Map — re-skinning runtime par zone
+    // (cf. doc/architecture/COLOR_ID_MAP_INTEGRATION_PLAN.md)
+    //
+    // Format kuraViewer, SANS balsam : un modèle = un dossier
+    //   base/<model>.glb + base/skin_base.png
+    //   skins/<skin>/colorMap.png + skin.json + textures/ + variants/
+    //   model_manifest.json (name, version, transform, colorId…)
+    // chargé au runtime via RuntimeLoader (.glb) + KuraMaterial appliqué par
+    // overrideMaterials. Le KuraMaterial.qml + shaders/tint.frag sont
+    // UNIQUES et versionnés dans l'app (qrc) — pas de codegen par modèle.
+    // ===================================================================
 
-    // Description des options balsam exposables côté UI : retourne une
-    // liste de { key, flag, label, type ("bool"|"real"), default, group,
-    // dependsOn? } afin que le QML puisse générer dynamiquement les
-    // contrôles si besoin. Les types acceptés sont "bool" et "real".
-    Q_INVOKABLE QVariantList balsamOptionDefinitions() const;
+    // --- Créateur de skin : dossiers skins/<skin>/ ---------------------
+    // Arborescence (cf. plan §4) :
+    //   <folderPath>/skins/<skin>/colorMap.png
+    //   <folderPath>/skins/<skin>/skin.json
+    //   <folderPath>/skins/<skin>/textures/*.png
+    //   <folderPath>/skins/<skin>/variants/*.json
+
+    // Crée skins/<skinName>/ (+ textures/ + variants/), copie la color map
+    // source vers colorMap.png et écrit skin.json avec autant de zones que
+    // la color map en contient (cf. detectColorMapZones).
+    Q_INVOKABLE bool createModelSkin(const QString &folderPath, const QString &skinName,
+                                     const QString &colorMapSource);
+    // Compte les zones d'une color ID map : nombre de couleurs de palette
+    // (≤20) présentes dans l'image → (index max + 1). 1 si échec/aucune.
+    Q_INVOKABLE int detectColorMapZones(const QString &colorMapSource) const;
+    // Sous-dossiers de <folderPath>/skins (les skins disponibles), triés.
+    Q_INVOKABLE QStringList listModelSkins(const QString &folderPath) const;
+    // Noms de fichiers image de skins/<skin>/textures.
+    Q_INVOKABLE QStringList listSkinTextures(const QString &folderPath, const QString &skin) const;
+    // Copie une image source dans skins/<skin>/textures/.
+    Q_INVOKABLE bool importSkinTexture(const QString &folderPath, const QString &skin,
+                                       const QString &textureSource);
+    // Lit/écrit skins/<skin>/skin.json (string JSON, "" si absent).
+    Q_INVOKABLE QString readSkinJson(const QString &folderPath, const QString &skin) const;
+    Q_INVOKABLE bool    writeSkinJson(const QString &folderPath, const QString &skin,
+                                      const QString &json) const;
+    // Variantes (presets d'auteur) de skins/<skin>/variants/.
+    Q_INVOKABLE QStringList listSkinVariants(const QString &folderPath, const QString &skin) const;
+    Q_INVOKABLE bool    saveSkinVariant(const QString &folderPath, const QString &skin,
+                                        const QString &name, const QString &json) const;
+    Q_INVOKABLE QString loadSkinVariant(const QString &folderPath, const QString &skin,
+                                        const QString &name) const;
+    Q_INVOKABLE bool    deleteSkinVariant(const QString &folderPath, const QString &skin,
+                                          const QString &name) const;
+    // Supprime un fichier texture de skins/<skin>/textures/.
+    Q_INVOKABLE bool deleteSkinTexture(const QString &folderPath, const QString &skin,
+                                       const QString &file) const;
+
+    // --- Bibliothèque de textures générales (partagée entre modèles) ----
+    // Dossier <AppData>/model_textures/. On y importe des textures réutilisables,
+    // puis on les copie vers le skin d'un modèle à la demande.
+    Q_INVOKABLE QString     generalTextureDir() const;
+    Q_INVOKABLE QStringList listGeneralTextures() const;
+    Q_INVOKABLE bool        importGeneralTexture(const QString &source);
+    Q_INVOKABLE bool        deleteGeneralTexture(const QString &file) const;
+    Q_INVOKABLE bool        copyGeneralTextureToSkin(const QString &folderPath, const QString &skin,
+                                                     const QString &file);
+
+    // Dossier (clean, sans file://) d'un modèle installé : <AppData>/models/<name>.
+    Q_INVOKABLE QString installedModelDir(const QString &name) const;
 
     // Utilitaire de comparaison sémantique de versions
     // Retourne -1 si v1 < v2, 0 si égales, 1 si v1 > v2
@@ -133,9 +185,6 @@ signals:
     void logMessage(const QString &message);
     void updateAvailable();
     void downloadSucess();
-    void balsamPathChanged();
-    void balsamRunningChanged();
-    void balsamFinished(bool success, const QString &qmlPath, const QString &errorMessage);
 
 private slots:
     void onDownloadFinished();
@@ -216,10 +265,6 @@ private:
     QString getLocalModelVersion(const QString &modelName);
 
     QString m_basePath;
-
-    // Balsam (import .obj/.glb → .qml)
-    QString m_balsamPath;
-    QProcess *m_balsamProcess = nullptr;
 };
 
 #endif // LAUNCHER_MANAGER_H

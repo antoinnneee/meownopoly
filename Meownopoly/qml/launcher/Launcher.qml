@@ -65,6 +65,9 @@ Rectangle {
     // Bascule entre la vue principale du launcher et le configurateur 3D.
     // "launcher" (défaut) | "modelConfigurator"
     property string currentView: "launcher"
+    // Dossier à charger d'emblée dans le configurateur (bouton « Éditer »).
+    // Vide = configurateur ouvert sans modèle (création depuis zéro).
+    property string configFolderPath: ""
 
     signal launchGame()
     signal backRequested()
@@ -161,12 +164,8 @@ Rectangle {
         z: 100
         sourceComponent: ModelConfigurator {
             serverUrl: logic.serverUrl
-            balsamPath: logic.settings.balsamPath
-            balsamOptions: logic.balsamOptions
+            initialFolderPath: root.configFolderPath
             onCloseRequested: root.currentView = "launcher"
-            onBalsamPathRequested: function(p) { logic.setBalsamPath(p) }
-            onBalsamOptionRequested: function(k, v) { logic.setBalsamOption(k, v) }
-            onBalsamOptionsResetRequested: logic.resetBalsamOptions()
         }
     }
 
@@ -255,7 +254,10 @@ Rectangle {
                     logic.uploadModelPackage(name, version)
                 }
 
-                onOpenModelConfiguratorRequested: root.currentView = "modelConfigurator"
+                onOpenModelConfiguratorRequested: {
+                    root.configFolderPath = ""   // création depuis zéro
+                    root.currentView = "modelConfigurator"
+                }
             }
 
             // Section Modèles (Nouveau)
@@ -267,6 +269,13 @@ Rectangle {
                 onRefreshRequested: logic.fetchModelsList()
                 onDownloadRequested: function(name, version) {
                     logic.downloadModel(name, version)
+                }
+                onEditRequested: function(name) {
+                    const dir = LauncherManager.installedModelDir(name)
+                    if (dir && dir.length > 0) {
+                        root.configFolderPath = dir
+                        root.currentView = "modelConfigurator"
+                    }
                 }
             }
             

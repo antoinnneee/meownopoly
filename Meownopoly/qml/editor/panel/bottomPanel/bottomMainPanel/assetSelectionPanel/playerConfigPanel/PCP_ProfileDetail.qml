@@ -143,6 +143,18 @@ Item {
                                            () => { root.profile.modelName = name })
                     }
                 }
+
+                // --- Skin / Variante (Color ID Map) ---
+                PCP_SkinPicker {
+                    Layout.fillWidth: true
+                    modelName: root.profile ? root.profile.modelName : ""
+                    colorVariant: root.profile ? root.profile.colorVariant : ""
+                    onColorVariantPicked: function(json) {
+                        if (!root.profile || json === root.profile.colorVariant) return
+                        root._mutateFields({ "colorVariant": json },
+                                           () => { root.profile.colorVariant = json })
+                    }
+                }
             }
 
             // --- Mode de sélection (Unique / Shared / Mandatory) ---

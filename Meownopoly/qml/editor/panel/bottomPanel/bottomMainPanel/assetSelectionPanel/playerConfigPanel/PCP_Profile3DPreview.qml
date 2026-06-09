@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
 import AssetManager
+import world3d 1.0
 
 /*
  * Preview 3D miniature pour la card / le détail de profil.
@@ -22,6 +23,7 @@ Item {
     id: root
 
     property string modelName: "Princess"
+    property string colorVariant: ""        // re-skin Color ID Map (JSON profil)
     property bool   spinning: true
     property real   spinDegPerSec: 30
     property color  backgroundColor: "#1f1f1f"
@@ -110,19 +112,10 @@ Item {
                     materials: PrincipledMaterial { baseColor: "#a8c8ff" }
                 }
 
-                Loader3D {
-                    id: modelLoader
+                SkinnedModel {
                     visible: root.modelName !== "Cube" && root.modelName !== "Sphere"
-                    source: visible
-                              ? ("file:///" + AssetManager.getAppDataPath()
-                                 + "/models/" + root.modelName + "/"
-                                 + root.modelName + ".qml")
-                              : ""
-                    onStatusChanged: {
-                        if (status === Loader3D.Error)
-                            console.warn("[PCP_Profile3DPreview] Erreur chargement modèle:",
-                                         root.modelName)
-                    }
+                    modelName: root.modelName
+                    colorVariant: root.colorVariant
                 }
             }
         }

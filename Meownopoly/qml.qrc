@@ -50,6 +50,7 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_ProfileDetail.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PickModeSelector.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_ModelPicker.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_SkinPicker.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PhysicsSimpleSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PhysicsExpertSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_PresetButtons.qml</file>
@@ -141,5 +142,9 @@
         <file>qml/world3d/LocalPlayerSpawner.qml</file>
         <file>qml/world3d/InputController.qml</file>
         <file>qml/world3d/CameraRig.qml</file>
+        <file>qml/world3d/KuraMaterial.qml</file>
+        <file>qml/world3d/KuraModel.qml</file>
+        <file>qml/world3d/SkinnedModel.qml</file>
+        <file>qml/world3d/shaders/tint.frag</file>
     </qresource>
 </RCC>

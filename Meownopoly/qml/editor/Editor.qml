@@ -1306,6 +1306,10 @@ Base_Board {
             modelName: workArea._testedProfile
                          ? workArea._testedProfile.modelName
                          : "Princess"
+            // Re-skin Color ID Map du profil testé (skin + variante + équipe).
+            colorVariant: workArea._testedProfile
+                            ? workArea._testedProfile.colorVariant
+                            : ""
         }
 
         // Phase 4 — joueur local. Body créé/détruit par le spawner ; le
