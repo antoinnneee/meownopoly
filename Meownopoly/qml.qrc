@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/textTools.js</file>
+        <file>qml/theme/Theme.qml</file>
+        <file>qml/theme/qmldir</file>
         <file>qml/main.qml</file>
         <file>qml/titleScreen/TitleScreen.qml</file>
         <file>qml/account/AccountSetupPage.qml</file>
