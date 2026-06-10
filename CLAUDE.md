@@ -15,18 +15,25 @@ Meownopoly is a networked board game (Monopoly-inspired, cat-themed) built with 
 
 ## Build Commands
 
-```bash
-# Configure (from repo root)
-cd Meownopoly && cmake -B ../build -G Ninja -DCMAKE_BUILD_TYPE=Release
+Le build principal `build/` est configuré en **Ninja Multi-Config sur Qt 6.11.0 + MinGW 13.1** (unifié 2026-06-10 — Qt 6.11+ est requis par `MeowPainter`/CanvasPainter dans l'éditeur ; sur un kit plus ancien `main.qml` ne charge pas). Le PATH MinGW est nécessaire au configure (test compilateur) et au build :
 
-# Build
-cmake --build ../build
+```powershell
+# Configure (depuis la racine du repo) — uniquement si build/ n'existe pas encore
+$env:PATH = "C:\Qt\Tools\mingw1310_64\bin;C:\Qt\6.11.0\mingw_64\bin;$env:PATH"
+& "C:/Qt/Tools/CMake_64/bin/cmake.exe" -S Meownopoly -B build -G "Ninja Multi-Config" `
+  -DCMAKE_CXX_COMPILER="C:/Qt/Tools/mingw1310_64/bin/g++.exe" `
+  -DCMAKE_PREFIX_PATH="C:/Qt/6.11.0/mingw_64" -DCMAKE_MAKE_PROGRAM="C:/Qt/Tools/Ninja/ninja.exe"
 
-# Run
-../build/Meownopoly.exe
+# Build (le post-build windeployqt déploie les DLLs dans build/Release en Release)
+& "C:/Qt/Tools/CMake_64/bin/cmake.exe" --build build --config Release --target Meownopoly
+
+# Run (exe racine = copie déployée autonome, pas besoin de PATH Qt)
+.\build\Meownopoly.exe
 ```
 
-Requires: CMake 3.21+, Ninja, Qt6 (Core, Quick, Qml, Widgets, QuickControls2, Network, WebSockets, Sql, Quick3D, Concurrent).
+Après un build Release, rafraîchir l'exe racine si besoin : `Copy-Item build\Release\Meownopoly.exe build\` (les DLLs racine sont déjà déployées via windeployqt `--qmldir Meownopoly/qml --compiler-runtime`).
+
+Requires: CMake 3.21+, Ninja, Qt 6.11+ (Core, Quick, Qml, Widgets, QuickControls2, Network, WebSockets, Sql, Quick3D, Concurrent, CanvasPainter).
 
 No automated test runner is configured. Manual testing via the executable.
 
@@ -167,6 +174,8 @@ No automated test runner is configured. Manual testing via the executable.
 
 - **Cible CMake `dual_test_p2p`** (Windows) lance 2 instances : Instance 1 et Instance 2 (avec `--instance 2`). `main.cpp` ajuste `applicationName` en conséquence → `QStandardPaths::AppDataLocation` renvoie des dossiers distincts (`Meownopoly/` vs `Meownopoly_2/`).
 - **CatwayTest scene** : tabs Catway / UDP Tests / Game Network / Editor Network. L'onglet Editor Network permet de démarrer manuellement une EditorSession pour tests sans passer par le lobby.
+- **Serveur d'automation embarqué** (`cpp/automation/automation_server.{h,cpp}`) : `QWebSocketServer` sur **127.0.0.1 uniquement**, opt-in via `--automation-port <N>` ou `MEOW_AUTOMATION_PORT` (sinon non instancié). Protocole JSON requête/réponse corrélé par `id` (commandes : `ping`, `tree`, `find`, `get`/`set`, `invoke`, souris `click`/`doubleClick`/`move`/`press`/`release`/`wheel`, `keys`, `screenshot`, `waitFor`, `quit`). Tout sur le GUI thread. Instancié dans `main.cpp` après `QmlApp`. Convention dual-instance : **7700** (instance 1) / **7701** (instance 2). Côté pilotage : serveur **MCP** stdio dans `automation_mcp/` (Node, `@modelcontextprotocol/sdk` + `ws`), enregistré dans `.mcp.json` à la racine. Doc : `doc/architecture/AUTOMATION_API.md`. Note : la scène complète nécessite Qt 6.11+ (l'éditeur importe `MeowPainter`/CanvasPainter ; sur Qt 6.10 `main.qml` ne charge pas mais le serveur d'automation démarre quand même).
+- **Hooks haut niveau éditeur** : `Editor.qml` instancie un `Item` passif `objectName: "editorAutomationHooks"` (`width/height:0`, `visible/enabled:false`) exposant des fonctions JS — `listAssetCategories`, `listAssets(cat,type)`, `placeAsset(id,cat,type,gx,gy)`, `placeCase(caseType,gx,gy)`, `getCamera`, `setCamera(gx,gy)`, `panCamera(dgx,dgy)`, `zoomCamera(steps)` + propriété `_tileCount`. Pose via le chemin UI exact (`placeSelectedAsset`+`Game.updateMap`, compatible collab/undo). Tools MCP dédiés : `editor_list_assets`, `editor_place_item`, `editor_place_case`, `editor_camera_{get,center,pan,zoom}`. **Important : c'est un `Item`** (pas un `QtObject`) sinon `find`/`tree` (qui descendent par `childItems()` visuels) ne le trouvent pas. `cmdInvoke` côté C++ a une voie dédiée aux **fonctions JS QML** (args/retour `QVariant` + nom de type exact, déballage `QJSValue`) sinon le retour revient `null`. Cf. `doc/architecture/AUTOMATION_API.md` §4 bis.
 
 ## External Documentation
 

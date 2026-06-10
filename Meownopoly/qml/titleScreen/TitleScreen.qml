@@ -8,6 +8,7 @@ import "../account/"
 
 Rectangle {
     id: root
+    objectName: "titleScreen"
     color: "#1a1a1a"  // Dark background for modern look
 
 
@@ -108,6 +109,7 @@ Rectangle {
 
         Button {
             id: startGameButton
+            objectName: "startGameButton"
             text: "Start Game"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
@@ -160,6 +162,7 @@ Rectangle {
         // Create Server Button
         Button {
             id: editorButton
+            objectName: "editorButton"
             text: "EDITOR"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
@@ -238,6 +241,7 @@ Rectangle {
         // Resource Launcher Button
         Button {
             id: launcherButton
+            objectName: "launcherButton"
             text: "🚀 Resource Launcher"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
@@ -264,6 +268,7 @@ Rectangle {
         // Catway Test Button
         Button {
             id: catwayTestButton
+            objectName: "catwayTestButton"
             text: "📡 Test Catway"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50

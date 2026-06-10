@@ -2193,6 +2193,267 @@ Base_Board {
         stEnableAutoSave.sync()
     }
 
+    // ────────────────────────────────────────────────────────────────────
+    // Hooks d'automation (objectName: "editorAutomationHooks")
+    // ────────────────────────────────────────────────────────────────────
+    // Objet STRICTEMENT passif : aucune logique n'est exécutée tant qu'une
+    // de ses fonctions n'est pas appelée explicitement via la commande
+    // `invoke` du serveur d'automation (cpp/automation/automation_server.*)
+    // ou les tools MCP `editor_*` (automation_mcp/index.js).
+    //
+    // Toutes les fonctions retournent un objet JS sérialisable en JSON.
+    // Convention de retour : { ok: bool, error?: string, ... }. Le ciblage
+    // se fait par `find` sur objectName="editorAutomationHooks", puis
+    // `invoke` avec method + args.
+    //
+    // Le chemin de pose réutilise EXACTEMENT celui de l'UI
+    // (TileLogic.placeSelectedAsset + Game.updateMap) pour rester compatible
+    // EditorOpBus / EditorSession (mode collab).
+    //
+    // NB : c'est un `Item` (et non un `QtObject`) pour qu'il soit visible dans
+    // l'arbre VISUEL parcouru par AutomationServer::findRecursive (qui descend
+    // par `childItems()`). `width/height: 0` + `visible: false` → strictement
+    // inerte côté rendu et entrées.
+    Item {
+        id: automationHooks
+        objectName: "editorAutomationHooks"
+        width: 0
+        height: 0
+        visible: false
+        enabled: false
+
+        // Nombre de tiles actuellement dans la carte de l'éditeur (lecture
+        // seule, utile pour vérifier une pose via la commande `get`).
+        readonly property int _tileCount: root.snapableTilesList
+            ? root.snapableTilesList.length : 0
+
+        // Centre du viewport visible (zone de travail au-dessus du panel
+        // d'assets) en coordonnées écran de `root`.
+        function _viewportCenterPx() {
+            const w = root.width
+            const h = root.height - selectionPanel.height
+            return Qt.point(w / 2.0, h / 2.0)
+        }
+
+        // Convertit une position écran (coords `root`) en coords grille réelles
+        // (float). cell N apparaît à l'écran à `gameGrid.x + N*gridSize`.
+        function _screenToGridReal(screenX, screenY) {
+            const gs = gameGrid.gridSize
+            if (gs <= 0) return Qt.point(0, 0)
+            return Qt.point((screenX - gameGrid.x) / gs,
+                            (screenY - gameGrid.y) / gs)
+        }
+
+        // ── Assets ──────────────────────────────────────────────────────
+        // Liste les catégories et, pour chacune, ses types disponibles.
+        function listAssetCategories() {
+            const cats = AssetManager.getAvailableCategories()
+            const out = []
+            for (let i = 0; i < cats.length; i++) {
+                const c = cats[i]
+                out.push({ category: c, types: AssetManager.getAvailableTypes(c) })
+            }
+            return { ok: true, categories: out }
+        }
+
+        // Liste les assets (id, filename, dimensions, ratio) d'une
+        // catégorie/type donnés.
+        function listAssets(category, type) {
+            if (!category || !type)
+                return { ok: false, error: "category et type requis" }
+            const model = AssetManager.getAssetModel(category, type)
+            if (!model)
+                return { ok: false, error: "Aucun modèle pour " + category + "/" + type }
+            // Rôles de AssetModel (Qt::UserRole+1 = 257). Cf.
+            // AssetModel::AssetRoles dans asset_manager.h.
+            const PathRole = 257, RatioWidthRole = 260, RatioHeightRole = 261,
+                  WidthRole = 262, HeightRole = 263, IdRole = 264,
+                  FilenameRole = 265, DescriptionRole = 270
+            const n = model.rowCount()
+            const assets = []
+            for (let i = 0; i < n; i++) {
+                const idx = model.index(i, 0)
+                assets.push({
+                    id: model.data(idx, IdRole),
+                    filename: model.data(idx, FilenameRole),
+                    path: model.data(idx, PathRole),
+                    width: model.data(idx, WidthRole),
+                    height: model.data(idx, HeightRole),
+                    ratioWidth: model.data(idx, RatioWidthRole),
+                    ratioHeight: model.data(idx, RatioHeightRole),
+                    description: model.data(idx, DescriptionRole)
+                })
+            }
+            return { ok: true, category: category, type: type, count: n, assets: assets }
+        }
+
+        // ── Pose ────────────────────────────────────────────────────────
+        // Sérialise les infos utiles d'une tile fraîchement créée.
+        function _tileInfo(tile) {
+            if (!tile || !tile.snapableParameters) return null
+            const sp = tile.snapableParameters
+            const dp = sp.displayParameter
+            return {
+                uuid: sp.uniqueId ? sp.uniqueId.toString() : null,
+                gridX: dp.gridRelativePositionX,
+                gridY: dp.gridRelativePositionY,
+                width: dp.unitSizeWidth,
+                height: dp.unitSizeHeight
+            }
+        }
+
+        // Sélectionne programmatiquement un asset (décoration) et le pose à
+        // (gridX, gridY). Réplique le chemin UI complet : sélection →
+        // placeSelectedAsset → Game.updateMap(TileAdded). Restaure le mode
+        // EM_NORMAL après coup (ne laisse pas EM_POSE armé).
+        function placeAsset(assetId, category, type, gridX, gridY) {
+            if (!assetId)
+                return { ok: false, error: "assetId requis" }
+            if (!AssetManager.isAssetValid(category, type, assetId))
+                return { ok: false, error: "Asset introuvable: "
+                         + category + "/" + type + "/" + assetId }
+
+            // updateSelectedAsset arme la sélection + ajuste le ratio + émet
+            // assetSelected → onAssetSelected passe en EM_POSE.
+            selectionPanel.assetPanel.updateSelectedAsset(category, type, assetId)
+
+            const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
+            if (placed && placed.snapableParameters)
+                Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
+
+            // Restaurer le mode normal (désarme EM_POSE) sans piétiner un
+            // mode spécialisé éventuel.
+            selectionPanel.clearAssetSelection()
+            if (logic.editorMouseMode === EditorEnum.EM_POSE)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+
+            const info = _tileInfo(placed)
+            if (!info)
+                return { ok: false, error: "Échec de la création de la tile" }
+            return { ok: true, tile: info }
+        }
+
+        // Pose une case typée (caseType = valeur Case::CaseType). TileLogic
+        // gère la branche case quand aucun asset n'est sélectionné et que
+        // caseTypeSelected != -1.
+        function placeCase(caseType, gridX, gridY) {
+            if (caseType === undefined || caseType === null || caseType < 0)
+                return { ok: false, error: "caseType (>= 0) requis" }
+            // Désarmer toute sélection d'asset puis armer le type de case.
+            selectionPanel.clearAssetSelection()
+            selectionPanel.caseTypeSelected = caseType  // → EM_POSE
+
+            const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
+            if (placed && placed.snapableParameters)
+                Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
+
+            // Restaurer : caseTypeSelected = -1 ramène EM_NORMAL via le handler.
+            selectionPanel.caseTypeSelected = -1
+            if (logic.editorMouseMode === EditorEnum.EM_POSE)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+
+            const info = _tileInfo(placed)
+            if (!info)
+                return { ok: false, error: "Échec de la création de la case" }
+            return { ok: true, tile: info }
+        }
+
+        // ── Caméra ──────────────────────────────────────────────────────
+        // Retourne l'état caméra : centre du viewport en coords grille,
+        // niveau de zoom (scaleLevel/mmSize/gridSize) et taille du viewport.
+        function getCamera() {
+            const center = _viewportCenterPx()
+            const g = _screenToGridReal(center.x, center.y)
+            return {
+                ok: true,
+                centerGridX: g.x,
+                centerGridY: g.y,
+                scaleLevel: gameGrid.scaleLevel,
+                mmSize: gameGrid.mmSize,
+                gridSize: gameGrid.gridSize,
+                gridOffsetX: gameGrid.x,
+                gridOffsetY: gameGrid.y,
+                viewportWidth: root.width,
+                viewportHeight: root.height - selectionPanel.height
+            }
+        }
+
+        // Centre la vue sur la cellule (gridX, gridY) — pan absolu. Met à
+        // jour gameGrid.x/y puis resynchronise la caméra 3D via
+        // updateCameraPosition (qui compare grid.x au lastGridPos mémorisé).
+        function setCamera(gridX, gridY) {
+            const gs = gameGrid.gridSize
+            if (gs <= 0) return { ok: false, error: "gridSize nul" }
+            const center = _viewportCenterPx()
+            // On veut : center = gameGrid.x + gridX*gs  ⇒  gameGrid.x = center - gridX*gs
+            if (logic.mouseLogic && logic.mouseLogic.lastGridPos !== undefined)
+                logic.mouseLogic.lastGridPos = Qt.point(gameGrid.x, gameGrid.y)
+            gameGrid.x = center.x - gridX * gs
+            gameGrid.y = center.y - gridY * gs
+            if (logic.mouseLogic && logic.mouseLogic.updateCameraPosition)
+                logic.mouseLogic.updateCameraPosition()
+            return getCamera()
+        }
+
+        // Pan relatif de (dGridX, dGridY) cellules.
+        function panCamera(dGridX, dGridY) {
+            const cam = getCamera()
+            return setCamera(cam.centerGridX + dGridX, cam.centerGridY + dGridY)
+        }
+
+        // Zoom ±N crans (×1.1 par cran), centré sur le viewport. Réplique la
+        // logique de ScrollLogic.scrollGrid (zoom multiplicatif + recentrage
+        // du point fixe + sync caméra 3D via prepare/applyZoom) pour rester
+        // cohérent avec le zoom molette de l'UI.
+        function zoomCamera(steps) {
+            steps = Math.trunc(steps || 0)
+            if (steps === 0)
+                return getCamera()
+            const zoomFactor = 1.1
+            const minMmSize = 0.5
+            const center = _viewportCenterPx()
+            const dir = steps > 0 ? 1.0 : -1.0
+            const count = Math.abs(steps)
+
+            for (let i = 0; i < count; i++) {
+                const oldMmSize = gameGrid.mmSize
+                const oldWidth = logic.tileLogic.currentElementWidth
+                const oldHeight = logic.tileLogic.currentElementHeight
+                const aspectRatio = oldWidth / oldHeight
+
+                const step = dir > 0 ? zoomFactor : 1.0 / zoomFactor
+                let newMmSize = oldMmSize * step
+                if (newMmSize < minMmSize) newMmSize = minMmSize
+                if (newMmSize <= 0) continue
+
+                // Capturer l'état 3D AVANT le changement de magnification.
+                if (logic.mouseLogic && logic.mouseLogic.prepareZoom)
+                    logic.mouseLogic.prepareZoom(center.x, center.y)
+                if (logic.mouseLogic && logic.mouseLogic.lastGridPos !== undefined)
+                    logic.mouseLogic.lastGridPos = Qt.point(gameGrid.x, gameGrid.y)
+
+                const ratio = newMmSize / oldMmSize
+                // Garder le point sous le centre du viewport fixe.
+                const newGridX = center.x - (center.x - gameGrid.x) * ratio
+                const newGridY = center.y - (center.y - gameGrid.y) * ratio
+
+                gameGrid.mmSize = newMmSize
+                gameGrid.x = newGridX
+                gameGrid.y = newGridY
+
+                // Conserver le ratio visuel du sélecteur (comme l'UI).
+                const newWidth = oldWidth * oldMmSize / newMmSize
+                const newHeight = newWidth / aspectRatio
+                logic.tileLogic.currentElementWidth = Math.max(1, Math.round(newWidth))
+                logic.tileLogic.currentElementHeight = Math.max(1, Math.round(newHeight))
+
+                if (logic.mouseLogic && logic.mouseLogic.applyZoom)
+                    logic.mouseLogic.applyZoom(center.x, center.y)
+            }
+            return getCamera()
+        }
+    }
+
     Component.onDestruction: {
         if (logic.mouseLogic && logic.mouseLogic.hideLinkPreview) {
             logic.mouseLogic.hideLinkPreview()

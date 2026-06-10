@@ -71,6 +71,7 @@ ApplicationWindow {
 
     StackView {
         id: stackView
+        objectName: "mainStackView"
         anchors.fill: parent
         initialItem: AccountManager.hasAccount ? titleScreen : accountSetup
     }
