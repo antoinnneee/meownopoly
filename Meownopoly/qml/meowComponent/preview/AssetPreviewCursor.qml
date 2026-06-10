@@ -5,6 +5,7 @@ import DecorationParameter
 
 import editor
 import meowComponent
+import theme
 
 import Game
 import ItemSnapable
@@ -152,7 +153,7 @@ Item {
                 border.color: "black"
                 anchors.fill: parent
                 border.width: 1
-                radius: 4
+                radius: Theme.radiusS
                 opacity: 0.2
             }
 
@@ -186,7 +187,7 @@ Item {
                 border.color: "black"
                 anchors.fill: parent
                 border.width: 1
-                radius: 4
+                radius: Theme.radiusS
                 opacity: 0.2
             }
 

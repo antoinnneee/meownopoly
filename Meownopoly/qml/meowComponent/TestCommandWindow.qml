@@ -1,15 +1,16 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import utils 1.0
+import theme
 
 Rectangle {
     id: root
     width: 200
     height: 600
-    color: "#252525"
-    border.color: "#4a90e2"
+    color: Theme.surface
+    border.color: Theme.accent
     border.width: 2
-    radius: 8
+    radius: Theme.radiusL
     clip: true
 
     DragHandler {
@@ -18,14 +19,14 @@ Rectangle {
 
     Column {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 10
+        anchors.margins: Theme.spacingL
+        spacing: Theme.spacingL
 
         Text {
             text: "C++ Test Commands"
-            color: "#e0e0e0"
+            color: Theme.textSoft
             font.bold: true
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
         }
@@ -33,28 +34,28 @@ Rectangle {
         // UDP / STUN Section
         Column {
             width: parent.width
-            spacing: 8
+            spacing: Theme.spacingM
 
             Text {
                 text: "STUN Config"
-                color: "#b0b0b0"
-                font.pixelSize: 12
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
 
             Rectangle {
                 width: parent.width
                 height: 30
-                color: "#353535"
-                radius: 4
-                border.color: "#555555"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.borderLight
 
                 TextInput {
                     id: ipInput
                     anchors.fill: parent
-                    anchors.margins: 5
+                    anchors.margins: Theme.spacingXS
                     text: "stun.l.google.com"
-                    color: "#e0e0e0"
+                    color: Theme.textSoft
                     verticalAlignment: Text.AlignVCenter
                     selectByMouse: true
                 }
@@ -63,16 +64,16 @@ Rectangle {
             Rectangle {
                 width: parent.width
                 height: 30
-                color: "#353535"
-                radius: 4
-                border.color: "#555555"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.borderLight
 
                 TextInput {
                     id: portInput
                     anchors.fill: parent
-                    anchors.margins: 5
+                    anchors.margins: Theme.spacingXS
                     text: "19302"
-                    color: "#e0e0e0"
+                    color: Theme.textSoft
                     verticalAlignment: Text.AlignVCenter
                     selectByMouse: true
                 }
@@ -80,24 +81,24 @@ Rectangle {
 
             Row {
                 width: parent.width
-                spacing: 5
+                spacing: Theme.spacingXS
 
                 Button {
                     text: "Set STUN"
                     width: (parent.width - 5) / 2
                     height: 30
-                    
+
                     background: Rectangle {
-                        color: parent.pressed ? "#4a90e2" : "#353535"
-                        border.color: "#555555"
-                        radius: 4
+                        color: parent.pressed ? Theme.accent : Theme.surfaceAlt
+                        border.color: Theme.borderLight
+                        radius: Theme.radiusS
                     }
                     contentItem: Text {
                         text: parent.text
-                        color: "#e0e0e0"
+                        color: Theme.textSoft
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                     // onClicked: TestManager.testSetStunServer(ipInput.text, parseInt(portInput.text))
                 }
@@ -106,18 +107,18 @@ Rectangle {
                     text: "Start UDP"
                     width: (parent.width - 5) / 2
                     height: 30
-                    
+
                     background: Rectangle {
-                        color: parent.pressed ? "#4a90e2" : "#353535"
-                        border.color: "#555555"
-                        radius: 4
+                        color: parent.pressed ? Theme.accent : Theme.surfaceAlt
+                        border.color: Theme.borderLight
+                        radius: Theme.radiusS
                     }
                     contentItem: Text {
                         text: parent.text
-                        color: "#e0e0e0"
+                        color: Theme.textSoft
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                     onClicked: TestManager.testUdpServer()
                 }
@@ -127,18 +128,18 @@ Rectangle {
                 text: "Send STUN Request"
                 width: parent.width
                 height: 30
-                
+
                 background: Rectangle {
-                    color: parent.pressed ? "#4a90e2" : "#353535"
-                    border.color: "#555555"
-                    radius: 4
+                    color: parent.pressed ? Theme.accent : Theme.surfaceAlt
+                    border.color: Theme.borderLight
+                    radius: Theme.radiusS
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "#e0e0e0"
+                    color: Theme.textSoft
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 onClicked: TestManager.testSendStun()
             }
@@ -148,39 +149,39 @@ Rectangle {
         Rectangle {
             width: parent.width
             height: 1
-            color: "#444"
+            color: Theme.border
         }
 
         // Peer Communication Section
         Column {
             width: parent.width
-            spacing: 8
+            spacing: Theme.spacingM
 
             Text {
                 text: "Peer Communication (Uses Main Port)"
-                color: "#b0b0b0"
-                font.pixelSize: 12
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
-            
+
             // Peer Config
             Row {
                 width: parent.width
-                spacing: 5
+                spacing: Theme.spacingXS
 
                 Rectangle {
                     width: (parent.width - 5) * 0.6
                     height: 30
-                    color: "#353535"
-                    radius: 4
-                    border.color: "#555555"
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusS
+                    border.color: Theme.borderLight
 
                     TextInput {
                         id: peerIpInput
                         anchors.fill: parent
-                        anchors.margins: 5
+                        anchors.margins: Theme.spacingXS
                         text: "127.0.0.1"
-                        color: "#e0e0e0"
+                        color: Theme.textSoft
                         verticalAlignment: Text.AlignVCenter
                         selectByMouse: true
                     }
@@ -189,16 +190,16 @@ Rectangle {
                 Rectangle {
                     width: (parent.width - 5) * 0.4
                     height: 30
-                    color: "#353535"
-                    radius: 4
-                    border.color: "#555555"
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusS
+                    border.color: Theme.borderLight
 
                     TextInput {
                         id: peerPortInput
                         anchors.fill: parent
-                        anchors.margins: 5
+                        anchors.margins: Theme.spacingXS
                         text: "3478"
-                        color: "#e0e0e0"
+                        color: Theme.textSoft
                         verticalAlignment: Text.AlignVCenter
                         selectByMouse: true
                     }
@@ -209,18 +210,18 @@ Rectangle {
                 text: "Set Peer"
                 width: parent.width
                 height: 30
-                
+
                 background: Rectangle {
-                    color: parent.pressed ? "#4a90e2" : "#353535"
-                    border.color: "#555555"
-                    radius: 4
+                    color: parent.pressed ? Theme.accent : Theme.surfaceAlt
+                    border.color: Theme.borderLight
+                    radius: Theme.radiusS
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "#e0e0e0"
+                    color: Theme.textSoft
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                 }
             }
 
@@ -228,16 +229,16 @@ Rectangle {
             Rectangle {
                 width: parent.width
                 height: 30
-                color: "#353535"
-                radius: 4
-                border.color: "#555555"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.borderLight
 
                 TextInput {
                     id: messageInput
                     anchors.fill: parent
-                    anchors.margins: 5
+                    anchors.margins: Theme.spacingXS
                     text: "Hello Peer!"
-                    color: "#e0e0e0"
+                    color: Theme.textSoft
                     verticalAlignment: Text.AlignVCenter
                     selectByMouse: true
                 }
@@ -247,18 +248,18 @@ Rectangle {
                 text: "Send to Peer"
                 width: parent.width
                 height: 30
-                
+
                 background: Rectangle {
-                    color: parent.pressed ? "#4a90e2" : "#353535"
-                    border.color: "#555555"
-                    radius: 4
+                    color: parent.pressed ? Theme.accent : Theme.surfaceAlt
+                    border.color: Theme.borderLight
+                    radius: Theme.radiusS
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "#e0e0e0"
+                    color: Theme.textSoft
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                 }
             }
         }
@@ -267,13 +268,13 @@ Rectangle {
         Rectangle {
             width: parent.width
             height: 1
-            color: "#444"
+            color: Theme.border
         }
 
         // Other tests
         Grid {
             columns: 3
-            spacing: 5
+            spacing: Theme.spacingXS
             width: parent.width
 
             Repeater {
@@ -287,19 +288,19 @@ Rectangle {
                     text: modelData.name
                     width: (parent.width - 10) / 3
                     height: 30
-                    
+
                     background: Rectangle {
-                        color: parent.pressed ? "#4a90e2" : "#2d2d2d"
-                        border.color: "#555555"
-                        radius: 4
+                        color: parent.pressed ? Theme.accent : Theme.surface
+                        border.color: Theme.borderLight
+                        radius: Theme.radiusS
                     }
 
                     contentItem: Text {
                         text: parent.text
-                        color: "#e0e0e0"
+                        color: Theme.textSoft
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSizeSmall
                     }
 
                     onClicked: modelData.action()
@@ -311,18 +312,18 @@ Rectangle {
             text: "Fermer"
             width: parent.width
             height: 30
-            
+
             background: Rectangle {
-                color: parent.pressed ? "#e74c3c" : "#3a3a3a"
-                radius: 4
+                color: parent.pressed ? Theme.danger : Theme.surfaceHover
+                radius: Theme.radiusS
             }
 
             contentItem: Text {
                 text: parent.text
-                color: "#e0e0e0"
+                color: Theme.textSoft
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
             }
 
             onClicked: root.visible = false

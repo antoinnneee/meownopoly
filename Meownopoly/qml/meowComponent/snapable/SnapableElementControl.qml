@@ -5,6 +5,7 @@ import ui_item
 
 import MapTypes
 import EditorOpBus 1.0
+import theme
 
 Item {
     id: controlsRoot
@@ -24,13 +25,13 @@ Item {
     z: 200  // Au-dessus de tout
 
     // Taille dictée par le badge compact (cible tactile ~9 mm)
-    anchors.leftMargin: 10
+    anchors.leftMargin: Theme.spacingL
     width: controlsColumn.width
     height: controlsColumn.height
 
     Column {
         id: controlsColumn
-        spacing: 5
+        spacing: Theme.spacingXS
 
         LayerVisualizer {
             id: layerOption
@@ -50,7 +51,7 @@ Item {
             }
 
             Behavior on scale {
-                NumberAnimation { duration: 100 }
+                NumberAnimation { duration: Theme.durationFast }
             }
         }
     }

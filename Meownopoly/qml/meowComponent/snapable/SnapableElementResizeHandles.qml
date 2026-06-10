@@ -1,15 +1,16 @@
 import QtQuick 2.15
 import QtQuick.Controls
+import theme
 import "."
 
 Item {
     id: resizeHandles
     visible: isSelected && isResizable
     // Assurer que les poignées sont au-dessus de tout
-    
+
     // Propriétés communes pour les poignées
     property int handleSize: 10
-    property color handleColor: "#2196F3"
+    property color handleColor: Theme.accent
     property color handleBorderColor: "white"
     
     // Poignées aux 8 positions (coins + milieux des côtés)...
