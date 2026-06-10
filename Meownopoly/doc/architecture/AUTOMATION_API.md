@@ -233,6 +233,7 @@ par `id`). Chemin de pose identique à l'UI (`TileLogic.placeSelectedAsset` +
 | `listAssets(category, type)` | 2 str | `{ ok, count, assets: [{ id, filename, path, width, height, ratioWidth, ratioHeight, description }] }` |
 | `placeAsset(assetId, category, type, gridX, gridY)` | str×3 + int×2 | `{ ok, tile: { uuid, gridX, gridY, width, height } }` |
 | `placeCase(caseType, gridX, gridY)` | int×3 | `{ ok, tile: { uuid, gridX, gridY, width, height } }` |
+| `placeZone(points, options)` | array + obj | `{ ok, tile: { uuid, gridX, gridY, width, height, pointCount, exclusion, color } }` |
 | `getCamera()` | — | `{ ok, centerGridX, centerGridY, scaleLevel, mmSize, gridSize, gridOffsetX/Y, viewportWidth/Height }` |
 | `setCamera(gridX, gridY)` | 2 num | `getCamera()` (pan absolu, centre la vue sur la cellule) |
 | `panCamera(dGridX, dGridY)` | 2 num | `getCamera()` (pan relatif) |
@@ -248,6 +249,16 @@ Notes de design :
   pose, puis restaure `EM_NORMAL` — l'éditeur ne reste jamais armé.
 - `placeCase` arme `selectionPanel.caseTypeSelected` (= `EM_POSE` aussi), pose,
   puis remet `-1` → `EM_NORMAL`.
+- `placeZone(points, options)` réplique `MouseLogic_DrawPolygon.createPhysicZone()`
+  sans passer par le mode dessin : `points` = sommets du polygone en coords
+  grille **absolues** (`[{x,y},...]` ou liste plate `[x1,y1,x2,y2,...]`, ≥ 3,
+  réels acceptés) ; l'origine de la tile = `floor(min)` des bounds, les points
+  sont stockés **relatifs** à cette origine. `options` (facultatif) : `color`,
+  `name`, `exclusion` (défaut `true` = mur ; `false` = zone d'effet),
+  `velocityX/Y`, `velocityStrength`, `frictionStrength`, `speedMultiplier`,
+  `accelerationMultiplier`. Attention : les propriétés C++ s'appellent
+  `velocityStrenght`/`frictionStrenght` (orthographe historique) — le hook fait
+  la traduction.
 - `placeSelectedAsset(gridX, gridY)` **centre** l'élément : la tile résultante a
   pour origine `(gridX − floor(w/2), gridY − floor(h/2))` (comportement UI).
 - Le pan modifie `gameGrid.x/y` (pixels) puis resynchronise la caméra 3D via
@@ -262,6 +273,7 @@ Notes de design :
 | `editor_list_assets` | `listAssetCategories` / `listAssets` | sans `category`/`type` : catégories ; avec les deux : assets. |
 | `editor_place_item` | `placeAsset` | `category`, `type`, `assetId`, `gridX`, `gridY`. |
 | `editor_place_case` | `placeCase` | `caseType` (Case::CaseType), `gridX`, `gridY`. |
+| `editor_place_zone` | `placeZone` | `points` (≥ 3 `{x,y}` grille absolue), `color?`, `name?`, `exclusion?`, `velocityX/Y?`, `velocityStrength?`, `frictionStrength?`, `speedMultiplier?`, `accelerationMultiplier?`. |
 | `editor_camera_get` | `getCamera` | |
 | `editor_camera_center` | `setCamera` | `gridX`, `gridY` (pan absolu). |
 | `editor_camera_pan` | `panCamera` | `dx`, `dy` (cellules). |

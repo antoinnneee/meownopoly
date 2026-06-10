@@ -386,6 +386,41 @@ server.registerTool(
     editorCall(port, "placeCase", [caseType, gridX, gridY])
 );
 
+// ── editor_place_zone ────────────────────────────────────────────────────────
+server.registerTool(
+  "editor_place_zone",
+  {
+    title: "Créer une zone physique polygonale dans l'éditeur",
+    description:
+      "Crée une zone physique (PhysicZoneTile : zone d'exclusion ou zone d'effet) définie par un " +
+      "polygone d'au moins 3 points en coordonnées GRILLE ABSOLUES, sans passer par le mode dessin. " +
+      "Même chemin que l'UI (compatible collab/undo). Par défaut la zone est une zone d'exclusion ; " +
+      "passer exclusion=false + velocity*/friction*/multipliers pour une zone d'effet. " +
+      "Retourne l'uuid, la position/taille de la tile et le nombre de points.",
+    inputSchema: {
+      port: portSchema,
+      points: z
+        .array(z.object({ x: z.number(), y: z.number() }))
+        .min(3)
+        .describe("Sommets du polygone en coordonnées grille absolues (≥ 3 points, réels acceptés)."),
+      color: z.string().optional().describe("Couleur de la zone '#RRGGBB' (défaut '#FF5722')."),
+      name: z.string().optional().describe("Nom de la zone (défaut '')."),
+      exclusion: z
+        .boolean()
+        .optional()
+        .describe("true = zone d'exclusion (mur, défaut) ; false = zone d'effet (vent/friction/boost)."),
+      velocityX: z.number().optional().describe("Direction X de la vélocité appliquée (zone d'effet)."),
+      velocityY: z.number().optional().describe("Direction Y de la vélocité appliquée (zone d'effet)."),
+      velocityStrength: z.number().optional().describe("Force de la vélocité (défaut 0)."),
+      frictionStrength: z.number().optional().describe("Friction additionnelle (défaut 0)."),
+      speedMultiplier: z.number().optional().describe("Multiplicateur de vitesse max (défaut 1.0)."),
+      accelerationMultiplier: z.number().optional().describe("Multiplicateur d'accélération (défaut 1.0)."),
+    },
+  },
+  async ({ port, points, ...options }) =>
+    editorCall(port, "placeZone", [points, options])
+);
+
 // ── editor_camera_get ────────────────────────────────────────────────────────
 server.registerTool(
   "editor_camera_get",

@@ -2358,6 +2358,85 @@ Base_Board {
             return { ok: true, tile: info }
         }
 
+        // Crée une zone physique polygonale (PhysicZoneTile) à partir d'une
+        // liste de points en coordonnées GRILLE ABSOLUES. Réplique
+        // MouseLogic_DrawPolygon.createPhysicZone() sans passer par le mode
+        // dessin : bounds → origine tile, points relatifs, paramètres
+        // physiques, puis createItemSnapableTile + Game.updateMap(TileAdded)
+        // (compatible collab/undo).
+        //
+        // points : [{x, y}, ...] ou liste plate [x1, y1, x2, y2, ...] — au
+        //          moins 3 sommets.
+        // options (toutes facultatives) :
+        //   color (string "#RRGGBB"), name (string), exclusion (bool, défaut
+        //   true), velocityX/velocityY/velocityStrength (real),
+        //   frictionStrength (real), speedMultiplier (real, défaut 1.0),
+        //   accelerationMultiplier (real, défaut 1.0).
+        function placeZone(points, options) {
+            // Normaliser : accepte [{x,y},...] ou liste plate [x1,y1,...].
+            let pts = []
+            if (points && points.length && typeof points[0] === "number") {
+                if (points.length % 2 !== 0)
+                    return { ok: false, error: "Liste plate de coordonnées de longueur impaire" }
+                for (let i = 0; i < points.length; i += 2)
+                    pts.push({ x: points[i], y: points[i + 1] })
+            } else if (points && points.length) {
+                for (let j = 0; j < points.length; j++) {
+                    const p = points[j]
+                    if (!p || p.x === undefined || p.y === undefined)
+                        return { ok: false, error: "Point " + j + " invalide (attendu {x, y})" }
+                    pts.push({ x: Number(p.x), y: Number(p.y) })
+                }
+            }
+            if (pts.length < 3)
+                return { ok: false, error: "Au moins 3 points requis (" + pts.length + " reçus)" }
+
+            const opt = options || {}
+            const sp = ItemSnapableFactory.createPhysicZone()
+
+            // Bounds → origine de la tile (même math que MouseLogic_DrawPolygon).
+            let minX = pts[0].x, maxX = pts[0].x
+            let minY = pts[0].y, maxY = pts[0].y
+            for (let k = 1; k < pts.length; k++) {
+                minX = Math.min(minX, pts[k].x); maxX = Math.max(maxX, pts[k].x)
+                minY = Math.min(minY, pts[k].y); maxY = Math.max(maxY, pts[k].y)
+            }
+            const gridOriginX = Math.floor(minX)
+            const gridOriginY = Math.floor(minY)
+
+            sp.displayParameter.gridRelativePositionX = gridOriginX
+            sp.displayParameter.gridRelativePositionY = gridOriginY
+            sp.displayParameter.unitSizeWidth = Math.ceil(maxX - minX) + 1
+            sp.displayParameter.unitSizeHeight = Math.ceil(maxY - minY) + 1
+            sp.displayParameter.zLayer = 1  // Sous les décorations et cases
+
+            // Points RELATIFS à la tile.
+            for (let m = 0; m < pts.length; m++)
+                sp.zoneParameter.addPoint(pts[m].x - gridOriginX, pts[m].y - gridOriginY)
+
+            sp.zoneParameter.zoneColor = opt.color !== undefined ? opt.color : "#FF5722"
+            sp.zoneParameter.zoneName = opt.name !== undefined ? opt.name : ""
+            sp.zoneParameter.exclusion = opt.exclusion !== undefined ? opt.exclusion : true
+            sp.zoneParameter.velocityDirection = Qt.vector2d(opt.velocityX || 0.0, opt.velocityY || 0.0)
+            // NB : orthographe historique des propriétés C++ ("Strenght").
+            sp.zoneParameter.velocityStrenght = opt.velocityStrength || 0.0
+            sp.zoneParameter.frictionStrenght = opt.frictionStrength || 0.0
+            sp.zoneParameter.speedMultiplier = opt.speedMultiplier !== undefined ? opt.speedMultiplier : 1.0
+            sp.zoneParameter.accelerationMultiplier = opt.accelerationMultiplier !== undefined ? opt.accelerationMultiplier : 1.0
+
+            const zone = logic.tileLogic.createItemSnapableTile(sp)
+            if (!zone || !zone.snapableParameters)
+                return { ok: false, error: "Échec de la création de la zone" }
+            zone.updateDisplayBounds()
+            Game.updateMap(EditDelta.TileAdded, zone.snapableParameters)
+
+            const info = _tileInfo(zone)
+            info.pointCount = pts.length
+            info.exclusion = sp.zoneParameter.exclusion
+            info.color = String(sp.zoneParameter.zoneColor)
+            return { ok: true, tile: info }
+        }
+
         // ── Caméra ──────────────────────────────────────────────────────
         // Retourne l'état caméra : centre du viewport en coords grille,
         // niveau de zoom (scaleLevel/mmSize/gridSize) et taille du viewport.
