@@ -2,13 +2,14 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Meownopoly.Chat 1.0
+import theme
 
 Rectangle {
     id: headerBar
     Layout.fillWidth: true
     Layout.preferredHeight: 50
-    color: "#333333"
-    border.color: "#444444"
+    color: Theme.surfaceAlt
+    border.color: Theme.border
     border.width: 1
 
     property var chatClient
@@ -24,14 +25,14 @@ Rectangle {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 8
-        color: resizeMouseArea.pressed ? "#4A90E2" : (resizeMouseArea.containsMouse ? "#444444" : "transparent")
+        color: resizeMouseArea.pressed ? Theme.accent : (resizeMouseArea.containsMouse ? Theme.border : "transparent")
         z: 15
 
         Rectangle {
             anchors.centerIn: parent
             width: 2
             height: parent.height * 0.4
-            color: resizeMouseArea.containsMouse || (drawer && drawer.isResizing) ? "#4A90E2" : "#666666"
+            color: resizeMouseArea.containsMouse || (drawer && drawer.isResizing) ? Theme.accent : Theme.textDisabled
             radius: 1
         }
 
@@ -67,24 +68,24 @@ Rectangle {
             }
         }
 
-        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
     }
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 16
-        anchors.rightMargin: 12
-        spacing: 8
+        anchors.leftMargin: Theme.spacingXXL
+        anchors.rightMargin: Theme.spacingXL
+        spacing: Theme.spacingM
 
         Text {
             text: "💬"
-            font.pointSize: 15
+            font.pixelSize: Theme.fontSizeHeading
         }
 
         Text {
             text: "Chat"
-            color: "#cccccc"
-            font.pointSize: 10
+            color: Theme.textSecondary
+            font.pixelSize: Theme.fontSizeBody
             font.bold: true
             Layout.fillWidth: true
         }
@@ -93,29 +94,29 @@ Rectangle {
         Rectangle {
             Layout.preferredHeight: 24
             Layout.preferredWidth: participantsBadgeRow.implicitWidth + 16
-            color: participantsBtnArea.containsMouse ? "#444444" : "#3a3a3a"
+            color: participantsBtnArea.containsMouse ? Theme.hover(Theme.surfaceHover) : Theme.surfaceHover
             radius: 12
-            border.color: participantsBtnArea.containsMouse ? "#4A90E2" : "#555555"
+            border.color: participantsBtnArea.containsMouse ? Theme.accent : Theme.borderLight
             border.width: 1
             visible: chatClient ? chatClient.connected : false
 
-            Behavior on color { ColorAnimation { duration: 100 } }
-            Behavior on border.color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+            Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
 
             RowLayout {
                 id: participantsBadgeRow
                 anchors.centerIn: parent
-                spacing: 4
+                spacing: Theme.spacingXS
 
                 Text {
                     text: "👥"
-                    font.pointSize: 8
+                    font.pixelSize: Theme.fontSizeSmall
                 }
 
                 Text {
                     text: chatClient ? chatClient.participantCount : "0"
-                    color: "#cccccc"
-                    font.pointSize: 8
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                 }
             }
@@ -138,13 +139,13 @@ Rectangle {
         Rectangle {
             Layout.preferredWidth: 24
             Layout.preferredHeight: 24
-            color: clearBtnArea.containsMouse ? "#444444" : "transparent"
-            radius: 4
+            color: clearBtnArea.containsMouse ? Theme.border : "transparent"
+            radius: Theme.radiusS
             visible: chatClient ? chatClient.connected : false
 
             Text {
                 text: "🗑️"
-                font.pointSize: 10
+                font.pixelSize: Theme.fontSizeBody
                 anchors.centerIn: parent
             }
 
@@ -163,7 +164,7 @@ Rectangle {
             Layout.preferredHeight: 10
             radius: 5
             color: chatClient && chatClient.connected ? "#4a8a4a" : "#aa4444"
-            border.color: chatClient && chatClient.connected ? "#569c58" : "#cc4444"
+            border.color: chatClient && chatClient.connected ? Theme.accentAlt : "#cc4444"
             border.width: 1
 
             SequentialAnimation on opacity {

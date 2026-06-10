@@ -8,6 +8,7 @@
  */
 import QtQuick
 import QtQuick.Controls
+import theme
 
 Rectangle {
     id: sel
@@ -21,10 +22,10 @@ Rectangle {
 
     implicitWidth: 99
     implicitHeight: 26
-    radius: 5
+    radius: Theme.radiusS
     clip: true
-    color: "#26262b"
-    border.color: "#52525b"
+    color: Theme.surface
+    border.color: Theme.borderLight
     border.width: 1
 
     Row {
@@ -46,14 +47,14 @@ Rectangle {
                 Rectangle {
                     visible: index > 0
                     width: 1; height: parent.height
-                    color: "#52525b"
+                    color: Theme.borderLight
                 }
                 Text {
                     anchors.centerIn: parent
                     text: sel._labels[index]
-                    color: sel.mode === index ? "white" : "#9ca3af"
+                    color: sel.mode === index ? Theme.textPrimary : Theme.textHint
                     font.bold: true
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSizeBody
                 }
                 MouseArea {
                     anchors.fill: parent

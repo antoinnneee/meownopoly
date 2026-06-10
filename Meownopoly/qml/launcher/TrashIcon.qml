@@ -1,4 +1,5 @@
 import QtQuick
+import theme
 
 /*
  * TrashIcon.qml — Petite icône « poubelle » composée de Rectangles.
@@ -7,7 +8,7 @@ import QtQuick
  */
 Item {
     id: icon
-    property color color: "#e5e7eb"
+    property color color: Theme.textSoft
     implicitWidth: 14
     implicitHeight: 16
 

@@ -1,36 +1,37 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /*
  * StyledCheckBox.qml — Case à cocher custom du launcher (thème sombre).
- * Indicateur visible : case #2a2a2e bordure claire au repos, remplie en
+ * Indicateur visible : case surface bordure claire au repos, remplie en
  * accentColor + ✓ blanc quand cochée. Texte clair.
  */
 CheckBox {
     id: control
 
-    property color accentColor: "#569c58"
+    property color accentColor: Theme.accentAlt
 
-    spacing: 6
-    font.pixelSize: 12
+    spacing: Theme.spacingS
+    font.pixelSize: Theme.fontSizeBody
 
     indicator: Rectangle {
         implicitWidth: 18
         implicitHeight: 18
         x: control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
-        radius: 4
-        color: control.checked ? control.accentColor : "#2a2a2e"
+        radius: Theme.radiusS
+        color: control.checked ? control.accentColor : Theme.surface
         border.width: 1
         border.color: control.checked ? control.accentColor
-                    : (control.hovered ? "#8b919b" : "#555a63")
-        Behavior on color { ColorAnimation { duration: 100 } }
+                    : (control.hovered ? Theme.textHint : Theme.borderLight)
+        Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         Text {
             anchors.centerIn: parent
             text: "✓"
-            color: "#ffffff"
-            font.pixelSize: 13
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeBody
             font.bold: true
             visible: control.checked
         }
@@ -39,7 +40,7 @@ CheckBox {
     contentItem: Text {
         text: control.text
         font: control.font
-        color: control.enabled ? "#d1d5db" : "#6b7280"
+        color: control.enabled ? Theme.textSecondary : Theme.textHint
         verticalAlignment: Text.AlignVCenter
         leftPadding: control.indicator.width + control.spacing
     }

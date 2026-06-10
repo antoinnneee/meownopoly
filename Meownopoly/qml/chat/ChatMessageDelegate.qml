@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import theme
 
 Rectangle {
     id: messageDelegate
@@ -20,9 +21,9 @@ Rectangle {
     visible: hasData
 
     // Style distinct : nos messages = bulle verte à droite, les autres = gris à gauche
-    color: isOwnMessage ? "#1e4620" : "#333333"
-    radius: 12
-    border.color: isOwnMessage ? "#2d6b30" : "#444444"
+    color: isOwnMessage ? "#1e4620" : Theme.surfaceAlt
+    radius: Theme.radiusXXL
+    border.color: isOwnMessage ? "#2d6b30" : Theme.border
     border.width: isOwnMessage ? 1.5 : 1
     antialiasing: true
 
@@ -62,7 +63,7 @@ Rectangle {
         property: "opacity"
         from: 0
         to: 1
-        duration: 150
+        duration: Theme.durationNormal
         easing.type: Easing.OutQuad
     }
 
@@ -88,33 +89,33 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: 8
-        spacing: 4
+        anchors.margins: Theme.spacingM
+        spacing: Theme.spacingXS
         visible: messageDelegate.hasData
 
         RowLayout {
             width: parent.width
-            spacing: 6
+            spacing: Theme.spacingS
             layoutDirection: messageDelegate.isOwnMessage ? Qt.RightToLeft : Qt.LeftToRight
 
             Text {
                 text: "🐱"
-                font.pointSize: 9
+                font.pixelSize: Theme.fontSizeBody
                 visible: !messageDelegate.isOwnMessage
             }
 
             Text {
                 text: messageDelegate.isOwnMessage ? "Vous" : (modelData ? (modelData.senderNickname || modelData.sender || "?") : "?")
-                font.pointSize: 8
+                font.pixelSize: Theme.fontSizeSmall
                 font.bold: true
-                color: messageDelegate.isOwnMessage ? "#7bc97f" : "#4A90E2"
+                color: messageDelegate.isOwnMessage ? "#7bc97f" : Theme.accent
                 Layout.fillWidth: true
             }
 
             Text {
                 text: (modelData && drawer && typeof drawer.formatTimestamp === "function") ? drawer.formatTimestamp(modelData.timestamp) : "--:--"
-                font.pointSize: 6
-                color: messageDelegate.isOwnMessage ? "#9ccc9e" : "#666666"
+                font.pixelSize: Theme.fontSizeTiny
+                color: messageDelegate.isOwnMessage ? "#9ccc9e" : Theme.textDisabled
             }
 
             // Badge message privé : afficher le destinataire pour nos envois, "Reçu en privé" pour les autres
@@ -122,9 +123,9 @@ Rectangle {
                 visible: !!(modelData && modelData.ephemeral)
                 Layout.preferredWidth: Math.max(52, ephemeralLabel.implicitWidth + 10)
                 Layout.preferredHeight: 14
-                radius: 3
+                radius: Theme.radiusXS
                 color: "#2a3a4a"
-                border.color: "#4A90E2"
+                border.color: Theme.accent
                 border.width: 1
 
                 Text {
@@ -132,8 +133,8 @@ Rectangle {
                     text: messageDelegate.isOwnMessage && (modelData.recipientNickname || modelData.recipientId)
                         ? ("🔒 À : " + (modelData.recipientNickname || modelData.recipientId || "?"))
                         : "🔒 Privé"
-                    font.pointSize: 6
-                    color: "#4A90E2"
+                    font.pixelSize: Theme.fontSizeTiny
+                    color: Theme.accent
                     anchors.centerIn: parent
                 }
 
@@ -157,8 +158,8 @@ Rectangle {
             text: modelData ? (modelData.text || "") : ""
             width: parent.width
             wrapMode: Text.Wrap
-            color: messageDelegate.isOwnMessage ? "#e0e0e0" : "#cccccc"
-            font.pointSize: 9
+            color: messageDelegate.isOwnMessage ? Theme.textSoft : Theme.textSecondary
+            font.pixelSize: Theme.fontSizeBody
             visible: !(modelData && (modelData.isImage || modelData.isTextFile))
         }
 
@@ -168,14 +169,14 @@ Rectangle {
             visible: !!(modelData && modelData.isImage)
 
             width: parent.width
-            spacing: 2
+            spacing: Theme.spacingXXS
 
             // En-tête de l'image (style TextFileDisplay)
             Rectangle {
                 width: parent.width
                 height: 24
-                color: "#667eea"
-                radius: 4
+                color: Theme.violetStart
+                radius: Theme.radiusS
                 // Coins du bas non arrondis pour coller à l'image
                 Rectangle {
                     anchors.bottom: parent.bottom
@@ -186,15 +187,15 @@ Rectangle {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 4
-                    spacing: 8
+                    anchors.leftMargin: Theme.spacingM
+                    anchors.rightMargin: Theme.spacingXS
+                    spacing: Theme.spacingM
 
                     Text {
                         text: "📷 Image"
-                        font.pointSize: 8
+                        font.pixelSize: Theme.fontSizeSmall
                         font.bold: true
-                        color: "white"
+                        color: Theme.textPrimary
                         Layout.alignment: Qt.AlignVCenter
                         Layout.fillWidth: true
                     }
@@ -204,15 +205,15 @@ Rectangle {
                         id: copyBtn
                         width: 20
                         height: 20
-                        color: copyArea.containsMouse ? "#5568d3" : "transparent"
-                        radius: 3
+                        color: copyArea.containsMouse ? Theme.violetEnd : "transparent"
+                        radius: Theme.radiusXS
                         Layout.alignment: Qt.AlignVCenter
 
                         Text {
                             text: copyTimer.running ? "✓" : "📋"
-                            font.pointSize: 9
+                            font.pixelSize: Theme.fontSizeBody
                             anchors.centerIn: parent
-                            color: "white"
+                            color: Theme.textPrimary
                         }
                         
                         MouseArea {
@@ -240,15 +241,15 @@ Rectangle {
                         id: saveBtn
                         width: 20
                         height: 20
-                        color: saveArea.containsMouse ? "#5568d3" : "transparent"
-                        radius: 3
+                        color: saveArea.containsMouse ? Theme.violetEnd : "transparent"
+                        radius: Theme.radiusXS
                         Layout.alignment: Qt.AlignVCenter
 
                         Text {
                             text: "💾"
-                            font.pointSize: 9
+                            font.pixelSize: Theme.fontSizeBody
                             anchors.centerIn: parent
-                            color: "white"
+                            color: Theme.textPrimary
                         }
 
                         MouseArea {
@@ -287,9 +288,9 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     color: "transparent"
-                    border.color: "#444444"
+                    border.color: Theme.border
                     border.width: 1
-                    radius: 4
+                    radius: Theme.radiusS
                 }
                 BusyIndicator {
                     anchors.centerIn: parent
@@ -328,9 +329,9 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     color: "transparent"
-                    border.color: "#444444"
+                    border.color: Theme.border
                     border.width: 1
-                    radius: 4
+                    radius: Theme.radiusS
                     visible: parent.status === Image.Ready
                 }
             }

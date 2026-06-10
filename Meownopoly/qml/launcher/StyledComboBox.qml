@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /*
  * StyledComboBox.qml — ComboBox custom du projet (thème sombre du launcher).
@@ -13,19 +14,19 @@ import QtQuick.Controls
 ComboBox {
     id: control
 
-    property color accentColor: "#569c58"
+    property color accentColor: Theme.accentAlt
 
     implicitHeight: 32
-    leftPadding: 10
+    leftPadding: Theme.spacingL
     rightPadding: 28
 
-    font.pixelSize: 12
+    font.pixelSize: Theme.fontSizeBody
 
     contentItem: Text {
         leftPadding: control.leftPadding
         rightPadding: control.rightPadding
         text: control.displayText
-        color: control.enabled ? "#ffffff" : "#6b7280"
+        color: control.enabled ? Theme.textPrimary : Theme.textHint
         font: control.font
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: Text.AlignLeft
@@ -36,14 +37,14 @@ ComboBox {
         x: control.width - width - 8
         y: control.topPadding + (control.availableHeight - height) / 2
         text: "▾"
-        color: control.popup.visible ? control.accentColor : "#aaaaaa"
-        font.pixelSize: 14
+        color: control.popup.visible ? control.accentColor : Theme.textHint
+        font.pixelSize: Theme.fontSizeMedium
     }
 
     background: Rectangle {
-        color: control.pressed ? "#1f1f23" : "#2a2a2e"
-        radius: 3
-        border.color: control.activeFocus ? control.accentColor : "#3a3a3a"
+        color: control.pressed ? Theme.background : Theme.surface
+        radius: Theme.radiusXS
+        border.color: control.activeFocus ? control.accentColor : Theme.border
         border.width: 1
         Behavior on border.color { ColorAnimation { duration: 120 } }
     }
@@ -53,7 +54,7 @@ ComboBox {
         width: control.width
         contentItem: Text {
             text: modelData
-            color: itemDel.highlighted ? "#ffffff" : "#cccccc"
+            color: itemDel.highlighted ? Theme.textPrimary : Theme.textSecondary
             font: control.font
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
@@ -61,8 +62,8 @@ ComboBox {
         background: Rectangle {
             color: itemDel.highlighted
                      ? control.accentColor
-                     : (itemDel.hovered ? "#2f2f2f" : "transparent")
-            Behavior on color { ColorAnimation { duration: 100 } }
+                     : (itemDel.hovered ? Theme.surfaceAlt : "transparent")
+            Behavior on color { ColorAnimation { duration: Theme.durationFast } }
         }
         highlighted: control.highlightedIndex === index
     }
@@ -83,10 +84,10 @@ ComboBox {
         }
 
         background: Rectangle {
-            color: "#1f1f23"
-            border.color: "#444444"
+            color: Theme.background
+            border.color: Theme.border
             border.width: 1
-            radius: 3
+            radius: Theme.radiusXS
         }
     }
 }

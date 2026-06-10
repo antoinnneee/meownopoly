@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 import "./components"
 import Meownopoly.Chat 1.0
 import Meownopoly.Account 1.0
@@ -14,7 +15,7 @@ import EditorSession 1.0
 Rectangle {
     id: root
 
-    color: "#1a1a1a"
+    color: Theme.background
 
     signal backToTitleScreen()
 
@@ -149,19 +150,19 @@ Rectangle {
         property string sessionIdForJoin: ""
 
         background: Rectangle {
-            color: "#2a2a2a"
+            color: Theme.surface
             border.color: "#E67E22"
             border.width: 2
-            radius: 12
+            radius: Theme.radiusXXL
         }
 
         contentItem: ColumnLayout {
-            spacing: 16
+            spacing: Theme.spacingXXL
 
             Text {
                 text: "Cette session est protégée. Entrez le mot de passe :"
-                color: "#e0e0e0"
-                font.pixelSize: 14
+                color: Theme.textSoft
+                font.pixelSize: Theme.fontSizeMedium
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
@@ -171,15 +172,15 @@ Rectangle {
                 placeholderText: "Mot de passe"
                 echoMode: TextInput.Password
                 color: "#f5f0ff"
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
                 Layout.fillWidth: true
                 Layout.preferredHeight: 44
 
                 background: Rectangle {
-                    color: "#1a1a1a"
-                    border.color: sessionPasswordField.activeFocus ? "#E67E22" : "#555555"
+                    color: Theme.background
+                    border.color: sessionPasswordField.activeFocus ? "#E67E22" : Theme.borderLight
                     border.width: 2
-                    radius: 8
+                    radius: Theme.radiusL
                 }
 
                 onAccepted: sessionPasswordDialog.acceptAndJoin()
@@ -309,12 +310,12 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 80
-            color: "#2a2a2a"
+            color: Theme.surface
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 16
-                spacing: 16
+                anchors.margins: Theme.spacingXXL
+                spacing: Theme.spacingXXL
 
                 // Bouton retour vers TitleScreen
                 BackButton {
@@ -327,8 +328,8 @@ Rectangle {
 
                     Text {
                         text: "🐱 Lobby Multijoueur"
-                        color: "#ffffff"
-                        font.pixelSize: 28
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeDisplay
                         font.bold: true
                         anchors.centerIn: parent
                     }
@@ -346,7 +347,7 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width
                 height: 1
-                color: "#444444"
+                color: Theme.border
             }
         }
 
@@ -418,17 +419,17 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 40
-            color: "#1a1a1a"
+            color: Theme.background
 
             Row {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 10
+                anchors.margins: Theme.spacingL
+                spacing: Theme.spacingL
 
                 Text {
                     text: "🐾 Meownopoly"
-                    color: "#666666"
-                    font.pixelSize: 12
+                    color: Theme.textDisabled
+                    font.pixelSize: Theme.fontSizeBody
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -436,8 +437,8 @@ Rectangle {
 
                 Text {
                     text: "v0.2.0 multiplayer edition"
-                    color: "#808080"
-                    font.pixelSize: 14
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeMedium
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
                 }

@@ -31,14 +31,15 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Dialogs
+import theme
 
 Rectangle {
     id: root
     Layout.fillWidth: true
     Layout.preferredHeight: 220
-    color: "#3a3a3a"
-    radius: 10
-    border.color: "#555555"
+    color: Theme.surfaceHover
+    radius: Theme.radiusXL
+    border.color: Theme.borderLight
     border.width: 1
     
     property bool packageCreated: false
@@ -57,16 +58,16 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 15
-        spacing: 10
-        
+        anchors.margins: Theme.spacingXXL
+        spacing: Theme.spacingL
+
         RowLayout {
             Layout.fillWidth: true
             Text {
                 text: "📦 Création de paquets"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontSizeLarge
                 font.bold: true
-                color: "#ffffff"
+                color: Theme.textPrimary
             }
 
             Item { Layout.fillWidth: true }
@@ -75,22 +76,22 @@ Rectangle {
                 text: "🧩 Configurer un modèle 3D"
                 onClicked: root.openModelConfiguratorRequested()
                 background: Rectangle {
-                    color: parent.pressed ? "#1976d2" : "#2196f3"
-                    radius: 4
+                    color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                    radius: Theme.radiusS
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
-                    padding: 6
+                    font.pixelSize: Theme.fontSizeBody
+                    padding: Theme.spacingS
                 }
             }
 
             Text {
                 text: "Assets Jeu"
-                color: !typeSwitch.checked ? "white" : "#888"
+                color: !typeSwitch.checked ? Theme.textPrimary : Theme.textMuted
             }
             Switch {
                 id: typeSwitch
@@ -98,29 +99,29 @@ Rectangle {
             }
             Text {
                 text: "Modèle 3D"
-                color: typeSwitch.checked ? "white" : "#888"
+                color: typeSwitch.checked ? Theme.textPrimary : Theme.textMuted
             }
         }
-        
+
         RowLayout {
             Layout.fillWidth: true
-            
+
             RowLayout {
-                spacing: 5
+                spacing: Theme.spacingXS
                 Layout.fillWidth: true
-                
+
                 // Champ Nom du Modèle (visible seulement en mode modèle)
                 TextField {
                     id: modelNameField
                     visible: root.isModelMode
                     Layout.preferredWidth: 150
                     placeholderText: "Nom du modèle (ex: PionChat)"
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     background: Rectangle {
-                        color: "#2a2a2a"
-                        border.color: "#555555"
+                        color: Theme.surface
+                        border.color: Theme.borderLight
                         border.width: 1
-                        radius: 4
+                        radius: Theme.radiusS
                     }
                 }
 
@@ -130,40 +131,40 @@ Rectangle {
                     placeholderText: "Version du paquet (ex: 1.0.1)"
                     // En mode modèle, on ne pré-remplit pas forcément avec la version du jeu
                     text: root.isModelMode ? "1.0.0" : logic.getNextVersion(root.currentVersion)
-                    color: "#ffffff"
-                    
+                    color: Theme.textPrimary
+
                     background: Rectangle {
-                        color: "#2a2a2a"
-                        border.color: "#555555"
+                        color: Theme.surface
+                        border.color: Theme.borderLight
                         border.width: 1
-                        radius: 4
+                        radius: Theme.radiusS
                     }
                 }
             }
-            
+
             Button {
                 text: "Sélectionner dossier"
                 onClicked: folderDialog.open()
-                
+
                 background: Rectangle {
                     color: parent.pressed ? "#5d4037" : "#795548"
-                    radius: 6
+                    radius: Theme.radiusM
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
             }
         }
-        
+
         Text {
             id: selectedFolderLabel
             text: "Aucun dossier sélectionné"
-            color: "#888888"
+            color: Theme.textMuted
             Layout.fillWidth: true
             elide: Text.ElideMiddle
         }
@@ -186,16 +187,16 @@ Rectangle {
                 }
                 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#388e3c" : "#4caf50") : "#666666"
-                    radius: 6
+                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.success) : Theme.success) : Theme.textDisabled
+                    radius: Theme.radiusM
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
             }
             
@@ -211,16 +212,16 @@ Rectangle {
                 }
                 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#1976d2" : "#2196f3") : "#666666"
-                    radius: 6
+                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent) : Theme.textDisabled
+                    radius: Theme.radiusM
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
             }
             

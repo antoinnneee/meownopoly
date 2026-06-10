@@ -5,11 +5,12 @@ import QtQuick.Particles
 import Game
 import Meownopoly.Account 1.0
 import "../account/"
+import theme
 
 Rectangle {
     id: root
     objectName: "titleScreen"
-    color: "#1a1a1a"  // Dark background for modern look
+    color: Theme.background  // Fond sombre pour un look moderne
 
 
     signal testViewRequested()  // Add this signal
@@ -75,8 +76,8 @@ Rectangle {
     Text {
         id: gameTitle
         text: "Meownopoly"
-        color: "#ffffff"
-        font.pixelSize: 48
+        color: Theme.textPrimary
+        font.pixelSize: Theme.px(48)
         font.bold: true
         anchors {
             horizontalCenter: parent.horizontalCenter
@@ -89,19 +90,19 @@ Rectangle {
     Text {
         id: subtitle
         text: "The Feline Edition"
-        color: "#cccccc"
-        font.pixelSize: 24
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeDisplay
         anchors {
             horizontalCenter: parent.horizontalCenter
             top: gameTitle.bottom
-            topMargin: 10
+            topMargin: Theme.spacingL
         }
     }
 
     // Menu buttons container
     ColumnLayout {
         anchors.centerIn: parent
-        spacing: 20
+        spacing: Theme.spacingHuge
         // Start Game Button
         Item {
             height: 20
@@ -115,14 +116,14 @@ Rectangle {
             Layout.preferredHeight: 50
             
             background: Rectangle {
-                color: startGameButton.pressed ? "#2e7d32" : "#4caf50"
-                radius: 8
+                color: startGameButton.pressed ? Theme.pressed(Theme.success) : Theme.success
+                radius: Theme.radiusL
             }
             
             contentItem: Text {
                 text: startGameButton.text
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -141,14 +142,14 @@ Rectangle {
             visible: false
 
             background: Rectangle {
-                color: testUIButton.pressed ? "#1565c0" : "#2196f3"
-                radius: 8
+                color: testUIButton.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                radius: Theme.radiusL
             }
 
             contentItem: Text {
                 text: testUIButton.text
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -168,14 +169,14 @@ Rectangle {
             Layout.preferredHeight: 50
 
             background: Rectangle {
-                color: editorButton.pressed ? "#1565c0" : "#2196f3"
-                radius: 8
+                color: editorButton.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                radius: Theme.radiusL
             }
 
             contentItem: Text {
                 text: editorButton.text
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -195,13 +196,13 @@ Rectangle {
 
             background: Rectangle {
                 color: caseCreatorButton.pressed ? "#6a1b9a" : "#9c27b0"
-                radius: 8
+                radius: Theme.radiusL
             }
 
             contentItem: Text {
                 text: caseCreatorButton.text
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -221,13 +222,13 @@ Rectangle {
 
             background: Rectangle {
                 color: test3DButton.pressed ? "#d84315" : "#ff5722"
-                radius: 8
+                radius: Theme.radiusL
             }
 
             contentItem: Text {
                 text: test3DButton.text
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -247,14 +248,14 @@ Rectangle {
             Layout.preferredHeight: 50
 
             background: Rectangle {
-                color: launcherButton.pressed ? "#388e3c" : "#4caf50"
-                radius: 8
+                color: launcherButton.pressed ? Theme.pressed(Theme.success) : Theme.success
+                radius: Theme.radiusL
             }
 
             contentItem: Text {
                 text: launcherButton.text
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -275,13 +276,13 @@ Rectangle {
 
             background: Rectangle {
                 color: catwayTestButton.pressed ? "#00695c" : "#00897b"
-                radius: 8
+                radius: Theme.radiusL
             }
 
             contentItem: Text {
                 text: catwayTestButton.text
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -298,13 +299,13 @@ Rectangle {
 
             background: Rectangle {
                 color: assetManagerTestButton.pressed ? "#7b1fa2" : "#9c27b0"
-                radius: 8
+                radius: Theme.radiusL
             }
 
             contentItem: Text {
                 text: assetManagerTestButton.text
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -319,12 +320,12 @@ Rectangle {
     // Version text
     Text {
         text: "v0.2.0 editor edition"
-        color: "#808080"
-        font.pixelSize: 14
+        color: Theme.textMuted
+        font.pixelSize: Theme.fontSizeMedium
         anchors {
             right: parent.right
             bottom: parent.bottom
-            margins: 10
+            margins: Theme.spacingL
         }
     }
 
@@ -334,31 +335,31 @@ Rectangle {
         anchors {
             top: parent.top
             right: parent.right
-            margins: 15
+            margins: Theme.spacingXXL
         }
         width: accountRow.width + 20
         height: 40
-        color: "#2a2a2a"
+        color: Theme.surface
         radius: 20
-        border.color: "#444444"
+        border.color: Theme.border
         border.width: 1
 
         RowLayout {
             id: accountRow
             anchors.centerIn: parent
-            spacing: 10
+            spacing: Theme.spacingL
 
             // Cat avatar
             Text {
                 text: "🐱"
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontSizeTitle
             }
 
             // Nickname
             Text {
                 text: AccountManager.nickname
-                color: "#cccccc"
-                font.pixelSize: 14
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeMedium
                 font.bold: true
             }
 
@@ -367,13 +368,13 @@ Rectangle {
                 width: 28
                 height: 28
                 radius: 14
-                color: settingsBtn.containsMouse ? "#444444" : "#333333"
+                color: settingsBtn.containsMouse ? Theme.border : Theme.surfaceAlt
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
 
                 Text {
                     text: "⚙️"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     anchors.centerIn: parent
                 }
 

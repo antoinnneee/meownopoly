@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Particles
+import theme
 import "./components"
 import ui_item
 import AssetManager
@@ -144,7 +145,7 @@ Rectangle {
         // HEADER
         RowLayout {
             Layout.fillWidth: true
-            spacing: 16
+            spacing: Theme.spacingXXL
 
             BackButton {
                 onBackClicked: root.backRequested()
@@ -155,7 +156,7 @@ Rectangle {
                 Text {
                     text: "🐱 Créer une Session"
                     color: "#f5f0ff"
-                    font.pixelSize: 28
+                    font.pixelSize: Theme.fontSizeDisplay
                     font.bold: true
                     anchors.centerIn: parent
                 }
@@ -167,7 +168,7 @@ Rectangle {
         // Separator dynamique central
         Rectangle {
             Layout.fillWidth: true
-            Layout.topMargin: 12
+            Layout.topMargin: Theme.spacingXL
             height: 2
             gradient: Gradient {
                 orientation: Gradient.Horizontal
@@ -185,14 +186,14 @@ Rectangle {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.topMargin: 20
+            Layout.topMargin: Theme.spacingHuge
 
             // Conteneur central limité en largeur
             RowLayout {
                 anchors.centerIn: parent
                 width: Math.min(parent.width, 820)
                 height: Math.min(parent.height, 420)
-                spacing: 28
+                spacing: Theme.spacingHuge
 
                 // ── COLONNE GAUCHE : Nom + Mot de passe ──
                 Rectangle {
@@ -221,23 +222,23 @@ Rectangle {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 24
+                        anchors.margins: Theme.spacingHuge
                         spacing: 0
 
                         // Section header
                         Row {
-                            spacing: 10
-                            Layout.bottomMargin: 20
+                            spacing: Theme.spacingL
+                            Layout.bottomMargin: Theme.spacingHuge
 
                             Text {
                                 text: "📝"
-                                font.pixelSize: 20
+                                font.pixelSize: Theme.fontSizeHeading
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             Text {
                                 text: "Informations"
                                 color: root.textHighlight
-                                font.pixelSize: 17
+                                font.pixelSize: Theme.fontSizeLarge
                                 font.bold: true
                                 anchors.verticalCenter: parent.verticalCenter
                                 Behavior on color { ColorAnimation { duration: 300 } }
@@ -248,7 +249,7 @@ Rectangle {
                         Text {
                             text: "Nom de la session *"
                             color: root.textHighlight
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                             Behavior on color { ColorAnimation { duration: 300 } }
                         }
@@ -257,10 +258,10 @@ Rectangle {
                             id: sessionNameInput
                             Layout.fillWidth: true
                             Layout.preferredHeight: 46
-                            Layout.topMargin: 8
+                            Layout.topMargin: Theme.spacingM
                             placeholderTextColor: root.textDim
                             color: "#f5f0ff"
-                            font.pixelSize: 15
+                            font.pixelSize: Theme.fontSizeMedium
                             maximumLength: 50
                             // Filtre à la frappe : rejette les caractères hors
                             // [A-Za-z0-9_] (accents, espaces, ponctuation).
@@ -272,11 +273,11 @@ Rectangle {
 
                             background: Rectangle {
                                 color: sessionNameInput.focus ? root.bgInputFocus : root.bgInput
-                                radius: 10
+                                radius: Theme.radiusXL
                                 border.color: {
                                     if (sessionNameInput.focus) return root.cPrimary
                                     if (sessionNameInput.text.length > 0 && root.sessionNameError !== "")
-                                        return "#E74C3C"
+                                        return Theme.danger
                                     return root.borderInput
                                 }
                                 border.width: 2
@@ -288,7 +289,7 @@ Rectangle {
                         // Bulle-info live : rule hint quand vide, erreur
                         // précise quand invalide, compteur de caractères.
                         Text {
-                            Layout.topMargin: 6
+                            Layout.topMargin: Theme.spacingS
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
                             text: {
@@ -301,10 +302,10 @@ Rectangle {
                             }
                             color: {
                                 if (sessionNameInput.text.length === 0) return root.textMuted
-                                if (root.sessionNameError !== "") return "#E74C3C"
-                                return "#4ade80"
+                                if (root.sessionNameError !== "") return Theme.danger
+                                return Theme.success
                             }
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSizeSmall
                             font.italic: true
                             Behavior on color { ColorAnimation { duration: 300 } }
                         }
@@ -314,11 +315,11 @@ Rectangle {
 
                         // — Mot de passe —
                         Row {
-                            spacing: 8
+                            spacing: Theme.spacingM
                             Text {
                                 text: "Mot de passe"
                                 color: root.textHighlight
-                                font.pixelSize: 14
+                                font.pixelSize: Theme.fontSizeMedium
                                 font.bold: true
                                 anchors.verticalCenter: parent.verticalCenter
                                 Behavior on color { ColorAnimation { duration: 300 } }
@@ -326,7 +327,7 @@ Rectangle {
                             Text {
                                 text: "(optionnel)"
                                 color: root.textMuted
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontSizeBody
                                 font.italic: true
                                 anchors.verticalCenter: parent.verticalCenter
                                 Behavior on color { ColorAnimation { duration: 300 } }
@@ -337,17 +338,17 @@ Rectangle {
                             id: sessionPasswordInput
                             Layout.fillWidth: true
                             Layout.preferredHeight: 46
-                            Layout.topMargin: 8
+                            Layout.topMargin: Theme.spacingM
                             placeholderText: "Laisser vide pour session ouverte"
                             placeholderTextColor: root.textDim
                             echoMode: showPasswordCheckbox.checked ? TextInput.Normal : TextInput.Password
                             color: "#f5f0ff"
-                            font.pixelSize: 15
+                            font.pixelSize: Theme.fontSizeMedium
                             maximumLength: 30
 
                             background: Rectangle {
                                 color: sessionPasswordInput.focus ? root.bgInputFocus : root.bgInput
-                                radius: 10
+                                radius: Theme.radiusXL
                                 border.color: sessionPasswordInput.focus ? root.cPrimary : root.borderInput
                                 border.width: 2
                                 Behavior on border.color { ColorAnimation { duration: 200 } }
@@ -356,22 +357,22 @@ Rectangle {
                         }
 
                         Row {
-                            Layout.topMargin: 10
-                            spacing: 10
+                            Layout.topMargin: Theme.spacingL
+                            spacing: Theme.spacingL
 
                             CheckBox {
                                 id: showPasswordCheckbox
                                 checked: false
                                 indicator: Rectangle {
-                                    width: 22; height: 22; radius: 6
+                                    width: 22; height: 22; radius: Theme.radiusM
                                     color: showPasswordCheckbox.checked ? root.cPrimary : root.bgInput
                                     border.color: showPasswordCheckbox.checked ? root.cSecondary : root.borderInput
                                     border.width: 2
                                     Behavior on color { ColorAnimation { duration: 200 } }
 
                                     Text {
-                                        text: "✓"; color: "#ffffff"
-                                        font.pixelSize: 16; font.bold: true
+                                        text: "✓"; color: Theme.textPrimary
+                                        font.pixelSize: Theme.fontSizeLarge; font.bold: true
                                         anchors.centerIn: parent
                                         visible: showPasswordCheckbox.checked
                                     }
@@ -381,7 +382,7 @@ Rectangle {
                             Text {
                                 text: "Afficher le mot de passe"
                                 color: root.textMuted
-                                font.pixelSize: 13
+                                font.pixelSize: Theme.fontSizeBody
                                 anchors.verticalCenter: parent.verticalCenter
                                 Behavior on color { ColorAnimation { duration: 300 } }
                             }
@@ -419,23 +420,23 @@ Rectangle {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 24
+                        anchors.margins: Theme.spacingHuge
                         spacing: 0
 
                         // Section header
                         Row {
-                            spacing: 10
-                            Layout.bottomMargin: 20
+                            spacing: Theme.spacingL
+                            Layout.bottomMargin: Theme.spacingHuge
 
                             Text {
                                 text: "⚙️"
-                                font.pixelSize: 20
+                                font.pixelSize: Theme.fontSizeHeading
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                             Text {
                                 text: "Configuration"
                                 color: root.textHighlight
-                                font.pixelSize: 17
+                                font.pixelSize: Theme.fontSizeLarge
                                 font.bold: true
                                 anchors.verticalCenter: parent.verticalCenter
                                 Behavior on color { ColorAnimation { duration: 300 } }
@@ -446,15 +447,15 @@ Rectangle {
                         Text {
                             text: "Mode de la session"
                             color: root.textHighlight
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                             Behavior on color { ColorAnimation { duration: 300 } }
                         }
 
                         // Toggle switch row
                         Row {
-                            Layout.topMargin: 14
-                            spacing: 16
+                            Layout.topMargin: Theme.spacingXL
+                            spacing: Theme.spacingXXL
 
                             CheckBox {
                                 id: modeCheckbox
@@ -479,18 +480,18 @@ Rectangle {
                             }
 
                             Row {
-                                spacing: 8
+                                spacing: Theme.spacingM
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 Text {
                                     text: root.isEditionMode ? "🛠️" : "🎮"
-                                    font.pixelSize: 22
+                                    font.pixelSize: Theme.fontSizeHeading
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                                 Text {
                                     text: root.isEditionMode ? "Édition" : "Jeu"
                                     color: root.isEditionMode ? root.cVioletSecondary : root.cOrangeSecondary
-                                    font.pixelSize: 18
+                                    font.pixelSize: Theme.fontSizeTitle
                                     font.bold: true
                                     anchors.verticalCenter: parent.verticalCenter
                                     Behavior on color { ColorAnimation { duration: 200 } }
@@ -501,9 +502,9 @@ Rectangle {
                         // Description du mode
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.topMargin: 16
+                            Layout.topMargin: Theme.spacingXXL
                             height: modeDescText.implicitHeight + 24
-                            radius: 10
+                            radius: Theme.radiusXL
 
                             // Cette description de mode utilise toujours du contraste par rapport au mode actif
                             color: root.isEditionMode ? "#352840" : "#3d2d20"
@@ -520,7 +521,7 @@ Rectangle {
                                           "📐 Collaborer sur l'éditeur de carte avec d'autres joueurs" :
                                           "🎲 Lancer une partie de Meownopoly classique"
                                 color: root.isEditionMode ? "#c9a8e8" : "#e8c8a0"
-                                font.pixelSize: 13
+                                font.pixelSize: Theme.fontSizeBody
                                 wrapMode: Text.WordWrap
                                 horizontalAlignment: Text.AlignHCenter
                                 Behavior on color { ColorAnimation { duration: 250 } }
@@ -531,18 +532,18 @@ Rectangle {
                         // Choix entre carte vierge (nom = session) ou carte
                         // existante (nom + méta conservés).
                         Text {
-                            Layout.topMargin: 16
+                            Layout.topMargin: Theme.spacingXXL
                             text: "Carte de départ"
                             color: root.textHighlight
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                             visible: root.isEditionMode
                         }
 
                         RowLayout {
-                            Layout.topMargin: 10
+                            Layout.topMargin: Theme.spacingL
                             Layout.fillWidth: true
-                            spacing: 14
+                            spacing: Theme.spacingXL
                             visible: root.isEditionMode
 
                             RadioButton {
@@ -553,7 +554,7 @@ Rectangle {
                                 contentItem: Text {
                                     text: radioNew.text
                                     color: root.textMuted
-                                    font.pixelSize: 13
+                                    font.pixelSize: Theme.fontSizeBody
                                     verticalAlignment: Text.AlignVCenter
                                     leftPadding: radioNew.indicator.width + 6
                                 }
@@ -568,7 +569,7 @@ Rectangle {
                                     text: radioExisting.text +
                                           (radioExisting.enabled ? "" : " (aucune)")
                                     color: radioExisting.enabled ? root.textMuted : root.textDim
-                                    font.pixelSize: 13
+                                    font.pixelSize: Theme.fontSizeBody
                                     verticalAlignment: Text.AlignVCenter
                                     leftPadding: radioExisting.indicator.width + 6
                                 }
@@ -578,7 +579,7 @@ Rectangle {
                         ComboBox {
                             id: existingMapCombo
                             Layout.fillWidth: true
-                            Layout.topMargin: 8
+                            Layout.topMargin: Theme.spacingM
                             Layout.preferredHeight: 40
                             visible: root.isEditionMode &&
                                      root.initialMapMode === "existing"
@@ -590,16 +591,16 @@ Rectangle {
                             }
                             background: Rectangle {
                                 color: root.bgInput
-                                radius: 8
+                                radius: Theme.radiusL
                                 border.color: existingMapCombo.pressed ? root.cPrimary : root.borderInput
                                 border.width: 1
                             }
                             contentItem: Text {
                                 text: existingMapCombo.currentText || "—"
                                 color: "#f5f0ff"
-                                font.pixelSize: 13
+                                font.pixelSize: Theme.fontSizeBody
                                 verticalAlignment: Text.AlignVCenter
-                                leftPadding: 10
+                                leftPadding: Theme.spacingL
                             }
                         }
 
@@ -609,7 +610,7 @@ Rectangle {
                         // ── Boutons d'action ──
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 14
+                            spacing: Theme.spacingXL
 
                             // Annuler
                             Button {
@@ -618,16 +619,16 @@ Rectangle {
 
                                 background: Rectangle {
                                     color: parent.pressed ? root.bgBtnPress : (parent.hovered ? root.bgBtnHover : root.bgPanel)
-                                    radius: 10
+                                    radius: Theme.radiusXL
                                     border.color: parent.hovered ? root.borderBtnHover : root.borderBtn
                                     border.width: 2
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
                                 }
 
                                 contentItem: Text {
                                     text: "Annuler"
                                     color: root.textHighlight
-                                    font.pixelSize: 15
+                                    font.pixelSize: Theme.fontSizeMedium
                                     font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
@@ -651,7 +652,7 @@ Rectangle {
                                 background: Rectangle {
                                     color: parent.enabled ?
                                                (parent.down ? root.cDark : root.cPrimary) : root.bgBtnPress
-                                    radius: 10
+                                    radius: Theme.radiusXL
                                     border.color: parent.enabled ?
                                                       (parent.hovered ? "#FFFFFF" : root.cDark) : root.borderBtn
                                     border.width: 2
@@ -659,21 +660,21 @@ Rectangle {
                                     Rectangle {
                                         anchors.fill: parent
                                         anchors.margins: 2
-                                        radius: 8
+                                        radius: Theme.radiusL
                                         gradient: Gradient {
                                             GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.15) }
                                             GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
                                         }
                                     }
 
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
                                 }
 
                                 contentItem: Text {
                                     text: parent.text
-                                    font.pixelSize: 15
+                                    font.pixelSize: Theme.fontSizeMedium
                                     font.bold: true
-                                    color: parent.enabled ? "white" : root.textMuted
+                                    color: parent.enabled ? Theme.textPrimary : root.textMuted
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                     Behavior on color { ColorAnimation { duration: 300 } }

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 /*
  * InlineColorPicker.qml — Sélecteur de couleur HSL inline (édition live).
@@ -54,16 +55,16 @@ Item {
         id: col
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 5
+        spacing: Theme.spacingXS
 
         // Aperçu + hex
         RowLayout {
-            Layout.fillWidth: true; spacing: 6
-            Rectangle { width: 22; height: 22; radius: 4
-                color: picker._preview; border.color: "#555"; border.width: 1 }
+            Layout.fillWidth: true; spacing: Theme.spacingS
+            Rectangle { width: 22; height: 22; radius: Theme.radiusS
+                color: picker._preview; border.color: Theme.borderLight; border.width: 1 }
             Label { Layout.fillWidth: true
                 text: picker._preview.toString().toUpperCase()
-                color: "#9ca3af"; font.pixelSize: 10 }
+                color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption }
         }
 
         // Teinte (arc-en-ciel)
@@ -77,7 +78,7 @@ Item {
                 x: hueS.leftPadding
                 y: hueS.topPadding + hueS.availableHeight / 2 - height / 2
                 width: hueS.availableWidth; height: 12; radius: 6
-                border.color: "#3a3a3a"; border.width: 1
+                border.color: Theme.border; border.width: 1
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
                     GradientStop { position: 0.000; color: "#ff0000" }
@@ -106,7 +107,7 @@ Item {
                 x: satS.leftPadding
                 y: satS.topPadding + satS.availableHeight / 2 - height / 2
                 width: satS.availableWidth; height: 12; radius: 6
-                border.color: "#3a3a3a"; border.width: 1
+                border.color: Theme.border; border.width: 1
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
                     GradientStop { position: 0.0; color: Qt.hsla(picker._h, 0, picker._l, 1) }
@@ -130,7 +131,7 @@ Item {
                 x: lumS.leftPadding
                 y: lumS.topPadding + lumS.availableHeight / 2 - height / 2
                 width: lumS.availableWidth; height: 12; radius: 6
-                border.color: "#3a3a3a"; border.width: 1
+                border.color: Theme.border; border.width: 1
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
                     GradientStop { position: 0.0; color: Qt.hsla(picker._h, picker._s, 0, 1) }

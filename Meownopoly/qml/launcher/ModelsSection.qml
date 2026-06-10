@@ -5,14 +5,15 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Rectangle {
     id: root
     Layout.fillWidth: true
     Layout.preferredHeight: 250 // Plus grand pour la liste
-    color: "#3a3a3a"
-    radius: 10
-    border.color: "#555555"
+    color: Theme.surfaceHover
+    radius: Theme.radiusXL
+    border.color: Theme.borderLight
     border.width: 1
 
     property var modelsList: []
@@ -24,30 +25,30 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 15
-        spacing: 10
+        anchors.margins: Theme.spacingXXL
+        spacing: Theme.spacingL
 
         RowLayout {
             Layout.fillWidth: true
             Text {
                 text: "🧸 Modèles 3D Disponibles"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontSizeLarge
                 font.bold: true
-                color: "#ffffff"
+                color: Theme.textPrimary
                 Layout.fillWidth: true
             }
-            
+
             Button {
                 text: "Actualiser"
                 onClicked: root.refreshRequested()
                 background: Rectangle {
-                    color: "#444"
-                    radius: 4
-                    border.color: "#666"
+                    color: Theme.border
+                    radius: Theme.radiusS
+                    border.color: Theme.textDisabled
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -64,24 +65,24 @@ Rectangle {
             delegate: Rectangle {
                 width: listView.width
                 height: 50
-                color: index % 2 === 0 ? "#444444" : "#3e3e3e"
-                radius: 4
+                color: index % 2 === 0 ? Theme.border : Theme.surfaceHover
+                radius: Theme.radiusS
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: 10
+                    anchors.margins: Theme.spacingL
+                    spacing: Theme.spacingL
 
                     Text {
                         text: modelData.name
-                        color: "white"
+                        color: Theme.textPrimary
                         font.bold: true
                         Layout.preferredWidth: 150
                     }
-                    
+
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: Theme.spacingXXS
                         
                         // Sélecteur de version
                         ComboBox {
@@ -94,26 +95,26 @@ Rectangle {
                             textRole: "version"
                             
                             background: Rectangle {
-                                color: "#2a2a2a"
-                                border.color: "#555"
-                                radius: 4
+                                color: Theme.surface
+                                border.color: Theme.borderLight
+                                radius: Theme.radiusS
                             }
                             contentItem: Text {
                                 text: parent.displayText
-                                color: "white"
+                                color: Theme.textPrimary
                                 verticalAlignment: Text.AlignVCenter
-                                leftPadding: 10
-                                font.pixelSize: 12
+                                leftPadding: Theme.spacingL
+                                font.pixelSize: Theme.fontSizeBody
                             }
-                            
+
                             Component.onCompleted: currentIndex = 0
                         }
-                        
+
                         // Indicateur d'installation
                         Text {
                             text: modelData.isInstalled ? "Installé: v" + modelData.localVersion : "Non installé"
-                            color: modelData.isInstalled ? "#4caf50" : "#888" // Vert si installé
-                            font.pixelSize: 10
+                            color: modelData.isInstalled ? Theme.success : Theme.textMuted // Vert si installé
+                            font.pixelSize: Theme.fontSizeCaption
                         }
                     }
 
@@ -127,14 +128,14 @@ Rectangle {
                         onClicked: root.editRequested(modelData.name)
                         background: Rectangle {
                             color: editButton.pressed ? "#6d28d9" : "#7c3aed"
-                            radius: 4
+                            radius: Theme.radiusS
                         }
                         contentItem: Text {
                             text: editButton.text
-                            color: "white"
+                            color: Theme.textPrimary
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSizeBody
                         }
                     }
 
@@ -151,15 +152,15 @@ Rectangle {
                             root.downloadRequested(modelData.name, versionSelector.currentText)
                         }
                         background: Rectangle {
-                            color: parent.enabled ? (actionButton.isSameVersion ? "#555" : "#2196f3") : "#666"
-                            radius: 4
+                            color: parent.enabled ? (actionButton.isSameVersion ? Theme.borderLight : Theme.accent) : Theme.textDisabled
+                            radius: Theme.radiusS
                         }
                         contentItem: Text {
                             text: parent.text
-                            color: "white"
+                            color: Theme.textPrimary
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSizeBody
                         }
                     }
                 }
@@ -168,7 +169,7 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: "Aucun modèle disponible"
-                color: "#888"
+                color: Theme.textMuted
                 visible: listView.count === 0
             }
         }

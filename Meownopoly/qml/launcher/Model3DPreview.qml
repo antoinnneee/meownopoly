@@ -26,6 +26,7 @@ import QtQuick3D.Helpers
 import QtQuick3D.AssetUtils
 import AssetManager
 import world3d 1.0
+import theme
 
 Item {
     id: root
@@ -57,7 +58,7 @@ Item {
     property real   comparisonOffsetX: 200
 
     property string cameraMode: "game"              // "game" | "face"
-    property color  bgColor: "#1f1f23"
+    property color  bgColor: Theme.background
 
     // --- Caméra game (ortho 55° calquée sur World3D.qml) ---
     property real gameMagnification: 1.0
@@ -331,17 +332,17 @@ Item {
     Rectangle {
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.margins: 10
+        anchors.margins: Theme.spacingL
         color: "#cc1f1f23"
-        radius: 4
-        border.color: "#444"
+        radius: Theme.radiusS
+        border.color: Theme.border
         width: hudCol.implicitWidth + 16
         height: hudCol.implicitHeight + 12
 
         Column {
             id: hudCol
             anchors.centerIn: parent
-            spacing: 2
+            spacing: Theme.spacingXXS
             Text {
                 text: root.cameraMode === "game"
                       ? "Caméra : Vue jeu (mag " + root.gameMagnification.toFixed(2)
@@ -350,15 +351,15 @@ Item {
                         + "°, pitch " + root.orbitPitch.toFixed(0)
                         + "°, dist " + root.orbitDistance.toFixed(0)
                         + ", pan " + root.facePanLocalX.toFixed(0) + "/" + root.facePanLocalY.toFixed(0) + ")"
-                color: "#e5e7eb"
-                font.pixelSize: 11
+                color: Theme.textSoft
+                font.pixelSize: Theme.fontSizeSmall
             }
             Text {
                 text: root.cameraMode === "face"
                       ? "Drag gauche = orbite • Drag milieu/droit ou Shift+gauche = pan • Molette = zoom"
                       : "Drag = pan • Molette = zoom"
-                color: "#9ca3af"
-                font.pixelSize: 10
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeCaption
             }
         }
     }

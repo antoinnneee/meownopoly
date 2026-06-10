@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 //import Qt5Compat.GraphicalEffects
 import AssetManager
+import theme
 
 Item {
     id: root
@@ -96,13 +97,13 @@ Item {
                         target: mainPad
                         property: "scale"
                         to: 1.1
-                        duration: 100
+                        duration: Theme.durationFast
                     }
                     NumberAnimation {
                         target: mainPad
                         property: "scale"
                         to: 1.0
-                        duration: 100
+                        duration: Theme.durationFast
                     }
                 }
             }

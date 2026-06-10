@@ -19,10 +19,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import LauncherManager 1.0
+import theme
 
 ColumnLayout {
     id: root
-    spacing: 12
+    spacing: Theme.spacingXL
 
     // --- Entrée ---
     property string folderPath: ""          // chemin clean du dossier modèle
@@ -401,9 +402,9 @@ ColumnLayout {
     // ====================== UI ======================
 
     // --- Skin courant + création ---
-    Label { text: "Skin"; color: "#e5e7eb"; font.bold: true; font.pixelSize: 15 }
+    Label { text: "Skin"; color: Theme.textSoft; font.bold: true; font.pixelSize: Theme.fontSizeMedium }
     RowLayout {
-        Layout.fillWidth: true; spacing: 6
+        Layout.fillWidth: true; spacing: Theme.spacingS
         StyledComboBox {
             id: skinCombo
             Layout.fillWidth: true
@@ -421,26 +422,26 @@ ColumnLayout {
     Text {
         visible: root.skins.length === 0
         text: root.folderPath.length === 0 ? "Charge d'abord un modèle." : "Aucun skin — crée-en un (＋ Skin)."
-        color: "#9ca3af"; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.WordWrap
+        color: Theme.textHint; font.pixelSize: Theme.fontSizeSmall; Layout.fillWidth: true; wrapMode: Text.WordWrap
     }
 
     // --- Variantes ---
-    Label { text: "Variantes"; color: "#e5e7eb"; font.bold: true; font.pixelSize: 13; visible: root._currentSkin.length > 0 }
+    Label { text: "Variantes"; color: Theme.textSoft; font.bold: true; font.pixelSize: Theme.fontSizeBody; visible: root._currentSkin.length > 0 }
     RowLayout {
-        Layout.fillWidth: true; spacing: 6; visible: root._currentSkin.length > 0
+        Layout.fillWidth: true; spacing: Theme.spacingS; visible: root._currentSkin.length > 0
         TextField {
             id: variantNameField
             Layout.fillWidth: true
             placeholderText: "nom de la variante…"
-            color: "white"
-            placeholderTextColor: "#9ca3af"
-            background: Rectangle { color: "#1f1f23"; border.color: "#3a3a3a"; radius: 3 }
+            color: Theme.textPrimary
+            placeholderTextColor: Theme.textHint
+            background: Rectangle { color: Theme.background; border.color: Theme.border; radius: Theme.radiusXS }
             onAccepted: { root.saveVariant(text); text = "" }
         }
         StyledButton { primary: true; text: "Sauver"; onClicked: { root.saveVariant(variantNameField.text); variantNameField.text = "" } }
     }
     RowLayout {
-        Layout.fillWidth: true; spacing: 6; visible: root._currentSkin.length > 0
+        Layout.fillWidth: true; spacing: Theme.spacingS; visible: root._currentSkin.length > 0
         StyledComboBox { id: variantCombo; Layout.fillWidth: true; model: root.variantNames }
         StyledButton { text: "Charger"; enabled: variantCombo.currentText.length > 0; onClicked: root.loadVariant(variantCombo.currentText) }
         StyledButton { danger: true; text: "Suppr"; enabled: variantCombo.currentText.length > 0; onClicked: root.deleteVariant(variantCombo.currentText) }
@@ -448,8 +449,8 @@ ColumnLayout {
 
     // --- Debug shader ---
     RowLayout {
-        Layout.fillWidth: true; spacing: 6; visible: root._currentSkin.length > 0
-        Label { text: "Debug"; color: "#9ca3af"; font.pixelSize: 12 }
+        Layout.fillWidth: true; spacing: Theme.spacingS; visible: root._currentSkin.length > 0
+        Label { text: "Debug"; color: Theme.textHint; font.pixelSize: Theme.fontSizeBody }
         Repeater {
             model: [ {l:"0",v:0}, {l:"base",v:3}, {l:"ID",v:4}, {l:"match",v:5} ]
             delegate: Button {
@@ -461,17 +462,17 @@ ColumnLayout {
                 onClicked: root.debugMode = modelData.v
                 Layout.fillWidth: true
                 implicitHeight: 28
-                leftPadding: 10; rightPadding: 10
+                leftPadding: Theme.spacingL; rightPadding: Theme.spacingL
                 background: Rectangle {
-                    radius: 4
-                    color: dbgBtn.checked ? "#569c58" : (dbgBtn.hovered ? "#3a3a3a" : "#2a2a2e")
-                    border.color: dbgBtn.checked ? "#6fb872" : "#3a3a3a"
+                    radius: Theme.radiusS
+                    color: dbgBtn.checked ? Theme.accentAlt : (dbgBtn.hovered ? Theme.surfaceHover : Theme.surface)
+                    border.color: dbgBtn.checked ? Theme.hover(Theme.accentAlt) : Theme.border
                     border.width: 1
                 }
                 contentItem: Text {
                     text: dbgBtn.text
-                    color: "#ffffff"
-                    font.pixelSize: 12
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeBody
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -479,15 +480,15 @@ ColumnLayout {
         }
     }
 
-    Rectangle { Layout.fillWidth: true; height: 1; color: "#3a3a3a"; visible: root._currentSkin.length > 0 }
+    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border; visible: root._currentSkin.length > 0 }
 
     // --- Couleur de peau (teinte globale) ---
-    Label { text: "Couleur de peau"; color: "#e5e7eb"; font.bold: true; font.pixelSize: 14; visible: root._currentSkin.length > 0 }
+    Label { text: "Couleur de peau"; color: Theme.textSoft; font.bold: true; font.pixelSize: Theme.fontSizeMedium; visible: root._currentSkin.length > 0 }
     RowLayout {
-        Layout.fillWidth: true; spacing: 6; visible: root._currentSkin.length > 0
+        Layout.fillWidth: true; spacing: Theme.spacingS; visible: root._currentSkin.length > 0
         Rectangle {
-            width: 44; height: 24; radius: 3; color: root.baseTint
-            border.color: root.colorTarget === "base" ? "#569c58" : "#555"
+            width: 44; height: 24; radius: Theme.radiusXS; color: root.baseTint
+            border.color: root.colorTarget === "base" ? Theme.accentAlt : Theme.borderLight
             border.width: root.colorTarget === "base" ? 2 : 1
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                 onClicked: root._toggleColor("base") }
@@ -500,11 +501,11 @@ ColumnLayout {
             Layout.fillWidth: true; from: 0.0; to: 1.0; value: root.baseTintStrength
             onMoved: { root.baseTintStrength = value; root.rebuildConfig() }
         }
-        Label { text: Number(root.baseTintStrength).toFixed(2); color: "#9ca3af"; font.pixelSize: 10; Layout.preferredWidth: 28 }
+        Label { text: Number(root.baseTintStrength).toFixed(2); color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; Layout.preferredWidth: 28 }
     }
     // Picker HSL inline de la couleur de peau (déplié au clic sur la pastille).
     Loader {
-        Layout.fillWidth: true; Layout.leftMargin: 8
+        Layout.fillWidth: true; Layout.leftMargin: Theme.spacingM
         active: root.colorTarget === "base"; visible: active
         sourceComponent: Component {
             InlineColorPicker {
@@ -517,10 +518,10 @@ ColumnLayout {
     // --- Zones ---
     RowLayout {
         Layout.fillWidth: true; visible: root._currentSkin.length > 0
-        Label { text: "Zones — " + root.slotCount + "/" + root.maxSlots; color: "#e5e7eb"; font.bold: true; font.pixelSize: 14; Layout.fillWidth: true }
-        StyledButton { text: "Détecter zones"; font.pixelSize: 10; onClicked: root.redetectZones()
+        Label { text: "Zones — " + root.slotCount + "/" + root.maxSlots; color: Theme.textSoft; font.bold: true; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
+        StyledButton { text: "Détecter zones"; font.pixelSize: Theme.fontSizeCaption; onClicked: root.redetectZones()
             ToolTip.text: "Re-détecter le nombre de zones depuis la colorMap"; ToolTip.visible: hovered; ToolTip.delay: 400 }
-        StyledButton { text: "Enregistrer JSON"; font.pixelSize: 10; onClicked: root.saveSkinJson()
+        StyledButton { text: "Enregistrer JSON"; font.pixelSize: Theme.fontSizeCaption; onClicked: root.saveSkinJson()
             ToolTip.text: "Enregistre noms de zones + flags équipe"; ToolTip.visible: hovered; ToolTip.delay: 400 }
     }
 
@@ -536,25 +537,25 @@ ColumnLayout {
             ColumnLayout {
                 id: zoneCol
                 anchors.left: parent.left; anchors.right: parent.right
-                spacing: 3
+                spacing: Theme.spacingXXS
 
                 // En-tête : pastille + nom éditable + case équipe
                 RowLayout {
-                    Layout.fillWidth: true; spacing: 6
+                    Layout.fillWidth: true; spacing: Theme.spacingS
                     Rectangle { width: 14; height: 14; radius: 7
                         color: root.slotPaletteHex[zoneRoot.zi]; border.color: "#222"; border.width: 1 }
-                    Label { text: zoneRoot.zi; color: "#9ca3af"; font.pixelSize: 10; Layout.preferredWidth: 12 }
+                    Label { text: zoneRoot.zi; color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; Layout.preferredWidth: 12 }
                     TextField {
                         Layout.fillWidth: true
                         text: root.zoneNames[zoneRoot.zi]
                         placeholderText: "zone " + zoneRoot.zi
-                        font.pixelSize: 11; color: "white"
-                        placeholderTextColor: "#9ca3af"
-                        background: Rectangle { color: "#1f1f23"; border.color: "#3a3a3a"; radius: 3 }
+                        font.pixelSize: Theme.fontSizeSmall; color: Theme.textPrimary
+                        placeholderTextColor: Theme.textHint
+                        background: Rectangle { color: Theme.background; border.color: Theme.border; radius: Theme.radiusXS }
                         onEditingFinished: root.setZoneName(zoneRoot.zi, text)
                     }
                     StyledCheckBox {
-                        text: "équipe"; font.pixelSize: 10
+                        text: "équipe"; font.pixelSize: Theme.fontSizeCaption
                         checked: root.zoneTeam[zoneRoot.zi]
                         onToggled: root.setZoneTeam(zoneRoot.zi, checked)
                         ToolTip.text: "Teintée par la couleur d'équipe au runtime"; ToolTip.visible: hovered; ToolTip.delay: 400
@@ -563,11 +564,11 @@ ColumnLayout {
 
                 // Teinte
                 RowLayout {
-                    Layout.fillWidth: true; Layout.leftMargin: 20; spacing: 6
-                    Label { text: "teinte"; color: "#9ca3af"; font.pixelSize: 10; Layout.preferredWidth: 42 }
-                    Rectangle { width: 36; height: 22; radius: 3
+                    Layout.fillWidth: true; Layout.leftMargin: 20; spacing: Theme.spacingS
+                    Label { text: "teinte"; color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; Layout.preferredWidth: 42 }
+                    Rectangle { width: 36; height: 22; radius: Theme.radiusXS
                         color: root.tints[zoneRoot.zi]
-                        border.color: root.colorTarget === ("zone:" + zoneRoot.zi) ? "#569c58" : "#555"
+                        border.color: root.colorTarget === ("zone:" + zoneRoot.zi) ? Theme.accentAlt : Theme.borderLight
                         border.width: root.colorTarget === ("zone:" + zoneRoot.zi) ? 2 : 1
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                             onClicked: root._toggleColor("zone:" + zoneRoot.zi) } }
@@ -592,11 +593,11 @@ ColumnLayout {
 
                 // Texture (≤ maxTex) — un libellé indique le drag & drop quand la lib est vide.
                 RowLayout {
-                    Layout.fillWidth: true; Layout.leftMargin: 20; spacing: 6
+                    Layout.fillWidth: true; Layout.leftMargin: 20; spacing: Theme.spacingS
                     visible: zoneRoot.zi < root.maxTex
-                    Label { text: "texture"; color: "#9ca3af"; font.pixelSize: 10; Layout.preferredWidth: 42 }
+                    Label { text: "texture"; color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; Layout.preferredWidth: 42 }
                     StyledComboBox {
-                        Layout.fillWidth: true; font.pixelSize: 11; implicitHeight: 26
+                        Layout.fillWidth: true; font.pixelSize: Theme.fontSizeSmall; implicitHeight: 26
                         visible: (root.textureLib || []).length > 0
                         model: ["Aucune"].concat((root.textureLib || []).map(function(t){ return t.name }))
                         currentIndex: root.texSelections[zoneRoot.zi] || 0
@@ -604,23 +605,23 @@ ColumnLayout {
                     }
                     Text {
                         Layout.fillWidth: true; visible: (root.textureLib || []).length === 0
-                        text: "glisse une image ici…"; color: "#6b7280"; font.pixelSize: 10; font.italic: true
+                        text: "glisse une image ici…"; color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; font.italic: true
                     }
                 }
                 // Opacité texture (si une texture choisie)
                 RowLayout {
-                    Layout.fillWidth: true; Layout.leftMargin: 20; spacing: 6
+                    Layout.fillWidth: true; Layout.leftMargin: 20; spacing: Theme.spacingS
                     visible: zoneRoot.zi < root.maxTex && (root.texSelections[zoneRoot.zi] || 0) > 0
-                    Label { text: "opacité"; color: "#9ca3af"; font.pixelSize: 10; Layout.preferredWidth: 42 }
+                    Label { text: "opacité"; color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; Layout.preferredWidth: 42 }
                     Slider { Layout.fillWidth: true; from: 0.0; to: 1.0; value: root.texOpacities[zoneRoot.zi]
                         onMoved: root.setTexOpacity(zoneRoot.zi, value) }
-                    Rectangle { width: 26; height: 20; radius: 3
+                    Rectangle { width: 26; height: 20; radius: Theme.radiusXS
                         color: root.texTints[zoneRoot.zi]
-                        border.color: root.colorTarget === ("tex:" + zoneRoot.zi) ? "#569c58" : "#555"
+                        border.color: root.colorTarget === ("tex:" + zoneRoot.zi) ? Theme.accentAlt : Theme.borderLight
                         border.width: root.colorTarget === ("tex:" + zoneRoot.zi) ? 2 : 1
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                             onClicked: root._toggleColor("tex:" + zoneRoot.zi) } }
-                    StyledCheckBox { text: "inv"; font.pixelSize: 10; checked: root.textureInverts[zoneRoot.zi]
+                    StyledCheckBox { text: "inv"; font.pixelSize: Theme.fontSizeCaption; checked: root.textureInverts[zoneRoot.zi]
                         onToggled: root.setTextureInvert(zoneRoot.zi, checked) }
                 }
                 // Picker HSL inline de la teinte de texture.
@@ -635,7 +636,7 @@ ColumnLayout {
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#2a2a2e" }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
             }
 
             // --- Drag & drop : déposer une image sur la zone → import + assignation ---
@@ -655,31 +656,31 @@ ColumnLayout {
                 id: dropHi
                 anchors.fill: parent
                 visible: false
-                color: "#22569c58"
-                border.color: "#569c58"; border.width: 2; radius: 4
+                color: Qt.alpha(Theme.accentAlt, 0.13)
+                border.color: Theme.accentAlt; border.width: 2; radius: Theme.radiusS
                 Text {
                     anchors.centerIn: parent
                     text: "Déposer l'image — zone " + zoneRoot.zi
-                    color: "#d1fae5"; font.pixelSize: 12; font.bold: true
+                    color: "#d1fae5"; font.pixelSize: Theme.fontSizeBody; font.bold: true
                 }
             }
         }
     }
 
     RowLayout {
-        Layout.fillWidth: true; spacing: 6; visible: root._currentSkin.length > 0
+        Layout.fillWidth: true; spacing: Theme.spacingS; visible: root._currentSkin.length > 0
         StyledButton { text: "Réinitialiser"; Layout.fillWidth: true; onClicked: root.resetConfig() }
         StyledButton { primary: true; text: "＋ Texture"; Layout.fillWidth: true; onClicked: textureDialog.open()
             ToolTip.text: "Importer une texture dans la bibliothèque du skin"; ToolTip.visible: hovered; ToolTip.delay: 400 }
     }
 
     // --- Textures du modèle (suppression + nettoyage) ---
-    Rectangle { Layout.fillWidth: true; height: 1; color: "#3a3a3a"; visible: root._currentSkin.length > 0 }
+    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border; visible: root._currentSkin.length > 0 }
     RowLayout {
         Layout.fillWidth: true; visible: root._currentSkin.length > 0
         Label { text: "Textures du modèle (" + (root.textureLib || []).length + ")"
-            color: "#e5e7eb"; font.bold: true; font.pixelSize: 13; Layout.fillWidth: true }
-        StyledButton { text: "Nettoyer inutilisées"; font.pixelSize: 10
+            color: Theme.textSoft; font.bold: true; font.pixelSize: Theme.fontSizeBody; Layout.fillWidth: true }
+        StyledButton { text: "Nettoyer inutilisées"; font.pixelSize: Theme.fontSizeCaption
             enabled: (root.textureLib || []).length > 0
             onClicked: root.removeUnusedModelTextures()
             ToolTip.text: "Supprime du modèle les textures référencées par aucune zone ET aucune variante"; ToolTip.visible: hovered; ToolTip.delay: 400 }
@@ -688,19 +689,19 @@ ColumnLayout {
         model: root._currentSkin.length > 0 ? (root.textureLib || []) : []
         delegate: RowLayout {
             required property var modelData
-            Layout.fillWidth: true; spacing: 6
+            Layout.fillWidth: true; spacing: Theme.spacingS
             Rectangle { width: 8; height: 8; radius: 4
-                color: root.isTextureUsed(modelData.file) ? "#569c58" : "#6b7280" }
-            Label { text: modelData.name; color: "#d1d5db"; font.pixelSize: 11
+                color: root.isTextureUsed(modelData.file) ? Theme.accentAlt : Theme.textHint }
+            Label { text: modelData.name; color: Theme.textSecondary; font.pixelSize: Theme.fontSizeSmall
                 Layout.fillWidth: true; elide: Text.ElideRight }
             Label { visible: !root.isTextureUsed(modelData.file); text: "inutilisée"
-                color: "#6b7280"; font.pixelSize: 9 }
+                color: Theme.textHint; font.pixelSize: Theme.fontSizeTiny }
             StyledButton { id: delModelBtn; danger: true
                 leftPadding: 0; rightPadding: 0; topPadding: 0; bottomPadding: 0
                 implicitWidth: 34; implicitHeight: 28
                 contentItem: Item {
                     TrashIcon { anchors.centerIn: parent; width: 14; height: 16
-                        color: delModelBtn.hovered ? "#fca5a5" : "#cbd5e1" }
+                        color: delModelBtn.hovered ? Theme.dangerSoft : Theme.textSecondary }
                 }
                 onClicked: root.deleteModelTexture(modelData.file)
                 ToolTip.text: "Supprimer du modèle"; ToolTip.visible: hovered; ToolTip.delay: 400 }
@@ -708,28 +709,28 @@ ColumnLayout {
     }
 
     // --- Bibliothèque générale (partagée) ---
-    Rectangle { Layout.fillWidth: true; height: 1; color: "#2a2a2e"; visible: root._currentSkin.length > 0 }
+    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; visible: root._currentSkin.length > 0 }
     RowLayout {
         Layout.fillWidth: true; visible: root._currentSkin.length > 0
         Label { text: "Bibliothèque générale (" + (root.generalTextures || []).length + ")"
-            color: "#e5e7eb"; font.bold: true; font.pixelSize: 13; Layout.fillWidth: true }
-        StyledButton { primary: true; text: "＋ Importer"; font.pixelSize: 10; onClicked: generalTextureDialog.open()
+            color: Theme.textSoft; font.bold: true; font.pixelSize: Theme.fontSizeBody; Layout.fillWidth: true }
+        StyledButton { primary: true; text: "＋ Importer"; font.pixelSize: Theme.fontSizeCaption; onClicked: generalTextureDialog.open()
             ToolTip.text: "Importer une image dans la bibliothèque partagée entre modèles"; ToolTip.visible: hovered; ToolTip.delay: 400 }
     }
     Text {
         visible: root._currentSkin.length > 0 && (root.generalTextures || []).length === 0
         text: "Bibliothèque vide — importe ici des textures réutilisables sur tous les modèles."
-        color: "#6b7280"; font.pixelSize: 10; Layout.fillWidth: true; wrapMode: Text.WordWrap
+        color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; Layout.fillWidth: true; wrapMode: Text.WordWrap
     }
     Repeater {
         model: root._currentSkin.length > 0 ? (root.generalTextures || []) : []
         delegate: RowLayout {
             required property var modelData
-            Layout.fillWidth: true; spacing: 6
-            Rectangle { width: 8; height: 8; radius: 4; color: "#3a82f7" }
-            Label { text: modelData; color: "#d1d5db"; font.pixelSize: 11
+            Layout.fillWidth: true; spacing: Theme.spacingS
+            Rectangle { width: 8; height: 8; radius: 4; color: Theme.accent }
+            Label { text: modelData; color: Theme.textSecondary; font.pixelSize: Theme.fontSizeSmall
                 Layout.fillWidth: true; elide: Text.ElideRight }
-            StyledButton { text: "→ modèle"; font.pixelSize: 10; implicitHeight: 24
+            StyledButton { text: "→ modèle"; font.pixelSize: Theme.fontSizeCaption; implicitHeight: 24
                 enabled: root._currentSkin.length > 0
                 onClicked: root.copyGeneralToSkin(modelData)
                 ToolTip.text: "Copier dans le skin du modèle courant"; ToolTip.visible: hovered; ToolTip.delay: 400 }
@@ -738,7 +739,7 @@ ColumnLayout {
                 implicitWidth: 34; implicitHeight: 28
                 contentItem: Item {
                     TrashIcon { anchors.centerIn: parent; width: 14; height: 16
-                        color: delGenBtn.hovered ? "#fca5a5" : "#cbd5e1" }
+                        color: delGenBtn.hovered ? Theme.dangerSoft : Theme.textSecondary }
                 }
                 onClicked: root.removeGeneralTexture(modelData)
                 ToolTip.text: "Supprimer de la bibliothèque générale"; ToolTip.visible: hovered; ToolTip.delay: 400 }
@@ -770,12 +771,12 @@ ColumnLayout {
             newSkinName.text = ""; newSkinDialog.pickedColorMap = ""
         }
         ColumnLayout {
-            spacing: 8
+            spacing: Theme.spacingM
             TextField { id: newSkinName; placeholderText: "nom du skin (ex: default)"; Layout.preferredWidth: 280 }
             RowLayout {
-                Layout.fillWidth: true; spacing: 6
+                Layout.fillWidth: true; spacing: Theme.spacingS
                 StyledButton { text: "Choisir colorMap…"; onClicked: colorMapDialog.open() }
-                Text { Layout.fillWidth: true; elide: Text.ElideMiddle; color: "#9ca3af"; font.pixelSize: 10
+                Text { Layout.fillWidth: true; elide: Text.ElideMiddle; color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption
                     text: newSkinDialog.pickedColorMap.toString().length > 0
                           ? newSkinDialog.pickedColorMap.toString() : "(optionnel)" }
             }

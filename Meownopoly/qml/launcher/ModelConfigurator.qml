@@ -22,10 +22,11 @@ import QtQuick.Layouts 1.15
 import QtQuick.Dialogs
 import AssetManager
 import LauncherManager 1.0
+import theme
 
 Rectangle {
     id: root
-    color: "#1e1e1e"
+    color: Theme.background
 
     signal closeRequested()
 
@@ -192,27 +193,27 @@ Rectangle {
             else statusBar.message = "Échec de la création du modèle."
         }
         ColumnLayout {
-            spacing: 8
+            spacing: Theme.spacingM
             TextField {
                 id: newModelName
                 placeholderText: "nom du modèle (ex: Kura)"
                 Layout.preferredWidth: 320
             }
             RowLayout {
-                Layout.fillWidth: true; spacing: 6
+                Layout.fillWidth: true; spacing: Theme.spacingS
                 Button { text: "Choisir .glb…"; onClicked: glbDialog.open() }
                 Text {
                     Layout.fillWidth: true; elide: Text.ElideMiddle
-                    color: "#9ca3af"; font.pixelSize: 10
+                    color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption
                     text: newModelDialog.glb.toString().length > 0 ? newModelDialog.glb.toString() : "(requis)"
                 }
             }
             RowLayout {
-                Layout.fillWidth: true; spacing: 6
+                Layout.fillWidth: true; spacing: Theme.spacingS
                 Button { text: "Base color (peau)…"; onClicked: skinBaseDialog.open() }
                 Text {
                     Layout.fillWidth: true; elide: Text.ElideMiddle
-                    color: "#9ca3af"; font.pixelSize: 10
+                    color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption
                     text: newModelDialog.skinBase.toString().length > 0 ? newModelDialog.skinBase.toString() : "(optionnel)"
                 }
             }
@@ -246,10 +247,10 @@ Rectangle {
         property real defaultValue: 0
         property int decimals: 2
         signal valueEdited(real v)
-        spacing: 6
+        spacing: Theme.spacingS
         Text {
             text: axisRow.axisLabel
-            color: "#9ca3af"
+            color: Theme.textHint
             Layout.preferredWidth: 18
             verticalAlignment: Text.AlignVCenter
         }
@@ -266,8 +267,8 @@ Rectangle {
             id: tf
             Layout.preferredWidth: 70
             text: axisRow.boundValue.toFixed(axisRow.decimals)
-            color: "white"
-            background: Rectangle { color: "#1f1f23"; border.color: "#3a3a3a"; radius: 3 }
+            color: Theme.textPrimary
+            background: Rectangle { color: Theme.background; border.color: Theme.border; radius: Theme.radiusXS }
             validator: DoubleValidator { bottom: axisRow.minValue; top: axisRow.maxValue }
             onEditingFinished: {
                 const v = parseFloat(text.replace(",", "."))
@@ -284,16 +285,16 @@ Rectangle {
             ToolTip.text: "Réinitialiser à " + axisRow.defaultValue.toFixed(axisRow.decimals)
             onClicked: axisRow.valueEdited(axisRow.defaultValue)
             background: Rectangle {
-                color: btnResetAxis.pressed ? "#374151" : (btnResetAxis.hovered ? "#3a3a3a" : "transparent")
-                border.color: "#3a3a3a"
-                radius: 3
+                color: btnResetAxis.pressed ? Theme.pressed(Theme.borderLight) : (btnResetAxis.hovered ? Theme.surfaceHover : "transparent")
+                border.color: Theme.border
+                radius: Theme.radiusXS
             }
             contentItem: Text {
                 text: btnResetAxis.text
-                color: "#9ca3af"
+                color: Theme.textHint
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
             }
         }
     }
@@ -303,55 +304,55 @@ Rectangle {
     // ============================================================
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 10
+        anchors.margins: Theme.spacingL
+        spacing: Theme.spacingL
 
         // ---- Header
         RowLayout {
             Layout.fillWidth: true
-            spacing: 12
+            spacing: Theme.spacingXL
 
             Button {
                 text: "← Retour"
                 onClicked: root.closeRequested()
-                background: Rectangle { color: parent.pressed ? "#374151" : "#4b5563"; radius: 4 }
-                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                background: Rectangle { color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight; radius: Theme.radiusS }
+                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             }
 
             Text {
                 text: "Configurateur de modèle 3D"
-                color: "white"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 font.bold: true
             }
 
             // Identité du modèle (déplacée du panneau vers la top bar).
-            Text { text: "Nom"; color: "#9ca3af"; font.pixelSize: 12; Layout.leftMargin: 8 }
+            Text { text: "Nom"; color: Theme.textHint; font.pixelSize: Theme.fontSizeBody; Layout.leftMargin: Theme.spacingM }
             TextField {
                 Layout.preferredWidth: 150
                 text: root.modelName
                 placeholderText: "Princess"
                 onEditingFinished: root.modelName = text
-                color: "white"
-                placeholderTextColor: "#9ca3af"
-                background: Rectangle { color: "#1f1f23"; border.color: "#3a3a3a"; radius: 3 }
+                color: Theme.textPrimary
+                placeholderTextColor: Theme.textHint
+                background: Rectangle { color: Theme.background; border.color: Theme.border; radius: Theme.radiusXS }
             }
-            Text { text: "Version"; color: "#9ca3af"; font.pixelSize: 12 }
+            Text { text: "Version"; color: Theme.textHint; font.pixelSize: Theme.fontSizeBody }
             TextField {
                 Layout.preferredWidth: 80
                 text: root.modelVersion
                 placeholderText: "1.0.0"
                 onEditingFinished: root.modelVersion = text
-                color: "white"
-                placeholderTextColor: "#9ca3af"
-                background: Rectangle { color: "#1f1f23"; border.color: "#3a3a3a"; radius: 3 }
+                color: Theme.textPrimary
+                placeholderTextColor: Theme.textHint
+                background: Rectangle { color: Theme.background; border.color: Theme.border; radius: Theme.radiusXS }
             }
 
             Item { Layout.fillWidth: true }   // spacer
 
             // Toggle caméra
             Row {
-                spacing: 6
+                spacing: Theme.spacingS
                 Button {
                     id: btnGame
                     text: "Vue jeu"
@@ -360,10 +361,10 @@ Rectangle {
                     checked: root.cameraMode === "game"
                     onClicked: root.cameraMode = "game"
                     background: Rectangle {
-                        color: btnGame.checked ? "#2563eb" : (btnGame.pressed ? "#374151" : "#4b5563")
-                        radius: 4
+                        color: btnGame.checked ? Theme.accent : (btnGame.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight)
+                        radius: Theme.radiusS
                     }
-                    contentItem: Text { text: btnGame.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                    contentItem: Text { text: btnGame.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                 }
                 Button {
                     id: btnFace
@@ -371,18 +372,18 @@ Rectangle {
                     checked: root.cameraMode === "face"
                     onClicked: root.cameraMode = "face"
                     background: Rectangle {
-                        color: btnFace.checked ? "#2563eb" : (btnFace.pressed ? "#374151" : "#4b5563")
-                        radius: 4
+                        color: btnFace.checked ? Theme.accent : (btnFace.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight)
+                        radius: Theme.radiusS
                     }
-                    contentItem: Text { text: btnFace.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                    contentItem: Text { text: btnFace.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                 }
             }
 
             Button {
                 text: "Reset vue"
                 onClicked: viewport.resetView()
-                background: Rectangle { color: parent.pressed ? "#374151" : "#4b5563"; radius: 4 }
-                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                background: Rectangle { color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight; radius: Theme.radiusS }
+                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
             }
 
         }
@@ -391,15 +392,15 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 10
+            spacing: Theme.spacingL
 
             // Viewport
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: "#0f0f12"
-                radius: 6
-                border.color: "#3a3a3a"
+                radius: Theme.radiusM
+                border.color: Theme.border
                 clip: true
 
                 Model3DPreview {
@@ -427,14 +428,14 @@ Rectangle {
                 Rectangle {
                     anchors.centerIn: parent
                     visible: !root.hasFolder
-                    color: "#22222a"
-                    radius: 6
-                    border.color: "#444"
+                    color: Theme.surface
+                    radius: Theme.radiusM
+                    border.color: Theme.border
                     width: 380; height: 80
                     Text {
                         anchors.centerIn: parent
                         text: "Sélectionnez un dossier, ou déposez un .glb pour créer un modèle"
-                        color: "#a1a1aa"
+                        color: Theme.textHint
                     }
                 }
 
@@ -471,16 +472,16 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     visible: objDropArea.containsDrag
-                    color: "#3322c55e"
-                    border.color: "#22c55e"
+                    color: Qt.alpha(Theme.success, 0.2)
+                    border.color: Theme.success
                     border.width: 3
-                    radius: 6
+                    radius: Theme.radiusM
                     z: 50
                     Text {
                         anchors.centerIn: parent
                         text: "Déposer un .glb pour créer un modèle"
-                        color: "#22c55e"
-                        font.pixelSize: 24
+                        color: Theme.success
+                        font.pixelSize: Theme.fontSizeDisplay
                         font.bold: true
                     }
                 }
@@ -494,12 +495,12 @@ Rectangle {
                 Layout.preferredWidth: 380
                 Layout.maximumWidth: 380
                 Layout.fillHeight: true
-                spacing: 8
+                spacing: Theme.spacingM
 
                 // Onglets
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: Theme.spacingS
                     Repeater {
                         model: [ { k: "3d", t: "3D" }, { k: "tex", t: "Textures" } ]
                         delegate: Button {
@@ -513,13 +514,13 @@ Rectangle {
                             checked: root.controlTab === modelData.k
                             onClicked: root.controlTab = modelData.k
                             background: Rectangle {
-                                radius: 4
-                                color: tabBtn.checked ? "#2563eb" : (tabBtn.hovered ? "#3a3a3a" : "#2a2a2e")
-                                border.color: tabBtn.checked ? "#2563eb" : "#3a3a3a"
+                                radius: Theme.radiusS
+                                color: tabBtn.checked ? Theme.accent : (tabBtn.hovered ? Theme.surfaceHover : Theme.surface)
+                                border.color: tabBtn.checked ? Theme.accent : Theme.border
                                 border.width: 1
                             }
                             contentItem: Text {
-                                text: tabBtn.text; color: "white"; font.bold: tabBtn.checked
+                                text: tabBtn.text; color: Theme.textPrimary; font.bold: tabBtn.checked
                                 horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
                             }
                         }
@@ -536,22 +537,22 @@ Rectangle {
 
                     ColumnLayout {
                         width: tab3dScroll.availableWidth
-                        spacing: 14
+                        spacing: Theme.spacingXL
 
                         // --- Source
                     GroupBox {
                         Layout.fillWidth: true
                         title: "Source"
-                        background: Rectangle { color: "#2a2a2e"; radius: 6; border.color: "#3a3a3a" }
-                        label: Text { text: parent.title; color: "#e5e7eb"; font.bold: true }
+                        background: Rectangle { color: Theme.surface; radius: Theme.radiusM; border.color: Theme.border }
+                        label: Text { text: parent.title; color: Theme.textSoft; font.bold: true }
 
                         ColumnLayout {
                             anchors.fill: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
 
                             Text {
                                 text: root.folderPath || "Aucun dossier sélectionné"
-                                color: root.folderPath ? "#d1d5db" : "#6b7280"
+                                color: root.folderPath ? Theme.textSecondary : Theme.textHint
                                 Layout.fillWidth: true
                                 elide: Text.ElideMiddle
                                 wrapMode: Text.NoWrap
@@ -559,15 +560,15 @@ Rectangle {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: 6
+                                spacing: Theme.spacingS
 
                                 Button {
                                     id: btnPickFolder
                                     text: "Sélectionner dossier..."
                                     Layout.fillWidth: true
                                     onClicked: folderDialog.open()
-                                    background: Rectangle { color: btnPickFolder.pressed ? "#5d4037" : "#795548"; radius: 4 }
-                                    contentItem: Text { text: btnPickFolder.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                                    background: Rectangle { color: btnPickFolder.pressed ? "#5d4037" : "#795548"; radius: Theme.radiusS }
+                                    contentItem: Text { text: btnPickFolder.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                                 }
                                 Button {
                                     id: btnReload
@@ -578,8 +579,8 @@ Rectangle {
                                     ToolTip.visible: hovered
                                     ToolTip.delay: 400
                                     ToolTip.text: "Recharger le dossier (re-scan manifest + transform)"
-                                    background: Rectangle { color: btnReload.enabled ? (btnReload.pressed ? "#374151" : "#4b5563") : "#3a3a3a"; radius: 4 }
-                                    contentItem: Text { text: btnReload.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                                    background: Rectangle { color: btnReload.enabled ? (btnReload.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight) : Theme.surfaceHover; radius: Theme.radiusS }
+                                    contentItem: Text { text: btnReload.text; color: Theme.textPrimary; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                                 }
                             }
 
@@ -593,8 +594,8 @@ Rectangle {
                                     newModelName.text = ""
                                     newModelDialog.open()
                                 }
-                                background: Rectangle { color: btnNewModel.pressed ? "#1d4ed8" : "#2563eb"; radius: 4 }
-                                contentItem: Text { text: btnNewModel.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                                background: Rectangle { color: btnNewModel.pressed ? Theme.pressed(Theme.accent) : Theme.accent; radius: Theme.radiusS }
+                                contentItem: Text { text: btnNewModel.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                             }
                         }
                     }
@@ -603,12 +604,12 @@ Rectangle {
                     GroupBox {
                         Layout.fillWidth: true
                         title: "Comparaison"
-                        background: Rectangle { color: "#2a2a2e"; radius: 6; border.color: "#3a3a3a" }
-                        label: Text { text: parent.title; color: "#e5e7eb"; font.bold: true }
+                        background: Rectangle { color: Theme.surface; radius: Theme.radiusM; border.color: Theme.border }
+                        label: Text { text: parent.title; color: Theme.textSoft; font.bold: true }
 
                         ColumnLayout {
                             anchors.fill: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
 
                             StyledComboBox {
                                 id: compCombo
@@ -621,14 +622,14 @@ Rectangle {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: "Décalage X"; color: "#d1d5db" }
+                                Text { text: "Décalage X"; color: Theme.textSecondary }
                                 Slider {
                                     Layout.fillWidth: true
                                     from: 0; to: 1000
                                     value: viewport.comparisonOffsetX
                                     onMoved: viewport.comparisonOffsetX = value
                                 }
-                                Text { text: viewport.comparisonOffsetX.toFixed(0); color: "#9ca3af"; Layout.preferredWidth: 36 }
+                                Text { text: viewport.comparisonOffsetX.toFixed(0); color: Theme.textHint; Layout.preferredWidth: 36 }
                             }
                         }
                     }
@@ -638,12 +639,12 @@ Rectangle {
                     GroupBox {
                         Layout.fillWidth: true
                         title: "Échelle"
-                        background: Rectangle { color: "#2a2a2e"; radius: 6; border.color: "#3a3a3a" }
-                        label: Text { text: parent.title; color: "#e5e7eb"; font.bold: true }
+                        background: Rectangle { color: Theme.surface; radius: Theme.radiusM; border.color: Theme.border }
+                        label: Text { text: parent.title; color: Theme.textSoft; font.bold: true }
 
                         ColumnLayout {
                             anchors.fill: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
 
                             StyledCheckBox {
                                 text: "Verrouillage uniforme (XYZ)"
@@ -691,12 +692,12 @@ Rectangle {
                     GroupBox {
                         Layout.fillWidth: true
                         title: "Rotation (degrés)"
-                        background: Rectangle { color: "#2a2a2e"; radius: 6; border.color: "#3a3a3a" }
-                        label: Text { text: parent.title; color: "#e5e7eb"; font.bold: true }
+                        background: Rectangle { color: Theme.surface; radius: Theme.radiusM; border.color: Theme.border }
+                        label: Text { text: parent.title; color: Theme.textSoft; font.bold: true }
 
                         ColumnLayout {
                             anchors.fill: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
 
                             AxisSlider {
                                 Layout.fillWidth: true
@@ -729,17 +730,17 @@ Rectangle {
                     GroupBox {
                         Layout.fillWidth: true
                         title: "Position (unités monde)"
-                        background: Rectangle { color: "#2a2a2e"; radius: 6; border.color: "#3a3a3a" }
-                        label: Text { text: parent.title; color: "#e5e7eb"; font.bold: true }
+                        background: Rectangle { color: Theme.surface; radius: Theme.radiusM; border.color: Theme.border }
+                        label: Text { text: parent.title; color: Theme.textSoft; font.bold: true }
 
                         ColumnLayout {
                             anchors.fill: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
 
                             Text {
                                 text: "Y > 0 = monter (utile pour faire toucher les pieds au sol)"
-                                color: "#9ca3af"
-                                font.pixelSize: 10
+                                color: Theme.textHint
+                                font.pixelSize: Theme.fontSizeCaption
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -773,8 +774,8 @@ Rectangle {
                                 text: "Reset transform global"
                                 Layout.fillWidth: true
                                 onClicked: root.resetTransform()
-                                background: Rectangle { color: parent.pressed ? "#374151" : "#4b5563"; radius: 4 }
-                                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                                background: Rectangle { color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight; radius: Theme.radiusS }
+                                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                             }
                         }
                     }
@@ -783,12 +784,12 @@ Rectangle {
                     GroupBox {
                         Layout.fillWidth: true
                         title: "Actions"
-                        background: Rectangle { color: "#2a2a2e"; radius: 6; border.color: "#3a3a3a" }
-                        label: Text { text: parent.title; color: "#e5e7eb"; font.bold: true }
+                        background: Rectangle { color: Theme.surface; radius: Theme.radiusM; border.color: Theme.border }
+                        label: Text { text: parent.title; color: Theme.textSoft; font.bold: true }
 
                         ColumnLayout {
                             anchors.fill: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
 
                             Button {
                                 text: "Sauvegarder dans le .qml + créer .meow"
@@ -796,10 +797,10 @@ Rectangle {
                                 enabled: root.hasFolder
                                 onClicked: root.applyTransformAndSave(false)
                                 background: Rectangle {
-                                    color: parent.enabled ? (parent.pressed ? "#388e3c" : "#4caf50") : "#4b5563"
-                                    radius: 4
+                                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.success) : Theme.success) : Theme.borderLight
+                                    radius: Theme.radiusS
                                 }
-                                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                             }
                             Button {
                                 text: "Sauvegarder & Uploader"
@@ -807,10 +808,10 @@ Rectangle {
                                 enabled: root.hasFolder && !LauncherManager.isDownloading
                                 onClicked: root.applyTransformAndSave(true)
                                 background: Rectangle {
-                                    color: parent.enabled ? (parent.pressed ? "#1976d2" : "#2196f3") : "#4b5563"
-                                    radius: 4
+                                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent) : Theme.borderLight
+                                    radius: Theme.radiusS
                                 }
-                                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: 6 }
+                                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                             }
                         }
                     }
@@ -827,13 +828,13 @@ Rectangle {
 
                     ColumnLayout {
                         width: tabTexScroll.availableWidth
-                        spacing: 14
+                        spacing: Theme.spacingXL
 
                         GroupBox {
                             Layout.fillWidth: true
                             title: "Skin (Color ID Map)"
-                            background: Rectangle { color: "#2a2a2e"; radius: 6; border.color: "#3a3a3a" }
-                            label: Text { text: parent.title; color: "#e5e7eb"; font.bold: true }
+                            background: Rectangle { color: Theme.surface; radius: Theme.radiusM; border.color: Theme.border }
+                            label: Text { text: parent.title; color: Theme.textSoft; font.bold: true }
 
                             SkinEditorPanel {
                                 id: skinEditor
@@ -853,20 +854,20 @@ Rectangle {
             id: statusBar
             Layout.fillWidth: true
             Layout.preferredHeight: 26
-            color: "#27272a"
-            radius: 4
-            border.color: "#3a3a3a"
+            color: Theme.surface
+            radius: Theme.radiusS
+            border.color: Theme.border
             property string message: "Prêt."
 
             Text {
                 anchors.fill: parent
-                anchors.leftMargin: 10
+                anchors.leftMargin: Theme.spacingL
                 verticalAlignment: Text.AlignVCenter
                 text: statusBar.message
                       + (LauncherManager.downloadStatus
                          ? "  [" + LauncherManager.downloadStatus + "]"
                          : "")
-                color: "#d1d5db"
+                color: Theme.textSecondary
                 elide: Text.ElideRight
             }
         }

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 Popup {
     id: root
@@ -33,16 +34,16 @@ Popup {
     contentItem: Column {
         id: toastColumn
         width: root.width
-        spacing: 8
+        spacing: Theme.spacingM
         Repeater {
             model: toastStackModel
             delegate: Rectangle {
                 width: toastColumn.width - 16
                 x: 8
                 color: "#E6333333"
-                border.color: "#4A90E2"
+                border.color: Theme.accent
                 border.width: 1
-                radius: 8
+                radius: Theme.radiusL
                 height: contentColToast.height + 24
 
                 Column {
@@ -50,21 +51,21 @@ Popup {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.margins: 12
-                    spacing: 6
+                    anchors.margins: Theme.spacingXL
+                    spacing: Theme.spacingS
                     width: parent.width - 24
                     Text {
                         text: "💬 " + model.sender
-                        color: "#4A90E2"
-                        font.pointSize: 8
+                        color: Theme.accent
+                        font.pixelSize: Theme.fontSizeSmall
                         font.bold: true
                         width: parent.width - 24
                         elide: Text.ElideRight
                     }
                     Text {
                         text: model.text
-                        color: "#cccccc"
-                        font.pointSize: 9
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeBody
                         width: parent.width - 24
                         wrapMode: Text.Wrap
                         maximumLineCount: 3
