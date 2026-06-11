@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import GameSession 1.0
+import theme
 
 Rectangle {
     id: root
@@ -19,14 +20,14 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingM
 
         Text {
             text: "Map Sync (reliable)"
             color: host.textPrimary
             font.bold: true
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
         }
 
         TextArea {
@@ -34,12 +35,12 @@ Rectangle {
             Layout.fillWidth: true
             implicitHeight: 60
             placeholderText: '{"mapName":"test","tiles":[]}'
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeBody
             color: host.textPrimary
             wrapMode: Text.Wrap
             background: Rectangle {
-                color: "#0e0e13"
-                radius: 6
+                color: Theme.background
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -50,8 +51,8 @@ Rectangle {
             text: "Envoyer MapSync"
             implicitHeight: 30
             background: Rectangle {
-                color: parent.pressed ? host.accent : "#2d2d35"
-                radius: 6
+                color: parent.pressed ? host.accent : Theme.surfaceAlt
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -60,7 +61,7 @@ Rectangle {
                 color: host.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
             }
             onClicked: {
                 try {
@@ -71,24 +72,24 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: Theme.spacingXS
             Text {
                 text: "Dernière reçue :"
                 color: host.textSecondary
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
             }
             Text {
                 id: lastMapSyncSender
                 text: "—"
                 color: host.textPrimary
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
                 elide: Text.ElideRight
             }
             Text {
                 id: lastMapSyncSummary
                 text: ""
                 color: host.textSecondary
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
             }
         }
     }

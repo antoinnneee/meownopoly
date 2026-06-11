@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import EditorSession 1.0
 import Catway 1.0
+import theme
 
 Rectangle {
     id: root
@@ -43,7 +44,7 @@ Rectangle {
 
                 UdpPlayersPanel {
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: Theme.spacingXS
                     host: root.host
                     selectedPlayer: root.selectedPlayer
                     onPlayerClicked: function(player) {
@@ -60,7 +61,7 @@ Rectangle {
                 EditorSessionPanel {
                     id: editorSessionPanel
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: Theme.spacingXS
                     host: root.host
                     selectedPlayerVisible: !!root.selectedPlayer
                 }
@@ -73,7 +74,7 @@ Rectangle {
 
                 EditorOpsCard {
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: Theme.spacingXS
                     host: root.host
                 }
             }

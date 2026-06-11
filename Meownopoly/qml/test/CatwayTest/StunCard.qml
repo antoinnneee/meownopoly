@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Catway 1.0
+import theme
 
 Rectangle {
     required property var host
@@ -15,26 +16,26 @@ Rectangle {
     ColumnLayout {
         id: stunColumn
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 10
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingL
 
         Text {
             text: "Port STUN"
             color: host.textPrimary
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSizeMedium
             font.bold: true
         }
         Button {
             text: "Nouveau port STUN"
             implicitHeight: 40
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSizeBody
             background: Rectangle {
                 color: parent.pressed ? Qt.darker(host.accent, 1.2) : (parent.hovered ? host.accentHover : host.accent)
-                radius: 8
+                radius: Theme.radiusL
             }
             contentItem: Text {
                 text: parent.text
-                color: "white"
+                color: Theme.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }

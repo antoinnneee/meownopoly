@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Catway
+import theme
 
 Rectangle {
     id: udpChatCard
@@ -29,12 +30,12 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingM
         Text {
             text: "Chat UDP"
             color: host.textPrimary
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSizeMedium
             font.bold: true
         }
         ScrollView {
@@ -46,27 +47,27 @@ Rectangle {
                 id: udpChatLog
                 readOnly: true
                 text: "(Les messages UDP s'afficheront ici.)"
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
                 font.family: "Consolas"
                 color: host.textPrimary
-                background: Rectangle { color: "#222226"; radius: 4 }
-                padding: 8
+                background: Rectangle { color: Theme.surfaceAlt; radius: Theme.radiusS }
+                padding: Theme.spacingM
                 onTextChanged: cursorPosition = length
             }
         }
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingM
             TextField {
                 id: udpChatInput
                 placeholderText: "Message à envoyer en UDP..."
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 36
                 Layout.fillWidth: true
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: udpChatInput.activeFocus ? host.accent : host.cardBorder
                     border.width: udpChatInput.activeFocus ? 2 : 1
                 }
@@ -76,14 +77,14 @@ Rectangle {
             Button {
                 text: "Envoyer"
                 implicitHeight: 36
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
                 background: Rectangle {
                     color: parent.pressed ? Qt.darker(host.accent, 1.2) : (parent.hovered ? host.accentHover : host.accent)
-                    radius: 8
+                    radius: Theme.radiusL
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }

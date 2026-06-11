@@ -1,10 +1,11 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Rectangle {
     id: window
-    color: "#2C2C2C"
+    color: Theme.surface
     
     signal backRequested()
     
@@ -14,7 +15,7 @@ Rectangle {
         text: "← Back"
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.margins: 10
+        anchors.margins: Theme.spacingL
         z: 100
         
         onClicked: window.backRequested()
@@ -23,10 +24,10 @@ Rectangle {
     Text {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 15
+        anchors.topMargin: Theme.spacingXXL
         text: "Range Slider Test"
-        color: "white"
-        font.pixelSize: 20
+        color: Theme.textPrimary
+        font.pixelSize: Theme.fontSizeHeading
         font.bold: true
     }
 
@@ -41,8 +42,8 @@ Rectangle {
         
         Text {
             text: "Plan Range Control Test"
-            color: "white"
-            font.pixelSize: 18
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeTitle
             font.bold: true
             anchors.horizontalCenter: parent.horizontalCenter
         }
@@ -50,21 +51,21 @@ Rectangle {
         Rectangle {
             width: parent.width
             height: 200
-            color: "#3A3A3A"
-            border.color: "#555555"
+            color: Theme.surfaceHover
+            border.color: Theme.borderLight
             border.width: 2
-            radius: 8
+            radius: Theme.radiusL
             
             Column {
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 15
+                anchors.margins: Theme.spacingHuge
+                spacing: Theme.spacingXXL
                 
                 Text {
                     text: "Plans: " + Math.round(planRangeSlider.first.value) + " - " + Math.round(planRangeSlider.second.value)
-                    color: "white"
+                    color: Theme.textPrimary
                     font.bold: true
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 
@@ -117,8 +118,8 @@ Rectangle {
                         Text {
                             anchors.centerIn: parent
                             text: Math.round(planRangeSlider.first.value)
-                            color: "white"
-                            font.pixelSize: 10
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeCaption
                             font.bold: true
                         }
                     }
@@ -136,8 +137,8 @@ Rectangle {
                         Text {
                             anchors.centerIn: parent
                             text: Math.round(planRangeSlider.second.value)
-                            color: "white"
-                            font.pixelSize: 10
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeCaption
                             font.bold: true
                         }
                     }
@@ -145,32 +146,32 @@ Rectangle {
                 
                 Text {
                     text: "Min ← → Max"
-                    color: "#7f8c8d"
-                    font.pixelSize: 11
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSmall
                     font.italic: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 
                 // Quick preset buttons
                 Row {
-                    spacing: 10
+                    spacing: Theme.spacingL
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     Button {
                         text: "Tout (1-10)"
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSizeCaption
                         onClicked: {
                             parent.parent.parent.minPlan = 1
                             parent.parent.parent.maxPlan = 10
                         }
                         background: Rectangle {
                             color: parent.pressed ? "#95a5a6" : "#bdc3c7"
-                            radius: 4
+                            radius: Theme.radiusS
                         }
                         contentItem: Text {
                             text: parent.text
                             color: "#2c3e50"
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeCaption
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -178,7 +179,7 @@ Rectangle {
                     
                     Button {
                         text: "Seul plan"
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSizeCaption
                         onClicked: {
                             var currentMax = parent.parent.parent.maxPlan
                             parent.parent.parent.minPlan = currentMax
@@ -186,12 +187,12 @@ Rectangle {
                         }
                         background: Rectangle {
                             color: parent.pressed ? "#95a5a6" : "#bdc3c7"
-                            radius: 4
+                            radius: Theme.radiusS
                         }
                         contentItem: Text {
                             text: parent.text
                             color: "#2c3e50"
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeCaption
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -199,7 +200,7 @@ Rectangle {
                     
                     Button {
                         text: "3 derniers"
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSizeCaption
                         onClicked: {
                             var currentMax = parent.parent.parent.maxPlan
                             parent.parent.parent.minPlan = Math.max(1, currentMax - 2)
@@ -207,12 +208,12 @@ Rectangle {
                         }
                         background: Rectangle {
                             color: parent.pressed ? "#95a5a6" : "#bdc3c7"
-                            radius: 4
+                            radius: Theme.radiusS
                         }
                         contentItem: Text {
                             text: parent.text
                             color: "#2c3e50"
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeCaption
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -225,21 +226,21 @@ Rectangle {
         Rectangle {
             width: parent.width
             height: 250
-            color: "#3A3A3A"
-            border.color: "#555555"
+            color: Theme.surfaceHover
+            border.color: Theme.borderLight
             border.width: 2
-            radius: 8
+            radius: Theme.radiusL
             
             Column {
                 anchors.fill: parent
-                anchors.margins: 15
-                spacing: 5
+                anchors.margins: Theme.spacingXXL
+                spacing: Theme.spacingXS
                 
                 Text {
                     text: "Simulation d'éléments par plan"
-                    color: "white"
+                    color: Theme.textPrimary
                     font.bold: true
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 
@@ -248,7 +249,7 @@ Rectangle {
                     height: parent.height - 30
                     
                     Column {
-                        spacing: 3
+                        spacing: Theme.spacingXXS
                         
                         Repeater {
                             model: 10
@@ -265,25 +266,25 @@ Rectangle {
                                         return "#757575" // Masqué
                                     }
                                 }
-                                radius: 3
+                                radius: Theme.radiusXS
                                 
                                 Text {
                                     anchors.left: parent.left
-                                    anchors.leftMargin: 10
+                                    anchors.leftMargin: Theme.spacingL
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: "Plan " + (index + 1) + " - Éléments de ce niveau"
-                                    color: "white"
-                                    font.pixelSize: 11
+                                    color: Theme.textPrimary
+                                    font.pixelSize: Theme.fontSizeSmall
                                     font.bold: parent.color === "#4CAF50"
                                 }
                                 
                                 Text {
                                     anchors.right: parent.right
-                                    anchors.rightMargin: 10
+                                    anchors.rightMargin: Theme.spacingL
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: parent.color === "#4CAF50" ? "VISIBLE" : "MASQUÉ"
-                                    color: "white"
-                                    font.pixelSize: 9
+                                    color: Theme.textPrimary
+                                    font.pixelSize: Theme.fontSizeTiny
                                     font.bold: true
                                 }
                             }
