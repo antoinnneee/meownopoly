@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Game
 import EditorOpBus
+import theme
 
 /*
  * Section "Simple" : 3 sliders Taille / Poids / Vitesse.
@@ -34,7 +35,7 @@ ColumnLayout {
 
         Label {
             text: lblSlider.label
-            color: "#cccccc"
+            color: Theme.textSecondary
             font.pixelSize: Math.round(Screen.pixelDensity * 3)
             Layout.preferredWidth: Screen.pixelDensity * 25
         }
@@ -45,8 +46,8 @@ ColumnLayout {
             Layout.preferredWidth: Screen.pixelDensity * 4
             Layout.preferredHeight: Screen.pixelDensity * 4
             radius: width / 2
-            color: helpHover.hovered ? "#4A90E2" : "#3a3a3a"
-            border.color: helpHover.hovered ? "#7ab4ee" : "#555555"
+            color: helpHover.hovered ? Theme.accent : Theme.surfaceHover
+            border.color: helpHover.hovered ? Theme.hover(Theme.accent) : Theme.borderLight
             border.width: 1
             Behavior on color { ColorAnimation { duration: 120 } }
             Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -54,7 +55,7 @@ ColumnLayout {
             Label {
                 anchors.centerIn: parent
                 text: "?"
-                color: "#ffffff"
+                color: Theme.textPrimary
                 font.pixelSize: Math.round(Screen.pixelDensity * 2.6)
                 font.bold: true
             }

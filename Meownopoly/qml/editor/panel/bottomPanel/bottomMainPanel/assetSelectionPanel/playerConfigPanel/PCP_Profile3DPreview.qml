@@ -3,6 +3,7 @@ import QtQuick3D
 import QtQuick3D.Helpers
 import AssetManager
 import world3d 1.0
+import theme
 
 /*
  * Preview 3D miniature pour la card / le détail de profil.
@@ -46,7 +47,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: root.backgroundColor
-        radius: 4
+        radius: Theme.radiusS
     }
 
     View3D {

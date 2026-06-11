@@ -1,29 +1,30 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /*
  * TabButton stylé : surligne au survol et marque l'onglet actif avec
- * un fond #569c58 + barre inférieure.
+ * un fond Theme.accentAlt + barre inférieure.
  */
 TabButton {
     id: control
 
-    padding: 8
+    padding: Theme.spacingM
 
     contentItem: Text {
         text: control.text
-        color: control.checked ? "#ffffff"
-                                : (control.hovered ? "#cccccc" : "#888888")
-        font.pixelSize: 12
+        color: control.checked ? Theme.textPrimary
+                                : (control.hovered ? Theme.textSecondary : Theme.textMuted)
+        font.pixelSize: Theme.fontSizeBody
         font.bold: control.checked
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
 
     background: Rectangle {
-        color: control.checked ? "#569c58"
-                                : (control.hovered ? "#2f2f2f" : "transparent")
-        radius: 3
+        color: control.checked ? Theme.accentAlt
+                                : (control.hovered ? Theme.hover(Theme.surface) : "transparent")
+        radius: Theme.radiusXS
         Behavior on color { ColorAnimation { duration: 120 } }
 
         Rectangle {
@@ -31,7 +32,7 @@ TabButton {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             height: 2
-            color: "#6fb872"
+            color: Theme.hover(Theme.accentAlt)
             visible: control.checked
         }
     }

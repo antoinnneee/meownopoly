@@ -7,6 +7,7 @@ import TemplateFileManager
 
 import "../"
 import editorBottomPanel
+import theme
 
 /**
  * Panneau de gestion des templates
@@ -235,48 +236,48 @@ EBP_Content {
     // Arrière-plan
     Rectangle {
         anchors.fill: parent
-        color: "#1a1a1a"
+        color: Theme.background
     }
 
     // Contenu principal
     RowLayout {
         id: mainLayout
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 12
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingXL
 
         // ==================== COLONNE 1: BOUTONS ====================
         ColumnLayout {
             Layout.preferredWidth: 110
             Layout.fillHeight: true
-            spacing: 10
+            spacing: Theme.spacingL
 
             // Bouton Enregistrer
             Rectangle {
                 Layout.preferredWidth: 100
                 Layout.preferredHeight: root.buttonHeight
                 Layout.alignment: Qt.AlignHCenter
-                radius: 8
+                radius: Theme.radiusL
                 color: saveMouseArea.containsMouse ? "#2d5a2d" : "#1e3d1e"
-                border.color: "#4CAF50"
+                border.color: Theme.success
                 border.width: 2
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
 
                 RowLayout {
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: Theme.spacingS
 
                     Text {
                         text: "💾"
-                        font.pointSize: 12
+                        font.pixelSize: Theme.fontSizeLarge
                     }
 
                     Text {
                         text: "Enregistrer"
-                        font.pointSize: 9
+                        font.pixelSize: Theme.fontSizeBody
                         font.bold: true
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                     }
                 }
 
@@ -296,27 +297,27 @@ EBP_Content {
                 Layout.preferredWidth: 100
                 Layout.preferredHeight: root.buttonHeight
                 Layout.alignment: Qt.AlignHCenter
-                radius: 8
+                radius: Theme.radiusL
                 color: deleteMouseArea.containsMouse ? "#5a2d2d" : "#3d1e1e"
-                border.color: "#F44336"
+                border.color: Theme.danger
                 border.width: 2
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
 
                 RowLayout {
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: Theme.spacingS
 
                     Text {
                         text: "🗑️"
-                        font.pointSize: 12
+                        font.pixelSize: Theme.fontSizeLarge
                     }
 
                     Text {
                         text: "Supprimer"
-                        font.pointSize: 9
+                        font.pixelSize: Theme.fontSizeBody
                         font.bold: true
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                     }
                 }
 
@@ -341,23 +342,23 @@ EBP_Content {
         Rectangle {
             Layout.fillHeight: true
             Layout.preferredWidth: 1
-            Layout.leftMargin: 15
-            Layout.rightMargin: 15
-            color: "#3a3a3a"
+            Layout.leftMargin: Theme.spacingXXL
+            Layout.rightMargin: Theme.spacingXXL
+            color: Theme.surfaceHover
         }
 
         // ==================== COLONNE 2: LISTE DES TEMPLATES ====================
         ColumnLayout {
             Layout.preferredWidth: 140
             Layout.fillHeight: true
-            spacing: 8
+            spacing: Theme.spacingM
 
             // Titre
             Text {
                 text: "📋 Templates"
-                font.pointSize: 10
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
-                color: "#ffffff"
+                color: Theme.textPrimary
                 Layout.alignment: Qt.AlignHCenter
             }
 
@@ -365,60 +366,60 @@ EBP_Content {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                radius: 6
+                radius: Theme.radiusM
                 color: "#252525"
-                border.color: "#3a3a3a"
+                border.color: Theme.surfaceHover
                 border.width: 1
 
                 ListView {
                     id: templateListView
                     anchors.fill: parent
-                    anchors.margins: 6
+                    anchors.margins: Theme.spacingS
                     clip: true
-                    spacing: 4
+                    spacing: Theme.spacingXS
 
                     model: root.templateNameList
 
                     delegate: Rectangle {
                         width: templateListView.width
                         height: root.listItemHeight
-                        radius: 6
+                        radius: Theme.radiusM
                         property string templateName: modelData
                         color: {
                             if (root.selectedTemplateName === templateName) {
                                 return "#3d5a80"
                             }
-                            return itemMouseArea.containsMouse ? "#353535" : "#2a2a2a"
+                            return itemMouseArea.containsMouse ? Theme.surfaceHover : Theme.surface
                         }
-                        border.color: root.selectedTemplateName === templateName ? "#5DADE2" : "transparent"
+                        border.color: root.selectedTemplateName === templateName ? Theme.hover(Theme.accent) : "transparent"
                         border.width: 2
 
-                        Behavior on color { ColorAnimation { duration: 100 } }
-                        Behavior on border.color { ColorAnimation { duration: 100 } }
+                        Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+                        Behavior on border.color { ColorAnimation { duration: Theme.durationFast } }
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 10
-                            spacing: 8
+                            anchors.leftMargin: Theme.spacingL
+                            anchors.rightMargin: Theme.spacingL
+                            spacing: Theme.spacingM
 
                             Text {
                                 text: "📁"
-                                font.pointSize: 10
+                                font.pixelSize: Theme.fontSizeBody
                             }
 
                             Text {
                                 text: templateName
-                                font.pointSize: 9
-                                color: "#ffffff"
+                                font.pixelSize: Theme.fontSizeBody
+                                color: Theme.textPrimary
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
 
                             Text {
                                 text: root.selectedTemplateName === templateName ? "✓" : ""
-                                font.pointSize: 10
-                                color: "#5DADE2"
+                                font.pixelSize: Theme.fontSizeBody
+                                color: Theme.hover(Theme.accent)
                             }
                         }
 
@@ -456,14 +457,14 @@ EBP_Content {
 
                         contentItem: Rectangle {
                             implicitWidth: 6
-                            radius: 3
-                            color: "#5a5a5a"
+                            radius: Theme.radiusXS
+                            color: Theme.borderLight
                         }
 
                         background: Rectangle {
                             implicitWidth: 6
-                            radius: 3
-                            color: "#2a2a2a"
+                            radius: Theme.radiusXS
+                            color: Theme.surface
                         }
                     }
                 }
@@ -486,16 +487,16 @@ EBP_Content {
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
-        padding: 16
+        padding: Theme.spacingXXL
         ColumnLayout {
             anchors.fill: parent
-            spacing: 12
+            spacing: Theme.spacingXL
 
             Text {
                 text: "Nom du template"
-                font.pointSize: 10
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
-                color: "#ffffff"
+                color: Theme.textPrimary
             }
 
             TextField {
@@ -503,39 +504,39 @@ EBP_Content {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 32
                 placeholderText: "Ex: Village, Foret..."
-                placeholderTextColor: "#666666"
+                placeholderTextColor: Theme.textDisabled
                 selectByMouse: true
-                font.pointSize: 9
-                color: "#ffffff"
+                font.pixelSize: Theme.fontSizeBody
+                color: Theme.textPrimary
                 onAccepted: root.doSaveTemplate(text)
 
                 background: Rectangle {
-                    radius: 6
-                    color: "#2a2a2a"
-                    border.color: saveNameInput.activeFocus ? "#5DADE2" : "#3a3a3a"
+                    radius: Theme.radiusM
+                    color: Theme.surface
+                    border.color: saveNameInput.activeFocus ? Theme.hover(Theme.accent) : Theme.surfaceHover
                     border.width: 2
                 }
             }
 
             RowLayout {
                 Layout.alignment: Qt.AlignRight
-                spacing: 8
+                spacing: Theme.spacingM
 
                 Rectangle {
                     Layout.preferredWidth: 90
                     Layout.preferredHeight: 32
-                    radius: 6
-                    color: cancelBtnMouseArea.containsMouse ? "#3a3a3a" : "#2a2a2a"
-                    border.color: "#3a3a3a"
+                    radius: Theme.radiusM
+                    color: cancelBtnMouseArea.containsMouse ? Theme.surfaceHover : Theme.surface
+                    border.color: Theme.surfaceHover
                     border.width: 1
 
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
 
                     Text {
                         anchors.centerIn: parent
                         text: "Annuler"
-                        font.pointSize: 9
-                        color: "#b0b0b0"
+                        font.pixelSize: Theme.fontSizeBody
+                        color: Theme.textSecondary
                     }
 
                     MouseArea {
@@ -550,19 +551,19 @@ EBP_Content {
                 Rectangle {
                     Layout.preferredWidth: 110
                     Layout.preferredHeight: 32
-                    radius: 6
+                    radius: Theme.radiusM
                     color: saveBtnMouseArea.containsMouse ? "#2d5a2d" : "#1e3d1e"
-                    border.color: "#4CAF50"
+                    border.color: Theme.success
                     border.width: 2
 
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
 
                     Text {
                         anchors.centerIn: parent
                         text: "Enregistrer"
-                        font.pointSize: 9
+                        font.pixelSize: Theme.fontSizeBody
                         font.bold: true
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                     }
 
                     MouseArea {
@@ -577,9 +578,9 @@ EBP_Content {
         }
 
         background: Rectangle {
-            color: "#2a2a2a"
-            border.color: "#4a4a4a"
-            radius: 8
+            color: Theme.surface
+            border.color: Theme.border
+            radius: Theme.radiusL
         }
     }
 }

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Case
 import CaseRestArea
 import Player
+import theme
 
 CCP_PanelElement {
     title: "Prix de Location"
@@ -37,38 +38,38 @@ CCP_PanelElement {
 
     ColumnLayout{
         anchors.fill: parent
-        spacing: 8
+        spacing: Theme.spacingM
         // Note explicative
         Text {
             text: "💡 Définissez les prix de location selon le niveau d'amélioration de la propriété"
             font.italic: true
-            font.pixelSize: 12
-            color: "#888888"
+            font.pixelSize: Theme.fontSizeBody
+            color: Theme.textMuted
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            Layout.bottomMargin: 5
+            Layout.bottomMargin: Theme.spacingXS
         }
 
         // Prix de location organisés en 2 colonnes
         RowLayout {
             Layout.fillWidth: true
-            spacing: 15
+            spacing: Theme.spacingXXL
             
             // Colonne gauche (Terrain nu, 2 étoiles)
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.spacingL
                 
                 // Terrain nu
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     
                     Label {
                         text: "🏞️ Terrain nu"
                         font.bold: true
-                        color: "#cccccc"
-                        font.pixelSize: 11
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                     
                     CCP_StyledSpinBox {
@@ -98,13 +99,13 @@ CCP_PanelElement {
                 // 2 étoiles
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     
                     Label {
                         text: "⭐⭐ 2 étoiles"
                         font.bold: true
-                        color: "#cccccc"
-                        font.pixelSize: 11
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                     
                     CCP_StyledSpinBox {
@@ -135,18 +136,18 @@ CCP_PanelElement {
             // Colonne droite (1 étoile, 3 étoiles)
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.spacingL
                 
                 // 1 étoile
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     
                     Label {
                         text: "⭐ 1 étoile"
                         font.bold: true
-                        color: "#cccccc"
-                        font.pixelSize: 11
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                     
                     CCP_StyledSpinBox {
@@ -176,13 +177,13 @@ CCP_PanelElement {
                 // 3 étoiles
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     
                     Label {
                         text: "⭐⭐⭐ 3 étoiles"
                         font.bold: true
-                        color: "#cccccc"
-                        font.pixelSize: 11
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                     
                     CCP_StyledSpinBox {
@@ -215,22 +216,22 @@ CCP_PanelElement {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#555555"
-            Layout.topMargin: 5
-            Layout.bottomMargin: 5
+            color: Theme.borderLight
+            Layout.topMargin: Theme.spacingXS
+            Layout.bottomMargin: Theme.spacingXS
         }
         
         // Hôtel (séparé en dessous)
         ColumnLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
-            spacing: 8
+            spacing: Theme.spacingM
             
             Label {
                 text: "🏨 Hôtel"
                 font.bold: true
-                color: "#ff6b6b"
-                font.pixelSize: 14
+                color: Theme.dangerSoft
+                font.pixelSize: Theme.fontSizeMedium
                 Layout.alignment: Qt.AlignHCenter
             }
             

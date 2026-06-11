@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Case
 import CaseRestArea
 import Player
+import theme
 
 CCP_PanelElement {
     title: "Prix d'Achat des Améliorations"
@@ -33,34 +34,34 @@ CCP_PanelElement {
     
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: Theme.spacingL
         
         // Note explicative
         Text {
             text: "🏗️ Définissez les prix d'achat pour construire des améliorations sur cette propriété"
             font.italic: true
-            font.pixelSize: 12
-            color: "#888888"
+            font.pixelSize: Theme.fontSizeBody
+            color: Theme.textMuted
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            Layout.bottomMargin: 5
+            Layout.bottomMargin: Theme.spacingXS
         }
         
         // Les deux prix côte à côte
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            spacing: Theme.spacingL
             
             // Prix d'achat d'une étoile
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 5
+                spacing: Theme.spacingXS
                 
                 Label {
                     text: "⭐ Prix d'une étoile:"
                     font.bold: true
-                    color: "#cccccc"
-                    font.pixelSize: 12
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeBody
                 }
                 
                 CCP_StyledSpinBox {
@@ -88,13 +89,13 @@ CCP_PanelElement {
             // Prix d'achat d'un hôtel
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 5
+                spacing: Theme.spacingXS
                 
                 Label {
                     text: "🏨 Prix d'un hôtel:"
                     font.bold: true
-                    color: "#ff6b6b"
-                    font.pixelSize: 12
+                    color: Theme.dangerSoft
+                    font.pixelSize: Theme.fontSizeBody
                 }
                 
                 CCP_StyledSpinBox {
@@ -125,16 +126,16 @@ CCP_PanelElement {
             Layout.fillWidth: true
             Layout.preferredHeight: infoText.implicitHeight + 16
             color: "#2a3a4a"
-            radius: 6
+            radius: Theme.radiusM
             border.color: "#4a6a8a"
             border.width: 1
             
             Text {
                 id: infoText
                 anchors.fill: parent
-                anchors.margins: 8
+                anchors.margins: Theme.spacingM
                 text: "💡 Les étoiles se construisent une par une (1⭐ → 2⭐ → 3⭐ → 4⭐). L'hôtel remplace les 4 étoiles."
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
                 color: "#99ccff"
                 wrapMode: Text.WordWrap
                 verticalAlignment: Text.AlignVCenter

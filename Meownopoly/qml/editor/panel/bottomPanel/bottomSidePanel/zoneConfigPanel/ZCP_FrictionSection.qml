@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 GroupBox {
     id: root
@@ -14,30 +15,30 @@ GroupBox {
     signal configurationChanged()
     
     background: Rectangle {
-        color: "#2a2a2a"
-        radius: 4
-        border.color: "#444444"
+        color: Theme.surface
+        radius: Theme.radiusS
+        border.color: Theme.border
         border.width: 1
     }
-    
+
     label: Text {
         text: root.title
-        color: "#cccccc"
-        font.pixelSize: 12
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeBody
         font.bold: true
-        leftPadding: 8
+        leftPadding: Theme.spacingM
     }
-    
+
     ColumnLayout {
         anchors.fill: parent
-        spacing: 8
-        
+        spacing: Theme.spacingM
+
         // Note explicative
         Text {
             text: "🎯 Force de friction appliquée aux objets dans la zone"
             font.italic: true
-            font.pixelSize: 11
-            color: "#8a8a8a"
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.textMuted
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
         }
@@ -45,12 +46,12 @@ GroupBox {
         // Friction Strength
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
-            
+            spacing: Theme.spacingL
+
             Text {
                 text: "Friction Strength:"
-                color: "#cccccc"
-                font.pixelSize: 12
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
                 Layout.preferredWidth: 120
             }
             
@@ -68,16 +69,16 @@ GroupBox {
                     width: frictionSlider.availableWidth
                     height: 6
                     radius: 3
-                    color: "#1a1a1a"
-                    
+                    color: Theme.background
+
                     Rectangle {
                         width: frictionSlider.visualPosition * parent.width
                         height: parent.height
                         radius: 3
                         gradient: Gradient {
                             orientation: Gradient.Horizontal
-                            GradientStop { position: 0.0; color: "#4a9c4e" }
-                            GradientStop { position: 1.0; color: "#6bc96f" }
+                            GradientStop { position: 0.0; color: Theme.accentAlt }
+                            GradientStop { position: 1.0; color: Theme.hover(Theme.accentAlt) }
                         }
                     }
                 }
@@ -88,12 +89,12 @@ GroupBox {
                     width: 16
                     height: 16
                     radius: 8
-                    color: frictionSlider.pressed ? "#7bd97f" : "#5cb85c"
+                    color: frictionSlider.pressed ? Theme.hover(Theme.accentAlt) : Theme.accentAlt
                     border.color: "#ffffff"
                     border.width: 2
-                    
+
                     Behavior on color {
-                        ColorAnimation { duration: 100 }
+                        ColorAnimation { duration: Theme.durationFast }
                     }
                 }
                 
@@ -109,16 +110,16 @@ GroupBox {
             Rectangle {
                 Layout.preferredWidth: 50
                 Layout.preferredHeight: 24
-                color: "#1a1a1a"
-                radius: 4
-                border.color: "#444444"
+                color: Theme.background
+                radius: Theme.radiusS
+                border.color: Theme.border
                 border.width: 1
-                
+
                 Text {
                     anchors.centerIn: parent
                     text: frictionSlider.value.toFixed(2)
-                    color: "#ffffff"
-                    font.pixelSize: 11
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                 }
             }

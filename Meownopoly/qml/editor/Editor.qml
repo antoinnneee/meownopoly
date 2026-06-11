@@ -39,6 +39,7 @@ import playerConfigPanel 1.0
 import "."
 
 import MeowPainter 1.0
+import theme
 
 Base_Board {
     id: root
@@ -164,9 +165,9 @@ Base_Board {
     BtSideMenu {
         id: btSelection
         anchors.right: parent.right
-        anchors.rightMargin: 10
+        anchors.rightMargin: Theme.spacingL
         anchors.top: parent.top
-        anchors.topMargin: 10
+        anchors.topMargin: Theme.spacingL
         z: UiStyle.z_HUD + 1
 
         property real xOrigin
@@ -224,7 +225,7 @@ Base_Board {
     BtSideMenu {
         id: btInfoMap
         emojiBt: "ℹ️"
-        colorBt: "#3498db"
+        colorBt: Theme.accent
         onBtClicked: mapInfoPanel.openDrawer()
         Behavior on y {SmoothedAnimation { velocity : 500}}
     }
@@ -232,7 +233,7 @@ Base_Board {
     BtSideMenu {
         id: btChat
         emojiBt: "💬"
-        colorBt: "#2ecc71"
+        colorBt: Theme.success
         onBtClicked: chatDrawer.open()
         Behavior on y {SmoothedAnimation { velocity : 500}}
     }
@@ -1172,9 +1173,9 @@ Base_Board {
         z: 10000
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.topMargin: 12
-        anchors.leftMargin: 12
-        spacing: 6
+        anchors.topMargin: Theme.spacingXL
+        anchors.leftMargin: Theme.spacingXL
+        spacing: Theme.spacingS
 
         CollabStatusPanel {}
         PhysicsStatusPanel {}
@@ -1588,7 +1589,7 @@ Base_Board {
                     // Étiquette playerId tronqué
                     Rectangle {
                         x: 18; y: 14
-                        radius: 3
+                        radius: Theme.radiusXS
                         color: parent._color
                         width: label.implicitWidth + 10
                         height: label.implicitHeight + 4
@@ -1597,7 +1598,7 @@ Base_Board {
                             anchors.centerIn: parent
                             text: modelData.length > 8 ? modelData.substring(0, 8) : modelData
                             color: "white"
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeCaption
                             font.bold: true
                         }
                     }
@@ -1625,9 +1626,9 @@ Base_Board {
         padding: 0
 
         background: Rectangle {
-            color: "#2b2b2b"
-            radius: 12
-            border.color: "#444444"
+            color: Theme.surface
+            radius: Theme.radiusXXL
+            border.color: Theme.border
             border.width: 1
 
             // Barre de titre
@@ -1637,8 +1638,8 @@ Base_Board {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 40
-                color: "#333333"
-                radius: 12
+                color: Theme.surfaceAlt
+                radius: Theme.radiusXXL
 
                 Rectangle {
                     anchors.bottom: parent.bottom
@@ -1650,29 +1651,29 @@ Base_Board {
 
                 Text {
                     anchors.left: parent.left
-                    anchors.leftMargin: 16
+                    anchors.leftMargin: Theme.spacingXXL
                     anchors.verticalCenter: parent.verticalCenter
                     text: "Message"
-                    color: "#cccccc"
-                    font.pointSize: 11
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeMedium
                     font.bold: true
                 }
 
                 Rectangle {
                     id: closeBt
                     anchors.right: parent.right
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: Theme.spacingM
                     anchors.verticalCenter: parent.verticalCenter
                     width: 28
                     height: 28
                     radius: 14
-                    color: closeBtArea.containsMouse ? "#c0392b" : "#444444"
+                    color: closeBtArea.containsMouse ? Theme.pressed(Theme.danger) : Theme.border
 
                     Text {
                         anchors.centerIn: parent
                         text: "✕"
-                        color: "#cccccc"
-                        font.pointSize: 10
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeBody
                         font.bold: true
                     }
 
@@ -1709,8 +1710,8 @@ Base_Board {
             NumberAnimation { property: "scale"; from: 0.92; to: 1; duration: 200; easing.type: Easing.OutCubic }
         }
         exit: Transition {
-            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 150; easing.type: Easing.InCubic }
-            NumberAnimation { property: "scale"; from: 1; to: 0.92; duration: 150; easing.type: Easing.InCubic }
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.durationNormal; easing.type: Easing.InCubic }
+            NumberAnimation { property: "scale"; from: 1; to: 0.92; duration: Theme.durationNormal; easing.type: Easing.InCubic }
         }
     }
 
@@ -1734,9 +1735,9 @@ Base_Board {
         property string mapNameAtExit: ""
 
         background: Rectangle {
-            color: "#2b2b2b"
-            radius: 10
-            border.color: "#4A90E2"
+            color: Theme.surface
+            radius: Theme.radiusXL
+            border.color: Theme.accent
             border.width: 1
         }
 
@@ -1745,13 +1746,13 @@ Base_Board {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 14
+                anchors.margins: Theme.spacingHuge
+                spacing: Theme.spacingXL
 
                 Text {
                     text: "Quitter la session collab"
-                    color: "#4A90E2"
-                    font.pixelSize: 18
+                    color: Theme.accent
+                    font.pixelSize: Theme.fontSizeTitle
                     font.bold: true
                 }
 
@@ -1759,8 +1760,8 @@ Base_Board {
                     Layout.fillWidth: true
                     text: "Conserver le fichier local «" +
                           sessionExitConfirmPopup.mapNameAtExit + "_map.json» sur votre ordinateur ?"
-                    color: "#e0e0e0"
-                    font.pixelSize: 13
+                    color: Theme.textSoft
+                    font.pixelSize: Theme.fontSizeBody
                     wrapMode: Text.WordWrap
                 }
 
@@ -1768,8 +1769,8 @@ Base_Board {
                     Layout.fillWidth: true
                     text: "« Supprimer » efface la copie locale reçue pendant la session. " +
                           "« Conserver » la garde — vous pourrez la rouvrir en mode mono."
-                    color: "#888"
-                    font.pixelSize: 11
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSmall
                     font.italic: true
                     wrapMode: Text.WordWrap
                 }
@@ -1778,20 +1779,20 @@ Base_Board {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: Theme.spacingL
 
                     Button {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
                         text: "🗑️  Supprimer"
                         background: Rectangle {
-                            color: parent.pressed ? "#991b1b" : (parent.hovered ? "#ef4444" : "#dc2626")
-                            radius: 6
+                            color: parent.pressed ? Theme.pressed(Theme.danger) : (parent.hovered ? Theme.hover(Theme.danger) : Theme.danger)
+                            radius: Theme.radiusM
                         }
                         contentItem: Text {
                             text: parent.text
-                            color: "white"
-                            font.pixelSize: 14
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -1804,13 +1805,13 @@ Base_Board {
                         Layout.preferredHeight: 40
                         text: "💾  Conserver"
                         background: Rectangle {
-                            color: parent.pressed ? "#2E5BBA" : (parent.hovered ? "#3A7BD5" : "#4A90E2")
-                            radius: 6
+                            color: parent.pressed ? Theme.pressed(Theme.accent) : (parent.hovered ? Theme.hover(Theme.accent) : Theme.accent)
+                            radius: Theme.radiusM
                         }
                         contentItem: Text {
                             text: parent.text
-                            color: "white"
-                            font.pixelSize: 14
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter

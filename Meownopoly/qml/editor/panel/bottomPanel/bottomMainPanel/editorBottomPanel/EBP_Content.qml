@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme
 
 Item {
 
@@ -33,8 +34,8 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        anchors.rightMargin: 5
-        anchors.leftMargin: 5
+        anchors.rightMargin: Theme.spacingXS
+        anchors.leftMargin: Theme.spacingXS
 
         width: parent.width * (1-sidePanelRatio) - anchors.rightMargin - anchors.leftMargin
 

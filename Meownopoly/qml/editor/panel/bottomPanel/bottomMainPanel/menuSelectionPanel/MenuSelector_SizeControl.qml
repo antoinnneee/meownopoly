@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 Rectangle {
     id: root
@@ -10,8 +11,8 @@ Rectangle {
     
     width: baseHeight * 5.6  // Ratio 5.6:1
     height: baseHeight
-    color: "#2a2a2a"
-    border.color: "#404040"
+    color: Theme.surface
+    border.color: Theme.border
     border.width: 1
     radius: baseHeight * 0.12
     
@@ -56,7 +57,7 @@ Rectangle {
                 
                 Text {
                     text: "Largeur"
-                    color: "#cccccc"
+                    color: Theme.textSecondary
                     font.pixelSize: root.baseHeight * 0.22
                     Layout.fillWidth: true
                 }
@@ -64,7 +65,7 @@ Rectangle {
                 Rectangle {
                     Layout.preferredWidth: root.baseHeight * 1.04
                     Layout.preferredHeight: root.baseHeight * 0.40
-                    color: "#1a1a1a"
+                    color: Theme.background
                     border.color: "#4a9eff"
                     border.width: 1
                     radius: root.baseHeight * 0.056
@@ -73,7 +74,7 @@ Rectangle {
                         id: widthInput
                         anchors.fill: parent
                         anchors.margins: root.baseHeight * 0.04
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                         font.pixelSize: root.baseHeight * 0.20
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -112,10 +113,10 @@ Rectangle {
                     width: widthSlider.availableWidth
                     height: root.baseHeight * 0.096
                     radius: root.baseHeight * 0.048
-                    color: "#1a1a1a"
-                    border.color: "#404040"
+                    color: Theme.background
+                    border.color: Theme.border
                     border.width: 1
-                    
+
                     Rectangle {
                         width: widthSlider.visualPosition * parent.width
                         height: parent.height
@@ -135,12 +136,12 @@ Rectangle {
                     width: root.baseHeight * 0.28
                     height: root.baseHeight * 0.28
                     radius: root.baseHeight * 0.14
-                    color: widthSlider.pressed ? "#5aa3ff" : "#ffffff"
+                    color: widthSlider.pressed ? "#5aa3ff" : Theme.surfaceLight
                     border.color: "#4a9eff"
                     border.width: root.baseHeight * 0.032
                     
                     Behavior on color {
-                        ColorAnimation { duration: 100 }
+                        ColorAnimation { duration: Theme.durationFast }
                     }
                 }
             }
@@ -152,7 +153,7 @@ Rectangle {
             Layout.fillHeight: true
             Layout.topMargin: root.baseHeight * 0.064
             Layout.bottomMargin: root.baseHeight * 0.064
-            color: "#404040"
+            color: Theme.border
         }
         
         // Contrôle Height
@@ -175,7 +176,7 @@ Rectangle {
                 
                 Text {
                     text: "Hauteur"
-                    color: "#cccccc"
+                    color: Theme.textSecondary
                     font.pixelSize: root.baseHeight * 0.22
                     Layout.fillWidth: true
                 }
@@ -183,7 +184,7 @@ Rectangle {
                 Rectangle {
                     Layout.preferredWidth: root.baseHeight * 1.04
                     Layout.preferredHeight: root.baseHeight * 0.40
-                    color: "#1a1a1a"
+                    color: Theme.background
                     border.color: "#ff6b9d"
                     border.width: 1
                     radius: root.baseHeight * 0.056
@@ -192,7 +193,7 @@ Rectangle {
                         id: heightInput
                         anchors.fill: parent
                         anchors.margins: root.baseHeight * 0.04
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                         font.pixelSize: root.baseHeight * 0.20
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -231,10 +232,10 @@ Rectangle {
                     width: heightSlider.availableWidth
                     height: root.baseHeight * 0.096
                     radius: root.baseHeight * 0.048
-                    color: "#1a1a1a"
-                    border.color: "#404040"
+                    color: Theme.background
+                    border.color: Theme.border
                     border.width: 1
-                    
+
                     Rectangle {
                         width: heightSlider.visualPosition * parent.width
                         height: parent.height
@@ -254,12 +255,12 @@ Rectangle {
                     width: root.baseHeight * 0.28
                     height: root.baseHeight * 0.28
                     radius: root.baseHeight * 0.14
-                    color: heightSlider.pressed ? "#ff88b3" : "#ffffff"
+                    color: heightSlider.pressed ? "#ff88b3" : Theme.surfaceLight
                     border.color: "#ff6b9d"
                     border.width: root.baseHeight * 0.032
                     
                     Behavior on color {
-                        ColorAnimation { duration: 100 }
+                        ColorAnimation { duration: Theme.durationFast }
                     }
                 }
             }

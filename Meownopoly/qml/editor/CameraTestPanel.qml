@@ -18,6 +18,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import world3d 1.0
+import theme
 
 Item {
     id: root
@@ -59,27 +60,27 @@ Item {
         anchors.right: parent.right
         width: badgeRow.implicitWidth + 20
         height: badgeRow.implicitHeight + 10
-        radius: 6
-        color: "#2a2a2e"
-        border.color: "#71717a"
+        radius: Theme.radiusM
+        color: Theme.surface
+        border.color: Theme.borderLight
         border.width: 1
 
         Row {
             id: badgeRow
             anchors.centerIn: parent
-            spacing: 8
+            spacing: Theme.spacingM
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "📷"
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Caméra · " + (root.cameraRig
                                      ? root._modeName(root.cameraRig.mode)
                                      : "n/a")
-                color: "#f4f4f5"
-                font.pixelSize: 12
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
         }
@@ -100,9 +101,9 @@ Item {
         anchors.right: parent.right
         width: 280
         height: panelLayout.implicitHeight + 16
-        radius: 8
-        color: "#1f1f23"
-        border.color: "#52525b"
+        radius: Theme.radiusL
+        color: Theme.background
+        border.color: Theme.borderLight
         border.width: 1
 
         ColumnLayout {
@@ -110,8 +111,8 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: 8
-            spacing: 6
+            anchors.margins: Theme.spacingM
+            spacing: Theme.spacingS
 
             // --- Header ---
             RowLayout {
@@ -119,14 +120,14 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: "Caméra — test"
-                    color: "#f4f4f5"
-                    font.pixelSize: 13
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
                 }
                 Text {
                     text: "✕"
-                    color: "#a1a1aa"
-                    font.pixelSize: 14
+                    color: Theme.textHint
+                    font.pixelSize: Theme.fontSizeMedium
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
@@ -135,19 +136,19 @@ Item {
                 }
             }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
 
             // --- Mode buttons ---
             Text {
                 text: "Mode"
-                color: "#a1a1aa"
-                font.pixelSize: 11
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeSmall
             }
             GridLayout {
                 Layout.fillWidth: true
                 columns: 2
-                columnSpacing: 4
-                rowSpacing: 4
+                columnSpacing: Theme.spacingXS
+                rowSpacing: Theme.spacingXS
 
                 Repeater {
                     model: cameraRig ? [
@@ -159,18 +160,18 @@ Item {
                     delegate: Rectangle {
                         Layout.fillWidth: true
                         height: 26
-                        radius: 4
+                        radius: Theme.radiusS
                         readonly property bool active:
                             cameraRig && cameraRig.mode === modelData.value
-                        color: active ? "#2563eb" : "#27272a"
-                        border.color: active ? "#60a5fa" : "#52525b"
+                        color: active ? Theme.accent : Theme.surface
+                        border.color: active ? Theme.hover(Theme.accent) : Theme.borderLight
                         border.width: 1
 
                         Text {
                             anchors.centerIn: parent
                             text: modelData.label
-                            color: "#f4f4f5"
-                            font.pixelSize: 11
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeSmall
                             font.bold: parent.active
                         }
                         MouseArea {
@@ -183,12 +184,12 @@ Item {
             }
 
             // --- Follow params ---
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
             Text {
                 text: "Follow — smoothSpeed: " + (cameraRig
                         ? cameraRig.smoothSpeed.toFixed(2) : "n/a")
-                color: "#a1a1aa"
-                font.pixelSize: 11
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeSmall
             }
             Slider {
                 Layout.fillWidth: true
@@ -201,17 +202,17 @@ Item {
             }
 
             // --- Orbit params ---
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
             Text {
                 text: "OrbitDebug"
-                color: "#a1a1aa"
-                font.pixelSize: 11
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeSmall
             }
 
             Text {
                 text: "Yaw: " + (cameraRig ? cameraRig.orbitYaw.toFixed(1) : "n/a") + "°"
-                color: "#d4d4d8"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
             }
             Slider {
                 Layout.fillWidth: true
@@ -223,8 +224,8 @@ Item {
 
             Text {
                 text: "Pitch: " + (cameraRig ? cameraRig.orbitPitch.toFixed(1) : "n/a") + "°"
-                color: "#d4d4d8"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
             }
             Slider {
                 Layout.fillWidth: true
@@ -236,8 +237,8 @@ Item {
 
             Text {
                 text: "Distance: " + (cameraRig ? cameraRig.orbitDistance.toFixed(0) : "n/a")
-                color: "#d4d4d8"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
             }
             Slider {
                 Layout.fillWidth: true
@@ -248,22 +249,22 @@ Item {
             }
 
             // --- Actions ---
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: Theme.spacingXS
 
                 Rectangle {
                     Layout.fillWidth: true
                     height: 26
-                    radius: 4
-                    color: "#27272a"
-                    border.color: "#52525b"
+                    radius: Theme.radiusS
+                    color: Theme.surface
+                    border.color: Theme.borderLight
                     Text {
                         anchors.centerIn: parent
                         text: "Snap"
-                        color: "#f4f4f5"
-                        font.pixelSize: 11
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                     MouseArea {
                         anchors.fill: parent
@@ -275,14 +276,14 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 26
-                    radius: 4
-                    color: "#27272a"
-                    border.color: "#52525b"
+                    radius: Theme.radiusS
+                    color: Theme.surface
+                    border.color: Theme.borderLight
                     Text {
                         anchors.centerIn: parent
                         text: "Recompute offset"
-                        color: "#f4f4f5"
-                        font.pixelSize: 10
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeCaption
                     }
                     MouseArea {
                         anchors.fill: parent
@@ -293,7 +294,7 @@ Item {
             }
 
             // --- Live readout ---
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#3f3f46" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
             Text {
                 Layout.fillWidth: true
                 // Référence à _readoutTick pour forcer la ré-évaluation
@@ -312,8 +313,8 @@ Item {
                          + cam.eulerRotation.y.toFixed(1) + "°, "
                          + cam.eulerRotation.z.toFixed(1) + "°)"
                 }
-                color: "#a1a1aa"
-                font.pixelSize: 10
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeCaption
                 font.family: "monospace"
             }
         }

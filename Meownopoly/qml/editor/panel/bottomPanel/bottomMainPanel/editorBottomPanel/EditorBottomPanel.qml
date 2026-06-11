@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Particles
 import AssetManager
 import editor
+import theme
 Rectangle {
     id: root
 
@@ -25,7 +26,7 @@ Rectangle {
     height: isExpanded ? expandedHeight : collapsedHeight
 
     color: "#E6000000" // Semi-transparent black
-    border.color: "#333333"
+    border.color: Theme.surfaceAlt
     border.width: 1
     ParticleSystem {
         id: particleSystem

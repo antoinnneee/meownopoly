@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import AssetManager
+import theme
 
 /*
  * PCP_SkinPicker — choix du skin + de la variante (preset Color ID Map) du
@@ -67,7 +68,7 @@ ColumnLayout {
 
     Label {
         text: "Skin"
-        color: "#cccccc"
+        color: Theme.textSecondary
         font.pixelSize: Math.round(Screen.pixelDensity * 3)
         font.bold: true
     }
@@ -87,7 +88,7 @@ ColumnLayout {
     Label {
         text: "Variante"
         visible: root._variants.length > 0
-        color: "#cccccc"
+        color: Theme.textSecondary
         font.pixelSize: Math.round(Screen.pixelDensity * 3)
         font.bold: true
     }

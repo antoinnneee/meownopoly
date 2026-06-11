@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtCore
 import ui_item
+import theme
 
 CollapsableGroupBox {
     id: control
@@ -92,24 +93,24 @@ CollapsableGroupBox {
         GroupBox {
             title: "Colorization Color"
             Layout.fillWidth: true
-            Layout.topMargin: 8
-            topPadding: 14
-            bottomPadding: 6
-            leftPadding: 6
-            rightPadding: 6
-            spacing: 2
+            Layout.topMargin: Theme.spacingM
+            topPadding: Theme.spacingXL
+            bottomPadding: Theme.spacingS
+            leftPadding: Theme.spacingS
+            rightPadding: Theme.spacingS
+            spacing: Theme.spacingXXS
 
             background: Rectangle {
                 color: "#1a2a2a2a"
-                radius: 3
-                border.color: "#444444"
+                radius: Theme.radiusXS
+                border.color: Theme.border
                 border.width: 1
             }
 
             label: Text {
                 text: parent.title
-                color: "#cccccc"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
                 font.bold: true
                 x: 4
                 y: 1
@@ -117,22 +118,22 @@ CollapsableGroupBox {
 
             component SwatchButton: Rectangle {
                 id: swatchRoot
-                property color baseColor: "#4a8a4a"
-                property color pressedColor: "#569c58"
+                property color baseColor: Theme.pressed(Theme.accentAlt)
+                property color pressedColor: Theme.accentAlt
                 property string text: ""
                 signal clicked()
                 readonly property alias hovered: swatchMouse.containsMouse
                 implicitWidth: 24
                 implicitHeight: 22
-                radius: 3
-                color: swatchRoot.enabled ? (swatchMouse.pressed ? pressedColor : baseColor) : "#444444"
+                radius: Theme.radiusXS
+                color: swatchRoot.enabled ? (swatchMouse.pressed ? pressedColor : baseColor) : Theme.border
                 opacity: swatchRoot.enabled ? 1.0 : 0.55
 
                 Text {
                     anchors.centerIn: parent
                     text: swatchRoot.text
-                    color: swatchRoot.enabled ? "#ffffff" : "#888888"
-                    font.pixelSize: 14
+                    color: swatchRoot.enabled ? "#ffffff" : Theme.textMuted
+                    font.pixelSize: Theme.fontSizeMedium
                     font.bold: true
                 }
 
@@ -147,7 +148,7 @@ CollapsableGroupBox {
 
             RowLayout {
                 anchors.fill: parent
-                spacing: 8
+                spacing: Theme.spacingM
 
                 VEP_InlineColorPicker {
                     id: picker
@@ -165,16 +166,16 @@ CollapsableGroupBox {
                 ColumnLayout {
                     Layout.alignment: Qt.AlignTop
                     Layout.preferredWidth: 92
-                    spacing: 4
+                    spacing: Theme.spacingXS
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 4
+                        spacing: Theme.spacingXS
 
                         Text {
                             text: "Presets"
-                            color: "#cccccc"
-                            font.pixelSize: 9
+                            color: Theme.textSecondary
+                            font.pixelSize: Theme.fontSizeTiny
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
@@ -199,7 +200,7 @@ CollapsableGroupBox {
 
                     Flow {
                         Layout.fillWidth: true
-                        spacing: 4
+                        spacing: Theme.spacingXS
 
                         Repeater {
                             model: colorPresets
@@ -207,9 +208,9 @@ CollapsableGroupBox {
                             Rectangle {
                                 width: 24
                                 height: 20
-                                radius: 3
+                                radius: Theme.radiusXS
                                 color: modelData.color
-                                border.color: index === activePresetIndex ? "#ffffff" : "#555555"
+                                border.color: index === activePresetIndex ? "#ffffff" : Theme.borderLight
                                 border.width: index === activePresetIndex ? 2 : 1
 
                                 MouseArea {

@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import Case
 import MapTypes
 import ui_item
+import theme
 
 CollapsableGroupBox {
     id: control
@@ -38,8 +39,8 @@ CollapsableGroupBox {
         Text {
             text: "🔌 Configuration de l'Appareil Électronique - Service public achetable"
             font.italic: true
-            font.pixelSize: 10
-            color: "#888888"
+            font.pixelSize: Theme.fontSizeCaption
+            color: Theme.textMuted
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
         },
@@ -54,42 +55,42 @@ CollapsableGroupBox {
         // Configuration spécifique au Device - Taxe d'utilisation
         Rectangle {
             Layout.fillWidth: true
-            color: "#2a2a2a"
-            radius: 3
-            border.color: "#444444"
+            color: Theme.surface
+            radius: Theme.radiusXS
+            border.color: Theme.border
             border.width: 1
             height: taxeLayout.implicitHeight + 20
             
             ColumnLayout {
                 id: taxeLayout
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
+                anchors.margins: Theme.spacingL
+                spacing: Theme.spacingM
                 
                 Text {
                     text: "⚡ Configuration du Service"
                     font.bold: true
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                     color: "#99f0f0"
                 }
                 
                 Text {
                     text: "Configurez la taxe d'utilisation que les autres joueurs devront payer"
                     font.italic: true
-                    font.pixelSize: 9
-                    color: "#888888"
+                    font.pixelSize: Theme.fontSizeTiny
+                    color: Theme.textMuted
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
                 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: Theme.spacingM
                     
                     Text {
                         text: "💡 Taxe d'utilisation:"
-                        color: "#cccccc"
-                        font.pixelSize: 11
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
                         font.bold: true
                         Layout.minimumWidth: 130
                     }
@@ -119,16 +120,16 @@ CollapsableGroupBox {
                         }
                         
                         background: Rectangle {
-                            color: "#1a1a1a"
-                            border.color: "#555555"
+                            color: Theme.background
+                            border.color: Theme.borderLight
                             border.width: 1
-                            radius: 3
+                            radius: Theme.radiusXS
                         }
                         
                         contentItem: TextInput {
                             text: taxeSpinBox.textFromValue(taxeSpinBox.value, taxeSpinBox.locale)
-                            font.pixelSize: 11
-                            color: "#ffffff"
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.textPrimary
                             horizontalAlignment: Qt.AlignHCenter
                             verticalAlignment: Qt.AlignVCenter
                             readOnly: !taxeSpinBox.editable
@@ -139,8 +140,8 @@ CollapsableGroupBox {
                     
                     Text {
                         text: "kibbles"
-                        font.pixelSize: 10
-                        color: "#888888"
+                        font.pixelSize: Theme.fontSizeCaption
+                        color: Theme.textMuted
                     }
                     
                     Item { Layout.fillWidth: true }
@@ -152,25 +153,25 @@ CollapsableGroupBox {
             Layout.fillWidth: true
             height: 90
             color: "#1a2a3a"
-            radius: 4
+            radius: Theme.radiusS
             border.color: "#2a3a4a"
             border.width: 1
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 6
+                anchors.margins: Theme.spacingL
+                spacing: Theme.spacingS
                 
                 Text {
                     text: "🔍 Fonctionnement"
                     font.bold: true
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                     color: "#99ccff"
                 }
                 
                 Text {
                     text: "• Les joueurs peuvent acheter cet appareil électronique\n• Quand un autre joueur atterrit dessus, il paie la taxe d'utilisation au propriétaire\n• Plus vous possédez d'appareils du même type, plus les revenus augmentent"
-                    font.pixelSize: 9
+                    font.pixelSize: Theme.fontSizeTiny
                     color: "#80b3d9"
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
@@ -183,25 +184,25 @@ CollapsableGroupBox {
             Layout.fillWidth: true
             height: 70
             color: "#1a3a3a"
-            radius: 4
+            radius: Theme.radiusS
             border.color: "#2a4a4a"
             border.width: 1
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 6
+                anchors.margins: Theme.spacingL
+                spacing: Theme.spacingS
                 
                 Text {
                     text: "💰 Conseil Économique"
                     font.bold: true
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                     color: "#99f0d9"
                 }
                 
                 Text {
                     text: "Équilibrez le prix d'achat avec la taxe d'utilisation pour créer un investissement attractif mais pas trop puissant."
-                    font.pixelSize: 9
+                    font.pixelSize: Theme.fontSizeTiny
                     color: "#80d9c0"
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap

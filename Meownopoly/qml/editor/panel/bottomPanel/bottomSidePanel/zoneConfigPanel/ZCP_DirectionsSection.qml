@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 GroupBox {
     id: root
@@ -28,54 +29,54 @@ GroupBox {
     }
     
     background: Rectangle {
-        color: "#2a2a2a"
-        radius: 4
-        border.color: "#444444"
+        color: Theme.surface
+        radius: Theme.radiusS
+        border.color: Theme.border
         border.width: 1
     }
-    
+
     label: Text {
         text: root.title
-        color: "#cccccc"
-        font.pixelSize: 12
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeBody
         font.bold: true
-        leftPadding: 8
+        leftPadding: Theme.spacingM
     }
-    
+
     ColumnLayout {
         anchors.fill: parent
-        spacing: 16
-        
+        spacing: Theme.spacingXXL
+
         // Note explicative
         Text {
             text: qsTr("🧭 Configurez la direction de vélocité et les forces de friction/vélocité")
             font.italic: true
-            font.pixelSize: 11
-            color: "#8a8a8a"
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.textMuted
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
         }
         
         RowLayout {
             Layout.fillWidth: true
-            spacing: 16
-            
+            spacing: Theme.spacingXXL
+
             // --- Direction Section ---
             ColumnLayout {
-                spacing: 4
+                spacing: Theme.spacingXS
                 Text {
                     text: qsTr("Direction")
-                    color: "#5cb85c"
-                    font.pixelSize: 11
+                    color: Theme.accentAlt
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                     Layout.alignment: Qt.AlignHCenter
                 }
-                
+
                 ZCP_VectorDirectionPicker {
                     id: velocityPicker
                     circleSize: 100
-                    arrowColor: "#5cb85c"
-                    highlightColor: "#7bd97f"
+                    arrowColor: Theme.accentAlt
+                    highlightColor: Theme.hover(Theme.accentAlt)
                     
                     directionX: 0
                     directionY: 0
@@ -89,22 +90,22 @@ GroupBox {
             // --- Strength Sliders Section ---
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 12
-                
+                spacing: Theme.spacingXL
+
                 // Velocity Strength
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 4
-                    
+                    spacing: Theme.spacingXS
+
                     Text {
                         text: qsTr("Force Vélocité")
-                        color: "#5cb85c"
-                        font.pixelSize: 11
+                        color: Theme.accentAlt
+                        font.pixelSize: Theme.fontSizeSmall
                         font.bold: true
                     }
-                    
+
                     RowLayout {
-                        spacing: 8
+                        spacing: Theme.spacingM
                         Slider {
                             id: velocityStrengthSlider
                             Layout.fillWidth: true
@@ -119,16 +120,16 @@ GroupBox {
                                 width: velocityStrengthSlider.availableWidth
                                 height: 6
                                 radius: 3
-                                color: "#1a1a1a"
-                                
+                                color: Theme.background
+
                                 Rectangle {
                                     width: velocityStrengthSlider.visualPosition * parent.width
                                     height: parent.height
                                     radius: 3
                                     gradient: Gradient {
                                         orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: "#4a9c4e" }
-                                        GradientStop { position: 1.0; color: "#6bc96f" }
+                                        GradientStop { position: 0.0; color: Theme.accentAlt }
+                                        GradientStop { position: 1.0; color: Theme.hover(Theme.accentAlt) }
                                     }
                                 }
                             }
@@ -139,7 +140,7 @@ GroupBox {
                                 width: 16
                                 height: 16
                                 radius: 8
-                                color: velocityStrengthSlider.pressed ? "#7bd97f" : "#5cb85c"
+                                color: velocityStrengthSlider.pressed ? Theme.hover(Theme.accentAlt) : Theme.accentAlt
                                 border.color: "#ffffff"
                                 border.width: 2
                             }
@@ -152,17 +153,17 @@ GroupBox {
                         Rectangle {
                             Layout.preferredWidth: 50
                             Layout.preferredHeight: 22
-                            color: "#1a1a1a"
-                            radius: 4
-                            border.color: velocityField.activeFocus ? "#5cb85c" : "#444444"
+                            color: Theme.background
+                            radius: Theme.radiusS
+                            border.color: velocityField.activeFocus ? Theme.accentAlt : Theme.border
                             border.width: 1
                             
                             TextInput {
                                 id: velocityField
                                 anchors.fill: parent
                                 text: velocityStrengthSlider.value.toFixed(0)
-                                color: "#ffffff"
-                                font.pixelSize: 11
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeSmall
                                 font.bold: true
                                 verticalAlignment: TextInput.AlignVCenter
                                 horizontalAlignment: TextInput.AlignHCenter

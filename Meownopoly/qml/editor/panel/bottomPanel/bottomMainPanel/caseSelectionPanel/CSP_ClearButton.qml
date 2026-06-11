@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 
 Button {
@@ -8,18 +9,18 @@ Button {
     flat: true
 
     background: Rectangle {
-        color: parent.pressed ? "#AA4444" : "transparent"
-        border.color: "#FF6666"
+        color: parent.pressed ? Theme.pressed(Theme.dangerSoft) : "transparent"
+        border.color: Theme.dangerSoft
         border.width: 1
-        radius: 4
+        radius: Theme.radiusS
     }
 
     contentItem: Text {
         text: parent.text
-        color: "#FF6666"
+        color: Theme.dangerSoft
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 11
+        font.pixelSize: Theme.fontSizeSmall
     }
 
     onClicked: {

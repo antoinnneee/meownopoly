@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Item {
     id: root
@@ -19,13 +20,13 @@ Item {
     // Main container
     Rectangle {
         anchors.fill: parent
-        color: "#1a1a1a"
-        radius: 4
-        border.color: textField.activeFocus ? "#569c58" : "#444444"
+        color: Theme.background
+        radius: Theme.radiusS
+        border.color: textField.activeFocus ? Theme.accentAlt : Theme.border
         border.width: 1
-        
+
         Behavior on border.color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Theme.durationNormal }
         }
         
         RowLayout {
@@ -36,19 +37,19 @@ Item {
             Rectangle {
                 Layout.preferredWidth: 28
                 Layout.fillHeight: true
-                color: decreaseArea.pressed ? "#333333" : (decreaseArea.containsMouse ? "#2a2a2a" : "transparent")
-                radius: 4
+                color: decreaseArea.pressed ? Theme.surfaceAlt : (decreaseArea.containsMouse ? Theme.surface : "transparent")
+                radius: Theme.radiusS
                 
                 Behavior on color {
-                    ColorAnimation { duration: 100 }
+                    ColorAnimation { duration: Theme.durationFast }
                 }
                 
                 Text {
                     anchors.centerIn: parent
                     text: "−"
-                    font.pointSize: 10
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
-                    color: root.value > root.from ? "#cccccc" : "#555555"
+                    color: root.value > root.from ? Theme.textSecondary : Theme.textDisabled
                 }
                 
                 MouseArea {
@@ -80,9 +81,9 @@ Item {
             Rectangle {
                 Layout.preferredWidth: 1
                 Layout.fillHeight: true
-                Layout.topMargin: 4
-                Layout.bottomMargin: 4
-                color: "#333333"
+                Layout.topMargin: Theme.spacingXS
+                Layout.bottomMargin: Theme.spacingXS
+                color: Theme.surfaceAlt
             }
             
             // Text input field
@@ -95,8 +96,8 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 
-                color: "#ffffff"
-                font.pointSize: 9
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
                 
                 readOnly: !root.editable
@@ -145,28 +146,28 @@ Item {
             Rectangle {
                 Layout.preferredWidth: 1
                 Layout.fillHeight: true
-                Layout.topMargin: 4
-                Layout.bottomMargin: 4
-                color: "#333333"
+                Layout.topMargin: Theme.spacingXS
+                Layout.bottomMargin: Theme.spacingXS
+                color: Theme.surfaceAlt
             }
             
             // Increase button
             Rectangle {
                 Layout.preferredWidth: 28
                 Layout.fillHeight: true
-                color: increaseArea.pressed ? "#333333" : (increaseArea.containsMouse ? "#2a2a2a" : "transparent")
-                radius: 4
+                color: increaseArea.pressed ? Theme.surfaceAlt : (increaseArea.containsMouse ? Theme.surface : "transparent")
+                radius: Theme.radiusS
                 
                 Behavior on color {
-                    ColorAnimation { duration: 100 }
+                    ColorAnimation { duration: Theme.durationFast }
                 }
                 
                 Text {
                     anchors.centerIn: parent
                     text: "+"
-                    font.pointSize: 10
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
-                    color: root.value < root.to ? "#cccccc" : "#555555"
+                    color: root.value < root.to ? Theme.textSecondary : Theme.textDisabled
                 }
                 
                 MouseArea {

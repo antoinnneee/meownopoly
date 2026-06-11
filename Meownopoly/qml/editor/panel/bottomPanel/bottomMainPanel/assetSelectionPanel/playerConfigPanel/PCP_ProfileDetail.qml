@@ -6,6 +6,7 @@ import Game
 import MapInfo
 import EditorOpBus
 import playerConfigPanel 1.0
+import theme
 
 /*
  * Panneau d'édition d'un PlayerProfile. Visible quand un profil est
@@ -54,9 +55,9 @@ Item {
     // Placeholder quand aucune classe n'est sélectionnée.
     Rectangle {
         anchors.fill: parent
-        color: "#1a1a1a"
-        radius: 6
-        border.color: "#3a3a3a"
+        color: Theme.background
+        radius: Theme.radiusM
+        border.color: Theme.surfaceHover
         border.width: 1
         visible: !root.profile
 
@@ -130,7 +131,7 @@ Item {
 
                 Label {
                     text: "Modèle 3D"
-                    color: "#cccccc"
+                    color: Theme.textSecondary
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
                     font.bold: true
                 }
@@ -204,7 +205,7 @@ Item {
 
                 Label {
                     text: "Presets"
-                    color: "#cccccc"
+                    color: Theme.textSecondary
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
                     font.bold: true
                 }
@@ -242,7 +243,7 @@ Item {
                 checked: false
                 contentItem: Label {
                     text: expertCheck.text
-                    color: "#cccccc"
+                    color: Theme.textSecondary
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
                     verticalAlignment: Text.AlignVCenter
                     leftPadding: expertCheck.indicator.width + expertCheck.spacing

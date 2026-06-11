@@ -6,6 +6,7 @@ import QtQuick.Dialogs
 
 import QtQuick.Controls.impl
 import ui_item
+import theme
 
 CollapsableGroupBox {
     id: control
@@ -49,10 +50,10 @@ CollapsableGroupBox {
 
                     x: blurEnabledCheck.text ? (blurEnabledCheck.mirrored ? blurEnabledCheck.width - width - blurEnabledCheck.rightPadding : blurEnabledCheck.leftPadding) : blurEnabledCheck.leftPadding + (blurEnabledCheck.availableWidth - width) / 2
                     y: blurEnabledCheck.topPadding + (blurEnabledCheck.availableHeight - height) / 2
-                    color: blurEnabledCheck.checked ? "#4CAF50" : "#444444"
+                    color: blurEnabledCheck.checked ? Theme.success : Theme.border
                     border.width: blurEnabledCheck.visualFocus ? 2 : 1
-                    border.color:  "#666666" 
-                    radius: 3
+                    border.color: Theme.textDisabled
+                    radius: Theme.radiusXS
 
                     ColorImage {
                         x: (parent.width - width) / 2
@@ -94,10 +95,10 @@ CollapsableGroupBox {
 
                     x: shadowEnabledCheck.text ? (shadowEnabledCheck.mirrored ? shadowEnabledCheck.width - width - shadowEnabledCheck.rightPadding : shadowEnabledCheck.leftPadding) : shadowEnabledCheck.leftPadding + (shadowEnabledCheck.availableWidth - width) / 2
                     y: shadowEnabledCheck.topPadding + (shadowEnabledCheck.availableHeight - height) / 2
-                    color: shadowEnabledCheck.checked ? "#4CAF50" : "#444444"
+                    color: shadowEnabledCheck.checked ? Theme.success : Theme.border
                     border.width: shadowEnabledCheck.visualFocus ? 2 : 1
-                    border.color:  "#666666" 
-                    radius: 3
+                    border.color: Theme.textDisabled
+                    radius: Theme.radiusXS
 
                     ColorImage {
                         x: (parent.width - width) / 2

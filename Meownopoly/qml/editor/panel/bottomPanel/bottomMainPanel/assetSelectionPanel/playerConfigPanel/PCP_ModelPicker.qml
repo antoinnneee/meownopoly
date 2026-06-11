@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import AssetManager
+import theme
 
 /*
  * Sélecteur de modèle 3D : PCP_StyledComboBox + bouton ↻ pour rescanner.
@@ -14,7 +15,7 @@ RowLayout {
     property string currentModel: ""
     signal modelSelected(string name)
 
-    spacing: 4
+    spacing: Theme.spacingXS
 
     PCP_StyledComboBox {
         id: combo

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import AssetManager
 
 import editorBottomPanel
+import theme
 
 EBP_TitleBar {
     id: titleBar
@@ -18,7 +19,7 @@ EBP_TitleBar {
     subTitleText: titleBar.currentSelectedId !== "" ?
                       "Selected: " + titleBar.currentSelectedType + " #" + titleBar.currentSelectedId :
                       "Click to select an asset"
-    subTitleColor: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
+    subTitleColor: titleBar.currentSelectedId !== "" ? Theme.success : Theme.textMuted
     buttonModel: ["Decoration", "Case", "Zones", "Scène", "Joueurs"]
 
     onButtonClicked: function(text, index) {

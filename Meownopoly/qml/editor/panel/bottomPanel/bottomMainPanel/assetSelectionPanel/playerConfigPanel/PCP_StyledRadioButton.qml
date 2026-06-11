@@ -1,17 +1,18 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /*
  * RadioButton stylé cohérent avec le reste de l'éditeur.
- * Indicator : cercle creux #555555 (focus #888888), point plein #569c58 au check.
- * Texte : #cccccc (#ffffff au check).
+ * Indicator : cercle creux Theme.borderLight (hover Theme.textMuted), point plein Theme.accentAlt au check.
+ * Texte : Theme.textSecondary (Theme.textPrimary au check).
  */
 RadioButton {
     id: control
 
-    spacing: 8
-    padding: 4
-    font.pixelSize: 12
+    spacing: Theme.spacingM
+    padding: Theme.spacingXS
+    font.pixelSize: Theme.fontSizeBody
 
     indicator: Rectangle {
         implicitWidth: 16
@@ -21,8 +22,8 @@ RadioButton {
         radius: 8
         color: "transparent"
         border.color: control.checked
-                        ? "#569c58"
-                        : (control.hovered ? "#888888" : "#555555")
+                        ? Theme.accentAlt
+                        : (control.hovered ? Theme.textMuted : Theme.borderLight)
         border.width: 2
 
         Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -32,7 +33,7 @@ RadioButton {
             width: control.checked ? 8 : 0
             height: width
             radius: width / 2
-            color: "#569c58"
+            color: Theme.accentAlt
 
             Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
         }
@@ -41,8 +42,8 @@ RadioButton {
     contentItem: Text {
         leftPadding: control.indicator.width + control.spacing
         text: control.text
-        color: !control.enabled ? "#666666"
-              : control.checked ? "#ffffff" : "#cccccc"
+        color: !control.enabled ? Theme.textDisabled
+              : control.checked ? Theme.textPrimary : Theme.textSecondary
         font: control.font
         verticalAlignment: Text.AlignVCenter
     }

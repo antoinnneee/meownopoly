@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import Case
 import MapTypes
 import ui_item
+import theme
 
 CollapsableGroupBox {
     id: control
@@ -40,8 +41,8 @@ CollapsableGroupBox {
         Text {
             text: "🥫 Configuration du distributeur de croquettes - récompense donnée au joueur"
             font.italic: true
-            font.pixelSize: 10
-            color: "#888888"
+            font.pixelSize: Theme.fontSizeCaption
+            color: Theme.textMuted
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
         },
@@ -49,12 +50,12 @@ CollapsableGroupBox {
         // Configuration de la récompense
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingM
             
             Text {
                 text: "Récompense (kibbles):"
-                color: "#cccccc"
-                font.pixelSize: 11
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeSmall
                 Layout.minimumWidth: 140
             }
             
@@ -75,16 +76,16 @@ CollapsableGroupBox {
                 }
                 
                 background: Rectangle {
-                    color: "#2a2a2a"
-                    border.color: "#555555"
+                    color: Theme.surface
+                    border.color: Theme.borderLight
                     border.width: 1
-                    radius: 3
+                    radius: Theme.radiusXS
                 }
                 
                 contentItem: TextInput {
                     text: rewardSpinBox.textFromValue(rewardSpinBox.value, rewardSpinBox.locale)
-                    font.pixelSize: 11
-                    color: "#ffffff"
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.textPrimary
                     horizontalAlignment: Qt.AlignHCenter
                     verticalAlignment: Qt.AlignVCenter
                     readOnly: !rewardSpinBox.editable
@@ -95,8 +96,8 @@ CollapsableGroupBox {
             
             Text {
                 text: "kibbles"
-                font.pixelSize: 10
-                color: "#888888"
+                font.pixelSize: Theme.fontSizeCaption
+                color: Theme.textMuted
             }
         }
 

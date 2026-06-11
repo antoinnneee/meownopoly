@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import AssetManager
+import theme
 
 ScrollView {
     id: root
@@ -60,8 +61,8 @@ ScrollView {
     GridLayout {
         id: gridLayout
         anchors.fill: parent
-        columnSpacing: 10
-        rowSpacing: 10
+        columnSpacing: Theme.spacingL
+        rowSpacing: Theme.spacingL
         columns: Math.max(1, Math.floor(parent.width / (Screen.pixelDensity*25))-1)
 
         Repeater {
@@ -135,17 +136,17 @@ ScrollView {
         
         Column {
             anchors.centerIn: parent
-            spacing: 15
-            
+            spacing: Theme.spacingXXL
+
             BusyIndicator {
                 anchors.horizontalCenter: parent.horizontalCenter
                 running: parent.parent.visible
             }
-            
+
             Text {
                 text: "Loading assets..."
-                color: "#CCCCCC"
-                font.pixelSize: 14
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeMedium
                 anchors.horizontalCenter: parent.horizontalCenter
             }
         }
@@ -161,33 +162,33 @@ ScrollView {
         
         Column {
             anchors.centerIn: parent
-            spacing: 10
-            
+            spacing: Theme.spacingL
+
             Text {
                 text: "📁"
-                font.pixelSize: 32
+                font.pixelSize: Theme.fontSizeHero
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "No assets found"
-                color: "#CCCCCC"
-                font.pixelSize: 14
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeMedium
                 font.bold: true
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "Category: " + root.category + " > " + root.type
-                color: "#999999"
-                font.pixelSize: 11
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeSmall
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "Make sure assets are properly loaded in AssetManager"
-                color: "#999999"
-                font.pixelSize: 10
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeCaption
                 font.italic: true
                 anchors.horizontalCenter: parent.horizontalCenter
                 wrapMode: Text.Wrap

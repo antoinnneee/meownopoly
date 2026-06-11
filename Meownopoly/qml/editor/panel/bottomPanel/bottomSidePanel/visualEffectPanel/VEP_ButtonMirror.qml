@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import QtQuick.Dialogs
+import theme
 
 
 Rectangle {
@@ -10,17 +11,17 @@ Rectangle {
     required property bool isHorizontal
     required property bool isMirrored
     
-    color: isMirrored ? "#4e4e4e" : "#3a3a3a"
-    border.color: "#666666"
+    color: isMirrored ? Theme.hover(Theme.surfaceHover) : Theme.surfaceHover
+    border.color: Theme.textDisabled
     border.width: 1
-    radius: 4
+    radius: Theme.radiusS
 
     signal clicked()
     
     Text {
         anchors.centerIn: parent
         text: mirrorButton.isHorizontal ? "↔️" : "↕️"
-        font.pixelSize: 16
+        font.pixelSize: Theme.fontSizeLarge
     }
     
     MouseArea {

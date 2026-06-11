@@ -9,6 +9,7 @@ import Game
 import MapFileManager
 import MapTypes
 import MapInfo
+import theme
 
 // Barre de navigation des cartes - Version refactorisée
 Item {
@@ -189,7 +190,7 @@ Item {
             orientation: Gradient.Vertical
             GradientStop {
                 position: 0.0
-                color: navButtonMa.containsMouse ? "#7dd3fc" : "#4A90E2"
+                color: navButtonMa.containsMouse ? "#7dd3fc" : Theme.accent
             }
             GradientStop {
                 position: 1.0
@@ -197,14 +198,14 @@ Item {
             }
         }
 
-        border.color: navButtonMa.containsMouse ? "#0ea5e9" : "#6AB0F2"
+        border.color: navButtonMa.containsMouse ? "#0ea5e9" : Theme.hover(Theme.accent)
         border.width: 2
 
         Text {
             anchors.centerIn: parent
             text: navButton.arrowText
-            font.pixelSize: 24
-            color: "white"
+            font.pixelSize: Theme.fontSizeDisplay
+            color: Theme.textPrimary
         }
 
         MouseArea {
@@ -219,7 +220,7 @@ Item {
         // Animation de scale au hover
         scale: navButtonMa.containsMouse ? 1.1 : 1.0
         Behavior on scale {
-            NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+            NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutBack }
         }
     }
 
@@ -228,8 +229,8 @@ Item {
         id: leftArrow
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        anchors.leftMargin: 20
-        anchors.bottomMargin: 20
+        anchors.leftMargin: Theme.spacingHuge
+        anchors.bottomMargin: Theme.spacingHuge
         arrowText: "◀"
         isLeft: true
         onClicked: {
@@ -243,8 +244,8 @@ Item {
         id: centerRow
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 20
-        spacing: 10
+        anchors.bottomMargin: Theme.spacingHuge
+        spacing: Theme.spacingL
         z: 9000
         // visible: !selectionPanel.visible
 
@@ -253,7 +254,7 @@ Item {
             id: mapNameContainer
             width: Math.max(200, mapNameText.contentWidth + 40)
             height: 50
-            radius: 8
+            radius: Theme.radiusL
             z: 9000
 
             gradient: Gradient {
@@ -268,7 +269,7 @@ Item {
 
             Row {
                 anchors.centerIn: parent
-                spacing: 8
+                spacing: Theme.spacingM
 
                 // Indicateur autosave
                 Rectangle {
@@ -295,18 +296,18 @@ Item {
                         }
                         return mapInfo.mapName
                     }
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeLarge
                     font.bold: true
-                    color: "white"
+                    color: Theme.textPrimary
                 }
             }
             // Indicateur de position dans la liste
             Text {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                anchors.margins: 4
+                anchors.margins: Theme.spacingXS
                 text: availableMaps.length > 0 ? (currentIndex + 1) + "/" + availableMaps.length : "0/0"
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeCaption
                 color: "#94a3b8"
             }
         }
@@ -339,13 +340,13 @@ Item {
 
             contentItem: Text {
                 text: deleteButton.confirmationStep === 0 ? "🗑️" : "❓"
-                font.pixelSize: 24
+                font.pixelSize: Theme.fontSizeDisplay
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
 
             background: Rectangle {
-                radius: 8
+                radius: Theme.radiusL
 
                 gradient: Gradient {
                     orientation: Gradient.Vertical
@@ -375,7 +376,7 @@ Item {
 
             scale: hovered ? 1.1 : 1.0
             Behavior on scale {
-                NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+                NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutBack }
             }
         }
     }
@@ -385,8 +386,8 @@ Item {
         id: rightArrow
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.rightMargin: 20
-        anchors.bottomMargin: 20
+        anchors.rightMargin: Theme.spacingHuge
+        anchors.bottomMargin: Theme.spacingHuge
         arrowText: "▶"
         isLeft: false
         onClicked:{

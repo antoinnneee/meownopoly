@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import ui_item
+import theme
 
 CollapsableGroupBox {
     id: control
@@ -27,8 +28,8 @@ CollapsableGroupBox {
             Text {
                 text: "Angle:"
                 verticalAlignment: Text.AlignVCenter
-                color: "#cccccc"
-                font.pointSize: 9
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
                 Layout.fillHeight: true
             }
 
@@ -50,8 +51,8 @@ CollapsableGroupBox {
                 Layout.fillHeight: true
                 Layout.maximumWidth: font.pixelSize
                 text: Math.round(rotationSlider.value) + "°"
-                color: "#cccccc"
-                font.pointSize: 9
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
                 width: 30
                 horizontalAlignment: Text.AlignRight
                 verticalAlignment: Text.AlignVCenter

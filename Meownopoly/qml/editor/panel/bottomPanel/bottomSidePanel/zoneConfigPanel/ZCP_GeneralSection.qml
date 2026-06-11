@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 GroupBox {
     id: root
@@ -32,31 +33,31 @@ GroupBox {
     }
     
     background: Rectangle {
-        color: "#2a2a2a"
-        radius: 4
-        border.color: "#444444"
+        color: Theme.surface
+        radius: Theme.radiusS
+        border.color: Theme.border
         border.width: 1
     }
-    
+
     label: Text {
         text: root.title
-        color: "#cccccc"
-        font.pixelSize: 12
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeBody
         font.bold: true
-        leftPadding: 8
+        leftPadding: Theme.spacingM
     }
-    
+
     GridLayout {
         anchors.fill: parent
         columns: 2
-        rowSpacing: 10
-        columnSpacing: 10
+        rowSpacing: Theme.spacingL
+        columnSpacing: Theme.spacingL
         
         // Zone Name
         Label {
             text: "Nom:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
         }
         
@@ -67,16 +68,16 @@ GroupBox {
             text: ""
             
             background: Rectangle {
-                color: "#1a1a1a"
-                radius: 3
-                border.color: nameField.activeFocus ? "#5cb85c" : "#444444"
+                color: Theme.background
+                radius: Theme.radiusXS
+                border.color: nameField.activeFocus ? Theme.accentAlt : Theme.border
                 border.width: 1
-                Behavior on border.color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
             }
-            
-            color: "#ffffff"
-            font.pixelSize: 11
-            padding: 6
+
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
+            padding: Theme.spacingS
             
             onEditingFinished: {
                 root.configurationChanged()
@@ -90,8 +91,8 @@ GroupBox {
         // Exclusion Mode
         Label {
             text: "Mode Exclusion:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
         }
         
@@ -105,8 +106,8 @@ GroupBox {
                 x: exclusionSwitch.leftPadding
                 y: parent.height / 2 - height / 2
                 radius: 10
-                color: exclusionSwitch.checked ? "#5cb85c" : "#333333"
-                border.color: exclusionSwitch.checked ? "#5cb85c" : "#555555"
+                color: exclusionSwitch.checked ? Theme.accentAlt : Theme.surfaceAlt
+                border.color: exclusionSwitch.checked ? Theme.accentAlt : Theme.borderLight
 
                 Rectangle {
                     x: exclusionSwitch.checked ? parent.width - width - 2 : 2
@@ -117,7 +118,7 @@ GroupBox {
                     color: "#ffffff"
                     
                     Behavior on x {
-                        NumberAnimation { duration: 150 }
+                        NumberAnimation { duration: Theme.durationNormal }
                     }
                 }
             }
@@ -130,15 +131,15 @@ GroupBox {
         // Speed Multiplier
         Label {
             text: "Multiplicateur Vitesse:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
         }
         
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingM
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
             enabled: !exclusionSwitch.checked
 
@@ -158,7 +159,7 @@ GroupBox {
                     width: speedSlider.availableWidth
                     height: implicitHeight
                     radius: 2
-                    color: "#3a3a3a"
+                    color: Theme.surfaceHover
 
                     Rectangle {
                         width: speedSlider.visualPosition * parent.width
@@ -187,16 +188,16 @@ GroupBox {
             Rectangle {
                 Layout.preferredWidth: 45
                 height: 26
-                radius: 4
-                color: "#2a2a2a"
+                radius: Theme.radiusS
+                color: Theme.surface
                 border.color: "#4CAF50"
                 border.width: 1
 
                 Text {
                     anchors.centerIn: parent
                     text: "×" + speedSlider.value.toFixed(1)
-                    color: "#ffffff"
-                    font.pointSize: 8
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                 }
             }
@@ -205,15 +206,15 @@ GroupBox {
         // Friction
         Label {
             text: "Friction:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
         }
         
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingM
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
             enabled: !exclusionSwitch.checked
 
@@ -233,7 +234,7 @@ GroupBox {
                     width: frictionSlider.availableWidth
                     height: implicitHeight
                     radius: 2
-                    color: "#3a3a3a"
+                    color: Theme.surfaceHover
 
                     Rectangle {
                         width: frictionSlider.visualPosition * parent.width
@@ -262,16 +263,16 @@ GroupBox {
             Rectangle {
                 Layout.preferredWidth: 45
                 height: 26
-                radius: 4
-                color: "#2a2a2a"
+                radius: Theme.radiusS
+                color: Theme.surface
                 border.color: "#5DADE2"
                 border.width: 1
 
                 Text {
                     anchors.centerIn: parent
                     text: frictionSlider.value.toFixed(2)
-                    color: "#ffffff"
-                    font.pointSize: 8
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                 }
             }
@@ -280,15 +281,15 @@ GroupBox {
         // Acceleration Multiplier
         Label {
             text: "Multiplicateur Accélération:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
         }
         
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingM
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
             enabled: !exclusionSwitch.checked
 
@@ -308,7 +309,7 @@ GroupBox {
                     width: accelerationSlider.availableWidth
                     height: implicitHeight
                     radius: 2
-                    color: "#3a3a3a"
+                    color: Theme.surfaceHover
 
                     Rectangle {
                         width: accelerationSlider.visualPosition * parent.width
@@ -337,16 +338,16 @@ GroupBox {
             Rectangle {
                 Layout.preferredWidth: 45
                 height: 26
-                radius: 4
-                color: "#2a2a2a"
+                radius: Theme.radiusS
+                color: Theme.surface
                 border.color: "#FF9800"
                 border.width: 1
 
                 Text {
                     anchors.centerIn: parent
                     text: "×" + accelerationSlider.value.toFixed(2)
-                    color: "#ffffff"
-                    font.pointSize: 8
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                 }
             }

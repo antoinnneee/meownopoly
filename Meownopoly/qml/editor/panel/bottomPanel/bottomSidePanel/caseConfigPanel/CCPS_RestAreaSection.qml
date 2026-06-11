@@ -5,6 +5,7 @@ import Case
 import MapTypes
 
 import ui_item
+import theme
 
 CollapsableGroupBox {
     id: control
@@ -29,8 +30,8 @@ CollapsableGroupBox {
         Text {
             text: "🏠 Configuration spécifique aux zones de repos (terrains)"
             font.italic: true
-            font.pixelSize: 10
-            color: "#888888"
+            font.pixelSize: Theme.fontSizeCaption
+            color: Theme.textMuted
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
         },
@@ -44,7 +45,7 @@ CollapsableGroupBox {
             // Apply dark style to the nested component
             Component.onCompleted: {
                 if (familyConfig.background) {
-                    familyConfig.background.color = "#2a2a2a"
+                    familyConfig.background.color = Theme.surface
                 }
             }
         },

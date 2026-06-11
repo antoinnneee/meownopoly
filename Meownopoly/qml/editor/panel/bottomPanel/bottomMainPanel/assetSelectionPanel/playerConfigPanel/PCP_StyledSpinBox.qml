@@ -1,9 +1,10 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /*
  * SpinBox stylé cohérent avec le reste de l'éditeur.
- * Boutons + / − à gauche/droite, fond central #2a2a2a, accent #569c58 au focus.
+ * Boutons + / − à gauche/droite, fond central Theme.surface, accent Theme.accentAlt au focus.
  */
 SpinBox {
     id: control
@@ -11,11 +12,11 @@ SpinBox {
     implicitHeight: 32
     implicitWidth: 110
     editable: true
-    font.pixelSize: 12
+    font.pixelSize: Theme.fontSizeBody
 
     contentItem: TextInput {
         text: control.displayText
-        color: "#ffffff"
+        color: Theme.textPrimary
         font: control.font
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
@@ -23,14 +24,14 @@ SpinBox {
         validator: control.validator
         inputMethodHints: Qt.ImhFormattedNumbersOnly
         selectByMouse: true
-        selectionColor: "#569c58"
-        selectedTextColor: "#ffffff"
+        selectionColor: Theme.accentAlt
+        selectedTextColor: Theme.textPrimary
     }
 
     background: Rectangle {
-        color: "#2a2a2a"
-        radius: 3
-        border.color: control.activeFocus ? "#569c58" : "#555555"
+        color: Theme.surface
+        radius: Theme.radiusXS
+        border.color: control.activeFocus ? Theme.accentAlt : Theme.borderLight
         border.width: 1
         Behavior on border.color { ColorAnimation { duration: 120 } }
     }
@@ -39,15 +40,15 @@ SpinBox {
         x: control.width - width
         height: control.height
         implicitWidth: 24
-        radius: 3
+        radius: Theme.radiusXS
         color: control.up.pressed
-                 ? "#1f1f1f"
-                 : (control.up.hovered ? "#3a3a3a" : "#2a2a2a")
+                 ? Theme.pressed(Theme.surface)
+                 : (control.up.hovered ? Theme.surfaceHover : Theme.surface)
         Text {
             anchors.centerIn: parent
             text: "+"
-            color: control.enabled ? "#cccccc" : "#555555"
-            font.pixelSize: 14
+            color: control.enabled ? Theme.textSecondary : Theme.borderLight
+            font.pixelSize: Theme.fontSizeMedium
             font.bold: true
         }
     }
@@ -56,15 +57,15 @@ SpinBox {
         x: 0
         height: control.height
         implicitWidth: 24
-        radius: 3
+        radius: Theme.radiusXS
         color: control.down.pressed
-                 ? "#1f1f1f"
-                 : (control.down.hovered ? "#3a3a3a" : "#2a2a2a")
+                 ? Theme.pressed(Theme.surface)
+                 : (control.down.hovered ? Theme.surfaceHover : Theme.surface)
         Text {
             anchors.centerIn: parent
             text: "−"
-            color: control.enabled ? "#cccccc" : "#555555"
-            font.pixelSize: 14
+            color: control.enabled ? Theme.textSecondary : Theme.borderLight
+            font.pixelSize: Theme.fontSizeMedium
             font.bold: true
         }
     }

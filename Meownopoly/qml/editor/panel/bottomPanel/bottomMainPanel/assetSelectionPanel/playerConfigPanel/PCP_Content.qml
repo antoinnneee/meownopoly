@@ -7,6 +7,7 @@ import EditorOpBus
 
 import "../"
 import editorBottomPanel
+import theme
 
 /*
  * Onglet "Joueurs" du AssetSelectionPanel.
@@ -142,9 +143,9 @@ EBP_Content {
         onClosed: root.editingProfileId = ""
 
         background: Rectangle {
-            color: "#1a1a1a"
-            radius: 8
-            border.color: "#3a3a3a"
+            color: Theme.background
+            radius: Theme.radiusL
+            border.color: Theme.surfaceHover
             border.width: 1
         }
 
@@ -157,7 +158,7 @@ EBP_Content {
                 anchors.top: parent.top
                 height: Screen.pixelDensity * 8
                 color: "#222222"
-                radius: 8
+                radius: Theme.radiusL
 
                 // Le radius arrondit aussi le bas du Rectangle, on masque
                 // sous la séparation horizontale avec un sous-rect carré.
@@ -179,7 +180,7 @@ EBP_Content {
                                   : null
                         return p ? ("Configurer — " + p.name) : "Configurer"
                     }
-                    color: "#e0e0e0"
+                    color: Theme.textSoft
                     font.pixelSize: Math.round(Screen.pixelDensity * 3.6)
                     font.bold: true
                     elide: Text.ElideRight
@@ -203,7 +204,7 @@ EBP_Content {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: 1
-                    color: "#3a3a3a"
+                    color: Theme.surfaceHover
                 }
             }
 
