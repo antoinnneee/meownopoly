@@ -41,13 +41,6 @@ CollapsableGroupBox {
             id: familyConfig
             targetCase: control.targetCase
             Layout.fillWidth: true
-            
-            // Apply dark style to the nested component
-            Component.onCompleted: {
-                if (familyConfig.background) {
-                    familyConfig.background.color = Theme.surface
-                }
-            }
         },
         
         // Configuration des prix CaseCatPerks

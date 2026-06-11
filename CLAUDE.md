@@ -141,6 +141,7 @@ No automated test runner is configured. Manual testing via the executable.
 
 ## QML Conventions
 
+- **Toute nouvelle valeur de style passe par le singleton `Theme`** (`qml/theme/Theme.qml`, `import theme`) : couleurs sémantiques (`surface`, `textPrimary`, `accent`, `success`…), échelles typo/spacing/radius (`fontSizeBody`, `spacingM`, `radiusS`…), helpers `Theme.hover(c)`/`Theme.pressed(c)`/`Theme.px(n)`. Toutes les tailles sont dérivées de `Theme.uiScale` (réglage global de l'échelle UI, modifiable à chaud — hook d'automation `setUiScale(s)` dans `editorAutomationHooks`). Frontière des responsabilités : `Theme` = style UI ; `MeowStyle` (C++) = couleurs **métier** des familles de cases ; `UiStyle` (C++) = z-index des calques. Ne PAS thémer : couleurs de données (joueurs, zones, swatches de pickers, skins, familles), blancs de contraste sur fonds dynamiques colorés, tailles proportionnelles (`parent.height * 0.5`), `font.pointSize` est proscrit (toujours `pixelSize`, sinon `uiScale` ne s'applique pas).
 - Root `id`: `root` by default, or a semantic role name
 - Files: `PascalCase.qml`; editor panels prefixed (`CCP_`, `ASP_`, `VEP_`)
 - Internal properties prefixed with `_`

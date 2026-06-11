@@ -2245,6 +2245,17 @@ Base_Board {
                             (screenY - gameGrid.y) / gs)
         }
 
+        // ── Thème ───────────────────────────────────────────────────────
+        // Change le facteur d'échelle global de l'UI (Theme.uiScale) à chaud.
+        // Toute l'interface re-bind ses tailles tokenisées immédiatement.
+        function setUiScale(s) {
+            const v = Number(s)
+            if (!isFinite(v) || v <= 0)
+                return { ok: false, error: "uiScale invalide : " + s }
+            Theme.uiScale = v
+            return { ok: true, uiScale: Theme.uiScale }
+        }
+
         // ── Assets ──────────────────────────────────────────────────────
         // Liste les catégories et, pour chacune, ses types disponibles.
         function listAssetCategories() {
