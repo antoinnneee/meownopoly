@@ -979,11 +979,12 @@ Drawer {
                     }
 
                     // Checkbox "Fixé à la grille"
-                    CheckBox {
+                    MeowCheckBox {
                         id: snapToGridCheckBox
                         text: "Fixé à la grille ?"
                         width: parent.width
                         checked: logic.mapInfo ? logic.mapInfo.isBackgroundOnGrill : false
+                        accentColor: Theme.accent
 
                         // onToggled (action utilisateur) plutôt que
                         // onCheckedChanged (qui fire aussi sur re-eval du binding).
@@ -994,33 +995,6 @@ Drawer {
                             var before = logic.mapInfo.toJSON()
                             logic.mapInfo.isBackgroundOnGrill = checked
                             Game.updateMapMetadata(before, logic.mapInfo.toJSON())
-                        }
-
-                        indicator: Rectangle {
-                            implicitWidth: 20
-                            implicitHeight: 20
-                            x: snapToGridCheckBox.leftPadding
-                            y: parent.height / 2 - height / 2
-                            radius: Theme.radiusXS
-                            border.color: Theme.accent
-                            border.width: 1
-                            color: snapToGridCheckBox.checked ? Theme.accent : "transparent"
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "✓"
-                                font.pixelSize: Theme.fontSizeMedium
-                                color: Theme.textPrimary
-                                visible: snapToGridCheckBox.checked
-                            }
-                        }
-
-                        contentItem: Text {
-                            text: snapToGridCheckBox.text
-                            font.pixelSize: Theme.fontSizeBody
-                            color: Theme.textPrimary
-                            verticalAlignment: Text.AlignVCenter
-                            leftPadding: snapToGridCheckBox.indicator.width + snapToGridCheckBox.spacing
                         }
                     }
 

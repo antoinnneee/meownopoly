@@ -12,3 +12,4 @@ MeowSlider 1.0 MeowSlider.qml
 MeowPropertyRow 1.0 MeowPropertyRow.qml
 MeowSpinBox 1.0 MeowSpinBox.qml
 MeowComboBox 1.0 MeowComboBox.qml
+MeowCheckBox 1.0 MeowCheckBox.qml

@@ -43,43 +43,16 @@ CollapsableGroupBox {
                     anchors.margins: Theme.spacingXL
                     spacing: Theme.spacingL
                     
-                    CheckBox {
+                    MeowCheckBox {
                         id: showConnectionsCheckbox
                         checked: root.showConnections
-
                         text: "Afficher les connexions"
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                        
+                        accentColor: Theme.violetStart
+
                         onCheckedChanged: {
                             root.showConnections = checked
-                        }
-                        contentItem: Text {
-                            text: showConnectionsCheckbox.text
-                            anchors.verticalCenter: parent.verticalCenter
-                        font: showConnectionsCheckbox.font
-                        opacity: showConnectionsCheckbox.enabled ? 1.0 : 0.3
-                        color: showConnectionsCheckbox.checked ? Theme.textPrimary : Theme.textSecondary
-                        verticalAlignment: Text.AlignVCenter
-                        leftPadding: showConnectionsCheckbox.indicator.width + showConnectionsCheckbox.spacing
-                        }
-                        indicator: Rectangle {
-                            implicitWidth: 20
-                            implicitHeight: 20
-                            radius: Theme.radiusS
-                            border.color: showConnectionsCheckbox.checked ? Theme.violetStart : Theme.textMuted
-                            border.width: 2
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: showConnectionsCheckbox.checked ? Theme.violetStart : Theme.surfaceHover
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "✓"
-                                color: Theme.textPrimary
-                                font.pixelSize: Theme.fontSizeMedium
-                                font.bold: true
-                                visible: showConnectionsCheckbox.checked
-                            }
                         }
                     }
 
