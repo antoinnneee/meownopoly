@@ -8,6 +8,7 @@
 
 #include "maptypes.h"
 #include "playerprofile.h"
+#include "screeneffect.h"
 
 #define AUTOSAVE_MAP_NAME "autosave_tmp"
 
@@ -34,9 +35,14 @@ class MapInfo : public QObject
     Q_PROPERTY(int playerConfigVersion READ playerConfigVersion WRITE setPlayerConfigVersion NOTIFY playerConfigVersionChanged FINAL)
     Q_PROPERTY(QQmlListProperty<PlayerProfile> playerProfiles READ playerProfilesQml NOTIFY playerProfilesChanged FINAL)
 
+    // ---- Bibliothèque d'effets visuels plein écran (déclenchés par zone) ----
+    Q_PROPERTY(int screenEffectVersion READ screenEffectVersion WRITE setScreenEffectVersion NOTIFY screenEffectVersionChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<ScreenEffect> screenEffects READ screenEffectsQml NOTIFY screenEffectsChanged FINAL)
+
 public:
     static constexpr int MAX_PLAYERS_HARD_CAP   = 8;
     static constexpr int CURRENT_PLAYER_CONFIG_VERSION = 1;
+    static constexpr int CURRENT_SCREEN_EFFECT_VERSION = 1;
 
     MapInfo();
     MapInfo(const QJsonObject &json);
@@ -101,6 +107,24 @@ public:
     Q_INVOKABLE PlayerProfile* playerProfileAt(int i) const;
     Q_INVOKABLE void           clearPlayerProfiles();
 
+    // ---- Screen effects library ----
+    int screenEffectVersion() const { return m_screenEffectVersion; }
+    void setScreenEffectVersion(int v);
+
+    QList<ScreenEffect *> screenEffects() const { return m_screenEffects; }
+    QQmlListProperty<ScreenEffect> screenEffectsQml();
+
+    Q_INVOKABLE ScreenEffect* addScreenEffect();
+    Q_INVOKABLE ScreenEffect* addScreenEffectFromPreset(const QString &presetName);
+    Q_INVOKABLE ScreenEffect* addScreenEffectFromJson(const QString &json);
+    Q_INVOKABLE ScreenEffect* duplicateScreenEffect(const QString &id);
+    Q_INVOKABLE void          removeScreenEffect(const QString &id);
+    Q_INVOKABLE bool          updateScreenEffect(const QString &id, const QString &fieldsJson);
+    Q_INVOKABLE ScreenEffect* screenEffectById(const QString &id) const;
+    Q_INVOKABLE int           screenEffectCount() const { return m_screenEffects.size(); }
+    Q_INVOKABLE ScreenEffect* screenEffectAt(int i) const;
+    Q_INVOKABLE void          clearScreenEffects();
+
 signals:
     void mapNameChanged(const QString &mapName);
     void mapDescriptionChanged(const QString &mapDescription);
@@ -124,13 +148,21 @@ signals:
     void playerConfigVersionChanged();
     void playerProfilesChanged();
 
+    void screenEffectVersionChanged();
+    void screenEffectsChanged();
+
 private:
     // QQmlListProperty static callbacks (read-only)
     static qsizetype profilesCountCb(QQmlListProperty<PlayerProfile> *p);
     static PlayerProfile *profilesAtCb(QQmlListProperty<PlayerProfile> *p, qsizetype i);
 
+    static qsizetype effectsCountCb(QQmlListProperty<ScreenEffect> *p);
+    static ScreenEffect *effectsAtCb(QQmlListProperty<ScreenEffect> *p, qsizetype i);
+
     PlayerProfile *adoptProfile(PlayerProfile *p);
     void clearProfilesNoEmit();
+    ScreenEffect *adoptEffect(ScreenEffect *e);
+    void clearEffectsNoEmit();
     /// Injecte un profil "Princess" par défaut si le roster est vide.
     /// Appelé par les ctors pour garantir qu'une map a toujours au moins un
     /// profil sélectionnable (cf. PLAYER_CONFIG_PANEL_PLAN.md §6.6).
@@ -155,6 +187,9 @@ private:
     int m_maxPlayers = MAX_PLAYERS_HARD_CAP;
     int m_playerConfigVersion = CURRENT_PLAYER_CONFIG_VERSION;
     QList<PlayerProfile *> m_playerProfiles;
+
+    int m_screenEffectVersion = CURRENT_SCREEN_EFFECT_VERSION;
+    QList<ScreenEffect *> m_screenEffects;
 };
 
 #endif // MAPINFO_H

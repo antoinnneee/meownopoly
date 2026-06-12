@@ -352,6 +352,10 @@ Rectangle {
         snapableParameters.zoneParameter.velocityStrenght = physicSettings.velocityStrength
         snapableParameters.zoneParameter.frictionStrenght = physicSettings.frictionStrength
         snapableParameters.zoneParameter.accelerationMultiplier = physicSettings.accelerationMultiplier
+        // Effet visuel de zone (référence vers MapInfo.screenEffects). Garde
+        // undefined pour ne pas écraser sur d'anciens appelants sans ce champ.
+        if (physicSettings.screenEffectId !== undefined)
+            snapableParameters.zoneParameter.screenEffectId = physicSettings.screenEffectId
     }
 
     // ─── liserés des sélections distantes ───────────────────────

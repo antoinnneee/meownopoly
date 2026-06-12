@@ -2,11 +2,12 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import MapFileManager
 
 GroupBox {
     id: root
     title: "Général"
-    
+
     // Properties
     property bool updatingValues: false
 
@@ -15,7 +16,34 @@ GroupBox {
     property alias speedMultiplier: speedSlider.value
     property alias accelerationMultiplier: accelerationSlider.value
     property alias frictionStrength: frictionSlider.value
-    
+    // Référence vers l'effet visuel déclenché à l'entrée (id de MapInfo.screenEffects,
+    // "" = aucun). Pas un alias : piloté par le ComboBox ci-dessous.
+    property string screenEffectId: ""
+
+    // Modèle du sélecteur d'effet : "Aucun" + bibliothèque de la carte.
+    // L'accès à `mapInfo.screenEffects` capture la dépendance de binding
+    // (NOTIFY screenEffectsChanged) pour rafraîchir la liste à chaud.
+    readonly property var _effectModel: {
+        const arr = [{ name: "Aucun", id: "" }]
+        const map = MapFileManager.currentMap
+        const mi = map ? map.mapInfo : null
+        if (mi) {
+            const dep = mi.screenEffects   // capture la dépendance
+            const n = mi.screenEffectCount()
+            for (let i = 0; i < n; ++i) {
+                const e = mi.screenEffectAt(i)
+                if (e) arr.push({ name: e.name, id: e.id })
+            }
+        }
+        return arr
+    }
+
+    function _indexForEffectId(id) {
+        for (let i = 0; i < root._effectModel.length; ++i)
+            if (root._effectModel[i].id === id) return i
+        return 0
+    }
+
     // Signal
     signal configurationChanged()
     signal focusReleased()
@@ -23,13 +51,15 @@ GroupBox {
     // Functions
     function updateFromZoneParameter(zoneParam) {
       if (root.updatingValues) return
-        
+
         // Update sliders from target values
         nameField.text = zoneParam.zoneName
         exclusionSwitch.checked = zoneParam.exclusion
         speedSlider.value = zoneParam.speedMultiplier
         accelerationSlider.value = zoneParam.accelerationMultiplier
         frictionSlider.value = zoneParam.frictionStrenght
+        root.screenEffectId = zoneParam.screenEffectId
+        effectCombo.currentIndex = root._indexForEffectId(zoneParam.screenEffectId)
     }
     
     background: Rectangle {
@@ -349,6 +379,39 @@ GroupBox {
                     color: Theme.textPrimary
                     font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
+                }
+            }
+        }
+
+        // Effet visuel à l'entrée de zone (bibliothèque MapInfo.screenEffects)
+        Label {
+            text: "Effet écran:"
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
+            font.bold: true
+        }
+
+        ComboBox {
+            id: effectCombo
+            Layout.fillWidth: true
+            model: root._effectModel
+            textRole: "name"
+            currentIndex: root._indexForEffectId(root.screenEffectId)
+
+            // Reflète une liste qui change à chaud (ajout/suppression d'effets).
+            Connections {
+                target: root
+                function on_EffectModelChanged() {
+                    effectCombo.currentIndex = root._indexForEffectId(root.screenEffectId)
+                }
+            }
+
+            onActivated: function(index) {
+                const entry = root._effectModel[index]
+                const id = entry ? entry.id : ""
+                if (root.screenEffectId !== id) {
+                    root.screenEffectId = id
+                    root.configurationChanged()
                 }
             }
         }

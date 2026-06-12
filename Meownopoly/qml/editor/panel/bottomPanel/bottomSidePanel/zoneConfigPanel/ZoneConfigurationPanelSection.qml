@@ -52,7 +52,8 @@ CollapsableGroupBox {
             velocityDirectionY: directionsSection.velocityDirectionY,
             velocityStrength: directionsSection.velocityStrength,
             frictionStrength: generalSection.frictionStrength,
-            accelerationMultiplier: generalSection.accelerationMultiplier
+            accelerationMultiplier: generalSection.accelerationMultiplier,
+            screenEffectId: generalSection.screenEffectId
         }
     }
     function updateFromZoneParameter(zoneParam) {

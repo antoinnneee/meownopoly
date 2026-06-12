@@ -1,0 +1,3 @@
+module screenEffectPanel
+SEP_Content 1.0 SEP_Content.qml
+SEP_Slider 1.0 SEP_Slider.qml

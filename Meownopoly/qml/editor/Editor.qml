@@ -33,6 +33,7 @@ import world3d 1.0
 
 import QtQuick3D
 import QtQuick3D.Helpers
+import QtQuick.Effects
 
 import editor
 import playerConfigPanel 1.0
@@ -1311,6 +1312,50 @@ Base_Board {
             colorVariant: workArea._testedProfile
                             ? workArea._testedProfile.colorVariant
                             : ""
+
+            // Flou + désaturation de la scène 3D quand un effet de zone à `blur`
+            // est actif. Un calque 2D au-dessus ne peut pas flouter une View3D
+            // vivante, donc on passe par le layer de la View3D elle-même. Le
+            // layer n'est activé que pendant l'effet → coût nul hors zone.
+            layer.enabled: screenEffectController.renderEffect
+                           && screenEffectController.renderEffect.blur > 0
+                           && screenEffectController.amount > 0.001
+            layer.smooth: true
+            layer.effect: MultiEffect {
+                blurEnabled: true
+                blurMax: 48
+                blur: screenEffectController.renderEffect
+                      ? screenEffectController.renderEffect.blur * screenEffectController.amount
+                      : 0
+                // saturation MultiEffect : 0 = normal, -1 = niveaux de gris.
+                saturation: screenEffectController.renderEffect
+                            ? screenEffectController.renderEffect.saturation * screenEffectController.amount
+                            : 0
+            }
+        }
+
+        // --- Effets visuels de zone (givré, toxique, …) ---
+        // Le contrôleur écoute les entrées/sorties de zone du moteur physique et
+        // résout l'effet via ZoneParameter.screenEffectId → MapInfo.screenEffects.
+        ScreenEffectController {
+            id: screenEffectController
+            physicsWorld: pattounxWorld
+            tilesList: root.snapableTilesList
+            mapInfo: root.mapInfo
+            onlyActorId: "player"   // ne réagit qu'au joueur local de l'éditeur
+        }
+
+        // Overlay 2D plein écran (teinte + vignette + pulsation). Géométrie
+        // calquée sur gameScene pour rester fixe à l'écran malgré le pan/zoom.
+        ScreenEffectOverlay {
+            id: screenEffectOverlay
+            x: -gameGrid.x
+            y: -gameGrid.y
+            width: root.width
+            height: root.height
+            z: 6.0  // juste au-dessus de gameScene (5.99), sous les panneaux UI
+            effect: screenEffectController.renderEffect
+            amount: screenEffectController.amount
         }
 
         // Phase 4 — joueur local. Body créé/détruit par le spawner ; le

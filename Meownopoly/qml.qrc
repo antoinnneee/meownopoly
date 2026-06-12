@@ -67,6 +67,9 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledComboBox.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledSpinBox.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/qmldir</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/screenEffectPanel/SEP_Content.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/screenEffectPanel/SEP_Slider.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/screenEffectPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/caseSelectionPanelMain/CSP_CaseTypeCell.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/caseSelectionPanelMain/CSP_CaseTypeSelector.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/caseSelectionPanel/CSP_ClearButton.qml</file>
@@ -144,6 +147,8 @@
         <file>qml/world3d/LocalPlayerSpawner.qml</file>
         <file>qml/world3d/InputController.qml</file>
         <file>qml/world3d/CameraRig.qml</file>
+        <file>qml/world3d/ScreenEffectController.qml</file>
+        <file>qml/world3d/ScreenEffectOverlay.qml</file>
         <file>qml/world3d/KuraMaterial.qml</file>
         <file>qml/world3d/KuraModel.qml</file>
         <file>qml/world3d/SkinnedModel.qml</file>
