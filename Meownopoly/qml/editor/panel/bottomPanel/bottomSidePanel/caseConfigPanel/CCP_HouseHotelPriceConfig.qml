@@ -5,6 +5,7 @@ import Case
 import CaseRestArea
 import Player
 import theme
+import ui_item
 
 CCP_PanelElement {
     title: "Prix d'Achat des Améliorations"
@@ -64,7 +65,7 @@ CCP_PanelElement {
                     font.pixelSize: Theme.fontSizeBody
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: housePriceSpinBox
                     Layout.fillWidth: true
                     from: 0
@@ -98,7 +99,7 @@ CCP_PanelElement {
                     font.pixelSize: Theme.fontSizeBody
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: hotelPriceSpinBox
                     Layout.fillWidth: true
                     from: 0

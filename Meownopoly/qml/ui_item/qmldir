@@ -10,3 +10,5 @@ MeowTextField 1.0 MeowTextField.qml
 MeowSwitch 1.0 MeowSwitch.qml
 MeowSlider 1.0 MeowSlider.qml
 MeowPropertyRow 1.0 MeowPropertyRow.qml
+MeowSpinBox 1.0 MeowSpinBox.qml
+MeowComboBox 1.0 MeowComboBox.qml

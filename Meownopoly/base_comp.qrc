@@ -75,6 +75,8 @@
         <file>qml/ui_item/MeowSwitch.qml</file>
         <file>qml/ui_item/MeowSlider.qml</file>
         <file>qml/ui_item/MeowPropertyRow.qml</file>
+        <file>qml/ui_item/MeowSpinBox.qml</file>
+        <file>qml/ui_item/MeowComboBox.qml</file>
         <file>qml/meowComponent/TestCommandWindow.qml</file>
     </qresource>
 </RCC>

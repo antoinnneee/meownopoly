@@ -34,6 +34,7 @@ RowLayout {
     property string unitText: ""         // préfixe affiché devant la valeur
     property color accentColor: Theme.accentAlt
     property bool boxedValue: true       // valeur en encadré (sinon texte simple)
+    property bool showValue: true        // false = l'appelant fournit son propre afficheur/champ
     property real valueWidth: Theme.px(45)
 
     property bool resettable: false
@@ -95,7 +96,7 @@ RowLayout {
 
     // Valeur — encadré (défaut) ou texte simple.
     Rectangle {
-        visible: control.boxedValue
+        visible: control.showValue && control.boxedValue
         Layout.preferredWidth: control.valueWidth
         Layout.preferredHeight: Theme.px(26)
         radius: Theme.radiusS
@@ -113,7 +114,7 @@ RowLayout {
     }
 
     Text {
-        visible: !control.boxedValue
+        visible: control.showValue && !control.boxedValue
         text: control.unitText + slider.value.toFixed(control.decimals)
         color: Theme.textSecondary
         font.pixelSize: Theme.fontSizeCaption

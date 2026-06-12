@@ -64,7 +64,6 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledButton.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledTabBar.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledTabButton.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledComboBox.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/PCP_StyledSpinBox.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/playerConfigPanel/qmldir</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/screenEffectPanel/SEP_Content.qml</file>
@@ -90,7 +89,6 @@
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_PanelElement.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RentConfig.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_StyledSpinBox.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_CardBoardBoxSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_CatDeviceSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_GeneralSection.qml</file>

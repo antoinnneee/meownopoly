@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Templates as T
 import theme
 
 /*
- * ComboBox stylée cohérente avec le reste de l'éditeur.
- * Palette : fond Theme.surface, border Theme.borderLight (focus Theme.accentAlt), texte blanc.
- * Popup : fond #222222, item hovered Theme.hover(surface), item sélectionné Theme.accentAlt.
+ * MeowComboBox — liste déroulante canonique des panneaux de l'éditeur.
+ *
+ * Promu depuis PCP_StyledComboBox.
+ * Palette : fond Theme.surface, border Theme.borderLight (focus Theme.accentAlt), texte clair.
+ * Popup : fond #222222, item survolé Theme.hover(surface), item sélectionné Theme.accentAlt.
  */
 ComboBox {
     id: control

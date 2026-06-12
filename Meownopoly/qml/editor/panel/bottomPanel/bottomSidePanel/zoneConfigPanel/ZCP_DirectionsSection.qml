@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import ui_item
 
 GroupBox {
     id: root
@@ -106,50 +107,20 @@ GroupBox {
 
                     RowLayout {
                         spacing: Theme.spacingM
-                        Slider {
+                        MeowSlider {
                             id: velocityStrengthSlider
                             Layout.fillWidth: true
                             from: 0.0
                             to: 100.0
                             stepSize: 1.0
                             value: 0.0
-                            
-                            background: Rectangle {
-                                x: velocityStrengthSlider.leftPadding
-                                y: velocityStrengthSlider.topPadding + velocityStrengthSlider.availableHeight / 2 - height / 2
-                                width: velocityStrengthSlider.availableWidth
-                                height: 6
-                                radius: 3
-                                color: Theme.background
+                            showValue: false   // champ éditable fourni ci-dessous
 
-                                Rectangle {
-                                    width: velocityStrengthSlider.visualPosition * parent.width
-                                    height: parent.height
-                                    radius: 3
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: Theme.accentAlt }
-                                        GradientStop { position: 1.0; color: Theme.hover(Theme.accentAlt) }
-                                    }
-                                }
-                            }
-                            
-                            handle: Rectangle {
-                                x: velocityStrengthSlider.leftPadding + velocityStrengthSlider.visualPosition * (velocityStrengthSlider.availableWidth - width)
-                                y: velocityStrengthSlider.topPadding + velocityStrengthSlider.availableHeight / 2 - height / 2
-                                width: 16
-                                height: 16
-                                radius: 8
-                                color: velocityStrengthSlider.pressed ? Theme.hover(Theme.accentAlt) : Theme.accentAlt
-                                border.color: "#ffffff"
-                                border.width: 2
-                            }
-                            
                             onMoved: {
                                 root.configurationChanged()
                             }
                         }
-                        
+
                         Rectangle {
                             Layout.preferredWidth: 50
                             Layout.preferredHeight: 22
