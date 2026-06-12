@@ -1090,57 +1090,31 @@ Drawer {
                             font.pixelSize: Theme.fontSizeSmall
                         }
 
-                        Slider {
+                        MeowSlider {
                             id: tileSizeSlider
                             width: parent.width
+                            showValue: false   // valeur affichée dans le Text ci-dessus
                             from: 20
                             to: 400
                             stepSize: 20
                             value: (logic.mapInfo ? logic.mapInfo.backgroundTileSize : 0) || 100
+                            decimals: 0
+                            accentColor: Theme.accent
                             property string _beforeJson: ""
 
-                            // onMoved (action utilisateur) — onValueChanged
-                            // fire aussi sur re-eval du binding value, ce qui
-                            // causait un write-back parasite à l'init.
+                            // moved (action utilisateur seulement) — évite le
+                            // write-back parasite à l'init du binding value.
                             onMoved: {
                                 if (logic.mapInfo)
                                     logic.mapInfo.backgroundTileSize = value
                             }
-
-                            onPressedChanged: {
-                                if (!logic.mapInfo) return
-                                if (pressed) {
+                            onGestureBegan: {
+                                if (logic.mapInfo)
                                     _beforeJson = logic.mapInfo.toJSON()
-                                } else {
+                            }
+                            onGestureCommitted: {
+                                if (logic.mapInfo)
                                     Game.updateMapMetadata(_beforeJson, logic.mapInfo.toJSON())
-                                }
-                            }
-
-                            background: Rectangle {
-                                x: tileSizeSlider.leftPadding
-                                y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
-                                width: tileSizeSlider.availableWidth
-                                height: 4
-                                radius: 2
-                                color: Theme.borderLight
-
-                                Rectangle {
-                                    width: tileSizeSlider.visualPosition * parent.width
-                                    height: parent.height
-                                    color: Theme.accent
-                                    radius: 2
-                                }
-                            }
-
-                            handle: Rectangle {
-                                x: tileSizeSlider.leftPadding + tileSizeSlider.visualPosition * (tileSizeSlider.availableWidth - width)
-                                y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
-                                width: 16
-                                height: 16
-                                radius: 8
-                                color: tileSizeSlider.pressed ? Theme.surfaceLight : "#F0F0F0"
-                                border.color: Theme.accent
-                                border.width: 1
                             }
                         }
                     }

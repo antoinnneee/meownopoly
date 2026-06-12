@@ -33,17 +33,18 @@ CollapsableGroupBox {
                 Layout.fillHeight: true
             }
 
-            Slider {
+            MeowSlider {
                 id: rotationSlider
                 Layout.fillHeight: true
                 Layout.fillWidth: true
+                showValue: false   // afficheur d'angle "°" fourni ci-dessous
                 from: -180
                 to: 180
                 value: 0
                 stepSize: 1
 
                 onValueChanged: {
-                    root.effectChanged()
+                    control.effectChanged()
                 }
             }
 
