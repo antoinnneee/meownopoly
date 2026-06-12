@@ -29,6 +29,7 @@ RowLayout {
     property alias to: slider.to
     property alias value: slider.value
     property alias stepSize: slider.stepSize
+    property alias snapMode: slider.snapMode
 
     property int decimals: 2
     property string unitText: ""         // préfixe affiché devant la valeur

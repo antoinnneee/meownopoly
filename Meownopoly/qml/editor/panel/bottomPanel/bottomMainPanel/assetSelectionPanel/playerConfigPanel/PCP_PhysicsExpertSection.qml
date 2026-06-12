@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Game
 import EditorOpBus
 import theme
+import ui_item
 
 /*
  * Section "Expert" : 8 sliders complets.
@@ -68,23 +69,17 @@ ColumnLayout {
             ToolTip.text: lblSlider.tooltip
             ToolTip.delay: 200
         }
-        Slider {
+        MeowSlider {
             id: slider
             Layout.fillWidth: true
+            showValue: false   // label + valeur fournis par LabelledSlider
             from: lblSlider.minValue
             to: lblSlider.maxValue
             stepSize: lblSlider.step
             value: lblSlider.value
             snapMode: Slider.SnapAlways
-            property bool _wasPressed: false
-            onPressedChanged: {
-                if (pressed && !_wasPressed) {
-                    lblSlider._beforeJson = root.mapInfo ? root.mapInfo.toJSON() : ""
-                } else if (!pressed && _wasPressed) {
-                    root._commit(lblSlider._beforeJson, lblSlider.fieldName, value)
-                }
-                _wasPressed = pressed
-            }
+            onGestureBegan: lblSlider._beforeJson = root.mapInfo ? root.mapInfo.toJSON() : ""
+            onGestureCommitted: root._commit(lblSlider._beforeJson, lblSlider.fieldName, value)
         }
         Label {
             text: slider.value.toFixed(lblSlider.decimals)
