@@ -482,6 +482,32 @@ app.post('/api/models/upload', uploadLimiter, authUpload, upload.single('package
     }
 });
 
+// 4. Suppression d'un pack de modèle spécifique (authentifié)
+app.delete('/api/models/delete/:name/:version', authUpload, async (req, res) => {
+    const safeName = req.params.name.replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeVersion = req.params.version.replace(/[^a-zA-Z0-9._-]/g, '');
+
+    const fileName = `${safeName}_v${safeVersion}.meow`;
+    const filePath = path.join(MODELS_DIR, fileName);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'Pack de modèle non trouvé' });
+    }
+
+    try {
+        await fsp.unlink(filePath);
+        console.log(`Suppression Modèle réussie: ${fileName}`);
+        res.json({
+            success: true,
+            message: 'Pack de modèle supprimé avec succès',
+            file: { name: safeName, version: safeVersion, filename: fileName }
+        });
+    } catch (error) {
+        console.error('Erreur suppression modèle:', error);
+        res.status(500).json({ error: 'Erreur lors de la suppression du modèle' });
+    }
+});
+
 // Page d'accueil
 app.get('/', (req, res) => {
     res.send('Serveur Meownopoly en ligne !');

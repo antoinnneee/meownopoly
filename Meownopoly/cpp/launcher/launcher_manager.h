@@ -63,6 +63,9 @@ public:
     Q_INVOKABLE void downloadModel(const QString &serverUrl, const QString &name, const QString &version);
     Q_INVOKABLE void createModelPackage(const QString &folderPath, const QString &name, const QString &version);
     Q_INVOKABLE void uploadModelPackage(const QString &serverUrl, const QString &name, const QString &version);
+    // Supprime un pack de modèle du serveur (DELETE /api/models/delete/:name/:version,
+    // authentifié par le token d'upload). Rafraîchit la liste serveur au succès.
+    Q_INVOKABLE void deleteModelPackage(const QString &serverUrl, const QString &name, const QString &version);
 
     // Model 3D Configurator helpers (préparation upload)
     // findModelQml : scanne <folderPath> et retourne le nom de base du
@@ -169,6 +172,12 @@ public:
     // Dossier (clean, sans file://) d'un modèle installé : <AppData>/models/<name>.
     Q_INVOKABLE QString installedModelDir(const QString &name) const;
 
+    // Supprime un modèle 3D téléchargé : efface récursivement
+    // <AppData>/models/<name> et met à jour m_modelsList en place
+    // (isInstalled=false, localVersion="0.0.0" pour cette entrée) +
+    // modelsListChanged. Retourne true si le dossier a bien été supprimé.
+    Q_INVOKABLE bool deleteModel(const QString &name);
+
     // Utilitaire de comparaison sémantique de versions
     // Retourne -1 si v1 < v2, 0 si égales, 1 si v1 > v2
     static int compareVersions(const QString &v1, const QString &v2);
@@ -185,6 +194,7 @@ signals:
     void logMessage(const QString &message);
     void updateAvailable();
     void downloadSucess();
+    void modelDeleteFinished(bool success, const QString &name, const QString &version);
 
 private slots:
     void onDownloadFinished();

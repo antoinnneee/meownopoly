@@ -266,7 +266,8 @@ Rectangle {
                 id: modelsSection
                 modelsList: logic.modelsList
                 isDownloading: logic.isDownloading
-                
+                canManageServer: logic.settings.uploadToken.length > 0
+
                 onRefreshRequested: logic.fetchModelsList()
                 onDownloadRequested: function(name, version) {
                     logic.downloadModel(name, version)
@@ -277,6 +278,12 @@ Rectangle {
                         root.configFolderPath = dir
                         root.currentView = "modelConfigurator"
                     }
+                }
+                onDeleteRequested: function(name) {
+                    logic.deleteModel(name)
+                }
+                onDeleteFromServerRequested: function(name, version) {
+                    logic.deleteModelFromServer(name, version)
                 }
             }
             

@@ -18,10 +18,20 @@ Rectangle {
 
     property var modelsList: []
     property bool isDownloading: false
-    
+    // Active les actions serveur (suppression distante) : nécessite un token d'upload.
+    property bool canManageServer: false
+
     signal refreshRequested()
     signal downloadRequested(string name, string version)
     signal editRequested(string name)
+    signal deleteRequested(string name)
+    signal deleteFromServerRequested(string name, string version)
+
+    // Nom du modèle en attente de confirmation de suppression locale.
+    property string _pendingDeleteName: ""
+    // Modèle/version en attente de confirmation de suppression serveur.
+    property string _pendingServerDeleteName: ""
+    property string _pendingServerDeleteVersion: ""
 
     ColumnLayout {
         anchors.fill: parent
@@ -139,6 +149,52 @@ Rectangle {
                         }
                     }
 
+                    // Supprimer : efface le modèle téléchargé localement.
+                    Button {
+                        id: deleteButton
+                        visible: modelData.isInstalled
+                        text: "Supprimer"
+                        onClicked: {
+                            root._pendingDeleteName = modelData.name
+                            confirmDeleteDialog.open()
+                        }
+                        background: Rectangle {
+                            color: deleteButton.pressed ? "#b91c1c" : "#dc2626"
+                            radius: Theme.radiusS
+                        }
+                        contentItem: Text {
+                            text: deleteButton.text
+                            color: Theme.textPrimary
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: Theme.fontSizeBody
+                        }
+                    }
+
+                    // Suppression serveur : retire la version sélectionnée du serveur
+                    // (action admin, nécessite un token d'upload configuré).
+                    Button {
+                        id: serverDeleteButton
+                        visible: root.canManageServer
+                        text: "Suppr. serveur"
+                        onClicked: {
+                            root._pendingServerDeleteName = modelData.name
+                            root._pendingServerDeleteVersion = versionSelector.currentText
+                            confirmServerDeleteDialog.open()
+                        }
+                        background: Rectangle {
+                            color: serverDeleteButton.pressed ? "#7f1d1d" : "#991b1b"
+                            radius: Theme.radiusS
+                        }
+                        contentItem: Text {
+                            text: serverDeleteButton.text
+                            color: Theme.textPrimary
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: Theme.fontSizeBody
+                        }
+                    }
+
                     Button {
                         id: actionButton
                         // Texte dynamique selon l'état
@@ -172,6 +228,57 @@ Rectangle {
                 color: Theme.textMuted
                 visible: listView.count === 0
             }
+        }
+    }
+
+    // Confirmation avant de supprimer un modèle téléchargé localement.
+    Dialog {
+        id: confirmDeleteDialog
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        title: "Supprimer le modèle"
+        standardButtons: Dialog.Yes | Dialog.No
+
+        contentItem: Text {
+            text: "Supprimer définitivement le modèle « " + root._pendingDeleteName + " » téléchargé ?"
+            color: Theme.textPrimary
+            wrapMode: Text.WordWrap
+        }
+
+        onAccepted: {
+            if (root._pendingDeleteName.length > 0)
+                root.deleteRequested(root._pendingDeleteName)
+            root._pendingDeleteName = ""
+        }
+        onRejected: root._pendingDeleteName = ""
+    }
+
+    // Confirmation avant de supprimer un modèle du SERVEUR (irréversible, partagé).
+    Dialog {
+        id: confirmServerDeleteDialog
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        title: "Supprimer du serveur"
+        standardButtons: Dialog.Yes | Dialog.No
+
+        contentItem: Text {
+            text: "Supprimer définitivement « " + root._pendingServerDeleteName
+                  + " » v" + root._pendingServerDeleteVersion
+                  + " du serveur ?\nCette action affecte tous les utilisateurs."
+            color: Theme.textPrimary
+            wrapMode: Text.WordWrap
+        }
+
+        onAccepted: {
+            if (root._pendingServerDeleteName.length > 0)
+                root.deleteFromServerRequested(root._pendingServerDeleteName,
+                                               root._pendingServerDeleteVersion)
+            root._pendingServerDeleteName = ""
+            root._pendingServerDeleteVersion = ""
+        }
+        onRejected: {
+            root._pendingServerDeleteName = ""
+            root._pendingServerDeleteVersion = ""
         }
     }
 }
