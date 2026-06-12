@@ -46,24 +46,13 @@ CollapsableGroupBox  {
             font.bold: true
         }
         
-        TextField {
+        MeowTextField {
             id: nameField
             Layout.fillWidth: true
             placeholderText: "Nom de la case"
-            
-            background: Rectangle {
-                color: Theme.surface
-                radius: Theme.radiusXS
-                border.color: nameField.activeFocus ? Theme.accentAlt : Theme.borderLight
-                border.width: 1
+            fieldColor: Theme.surface
+            borderColor: Theme.borderLight
 
-                Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
-            }
-
-            color: Theme.textPrimary
-            font.pixelSize: Theme.fontSizeSmall
-            padding: Theme.spacingS
-            
             Component.onCompleted: {
                 if (targetCase) {
                     text = targetCase.name
