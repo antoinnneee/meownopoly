@@ -120,8 +120,18 @@ Rectangle {
         posX = 0; posY = 0; posZ = 0
     }
 
+    // Normalise un nom de modèle : trim + première lettre en majuscule.
+    // Le nom de modèle doit toujours commencer par une majuscule.
+    function _capitalizeName(name) {
+        const t = (name || "").trim()
+        if (t.length === 0) return t
+        return t.charAt(0).toUpperCase() + t.slice(1)
+    }
+
     function applyTransformAndSave(uploadAfter) {
         if (!hasFolder) return
+        // Garantit la majuscule initiale même si modelName a été défini ailleurs.
+        root.modelName = root._capitalizeName(root.modelName)
         if (!modelName || modelName.length === 0) {
             statusBar.message = "Nom de modèle manquant."
             return
@@ -329,10 +339,17 @@ Rectangle {
             // Identité du modèle (déplacée du panneau vers la top bar).
             Text { text: "Nom"; color: Theme.textHint; font.pixelSize: Theme.fontSizeBody; Layout.leftMargin: Theme.spacingM }
             TextField {
+                id: nameField
                 Layout.preferredWidth: 150
                 text: root.modelName
                 placeholderText: "Princess"
-                onEditingFinished: root.modelName = text
+                // Majuscule forcée sur le premier caractère du nom de modèle.
+                onEditingFinished: {
+                    const norm = root._capitalizeName(text)
+                    root.modelName = norm
+                    if (text !== norm)
+                        text = norm
+                }
                 color: Theme.textPrimary
                 placeholderTextColor: Theme.textHint
                 background: Rectangle { color: Theme.background; border.color: Theme.border; radius: Theme.radiusXS }

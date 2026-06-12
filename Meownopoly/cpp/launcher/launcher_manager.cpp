@@ -558,6 +558,37 @@ void LauncherManager::uploadModelPackage(const QString &serverUrl, const QString
     });
 }
 
+void LauncherManager::deleteModelPackage(const QString &serverUrl, const QString &name, const QString &version)
+{
+    if (m_uploadToken.isEmpty()) {
+        emit logMessage("❌ Suppression serveur impossible : aucun token d'upload configuré");
+        emit modelDeleteFinished(false, name, version);
+        return;
+    }
+
+    QNetworkRequest request;
+    QString formattedServerUrl = reformat_server_url(serverUrl);
+    request.setUrl(QUrl(formattedServerUrl + "/api/models/delete/" + name + "/" + version));
+    request.setRawHeader("User-Agent", "Meownopoly-Launcher/1.0");
+    request.setRawHeader("Authorization", ("Bearer " + m_uploadToken).toUtf8());
+
+    emit logMessage("Suppression serveur du modèle '" + name + "' v" + version + "...");
+
+    QNetworkReply *reply = m_networkManager->deleteResource(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, serverUrl, name, version]() {
+        const bool ok = (reply->error() == QNetworkReply::NoError);
+        if (ok) {
+            emit logMessage("🗑️ Modèle '" + name + "' v" + version + " supprimé du serveur");
+            // Rafraîchir la liste serveur (le pack disparaît / change de versions).
+            fetchModelsList(serverUrl);
+        } else {
+            emit logMessage("❌ Erreur suppression serveur: " + reply->errorString());
+        }
+        emit modelDeleteFinished(ok, name, version);
+        reply->deleteLater();
+    });
+}
+
 // ---------------------------------------------------------
 // MODEL 3D CONFIGURATOR HELPERS
 // ---------------------------------------------------------
@@ -1099,6 +1130,46 @@ QString LauncherManager::installedModelDir(const QString &name) const
     const QString safe = QFileInfo(name.trimmed()).fileName();
     if (safe.isEmpty()) return QString();
     return m_basePath + QStringLiteral("/models/") + safe;
+}
+
+bool LauncherManager::deleteModel(const QString &name)
+{
+    const QString safe = QFileInfo(name.trimmed()).fileName();
+    if (safe.isEmpty()) {
+        emit logMessage("deleteModel: nom de modèle invalide");
+        return false;
+    }
+
+    const QString dirPath = m_basePath + QStringLiteral("/models/") + safe;
+    QDir dir(dirPath);
+    if (!dir.exists()) {
+        emit logMessage("deleteModel: modèle non installé " + safe);
+        return false;
+    }
+
+    if (!dir.removeRecursively()) {
+        emit logMessage("❌ deleteModel: échec suppression de " + dirPath);
+        return false;
+    }
+
+    // Mise à jour en place de la liste : l'entrée serveur reste affichée
+    // mais repasse "Non installé" sans refaire un aller-retour réseau.
+    bool touched = false;
+    for (QVariant &entry : m_modelsList) {
+        QVariantMap modelData = entry.toMap();
+        if (modelData.value("name").toString() == safe) {
+            modelData["localVersion"] = "0.0.0";
+            modelData["isInstalled"] = false;
+            entry = modelData;
+            touched = true;
+            break;
+        }
+    }
+    if (touched)
+        emit modelsListChanged();
+
+    emit logMessage("🗑️ Modèle supprimé : " + safe);
+    return true;
 }
 
 void LauncherManager::onModelsListFinished()

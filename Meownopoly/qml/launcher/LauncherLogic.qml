@@ -117,12 +117,20 @@ QtObject {
         LauncherManager.downloadModel(root.serverUrl, name, version)
     }
 
+    function deleteModel(name) {
+        return LauncherManager.deleteModel(name)
+    }
+
     function createModelPackage(folderPath, name, version) {
         LauncherManager.createModelPackage(folderPath, name, version)
     }
 
     function uploadModelPackage(name, version) {
         LauncherManager.uploadModelPackage(root.serverUrl, name, version)
+    }
+
+    function deleteModelFromServer(name, version) {
+        LauncherManager.deleteModelPackage(root.serverUrl, name, version)
     }
 
     // --- Configurateur de modèle 3D ---
