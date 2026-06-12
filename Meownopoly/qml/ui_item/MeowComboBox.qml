@@ -49,7 +49,12 @@ ComboBox {
         id: itemDel
         width: control.width
         contentItem: Text {
-            text: modelData
+            // Respecte textRole pour les modèles d'objets ({name, id}…),
+            // tout en restant compatible avec les modèles de chaînes.
+            text: (control.textRole && modelData
+                     && modelData[control.textRole] !== undefined)
+                    ? modelData[control.textRole]
+                    : modelData
             color: itemDel.highlighted ? Theme.textPrimary : Theme.textSecondary
             font: control.font
             verticalAlignment: Text.AlignVCenter

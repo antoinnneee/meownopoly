@@ -209,7 +209,7 @@ GroupBox {
             font.bold: true
         }
 
-        ComboBox {
+        MeowComboBox {
             id: effectCombo
             Layout.fillWidth: true
             model: root._effectModel
