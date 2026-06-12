@@ -31,7 +31,7 @@ public:
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
     static void registerQml();
 
-    /** Retourne le nom d'une session � partir de son ID, ou l'ID si non trouv�. */
+    /** Retourne le nom d'une session à partir de son ID, ou l'ID si non trouvé. */
     Q_INVOKABLE QString sessionNameForId(const QString &sessionId) const;
 
     // --- Accesseurs statiques C++ (délèguent à instance()) ---

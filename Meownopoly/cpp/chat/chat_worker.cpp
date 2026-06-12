@@ -43,8 +43,7 @@ void ChatWorker::connectToServer(const QString &url)
         connect(m_webSocket, &QWebSocket::connected, this, &ChatWorker::onConnected);
         connect(m_webSocket, &QWebSocket::disconnected, this, &ChatWorker::onDisconnected);
         connect(m_webSocket, &QWebSocket::textMessageReceived, this, &ChatWorker::onTextMessageReceived);
-        connect(m_webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
-                this, &ChatWorker::onError);
+        connect(m_webSocket, &QWebSocket::errorOccurred, this, &ChatWorker::onError);
         connect(m_webSocket, &QWebSocket::pong, this, &ChatWorker::onPong);
     }
 
