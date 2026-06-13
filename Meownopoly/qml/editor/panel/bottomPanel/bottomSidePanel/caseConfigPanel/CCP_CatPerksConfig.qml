@@ -5,6 +5,7 @@ import Case
 import CaseRestArea
 import Player
 import theme
+import ui_item
 
 CCP_PanelElement {
     title: "Prix et Finances"
@@ -62,7 +63,7 @@ CCP_PanelElement {
                     font.pixelSize: Theme.fontSizeSmall
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: priceSpinBox
                     Layout.fillWidth: true
                     from: 0
@@ -96,7 +97,7 @@ CCP_PanelElement {
                     font.pixelSize: Theme.fontSizeSmall
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: sellPriceSpinBox
                     Layout.fillWidth: true
                     from: 0
@@ -130,7 +131,7 @@ CCP_PanelElement {
                     font.pixelSize: Theme.fontSizeSmall
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: morgagePriceSpinBox
                     Layout.fillWidth: true
                     from: 0

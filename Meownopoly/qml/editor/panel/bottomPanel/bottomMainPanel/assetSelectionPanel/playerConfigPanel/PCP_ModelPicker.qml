@@ -3,9 +3,10 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import AssetManager
 import theme
+import ui_item
 
 /*
- * Sélecteur de modèle 3D : PCP_StyledComboBox + bouton ↻ pour rescanner.
+ * Sélecteur de modèle 3D : MeowComboBox + bouton ↻ pour rescanner.
  * Le label "Modèle 3D" est laissé au parent (variable selon le layout).
  * Source : AssetManager.availablePlayerModels() (QRC + AppData + primitives).
  */
@@ -17,7 +18,7 @@ RowLayout {
 
     spacing: Theme.spacingXS
 
-    PCP_StyledComboBox {
+    MeowComboBox {
         id: combo
         Layout.fillWidth: true
         model: AssetManager.availablePlayerModels()

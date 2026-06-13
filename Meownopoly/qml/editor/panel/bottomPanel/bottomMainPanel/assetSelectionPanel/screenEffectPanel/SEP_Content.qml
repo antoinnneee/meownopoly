@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Game
 import theme
+import ui_item
 import world3d 1.0
 
 import "../"
@@ -310,11 +311,9 @@ EBP_Content {
                             rowSpacing: Theme.spacingS
 
                             Label { text: "Nom :"; color: Theme.textPrimary; font.pixelSize: Theme.fontSizeSmall; font.bold: true }
-                            TextField {
+                            MeowTextField {
                                 id: nameField
                                 Layout.fillWidth: true
-                                color: Theme.textPrimary
-                                font.pixelSize: Theme.fontSizeSmall
                                 text: root.selectedEffect ? root.selectedEffect.name : ""
                                 onActiveFocusChanged: { if (activeFocus && root.mapInfo) root._beforeJson = root.mapInfo.toJSON() }
                                 onEditingFinished: {
@@ -326,7 +325,7 @@ EBP_Content {
                             }
 
                             Label { text: "Type :"; color: Theme.textPrimary; font.pixelSize: Theme.fontSizeSmall; font.bold: true }
-                            ComboBox {
+                            MeowComboBox {
                                 id: typeCombo
                                 Layout.fillWidth: true
                                 model: root._typeLabels
@@ -338,7 +337,7 @@ EBP_Content {
                             }
 
                             Label { text: "Preset :"; color: Theme.textPrimary; font.pixelSize: Theme.fontSizeSmall; font.bold: true }
-                            ComboBox {
+                            MeowComboBox {
                                 id: presetCombo
                                 Layout.fillWidth: true
                                 model: root._presets
@@ -361,11 +360,9 @@ EBP_Content {
                                 color: root.selectedEffect ? root.selectedEffect.tintColor : "transparent"
                                 border.color: Theme.border; border.width: 1
                             }
-                            TextField {
+                            MeowTextField {
                                 id: colorField
                                 Layout.preferredWidth: 90
-                                color: Theme.textPrimary
-                                font.pixelSize: Theme.fontSizeSmall
                                 text: root.selectedEffect ? root.selectedEffect.tintColor : ""
                                 onEditingFinished: {
                                     if (root.selectedEffect && root.selectedEffect.tintColor !== text)

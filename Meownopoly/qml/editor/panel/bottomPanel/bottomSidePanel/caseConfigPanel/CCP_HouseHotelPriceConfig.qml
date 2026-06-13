@@ -5,6 +5,7 @@ import Case
 import CaseRestArea
 import Player
 import theme
+import ui_item
 
 CCP_PanelElement {
     title: "Prix d'Achat des Améliorations"
@@ -37,14 +38,10 @@ CCP_PanelElement {
         spacing: Theme.spacingL
         
         // Note explicative
-        Text {
-            text: "🏗️ Définissez les prix d'achat pour construire des améliorations sur cette propriété"
-            font.italic: true
-            font.pixelSize: Theme.fontSizeBody
-            color: Theme.textMuted
+        MeowInfoBox {
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
             Layout.bottomMargin: Theme.spacingXS
+            text: "🏗️ Définissez les prix d'achat pour construire des améliorations sur cette propriété"
         }
         
         // Les deux prix côte à côte
@@ -64,7 +61,7 @@ CCP_PanelElement {
                     font.pixelSize: Theme.fontSizeBody
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: housePriceSpinBox
                     Layout.fillWidth: true
                     from: 0
@@ -98,7 +95,7 @@ CCP_PanelElement {
                     font.pixelSize: Theme.fontSizeBody
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: hotelPriceSpinBox
                     Layout.fillWidth: true
                     from: 0

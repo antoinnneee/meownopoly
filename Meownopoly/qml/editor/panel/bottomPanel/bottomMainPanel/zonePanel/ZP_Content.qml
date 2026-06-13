@@ -7,6 +7,7 @@ import "../"
 import editorBottomPanel
 import "../../bottomSidePanel/zoneConfigPanel/"
 import theme
+import ui_item
 
 /**
  * Panneau moderne pour gérer les zones d'exclusion et les zones d'effet
@@ -448,213 +449,53 @@ EBP_Content {
                 }
 
                 // Friction
-                RowLayout {
+                MeowSlider {
+                    id: frictionSlider
                     Layout.fillWidth: true
-                    spacing: Theme.spacingS
-
-                    Text {
-                        text: "🧊 Friction:"
-                        color: Theme.textSecondary
-                        font.pixelSize: Theme.fontSizeSmall
-                        Layout.preferredWidth: 70
-                    }
-
-                    Slider {
-                        id: frictionSlider
-                        Layout.fillWidth: true
-                        from: 0.0
-                        to: 1.0
-                        value: 0.0
-                        stepSize: 0.01
-
-                        background: Rectangle {
-                            x: frictionSlider.leftPadding
-                            y: frictionSlider.topPadding + frictionSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 100
-                            implicitHeight: 4
-                            width: frictionSlider.availableWidth
-                            height: implicitHeight
-                            radius: Theme.radiusXS
-                            color: Theme.surfaceHover
-
-                            Rectangle {
-                                width: frictionSlider.visualPosition * parent.width
-                                height: parent.height
-                                color: Theme.hover(Theme.accent)
-                                radius: Theme.radiusXS
-                            }
-                        }
-
-                        handle: Rectangle {
-                            x: frictionSlider.leftPadding + frictionSlider.visualPosition * (frictionSlider.availableWidth - width)
-                            y: frictionSlider.topPadding + frictionSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 14
-                            implicitHeight: 14
-                            radius: 7
-                            color: Theme.surfaceLight
-                            border.color: Theme.hover(Theme.accent)
-                            border.width: 2
-                        }
-
-                        onMoved: updateBackendConfiguration()
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 45
-                        height: 26
-                        radius: Theme.radiusS
-                        color: Theme.surface
-                        border.color: Theme.hover(Theme.accent)
-                        border.width: 1
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: frictionSlider.value.toFixed(2)
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.bold: true
-                        }
-                    }
+                    label: "🧊 Friction:"
+                    labelWidth: 70
+                    labelBold: false
+                    from: 0.0
+                    to: 1.0
+                    value: 0.0
+                    stepSize: 0.01
+                    decimals: 2
+                    accentColor: Theme.hover(Theme.accent)
+                    onMoved: updateBackendConfiguration()
                 }
 
                 // Multiplicateur Vitesse
-                RowLayout {
+                MeowSlider {
+                    id: speedMultSlider
                     Layout.fillWidth: true
-                    spacing: Theme.spacingS
-
-                    Text {
-                        text: "🏃 Mult. Vit:"
-                        color: Theme.textSecondary
-                        font.pixelSize: Theme.fontSizeSmall
-                        Layout.preferredWidth: 70
-                    }
-
-                    Slider {
-                        id: speedMultSlider
-                        Layout.fillWidth: true
-                        from: 0.1
-                        to: 3.0
-                        value: 1.0
-                        stepSize: 0.1
-
-                        background: Rectangle {
-                            x: speedMultSlider.leftPadding
-                            y: speedMultSlider.topPadding + speedMultSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 100
-                            implicitHeight: 4
-                            width: speedMultSlider.availableWidth
-                            height: implicitHeight
-                            radius: Theme.radiusXS
-                            color: Theme.surfaceHover
-
-                            Rectangle {
-                                width: speedMultSlider.visualPosition * parent.width
-                                height: parent.height
-                                color: Theme.success
-                                radius: Theme.radiusXS
-                            }
-                        }
-
-                        handle: Rectangle {
-                            x: speedMultSlider.leftPadding + speedMultSlider.visualPosition * (speedMultSlider.availableWidth - width)
-                            y: speedMultSlider.topPadding + speedMultSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 14
-                            implicitHeight: 14
-                            radius: 7
-                            color: Theme.surfaceLight
-                            border.color: Theme.success
-                            border.width: 2
-                        }
-
-                        onMoved: updateBackendConfiguration()
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 45
-                        height: 26
-                        radius: Theme.radiusS
-                        color: Theme.surface
-                        border.color: Theme.success
-                        border.width: 1
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "×" + speedMultSlider.value.toFixed(1)
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.bold: true
-                        }
-                    }
+                    label: "🏃 Mult. Vit:"
+                    labelWidth: 70
+                    labelBold: false
+                    from: 0.1
+                    to: 3.0
+                    value: 1.0
+                    stepSize: 0.1
+                    decimals: 1
+                    unitText: "×"
+                    accentColor: Theme.success
+                    onMoved: updateBackendConfiguration()
                 }
 
                 // Multiplicateur Accélération
-                RowLayout {
+                MeowSlider {
+                    id: accelMultSlider
                     Layout.fillWidth: true
-                    spacing: Theme.spacingS
-
-                    Text {
-                        text: "⚡ Mult. Acc:"
-                        color: Theme.textSecondary
-                        font.pixelSize: Theme.fontSizeSmall
-                        Layout.preferredWidth: 70
-                    }
-
-                    Slider {
-                        id: accelMultSlider
-                        Layout.fillWidth: true
-                        from: 0.0
-                        to: 10.0
-                        value: 1.0
-                        stepSize: 0.05
-
-                        background: Rectangle {
-                            x: accelMultSlider.leftPadding
-                            y: accelMultSlider.topPadding + accelMultSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 100
-                            implicitHeight: 4
-                            width: accelMultSlider.availableWidth
-                            height: implicitHeight
-                            radius: Theme.radiusXS
-                            color: Theme.surfaceHover
-
-                            Rectangle {
-                                width: accelMultSlider.visualPosition * parent.width
-                                height: parent.height
-                                color: Theme.warning
-                                radius: Theme.radiusXS
-                            }
-                        }
-
-                        handle: Rectangle {
-                            x: accelMultSlider.leftPadding + accelMultSlider.visualPosition * (accelMultSlider.availableWidth - width)
-                            y: accelMultSlider.topPadding + accelMultSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 14
-                            implicitHeight: 14
-                            radius: 7
-                            color: Theme.surfaceLight
-                            border.color: Theme.warning
-                            border.width: 2
-                        }
-
-                        onMoved: updateBackendConfiguration()
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 45
-                        height: 26
-                        radius: Theme.radiusS
-                        color: Theme.surface
-                        border.color: Theme.warning
-                        border.width: 1
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "×" + accelMultSlider.value.toFixed(2)
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.bold: true
-                        }
-                    }
+                    label: "⚡ Mult. Acc:"
+                    labelWidth: 70
+                    labelBold: false
+                    from: 0.0
+                    to: 10.0
+                    value: 1.0
+                    stepSize: 0.05
+                    decimals: 2
+                    unitText: "×"
+                    accentColor: Theme.warning
+                    onMoved: updateBackendConfiguration()
                 }
 
                 // Espaceur pour pousser vers le haut

@@ -116,36 +116,6 @@ CollapsableGroupBox {
                 y: 1
             }
 
-            component SwatchButton: Rectangle {
-                id: swatchRoot
-                property color baseColor: Theme.pressed(Theme.accentAlt)
-                property color pressedColor: Theme.accentAlt
-                property string text: ""
-                signal clicked()
-                readonly property alias hovered: swatchMouse.containsMouse
-                implicitWidth: 24
-                implicitHeight: 22
-                radius: Theme.radiusXS
-                color: swatchRoot.enabled ? (swatchMouse.pressed ? pressedColor : baseColor) : Theme.border
-                opacity: swatchRoot.enabled ? 1.0 : 0.55
-
-                Text {
-                    anchors.centerIn: parent
-                    text: swatchRoot.text
-                    color: swatchRoot.enabled ? "#ffffff" : Theme.textMuted
-                    font.pixelSize: Theme.fontSizeMedium
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: swatchMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: swatchRoot.clicked()
-                }
-            }
-
             RowLayout {
                 anchors.fill: parent
                 spacing: Theme.spacingM
@@ -180,14 +150,14 @@ CollapsableGroupBox {
                             elide: Text.ElideRight
                         }
 
-                        SwatchButton {
+                        MeowSwatchButton {
                             text: "+"
                             ToolTip.visible: hovered
                             ToolTip.text: "Save current color"
                             onClicked: addPresetFromPicker()
                         }
 
-                        SwatchButton {
+                        MeowSwatchButton {
                             text: "×"
                             baseColor: "#aa4444"
                             pressedColor: "#cc4444"

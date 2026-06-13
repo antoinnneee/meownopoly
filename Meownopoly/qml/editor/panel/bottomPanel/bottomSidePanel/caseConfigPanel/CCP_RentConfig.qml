@@ -5,6 +5,7 @@ import Case
 import CaseRestArea
 import Player
 import theme
+import ui_item
 
 CCP_PanelElement {
     title: "Prix de Location"
@@ -40,14 +41,10 @@ CCP_PanelElement {
         anchors.fill: parent
         spacing: Theme.spacingM
         // Note explicative
-        Text {
-            text: "💡 Définissez les prix de location selon le niveau d'amélioration de la propriété"
-            font.italic: true
-            font.pixelSize: Theme.fontSizeBody
-            color: Theme.textMuted
+        MeowInfoBox {
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
             Layout.bottomMargin: Theme.spacingXS
+            text: "💡 Définissez les prix de location selon le niveau d'amélioration de la propriété"
         }
 
         // Prix de location organisés en 2 colonnes
@@ -72,7 +69,7 @@ CCP_PanelElement {
                         font.pixelSize: Theme.fontSizeSmall
                     }
                     
-                    CCP_StyledSpinBox {
+                    MeowSpinBox {
                         id: terrainNuSpinBox
                         Layout.fillWidth: true
                         from: 0
@@ -108,7 +105,7 @@ CCP_PanelElement {
                         font.pixelSize: Theme.fontSizeSmall
                     }
                     
-                    CCP_StyledSpinBox {
+                    MeowSpinBox {
                         id: star2SpinBox
                         Layout.fillWidth: true
                         from: 0
@@ -150,7 +147,7 @@ CCP_PanelElement {
                         font.pixelSize: Theme.fontSizeSmall
                     }
                     
-                    CCP_StyledSpinBox {
+                    MeowSpinBox {
                         id: star1SpinBox
                         Layout.fillWidth: true
                         from: 0
@@ -186,7 +183,7 @@ CCP_PanelElement {
                         font.pixelSize: Theme.fontSizeSmall
                     }
                     
-                    CCP_StyledSpinBox {
+                    MeowSpinBox {
                         id: star3SpinBox
                         Layout.fillWidth: true
                         from: 0
@@ -235,7 +232,7 @@ CCP_PanelElement {
                 Layout.alignment: Qt.AlignHCenter
             }
             
-            CCP_StyledSpinBox {
+            MeowSpinBox {
                 id: hotelSpinBox
                 Layout.preferredWidth: 200
                 Layout.alignment: Qt.AlignHCenter

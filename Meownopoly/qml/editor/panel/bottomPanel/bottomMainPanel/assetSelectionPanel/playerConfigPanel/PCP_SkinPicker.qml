@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import AssetManager
 import theme
+import ui_item
 
 /*
  * PCP_SkinPicker — choix du skin + de la variante (preset Color ID Map) du
@@ -72,7 +73,7 @@ ColumnLayout {
         font.pixelSize: Math.round(Screen.pixelDensity * 3)
         font.bold: true
     }
-    PCP_StyledComboBox {
+    MeowComboBox {
         id: skinCombo
         Layout.fillWidth: true
         model: root._skins
@@ -92,7 +93,7 @@ ColumnLayout {
         font.pixelSize: Math.round(Screen.pixelDensity * 3)
         font.bold: true
     }
-    PCP_StyledComboBox {
+    MeowComboBox {
         id: variantCombo
         visible: root._variants.length > 0
         Layout.fillWidth: true

@@ -7,6 +7,7 @@ import MapInfo
 import EditorOpBus
 import playerConfigPanel 1.0
 import theme
+import ui_item
 
 /*
  * Panneau d'édition d'un PlayerProfile. Visible quand un profil est
@@ -236,18 +237,11 @@ Item {
             }
 
             // --- Mode expert (CheckBox remplace les onglets Simple/Expert) ---
-            CheckBox {
+            MeowCheckBox {
                 id: expertCheck
                 Layout.fillWidth: true
                 text: "Mode expert (afficher tous les paramètres physiques)"
                 checked: false
-                contentItem: Label {
-                    text: expertCheck.text
-                    color: Theme.textSecondary
-                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: expertCheck.indicator.width + expertCheck.spacing
-                }
             }
 
             // --- Sliders (scrollables si Expert déborde) ---

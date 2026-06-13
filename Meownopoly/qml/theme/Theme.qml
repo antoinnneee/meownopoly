@@ -81,6 +81,21 @@ QtObject {
     readonly property color violetStart: "#667eea"  // gradients décoratifs
     readonly property color violetEnd:   "#5568d3"
 
+    // ── Encadrés d'information (MeowInfoBox) ──────────────────────
+    // Trios fond / bordure / titre / texte par variante sémantique.
+    readonly property color infoBg:        "#1a2e3a"
+    readonly property color infoBorder:    "#2a3e4a"
+    readonly property color infoTitle:     "#99d6f0"
+    readonly property color infoText:      "#80c1d9"
+    readonly property color warningBg:     "#3a3a1a"
+    readonly property color warningBorder: "#4a4a2a"
+    readonly property color warningTitle:  "#ffeb99"
+    readonly property color warningText:   "#d4c894"
+    readonly property color tipBg:         "#1a3a2a"
+    readonly property color tipBorder:     "#2a4a3a"
+    readonly property color tipTitle:      "#99f0c0"
+    readonly property color tipText:       "#80d9a8"
+
     // ── États dérivés ────────────────────────────────────────────
     function hover(c)   { return Qt.lighter(c, 1.12) }
     function pressed(c) { return Qt.darker(c, 1.25) }
