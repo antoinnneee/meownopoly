@@ -49,13 +49,10 @@ GroupBox {
         spacing: Theme.spacingXXL
 
         // Note explicative
-        Text {
-            text: qsTr("🧭 Configurez la direction de vélocité et les forces de friction/vélocité")
-            font.italic: true
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.textMuted
+        MeowInfoBox {
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
+            fontSize: Theme.fontSizeSmall
+            text: qsTr("🧭 Configurez la direction de vélocité et les forces de friction/vélocité")
         }
         
         RowLayout {

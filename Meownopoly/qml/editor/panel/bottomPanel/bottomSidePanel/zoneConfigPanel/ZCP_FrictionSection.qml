@@ -35,13 +35,10 @@ GroupBox {
         spacing: Theme.spacingM
 
         // Note explicative
-        Text {
-            text: "🎯 Force de friction appliquée aux objets dans la zone"
-            font.italic: true
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.textMuted
+        MeowInfoBox {
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
+            fontSize: Theme.fontSizeSmall
+            text: "🎯 Force de friction appliquée aux objets dans la zone"
         }
         
         // Friction Strength

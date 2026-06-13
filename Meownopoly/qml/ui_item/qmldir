@@ -13,3 +13,5 @@ MeowPropertyRow 1.0 MeowPropertyRow.qml
 MeowSpinBox 1.0 MeowSpinBox.qml
 MeowComboBox 1.0 MeowComboBox.qml
 MeowCheckBox 1.0 MeowCheckBox.qml
+MeowInfoBox 1.0 MeowInfoBox.qml
+MeowSwatchButton 1.0 MeowSwatchButton.qml

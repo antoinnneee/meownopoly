@@ -41,14 +41,10 @@ CCP_PanelElement {
         anchors.fill: parent
         spacing: Theme.spacingM
         // Note explicative
-        Text {
-            text: "💡 Définissez les prix de location selon le niveau d'amélioration de la propriété"
-            font.italic: true
-            font.pixelSize: Theme.fontSizeBody
-            color: Theme.textMuted
+        MeowInfoBox {
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
             Layout.bottomMargin: Theme.spacingXS
+            text: "💡 Définissez les prix de location selon le niveau d'amélioration de la propriété"
         }
 
         // Prix de location organisés en 2 colonnes

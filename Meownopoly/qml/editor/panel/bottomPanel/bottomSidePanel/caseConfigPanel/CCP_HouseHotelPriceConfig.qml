@@ -38,14 +38,10 @@ CCP_PanelElement {
         spacing: Theme.spacingL
         
         // Note explicative
-        Text {
-            text: "🏗️ Définissez les prix d'achat pour construire des améliorations sur cette propriété"
-            font.italic: true
-            font.pixelSize: Theme.fontSizeBody
-            color: Theme.textMuted
+        MeowInfoBox {
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
             Layout.bottomMargin: Theme.spacingXS
+            text: "🏗️ Définissez les prix d'achat pour construire des améliorations sur cette propriété"
         }
         
         // Les deux prix côte à côte
