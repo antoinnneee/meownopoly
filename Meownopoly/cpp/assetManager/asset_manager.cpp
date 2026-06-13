@@ -728,8 +728,11 @@ QStringList AssetManager::availablePlayerModels() const
     auto isValidModelDir = [](const QDir &dir) {
         const QString name = dir.dirName();
         if (name.isEmpty() || name.startsWith('.')) return false;
-        // Doit contenir un <name>.qml
-        return dir.exists(name + QStringLiteral(".qml"));
+        // Format kura courant (Color ID Map) : model_manifest.json + base/<x>.glb,
+        // sans <name>.qml (balsam abandonne, cf. Phase E). Format legacy balsam :
+        // <name>.qml. On accepte les deux pour ne pas masquer les anciens modeles.
+        return dir.exists(QStringLiteral("model_manifest.json"))
+               || dir.exists(name + QStringLiteral(".qml"));
     };
 
     auto pushUnique = [&result](const QString &name) {
