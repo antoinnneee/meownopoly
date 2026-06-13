@@ -6,22 +6,23 @@ import QtQuick3D
 import QtQuick3D.Helpers
 import Case
 import CaseRestArea
+import theme
 
 Rectangle {
     id: root
     width: 800
     height: 600
-    color: "#2a2a2a"
+    color: Theme.surface
 
     RowLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: Theme.spacingL
         
         Rectangle{
             id: viewArea
             Layout.preferredWidth: root.width * 0.7
             Layout.preferredHeight: root.height * 0.8
-            color: "#3a3a3a"
+            color: Theme.surfaceHover
             Layout.alignment: Qt.AlignCenter
             border.width: 1
 
@@ -74,29 +75,29 @@ Rectangle {
         Rectangle {
             Layout.preferredWidth: root.width * 0.25
             Layout.preferredHeight: root.height * 0.8
-            color: "#3a3a3a"
+            color: Theme.surfaceHover
             Layout.alignment: Qt.AlignCenter
             border.width: 1
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 20
+                anchors.margins: Theme.spacingL
+                spacing: Theme.spacingHuge
 
                 Label {
                     text: "Camera Position"
-                    color: "white"
+                    color: Theme.textPrimary
                     font.bold: true
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeLarge
                     Layout.alignment: Qt.AlignHCenter
                 }
 
                 // X Position
                 ColumnLayout {
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     Label {
                         text: "X Position: " + xPositionSlider.value.toFixed(0)
-                        color: "white"
+                        color: Theme.textPrimary
                     }
                     Slider {
                         id: xPositionSlider
@@ -110,10 +111,10 @@ Rectangle {
 
                 // Y Position
                 ColumnLayout {
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     Label {
                         text: "Y Position: " + yPositionSlider.value.toFixed(0)
-                        color: "white"
+                        color: Theme.textPrimary
                     }
                     Slider {
                         id: yPositionSlider
@@ -127,10 +128,10 @@ Rectangle {
 
                 // Z Position
                 ColumnLayout {
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     Label {
                         text: "Z Position: " + zPositionSlider.value.toFixed(0)
-                        color: "white"
+                        color: Theme.textPrimary
                     }
                     Slider {
                         id: zPositionSlider
@@ -144,19 +145,19 @@ Rectangle {
 
                 Label {
                     text: "Camera Rotation"
-                    color: "white"
+                    color: Theme.textPrimary
                     font.bold: true
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeLarge
                     Layout.alignment: Qt.AlignHCenter
-                    Layout.topMargin: 20
+                    Layout.topMargin: Theme.spacingHuge
                 }
 
                 // X Rotation
                 ColumnLayout {
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     Label {
                         text: "X Rotation: " + xRotationSlider.value.toFixed(1)
-                        color: "white"
+                        color: Theme.textPrimary
                     }
                     Slider {
                         id: xRotationSlider
@@ -170,10 +171,10 @@ Rectangle {
 
                 // Y Rotation
                 ColumnLayout {
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     Label {
                         text: "Y Rotation: " + yRotationSlider.value.toFixed(1)
-                        color: "white"
+                        color: Theme.textPrimary
                     }
                     Slider {
                         id: yRotationSlider
@@ -187,10 +188,10 @@ Rectangle {
 
                 // Z Rotation
                 ColumnLayout {
-                    spacing: 5
+                    spacing: Theme.spacingXS
                     Label {
                         text: "Z Rotation: " + zRotationSlider.value.toFixed(1)
-                        color: "white"
+                        color: Theme.textPrimary
                     }
                     Slider {
                         id: zRotationSlider

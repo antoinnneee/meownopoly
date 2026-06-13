@@ -1,14 +1,15 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Rectangle {
     id: root
     Layout.fillWidth: true
     Layout.preferredHeight: 180
-    color: "#3a3a3a"
-    radius: 10
-    border.color: "#555555"
+    color: Theme.surfaceHover
+    radius: Theme.radiusXL
+    border.color: Theme.borderLight
     border.width: 1
     
     property string currentVersion: "0.0.0"
@@ -22,60 +23,60 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 15
-        spacing: 10
-        
+        anchors.margins: Theme.spacingXXL
+        spacing: Theme.spacingL
+
         Text {
             text: "📦 Gestion des versions"
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontSizeLarge
             font.bold: true
-            color: "#ffffff"
+            color: Theme.textPrimary
         }
-        
+
         GridLayout {
             Layout.fillWidth: true
             columns: 2
-            columnSpacing: 20
-            rowSpacing: 8
-            
-            Text { 
+            columnSpacing: Theme.spacingHuge
+            rowSpacing: Theme.spacingM
+
+            Text {
                 text: "Version actuelle:"
-                color: "#cccccc"
+                color: Theme.textSecondary
             }
-            Text { 
+            Text {
                 text: root.currentVersion
-                color: "#4CAF50"
+                color: Theme.success
                 font.bold: true
             }
-            
-            Text { 
+
+            Text {
                 text: "Dernière version:"
-                color: "#cccccc"
+                color: Theme.textSecondary
             }
-            Text { 
+            Text {
                 text: root.latestVersion
-                color: root.latestVersion !== root.currentVersion ? "#FF9800" : "#4CAF50"
+                color: root.latestVersion !== root.currentVersion ? Theme.warning : Theme.success
                 font.bold: true
             }
-            
+
             Text {
                 text: "Statut:"
-                color: "#cccccc"
+                color: Theme.textSecondary
             }
             Text {
                 text: root.downloadStatus
-                color: root.isDownloading ? "#2196F3" : "#4CAF50"
+                color: root.isDownloading ? Theme.accent : Theme.success
                 font.bold: true
             }
 
             Text {
                 text: "Description:"
-                color: "#cccccc"
+                color: Theme.textSecondary
                 visible: root.versionDescription.length > 0
             }
             Text {
                 text: root.versionDescription
-                color: "#aaaaaa"
+                color: Theme.textHint
                 font.italic: true
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
@@ -91,18 +92,18 @@ Rectangle {
             height: 25
             
             background: Rectangle {
-                color: "#2a2a2a"
-                radius: 4
-                border.color: "#555555"
+                color: Theme.surface
+                radius: Theme.radiusS
+                border.color: Theme.borderLight
                 border.width: 1
             }
-            
+
             contentItem: Item {
                 Rectangle {
                     width: parent.parent.value * parent.width
                     height: parent.height
-                    radius: 4
-                    color: "#4CAF50"
+                    radius: Theme.radiusS
+                    color: Theme.success
                 }
                 
                 Text {
@@ -116,7 +117,7 @@ Rectangle {
                         }
                         return percent
                     }
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     font.bold: true
                 }
             }

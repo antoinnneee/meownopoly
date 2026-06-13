@@ -5,20 +5,21 @@ import "../grid"
 import MapTypes
 import Game
 import EditDelta 1.0
+import theme
 
 Rectangle {
     id: handle
-    
+
     required property string direction
     required property GridManager gridManager
     required property var targetElement
-    
+
     width: 10
     height: 10
-    color: "#2196F3"
+    color: Theme.accent
     border.color: "white"
     border.width: 2
-    radius: 2
+    radius: Theme.radiusXS
     z: 20
     
     // Curseur selon la direction
@@ -223,7 +224,7 @@ Rectangle {
         PropertyChanges {
             target: handle
             scale: 1.2
-            color: Qt.lighter("#2196F3", 1.2)
+            color: Theme.hover(Theme.accent)
         }
     }
     

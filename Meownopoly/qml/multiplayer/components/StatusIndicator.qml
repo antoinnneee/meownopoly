@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import theme
 
 /**
  * Indicateur de statut de connexion réutilisable
@@ -7,8 +8,8 @@ import QtQuick.Layouts
  */
 Row {
     id: root
-    
-    spacing: 8
+
+    spacing: Theme.spacingM
     
     property bool isOnline: true
     // ping en ms ; -1 = pas encore mesuré
@@ -18,7 +19,7 @@ Row {
     Text {
         id: connectionEmoji
         text: "🛜"
-        font.pixelSize: 16
+        font.pixelSize: Theme.fontSizeLarge
         anchors.verticalCenter: parent.verticalCenter
         
         // Animation pulse subtile
@@ -35,8 +36,8 @@ Row {
         text: root.isOnline
               ? (root.ping >= 0 ? "En ligne (" + root.ping + "ms)" : "En ligne (…)")
               : "Hors ligne"
-        color: root.isOnline ? "#4caf50" : "#f44336"
-        font.pixelSize: 14
+        color: root.isOnline ? Theme.success : Theme.danger
+        font.pixelSize: Theme.fontSizeMedium
         anchors.verticalCenter: parent.verticalCenter
         
         // Animation de couleur

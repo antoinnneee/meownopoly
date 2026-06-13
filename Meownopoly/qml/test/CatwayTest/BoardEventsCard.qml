@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import GameSession 1.0
+import theme
 
 Rectangle {
     id: root
@@ -18,14 +19,14 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingM
 
         Text {
             text: "Board Events (reliable)"
             color: host.textPrimary
             font.bold: true
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
         }
 
         ComboBox {
@@ -44,16 +45,16 @@ Rectangle {
                 { label: "MapSync (0x0D)",     value: 0x0D }
             ]
             background: Rectangle {
-                color: "#0e0e13"
-                radius: 6
+                color: Theme.background
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
             contentItem: Text {
-                leftPadding: 8
+                leftPadding: Theme.spacingM
                 text: msgTypeCombo.displayText
                 color: host.textPrimary
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
                 verticalAlignment: Text.AlignVCenter
             }
         }
@@ -62,11 +63,11 @@ Rectangle {
             id: payloadField
             Layout.fillWidth: true
             placeholderText: "{}"
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeBody
             color: host.textPrimary
             background: Rectangle {
-                color: "#0e0e13"
-                radius: 6
+                color: Theme.background
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -77,8 +78,8 @@ Rectangle {
             text: "Envoyer Event"
             implicitHeight: 30
             background: Rectangle {
-                color: parent.pressed ? host.accent : "#2d2d35"
-                radius: 6
+                color: parent.pressed ? host.accent : Theme.surfaceAlt
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -87,7 +88,7 @@ Rectangle {
                 color: host.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
             }
             onClicked: {
                 try {
@@ -104,11 +105,11 @@ Rectangle {
                 id: boardEventLog
                 readOnly: true
                 wrapMode: Text.Wrap
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
                 color: host.textPrimary
                 background: Rectangle {
-                    color: "#0e0e13"
-                    radius: 4
+                    color: Theme.background
+                    radius: Theme.radiusS
                     border.color: host.cardBorder
                     border.width: 1
                 }

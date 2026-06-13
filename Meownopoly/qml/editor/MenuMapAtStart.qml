@@ -18,6 +18,7 @@ import MapFileManager
 import MapTypes
 import EditorEnum
 import AssetManager 1.0
+import theme
 
 MouseArea {
     id: root
@@ -46,8 +47,8 @@ MouseArea {
         width: parent.width * 0.5
         height: width
         radius: 15
-        color: "#212121"
-        border.color: "#4A90E2"
+        color: Theme.background
+        border.color: Theme.accent
         border.width: 2
         anchors.centerIn: parent
 
@@ -71,8 +72,8 @@ MouseArea {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 16
-            spacing: 12
+            anchors.margins: Theme.spacingXXL
+            spacing: Theme.spacingXL
 
             // Header with title
             RowLayout {
@@ -82,8 +83,8 @@ MouseArea {
                     Layout.alignment: Qt.AlignLeft
                     horizontalAlignment: Text.AlignLeft
                     text: "Configuration de la carte"
-                    color: "#FFFFFF"
-                    font.pixelSize: 20
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeHeading
                     font.bold: true
                 }
                 Item {
@@ -98,14 +99,14 @@ MouseArea {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 42
                 placeholderText: mapnameExists ? "Nom de carte deja utilise" : "Nom de la nouvelle carte"
-                placeholderTextColor: mapnameExists ? "lightred" : "#888888"
-                color: "#FFFFFF"
-                font.pixelSize: 16
+                placeholderTextColor: mapnameExists ? "lightred" : Theme.textMuted
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeLarge
                 background: Rectangle {
-                    color: "#333333"
-                    radius: 8
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusL
                     border.width: mapNameField.activeFocus ? 2 : 1
-                    border.color: !mapNameField.activeFocus ? "#555555" : mapNameField.mapnameExists ? "red" : "#4A90E2"
+                    border.color: !mapNameField.activeFocus ? Theme.borderLight : mapNameField.mapnameExists ? Theme.danger : Theme.accent
                 }
 
                 onTextChanged: {
@@ -143,16 +144,16 @@ MouseArea {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
                 placeholderText: "Description de la carte (optionnel)"
-                placeholderTextColor: "#888888"
-                color: "#FFFFFF"
-                font.pixelSize: 14
+                placeholderTextColor: Theme.textMuted
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeMedium
                 wrapMode: TextInput.Wrap
 
                 background: Rectangle {
-                    color: "#333333"
-                    radius: 8
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusL
                     border.width: mapDescriptionField.activeFocus ? 2 : 1
-                    border.color: mapDescriptionField.activeFocus ? "#4A90E2" : "#555555"
+                    border.color: mapDescriptionField.activeFocus ? Theme.accent : Theme.borderLight
                 }
 
                 onTextChanged: {
@@ -171,13 +172,13 @@ MouseArea {
                 ColumnLayout {
                     id: backgroundSelectionLayout
                     anchors.fill: parent
-                    spacing: 15
+                    spacing: Theme.spacingXXL
 
                     // Display mode label
                     Text {
                         text: "Mode d'affichage:"
-                        color: "#FFFFFF"
-                        font.pixelSize: 16
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeLarge
                     }
 
                     // Snap to grid checkbox - EN PREMIER
@@ -192,24 +193,24 @@ MouseArea {
                             implicitHeight: 20
                             x: snapToGridCheckBox.leftPadding
                             y: parent.height / 2 - height / 2
-                            radius: 3
-                            border.color: "#4A90E2"
+                            radius: Theme.radiusXS
+                            border.color: Theme.accent
                             border.width: 1
-                            color: snapToGridCheckBox.checked ? "#4A90E2" : "transparent"
+                            color: snapToGridCheckBox.checked ? Theme.accent : "transparent"
 
                             Text {
                                 anchors.centerIn: parent
                                 text: "✓"
-                                font.pixelSize: 14
-                                color: "white"
+                                font.pixelSize: Theme.fontSizeMedium
+                                color: Theme.textPrimary
                                 visible: snapToGridCheckBox.checked
                             }
                         }
 
                         contentItem: Text {
                             text: snapToGridCheckBox.text
-                            font.pixelSize: 14
-                            color: "#FFFFFF"
+                            font.pixelSize: Theme.fontSizeMedium
+                            color: Theme.textPrimary
                             verticalAlignment: Text.AlignVCenter
                             leftPadding: snapToGridCheckBox.indicator.width + snapToGridCheckBox.spacing
                         }
@@ -224,22 +225,22 @@ MouseArea {
                     Row {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 32
-                        spacing: 10
+                        spacing: Theme.spacingL
 
                         Button {
                             text: "Stretch"
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontSizeMedium
                             width: (parent.width - 20) / 3
                             height: parent.height
 
                             background: Rectangle {
-                                color: menuMapAtStart.selectedDisplayMode === "Stretch" ? "#4A90E2" : "#333333"
-                                radius: 6
+                                color: menuMapAtStart.selectedDisplayMode === "Stretch" ? Theme.accent : Theme.surfaceAlt
+                                radius: Theme.radiusM
                             }
 
                             contentItem: Text {
                                 text: parent.text
-                                color: "white"
+                                color: Theme.textPrimary
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
@@ -253,18 +254,18 @@ MouseArea {
                         Button {
                             id: fitButton
                             text: "Fit"
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontSizeMedium
                             width: (parent.width - 20) / 3
                             height: parent.height
 
                             background: Rectangle {
-                                color: menuMapAtStart.selectedDisplayMode === "Fit" ? "#4A90E2" : "#333333"
-                                radius: 6
+                                color: menuMapAtStart.selectedDisplayMode === "Fit" ? Theme.accent : Theme.surfaceAlt
+                                radius: Theme.radiusM
                             }
 
                             contentItem: Text {
                                 text: parent.text
-                                color: "white"
+                                color: Theme.textPrimary
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
@@ -277,22 +278,22 @@ MouseArea {
 
                         ColumnLayout {
                             width: (parent.width - 20) / 3
-                            spacing: 4
+                            spacing: Theme.spacingXS
 
                             Button {
                                 text: "Tile"
-                                font.pixelSize: 14
+                                font.pixelSize: Theme.fontSizeMedium
                                 Layout.fillWidth: true
                                 Layout.maximumHeight: fitButton.height
 
                                 background: Rectangle {
-                                    color: menuMapAtStart.selectedDisplayMode === "Tile" ? "#4A90E2" : "#333333"
-                                    radius: 6
+                                    color: menuMapAtStart.selectedDisplayMode === "Tile" ? Theme.accent : Theme.surfaceAlt
+                                    radius: Theme.radiusM
                                 }
 
                                 contentItem: Text {
                                     text: parent.text
-                                    color: "white"
+                                    color: Theme.textPrimary
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                 }
@@ -324,12 +325,12 @@ MouseArea {
                                     width: tileSizeSlider.availableWidth
                                     height: 4
                                     radius: 2
-                                    color: "#333333"
+                                    color: Theme.surfaceAlt
 
                                     Rectangle {
                                         width: tileSizeSlider.visualPosition * parent.width
                                         height: parent.height
-                                        color: "#4A90E2"
+                                        color: Theme.accent
                                         radius: 2
                                     }
                                 }
@@ -339,8 +340,8 @@ MouseArea {
                                     width: 16
                                     height: 16
                                     radius: 8
-                                    color: tileSizeSlider.pressed ? "#FFFFFF" : "#F0F0F0"
-                                    border.color: "#4A90E2"
+                                    color: tileSizeSlider.pressed ? Theme.surfaceLight : Theme.pressed(Theme.surfaceLight)
+                                    border.color: Theme.accent
                                 }
                             }
                         }
@@ -365,7 +366,7 @@ MouseArea {
                             contentItem: Rectangle {
                                 implicitWidth: 6
                                 radius: width / 2
-                                color: backgroundScrollBar.pressed ? "#888888" : "#666666"
+                                color: backgroundScrollBar.pressed ? Theme.textMuted : Theme.textDisabled
                                 opacity: backgroundScrollBar.active ? 1.0 : 0.5
                             }
                         }
@@ -373,56 +374,56 @@ MouseArea {
                         Column {
                             id: scrollableContent
                             width: backgroundFlickable.width - 10
-                            spacing: 15
+                            spacing: Theme.spacingXXL
 
                             // Background selection label
                             Text {
                                 text: "Sélectionner un arrière-plan:"
-                                color: "#FFFFFF"
-                                font.pixelSize: 14
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeMedium
                             }
 
                             // Option image personnalisée
                             Rectangle {
                                 width: parent.width
                                 height: 80
-                                radius: 8
-                                color: "#2a2a2a"
+                                radius: Theme.radiusL
+                                color: Theme.surface
                                 border.width: menuMapAtStart.selectedBackground === -2 ? 3 : 1
-                                border.color: menuMapAtStart.selectedBackground === -2 ? "#E91E63" : "#555555"
+                                border.color: menuMapAtStart.selectedBackground === -2 ? "#E91E63" : Theme.borderLight
 
                                 Row {
                                     anchors.fill: parent
-                                    anchors.margins: 8
-                                    spacing: 12
+                                    anchors.margins: Theme.spacingM
+                                    spacing: Theme.spacingXL
 
                                     // Zone d'aperçu / sélection
                                     Rectangle {
                                         width: 64
                                         height: 64
-                                        radius: 6
-                                        color: "#333333"
-                                        border.color: customImageMouseArea.containsMouse ? "#E91E63" : "#444444"
+                                        radius: Theme.radiusM
+                                        color: Theme.surfaceAlt
+                                        border.color: customImageMouseArea.containsMouse ? "#E91E63" : Theme.border
                                         border.width: customImageMouseArea.containsMouse ? 2 : 1
 
                                         // Icône caméra
                                         Column {
                                             anchors.centerIn: parent
-                                            spacing: 2
+                                            spacing: Theme.spacingXXS
                                             visible: menuMapAtStart.selectedBackground !== -2
 
                                             Text {
                                                 anchors.horizontalCenter: parent.horizontalCenter
                                                 text: "📷"
-                                                font.pixelSize: 24
-                                                color: "#AAAAAA"
+                                                font.pixelSize: Theme.fontSizeDisplay
+                                                color: Theme.textHint
                                             }
 
                                             Text {
                                                 anchors.horizontalCenter: parent.horizontalCenter
                                                 text: "Parcourir"
-                                                font.pixelSize: 9
-                                                color: "#888888"
+                                                font.pixelSize: Theme.fontSizeTiny
+                                                color: Theme.textMuted
                                             }
                                         }
 
@@ -447,13 +448,13 @@ MouseArea {
                                     // Texte descriptif
                                     Column {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        spacing: 4
+                                        spacing: Theme.spacingXS
                                         width: parent.width - 76 - 40 - parent.spacing * 2
 
                                         Text {
                                             text: "Image personnalisée"
-                                            color: "#FFFFFF"
-                                            font.pixelSize: 13
+                                            color: Theme.textPrimary
+                                            font.pixelSize: Theme.fontSizeBody
                                             font.bold: true
                                         }
 
@@ -461,8 +462,8 @@ MouseArea {
                                             text: menuMapAtStart.selectedBackground === -2 && newMapInfo.backgroundPath !== ""
                                                   ? newMapInfo.backgroundPath.toString().substring(newMapInfo.backgroundPath.toString().lastIndexOf("/") + 1)
                                                   : "Cliquez pour choisir une image"
-                                            color: "#AAAAAA"
-                                            font.pixelSize: 11
+                                            color: Theme.textHint
+                                            font.pixelSize: Theme.fontSizeSmall
                                             width: parent.width
                                             elide: Text.ElideMiddle
                                         }
@@ -473,7 +474,7 @@ MouseArea {
                                         width: 24
                                         height: 24
                                         radius: 12
-                                        color: "#CC2222"
+                                        color: Theme.danger
                                         visible: menuMapAtStart.selectedBackground === -2 && newMapInfo.backgroundPath !== ""
                                         anchors.verticalCenter: parent.verticalCenter
                                         opacity: removeCustomMouseArea.containsMouse ? 1.0 : 0.7
@@ -481,9 +482,9 @@ MouseArea {
                                         Text {
                                             anchors.centerIn: parent
                                             text: "×"
-                                            font.pixelSize: 16
+                                            font.pixelSize: Theme.fontSizeLarge
                                             font.bold: true
-                                            color: "white"
+                                            color: Theme.textPrimary
                                         }
 
                                         MouseArea {
@@ -504,24 +505,24 @@ MouseArea {
                             // Séparateur
                             Row {
                                 width: parent.width
-                                spacing: 10
+                                spacing: Theme.spacingL
 
                                 Rectangle {
                                     width: (parent.width - orText.width - 20) / 2
                                     height: 1
-                                    color: "#444444"
+                                    color: Theme.border
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                                 Text {
                                     id: orText
                                     text: "ou"
-                                    color: "#666666"
-                                    font.pixelSize: 11
+                                    color: Theme.textDisabled
+                                    font.pixelSize: Theme.fontSizeSmall
                                 }
                                 Rectangle {
                                     width: (parent.width - orText.width - 20) / 2
                                     height: 1
-                                    color: "#444444"
+                                    color: Theme.border
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
@@ -534,9 +535,9 @@ MouseArea {
                                 Rectangle {
                                     width: scrollableContent.width
                                     height: 90
-                                    radius: 8
+                                    radius: Theme.radiusL
                                     border.width: menuMapAtStart.selectedBackground === index ? 3 : 1
-                                    border.color: menuMapAtStart.selectedBackground === index ? "#4A90E2" : "#555555"
+                                    border.color: menuMapAtStart.selectedBackground === index ? Theme.accent : Theme.borderLight
 
                                     Image {
                                         id: bgImage
@@ -552,7 +553,7 @@ MouseArea {
                                         anchors.right: parent.right
                                         anchors.bottom: parent.bottom
                                         height: 26
-                                        color: "#80000000"
+                                        color: Theme.scrim
 
                                         Text {
                                             anchors.centerIn: parent
@@ -562,7 +563,7 @@ MouseArea {
                                                 return fileName.replace(/\.[^/.]+$/, "");
                                             }
                                             color: "white"
-                                            font.pixelSize: 14
+                                            font.pixelSize: Theme.fontSizeMedium
                                         }
                                     }
 
@@ -595,24 +596,24 @@ MouseArea {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 44
-                spacing: 12
+                spacing: Theme.spacingXL
 
                 Button {
                     text: "Confirmer"
                     Layout.fillWidth: true
 
                     background: Rectangle {
-                        color: "#4CAF50"
-                        radius: 8
+                        color: Theme.success
+                        radius: Theme.radiusL
                         border.width: 1
-                        border.color: "#FFFFFF"
+                        border.color: Theme.surfaceLight
                     }
 
                     contentItem: Text {
                         text: parent.text
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontSizeMedium
                         font.bold: true
-                        color: "#FFFFFF"
+                        color: Theme.textPrimary
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -634,17 +635,17 @@ MouseArea {
                     Layout.fillWidth: true
 
                     background: Rectangle {
-                        color: "#F44336"
-                        radius: 8
+                        color: Theme.danger
+                        radius: Theme.radiusL
                         border.width: 1
-                        border.color: "#FFFFFF"
+                        border.color: Theme.surfaceLight
                     }
 
                     contentItem: Text {
                         text: parent.text
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontSizeMedium
                         font.bold: true
-                        color: "#FFFFFF"
+                        color: Theme.textPrimary
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

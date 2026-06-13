@@ -33,6 +33,7 @@ import QtQuick3D
 import QtQuick3D.Helpers
 
 import editor
+import theme
 import "."
 
 Image {
@@ -57,7 +58,7 @@ Image {
     Text {
         text: emojiBt
         anchors.centerIn: parent
-        font.pixelSize: 20
+        font.pixelSize: Theme.fontSizeHeading
     }
     
     MouseArea {

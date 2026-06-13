@@ -13,8 +13,6 @@ L'éditeur de maps de Meownopoly vous permet de :
 
 ## Interface de l'Éditeur
 
-![Interface de l'Éditeur](../build/asset_extracted/ui/editor_interface.png)
-
 L'interface de l'éditeur est divisée en plusieurs zones :
 
 1. **Zone de travail** - Espace central où vous construisez votre plateau de jeu
@@ -29,18 +27,16 @@ L'interface de l'éditeur est divisée en plusieurs zones :
 
 1. Lancez l'application Meownopoly
 2. Sélectionnez "Éditeur" dans le menu principal
-3. Dans l'éditeur, cliquez sur "Fichier" > "Nouvelle carte"
-4. Définissez les paramètres de base :
-   - Nom de la carte
-   - Dimensions (largeur x hauteur)
-   - Type de fond
+3. L'éditeur s'ouvre directement sur une carte vierge, prête à être éditée
+4. Sélectionnez les éléments à placer depuis le panneau de sélection latéral et construisez votre plateau directement dans la zone de travail
+
+> L'éditeur ne possède pas de barre de menus. Toutes les actions liées au fichier (charger une carte, régler la sauvegarde) passent par le **menu d'échappement**, ouvert avec la touche **Esc**.
 
 ### Navigation dans l'éditeur
 
-- **Zoom** : Molette de la souris ou pincement sur trackpad
+- **Zoom** : Ctrl + molette de la souris
 - **Déplacement** : Clic-droit maintenu + déplacement
 - **Rotation de la vue** : Touche Alt + déplacement de la souris
-- **Grille** : Activez/désactivez avec G ou via le menu "Affichage"
 
 ## Placement des Cases
 
@@ -77,7 +73,6 @@ Les cases doivent former un chemin continu pour le plateau de jeu :
 1. Placez la case de départ
 2. Placez les cases adjacentes pour former le chemin
 3. L'éditeur indiquera visuellement les connexions entre les cases
-4. Vous pouvez visualiser l'ordre du parcours avec le bouton "Afficher chemin"
 
 ## Ajout de Décorations
 
@@ -127,56 +122,44 @@ Le panneau d'effets visuels vous permet de modifier l'apparence des décorations
 
 ## Propriétés de la Carte
 
-### Configuration générale
+### Configuration du roster de joueurs
 
-Accédez aux propriétés via "Fichier" > "Propriétés de la carte" :
-- **Nom de la carte**
-- **Auteur**
-- **Description**
-- **Image de miniature**
-- **Tags et catégories**
+Le panneau de sélection comporte un onglet "Joueurs" qui permet de configurer le roster embarqué dans la carte :
 
-### Configuration du jeu
+- **Nombre de joueurs** : bornes min/max supportées (indicatives, sans contrôle bloquant)
+- **Profils de joueurs** : liste de profils configurables (nom, modèle, mode de sélection, paramètres physiques)
 
-- **Nombre de joueurs** : Min/Max supportés
-- **Règles spéciales** : Activez/désactivez des mécaniques spécifiques
-- **Difficulté** : Définissez le niveau de difficulté
+Ces réglages sont enregistrés directement dans le fichier de la carte. Il n'existe pas de fenêtre "Propriétés de la carte" séparée.
 
 ## Sauvegarde et Chargement
 
 ### Sauvegarde de la carte
 
-1. "Fichier" > "Sauvegarder" ou Ctrl+S
-2. Choisissez un emplacement (par défaut : dossier `map/`)
-3. La carte est sauvegardée au format JSON avec extension `.json`
+La sauvegarde n'est pas déclenchée par une action de menu mais pilotée par une **politique** réglable dans le menu d'échappement (Esc) > **Paramètres**, via la liste déroulante du mode de sauvegarde :
+
+- **Manuelle**
+- **Intervalle de temps** (sauvegarde périodique)
+- **Sur modification** (sauvegarde après chaque changement)
+
+Les cartes sont stockées au format JSON dans le dossier `map/`. Le fichier cible est `<nom>_map.json` pour une carte personnalisée (ou `autosave_tmp.json` pour la carte d'autosave).
 
 ### Chargement d'une carte
 
-1. "Fichier" > "Ouvrir" ou Ctrl+O
-2. Sélectionnez un fichier de carte `.json`
-3. L'éditeur charge tous les éléments et propriétés
+1. Ouvrez le menu d'échappement avec **Esc**
+2. Cliquez sur **"Charger carte"**
+3. Sélectionnez une carte ; l'éditeur charge tous ses éléments et propriétés
 
 ## Test de la Carte
 
-### Prévisualisation
+> Les outils de test automatisé (prévisualisation en mode jeu, simulation de parcours, analyse de validité, partie simulée avec joueurs IA) ne sont **pas encore implémentés**.
 
-- Utilisez le bouton "Prévisualiser" pour voir la carte en mode jeu
-- Testez le parcours avec le bouton "Simuler Parcours"
-- Vérifiez la validité avec "Analyser Carte"
-
-### Mode Test Rapide
-
-1. Cliquez sur "Tester la carte"
-2. Définissez le nombre de joueurs IA
-3. Observez le déroulement d'une partie simulée
-4. Utilisez les contrôles pour accélérer/ralentir la simulation
+Le seul moyen de tester une carte est le **pilotage de l'acteur physique 3D** : déplacez l'acteur sur le plateau au clavier (WASD) et basculez en caméra libre pour explorer la carte (cf. `InputController` / `CameraRig` de la présentation 3D).
 
 ## Partage de Cartes
 
-### Export et Import
+### Format de fichier
 
-- **Export** : "Fichier" > "Exporter" pour créer un fichier `.meowmap` portable
-- **Import** : "Fichier" > "Importer" pour charger un fichier `.meowmap`
+Les cartes sont enregistrées et chargées sous forme de fichiers **JSON** (`<nom>_map.json`) dans le dossier `map/`. Il n'existe pas de format `.meowmap` ni d'action de menu d'export/import distincte : le fichier JSON de la carte est lui-même le format portable.
 
 ### Publication
 
@@ -189,20 +172,10 @@ Utilisez le launcher pour :
 
 | Touche | Action |
 |--------|--------|
-| Ctrl+N | Nouvelle carte |
-| Ctrl+O | Ouvrir une carte |
-| Ctrl+S | Sauvegarder |
-| Ctrl+Shift+S | Sauvegarder sous |
-| Ctrl+Z | Annuler |
-| Ctrl+Y | Refaire |
-| Ctrl+C | Copier |
-| Ctrl+V | Coller |
+| Ctrl+Z | Aperçu / élément précédent (`Game.askPreview`) |
+| Ctrl+Y | Élément suivant (`Game.askNext`) |
 | Delete | Supprimer la sélection |
-| F | Centrer sur la sélection |
-| G | Afficher/masquer la grille |
-| R | Rotation de l'élément |
-| Alt+R | Réinitialiser la rotation |
-| Esc | Annuler l'action en cours |
+| Esc | Annuler l'action en cours / ouvrir le menu d'échappement |
 
 ## Astuces et Bonnes Pratiques
 
@@ -238,7 +211,7 @@ Utilisez le launcher pour :
 ### Support et aide
 
 Si vous rencontrez des problèmes :
-- Consultez le log de l'application (accessible via "Aide" > "Afficher les logs")
+- Consultez la sortie console / les logs de l'application (l'éditeur n'embarque pas de visionneuse de logs intégrée)
 - Vérifiez la documentation à jour sur le site officiel
 - Posez vos questions sur le forum ou le Discord de la communauté
 

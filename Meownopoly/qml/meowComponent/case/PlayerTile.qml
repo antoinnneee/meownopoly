@@ -5,6 +5,7 @@ import Game
 import Case
 import Player
 import AssetManager
+import theme
 
 Rectangle {
     id: root
@@ -51,16 +52,16 @@ Rectangle {
                 left: parent.left
                 right: parent.right
                 bottom: parent.bottom
-                margins: 5
+                margins: Theme.spacingXS
             }
-            spacing: 2
+            spacing: Theme.spacingXXS
             
             // Nom du joueur
             Label {
                 Layout.fillWidth: true
                 text: playerData ? playerData.name : "Joueur"
                 font.bold: true
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeCaption
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignHCenter
                 color: getContrastTextColor(root.color)
@@ -70,7 +71,7 @@ Rectangle {
             Label {
                 Layout.fillWidth: true
                 text: playerData ? playerData.kibble + " Kibbles" : "0 Kibbles"
-                font.pixelSize: 9
+                font.pixelSize: Theme.fontSizeTiny
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignHCenter
                 color: getContrastTextColor(root.color)
@@ -80,7 +81,7 @@ Rectangle {
             Label {
                 Layout.fillWidth: true
                 text: playerData ? "Propriétés: " + playerData.propertyCount : "Propriétés: 0"
-                font.pixelSize: 8
+                font.pixelSize: Theme.fontSizeTiny
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignHCenter
                 color: getContrastTextColor(root.color)
@@ -91,11 +92,11 @@ Rectangle {
             Label {
                 Layout.fillWidth: true
                 text: playerData && playerData.inJail ? "En prison" : ""
-                font.pixelSize: 8
+                font.pixelSize: Theme.fontSizeTiny
                 font.italic: true
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignHCenter
-                color: "red"
+                color: Theme.danger
                 visible: playerData && playerData.inJail
             }
         }

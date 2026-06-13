@@ -1,11 +1,12 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 RowLayout {
     id: filterButton
     visible: true
-    spacing: 10
+    spacing: Theme.spacingL
 
     required property string activeFilter
     onActiveFilterChanged: {
@@ -27,15 +28,15 @@ RowLayout {
             required property var modelData
 
             background: Rectangle {
-                color: parent.checked ? "#4A90E2" : "transparent"
-                border.color: "#4A90E2"
+                color: parent.checked ? Theme.accent : "transparent"
+                border.color: Theme.accent
                 border.width: 1
-                radius: 4
+                radius: Theme.radiusS
             }
-            
+
             contentItem: Text {
                 text: parent.text
-                color: parent.checked ? "white" : "#4A90E2"
+                color: parent.checked ? Theme.textPrimary : Theme.accent
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }

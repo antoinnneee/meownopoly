@@ -63,11 +63,30 @@ MapInfo::MapInfo(const QJsonObject &json)
     // Couvre : version trop récente (roster wipé), JSON sans clé
     // "playerProfiles" (ancienne map pré-Phase 1), ou tableau vide.
     ensureFallbackProfile();
+
+    // ---- Screen effects library ----
+    // Bibliothèque optionnelle : pas de fallback (vide = valide). Garde de
+    // version : un JSON plus récent que le schéma courant fait repartir sur
+    // une bibliothèque vide plutôt que d'importer des champs inconnus.
+    const int loadedEffectVersion = json.value("screenEffectVersion").toInt(0);
+    if (loadedEffectVersion > CURRENT_SCREEN_EFFECT_VERSION) {
+        qWarning() << "[MapInfo] screenEffectVersion" << loadedEffectVersion
+                   << "is newer than supported" << CURRENT_SCREEN_EFFECT_VERSION
+                   << "- ignoring screen effects library.";
+    } else if (json.contains("screenEffects") && json.value("screenEffects").isArray()) {
+        const QJsonArray arr = json.value("screenEffects").toArray();
+        for (const QJsonValue &v : arr) {
+            if (!v.isObject()) continue;
+            adoptEffect(new ScreenEffect(v.toObject(), this));
+        }
+    }
+    m_screenEffectVersion = CURRENT_SCREEN_EFFECT_VERSION;
 }
 
 MapInfo::~MapInfo()
 {
     clearProfilesNoEmit();
+    clearEffectsNoEmit();
 }
 
 QString MapInfo::toJSON()
@@ -95,6 +114,13 @@ QString MapInfo::toJSON()
         if (p) profiles.append(p->toJSON());
     }
     json["playerProfiles"] = profiles;
+
+    json["screenEffectVersion"] = m_screenEffectVersion;
+    QJsonArray effects;
+    for (const ScreenEffect *e : m_screenEffects) {
+        if (e) effects.append(e->toJSON());
+    }
+    json["screenEffects"] = effects;
 
     return QJsonDocument(json).toJson(QJsonDocument::Indented);
 }
@@ -412,4 +438,140 @@ void MapInfo::clearPlayerProfiles()
     }
     m_playerProfiles.clear();
     emit playerProfilesChanged();
+}
+
+// ============================================================================
+// Screen effects library
+// ============================================================================
+
+void MapInfo::setScreenEffectVersion(int v)
+{
+    if (m_screenEffectVersion == v) return;
+    m_screenEffectVersion = v;
+    emit screenEffectVersionChanged();
+}
+
+qsizetype MapInfo::effectsCountCb(QQmlListProperty<ScreenEffect> *p)
+{
+    auto *self = qobject_cast<MapInfo *>(p->object);
+    return self ? self->m_screenEffects.size() : 0;
+}
+
+ScreenEffect *MapInfo::effectsAtCb(QQmlListProperty<ScreenEffect> *p, qsizetype i)
+{
+    auto *self = qobject_cast<MapInfo *>(p->object);
+    if (!self || i < 0 || i >= self->m_screenEffects.size()) return nullptr;
+    return self->m_screenEffects.at(i);
+}
+
+QQmlListProperty<ScreenEffect> MapInfo::screenEffectsQml()
+{
+    return QQmlListProperty<ScreenEffect>(this, nullptr,
+                                          &MapInfo::effectsCountCb,
+                                          &MapInfo::effectsAtCb);
+}
+
+ScreenEffect *MapInfo::adoptEffect(ScreenEffect *e)
+{
+    if (!e) return nullptr;
+    e->setParent(this);
+    m_screenEffects.append(e);
+    return e;
+}
+
+void MapInfo::clearEffectsNoEmit()
+{
+    qDeleteAll(m_screenEffects);
+    m_screenEffects.clear();
+}
+
+ScreenEffect *MapInfo::addScreenEffect()
+{
+    auto *e = adoptEffect(new ScreenEffect(this));
+    emit screenEffectsChanged();
+    return e;
+}
+
+ScreenEffect *MapInfo::addScreenEffectFromPreset(const QString &presetName)
+{
+    auto *e = adoptEffect(new ScreenEffect(this));
+    e->applyPreset(presetName);
+    e->setName(presetName);
+    emit screenEffectsChanged();
+    return e;
+}
+
+ScreenEffect *MapInfo::addScreenEffectFromJson(const QString &json)
+{
+    QJsonParseError err;
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+        qWarning() << "[MapInfo] addScreenEffectFromJson: parse error" << err.errorString();
+        return nullptr;
+    }
+    auto *e = adoptEffect(new ScreenEffect(doc.object(), this));
+    emit screenEffectsChanged();
+    return e;
+}
+
+ScreenEffect *MapInfo::duplicateScreenEffect(const QString &id)
+{
+    ScreenEffect *src = screenEffectById(id);
+    if (!src) return nullptr;
+    QJsonObject j = src->toJSON();
+    j.remove("id"); // force nouveau UUID
+    auto *e = adoptEffect(new ScreenEffect(j, this));
+    emit screenEffectsChanged();
+    return e;
+}
+
+void MapInfo::removeScreenEffect(const QString &id)
+{
+    for (int i = 0; i < m_screenEffects.size(); ++i) {
+        ScreenEffect *e = m_screenEffects.at(i);
+        if (e && e->id() == id) {
+            m_screenEffects.removeAt(i);
+            e->deleteLater();
+            emit screenEffectsChanged();
+            return;
+        }
+    }
+}
+
+bool MapInfo::updateScreenEffect(const QString &id, const QString &fieldsJson)
+{
+    ScreenEffect *e = screenEffectById(id);
+    if (!e) return false;
+    QJsonParseError err;
+    const QJsonDocument doc = QJsonDocument::fromJson(fieldsJson.toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+        qWarning() << "[MapInfo] updateScreenEffect: parse error" << err.errorString();
+        return false;
+    }
+    e->applyJson(doc.object());
+    return true;
+}
+
+ScreenEffect *MapInfo::screenEffectById(const QString &id) const
+{
+    for (ScreenEffect *e : m_screenEffects) {
+        if (e && e->id() == id) return e;
+    }
+    return nullptr;
+}
+
+ScreenEffect *MapInfo::screenEffectAt(int i) const
+{
+    if (i < 0 || i >= m_screenEffects.size()) return nullptr;
+    return m_screenEffects.at(i);
+}
+
+void MapInfo::clearScreenEffects()
+{
+    if (m_screenEffects.isEmpty()) return;
+    for (ScreenEffect *e : m_screenEffects) {
+        if (e) e->deleteLater();
+    }
+    m_screenEffects.clear();
+    emit screenEffectsChanged();
 }

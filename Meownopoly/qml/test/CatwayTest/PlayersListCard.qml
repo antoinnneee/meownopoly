@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Catway 1.0
+import theme
 
 Rectangle {
     id: playersListCard
@@ -19,23 +20,23 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingM
 
         Text {
             text: "Joueurs"
             color: host.textPrimary
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSizeMedium
             font.bold: true
         }
         RowLayout {
             Layout.fillWidth: true
             spacing: 0
-            Layout.bottomMargin: 4
+            Layout.bottomMargin: Theme.spacingXS
             Text {
                 text: "ID / Nickname"
                 color: host.textSecondary
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeCaption
                 font.capitalization: Font.AllUppercase
                 Layout.preferredWidth: 120
                 elide: Text.ElideRight
@@ -44,7 +45,7 @@ Rectangle {
             Text {
                 text: "IP:Port (dest.)"
                 color: host.textSecondary
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeCaption
                 font.capitalization: Font.AllUppercase
                 Layout.preferredWidth: 110
                 elide: Text.ElideRight
@@ -53,7 +54,7 @@ Rectangle {
             Text {
                 text: "SocketInfo"
                 color: host.textSecondary
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeCaption
                 font.capitalization: Font.AllUppercase
                 Layout.fillWidth: true
                 elide: Text.ElideRight
@@ -68,12 +69,12 @@ Rectangle {
             ListView {
                 id: playersList
                 model: Catway.players
-                spacing: 4
+                spacing: Theme.spacingXS
                 delegate: Rectangle {
                     width: playersList.width - 4
                     height: 48
-                    color: rowMouseArea.pressed ? host.cardBorder : "#222226"
-                    radius: 6
+                    color: rowMouseArea.pressed ? host.cardBorder : Theme.surfaceAlt
+                    radius: Theme.radiusM
                     clip: true
 
                     MouseArea {
@@ -85,17 +86,17 @@ Rectangle {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: 10
+                        anchors.margins: Theme.spacingL
                         spacing: 0
                         ColumnLayout {
-                            spacing: 2
+                            spacing: Theme.spacingXXS
                             Layout.preferredWidth: 120
                             Layout.minimumWidth: 0
                             Layout.alignment: Qt.AlignVCenter
                             Text {
                                 text: modelData ? modelData.nickname : "?"
                                 color: host.textPrimary
-                                font.pixelSize: 13
+                                font.pixelSize: Theme.fontSizeBody
                                 font.bold: true
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
@@ -104,7 +105,7 @@ Rectangle {
                             Text {
                                 text: modelData ? modelData.playerId : "?"
                                 color: host.textSecondary
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontSizeSmall
                                 font.family: "Consolas"
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
@@ -113,14 +114,14 @@ Rectangle {
                         }
                         Rectangle { width: 1; height: 28; color: host.cardBorder; Layout.alignment: Qt.AlignVCenter }
                         ColumnLayout {
-                            spacing: 2
+                            spacing: Theme.spacingXXS
                             Layout.preferredWidth: 110
                             Layout.minimumWidth: 0
                             Layout.alignment: Qt.AlignVCenter
                             Text {
                                 text: (modelData && (modelData.ip || modelData.port)) ? (modelData.ip + (modelData.port ? (":" + modelData.port) : "")) : "—"
                                 color: host.textSecondary
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontSizeSmall
                                 font.family: "Consolas"
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
@@ -135,8 +136,8 @@ Rectangle {
                             Layout.alignment: Qt.AlignVCenter
                             Text {
                                 text: (modelData && modelData.socketInfo) ? (modelData.socketInfo.publicAddress + ":" + modelData.socketInfo.publicPort) : "—"
-                                color: "#71717a"
-                                font.pixelSize: 11
+                                color: Theme.textMuted
+                                font.pixelSize: Theme.fontSizeSmall
                                 font.family: "Consolas"
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
@@ -146,14 +147,14 @@ Rectangle {
                         Button {
                             text: "Retirer"
                             flat: true
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSizeBody
                             implicitHeight: 32
                             Layout.preferredWidth: 72
                             Layout.alignment: Qt.AlignVCenter
-                            contentItem: Text { text: parent.text; color: "#f87171"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            contentItem: Text { text: parent.text; color: Theme.dangerSoft; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                             background: Rectangle {
                                 color: parent.pressed ? "#3f1d1d" : "transparent"
-                                radius: 6
+                                radius: Theme.radiusM
                             }
                             onClicked: Catway.removePlayer(modelData)
                         }

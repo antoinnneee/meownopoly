@@ -7,6 +7,7 @@ PCP_AddProfileCard 1.0 PCP_AddProfileCard.qml
 PCP_ProfileDetail 1.0 PCP_ProfileDetail.qml
 PCP_PickModeSelector 1.0 PCP_PickModeSelector.qml
 PCP_ModelPicker 1.0 PCP_ModelPicker.qml
+PCP_SkinPicker 1.0 PCP_SkinPicker.qml
 PCP_PhysicsSimpleSection 1.0 PCP_PhysicsSimpleSection.qml
 PCP_PhysicsExpertSection 1.0 PCP_PhysicsExpertSection.qml
 PCP_PresetButtons 1.0 PCP_PresetButtons.qml
@@ -17,5 +18,4 @@ PCP_StyledRadioButton 1.0 PCP_StyledRadioButton.qml
 PCP_StyledButton 1.0 PCP_StyledButton.qml
 PCP_StyledTabBar 1.0 PCP_StyledTabBar.qml
 PCP_StyledTabButton 1.0 PCP_StyledTabButton.qml
-PCP_StyledComboBox 1.0 PCP_StyledComboBox.qml
 PCP_StyledSpinBox 1.0 PCP_StyledSpinBox.qml

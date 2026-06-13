@@ -71,7 +71,7 @@
 ## `game/case/`
 | Classe | S | QML | Description | QML files |
 |--------|---|-----|-------------|-----------|
-| `Case` | — | ✓ | Base de toutes les cases. Enum `CaseType` (11 valeurs). Méthodes virtuelles `onLand/onLeave/onHover/toJSON`. | `CaseTile`, `TileContent`, `CaseConfigurationPanel` |
+| `Case` | — | ✓ | Base de toutes les cases. Enum `CaseType` (12 énumérateurs dont sentinelles `CS_Unknow`/`CS_Count` ; 10 types concrets, mais `CS_Taxe` non implémenté → fallback `CaseKibbleDispenser`, soit 9 classes `Case` dédiées). Méthodes virtuelles `onLand/onLeave/onHover/toJSON`. | `CaseTile`, `TileContent`, `CaseConfigurationPanel` |
 | `CaseCatPerks` ← `Case` | — | ✓ | Intermédiaire achetable. Prix, prix vente, hypothèque, propriétaire `Player*`. Parent de RestArea, CatDoor, CatDevice. | — |
 | `CaseRestArea` ← `CaseCatPerks` | — | ✓ | Rue Monopoly. `RestQuality` (1–4★ + hôtel), famille couleur, prix maisons/hôtel, loyers. | `CCPS_RestAreaSection`, `CCP_RestAreaSpecificConfig`, `CCP_RestAreaFamilyConfig`, `RestAreaContent` |
 | `CaseCatDoor` ← `CaseCatPerks` | — | ✓ | Gare. `indexCatDoor` (1–4), `travelPrice`. | `CatDoorDetails`, `CatDoorContent` |
@@ -90,7 +90,8 @@
 | Classe | S | QML | Description | QML files |
 |--------|---|-----|-------------|-----------|
 | `Map` | — | ✓ | Carte chargée : `MapInfo` + liste `ItemSnapable`. Comptage par catégorie (case/déco/zone). Factory `loadMap()`. Contient : `MapInfo`, `ItemSnapable[]`. | `Editor`, `EditorLogic`, `EditorDynamicComponent` |
-| `MapInfo` | — | ✓ | Métadonnées carte : nom, description, dates, version, fond, grille, musique. | `MapInfoPanel`, `MapSidePanel`, `MapInfoDrawer`, `MapNavigationBar` |
+| `MapInfo` | — | ✓ | Métadonnées carte : nom, description, dates, version, fond, grille, musique + roster joueurs : `minPlayers`/`maxPlayers`, `playerConfigVersion`, liste `PlayerProfile` (add/remove/update/reorder + fallback Princess via `ensureFallbackProfile`). | `MapInfoPanel`, `MapSidePanel`, `MapInfoDrawer`, `MapNavigationBar` |
+| `PlayerProfile` | — | ✓ | Profil joueur configurable : `name`, `modelName`, `colorVariant` (re-skin Color ID), `pickMode` (enum `PickMode` Unique/Shared/Mandatory), `minOccurrences` + paramètres physiques (`radius`, `mass`, `acceleration`, `maxSpeed`, `linearDamping`, `static`/`dynamicFriction`, `bounceFactor`). | `PCP_ProfileDetail`, `PCP_SkinPicker`, `AssetSelectionPanel` |
 | `MapTypes` (namespace) | — | ✓ | Enum `Q_NAMESPACE` : `MapType { AUTOSAVE, CUSTOM, UNDOREDO }`. | — |
 | `MapFileManager` | ✓ | ✓ | I/O fichier maps : existence, JSON read/write, renommage, listage, résolution chemins. | `MenuMapAtStart`, `EditorEscMenu`, `MapSidePanel` |
 | `TemplateFileManager` | ✓ | ✓ | I/O templates. Conversion positions relatives/absolues, régénération IDs pour copier-coller. | `TP_Content` |
@@ -98,23 +99,29 @@
 
 ---
 
-## `game/physics/` — Moteur PattounX
+## `game/physics/` — Moteur PattounX v2
 | Classe | S | QML | Description | QML files |
 |--------|---|-----|-------------|-----------|
-| `PattounX_engine` | — | ✓ | "Feline Physics Solver". Gère `PattounX_body` et `PattounX_zone`, détection/résolution collisions, effets de zone. | `EntityEngine`, `MinigameSyncPanel` |
-| `PattounX_body` | — | ✓ | Corps physique 2D : position, vélocité, masse, rayon, bounce/slide, damping. Créé par `createBody()`. | — |
-| `PattounX_zone` | — | ~✓ | Zone polygonale : exclusion (mur) ou effet (vélocité/friction/vitesse). Basée sur `ItemSnapable`. | — |
+| `pattounx::PattounX_engine` | — | — | Cœur de simulation Qt-free (`pattounx_engine_v2.{h,cpp}`) : pas de signaux/slots, API `upsertBody`/`upsertZone`/`step`/`writeSnapshot`. Types POD `BodySpec`/`ZoneSpec`/`BodySnapshot`/`WorldSnapshot` dans `pattounx_types.h`. | — |
+| `PhysicsWorker` | — | — | `QThread` dédié qui fait tourner le moteur à 60 Hz. Reçoit les commandes GUI via signaux `Qt::QueuedConnection`. | — |
+| `PhysicsWorld` *(contextProperty `pattounxWorld`)* | — | ✓ | Façade GUI du moteur. Triple buffer Fraser-Harris lock-free pour les snapshots, encode/décode réseau. Instance globale unique (pas singleton QML). | qml/world3d/* |
+| `PhysicsSession` | ✓ | ✓ | Session physique host-authoritative sur `Catway` (calquée sur `EditorSession`). Broadcast snapshot 30 Hz fiable ; les clients relaient leurs inputs en fiable vers l'hôte qui simule pour tous. `registerQml`. | — |
+| `PhysicsProtocol` | — | — | Pack/unpack des paquets physique, démultiplexage par plage de type-byte. | — |
+| `PhysicsMessageType` (namespace) | — | ✓ | Enum `Q_NAMESPACE Value : quint8`, plage `0x40+` : `Snapshot`, `BodiesAnnounce`, `InputUpdate`, `Hello`. | — |
 | `Collision2D` | — | — | Maths collision 2D. Contient : `Polygon2D` (struct), `CollisionResult` (struct), `SegmentResult` (struct). Statiques `checkCirclePolygon`, `applyBounce`, tests AABB. | — |
+
+> Présentation 3D dans `qml/world3d/` : `World3D`, `PhysicsActor`, `PhysicsObjectSpawner`, `LocalPlayerSpawner`, `EditorPhysicsBridge`, `InputController`, `CameraRig`. Détails dans `doc/architecture/PHYSICS_ENGINE_V2.md`.
 
 ---
 
 ## `game/item_snapable/`
 | Classe | S | QML | Description | QML files |
 |--------|---|-----|-------------|-----------|
-| `ItemSnapable` | — | ✓ | Tuile fondamentale. Selon `TileType` : (`Case`+`DisplayParameter`) ou (`DecorationParameter`+`DisplayParameter`) ou (`ZoneParameter`+`DisplayParameter`). Graphe doublement lié next/prev pour topologie plateau. | `SnapableElement`, `SnapableDecoration`, `TileLogic`, `EditorDynamicComponent`, `Base_Board` |
+| `ItemSnapable` | — | ✓ | Tuile fondamentale. Selon `TileType` : (`Case`+`DisplayParameter`) ou (`DecorationParameter`+`DisplayParameter`) ou (`ZoneParameter`+`DisplayParameter`) ou (`PhysicalObjectParameter`+`DisplayParameter` pour `PhysicalObjectTile`). Graphe doublement lié next/prev pour topologie plateau. | `SnapableElement`, `SnapableDecoration`, `TileLogic`, `EditorDynamicComponent`, `Base_Board` |
 | `DisplayParameter` | — | ✓ | Config visuelle : pos grille, taille, Z-layer, rotation, miroir, effets (luminosité, contraste, saturation, colorisation, flou, ombre). | `SnapableElement`, `visualEffectPanel/*` |
 | `DecorationParameter` | — | ✓ | Décoration : catégorie, type, asset ID. `getAnimePath()` pour variantes animées. | `SnapableDecoration`, `ASP_Item`, `ASP_Grid` |
 | `ZoneParameter` | — | ✓ | Zone physique : points polygone, couleur, nom, vélocité, friction, multiplicateurs vitesse/accél, flag exclusion. | `ZCP_GeneralSection`, `ZP_Content`, `MouseLogic_DrawPolygon` |
+| `PhysicalObjectParameter` | — | ✓ | Paramètres caisse physique (`PhysicalObjectTile`) : `mass`, `bounceFactor`, `frictionStrength`, `linearDamping`. Sérialisé dans le JSON de map ; lus par Pattounx v2 à la création du Body `Dynamic`. | `SnapablePhysicalObject` |
 | `ItemSnapableFactory` | ✓ | ✓ | Factory `ItemSnapable` (par type, JSON, zone). Bus signaux `createItemRequested`/`createItemsRequested` pour l'éditeur. | `EditorDynamicComponent`, `TileLogic`, `MouseLogic_Template` |
 
 ---
@@ -129,10 +136,37 @@
 
 ---
 
+## `editor/network/`
+| Classe | S | QML | Description | QML files |
+|--------|---|-----|-------------|-----------|
+| `EditorSession` | ✓ | ✓ | Session collaborative host-authoritative sur `Catway` (calquée sur `GameSession`). Clients envoient des ops, l'hôte valide/rebroadcaste. Full-sync, présence (curseurs/sélections), migration d'hôte. | `Editor`, `EditorSessionPanel` |
+| `EditorProtocol` | — | — | Pack/unpack des frames `[1 octet type][JSON UTF-8]`. `isEditorPacket` filtre par plage `>= Hello && <= <dernier type>`. | — |
+| `EditorMessageType` (namespace) | — | ✓ | Enum `Q_NAMESPACE` des types de message éditeur, plage `0x20+` (coexiste avec `GameMessageType` 0x01–0x11). | — |
+
+---
+
+## `editor/ops/`
+| Classe | S | QML | Description | QML files |
+|--------|---|-----|-------------|-----------|
+| `EditorOpBus` | ✓ | ✓ | Chokepoint QML de **toutes** les mutations de l'éditeur : `submitOp`/`submitOpWithUndo`, log, envoi via `EditorSession`, piles undo/redo par client. | `Editor`, `EditorOpsCard` |
+| `EditorOpType` (namespace) | — | ✓ | Enum des types d'opération éditeur (Create/Delete/Move/Resize/Set*/Link/Unlink + ops Player Config 12-16). | — |
+
+---
+
+## `editor/painter/` — Rendu GPU 2D viewport-cullé *(Qt 6.11+)*
+| Classe | S | QML | Description | QML files |
+|--------|---|-----|-------------|-----------|
+| `GridCanvasPainter` | — | ✓ | Un seul canvas pour toute la grille (croisillons, lignes), viewport culling. | `Editor` |
+| `ZonesOverlayPainter` | — | ✓ | Un seul canvas pour toutes les zones polygonales (fill + contour + hachures), viewport culling. | `Editor` |
+| `ZoneCanvasPainter` | — | ✓ | Legacy : 1 canvas par zone (fallback `MEOW_ZONES_RENDERER=per-tile`, sous `Loader`). | `SnapableExclusionZone` |
+| `zone_hatch_compute` (namespace `zone_painter`) | — | — | Fonctions libres (pas de classe) `computeHatchSegments*` : calcul scanline factorisé des hachures (modes baseline/qtc/precompute(-async)). | — |
+
+---
+
 ## `assetManager/`
 | Classe | S | QML | Description | QML files |
 |--------|---|-----|-------------|-----------|
-| `AssetManager` | ✓ | ✓ | Découverte, chargement, cache et service de tous les assets graphiques. Lit `metadata.json`, construit `AssetModel` par catégorie+type. Contient : `Asset` (struct métadonnées), `AssetModel` (hérite `QAbstractListModel`). | `ASP_Grid`, `ASP_Item`, `ASP_CategoryGrid`, `AssetSelectionPanel`, `SnapableDecoration`, `SnapableElement`, `ModelSelectionPanel`, `TEST_ASSET_MANAGER` |
+| `AssetManager` | ✓ | ✓ | Découverte, chargement, cache et service de tous les assets graphiques. Lit `metadata.json`, construit `AssetModel` par catégorie+type. Contient : `Asset` (struct métadonnées), `AssetModel` (hérite `QAbstractListModel`). + sous-système modèles 3D & skins Color ID Map : `getAvailableModels`/`availablePlayerModels` (scan QRC `:/asset/models/` + `AppData/models/`), `modelDir`, `readModelManifest`, `listModelSkins`/`listSkinTextures`/`readSkinJson`/`listSkinVariants`/`loadSkinVariant`. | `ASP_Grid`, `ASP_Item`, `ASP_CategoryGrid`, `AssetSelectionPanel`, `SnapableDecoration`, `SnapableElement`, `ModelSelectionPanel`, `TEST_ASSET_MANAGER` |
 
 ---
 

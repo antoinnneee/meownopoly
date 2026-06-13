@@ -7,6 +7,7 @@ import Meownopoly.Account 1.0
 import QtQuick.Dialogs
 import Catway 1.0
 import "."
+import theme
 
 Drawer {
     id: chatDrawer
@@ -31,7 +32,7 @@ Drawer {
 
     background: Rectangle {
         color: "#E6222222"
-        border.color: "#333333"
+        border.color: Theme.surfaceAlt
         border.width: 1
     }
 
@@ -75,19 +76,19 @@ Drawer {
         property string sessionIdForJoin: ""
 
         background: Rectangle {
-            color: "#2a2a2a"
-            border.color: "#4A90E2"
+            color: Theme.surface
+            border.color: Theme.accent
             border.width: 2
-            radius: 10
+            radius: Theme.radiusXL
         }
 
         contentItem: ColumnLayout {
-            spacing: 12
+            spacing: Theme.spacingXL
 
             Text {
                 text: "Session protégée — entrez le mot de passe :"
-                color: "#cccccc"
-                font.pixelSize: 13
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
@@ -97,15 +98,15 @@ Drawer {
                 placeholderText: "Mot de passe"
                 echoMode: TextInput.Password
                 color: "#f5f0ff"
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontSizeBody
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
 
                 background: Rectangle {
-                    color: "#1a1a1a"
-                    border.color: pwdField.activeFocus ? "#4A90E2" : "#555555"
+                    color: Theme.background
+                    border.color: pwdField.activeFocus ? Theme.accent : Theme.borderLight
                     border.width: 2
-                    radius: 6
+                    radius: Theme.radiusM
                 }
 
                 onAccepted: sessionPasswordDialog.acceptAndJoin()

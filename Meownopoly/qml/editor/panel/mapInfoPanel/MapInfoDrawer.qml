@@ -22,6 +22,7 @@ import DisplayParameter
 import DecorationParameter
 import ItemSnapableFactory
 import AssetManager
+import theme
 Drawer {
 
     id: mapInfoDrawer
@@ -71,36 +72,36 @@ Drawer {
         width: parent.width*0.9
         height: 32
         color: "#383838"
-        radius: 4
+        radius: Theme.radiusS
         anchors.top: parent.top
-        anchors.topMargin: 8
+        anchors.topMargin: Theme.spacingM
         anchors.horizontalCenter: parent.horizontalCenter
 
         Row {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
-            anchors.leftMargin: 6
-            spacing: 6
+            anchors.leftMargin: Theme.spacingS
+            spacing: Theme.spacingS
 
             Rectangle {
                 width: 20
                 height: 20
                 radius: 10
-                color: "#4A90E2"
+                color: Theme.accent
                 opacity: 0.2
 
                 Text {
                     anchors.centerIn: parent
                     text: mapInfoPanel.currentView === 0 ? "🗺️" : "🖼️"
-                    font.pixelSize: 10
+                    font.pixelSize: Theme.fontSizeCaption
                 }
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: mapInfoPanel.currentView === 0 ? "Infos carte" : "Fond d'écran"
-                color: "white"
-                font.pixelSize: 14
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeMedium
                 font.bold: true
             }
 
@@ -115,19 +116,19 @@ Drawer {
                     text: "NOUVELLE CARTE"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     font.bold: true
-                    color: parent.parent.hovered ? "#ffffff" : "#7dd3fc"
+                    color: parent.parent.hovered ? Theme.textPrimary : "#7dd3fc"
                 }
                 
                 background: Rectangle {
-                    radius: 10
-                    color: parent.hovered ? "#4A90E2" : "transparent"
-                    border.color: parent.hovered ? "#6AB0F2" : "#4A90E2"
+                    radius: Theme.radiusXL
+                    color: parent.hovered ? Theme.accent : "transparent"
+                    border.color: parent.hovered ? Theme.hover(Theme.accent) : Theme.accent
                     border.width: 1
                     
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation { duration: Theme.durationNormal }
                     }
                 }
                 
@@ -145,13 +146,13 @@ Drawer {
         Button {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.rightMargin: 6
+            anchors.rightMargin: Theme.spacingS
             width: 24
             height: 24
             text: "✕"
             background: Rectangle {
-                color: parent.hovered ? "#555555" : "transparent"
-                radius: 3
+                color: parent.hovered ? Theme.borderLight : "transparent"
+                radius: Theme.radiusXS
             }
 
             onClicked: {
@@ -168,38 +169,38 @@ Drawer {
         anchors.top: headerSection.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 8
-        anchors.topMargin: 4
+        anchors.margins: Theme.spacingM
+        anchors.topMargin: Theme.spacingXS
         height: 30
-        spacing: 4
+        spacing: Theme.spacingXS
 
         Button {
             width: (parent.width - parent.spacing) / 2
             height: parent.height
 
             background: Rectangle {
-                color: mapInfoPanel.currentView === 0 ? "#4A90E2" : "#444444"
-                radius: 3
-                border.color: mapInfoPanel.currentView === 0 ? "#6AB0F2" : "#555555"
+                color: mapInfoPanel.currentView === 0 ? Theme.accent : Theme.border
+                radius: Theme.radiusXS
+                border.color: mapInfoPanel.currentView === 0 ? Theme.hover(Theme.accent) : Theme.borderLight
                 border.width: 1
             }
 
             contentItem: Row {
                 anchors.centerIn: parent
-                spacing: 3
+                spacing: Theme.spacingXXS
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "🗺️"
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     horizontalAlignment: Text.AlignHCenter
                     text: "Cartes"
-                    color: "white"
-                    font.pixelSize: 11
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: mapInfoPanel.currentView === 0
                 }
             }
@@ -213,20 +214,20 @@ Drawer {
             height: parent.height
 
             background: Rectangle {
-                color: mapInfoPanel.currentView === 1 ? "#4A90E2" : "#444444"
-                radius: 3
-                border.color: mapInfoPanel.currentView === 1 ? "#6AB0F2" : "#555555"
+                color: mapInfoPanel.currentView === 1 ? Theme.accent : Theme.border
+                radius: Theme.radiusXS
+                border.color: mapInfoPanel.currentView === 1 ? Theme.hover(Theme.accent) : Theme.borderLight
                 border.width: 1
             }
 
             contentItem: Row {
                 anchors.centerIn: parent
-                spacing: 3
+                spacing: Theme.spacingXXS
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "🖼️"
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
 
                 Text {
@@ -234,8 +235,8 @@ Drawer {
                     text: "Arrière-plan"
                     horizontalAlignment: Text.AlignHCenter
 
-                    color: "white"
-                    font.pixelSize: 11
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: mapInfoPanel.currentView === 1
                 }
             }
@@ -252,8 +253,8 @@ Drawer {
         anchors.top: navigationButtons.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 8
-        anchors.topMargin: 6
+        anchors.margins: Theme.spacingM
+        anchors.topMargin: Theme.spacingS
         height: parent.height - headerSection.height - navigationButtons.height - 16 - 6 - 8 // parent.height - headerSection - navigationButtons - marges
         clip: true
         visible: mapInfoPanel.currentView === 0
@@ -266,9 +267,9 @@ Drawer {
             active: mapInfoFlickable.contentHeight > mapInfoFlickable.height
             policy: ScrollBar.AlwaysOff
             interactive: true
-            anchors.rightMargin: 4
-            anchors.topMargin: 3
-            anchors.bottomMargin: 3
+            anchors.rightMargin: Theme.spacingXS
+            anchors.topMargin: Theme.spacingXXS
+            anchors.bottomMargin: Theme.spacingXXS
 
             contentItem: Rectangle {
                 implicitWidth: 6
@@ -281,7 +282,7 @@ Drawer {
         Column {
             id: generalInfoColumn
             width: parent.width
-            spacing: 6
+            spacing: Theme.spacingS
 
             Settings {
                 id: stEnableAutoSave
@@ -293,9 +294,9 @@ Drawer {
             // Map Information Container
             Rectangle {
                 width: parent.width
-                color: "#333333"
-                radius: 4
-                border.color: "#444444"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.border
                 border.width: 1
                 height: mapInfoContent.height + 12
 
@@ -304,41 +305,41 @@ Drawer {
                     width: parent.width - 12
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: 6
-                    spacing: 8
+                    anchors.topMargin: Theme.spacingS
+                    spacing: Theme.spacingM
 
                     // Map info header with icon
                     Rectangle {
                         width: parent.width
                         height: 32
                         color: "#383838"
-                        radius: 4
+                        radius: Theme.radiusS
 
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
-                            anchors.leftMargin: 6
-                            spacing: 6
+                            anchors.leftMargin: Theme.spacingS
+                            spacing: Theme.spacingS
 
                             Rectangle {
                                 width: 24
                                 height: 24
                                 radius: 12
-                                color: "#4A90E2"
+                                color: Theme.accent
                                 opacity: 0.2
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "🗺️"
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                 }
                             }
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Map Information"
-                                color: "white"
-                                font.pixelSize: 13
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeBody
                                 font.bold: true
                             }
                         }
@@ -366,11 +367,11 @@ Drawer {
                                     "#008B8B"
                                 }
                                 else {
-                                    "#4CAF50"
+                                    Theme.success
                                 }
                             }
                             opacity: 0.8
-                            radius: 3
+                            radius: Theme.radiusXS
                         }
 
                         contentItem: Text {
@@ -383,10 +384,10 @@ Drawer {
                                   else {
                                       "Créer une carte"
                                   }
-                            color: "white"
+                            color: Theme.textPrimary
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSizeBody
                             font.bold: true
                         }
                         onClicked: {
@@ -405,16 +406,16 @@ Drawer {
                     GridLayout {
                         width: parent.width
                         columns: 2
-                        columnSpacing: 6
-                        rowSpacing: 8
+                        columnSpacing: Theme.spacingS
+                        rowSpacing: Theme.spacingM
 
                         // ============ CHAMPS NON-ÉDITABLES (lecture seule) ============
 
                         // Map name (lecture seule)
                         Text {
                             text: "Map Name"
-                            color: "#666666"
-                            font.pixelSize: 12
+                            color: Theme.textDisabled
+                            font.pixelSize: Theme.fontSizeBody
                             font.italic: true
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
@@ -422,20 +423,20 @@ Drawer {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "#2a2a2a"
-                            border.color: "#444444"
+                            color: Theme.surface
+                            border.color: Theme.border
                             border.width: 1
-                            radius: 3
+                            radius: Theme.radiusXS
 
                             Row {
                                 anchors.fill: parent
-                                anchors.margins: 4
-                                spacing: 4
+                                anchors.margins: Theme.spacingXS
+                                spacing: Theme.spacingXS
 
                                 Text {
                                     text: "📁"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                     opacity: 0.6
                                 }
 
@@ -443,8 +444,8 @@ Drawer {
                                     id: mapNameInput
                                     width: parent.width - 24
                                     height: parent.height
-                                    color: "#888888"
-                                    font.pixelSize: 12
+                                    color: Theme.textMuted
+                                    font.pixelSize: Theme.fontSizeBody
                                     verticalAlignment: Text.AlignVCenter
                                     elide: Text.ElideRight
                                     text: logic.mapInfo.mapName !== "" ? logic.mapInfo.mapName : "—"
@@ -456,8 +457,8 @@ Drawer {
                         // Version (lecture seule)
                         Text {
                             text: "Version"
-                            color: "#666666"
-                            font.pixelSize: 12
+                            color: Theme.textDisabled
+                            font.pixelSize: Theme.fontSizeBody
                             font.italic: true
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
@@ -465,20 +466,20 @@ Drawer {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "#2a2a2a"
-                            border.color: "#444444"
+                            color: Theme.surface
+                            border.color: Theme.border
                             border.width: 1
-                            radius: 3
+                            radius: Theme.radiusXS
 
                             Row {
                                 anchors.fill: parent
-                                anchors.margins: 4
-                                spacing: 4
+                                anchors.margins: Theme.spacingXS
+                                spacing: Theme.spacingXS
 
                                 Text {
                                     text: "📈"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                     opacity: 0.6
                                 }
 
@@ -486,8 +487,8 @@ Drawer {
                                     id: versionInput
                                     width: parent.width - 24
                                     height: parent.height
-                                    color: "#888888"
-                                    font.pixelSize: 12
+                                    color: Theme.textMuted
+                                    font.pixelSize: Theme.fontSizeBody
                                     verticalAlignment: Text.AlignVCenter
                                     elide: Text.ElideRight
                                     text: logic.mapInfo.version.toString()
@@ -498,8 +499,8 @@ Drawer {
                         // Creation date (lecture seule)
                         Text {
                             text: "Created"
-                            color: "#666666"
-                            font.pixelSize: 12
+                            color: Theme.textDisabled
+                            font.pixelSize: Theme.fontSizeBody
                             font.italic: true
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
@@ -507,20 +508,20 @@ Drawer {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "#2a2a2a"
-                            border.color: "#444444"
+                            color: Theme.surface
+                            border.color: Theme.border
                             border.width: 1
-                            radius: 3
+                            radius: Theme.radiusXS
 
                             Row {
                                 anchors.fill: parent
-                                anchors.margins: 4
-                                spacing: 4
+                                anchors.margins: Theme.spacingXS
+                                spacing: Theme.spacingXS
 
                                 Text {
                                     text: "📅"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                     opacity: 0.6
                                 }
 
@@ -528,8 +529,8 @@ Drawer {
                                     id: creationDateInput
                                     width: parent.width - 24
                                     height: parent.height
-                                    color: "#888888"
-                                    font.pixelSize: 12
+                                    color: Theme.textMuted
+                                    font.pixelSize: Theme.fontSizeBody
                                     verticalAlignment: Text.AlignVCenter
                                     elide: Text.ElideRight
                                     text: logic.mapInfo.mapCreationDate !== "" ? logic.mapInfo.mapCreationDate : "—"
@@ -541,8 +542,8 @@ Drawer {
                         // Last modification (lecture seule)
                         Text {
                             text: "Modified"
-                            color: "#666666"
-                            font.pixelSize: 12
+                            color: Theme.textDisabled
+                            font.pixelSize: Theme.fontSizeBody
                             font.italic: true
                             Layout.alignment: Qt.AlignTop | Qt.AlignLeft
                         }
@@ -550,20 +551,20 @@ Drawer {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "#2a2a2a"
-                            border.color: "#444444"
+                            color: Theme.surface
+                            border.color: Theme.border
                             border.width: 1
-                            radius: 3
+                            radius: Theme.radiusXS
 
                             Row {
                                 anchors.fill: parent
-                                anchors.margins: 4
-                                spacing: 4
+                                anchors.margins: Theme.spacingXS
+                                spacing: Theme.spacingXS
 
                                 Text {
                                     text: "🕒"
                                     anchors.verticalCenter: parent.verticalCenter
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                     opacity: 0.6
                                 }
 
@@ -571,8 +572,8 @@ Drawer {
                                     id: lastModifiedInput
                                     width: parent.width - 24
                                     height: parent.height
-                                    color: "#888888"
-                                    font.pixelSize: 12
+                                    color: Theme.textMuted
+                                    font.pixelSize: Theme.fontSizeBody
                                     verticalAlignment: Text.AlignVCenter
                                     elide: Text.ElideRight
                                     text: logic.mapInfo.mapLastModified !== "" ? logic.mapInfo.mapLastModified : "—"
@@ -586,23 +587,23 @@ Drawer {
                         // Min joueurs
                         Text {
                             text: "Min joueurs"
-                            color: "#cccccc"
-                            font.pixelSize: 12
+                            color: Theme.textSecondary
+                            font.pixelSize: Theme.fontSizeBody
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "#2a2a2a"
-                            border.color: "#444444"
+                            color: Theme.surface
+                            border.color: Theme.border
                             border.width: 1
-                            radius: 3
+                            radius: Theme.radiusXS
 
                             SpinBox {
                                 id: minPlayersSpinBox
                                 anchors.fill: parent
-                                anchors.margins: 2
+                                anchors.margins: Theme.spacingXXS
                                 from: 1
                                 to: logic.mapInfo ? logic.mapInfo.maxPlayers : 8
                                 value: logic.mapInfo ? logic.mapInfo.minPlayers : 2
@@ -632,8 +633,8 @@ Drawer {
 
                                 contentItem: TextInput {
                                     text: minPlayersSpinBox.displayText
-                                    color: "#cccccc"
-                                    font.pixelSize: 12
+                                    color: Theme.textSecondary
+                                    font.pixelSize: Theme.fontSizeBody
                                     horizontalAlignment: Qt.AlignHCenter
                                     verticalAlignment: Qt.AlignVCenter
                                     readOnly: !minPlayersSpinBox.editable
@@ -647,23 +648,23 @@ Drawer {
                         // Max joueurs
                         Text {
                             text: "Max joueurs"
-                            color: "#cccccc"
-                            font.pixelSize: 12
+                            color: Theme.textSecondary
+                            font.pixelSize: Theme.fontSizeBody
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
                             height: 36
-                            color: "#2a2a2a"
-                            border.color: "#444444"
+                            color: Theme.surface
+                            border.color: Theme.border
                             border.width: 1
-                            radius: 3
+                            radius: Theme.radiusXS
 
                             SpinBox {
                                 id: maxPlayersSpinBox
                                 anchors.fill: parent
-                                anchors.margins: 2
+                                anchors.margins: Theme.spacingXXS
                                 from: logic.mapInfo ? logic.mapInfo.minPlayers : 1
                                 to: 8
                                 value: logic.mapInfo ? logic.mapInfo.maxPlayers : 8
@@ -693,8 +694,8 @@ Drawer {
 
                                 contentItem: TextInput {
                                     text: maxPlayersSpinBox.displayText
-                                    color: "#cccccc"
-                                    font.pixelSize: 12
+                                    color: Theme.textSecondary
+                                    font.pixelSize: Theme.fontSizeBody
                                     horizontalAlignment: Qt.AlignHCenter
                                     verticalAlignment: Qt.AlignVCenter
                                     readOnly: !maxPlayersSpinBox.editable
@@ -711,9 +712,9 @@ Drawer {
             // Description Container
             Rectangle {
                 width: parent.width
-                color: "#333333"
-                radius: 4
-                border.color: "#444444"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.border
                 border.width: 1
                 height: descriptionContent.height + 12
 
@@ -722,20 +723,20 @@ Drawer {
                     width: parent.width - 12
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: 6
-                    spacing: 8
+                    anchors.topMargin: Theme.spacingS
+                    spacing: Theme.spacingM
 
                     Rectangle {
                         width: parent.width
                         height: 32
                         color: "#383838"
-                        radius: 4
+                        radius: Theme.radiusS
 
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
-                            anchors.leftMargin: 6
-                            spacing: 6
+                            anchors.leftMargin: Theme.spacingS
+                            spacing: Theme.spacingS
 
                             Rectangle {
                                 width: 24
@@ -747,14 +748,14 @@ Drawer {
                                 Text {
                                     anchors.centerIn: parent
                                     text: "📝"
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                 }
                             }
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Description"
-                                color: "#666666"
-                                font.pixelSize: 13
+                                color: Theme.textDisabled
+                                font.pixelSize: Theme.fontSizeBody
                                 font.italic: true
                             }
                         }
@@ -764,15 +765,15 @@ Drawer {
                     Rectangle {
                         width: parent.width
                         height: Math.max(80, descriptionInput.height + 8)
-                        color: "#2a2a2a"
-                        border.color: "#444444"
+                        color: Theme.surface
+                        border.color: Theme.border
                         border.width: 1
-                        radius: 3
+                        radius: Theme.radiusXS
 
                         Flickable {
                             id: descriptionFlickable
                             anchors.fill: parent
-                            anchors.margins: 4
+                            anchors.margins: Theme.spacingXS
                             contentWidth: descriptionInput.paintedWidth
                             contentHeight: descriptionInput.paintedHeight
                             clip: true
@@ -780,8 +781,8 @@ Drawer {
                             Text {
                                 id: descriptionInput
                                 width: descriptionFlickable.width
-                                color: "#888888"
-                                font.pixelSize: 12
+                                color: Theme.textMuted
+                                font.pixelSize: Theme.fontSizeBody
                                 wrapMode: Text.Wrap
                                 text: logic.mapInfo.mapDescription !== "" ? logic.mapInfo.mapDescription : "—"
                             }
@@ -792,8 +793,8 @@ Drawer {
                             anchors.right: parent.right
                             anchors.top: parent.top
                             anchors.bottom: parent.bottom
-                            anchors.rightMargin: 4
-                            anchors.topMargin: 3
+                            anchors.rightMargin: Theme.spacingXS
+                            anchors.topMargin: Theme.spacingXXS
                             anchors.bottomMargin: 0
                             width: 6
                             policy: ScrollBar.AlwaysOff
@@ -817,9 +818,9 @@ Drawer {
             // Statistics Container
             Rectangle {
                 width: parent.width
-                color: "#333333"
-                radius: 4
-                border.color: "#444444"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.border
                 border.width: 1
                 height: statsContent.height + 12
 
@@ -828,21 +829,21 @@ Drawer {
                     width: parent.width - 12
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: 6
-                    spacing: 8
+                    anchors.topMargin: Theme.spacingS
+                    spacing: Theme.spacingM
 
                     // Stats section header
                     Rectangle {
                         width: parent.width
                         height: 32
                         color: "#383838"
-                        radius: 4
+                        radius: Theme.radiusS
 
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
-                            anchors.leftMargin: 6
-                            spacing: 6
+                            anchors.leftMargin: Theme.spacingS
+                            spacing: Theme.spacingS
 
                             Rectangle {
                                 width: 24
@@ -854,15 +855,15 @@ Drawer {
                                 Text {
                                     anchors.centerIn: parent
                                     text: "📊"
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                 }
                             }
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Statistics"
-                                color: "white"
-                                font.pixelSize: 13
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeBody
                                 font.bold: true
                             }
                         }
@@ -871,12 +872,12 @@ Drawer {
                     // Quick stats in badges
                     Flow {
                         width: parent.width
-                        spacing: 5
+                        spacing: Theme.spacingXS
 
                         // Stats badges with subtle colors
                         Repeater {
                             model: [
-                                {icon: "🏠", label: "Cases", value: mapInfoDrawer.caseCount.toString(), color: "#4A90E2"},
+                                {icon: "🏠", label: "Cases", value: mapInfoDrawer.caseCount.toString(), color: Theme.accent},
                                 {icon: "🌳", label: "Déco", value: mapInfoDrawer.decoCount.toString(), color: "#FFC107"},
                                 {icon: "🔷", label: "Zone", value: mapInfoDrawer.zoneCount.toString(), color: "#E91E63"}
                             ]
@@ -885,29 +886,24 @@ Drawer {
                                 width: (parent.width - 5) / 2
                                 height: 28
                                 radius: 14
-                                color: Qt.rgba(
-                                           parseInt(modelData.color.substr(1, 2), 16) / 255,
-                                           parseInt(modelData.color.substr(3, 2), 16) / 255,
-                                           parseInt(modelData.color.substr(5, 2), 16) / 255,
-                                           0.15
-                                           )
+                                color: Qt.alpha(modelData.color, 0.15)
                                 border.color: modelData.color
                                 border.width: 1
 
                                 Row {
                                     anchors.centerIn: parent
-                                    spacing: 4
+                                    spacing: Theme.spacingXS
 
                                     Text {
                                         text: modelData.icon
-                                        font.pixelSize: 13
+                                        font.pixelSize: Theme.fontSizeBody
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
 
                                     Text {
                                         text: modelData.label + ": " + modelData.value
-                                        color: "white"
-                                        font.pixelSize: 11
+                                        color: Theme.textPrimary
+                                        font.pixelSize: Theme.fontSizeSmall
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
@@ -926,8 +922,8 @@ Drawer {
         anchors.top: navigationButtons.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 8
-        anchors.topMargin: 6
+        anchors.margins: Theme.spacingM
+        anchors.topMargin: Theme.spacingS
         height: parent.height - headerSection.height - navigationButtons.height - 16 - 6 - 8
         clip: true
         visible: mapInfoPanel.currentView === 1
@@ -940,9 +936,9 @@ Drawer {
             policy: ScrollBar.AlwaysOff
             active: backgroundFlickable.contentHeight > backgroundFlickable.height
             interactive: true
-            anchors.rightMargin: 4
-            anchors.topMargin: 3
-            anchors.bottomMargin: 3
+            anchors.rightMargin: Theme.spacingXS
+            anchors.topMargin: Theme.spacingXXS
+            anchors.bottomMargin: Theme.spacingXXS
 
             contentItem: Rectangle {
                 implicitWidth: 6
@@ -955,15 +951,15 @@ Drawer {
         Column {
             id: backgroundColumn
             width: parent.width
-            spacing: 10
+            spacing: Theme.spacingL
 
             // Contrôles d'affichage
             Rectangle {
                 width: parent.width
                 height: displayControlsColumn.height + 16
-                color: "#333333"
-                radius: 4
-                border.color: "#444444"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.border
                 border.width: 1
                 visible: logic.mapInfo.backgroundPath !== ""
 
@@ -972,22 +968,23 @@ Drawer {
                     width: parent.width - 12
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: 8
-                    spacing: 10
+                    anchors.topMargin: Theme.spacingM
+                    spacing: Theme.spacingL
 
                     Text {
                         text: "Mode d'affichage:"
-                        color: "#FFFFFF"
-                        font.pixelSize: 12
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeBody
                         font.bold: true
                     }
 
                     // Checkbox "Fixé à la grille"
-                    CheckBox {
+                    MeowCheckBox {
                         id: snapToGridCheckBox
                         text: "Fixé à la grille ?"
                         width: parent.width
                         checked: logic.mapInfo ? logic.mapInfo.isBackgroundOnGrill : false
+                        accentColor: Theme.accent
 
                         // onToggled (action utilisateur) plutôt que
                         // onCheckedChanged (qui fire aussi sur re-eval du binding).
@@ -999,40 +996,13 @@ Drawer {
                             logic.mapInfo.isBackgroundOnGrill = checked
                             Game.updateMapMetadata(before, logic.mapInfo.toJSON())
                         }
-
-                        indicator: Rectangle {
-                            implicitWidth: 20
-                            implicitHeight: 20
-                            x: snapToGridCheckBox.leftPadding
-                            y: parent.height / 2 - height / 2
-                            radius: 3
-                            border.color: "#4A90E2"
-                            border.width: 1
-                            color: snapToGridCheckBox.checked ? "#4A90E2" : "transparent"
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "✓"
-                                font.pixelSize: 14
-                                color: "white"
-                                visible: snapToGridCheckBox.checked
-                            }
-                        }
-
-                        contentItem: Text {
-                            text: snapToGridCheckBox.text
-                            font.pixelSize: 12
-                            color: "#FFFFFF"
-                            verticalAlignment: Text.AlignVCenter
-                            leftPadding: snapToGridCheckBox.indicator.width + snapToGridCheckBox.spacing
-                        }
                     }
 
                     // Boutons de mode d'affichage
                     Row {
                         width: parent.width
                         height: 36
-                        spacing: 6
+                        spacing: Theme.spacingS
 
                         Repeater {
                             model: [
@@ -1044,25 +1014,25 @@ Drawer {
                             Rectangle {
                                 width: (parent.width - parent.spacing * 2) / 3
                                 height: parent.height
-                                radius: 4
-                                color: logic.mapInfo.backgroundScaling === modelData.mode ? "#4A90E2" : "#3a3a3a"
-                                border.color: logic.mapInfo.backgroundScaling === modelData.mode ? "#6AB0F2" : "#555555"
+                                radius: Theme.radiusS
+                                color: logic.mapInfo.backgroundScaling === modelData.mode ? Theme.accent : Theme.surfaceHover
+                                border.color: logic.mapInfo.backgroundScaling === modelData.mode ? Theme.hover(Theme.accent) : Theme.borderLight
                                 border.width: 1
 
                                 Row {
                                     anchors.centerIn: parent
-                                    spacing: 4
+                                    spacing: Theme.spacingXS
 
                                     Text {
                                         text: modelData.icon
-                                        font.pixelSize: 14
+                                        font.pixelSize: Theme.fontSizeMedium
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
 
                                     Text {
                                         text: modelData.text
-                                        color: "white"
-                                        font.pixelSize: 12
+                                        color: Theme.textPrimary
+                                        font.pixelSize: Theme.fontSizeBody
                                         font.bold: logic.mapInfo.backgroundScaling === modelData.mode
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
@@ -1085,66 +1055,40 @@ Drawer {
                     // Slider pour la taille des tuiles (visible seulement en mode Tile)
                     Column {
                         width: parent.width
-                        spacing: 6
+                        spacing: Theme.spacingS
                         visible: logic.mapInfo.backgroundScaling === "Tile"
 
                         Text {
                             text: "Taille des tuiles: " + tileSizeSlider.value + "px"
                             color: "#AAAAAA"
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSizeSmall
                         }
 
-                        Slider {
+                        MeowSlider {
                             id: tileSizeSlider
                             width: parent.width
+                            showValue: false   // valeur affichée dans le Text ci-dessus
                             from: 20
                             to: 400
                             stepSize: 20
                             value: (logic.mapInfo ? logic.mapInfo.backgroundTileSize : 0) || 100
+                            decimals: 0
+                            accentColor: Theme.accent
                             property string _beforeJson: ""
 
-                            // onMoved (action utilisateur) — onValueChanged
-                            // fire aussi sur re-eval du binding value, ce qui
-                            // causait un write-back parasite à l'init.
+                            // moved (action utilisateur seulement) — évite le
+                            // write-back parasite à l'init du binding value.
                             onMoved: {
                                 if (logic.mapInfo)
                                     logic.mapInfo.backgroundTileSize = value
                             }
-
-                            onPressedChanged: {
-                                if (!logic.mapInfo) return
-                                if (pressed) {
+                            onGestureBegan: {
+                                if (logic.mapInfo)
                                     _beforeJson = logic.mapInfo.toJSON()
-                                } else {
+                            }
+                            onGestureCommitted: {
+                                if (logic.mapInfo)
                                     Game.updateMapMetadata(_beforeJson, logic.mapInfo.toJSON())
-                                }
-                            }
-
-                            background: Rectangle {
-                                x: tileSizeSlider.leftPadding
-                                y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
-                                width: tileSizeSlider.availableWidth
-                                height: 4
-                                radius: 2
-                                color: "#555555"
-
-                                Rectangle {
-                                    width: tileSizeSlider.visualPosition * parent.width
-                                    height: parent.height
-                                    color: "#4A90E2"
-                                    radius: 2
-                                }
-                            }
-
-                            handle: Rectangle {
-                                x: tileSizeSlider.leftPadding + tileSizeSlider.visualPosition * (tileSizeSlider.availableWidth - width)
-                                y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
-                                width: 16
-                                height: 16
-                                radius: 8
-                                color: tileSizeSlider.pressed ? "#FFFFFF" : "#F0F0F0"
-                                border.color: "#4A90E2"
-                                border.width: 1
                             }
                         }
                     }
@@ -1155,9 +1099,9 @@ Drawer {
             Rectangle {
                 width: parent.width
                 height: customBackgroundContent.height + 16
-                color: "#333333"
-                radius: 4
-                border.color: "#444444"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.border
                 border.width: 1
 
                 Column {
@@ -1165,21 +1109,21 @@ Drawer {
                     width: parent.width - 12
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: 8
-                    spacing: 8
+                    anchors.topMargin: Theme.spacingM
+                    spacing: Theme.spacingM
 
                     // Header
                     Rectangle {
                         width: parent.width
                         height: 32
                         color: "#383838"
-                        radius: 4
+                        radius: Theme.radiusS
 
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
-                            anchors.leftMargin: 6
-                            spacing: 6
+                            anchors.leftMargin: Theme.spacingS
+                            spacing: Theme.spacingS
 
                             Rectangle {
                                 width: 24
@@ -1191,15 +1135,15 @@ Drawer {
                                 Text {
                                     anchors.centerIn: parent
                                     text: "📷"
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                 }
                             }
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Thème personnalisé"
-                                color: "white"
-                                font.pixelSize: 13
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeBody
                                 font.bold: true
                             }
                         }
@@ -1210,22 +1154,22 @@ Drawer {
                         id: customBackgroundSelector
                         width: parent.width
                         height: 100
-                        color: "#3a3a3a"
-                        radius: 6
-                        border.color: imageMouseArea.containsMouse ? "#E91E63" : "#555555"
+                        color: Theme.surfaceHover
+                        radius: Theme.radiusM
+                        border.color: imageMouseArea.containsMouse ? "#E91E63" : Theme.borderLight
                         border.width: imageMouseArea.containsMouse ? 2 : 1
 
 
                         // Default image icon
                         Column {
                             anchors.centerIn: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
                             visible: mapInfo.backgroundPath === "" || mapInfo.backgroundPath.indexOf("background/") !== -1
 
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: "📷"
-                                font.pixelSize: 32
+                                font.pixelSize: Theme.fontSizeHero
                                 color: "#AAAAAA"
                             }
 
@@ -1233,7 +1177,7 @@ Drawer {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: "Cliquez pour choisir une image"
                                 color: "#AAAAAA"
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontSizeBody
                                 opacity: 0.7
                             }
                         }
@@ -1242,7 +1186,7 @@ Drawer {
                         Image {
                             id: selectedCustomImage
                             anchors.fill: parent
-                            anchors.margins: 2
+                            anchors.margins: Theme.spacingXXS
                             visible: mapInfo.backgroundPath !== "" && mapInfo.backgroundPath.indexOf("background/") === -1
                             source: mapInfo.backgroundPath
                             fillMode: Image.PreserveAspectCrop
@@ -1263,8 +1207,8 @@ Drawer {
                                         var fileName = path.substring(path.lastIndexOf("/") + 1)
                                         return fileName.replace(/\.[^/.]+$/, "")
                                     }
-                                    color: "white"
-                                    font.pixelSize: 12
+                                    color: Theme.textPrimary
+                                    font.pixelSize: Theme.fontSizeBody
                                     font.bold: true
                                     elide: Text.ElideRight
                                     width: parent.width - 10
@@ -1278,7 +1222,7 @@ Drawer {
                             id: removeButton
                             anchors.right: parent.right
                             anchors.top: parent.top
-                            anchors.margins: 6
+                            anchors.margins: Theme.spacingS
                             width: 28
                             height: 28
                             radius: 14
@@ -1290,9 +1234,9 @@ Drawer {
                             Text {
                                 anchors.centerIn: parent
                                 text: "×"
-                                font.pixelSize: 18
+                                font.pixelSize: Theme.fontSizeTitle
                                 font.bold: true
-                                color: "white"
+                                color: Theme.textPrimary
                             }
 
                             MouseArea {
@@ -1327,19 +1271,19 @@ Drawer {
 
                 Row {
                     anchors.centerIn: parent
-                    spacing: 10
+                    spacing: Theme.spacingL
 
                     Rectangle {
                         width: 60
                         height: 1
-                        color: "#555555"
+                        color: Theme.borderLight
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
                     Text {
                         text: "OU"
                         color: "#999999"
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSizeBody
                         font.bold: true
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -1347,7 +1291,7 @@ Drawer {
                     Rectangle {
                         width: 60
                         height: 1
-                        color: "#555555"
+                        color: Theme.borderLight
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -1357,9 +1301,9 @@ Drawer {
             Rectangle {
                 width: parent.width
                 height: defaultBackgroundsContent.height + 16
-                color: "#333333"
-                radius: 4
-                border.color: "#444444"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.border
                 border.width: 1
 
                 Column {
@@ -1367,41 +1311,41 @@ Drawer {
                     width: parent.width - 12
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: 8
-                    spacing: 8
+                    anchors.topMargin: Theme.spacingM
+                    spacing: Theme.spacingM
 
                     // Header
                     Rectangle {
                         width: parent.width
                         height: 32
                         color: "#383838"
-                        radius: 4
+                        radius: Theme.radiusS
 
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
-                            anchors.leftMargin: 6
-                            spacing: 6
+                            anchors.leftMargin: Theme.spacingS
+                            spacing: Theme.spacingS
 
                             Rectangle {
                                 width: 24
                                 height: 24
                                 radius: 12
-                                color: "#4A90E2"
+                                color: Theme.accent
                                 opacity: 0.2
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "🖼️"
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeMedium
                                 }
                             }
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: "Thèmes par défaut"
-                                color: "white"
-                                font.pixelSize: 13
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeBody
                                 font.bold: true
                             }
                         }
@@ -1410,7 +1354,7 @@ Drawer {
                     // Liste des thèmes
                     Column {
                         width: parent.width
-                        spacing: 10
+                        spacing: Theme.spacingL
 
                         Repeater {
                             id: backgroundsList
@@ -1423,15 +1367,15 @@ Drawer {
                                 Rectangle {
                                     width: parent.width
                                     height: 90
-                                    radius: 6
+                                    radius: Theme.radiusM
                                     border.width: mapInfo.backgroundPath === modelData ? 3 : 1
-                                    border.color: mapInfo.backgroundPath === modelData ? "#4A90E2" : "#555555"
-                                    color: "#3a3a3a"
+                                    border.color: mapInfo.backgroundPath === modelData ? Theme.accent : Theme.borderLight
+                                    color: Theme.surfaceHover
 
                                     Image {
                                         id: bgImage
                                         anchors.fill: parent
-                                        anchors.margins: 2
+                                        anchors.margins: Theme.spacingXXS
                                         source: modelData
                                         fillMode: Image.PreserveAspectCrop
                                         asynchronous: true
@@ -1449,8 +1393,8 @@ Drawer {
                                                     var fileName = fullPath.substring(fullPath.lastIndexOf('/') + 1)
                                                     return fileName.substring(0, fileName.lastIndexOf('.'))
                                                 }
-                                                color: "white"
-                                                font.pixelSize: 12
+                                                color: Theme.textPrimary
+                                                font.pixelSize: Theme.fontSizeBody
                                                 font.bold: true
                                                 elide: Text.ElideRight
                                                 width: parent.width - 10

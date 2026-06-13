@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Particles
 
+import theme
+
 /**
  * Bouton avec effet de particules lors du clic
  * Les particules sont émises en arc de cercle vers le haut et retombent avec gravité
@@ -22,16 +24,16 @@ Button {
     height: 50
     
     background: Rectangle {
-        color: particleButton.down ? "#4A90E2" : "#5AA3F2"
-        radius: 8
-        border.color: particleButton.hovered ? "#FFFFFF" : "#3A80D2"
+        color: particleButton.down ? Theme.accent : Theme.hover(Theme.accent)
+        radius: Theme.radiusL
+        border.color: particleButton.hovered ? Theme.surfaceLight : Theme.pressed(Theme.accent)
         border.width: 2
-        
+
         // Effet de brillance
         Rectangle {
             anchors.fill: parent
-            anchors.margins: 2
-            radius: 6
+            anchors.margins: Theme.spacingXXS
+            radius: Theme.radiusM
             gradient: Gradient {
                 GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.2) }
                 GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
@@ -41,9 +43,9 @@ Button {
     
     contentItem: Text {
         text: particleButton.text
-        font.pixelSize: 16
+        font.pixelSize: Theme.fontSizeLarge
         font.bold: true
-        color: "white"
+        color: Theme.textPrimary
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -129,7 +131,7 @@ Button {
             property: "scale"
             from: 1.0
             to: 0.95
-            duration: 100
+            duration: Theme.durationFast
             easing.type: Easing.OutQuad
         }
         NumberAnimation {
@@ -137,7 +139,7 @@ Button {
             property: "scale"
             from: 0.95
             to: 1.0
-            duration: 100
+            duration: Theme.durationFast
             easing.type: Easing.OutBounce
         }
     }
@@ -146,7 +148,7 @@ Button {
     scale: hovered ? 1.05 : 1.0
     Behavior on scale {
         NumberAnimation {
-            duration: 150
+            duration: Theme.durationNormal
             easing.type: Easing.OutQuad
         }
     }

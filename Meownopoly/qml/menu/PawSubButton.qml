@@ -3,6 +3,7 @@ pragma ComponentBehavior:Bound
 import QtQuick
 import QtQuick.Controls
 //import Qt5Compat.GraphicalEffects
+import theme
 
 Rectangle {
     id: root
@@ -75,7 +76,7 @@ Rectangle {
         Rectangle {
             anchors.fill: parent
             radius: parent.width / 2
-            color: "#80000000"
+            color: Theme.scrim
             visible: action && action.enabled === false
             
             Text {
@@ -101,7 +102,7 @@ Rectangle {
     
     // Animation de clic
     Behavior on scale {
-        NumberAnimation { duration: 100 }
+        NumberAnimation { duration: Theme.durationFast }
     }
     
     // Animation au survol
@@ -120,7 +121,7 @@ Rectangle {
     
     transitions: [
         Transition {
-            NumberAnimation { properties: "scale"; duration: 100; easing.type: Easing.OutQuad }
+            NumberAnimation { properties: "scale"; duration: Theme.durationFast; easing.type: Easing.OutQuad }
         }
     ]
     

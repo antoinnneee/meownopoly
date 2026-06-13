@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /**
  * Bouton retour réutilisable avec flèche
@@ -7,27 +8,27 @@ import QtQuick.Controls
  */
 Rectangle {
     id: root
-    
+
     width: 40
     height: 40
-    color: mouseArea.containsMouse ? "#444444" : "#333333"
-    radius: 8
-    
+    color: mouseArea.containsMouse ? Theme.border : Theme.surfaceAlt
+    radius: Theme.radiusL
+
     signal backClicked()
-    
+
     // Animation de couleur
     Behavior on color {
         ColorAnimation {
-            duration: 150
+            duration: Theme.durationNormal
             easing.type: Easing.OutQuad
         }
     }
-    
+
     // Flèche de retour
     Text {
         text: "←"
-        color: "#ffffff"
-        font.pixelSize: 24
+        color: Theme.textPrimary
+        font.pixelSize: Theme.fontSizeDisplay
         anchors.centerIn: parent
     }
     
@@ -45,7 +46,7 @@ Rectangle {
     scale: mouseArea.pressed ? 0.95 : 1.0
     Behavior on scale {
         NumberAnimation {
-            duration: 100
+            duration: Theme.durationFast
             easing.type: Easing.OutQuad
         }
     }

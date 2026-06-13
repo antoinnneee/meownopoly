@@ -12,7 +12,7 @@ Ce dossier contient toute la documentation technique sur l'architecture du proje
 Documentation complète sur l'architecture de l'éditeur de cartes :
 
 1. **[ANALYSE_ARCHITECTURE_EDITEUR.md](./ANALYSE_ARCHITECTURE_EDITEUR.md)** - **Document principal**
-   - Analyse détaillée en 12 sections (~500 lignes)
+   - Analyse détaillée en 13 sections (~870 lignes)
    - Explications approfondies de chaque mécanisme
    - Parfait pour comprendre en profondeur le fonctionnement
 
@@ -46,7 +46,8 @@ Documentation complète sur l'architecture de l'éditeur de cartes :
 ### Systèmes Spécialisés
 - **[ASSET_MANAGER.md](./ASSET_MANAGER.md)** - Système de gestion des ressources (images, sons, assets)
 - **[VISUAL_EFFECTS_SYSTEM.md](./VISUAL_EFFECTS_SYSTEM.md)** - Système d'effets visuels et post-processing
-- **[PHYSICS_ENGINE.md](./PHYSICS_ENGINE.md)** - Moteur physique 2D PattounX
+- **[PHYSICS_ENGINE_V2.md](./PHYSICS_ENGINE_V2.md)** - Moteur physique 2D Pattounx v2 (référence actuelle)
+- [PHYSICS_ENGINE.md](./PHYSICS_ENGINE.md) - ⚠️ Archive V1 legacy (obsolète, contient des erreurs)
 
 ## 🎯 Par Où Commencer ?
 

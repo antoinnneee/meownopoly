@@ -3,22 +3,23 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Case
 import CaseKibbleDispenser
+import theme
 
 ColumnLayout {
-    spacing: 5
+    spacing: Theme.spacingXS
 
     required property CaseKibbleDispenser caseData
     Text {
         text: "Collect " + ((caseData)?caseData.reward  : "" )+ "K when passing"
-        font.pixelSize: 14
+        font.pixelSize: Theme.fontSizeMedium
         color: "#2c3e50"
         font.bold: true
     }
 
     Text {
         text: "Start your journey here!"
-        font.pixelSize: 12
+        font.pixelSize: Theme.fontSizeBody
         color: "#7f8c8d"
-        Layout.topMargin: 5
+        Layout.topMargin: Theme.spacingXS
     }
 } 

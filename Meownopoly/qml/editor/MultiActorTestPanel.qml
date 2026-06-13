@@ -14,6 +14,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 Item {
     id: root
@@ -41,30 +42,30 @@ Item {
         id: badge
         width: badgeContent.implicitWidth + 20
         height: badgeContent.implicitHeight + 10
-        radius: 6
-        color: root._on ? "#7c2d12" : "#2a2a2e"   // orange foncé si ON (cohérent visuel P2)
-        border.color: root._on ? "#f97316" : "#71717a"
+        radius: Theme.radiusM
+        color: root._on ? "#7c2d12" : Theme.surface   // orange foncé si ON (cohérent visuel P2)
+        border.color: root._on ? "#f97316" : Theme.borderLight
         border.width: 1
 
         Column {
             id: badgeContent
             anchors.centerIn: parent
-            spacing: 2
+            spacing: Theme.spacingXXS
             Row {
-                spacing: 8
+                spacing: Theme.spacingM
                 anchors.horizontalCenter: parent.horizontalCenter
                 Rectangle {
                     width: 10
                     height: 10
                     radius: 5
                     anchors.verticalCenter: parent.verticalCenter
-                    color: root._on ? "#f97316" : "#71717a"
+                    color: root._on ? "#f97316" : Theme.borderLight
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root._on ? "P2 · ON · ←↑↓→" : "P2 · OFF"
-                    color: "#f4f4f5"
-                    font.pixelSize: 12
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
                 }
             }
@@ -83,7 +84,7 @@ Item {
                                + s.position.y.toFixed(1) + ")"
                 }
                 color: "#fed7aa"
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeCaption
                 font.family: "monospace"
             }
         }

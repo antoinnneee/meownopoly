@@ -2,39 +2,40 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Catway 1.0
+import theme
 
 Rectangle {
     id: root
-    color: "#16161a"
+    color: Theme.background
     signal backRequested()
 
     property UdpSocketInfo selectedSocketInfo: null
     property int selectedPortIndex: -1
 
-    property color cardBg: "#1c1c21"
-    property color cardBorder: "#2d2d35"
+    property color cardBg: Theme.surface
+    property color cardBorder: Theme.border
     property color accent: "#7c3aed"
     property color accentHover: "#8b5cf6"
-    property color textPrimary: "#f4f4f5"
-    property color textSecondary: "#a1a1aa"
-    property int cardRadius: 12
+    property color textPrimary: Theme.textPrimary
+    property color textSecondary: Theme.textHint
+    property int cardRadius: Theme.radiusXXL
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: Theme.spacingXXL
+        spacing: Theme.spacingXL
 
         RowLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 44
-            spacing: 16
+            spacing: Theme.spacingXXL
             Button {
                 text: "← Retour"
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
                 implicitHeight: 40
                 background: Rectangle {
-                    color: parent.pressed ? "#2d2d35" : "transparent"
-                    radius: 8
+                    color: parent.pressed ? Theme.surfaceAlt : "transparent"
+                    radius: Theme.radiusL
                     border.color: root.cardBorder
                     border.width: 1
                 }
@@ -54,7 +55,7 @@ Rectangle {
                 background: Rectangle { color: "transparent" }
                 TabButton {
                     text: "Catway"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     contentItem: Text {
                         text: parent.text
                         color: parent.checked ? root.accent : root.textSecondary
@@ -63,14 +64,14 @@ Rectangle {
                     }
                     background: Rectangle {
                         color: parent.checked ? root.cardBg : "transparent"
-                        radius: 8
+                        radius: Theme.radiusL
                         border.color: parent.checked ? root.accent : root.cardBorder
                         border.width: 1
                     }
                 }
                 TabButton {
                     text: "UDP Tests"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     contentItem: Text {
                         text: parent.text
                         color: parent.checked ? root.accent : root.textSecondary
@@ -79,14 +80,14 @@ Rectangle {
                     }
                     background: Rectangle {
                         color: parent.checked ? root.cardBg : "transparent"
-                        radius: 8
+                        radius: Theme.radiusL
                         border.color: parent.checked ? root.accent : root.cardBorder
                         border.width: 1
                     }
                 }
                 TabButton {
                     text: "Game Network"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     contentItem: Text {
                         text: parent.text
                         color: parent.checked ? root.accent : root.textSecondary
@@ -95,14 +96,14 @@ Rectangle {
                     }
                     background: Rectangle {
                         color: parent.checked ? root.cardBg : "transparent"
-                        radius: 8
+                        radius: Theme.radiusL
                         border.color: parent.checked ? root.accent : root.cardBorder
                         border.width: 1
                     }
                 }
                 TabButton {
                     text: "Editor Network"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     contentItem: Text {
                         text: parent.text
                         color: parent.checked ? root.accent : root.textSecondary
@@ -111,14 +112,14 @@ Rectangle {
                     }
                     background: Rectangle {
                         color: parent.checked ? root.cardBg : "transparent"
-                        radius: 8
+                        radius: Theme.radiusL
                         border.color: parent.checked ? root.accent : root.cardBorder
                         border.width: 1
                     }
                 }
                 TabButton {
                     text: "Physics"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     contentItem: Text {
                         text: parent.text
                         color: parent.checked ? root.accent : root.textSecondary
@@ -127,14 +128,14 @@ Rectangle {
                     }
                     background: Rectangle {
                         color: parent.checked ? root.cardBg : "transparent"
-                        radius: 8
+                        radius: Theme.radiusL
                         border.color: parent.checked ? root.accent : root.cardBorder
                         border.width: 1
                     }
                 }
                 TabButton {
                     text: "Painter"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     contentItem: Text {
                         text: parent.text
                         color: parent.checked ? root.accent : root.textSecondary
@@ -143,7 +144,7 @@ Rectangle {
                     }
                     background: Rectangle {
                         color: parent.checked ? root.cardBg : "transparent"
-                        radius: 8
+                        radius: Theme.radiusL
                         border.color: parent.checked ? root.accent : root.cardBorder
                         border.width: 1
                     }
@@ -152,7 +153,7 @@ Rectangle {
             Text {
                 text: "Test Catway"
                 color: root.textPrimary
-                font.pixelSize: 22
+                font.pixelSize: Theme.fontSizeHeading
                 font.bold: true
                 font.letterSpacing: 0.5
                 Layout.fillWidth: true
@@ -176,7 +177,7 @@ Rectangle {
                 ColumnLayout {
                     id: contentColumn
                     width: root.width - 32
-                    spacing: 16
+                    spacing: Theme.spacingXXL
                     SplitView {
                         id: columnSplitView
                         Layout.fillWidth: true
@@ -200,7 +201,7 @@ Rectangle {
                             SplitView.fillWidth: true
                             ColumnLayout {
                                 anchors.fill: parent
-                                spacing: 12
+                                spacing: Theme.spacingXL
                                 StunCard { Layout.fillWidth: true; host: root }
                                 LocalPortsCard {
                                     Layout.fillWidth: true
@@ -220,7 +221,7 @@ Rectangle {
                             SplitView.fillWidth: true
                             ColumnLayout {
                                 anchors.fill: parent
-                                spacing: 12
+                                spacing: Theme.spacingXL
                                 ChatClientCard {
                                     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
                                     Layout.fillWidth: true
@@ -238,7 +239,7 @@ Rectangle {
                             SplitView.fillWidth: true
                             ColumnLayout {
                                 anchors.fill: parent
-                                spacing: 12
+                                spacing: Theme.spacingXL
                                 CreatePlayerForm {
                                     id: createPlayerForm
                                     Layout.fillWidth: true
@@ -270,7 +271,7 @@ Rectangle {
                 ColumnLayout {
                     id: udpTestContent
                     width: root.width - 32
-                    spacing: 12
+                    spacing: Theme.spacingXL
                     UdpTestTab {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 700
@@ -290,7 +291,7 @@ Rectangle {
                 ColumnLayout {
                     id: gameNetworkContent
                     width: root.width - 32
-                    spacing: 12
+                    spacing: Theme.spacingXL
                     GameNetworkTestTab {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 700
@@ -310,7 +311,7 @@ Rectangle {
                 ColumnLayout {
                     id: editorNetworkContent
                     width: root.width - 32
-                    spacing: 12
+                    spacing: Theme.spacingXL
                     EditorNetworkTestTab {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 700
@@ -330,7 +331,7 @@ Rectangle {
                 ColumnLayout {
                     id: physicsContent
                     width: root.width - 32
-                    spacing: 12
+                    spacing: Theme.spacingXL
                     PhysicsTestTab {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 600
@@ -346,7 +347,7 @@ Rectangle {
                 Layout.fillHeight: true
                 ZoneCanvasPainterTest {
                     anchors.fill: parent
-                    anchors.margins: 12
+                    anchors.margins: Theme.spacingXL
                 }
             }
         }

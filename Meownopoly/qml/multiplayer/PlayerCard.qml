@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 /**
  * Carte représentant un joueur dans une session
@@ -16,28 +17,28 @@ Rectangle {
     
     width: parent.width
     height: 60
-    color: "#2a2a2a"
-    radius: 8
-    border.color: "#444444"
+    color: Theme.surface
+    radius: Theme.radiusL
+    border.color: Theme.border
     border.width: 1
-    
+
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 12
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingXL
         
         // GAUCHE: Avatar emoji
         Text {
             text: root.avatar
-            font.pixelSize: 24
+            font.pixelSize: Theme.fontSizeDisplay
             Layout.alignment: Qt.AlignVCenter
         }
         
         // CENTRE: Pseudo du joueur
         Text {
             text: root.nickname
-            color: "#ffffff"
-            font.pixelSize: 16
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeLarge
             font.bold: true
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
@@ -49,14 +50,14 @@ Rectangle {
             Layout.preferredWidth: 32
             Layout.preferredHeight: 32
             radius: 16
-            color: "#ff9800"
+            color: Theme.warning
             border.color: "#ffffff"
             border.width: 2
             Layout.alignment: Qt.AlignVCenter
             
             Text {
                 text: "👑"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontSizeLarge
                 anchors.centerIn: parent
             }
             

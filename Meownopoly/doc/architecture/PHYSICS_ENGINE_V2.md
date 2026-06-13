@@ -83,7 +83,7 @@ Particularités vs V1 :
 │     ├── integrateBodies(dt)                                      │
 │     ├── resolveBodyZoneCCD (sweep + rewind)                      │
 │     ├── resolveBodyBodyCCD (cercle-cercle)                       │
-│     ├── runStaticPass (contacts résiduels)                       │
+│     ├── runStaticPass (solver vitesse contacts résiduels ×4)     │
 │     └── correctPositions (anti-pénétration)                      │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -107,7 +107,7 @@ Particularités vs V1 :
 |  | `qml/world3d/LocalPlayerSpawner.qml` | Crée le body Kinematic du joueur local |
 |  | `qml/world3d/EditorPhysicsBridge.qml` | Pousse zones et caisses depuis l'éditeur |
 |  | `qml/world3d/InputController.qml` | Clavier → `pushInput(actorId, vec)` |
-|  | `qml/world3d/CameraRig.qml` | Stratégies Follow / Free / FixedTopDown |
+|  | `qml/world3d/CameraRig.qml` | Stratégies Follow / FreeCam / FixedTopDown / OrbitDebug |
 | Snapable | `cpp/game/item_snapable/physicalobjectparameter.{h,cpp}` | `mass`/`bounceFactor`/`frictionStrength`/`linearDamping` (par tile) |
 |  | `qml/meowComponent/snapable/SnapablePhysicalObject.qml` | Présentation 2D éditeur (cercle, couleur ∝ masse) |
 
@@ -377,8 +377,9 @@ FrameAnimation {
 ```
 
 `beginFrame()` reset `m_guiAdvancedThisFrame = false`. La première
-`bodyState()` du tick fait `tryAdvanceGuiBuffer()` (atomic exchange avec
-`m_pending`) ; les suivantes lisent dans le même `m_guiInUse`.
+`bodyState()` du tick fait `tryAdvanceGuiBuffer()` (peek de `m_pending`
+puis échange uniquement si le buffer publié est plus récent, cf. §6.2) ;
+les suivantes lisent dans le même `m_guiInUse`.
 
 ### 4.7 Signaux
 
@@ -419,12 +420,19 @@ même si le body touche plusieurs segments d'une zone, un seul signal sort.
    - pour chaque body en mouvement, broadphase AABB pour filtrer les zones
      à tester,
    - pour chaque zone restante : sweep cercle-segment + cercle-vertex via
-     `Collision2D::sweepCirclePolygon`. Le plus petit `t ∈ [0, 1]` donne
-     le point d'impact,
+     `Collision2D::checkCirclePolygonSweepAll` (qui s'appuie en interne sur
+     `sweepCircleSegment`). Le plus petit `t ∈ [0, 1]` donne le point
+     d'impact,
    - body rembobiné à `previousPosition + v × t × dt`,
    - bounce/slide appliqué sur la vélocité avec `bounceFactor` /
      `slideFactor` du `BodySpec`,
-   - `enteredZone` / `exitedZone` mis à jour (set par body).
+   - `enteredZone` / `exitedZone` mis à jour (set par body),
+   - en fin de méthode, un test **statique** cercle-polygone aux positions
+     corrigées (`Collision2D::checkCirclePolygonAll`) détecte les corps
+     appuyés contre un mur et accumule, pour chacun, un
+     `ResidualContact { normal, closestPoint, penetration }` (les
+     « contacts résiduels au repos » consommés ensuite par le solver de
+     vitesse).
 
 3. **`resolveBodyBodyCCD()`** (cercle-cercle)
    - pairs uniques des bodies en mouvement,
@@ -442,31 +450,34 @@ même si le body touche plusieurs segments d'une zone, un seul signal sort.
      identiquement. Cf. test `bodyBody_kinematicPush_massAffectsResponse`
      dans `tst_pattounx_engine.cpp`.
 
-4. **`runStaticPass()`** (contacts résiduels)
-   - pour chaque body, test statique cercle-polygone à la position
-     courante (corps appuyé contre un mur),
-   - accumule `ResidualContact { normal, closestPoint, penetration }`.
+4. **Solver de vitesse itératif** (`runStaticPass()` × `VELOCITY_ITERATIONS = 4`)
+   - `step()` appelle `runStaticPass()` dans une boucle
+     `for (i < VELOCITY_ITERATIONS) runStaticPass();`. La détection des
+     contacts n'a **pas** lieu ici : `runStaticPass()` itère les
+     `m_residualContacts` déjà accumulés en fin de `resolveBodyZoneCCD()`
+     (étape 2) et applique, pour chacun :
+     - une impulsion de Newton normale
+       `jMag = -(1 + e) × (v · n) / invMass` (le rebond utilise
+       `restitution`, constante 0.3 par défaut),
+     - une friction Coulomb tangentielle : si
+       `|jt| < jn × √(μs_body × μs_zone)` → friction statique (impulsion
+       qui annule la vitesse tangentielle), sinon friction dynamique avec
+       `μd = √(μd_body × μd_zone)` (moyenne géométrique des coefficients).
 
-5. **Solver itératif** (`VELOCITY_ITERATIONS = 4` passes)
-   - friction Coulomb : si `|jt| < jn × √(μs_body × μs_zone)` → friction
-     statique (impulsion qui annule la vitesse tangentielle), sinon
-     dynamique avec `μd = √(μd_body × μd_zone)`,
-   - rebond solver utilise `restitution` (constante 0.3 par défaut).
-
-6. **`correctPositions()`**
+5. **`correctPositions()`**
    - pour chaque contact résiduel : si pénétration > `PENETRATION_SLOP`
      (0.01), on déplace le body de
      `POSITION_CORRECTION_PERCENT × (penetration - slop)` le long de la
      normale. Évite la dérive sur les contacts soutenus.
 
-7. **Sleep system**
+6. **Sleep system**
    - si `|v| < SLEEP_VELOCITY_THRESHOLD` (0.5) pendant
      `SLEEP_FRAMES_REQUIRED` (30) frames consécutifs → `isSleeping = true`,
      pas d'intégration ni de CCD pour ce body au step suivant,
    - `setBodyInput`, `applyImpulse`, `setBodyPosition` réveillent
      automatiquement (`wakeUp(body)`).
 
-8. **Événements**
+7. **Événements**
    - les paires (body, zone) entrées/sorties et les collisions sont
      accumulées dans `m_pendingEvents`,
    - `takeEvents()` (appelé par le worker après `step`) vide la file et
@@ -510,15 +521,24 @@ sauter accidentellement la frame intermédiaire :
 ```cpp
 void PhysicsWorld::tryAdvanceGuiBuffer() {
     if (m_guiAdvancedThisFrame) return;
+    m_guiAdvancedThisFrame = true;
+    if (!m_guiInUse) return;
+    // Peek d'abord : on n'échange QUE si le buffer publié est strictement
+    // plus récent que celui qu'on tient déjà. Sinon on garderait la même
+    // position deux frames de suite, ou on reculerait d'un tick.
+    auto *peek = m_pending.load(std::memory_order_acquire);
+    if (!peek || peek->tick <= m_guiInUse->tick) return;
     auto *fresh = m_pending.exchange(m_guiInUse, std::memory_order_acq_rel);
     if (fresh) m_guiInUse = fresh;
-    m_guiAdvancedThisFrame = true;
 }
 ```
 
-Reset à `beginFrame()`. Sans ça, la GUI consommait 144 frames physiques
-pour 60 frames de rendu et ratait des positions intermédiaires (jitter
-visible — historisé dans la mémoire `physics_actor_jitter_wip`).
+Reset à `beginFrame()`. Le **peek + garde sur `tick`** est ce qui corrige
+le jitter quand le rendu tourne plus vite que la simu (écran 144 Hz vs
+tick physique 60 Hz) : sans lui, l'échange inconditionnel rejouait la même
+position ou en sautait, et la GUI consommait des frames physiques de façon
+irrégulière (positions intermédiaires perdues — historisé dans la mémoire
+`physics_actor_jitter_resolved`).
 
 ---
 
@@ -660,8 +680,7 @@ LocalPlayerSpawner {
 6 lignes qui font `createKinematicActor(actorId, initialPosition, radius)`
 au `Component.onCompleted` et `removeBody(actorId)` au
 `Component.onDestruction`. C'est le contrat : "le body est créé là, pas
-ailleurs". Pour le multi-joueurs, un `RemotePlayerSpawner` est créé sur
-réception du `BodiesAnnounce` réseau.
+ailleurs".
 
 ### 8.4 `PhysicsObjectSpawner`
 
@@ -932,6 +951,11 @@ Pistes connues mais pas implémentées :
 - **Multi-joueurs collab + physique** : `EditorSession` et `PhysicsSession`
   cohabitent sur Catway, mais le pipeline complet "rejoindre une session
   d'édition + démarrer simu commune" n'a pas été testé bout en bout.
+- **Présentateur d'actor distant** : aucun composant de spawn d'actor
+  distant (style `RemotePlayerSpawner`) n'est encore câblé sur réception
+  du `BodiesAnnounce`. Côté client, le décodage de la table
+  `idIndex → actorId` existe (cf. §10.4), mais l'instanciation 3D
+  automatique des chats distants reste à faire.
 
 ---
 

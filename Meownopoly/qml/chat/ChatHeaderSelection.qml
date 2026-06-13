@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Meownopoly.Chat 1.0
+import theme
 
 Rectangle {
     id: root
@@ -16,32 +17,32 @@ Rectangle {
     implicitWidth: selectorRow.implicitWidth + 10
     Layout.maximumWidth: 90
 
-    color: selectorArea.containsMouse ? "#3a3a3a" : "transparent"
-    radius: 4
-    border.color: selectorArea.containsMouse ? "#555555" : "transparent"
+    color: selectorArea.containsMouse ? Theme.surfaceHover : "transparent"
+    radius: Theme.radiusS
+    border.color: selectorArea.containsMouse ? Theme.borderLight : "transparent"
     border.width: 1
 
-    Behavior on color { ColorAnimation { duration: 100 } }
+    Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
     RowLayout {
         id: selectorRow
         anchors.fill: parent
-        anchors.leftMargin: 4
-        anchors.rightMargin: 4
-        spacing: 2
+        anchors.leftMargin: Theme.spacingXS
+        anchors.rightMargin: Theme.spacingXS
+        spacing: Theme.spacingXXS
 
         Text {
             text: root._selectedName !== "" ? root._selectedName : (root.currentSessionId !== "" ? root.currentSessionId : "—")
-            color: "#888888"
-            font.pointSize: 8
+            color: Theme.textMuted
+            font.pixelSize: Theme.fontSizeSmall
             elide: Text.ElideRight
             Layout.fillWidth: true
         }
 
         Text {
             text: "▾"
-            color: sessionPopup.visible ? "#4A90E2" : "#666666"
-            font.pointSize: 7
+            color: sessionPopup.visible ? Theme.accent : Theme.textDisabled
+            font.pixelSize: Theme.fontSizeTiny
         }
     }
 
@@ -73,10 +74,10 @@ Rectangle {
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
         background: Rectangle {
-            color: "#2a2a2a"
-            border.color: "#444444"
+            color: Theme.surface
+            border.color: Theme.border
             border.width: 1
-            radius: 6
+            radius: Theme.radiusM
 
             // Ombre portée légère
             layer.enabled: true
@@ -94,14 +95,14 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: "Sessions disponibles"
-                    color: "#888888"
-                    font.pointSize: 7
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeTiny
                     font.bold: true
                     font.letterSpacing: 0.5
                 }
             }
 
-            Rectangle { width: 230; height: 1; color: "#3a3a3a" }
+            Rectangle { width: 230; height: 1; color: Theme.surfaceHover }
 
             // Liste des sessions
             ListView {
@@ -118,7 +119,7 @@ Rectangle {
 
                     width: 230
                     height: 48
-                    color: delegateHover.containsMouse ? "#363636" : "transparent"
+                    color: delegateHover.containsMouse ? Theme.surfaceHover : "transparent"
 
                     Behavior on color { ColorAnimation { duration: 80 } }
 
@@ -129,22 +130,22 @@ Rectangle {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         width: 3
-                        color: "#4A90E2"
+                        color: Theme.accent
                         radius: 1
                     }
 
                     Column {
                         anchors {
-                            left: parent.left; leftMargin: 12
-                            right: parent.right; rightMargin: 8
+                            left: parent.left; leftMargin: Theme.spacingXL
+                            right: parent.right; rightMargin: Theme.spacingM
                             verticalCenter: parent.verticalCenter
                         }
-                        spacing: 3
+                        spacing: Theme.spacingXXS
 
                         Text {
                             text: modelData.name ?? modelData.sessionId
-                            color: modelData.sessionId === root.currentSessionId ? "#4A90E2" : "#cccccc"
-                            font.pointSize: 8
+                            color: modelData.sessionId === root.currentSessionId ? Theme.accent : Theme.textSecondary
+                            font.pixelSize: Theme.fontSizeSmall
                             font.bold: true
                             elide: Text.ElideRight
                             width: parent.width
@@ -154,8 +155,8 @@ Rectangle {
                             text: "🎮 " + (modelData.hostNickname ?? "?") +
                                   "  ·  👥 " + (modelData.players ?? 0) +
                                   "/" + (modelData.maxPlayers ?? "∞")
-                            color: "#666666"
-                            font.pointSize: 7
+                            color: Theme.textDisabled
+                            font.pixelSize: Theme.fontSizeTiny
                         }
                     }
 
@@ -175,7 +176,7 @@ Rectangle {
                         anchors.bottom: parent.bottom
                         width: parent.width
                         height: 1
-                        color: "#333333"
+                        color: Theme.surfaceAlt
                         visible: index < sessionList.count - 1
                     }
                 }
@@ -185,8 +186,8 @@ Rectangle {
                     anchors.centerIn: parent
                     text: "Aucune session\ndisponible"
                     horizontalAlignment: Text.AlignHCenter
-                    color: "#555555"
-                    font.pointSize: 7
+                    color: Theme.textDisabled
+                    font.pixelSize: Theme.fontSizeTiny
                     lineHeight: 1.4
                     visible: sessionList.count === 0
                 }

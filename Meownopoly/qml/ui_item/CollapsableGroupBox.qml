@@ -3,13 +3,15 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 
+import theme
+
 
 GroupBox {
     id: control
     title: "Box Title"
     property bool isCollapsed: false
     property alias titleLabel: titleLabel
-    font.pointSize: 12
+    font.pixelSize: Theme.fontSizeLarge
     clip: true
 
 
@@ -19,14 +21,14 @@ GroupBox {
 
     property alias content : mainLayout.children
 
-    topPadding: 2
-    bottomPadding: 2
-    spacing: 2
+    topPadding: Theme.spacingXXS
+    bottomPadding: Theme.spacingXXS
+    spacing: Theme.spacingXXS
 
     background: Rectangle {
-        color: "#333333"
-        radius: 4
-        border.color: "#555555"
+        color: Theme.surfaceAlt
+        radius: Theme.radiusS
+        border.color: Theme.borderLight
         border.width: 1
 
     }
@@ -35,17 +37,17 @@ GroupBox {
         id: titleLabel
         x: control.leftPadding
         width: control.availableWidth
-        height: control.font.pixelSize + 4
+        height: control.font.pixelSize + Theme.spacingXS
 
         onClicked: {
             control.isCollapsed = !control.isCollapsed
         }
         RowLayout {
-            spacing: 8
+            spacing: Theme.spacingM
             anchors.fill: parent
 
             Text {
-                color: "#cccccc"
+                color: Theme.textSecondary
                 text: control.title
                 font: control.font
 

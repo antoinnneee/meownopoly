@@ -71,6 +71,15 @@
         <file>qml/meowComponent/TemplateBoundingRect.qml</file>
         <file>qml/meowComponent/preview/TemplatePreviewCursor.qml</file>
         <file>qml/ui_item/BtSideMenu.qml</file>
+        <file>qml/ui_item/MeowTextField.qml</file>
+        <file>qml/ui_item/MeowSwitch.qml</file>
+        <file>qml/ui_item/MeowSlider.qml</file>
+        <file>qml/ui_item/MeowPropertyRow.qml</file>
+        <file>qml/ui_item/MeowSpinBox.qml</file>
+        <file>qml/ui_item/MeowComboBox.qml</file>
+        <file>qml/ui_item/MeowCheckBox.qml</file>
+        <file>qml/ui_item/MeowInfoBox.qml</file>
+        <file>qml/ui_item/MeowSwatchButton.qml</file>
         <file>qml/meowComponent/TestCommandWindow.qml</file>
     </qresource>
 </RCC>

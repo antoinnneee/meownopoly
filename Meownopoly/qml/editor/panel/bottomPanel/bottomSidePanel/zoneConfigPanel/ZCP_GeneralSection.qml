@@ -1,11 +1,14 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
+import ui_item
+import MapFileManager
 
 GroupBox {
     id: root
     title: "Général"
-    
+
     // Properties
     property bool updatingValues: false
 
@@ -14,7 +17,34 @@ GroupBox {
     property alias speedMultiplier: speedSlider.value
     property alias accelerationMultiplier: accelerationSlider.value
     property alias frictionStrength: frictionSlider.value
-    
+    // Référence vers l'effet visuel déclenché à l'entrée (id de MapInfo.screenEffects,
+    // "" = aucun). Pas un alias : piloté par le ComboBox ci-dessous.
+    property string screenEffectId: ""
+
+    // Modèle du sélecteur d'effet : "Aucun" + bibliothèque de la carte.
+    // L'accès à `mapInfo.screenEffects` capture la dépendance de binding
+    // (NOTIFY screenEffectsChanged) pour rafraîchir la liste à chaud.
+    readonly property var _effectModel: {
+        const arr = [{ name: "Aucun", id: "" }]
+        const map = MapFileManager.currentMap
+        const mi = map ? map.mapInfo : null
+        if (mi) {
+            const dep = mi.screenEffects   // capture la dépendance
+            const n = mi.screenEffectCount()
+            for (let i = 0; i < n; ++i) {
+                const e = mi.screenEffectAt(i)
+                if (e) arr.push({ name: e.name, id: e.id })
+            }
+        }
+        return arr
+    }
+
+    function _indexForEffectId(id) {
+        for (let i = 0; i < root._effectModel.length; ++i)
+            if (root._effectModel[i].id === id) return i
+        return 0
+    }
+
     // Signal
     signal configurationChanged()
     signal focusReleased()
@@ -22,62 +52,52 @@ GroupBox {
     // Functions
     function updateFromZoneParameter(zoneParam) {
       if (root.updatingValues) return
-        
+
         // Update sliders from target values
         nameField.text = zoneParam.zoneName
         exclusionSwitch.checked = zoneParam.exclusion
         speedSlider.value = zoneParam.speedMultiplier
         accelerationSlider.value = zoneParam.accelerationMultiplier
         frictionSlider.value = zoneParam.frictionStrenght
+        root.screenEffectId = zoneParam.screenEffectId
+        effectCombo.currentIndex = root._indexForEffectId(zoneParam.screenEffectId)
     }
     
     background: Rectangle {
-        color: "#2a2a2a"
-        radius: 4
-        border.color: "#444444"
+        color: Theme.surface
+        radius: Theme.radiusS
+        border.color: Theme.border
         border.width: 1
     }
-    
+
     label: Text {
         text: root.title
-        color: "#cccccc"
-        font.pixelSize: 12
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeBody
         font.bold: true
-        leftPadding: 8
+        leftPadding: Theme.spacingM
     }
-    
+
     GridLayout {
         anchors.fill: parent
         columns: 2
-        rowSpacing: 10
-        columnSpacing: 10
+        rowSpacing: Theme.spacingL
+        columnSpacing: Theme.spacingL
         
         // Zone Name
         Label {
             text: "Nom:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
         }
         
-        TextField {
+        MeowTextField {
             id: nameField
             Layout.fillWidth: true
             placeholderText: "Nom de la zone"
             text: ""
-            
-            background: Rectangle {
-                color: "#1a1a1a"
-                radius: 3
-                border.color: nameField.activeFocus ? "#5cb85c" : "#444444"
-                border.width: 1
-                Behavior on border.color { ColorAnimation { duration: 150 } }
-            }
-            
-            color: "#ffffff"
-            font.pixelSize: 11
-            padding: 6
-            
+
             onEditingFinished: {
                 root.configurationChanged()
             }
@@ -86,42 +106,19 @@ GroupBox {
                 root.focusReleased()
             }
         }
-        
+
         // Exclusion Mode
         Label {
             text: "Mode Exclusion:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
         }
-        
-        Switch {
+
+        MeowSwitch {
             id: exclusionSwitch
             checked: true
-            
-            indicator: Rectangle {
-                implicitWidth: 36
-                implicitHeight: 20
-                x: exclusionSwitch.leftPadding
-                y: parent.height / 2 - height / 2
-                radius: 10
-                color: exclusionSwitch.checked ? "#5cb85c" : "#333333"
-                border.color: exclusionSwitch.checked ? "#5cb85c" : "#555555"
 
-                Rectangle {
-                    x: exclusionSwitch.checked ? parent.width - width - 2 : 2
-                    y: 2
-                    width: 16
-                    height: 16
-                    radius: 8
-                    color: "#ffffff"
-                    
-                    Behavior on x {
-                        NumberAnimation { duration: 150 }
-                    }
-                }
-            }
-            
             onToggled: {
                 root.configurationChanged()
             }
@@ -130,224 +127,109 @@ GroupBox {
         // Speed Multiplier
         Label {
             text: "Multiplicateur Vitesse:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
         }
         
-        RowLayout {
+        MeowSlider {
+            id: speedSlider
             Layout.fillWidth: true
-            spacing: 8
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
             enabled: !exclusionSwitch.checked
 
-            Slider {
-                id: speedSlider
-                Layout.fillWidth: true
-                from: 0.1
-                to: 3.0
-                stepSize: 0.1
-                value: 1.0
+            from: 0.1
+            to: 3.0
+            stepSize: 0.1
+            value: 1.0
+            decimals: 1
+            unitText: "×"
+            accentColor: Theme.success
 
-                background: Rectangle {
-                    x: speedSlider.leftPadding
-                    y: speedSlider.topPadding + speedSlider.availableHeight / 2 - height / 2
-                    implicitWidth: 100
-                    implicitHeight: 4
-                    width: speedSlider.availableWidth
-                    height: implicitHeight
-                    radius: 2
-                    color: "#3a3a3a"
-
-                    Rectangle {
-                        width: speedSlider.visualPosition * parent.width
-                        height: parent.height
-                        color: "#4CAF50"
-                        radius: 2
-                    }
-                }
-
-                handle: Rectangle {
-                    x: speedSlider.leftPadding + speedSlider.visualPosition * (speedSlider.availableWidth - width)
-                    y: speedSlider.topPadding + speedSlider.availableHeight / 2 - height / 2
-                    implicitWidth: 14
-                    implicitHeight: 14
-                    radius: 7
-                    color: "#ffffff"
-                    border.color: "#4CAF50"
-                    border.width: 2
-                }
-                
-                onMoved: {
-                        root.configurationChanged()
-                }
-            }
-            
-            Rectangle {
-                Layout.preferredWidth: 45
-                height: 26
-                radius: 4
-                color: "#2a2a2a"
-                border.color: "#4CAF50"
-                border.width: 1
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "×" + speedSlider.value.toFixed(1)
-                    color: "#ffffff"
-                    font.pointSize: 8
-                    font.bold: true
-                }
-            }
+            onMoved: root.configurationChanged()
         }
 
         // Friction
         Label {
             text: "Friction:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
         }
         
-        RowLayout {
+        MeowSlider {
+            id: frictionSlider
             Layout.fillWidth: true
-            spacing: 8
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
             enabled: !exclusionSwitch.checked
 
-            Slider {
-                id: frictionSlider
-                Layout.fillWidth: true
-                from: 0.0
-                to: 1.0
-                stepSize: 0.01
-                value: 0.0
+            from: 0.0
+            to: 1.0
+            stepSize: 0.01
+            value: 0.0
+            decimals: 2
+            accentColor: "#5DADE2"
 
-                background: Rectangle {
-                    x: frictionSlider.leftPadding
-                    y: frictionSlider.topPadding + frictionSlider.availableHeight / 2 - height / 2
-                    implicitWidth: 100
-                    implicitHeight: 4
-                    width: frictionSlider.availableWidth
-                    height: implicitHeight
-                    radius: 2
-                    color: "#3a3a3a"
-
-                    Rectangle {
-                        width: frictionSlider.visualPosition * parent.width
-                        height: parent.height
-                        color: "#5DADE2"
-                        radius: 2
-                    }
-                }
-
-                handle: Rectangle {
-                    x: frictionSlider.leftPadding + frictionSlider.visualPosition * (frictionSlider.availableWidth - width)
-                    y: frictionSlider.topPadding + frictionSlider.availableHeight / 2 - height / 2
-                    implicitWidth: 14
-                    implicitHeight: 14
-                    radius: 7
-                    color: "#ffffff"
-                    border.color: "#5DADE2"
-                    border.width: 2
-                }
-                
-                onMoved: {
-                        root.configurationChanged()
-                }
-            }
-            
-            Rectangle {
-                Layout.preferredWidth: 45
-                height: 26
-                radius: 4
-                color: "#2a2a2a"
-                border.color: "#5DADE2"
-                border.width: 1
-
-                Text {
-                    anchors.centerIn: parent
-                    text: frictionSlider.value.toFixed(2)
-                    color: "#ffffff"
-                    font.pointSize: 8
-                    font.bold: true
-                }
-            }
+            onMoved: root.configurationChanged()
         }
 
         // Acceleration Multiplier
         Label {
             text: "Multiplicateur Accélération:"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
         }
         
-        RowLayout {
+        MeowSlider {
+            id: accelerationSlider
             Layout.fillWidth: true
-            spacing: 8
             opacity: exclusionSwitch.checked ? 0.5 : 1.0
             enabled: !exclusionSwitch.checked
 
-            Slider {
-                id: accelerationSlider
-                Layout.fillWidth: true
-                from: 0.0
-                to: 10.0
-                stepSize: 0.05
-                value: 1.0
+            from: 0.0
+            to: 10.0
+            stepSize: 0.05
+            value: 1.0
+            decimals: 2
+            unitText: "×"
+            accentColor: Theme.warning
 
-                background: Rectangle {
-                    x: accelerationSlider.leftPadding
-                    y: accelerationSlider.topPadding + accelerationSlider.availableHeight / 2 - height / 2
-                    implicitWidth: 100
-                    implicitHeight: 4
-                    width: accelerationSlider.availableWidth
-                    height: implicitHeight
-                    radius: 2
-                    color: "#3a3a3a"
+            onMoved: root.configurationChanged()
+        }
 
-                    Rectangle {
-                        width: accelerationSlider.visualPosition * parent.width
-                        height: parent.height
-                        color: "#FF9800"
-                        radius: 2
-                    }
-                }
+        // Effet visuel à l'entrée de zone (bibliothèque MapInfo.screenEffects)
+        Label {
+            text: "Effet écran:"
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
+            font.bold: true
+        }
 
-                handle: Rectangle {
-                    x: accelerationSlider.leftPadding + accelerationSlider.visualPosition * (accelerationSlider.availableWidth - width)
-                    y: accelerationSlider.topPadding + accelerationSlider.availableHeight / 2 - height / 2
-                    implicitWidth: 14
-                    implicitHeight: 14
-                    radius: 7
-                    color: "#ffffff"
-                    border.color: "#FF9800"
-                    border.width: 2
-                }
-                
-                onMoved: {
-                        root.configurationChanged()
+        MeowComboBox {
+            id: effectCombo
+            Layout.fillWidth: true
+            model: root._effectModel
+            textRole: "name"
+            currentIndex: root._indexForEffectId(root.screenEffectId)
+
+            // Reflète une liste qui change à chaud (ajout/suppression d'effets).
+            Connections {
+                target: root
+                function on_EffectModelChanged() {
+                    effectCombo.currentIndex = root._indexForEffectId(root.screenEffectId)
                 }
             }
-            
-            Rectangle {
-                Layout.preferredWidth: 45
-                height: 26
-                radius: 4
-                color: "#2a2a2a"
-                border.color: "#FF9800"
-                border.width: 1
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "×" + accelerationSlider.value.toFixed(2)
-                    color: "#ffffff"
-                    font.pointSize: 8
-                    font.bold: true
+            onActivated: function(index) {
+                const entry = root._effectModel[index]
+                const id = entry ? entry.id : ""
+                if (root.screenEffectId !== id) {
+                    root.screenEffectId = id
+                    root.configurationChanged()
                 }
             }
         }

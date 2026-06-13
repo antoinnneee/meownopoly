@@ -3,10 +3,11 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 import AssetManager
+import theme
 
 Rectangle {
     id: window
-    color: "#1e1e1e"
+    color: Theme.background
     
     signal backRequested()
     
@@ -16,7 +17,7 @@ Rectangle {
         text: "← Back"
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.margins: 10
+        anchors.margins: Theme.spacingL
         z: 100
         
         onClicked: window.backRequested()
@@ -25,10 +26,10 @@ Rectangle {
     Text {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 15
+        anchors.topMargin: Theme.spacingXXL
         text: "Asset Manager Test"
-        color: "white"
-        font.pixelSize: 20
+        color: Theme.textPrimary
+        font.pixelSize: Theme.fontSizeHeading
         font.bold: true
     }
 
@@ -38,13 +39,13 @@ Rectangle {
             right: parent.right
             top: backButton.bottom
             bottom: parent.bottom
-            margins: 20
+            margins: Theme.spacingHuge
         }
-        spacing: 15
+        spacing: Theme.spacingXXL
 
         Text {
             text: "Generate metadata.json files automatically from image files"
-            color: "white"
+            color: Theme.textPrimary
             wrapMode: Text.Wrap
             Layout.fillWidth: true
         }
@@ -52,7 +53,7 @@ Rectangle {
         // Available assets scan
         Text {
             text: "Available Assets:"
-            color: "white"
+            color: Theme.textPrimary
             font.bold: true
         }
 
@@ -65,8 +66,8 @@ Rectangle {
             model: AssetManager.scanAvailableAssets()
             delegate: Text {
                 text: "• " + modelData
-                color: "#cccccc"
-                font.pixelSize: 12
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
                 width: availableAssetsList.width
             }
 
@@ -77,7 +78,7 @@ Rectangle {
         }
         // Generation buttons
         Row {
-            spacing: 10
+            spacing: Theme.spacingL
 
             Button {
                 text: "🔄 Scan Assets"
@@ -92,10 +93,10 @@ Rectangle {
                     var success = AssetManager.generateAllMetadata()
                     if (success) {
                         generationStatus.text = "✅ Metadata generated successfully!"
-                        generationStatus.color = "#4CAF50"
+                        generationStatus.color = Theme.success
                     } else {
                         generationStatus.text = "❌ Failed to generate metadata"
-                        generationStatus.color = "#F44336"
+                        generationStatus.color = Theme.danger
                     }
                     statusTimer.start()
                 }
@@ -110,8 +111,8 @@ Rectangle {
 
         Text {
             text: "Note: This will overwrite existing metadata.json files"
-            color: "#FFC107"
-            font.pixelSize: 11
+            color: Theme.warning
+            font.pixelSize: Theme.fontSizeSmall
             font.italic: true
         }
 

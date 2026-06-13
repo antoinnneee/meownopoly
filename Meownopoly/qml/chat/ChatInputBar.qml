@@ -3,12 +3,13 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Meownopoly.Chat 1.0
 import Catway 1.0
+import theme
 
 Rectangle {
     Layout.fillWidth: true
     Layout.preferredHeight: recipientId ? 88 : 60
-    color: "#333333"
-    border.color: "#444444"
+    color: Theme.surfaceAlt
+    border.color: Theme.border
     border.width: 1
 
     property var chatClient
@@ -21,7 +22,7 @@ Rectangle {
     signal createSnapableRequested(string jsonString)
     signal focusReleased()
 
-    Behavior on Layout.preferredHeight { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    Behavior on Layout.preferredHeight { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
 
     function sendCurrentMessage() {
         if (inputField.text !== "" && chatClient) {
@@ -45,8 +46,8 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 4
+        anchors.margins: Theme.spacingM
+        spacing: Theme.spacingXS
 
         // Bandeau "Message privé à : X"
         Rectangle {
@@ -54,23 +55,23 @@ Rectangle {
             Layout.preferredHeight: 24
             visible: !!recipientId
             color: "#2a3a4a"
-            radius: 4
-            border.color: "#4A90E2"
+            radius: Theme.radiusS
+            border.color: Theme.accent
             border.width: 1
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 4
-                spacing: 6
+                anchors.margins: Theme.spacingXS
+                spacing: Theme.spacingS
 
                 Text {
                     text: "🔒"
-                    font.pointSize: 8
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 Text {
                     text: "Message privé à : " + (recipientNickname || recipientId || "?")
-                    color: "#4A90E2"
-                    font.pointSize: 8
+                    color: Theme.accent
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                     Layout.fillWidth: true
                     elide: Text.ElideRight
@@ -78,13 +79,13 @@ Rectangle {
                 Rectangle {
                     Layout.preferredWidth: 20
                     Layout.preferredHeight: 20
-                    color: clearRecipientArea.containsMouse ? "#444444" : "transparent"
-                    radius: 3
+                    color: clearRecipientArea.containsMouse ? Theme.border : "transparent"
+                    radius: Theme.radiusXS
 
                     Text {
                         text: "✕"
                         color: "#aaaaaa"
-                        font.pointSize: 8
+                        font.pixelSize: Theme.fontSizeSmall
                         anchors.centerIn: parent
                     }
 
@@ -108,20 +109,20 @@ Rectangle {
     RowLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: 8
+        spacing: Theme.spacingM
 
         Rectangle {
             Layout.preferredWidth: 36
             Layout.preferredHeight: 36
-            color: imgBtnArea.containsMouse ? "#444444" : "#3a3a3a"
-            radius: 6
-            border.color: imgBtnArea.pressed ? "#4A90E2" : "#555555"
+            color: imgBtnArea.containsMouse ? Theme.hover(Theme.surfaceHover) : Theme.surfaceHover
+            radius: Theme.radiusM
+            border.color: imgBtnArea.pressed ? Theme.accent : Theme.borderLight
             border.width: 1
 
             Text {
                 text: "📷"
                 anchors.centerIn: parent
-                font.pointSize: 12
+                font.pixelSize: Theme.fontSizeLarge
             }
 
             MouseArea {
@@ -131,21 +132,21 @@ Rectangle {
                 onClicked: openImageDialog()
             }
 
-            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on color { ColorAnimation { duration: Theme.durationFast } }
         }
 
         Rectangle {
             Layout.preferredWidth: 36
             Layout.preferredHeight: 36
-            color: fileBtnArea.containsMouse ? "#444444" : "#3a3a3a"
-            radius: 6
-            border.color: fileBtnArea.pressed ? "#667eea" : "#555555"
+            color: fileBtnArea.containsMouse ? Theme.hover(Theme.surfaceHover) : Theme.surfaceHover
+            radius: Theme.radiusM
+            border.color: fileBtnArea.pressed ? Theme.violetStart : Theme.borderLight
             border.width: 1
 
             Text {
                 text: "📄"
                 anchors.centerIn: parent
-                font.pointSize: 12
+                font.pixelSize: Theme.fontSizeLarge
             }
 
             MouseArea {
@@ -155,27 +156,27 @@ Rectangle {
                 onClicked: openTextFileDialog()
             }
 
-            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on color { ColorAnimation { duration: Theme.durationFast } }
         }
 
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: "#2a2a2a"
-            radius: 6
-            border.color: inputField.activeFocus ? "#4A90E2" : "#444444"
+            color: Theme.surface
+            radius: Theme.radiusM
+            border.color: inputField.activeFocus ? Theme.accent : Theme.border
             border.width: 1
 
-            Behavior on border.color { ColorAnimation { duration: 150 } }
+            Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
 
             TextField {
                 id: inputField
                 anchors.fill: parent
-                anchors.margins: 4
+                anchors.margins: Theme.spacingXS
                 placeholderText: "Tapez un message..."
-                placeholderTextColor: "#666666"
-                color: "#cccccc"
-                font.pointSize: 9
+                placeholderTextColor: Theme.textDisabled
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
 
                 background: Rectangle {
                     color: "transparent"
@@ -190,23 +191,23 @@ Rectangle {
         Rectangle {
             Layout.preferredWidth: 60
             Layout.preferredHeight: 36
-            color: sendBtnArea.pressed ? "#569c58" : (sendBtnArea.containsMouse ? "#4a8a4a" : "#3d6b3d")
-            radius: 6
-            border.color: "#569c58"
+            color: sendBtnArea.pressed ? Theme.accentAlt : (sendBtnArea.containsMouse ? "#4a8a4a" : "#3d6b3d")
+            radius: Theme.radiusM
+            border.color: Theme.accentAlt
             border.width: 1
             opacity: inputField.text !== "" ? 1.0 : 0.5
 
-            Behavior on color { ColorAnimation { duration: 100 } }
-            Behavior on opacity { NumberAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+            Behavior on opacity { NumberAnimation { duration: Theme.durationNormal } }
 
             RowLayout {
                 anchors.centerIn: parent
-                spacing: 4
+                spacing: Theme.spacingXS
 
                 Text {
                     text: "Envoyer"
-                    color: "#ffffff"
-                    font.pointSize: 8
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                 }
             }

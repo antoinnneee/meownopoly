@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import PlayerProfile
+import theme
 
 /*
  * Sélecteur du PickMode + minOccurrences pour un PlayerProfile.
@@ -29,7 +30,7 @@ ColumnLayout {
 
         Label {
             text: "Mode de sélection"
-            color: "#cccccc"
+            color: Theme.textSecondary
             font.pixelSize: Math.round(Screen.pixelDensity * 3)
         }
 
@@ -61,7 +62,7 @@ ColumnLayout {
 
         Label {
             text: "min ×"
-            color: "#cccccc"
+            color: Theme.textSecondary
             font.pixelSize: Math.round(Screen.pixelDensity * 3)
             visible: root.pickMode === PlayerProfile.Mandatory
         }

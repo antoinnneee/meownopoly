@@ -12,6 +12,7 @@
  */
 import QtQuick 2.15
 import QtQuick.Controls
+import theme
 
 Item {
     id: root
@@ -32,27 +33,27 @@ Item {
         id: badge
         width: badgeRow.implicitWidth + 16
         height: badgeRow.implicitHeight + 10
-        radius: 6
-        color: root._waveOn ? "#3b1d4d" : "#2a2a2e"
-        border.color: root._waveOn ? "#a855f7" : "#71717a"
+        radius: Theme.radiusM
+        color: root._waveOn ? "#3b1d4d" : Theme.surface
+        border.color: root._waveOn ? "#a855f7" : Theme.borderLight
         border.width: 1
 
         Row {
             id: badgeRow
             anchors.centerIn: parent
-            spacing: 6
+            spacing: Theme.spacingS
 
             Rectangle {
                 width: 10; height: 10; radius: 5
                 anchors.verticalCenter: parent.verticalCenter
-                color: root._waveOn ? "#a855f7" : "#71717a"
+                color: root._waveOn ? "#a855f7" : Theme.borderLight
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "2.5D"
-                color: "#f4f4f5"
-                font.pixelSize: 12
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
 
@@ -60,7 +61,7 @@ Item {
             Rectangle {
                 width: 1
                 height: 14
-                color: "#52525b"
+                color: Theme.borderLight
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -69,19 +70,19 @@ Item {
                 id: jumpBtn
                 width: jumpText.implicitWidth + 12
                 height: 18
-                radius: 4
+                radius: Theme.radiusS
                 anchors.verticalCenter: parent.verticalCenter
                 color: jumpMa.containsMouse
-                       ? (jumpMa.pressed ? "#3f3f46" : "#33333a")
+                       ? (jumpMa.pressed ? Theme.surfaceHover : Theme.surfaceAlt)
                        : "transparent"
-                border.color: "#52525b"
+                border.color: Theme.borderLight
                 border.width: 1
                 Text {
                     id: jumpText
                     anchors.centerIn: parent
                     text: "Jump"
-                    color: "#f4f4f5"
-                    font.pixelSize: 10
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeCaption
                     font.bold: true
                 }
                 MouseArea {
@@ -107,21 +108,21 @@ Item {
                 id: waveBtn
                 width: waveText.implicitWidth + 12
                 height: 18
-                radius: 4
+                radius: Theme.radiusS
                 anchors.verticalCenter: parent.verticalCenter
                 color: root._waveOn
                        ? "#6b21a8"
                        : (waveMa.containsMouse
-                            ? (waveMa.pressed ? "#3f3f46" : "#33333a")
+                            ? (waveMa.pressed ? Theme.surfaceHover : Theme.surfaceAlt)
                             : "transparent")
-                border.color: root._waveOn ? "#a855f7" : "#52525b"
+                border.color: root._waveOn ? "#a855f7" : Theme.borderLight
                 border.width: 1
                 Text {
                     id: waveText
                     anchors.centerIn: parent
                     text: root._waveOn ? "Wave ✓" : "Wave"
-                    color: "#f4f4f5"
-                    font.pixelSize: 10
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeCaption
                     font.bold: true
                 }
                 MouseArea {

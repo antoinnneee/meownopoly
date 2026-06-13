@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 import editorBottomPanel
+import theme
 
 EBP_Content {
     id: root
@@ -112,15 +113,15 @@ EBP_Content {
     ScrollView {
         id: scrollView
         anchors.fill: parent
-        anchors.margins: 8
-        
+        anchors.margins: Theme.spacingM
+
         // Grille des types de cases
         GridLayout {
             id: gridLayout
             width: scrollView.width - 20
             columns: root.gridColumns
-            rowSpacing: 12
-            columnSpacing: 12
+            rowSpacing: Theme.spacingXL
+            columnSpacing: Theme.spacingXL
             
             // Repeater pour créer les cellules
             Repeater {
@@ -169,7 +170,7 @@ EBP_Content {
                     
                     // Animation de scale
                     Behavior on scale {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+                        NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutQuad }
                     }
                 }
             }

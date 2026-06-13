@@ -36,6 +36,12 @@ Item {
 
     property real cameraMagnification: 1.0
     property string modelName: "Princess"
+    // Re-skin Color ID Map du joueur principal (JSON du PlayerProfile).
+    property string colorVariant: ""
+    // Couleur d'équipe imposée par la partie (sur les zones team:true).
+    property color teamColorOverride: "transparent"
+    // Acteur P2 (test multi-acteurs) : couleur d'équipe distincte sur ses zones team.
+    property color teamColorOverride2: "#f97316"
 
     // Référence au moteur physique global. Utilisé par PhysicsActor /
     // CameraRig / InputController. Décision §3 du plan : un PhysicsWorld
@@ -270,25 +276,13 @@ Item {
             y: 0
             z: 0
 
-            Model {
-                id: primitiveModel
-                visible: root.modelName === "Cube" || root.modelName === "Sphere"
-                source: root.modelName === "Cube" ? "#Cube" : "#Sphere"
-                materials: PrincipledMaterial { baseColor: "white" }
-            }
-
-            Loader3D {
-                id: modelLoader
-                visible: root.modelName !== "Cube" && root.modelName !== "Sphere"
-                source: visible ? ("file:///" + AssetManager.getAppDataPath()
-                                  + "/models/" + root.modelName + "/"
-                                  + root.modelName + ".qml")
-                                : ""
-                onStatusChanged: {
-                    if (status === Loader3D.Error)
-                        console.error("Erreur chargement modèle 3D:",
-                                      sourceComponent ? sourceComponent.errorString() : "")
-                }
+            // Modèle joueur re-skinné (format kura : .glb + Color ID Map).
+            // Gère aussi les primitives Cube/Sphere. Remplace l'ancien couple
+            // Model(primitive) + Loader3D(.qml).
+            SkinnedModel {
+                modelName: root.modelName
+                colorVariant: root.colorVariant
+                teamColorOverride: root.teamColorOverride
             }
         }
 
@@ -301,10 +295,12 @@ Item {
             y: 0
             z: 0
             visible: false
-            Model {
-                source: "#Cube"
-                scale: Qt.vector3d(0.5, 0.5, 0.5)
-                materials: PrincipledMaterial { baseColor: "#f97316" }
+            // Même modèle que P1 mais teinte d'équipe distincte sur les zones
+            // team:true → preuve du rendu multi-acteurs re-skinné (Phase D).
+            SkinnedModel {
+                modelName: root.modelName
+                colorVariant: root.colorVariant
+                teamColorOverride: root.teamColorOverride2
             }
         }
 

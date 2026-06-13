@@ -6,6 +6,7 @@ import QtQuick.Dialogs
 
 import QtQuick.Controls.impl
 import ui_item
+import theme
 
 CollapsableGroupBox {
     id: control
@@ -36,34 +37,14 @@ CollapsableGroupBox {
             Layout.fillWidth: true
             Layout.fillHeight: true
             
-            CheckBox {
+            MeowCheckBox {
                 id: blurEnabledCheck
                 Layout.fillHeight: true
+                accentColor: Theme.success
 
                 onCheckedChanged: {
                         control.effectChanged()
                 }
-                indicator: Rectangle {
-                    implicitWidth: 20
-                    implicitHeight: 20
-
-                    x: blurEnabledCheck.text ? (blurEnabledCheck.mirrored ? blurEnabledCheck.width - width - blurEnabledCheck.rightPadding : blurEnabledCheck.leftPadding) : blurEnabledCheck.leftPadding + (blurEnabledCheck.availableWidth - width) / 2
-                    y: blurEnabledCheck.topPadding + (blurEnabledCheck.availableHeight - height) / 2
-                    color: blurEnabledCheck.checked ? "#4CAF50" : "#444444"
-                    border.width: blurEnabledCheck.visualFocus ? 2 : 1
-                    border.color:  "#666666" 
-                    radius: 3
-
-                    ColorImage {
-                        x: (parent.width - width) / 2
-                        y: (parent.height - height) / 2
-                        defaultColor: "#cfd0d1"
-                        color: blurEnabledCheck.palette.text
-                        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
-                        visible: blurEnabledCheck.checkState === Qt.Checked
-                    }
-                }
-                
             }
             
             VEP_Slider {
@@ -84,36 +65,14 @@ CollapsableGroupBox {
             Layout.fillHeight: true
             Layout.fillWidth: true
             
-            CheckBox {
+            MeowCheckBox {
                 id: shadowEnabledCheck
-
                 Layout.fillHeight: true
-                indicator: Rectangle {
-                    implicitWidth: 20
-                    implicitHeight: 20
+                accentColor: Theme.success
 
-                    x: shadowEnabledCheck.text ? (shadowEnabledCheck.mirrored ? shadowEnabledCheck.width - width - shadowEnabledCheck.rightPadding : shadowEnabledCheck.leftPadding) : shadowEnabledCheck.leftPadding + (shadowEnabledCheck.availableWidth - width) / 2
-                    y: shadowEnabledCheck.topPadding + (shadowEnabledCheck.availableHeight - height) / 2
-                    color: shadowEnabledCheck.checked ? "#4CAF50" : "#444444"
-                    border.width: shadowEnabledCheck.visualFocus ? 2 : 1
-                    border.color:  "#666666" 
-                    radius: 3
-
-                    ColorImage {
-                        x: (parent.width - width) / 2
-                        y: (parent.height - height) / 2
-                        defaultColor: "#cfd0d1"
-                        color: shadowEnabledCheck.palette.text
-                        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
-                        visible: shadowEnabledCheck.checkState === Qt.Checked
-                    }
-                }
-
-                
                 onCheckedChanged: {
                     control.effectChanged()
                 }
-
             }
             
             VEP_Slider {

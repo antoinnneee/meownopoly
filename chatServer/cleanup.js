@@ -1,7 +1,8 @@
 const db = require('./database');
 
-// TTL in hours
-const TTL_HOURS = 24;
+// TTL in hours — configurable via .env (TTL_HOURS), défaut 24 h.
+// Avant, la valeur était codée en dur et TTL_HOURS dans .env était ignoré.
+const TTL_HOURS = parseFloat(process.env.TTL_HOURS) || 24;
 
 /**
  * Runs the cleanup process.

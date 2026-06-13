@@ -3,10 +3,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Particles
 import Meownopoly.Account 1.0
+import theme
 
 Rectangle {
     id: root
-    color: "#1a1a1a"
+    color: Theme.background
 
     signal accountCreated()
 
@@ -52,8 +53,8 @@ Rectangle {
     Text {
         id: welcomeTitle
         text: "Bienvenue sur Meownopoly!"
-        color: "#ffffff"
-        font.pixelSize: 42
+        color: Theme.textPrimary
+        font.pixelSize: Theme.px(42)
         font.bold: true
         anchors {
             horizontalCenter: parent.horizontalCenter
@@ -65,18 +66,18 @@ Rectangle {
     Text {
         id: subtitle
         text: "Créez votre profil pour commencer"
-        color: "#cccccc"
-        font.pixelSize: 20
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeHeading
         anchors {
             horizontalCenter: parent.horizontalCenter
             top: welcomeTitle.bottom
-            topMargin: 12
+            topMargin: Theme.spacingXL
         }
     }
 
     Text {
         text: "🐱"
-        font.pixelSize: 80
+        font.pixelSize: Theme.px(80)
         anchors {
             horizontalCenter: parent.horizontalCenter
             top: subtitle.bottom
@@ -89,20 +90,20 @@ Rectangle {
         width: 400
         height: 450
         anchors.centerIn: parent
-        color: "#2a2a2a"
+        color: Theme.surface
         radius: 16
-        border.color: "#444444"
+        border.color: Theme.border
         border.width: 1
 
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 30
-            spacing: 20
+            spacing: Theme.spacingHuge
 
             Text {
                 text: "Choisissez votre pseudo"
-                color: "#cccccc"
-                font.pixelSize: 16
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeLarge
                 font.bold: true
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -110,21 +111,21 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
-                color: "#333333"
-                radius: 8
-                border.color: nicknameField.activeFocus ? "#4caf50" : "#555555"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusL
+                border.color: nicknameField.activeFocus ? Theme.success : Theme.borderLight
                 border.width: 2
 
-                Behavior on border.color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
 
                 TextField {
                     id: nicknameField
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: Theme.spacingXS
                     placeholderText: "Entrez votre pseudo..."
-                    placeholderTextColor: "#666666"
-                    color: "#ffffff"
-                    font.pixelSize: 16
+                    placeholderTextColor: Theme.textDisabled
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeLarge
                     horizontalAlignment: Text.AlignHCenter
                     maximumLength: 20
 
@@ -142,11 +143,11 @@ Rectangle {
 
             Text {
                 text: "Serveur STUN"
-                color: "#cccccc"
-                font.pixelSize: 16
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeLarge
                 font.bold: true
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 10
+                Layout.topMargin: Theme.spacingL
             }
 
             ComboBox {
@@ -194,24 +195,24 @@ Rectangle {
             RowLayout {
                 Layout.fillWidth: true
                 visible: stunComboBox.currentText === "Custom"
-                spacing: 10
+                spacing: Theme.spacingL
 
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
-                    color: "#333333"
-                    radius: 8
-                    border.color: customHostField.activeFocus ? "#4caf50" : "#555555"
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusL
+                    border.color: customHostField.activeFocus ? Theme.success : Theme.borderLight
                     border.width: 1
 
                     TextField {
                         id: customHostField
                         anchors.fill: parent
-                        anchors.margins: 4
+                        anchors.margins: Theme.spacingXS
                         placeholderText: "Hôte (ex: stun.example.com)"
-                        placeholderTextColor: "#666666"
-                        color: "#ffffff"
-                        font.pixelSize: 12
+                        placeholderTextColor: Theme.textDisabled
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeBody
                         verticalAlignment: Text.AlignVCenter
                         text: AccountManager.stunServer
 
@@ -228,19 +229,19 @@ Rectangle {
                 Rectangle {
                     Layout.preferredWidth: 80
                     Layout.preferredHeight: 40
-                    color: "#333333"
-                    radius: 8
-                    border.color: customPortField.activeFocus ? "#4caf50" : "#555555"
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusL
+                    border.color: customPortField.activeFocus ? Theme.success : Theme.borderLight
                     border.width: 1
 
                     TextField {
                         id: customPortField
                         anchors.fill: parent
-                        anchors.margins: 4
+                        anchors.margins: Theme.spacingXS
                         placeholderText: "Port"
-                        placeholderTextColor: "#666666"
-                        color: "#ffffff"
-                        font.pixelSize: 12
+                        placeholderTextColor: Theme.textDisabled
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeBody
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: AccountManager.stunPort.toString()
@@ -259,16 +260,16 @@ Rectangle {
 
             Text {
                 text: nicknameField.text.length + "/20 caractères"
-                color: "#666666"
-                font.pixelSize: 11
+                color: Theme.textDisabled
+                font.pixelSize: Theme.fontSizeSmall
                 Layout.alignment: Qt.AlignRight
             }
 
             Text {
                 id: errorText
                 text: ""
-                color: "#ff6b6b"
-                font.pixelSize: 12
+                color: Theme.dangerSoft
+                font.pixelSize: Theme.fontSizeBody
                 Layout.alignment: Qt.AlignHCenter
                 visible: text !== ""
             }
@@ -282,18 +283,18 @@ Rectangle {
 
                 background: Rectangle {
                     color: {
-                        if (!createAccountButton.enabled) return "#555555"
-                        return createAccountButton.pressed ? "#2e7d32" : "#4caf50"
+                        if (!createAccountButton.enabled) return Theme.borderLight
+                        return createAccountButton.pressed ? Theme.pressed(Theme.success) : Theme.success
                     }
-                    radius: 8
+                    radius: Theme.radiusL
 
-                    Behavior on color { ColorAnimation { duration: 100 } }
+                    Behavior on color { ColorAnimation { duration: Theme.durationFast } }
                 }
 
                 contentItem: Text {
                     text: createAccountButton.text
-                    color: createAccountButton.enabled ? "white" : "#888888"
-                    font.pixelSize: 16
+                    color: createAccountButton.enabled ? Theme.textPrimary : Theme.textMuted
+                    font.pixelSize: Theme.fontSizeLarge
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -317,8 +318,8 @@ Rectangle {
 
     Text {
         text: "Votre compte est stocké localement sur cet appareil"
-        color: "#666666"
-        font.pixelSize: 12
+        color: Theme.textDisabled
+        font.pixelSize: Theme.fontSizeBody
         anchors {
             horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom
@@ -328,12 +329,12 @@ Rectangle {
 
     Text {
         text: "v0.2.0 editor edition"
-        color: "#808080"
-        font.pixelSize: 14
+        color: Theme.textMuted
+        font.pixelSize: Theme.fontSizeMedium
         anchors {
             right: parent.right
             bottom: parent.bottom
-            margins: 10
+            margins: Theme.spacingL
         }
     }
 

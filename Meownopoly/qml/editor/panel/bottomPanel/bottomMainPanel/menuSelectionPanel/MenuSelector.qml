@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import editor
+import theme
 Item {
     id: root
     height: Screen.pixelDensity * 12.5
@@ -41,16 +42,16 @@ Item {
             Layout.fillHeight: true
             background: Rectangle {
                 anchors.fill: parent
-                color: parent.pressed ? "#555555" : "#444444"
-                border.color: "#666666"
+                color: parent.pressed ? Theme.borderLight : Theme.border
+                border.color: Theme.textDisabled
                 border.width: 1
-                radius: 4
+                radius: Theme.radiusS
             }
 
             contentItem: Text {
                 text: root.isExpanded ? "▼" : "▲"
-                color: "white"
-                font.pixelSize: 12
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 anchors.fill:expandButton
@@ -114,16 +115,16 @@ Item {
         anchors.bottomMargin: 0
         background: Rectangle {
             anchors.fill: parent
-            color: parent.pressed ? "#555555" : "#444444"
-            border.color: "#666666"
+            color: parent.pressed ? Theme.borderLight : Theme.border
+            border.color: Theme.textDisabled
             border.width: 1
-            radius: 4
+            radius: Theme.radiusS
         }
 
         contentItem: Text {
             text: root.isSidePanelExpanded ? "◀" : "▶"
-            color: "white"
-            font.pixelSize: 12
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeBody
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             anchors.fill:expendSidePanelBt

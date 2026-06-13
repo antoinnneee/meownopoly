@@ -36,9 +36,9 @@ const MAX_NAME_LEN = 128;
 const MAX_NICKNAME_LEN = 64;
 const MAX_MAX_PLAYERS = 16;
 const ID_REGEX = /^[A-Za-z0-9_.:\-]{1,64}$/; // UUIDs, timestamps, ids composites OK
-// SHA-256 = 32 octets. Le client C++ envoie le hash en base64 (44 chars, 1 `=`)
-// via `ChatCrypto::derivePasswordProof().toBase64()`. On accepte aussi la
-// forme hex canonique (64 chars) pour la compat dashboard / futurs clients.
+// SHA-256 = 32 octets. Le client C++ envoie le hash en hex (64 chars) via
+// `QString::fromLatin1(ChatCrypto::derivePasswordProof(...))` — la forme
+// base64 canonique (44 chars, 1 `=`) reste acceptée pour le dashboard JS.
 const HASH_HEX_REGEX = /^[0-9a-fA-F]{64}$/;
 const HASH_B64_REGEX = /^[A-Za-z0-9+/]{43}=$/;
 
@@ -1122,8 +1122,20 @@ function handleLeaveSession(ws, payload) {
         }
     }
 
-    // Leaving triggers key rotation necessity for remaining members to secure future messages
-    keyRotationRequired.add(session_id);
+    // Leaving triggers key rotation necessity for remaining members to secure
+    // future messages — seulement si la session existe encore (si la room
+    // vient d'être purgée ci-dessus, ré-ajouter l'id laisserait une entrée
+    // fantôme dans keyRotationRequired pour toujours).
+    if (rooms.has(session_id)) {
+        keyRotationRequired.add(session_id);
+    }
+
+    // Détacher la socket de la session : sans ça, le gating `sessionCommands`
+    // (ws.session_id === payload.session_id) continuait de passer après un
+    // LEAVE — le partant pouvait encore SEND_MSG / GET_HISTORY sur la session
+    // qu'il avait quittée.
+    ws.session_id = null;
+    ws.player_id = null;
 
     ws.send(JSON.stringify({
         type: 'LEFT_SESSION',
@@ -1222,7 +1234,7 @@ function handleKick(ws, payload) {
     // Trigger key rotation requirement
     keyRotationRequired.add(session_id);
 
-    debug(`Host ${hostId} kicked ${target_player_id} from session ${session_id}`);
+    debug(`Host ${ws.player_id} kicked ${target_player_id} from session ${session_id}`);
 }
 
 // Phase 8 — host migration : rename une session existante (même session_id).

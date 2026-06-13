@@ -17,6 +17,7 @@ import utils
 import EditorEnum
 
 import UiStyle
+import theme
 
 Rectangle {
     id: root
@@ -24,11 +25,11 @@ Rectangle {
     anchors.top: parent.top
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.margins: 10
-    color: "#1e1e1e"
-    border.color: "#3a3a3a"
+    anchors.margins: Theme.spacingL
+    color: Theme.background
+    border.color: Theme.border
     border.width: 1
-    radius: 8
+    radius: Theme.radiusL
     
     // Modèle pour stocker l'historique des commandes
     ListModel {
@@ -93,20 +94,20 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: inputContainer.top
-        anchors.margins: 10
-        anchors.bottomMargin: 5
-        
-        color: "#2d2d2d"
-        border.color: "#3a3a3a"
+        anchors.margins: Theme.spacingL
+        anchors.bottomMargin: Theme.spacingXS
+
+        color: Theme.surface
+        border.color: Theme.border
         border.width: 1
-        radius: 6
-        
+        radius: Theme.radiusM
+
         ListView {
             id: historyView
             anchors.fill: parent
-            anchors.margins: 8
+            anchors.margins: Theme.spacingM
             clip: true
-            spacing: 12
+            spacing: Theme.spacingXL
             
             model: historyModel
             
@@ -116,8 +117,8 @@ Rectangle {
                 
                 contentItem: Rectangle {
                     implicitWidth: 6
-                    radius: 3
-                    color: parent.pressed ? "#555555" : "#444444"
+                    radius: Theme.radiusXS
+                    color: parent.pressed ? Theme.borderLight : Theme.border
                 }
                 
                 background: Rectangle {
@@ -131,36 +132,36 @@ Rectangle {
                 
                 Rectangle {
                     anchors.fill: parent
-                    color: historyMouseArea.containsMouse ? "#252525" : "transparent"
-                    radius: 4
-                    
+                    color: historyMouseArea.containsMouse ? Theme.pressed(Theme.surface) : "transparent"
+                    radius: Theme.radiusS
+
                     Behavior on color {
-                        ColorAnimation { duration: 100 }
+                        ColorAnimation { duration: Theme.durationFast }
                     }
                 }
-                
+
                 Column {
                     id: commandColumn
                     width: parent.width
-                    spacing: 4
-                    
+                    spacing: Theme.spacingXS
+
                     // Ligne de commande avec timestamp
                     Text {
                         width: parent.width
                         text: "[" + model.timestamp + "] > " + model.command
-                        color: "#4a90e2"
+                        color: Theme.accent
                         font.family: "Consolas, Monaco, Courier New, monospace"
-                        font.pointSize: 9
+                        font.pixelSize: Theme.fontSizeBody
                         wrapMode: Text.Wrap
                     }
-                    
+
                     // Résultat
                     Text {
                         width: parent.width
                         text: model.result
-                        color: model.isError ? "#e74c3c" : "#a0e0a0"
+                        color: model.isError ? Theme.danger : "#a0e0a0"
                         font.family: "Consolas, Monaco, Courier New, monospace"
-                        font.pointSize: 9
+                        font.pixelSize: Theme.fontSizeBody
                         wrapMode: Text.Wrap
                     }
                 }
@@ -184,9 +185,9 @@ Rectangle {
                 anchors.centerIn: parent
                 visible: historyModel.count === 0
                 text: "Admin Console Ready\nPress ² to show/hide"
-                color: "#555555"
+                color: Theme.textDisabled
                 font.family: "Consolas, Monaco, Courier New, monospace"
-                font.pointSize: 10
+                font.pixelSize: Theme.fontSizeBody
                 horizontalAlignment: Text.AlignHCenter
             }
         }
@@ -198,19 +199,19 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.margins: 10
-        anchors.topMargin: 5
-        
+        anchors.margins: Theme.spacingL
+        anchors.topMargin: Theme.spacingXS
+
         height: Math.max(60, Math.min(commandInputFlickable.contentHeight + 20, 150))
-        
-        color: "#2d2d2d"
-        border.color: commandInput.activeFocus ? "#4a90e2" : "#3a3a3a"
+
+        color: Theme.surface
+        border.color: commandInput.activeFocus ? Theme.accent : Theme.border
         border.width: commandInput.activeFocus ? 2 : 1
-        radius: 6
-        
-        Behavior on border.color { ColorAnimation { duration: 150 } }
-        Behavior on border.width { NumberAnimation { duration: 150 } }
-        Behavior on height { NumberAnimation { duration: 100 } }
+        radius: Theme.radiusM
+
+        Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
+        Behavior on border.width { NumberAnimation { duration: Theme.durationNormal } }
+        Behavior on height { NumberAnimation { duration: Theme.durationFast } }
 
         // Bouton Tests à gauche
         Rectangle {
@@ -218,22 +219,22 @@ Rectangle {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            anchors.margins: 8
-            
+            anchors.margins: Theme.spacingM
+
             width: 70
-            color: testsMouseArea.pressed ? "#2a2a2a" : 
-                   testsMouseArea.containsMouse ? "#4a4a4a" : "#3a3a3a"
-            border.color: "#555555"
+            color: testsMouseArea.pressed ? Theme.surface :
+                   testsMouseArea.containsMouse ? Theme.hover(Theme.surfaceHover) : Theme.surfaceHover
+            border.color: Theme.borderLight
             border.width: 1
-            radius: 6
-            
-            Behavior on color { ColorAnimation { duration: 150 } }
-            
+            radius: Theme.radiusM
+
+            Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+
             Text {
                 anchors.centerIn: parent
                 text: "Tests"
-                color: "#e0e0e0"
-                font.pixelSize: 11
+                color: Theme.textSoft
+                font.pixelSize: Theme.fontSizeSmall
                 font.bold: true
             }
             
@@ -259,22 +260,22 @@ Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            anchors.margins: 8
-            
+            anchors.margins: Theme.spacingM
+
             width: 70
-            color: executeMouseArea.pressed ? "#2a2a2a" : 
-                   executeMouseArea.containsMouse ? "#4a4a4a" : "#3a3a3a"
-            border.color: "#555555"
+            color: executeMouseArea.pressed ? Theme.surface :
+                   executeMouseArea.containsMouse ? Theme.hover(Theme.surfaceHover) : Theme.surfaceHover
+            border.color: Theme.borderLight
             border.width: 1
-            radius: 6
-            
-            Behavior on color { ColorAnimation { duration: 150 } }
-            
+            radius: Theme.radiusM
+
+            Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+
             Text {
                 anchors.centerIn: parent
                 text: "Execute"
-                color: "#e0e0e0"
-                font.pixelSize: 11
+                color: Theme.textSoft
+                font.pixelSize: Theme.fontSizeSmall
                 font.bold: true
             }
             
@@ -298,21 +299,21 @@ Rectangle {
             anchors.right: executeButton.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            anchors.margins: 8
-            anchors.rightMargin: 4
-            
+            anchors.margins: Theme.spacingM
+            anchors.rightMargin: Theme.spacingXS
+
             contentWidth: commandInput.paintedWidth
             contentHeight: commandInput.paintedHeight
             clip: true
-            
+
             ScrollBar.vertical: ScrollBar {
                 policy: commandInputFlickable.contentHeight > height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
                 width: 8
-                
+
                 contentItem: Rectangle {
                     implicitWidth: 4
-                    radius: 2
-                    color: parent.pressed ? "#555555" : "#444444"
+                    radius: Theme.radiusXS
+                    color: parent.pressed ? Theme.borderLight : Theme.border
                 }
             }
             
@@ -327,12 +328,12 @@ Rectangle {
                 id: commandInput
                 width: commandInputFlickable.width - 10
                 
-                color: "#e0e0e0"
+                color: Theme.textSoft
                 font.family: "Consolas, Monaco, Courier New, monospace"
-                font.pointSize: 10
+                font.pixelSize: Theme.fontSizeBody
                 wrapMode: TextEdit.Wrap
                 selectByMouse: true
-                selectionColor: "#4a90e2"
+                selectionColor: Theme.accent
                 
                 text: ""
                 
@@ -363,7 +364,7 @@ Rectangle {
                     anchors.fill: parent
                     visible: commandInput.text.length === 0 && !commandInput.activeFocus
                     text: "Enter command... (Enter = execute, Shift+Enter = newline)"
-                    color: "#555555"
+                    color: Theme.textDisabled
                     font: commandInput.font
                 }
             }

@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Effects
 import QtQuick.Dialogs
 import ui_item
+import theme
 
 
 CollapsableGroupBox {
@@ -16,7 +17,7 @@ CollapsableGroupBox {
     
     // Signals
     signal effectChanged()
-    font.pointSize: 18
+    font.pixelSize: Theme.fontSizeDisplay
     
     // Main layout
     content: [

@@ -12,7 +12,7 @@ Sources : `cpp/editor/painter/{grid,zone,zones_overlay,zone_hatch}_*`, `cpp/game
 `Repeater { model: 1202 }` (601 lignes verticales + 601 horizontales pour `croisillons=600`). Steady-state OK (le scene graph batche), mais création/destruction au `croisillonsChanged` = 75–101 ms/itération.
 
 ### Après
-Un seul `QCanvasPainterItem` C++ couvrant le viewport visible (≈ 1280×720, **pas** la grille entière 7200×7200), positionné en `x: -gridManager.x` pour rester aligné en coords écran. Calcule `[firstX, lastX] × [firstY, lastY]` visibles puis émet ~167 `lineTo` par frame.
+Un seul `QCanvasPainterItem` C++ couvrant le viewport visible (≈ 1280×720, **pas** la grille entière 7200×7200). Son `Loader` parent est positionné en `x: -gridManager.x` / `y: -gridManager.y` (il couvre le viewport en coords écran) ; le `QCanvasPainterItem` lui-même est ancré `anchors.fill: parent` et reçoit `viewportOffsetX/Y = gridManager.x/y`, appliqué comme offset de tracé. Calcule `[firstX, lastX] × [firstY, lastY]` visibles puis émet ~167 `lineTo` par frame.
 
 ### Pourquoi `QCanvasPainterItem` (Qt 6.11)
 - **Rendu GPU** via QRhi. Le `Canvas` QML 2D utilise QPainter CPU sur le main thread → freeze garanti dès quelques centaines d'items.
@@ -147,11 +147,11 @@ map[key] = value
 map = Object.assign({}, map, { [key]: value })
 ```
 
-### Débounce du `snapToGridFromGridPos`
-`Editor_WheelHandler` rebindait toutes les tuiles à chaque tick wheel → cascade. Timer 80 ms qui boucle une seule fois en fin de geste.
+### Débounce du `snapToGridFromGridPos` (non implémenté)
+`Editor_WheelHandler` appelle `snapToGridFromGridPos()` sur **chaque** tuile de `snapableTilesList`, synchrone, à **chaque** tick wheel (pas de débounce actuellement). Le débounce trailing-edge (Timer en fin de geste qui ne boucle qu'une fois) reste une optim non implémentée — cf. section 8.
 
 ### `WheelHandler` n'a pas de default property pour les enfants visuels
-Un `Timer` enfant d'un `WheelHandler` provoque "Cannot assign to non-existent default property". Le déclarer en `property Timer foo: Timer { ... }` à la place.
+Un `Timer` enfant d'un `WheelHandler` provoque "Cannot assign to non-existent default property". Le déclarer en `property Timer foo: Timer { ... }` à la place. (Gotcha QML général ; pas appliqué actuellement dans `Editor_WheelHandler` — cf. le débounce non implémenté ci-dessus.)
 
 ### `Loader.source = "qrc:/..."` peut fail silencieusement
 Status=Error sans message clair. Si le module C++ utilisé par le QML chargé est déjà importé ailleurs dans la scène, préférer instancier directement le composant via `import` + Component inline plutôt qu'un `Loader { source: "qrc:/..." }`. Voir `ZonesOverlayPainter` instancié directement dans `Editor.qml` après échec du Loader/qrc.
@@ -209,6 +209,7 @@ Les overlays globaux viewport-cullés (`ZonesOverlayPainter`, `GridCanvasPainter
 - **Réduction dynamique des hachures** selon `scaleLevel`.
 - **`QCanvasGridPattern` ou `QCanvasImagePattern`** (Qt 6.11) pour le pattern de hachures au lieu d'un scanline manuel.
 - **Interpolation tick-aware** côté `PhysicsActor` (lerp prev/curr) si on veut zéro stutter à 144 Hz. Lissage exponentiel `smoothing=0.3` actuel suffit en pratique.
+- **Débounce trailing-edge du re-snap au wheel** : `Editor_WheelHandler` re-snappe toutes les tuiles de `snapableTilesList` à chaque tick wheel (cf. section 5). Un Timer (~80 ms) qui ne boucle qu'une fois en fin de geste éviterait la cascade par tick — pas encore en place.
 
 ## 9. Benchmarks
 

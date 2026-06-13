@@ -54,22 +54,6 @@ QtObject {
         property string serverUrl: "https://pattounecorp.ovh"
         property string lastVersion: "0.0.0"
         property string uploadToken: ""
-        property string balsamPath: ""
-        // Options balsam : map clé→valeur sérialisée en JSON. Cf.
-        // LauncherManager::balsamOptionDefinitions() pour les clés.
-        property string balsamOptionsJson: "{}"
-    }
-
-    // Map réactive parsée depuis settings.balsamOptionsJson : se ré-évalue
-    // chaque fois que la chaîne JSON change.
-    property var balsamOptions: {
-        try {
-            return root.settings.balsamOptionsJson.length > 0
-                   ? JSON.parse(root.settings.balsamOptionsJson)
-                   : ({})
-        } catch (e) {
-            return ({})
-        }
     }
     
     // Signals pour communication avec l'interface
@@ -133,12 +117,20 @@ QtObject {
         LauncherManager.downloadModel(root.serverUrl, name, version)
     }
 
+    function deleteModel(name) {
+        return LauncherManager.deleteModel(name)
+    }
+
     function createModelPackage(folderPath, name, version) {
         LauncherManager.createModelPackage(folderPath, name, version)
     }
 
     function uploadModelPackage(name, version) {
         LauncherManager.uploadModelPackage(root.serverUrl, name, version)
+    }
+
+    function deleteModelFromServer(name, version) {
+        LauncherManager.deleteModelPackage(root.serverUrl, name, version)
     }
 
     // --- Configurateur de modèle 3D ---
@@ -220,30 +212,12 @@ QtObject {
         }
     }
     
-    function setBalsamPath(p) {
-        root.settings.balsamPath = p
-        LauncherManager.balsamPath = p
-    }
-
-    function setBalsamOption(key, value) {
-        const o = Object.assign({}, root.balsamOptions)
-        o[key] = value
-        root.settings.balsamOptionsJson = JSON.stringify(o)
-    }
-
-    function resetBalsamOptions() {
-        root.settings.balsamOptionsJson = "{}"
-    }
-
     // Initialisation
     Component.onCompleted: {
         root.logMessage("Launcher Logic initialisé")
         // Charger le token depuis les settings
         if (root.settings.uploadToken.length > 0) {
             LauncherManager.setUploadToken(root.settings.uploadToken)
-        }
-        if (root.settings.balsamPath.length > 0) {
-            LauncherManager.balsamPath = root.settings.balsamPath
         }
     }
 }

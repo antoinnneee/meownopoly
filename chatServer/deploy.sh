@@ -49,7 +49,10 @@ echo "🚀 Début du déploiement vers $REMOTE_HOST..."
 
 # Établir la connexion maître
 echo "🔑 Connexion au serveur..."
-ssh $SSH_OPTS -fNM "$REMOTE_USER@$REMOTE_HOST"
+if ! ssh $SSH_OPTS -fNM "$REMOTE_USER@$REMOTE_HOST"; then
+    echo "❌ Erreur : impossible d'établir la connexion SSH vers $REMOTE_USER@$REMOTE_HOST."
+    exit 1
+fi
 
 # Fichiers à copier (exclut node_modules)
 FILES=(
@@ -70,17 +73,37 @@ FILES=(
 )
 
 # Copie des fichiers
+COPY_ERRORS=0
 for file in "${FILES[@]}"; do
     if [ -f "$file" ]; then
         echo "📦 Copie de $file..."
-        scp -o "ControlPath=$SSH_MUX_SOCKET" "$file" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/"
+        if ! scp -o "ControlPath=$SSH_MUX_SOCKET" "$file" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/"; then
+            echo "❌ Échec de copie : $file"
+            COPY_ERRORS=$((COPY_ERRORS + 1))
+        fi
     else
         echo "⚠️  Fichier introuvable : $file"
+        COPY_ERRORS=$((COPY_ERRORS + 1))
     fi
 done
 
+if [ "$COPY_ERRORS" -gt 0 ]; then
+    echo "❌ $COPY_ERRORS fichier(s) non copié(s). Abandon avant le redémarrage du service."
+    exit 1
+fi
+
 # Installation des dépendances et redémarrage du service
 echo "🔄 Mise à jour des dépendances et redémarrage du service..."
-ssh -o "ControlPath=$SSH_MUX_SOCKET" "$REMOTE_USER@$REMOTE_HOST" "cd $REMOTE_DIR && npm install --production && echo '$REMOTE_PASSWORD' | sudo -S systemctl restart $SERVICE_NAME"
+if ! ssh -o "ControlPath=$SSH_MUX_SOCKET" "$REMOTE_USER@$REMOTE_HOST" "cd $REMOTE_DIR && npm install --production && echo '$REMOTE_PASSWORD' | sudo -S systemctl restart $SERVICE_NAME"; then
+    echo "❌ Erreur lors de l'installation des dépendances ou du redémarrage de $SERVICE_NAME."
+    exit 1
+fi
 
-echo "✅ Déploiement terminé !"
+# Vérification que le service est bien reparti
+sleep 2
+if ssh -o "ControlPath=$SSH_MUX_SOCKET" "$REMOTE_USER@$REMOTE_HOST" "echo '$REMOTE_PASSWORD' | sudo -S systemctl is-active --quiet $SERVICE_NAME"; then
+    echo "✅ Déploiement terminé ! Service $SERVICE_NAME actif."
+else
+    echo "⚠️  Déploiement copié mais le service $SERVICE_NAME ne semble pas actif. Vérifier : journalctl -u $SERVICE_NAME"
+    exit 1
+fi

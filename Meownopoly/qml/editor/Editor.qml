@@ -33,12 +33,14 @@ import world3d 1.0
 
 import QtQuick3D
 import QtQuick3D.Helpers
+import QtQuick.Effects
 
 import editor
 import playerConfigPanel 1.0
 import "."
 
 import MeowPainter 1.0
+import theme
 
 Base_Board {
     id: root
@@ -164,9 +166,9 @@ Base_Board {
     BtSideMenu {
         id: btSelection
         anchors.right: parent.right
-        anchors.rightMargin: 10
+        anchors.rightMargin: Theme.spacingL
         anchors.top: parent.top
-        anchors.topMargin: 10
+        anchors.topMargin: Theme.spacingL
         z: UiStyle.z_HUD + 1
 
         property real xOrigin
@@ -224,7 +226,7 @@ Base_Board {
     BtSideMenu {
         id: btInfoMap
         emojiBt: "ℹ️"
-        colorBt: "#3498db"
+        colorBt: Theme.accent
         onBtClicked: mapInfoPanel.openDrawer()
         Behavior on y {SmoothedAnimation { velocity : 500}}
     }
@@ -232,7 +234,7 @@ Base_Board {
     BtSideMenu {
         id: btChat
         emojiBt: "💬"
-        colorBt: "#2ecc71"
+        colorBt: Theme.success
         onBtClicked: chatDrawer.open()
         Behavior on y {SmoothedAnimation { velocity : 500}}
     }
@@ -1172,9 +1174,9 @@ Base_Board {
         z: 10000
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.topMargin: 12
-        anchors.leftMargin: 12
-        spacing: 6
+        anchors.topMargin: Theme.spacingXL
+        anchors.leftMargin: Theme.spacingXL
+        spacing: Theme.spacingS
 
         CollabStatusPanel {}
         PhysicsStatusPanel {}
@@ -1306,6 +1308,54 @@ Base_Board {
             modelName: workArea._testedProfile
                          ? workArea._testedProfile.modelName
                          : "Princess"
+            // Re-skin Color ID Map du profil testé (skin + variante + équipe).
+            colorVariant: workArea._testedProfile
+                            ? workArea._testedProfile.colorVariant
+                            : ""
+
+            // Flou + désaturation de la scène 3D quand un effet de zone à `blur`
+            // est actif. Un calque 2D au-dessus ne peut pas flouter une View3D
+            // vivante, donc on passe par le layer de la View3D elle-même. Le
+            // layer n'est activé que pendant l'effet → coût nul hors zone.
+            layer.enabled: screenEffectController.renderEffect
+                           && screenEffectController.renderEffect.blur > 0
+                           && screenEffectController.amount > 0.001
+            layer.smooth: true
+            layer.effect: MultiEffect {
+                blurEnabled: true
+                blurMax: 48
+                blur: screenEffectController.renderEffect
+                      ? screenEffectController.renderEffect.blur * screenEffectController.amount
+                      : 0
+                // saturation MultiEffect : 0 = normal, -1 = niveaux de gris.
+                saturation: screenEffectController.renderEffect
+                            ? screenEffectController.renderEffect.saturation * screenEffectController.amount
+                            : 0
+            }
+        }
+
+        // --- Effets visuels de zone (givré, toxique, …) ---
+        // Le contrôleur écoute les entrées/sorties de zone du moteur physique et
+        // résout l'effet via ZoneParameter.screenEffectId → MapInfo.screenEffects.
+        ScreenEffectController {
+            id: screenEffectController
+            physicsWorld: pattounxWorld
+            tilesList: root.snapableTilesList
+            mapInfo: root.mapInfo
+            onlyActorId: "player"   // ne réagit qu'au joueur local de l'éditeur
+        }
+
+        // Overlay 2D plein écran (teinte + vignette + pulsation). Géométrie
+        // calquée sur gameScene pour rester fixe à l'écran malgré le pan/zoom.
+        ScreenEffectOverlay {
+            id: screenEffectOverlay
+            x: -gameGrid.x
+            y: -gameGrid.y
+            width: root.width
+            height: root.height
+            z: 6.0  // juste au-dessus de gameScene (5.99), sous les panneaux UI
+            effect: screenEffectController.renderEffect
+            amount: screenEffectController.amount
         }
 
         // Phase 4 — joueur local. Body créé/détruit par le spawner ; le
@@ -1584,7 +1634,7 @@ Base_Board {
                     // Étiquette playerId tronqué
                     Rectangle {
                         x: 18; y: 14
-                        radius: 3
+                        radius: Theme.radiusXS
                         color: parent._color
                         width: label.implicitWidth + 10
                         height: label.implicitHeight + 4
@@ -1593,7 +1643,7 @@ Base_Board {
                             anchors.centerIn: parent
                             text: modelData.length > 8 ? modelData.substring(0, 8) : modelData
                             color: "white"
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeCaption
                             font.bold: true
                         }
                     }
@@ -1621,9 +1671,9 @@ Base_Board {
         padding: 0
 
         background: Rectangle {
-            color: "#2b2b2b"
-            radius: 12
-            border.color: "#444444"
+            color: Theme.surface
+            radius: Theme.radiusXXL
+            border.color: Theme.border
             border.width: 1
 
             // Barre de titre
@@ -1633,8 +1683,8 @@ Base_Board {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 40
-                color: "#333333"
-                radius: 12
+                color: Theme.surfaceAlt
+                radius: Theme.radiusXXL
 
                 Rectangle {
                     anchors.bottom: parent.bottom
@@ -1646,29 +1696,29 @@ Base_Board {
 
                 Text {
                     anchors.left: parent.left
-                    anchors.leftMargin: 16
+                    anchors.leftMargin: Theme.spacingXXL
                     anchors.verticalCenter: parent.verticalCenter
                     text: "Message"
-                    color: "#cccccc"
-                    font.pointSize: 11
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeMedium
                     font.bold: true
                 }
 
                 Rectangle {
                     id: closeBt
                     anchors.right: parent.right
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: Theme.spacingM
                     anchors.verticalCenter: parent.verticalCenter
                     width: 28
                     height: 28
                     radius: 14
-                    color: closeBtArea.containsMouse ? "#c0392b" : "#444444"
+                    color: closeBtArea.containsMouse ? Theme.pressed(Theme.danger) : Theme.border
 
                     Text {
                         anchors.centerIn: parent
                         text: "✕"
-                        color: "#cccccc"
-                        font.pointSize: 10
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeBody
                         font.bold: true
                     }
 
@@ -1705,8 +1755,8 @@ Base_Board {
             NumberAnimation { property: "scale"; from: 0.92; to: 1; duration: 200; easing.type: Easing.OutCubic }
         }
         exit: Transition {
-            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 150; easing.type: Easing.InCubic }
-            NumberAnimation { property: "scale"; from: 1; to: 0.92; duration: 150; easing.type: Easing.InCubic }
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.durationNormal; easing.type: Easing.InCubic }
+            NumberAnimation { property: "scale"; from: 1; to: 0.92; duration: Theme.durationNormal; easing.type: Easing.InCubic }
         }
     }
 
@@ -1730,9 +1780,9 @@ Base_Board {
         property string mapNameAtExit: ""
 
         background: Rectangle {
-            color: "#2b2b2b"
-            radius: 10
-            border.color: "#4A90E2"
+            color: Theme.surface
+            radius: Theme.radiusXL
+            border.color: Theme.accent
             border.width: 1
         }
 
@@ -1741,13 +1791,13 @@ Base_Board {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 14
+                anchors.margins: Theme.spacingHuge
+                spacing: Theme.spacingXL
 
                 Text {
                     text: "Quitter la session collab"
-                    color: "#4A90E2"
-                    font.pixelSize: 18
+                    color: Theme.accent
+                    font.pixelSize: Theme.fontSizeTitle
                     font.bold: true
                 }
 
@@ -1755,8 +1805,8 @@ Base_Board {
                     Layout.fillWidth: true
                     text: "Conserver le fichier local «" +
                           sessionExitConfirmPopup.mapNameAtExit + "_map.json» sur votre ordinateur ?"
-                    color: "#e0e0e0"
-                    font.pixelSize: 13
+                    color: Theme.textSoft
+                    font.pixelSize: Theme.fontSizeBody
                     wrapMode: Text.WordWrap
                 }
 
@@ -1764,8 +1814,8 @@ Base_Board {
                     Layout.fillWidth: true
                     text: "« Supprimer » efface la copie locale reçue pendant la session. " +
                           "« Conserver » la garde — vous pourrez la rouvrir en mode mono."
-                    color: "#888"
-                    font.pixelSize: 11
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSmall
                     font.italic: true
                     wrapMode: Text.WordWrap
                 }
@@ -1774,20 +1824,20 @@ Base_Board {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: Theme.spacingL
 
                     Button {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
                         text: "🗑️  Supprimer"
                         background: Rectangle {
-                            color: parent.pressed ? "#991b1b" : (parent.hovered ? "#ef4444" : "#dc2626")
-                            radius: 6
+                            color: parent.pressed ? Theme.pressed(Theme.danger) : (parent.hovered ? Theme.hover(Theme.danger) : Theme.danger)
+                            radius: Theme.radiusM
                         }
                         contentItem: Text {
                             text: parent.text
-                            color: "white"
-                            font.pixelSize: 14
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -1800,13 +1850,13 @@ Base_Board {
                         Layout.preferredHeight: 40
                         text: "💾  Conserver"
                         background: Rectangle {
-                            color: parent.pressed ? "#2E5BBA" : (parent.hovered ? "#3A7BD5" : "#4A90E2")
-                            radius: 6
+                            color: parent.pressed ? Theme.pressed(Theme.accent) : (parent.hovered ? Theme.hover(Theme.accent) : Theme.accent)
+                            radius: Theme.radiusM
                         }
                         contentItem: Text {
                             text: parent.text
-                            color: "white"
-                            font.pixelSize: 14
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -2217,6 +2267,357 @@ Base_Board {
             Game.loadMap(mapInfo.autosaveMapName, MapTypes.AUTOSAVE)
         }
         stEnableAutoSave.sync()
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    // Hooks d'automation (objectName: "editorAutomationHooks")
+    // ────────────────────────────────────────────────────────────────────
+    // Objet STRICTEMENT passif : aucune logique n'est exécutée tant qu'une
+    // de ses fonctions n'est pas appelée explicitement via la commande
+    // `invoke` du serveur d'automation (cpp/automation/automation_server.*)
+    // ou les tools MCP `editor_*` (automation_mcp/index.js).
+    //
+    // Toutes les fonctions retournent un objet JS sérialisable en JSON.
+    // Convention de retour : { ok: bool, error?: string, ... }. Le ciblage
+    // se fait par `find` sur objectName="editorAutomationHooks", puis
+    // `invoke` avec method + args.
+    //
+    // Le chemin de pose réutilise EXACTEMENT celui de l'UI
+    // (TileLogic.placeSelectedAsset + Game.updateMap) pour rester compatible
+    // EditorOpBus / EditorSession (mode collab).
+    //
+    // NB : c'est un `Item` (et non un `QtObject`) pour qu'il soit visible dans
+    // l'arbre VISUEL parcouru par AutomationServer::findRecursive (qui descend
+    // par `childItems()`). `width/height: 0` + `visible: false` → strictement
+    // inerte côté rendu et entrées.
+    Item {
+        id: automationHooks
+        objectName: "editorAutomationHooks"
+        width: 0
+        height: 0
+        visible: false
+        enabled: false
+
+        // Nombre de tiles actuellement dans la carte de l'éditeur (lecture
+        // seule, utile pour vérifier une pose via la commande `get`).
+        readonly property int _tileCount: root.snapableTilesList
+            ? root.snapableTilesList.length : 0
+
+        // Centre du viewport visible (zone de travail au-dessus du panel
+        // d'assets) en coordonnées écran de `root`.
+        function _viewportCenterPx() {
+            const w = root.width
+            const h = root.height - selectionPanel.height
+            return Qt.point(w / 2.0, h / 2.0)
+        }
+
+        // Convertit une position écran (coords `root`) en coords grille réelles
+        // (float). cell N apparaît à l'écran à `gameGrid.x + N*gridSize`.
+        function _screenToGridReal(screenX, screenY) {
+            const gs = gameGrid.gridSize
+            if (gs <= 0) return Qt.point(0, 0)
+            return Qt.point((screenX - gameGrid.x) / gs,
+                            (screenY - gameGrid.y) / gs)
+        }
+
+        // ── Thème ───────────────────────────────────────────────────────
+        // Change le facteur d'échelle global de l'UI (Theme.uiScale) à chaud.
+        // Toute l'interface re-bind ses tailles tokenisées immédiatement.
+        function setUiScale(s) {
+            const v = Number(s)
+            if (!isFinite(v) || v <= 0)
+                return { ok: false, error: "uiScale invalide : " + s }
+            Theme.uiScale = v
+            return { ok: true, uiScale: Theme.uiScale }
+        }
+
+        // ── Assets ──────────────────────────────────────────────────────
+        // Liste les catégories et, pour chacune, ses types disponibles.
+        function listAssetCategories() {
+            const cats = AssetManager.getAvailableCategories()
+            const out = []
+            for (let i = 0; i < cats.length; i++) {
+                const c = cats[i]
+                out.push({ category: c, types: AssetManager.getAvailableTypes(c) })
+            }
+            return { ok: true, categories: out }
+        }
+
+        // Liste les assets (id, filename, dimensions, ratio) d'une
+        // catégorie/type donnés.
+        function listAssets(category, type) {
+            if (!category || !type)
+                return { ok: false, error: "category et type requis" }
+            const model = AssetManager.getAssetModel(category, type)
+            if (!model)
+                return { ok: false, error: "Aucun modèle pour " + category + "/" + type }
+            // Rôles de AssetModel (Qt::UserRole+1 = 257). Cf.
+            // AssetModel::AssetRoles dans asset_manager.h.
+            const PathRole = 257, RatioWidthRole = 260, RatioHeightRole = 261,
+                  WidthRole = 262, HeightRole = 263, IdRole = 264,
+                  FilenameRole = 265, DescriptionRole = 270
+            const n = model.rowCount()
+            const assets = []
+            for (let i = 0; i < n; i++) {
+                const idx = model.index(i, 0)
+                assets.push({
+                    id: model.data(idx, IdRole),
+                    filename: model.data(idx, FilenameRole),
+                    path: model.data(idx, PathRole),
+                    width: model.data(idx, WidthRole),
+                    height: model.data(idx, HeightRole),
+                    ratioWidth: model.data(idx, RatioWidthRole),
+                    ratioHeight: model.data(idx, RatioHeightRole),
+                    description: model.data(idx, DescriptionRole)
+                })
+            }
+            return { ok: true, category: category, type: type, count: n, assets: assets }
+        }
+
+        // ── Pose ────────────────────────────────────────────────────────
+        // Sérialise les infos utiles d'une tile fraîchement créée.
+        function _tileInfo(tile) {
+            if (!tile || !tile.snapableParameters) return null
+            const sp = tile.snapableParameters
+            const dp = sp.displayParameter
+            return {
+                uuid: sp.uniqueId ? sp.uniqueId.toString() : null,
+                gridX: dp.gridRelativePositionX,
+                gridY: dp.gridRelativePositionY,
+                width: dp.unitSizeWidth,
+                height: dp.unitSizeHeight
+            }
+        }
+
+        // Sélectionne programmatiquement un asset (décoration) et le pose à
+        // (gridX, gridY). Réplique le chemin UI complet : sélection →
+        // placeSelectedAsset → Game.updateMap(TileAdded). Restaure le mode
+        // EM_NORMAL après coup (ne laisse pas EM_POSE armé).
+        function placeAsset(assetId, category, type, gridX, gridY) {
+            if (!assetId)
+                return { ok: false, error: "assetId requis" }
+            if (!AssetManager.isAssetValid(category, type, assetId))
+                return { ok: false, error: "Asset introuvable: "
+                         + category + "/" + type + "/" + assetId }
+
+            // updateSelectedAsset arme la sélection + ajuste le ratio + émet
+            // assetSelected → onAssetSelected passe en EM_POSE.
+            selectionPanel.assetPanel.updateSelectedAsset(category, type, assetId)
+
+            const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
+            if (placed && placed.snapableParameters)
+                Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
+
+            // Restaurer le mode normal (désarme EM_POSE) sans piétiner un
+            // mode spécialisé éventuel.
+            selectionPanel.clearAssetSelection()
+            if (logic.editorMouseMode === EditorEnum.EM_POSE)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+
+            const info = _tileInfo(placed)
+            if (!info)
+                return { ok: false, error: "Échec de la création de la tile" }
+            return { ok: true, tile: info }
+        }
+
+        // Pose une case typée (caseType = valeur Case::CaseType). TileLogic
+        // gère la branche case quand aucun asset n'est sélectionné et que
+        // caseTypeSelected != -1.
+        function placeCase(caseType, gridX, gridY) {
+            if (caseType === undefined || caseType === null || caseType < 0)
+                return { ok: false, error: "caseType (>= 0) requis" }
+            // Désarmer toute sélection d'asset puis armer le type de case.
+            selectionPanel.clearAssetSelection()
+            selectionPanel.caseTypeSelected = caseType  // → EM_POSE
+
+            const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
+            if (placed && placed.snapableParameters)
+                Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
+
+            // Restaurer : caseTypeSelected = -1 ramène EM_NORMAL via le handler.
+            selectionPanel.caseTypeSelected = -1
+            if (logic.editorMouseMode === EditorEnum.EM_POSE)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+
+            const info = _tileInfo(placed)
+            if (!info)
+                return { ok: false, error: "Échec de la création de la case" }
+            return { ok: true, tile: info }
+        }
+
+        // Crée une zone physique polygonale (PhysicZoneTile) à partir d'une
+        // liste de points en coordonnées GRILLE ABSOLUES. Réplique
+        // MouseLogic_DrawPolygon.createPhysicZone() sans passer par le mode
+        // dessin : bounds → origine tile, points relatifs, paramètres
+        // physiques, puis createItemSnapableTile + Game.updateMap(TileAdded)
+        // (compatible collab/undo).
+        //
+        // points : [{x, y}, ...] ou liste plate [x1, y1, x2, y2, ...] — au
+        //          moins 3 sommets.
+        // options (toutes facultatives) :
+        //   color (string "#RRGGBB"), name (string), exclusion (bool, défaut
+        //   true), velocityX/velocityY/velocityStrength (real),
+        //   frictionStrength (real), speedMultiplier (real, défaut 1.0),
+        //   accelerationMultiplier (real, défaut 1.0).
+        function placeZone(points, options) {
+            // Normaliser : accepte [{x,y},...] ou liste plate [x1,y1,...].
+            let pts = []
+            if (points && points.length && typeof points[0] === "number") {
+                if (points.length % 2 !== 0)
+                    return { ok: false, error: "Liste plate de coordonnées de longueur impaire" }
+                for (let i = 0; i < points.length; i += 2)
+                    pts.push({ x: points[i], y: points[i + 1] })
+            } else if (points && points.length) {
+                for (let j = 0; j < points.length; j++) {
+                    const p = points[j]
+                    if (!p || p.x === undefined || p.y === undefined)
+                        return { ok: false, error: "Point " + j + " invalide (attendu {x, y})" }
+                    pts.push({ x: Number(p.x), y: Number(p.y) })
+                }
+            }
+            if (pts.length < 3)
+                return { ok: false, error: "Au moins 3 points requis (" + pts.length + " reçus)" }
+
+            const opt = options || {}
+            const sp = ItemSnapableFactory.createPhysicZone()
+
+            // Bounds → origine de la tile (même math que MouseLogic_DrawPolygon).
+            let minX = pts[0].x, maxX = pts[0].x
+            let minY = pts[0].y, maxY = pts[0].y
+            for (let k = 1; k < pts.length; k++) {
+                minX = Math.min(minX, pts[k].x); maxX = Math.max(maxX, pts[k].x)
+                minY = Math.min(minY, pts[k].y); maxY = Math.max(maxY, pts[k].y)
+            }
+            const gridOriginX = Math.floor(minX)
+            const gridOriginY = Math.floor(minY)
+
+            sp.displayParameter.gridRelativePositionX = gridOriginX
+            sp.displayParameter.gridRelativePositionY = gridOriginY
+            sp.displayParameter.unitSizeWidth = Math.ceil(maxX - minX) + 1
+            sp.displayParameter.unitSizeHeight = Math.ceil(maxY - minY) + 1
+            sp.displayParameter.zLayer = 1  // Sous les décorations et cases
+
+            // Points RELATIFS à la tile.
+            for (let m = 0; m < pts.length; m++)
+                sp.zoneParameter.addPoint(pts[m].x - gridOriginX, pts[m].y - gridOriginY)
+
+            sp.zoneParameter.zoneColor = opt.color !== undefined ? opt.color : "#FF5722"
+            sp.zoneParameter.zoneName = opt.name !== undefined ? opt.name : ""
+            sp.zoneParameter.exclusion = opt.exclusion !== undefined ? opt.exclusion : true
+            sp.zoneParameter.velocityDirection = Qt.vector2d(opt.velocityX || 0.0, opt.velocityY || 0.0)
+            // NB : orthographe historique des propriétés C++ ("Strenght").
+            sp.zoneParameter.velocityStrenght = opt.velocityStrength || 0.0
+            sp.zoneParameter.frictionStrenght = opt.frictionStrength || 0.0
+            sp.zoneParameter.speedMultiplier = opt.speedMultiplier !== undefined ? opt.speedMultiplier : 1.0
+            sp.zoneParameter.accelerationMultiplier = opt.accelerationMultiplier !== undefined ? opt.accelerationMultiplier : 1.0
+
+            const zone = logic.tileLogic.createItemSnapableTile(sp)
+            if (!zone || !zone.snapableParameters)
+                return { ok: false, error: "Échec de la création de la zone" }
+            zone.updateDisplayBounds()
+            Game.updateMap(EditDelta.TileAdded, zone.snapableParameters)
+
+            const info = _tileInfo(zone)
+            info.pointCount = pts.length
+            info.exclusion = sp.zoneParameter.exclusion
+            info.color = String(sp.zoneParameter.zoneColor)
+            return { ok: true, tile: info }
+        }
+
+        // ── Caméra ──────────────────────────────────────────────────────
+        // Retourne l'état caméra : centre du viewport en coords grille,
+        // niveau de zoom (scaleLevel/mmSize/gridSize) et taille du viewport.
+        function getCamera() {
+            const center = _viewportCenterPx()
+            const g = _screenToGridReal(center.x, center.y)
+            return {
+                ok: true,
+                centerGridX: g.x,
+                centerGridY: g.y,
+                scaleLevel: gameGrid.scaleLevel,
+                mmSize: gameGrid.mmSize,
+                gridSize: gameGrid.gridSize,
+                gridOffsetX: gameGrid.x,
+                gridOffsetY: gameGrid.y,
+                viewportWidth: root.width,
+                viewportHeight: root.height - selectionPanel.height
+            }
+        }
+
+        // Centre la vue sur la cellule (gridX, gridY) — pan absolu. Met à
+        // jour gameGrid.x/y puis resynchronise la caméra 3D via
+        // updateCameraPosition (qui compare grid.x au lastGridPos mémorisé).
+        function setCamera(gridX, gridY) {
+            const gs = gameGrid.gridSize
+            if (gs <= 0) return { ok: false, error: "gridSize nul" }
+            const center = _viewportCenterPx()
+            // On veut : center = gameGrid.x + gridX*gs  ⇒  gameGrid.x = center - gridX*gs
+            if (logic.mouseLogic && logic.mouseLogic.lastGridPos !== undefined)
+                logic.mouseLogic.lastGridPos = Qt.point(gameGrid.x, gameGrid.y)
+            gameGrid.x = center.x - gridX * gs
+            gameGrid.y = center.y - gridY * gs
+            if (logic.mouseLogic && logic.mouseLogic.updateCameraPosition)
+                logic.mouseLogic.updateCameraPosition()
+            return getCamera()
+        }
+
+        // Pan relatif de (dGridX, dGridY) cellules.
+        function panCamera(dGridX, dGridY) {
+            const cam = getCamera()
+            return setCamera(cam.centerGridX + dGridX, cam.centerGridY + dGridY)
+        }
+
+        // Zoom ±N crans (×1.1 par cran), centré sur le viewport. Réplique la
+        // logique de ScrollLogic.scrollGrid (zoom multiplicatif + recentrage
+        // du point fixe + sync caméra 3D via prepare/applyZoom) pour rester
+        // cohérent avec le zoom molette de l'UI.
+        function zoomCamera(steps) {
+            steps = Math.trunc(steps || 0)
+            if (steps === 0)
+                return getCamera()
+            const zoomFactor = 1.1
+            const minMmSize = 0.5
+            const center = _viewportCenterPx()
+            const dir = steps > 0 ? 1.0 : -1.0
+            const count = Math.abs(steps)
+
+            for (let i = 0; i < count; i++) {
+                const oldMmSize = gameGrid.mmSize
+                const oldWidth = logic.tileLogic.currentElementWidth
+                const oldHeight = logic.tileLogic.currentElementHeight
+                const aspectRatio = oldWidth / oldHeight
+
+                const step = dir > 0 ? zoomFactor : 1.0 / zoomFactor
+                let newMmSize = oldMmSize * step
+                if (newMmSize < minMmSize) newMmSize = minMmSize
+                if (newMmSize <= 0) continue
+
+                // Capturer l'état 3D AVANT le changement de magnification.
+                if (logic.mouseLogic && logic.mouseLogic.prepareZoom)
+                    logic.mouseLogic.prepareZoom(center.x, center.y)
+                if (logic.mouseLogic && logic.mouseLogic.lastGridPos !== undefined)
+                    logic.mouseLogic.lastGridPos = Qt.point(gameGrid.x, gameGrid.y)
+
+                const ratio = newMmSize / oldMmSize
+                // Garder le point sous le centre du viewport fixe.
+                const newGridX = center.x - (center.x - gameGrid.x) * ratio
+                const newGridY = center.y - (center.y - gameGrid.y) * ratio
+
+                gameGrid.mmSize = newMmSize
+                gameGrid.x = newGridX
+                gameGrid.y = newGridY
+
+                // Conserver le ratio visuel du sélecteur (comme l'UI).
+                const newWidth = oldWidth * oldMmSize / newMmSize
+                const newHeight = newWidth / aspectRatio
+                logic.tileLogic.currentElementWidth = Math.max(1, Math.round(newWidth))
+                logic.tileLogic.currentElementHeight = Math.max(1, Math.round(newHeight))
+
+                if (logic.mouseLogic && logic.mouseLogic.applyZoom)
+                    logic.mouseLogic.applyZoom(center.x, center.y)
+            }
+            return getCamera()
+        }
     }
 
     Component.onDestruction: {

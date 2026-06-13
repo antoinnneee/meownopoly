@@ -1,6 +1,6 @@
 # Architecture détaillée de Catway
 
-Ce document décrit en profondeur le fonctionnement interne de la classe `Catway` et de ses composants satellites : threads impliqués, responsabilités de chaque élément, flux d'interactions cross-thread, et historique des problèmes corrigés. Il est aligné avec la **répartition du code en plusieurs fichiers** (`catway.cpp`, `catway_stun.cpp`, `catway_player.cpp`, `catway_worker.cpp`) et les noms d’API actuels (`takeStunSocket`, etc.).
+Ce document décrit en profondeur le fonctionnement interne de la classe `Catway` et de ses composants satellites : threads impliqués, responsabilités de chaque élément, flux d'interactions cross-thread, et historique des problèmes corrigés. Il est aligné avec la **répartition du code en plusieurs fichiers** (`catway.cpp`, `catway_stun.cpp`, `catway_player.cpp`, `catway_worker.cpp`, `catway_holepunch.cpp`) et les noms d’API actuels (`takeStunSocket`, etc.).
 
 ---
 
@@ -52,13 +52,14 @@ L’implémentation de `Catway` est répartie sur plusieurs unités de compilati
 | Fichier                                                          | Contenu principal                                                                                                                                                                                 |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `[catway.h](../../cpp/communication/catway.h)`                   | Déclarations `Catway`, `CatwayWorker`, `PlayerSnapshot`, `CatwayReliableContext`                                                                                                                  |
-| `[catway.cpp](../../cpp/communication/catway.cpp)`               | Singleton, constructeur / destructeur, enregistrement QML, listes `localPorts` / `players`, chat, UDP, datagrammes, commandes chat, reliable broadcast                                            |
+| `[catway.cpp](../../cpp/communication/catway.cpp)`               | Singleton, constructeur / destructeur, enregistrement QML, listes `localPorts` / `players`, chat, UDP, datagrammes, dispatch des commandes chat (`onChatCommandReceived`), reliable broadcast     |
 | `[catway_stun.cpp](../../cpp/communication/catway_stun.cpp)`     | Cache `m_currentStunSocketInfo`, `getSocket` / `currentSocketInfo`, `takeStunSocket`, flux STUN (`setupNewPort`, `onExternalAddressReceivedTakePort`), `triggerStunForPendingCommand`, échec STUN |
 | `[catway_player.cpp](../../cpp/communication/catway_player.cpp)` | `pushPlayerSnapshots`, `addPlayer` / `removePlayer`, joueurs (`playerAt`, `getOrCreatePlayer`, …), callbacks C `catway_transmit_packet` / `catway_process_packet`                                 |
 | `[catway_worker.cpp](../../cpp/communication/catway_worker.cpp)` | Thread réseau : timers, STUN proxy, sockets, reliable                                                                                                                                             |
+| `[catway_holepunch.cpp](../../cpp/communication/catway_holepunch.cpp)` | Hole punching : `initiateHolePunch`, `handleHolePunch{Reply,Final,Strike,Ping}`, et les handlers concrets des commandes chat (`handleChatReplyConnectionInfo` / `handleChatUdpHolePunchRequest` / `handleChatRequestConnectionInfo`) |
 
 
-Ces fichiers sont référencés dans `[Meownopoly.pro](../../Meownopoly.pro)` (`SOURCES`) aux côtés de `catway.cpp`.
+Ces fichiers sont compilés automatiquement via le `file(GLOB_RECURSE …)` sur `cpp/*.cpp` de [CMakeLists.txt](../../CMakeLists.txt). Le `[Meownopoly.pro](../../Meownopoly.pro)` (qmake legacy) liste encore les `SOURCES` manuellement et ne référence pas `catway_holepunch.cpp`.
 
 ### 2.1 `Catway` — Thread GUI
 

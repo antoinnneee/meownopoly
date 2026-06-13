@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import ui_item
+import theme
 
 /**
  * Exemple simple d'intégration du ParticleButton
@@ -8,7 +9,7 @@ import ui_item
  */
 Rectangle {
     anchors.fill: parent
-    color: "#1a1a1a"
+    color: Theme.background
     
     Column {
         anchors.centerIn: parent
@@ -18,9 +19,9 @@ Rectangle {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Exemple Simple"
-            font.pixelSize: 28
+            font.pixelSize: Theme.fontSizeDisplay
             font.bold: true
-            color: "white"
+            color: Theme.textPrimary
         }
         
         // Exemple 1 : Configuration par défaut
@@ -59,17 +60,17 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 300
             height: 60
-            color: "#2C2C2C"
-            radius: 8
-            border.color: "#4A90E2"
+            color: Theme.surface
+            radius: Theme.radiusL
+            border.color: Theme.accent
             border.width: 1
-            
+
             Text {
                 id: resultText
                 anchors.centerIn: parent
                 text: "Cliquez sur un bouton..."
-                font.pixelSize: 14
-                color: "#CCCCCC"
+                font.pixelSize: Theme.fontSizeMedium
+                color: Theme.textSecondary
                 
                 Behavior on color {
                     ColorAnimation { duration: 300 }

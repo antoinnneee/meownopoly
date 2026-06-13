@@ -36,6 +36,7 @@ Documentation technique sur l'architecture du système et les composants.
 
 ### Systèmes
 - [Gestionnaire d'Assets](./architecture/ASSET_MANAGER.md) - Système de gestion des ressources
+- [🎨 Color ID Map — Plan d'intégration](./architecture/COLOR_ID_MAP_INTEGRATION_PLAN.md) - Re-skinning runtime par zone (teinte/texture + variantes + teinte d'équipe) — **implémentation démarrée (Phase A)**
 - [Système d'Effets Visuels](./architecture/VISUAL_EFFECTS_SYSTEM.md) - Effets post-processing
 - [Moteur Physique Pattounx v2](./architecture/PHYSICS_ENGINE_V2.md) - Doc fonctionnelle actuelle (post-refactor : thread dédié, multi-actors, body-body, sync live)
 - [Plan refactor physique](./architecture/PHYSICS_REFACTOR_PLAN.md) - Décisions, phases, roadmap (référence historique)
@@ -56,7 +57,6 @@ Guides pratiques pour les utilisateurs et développeurs.
 
 Documentation sur le design et l'interface utilisateur.
 
-- [Guide de Style UI](./design/UI_STYLE_GUIDE.md) - Standards d'interface utilisateur
 - [Héritage QML](./design/INHERITANCE_QML.md) - Utilisation de l'héritage en QML
 
 ---
@@ -92,9 +92,8 @@ Documentation sur les fonctionnalités spécifiques.
 - [Support du Curseur Asset Preview](./features/ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md)
 
 ### 👨‍💻 Pour les Nouveaux Développeurs
+- [🚀 QUICK_START](./QUICK_START.md)
 - [Structure du Projet](./architecture/PROJECT_STRUCTURE.md)
-- [Guide du Développeur](./guides/DEVELOPER_GUIDE.md)
-- [Directives de Contribution](./guides/CONTRIBUTION_GUIDELINES.md)
 
 ### 🔬 Pour les Experts Techniques
 - [Architecture de l'Éditeur - Analyse Complète](./architecture/ANALYSE_ARCHITECTURE_EDITEUR.md) ⭐
@@ -103,13 +102,13 @@ Documentation sur les fonctionnalités spécifiques.
 - [Serveur de Ressources](./features/SERVEUR_RESSOURCES.md)
 
 ### 🎨 Pour les Designers UI/UX
-- [Guide de Style UI](./design/UI_STYLE_GUIDE.md)
 - [Héritage QML](./design/INHERITANCE_QML.md)
 
 ## 📅 Historique des Mises à Jour
 
 | Date | Document | Modification |
 |------|----------|--------------|
+| 2026-06-05 | Architecture/Color ID Map | Nouveau : plan d'intégration du re-skinning runtime par zone (Color ID Map ArmorPaint) |
 | 2026-04-18 | Architecture/Collab Editor | Nouveau : stack collaborative (EditorSession, EditorOpBus, host migration, stats reliable.io) |
 | 2026-04-10 | Architecture/Launcher | Ajout queue, retry, checksum, timeout, modèles 3D, auth |
 | 2026-04-10 | Architecture/Asset Manager | Ajout section modèles 3D |

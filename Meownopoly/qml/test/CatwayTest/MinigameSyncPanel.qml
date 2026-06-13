@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import GameSession 1.0
 import Catway 1.0
+import theme
 
 Rectangle {
     id: root
@@ -35,8 +36,8 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 4
-        spacing: 8
+        anchors.margins: Theme.spacingXS
+        spacing: Theme.spacingM
 
         Rectangle {
             Layout.fillWidth: true
@@ -50,17 +51,17 @@ Rectangle {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
+                anchors.margins: Theme.spacingXL
+                spacing: Theme.spacingM
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: Theme.spacingM
                     Text {
                         text: "Mini-jeu (UDP brut)"
                         color: host.textPrimary
                         font.bold: true
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontSizeMedium
                     }
                     Rectangle {
                         width: 10
@@ -71,7 +72,7 @@ Rectangle {
                     Text {
                         text: minigameSync.running ? "running" : "stopped"
                         color: host.textSecondary
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSizeSmall
                     }
                     Item { Layout.fillWidth: true }
                     Button {
@@ -79,8 +80,8 @@ Rectangle {
                         implicitHeight: 28
                         implicitWidth: 90
                         background: Rectangle {
-                            color: parent.pressed ? host.accent : "#2d2d35"
-                            radius: 6
+                            color: parent.pressed ? host.accent : Theme.surfaceAlt
+                            radius: Theme.radiusM
                             border.color: host.cardBorder
                             border.width: 1
                         }
@@ -89,7 +90,7 @@ Rectangle {
                             color: host.textPrimary
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.fontSizeBody
                         }
                         onClicked: minigameSync.running ? minigameSync.stop() : minigameSync.start()
                     }
@@ -99,7 +100,7 @@ Rectangle {
                     visible: !!selectedPlayer
                     text: "Peer : " + (selectedPlayer ? selectedPlayer.nickname + " (" + selectedPlayer.playerId + ")" : "")
                     color: host.textSecondary
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }
@@ -108,8 +109,8 @@ Rectangle {
                     id: gameZone
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#0e0e13"
-                    radius: 6
+                    color: Theme.background
+                    radius: Theme.radiusM
                     clip: true
 
                     Rectangle {
@@ -140,7 +141,7 @@ Rectangle {
                                 y: 26
                                 text: model.pid.length > 10 ? model.pid.substring(0, 10) : model.pid
                                 color: host.textSecondary
-                                font.pixelSize: 10
+                                font.pixelSize: Theme.fontSizeCaption
                             }
                         }
                     }
@@ -158,17 +159,17 @@ Rectangle {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 6
+                anchors.margins: Theme.spacingL
+                spacing: Theme.spacingS
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: Theme.spacingM
                     Text {
                         text: "Snapshots reçus"
                         color: host.textPrimary
                         font.bold: true
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.fontSizeBody
                     }
                     Item { Layout.fillWidth: true }
                     Button {
@@ -176,8 +177,8 @@ Rectangle {
                         text: "Envoyer snapshot test"
                         implicitHeight: 26
                         background: Rectangle {
-                            color: parent.pressed ? host.accent : "#2d2d35"
-                            radius: 6
+                            color: parent.pressed ? host.accent : Theme.surfaceAlt
+                            radius: Theme.radiusM
                             border.color: host.cardBorder
                             border.width: 1
                         }
@@ -186,7 +187,7 @@ Rectangle {
                             color: host.textPrimary
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSizeSmall
                         }
                         onClicked: GameSession.broadcastMinigameSnapshot({ "test": true, "ts": Date.now() })
                     }
@@ -200,11 +201,11 @@ Rectangle {
                         id: snapshotLog
                         readOnly: true
                         wrapMode: Text.Wrap
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSizeSmall
                         color: host.textPrimary
                         background: Rectangle {
-                            color: "#0e0e13"
-                            radius: 4
+                            color: Theme.background
+                            radius: Theme.radiusS
                             border.color: host.cardBorder
                             border.width: 1
                         }

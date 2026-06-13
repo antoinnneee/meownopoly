@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import AssetManager 1.0
+import theme
 
 CollapsableGroupBox {
     id: root
@@ -16,8 +17,8 @@ CollapsableGroupBox {
     content: [
         Flow {
             Layout.fillWidth: true
-            spacing: 8
-            padding: 5
+            spacing: Theme.spacingM
+            padding: Theme.spacingXS
 
             // --- Primitives ---
             ModelButton {
@@ -57,23 +58,23 @@ CollapsableGroupBox {
 
         width: 80
         height: 60
-        color: isSelected ? "#4a4a4a" : (mouseArea.containsMouse ? "#3d3d3d" : "#333333")
-        radius: 6
-        border.color: isSelected ? "#0078d7" : "#555555"
+        color: isSelected ? Theme.hover(Theme.surfaceHover) : (mouseArea.containsMouse ? Theme.surfaceHover : Theme.surfaceAlt)
+        radius: Theme.radiusM
+        border.color: isSelected ? Theme.accent : Theme.borderLight
         border.width: isSelected ? 2 : 1
 
         ColumnLayout {
             anchors.centerIn: parent
-            spacing: 2
+            spacing: Theme.spacingXXS
             Text {
                 text: btn.icon
-                font.pixelSize: 20
+                font.pixelSize: Theme.fontSizeHeading
                 Layout.alignment: Qt.AlignHCenter
             }
             Text {
                 text: btn.text
-                color: "white"
-                font.pixelSize: 10
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeCaption
                 Layout.alignment: Qt.AlignHCenter
                 elide: Text.ElideRight
                 Layout.maximumWidth: btn.width - 8

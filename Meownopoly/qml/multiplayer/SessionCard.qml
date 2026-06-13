@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 /**
  * Carte cliquable représentant une session de jeu
@@ -30,16 +31,16 @@ Rectangle {
     
     width: ListView.view.width - 32
     height: 90
-    color: "#2a2a2a"
-    radius: 12
+    color: Theme.surface
+    radius: Theme.radiusXXL
     
     // Bordure colorée selon disponibilité (ou violette pour session éditeur).
     border.width: 2
     border.color: {
-        if (root.isEditorSession) return "#a78bfa"           // Violet: session éditeur
-        if (players === maxPlayers) return "#ff9800"          // Orange: pleine
+        if (root.isEditorSession) return "#a78bfa"            // Violet: session éditeur
+        if (players === maxPlayers) return Theme.warning      // Orange: pleine
         if (players >= maxPlayers * 0.75) return "#ffeb3b"    // Jaune: presque pleine
-        return "#4caf50"                                       // Vert: disponible
+        return Theme.success                                  // Vert: disponible
     }
     
     // Animation de bordure
@@ -54,20 +55,20 @@ Rectangle {
     
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
-        
+        anchors.margins: Theme.spacingXXL
+        spacing: Theme.spacingXXL
+
         // GAUCHE: Informations de la session
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: Theme.spacingS
             
             // Nom de la session (prefix "[EDIT:...]" stripé, 🛠️ ajouté).
             Text {
                 text: (root.isEditorSession ? "🛠️ " : "")
                       + "Name: " + root.displayName
-                color: "#ffffff"
-                font.pixelSize: 18
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeTitle
                 font.bold: true
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -76,35 +77,35 @@ Rectangle {
             // ID de la session
             Text {
                 text: "ID: " + root.sessionId
-                color: "#888888"
-                font.pixelSize: 12
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 font.family: "Consolas, Monaco, monospace"
             }
             
             // Hôte
             Text {
                 text: "👤 Hôte : " + (root.hostNickname ? root.hostNickname : "Inconnu")
-                color: "#aaaaaa"
-                font.pixelSize: 12
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeBody
             }
         }
         
         // CENTRE: Online Status
         ColumnLayout {
             Layout.alignment: Qt.AlignRight
-            spacing: 2
-            
+            spacing: Theme.spacingXXS
+
             Text {
                 text: "En ligne"
-                color: "#888888"
-                font.pixelSize: 10
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeCaption
                 Layout.alignment: Qt.AlignHCenter
             }
-            
+
             Text {
                 text: "🟢 " + root.onlineCount
-                color: "#4caf50"
-                font.pixelSize: 14
+                color: Theme.success
+                font.pixelSize: Theme.fontSizeMedium
                 font.bold: true
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -115,7 +116,7 @@ Rectangle {
             Layout.preferredWidth: 60
             Layout.preferredHeight: 60
             radius: 30
-            color: root.players === root.maxPlayers ? "#ff9800" : "#4caf50"
+            color: root.players === root.maxPlayers ? Theme.warning : Theme.success
             border.color: "#ffffff"
             border.width: 2
             
@@ -129,20 +130,20 @@ Rectangle {
             
             Column {
                 anchors.centerIn: parent
-                spacing: 2
-                
+                spacing: Theme.spacingXXS
+
                 Text {
                     text: root.players + "/" + root.maxPlayers
-                    color: "#ffffff"
-                    font.pixelSize: 16
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeLarge
                     font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
                 
                 Text {
                     text: "joueurs"
-                    color: "#ffffff"
-                    font.pixelSize: 9
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeTiny
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
@@ -172,7 +173,7 @@ Rectangle {
     
     Behavior on opacity {
         NumberAnimation {
-            duration: 100
+            duration: Theme.durationFast
             easing.type: Easing.OutQuad
         }
     }

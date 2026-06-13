@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 import Meownopoly.Chat 1.0
 import "../ui_item"
 import "./components"
@@ -11,8 +12,8 @@ import "./components"
  */
 Rectangle {
     id: root
-    
-    color: "#1a1a1a"
+
+    color: Theme.background
     
     // Props reçues de la navigation
     required property string sessionName
@@ -53,8 +54,8 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
-        spacing: 20
+        anchors.margins: Theme.spacingHuge
+        spacing: Theme.spacingHuge
         
         // HEADER INTÉGRÉ
         Rectangle {
@@ -74,20 +75,20 @@ Rectangle {
             // Nom et ID de session (centré)
             ColumnLayout {
                 anchors.centerIn: parent
-                spacing: 4
-                
+                spacing: Theme.spacingXS
+
                 Text {
                     text: root.sessionName
-                    color: "#ffffff"
-                    font.pixelSize: 36
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeHero
                     font.bold: true
                     Layout.alignment: Qt.AlignHCenter
                 }
                 
                 Text {
                     text: "ID: " + root.sessionId
-                    color: "#888888"
-                    font.pixelSize: 18
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeTitle
                     font.family: "Consolas, Monaco, monospace"
                     Layout.alignment: Qt.AlignHCenter
                 }
@@ -107,14 +108,14 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 150
             color: "#252525"
-            radius: 10
-            border.color: "#333333"
+            radius: Theme.radiusXL
+            border.color: Theme.surfaceAlt
             border.width: 1
-            
+
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 16
-                spacing: 12
+                anchors.margins: Theme.spacingXXL
+                spacing: Theme.spacingXL
                 
                 // Statut de la session
                 Rectangle {
@@ -122,23 +123,23 @@ Rectangle {
                     Layout.preferredWidth: statusText.width + 24
                     Layout.preferredHeight: 32
                     radius: 16
-                    color: root.players < root.maxPlayers ? "#4caf50" : "#ff9800"
-                    
+                    color: root.players < root.maxPlayers ? Theme.success : Theme.warning
+
                     Row {
                         anchors.centerIn: parent
-                        spacing: 6
-                        
+                        spacing: Theme.spacingS
+
                         Text {
                             text: root.players < root.maxPlayers ? "⏳" : "✋"
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontSizeMedium
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         
                         Text {
                             id: statusText
                             text: root.players < root.maxPlayers ? "En attente de joueurs" : "Session complète"
-                            color: "#ffffff"
-                            font.pixelSize: 13
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeBody
                             font.bold: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -149,55 +150,55 @@ Rectangle {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 1
-                    color: "#333333"
+                    color: Theme.surfaceAlt
                 }
-                
+
                 // Informations de la session
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: Theme.spacingM
                     
                     Row {
-                        spacing: 8
+                        spacing: Theme.spacingM
                         Text {
                             text: "🗺️ Map:"
-                            color: "#888888"
-                            font.pixelSize: 14
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.fontSizeMedium
                         }
                         Text {
                             text: "Classic Meownopoly Board"
-                            color: "#ffffff"
-                            font.pixelSize: 14
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                         }
                     }
                     
                     Row {
-                        spacing: 8
+                        spacing: Theme.spacingM
                         Text {
                             text: "⏱️ Durée:"
-                            color: "#888888"
-                            font.pixelSize: 14
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.fontSizeMedium
                         }
                         Text {
                             text: "45-60 minutes"
-                            color: "#ffffff"
-                            font.pixelSize: 14
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                         }
                     }
                     
                     Row {
-                        spacing: 8
+                        spacing: Theme.spacingM
                         Text {
                             text: "🎮 Mode:"
-                            color: "#888888"
-                            font.pixelSize: 14
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.fontSizeMedium
                         }
                         Text {
                             text: "Standard"
-                            color: "#ffffff"
-                            font.pixelSize: 14
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeMedium
                             font.bold: true
                         }
                     }
@@ -213,18 +214,18 @@ Rectangle {
             
             ColumnLayout {
                 width: parent.width
-                spacing: 16
-                
+                spacing: Theme.spacingXXL
+
                 Text {
                     text: "Joueurs (" + playersModel.count + "/" + root.maxPlayers + ")"
-                    color: "#ffffff"
-                    font.pixelSize: 22
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeHeading
                     font.bold: true
                 }
-                
+
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 12
+                    spacing: Theme.spacingXL
                     
                     Repeater {
                         model: playersModel
@@ -243,8 +244,8 @@ Rectangle {
         // BOUTONS ACTIONS INTÉGRÉS
         RowLayout {
             Layout.fillWidth: true
-            spacing: 16
-            
+            spacing: Theme.spacingXXL
+
             // Bouton secondaire: Retour
             Button {
                 text: "Retour à la liste"
@@ -252,16 +253,16 @@ Rectangle {
                 Layout.preferredHeight: 50
                 
                 background: Rectangle {
-                    color: parent.pressed ? "#444444" : "#555555"
-                    radius: 8
-                    border.color: parent.hovered ? "#777777" : "#666666"
+                    color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight
+                    radius: Theme.radiusL
+                    border.color: parent.hovered ? Theme.hover(Theme.textDisabled) : Theme.textDisabled
                     border.width: 1
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "#cccccc"
-                    font.pixelSize: 14
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeMedium
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -278,19 +279,19 @@ Rectangle {
                 Layout.preferredHeight: 50
                 
                 particleColor: "#7CB518"
-                particleColorVariation: "#4caf50"
+                particleColorVariation: Theme.success
                 particleCount: 30
                 
                 background: Rectangle {
-                    color: parent.down ? "#388e3c" : "#4caf50"
-                    radius: 8
-                    border.color: parent.hovered ? "#FFFFFF" : "#388e3c"
+                    color: parent.down ? Theme.pressed(Theme.success) : Theme.success
+                    radius: Theme.radiusL
+                    border.color: parent.hovered ? "#FFFFFF" : Theme.pressed(Theme.success)
                     border.width: 2
-                    
+
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 2
-                        radius: 6
+                        radius: Theme.radiusM
                         gradient: Gradient {
                             GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.2) }
                             GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
@@ -300,9 +301,9 @@ Rectangle {
                 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeLarge
                     font.bold: true
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }

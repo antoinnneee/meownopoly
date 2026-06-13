@@ -728,8 +728,11 @@ QStringList AssetManager::availablePlayerModels() const
     auto isValidModelDir = [](const QDir &dir) {
         const QString name = dir.dirName();
         if (name.isEmpty() || name.startsWith('.')) return false;
-        // Doit contenir un <name>.qml
-        return dir.exists(name + QStringLiteral(".qml"));
+        // Format kura courant (Color ID Map) : model_manifest.json + base/<x>.glb,
+        // sans <name>.qml (balsam abandonne, cf. Phase E). Format legacy balsam :
+        // <name>.qml. On accepte les deux pour ne pas masquer les anciens modeles.
+        return dir.exists(QStringLiteral("model_manifest.json"))
+               || dir.exists(name + QStringLiteral(".qml"));
     };
 
     auto pushUnique = [&result](const QString &name) {
@@ -768,6 +771,93 @@ QStringList AssetManager::availablePlayerModels() const
 QString AssetManager::getAppDataPath() const
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+}
+
+// ==================== Color ID Map (résolution runtime) ====================
+
+// Garde lettres/chiffres/espace/-/_ (évite toute traversée de chemin).
+static QString sanitizeColorIdName(const QString &name)
+{
+    QString out;
+    for (const QChar c : name.trimmed()) {
+        if (c.isLetterOrNumber() || c == QLatin1Char('_')
+            || c == QLatin1Char('-') || c == QLatin1Char(' '))
+            out += c;
+    }
+    return out.trimmed();
+}
+
+QString AssetManager::modelDir(const QString &modelName) const
+{
+    const QString safe = sanitizeColorIdName(modelName);
+    if (safe.isEmpty()) return QString();
+    const QString appData = getAppDataPath() + QStringLiteral("/models/") + safe;
+    if (QDir(appData).exists()) return appData;
+    const QString qrc = QStringLiteral(":/asset/models/") + safe;
+    if (QDir(qrc).exists()) return qrc;
+    return appData; // défaut (peut ne pas exister encore)
+}
+
+QVariantMap AssetManager::readModelManifest(const QString &modelName) const
+{
+    QVariantMap result;
+    QFile f(modelDir(modelName) + QStringLiteral("/model_manifest.json"));
+    if (!f.open(QIODevice::ReadOnly)) return result;
+    const QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+    f.close();
+    if (!doc.isObject()) return result;
+    const QJsonObject obj = doc.object();
+    for (auto it = obj.begin(); it != obj.end(); ++it)
+        result.insert(it.key(), it.value().toVariant());
+    return result;
+}
+
+QStringList AssetManager::listModelSkins(const QString &modelName) const
+{
+    QDir d(modelDir(modelName) + QStringLiteral("/skins"));
+    if (!d.exists()) return {};
+    return d.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+}
+
+QStringList AssetManager::listSkinTextures(const QString &modelName, const QString &skin) const
+{
+    QDir d(modelDir(modelName) + QStringLiteral("/skins/") + sanitizeColorIdName(skin)
+           + QStringLiteral("/textures"));
+    if (!d.exists()) return {};
+    return d.entryList(QStringList{ "*.png", "*.jpg", "*.jpeg", "*.tga", "*.bmp" },
+                       QDir::Files, QDir::Name);
+}
+
+QString AssetManager::readSkinJson(const QString &modelName, const QString &skin) const
+{
+    QFile f(modelDir(modelName) + QStringLiteral("/skins/") + sanitizeColorIdName(skin)
+            + QStringLiteral("/skin.json"));
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return QString();
+    const QString s = QString::fromUtf8(f.readAll());
+    f.close();
+    return s;
+}
+
+QStringList AssetManager::listSkinVariants(const QString &modelName, const QString &skin) const
+{
+    QDir d(modelDir(modelName) + QStringLiteral("/skins/") + sanitizeColorIdName(skin)
+           + QStringLiteral("/variants"));
+    if (!d.exists()) return {};
+    QStringList names;
+    for (const QString &f : d.entryList(QStringList{ "*.json" }, QDir::Files, QDir::Name))
+        names << QFileInfo(f).completeBaseName();
+    return names;
+}
+
+QString AssetManager::loadSkinVariant(const QString &modelName, const QString &skin,
+                                      const QString &variant) const
+{
+    QFile f(modelDir(modelName) + QStringLiteral("/skins/") + sanitizeColorIdName(skin)
+            + QStringLiteral("/variants/") + sanitizeColorIdName(variant) + QStringLiteral(".json"));
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return QString();
+    const QString s = QString::fromUtf8(f.readAll());
+    f.close();
+    return s;
 }
 
 QStringList AssetManager::getAvailableTypes(const QString &category) const

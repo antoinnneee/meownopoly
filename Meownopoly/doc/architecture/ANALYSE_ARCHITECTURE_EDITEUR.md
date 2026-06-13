@@ -80,14 +80,14 @@ L'éditeur hérite de **`meowComponent/Base_Board.qml`** (grille, fond, `GlobalM
 - **`ScrollLogic_POSE.qml`** : Scroll en mode pose
 
 **Logique des Tuiles et Plans** :
-- **`TileLogic.qml`** : Création/suppression d'éléments (`createNewTileAtPosition`, `deleteElement`, zones d'exclusion), connexions, désélection, ordre Z
+- **`TileLogic.qml`** : Création/suppression d'éléments (`placeSelectedAsset` comme point d'entrée, `createItemSnapableTile` comme fabrique d'objet, `deleteElement`, zones d'exclusion), connexions, désélection, ordre Z
 - **`PlanLogic.qml`** : Gestion des plans/calques Z (visibilité par plage de plans)
 
 #### **Composants partagés `/qml/meowComponent/`** - Grille, Snapables, Cases
 
 **Grille** (`/qml/meowComponent/grid/`) :
 - **`GridManager.qml`** : ⭐ Composant central de la grille
-  - Dessine la grille avec un seul `Repeater` optimisé (lignes verticales + horizontales)
+  - Rendu par défaut via une couche Canvas viewport-cullée (`GridCanvasLayer.qml` / `GridCanvasPainter`, défaut `MEOW_GRID_RENDERER=canvas`) ; le mode `Repeater` (lignes verticales + horizontales) est conservé comme fallback legacy (`MEOW_GRID_RENDERER=repeater`). Le choix est piloté par la context property `_gridRendererUseCanvas`.
   - Propriétés : `gridSize = Screen.pixelDensity * mmSize`, `boardSize = gridSize * croisillons` (600), `croisillons`, `mmSize`, `scaleLevel`
   - Fonctions : `getGridPosition(x, y)`, `snapElement2(element)` (utilise `snapableParameters.displayParameter`)
   - Mode redimensionnement visuel (`resizeMode`), signal `selectedElementSnapped`
@@ -130,21 +130,22 @@ L'éditeur hérite de **`meowComponent/Base_Board.qml`** (grille, fond, `GlobalM
   - `StackLayout` avec **`AssetSelectionPanel`** (assets + types de cases intégrés)
   - Signaux : `assetSelected`, `assetCleared`, `caseSelected`, `visualEffectChanged`, `resizeStarted`/`resizeFinished`
   - Sous-dossiers : `assetSelectionPanel/`, `caseSelectionPanel/`, `menuSelectionPanel/`, `editorBottomPanel/`, `templatePanel/`, `zonePanel/`
-  - **Note** : `MapSelectionPanel` existe en backup uniquement ; paramètres carte / sauvegarde-chargement passent par `MapInfoPanel` et `EditorEscMenu`.
+  - **Note** : les paramètres carte / sauvegarde-chargement passent par `MapInfoPanel` et `EditorEscMenu`.
 
 **Panneau latéral** (`bottomPanel/bottomSidePanel/`) :
 - **`BottomSidePanel.qml`** : Panneau coulissant (droite) ; expose `visualEffectsPanel`, `caseConfigurationPanel`, `connectionsConfigurationPanel`, `zoneConfigurationPanel`
 - **`caseConfigPanel/`** : Configuration de case
-  - `CaseConfigurationPanel.qml`, `CaseConfigurationPanelSection.qml`
-  - `ConnectionsConfigurationSection.qml` : ⭐ Gestion des connexions (previous/next)
-  - `ConnectionListSection.qml`, `ConnectionsPanel.qml`
+  - `CaseConfigurationPanelSection.qml`
   - Sections par type : `CCPS_*.qml`, `CCP_*.qml`
+- **`connectionConfigPanel/`** : Gestion des connexions
+  - `ConnectionsConfigurationSection.qml` : ⭐ Gestion des connexions (previous/next)
+  - `ConnectionListSection.qml`
 - **`visualEffectPanel/`** : `VisualEffectsPanel.qml`, `TransformPanel.qml`, `VEP_*.qml` (couleur, miroir, rotation, etc.)
 - **`zoneConfigPanel/`** : Configuration des zones physiques (`ZCP_*.qml`, `ZoneConfigurationPanelSection.qml`)
 - **`ModelSelectionPanel.qml`** : Sélection de modèles
 
 **Autres panneaux** :
-- **`mapInfoPanel/`** : `MapInfoPanel.qml`, `MapInfoDrawer.qml`, `MapNavigationBar.qml`, `MapSidePanel.qml` — infos carte et fond d’écran
+- **`mapInfoPanel/`** : `MapInfoPanel.qml`, `MapInfoDrawer.qml`, `MapNavigationBar.qml` — infos carte et fond d’écran
 
 #### **Sous-dossier `/qml/meowComponent/case/`** - Affichage des Cases
 
@@ -164,10 +165,10 @@ La grille est générée par **`meowComponent/grid/GridManager.qml`** (instanci�
 
 ```qml
 property int croisillons: 600
-property int mmSize: 12
+property real mmSize: 12.0       // real (et non int) : requis pour le zoom multiplicatif
 property real defaultMmSize: 12.0
 property real scaleLevel: mmSize / defaultMmSize
-property int gridSize: Screen.pixelDensity * mmSize  // Pixels par cellule
+property real gridSize: Screen.pixelDensity * mmSize  // Pixels par cellule
 
 property int boardSize: gridSize * croisillons  // Grille de 600×600 cellules
 width: boardSize
@@ -175,11 +176,13 @@ height: boardSize
 ```
 
 **Rendu de la grille** :
-- Un seul `Repeater` avec `model: totalLineCount` où `totalLineCount = verticalLinesCount + horizontalLinesCount`
-- `verticalLinesCount` / `horizontalLinesCount` = `croisillons + 1` si la grille est affichée
-- Chaque delegate est un `Rectangle` dont la position et la taille dépendent de `isVertical` (index < verticalLinesCount)
+- **Par défaut** (`MEOW_GRID_RENDERER=canvas`) : une couche Canvas viewport-cullée (`GridCanvasLayer.qml` via `GridCanvasPainter`) ne dessine que les croisillons visibles dans le viewport, chargée par un `Loader` actif quand `_useCanvasGrid`.
+- **Fallback legacy** (`MEOW_GRID_RENDERER=repeater`, `Loader` actif quand `!_useCanvasGrid`) : un seul `Repeater` avec `model: totalLineCount` où `totalLineCount = verticalLinesCount + horizontalLinesCount`.
+  - `verticalLinesCount` / `horizontalLinesCount` = `croisillons + 1` si la grille est affichée.
+  - Chaque delegate est un `Rectangle` dont la position et la taille dépendent de `isVertical` (index < verticalLinesCount).
 
 ```qml
+// Mode Repeater (legacy, fallback) :
 Repeater {
     model: gridContainer.totalLineCount
     Rectangle {
@@ -294,7 +297,7 @@ gridSize = Screen.pixelDensity * mmSize
 ```
 
 - `Screen.pixelDensity` : Constante (pixels par mm de l'écran)
-- `mmSize` : Variable contrôlée par l'utilisateur (10mm par défaut)
+- `mmSize` : Variable contrôlée par l'utilisateur (`real`, 12mm par défaut)
 
 **Effet** :
 - Augmenter `mmSize` → cellules plus grandes → effet de "zoom in"
@@ -569,7 +572,7 @@ Changer `gridRelativePositionX` / `unitSizeWidth` ou `gridSize` met à jour `x` 
 
 ### `/qml/editor/panel/bottomPanel/bottomSidePanel/` - Panneau Latéral (droite)
 **Rôle** : Configuration case, connexions, effets visuels, zones  
-**Fichiers clés** : `BottomSidePanel.qml`, `caseConfigPanel/CaseConfigurationPanel.qml`, `connectionConfigPanel/ConnectionsConfigurationSection.qml`, `visualEffectPanel/VisualEffectsPanel.qml`, `zoneConfigPanel/`
+**Fichiers clés** : `BottomSidePanel.qml`, `caseConfigPanel/CaseConfigurationPanelSection.qml`, `connectionConfigPanel/ConnectionsConfigurationSection.qml`, `visualEffectPanel/VisualEffectsPanel.qml`, `zoneConfigPanel/`
 
 ### `/qml/editor/panel/mapInfoPanel/` - Infos Carte
 **Rôle** : Infos carte, fond d’écran, navigation (sauvegarde/chargement via EditorEscMenu / MapNavigationBar)  
@@ -596,9 +599,9 @@ Loader charge MouseLogic_Pose
    ↓
 Utilisateur clique sur la grille
    ↓
-Editor.placeSelectedAsset(gridX, gridY)
+logic.tileLogic.placeSelectedAsset(gridX, gridY)
    ↓
-logic.tileLogic.createNewTileAtPosition(type, gridX, gridY, ItemSnapable.CaseTile)
+logic.tileLogic.createItemSnapableTile(snapableParameters)  // appelé en interne par placeSelectedAsset
    ↓
 dynamicComponent.snapableCaseTileComponent.createObject(workArea, ...)
    ↓
@@ -726,11 +729,14 @@ z: (isSelected && !isDragging) ? snapableParameters.displayParameter.zOrder + 11
 
 ### 10.2 Optimisation de la Grille
 
-La grille utilise un seul `Repeater` pour toutes les lignes :
+Le rendu par défaut (`MEOW_GRID_RENDERER=canvas`) repose sur une couche Canvas viewport-cullée (`GridCanvasLayer.qml` via `GridCanvasPainter`) : seuls les croisillons visibles dans le viewport sont dessinés, ce qui évite l'explosion du nombre de delegates au zoom.
+
+Le mode `Repeater` reste disponible en fallback legacy (`MEOW_GRID_RENDERER=repeater`). Son optimisation interne est d'utiliser un seul `Repeater` pour toutes les lignes :
 - **Avant** : 2 Repeater (vertical + horizontal) = double overhead
 - **Après** : 1 Repeater avec logique conditionnelle = meilleure performance
 
 ```qml
+// Fallback legacy (Repeater) :
 Repeater {
     model: verticalLinesCount + horizontalLinesCount
     Rectangle {

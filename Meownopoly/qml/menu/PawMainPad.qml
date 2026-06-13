@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 //import Qt5Compat.GraphicalEffects
+import theme
 
 Rectangle {
     id: mainPad
@@ -80,7 +81,7 @@ Rectangle {
     
     // Animation de clic
     Behavior on scale {
-        NumberAnimation { duration: 100 }
+        NumberAnimation { duration: Theme.durationFast }
     }
     /*
     layer: {

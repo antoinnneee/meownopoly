@@ -8,48 +8,38 @@ Le système de templates permet de créer, sauvegarder et réutiliser des groupe
 
 ## 📋 Liste des fichiers ajoutés/modifiés
 
-### Fichiers C++ créés (`cpp/game/template/`)
+### Fichiers C++ créés
 
 | Fichier | Rôle |
 |---------|------|
-| `templateinfo.h` | Classe contenant les métadonnées d'un template (nom, dimensions, nombre d'éléments, auteur, etc.) |
-| `templateinfo.cpp` | Implémentation de TemplateInfo avec sérialisation JSON |
-| `templatefilemanager.h` | Gestionnaire de fichiers JSON pour les templates (lecture/écriture/suppression) |
-| `templatefilemanager.cpp` | Implémentation avec conversion positions absolues ↔ relatives |
-| `templatemodel.h` | Modèle QAbstractListModel pour afficher les templates dans une ListView QML |
-| `templatemodel.cpp` | Implémentation du modèle avec chargement des templates |
-| `templatemanager.h` | Façade principale exposée en QML comme singleton |
-| `templatemanager.cpp` | Logique de création, sélection et placement des templates |
+| `cpp/game/map/templatefilemanager.h` | Déclaration du singleton `TemplateFileManager` (méthodes QML `templateExists`/`getAvailableTemplates`/`getTemplatePath`) + helpers statiques de conversion/IO |
+| `cpp/game/map/templatefilemanager.cpp` | Implémentation : lecture/écriture/suppression des fichiers JSON et conversion positions absolues ↔ relatives |
+| `cpp/game/game_template.cpp` | Méthodes de la classe `Game` : `saveTemplate` / `deleteTemplate` / `loadTemplate` / `getTemplateElementsForPlacement` |
 
 ### Fichiers C++ modifiés
 
 | Fichier | Modification |
 |---------|--------------|
-| `cpp/qmlapp.cpp` | Ajout des includes et appels `registerQml()` pour les 4 modules template |
+| `cpp/qmlapp.cpp` | Include de `game/map/templatefilemanager.h` et appel `TemplateFileManager::registerQml()` (un seul module template enregistré) |
 | `cpp/game/item_snapable/itemsnapablefactory.h` | Ajout de la méthode `createItemSnapableFromJson(const QJsonObject &json)` |
 | `cpp/game/item_snapable/itemsnapablefactory.cpp` | Implémentation de `createItemSnapableFromJson()` |
-| `Meownopoly.pro` | Ajout des 8 nouveaux fichiers sources/headers dans SOURCES et HEADERS |
+| `Meownopoly.pro` | Ajout de `game/game_template.cpp`, `game/map/templatefilemanager.cpp` et `game/map/templatefilemanager.h` dans SOURCES/HEADERS (le build principal est CMake, qui ramasse `cpp/*.cpp` via `GLOB_RECURSE` — reconfigurer après ajout) |
 
 ### Fichiers QML modifiés
 
 | Fichier | Modification |
 |---------|--------------|
 | `qml/editor/panel/bottomPanel/bottomMainPanel/templatePanel/TP_Content.qml` | Refonte complète avec interface à 2 onglets (Templates / Créer) |
-| `qml/editor/logic/MouseLogic_Template.qml` | Ajout de la propriété `isPlacingTemplate` et logique de placement |
-| `qml/editor/logic/TileLogic.qml` | Ajout de la fonction `placeSelectedTemplate()` et imports |
+| `qml/editor/logic/MouseLogic_Template.qml` | Propriété `isPlacementMode` et fonctions `enterPlacementMode()` / `exitPlacementMode()` / `placeTemplateAtCursor()` (logique de placement) |
+| `qml/editor/logic/TileLogic.qml` | Réutilisé par le placement : `placeTemplateAtCursor()` appelle `tileLogic.createItemSnapableTile()` (pas de fonction `placeSelectedTemplate()`) |
 
-### Dossiers créés
+### Dossier créé (au runtime)
 
 | Dossier | Usage |
 |---------|-------|
-| `template/default/` | Templates fournis par défaut (non modifiables par l'utilisateur) |
-| `template/user/` | Templates créés par l'utilisateur |
+| `./templates/` | Dossier unique (relatif au CWD) créé automatiquement à la première sauvegarde ; stocke tous les templates sous `<nomNormalisé>_template.json` |
 
-### Fichiers JSON exemple
-
-| Fichier | Description |
-|---------|-------------|
-| `template/default/corner_grass_template.json` | Template d'exemple avec 4 tuiles d'herbe en carré |
+> Il n'y a pas de séparation `default/` vs `user/` ni de templates livrés avec le projet : tous les templates sont générés au runtime dans `./templates/`. Le nom est normalisé (minuscules, espaces → `_`, trim) avant écriture.
 
 ---
 
@@ -59,17 +49,10 @@ Le système de templates permet de créer, sauvegarder et réutiliser des groupe
 {
     "templateInfo": {
         "name": "Nom du template",
-        "description": "Description optionnelle",
-        "creationDate": "2025-01-01T00:00:00",
-        "author": "Nom de l'auteur",
-        "version": 1,
+        "elementCount": 4,
         "boundingBoxWidth": 6,
         "boundingBoxHeight": 6,
-        "originOffsetX": 0,
-        "originOffsetY": 0,
-        "elementCount": 4,
-        "thumbnailPath": "",
-        "isDefault": false
+        "creationDate": "2025-01-01T00:00:00"
     },
     "elements": [
         {
@@ -105,8 +88,8 @@ Le système de templates permet de créer, sauvegarder et réutiliser des groupe
 ```
 
 ### Points clés du format :
-- **relativePositionX/Y** : Position relative à l'origine du template (coin supérieur gauche de la bounding box)
-- **displayParameter** : Ne contient PAS `gridRelativePositionX/Y` (calculées au placement)
+- **relativePositionX/Y** : Position relative à l'origine du template (coin supérieur gauche de la bounding box), ajoutée au niveau racine de chaque élément. Ce sont ces champs qui pilotent le placement (`convertToAbsolutePositions` les lit pour recalculer les positions absolues).
+- **displayParameter** : Conserve encore `gridRelativePositionX/Y` à la sauvegarde — le strip de ces champs est actuellement désactivé (commenté dans `convertToRelativePositions`). En revanche l'`uniqueId` est retiré à la sauvegarde et régénéré au placement (`regenerateUniqueIds`, avec remappage des liens `next`/`prev`).
 - **tileType** : 0 = CaseTile, 1 = DecorationTile, 2 = ExclusionZone, 3 = EffectZone
 
 ---
@@ -122,42 +105,35 @@ Le système de templates permet de créer, sauvegarder et réutiliser des groupe
 2. TP_Content → EditorEnum : Active EM_TEMPLATE via logic.editorMouseMode
                     │
                     ▼
-3. Utilisateur → Grille : Clique sur des éléments existants
+3. Utilisateur → Grille : Sélectionne des éléments existants (MouseLogic_Template)
                     │
                     ▼
-4. MouseLogic_Template.clickedLeft() :
-   ├── Détecte le clic sur un élément
-   ├── selectElement() ajoute à selectedElements[]
-   └── updateBoundingRectangle() affiche rectangle vert
+4. Utilisateur → TP_Content : Clique "Enregistrer" puis saisit un nom
                     │
                     ▼
-5. Utilisateur → TP_Content : Entre un nom + clique "Créer Template"
+5. TP_Content.doSaveTemplate(name) :
+   ├── pendingSaveElementsJson = buildElementsJsonFromSelection()
+   └── Appelle Game.saveTemplate(name, pendingSaveElementsJson)
                     │
                     ▼
-6. TP_Content.createTemplate() :
-   ├── Récupère selectedElements[] depuis MouseLogic_Template
-   ├── Convertit chaque element.snapableParameters.toJSON()
-   └── Appelle TemplateManager.createTemplateFromJson(name, jsonArray)
-                    │
-                    ▼
-7. TemplateManager.createTemplateFromJson() :
-   ├── calculateBoundingBox() → {minX, minY, maxX, maxY}
-   ├── Crée templateInfo avec métadonnées
-   ├── TemplateFileManager::convertElementsToTemplateFormat()
+6. Game::saveTemplate() :
+   ├── TemplateFileManager::calculateBoundingBox() → {x, y, width, height}
+   ├── TemplateFileManager::convertToRelativePositions()
    │   └── Pour chaque élément :
-   │       ├── relativePositionX = absX - minX
-   │       ├── relativePositionY = absY - minY
-   │       └── Retire gridRelativePositionX/Y
-   └── TemplateFileManager::saveTemplate()
+   │       ├── relativePositionX = absX - originX (ajouté au top-level)
+   │       ├── relativePositionY = absY - originY
+   │       └── Retire uniqueId (gridRelativePositionX/Y conservés)
+   ├── Construit templateInfo (name, elementCount, boundingBoxWidth/Height, creationDate)
+   └── TemplateFileManager::writeTemplateFile(templateJson, name)
                     │
                     ▼
-8. TemplateFileManager.saveTemplate() :
-   ├── Chemin : ./template/user/{nom_normalisé}_template.json
-   ├── Crée dossier si nécessaire
-   └── Écrit JSON formaté
+7. writeTemplateFile() :
+   ├── Chemin : ./templates/{nom_normalisé}_template.json
+   ├── Crée le dossier ./templates/ si nécessaire
+   └── Écrit le JSON formaté
                     │
                     ▼
-9. TemplateModel.refresh() → Met à jour la ListView
+8. TP_Content.refreshTemplateList() → Met à jour la ListView
 ```
 
 ### Phase 2 : Lecture des Templates
@@ -166,36 +142,21 @@ Le système de templates permet de créer, sauvegarder et réutiliser des groupe
 1. Application démarre OU TP_Content devient visible
                     │
                     ▼
-2. TemplateModel.loadTemplates() :
-   ├── beginResetModel()
-   └── Vide m_templates[]
+2. TP_Content.refreshTemplateList() :
+   └── Appelle TemplateFileManager.getAvailableTemplates()
                     │
                     ▼
-3. Charge templates par défaut :
-   ├── TemplateFileManager::getAvailableTemplates(DEFAULT)
-   │   └── Scanne ./template/default/*.json
-   └── Pour chaque : loadTemplateInfo(name, DEFAULT)
+3. TemplateFileManager::getAvailableTemplates() :
+   └── Scanne le dossier unique ./templates/*.json
                     │
                     ▼
-4. Charge templates utilisateur :
-   ├── TemplateFileManager::getAvailableTemplates(USER)
-   │   └── Scanne ./template/user/*.json
-   └── Pour chaque : loadTemplateInfo(name, USER)
+4. Retourne une QStringList de noms de templates
                     │
                     ▼
-5. loadTemplateInfo() :
-   ├── TemplateFileManager::readTemplateFile()
-   │   ├── Ouvre fichier JSON
-   │   ├── Parse JSON
-   │   └── Retourne QJsonObject
-   ├── Extrait templateInfo
-   └── Ajoute TemplateData à m_templates[]
+5. TP_Content : templateNameList = list (tableau JS de noms)
                     │
                     ▼
-6. endResetModel() + emit signals
-                    │
-                    ▼
-7. ListView QML se met à jour (binding model: TemplateModel)
+6. ListView QML se met à jour (binding model: root.templateNameList)
 ```
 
 ### Phase 3 : Sélection pour placement
@@ -205,71 +166,50 @@ Le système de templates permet de créer, sauvegarder et réutiliser des groupe
                     │
                     ▼
 2. TP_Content :
-   ├── selectedTemplateName = model.name
-   └── TemplateManager.selectTemplate(name)
+   ├── selectedTemplateName = modelData
+   └── MouseLogic_Template.enterPlacementMode(name)
                     │
                     ▼
-3. TemplateManager.selectTemplate() :
-   ├── Détermine type (DEFAULT ou USER)
-   ├── TemplateFileManager::readTemplateFile()
-   ├── Stocke dans m_currentTemplateData
-   └── Émet currentTemplateDataChanged()
+3. enterPlacementMode() :
+   ├── placementTemplateData = Game.loadTemplate(name)
+   │   └── TemplateFileManager::readTemplateFile()
+   └── isPlacementMode = true
                     │
                     ▼
-4. MouseLogic_Template :
-   └── isPlacingTemplate = TemplateManager.hasCurrentTemplate → true
-                    │
-                    ▼
-5. TP_Content affiche : "Cliquez sur la grille pour placer..."
+4. TP_Content affiche : "Cliquez sur la grille pour placer..."
 ```
 
 ### Phase 4 : Placement sur la grille
 
 ```
-1. Utilisateur → Grille : Clique sur espace vide
+1. Utilisateur → Grille : Clique sur espace vide (isPlacementMode actif)
                     │
                     ▼
-2. MouseLogic_Template.clickedLeft() :
-   └── Condition : clickElement.length === 0 
-                   && isPlacingTemplate 
-                   && !hasMoved
+2. MouseLogic_Template.placeTemplateAtCursor(workAreaX, workAreaY) :
+   ├── gridPos = grid.getGridPosition(px, py)
+   └── Ajuste la position pour centrer sur la bounding box
                     │
                     ▼
-3. Calcul position :
-   └── gridPos = grid.getGridPosition(workAreaPos.x, workAreaPos.y)
+3. Game.getTemplateElementsForPlacement(name, adjustedGridX, adjustedGridY) :
+   ├── loadTemplate(name) → QJsonObject
+   ├── TemplateFileManager::convertToAbsolutePositions()
+   │   └── Pour chaque élément :
+   │       ├── gridRelativePositionX = targetX + relativePositionX
+   │       └── gridRelativePositionY = targetY + relativePositionY
+   └── TemplateFileManager::regenerateUniqueIds()
+       └── Nouveaux uniqueId (QUuid) + remappage des liens next/prev
                     │
                     ▼
-4. TileLogic.placeSelectedTemplate(gridPos.x, gridPos.y)
+4. itemSnapableList = Game.generateItems({ snapableTiles: elementsArray })
                     │
                     ▼
-5. TileLogic.placeSelectedTemplate() :
-   ├── Vérifie TemplateManager.hasCurrentTemplate
-   ├── bounds = TemplateManager.getCurrentTemplateBounds()
-   ├── Ajuste position pour centrer
-   └── elementsJson = TemplateManager.generateTemplateElementsJson()
+5. Pour chaque élément :
+   └── logic.tileLogic.createItemSnapableTile(item)
+       ├── Crée le composant QML selon tileType
+       └── Ajoute à snapableTilesList[]
                     │
                     ▼
-6. TemplateManager.generateTemplateElementsJson() :
-   └── TemplateFileManager::convertTemplateElementsToMapFormat()
-       └── Pour chaque élément :
-           ├── gridRelativePositionX = targetX + relativePositionX
-           ├── gridRelativePositionY = targetY + relativePositionY
-           ├── Génère nouveau uniqueId (QUuid)
-           └── Réinitialise next/prev = []
-                    │
-                    ▼
-7. Pour chaque élément JSON :
-   ├── ItemSnapableFactory.createItemSnapableFromJson(data)
-   └── TileLogic.createItemSnapable(snapableParameters)
-       ├── Crée composant QML selon tileType
-       ├── Ajoute à snapableTilesList[]
-       └── snapToGridFromGridPos()
-                    │
-                    ▼
-8. Éléments apparaissent sur la grille
-                    │
-                    ▼
-9. logic.saveMap(MapTypes.UNDOREDO) → Sauvegarde pour undo/redo
+6. Éléments apparaissent sur la grille (entourés d'une transaction Game.beginTransaction()/commitTransaction())
 ```
 
 ---
@@ -293,38 +233,36 @@ Le système de templates permet de créer, sauvegarder et réutiliser des groupe
 │                           COUCHE C++ / SINGLETONS                            │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  ┌─────────────────────┐    ┌──────────────────────┐                        │
-│  │   TemplateManager   │◄───│    TemplateModel     │                        │
-│  │     (Singleton)     │    │  (QAbstractListModel)│                        │
-│  │                     │    │                      │                        │
-│  │ • createTemplate()  │    │ • loadTemplates()    │                        │
-│  │ • selectTemplate()  │    │ • refresh()          │                        │
-│  │ • generateElements()│    │ • getTemplateData()  │                        │
-│  └──────────┬──────────┘    └──────────┬───────────┘                        │
-│             │                          │                                     │
-│             └────────────┬─────────────┘                                     │
-│                          ▼                                                   │
-│             ┌────────────────────────┐                                       │
-│             │  TemplateFileManager   │                                       │
-│             │      (Singleton)       │                                       │
-│             │                        │                                       │
-│             │ • readTemplateFile()   │                                       │
-│             │ • saveTemplate()       │                                       │
-│             │ • convertElements...() │                                       │
-│             └────────────┬───────────┘                                       │
-│                          │                                                   │
-└──────────────────────────┼───────────────────────────────────────────────────┘
-                           │
-                           ▼
+│  ┌──────────────────────────────┐                                            │
+│  │            Game              │  (singleton)                               │
+│  │                              │                                            │
+│  │ • saveTemplate()             │                                            │
+│  │ • deleteTemplate()           │                                            │
+│  │ • loadTemplate()             │                                            │
+│  │ • getTemplateElementsFor…()  │                                            │
+│  └──────────────┬───────────────┘                                            │
+│                 │                                                            │
+│                 ▼                                                            │
+│  ┌──────────────────────────────┐                                            │
+│  │      TemplateFileManager     │  (singleton QML)                           │
+│  │                              │                                            │
+│  │ • templateExists()           │  (Q_INVOKABLE)                             │
+│  │ • getAvailableTemplates()    │                                            │
+│  │ • getTemplatePath()          │                                            │
+│  │ • readTemplateFile() (static)│                                            │
+│  │ • writeTemplateFile() (static)│                                           │
+│  │ • convertToRelative/Absolute…│  (static)                                 │
+│  └──────────────┬───────────────┘                                            │
+│                 │                                                            │
+└─────────────────┼──────────────────────────────────────────────────────────┘
+                  │
+                  ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                          SYSTÈME DE FICHIERS                                  │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  ./template/                                                                 │
-│  ├── default/                    ← Templates par défaut (lecture seule)     │
-│  │   └── corner_grass_template.json                                         │
-│  └── user/                       ← Templates utilisateur (lecture/écriture) │
-│      └── mon_template_template.json                                         │
+│  ./templates/                    ← Dossier unique (créé au runtime)          │
+│  └── mon_template_template.json                                              │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -333,68 +271,37 @@ Le système de templates permet de créer, sauvegarder et réutiliser des groupe
 
 ## 🔧 API C++ exposée en QML
 
-### TemplateManager (Singleton)
+Le système repose sur deux points d'entrée : le singleton `Game` (méthodes haut niveau de création/suppression/chargement/placement) et le singleton QML `TemplateFileManager` (IO disque + helpers de conversion). Il n'y a ni `TemplateManager`, ni `TemplateModel`, ni `QAbstractListModel` : la ListView est alimentée par un simple tableau JS de noms.
+
+### Game (Singleton)
 
 ```cpp
-// Propriétés
-Q_PROPERTY(QString currentTemplateName ...)
-Q_PROPERTY(QJsonObject currentTemplateData ...)
-Q_PROPERTY(bool hasCurrentTemplate ...)
-
-// Méthodes
-Q_INVOKABLE bool createTemplateFromElements(QString name, QVariantList elements);
-Q_INVOKABLE bool createTemplateFromJson(QString name, QJsonArray elementsJson);
-Q_INVOKABLE bool selectTemplate(QString name);
-Q_INVOKABLE void clearSelection();
-Q_INVOKABLE QJsonArray generateTemplateElementsJson(int targetX, int targetY);
-Q_INVOKABLE QVariantMap getCurrentTemplateBounds();
-Q_INVOKABLE bool deleteTemplate(QString name);
-Q_INVOKABLE void refreshTemplates();
-
-// Signaux
-signal templateCreated(QString name);
-signal templateDeleted(QString name);
-signal templateSelected(QString name);
-signal templatePlaced(int gridX, int gridY, int elementCount);
+// Méthodes template (game_template.cpp)
+bool       saveTemplate(QString name, QJsonArray elementsJson);
+bool       deleteTemplate(QString name);
+QJsonObject loadTemplate(QString name);
+QJsonArray  getTemplateElementsForPlacement(QString name, int targetX, int targetY);
 ```
 
-### TemplateModel (Singleton, QAbstractListModel)
+### TemplateFileManager (Singleton QML)
 
 ```cpp
-// Rôles pour ListView
-enum TemplateRoles {
-    NameRole, DescriptionRole, CreationDateRole, AuthorRole,
-    VersionRole, BoundingBoxWidthRole, BoundingBoxHeightRole,
-    OriginOffsetXRole, OriginOffsetYRole, ElementCountRole,
-    ThumbnailPathRole, IsDefaultRole, FilePathRole
-};
+// Méthodes QML (instance, Q_INVOKABLE)
+Q_INVOKABLE bool        templateExists(const QString &templateName);
+Q_INVOKABLE QStringList getAvailableTemplates();
+Q_INVOKABLE QString     getTemplatePath(const QString &templateName);
 
-// Méthodes
-Q_INVOKABLE void refresh();
-Q_INVOKABLE void loadTemplates();
-Q_INVOKABLE QJsonObject getTemplateData(int index);
-Q_INVOKABLE QJsonObject getTemplateDataByName(QString name);
-Q_INVOKABLE int indexOf(QString name);
-```
+// Méthodes statiques (internes) - utilisées par Game
+static QJsonObject readTemplateFile(const QString &templateName);
+static bool        writeTemplateFile(const QJsonObject &templateData, const QString &templateName);
+static bool        removeTemplateFile(const QString &templateName);
 
-### TemplateFileManager (Singleton)
-
-```cpp
-// Types
-enum TemplateType { DEFAULT, USER };
-
-// Méthodes
-Q_INVOKABLE bool templateExists(QString name, TemplateType type);
-Q_INVOKABLE QStringList getAvailableTemplates(TemplateType type);
-Q_INVOKABLE QString createTemplateFile(QString name);
-Q_INVOKABLE bool deleteTemplate(QString name);
-Q_INVOKABLE bool isDefaultTemplate(QString name);
-
-// Méthodes statiques (internes)
-static QJsonObject readTemplateFile(QString name, TemplateType type);
-static bool saveTemplate(QJsonObject data, QString name, TemplateType type);
-static QJsonArray convertElementsToTemplateFormat(QJsonArray elements, int originX, int originY);
-static QJsonArray convertTemplateElementsToMapFormat(QJsonArray elements, int targetX, int targetY);
+// Utilitaires statiques - conversion de positions
+static QString     normalizeTemplateName(const QString &templateName);
+static QVariantMap calculateBoundingBox(const QJsonArray &elementsArray);
+static QJsonArray  convertToRelativePositions(const QJsonArray &elementsArray, int originX, int originY);
+static QJsonArray  convertToAbsolutePositions(const QJsonArray &elementsArray, int targetX, int targetY);
+static QJsonArray  regenerateUniqueIds(const QJsonArray &elementsArray);
 ```
 
 ---
@@ -404,23 +311,25 @@ static QJsonArray convertTemplateElementsToMapFormat(QJsonArray elements, int ta
 ### Import des modules
 
 ```qml
-import TemplateManager
-import TemplateModel
+import EditorEnum
+import Game
 import TemplateFileManager
 ```
 
 ### Exemple : Afficher la liste des templates
 
+La ListView se lie à un simple tableau JS de noms (`templateNameList`), rafraîchi via `TemplateFileManager.getAvailableTemplates()`. Le délégué utilise `modelData` (le nom du template).
+
 ```qml
 ListView {
-    model: TemplateModel
+    // alimenté par TemplateFileManager.getAvailableTemplates()
+    model: root.templateNameList
     delegate: Rectangle {
-        Text { text: model.name }
-        Text { text: model.elementCount + " éléments" }
-        Text { text: model.boundingBoxWidth + "×" + model.boundingBoxHeight }
-        
+        property string templateName: modelData
+        Text { text: templateName }
+
         MouseArea {
-            onClicked: TemplateManager.selectTemplate(model.name)
+            onClicked: root.selectedTemplateName = templateName
         }
     }
 }
@@ -430,14 +339,14 @@ ListView {
 
 ```qml
 Button {
-    text: "Créer Template"
+    text: "Enregistrer"
     onClicked: {
-        var elementsJson = []
-        for (var i = 0; i < selectedElements.length; i++) {
-            var jsonStr = selectedElements[i].snapableParameters.toJSON()
+        const elementsJson = []
+        for (let i = 0; i < selectedElements.length; i++) {
+            const jsonStr = selectedElements[i].snapableParameters.toJSON()
             elementsJson.push(JSON.parse(jsonStr))
         }
-        TemplateManager.createTemplateFromJson("MonTemplate", elementsJson)
+        Game.saveTemplate("MonTemplate", elementsJson)
     }
 }
 ```

@@ -20,6 +20,9 @@ class ZoneParameter : public QObject
     Q_PROPERTY(qreal speedMultiplier READ speedMultiplier WRITE setSpeedMultiplier NOTIFY speedMultiplierChanged FINAL)
     Q_PROPERTY(bool exclusion READ exclusion WRITE setExclusion NOTIFY exclusionChanged FINAL)
     Q_PROPERTY(qreal accelerationMultiplier READ accelerationMultiplier WRITE setAccelerationMultiplier NOTIFY accelerationMultiplierChanged FINAL)
+    // Référence (id) vers un ScreenEffect de la bibliothèque de la carte
+    // (MapInfo::screenEffects). Vide = aucun effet visuel à l'entrée de zone.
+    Q_PROPERTY(QString screenEffectId READ screenEffectId WRITE setScreenEffectId NOTIFY screenEffectIdChanged FINAL)
 
 public:
 
@@ -35,7 +38,8 @@ public:
                && m_frictionStrenght      == other.m_frictionStrenght
                && m_exclusion             == other.m_exclusion
                && m_speedMultiplier       == other.m_speedMultiplier
-               && m_accelerationMultiplier == other.m_accelerationMultiplier;
+               && m_accelerationMultiplier == other.m_accelerationMultiplier
+               && m_screenEffectId        == other.m_screenEffectId;
     }
 
     explicit ZoneParameter(QObject *parent = nullptr);
@@ -78,6 +82,9 @@ public:
     qreal accelerationMultiplier() const;
     void setAccelerationMultiplier(qreal newAccelerationMultiplier);
 
+    QString screenEffectId() const;
+    void setScreenEffectId(const QString &newScreenEffectId);
+
 
 
 signals:
@@ -99,6 +106,8 @@ signals:
 
     void accelerationMultiplierChanged();
 
+    void screenEffectIdChanged();
+
 private:
     QVariantList m_polygonPoints;
     QString m_zoneColor;
@@ -109,6 +118,7 @@ private:
     bool m_exclusion = true;
     qreal m_speedMultiplier = 1;
     qreal m_accelerationMultiplier = 1;
+    QString m_screenEffectId;
 };
 
 #endif // ZONEPARAMETER_H

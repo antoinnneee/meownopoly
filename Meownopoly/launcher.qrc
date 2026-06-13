@@ -11,5 +11,12 @@
     <file>qml/launcher/ModelsSection.qml</file>
     <file>qml/launcher/Model3DPreview.qml</file>
     <file>qml/launcher/ModelConfigurator.qml</file>
+    <file>qml/launcher/SkinEditorPanel.qml</file>
+    <file>qml/launcher/TintModeSelector.qml</file>
+    <file>qml/launcher/StyledComboBox.qml</file>
+    <file>qml/launcher/StyledButton.qml</file>
+    <file>qml/launcher/InlineColorPicker.qml</file>
+    <file>qml/launcher/StyledCheckBox.qml</file>
+    <file>qml/launcher/TrashIcon.qml</file>
     </qresource>
 </RCC>

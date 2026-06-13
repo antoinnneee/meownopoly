@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts
 import AssetManager
 import QtQuick.Window
+import theme
 
 ScrollView {
     id: root
@@ -28,8 +29,8 @@ ScrollView {
     GridLayout {
         id: gridLayout
         anchors.fill: parent
-        columnSpacing: 10
-        rowSpacing: 10
+        columnSpacing: Theme.spacingL
+        rowSpacing: Theme.spacingL
         columns: Math.max(1, Math.floor(parent.width / (Screen.pixelDensity*25))-1)
         
         // Define category metadata with icons and descriptions
@@ -126,23 +127,23 @@ ScrollView {
             Rectangle {
                 Layout.preferredWidth: Screen.pixelDensity*25
                 Layout.preferredHeight:  Screen.pixelDensity*25
-                color: categoryMouseArea.containsMouse ? "#555555" : "#444444"
-                border.color: "#666666"
+                color: categoryMouseArea.containsMouse ? Theme.borderLight : Theme.border
+                border.color: Theme.textDisabled
                 border.width: 1
-                radius: 8
-                
+                radius: Theme.radiusL
+
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation { duration: Theme.durationNormal }
                 }
-                
+
                 Column {
                     anchors.centerIn: parent
-                    spacing: 5
-                    
+                    spacing: Theme.spacingXS
+
                     // Icon
                     Text {
                         text: modelData.icon
-                        font.pixelSize: 32
+                        font.pixelSize: Theme.fontSizeHero
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                     
@@ -150,7 +151,7 @@ ScrollView {
                     Text {
                         text: modelData.category + "\n" + modelData.name
                         elide: Text.ElideNone
-                        color: "white"
+                        color: Theme.textPrimary
                         font.bold: true
                         anchors.horizontalCenter: parent.horizontalCenter
                         horizontalAlignment: Text.AlignHCenter
@@ -176,12 +177,12 @@ ScrollView {
                 Rectangle {
                     anchors.fill: parent
                     color: "transparent"
-                    border.color: "#4A90E2"
+                    border.color: Theme.accent
                     border.width: categoryMouseArea.containsMouse ? 2 : 0
-                    radius: 8
-                    
+                    radius: Theme.radiusL
+
                     Behavior on border.width {
-                        NumberAnimation { duration: 150 }
+                        NumberAnimation { duration: Theme.durationNormal }
                     }
                 }
             }
@@ -205,25 +206,25 @@ ScrollView {
         
         Column {
             anchors.centerIn: parent
-            spacing: 10
-            
+            spacing: Theme.spacingL
+
             Text {
                 text: "🔍"
-                font.pixelSize: 32
+                font.pixelSize: Theme.fontSizeHero
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "No categories found"
-                color: "#CCCCCC"
-                font.pixelSize: 14
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeMedium
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "Try adjusting your filters or search terms"
-                color: "#999999"
-                font.pixelSize: 11
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeSmall
                 anchors.horizontalCenter: parent.horizontalCenter
                 wrapMode: Text.Wrap
                 width: 180

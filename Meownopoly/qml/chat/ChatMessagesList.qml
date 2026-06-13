@@ -1,14 +1,15 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 Rectangle {
     id: messagesContainer
     Layout.fillWidth: true
     Layout.fillHeight: true
-    color: "#2a2a2a"
+    color: Theme.surface
 
-    border.color: dropArea.containsDrag ? "#4A90E2" : "#444444"
+    border.color: dropArea.containsDrag ? Theme.accent : Theme.border
     border.width: dropArea.containsDrag ? 2 : 1
 
     property var chatClient
@@ -18,8 +19,8 @@ Rectangle {
     signal countChanged(int count)
     signal openFullScreenMsg(var modelMsg)
 
-    Behavior on border.color { ColorAnimation { duration: 150 } }
-    Behavior on border.width { NumberAnimation { duration: 150 } }
+    Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
+    Behavior on border.width { NumberAnimation { duration: Theme.durationNormal } }
 
     // Extensions de fichiers texte acceptées
     property var textFileExtensions: [
@@ -86,39 +87,39 @@ Rectangle {
 
         Rectangle {
             anchors.fill: parent
-            anchors.margins: 20
+            anchors.margins: Theme.spacingHuge
             color: "transparent"
-            border.color: "#4A90E2"
+            border.color: Theme.accent
             border.width: 2
             border.pixelAligned: true
-            radius: 12
+            radius: Theme.radiusXXL
 
             Rectangle {
                 anchors.fill: parent
-                anchors.margins: 4
+                anchors.margins: Theme.spacingXS
                 color: "transparent"
-                border.color: "#4A90E2"
+                border.color: Theme.accent
                 border.width: 1
-                radius: 10
+                radius: Theme.radiusXL
                 opacity: 0.5
             }
 
             Column {
                 anchors.centerIn: parent
-                spacing: 12
+                spacing: Theme.spacingXL
 
                 Rectangle {
                     width: 64
                     height: 64
                     radius: 32
-                    color: "#333333"
-                    border.color: "#4A90E2"
+                    color: Theme.surfaceAlt
+                    border.color: Theme.accent
                     border.width: 2
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Text {
                         text: "📎"
-                        font.pointSize: 21
+                        font.pixelSize: Theme.fontSizeDisplay
                         anchors.centerIn: parent
                     }
 
@@ -132,16 +133,16 @@ Rectangle {
 
                 Text {
                     text: "Déposez votre fichier ici"
-                    color: "#cccccc"
-                    font.pointSize: 10
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
                 Text {
                     text: "Images ou fichiers texte"
-                    color: "#888888"
-                    font.pointSize: 8
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSmall
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
@@ -151,10 +152,10 @@ Rectangle {
     ListView {
         id: messageList
         anchors.fill: parent
-        anchors.margins: 8
+        anchors.margins: Theme.spacingM
         model: chatClient ? chatClient.messages : null
         clip: true
-        spacing: 4
+        spacing: Theme.spacingXS
         highlightFollowsCurrentItem: false
         reuseItems: true
         // Matérialise plus d'items hors écran pour que ListView mesure leur vraie hauteur
@@ -204,11 +205,11 @@ Rectangle {
             contentItem: Rectangle {
                 implicitWidth: 6
                 radius: 3
-                color: parent.pressed ? "#4A90E2" : "#555555"
+                color: parent.pressed ? Theme.accent : Theme.borderLight
             }
             background: Rectangle {
                 implicitWidth: 6
-                color: "#333333"
+                color: Theme.surfaceAlt
                 radius: 3
             }
         }
@@ -230,7 +231,7 @@ Rectangle {
                 index: parent.index
                 chatClient: messagesContainer.chatClient
                 anchors.top: parent.top
-                anchors.topMargin: 4
+                anchors.topMargin: Theme.spacingXS
                 anchors.left: parent.isOwn ? undefined : parent.left
                 anchors.right: parent.isOwn ? parent.right : undefined
                 anchors.leftMargin: 0
@@ -287,33 +288,33 @@ Rectangle {
             anchors.centerIn: parent
             width: 200
             height: 80
-            color: "#333333"
-            radius: 8
-            border.color: "#444444"
+            color: Theme.surfaceAlt
+            radius: Theme.radiusL
+            border.color: Theme.border
             border.width: 1
             visible: messageList.count === 0
 
             Column {
                 anchors.centerIn: parent
-                spacing: 8
+                spacing: Theme.spacingM
 
                 Text {
                     text: "🐾"
-                    font.pointSize: 18
+                    font.pixelSize: Theme.fontSizeDisplay
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
                 Text {
                     text: "Aucun message"
-                    color: "#888888"
-                    font.pointSize: 8
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSmall
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
                 Text {
                     text: "Commencez la conversation !"
-                    color: "#666666"
-                    font.pointSize: 7
+                    color: Theme.textDisabled
+                    font.pixelSize: Theme.fontSizeTiny
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }

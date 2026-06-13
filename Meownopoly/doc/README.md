@@ -94,25 +94,30 @@ Chaque tour se compose de **4 phases distinctes** :
 - **Qt/QML** pour l'interface utilisateur
 - **C++** pour la logique de jeu
 - **JSON** pour la configuration des cases et des maps
-- **CSV** pour les données de propriétés
 
 ### Structure du Projet
 ```
 Meownopoly/
-├── asset_manager.cpp/h   # Gestionnaire de ressources
-├── case/                # Classes des différents types de cases
-├── config/              # Fichiers de configuration
-├── doc/                 # Documentation
-├── item_snapable/       # Éléments plaçables sur la grille
-├── map/                 # Gestion des cartes
-├── qml/                 # Interface utilisateur QML
-│   ├── case/            # Composants QML des cases
-│   ├── editor/          # Éditeur de cartes
-│   ├── launcher/        # Interface du lanceur
-│   └── menu/            # Menu principal
-├── QtFolderCompressor/  # Compression/décompression
-└── tools/               # Outils de développement
+├── cpp/                    # Sources C++ (logique de jeu, réseau, chat, assets, physique, éditeur)
+│   ├── account/            # Gestion des comptes
+│   ├── assetManager/       # Gestionnaire de ressources (asset_manager.cpp/h)
+│   ├── chat/               # Client de chat WebSocket
+│   ├── communication/      # Catway, PlayerNetwork, StunManager (P2P/UDP)
+│   ├── editor/             # Éditeur de cartes (réseau, ops, painters)
+│   ├── experiment/         # Code expérimental
+│   ├── game/               # Logique de jeu (case/, map/, network/, physics/)
+│   ├── launcher/           # Logique du lanceur
+│   ├── reliable/           # Bibliothèque reliable.io (fiabilité UDP)
+│   └── tools/              # Outils (QtFolderCompressor/, etc.)
+├── qml/                    # Interface utilisateur QML
+├── asset/                  # Ressources graphiques
+├── doc/                    # Documentation
+├── tests/                  # Tests
+├── *.qrc                   # Fichiers de ressources Qt
+└── CMakeLists.txt          # Configuration du build CMake
 ```
+
+Pour le détail complet de l'organisation du code, voir [PROJECT_STRUCTURE.md](./architecture/PROJECT_STRUCTURE.md).
 
 ### Composants Principaux
 
@@ -131,7 +136,7 @@ Composants pour appliquer des effets visuels aux éléments de jeu (flou, ombre,
 ## 🎨 Assets et Thème
 
 Le jeu comprend des assets visuels sur le thème félin :
-- **Avatars de chats** (6 différents)
+- **Avatars de chats**
 - **Éléments de jeu :** dés, prison, aires de repos
 - **Objets thématiques :** distributeur de croquettes, herbe à chat, porte à chat
 - **Interface moderne** avec des éléments UI adaptés au thème
@@ -139,19 +144,23 @@ Le jeu comprend des assets visuels sur le thème félin :
 ## 🚀 Installation et Lancement
 
 ### Prérequis
-- Qt 5.x ou supérieur
-- Compilateur C++ compatible
-- Make
+- CMake 3.21+
+- Ninja
+- Qt6 (Core, Quick, Qml, Widgets, QuickControls2, Network, WebSockets, Sql, Quick3D, Concurrent)
+- Compilateur C++20
 
 ### Compilation
 ```bash
-qmake Meownopoly.pro
-make
+# Configuration (depuis la racine du dépôt)
+cd Meownopoly && cmake -B ../build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+# Build
+cmake --build ../build
 ```
 
 ### Lancement
 ```bash
-./Meownopoly
+../build/Meownopoly.exe
 ```
 
 ## 🎲 Règles Spéciales
@@ -172,12 +181,12 @@ Le jeu supporte plusieurs joueurs (minimum 2), avec des mécaniques qui s'adapte
 
 ## 📚 Documentation Additionnelle
 
-- [Asset Manager](./ASSET_MANAGER.md) - Documentation du système de gestion d'assets
-- [Launcher Architecture](./LAUNCHER_ARCHITECTURE.md) - Architecture du launcher et pattern singleton
-- [Héritage QML](./INHERITANCE_QML.md) - Guide sur l'utilisation de l'héritage en QML
-- [Effets Visuels](./VISUAL_EFFECTS_SYSTEM.md) - Documentation du système d'effets visuels
-- [Serveur de Ressources](./SERVEUR_RESSOURCES.md) - Implémentation du serveur de ressources
-- [Asset Preview Cursor](./ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md) - Support des cases dans le curseur de prévisualisation
+- [Asset Manager](./architecture/ASSET_MANAGER.md) - Documentation du système de gestion d'assets
+- [Launcher Architecture](./architecture/LAUNCHER_ARCHITECTURE.md) - Architecture du launcher et pattern singleton
+- [Héritage QML](./design/INHERITANCE_QML.md) - Guide sur l'utilisation de l'héritage en QML
+- [Effets Visuels](./architecture/VISUAL_EFFECTS_SYSTEM.md) - Documentation du système d'effets visuels
+- [Serveur de Ressources](./features/SERVEUR_RESSOURCES.md) - Implémentation du serveur de ressources
+- [Asset Preview Cursor](./features/ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md) - Support des cases dans le curseur de prévisualisation
 
 ---
 

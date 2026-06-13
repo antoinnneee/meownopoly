@@ -3,14 +3,15 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Meownopoly.Chat 1.0
 import "."
+import theme
 
 Rectangle {
     id: participantsPanel
     Layout.fillWidth: true
     Layout.preferredHeight: visible ? participantsPanelContent.implicitHeight + 16 : 0
     implicitHeight: participantsPanelContent.implicitHeight + 16
-    color: "#2d2d2d"
-    border.color: "#3a3a3a"
+    color: Theme.surface
+    border.color: Theme.surfaceHover
     border.width: 1
     visible: false
     clip: true
@@ -27,31 +28,31 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: 8
-        spacing: 4
+        anchors.margins: Theme.spacingM
+        spacing: Theme.spacingXS
 
         // Titre du panneau
         RowLayout {
             width: parent.width
-            spacing: 6
+            spacing: Theme.spacingS
 
             Text {
                 text: "👥"
-                font.pointSize: 9
+                font.pixelSize: Theme.fontSizeBody
             }
 
             Text {
                 text: "Participants connectés"
                 color: "#aaaaaa"
-                font.pointSize: 8
+                font.pixelSize: Theme.fontSizeSmall
                 font.bold: true
                 Layout.fillWidth: true
             }
 
             Text {
                 text: chatClient ? chatClient.participantCount.toString() : "0"
-                color: "#4A90E2"
-                font.pointSize: 8
+                color: Theme.accent
+                font.pixelSize: Theme.fontSizeSmall
                 font.bold: true
             }
 
@@ -59,12 +60,12 @@ Rectangle {
             Rectangle {
                 Layout.preferredWidth: 20
                 Layout.preferredHeight: 20
-                color: refreshBtnArea.containsMouse ? "#444444" : "transparent"
-                radius: 4
+                color: refreshBtnArea.containsMouse ? Theme.border : "transparent"
+                radius: Theme.radiusS
 
                 Text {
                     text: "🔄"
-                    font.pointSize: 8
+                    font.pixelSize: Theme.fontSizeSmall
                     anchors.centerIn: parent
                 }
 
@@ -90,7 +91,7 @@ Rectangle {
         Rectangle {
             width: parent.width
             height: 1
-            color: "#3a3a3a"
+            color: Theme.surfaceHover
         }
 
         // Liste des participants
@@ -100,10 +101,10 @@ Rectangle {
             Rectangle {
                 width: participantsPanelContent.width
                 height: 28
-                color: participantHoverArea.containsMouse ? "#383838" : "transparent"
-                radius: 4
+                color: participantHoverArea.containsMouse ? Theme.surfaceHover : "transparent"
+                radius: Theme.radiusS
 
-                Behavior on color { ColorAnimation { duration: 100 } }
+                Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
                 MouseArea {
                     id: participantHoverArea
@@ -113,9 +114,9 @@ Rectangle {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    spacing: 8
+                    anchors.leftMargin: Theme.spacingM
+                    anchors.rightMargin: Theme.spacingM
+                    spacing: Theme.spacingM
 
                     // Indicateur en ligne/hors ligne/absent
                     Rectangle {
@@ -142,14 +143,14 @@ Rectangle {
 
                     Text {
                         text: "👑"
-                        font.pointSize: 8
+                        font.pixelSize: Theme.fontSizeSmall
                         visible: modelData.is_host || false
                     }
 
                     Text {
                         text: modelData.player_nickname || modelData.player_id || "?"
-                        color: (modelData.player_id === drawer.playerId) ? "#4A90E2" : "#cccccc"
-                        font.pointSize: 8
+                        color: (modelData.player_id === drawer.playerId) ? Theme.accent : Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
                         font.bold: modelData.player_id === drawer.playerId
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -157,8 +158,8 @@ Rectangle {
 
                     Text {
                         text: (modelData.player_id === drawer.playerId) ? "(vous)" : ""
-                        color: "#888888"
-                        font.pointSize: 7
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeTiny
                         font.italic: true
                         visible: modelData.player_id === drawer.playerId
                     }
@@ -168,12 +169,12 @@ Rectangle {
                         Layout.preferredWidth: 20
                         Layout.preferredHeight: 20
                         color: privateMsgBtnArea.containsMouse ? "#334466" : "transparent"
-                        radius: 4
+                        radius: Theme.radiusS
                         visible: modelData.player_id !== drawer.playerId
 
                         Text {
                             text: "✉️"
-                            font.pointSize: 8
+                            font.pixelSize: Theme.fontSizeSmall
                             anchors.centerIn: parent
                         }
 
@@ -200,7 +201,7 @@ Rectangle {
                         Layout.preferredWidth: 20
                         Layout.preferredHeight: 20
                         color: kickBtnArea.containsMouse ? "#552222" : "transparent"
-                        radius: 4
+                        radius: Theme.radiusS
                         visible: {
                             if (!chatClient || chatClient.participants.length < 1) return false;
                             var isHost = chatClient.participants[0].player_id === drawer.playerId;
@@ -210,7 +211,7 @@ Rectangle {
 
                         Text {
                             text: "❌"
-                            font.pointSize: 8
+                            font.pixelSize: Theme.fontSizeSmall
                             anchors.centerIn: parent
                         }
 
@@ -237,13 +238,13 @@ Rectangle {
         // Message si aucun participant
         Text {
             text: "Aucun participant connecté"
-            color: "#666666"
-            font.pointSize: 8
+            color: Theme.textDisabled
+            font.pixelSize: Theme.fontSizeSmall
             font.italic: true
             anchors.horizontalCenter: parent.horizontalCenter
             visible: !chatClient || chatClient.participantCount === 0
-            topPadding: 4
-            bottomPadding: 4
+            topPadding: Theme.spacingXS
+            bottomPadding: Theme.spacingXS
         }
     }
 }

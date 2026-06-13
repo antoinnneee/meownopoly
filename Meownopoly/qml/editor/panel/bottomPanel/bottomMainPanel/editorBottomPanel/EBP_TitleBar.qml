@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 RowLayout {
     id: titleBar
@@ -24,9 +25,9 @@ RowLayout {
 
     signal focusReleased()
 
-    anchors.margins: 10
-    anchors.rightMargin: 6
-    spacing: 15
+    anchors.margins: Theme.spacingL
+    anchors.rightMargin: Theme.spacingS
+    spacing: Theme.spacingXXL
 
     height: isExpanded ? 40 : 0
     // Title with selection indicator
@@ -34,12 +35,12 @@ RowLayout {
         id: titleBarArea
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignVCenter
-        spacing: 2
+        spacing: Theme.spacingXXS
 
         Text {
             text: titleBar.titleText
-            color: "white"
-            font.pixelSize: 16
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeLarge
             font.bold: true
             Layout.fillHeight: true
         }
@@ -47,7 +48,7 @@ RowLayout {
         Text {
             text: titleBar.subTitleText
             color: titleBar.subTitleColor
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSizeCaption
             font.italic: true
             visible: titleBar.isExpanded
             Layout.fillHeight: true

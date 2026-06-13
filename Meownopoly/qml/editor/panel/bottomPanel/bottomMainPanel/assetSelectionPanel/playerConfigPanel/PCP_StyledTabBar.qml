@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /*
  * TabBar stylé. Utilisé conjointement avec PCP_StyledTabButton pour
@@ -9,9 +10,9 @@ TabBar {
     id: control
 
     background: Rectangle {
-        color: "#1a1a1a"
-        radius: 3
-        border.color: "#444444"
+        color: Theme.background
+        radius: Theme.radiusXS
+        border.color: Theme.border
         border.width: 1
     }
 }

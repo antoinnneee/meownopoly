@@ -4,17 +4,18 @@ import QtQuick.Layouts
 import CaseRestArea
 import Player
 import ".."
+import theme
 
 ColumnLayout {
     id: root
-    spacing: 5
+    spacing: Theme.spacingXS
 
     required property CaseRestArea caseData
     property var familyColors: []
 
     Text {
         text: "Family: " + root.getFamilyName()
-        font.pixelSize: 14
+        font.pixelSize: Theme.fontSizeMedium
         color: "#2c3e50"
     }
 
@@ -22,27 +23,27 @@ ColumnLayout {
         text: (root.caseData === null) ? "null" :
                                                      root.caseData.owner != undefined ? root.caseData.owner.name
                                                                                       : "no owner"
-        font.pixelSize: 14
+        font.pixelSize: Theme.fontSizeMedium
         color: "#2c3e50"
     }
 
     RowLayout {
         Layout.fillWidth: true
-        spacing: 5
+        spacing: Theme.spacingXS
 
         Text {
             text: "Rest Quality:"
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
             color: "#2c3e50"
         }
 
         Item {
             Layout.preferredWidth: 120
             Layout.preferredHeight: 30
-            
+
             StarRating {
                 anchors.fill: parent
-                anchors.margins: 2
+                anchors.margins: Theme.spacingXXS
                 restQuality: (root.caseData) ? root.caseData.restQuality : CaseRestArea.RQ_NONE
             }
         }
@@ -51,12 +52,12 @@ ColumnLayout {
     // Price information
     ColumnLayout {
         Layout.fillWidth: true
-        spacing: 5
+        spacing: Theme.spacingXS
         visible: root.caseData
 
         Text {
             text: "Purchase: " + (root.caseData && root.caseData.price ? root.caseData.price + "K" : "N/A")
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
             color: "#2c3e50"
             font.bold: true
         }
@@ -65,7 +66,7 @@ ColumnLayout {
         Grid {
             Layout.fillWidth: true
             columns: 4
-            spacing: 10
+            spacing: Theme.spacingL
 
             Repeater {
                 model: 4
@@ -73,7 +74,7 @@ ColumnLayout {
                     width: (parent.width - parent.spacing * 3) / 4
                     horizontalAlignment: Text.AlignHCenter
                     text: (index + 1) + (index === 0 ? " star" : " stars")
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                     color: "#2c3e50"
                 }
             }
@@ -85,7 +86,7 @@ ColumnLayout {
                     horizontalAlignment: Text.AlignHCenter
                     text: root.caseData && root.caseData.rentPrice ?
                           root.caseData.rentPrice[index + 1] + "K" : "N/A"
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                     color: "#2c3e50"
                     font.bold: true
                 }
@@ -95,7 +96,7 @@ ColumnLayout {
         // Hotel price
         Text {
             text: (root.caseData) ?"Hotel :" +  root.caseData.rentPrice[5] : "N/A"
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
             color: "#2c3e50"
             font.bold: true
             Layout.alignment: Qt.AlignRight

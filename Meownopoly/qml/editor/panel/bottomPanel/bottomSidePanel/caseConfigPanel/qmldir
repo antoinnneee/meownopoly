@@ -5,7 +5,6 @@ CCP_HouseHotelPriceConfig 1.0 CCP_HouseHotelPriceConfig.qml
 CCP_PanelElement 1.0 CCP_PanelElement.qml
 CCP_RentConfig 1.0 CCP_RentConfig.qml
 CCP_RestAreaFamilyConfig 1.0 CCP_RestAreaFamilyConfig.qml
-CCP_StyledSpinBox 1.0 CCP_StyledSpinBox.qml
 CCPS_CardBoardBoxSection 1.0 CCPS_CardBoardBoxSection.qml
 CCPS_CatDeviceSection 1.0 CCPS_CatDeviceSection.qml
 CCPS_GeneralSection 1.0 CCPS_GeneralSection.qml

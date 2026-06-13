@@ -1,0 +1,3 @@
+# Les scripts shell (deploy.sh, setup-domain.sh…) sont exécutés sous bash/Linux :
+# un checkout CRLF (core.autocrlf=true sous Windows) les casse ("$'\r': command not found").
+*.sh text eol=lf

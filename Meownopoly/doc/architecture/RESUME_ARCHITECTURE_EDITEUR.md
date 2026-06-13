@@ -19,34 +19,52 @@ qml/editor/
 ├── EditorLogic.qml               # 🧠 Cerveau de l'éditeur
 ├── EditorDynamicComponent.qml    # 🏭 Fabrique d'éléments
 ├── Editor_WheelHandler.qml       # 🖱️ Gestion molette
-├── Background.qml                # 🖼️ Image de fond
 │
 ├── logic/                        # 📦 Logique métier
 │   ├── MouseLogic_Base.qml          # Classe de base
 │   ├── MouseLogic_Selection.qml     # Mode sélection/déplacement
 │   ├── MouseLogic_Pose.qml          # Mode placement
 │   ├── MouseLogic_Selection_link.qml # Mode création de liens
+│   ├── MouseLogic_Template.qml      # Mode template
+│   ├── MouseLogic_Game.qml          # Mode jeu
+│   ├── MouseLogic_DrawPolygon.qml   # Mode tracé de polygone (zones)
 │   ├── TileLogic.qml                # Gestion des tuiles
 │   ├── ScrollLogic.qml              # Zoom et scroll
 │   └── PlanLogic.qml                # Gestion Z-layers
 │
-├── tools/                        # 🔧 Outils
-│   ├── GridManager.qml              # ⭐ GRILLE - Génération et snapping
-│   ├── SelectionRect.qml            # ⭐ Rectangle de sélection
-│   ├── AssetPreviewCursor.qml       # Aperçu curseur
-│   ├── ConnectionOverlay.qml        # Ligne de connexion
-│   │
-│   └── snapable/                    # 📌 Système Snapable
-│       ├── SnapableElement.qml           # ⭐ Classe de base
-│       ├── SnapableElementConnections.qml # ⭐ Gestion des liens
-│       ├── SnapableElementControl.qml    # Boutons de contrôle
-│       └── SnapableElementResizeHandles.qml # Poignées redimensionnement
-│
 └── panel/                        # 🎨 Interface utilisateur
-    ├── SelectionPanel.qml           # Panneau principal (bas)
-    ├── assetSelectionPanel/         # Sélection décorations
-    ├── caseSelectionPanel/          # Sélection cases + config
-    └── mapSelectionPanel/           # Paramètres carte
+    ├── bottomPanel/
+    │   ├── bottomMainPanel/             # Panneau principal (bas)
+    │   │   ├── SelectionPanel.qml          # Conteneur du panneau principal
+    │   │   ├── assetSelectionPanel/        # Sélection assets/décorations + cases
+    │   │   ├── caseSelectionPanel/         # Composants CSP_ de config de case
+    │   │   ├── menuSelectionPanel/         # Onglets de menu
+    │   │   ├── templatePanel/              # Templates
+    │   │   └── zonePanel/                  # Zones
+    │   └── bottomSidePanel/             # Panneaux latéraux contextuels
+    │       ├── caseConfigPanel/            # Config détaillée de case
+    │       ├── connectionConfigPanel/      # Config des liens Previous/Next
+    │       ├── visualEffectPanel/          # Effets visuels
+    │       ├── zoneConfigPanel/            # Config de zone
+    │       └── sidePanel/                  # Conteneur latéral
+    └── mapInfoPanel/                    # Paramètres carte
+        ├── MapInfoPanel.qml
+        ├── MapInfoDrawer.qml
+        └── MapNavigationBar.qml
+
+qml/meowComponent/                # 🧩 Composants partagés éditeur/plateau
+├── Background.qml                   # 🖼️ Image de fond
+├── SelectionRect.qml               # ⭐ Rectangle de sélection
+├── grid/
+│   └── GridManager.qml             # ⭐ GRILLE - Génération et snapping
+├── preview/
+│   └── AssetPreviewCursor.qml      # Aperçu curseur
+└── snapable/                       # 📌 Système Snapable
+    ├── SnapableElement.qml             # ⭐ Classe de base
+    ├── SnapableElementConnections.qml  # ⭐ Gestion des liens
+    ├── SnapableElementControl.qml      # Boutons de contrôle
+    ├── SnapableElementResizeHandles.qml # Poignées redimensionnement
+    └── ConnectionOverlay.qml           # Ligne de connexion
 ```
 
 ---
@@ -60,14 +78,17 @@ boardSize = gridSize × 600               // Grille 600×600 cellules
 ```
 
 ### Rendu Optimisé
-- **1 seul Repeater** pour toutes les lignes (vertical + horizontal)
+- **Chemin par défaut (Qt 6.11+)** : un seul `GridCanvasPainter` GPU global (`GridCanvasLayer.qml`) qui couvre le viewport visible et fait du **viewport culling** — il ne dessine que les croisillons/lignes réellement à l'écran
+- Sélectionné via la context property `_gridRendererUseCanvas` (env `MEOW_GRID_RENDERER`, défaut `canvas`)
+- **Fallback legacy (Qt 6.10)** : un Repeater unique (`gridLinesRepeater`, ~1202 `Rectangle`) activé par `MEOW_GRID_RENDERER=repeater`
 - Lignes calculées dynamiquement selon la taille de la vue
 - Mode "resize" pour intensifier visuellement pendant redimensionnement
 
 ### Fonctions Clés
 ```javascript
-snapToGridCoord(value)        // Pixel → Position snappée
-getGridPosition(x, y)         // Pixel → Coordonnées grille (0,1,2...)
+getGridPosition(x, y)         // Pixel → Coordonnées grille entières (0,1,2...)
+getGridRealPosition(x, y)     // Pixel → Coordonnées grille fractionnaires
+getGridPixelPosition(x, y)    // Coordonnées grille → Pixel
 snapElement2(element)         // Positionne un élément sur la grille
 ```
 
@@ -84,10 +105,10 @@ Les éléments se **positionnent automatiquement sur la grille** après chaque m
 
 ```qml
 // Dans SnapableElement.qml - Binding automatique
-x: displaySettings.gridRelativePositionX × gridManager.gridSize
-y: displaySettings.gridRelativePositionY × gridManager.gridSize
-width: displaySettings.unitSizeWidth × gridManager.gridSize
-height: displaySettings.unitSizeHeight × gridManager.gridSize
+x: snapableParameters.displayParameter.gridRelativePositionX × gridManager.gridSize
+y: snapableParameters.displayParameter.gridRelativePositionY × gridManager.gridSize
+width: snapableParameters.displayParameter.unitSizeWidth × gridManager.gridSize
+height: snapableParameters.displayParameter.unitSizeHeight × gridManager.gridSize
 ```
 
 ### Cycle de Vie
@@ -95,8 +116,8 @@ height: displaySettings.unitSizeHeight × gridManager.gridSize
 Création
   → snapToGrid() automatique
   ↓
-Sélection
-  → z augmenté (+11)
+Sélection (hors drag)
+  → z = zOrder + 11 (le zLayer est remplacé, pas additionné)
   ↓
 Drag
   → parent = groupeSelection
@@ -129,8 +150,10 @@ gridSize = Screen.pixelDensity × mmSize
 ```
 
 ### Contrôle
-- **Ctrl + Molette Haut** : `mmSize++` → Zoom In
-- **Ctrl + Molette Bas** : `mmSize--` → Zoom Out
+- **Ctrl + Molette Haut** : `mmSize ×= 1.1` → Zoom In
+- **Ctrl + Molette Bas** : `mmSize ÷= 1.1` → Zoom Out
+- Facteur **multiplicatif** `ScrollLogic.zoomFactor = 1.1` (zoom continu, pas additif)
+- `mmSize` est un `real` (défaut `12.0`) borné en bas par `minMmSize = 0.5`
 
 ### Effet Cascade
 ```
@@ -282,10 +305,21 @@ Loader charge dynamiquement le MouseLogic correspondant
    │   • Placement d'assets/cases
    │   • Aperçu sous curseur
    │
-   └─ EM_SELECTION_LINK → MouseLogic_Selection_link
-       • Création de connexions
-       • Attend clic sur case cible
+   ├─ EM_SELECTION_LINK → MouseLogic_Selection_link
+   │   • Création de connexions
+   │   • Attend clic sur case cible
+   │
+   ├─ EM_TEMPLATE → MouseLogic_Template
+   │   • Pose/manipulation de templates
+   │
+   ├─ EM_GAME → MouseLogic_Game
+   │   • Interaction en mode jeu
+   │
+   └─ EM_DRAW_POLYGON → MouseLogic_DrawPolygon
+       • Tracé de polygones (zones)
 ```
+
+Les six valeurs de `EditorEnum::EditorMouseMode` (`EM_NORMAL`, `EM_POSE`, `EM_SELECTION_LINK`, `EM_TEMPLATE`, `EM_GAME`, `EM_DRAW_POLYGON`) ont chacune leur `MouseLogic` chargé dynamiquement dans `EditorLogic.qml`.
 
 ### Changement de Mode
 ```javascript
@@ -302,28 +336,30 @@ logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
 ```
 SelectionPanel.qml
 ├── MenuSelector (Onglets en haut)
-│   ├─ [Assets] → AssetSelectionPanel
-│   ├─ [Cases] → CaseSelectionPanel
-│   └─ [Map] → MapSelectionPanel
 │
 ├── StackLayout (Affiche le panneau actif)
+│   └─ AssetSelectionPanel (unique enfant)
 │
 └── ResizeHandle (Zone de redimensionnement)
 ```
+- Le `StackLayout` ne contient qu'un seul enfant : `AssetSelectionPanel` (id `assetPanel`).
+- La sélection du **type de case** n'est pas un panneau séparé : elle est intégrée à `AssetSelectionPanel` et exposée via `property alias caseTypeSelected: assetPanel.selectedCaseType`.
+- Les **paramètres de carte** vivent dans `panel/mapInfoPanel/` (`MapInfoPanel`, `MapInfoDrawer`, `MapNavigationBar`), pas dans un `MapSelectionPanel`.
 
 ### AssetSelectionPanel
 - Sélection de décorations (arbres, objets 3D, etc.)
+- Sélection du type de case (Kibble Dispenser, Cat Door, etc.) via `selectedCaseType`
 - **VisualEffectsPanel** : Rotation, miroir, couleur, opacité, etc.
 - Lock des effets pour appliquer aux prochains éléments
 
-### CaseSelectionPanel ⭐
-- Sélecteur de type de case (Kibble Dispenser, Cat Door, etc.)
-- **CaseConfigurationPanelSection** : Config détaillée (nom, prix, loyers, etc.)
-- **ConnectionsConfigurationSection** : Gestion des liens Previous/Next
+### Panneaux latéraux contextuels (`panel/bottomPanel/bottomSidePanel/`)
+- **caseConfigPanel** : Config détaillée d'une case (nom, prix, loyers, etc.)
+- **connectionConfigPanel** : Gestion des liens Previous/Next
+- **zoneConfigPanel** : Config de zone
+- **visualEffectPanel** : Effets visuels
 
-### MapSelectionPanel
-- Sélection d'image de fond
-- Paramètres de scaling (Stretch, Fit, Tile)
+### mapInfoPanel
+- Informations et paramètres de carte (image de fond, scaling, etc.)
 - Sauvegarde/Chargement de cartes
 
 ---
@@ -332,11 +368,11 @@ SelectionPanel.qml
 
 ### Z-Order (Ordre d'Affichage)
 ```javascript
-z = zOrder + zLayer + (isSelected ? 11 : 0)
+z = (isSelected && !isDragging) ? zOrder + 11 : zOrder + zLayer
 ```
 - **zLayer** : Couche logique (0-10), modifiable par utilisateur
 - **zOrder** : Micro-ordre (0.00001 incréments), ordre de création
-- **+11** : Bonus si sélectionné (passe au premier plan)
+- **+11** : Bonus si sélectionné (passe au premier plan). En sélection, le `zLayer` est **remplacé** par le bonus, pas additionné — et ce bonus ne s'applique **pas pendant un drag**.
 
 ### Éviter les Conflits de Drag
 ```qml
@@ -347,7 +383,8 @@ MouseArea {
 ```
 
 ### Performance Grille
-- **1 Repeater** au lieu de 2 → 2× plus rapide
+- **Canvas GPU unique global** (`GridCanvasPainter`, chemin par défaut Qt 6.11+) avec **viewport culling** : ne dessine que ce qui est à l'écran
+- Le **Repeater unique** (`gridLinesRepeater`, ~1202 `Rectangle`) est désormais le **fallback legacy** (Qt 6.10), activable via `MEOW_GRID_RENDERER=repeater`
 - Lignes calculées à la demande
 - Visible uniquement si `showGrid: true`
 
@@ -358,7 +395,8 @@ MouseArea {
 ```
 Utilisateur clique sur type de case (Kibble Dispenser)
    ↓
-CaseSelectionPanel.caseTypeSelected = CS_KibbleDispenser
+AssetSelectionPanel.selectedCaseType = CS_KibbleDispenser
+(exposé via SelectionPanel.caseTypeSelected)
    ↓
 Mode change → EM_POSE
    ↓
@@ -366,13 +404,15 @@ Utilisateur clique sur la grille (200px, 300px)
    ↓
 Conversion : getGridPosition(200, 300) → (2, 3)
    ↓
-TileLogic.createNewTileAtPosition(CS_KibbleDispenser, 2, 3, CaseTile)
+TileLogic.placeSelectedAsset(gridX, gridY)
+   → ItemSnapableFactory.createItemSnapable(caseType)  // construit le ItemSnapable
+   → createItemSnapableTile(itemSnapableData)
    ↓
 EditorDynamicComponent.snapableCaseTileComponent.createObject(workArea)
    ↓
 Nouvel élément créé :
-   - displaySettings.gridRelativePositionX = 2
-   - displaySettings.gridRelativePositionY = 3
+   - snapableParameters.displayParameter.gridRelativePositionX = 2
+   - snapableParameters.displayParameter.gridRelativePositionY = 3
    - x = 2 × gridSize (binding auto)
    - y = 3 × gridSize (binding auto)
    ↓
@@ -412,7 +452,7 @@ Case affichée sur la grille ✅
 
 **Comment ça marche ?**
 
-1. **Grille** : Cellules de taille dynamique (pas de scale), zoom = changer `mmSize`
+1. **Grille** : Cellules de taille dynamique (pas de scale), zoom = `mmSize` multiplié/divisé par 1.1 par cran
 2. **Snapable** : Coordonnées grille (0,1,2...) → pixel calculé automatiquement
 3. **Sélection rectangle** : Détection AABB en temps réel pendant le drag
 4. **Liens** : Connexions bidirectionnelles automatiques avec affichage visuel

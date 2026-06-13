@@ -13,17 +13,20 @@
 void ChatClient::sendMessage(const QString &text, const QString &recipientId, const QString &recipientNickname) {
     if (!m_connected || m_sessionKeys.isEmpty()) return;
 
-    // Store pending message for retry logic (only for broadcast, not for private).
-    // On enfile en FIFO : si plusieurs messages sont envoyés pendant qu'une rotation
-    // de clé est en cours, ils seront tous rejoués dans l'ordre par handleKeyUpdate.
-    if (recipientId.isEmpty())
-        m_pendingMessages.append(text);
-
     // Use current (latest) key
     if (!m_sessionKeys.contains(m_currentKeyVersion)) {
         Logger::instance()->warn(QString("Current key version %1 not found in keys map!").arg(m_currentKeyVersion), "ChatClient");
         return;
     }
+
+    // Store pending message for retry logic (only for broadcast, not for private).
+    // On enfile en FIFO : si plusieurs messages sont envoyés pendant qu'une rotation
+    // de clé est en cours, ils seront tous rejoués dans l'ordre par handleKeyUpdate.
+    // L'enfilage se fait APRÈS le check de clé : un early-return laissait sinon
+    // une entrée fantôme jamais envoyée, et l'écho du message suivant dépilait
+    // la mauvaise entrée (removeFirst dans handleNewMessage).
+    if (recipientId.isEmpty())
+        m_pendingMessages.append(text);
 
     Logger::instance()->debug(QString("Sending message with Key Version %1 %2").arg(m_currentKeyVersion).arg(recipientId.isEmpty() ? "(broadcast)" : QString("(to %1)").arg(recipientId)), "ChatClient");
     QByteArray nonce = ChatCrypto::generateNonce();
