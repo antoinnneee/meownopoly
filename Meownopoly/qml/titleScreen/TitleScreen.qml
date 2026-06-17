@@ -6,6 +6,7 @@ import Game
 import Meownopoly.Account 1.0
 import "../account/"
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -108,25 +109,15 @@ Rectangle {
             height: 20
         }
 
-        Button {
+        MeowButton {
             id: startGameButton
             objectName: "startGameButton"
             text: "Start Game"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
-            
-            background: Rectangle {
-                color: startGameButton.pressed ? Theme.pressed(Theme.success) : Theme.success
-                radius: Theme.radiusL
-            }
-            
-            contentItem: Text {
-                text: startGameButton.text
-                color: Theme.textPrimary
-                font.pixelSize: Theme.fontSizeTitle
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+
+            baseColor: Theme.success
+
             onClicked: {
                 root.multiplayerLobbyRequested()  // Emit the signal for multiplayer lobby
             }
@@ -134,25 +125,14 @@ Rectangle {
 
 
         // Create Server Button
-        Button {
+        MeowButton {
             id: testUIButton
             text: "TEST UI"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
             visible: false
 
-            background: Rectangle {
-                color: testUIButton.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                radius: Theme.radiusL
-            }
-
-            contentItem: Text {
-                text: testUIButton.text
-                color: Theme.textPrimary
-                font.pixelSize: Theme.fontSizeTitle
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            // baseColor par défaut = Theme.accent
 
             onClicked: {
                 // TODO: Implement server creation functionality
@@ -161,25 +141,14 @@ Rectangle {
             }
         }
         // Create Server Button
-        Button {
+        MeowButton {
             id: editorButton
             objectName: "editorButton"
             text: "EDITOR"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
 
-            background: Rectangle {
-                color: editorButton.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                radius: Theme.radiusL
-            }
-
-            contentItem: Text {
-                text: editorButton.text
-                color: Theme.textPrimary
-                font.pixelSize: Theme.fontSizeTitle
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            // baseColor par défaut = Theme.accent
 
             onClicked: {
                 root.editorRequested()
@@ -187,25 +156,14 @@ Rectangle {
         }
 
         // Case Creator Button
-        Button {
+        MeowButton {
             id: caseCreatorButton
             text: "Case Creator"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
             visible: false
 
-            background: Rectangle {
-                color: caseCreatorButton.pressed ? "#6a1b9a" : "#9c27b0"
-                radius: Theme.radiusL
-            }
-
-            contentItem: Text {
-                text: caseCreatorButton.text
-                color: Theme.textPrimary
-                font.pixelSize: Theme.fontSizeTitle
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            baseColor: "#9c27b0"
 
             onClicked: {
                 root.caseCreatorRequested()
@@ -214,101 +172,57 @@ Rectangle {
         }
 
         // Test 3D Button
-        Button {
+        MeowButton {
             id: test3DButton
             text: "🐱 Test Component"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
 
-            background: Rectangle {
-                color: test3DButton.pressed ? "#d84315" : "#ff5722"
-                radius: Theme.radiusL
-            }
-
-            contentItem: Text {
-                text: test3DButton.text
-                color: Theme.textPrimary
-                font.pixelSize: Theme.fontSizeTitle
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            baseColor: "#ff5722"
 
             onClicked: {
                 root.test3DRequested()
                 console.log("Test Component requested")
             }
         }
-        
+
         // Resource Launcher Button
-        Button {
+        MeowButton {
             id: launcherButton
             objectName: "launcherButton"
             text: "🚀 Resource Launcher"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
 
-            background: Rectangle {
-                color: launcherButton.pressed ? Theme.pressed(Theme.success) : Theme.success
-                radius: Theme.radiusL
-            }
-
-            contentItem: Text {
-                text: launcherButton.text
-                color: Theme.textPrimary
-                font.pixelSize: Theme.fontSizeTitle
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            baseColor: Theme.success
 
             onClicked: {
                 root.launcherRequested()
                 console.log("Resource Launcher requested")
             }
         }
-        
+
         // Catway Test Button
-        Button {
+        MeowButton {
             id: catwayTestButton
             objectName: "catwayTestButton"
             text: "📡 Test Catway"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
 
-            background: Rectangle {
-                color: catwayTestButton.pressed ? "#00695c" : "#00897b"
-                radius: Theme.radiusL
-            }
-
-            contentItem: Text {
-                text: catwayTestButton.text
-                color: Theme.textPrimary
-                font.pixelSize: Theme.fontSizeTitle
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            baseColor: "#00897b"
 
             onClicked: root.catwayTestRequested()
         }
 
         // Asset Manager Test Button
-        Button {
+        MeowButton {
             id: assetManagerTestButton
             text: "🎨 Asset Manager Test"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
 
-            background: Rectangle {
-                color: assetManagerTestButton.pressed ? "#7b1fa2" : "#9c27b0"
-                radius: Theme.radiusL
-            }
-
-            contentItem: Text {
-                text: assetManagerTestButton.text
-                color: Theme.textPrimary
-                font.pixelSize: Theme.fontSizeTitle
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+            baseColor: "#9c27b0"
 
             onClicked: {
                 root.assetManagerTestRequested()
