@@ -121,6 +121,7 @@
         <file>qml/editor/configPanel/visualEffectPanel/qmldir</file>
         <file>qml/editor/panel/mapInfoPanel/qmldir</file>
         <file>qml/editor/moduleManager/zonePanel/ZP_Content.qml</file>
+        <file>qml/editor/moduleManager/zonePanel/ZonePanel.qml</file>
         <file>qml/editor/moduleManager/zonePanel/qmldir</file>
         <file>qml/editor/configPanel/ModelSelectionPanel.qml</file>
         <file>qml/editor/configPanel/zoneConfigPanel/qmldir</file>
@@ -132,6 +133,7 @@
         <file>qml/editor/panel/mapInfoPanel/MapInfoDrawer.qml</file>
         <file>qml/editor/moduleManager/templatePanel/qmldir</file>
         <file>qml/editor/moduleManager/templatePanel/TP_Content.qml</file>
+        <file>qml/editor/moduleManager/templatePanel/TemplatePanel.qml</file>
         <file>qml/editor/logic/MouseLogic_Template.qml</file>
         <file>qml/multiplayer/components/BackButton.qml</file>
         <file>qml/multiplayer/components/StatusIndicator.qml</file>

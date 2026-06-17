@@ -38,6 +38,8 @@ import QtQuick.Effects
 import editor
 import playerConfigPanel 1.0
 import playerPanel
+import zonePanel
+import templatePanel
 import "."
 
 import MeowPainter 1.0
@@ -1231,11 +1233,11 @@ Base_Board {
         // actif. chat → ChatDrawer ; config3d → log ; config → placeholder en
         // attendant son conteneur bespoke (D3).
         // Modules "bas" encore servis par le SelectionPanel legacy (D2).
-        // "player" en a été retiré : il est désormais rendu par son conteneur
-        // bespoke PlayerPanel (D3). Les autres suivront, puis SelectionPanel
-        // sera supprimé (D4).
+        // player/zone/template en ont été retirés : ils sont rendus par leurs
+        // conteneurs bespoke (D3). deco/case suivront, puis SelectionPanel sera
+        // supprimé (D4).
         readonly property var _bottomIndex: ({
-            "deco": 0, "case": 1, "zone": 2, "template": 3
+            "deco": 0, "case": 1
         })
 
         onModuleSelected: function (moduleId) {
@@ -2025,6 +2027,31 @@ Base_Board {
         id: playerPanel
         logic: logic
         visible: moduleManager.selectedModuleId === "player"
+        z: UiStyle.z_HUD
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: sidePanel.left
+        height: visible ? Screen.pixelDensity * 75 : 0
+    }
+
+    // D3 — conteneur bespoke du module "Zone".
+    ZonePanel {
+        id: zonePanel
+        logic: logic
+        visible: moduleManager.selectedModuleId === "zone"
+        onFocusReleased: root.focus = true
+        z: UiStyle.z_HUD
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: sidePanel.left
+        height: visible ? Screen.pixelDensity * 75 : 0
+    }
+
+    // D3 — conteneur bespoke du module "Template".
+    TemplatePanel {
+        id: templatePanel
+        logic: logic
+        visible: moduleManager.selectedModuleId === "template"
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         anchors.left: parent.left

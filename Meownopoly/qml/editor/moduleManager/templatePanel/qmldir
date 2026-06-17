@@ -1,2 +1,3 @@
 module templatePanel
 TP_Content 1.0 TP_Content.qml
+TemplatePanel 1.0 TemplatePanel.qml
