@@ -8,6 +8,6 @@ CaseConfigurationPanelSection 1.0 panel/bottomPanel/bottomSidePanel/caseConfigPa
 ConnectionsConfigurationSection 1.0 panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionsConfigurationSection.qml
 ZoneConfigurationPanelSection 1.0 panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZoneConfigurationPanelSection.qml
 MapInfoPanel 1.0 panel/mapInfoPanel/MapInfoPanel.qml
-SelectionPanel 1.0 panel/bottomPanel/bottomMainPanel/SelectionPanel.qml
+SelectionPanel 1.0 moduleManager/SelectionPanel.qml
 BottomSidePanel 1.0 panel/bottomPanel/bottomSidePanel/BottomSidePanel.qml
 ModuleManager 1.0 moduleManager/ModuleManager.qml

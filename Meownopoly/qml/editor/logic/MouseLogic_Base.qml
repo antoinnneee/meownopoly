@@ -8,8 +8,6 @@ import CursorManager
 import "../../meowComponent/snapable"
 import "../../meowComponent/grid"
 
-import bottomMainPanel
-
 QtObject {
     id: mouseLogic
     property bool isDragging: false

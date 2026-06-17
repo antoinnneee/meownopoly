@@ -5,7 +5,7 @@ import EditorEnum
 
 import "../"
 import editorBottomPanel
-import "../../bottomSidePanel/zoneConfigPanel/"
+import zoneConfigPanel
 import theme
 import ui_item
 
