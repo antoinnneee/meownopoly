@@ -247,26 +247,15 @@ Rectangle {
             spacing: Theme.spacingXXL
 
             // Bouton secondaire: Retour
-            Button {
+            MeowButton {
                 text: "Retour à la liste"
                 Layout.preferredWidth: 180
                 Layout.preferredHeight: 50
-                
-                background: Rectangle {
-                    color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight
-                    radius: Theme.radiusL
-                    border.color: parent.hovered ? Theme.hover(Theme.textDisabled) : Theme.textDisabled
-                    border.width: 1
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textSecondary
-                    font.pixelSize: Theme.fontSizeMedium
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
+                variant: "secondary"
+                baseColor: Theme.borderLight
+                textColor: Theme.textSecondary
+                fontSize: Theme.fontSizeMedium
+                hoverZoom: false
                 onClicked: root.backRequested()
             }
             

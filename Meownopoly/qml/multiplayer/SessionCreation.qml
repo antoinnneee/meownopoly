@@ -696,28 +696,14 @@ Rectangle {
                             spacing: Theme.spacingXL
 
                             // Annuler
-                            Button {
+                            MeowButton {
+                                text: "Annuler"
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 48
-
-                                background: Rectangle {
-                                    color: parent.pressed ? root.bgBtnPress : (parent.hovered ? root.bgBtnHover : root.bgPanel)
-                                    radius: Theme.radiusXL
-                                    border.color: parent.hovered ? root.borderBtnHover : root.borderBtn
-                                    border.width: 2
-                                    Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
-                                }
-
-                                contentItem: Text {
-                                    text: "Annuler"
-                                    color: root.textHighlight
-                                    font.pixelSize: Theme.fontSizeMedium
-                                    font.bold: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    Behavior on color { ColorAnimation { duration: 300 } }
-                                }
-
+                                baseColor: root.bgPanel
+                                textColor: root.textHighlight
+                                fontSize: Theme.fontSizeMedium
+                                hoverZoom: false
                                 onClicked: root.backRequested()
                             }
 
