@@ -9,7 +9,9 @@ Item {
     width: 800
     required property EditorLogic logic
 
-    property bool isExpanded : true
+    // D2 : replié par défaut — le ModuleManager pilote l'expansion. (MenuSelector
+    // entièrement supprimé en D4.)
+    property bool isExpanded : false
     property bool isSidePanelExpanded: false
 
     // Propriétés pour gérer les onglets dynamiques

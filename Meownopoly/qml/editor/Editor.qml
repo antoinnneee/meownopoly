@@ -1224,6 +1224,30 @@ Base_Board {
         onModuleAdded: function (moduleId) {
             console.log("[ModuleManager] module ajouté :", moduleId)
         }
+
+        // D2 — pilotage de l'affichage. Le panneau du bas (selectionPanel) ne
+        // s'affiche que pour un module "bas", et son contenu suit le module
+        // actif. chat → ChatDrawer ; config3d → log ; config → placeholder en
+        // attendant son conteneur bespoke (D3).
+        readonly property var _bottomIndex: ({
+            "deco": 0, "case": 1, "zone": 2, "template": 3, "player": 4
+        })
+
+        onModuleSelected: function (moduleId) {
+            const isBottom = (moduleId in moduleManager._bottomIndex)
+            // Panneau du bas déplié seulement pour un module "bas" ; replié
+            // sinon (désélection, config, chat, config3d).
+            selectionPanel.isExpanded = isBottom
+            if (isBottom) {
+                selectionPanel.contentIndex = moduleManager._bottomIndex[moduleId]
+            } else if (moduleId === "chat") {
+                chatDrawer.open()
+            } else if (moduleId === "config3d") {
+                console.log("[ModuleManager] config3d — placeholder (panneau à venir)")
+            } else if (moduleId === "config") {
+                console.log("[ModuleManager] config — conteneur bespoke en D3")
+            }
+        }
     }
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de
@@ -2003,8 +2027,11 @@ Base_Board {
         // Connexion à la logique
         logic: logic
 
-        // Définir la valeur d'expansion par défaut
-        isExpanded: true
+        // D2 — l'état d'expansion est piloté impérativement par
+        // moduleManager.onModuleSelected (et non par un binding : la propriété
+        // est encore partagée avec le bouton ▼ legacy du MenuSelector, qu'un
+        // binding casserait définitivement au 1er clic). Replié par défaut via
+        // le défaut MenuSelector.isExpanded=false. Tout part en D4.
 
         onIsSidePanelExpandedChanged: {
             console.log("SelectionPanel: Side panel expanded state changed to",

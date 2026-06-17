@@ -45,6 +45,12 @@ EditorBottomPanel {
     property alias assetManagerSettings: assetManagerSettings
     property alias currentTabIndex: asp_contentArea.currentTabIndex
     property alias asp_contentArea: asp_contentArea
+
+    // Index du StackLayout interne (contentArea) : 0=Déco, 1=Case, 2=Zone,
+    // 3=Template, 4=Joueur, 5=Effets. Exposé pour pilotage externe par le
+    // ModuleManager (D2). NB: bascule legacy via les boutons d'ASP_TitleBar
+    // encore présente (retirée en D4).
+    property alias contentIndex: stackView.currentIndex
     // Current selection state (from parent)
     QtObject{
         id: assetManagerSettings

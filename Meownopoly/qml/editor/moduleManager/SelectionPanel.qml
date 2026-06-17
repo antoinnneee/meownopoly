@@ -39,6 +39,8 @@ Rectangle {
 
     // Alias pour propager les propriétés de AssetSelectionPanel
     property alias assetPanel: assetPanel
+    // Index du panneau "bas" affiché (piloté par le ModuleManager — D2).
+    property alias contentIndex: assetPanel.contentIndex
     property alias currentSelectedAssetCategory: assetPanel.currentSelectedCategory
     property alias currentSelectedAssetType: assetPanel.currentSelectedType
     property alias currentSelectedAssetId: assetPanel.currentSelectedId
