@@ -6,6 +6,8 @@ import Game
 import MapInfo
 import EditorOpBus
 import playerConfigPanel 1.0
+import theme
+import ui_item
 
 /*
  * Panneau d'édition d'un PlayerProfile. Visible quand un profil est
@@ -54,9 +56,9 @@ Item {
     // Placeholder quand aucune classe n'est sélectionnée.
     Rectangle {
         anchors.fill: parent
-        color: "#1a1a1a"
-        radius: 6
-        border.color: "#3a3a3a"
+        color: Theme.background
+        radius: Theme.radiusM
+        border.color: Theme.surfaceHover
         border.width: 1
         visible: !root.profile
 
@@ -130,7 +132,7 @@ Item {
 
                 Label {
                     text: "Modèle 3D"
-                    color: "#cccccc"
+                    color: Theme.textSecondary
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
                     font.bold: true
                 }
@@ -141,6 +143,18 @@ Item {
                         if (!root.profile || name === root.profile.modelName) return
                         root._mutateFields({ "modelName": name },
                                            () => { root.profile.modelName = name })
+                    }
+                }
+
+                // --- Skin / Variante (Color ID Map) ---
+                PCP_SkinPicker {
+                    Layout.fillWidth: true
+                    modelName: root.profile ? root.profile.modelName : ""
+                    colorVariant: root.profile ? root.profile.colorVariant : ""
+                    onColorVariantPicked: function(json) {
+                        if (!root.profile || json === root.profile.colorVariant) return
+                        root._mutateFields({ "colorVariant": json },
+                                           () => { root.profile.colorVariant = json })
                     }
                 }
             }
@@ -192,7 +206,7 @@ Item {
 
                 Label {
                     text: "Presets"
-                    color: "#cccccc"
+                    color: Theme.textSecondary
                     font.pixelSize: Math.round(Screen.pixelDensity * 3)
                     font.bold: true
                 }
@@ -223,18 +237,11 @@ Item {
             }
 
             // --- Mode expert (CheckBox remplace les onglets Simple/Expert) ---
-            CheckBox {
+            MeowCheckBox {
                 id: expertCheck
                 Layout.fillWidth: true
                 text: "Mode expert (afficher tous les paramètres physiques)"
                 checked: false
-                contentItem: Label {
-                    text: expertCheck.text
-                    color: "#cccccc"
-                    font.pixelSize: Math.round(Screen.pixelDensity * 3)
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: expertCheck.indicator.width + expertCheck.spacing
-                }
             }
 
             // --- Sliders (scrollables si Expert déborde) ---

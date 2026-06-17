@@ -17,7 +17,7 @@ Cette doc consolide les patterns réseau du projet et **les raisons des choix de
 
 - **Thread GUI** : QML, `Catway` singleton, `ChatClient`, `PlayerNetwork`, `UdpSocketInfo`.
 - **Thread réseau** (`Catway::m_networkThread`) : `CatwayWorker`, `StunManager`, timers reliable 60 Hz, heartbeat 10 s, `QUdpSocket`.
-- **Thread physique** (`PhysicsWorker::m_thread`) : moteur Pattounx v2, simulation 60 Hz.
+- **Thread physique** (`PhysicsWorld::m_thread`) : moteur Pattounx v2, simulation 60 Hz. Le `QThread` est détenu par la façade `PhysicsWorld` ; `PhysicsWorker` y est déplacé via `moveToThread`.
 - **Cross-thread** : `Qt::BlockingQueuedConnection` pour le setup socket, `Qt::QueuedConnection` pour l'asynchrone (datagrammes reçus, signaux GUI).
 
 ### Pourquoi cette répartition
@@ -111,7 +111,7 @@ Préfixe `[1 byte type][JSON UTF-8]` (sauf physics qui passe en binaire compact 
 Sans ce chokepoint, des mutations directes du modèle bypasseraient la sync collab. Gap connu v1 : live-edits CCPS_* ne passent pas par l'op bus (uuid inaccessible depuis les sections).
 
 ### Full-sync au join (Phase 4)
-Client envoie `Hello` → host répond avec map chunks (< 28 KB) en reliable ordonné → client wipe + rebuild via `ItemSnapableFactory.createItemSnapableFromJson`.
+Client envoie `Hello` → host répond avec map chunks (< 20 KB, seuil `k_chunkThresholdBytes`) en reliable ordonné → client wipe + rebuild via `ItemSnapableFactory.createItemSnapableFromJson`.
 
 ### Piège : `Game`/`MapFileManager` singletons persistants
 La `Map` C++ survit à la destruction du QML `Editor` (quit + re-push). Sur rejoin collab, `Game.m_tiles` garde les uuids de la session précédente → `applyRemoteDelta(TileAdded)` du FullSync no-ope → carte QML vide alors que C++ a les données. Fix : `Game::initEmptyCollabMap()` recrée toujours une `Map` neuve. En reconnect post-migration (`skipPush=true`), l'appel doit être fait **explicitement** — cf. `Editor.onHostLost` qui wipe `snapableTilesList` + `Game.initEmptyCollabMap()` avant `reconnectRequested`.
@@ -124,7 +124,7 @@ La `Map` C++ survit à la destruction du QML `Editor` (quit + re-push). Sur rejo
 `Catway.broadcastRaw("EC:<pid>;<x>;<y>")` — **pas de prefix reliable**, paquet UDP nu. Si perdu, le suivant remplace. Rendu côté QML via `HoverHandler` enfant de `workArea`.
 
 ### Sélections (fiable)
-`EditorSession.remoteSelections` (`QVariantMap` exposée en `Q_PROPERTY`). Update via op `EditorMessageType::Selection` reliable.
+`EditorSession.remoteSelections` (`QVariantMap` exposée en `Q_PROPERTY`). Update via op `EditorMessageType::SelectionUpdate` reliable.
 
 ### Pourquoi cette dichotomie
 - Cursors changent 20× par seconde × N peers → 20×N pkts/s. Si reliable → file de retransmission saturée. Lossy OK : une frame sautée invisible.
@@ -258,7 +258,7 @@ QML auto-génère `<property>Changed`. Un signal custom `fooChanged` provoque "D
 Lance 2 instances : `Instance 1` et `Instance 2` (`--instance 2`). `main.cpp` ajuste `applicationName` → `QStandardPaths::AppDataLocation` renvoie des dossiers distincts (`Meownopoly/` vs `Meownopoly_2/`). QSettings, chat DB, assets isolés. **Pas** d'isolation pour les maps (CWD-relative `./map/` — à arbitrer).
 
 ### `qml/test/CatwayTest/`
-Tabs : Catway / UDP Tests / Game Network / Editor Network. L'onglet Editor Network permet de démarrer manuellement une `EditorSession` pour tests sans passer par le lobby.
+Tabs : Catway / UDP Tests / Game Network / Editor Network / Physics / Painter. L'onglet Editor Network permet de démarrer manuellement une `EditorSession` pour tests sans passer par le lobby.
 
 ### `EditorOpsCard`
 Log live des ops locales/distantes — visible dans `EditorNetworkTestTab.qml`.

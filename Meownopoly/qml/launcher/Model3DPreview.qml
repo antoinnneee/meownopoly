@@ -25,16 +25,31 @@ import QtQuick3D
 import QtQuick3D.Helpers
 import QtQuick3D.AssetUtils
 import AssetManager
+import world3d 1.0
+import theme
 
 Item {
     id: root
 
     // --- API ---
-    property url    modelSourceUrl: ""              // file:///.../Princess.qml
-    property string modelName: ""                   // "Princess"
+    property string modelName: ""                   // "Kura"
     property vector3d subjectScale: Qt.vector3d(1, 1, 1)
     property vector3d subjectEuler: Qt.vector3d(0, 0, 0)
     property vector3d subjectPosition: Qt.vector3d(0, 0, 0)
+
+    // --- Sujet Color ID Map (format kura : .glb + skin) ---
+    property url  subjectGlbUrl: ""                 // base/<Model>.glb
+    property url  subjectBaseColorUrl: ""           // base/skin_base.png
+    property url  subjectColorMapUrl: ""            // skins/<skin>/colorMap.png
+    property url  subjectSkinUrl: ""                // .../skins/<skin>/
+    property var  subjectTextureLib: []             // [{ name, file }]
+    property var  subjectConfig: ({})               // variante courante
+    property color subjectTeamColor: "transparent"
+    property var  subjectTeamZones: []
+    property int  subjectSlotCount: 1
+    property int  subjectDebugMode: 0
+    // Exposé pour que le configurateur lise/écrive la config en aval.
+    property alias subjectModel: subjectModel
 
     // "" = pas de comparaison ; "Cube"/"Sphere" = primitives ; sinon nom
     // de modèle dans <AppData>/models/<name>/<name>.qml
@@ -42,21 +57,8 @@ Item {
     // décalage en X (unités monde) entre sujet et modèle de comparaison
     property real   comparisonOffsetX: 200
 
-    // Aperçu d'un .obj externe (ex: avant de l'importer comme nouveau
-    // modèle). Chargé via RuntimeLoader de QtQuick3D.AssetUtils, qui
-    // gère obj/gltf/glb/fbx via balsamruntime.
-    property url    auxObjUrl: ""
-    property real   auxObjOffsetX: -200
-    property real   auxObjScale: 1.0   // scale uniforme appliqué au wrapper
-    // Statut/erreur exposés pour que le panneau puisse les afficher.
-    readonly property string auxObjStatus: auxLoader.status === RuntimeLoader.Empty ? "vide"
-                                         : auxLoader.status === RuntimeLoader.Loading ? "chargement..."
-                                         : auxLoader.status === RuntimeLoader.Ready   ? "prêt"
-                                         : auxLoader.status === RuntimeLoader.Error   ? "erreur" : "?"
-    readonly property string auxObjError: auxLoader.errorString
-
     property string cameraMode: "game"              // "game" | "face"
-    property color  bgColor: "#1f1f23"
+    property color  bgColor: Theme.background
 
     // --- Caméra game (ortho 55° calquée sur World3D.qml) ---
     property real gameMagnification: 1.0
@@ -157,39 +159,27 @@ Item {
                 }
             }
 
-            // Sujet : modèle en cours de configuration
+            // Sujet : modèle en cours de configuration (format kura : .glb + skin).
+            // Le transform édité (scale/euler/position) est porté par le wrapper ;
+            // KuraModel garde un modelScale identité pour éviter le double-transform.
             Node {
                 id: subjectWrapper
                 position: root.subjectPosition
                 scale: root.subjectScale
                 eulerRotation: root.subjectEuler
 
-                Loader3D {
-                    id: subjectLoader
-                    source: root.modelSourceUrl
-                    onStatusChanged: {
-                        if (status === Loader3D.Error)
-                            console.error("Model3DPreview: erreur chargement sujet:",
-                                          source, sourceComponent ? sourceComponent.errorString() : "")
-                    }
-                }
-            }
-
-            // Aperçu .obj (RuntimeLoader)
-            Node {
-                id: auxObjWrapper
-                x: root.auxObjOffsetX
-                scale: Qt.vector3d(root.auxObjScale, root.auxObjScale, root.auxObjScale)
-                visible: root.auxObjUrl.toString().length > 0
-
-                RuntimeLoader {
-                    id: auxLoader
-                    source: root.auxObjUrl
-                    onStatusChanged: {
-                        if (status === RuntimeLoader.Error)
-                            console.error("Model3DPreview: erreur RuntimeLoader:",
-                                          source, errorString)
-                    }
+                KuraModel {
+                    id: subjectModel
+                    glbUrl:       root.subjectGlbUrl
+                    baseColorUrl: root.subjectBaseColorUrl
+                    colorMapUrl:  root.subjectColorMapUrl
+                    skinUrl:      root.subjectSkinUrl
+                    textureLib:   root.subjectTextureLib
+                    config:       root.subjectConfig
+                    teamColor:    root.subjectTeamColor
+                    teamZones:    root.subjectTeamZones
+                    slotCount:    root.subjectSlotCount
+                    debugMode:    root.subjectDebugMode
                 }
             }
 
@@ -342,17 +332,17 @@ Item {
     Rectangle {
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.margins: 10
+        anchors.margins: Theme.spacingL
         color: "#cc1f1f23"
-        radius: 4
-        border.color: "#444"
+        radius: Theme.radiusS
+        border.color: Theme.border
         width: hudCol.implicitWidth + 16
         height: hudCol.implicitHeight + 12
 
         Column {
             id: hudCol
             anchors.centerIn: parent
-            spacing: 2
+            spacing: Theme.spacingXXS
             Text {
                 text: root.cameraMode === "game"
                       ? "Caméra : Vue jeu (mag " + root.gameMagnification.toFixed(2)
@@ -361,15 +351,15 @@ Item {
                         + "°, pitch " + root.orbitPitch.toFixed(0)
                         + "°, dist " + root.orbitDistance.toFixed(0)
                         + ", pan " + root.facePanLocalX.toFixed(0) + "/" + root.facePanLocalY.toFixed(0) + ")"
-                color: "#e5e7eb"
-                font.pixelSize: 11
+                color: Theme.textSoft
+                font.pixelSize: Theme.fontSizeSmall
             }
             Text {
                 text: root.cameraMode === "face"
                       ? "Drag gauche = orbite • Drag milieu/droit ou Shift+gauche = pan • Molette = zoom"
                       : "Drag = pan • Molette = zoom"
-                color: "#9ca3af"
-                font.pixelSize: 10
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeCaption
             }
         }
     }

@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 GroupBox {
     property var targetCase: null
@@ -12,15 +13,15 @@ GroupBox {
     // Style pour le thème sombre
     label: Text {
         text: parent.title
-        color: "#cccccc"
+        color: Theme.textSecondary
         font.bold: true
-        font.pixelSize: 12
+        font.pixelSize: Theme.fontSizeBody
     }
-    
+
     background: Rectangle {
-        color: "#2a2a2a"
-        radius: 4
-        border.color: "#444444"
+        color: Theme.surface
+        radius: Theme.radiusS
+        border.color: Theme.border
         border.width: 1
     }
 }

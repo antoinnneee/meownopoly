@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import GameSession 1.0
 import Meownopoly.Account 1.0
+import theme
 
 Rectangle {
     id: root
@@ -17,31 +18,31 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingM
 
         Text {
             text: "Session GameSession"
             color: host.textPrimary
             font.bold: true
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
         }
 
         Text {
             text: "Mon playerId"
             color: host.textSecondary
-            font.pixelSize: 11
+            font.pixelSize: Theme.fontSizeSmall
         }
         TextField {
             id: localPlayerIdField
             Layout.fillWidth: true
             placeholderText: "Mon playerId"
             text: AccountManager.uniqueId
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeBody
             color: host.textPrimary
             background: Rectangle {
-                color: "#0e0e13"
-                radius: 6
+                color: Theme.background
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -50,7 +51,7 @@ Rectangle {
         Text {
             text: "PlayerId de l'hôte (si client)"
             color: host.textSecondary
-            font.pixelSize: 11
+            font.pixelSize: Theme.fontSizeSmall
         }
         TextField {
             id: hostPlayerIdField
@@ -58,11 +59,11 @@ Rectangle {
             placeholderText: "PlayerId de l'hôte (si client)"
             text: root.hostPlayerId
             onTextChanged: root.hostPlayerId = text
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeBody
             color: host.textPrimary
             background: Rectangle {
-                color: "#0e0e13"
-                radius: 6
+                color: Theme.background
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -72,7 +73,7 @@ Rectangle {
             visible: selectedPlayerVisible
             text: "← sélectionné depuis la liste"
             color: host.textSecondary
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSizeCaption
             font.italic: true
         }
 
@@ -81,8 +82,8 @@ Rectangle {
             text: "Hôte"
             implicitHeight: 32
             background: Rectangle {
-                color: parent.pressed ? host.accent : "#2d2d35"
-                radius: 6
+                color: parent.pressed ? host.accent : Theme.surfaceAlt
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -91,7 +92,7 @@ Rectangle {
                 color: host.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
             }
             onClicked: GameSession.startAsHost(localPlayerIdField.text)
         }
@@ -101,8 +102,8 @@ Rectangle {
             text: "Client"
             implicitHeight: 32
             background: Rectangle {
-                color: parent.pressed ? host.accent : "#2d2d35"
-                radius: 6
+                color: parent.pressed ? host.accent : Theme.surfaceAlt
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -111,7 +112,7 @@ Rectangle {
                 color: host.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
             }
             onClicked: GameSession.startAsClient(localPlayerIdField.text, hostPlayerIdField.text)
         }
@@ -121,8 +122,8 @@ Rectangle {
             text: "Stop"
             implicitHeight: 32
             background: Rectangle {
-                color: parent.pressed ? host.accent : "#2d2d35"
-                radius: 6
+                color: parent.pressed ? host.accent : Theme.surfaceAlt
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
             }
@@ -131,14 +132,14 @@ Rectangle {
                 color: host.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
             }
             onClicked: GameSession.stop()
         }
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingM
             Rectangle {
                 width: 12
                 height: 12
@@ -148,7 +149,7 @@ Rectangle {
             Text {
                 text: GameSession.active ? "Actif" : "Inactif"
                 color: host.textPrimary
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
             }
         }
 
@@ -156,7 +157,7 @@ Rectangle {
             visible: GameSession.active
             text: GameSession.isHost ? "Rôle : Hôte" : "Rôle : Client"
             color: host.textSecondary
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeBody
         }
 
         Item { Layout.fillHeight: true }

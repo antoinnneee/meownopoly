@@ -5,6 +5,7 @@ import Catway 1.0
 import Meownopoly.Account 1.0
 import Meownopoly.Chat 1.0
 import Meownopoly.Account 1.0
+import theme
 
 Rectangle {
     id: chatClientCard
@@ -23,49 +24,49 @@ Rectangle {
     ColumnLayout {
         id: chatColumn
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 10
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingL
 
         Text {
             text: "Chat Client"
             color: host.textPrimary
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSizeMedium
             font.bold: true
         }
 
         RowLayout {
-            spacing: 6
-            Text { text: "État:"; color: host.textSecondary; font.pixelSize: 12 }
+            spacing: Theme.spacingS
+            Text { text: "État:"; color: host.textSecondary; font.pixelSize: Theme.fontSizeBody }
             Text {
                 text: chatClient && chatClient.connected ? "Connecté" : "Déconnecté"
                 color: chatClient && chatClient.connected ? "#22c55e" : host.textSecondary
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
             }
         }
         RowLayout {
-            spacing: 6
-            Text { text: "Session:"; color: host.textSecondary; font.pixelSize: 12 }
+            spacing: Theme.spacingS
+            Text { text: "Session:"; color: host.textSecondary; font.pixelSize: Theme.fontSizeBody }
             Text {
                 text: (chatClient && chatClient.sessionId) ? chatClient.sessionId : "—"
                 color: host.textPrimary
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
                 elide: Text.ElideMiddle
                 Layout.maximumWidth: 180
             }
         }
 
         ColumnLayout {
-            spacing: 4
-            Text { text: "URL serveur"; color: host.textSecondary; font.pixelSize: 11; font.capitalization: Font.AllUppercase }
+            spacing: Theme.spacingXS
+            Text { text: "URL serveur"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.capitalization: Font.AllUppercase }
             TextField {
                 id: fieldServerUrl
                 placeholderText: "wss://..."
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 38
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: fieldServerUrl.activeFocus ? host.accent : host.cardBorder
                     border.width: fieldServerUrl.activeFocus ? 2 : 1
                 }
@@ -77,14 +78,14 @@ Rectangle {
         Button {
             text: "Connecter au serveur"
             implicitHeight: 36
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeBody
             background: Rectangle {
                 color: parent.pressed ? Qt.darker(host.accent, 1.2) : (parent.hovered ? host.accentHover : host.accent)
-                radius: 8
+                radius: Theme.radiusL
             }
             contentItem: Text {
                 text: parent.text
-                color: "white"
+                color: Theme.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -99,21 +100,21 @@ Rectangle {
         Text {
             text: "Connexion directe à une session"
             color: host.textSecondary
-            font.pixelSize: 11
+            font.pixelSize: Theme.fontSizeSmall
             font.capitalization: Font.AllUppercase
         }
         ColumnLayout {
-            spacing: 4
-            Text { text: "Nom de la session"; color: host.textSecondary; font.pixelSize: 11 }
+            spacing: Theme.spacingXS
+            Text { text: "Nom de la session"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall }
             TextField {
                 id: fieldSessionName
                 placeholderText: "ex: Ma Super Partie"
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 38
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: fieldSessionName.activeFocus ? host.accent : host.cardBorder
                     border.width: fieldSessionName.activeFocus ? 2 : 1
                 }
@@ -123,17 +124,17 @@ Rectangle {
             }
         }
         ColumnLayout {
-            spacing: 4
-            Text { text: "Session ID"; color: host.textSecondary; font.pixelSize: 11 }
+            spacing: Theme.spacingXS
+            Text { text: "Session ID"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall }
             TextField {
                 id: fieldSessionId
                 placeholderText: "ex: abc123"
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 38
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: fieldSessionId.activeFocus ? host.accent : host.cardBorder
                     border.width: fieldSessionId.activeFocus ? 2 : 1
                 }
@@ -143,18 +144,18 @@ Rectangle {
             }
         }
         ColumnLayout {
-            spacing: 4
-            Text { text: "Mot de passe"; color: host.textSecondary; font.pixelSize: 11 }
+            spacing: Theme.spacingXS
+            Text { text: "Mot de passe"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall }
             TextField {
                 id: fieldDirectPassword
                 placeholderText: "Mot de passe session"
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 38
                 echoMode: TextInput.Password
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: fieldDirectPassword.activeFocus ? host.accent : host.cardBorder
                     border.width: fieldDirectPassword.activeFocus ? 2 : 1
                 }
@@ -165,19 +166,19 @@ Rectangle {
         }
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingM
             Button {
                 text: "Créer une session"
                 Layout.fillWidth: true
                 implicitHeight: 36
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
                 background: Rectangle {
                     color: parent.pressed ? Qt.darker(host.accent, 1.2) : (parent.hovered ? host.accentHover : host.accent)
-                    radius: 8
+                    radius: Theme.radiusL
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -190,10 +191,10 @@ Rectangle {
                 text: "Rejoindre"
                 Layout.fillWidth: true
                 implicitHeight: 36
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
                 background: Rectangle {
-                    color: parent.pressed ? "#2d2d35" : "transparent"
-                    radius: 6
+                    color: parent.pressed ? Theme.surfaceAlt : "transparent"
+                    radius: Theme.radiusM
                     border.color: host.cardBorder
                     border.width: 1
                 }
@@ -214,26 +215,26 @@ Rectangle {
         Text {
             text: "Participants à la session"
             color: host.textPrimary
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSizeMedium
             font.bold: true
         }
         RowLayout {
-            spacing: 8
+            spacing: Theme.spacingM
             Text {
                 text: chatClient && chatClient.connected
                       ? (chatClient.participantCount + " participant(s)")
                       : "— connectez-vous à une session —"
                 color: host.textSecondary
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
             }
             Button {
                 text: "Rafraîchir"
                 implicitHeight: 28
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
                 visible: chatClient && chatClient.connected
                 background: Rectangle {
-                    color: parent.pressed ? "#2d2d35" : "transparent"
-                    radius: 4
+                    color: parent.pressed ? Theme.surfaceAlt : "transparent"
+                    radius: Theme.radiusS
                     border.color: host.cardBorder
                     border.width: 1
                 }
@@ -255,13 +256,13 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: chatClient && chatClient.connected ? Math.min(260, Math.max(80, chatClient.participantCount * 48 + 8)) : 0
             clip: true
-            spacing: 4
+            spacing: Theme.spacingXS
             model: chatClient && chatClient.connected ? chatClient.participants : []
             delegate: Rectangle {
                 width: parent.width
                 height: 44
-                color: participantMouseArea.pressed ? host.cardBorder : "#222226"
-                radius: 6
+                color: participantMouseArea.pressed ? host.cardBorder : Theme.surfaceAlt
+                radius: Theme.radiusM
                 border.color: host.cardBorder
                 border.width: 1
                 MouseArea {
@@ -280,15 +281,15 @@ Rectangle {
                 }
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 8
+                    anchors.margins: Theme.spacingM
+                    spacing: Theme.spacingM
                     ColumnLayout {
-                        spacing: 2
+                        spacing: Theme.spacingXXS
                         Layout.fillWidth: true
                         Text {
                             text: modelData.player_nickname || "—"
                             color: host.textPrimary
-                            font.pixelSize: 13
+                            font.pixelSize: Theme.fontSizeBody
                             font.bold: !!modelData.is_host
                             Layout.fillWidth: true
                             elide: Text.ElideRight
@@ -296,7 +297,7 @@ Rectangle {
                         Text {
                             text: modelData.player_id ? ("id: " + modelData.player_id) : ""
                             color: host.textSecondary
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSizeSmall
                             Layout.fillWidth: true
                             elide: Text.ElideMiddle
                         }
@@ -304,7 +305,7 @@ Rectangle {
                     Text {
                         text: modelData.is_host ? "Hôte" : ""
                         color: host.accent
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSizeSmall
                         visible: !!modelData.is_host
                     }
                     Rectangle {

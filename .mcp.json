@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "meownopoly-automation": {
+      "command": "node",
+      "args": ["automation_mcp/index.js"],
+      "env": {
+        "MEOW_AUTOMATION_PORT": "7700"
+      }
+    }
+  }
+}

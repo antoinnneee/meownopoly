@@ -123,7 +123,7 @@ public:
 |---|---|---|---|---|---|
 | `radius` | 0.1 | 1.5 | 0.4 | 0.05 | simple ("taille") |
 | `mass` | 0.1 | 10.0 | 1.0 | 0.1 | simple ("poids") |
-| `maxSpeed` | 50 | 800 | 300 | 10 | simple ("vitesse") |
+| `maxSpeed` | 50 | 800 | 30 | 10 | simple ("vitesse") |
 | `acceleration` | 5 | 100 | 30 | 1 | expert |
 | `linearDamping` | 0.0 | 1.0 | 0.1 | 0.05 | expert |
 | `staticFriction` | 0.0 | 2.0 | 0.4 | 0.05 | expert |
@@ -188,7 +188,7 @@ static constexpr int MAX_PLAYERS_HARD_CAP = 8;   // placeholder, augmentable
       "pickMode": "Unique",          // "Unique" | "Shared" | "Mandatory"
       "minOccurrences": 1,
       "radius": 0.4, "mass": 1.0,
-      "acceleration": 30.0, "maxSpeed": 300.0,
+      "acceleration": 30.0, "maxSpeed": 30.0,
       "linearDamping": 0.1,
       "staticFriction": 0.4, "dynamicFriction": 0.2,
       "bounceFactor": 0.1
@@ -323,7 +323,7 @@ Le panel adopte un layout **rangée horizontale de cards** (à la "character sel
 
 
 ### 4.5 Catalogue de modèles
-**Modif** : `Meownopoly/cpp/asset/assetmanager.{h,cpp}`
+**Modif** : `Meownopoly/cpp/assetManager/asset_manager.{h,cpp}`
 
 ```cpp
 Q_INVOKABLE QStringList availablePlayerModels() const;
@@ -364,38 +364,39 @@ Q_INVOKABLE QJsonObject makeSetMapPlayerLimitsOp(const QJsonObject &fields) cons
 ### 5.3 Apply remote
 **Fichier modifié** : `Meownopoly/qml/editor/Editor.qml` (handler `Connections` sur `EditorOpBus.remoteOpReceived`).
 
+> Les champs de payload sont portés **directement sur l'objet `op`** (pas sous `op.fields`), à l'exception de `UpdatePlayerProfile` dont le patch partiel reste imbriqué dans `op.fields`. Les `case` utilisent les labels nommés `EditorOpType.*` plutôt que les valeurs numériques.
+
 ```qml
-case 12: { // AddPlayerProfile
+case EditorOpType.AddPlayerProfile: {
     EditorOpBus.beginApplyRemote()
-    MapFileManager.currentMap.mapInfo.addPlayerProfileFromJson(JSON.stringify(op.fields.profile))
+    MapFileManager.currentMap.mapInfo.addPlayerProfileFromJson(JSON.stringify(op.profile))
     EditorOpBus.endApplyRemote()
     break
 }
-case 13: { // RemovePlayerProfile
+case EditorOpType.RemovePlayerProfile: {
     EditorOpBus.beginApplyRemote()
-    MapFileManager.currentMap.mapInfo.removePlayerProfile(op.fields.id)
+    MapFileManager.currentMap.mapInfo.removePlayerProfile(op.id)
     EditorOpBus.endApplyRemote()
     break
 }
-case 14: { // UpdatePlayerProfile
+case EditorOpType.UpdatePlayerProfile: {
     EditorOpBus.beginApplyRemote()
     MapFileManager.currentMap.mapInfo.updatePlayerProfile(
-        op.fields.id, JSON.stringify(op.fields.fields || {}))
+        op.id, JSON.stringify(op.fields || {}))
     EditorOpBus.endApplyRemote()
     break
 }
-case 15: { // ReorderPlayerProfile
+case EditorOpType.ReorderPlayerProfile: {
     EditorOpBus.beginApplyRemote()
-    MapFileManager.currentMap.mapInfo.reorderPlayerProfile(op.fields.id, op.fields.newIndex)
+    MapFileManager.currentMap.mapInfo.reorderPlayerProfile(op.id, op.newIndex)
     EditorOpBus.endApplyRemote()
     break
 }
-case 16: { // SetMapPlayerLimits
+case EditorOpType.SetMapPlayerLimits: {
     EditorOpBus.beginApplyRemote()
-    const f = op.fields || {}
     const mi = MapFileManager.currentMap.mapInfo
-    if ('minPlayers' in f) mi.minPlayers = f.minPlayers
-    if ('maxPlayers' in f) mi.maxPlayers = f.maxPlayers
+    if ('minPlayers' in op) mi.minPlayers = op.minPlayers
+    if ('maxPlayers' in op) mi.maxPlayers = op.maxPlayers
     EditorOpBus.endApplyRemote()
     break
 }
@@ -546,7 +547,7 @@ La Phase 4 envoie déjà `Map.toJSON()`. `MapInfo` étendue suit naturellement, 
 
 ### Modifiés
 - `cpp/game/map/mapinfo.h` / `mapinfo.cpp` — Q_PROPERTY min/max/playerConfigVersion/roster + JSON + helpers (incl. `duplicatePlayerProfile`).
-- `cpp/asset/assetmanager.h` / `assetmanager.cpp` — `availablePlayerModels()`.
+- `cpp/assetManager/asset_manager.h` / `asset_manager.cpp` — `availablePlayerModels()`.
 - `cpp/editor/ops/editor_op_type.h` — 5 nouveaux types (12-16).
 - `cpp/editor/ops/editor_op_bus.h` / `editor_op_bus.cpp` — 5 helpers `make*Op`.
 - `cpp/editor/network/editor_protocol.cpp` — borne plage `isEditorPacket` à 16.

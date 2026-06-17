@@ -13,9 +13,9 @@
 │  └─────────────────────────────────────────────────────────────────────────┘  │
 │                                                                               │
 │  ┌───────────────────────────────┐        ┌────────────────────────────────┐  │
-│  │    WorkArea (Zone Travail)    │        │       Panneaux Latéraux        │  │
+│  │  Base_WorkArea (Zone Travail) │        │       Panneaux Latéraux        │  │
 │  │  ┌─────────────────────────┐  │        │  ┌────────────┐┌────────────┐  │  │
-│  │  │        GameScene        │  │        │  │MapInfoPanel││ SidePanel  │  │  │
+│  │  │     World3D (Phase 4)   │  │        │  │MapInfoPanel││BottomSidePanel│ │  │
 │  │  │  ┌───────────────────┐  │  │        │  │ (Informations)│(Configuration) │  │
 │  │  │  │  Moteur 3D (3D)   │  │  │        │  └────────────┘└────────────┘  │  │
 │  │  │  └───────────────────┘  │  │        └────────────────────────────────┘  │
@@ -29,9 +29,9 @@
 │                                           └────────────────────────────────┘  │
 │  ┌─────────────────────────────────────────────────────────────────────────┐  │
 │  │                       SelectionPanel (Panneau Bas)                      │  │
-│  │  ┌─────────────────┐  ┌──────────────────┐  ┌───────────────┐           │  │
-│  │  │ AssetSelection  │  │ CaseSelection    │  │ Zone/Template │           │  │
-│  │  └─────────────────┘  └──────────────────┘  └───────────────┘           │  │
+│  │  ┌─────────────────┐                                                     │  │
+│  │  │ AssetSelection  │  ← unique enfant du StackLayout                    │  │
+│  │  └─────────────────┘                                                     │  │
 │  └─────────────────────────────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -47,8 +47,8 @@ GridManager
     │
     ├─ gridSize = Screen.pixelDensity × mmSize
     │       │
-    │       ├─ mmSize = 12 (défaut)
-    │       └─ Ctrl+Molette → mmSize ± 1 (ZOOM centré sous curseur)
+    │       ├─ mmSize = 12.0 (défaut, real)
+    │       └─ Ctrl+Molette → mmSize ×1.1 / ÷1.1 (ZOOM multiplicatif centré sous curseur)
     │
     ├─ boardSize = gridSize × 600
     │
@@ -97,23 +97,23 @@ SNAP
 ```
 SnapableElement.qml (BASE)
     │
-    ├─ displaySettings: DisplayParameter
-    │   ├─ gridRelativePositionX
-    │   ├─ gridRelativePositionY
-    │   ├─ unitSizeWidth
-    │   ├─ unitSizeHeight
-    │   ├─ zLayer
-    │   └─ zOrder
+    ├─ snapableParameters: ItemSnapable
+    │   └─ displayParameter (accès via snapableParameters.displayParameter.*)
+    │       ├─ gridRelativePositionX
+    │       ├─ gridRelativePositionY
+    │       ├─ unitSizeWidth
+    │       ├─ unitSizeHeight
+    │       ├─ zLayer
+    │       └─ zOrder
     │
     ├─ connectionManager: SnapableElementConnections
     │   ├─ previousElements[]
     │   ├─ nextElements[]
     │   └─ ConnectionOverlay (lignes visuelles)
     │
-    ├─ SnapableElementControl (boutons)
-    │   ├─ Bouton Supprimer
-    │   ├─ Bouton Plan (z-layer)
-    │   └─ Bouton Configurer
+    ├─ SnapableElementControl (LayerVisualizer unique)
+    │   └─ Contrôle de plan / z-layer
+    │       └─ signal layerChanged(int)
     │
     └─ SnapableElementResizeHandles (poignées)
         ├─ TopLeft, Top, TopRight
@@ -126,8 +126,10 @@ SnapableElement.qml (BASE)
 │  SnapableCaseTile   │  SnapableDecoration │
 │  (Cases de jeu)     │  (Décorations)      │
 │                     │                     │
-│  + caseData (C++)   │  + decorationSettings│
-│  + TileContent.qml  │  + Image            │
+│  + caseData (C++)   │  + decorationParameter│
+│  + TileContent.qml  │  (résolution asset  │
+│                     │   via AssetManager) │
+│                     │  + AnimatedImage    │
 └─────────────────────┴─────────────────────┘
 ```
 
@@ -141,7 +143,8 @@ SnapableElement.qml (BASE)
 │  y: gridRelativePositionY × gridSize       │ ← Binding auto
 │  width: unitSizeWidth × gridSize           │ ← Binding auto
 │  height: unitSizeHeight × gridSize         │ ← Binding auto
-│  z: zOrder + zLayer + (isSelected?11:0)    │ ← Binding auto
+│  z: (isSelected && !isDragging)            │ ← Binding auto
+│       ? zOrder + 11 : zOrder + zLayer      │
 └────────────────────────────────────────────┘
 
 Changer gridRelativePositionX ou gridSize
@@ -197,30 +200,31 @@ Changer de mode :
 ```
 Utilisateur : Ctrl + Molette Haut
          ↓
-ScrollLogic.scrollUp()
+ScrollLogic.scrollUp(wheel) → scrollGrid(wheel, 1)
          ↓
-logic.updateSize(mmSize + 1)
+newMmSize = oldMmSize × 1.1  (zoomFactor)
+   (zoom arrière = oldMmSize ÷ 1.1)
          ↓
-mmSize = 11  (était 10)
+mmSize est un real (défaut 12.0)
          ↓
 gridSize recalculé (binding)
          ↓
-gridSize = Screen.pixelDensity × 12
+gridSize = Screen.pixelDensity × mmSize
          ↓
 Tous les éléments repositionnés/redimensionnés (bindings)
 ScrollLogic ajuste x/y pour maintenir le point sous la souris
 
-AVANT (mmSize=10, gridSize=50px) :
+AVANT (mmSize=12.0, gridSize=60px) :
 ┌──────┬──────┬──────┐
 │      │      │      │
-│  50px│      │      │
+│  60px│      │      │
 │      │      │      │
 └──────┴──────┴──────┘
 
-APRÈS (mmSize=11, gridSize=55px) :
+APRÈS un cran (mmSize=13.2 = 12.0×1.1, gridSize=66px) :
 ┌───────┬───────┬───────┐
 │       │       │       │
-│  55px │       │       │
+│  66px │       │       │
 │       │       │       │
 └───────┴───────┴───────┘
 ```
@@ -472,15 +476,21 @@ Résultat :
         ↓
 6. getGridPosition(200, 300) → (gridX=4, gridY=6)
         ↓
-7. TileLogic.createNewTileAtPosition(CS_KibbleDispenser, 4, 6, CaseTile)
+7. TileLogic.placeSelectedAsset(gridX, gridY)
         ↓
-8. editorDynamicComponent.snapableCaseTileComponent.createObject(workArea, {
-        gridRelativePositionX: 4,
-        gridRelativePositionY: 6,
-        unitSizeWidth: 3,
-        unitSizeHeight: 4,
-        caseData: Game.getNewCaseType(CS_KibbleDispenser)
-   })
+8. snapableParameters = ItemSnapableFactory.createItemSnapable(caseType)
+        ↓
+   On renseigne sur snapableParameters :
+        displayParameter.gridRelativePositionX = 4
+        displayParameter.gridRelativePositionY = 6
+        displayParameter.unitSizeWidth  = 3
+        displayParameter.unitSizeHeight = 4
+        displayParameter.zLayer = 5
+        displayParameter.zOrder = Game.tickLamport()
+        + decorationParameter
+        ↓
+   createItemSnapableTile(snapableParameters)
+        → instancie via snapableCaseTileComponent
         ↓
 9. Nouvel élément ajouté à snapableTilesList
         ↓
@@ -544,34 +554,32 @@ Résultat :
 ```
 1. Utilisateur sélectionne case
         ↓
-2. Appui sur Delete OU clic bouton supprimer
+2. Appui sur Delete
         ↓
 3. element.deleteRequest()
         ↓
-4. SnapableElementControl.deleteRequested()
-        ↓
-5. deleteAnimation.start()
+4. deleteAnimation.start()
    (animation de disparition)
         ↓
-6. Animation terminée → signal finished
+5. Animation terminée → onFinished
         ↓
-7. element.elementDeleted(element)
+6. element.elementDeleted(element)
         ↓
-8. EditorDynamicComponent.onElementDeleted handler
+7. EditorDynamicComponent.onElementDeleted → _handleElementDeleted(element)
         ↓
-9. logic.tileLogic.deleteElementsConnections(element)
+8. logic.tileLogic.deleteElementsConnections(element)
    Supprime les connexions vers/depuis cet élément
         ↓
-10. element.connectionManager.deleteLinkedConnection()
-    Nettoie previousElements/nextElements
+9. element.connectionManager.deleteLinkedConnection()
+   Nettoie previousElements/nextElements
         ↓
-11. logic.tileLogic.deleteElement(element)
+10. logic.tileLogic.deleteElement(element)
     Retire de snapableTilesList
         ↓
-12. element.destroy()
+11. element.destroy()
     Destruction de l'objet QML
         ↓
-13. Case supprimée ✅
+12. Case supprimée ✅
 ```
 
 ---
@@ -587,38 +595,26 @@ SelectionPanel.qml
     │   └─ MouseArea → customHeight ajustable
     │
     ├─ MenuSelector (Barre d'onglets)
-    │   ├─ [🎨 Assets]
-    │   ├─ [🏠 Cases]
-    │   └─ [🗺️ Map]
+    │   └─ [🎨 Assets]
     │
     └─ StackLayout
         │
-        ├─ Index 0: AssetSelectionPanel
-        │   ├─ ASP_CategoryGrid (Catégories)
-        │   ├─ ASP_Grid (Assets dans catégorie)
-        │   └─ VisualEffectsPanel
-        │       ├─ Rotation, Miroir
-        │       ├─ Opacité, Saturation
-        │       └─ Lock effets
-        │
-        ├─ Index 1: CaseSelectionPanel
-        │   ├─ CSP_CaseTypeSelector (Sélection type)
-        │   └─ CSP_ContentArea (Onglets)
-        │       ├─ Tab 0: CaseConfigurationPanelSection
-        │       │   ├─ Nom, Description
-        │       │   ├─ Prix, Loyers
-        │       │   └─ Config spécifique par type
-        │       │
-        │       └─ Tab 1: ConnectionsConfigurationSection
-        │           ├─ [Connect Previous ◀]
-        │           ├─ [Connect Next ▶]
-        │           └─ Liste connexions existantes
-        │
-        └─ Index 2: MapSelectionPanel
-            ├─ MSP_SP_Background (Image de fond)
-            ├─ MSP_SP_General (Nom, description)
-            └─ MSP_SP_SaveLoad (Sauvegarde/Chargement)
+        └─ Index 0: AssetSelectionPanel  ← unique enfant
+            ├─ ASP_CategoryGrid (Catégories)
+            ├─ ASP_Grid (Assets dans catégorie)
+            └─ VisualEffectsPanel
+                ├─ Rotation, Miroir
+                ├─ Opacité, Saturation
+                └─ Lock effets
 ```
+
+> **Note** : la configuration des cases (`CaseConfigurationPanelSection`), des
+> connexions (`ConnectionsConfigurationSection`), des zones et des effets visuels
+> n'est plus dans le `SelectionPanel`. Elle est déplacée dans le
+> `BottomSidePanel` (le `sidePanel`), sous
+> `caseConfigPanel/` / `connectionConfigPanel/` / `zoneConfigPanel/` /
+> `visualEffectPanel/`. Les infos de map (nom, fond, sauvegarde/chargement) sont
+> portées par `MapInfoPanel.qml` (`qml/editor/panel/mapInfoPanel/`).
 
 ### Flux de Redimensionnement
 
@@ -644,27 +640,30 @@ Contenu visible change
 ## ⚙️ Z-Order (Ordre d'Affichage)
 
 ```
-z = zOrder + zLayer + (isSelected ? 11 : 0)
-    │        │         │
-    │        │         └─ Bonus sélection (premier plan)
-    │        │
-    │        └─ Couche logique (0-10)
-    │           Modifiable via boutons "Plan"
-    │
-    └─ Ordre microscopique (0.00001 incréments)
-       Ordre de création (plus récent = plus haut)
+z = (isSelected && !isDragging) ? zOrder + 11 : zOrder + zLayer
+         │                          │              │       │
+         │                          │              │       └─ Couche logique (0-10)
+         │                          │              │          Modifiable via le contrôle "Plan"
+         │                          │              │
+         │                          │              └─ Ordre microscopique (0.00001 incréments)
+         │                          │                 Ordre de création (plus récent = plus haut)
+         │                          │
+         │                          └─ Quand sélectionné (et pas en cours de drag) :
+         │                             bonus +11 (premier plan), zLayer ignoré
+         │
+         └─ Sinon : zOrder + zLayer
 
 Exemple :
     Case A : zOrder=0.00001, zLayer=5, selected=false
-    → z = 5.00001
+    → z = 0.00001 + 5 = 5.00001
 
-    Case B : zOrder=0.00002, zLayer=5, selected=true
-    → z = 5.00002 + 11 = 16.00002
+    Case B : zOrder=0.00002, zLayer=5, selected=true, !isDragging
+    → z = 0.00002 + 11 = 11.00002  (zLayer ignoré quand sélectionné)
     → Case B au premier plan
 
 Visuel (z croissant de bas en haut) :
     ┌─────────────────┐
-    │   Case B (16)   │  ← Sélectionnée, devant tout
+    │   Case B (11)   │  ← Sélectionnée, devant tout
     ├─────────────────┤
     │   Case A (5)    │
     ├─────────────────┤
@@ -684,15 +683,19 @@ AVANT (2 Repeater) :
     Repeater 2 (lignes horizontales)
     → Overhead × 2
 
-APRÈS (1 Repeater) :
+ÉTAPE INTERMÉDIAIRE (1 Repeater) :
     Repeater (vertical + horizontal)
+    → model: verticalLinesCount + horizontalLinesCount
+        ├─ Index < verticalLinesCount ?  Ligne verticale
+        └─ Index >= verticalLinesCount ?  Ligne horizontale
     → Overhead × 1
-    → Performance × 2 ✅
 
-model: verticalLinesCount + horizontalLinesCount
-    │
-    ├─ Index < verticalLinesCount ?  Ligne verticale
-    └─ Index >= verticalLinesCount ?  Ligne horizontale
+APRÈS (défaut Qt 6.11+) :
+    Un seul GridCanvasPainter GPU + viewport culling
+    → O(1) items dans le scene graph ✅
+
+Le path 1-Repeater (verticalLinesCount + horizontalLinesCount) n'est plus
+que le fallback legacy, activé par MEOW_GRID_RENDERER=repeater (ou Qt < 6.11).
 ```
 
 ### Bindings vs Calculs Manuels

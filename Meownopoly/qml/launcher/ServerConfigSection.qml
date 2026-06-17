@@ -1,14 +1,15 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Rectangle {
     id: root
     Layout.fillWidth: true
     Layout.preferredHeight: 210
-    color: "#3a3a3a"
-    radius: 10
-    border.color: "#555555"
+    color: Theme.surfaceHover
+    radius: Theme.radiusXL
+    border.color: Theme.borderLight
     border.width: 1
     
     property alias serverUrl: serverUrlField.text
@@ -31,66 +32,66 @@ Rectangle {
             target: statusIcon
             property: "scale"
             to: 1.2
-            duration: 100
+            duration: Theme.durationFast
         }
         PropertyAnimation {
             target: statusIcon
             property: "scale"
             to: 1.0
-            duration: 100
+            duration: Theme.durationFast
         }
     }
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 15
-        spacing: 10
-        
+        anchors.margins: Theme.spacingXXL
+        spacing: Theme.spacingL
+
         Text {
             text: "⚙️ Configuration du serveur"
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontSizeLarge
             font.bold: true
-            color: "#ffffff"
+            color: Theme.textPrimary
         }
-        
+
         RowLayout {
             Layout.fillWidth: true
-            
+
             Text {
                 text: "URL du serveur:"
-                color: "#cccccc"
+                color: Theme.textSecondary
                 Layout.preferredWidth: 120
             }
-            
+
             TextField {
                 id: serverUrlField
                 Layout.fillWidth: true
                 placeholderText: "https://localhost:8080"
-                color: "#ffffff"
-                
+                color: Theme.textPrimary
+
                 background: Rectangle {
-                    color: "#2a2a2a"
-                    border.color: "#555555"
+                    color: Theme.surface
+                    border.color: Theme.borderLight
                     border.width: 1
-                    radius: 4
+                    radius: Theme.radiusS
                 }
             }
-            
+
             Button {
                 text: "Tester"
                 onClicked: {
                     root.testConnectionRequested()
                     statusIcon.state = "testing"
                 }
-                
+
                 background: Rectangle {
-                    color: parent.pressed ? "#1976d2" : "#2196f3"
-                    radius: 6
+                    color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                    radius: Theme.radiusM
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -103,15 +104,15 @@ Rectangle {
                 height: 24
                 
                 property string currentIcon: "❓"
-                property color currentColor: "#888888"
-                
+                property color currentColor: Theme.textMuted
+
                 states: [
                     State {
                         name: "valid"
                         PropertyChanges {
                             target: statusIcon
                             currentIcon: "✅"
-                            currentColor: "#4CAF50"
+                            currentColor: Theme.success
                         }
                         PropertyChanges {
                             target: iconText
@@ -123,7 +124,7 @@ Rectangle {
                         PropertyChanges {
                             target: statusIcon
                             currentIcon: "❌"
-                            currentColor: "#f44336"
+                            currentColor: Theme.danger
                         }
                         PropertyChanges {
                             target: iconText
@@ -135,16 +136,16 @@ Rectangle {
                         PropertyChanges {
                             target: statusIcon
                             currentIcon: "🔄"
-                            currentColor: "#2196f3"
+                            currentColor: Theme.accent
                         }
                     }
                 ]
-                
+
                 Text {
                     id: iconText
                     anchors.centerIn: parent
                     text: parent.currentIcon
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeLarge
                     color: parent.currentColor
                     
                     RotationAnimation on rotation {
@@ -174,7 +175,7 @@ Rectangle {
             id: statusText
             text: root.connectionMessage
             color: statusIcon.currentColor
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeBody
             visible: text !== ""
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignRight
@@ -188,7 +189,7 @@ Rectangle {
 
             Text {
                 text: "Token upload:"
-                color: "#cccccc"
+                color: Theme.textSecondary
                 Layout.preferredWidth: 120
             }
 
@@ -197,14 +198,14 @@ Rectangle {
                 Layout.fillWidth: true
                 placeholderText: "Token pour autoriser les uploads"
                 echoMode: TextInput.Password
-                color: "#ffffff"
+                color: Theme.textPrimary
                 onTextChanged: root.uploadTokenEdited(text)
 
                 background: Rectangle {
-                    color: "#2a2a2a"
-                    border.color: "#555555"
+                    color: Theme.surface
+                    border.color: Theme.borderLight
                     border.width: 1
-                    radius: 4
+                    radius: Theme.radiusS
                 }
             }
         }

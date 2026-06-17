@@ -1,43 +1,44 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Rectangle {
     id: root
     Layout.fillWidth: true
     Layout.preferredHeight: 80
-    color: "#4a4a4a"
-    radius: 12
-    border.color: "#666666"
+    color: Theme.border
+    radius: Theme.radiusXXL
+    border.color: Theme.borderLight
     border.width: 1
-    
+
     signal backRequested()
-    
+
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 20
-        
+        anchors.margins: Theme.spacingHuge
+
         Text {
             text: "🐱 Meownopoly Resource Launcher"
-            font.pixelSize: 24
+            font.pixelSize: Theme.fontSizeDisplay
             font.bold: true
-            color: "#ffffff"
+            color: Theme.textPrimary
         }
-        
+
         Item { Layout.fillWidth: true }
-        
+
         Button {
             text: "Retour"
             onClicked: root.backRequested()
-            
+
             background: Rectangle {
-                color: parent.pressed ? "#d32f2f" : "#f44336"
-                radius: 6
+                color: parent.pressed ? Theme.pressed(Theme.danger) : Theme.danger
+                radius: Theme.radiusM
             }
-            
+
             contentItem: Text {
                 text: parent.text
-                color: "white"
+                color: Theme.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }

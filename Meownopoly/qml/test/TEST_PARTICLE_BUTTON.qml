@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import ui_item
+import theme
 
 /**
  * Test du composant ParticleButton
@@ -10,7 +11,7 @@ import ui_item
 Rectangle {
     id: testRoot
     anchors.fill: parent
-    color: "#1a1a1a"
+    color: Theme.background
     
     ColumnLayout {
         anchors.centerIn: parent
@@ -20,16 +21,16 @@ Rectangle {
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: "Test du Bouton à Particules"
-            font.pixelSize: 32
+            font.pixelSize: Theme.fontSizeHero
             font.bold: true
-            color: "white"
+            color: Theme.textPrimary
         }
         
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: "Cliquez sur les boutons pour voir l'effet de particules !"
-            font.pixelSize: 16
-            color: "#CCCCCC"
+            font.pixelSize: Theme.fontSizeLarge
+            color: Theme.textSecondary
         }
         
         // Conteneur pour les boutons
@@ -152,39 +153,39 @@ Rectangle {
             property int count: 0
             
             Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 20
+            Layout.topMargin: Theme.spacingHuge
             width: 300
             height: 80
-            color: "#2C2C2C"
-            radius: 10
-            border.color: "#4A90E2"
+            color: Theme.surface
+            radius: Theme.radiusXL
+            border.color: Theme.accent
             border.width: 2
-            
+
             ColumnLayout {
                 anchors.centerIn: parent
-                spacing: 5
-                
+                spacing: Theme.spacingXS
+
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: "Nombre de clics"
-                    font.pixelSize: 14
-                    color: "#CCCCCC"
+                    font.pixelSize: Theme.fontSizeMedium
+                    color: Theme.textSecondary
                 }
-                
+
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: clickCounter.count
-                    font.pixelSize: 36
+                    font.pixelSize: Theme.fontSizeHero
                     font.bold: true
-                    color: "#4A90E2"
+                    color: Theme.accent
                 }
             }
             
             // Animation du compteur
             Behavior on scale {
                 SequentialAnimation {
-                    NumberAnimation { from: 1.0; to: 1.2; duration: 100 }
-                    NumberAnimation { from: 1.2; to: 1.0; duration: 100 }
+                    NumberAnimation { from: 1.0; to: 1.2; duration: Theme.durationFast }
+                    NumberAnimation { from: 1.2; to: 1.0; duration: Theme.durationFast }
                 }
             }
             
@@ -208,7 +209,7 @@ Rectangle {
             
             contentItem: Text {
                 text: parent.text
-                color: "white"
+                color: Theme.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -217,21 +218,21 @@ Rectangle {
         // Instructions
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 10
+            Layout.topMargin: Theme.spacingL
             width: 400
             height: 100
-            color: "#2C2C2C"
-            radius: 10
-            
+            color: Theme.surface
+            radius: Theme.radiusXL
+
             ColumnLayout {
                 anchors.centerIn: parent
-                anchors.margins: 10
-                spacing: 5
-                
+                anchors.margins: Theme.spacingL
+                spacing: Theme.spacingXS
+
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: "💡 Astuce"
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeLarge
                     font.bold: true
                     color: "#FFD700"
                 }
@@ -239,16 +240,16 @@ Rectangle {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: "Chaque bouton a une configuration différente :"
-                    font.pixelSize: 12
-                    color: "#CCCCCC"
+                    font.pixelSize: Theme.fontSizeBody
+                    color: Theme.textSecondary
                     wrapMode: Text.WordWrap
                 }
                 
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: "couleur, nombre de particules, taille, durée..."
-                    font.pixelSize: 12
-                    color: "#CCCCCC"
+                    font.pixelSize: Theme.fontSizeBody
+                    color: Theme.textSecondary
                     wrapMode: Text.WordWrap
                 }
             }

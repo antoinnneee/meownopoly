@@ -5,6 +5,7 @@ import QtQuick.Shapes
 import Pattounx 1.0
 import world3d 1.0
 import ItemSnapable
+import theme
 
 Item {
     id: root
@@ -181,17 +182,17 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 12
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingXL
 
         // Header
         RowLayout {
-            spacing: 12
+            spacing: Theme.spacingXL
             Layout.fillWidth: true
             Text {
                 text: "PattounX v2 — test panel"
                 color: host.textPrimary
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontSizeTitle
                 font.bold: true
             }
             Item { Layout.fillWidth: true }
@@ -200,13 +201,13 @@ Item {
                       ? ("● running   tick=" + world.currentTick)
                       : "○ stopped"
                 color: world.running ? "#22c55e" : host.textSecondary
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontSizeBody
             }
         }
 
         // Lifecycle
         RowLayout {
-            spacing: 8
+            spacing: Theme.spacingM
             Button {
                 text: "Start"
                 enabled: !world.running
@@ -276,19 +277,19 @@ Item {
             label: Text {
                 text: parent.title
                 color: host.textPrimary
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
-            background: Rectangle { color: host.cardBg; radius: 8;
+            background: Rectangle { color: host.cardBg; radius: Theme.radiusL;
                                     border.color: host.cardBorder; border.width: 1 }
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 6
+                spacing: Theme.spacingS
                 Text {
                     color: host.textSecondary
                     text: "Cliquez la zone ci-dessous puis utilisez ZQSD/flèches"
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
                 Rectangle {
                     Layout.fillWidth: true
@@ -296,7 +297,7 @@ Item {
                     color: focusArea.activeFocus ? "#1e1e26" : "#181820"
                     border.color: focusArea.activeFocus ? host.accent : host.cardBorder
                     border.width: 1
-                    radius: 6
+                    radius: Theme.radiusM
 
                     Text {
                         anchors.centerIn: parent
@@ -304,7 +305,7 @@ Item {
                         text: focusArea.activeFocus
                               ? "Focus actif — ZQSD/flèches pour bouger"
                               : "Cliquez pour focus"
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSizeBody
                     }
 
                     MouseArea { anchors.fill: parent; onClicked: focusArea.forceActiveFocus() }
@@ -367,24 +368,24 @@ Item {
             color: host.cardBg
             border.color: host.cardBorder
             border.width: 1
-            radius: 8
+            radius: Theme.radiusL
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 4
+                anchors.margins: Theme.spacingL
+                spacing: Theme.spacingXS
                 Text {
                     id: positionLabel
                     text: "pos = (?, ?)"
                     color: host.textPrimary
                     font.family: "Consolas"
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSizeBody
                 }
                 Text {
                     text: "events: " + root.eventCount + "   last: " + root.lastEvent
                             + "   zones: " + Object.keys(root.viewZones).length
                     color: host.textSecondary
                     font.family: "Consolas"
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
             }
         }
@@ -397,21 +398,21 @@ Item {
             label: Text {
                 text: parent.title
                 color: host.textPrimary
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
-            background: Rectangle { color: host.cardBg; radius: 8;
+            background: Rectangle { color: host.cardBg; radius: Theme.radiusL;
                                     border.color: host.cardBorder; border.width: 1 }
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 6
+                spacing: Theme.spacingS
                 RowLayout {
-                    spacing: 8
+                    spacing: Theme.spacingM
                     Text {
                         text: "px / unité world : " + root.pxPerUnit.toFixed(0)
                         color: host.textSecondary
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSizeBody
                     }
                     Slider {
                         Layout.preferredWidth: 220
@@ -423,7 +424,7 @@ Item {
                     Text {
                         text: "● actor   ▰ wall   ▱ trigger"
                         color: host.textSecondary
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSizeSmall
                         font.family: "Consolas"
                     }
                 }
@@ -435,7 +436,7 @@ Item {
                     color: "#0f1015"
                     border.color: host.cardBorder
                     border.width: 1
-                    radius: 6
+                    radius: Theme.radiusM
                     clip: true
 
                     Canvas {

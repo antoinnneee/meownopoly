@@ -20,7 +20,7 @@ set(PATTOUNX_WORKER_HEADERS
 )
 
 # Test : Collision2D (primitives + sweep cercle/cercle)
-qt_add_executable(tst_collision2d
+qt_add_executable(tst_collision2d EXCLUDE_FROM_ALL
     tst_collision2d.cpp
     ${PATTOUNX_TEST_SOURCES}
 )
@@ -32,7 +32,7 @@ target_link_libraries(tst_collision2d PRIVATE Qt6::Core Qt6::Test Qt6::Gui)
 add_test(NAME tst_collision2d COMMAND tst_collision2d)
 
 # Test : PattounX_engine v2 (smoke tests, body-body, sleep)
-qt_add_executable(tst_pattounx_engine
+qt_add_executable(tst_pattounx_engine EXCLUDE_FROM_ALL
     tst_pattounx_engine.cpp
     ${PATTOUNX_TEST_SOURCES}
 )
@@ -44,7 +44,7 @@ target_link_libraries(tst_pattounx_engine PRIVATE Qt6::Core Qt6::Test Qt6::Gui)
 add_test(NAME tst_pattounx_engine COMMAND tst_pattounx_engine)
 
 # Test : PhysicsWorker + PhysicsWorld (cycle de vie + thread + buffer)
-qt_add_executable(tst_physics_worker
+qt_add_executable(tst_physics_worker EXCLUDE_FROM_ALL
     tst_physics_worker.cpp
     ${PATTOUNX_TEST_SOURCES}
     ${PATTOUNX_WORKER_SOURCES}
@@ -59,7 +59,7 @@ target_link_libraries(tst_physics_worker PRIVATE
 add_test(NAME tst_physics_worker COMMAND tst_physics_worker)
 
 # Test : codec snapshot réseau (round-trip serialize/applyRemoteSnapshot)
-qt_add_executable(tst_snapshot_codec
+qt_add_executable(tst_snapshot_codec EXCLUDE_FROM_ALL
     tst_snapshot_codec.cpp
     ${PATTOUNX_TEST_SOURCES}
     ${PATTOUNX_WORKER_SOURCES}
@@ -95,7 +95,7 @@ add_subdirectory(map_lifecycle)
 
 if (TARGET Qt6::CanvasPainter)
     set(PAINTER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../cpp/editor/painter")
-    qt_add_executable(tst_zone_render_perf
+    qt_add_executable(tst_zone_render_perf EXCLUDE_FROM_ALL
         tst_zone_render_perf.cpp
         "${PAINTER_DIR}/zone_canvas_painter.cpp"
         "${PAINTER_DIR}/zone_canvas_painter.h"
@@ -130,7 +130,7 @@ if (TARGET Qt6::CanvasPainter)
     # ────────────────────────────────────────────────────────────────────
     # Compare Repeater (legacy) vs GridCanvasPainter (Qt 6.11) avec viewport
     # culling. Toggle via env var MEOW_GRID_RENDERER=repeater|canvas.
-    qt_add_executable(tst_grid_render_perf
+    qt_add_executable(tst_grid_render_perf EXCLUDE_FROM_ALL
         tst_grid_render_perf.cpp
         "${PAINTER_DIR}/grid_canvas_painter.cpp"
         "${PAINTER_DIR}/grid_canvas_painter.h"
@@ -162,7 +162,7 @@ if (TARGET Qt6::CanvasPainter)
     # grille + tous les ZoneCanvasPainter dans la même scène et mesure le
     # coût combiné. Toggle grille via MEOW_GRID_RENDERER, mode zones via
     # MEOW_ZONE_PARALLEL_MODE (défaut precompute-async).
-    qt_add_executable(tst_combined_render_perf
+    qt_add_executable(tst_combined_render_perf EXCLUDE_FROM_ALL
         tst_combined_render_perf.cpp
         "${PAINTER_DIR}/grid_canvas_painter.cpp"
         "${PAINTER_DIR}/grid_canvas_painter.h"
@@ -206,3 +206,23 @@ if (TARGET Qt6::CanvasPainter)
     add_test(NAME tst_combined_render_perf COMMAND tst_combined_render_perf)
     set_tests_properties(tst_combined_render_perf PROPERTIES LABELS "manual;perf")
 endif()
+
+# ============================================================================
+# Cible agrégée "tout compiler" — tests unitaires + benchmarks perf si dispo.
+# ============================================================================
+# Tous les exécutables de test sont EXCLUDE_FROM_ALL : un `cmake --build build`
+# générique ne les compile pas. Pour les construire à la demande :
+#   cmake --build build --config Release --target meownopoly_tests   (tout)
+#   cmake --build build --config Release --target pattounx_tests      (unitaires)
+#   cmake --build build --config Release --target tst_collision2d     (un seul)
+set(MEOWNOPOLY_ALL_TEST_TARGETS
+    tst_collision2d tst_pattounx_engine tst_physics_worker tst_snapshot_codec
+    tst_mapinfo)
+if (TARGET Qt6::CanvasPainter)
+    list(APPEND MEOWNOPOLY_ALL_TEST_TARGETS
+        tst_zone_render_perf tst_grid_render_perf tst_combined_render_perf)
+endif()
+add_custom_target(meownopoly_tests
+    DEPENDS ${MEOWNOPOLY_ALL_TEST_TARGETS}
+    COMMENT "Build all Meownopoly tests (unit + perf benchmarks)"
+)

@@ -14,6 +14,7 @@ import ItemSnapableFactory
 import MapTypes
 import MapFileManager
 import EditorSession 1.0
+import theme
 
 Rectangle {
     id: snapableElement
@@ -351,6 +352,10 @@ Rectangle {
         snapableParameters.zoneParameter.velocityStrenght = physicSettings.velocityStrength
         snapableParameters.zoneParameter.frictionStrenght = physicSettings.frictionStrength
         snapableParameters.zoneParameter.accelerationMultiplier = physicSettings.accelerationMultiplier
+        // Effet visuel de zone (référence vers MapInfo.screenEffects). Garde
+        // undefined pour ne pas écraser sur d'anciens appelants sans ce champ.
+        if (physicSettings.screenEffectId !== undefined)
+            snapableParameters.zoneParameter.screenEffectId = physicSettings.screenEffectId
     }
 
     // ─── liserés des sélections distantes ───────────────────────
@@ -386,7 +391,7 @@ Rectangle {
             color: "transparent"
             border.width: 2
             border.color: snapableElement._foreignColor(modelData)
-            radius: 4
+            radius: Theme.radiusS
             z: 50 + index
             visible: EditorSession.active
         }

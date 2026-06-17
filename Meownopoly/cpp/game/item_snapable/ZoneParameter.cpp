@@ -42,6 +42,7 @@ ZoneParameter::ZoneParameter(const QJsonObject &json, QObject *parent)
     m_exclusion = json.value("exclusion").toBool(true);
     m_speedMultiplier = json.value("speedMultiplier").toDouble(1);
     m_accelerationMultiplier = json.value("accelerationMultiplier").toDouble(1);
+    m_screenEffectId = json.value("screenEffectId").toString("");
 }
 
 ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
@@ -55,6 +56,7 @@ ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
     , m_exclusion(other.m_exclusion)
     , m_speedMultiplier(other.m_speedMultiplier)
     , m_accelerationMultiplier(other.m_accelerationMultiplier)
+    , m_screenEffectId(other.m_screenEffectId)
 {
 }
 
@@ -81,6 +83,7 @@ void ZoneParameter::applyJson(const QJsonObject &json)
     setExclusion(json.value("exclusion").toBool(true));
     setSpeedMultiplier(json.value("speedMultiplier").toDouble(1));
     setAccelerationMultiplier(json.value("accelerationMultiplier").toDouble(1));
+    setScreenEffectId(json.value("screenEffectId").toString(""));
 }
 
 QString ZoneParameter::toJSON()
@@ -109,7 +112,8 @@ QString ZoneParameter::toJSON()
     json += "    \"frictionStrenght\": " + QString::number(m_frictionStrenght) + ",\n";
     json += "    \"exclusion\": " + exclusionStr + ",\n";
     json += "    \"speedMultiplier\": " + QString::number(m_speedMultiplier) + ",\n";
-    json += "    \"accelerationMultiplier\": " + QString::number(m_accelerationMultiplier) + "\n";
+    json += "    \"accelerationMultiplier\": " + QString::number(m_accelerationMultiplier) + ",\n";
+    json += "    \"screenEffectId\": \"" + m_screenEffectId + "\"\n";
     json += "}";
     
     return json;
@@ -263,4 +267,17 @@ void ZoneParameter::setAccelerationMultiplier(qreal newAccelerationMultiplier)
         return;
     m_accelerationMultiplier = newAccelerationMultiplier;
     emit accelerationMultiplierChanged();
+}
+
+QString ZoneParameter::screenEffectId() const
+{
+    return m_screenEffectId;
+}
+
+void ZoneParameter::setScreenEffectId(const QString &newScreenEffectId)
+{
+    if (m_screenEffectId == newScreenEffectId)
+        return;
+    m_screenEffectId = newScreenEffectId;
+    emit screenEffectIdChanged();
 }

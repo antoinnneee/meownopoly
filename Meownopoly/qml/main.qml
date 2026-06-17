@@ -19,10 +19,12 @@ import Catway 1.0
 import EditorSession 1.0
 import EditorOpBus 1.0
 
+import theme
+
 
 ApplicationWindow {
     id: root
-    
+
     Settings {
         id: stVideoConfig
         category: "Video"
@@ -71,6 +73,7 @@ ApplicationWindow {
 
     StackView {
         id: stackView
+        objectName: "mainStackView"
         anchors.fill: parent
         initialItem: AccountManager.hasAccount ? titleScreen : accountSetup
     }

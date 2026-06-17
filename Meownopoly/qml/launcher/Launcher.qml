@@ -54,17 +54,21 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import LauncherManager 1.0
+import theme
 
 import AssetManager
 
 Rectangle {
     id: root
-    color: "#1e1e1e"
+    color: Theme.background
 
     property bool autoUpdate : true
     // Bascule entre la vue principale du launcher et le configurateur 3D.
     // "launcher" (défaut) | "modelConfigurator"
     property string currentView: "launcher"
+    // Dossier à charger d'emblée dans le configurateur (bouton « Éditer »).
+    // Vide = configurateur ouvert sans modèle (création depuis zéro).
+    property string configFolderPath: ""
 
     signal launchGame()
     signal backRequested()
@@ -122,16 +126,16 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: parent.top
         height: 40
-        color: "#FF9800"
+        color: Theme.warning
         z: 10
 
         RowLayout {
             anchors.fill: parent
-            anchors.margins: 10
+            anchors.margins: Theme.spacingL
 
             Text {
                 text: "Nouvelle version disponible: " + logic.latestVersion
-                color: "white"
+                color: Theme.textPrimary
                 font.bold: true
                 Layout.fillWidth: true
             }
@@ -139,15 +143,15 @@ Rectangle {
             Button {
                 text: "Telecharger"
                 onClicked: { logic.downloadResources(); updateBanner.visible = false }
-                background: Rectangle { color: "#E65100"; radius: 4 }
-                contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                background: Rectangle { color: "#E65100"; radius: Theme.radiusS }
+                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             }
 
             Button {
                 text: "x"
                 onClicked: updateBanner.visible = false
                 background: Rectangle { color: "transparent" }
-                contentItem: Text { text: parent.text; color: "white"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                contentItem: Text { text: parent.text; color: Theme.textPrimary; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             }
         }
     }
@@ -161,27 +165,23 @@ Rectangle {
         z: 100
         sourceComponent: ModelConfigurator {
             serverUrl: logic.serverUrl
-            balsamPath: logic.settings.balsamPath
-            balsamOptions: logic.balsamOptions
+            initialFolderPath: root.configFolderPath
             onCloseRequested: root.currentView = "launcher"
-            onBalsamPathRequested: function(p) { logic.setBalsamPath(p) }
-            onBalsamOptionRequested: function(k, v) { logic.setBalsamOption(k, v) }
-            onBalsamOptionsResetRequested: logic.resetBalsamOptions()
         }
     }
 
     ScrollView {
         anchors.fill: parent
-        anchors.topMargin: updateBanner.visible ? updateBanner.height + 10 : 10
-        anchors.leftMargin: 10
-        anchors.rightMargin: 10
-        anchors.bottomMargin: 10
+        anchors.topMargin: updateBanner.visible ? updateBanner.height + Theme.spacingL : Theme.spacingL
+        anchors.leftMargin: Theme.spacingL
+        anchors.rightMargin: Theme.spacingL
+        anchors.bottomMargin: Theme.spacingL
         contentWidth: availableWidth
         visible: root.currentView === "launcher"
 
         ColumnLayout {
             width: parent.width
-            spacing: 15
+            spacing: Theme.spacingXXL
 
             // Header
             LauncherHeader {
@@ -255,7 +255,10 @@ Rectangle {
                     logic.uploadModelPackage(name, version)
                 }
 
-                onOpenModelConfiguratorRequested: root.currentView = "modelConfigurator"
+                onOpenModelConfiguratorRequested: {
+                    root.configFolderPath = ""   // création depuis zéro
+                    root.currentView = "modelConfigurator"
+                }
             }
 
             // Section Modèles (Nouveau)
@@ -263,10 +266,24 @@ Rectangle {
                 id: modelsSection
                 modelsList: logic.modelsList
                 isDownloading: logic.isDownloading
-                
+                canManageServer: logic.settings.uploadToken.length > 0
+
                 onRefreshRequested: logic.fetchModelsList()
                 onDownloadRequested: function(name, version) {
                     logic.downloadModel(name, version)
+                }
+                onEditRequested: function(name) {
+                    const dir = LauncherManager.installedModelDir(name)
+                    if (dir && dir.length > 0) {
+                        root.configFolderPath = dir
+                        root.currentView = "modelConfigurator"
+                    }
+                }
+                onDeleteRequested: function(name) {
+                    logic.deleteModel(name)
+                }
+                onDeleteFromServerRequested: function(name, version) {
+                    logic.deleteModelFromServer(name, version)
                 }
             }
             

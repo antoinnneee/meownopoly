@@ -3,6 +3,7 @@ import QtQuick.Controls
 
 import ItemSnapable
 import TileType
+import theme
 
 /**
  * Phase 9 — caisse à pousser.
@@ -92,8 +93,8 @@ SnapableElement {
         visible: root.isSelected
         text: "r=" + (root.snapableParameters.displayParameter.unitSizeWidth / 2.0).toFixed(2)
             + "  m=" + root._mass.toFixed(1)
-        color: "white"
-        font.pixelSize: 12
+        color: Theme.textPrimary
+        font.pixelSize: Theme.fontSizeBody
         font.bold: true
         x: 4; y: 4
         z: 3
@@ -101,7 +102,7 @@ SnapableElement {
             anchors.fill: parent
             anchors.margins: -2
             color: Qt.rgba(0, 0, 0, 0.55)
-            radius: 2
+            radius: Theme.radiusXS
             z: -1
         }
     }

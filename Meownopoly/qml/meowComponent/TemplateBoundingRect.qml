@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import theme
 
 /**
  * Rectangle vert pour afficher la bounding box des éléments sélectionnés en mode template.
@@ -23,28 +24,28 @@ Item {
     Rectangle {
         id: backgroundFill
         anchors.fill: parent
-        color: "#4CAF50"
+        color: Theme.success
         opacity: 0.15
-        radius: 4
+        radius: Theme.radiusS
     }
-    
+
     // Bordure verte avec effet de brillance
     Rectangle {
         id: borderOuter
         anchors.fill: parent
         color: "transparent"
-        radius: 4
+        radius: Theme.radiusS
         border.color: "#81C784"  // Vert clair
         border.width: 3
     }
-    
+
     Rectangle {
         id: borderInner
         anchors.fill: parent
         anchors.margins: 2
         color: "transparent"
-        radius: 2
-        border.color: "#4CAF50"  // Vert principal
+        radius: Theme.radiusXS
+        border.color: Theme.success  // Vert principal
         border.width: 2
     }
     
@@ -60,8 +61,8 @@ Item {
         Rectangle {
             width: 12
             height: 12
-            color: "#4CAF50"
-            radius: 2
+            color: Theme.success
+            radius: Theme.radiusXS
             
             x: modelData.ax === "left" ? -2 : parent.width - width + 2
             y: modelData.ay === "top" ? -2 : parent.height - height + 2

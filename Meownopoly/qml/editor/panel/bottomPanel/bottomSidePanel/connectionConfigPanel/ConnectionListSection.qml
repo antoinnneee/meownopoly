@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 pragma ComponentBehavior: Bound
 
@@ -24,14 +25,14 @@ Rectangle {
     signal elementHovered(var element)
     signal elementUnhovered()
     
-    color: "#333333"
-    radius: 8
-    border.color: "#555555"
+    color: Theme.surfaceAlt
+    radius: Theme.radiusL
+    border.color: Theme.borderLight
     border.width: 1
-    
+
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 5
+        anchors.margins: Theme.spacingXS
 
         
         // Placeholder quand vide
@@ -39,25 +40,25 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             visible: connectionList.count === 0
-            color: "#2a2a2a"
-            radius: 6
-            border.color: "#555555"
+            color: Theme.surface
+            radius: Theme.radiusM
+            border.color: Theme.borderLight
             border.width: 1
-            
+
             ColumnLayout {
                 anchors.centerIn: parent
-                spacing: 6
-                
+                spacing: Theme.spacingS
+
                 Text {
                     text: root.emptyIcon
-                    font.pixelSize: 24
+                    font.pixelSize: Theme.fontSizeDisplay
                     Layout.alignment: Qt.AlignHCenter
                 }
-                
+
                 Label {
                     text: root.emptyMessage
-                    color: "#888888"
-                    font.pixelSize: 12
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeBody
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -72,19 +73,19 @@ Rectangle {
             visible: count > 0
             model: root.listModel
             boundsBehavior: Flickable.StopAtBounds
-            spacing: 2
+            spacing: Theme.spacingXXS
             
             delegate: Rectangle {
                 required property int index
                 required property var modelData
                 width: ListView.view.width
                 height: 36
-                color: itemMouseArea.containsMouse ? "#444444" : "#333333"
-                radius: 4
-                border.color: "#555555"
+                color: itemMouseArea.containsMouse ? Theme.border : Theme.surfaceAlt
+                radius: Theme.radiusS
+                border.color: Theme.borderLight
                 border.width: 1
-                
-                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
                 
                 MouseArea {
                     id: itemMouseArea
@@ -100,21 +101,21 @@ Rectangle {
                 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 8
+                    anchors.margins: Theme.spacingM
+                    spacing: Theme.spacingM
                     
                     // Badge d'index
                     Rectangle {
                         implicitWidth: 24
                         implicitHeight: 20
-                        radius: 10
+                        radius: Theme.radiusXL
                         color: root.badgeColor
-                        
+
                         Label {
                             anchors.centerIn: parent
                             text: index + 1
                             color: "#ffffff"
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeCaption
                             font.bold: true
                         }
                     }
@@ -122,8 +123,8 @@ Rectangle {
                     Label {
                         Layout.fillWidth: true
                         text: "Élément " + (index + 1)
-                        color: "#cccccc"
-                        font.pixelSize: 12
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeBody
                         elide: Label.ElideRight
                     }
                     
@@ -131,10 +132,10 @@ Rectangle {
                     Rectangle {
                         implicitWidth: 60
                         implicitHeight: 20
-                        radius: 10
-                        color: removeBtn.containsMouse ? "#ff7675" : "#fd79a8"
-                        
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        radius: Theme.radiusXL
+                        color: removeBtn.containsMouse ? Theme.dangerSoft : "#fd79a8"
+
+                        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
                         
                         MouseArea {
                             id: removeBtn
@@ -150,7 +151,7 @@ Rectangle {
                             anchors.centerIn: parent
                             text: "Retirer"
                             color: "#ffffff"
-                            font.pixelSize: 9
+                            font.pixelSize: Theme.fontSizeTiny
                             font.bold: true
                         }
                     }

@@ -1,14 +1,15 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Rectangle {
     id: root
     Layout.fillWidth: true
     Layout.preferredHeight: 100
-    color: "#3a3a3a"
-    radius: 10
-    border.color: "#555555"
+    color: Theme.surfaceHover
+    radius: Theme.radiusXL
+    border.color: Theme.borderLight
     border.width: 1
     
     property bool isDownloading: false
@@ -22,19 +23,19 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 15
-        spacing: 10
-        
+        anchors.margins: Theme.spacingXXL
+        spacing: Theme.spacingL
+
         Text {
             text: "🚀 Actions"
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontSizeLarge
             font.bold: true
-            color: "#ffffff"
+            color: Theme.textPrimary
         }
-        
+
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            spacing: Theme.spacingL
             
             Button {
                 text: "Vérifier"
@@ -43,19 +44,19 @@ Rectangle {
                 Layout.preferredWidth: 120
                 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#1976d2" : "#2196f3") : "#666666"
-                    radius: 6
+                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent) : Theme.textDisabled
+                    radius: Theme.radiusM
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
             }
-            
+
             Button {
                 text: "Télécharger"
                 enabled: !root.isDownloading && root.latestVersion !== root.currentVersion
@@ -63,16 +64,16 @@ Rectangle {
                 Layout.preferredWidth: 120
                 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#388e3c" : "#4caf50") : "#666666"
-                    radius: 6
+                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.success) : Theme.success) : Theme.textDisabled
+                    radius: Theme.radiusM
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
             }
 
@@ -83,16 +84,16 @@ Rectangle {
                 Layout.preferredWidth: 150
                 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#ff9800" : "#ff5722") : "#666666"
-                    radius: 6
+                    color: parent.enabled ? (parent.pressed ? Theme.warning : "#ff5722") : Theme.textDisabled
+                    radius: Theme.radiusM
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                 }
             }
 
@@ -105,16 +106,16 @@ Rectangle {
                 Layout.preferredWidth: 120
                 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#6a1b9a" : "#9c27b0") : "#666666"
-                    radius: 6
+                    color: parent.enabled ? (parent.pressed ? "#6a1b9a" : "#9c27b0") : Theme.textDisabled
+                    radius: Theme.radiusM
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
                 }
             }

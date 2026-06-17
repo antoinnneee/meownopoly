@@ -6,10 +6,11 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import MeowPainter 1.0
+import theme
 
 Rectangle {
     id: root
-    color: "#202020"
+    color: Theme.background
     implicitWidth: 600
     implicitHeight: 480
 
@@ -24,19 +25,19 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingM
 
         Label {
             text: "Test ZoneCanvasPainter (Qt 6.11 CanvasPainter)"
-            color: "white"
-            font.pixelSize: 16
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeLarge
             font.bold: true
         }
 
         RowLayout {
-            spacing: 12
-            Label { text: "gridSize: " + gridSlider.value.toFixed(1); color: "white" }
+            spacing: Theme.spacingXL
+            Label { text: "gridSize: " + gridSlider.value.toFixed(1); color: Theme.textPrimary }
             Slider {
                 id: gridSlider
                 from: 10
@@ -44,7 +45,7 @@ Rectangle {
                 value: 40
                 Layout.preferredWidth: 200
             }
-            Label { text: "hatchSpacing: " + hatchSlider.value.toFixed(0); color: "white" }
+            Label { text: "hatchSpacing: " + hatchSlider.value.toFixed(0); color: Theme.textPrimary }
             Slider {
                 id: hatchSlider
                 from: 4
@@ -58,7 +59,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: "#101010"
-            border.color: "#404040"
+            border.color: Theme.border
 
             ZoneCanvasPainter {
                 id: zone
@@ -76,8 +77,8 @@ Rectangle {
 
         Label {
             text: "→ Si tu vois le pentagone (orange + contour + hachures), CanvasPainter fonctionne."
-            color: "#A0A0A0"
-            font.pixelSize: 11
+            color: Theme.textMuted
+            font.pixelSize: Theme.fontSizeSmall
         }
     }
 }

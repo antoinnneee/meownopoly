@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Particles
 import QtQuick.Controls
 import AssetManager
+import theme
 
 Rectangle {
     id: root
@@ -46,7 +47,7 @@ Rectangle {
     // height: isExpanded ? expandedHeight : collapsedHeight
 
     color: "#E6002200"
-    border.color: "#333333"
+    border.color: Theme.surfaceAlt
     border.width: 1
 
     Behavior on height {
@@ -78,7 +79,7 @@ Rectangle {
             anchors.centerIn: parent
             width: parent.width * 0.3
             height: 2
-            color: resizeMouseArea.containsMouse || root.isResizing ? "#4A90E2" : "#CCCCCC"
+            color: resizeMouseArea.containsMouse || root.isResizing ? Theme.accent : Theme.textSecondary
             radius: 1
         }
 
@@ -150,7 +151,7 @@ Rectangle {
         }
 
         // Animation de couleur au survol
-        Behavior on color { ColorAnimation { duration: 150 }}
+        Behavior on color { ColorAnimation { duration: Theme.durationNormal }}
     }
 
     ParticleSystem {

@@ -2,11 +2,13 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import theme
+
 
 Rectangle {
     id: control
-    color: "#333333"
-    border.color: "#444444"
+    color: Theme.surfaceAlt
+    border.color: Theme.border
     border.width: 1
     property alias text: textSize.text
     property alias widthSpinBox: widthSpinBox
@@ -14,10 +16,10 @@ Rectangle {
     signal valueChanged(var value)
 
     RowLayout {
-        spacing: 4
+        spacing: Theme.spacingXS
         anchors.fill: parent
-        anchors.leftMargin: 5
-        anchors.rightMargin: 5
+        anchors.leftMargin: Theme.spacingXS
+        anchors.rightMargin: Theme.spacingXS
         anchors.topMargin: 1
         anchors.bottomMargin: 1
 
@@ -25,7 +27,7 @@ Rectangle {
         Text {
             id: textSize
             text: "W:"
-            color: "white"
+            color: Theme.textPrimary
             font.pixelSize: control.height * 0.7
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
@@ -47,10 +49,10 @@ Rectangle {
                 control.valueChanged(value)
             }
             background: Rectangle {
-                color: "#2a2a2a"
-                border.color: widthSpinBox.activeFocus ? "#0078d4" : "#555555"
+                color: Theme.surface
+                border.color: widthSpinBox.activeFocus ? Theme.accent : Theme.borderLight
                 border.width: widthSpinBox.activeFocus ? 2 : 1
-                radius: 3
+                radius: Theme.radiusXS
             }
             
             contentItem: TextInput {
@@ -60,9 +62,9 @@ Rectangle {
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 font.pixelSize: control.height * 0.6
-                color: "white"
-                selectionColor: "#0078d4"
-                selectedTextColor: "white"
+                color: Theme.textPrimary
+                selectionColor: Theme.accent
+                selectedTextColor: Theme.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 bottomPadding: 1
@@ -78,10 +80,10 @@ Rectangle {
                 x: widthSpinBox.mirrored ? 0 : parent.width - width
                 height: widthSpinBox.height
                 implicitWidth: Screen.pixelDensity * 9
-                color: widthSpinBox.up.pressed ? "#404040" : (widthSpinBox.up.hovered ? "#353535" : "#2a2a2a")
-                border.color: widthSpinBox.activeFocus ? "#0078d4" : "#555555"
+                color: widthSpinBox.up.pressed ? Theme.border : (widthSpinBox.up.hovered ? Theme.surfaceHover : Theme.surface)
+                border.color: widthSpinBox.activeFocus ? Theme.accent : Theme.borderLight
                 border.width: widthSpinBox.activeFocus ? 2 : 1
-                radius: 3
+                radius: Theme.radiusXS
                 
                 Text {
                     text: "+"
@@ -90,7 +92,7 @@ Rectangle {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     bottomPadding: 2
-                    color: widthSpinBox.up.pressed ? "#cccccc" : "white"
+                    color: widthSpinBox.up.pressed ? Theme.textSecondary : Theme.textPrimary
                 }
             }
             
@@ -99,10 +101,10 @@ Rectangle {
                 x: widthSpinBox.mirrored ? parent.width - width : 0
                 height: widthSpinBox.height
                 implicitWidth: Screen.pixelDensity * 9
-                color: widthSpinBox.down.pressed ? "#404040" : (widthSpinBox.down.hovered ? "#353535" : "#2a2a2a")
-                border.color: widthSpinBox.activeFocus ? "#0078d4" : "#555555"
+                color: widthSpinBox.down.pressed ? Theme.border : (widthSpinBox.down.hovered ? Theme.surfaceHover : Theme.surface)
+                border.color: widthSpinBox.activeFocus ? Theme.accent : Theme.borderLight
                 border.width: widthSpinBox.activeFocus ? 2 : 1
-                radius: 3
+                radius: Theme.radiusXS
                 
                 Text {
                     text: "−"
@@ -111,7 +113,7 @@ Rectangle {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     bottomPadding: 2
-                    color: widthSpinBox.down.pressed ? "#cccccc" : "white"
+                    color: widthSpinBox.down.pressed ? Theme.textSecondary : Theme.textPrimary
                 }
             }
         }

@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import editorBottomPanel
 import visualEffectPanel
+import theme
 
 
 EBP_Content {
@@ -31,7 +32,7 @@ EBP_Content {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        anchors.rightMargin: 5
+        anchors.rightMargin: Theme.spacingXS
         width: parent.width
 
 
@@ -39,7 +40,7 @@ EBP_Content {
         ASP_CategoryGrid {
             id: categoryGrid
             anchors.fill: parent
-            anchors.topMargin: 6
+            anchors.topMargin: Theme.spacingS
             visible: contentArea.currentView === "categories"
             activeFilter: contentArea.activeFilter
             searchText: contentArea.searchText
@@ -55,7 +56,7 @@ EBP_Content {
         ASP_Grid {
             id: assetGrid
             anchors.fill: parent
-            anchors.topMargin: 6
+            anchors.topMargin: Theme.spacingS
             visible: contentArea.currentView === "assets"
             category: contentArea.selectedCategory
             type: contentArea.selectedType

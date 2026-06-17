@@ -20,6 +20,7 @@ import QtQuick.Layouts
 import Pattounx 1.0
 import Catway 1.0
 import Meownopoly.Account 1.0
+import theme
 
 Item {
     id: root
@@ -47,25 +48,25 @@ Item {
         visible: !root.open
         width: badgeContent.implicitWidth + 20
         height: badgeContent.implicitHeight + 10
-        radius: 6
+        radius: Theme.radiusM
         color: PhysicsSession.active
                 ? (PhysicsSession.isHost ? "#1e3a5f" : "#3a5f1e")
-                : "#2a2a2e"
+                : Theme.surface
         border.color: PhysicsSession.active
-                ? (PhysicsSession.isHost ? "#3b82f6" : "#84cc16")
-                : "#71717a"
+                ? (PhysicsSession.isHost ? Theme.accent : Theme.success)
+                : Theme.borderLight
         border.width: 1
 
         Row {
             id: badgeContent
             anchors.centerIn: parent
-            spacing: 8
+            spacing: Theme.spacingM
             Rectangle {
                 width: 10; height: 10; radius: 5
                 anchors.verticalCenter: parent.verticalCenter
                 color: PhysicsSession.active
-                        ? (PhysicsSession.isHost ? "#3b82f6" : "#84cc16")
-                        : "#71717a"
+                        ? (PhysicsSession.isHost ? Theme.accent : Theme.success)
+                        : Theme.borderLight
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -74,8 +75,8 @@ Item {
                                 ? ("NET · HOST · " + PhysicsSession.snapshotsSent + "↑")
                                 : ("NET · CLIENT · " + PhysicsSession.snapshotsReceived + "↓"))
                         : "NET · OFF"
-                color: "#f4f4f5"
-                font.pixelSize: 12
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
         }
@@ -92,9 +93,9 @@ Item {
         visible: root.open
         width: 260
         height: contentColumn.implicitHeight + 24
-        radius: 8
-        color: "#1c1c20"
-        border.color: "#71717a"
+        radius: Theme.radiusL
+        color: Theme.background
+        border.color: Theme.borderLight
         border.width: 1
 
         // Button stylé sombre/lisible — évite que le style Material par défaut
@@ -102,21 +103,21 @@ Item {
         component PillBtn: Button {
             id: btn
             implicitHeight: 26
-            padding: 4
-            leftPadding: 8; rightPadding: 8
+            padding: Theme.spacingXS
+            leftPadding: Theme.spacingM; rightPadding: Theme.spacingM
             contentItem: Text {
                 text: btn.text
-                color: btn.enabled ? "#f4f4f5" : "#71717a"
-                font.pixelSize: 11
+                color: btn.enabled ? Theme.textPrimary : Theme.textDisabled
+                font.pixelSize: Theme.fontSizeSmall
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
             }
             background: Rectangle {
-                color: btn.pressed ? "#3f3f46" : (btn.hovered ? "#33333a" : "#2a2a2e")
-                radius: 4
-                border.color: "#52525b"
+                color: btn.pressed ? Theme.surfaceHover : (btn.hovered ? Theme.surfaceAlt : Theme.surface)
+                radius: Theme.radiusS
+                border.color: Theme.borderLight
                 border.width: 1
                 opacity: btn.enabled ? 1.0 : 0.5
             }
@@ -125,17 +126,17 @@ Item {
         ColumnLayout {
             id: contentColumn
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 8
+            anchors.margins: Theme.spacingXL
+            spacing: Theme.spacingM
 
             RowLayout {
                 Layout.fillWidth: true
                 Text {
                     Layout.fillWidth: true
                     text: "Physics Network (Phase 7)"
-                    color: "#f4f4f5"
+                    color: Theme.textPrimary
                     font.bold: true
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSizeBody
                 }
                 Button {
                     text: "×"
@@ -144,8 +145,8 @@ Item {
                     implicitHeight: 24
                     contentItem: Text {
                         text: parent.text
-                        color: "#a1a1aa"
-                        font.pixelSize: 16
+                        color: Theme.textHint
+                        font.pixelSize: Theme.fontSizeLarge
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -156,32 +157,32 @@ Item {
 
             Text {
                 text: "Mon playerId (auto)"
-                color: "#a1a1aa"; font.pixelSize: 10
+                color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption
             }
             TextField {
                 id: localIdField
                 Layout.fillWidth: true
                 placeholderText: "playerId local"
                 text: AccountManager ? AccountManager.uniqueId : ""
-                font.pixelSize: 11
-                color: "#f4f4f5"
-                background: Rectangle { color: "#0e0e13"; radius: 4; border.color: "#3f3f46"; border.width: 1 }
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.textPrimary
+                background: Rectangle { color: "#0e0e13"; radius: Theme.radiusS; border.color: Theme.border; border.width: 1 }
             }
 
             Text {
                 text: "playerId de l'hôte (si client)"
-                color: "#a1a1aa"; font.pixelSize: 10
+                color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption
             }
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: Theme.spacingXS
                 TextField {
                     id: hostIdField
                     Layout.fillWidth: true
                     placeholderText: "hostPlayerId"
-                    font.pixelSize: 11
-                    color: "#f4f4f5"
-                    background: Rectangle { color: "#0e0e13"; radius: 4; border.color: "#3f3f46"; border.width: 1 }
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.textPrimary
+                    background: Rectangle { color: "#0e0e13"; radius: Theme.radiusS; border.color: Theme.border; border.width: 1 }
                 }
                 PillBtn {
                     text: "↓"
@@ -197,7 +198,7 @@ Item {
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.spacingS
                 PillBtn {
                     Layout.fillWidth: true
                     text: "HOST"
@@ -228,7 +229,7 @@ Item {
 
             Text {
                 text: "Acteur revendiqué (client)"
-                color: "#a1a1aa"; font.pixelSize: 10
+                color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption
             }
             TextField {
                 id: claimField
@@ -236,9 +237,9 @@ Item {
                 placeholderText: "ex: player2 — vide = pas de filtre"
                 text: PhysicsSession.claimedActorId
                 onEditingFinished: PhysicsSession.claimedActorId = text
-                font.pixelSize: 11
-                color: "#f4f4f5"
-                background: Rectangle { color: "#0e0e13"; radius: 4; border.color: "#3f3f46"; border.width: 1 }
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.textPrimary
+                background: Rectangle { color: "#0e0e13"; radius: Theme.radiusS; border.color: Theme.border; border.width: 1 }
             }
 
             PillBtn {
@@ -255,25 +256,25 @@ Item {
             // Statut session
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 6
+                spacing: Theme.spacingS
                 Rectangle {
                     width: 10; height: 10; radius: 5
                     color: PhysicsSession.active
-                            ? (PhysicsSession.isHost ? "#3b82f6" : "#84cc16")
-                            : "#71717a"
+                            ? (PhysicsSession.isHost ? Theme.accent : Theme.success)
+                            : Theme.borderLight
                 }
                 Text {
                     Layout.fillWidth: true
                     text: PhysicsSession.active
                             ? (PhysicsSession.isHost ? "HOST" : "CLIENT")
                             : "Inactif"
-                    color: "#f4f4f5"
-                    font.pixelSize: 11
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 Text {
                     text: PhysicsSession.snapshotHz + " Hz"
-                    color: "#a1a1aa"
-                    font.pixelSize: 10
+                    color: Theme.textHint
+                    font.pixelSize: Theme.fontSizeCaption
                 }
             }
 
@@ -283,8 +284,8 @@ Item {
                         ? ("Snapshots envoyés : " + PhysicsSession.snapshotsSent)
                         : ("Snapshots reçus : " + PhysicsSession.snapshotsReceived
                            + "\nTick remote : " + (pattounxWorld ? pattounxWorld.currentGuiTick() : 0))
-                color: "#a1a1aa"
-                font.pixelSize: 10
+                color: Theme.textHint
+                font.pixelSize: Theme.fontSizeCaption
                 font.family: "monospace"
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap

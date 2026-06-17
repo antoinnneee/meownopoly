@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Item {
     id: root
@@ -24,15 +25,15 @@ Item {
     Rectangle {
         id: cellBackground
         anchors.fill: parent
-        radius: 8
+        radius: Theme.radiusL
         color: {
-            if (root.isSelected) return "#4CAF50"
+            if (root.isSelected) return Theme.success
             else if (mouseArea.containsMouse) return "#E8F5E8"
             else return "#F5F5F5"
         }
         border.color: {
-            if (root.isSelected) return "#2E7D32"
-            else if (mouseArea.containsMouse) return "#4CAF50"
+            if (root.isSelected) return Theme.pressed(Theme.success)
+            else if (mouseArea.containsMouse) return Theme.success
             else return "#E0E0E0"
         }
         border.width: 2
@@ -73,7 +74,7 @@ Item {
                     default: return "❓"
                 }
             }
-            font.pixelSize: 20
+            font.pixelSize: Theme.fontSizeHeading
         }
     }
     
@@ -83,11 +84,11 @@ Item {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 4
+        anchors.margins: Theme.spacingXS
         text: root.caseName
-        font.pixelSize: 10
+        font.pixelSize: Theme.fontSizeCaption
         font.bold: root.isSelected
-        color: root.isSelected ? "white" : "#333333"
+        color: root.isSelected ? Theme.textPrimary : "#333333"
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
         maximumLineCount: 2
@@ -99,18 +100,18 @@ Item {
         id: selectionIndicator
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.margins: 4
+        anchors.margins: Theme.spacingXS
         width: 16
         height: 16
         radius: 8
-        color: "#4CAF50"
+        color: Theme.success
         visible: root.isSelected
-        
+
         Text {
             anchors.centerIn: parent
             text: "✓"
-            color: "white"
-            font.pixelSize: 12
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeBody
             font.bold: true
         }
         

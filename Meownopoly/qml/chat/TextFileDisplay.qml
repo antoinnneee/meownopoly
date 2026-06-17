@@ -2,11 +2,12 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import theme
 
 Column {
     id: textFileDisplay
     width: parent.width
-    spacing: 4
+    spacing: Theme.spacingXS
 
     required property string text
     required property string fileExtension
@@ -65,21 +66,21 @@ Column {
     Rectangle {
         width: parent.width
         height: 30
-        color: "#667eea"
-        radius: 6
+        color: Theme.violetStart
+        radius: Theme.radiusM
 
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 10
-            anchors.rightMargin: 6
-            spacing: 8
+            anchors.leftMargin: Theme.spacingL
+            anchors.rightMargin: Theme.spacingS
+            spacing: Theme.spacingM
 
             // Icône + nom du fichier
             Text {
                 text: textFileDisplay.icon + " " + textFileDisplay.fileName
-                font.pointSize: 8
+                font.pixelSize: Theme.fontSizeSmall
                 font.bold: true
-                color: "white"
+                color: Theme.textPrimary
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
                 elide: Text.ElideMiddle
@@ -89,15 +90,15 @@ Column {
             Rectangle {
                 Layout.preferredWidth: 36
                 Layout.preferredHeight: 18
-                color: "#5568d3"
+                color: Theme.violetEnd
                 radius: 9
                 Layout.alignment: Qt.AlignVCenter
 
                 Text {
                     text: textFileDisplay.fileExtension.toUpperCase()
-                    font.pointSize: 6
+                    font.pixelSize: Theme.fontSizeTiny
                     font.bold: true
-                    color: "white"
+                    color: Theme.textPrimary
                     anchors.centerIn: parent
                 }
             }
@@ -106,14 +107,14 @@ Column {
             Rectangle {
                 Layout.preferredWidth: 20
                 Layout.preferredHeight: 20
-                color: copyArea.containsMouse ? "#5568d3" : "transparent"
-                radius: 3
+                color: copyArea.containsMouse ? Theme.violetEnd : "transparent"
+                radius: Theme.radiusXS
                 Layout.alignment: Qt.AlignVCenter
 
                 Text {
                     text: textFileDisplay.copyFeedback ? "✓" : "📋"
-                    font.pointSize: 9
-                    color: "white"
+                    font.pixelSize: Theme.fontSizeBody
+                    color: Theme.textPrimary
                     anchors.centerIn: parent
                 }
 
@@ -141,15 +142,15 @@ Column {
             Rectangle {
                 Layout.preferredWidth: 20
                 Layout.preferredHeight: 20
-                color: saveArea.containsMouse ? "#5568d3" : "transparent"
-                radius: 3
+                color: saveArea.containsMouse ? Theme.violetEnd : "transparent"
+                radius: Theme.radiusXS
                 Layout.alignment: Qt.AlignVCenter
                 visible: !!textFileDisplay.chatClient
 
                 Text {
                     text: "💾"
-                    font.pointSize: 9
-                    color: "white"
+                    font.pixelSize: Theme.fontSizeBody
+                    color: Theme.textPrimary
                     anchors.centerIn: parent
                 }
 
@@ -180,15 +181,15 @@ Column {
         width: parent.width
         height: fullScreenHeight == -1 ?  Math.min(contentText.contentHeight + 20, 300) :
                                          Math.min(contentText.contentHeight + 20, fullScreenHeight)
-        color: "#2a2a2a"
-        radius: 6
-        border.color: "#444444"
+        color: Theme.surface
+        radius: Theme.radiusM
+        border.color: Theme.border
         border.width: 1
 
         ScrollView {
             id: scrollView
             anchors.fill: parent
-            anchors.margins: 10
+            anchors.margins: Theme.spacingL
             clip: true
 
             ScrollBar.vertical.policy: ScrollBar.AsNeeded
@@ -201,9 +202,9 @@ Column {
                 wrapMode: Text.WordWrap
                 readOnly: true
                 selectByMouse: true
-                color: "#e0e0e0"
+                color: Theme.textSoft
                 font.family: "Consolas, Monaco, monospace"
-                font.pointSize: 8
+                font.pixelSize: Theme.fontSizeSmall
                 textFormat: textFileDisplay.fileExtension == "md" ? Text.MarkdownText : Text.AutoText
             }
         }

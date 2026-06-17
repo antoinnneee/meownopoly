@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
+import theme
 
 Item {
     id: root
@@ -181,12 +182,12 @@ Item {
     ColumnLayout {
         id: layout
         anchors.fill: parent
-        spacing: 6
+        spacing: Theme.spacingS
 
         // Mode toggle
         RowLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: Theme.spacingXS
 
             Repeater {
                 model: [
@@ -198,17 +199,17 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 26
                     readonly property bool isChecked: root.mode === modelData.value
-                    color: isChecked ? "#4a8a4a"
-                                     : (modeMouse.containsMouse ? "#3a3a3a" : "#2d2d2d")
-                    border.color: isChecked ? "#6bcf6d" : "#555"
+                    color: isChecked ? Theme.pressed(Theme.accentAlt)
+                                     : (modeMouse.containsMouse ? Theme.surfaceHover : Theme.surface)
+                    border.color: isChecked ? Theme.hover(Theme.accentAlt) : Theme.borderLight
                     border.width: 1
-                    radius: 3
+                    radius: Theme.radiusXS
 
                     Text {
                         anchors.centerIn: parent
                         text: modelData.label
-                        color: parent.isChecked ? "#ffffff" : "#cccccc"
-                        font.pixelSize: 12
+                        color: parent.isChecked ? "#ffffff" : Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeBody
                         font.bold: parent.isChecked
                     }
 
@@ -329,9 +330,9 @@ Item {
                     height: classicMode.squareSide
                     anchors.centerIn: parent
                     color: Qt.hsva(root._hue, 1, 1, 1)
-                    border.color: "#555"
+                    border.color: Theme.borderLight
                     border.width: 1
-                    radius: 2
+                    radius: Theme.radiusXS
                     clip: true
 
                     Rectangle {
@@ -470,8 +471,8 @@ Item {
                 y: pickerArea.circleY
                 width: 16
                 height: pickerArea.diameter
-                radius: 3
-                border.color: "#555"
+                radius: Theme.radiusXS
+                border.color: Theme.borderLight
                 border.width: 1
                 gradient: Gradient {
                     GradientStop { position: 0; color: Qt.hsva(root._hue, root._sat, 1, 1) }
@@ -503,14 +504,14 @@ Item {
         // Color preview + hex field + eyedropper
         RowLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: Theme.spacingS
 
             Rectangle {
                 Layout.preferredWidth: 28
                 Layout.preferredHeight: 28
-                radius: 3
+                radius: Theme.radiusXS
                 color: root.pickedColor
-                border.color: "#666"; border.width: 1
+                border.color: Theme.textDisabled; border.width: 1
             }
 
             // TODO: Eyedropper button disabled — grabToImage fails with
@@ -549,23 +550,23 @@ Item {
                 id: hexField
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
-                color: "#ffffff"
-                font.pixelSize: 13
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 font.family: "monospace"
                 font.bold: true
                 selectByMouse: true
                 placeholderText: "#rrggbb"
-                placeholderTextColor: "#666"
+                placeholderTextColor: Theme.textDisabled
                 text: root.pickedColor.toString().toUpperCase()
                 verticalAlignment: TextInput.AlignVCenter
                 topPadding: 0
                 bottomPadding: 0
-                leftPadding: 8
-                rightPadding: 8
+                leftPadding: Theme.spacingM
+                rightPadding: Theme.spacingM
                 background: Rectangle {
-                    color: "#2a2a2a"
-                    radius: 3
-                    border.color: hexField.activeFocus ? "#6bcf6d" : "#555"
+                    color: Theme.surface
+                    radius: Theme.radiusXS
+                    border.color: hexField.activeFocus ? Theme.hover(Theme.accentAlt) : Theme.borderLight
                     border.width: 1
                 }
                 onEditingFinished: commit()

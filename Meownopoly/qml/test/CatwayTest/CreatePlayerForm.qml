@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Catway 1.0
+import theme
 
 Rectangle {
     id: createPlayerFormRoot
@@ -47,28 +48,28 @@ Rectangle {
     ColumnLayout {
         id: createColumn
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 10
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingL
 
         Text {
             text: editingPlayer ? "Modifier le joueur" : "Créer un joueur"
             color: host.textPrimary
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSizeMedium
             font.bold: true
         }
 
         ColumnLayout {
-            spacing: 4
-            Text { text: "Player ID"; color: host.textSecondary; font.pixelSize: 11; font.capitalization: Font.AllUppercase }
+            spacing: Theme.spacingXS
+            Text { text: "Player ID"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.capitalization: Font.AllUppercase }
             TextField {
                 id: fieldPlayerId
                 placeholderText: "ex: player_1"
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 38
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: fieldPlayerId.activeFocus ? host.accent : host.cardBorder
                     border.width: fieldPlayerId.activeFocus ? 2 : 1
                 }
@@ -78,17 +79,17 @@ Rectangle {
         }
 
         ColumnLayout {
-            spacing: 4
-            Text { text: "Nickname"; color: host.textSecondary; font.pixelSize: 11; font.capitalization: Font.AllUppercase }
+            spacing: Theme.spacingXS
+            Text { text: "Nickname"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.capitalization: Font.AllUppercase }
             TextField {
                 id: fieldNickname
                 placeholderText: "ex: Minou"
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 38
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: fieldNickname.activeFocus ? host.accent : host.cardBorder
                     border.width: fieldNickname.activeFocus ? 2 : 1
                 }
@@ -98,17 +99,17 @@ Rectangle {
         }
 
         ColumnLayout {
-            spacing: 4
-            Text { text: "Socket"; color: host.textSecondary; font.pixelSize: 11; font.capitalization: Font.AllUppercase }
+            spacing: Theme.spacingXS
+            Text { text: "Socket"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.capitalization: Font.AllUppercase }
             RowLayout {
-                spacing: 8
+                spacing: Theme.spacingM
                 Button {
                     text: "Socket actuel"
                     implicitHeight: 36
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeBody
                     background: Rectangle {
-                        color: parent.pressed ? "#2d2d35" : "transparent"
-                        radius: 6
+                        color: parent.pressed ? Theme.surfaceAlt : "transparent"
+                        radius: Theme.radiusM
                         border.color: host.cardBorder
                         border.width: 1
                     }
@@ -125,7 +126,7 @@ Rectangle {
                 }
                 Text {
                     color: host.textSecondary
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                     text: host.selectedSocketInfo ? (host.selectedSocketInfo.publicAddress + ":" + host.selectedSocketInfo.publicPort) : "— non choisi —"
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
@@ -134,17 +135,17 @@ Rectangle {
         }
 
         ColumnLayout {
-            spacing: 4
-            Text { text: "Destination (IP)"; color: host.textSecondary; font.pixelSize: 11; font.capitalization: Font.AllUppercase }
+            spacing: Theme.spacingXS
+            Text { text: "Destination (IP)"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.capitalization: Font.AllUppercase }
             TextField {
                 id: fieldDestIp
                 placeholderText: "ex: 78.122.112.36"
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 38
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: fieldDestIp.activeFocus ? host.accent : host.cardBorder
                     border.width: fieldDestIp.activeFocus ? 2 : 1
                 }
@@ -154,19 +155,19 @@ Rectangle {
         }
 
         ColumnLayout {
-            spacing: 4
-            Text { text: "Destination (port)"; color: host.textSecondary; font.pixelSize: 11; font.capitalization: Font.AllUppercase }
+            spacing: Theme.spacingXS
+            Text { text: "Destination (port)"; color: host.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.capitalization: Font.AllUppercase }
             TextField {
                 id: fieldDestPort
                 placeholderText: "ex: 55413"
-                placeholderTextColor: "#71717a"
-                font.pixelSize: 13
+                placeholderTextColor: Theme.textMuted
+                font.pixelSize: Theme.fontSizeBody
                 implicitHeight: 38
                 inputMethodHints: Qt.ImhDigitsOnly
                 validator: IntValidator { bottom: 1; top: 65535 }
                 background: Rectangle {
-                    color: "#222226"
-                    radius: 6
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: fieldDestPort.activeFocus ? host.accent : host.cardBorder
                     border.width: fieldDestPort.activeFocus ? 2 : 1
                 }
@@ -176,17 +177,17 @@ Rectangle {
         }
 
         RowLayout {
-            spacing: 8
+            spacing: Theme.spacingM
             Layout.fillWidth: true
             visible: !!Catway.chatClient
             Button {
                 text: "Demander infos connexion"
                 implicitHeight: 36
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
                 enabled: !!(host.selectedSocketInfo || Catway.currentSocketInfo()) && fieldPlayerId.text.trim().length > 0
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#2d2d35" : "transparent") : "#1a1a1e"
-                    radius: 6
+                    color: parent.enabled ? (parent.pressed ? Theme.surfaceAlt : "transparent") : Theme.background
+                    radius: Theme.radiusM
                     border.color: host.cardBorder
                     border.width: 1
                 }
@@ -210,28 +211,28 @@ Rectangle {
             Text {
                 text: "Player ID requis + socket choisi."
                 color: host.textSecondary
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
             }
         }
 
         RowLayout {
-            spacing: 8
-            Layout.topMargin: 2
+            spacing: Theme.spacingM
+            Layout.topMargin: Theme.spacingXXS
             Button {
                 text: editingPlayer ? "Modifier le joueur" : "Ajouter le joueur"
                 implicitHeight: 40
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
                 Layout.fillWidth: true
                 background: Rectangle {
                     color: parent.pressed ? Qt.darker(host.accent, 1.2) : (parent.hovered ? host.accentHover : host.accent)
-                    radius: 8
+                    radius: Theme.radiusL
                 }
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -265,11 +266,11 @@ Rectangle {
             Button {
                 text: "Nouveau"
                 implicitHeight: 40
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontSizeBody
                 visible: !!editingPlayer
                 background: Rectangle {
-                    color: parent.pressed ? "#2d2d35" : "transparent"
-                    radius: 8
+                    color: parent.pressed ? Theme.surfaceAlt : "transparent"
+                    radius: Theme.radiusL
                     border.color: host.cardBorder
                     border.width: 1
                 }

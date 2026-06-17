@@ -9,7 +9,7 @@ Le système d'effets visuels de Meownopoly utilise le composant `MultiEffect` de
 ### Composants principaux
 
 1.  **SnapableDecoration** : L'élément visuel de base qui intègre le `MultiEffect` et gère le rendu des assets avec leurs effets et transformations.
-2.  **VisualEffectsPanel** : Le conteneur principal de l'interface utilisateur des effets, intégré dans le panneau de sélection d'assets.
+2.  **VisualEffectsPanel** : Le conteneur principal de l'interface utilisateur des effets, intégré dans le panneau latéral inférieur (`BottomSidePanel_Content`).
 3.  **Sections Modulaires** :
     - **VEP_ColorEffectsSection** : Contrôle de la luminosité, contraste, saturation et colorisation.
     - **VEP_AdvancedEffectsSection** : Gestion du flou et de l'ombre portée (plus coûteux en performance).
@@ -37,8 +37,8 @@ qml/
 
 ### Effets de couleur
 - **Luminosité** (`effectBrightness`) : -1.0 à 1.0
-- **Contraste** (`effectContrast`) : -1.0 à 2.0
-- **Saturation** (`effectSaturation`) : -1.0 à 2.0
+- **Contraste** (`effectContrast`) : -1.0 à 1.0
+- **Saturation** (`effectSaturation`) : -1.0 à 1.0
 - **Colorisation** (`effectColorization`) : 0.0 à 1.0
 - **Couleur de colorisation** (`effectColorizationColor`)
 
@@ -47,14 +47,14 @@ qml/
 - **Ombre** (`effectShadowEnabled`, `effectShadowBlur`) : Ombre portée avec contrôle de l'opacité et de l'offset.
 
 ### Transformations (Nouveau)
-- **Rotation** (`rotationAngle`) : Rotation libre sur l'axe Z (0 à 360°).
+- **Rotation** (`rotationAngle`) : Rotation libre sur l'axe Z (-180° à 180°).
 - **Miroir Horizontal** (`mirrorHorizontal`) : Symétrie par rapport à l'axe vertical.
 - **Miroir Vertical** (`mirrorVertical`) : Symétrie par rapport à l'axe horizontal.
 
 ## Optimisations de performance
 
 ### Activation conditionnelle
-Le `MultiEffect` n'est instancié que si au moins un effet est actif pour économiser les ressources GPU.
+Le `MultiEffect` est toujours instancié mais reste masqué (`visible: shouldCreateEffect`) tant qu'aucun effet n'est actif ; l'image source (`AnimatedImage`) est alors affichée à sa place (`visible: !hasActiveEffects`).
 
 ```qml
 // Propriété calculée dans SnapableDecoration.qml

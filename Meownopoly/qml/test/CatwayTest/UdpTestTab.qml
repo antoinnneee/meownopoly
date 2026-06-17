@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 Rectangle {
     id: udpTestRoot
@@ -12,7 +13,7 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        spacing: 12
+        spacing: Theme.spacingXL
 
         UdpPlayersPanel {
             Layout.preferredWidth: 280
@@ -36,7 +37,7 @@ Rectangle {
             ColumnLayout {
                 id: testTilesColumn
                 width: scrollView.availableWidth
-                spacing: 12
+                spacing: Theme.spacingXL
 
                 UdpChatTile {
                     host: udpTestRoot.host

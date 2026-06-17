@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Rectangle {
     id: root
@@ -24,26 +25,26 @@ Rectangle {
     width: 80
     height: 80
     color: {
-        if (isSelected) return "#4A90E2"
-        if (mouseArea.containsMouse) return "#555555"
-        return "#444444"
+        if (isSelected) return Theme.accent
+        if (mouseArea.containsMouse) return Theme.borderLight
+        return Theme.border
     }
-    border.color: isSelected ? "#6BB6FF" : "#666666"
+    border.color: isSelected ? Theme.hover(Theme.accent) : Theme.textDisabled
     border.width: isSelected ? 2 : 1
-    radius: 6
-    
+    radius: Theme.radiusM
+
     Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation { duration: Theme.durationNormal }
     }
-    
+
     Behavior on border.width {
-        NumberAnimation { duration: 150 }
+        NumberAnimation { duration: Theme.durationNormal }
     }
     
     // Main content
     Column {
         anchors.fill: parent
-        anchors.margins: 2
+        anchors.margins: Theme.spacingXXS
         spacing: -1
 
 
@@ -68,7 +69,7 @@ Rectangle {
                 // Loading placeholder
                 Rectangle {
                     anchors.fill: parent
-                    color: "#333333"
+                    color: Theme.surfaceAlt
                     visible: parent.status === Image.Loading
                     
                     BusyIndicator {
@@ -86,7 +87,7 @@ Rectangle {
                     anchors.right: parent.right
                     width: favoriteText.implicitWidth / 2
                     height: favoriteText.implicitHeight / 2
-                    radius: 8
+                    radius: Theme.radiusL
                     visible:true
                     color: "transparent"
                     
@@ -95,7 +96,7 @@ Rectangle {
                         anchors.centerIn: parent
                         color: '#ffc400'
                         text: root.isFavorite ? "★" : "☆"
-                        font.pointSize: 13
+                        font.pixelSize: Theme.fontSizeLarge
                     }
                 }
             }
@@ -106,8 +107,8 @@ Rectangle {
             width: parent.width
 
             text: root.assetId || root.assetFilename
-            color: "white"
-            font.pointSize: 8
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
             elide: Text.ElideMiddle
             horizontalAlignment: Text.AlignHCenter
@@ -143,12 +144,12 @@ Rectangle {
     Rectangle {
         anchors.fill: parent
         color: "transparent"
-        border.color: "#4A90E2"
+        border.color: Theme.accent
         border.width: mouseArea.containsMouse && !root.isSelected ? 1 : 0
-        radius: 6
-        
+        radius: Theme.radiusM
+
         Behavior on border.width {
-            NumberAnimation { duration: 150 }
+            NumberAnimation { duration: Theme.durationNormal }
         }
     }
     
@@ -156,9 +157,9 @@ Rectangle {
     Rectangle {
         anchors.fill: parent
         color: "transparent"
-        border.color: "#6BB6FF"
+        border.color: Theme.hover(Theme.accent)
         border.width: root.isSelected ? 3 : 0
-        radius: 6
+        radius: Theme.radiusM
         opacity: 0.8
         
         Behavior on border.width {
@@ -173,39 +174,39 @@ Rectangle {
         timeout: 3000
         
         contentItem: Column {
-            spacing: 4
-            
+            spacing: Theme.spacingXS
+
             Text {
                 text: "ID: " + root.assetId
-                color: "white"
-                font.pixelSize: 11
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeSmall
                 font.bold: true
             }
-            
+
             Text {
                 text: "File: " + root.assetFilename
-                color: "#CCCCCC"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
             }
-            
+
             Text {
                 text: "Size: " + root.assetWidth + "×" + root.assetHeight + " px"
-                color: "#CCCCCC"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
                 visible: root.assetWidth > 0 && root.assetHeight > 0
             }
-            
+
             Text {
                 text: "Ratio: " + root.assetRatioWidth + ":" + root.assetRatioHeight
-                color: "#CCCCCC"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
                 visible: root.assetRatioWidth !== 1 || root.assetRatioHeight !== 1
             }
 
             Text {
                 text: root.assetDescription
-                color: "#CCCCCC"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
                 font.italic: true
                 visible: root.assetDescription !== ""
                 wrapMode: Text.Wrap
@@ -215,9 +216,9 @@ Rectangle {
         
         background: Rectangle {
             color: "#E6000000"
-            border.color: "#666666"
+            border.color: Theme.textDisabled
             border.width: 1
-            radius: 4
+            radius: Theme.radiusS
         }
     }
 }

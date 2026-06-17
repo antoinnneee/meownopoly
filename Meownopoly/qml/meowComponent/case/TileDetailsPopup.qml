@@ -6,6 +6,7 @@ import Case
 import "./details"
 
 import AssetManager
+import theme
 
 Popup {
     id: root
@@ -22,31 +23,31 @@ Popup {
     property var familyColors: []
 
     contentItem: Rectangle {
-        color: "#ecf0f1"
+        color: Theme.surfaceLight
         border.color: "#bdc3c7"
         border.width: 1
-        radius: 8
+        radius: Theme.radiusL
 
         ColumnLayout {
             anchors {
                 fill: parent
-                margins: 10
+                margins: Theme.spacingL
             }
-            spacing: 10
+            spacing: Theme.spacingL
 
             // Title bar
             Rectangle {
                 Layout.fillWidth: true
                 height: 40
                 color: root.tileType === 1 && root.caseData != undefined && root.caseData.family ?
-                       root.familyColors[root.caseData.family] : "#34495e"
-                radius: 4
+                       root.familyColors[root.caseData.family] : Theme.hover(Theme.surfaceBoard)
+                radius: Theme.radiusS
 
                 Text {
                     anchors.centerIn: parent
                     text: root.tileName
                     color: "white"
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontSizeTitle
                     font.bold: true
                 }
             }
@@ -76,9 +77,9 @@ Popup {
             // Tile type
             Text {
                 text: "Type: " + root.getTileTypeName()
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
                 color: "#2c3e50"
-                Layout.bottomMargin: 10
+                Layout.bottomMargin: Theme.spacingL
             }
 
             // Specific tile details
@@ -110,12 +111,12 @@ Popup {
                 
                 background: Rectangle {
                     color: parent.pressed ? "#95a5a6" : "#7f8c8d"
-                    radius: 4
+                    radius: Theme.radiusS
                 }
-                
+
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: Theme.textPrimary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }

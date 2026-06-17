@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /*
  * Button stylé cohérent avec le reste de l'éditeur. Variante `accent`
@@ -11,16 +12,16 @@ Button {
 
     property bool accent: false
 
-    padding: 8
-    leftPadding: 12
-    rightPadding: 12
+    padding: Theme.spacingM
+    leftPadding: Theme.spacingXL
+    rightPadding: Theme.spacingXL
 
     contentItem: Text {
         text: control.text
         color: control.enabled
-                 ? (control.accent ? "#ffffff" : "#cccccc")
-                 : "#666666"
-        font.pixelSize: 12
+                 ? (control.accent ? Theme.textPrimary : Theme.textSecondary)
+                 : Theme.textDisabled
+        font.pixelSize: Theme.fontSizeBody
         font.bold: control.accent
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -28,14 +29,14 @@ Button {
     }
 
     background: Rectangle {
-        radius: 4
+        radius: Theme.radiusS
         color: {
-            if (!control.enabled) return "#1f1f1f"
-            if (control.pressed)  return control.accent ? "#3d6f3f" : "#1a1a1a"
-            if (control.hovered)  return control.accent ? "#5fa362" : "#3a3a3a"
-            return control.accent ? "#569c58" : "#2a2a2a"
+            if (!control.enabled) return Theme.pressed(Theme.surface)
+            if (control.pressed)  return control.accent ? Theme.pressed(Theme.accentAlt) : Theme.background
+            if (control.hovered)  return control.accent ? Theme.hover(Theme.accentAlt) : Theme.surfaceHover
+            return control.accent ? Theme.accentAlt : Theme.surface
         }
-        border.color: control.accent ? "#6fb872" : "#555555"
+        border.color: control.accent ? Theme.hover(Theme.accentAlt) : Theme.borderLight
         border.width: 1
 
         Behavior on color { ColorAnimation { duration: 120 } }

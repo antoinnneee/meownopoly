@@ -5,6 +5,7 @@
 #include <QSettings>
 
 #include "qmlapp.h"
+#include "automation/automation_server.h"
 
 #include <QQuickWindow>
 #include <QSGRendererInterface>
@@ -57,6 +58,14 @@ int main(int argc, char *argv[])
 
     QmlApp a;
     qInstallMessageHandler(0);
+
+    // Serveur d'automation/test embarqué (opt-in). Instancié uniquement si
+    // --automation-port <N> ou MEOW_AUTOMATION_PORT est fourni. Écoute sur
+    // 127.0.0.1 strictement. Convention de port pour le dual-instance :
+    // 7700 (instance 1) / 7701 (instance 2). Cf. doc/architecture/AUTOMATION_API.md.
+    // Créé après QmlApp (l'engine a chargé main.qml → la QQuickWindow existe).
+    AutomationServer *automation = AutomationServer::maybeCreate(app.arguments(), &app);
+    Q_UNUSED(automation);
 
     return app.exec();
 }

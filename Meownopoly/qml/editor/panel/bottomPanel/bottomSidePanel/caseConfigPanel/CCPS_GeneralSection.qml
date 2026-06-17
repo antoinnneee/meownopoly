@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import MapTypes
 import ui_item
+import theme
 
 
 CollapsableGroupBox  {
@@ -35,34 +36,23 @@ CollapsableGroupBox  {
         Layout.fillHeight: true
         Layout.fillWidth: true
         columns: 2
-        rowSpacing: 8
-        columnSpacing: 10
+        rowSpacing: Theme.spacingM
+        columnSpacing: Theme.spacingL
         
         Text {
             text: "Nom:"
-            color: "#cccccc"
-            font.pixelSize: 11
+            color: Theme.textSecondary
+            font.pixelSize: Theme.fontSizeSmall
             font.bold: true
         }
         
-        TextField {
+        MeowTextField {
             id: nameField
             Layout.fillWidth: true
             placeholderText: "Nom de la case"
-            
-            background: Rectangle {
-                color: "#2a2a2a"
-                radius: 3
-                border.color: nameField.activeFocus ? "#569c58" : "#555555"
-                border.width: 1
-                
-                Behavior on border.color { ColorAnimation { duration: 150 } }
-            }
-            
-            color: "#ffffff"
-            font.pixelSize: 11
-            padding: 6
-            
+            fieldColor: Theme.surface
+            borderColor: Theme.borderLight
+
             Component.onCompleted: {
                 if (targetCase) {
                     text = targetCase.name

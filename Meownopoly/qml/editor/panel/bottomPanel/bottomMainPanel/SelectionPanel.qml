@@ -11,6 +11,7 @@ import menuSelectionPanel
 
 import editor
 import zonePanel
+import theme
 
 Rectangle {
     id: root
@@ -126,7 +127,7 @@ Rectangle {
             anchors.centerIn: parent
             width: parent.width * 0.3
             height: 2
-            color: resizeMouseArea.containsMouse || root.isResizing ? "#4A90E2" : "#CCCCCC"
+            color: resizeMouseArea.containsMouse || root.isResizing ? Theme.accent : Theme.textSecondary
             radius: 1
         }
 
@@ -182,7 +183,7 @@ Rectangle {
         }
 
         // Animation de couleur au survol
-        Behavior on color { ColorAnimation { duration: 150 }}
+        Behavior on color { ColorAnimation { duration: Theme.durationNormal }}
     }
 
     color: "transparent"

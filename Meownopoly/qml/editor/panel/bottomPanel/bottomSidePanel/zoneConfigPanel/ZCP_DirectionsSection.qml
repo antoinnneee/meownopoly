@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
+import ui_item
 
 GroupBox {
     id: root
@@ -28,54 +30,51 @@ GroupBox {
     }
     
     background: Rectangle {
-        color: "#2a2a2a"
-        radius: 4
-        border.color: "#444444"
+        color: Theme.surface
+        radius: Theme.radiusS
+        border.color: Theme.border
         border.width: 1
     }
-    
+
     label: Text {
         text: root.title
-        color: "#cccccc"
-        font.pixelSize: 12
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeBody
         font.bold: true
-        leftPadding: 8
+        leftPadding: Theme.spacingM
     }
-    
+
     ColumnLayout {
         anchors.fill: parent
-        spacing: 16
-        
+        spacing: Theme.spacingXXL
+
         // Note explicative
-        Text {
-            text: qsTr("🧭 Configurez la direction de vélocité et les forces de friction/vélocité")
-            font.italic: true
-            font.pixelSize: 11
-            color: "#8a8a8a"
+        MeowInfoBox {
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
+            fontSize: Theme.fontSizeSmall
+            text: qsTr("🧭 Configurez la direction de vélocité et les forces de friction/vélocité")
         }
         
         RowLayout {
             Layout.fillWidth: true
-            spacing: 16
-            
+            spacing: Theme.spacingXXL
+
             // --- Direction Section ---
             ColumnLayout {
-                spacing: 4
+                spacing: Theme.spacingXS
                 Text {
                     text: qsTr("Direction")
-                    color: "#5cb85c"
-                    font.pixelSize: 11
+                    color: Theme.accentAlt
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                     Layout.alignment: Qt.AlignHCenter
                 }
-                
+
                 ZCP_VectorDirectionPicker {
                     id: velocityPicker
                     circleSize: 100
-                    arrowColor: "#5cb85c"
-                    highlightColor: "#7bd97f"
+                    arrowColor: Theme.accentAlt
+                    highlightColor: Theme.hover(Theme.accentAlt)
                     
                     directionX: 0
                     directionY: 0
@@ -89,80 +88,50 @@ GroupBox {
             // --- Strength Sliders Section ---
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 12
-                
+                spacing: Theme.spacingXL
+
                 // Velocity Strength
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 4
-                    
+                    spacing: Theme.spacingXS
+
                     Text {
                         text: qsTr("Force Vélocité")
-                        color: "#5cb85c"
-                        font.pixelSize: 11
+                        color: Theme.accentAlt
+                        font.pixelSize: Theme.fontSizeSmall
                         font.bold: true
                     }
-                    
+
                     RowLayout {
-                        spacing: 8
-                        Slider {
+                        spacing: Theme.spacingM
+                        MeowSlider {
                             id: velocityStrengthSlider
                             Layout.fillWidth: true
                             from: 0.0
                             to: 100.0
                             stepSize: 1.0
                             value: 0.0
-                            
-                            background: Rectangle {
-                                x: velocityStrengthSlider.leftPadding
-                                y: velocityStrengthSlider.topPadding + velocityStrengthSlider.availableHeight / 2 - height / 2
-                                width: velocityStrengthSlider.availableWidth
-                                height: 6
-                                radius: 3
-                                color: "#1a1a1a"
-                                
-                                Rectangle {
-                                    width: velocityStrengthSlider.visualPosition * parent.width
-                                    height: parent.height
-                                    radius: 3
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: "#4a9c4e" }
-                                        GradientStop { position: 1.0; color: "#6bc96f" }
-                                    }
-                                }
-                            }
-                            
-                            handle: Rectangle {
-                                x: velocityStrengthSlider.leftPadding + velocityStrengthSlider.visualPosition * (velocityStrengthSlider.availableWidth - width)
-                                y: velocityStrengthSlider.topPadding + velocityStrengthSlider.availableHeight / 2 - height / 2
-                                width: 16
-                                height: 16
-                                radius: 8
-                                color: velocityStrengthSlider.pressed ? "#7bd97f" : "#5cb85c"
-                                border.color: "#ffffff"
-                                border.width: 2
-                            }
-                            
+                            showValue: false   // champ éditable fourni ci-dessous
+
                             onMoved: {
                                 root.configurationChanged()
                             }
                         }
-                        
+
                         Rectangle {
                             Layout.preferredWidth: 50
                             Layout.preferredHeight: 22
-                            color: "#1a1a1a"
-                            radius: 4
-                            border.color: velocityField.activeFocus ? "#5cb85c" : "#444444"
+                            color: Theme.background
+                            radius: Theme.radiusS
+                            border.color: velocityField.activeFocus ? Theme.accentAlt : Theme.border
                             border.width: 1
                             
                             TextInput {
                                 id: velocityField
                                 anchors.fill: parent
                                 text: velocityStrengthSlider.value.toFixed(0)
-                                color: "#ffffff"
-                                font.pixelSize: 11
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeSmall
                                 font.bold: true
                                 verticalAlignment: TextInput.AlignVCenter
                                 horizontalAlignment: TextInput.AlignHCenter

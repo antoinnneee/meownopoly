@@ -6,15 +6,16 @@ import QtCore
 import Game
 import MapFileManager
 import MapTypes
+import theme
 
 Rectangle {
     id: escMenu
     width: (parent.width * 0.8 < Screen.pixelDensity * 180) ? parent.width * 0.8 : Screen.pixelDensity * 180
     height: (parent.height * 0.8 < Screen.pixelDensity * 150) ? parent.height * 0.8 : Screen.pixelDensity * 150
     anchors.centerIn: parent
-    color: "#2C2C2C"
-    radius: 10
-    border.color: "#4A90E2"
+    color: Theme.surface
+    radius: Theme.radiusXL
+    border.color: Theme.accent
     border.width: 2
     onVisibleChanged: isVisble(visible)
 
@@ -102,7 +103,7 @@ Rectangle {
         anchors.fill: parent
         color: "black"
         opacity: 0.3
-        radius: 10
+        radius: Theme.radiusXL
         z: 0  // Au-dessus des particules mais sous le contenu
     }
     
@@ -118,22 +119,22 @@ Rectangle {
     // Contenu principal
     Item {
         anchors.fill: parent
-        anchors.margins: 20
-        
+        anchors.margins: Theme.spacingHuge
+
         // Vue principale avec les options
         Item {
             id: mainView
             anchors.fill: parent
             visible: currentView === "main"
-            
+
             Column {
                 anchors.centerIn: parent
-                spacing: 20
-                
+                spacing: Theme.spacingHuge
+
                 Text {
                     text: "Menu d'échappement"
-                    color: "white"
-                    font.pixelSize: 24
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeDisplay
                     font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -146,16 +147,16 @@ Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     background: Rectangle {
-                        color: parent.pressed ? "#3A7BD5" : "#4A90E2"
-                        radius: 8
-                        border.color: "#2E5BBA"
+                        color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                        radius: Theme.radiusL
+                        border.color: Theme.pressed(Theme.accent)
                         border.width: 1
                     }
                     
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
-                        font.pixelSize: 16
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeLarge
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -175,16 +176,16 @@ Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     background: Rectangle {
-                        color: parent.pressed ? "#3A7BD5" : "#4A90E2"
-                        radius: 8
-                        border.color: "#2E5BBA"
+                        color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                        radius: Theme.radiusL
+                        border.color: Theme.pressed(Theme.accent)
                         border.width: 1
                     }
                     
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
-                        font.pixelSize: 16
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeLarge
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -204,16 +205,16 @@ Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     background: Rectangle {
-                        color: parent.pressed ? "#3A7BD5" : "#4A90E2"
-                        radius: 8
-                        border.color: "#2E5BBA"
+                        color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                        radius: Theme.radiusL
+                        border.color: Theme.pressed(Theme.accent)
                         border.width: 1
                     }
                     
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
-                        font.pixelSize: 16
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeLarge
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -232,16 +233,16 @@ Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     background: Rectangle {
-                        color: parent.pressed ? "#3A7BD5" : "#4A90E2"
-                        radius: 8
-                        border.color: "#2E5BBA"
+                        color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                        radius: Theme.radiusL
+                        border.color: Theme.pressed(Theme.accent)
                         border.width: 1
                     }
                     
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
-                        font.pixelSize: 16
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeLarge
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -260,16 +261,16 @@ Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
                     
                     background: Rectangle {
-                        color: parent.pressed ? "#666666" : "#888888"
-                        radius: 8
-                        border.color: "#555555"
+                        color: parent.pressed ? Theme.textDisabled : Theme.textMuted
+                        radius: Theme.radiusL
+                        border.color: Theme.borderLight
                         border.width: 1
                     }
                     
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
-                        font.pixelSize: 16
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeLarge
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -290,13 +291,13 @@ Rectangle {
             
             Column {
                 anchors.fill: parent
-                spacing: 15
+                spacing: Theme.spacingXXL
                 
                 // Header avec bouton retour
                 Row {
                     width: parent.width
                     height: 40
-                    spacing: 15
+                    spacing: Theme.spacingXXL
                     
                     Button {
                         width: 40
@@ -305,14 +306,14 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         
                         background: Rectangle {
-                            color: parent.pressed ? "#3A7BD5" : "#4A90E2"
-                            radius: 6
+                            color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                            radius: Theme.radiusM
                         }
                         
                         contentItem: Text {
                             text: parent.text
-                            color: "white"
-                            font.pixelSize: 18
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeTitle
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -325,8 +326,8 @@ Rectangle {
                     
                     Text {
                         text: "Charger une carte"
-                        color: "white"
-                        font.pixelSize: 20
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeHeading
                         font.bold: true
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -336,17 +337,17 @@ Rectangle {
                 Rectangle {
                     width: parent.width
                     height: parent.height - 60
-                    color: "#333333"
-                    radius: 8
-                    border.color: "#4A90E2"
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusL
+                    border.color: Theme.accent
                     border.width: 1
-                    
+
                     ListView {
                         id: mapsList
                         anchors.fill: parent
-                        anchors.margins: 10
+                        anchors.margins: Theme.spacingL
                         model: []
-                        spacing: 5
+                        spacing: Theme.spacingXS
                         clip: true
                         
                         ScrollBar.vertical: ScrollBar {
@@ -368,16 +369,16 @@ Rectangle {
                             height: 40
                             
                             background: Rectangle {
-                                color: "#444444"
-                                radius: 6
-                                border.color: "#4A90E2"
+                                color: Theme.border
+                                radius: Theme.radiusM
+                                border.color: Theme.accent
                                 border.width: 1
                             }
                             
                             contentItem: Text {
                                 text: modelData
-                                color: "white"
-                                font.pixelSize: 14
+                                color: Theme.textPrimary
+                                font.pixelSize: Theme.fontSizeMedium
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
@@ -430,13 +431,13 @@ Rectangle {
             
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 15
+                spacing: Theme.spacingXXL
                 
                 // Header avec bouton retour
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
-                    spacing: 15
+                    spacing: Theme.spacingXXL
                     
                     Button {
                         Layout.preferredWidth: 40
@@ -444,14 +445,14 @@ Rectangle {
                         text: "←"
                         
                         background: Rectangle {
-                            color: parent.pressed ? "#3A7BD5" : "#4A90E2"
-                            radius: 8
+                            color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                            radius: Theme.radiusL
                         }
                         
                         contentItem: Text {
                             text: parent.text
-                            color: "white"
-                            font.pixelSize: 18
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeTitle
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -464,8 +465,8 @@ Rectangle {
                     
                     Text {
                         text: "Paramètres"
-                        color: "white"
-                        font.pixelSize: 22
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeHeading
                         font.bold: true
                         Layout.fillWidth: true
                     }
@@ -475,50 +476,50 @@ Rectangle {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#1E1E1E"
-                    radius: 12
-                    border.color: "#333333"
+                    color: Theme.background
+                    radius: Theme.radiusXXL
+                    border.color: Theme.surfaceAlt
                     border.width: 1
                     
                     ScrollView {
                         anchors.fill: parent
-                        anchors.margins: 15
+                        anchors.margins: Theme.spacingXXL
                         contentWidth: availableWidth
                         clip: true
                         
                         ColumnLayout {
                             width: parent.width
-                            spacing: 15
+                            spacing: Theme.spacingXXL
                             
                             // --- SECTION ÉDITEUR ---
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: editorLayout.implicitHeight + 30
-                                color: "#252525"
-                                radius: 8
-                                border.color: "#3A3A3A"
+                                color: Theme.surface
+                                radius: Theme.radiusL
+                                border.color: Theme.surfaceHover
                                 border.width: 1
                                 
                                 ColumnLayout {
                                     id: editorLayout
                                     anchors.fill: parent
-                                    anchors.margins: 15
-                                    spacing: 15
+                                    anchors.margins: Theme.spacingXXL
+                                    spacing: Theme.spacingXXL
                                     
                                     Text {
                                         text: "Éditeur"
-                                        color: "#4A90E2"
-                                        font.pixelSize: 16
+                                        color: Theme.accent
+                                        font.pixelSize: Theme.fontSizeLarge
                                         font.bold: true
                                         Layout.fillWidth: true
                                     }
 
-                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#3A3A3A" }
+                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.surfaceHover }
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: 15
-                                        Text { text: "Afficher la sélection de carte au lancement"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        spacing: Theme.spacingXXL
+                                        Text { text: "Afficher la sélection de carte au lancement"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         Switch {
                                             id: launchSwitch
                                             checked: stBackGroundEditor.selectBackgroundAtStart
@@ -531,11 +532,11 @@ Rectangle {
                                                 x: parent.leftPadding
                                                 y: parent.height / 2 - height / 2
                                                 radius: 12
-                                                color: parent.checked ? "#4A90E2" : "#444444"
+                                                color: parent.checked ? Theme.accent : Theme.border
                                                 Rectangle {
                                                     x: parent.parent.checked ? parent.width - width - 2 : 2
-                                                    y: 2; width: 20; height: 20; radius: 10; color: "white"
-                                                    Behavior on x { NumberAnimation { duration: 150 } }
+                                                    y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight
+                                                    Behavior on x { NumberAnimation { duration: Theme.durationNormal } }
                                                 }
                                             }
                                         }
@@ -543,8 +544,8 @@ Rectangle {
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: 15
-                                        Text { text: "Mode de sauvegarde"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        spacing: Theme.spacingXXL
+                                        Text { text: "Mode de sauvegarde"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         ComboBox {
                                             id: autoSaveCombo
                                             Layout.preferredWidth: 220
@@ -558,30 +559,30 @@ Rectangle {
                                                 stEnableAutoSave.sync()
                                                 escMenu.indexSaveEvent(currentIndex + 1)
                                             }
-                                            background: Rectangle { color: "#333333"; radius: 6; border.color: autoSaveCombo.pressed ? "#4A90E2" : "#555555"; border.width: 1 }
-                                            contentItem: Text { text: parent.currentText; color: "white"; verticalAlignment: Text.AlignVCenter; leftPadding: 10; font.pixelSize: 14 }
+                                            background: Rectangle { color: Theme.surfaceAlt; radius: Theme.radiusM; border.color: autoSaveCombo.pressed ? Theme.accent : Theme.borderLight; border.width: 1 }
+                                            contentItem: Text { text: parent.currentText; color: Theme.textPrimary; verticalAlignment: Text.AlignVCenter; leftPadding: Theme.spacingL; font.pixelSize: Theme.fontSizeMedium }
                                         }
                                     }
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: 15
+                                        spacing: Theme.spacingXXL
                                         visible: autoSaveCombo.currentIndex === 1
-                                        Text { text: "Intervalle (minutes)"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Text { text: "Intervalle (minutes)"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         SpinBox {
                                             id: saveIntervalSpinBox
                                             Layout.preferredWidth: 120
                                             from: 1; to: 60
                                             value: parseInt(stEnableAutoSave.value("saveInterval", "1"))
                                             onValueChanged: { stEnableAutoSave.setValue("saveInterval", value); stEnableAutoSave.sync() }
-                                            background: Rectangle { color: "#333333"; radius: 6; border.color: "#555555"; border.width: 1 }
+                                            background: Rectangle { color: Theme.surfaceAlt; radius: Theme.radiusM; border.color: Theme.borderLight; border.width: 1 }
                                             contentItem: TextInput {
                                                 text: parent.textFromValue(parent.value, parent.locale)
-                                                font.pixelSize: 14; color: "white"
+                                                font.pixelSize: Theme.fontSizeMedium; color: Theme.textPrimary
                                                 horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; readOnly: true
                                             }
-                                            up.indicator: Rectangle { x: parent.width - width; height: parent.height; implicitWidth: 30; color: parent.up.pressed ? "#4A90E2" : "#404040"; radius: 6; Text { text: "+"; color: "white"; anchors.centerIn: parent } }
-                                            down.indicator: Rectangle { x: 0; height: parent.height; implicitWidth: 30; color: parent.down.pressed ? "#4A90E2" : "#404040"; radius: 6; Text { text: "-"; color: "white"; anchors.centerIn: parent } }
+                                            up.indicator: Rectangle { x: parent.width - width; height: parent.height; implicitWidth: 30; color: parent.up.pressed ? Theme.accent : Theme.border; radius: Theme.radiusM; Text { text: "+"; color: Theme.textPrimary; anchors.centerIn: parent } }
+                                            down.indicator: Rectangle { x: 0; height: parent.height; implicitWidth: 30; color: parent.down.pressed ? Theme.accent : Theme.border; radius: Theme.radiusM; Text { text: "-"; color: Theme.textPrimary; anchors.centerIn: parent } }
                                         }
                                     }
                                 }
@@ -591,30 +592,30 @@ Rectangle {
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: graphicsLayout.implicitHeight + 30
-                                color: "#252525"
-                                radius: 8
-                                border.color: "#3A3A3A"
+                                color: Theme.surface
+                                radius: Theme.radiusL
+                                border.color: Theme.surfaceHover
                                 border.width: 1
                                 
                                 ColumnLayout {
                                     id: graphicsLayout
                                     anchors.fill: parent
-                                    anchors.margins: 15
-                                    spacing: 15
+                                    anchors.margins: Theme.spacingXXL
+                                    spacing: Theme.spacingXXL
                                     
                                     Text {
                                         text: "Graphiques"
-                                        color: "#4A90E2"
-                                        font.pixelSize: 16
+                                        color: Theme.accent
+                                        font.pixelSize: Theme.fontSizeLarge
                                         font.bold: true
                                         Layout.fillWidth: true
                                     }
                                     
-                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#3A3A3A" }
+                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.surfaceHover }
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Résolution"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Text { text: "Résolution"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         ComboBox {
                                             id: resolutionCombo
                                             Layout.preferredWidth: 200; 
@@ -639,14 +640,14 @@ Rectangle {
                                                     Window.window.y = (Screen.desktopAvailableHeight - Window.window.height) / 2
                                                 }
                                             }
-                                            background: Rectangle { color: "#333333"; radius: 6; border.color: parent.pressed ? "#4A90E2" : "#555555"; border.width: 1 }
-                                            contentItem: Text { text: parent.currentText; color: "white"; verticalAlignment: Text.AlignVCenter; leftPadding: 10; font.pixelSize: 14 }
+                                            background: Rectangle { color: Theme.surfaceAlt; radius: Theme.radiusM; border.color: parent.pressed ? Theme.accent : Theme.borderLight; border.width: 1 }
+                                            contentItem: Text { text: parent.currentText; color: Theme.textPrimary; verticalAlignment: Text.AlignVCenter; leftPadding: Theme.spacingL; font.pixelSize: Theme.fontSizeMedium }
                                         }
                                     }
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Mode plein écran sans bordure"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Text { text: "Mode plein écran sans bordure"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         Switch {
                                             id: fullscreenSwitch; 
                                             checked: stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true
@@ -662,8 +663,8 @@ Rectangle {
                                                     }
                                                 }
                                             }
-                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? "#4A90E2" : "#444444"
-                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: "white"; Behavior on x { NumberAnimation { duration: 150 } } } }
+                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? Theme.accent : Theme.border
+                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight; Behavior on x { NumberAnimation { duration: Theme.durationNormal } } } }
                                         }
                                     }
                                 }
@@ -673,46 +674,46 @@ Rectangle {
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: audioLayout.implicitHeight + 30
-                                color: "#252525"
-                                radius: 8
-                                border.color: "#3A3A3A"
+                                color: Theme.surface
+                                radius: Theme.radiusL
+                                border.color: Theme.surfaceHover
                                 border.width: 1
                                 
                                 ColumnLayout {
                                     id: audioLayout
                                     anchors.fill: parent
-                                    anchors.margins: 15
-                                    spacing: 15
+                                    anchors.margins: Theme.spacingXXL
+                                    spacing: Theme.spacingXXL
                                     
                                     Text {
                                         text: "Audio"
-                                        color: "#4A90E2"
-                                        font.pixelSize: 16
+                                        color: Theme.accent
+                                        font.pixelSize: Theme.fontSizeLarge
                                         font.bold: true
                                         Layout.fillWidth: true
                                     }
                                     
-                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#3A3A3A" }
+                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.surfaceHover }
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Volume général"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Text { text: "Volume général"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         Slider {
                                             id: volumeSlider
                                             Layout.preferredWidth: 200; from: 0; to: 100; value: 50
-                                            background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: "#444444"; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: "#4A90E2"; radius: 2 } }
-                                            handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? "#f0f0f0" : "white"; border.color: "#4A90E2"; border.width: 1 }
+                                            background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: Theme.border; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: Theme.accent; radius: 2 } }
+                                            handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? Theme.pressed(Theme.surfaceLight) : Theme.surfaceLight; border.color: Theme.accent; border.width: 1 }
                                         }
-                                        Text { text: Math.round(volumeSlider.value) + "%"; color: "#E0E0E0"; font.pixelSize: 14; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
+                                        Text { text: Math.round(volumeSlider.value) + "%"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
                                     }
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Activer la musique"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Text { text: "Activer la musique"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         Switch {
                                             id: musicSwitch; checked: true
-                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? "#4A90E2" : "#444444"
-                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: "white"; Behavior on x { NumberAnimation { duration: 150 } } } }
+                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? Theme.accent : Theme.border
+                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight; Behavior on x { NumberAnimation { duration: Theme.durationNormal } } } }
                                         }
                                     }
                                 }
@@ -722,30 +723,30 @@ Rectangle {
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: controlsLayout.implicitHeight + 30
-                                color: "#252525"
-                                radius: 8
-                                border.color: "#3A3A3A"
+                                color: Theme.surface
+                                radius: Theme.radiusL
+                                border.color: Theme.surfaceHover
                                 border.width: 1
                                 
                                 ColumnLayout {
                                     id: controlsLayout
                                     anchors.fill: parent
-                                    anchors.margins: 15
-                                    spacing: 15
+                                    anchors.margins: Theme.spacingXXL
+                                    spacing: Theme.spacingXXL
                                     
                                     Text {
                                         text: "Contrôles"
-                                        color: "#4A90E2"
-                                        font.pixelSize: 16
+                                        color: Theme.accent
+                                        font.pixelSize: Theme.fontSizeLarge
                                         font.bold: true
                                         Layout.fillWidth: true
                                     }
                                     
-                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#3A3A3A" }
+                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.surfaceHover }
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Sensibilité de la souris"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Text { text: "Sensibilité de la souris"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         Slider {
                                             id: sensitivitySlider
                                             Layout.preferredWidth: 200; from: 0.8; to: 4.0; 
@@ -754,15 +755,15 @@ Rectangle {
                                                 stControlsConfig.setValue("mouseSensitivity", value)
                                                 stControlsConfig.sync()
                                             }
-                                            background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: "#444444"; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: "#4A90E2"; radius: 2 } }
-                                            handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? "#f0f0f0" : "white"; border.color: "#4A90E2"; border.width: 1 }
+                                            background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: Theme.border; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: Theme.accent; radius: 2 } }
+                                            handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? Theme.pressed(Theme.surfaceLight) : Theme.surfaceLight; border.color: Theme.accent; border.width: 1 }
                                         }
-                                        Text { text: (Math.round(sensitivitySlider.value * 100) / 100).toFixed(2); color: "#E0E0E0"; font.pixelSize: 14; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
+                                        Text { text: (Math.round(sensitivitySlider.value * 100) / 100).toFixed(2); color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
                                     }
                                     
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Inverser l'axe Y"; color: "#E0E0E0"; font.pixelSize: 14; Layout.fillWidth: true }
+                                        Text { text: "Inverser l'axe Y"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
                                         Switch {
                                             id: invertMouseSwitch; 
                                             checked: stControlsConfig.value("invertMouseY", false) === "true" || stControlsConfig.value("invertMouseY", false) === true
@@ -770,8 +771,8 @@ Rectangle {
                                                 stControlsConfig.setValue("invertMouseY", checked)
                                                 stControlsConfig.sync()
                                             }
-                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? "#4A90E2" : "#444444"
-                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: "white"; Behavior on x { NumberAnimation { duration: 150 } } } }
+                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? Theme.accent : Theme.border
+                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight; Behavior on x { NumberAnimation { duration: Theme.durationNormal } } } }
                                         }
                                     }
                                 }
@@ -789,13 +790,13 @@ Rectangle {
             
             Column {
                 anchors.fill: parent
-                spacing: 15
+                spacing: Theme.spacingXXL
                 
                 // Header avec bouton retour
                 Row {
                     width: parent.width
                     height: 40
-                    spacing: 15
+                    spacing: Theme.spacingXXL
                     
                     Button {
                         width: 40
@@ -804,14 +805,14 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         
                         background: Rectangle {
-                            color: parent.pressed ? "#3A7BD5" : "#4A90E2"
-                            radius: 6
+                            color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
+                            radius: Theme.radiusM
                         }
                         
                         contentItem: Text {
                             text: parent.text
-                            color: "white"
-                            font.pixelSize: 18
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeTitle
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -824,8 +825,8 @@ Rectangle {
                     
                     Text {
                         text: "À propos"
-                        color: "white"
-                        font.pixelSize: 20
+                        color: Theme.textPrimary
+                        font.pixelSize: Theme.fontSizeHeading
                         font.bold: true
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -835,19 +836,19 @@ Rectangle {
                 Rectangle {
                     width: parent.width
                     height: parent.height - 60
-                    color: "#333333"
-                    radius: 8
-                    border.color: "#4A90E2"
+                    color: Theme.surfaceAlt
+                    radius: Theme.radiusL
+                    border.color: Theme.accent
                     border.width: 1
-                    
+
                     ScrollView {
                         anchors.fill: parent
-                        anchors.margins: 15
+                        anchors.margins: Theme.spacingXXL
                         
                         Text {
                             width: parent.width
-                            color: "white"
-                            font.pixelSize: 14
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeMedium
                             wrapMode: Text.WordWrap
                             text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 

@@ -96,7 +96,7 @@ void ChatClient::createSession(QString nameSession, QString pwdSession, QString 
     m_passwordHash = ChatCrypto::derivePasswordProof(m_sessionId, m_password);
 
     if (!m_connected) {
-        emit errorOccurred("Non connect� au serveur");
+        emit errorOccurred("Non connecté au serveur");
         return;
     }
 
@@ -193,8 +193,8 @@ void ChatClient::connectToSession(const QString &playerId, const QString &passwo
 
 void ChatClient::joinSession(){
 
-    if (m_sessionId.isEmpty()) {Logger::instance()->warn("Session ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de session ne peut pas �tre vide");return;}
-    if (m_playerId.isEmpty()) {Logger::instance()->warn("Player ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de joueur ne peut pas �tre vide");return;}
+    if (m_sessionId.isEmpty()) {Logger::instance()->warn("Session ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de session ne peut pas être vide");return;}
+    if (m_playerId.isEmpty()) {Logger::instance()->warn("Player ID cannot be empty", "ChatClient");emit errorOccurred("L'ID de joueur ne peut pas être vide");return;}
 
     Logger::instance()->info(QString("Preparing session %4 for player: %2_%1, %3").arg(m_playerId).arg(m_nickname).arg(m_password).arg(m_sessionId), "ChatClient");
 
@@ -317,7 +317,7 @@ void ChatClient::kickPlayer(const QString &targetPlayerId) {
     kick["payload"] = p;
 
     sendWebSocketMessage(kick);
-    // Demander la liste � jour apr�s exclusion d'un participant
+    // Demander la liste à jour après exclusion d'un participant
     requestParticipants();
 }
 

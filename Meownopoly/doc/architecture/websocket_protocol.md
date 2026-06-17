@@ -32,7 +32,7 @@ La création est désormais une opération distincte du rejoindre. Elle suit les
 ## Processus de Rejoindre une Session Existante
 
 1. **Connexion WebSocket** : Le client ouvre une connexion TCP vers le serveur.
-2. **Requête `JOIN_SESSION`** : Le client envoie ses identifiants (`player_id`, `nickname`) et la preuve du mot de passe (`password_hash`).
+2. **Requête `JOIN_SESSION`** : Le client envoie ses identifiants (`player_id`, `player_nickname`) et la preuve du mot de passe (`password_hash`).
 3. **Vérification Serveur** :
    - **Session inexistante** : Le serveur renvoie une erreur `SESSION_NOT_FOUND`. La session doit être créée explicitement via `CREATE_SESSION`.
    - **Mot de passe invalide** : Le serveur renvoie une erreur `INVALID_PASSWORD`.
@@ -113,12 +113,29 @@ Expulse un joueur (réservé à l'hôte).
 Demande la liste de toutes les sessions actives sur le serveur.
 
 ### `DELETE_SESSION`
-Supprime complètement une session (réservé aux participants).
+Supprime complètement une session (réservé à l'hôte). Renvoie `ERROR`/`FORBIDDEN` (`"Only the host can delete the session"`) aux non-hôtes.
 - `session_id` (string) : Identifiant de la session.
 
 ### `CLEAR_HISTORY`
-Efface tous les messages d'une session.
+Efface tous les messages d'une session (réservé à l'hôte). Renvoie `ERROR`/`FORBIDDEN` (`"Only the host can clear the session history"`) aux non-hôtes.
 - `session_id` (string) : Identifiant de la session.
+
+### `RENAME_SESSION`
+Renomme une session existante (requiert seulement d'avoir rejoint la session — **pas** réservé à l'hôte côté serveur). Diffuse un `SESSION_RENAMED` aux participants.
+- `session_id` (string) : Identifiant de la session.
+- `session_name` (string) : Nouveau nom lisible de la session.
+
+### `TRANSFER_HOST`
+Transfère explicitement l'hôte d'une session (utilisé par la migration P2P Phase 8 de l'éditeur collaboratif). Met à jour `sessions.host_player_id` et diffuse un `HOST_CHANGED`.
+- `session_id` (string) : Identifiant de la session.
+- `new_host_id` (string) : Identifiant du joueur qui devient le nouvel hôte.
+
+### `GET_SESSION_LIST`
+Alias de `LIST_SESSIONS` (même traitement serveur, même réponse `SESSIONS_LIST`).
+
+### `CLEAR_ALL_SESSIONS`
+Commande d'administration : purge **toutes** les sessions du serveur. Nécessite un jeton d'administration.
+- `admin_token` (string) : Jeton d'administration (champ `payload.admin_token`). Si aucun `ADMIN_TOKEN` n'est configuré côté serveur, la commande est refusée d'office (fail-closed) avec `ERROR`/`FORBIDDEN`.
 
 ---
 
@@ -135,7 +152,7 @@ Confirmation de création de session, envoyée après un `CREATE_SESSION` réuss
 ### `INIT_SESSION`
 Envoyée après un `JOIN_SESSION` réussi.
 - `current_version` (int) : Version actuelle de la clé.
-- `keys` (array) : Liste des clés de session (`version`, `key_package`, `nonce`). (uniquement dernière clé)
+- `keys` (array) : Liste des clés de session (`version`, `key_package`, `key_nonce`). (uniquement dernière clé) Un champ `password_hash` figure aussi dans la ligne brute renvoyée par la base, ignoré par le client.
 - `history` (array) : Historique des messages chiffrés.
 - `new_joiner` (bool) : `true` si le joueur vient de s'inscrire pour la première fois dans cette session.
 
@@ -175,7 +192,7 @@ Réponse à `LIST_SESSIONS`.
 - `sessions` (array) : Liste des sessions. Chaque entrée contient :
   - `session_id` (string)
   - `session_name` (string) : Nom lisible de la session.
-  - `host_id` (string) : ID du premier participant (hôte).
+  - `host_id` (string) : ID de l'hôte explicite (`sessions.host_player_id`) s'il est défini (après `TRANSFER_HOST`), sinon le premier participant (fallback legacy).
   - `host_nickname` (string) : Pseudonyme de l'hôte.
   - `player_count` (int) : Nombre de participants enregistrés.
   - `max_players` (int) : Capacité maximale.
@@ -198,6 +215,38 @@ Diffusé quand un joueur quitte ou est expulsé.
 - `session_id` (string)
 - `player_id` (string)
 
+### `HISTORY_RESULT`
+Réponse à `GET_HISTORY`.
+- `history` (array) : Liste des messages chiffrés.
+
+### `LEFT_SESSION`
+Réponse à `LEAVE_SESSION`, confirmant le retrait du joueur.
+- `session_id` (string) : Identifiant de la session quittée.
+
+### `KICKED`
+Envoyé au joueur expulsé pour l'informer de son éviction.
+- `session_id` (string) : Identifiant de la session.
+- `reason` (string) : Motif de l'expulsion.
+
+### `SESSION_DELETED`
+Diffusé globalement lorsqu'une session est purgée.
+- `session_id` (string) : Identifiant de la session supprimée.
+
+### `SESSION_CREATED_BROADCAST`
+Notifie les autres clients de l'apparition d'une nouvelle session (pour rafraîchir la liste).
+- `session_id` (string) : Identifiant de la nouvelle session.
+- `session_name` (string) : Nom lisible de la session.
+
+### `SESSION_RENAMED`
+Diffusé après un `RENAME_SESSION` réussi.
+- `session_id` (string) : Identifiant de la session.
+- `session_name` (string) : Nouveau nom de la session.
+
+### `HOST_CHANGED`
+Diffusé après un `TRANSFER_HOST` réussi (migration P2P Phase 8).
+- `session_id` (string) : Identifiant de la session.
+- `host_player_id` (string) : Identifiant du nouvel hôte.
+
 ### `ERROR`
 Envoyé en cas d'échec d'une opération.
 - `code` (string) : Code d'erreur. Codes possibles :
@@ -212,6 +261,18 @@ Envoyé en cas d'échec d'une opération.
 | `MAX_SESSIONS_REACHED` | Limite serveur atteinte | `emit errorOccurred` |
 | `MISSING_PARAMETER` | Paramètre obligatoire absent | `emit errorOccurred` |
 | `PAYLOAD_TOO_LARGE` | Message dépassant la limite (10 MB) | `emit errorOccurred` |
+| `FORBIDDEN` | Action réservée à l'hôte/admin refusée (KICK, DELETE_SESSION, CLEAR_HISTORY, TRANSFER_HOST, CLEAR_ALL_SESSIONS, LEAVE_SESSION d'un autre joueur) | `emit errorOccurred` |
+| `NOT_PARTICIPANT` | Cible d'un `TRANSFER_HOST` qui n'est pas participante de la session | `emit errorOccurred` |
+| `RENAME_FAILED` | Échec d'un `RENAME_SESSION` | `emit errorOccurred` |
+| `TRANSFER_FAILED` | Échec d'un `TRANSFER_HOST` | `emit errorOccurred` |
+| `INVALID_OPERATION` | Opération invalide (ex. KICK de soi-même) | `emit errorOccurred` |
+| `RATE_LIMITED` | Trop de messages/commandes en peu de temps | `emit errorOccurred` |
+| `PLAYER_ID_IN_USE` | `player_id` déjà connecté pour cette session | `emit errorOccurred` |
+| `INVALID_FORMAT` | Trame mal formée (JSON invalide / champs manquants) | `emit errorOccurred` |
+| `UNKNOWN_COMMAND` | Type de commande non reconnu | `emit errorOccurred` |
+| `INTERNAL_ERROR` | Erreur serveur inattendue | `emit errorOccurred` |
+
+Cette liste n'est pas nécessairement exhaustive ; la référence faisant foi reste `chatServer/server.js`.
 
 - `message` (string) : Description explicative.
 
@@ -236,6 +297,9 @@ Le serveur (`chatServer/server.js`) et la base de données (`chatServer/database
 | `key_nonce`     | TEXT      | Nonce utilisé pour le chiffrement du blob. |
 | `version`       | INTEGER   | Version courante de la clé (incrémentée à chaque rotation). |
 | `created_at`    | TIMESTAMP | Date de création de la session. |
+| `max_players`     | INTEGER   | Capacité maximale de la session (défaut 4). |
+| `is_public`       | INTEGER   | Visibilité dans la liste publique (défaut 1). |
+| `host_player_id`  | TEXT      | Hôte explicite (migration P2P Phase 8, mis à jour par `TRANSFER_HOST`) ; `isHost`/`getHost` retombent sur `MIN(joined_at)` quand `NULL`. |
 
 **Table `participants`**
 | Champ        | Type      | Description |
@@ -271,7 +335,7 @@ L'ordre d'insertion définit l'**hôte** : le premier participant (`ORDER BY joi
 `db.getSessionKeys(session_id)` retourne une liste (en pratique une seule entrée) d'objets avec :
 - `version` : version de la clé
 - `key_package` : blob chiffré (envoyé tel quel dans les trames)
-- `key_nonce` : nonce (envoyé sous le champ `nonce` dans INIT_SESSION / KEY_UPDATE)
+- `key_nonce` : nonce, envoyé tel quel sous le champ `key_nonce` dans le tableau `keys` de `INIT_SESSION`, et renommé en `nonce` dans `KEY_UPDATE`
 
 Les entrées avec `key_package === null` sont filtrées avant envoi au client (session sans clé encore publiée).
 

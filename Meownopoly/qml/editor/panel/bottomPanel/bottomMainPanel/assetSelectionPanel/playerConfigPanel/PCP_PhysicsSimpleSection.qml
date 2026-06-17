@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Game
 import EditorOpBus
+import theme
+import ui_item
 
 /*
  * Section "Simple" : 3 sliders Taille / Poids / Vitesse.
@@ -34,7 +36,7 @@ ColumnLayout {
 
         Label {
             text: lblSlider.label
-            color: "#cccccc"
+            color: Theme.textSecondary
             font.pixelSize: Math.round(Screen.pixelDensity * 3)
             Layout.preferredWidth: Screen.pixelDensity * 25
         }
@@ -45,8 +47,8 @@ ColumnLayout {
             Layout.preferredWidth: Screen.pixelDensity * 4
             Layout.preferredHeight: Screen.pixelDensity * 4
             radius: width / 2
-            color: helpHover.hovered ? "#4A90E2" : "#3a3a3a"
-            border.color: helpHover.hovered ? "#7ab4ee" : "#555555"
+            color: helpHover.hovered ? Theme.accent : Theme.surfaceHover
+            border.color: helpHover.hovered ? Theme.hover(Theme.accent) : Theme.borderLight
             border.width: 1
             Behavior on color { ColorAnimation { duration: 120 } }
             Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -54,7 +56,7 @@ ColumnLayout {
             Label {
                 anchors.centerIn: parent
                 text: "?"
-                color: "#ffffff"
+                color: Theme.textPrimary
                 font.pixelSize: Math.round(Screen.pixelDensity * 2.6)
                 font.bold: true
             }
@@ -66,23 +68,17 @@ ColumnLayout {
             ToolTip.text: lblSlider.tooltip
             ToolTip.delay: 200
         }
-        Slider {
+        MeowSlider {
             id: slider
             Layout.fillWidth: true
+            showValue: false   // label + valeur fournis par LabelledSlider
             from: lblSlider.minValue
             to: lblSlider.maxValue
             stepSize: lblSlider.step
             value: lblSlider.value
             snapMode: Slider.SnapAlways
-            property bool _wasPressed: false
-            onPressedChanged: {
-                if (pressed && !_wasPressed) {
-                    lblSlider._beforeJson = root.mapInfo ? root.mapInfo.toJSON() : ""
-                } else if (!pressed && _wasPressed) {
-                    root._commit(lblSlider._beforeJson, lblSlider.fieldName, value)
-                }
-                _wasPressed = pressed
-            }
+            onGestureBegan: lblSlider._beforeJson = root.mapInfo ? root.mapInfo.toJSON() : ""
+            onGestureCommitted: root._commit(lblSlider._beforeJson, lblSlider.fieldName, value)
         }
         Label {
             text: slider.value.toFixed(lblSlider.step < 1 ? 2 : 0)

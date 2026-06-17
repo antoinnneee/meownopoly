@@ -1,0 +1,922 @@
+{
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\main.cpp": {
+    "mtime": 1776550979.4008956,
+    "hash": "b049f8636b6f1d2ecd838409819ced62"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\qmlapp.cpp": {
+    "mtime": 1778197325.6140788,
+    "hash": "ce9d7dcc2a791b14c2c245f253d314e1"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\qmlapp.h": {
+    "mtime": 1777403049.760152,
+    "hash": "89356cb3a0c4741a1656984533149118"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\account\\account_manager.cpp": {
+    "mtime": 1773252924.0921004,
+    "hash": "8f825218b7148979a44293d0ccf493ef"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\account\\account_manager.h": {
+    "mtime": 1773252924.098456,
+    "hash": "e9b9857f73f914af39961c00dbd9cac5"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\assetManager\\asset_manager.cpp": {
+    "mtime": 1777460412.4724817,
+    "hash": "6bc8d9bd5a7bdd9d0ef329354cf2b322"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\assetManager\\asset_manager.h": {
+    "mtime": 1777460412.473498,
+    "hash": "3b20b690f5badf1eaa482f7fcfc3b7eb"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_client.cpp": {
+    "mtime": 1777403049.7397034,
+    "hash": "d277233dad4d698b7bf00ee395cc2e96"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_client.h": {
+    "mtime": 1776668786.1235743,
+    "hash": "15fb8f7b5185516e65e943d29dfd82a3"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_client_command.cpp": {
+    "mtime": 1775849236.1403034,
+    "hash": "25e02cfd3e80c80697503b533d8961a0"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_client_handler.cpp": {
+    "mtime": 1777403049.740718,
+    "hash": "8f394a907a4976ad88f1e2e2d455e116"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_client_message.cpp": {
+    "mtime": 1775849236.1413202,
+    "hash": "15d994ac49aa52cf9693155b3024abf8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_command_helper.cpp": {
+    "mtime": 1773252924.1495748,
+    "hash": "342a3853f660acdec409bb6aa72f679e"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_command_helper.h": {
+    "mtime": 1773252924.1550846,
+    "hash": "da49b0d2f02854d682b2d24cf3b51c94"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_crypto.cpp": {
+    "mtime": 1773252924.1614306,
+    "hash": "da5e5a9aa41f41fc1a22d9fcb26253a4"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_crypto.h": {
+    "mtime": 1773252924.1673472,
+    "hash": "0004d4f7850f3a010621b605e4925f4e"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_database.cpp": {
+    "mtime": 1773252924.1729507,
+    "hash": "bcef7f6e4adc6cf2b7968449fc427d62"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_database.h": {
+    "mtime": 1773252924.1784365,
+    "hash": "e0da8928bc4951c27e940e93cad435fc"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_image_provider.cpp": {
+    "mtime": 1773252924.1837606,
+    "hash": "f7960a8c62b926d5ca1349f71e973806"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_image_provider.h": {
+    "mtime": 1773252924.191346,
+    "hash": "355a3eaaababfeb95a418d187e645164"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_session_manager.cpp": {
+    "mtime": 1776550979.3758357,
+    "hash": "3f6f4d3044005dfa574f33fb8160e7bd"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_session_manager.h": {
+    "mtime": 1776550979.3758357,
+    "hash": "839ef5c5b8c54586fa11a64439cb3534"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_slash_commands.cpp": {
+    "mtime": 1775849236.1423326,
+    "hash": "5c87b24fe7dadd4c1a7798ec8fff8cb3"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_slash_commands.h": {
+    "mtime": 1773252924.2050953,
+    "hash": "0bd3b8389da95ec07c1c27940c46c081"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_worker.cpp": {
+    "mtime": 1777403049.7417326,
+    "hash": "2ba6504e06d6355b6c82630d5272df0d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\chat\\chat_worker.h": {
+    "mtime": 1776668786.1256502,
+    "hash": "393a3b1974cabc36cb0217cd8c5b7d71"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\catway.cpp": {
+    "mtime": 1776553954.093728,
+    "hash": "bea28ed779a66a011089d366340520a3"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\catway.h": {
+    "mtime": 1776602377.0153897,
+    "hash": "b4f1cbc8fcf294ab099fde2fad3ea82e"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\catway_holepunch.cpp": {
+    "mtime": 1775849236.144358,
+    "hash": "5463f196a3ccbff0c608b2409e1f43bb"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\catway_player.cpp": {
+    "mtime": 1776602377.0164063,
+    "hash": "15327345597ae7d51a9fd395c8fc1c96"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\catway_stun.cpp": {
+    "mtime": 1775849236.1463802,
+    "hash": "08c6048e1232c0f78af87f9ba4e86a1a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\catway_worker.cpp": {
+    "mtime": 1776602377.0174513,
+    "hash": "31a81c6839ee7ff4d9f0ebca80db82b6"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\player_network.cpp": {
+    "mtime": 1776600734.8272173,
+    "hash": "1c9b6b9e22e5d90eea181451f0cc90b6"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\player_network.h": {
+    "mtime": 1776553954.0957556,
+    "hash": "1fda25b5855a37a19d529e5b251e8fab"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\stun_manager.cpp": {
+    "mtime": 1775849236.1484084,
+    "hash": "c3568596245dd970a388d6d07a35580a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\stun_manager.h": {
+    "mtime": 1775409133.9274814,
+    "hash": "2ca3c792c3ab85390bdad949c44e12ae"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\udp_socket_info.cpp": {
+    "mtime": 1775849236.14942,
+    "hash": "08488295ee8f44ae8d9dd18edf115b58"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\communication\\udp_socket_info.h": {
+    "mtime": 1773252924.2517602,
+    "hash": "335800c929cb3fd119541ced35500857"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\network\\editor_message_type.h": {
+    "mtime": 1776668786.1266649,
+    "hash": "685dc6849d4c2d5d290ee3a5f9110299"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\network\\editor_protocol.cpp": {
+    "mtime": 1776668786.1276946,
+    "hash": "3dbc39018626d7c8afe4a0a4a4f0741b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\network\\editor_protocol.h": {
+    "mtime": 1776518949.1037538,
+    "hash": "5cc1cf59d81cf075421c33ff9379032b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\network\\editor_session.cpp": {
+    "mtime": 1776668786.1276946,
+    "hash": "e03c7ae7c86a161e85d4a1076f562b3a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\network\\editor_session.h": {
+    "mtime": 1776668786.128706,
+    "hash": "f611e6baa06fe390944f2a5e61ce6fc8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\ops\\editor_op_bus.cpp": {
+    "mtime": 1777460412.474516,
+    "hash": "e30ce04337d0612e7dcf4d2bbb65195c"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\ops\\editor_op_bus.h": {
+    "mtime": 1777460412.474516,
+    "hash": "fa5c2a0112848102c2b46bc13fb35a17"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\ops\\editor_op_type.h": {
+    "mtime": 1777460412.4755354,
+    "hash": "528236f2ee27b9c9b6e6e85d86e12a59"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\grid_canvas_painter.cpp": {
+    "mtime": 1778197325.6100366,
+    "hash": "d5a0b7db3c28f9cd6580b648684bc8ae"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\grid_canvas_painter.h": {
+    "mtime": 1778197325.6100366,
+    "hash": "0ec5fa63e9c1f178bfaaf037c1ad1525"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\grid_canvas_painter_renderer.cpp": {
+    "mtime": 1778197325.6110463,
+    "hash": "3048cf444930539205d015000f9d7025"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\grid_canvas_painter_renderer.h": {
+    "mtime": 1778197325.6110463,
+    "hash": "d61d5b434c7cc5e25e4e7208a1c54beb"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zones_overlay_painter.cpp": {
+    "mtime": 1778197325.6120589,
+    "hash": "30eae7e337e178aaf6b61d7c520b71f6"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zones_overlay_painter.h": {
+    "mtime": 1778197325.6120589,
+    "hash": "0876826ab5bea03a117616dddd271e8f"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zones_overlay_painter_renderer.cpp": {
+    "mtime": 1778197325.6130702,
+    "hash": "83ada7582f1d13ed0baecaf5f16a683c"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zones_overlay_painter_renderer.h": {
+    "mtime": 1778197325.6130702,
+    "hash": "c7961490b8c54b4650b3f063f660fc08"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zone_canvas_painter.cpp": {
+    "mtime": 1778196429.7368717,
+    "hash": "e3f2125138f2a5481401390cef6f8142"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zone_canvas_painter.h": {
+    "mtime": 1778196422.5019681,
+    "hash": "5be1157fa7cb211dbdd36d03e76013af"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zone_canvas_painter_renderer.cpp": {
+    "mtime": 1778135129.1522245,
+    "hash": "5f66777647011b972d481434525efffb"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zone_canvas_painter_renderer.h": {
+    "mtime": 1778135129.1522245,
+    "hash": "1f524a6f7edc080ab0128597a6bcfd1d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zone_hatch_compute.cpp": {
+    "mtime": 1778135129.1532338,
+    "hash": "0c48d4dc3f8926892fd7aef7b323088b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\editor\\painter\\zone_hatch_compute.h": {
+    "mtime": 1778135129.1532338,
+    "hash": "3e8167436a70ed81c5cd40c1efb92afd"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\experiment\\animationprovider.cpp": {
+    "mtime": 1770496115.2663503,
+    "hash": "4d95ffe574d21e2fad2facbfa59c432a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\experiment\\animationprovider.h": {
+    "mtime": 1770496115.2663503,
+    "hash": "43c1a6676a9171ce0e03e944cb3de6dd"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\experiment\\animation_manager.cpp": {
+    "mtime": 1770496115.2653382,
+    "hash": "144893e9eaad3b7ae6f471232154a17b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\experiment\\animation_manager.h": {
+    "mtime": 1770496115.2653382,
+    "hash": "5fafab5c0137704b718254f17099ea51"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\experiment\\liveimage.cpp": {
+    "mtime": 1773252924.2517602,
+    "hash": "9d08ea68b42a6e4267d5d3fc2fa465f0"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\experiment\\liveimage.h": {
+    "mtime": 1770496115.2673638,
+    "hash": "a7687b66d7fa63b97df909e9b91457c7"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\card.cpp": {
+    "mtime": 1770496115.2673638,
+    "hash": "76401b4ba57d519ff70259f5d29e1362"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\card.h": {
+    "mtime": 1770496115.2683735,
+    "hash": "24561a052a620f800968a7efe4e5b211"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\game.cpp": {
+    "mtime": 1777058875.6012323,
+    "hash": "1c1527cbcc572b820f5d4c1e21db2e82"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\game.h": {
+    "mtime": 1777062039.9683344,
+    "hash": "b6ed7b729c7c4177892f70a636bf223d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\game_lamport.cpp": {
+    "mtime": 1777062039.969359,
+    "hash": "18c58cb6653a4402ead5ae5ea56a5636"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\game_loader.cpp": {
+    "mtime": 1778324734.8146267,
+    "hash": "e484ede3decd13656f1bded718236e39"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\game_template.cpp": {
+    "mtime": 1773252924.2779846,
+    "hash": "25267b27c896577baeeac64fae4b99e8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\meowstyle.cpp": {
+    "mtime": 1770496115.33807,
+    "hash": "b22824bb9b6bd9b46d7e7604a1f8b0d1"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\meowstyle.h": {
+    "mtime": 1770496115.33908,
+    "hash": "bf0e395d7c54f974bcdd9b95f517ab5e"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\player.cpp": {
+    "mtime": 1770496115.3904529,
+    "hash": "d3c4de9551de02b8b900b3669422d559"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\player.h": {
+    "mtime": 1770496115.3904529,
+    "hash": "a37146b0ba69924a678a0f9c8785dc52"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\Case.cpp": {
+    "mtime": 1770496115.2683735,
+    "hash": "c377ed98f772b9c8101299c78ea72c98"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\Case.h": {
+    "mtime": 1770496115.2683735,
+    "hash": "71e9dcdbd6f2bdff9e52e61021721c4d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCardBoardBox.cpp": {
+    "mtime": 1770496115.2693899,
+    "hash": "4bca73e8c770328bdd50f7adbf21e322"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCardBoardBox.h": {
+    "mtime": 1770496115.2693899,
+    "hash": "7c7fc7e43206c2290f575652a4623444"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCatDevice.cpp": {
+    "mtime": 1770496115.2704015,
+    "hash": "b9f6910ea7d5dd683be499960752a760"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCatDevice.h": {
+    "mtime": 1770496115.271072,
+    "hash": "3fa4bc863ba1c6893a881c7181be9a82"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCatDoor.cpp": {
+    "mtime": 1770496115.2716017,
+    "hash": "ef74d913604fb5499ec0cca97edd20c8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCatDoor.h": {
+    "mtime": 1770496115.2716017,
+    "hash": "ee58357f4e89914d36abcb665fd4b008"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCatNip.cpp": {
+    "mtime": 1770496115.2726169,
+    "hash": "a8b965b2c73ecc9bffbe48a59c3bc3ef"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCatNip.h": {
+    "mtime": 1770496115.2726169,
+    "hash": "4a207c1cc48d8033136110b6d71ae14c"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCatPerks.cpp": {
+    "mtime": 1770496115.2726169,
+    "hash": "e269f78c3e383444a828453546ce640a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseCatPerks.h": {
+    "mtime": 1770496115.2726169,
+    "hash": "a6ab87cae2df955d76cd2ad1b66669ea"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseFactory.cpp": {
+    "mtime": 1776719957.5830333,
+    "hash": "2b0bb317d2c84e5304fc7a2a85e1f8c8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseFactory.h": {
+    "mtime": 1770496115.2736335,
+    "hash": "29435d589c91a17a3c4955843c2ab5ab"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseFreeNap.cpp": {
+    "mtime": 1770496115.2736335,
+    "hash": "18d2efff90b5a640a8820af05d577d6a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseFreeNap.h": {
+    "mtime": 1770496115.2736335,
+    "hash": "1a38245545058c385e6fcabed7bc72e8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseJail.cpp": {
+    "mtime": 1770496115.2746494,
+    "hash": "43daa7db15bbfe73efcb5c8cb10706bc"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseJail.h": {
+    "mtime": 1770496115.2746494,
+    "hash": "ea94366a45cc93ccad237278775bdbed"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseKibbleDispenser.cpp": {
+    "mtime": 1770496115.2746494,
+    "hash": "5d8bfc9ccc2f9f24467e12ea248e4df4"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseKibbleDispenser.h": {
+    "mtime": 1770496115.275666,
+    "hash": "45e04bd1cae0f811ea4c00742b21ad60"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseRestArea.cpp": {
+    "mtime": 1773252924.2590785,
+    "hash": "a598f4e501c08ca533c64522126c05b2"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseRestArea.h": {
+    "mtime": 1770496115.2840748,
+    "hash": "30ee786fb57629070695c6d25d4bda32"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseToJail.cpp": {
+    "mtime": 1770496115.284582,
+    "hash": "6e47dfb5a7da53753e6f16bf811a10be"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\case\\CaseToJail.h": {
+    "mtime": 1770496115.284582,
+    "hash": "97f347ac5b945762625c2bca86801aa9"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\decorationparameter.cpp": {
+    "mtime": 1776550979.3942118,
+    "hash": "dd18ba1ce8bcdcef9f3e9471e84e74df"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\decorationparameter.h": {
+    "mtime": 1776550979.394725,
+    "hash": "7495a7b0501b4fcf32745e7b29ac4c29"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\Displayparameter.cpp": {
+    "mtime": 1776555842.8116164,
+    "hash": "32ba18914a037daf92ba49c73e280c21"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\Displayparameter.h": {
+    "mtime": 1776550979.3906455,
+    "hash": "e1919265c1a53d1e406a9f9e6d02eda1"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\ItemSnapable.cpp": {
+    "mtime": 1777403049.743772,
+    "hash": "98b11416ab4cb0f6d85110373e042905"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\ItemSnapable.h": {
+    "mtime": 1777403049.7448595,
+    "hash": "0dbfebd055339340b078862f4d3e2b83"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\itemsnapablefactory.cpp": {
+    "mtime": 1777403049.7458653,
+    "hash": "180246fc26d7938df9dae4c7b87d02f6"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\itemsnapablefactory.h": {
+    "mtime": 1777403049.7458653,
+    "hash": "5b45c0c2e4271187dba0a75820fbfcdd"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\physicalobjectparameter.cpp": {
+    "mtime": 1777403049.7468793,
+    "hash": "5bdc7ec6ef739f10c0a42bdcabbaada0"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\physicalobjectparameter.h": {
+    "mtime": 1777403049.7468793,
+    "hash": "bc3d9e94a3da6f774196e097a35ad923"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\ZoneParameter.cpp": {
+    "mtime": 1776550979.3926857,
+    "hash": "62694ab5a9ebfe28eb7eaeec9dd7975b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\item_snapable\\ZoneParameter.h": {
+    "mtime": 1776550979.3926857,
+    "hash": "9201d15df6fd60caa0ffd3b3504b8740"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\editdelta.h": {
+    "mtime": 1776550979.394725,
+    "hash": "aa9061a680499bb0f997b19505ae7c40"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\map.cpp": {
+    "mtime": 1777403049.7479064,
+    "hash": "17a067f9f4f55a15362d409b15372e8c"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\map.h": {
+    "mtime": 1777403049.7489192,
+    "hash": "0cf3186aeda77e5775742a5056ac4a07"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\mapfilemanager.cpp": {
+    "mtime": 1778324734.8167026,
+    "hash": "ad5aa06831849312e9dc6c848e97656b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\mapfilemanager.h": {
+    "mtime": 1778324734.817721,
+    "hash": "d5b8f51bc537ad65b0d6efa7a779e2f9"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\mapinfo.cpp": {
+    "mtime": 1778324734.8197632,
+    "hash": "5799d16f3ab6ee5968c16ffd1a4e8108"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\mapinfo.h": {
+    "mtime": 1777460412.4765499,
+    "hash": "e1d9fa2d64a480c15f2233ce4f4339a2"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\maptypes.h": {
+    "mtime": 1770496115.3226345,
+    "hash": "fdc6f71bcac238e5df2431bce19469df"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\playerprofile.cpp": {
+    "mtime": 1777573406.4423487,
+    "hash": "2a5704955af0d23f27e3bcc9832bb444"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\playerprofile.h": {
+    "mtime": 1777573406.4428647,
+    "hash": "fda5a69b75bc308d5d53d968fb4548fc"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\templatefilemanager.cpp": {
+    "mtime": 1773252924.3554256,
+    "hash": "bf05c8c0dc554c79a0c1e119cbacfb87"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\map\\templatefilemanager.h": {
+    "mtime": 1773252924.3613234,
+    "hash": "e63763a8952d145adda1035fda4b648a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\network\\game_message_type.h": {
+    "mtime": 1773252924.378776,
+    "hash": "59fc5104c805634782f838cbae945a8b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\network\\game_protocol.cpp": {
+    "mtime": 1775849236.14942,
+    "hash": "63b14a44c0b5a4d49fb58d36db177227"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\network\\game_protocol.h": {
+    "mtime": 1773252924.3891642,
+    "hash": "c1486645dda582d02176661f166aba2d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\network\\game_session.cpp": {
+    "mtime": 1775849236.1504302,
+    "hash": "4e8c043f28a5fd5bc8c24dd0f10af92f"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\network\\game_session.h": {
+    "mtime": 1775409133.930563,
+    "hash": "b6ea1589f0efd6bb5a08450e4d6085d1"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\network\\minigame_sync.cpp": {
+    "mtime": 1773252924.401204,
+    "hash": "5990ae1e6c4c62a9e5cb51077b6864d6"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\network\\minigame_sync.h": {
+    "mtime": 1773252924.4065387,
+    "hash": "96cc5a6a6978052a17c1d841874eb105"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\collision2d.cpp": {
+    "mtime": 1777403049.7499368,
+    "hash": "9c0fdfa50b5444bb9d5bd37b974564d8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\collision2d.h": {
+    "mtime": 1777403049.750955,
+    "hash": "fae4fdf9f24aa02b68748fa6c270a296"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\item_snapable_events.cpp": {
+    "mtime": 1777403049.750955,
+    "hash": "5e411e610c9730a008d9e32bab7eb0e9"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\item_snapable_events.h": {
+    "mtime": 1777403049.750955,
+    "hash": "9dea58f735054cfff045e7a780d0d20d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\pattounx_engine_v2.cpp": {
+    "mtime": 1777573406.4443953,
+    "hash": "6b68ca70275324bcf4015ef0dfb6187d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\pattounx_engine_v2.h": {
+    "mtime": 1777403049.7519708,
+    "hash": "83a9e1f5e7145c1cef1bd9e4c852e132"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\pattounx_types.h": {
+    "mtime": 1777403049.7529824,
+    "hash": "4793c9da00d2d974d57b3b891e18dc72"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_message_type.h": {
+    "mtime": 1777403049.7529824,
+    "hash": "3acb71dd29545c23bce888e0da6b82fc"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_protocol.cpp": {
+    "mtime": 1777403049.7539935,
+    "hash": "6e8b35de313c3e6af851bfbe9631f8c3"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_protocol.h": {
+    "mtime": 1777403049.7539935,
+    "hash": "fe6fff364226864e9a9a2feb56783b7a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_session.cpp": {
+    "mtime": 1777403049.7550058,
+    "hash": "22016cd4413bae06deca7b7c656cb8ae"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_session.h": {
+    "mtime": 1777403049.756016,
+    "hash": "80a53b17e33cd67b74a64db8693abf95"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_worker.cpp": {
+    "mtime": 1777403049.7570326,
+    "hash": "97ca25df49a4965a107a71c0bfc04383"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_worker.h": {
+    "mtime": 1777403049.7580528,
+    "hash": "7cf14aaa307a9725299531cf52f4c959"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_world.cpp": {
+    "mtime": 1777403049.7580528,
+    "hash": "9d2a95f006597c9e71ab4960c3f8f135"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\game\\physics\\physics_world.h": {
+    "mtime": 1777403049.759073,
+    "hash": "86a69f728ad4fa95991ecf54057d33a8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\launcher\\launcher_manager.cpp": {
+    "mtime": 1778322233.5885713,
+    "hash": "a98c3d60a16eaf365045e946fc02da89"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\launcher\\launcher_manager.h": {
+    "mtime": 1778322233.5885713,
+    "hash": "81ef24697c76ce007271d7debae4b0b5"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\example.c": {
+    "mtime": 1773252924.505203,
+    "hash": "ac32d7feb41f4d84367f22e8b925c97a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\fuzz.c": {
+    "mtime": 1773252924.5114548,
+    "hash": "64a9cebb8e643b9113be961bce5e0b0b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\premake5.lua": {
+    "mtime": 1773252924.5179605,
+    "hash": "52058063454fa99a9706a89cfb8f3e72"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\reliable.c": {
+    "mtime": 1776595671.2812488,
+    "hash": "0585fac158e23be08b3f7f65883de719"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\reliable.h": {
+    "mtime": 1776593315.8680856,
+    "hash": "be14b44a716362ff5039cf8756aee364"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\reliable_impl.cpp": {
+    "mtime": 1773252924.5363133,
+    "hash": "6db4d9f6443d861cbddc6a8d14556b7d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\soak.c": {
+    "mtime": 1773252924.5427456,
+    "hash": "d8dbdbc93a0b52d913918bb7fa5c0a1a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\stats.c": {
+    "mtime": 1773252924.5492053,
+    "hash": "1e60244c46a76cdc90394fce9e74428c"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\test.cpp": {
+    "mtime": 1773252924.5543618,
+    "hash": "1486f0c81796173de54b6b5b4aaaaa3b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\appinfo.cpp": {
+    "mtime": 1773252924.5634959,
+    "hash": "46e05ee9aa63e1080bfb26b49ceb49ff"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\appinfo.h": {
+    "mtime": 1770496115.403208,
+    "hash": "5465febcca72daa862066f621e97ae66"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\cursor_manager.cpp": {
+    "mtime": 1773252924.5634959,
+    "hash": "ff76604971be28127ac3b852c02eaedd"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\cursor_manager.h": {
+    "mtime": 1770496115.4042313,
+    "hash": "30917b432ffd5179f7edb54d089edee7"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\debug_info.h": {
+    "mtime": 1770496115.4042313,
+    "hash": "2b151e625eb320f27ade47b271d750f7"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\editorenum.cpp": {
+    "mtime": 1770496115.4052465,
+    "hash": "b5988718b1017002ade4d38580f31dd0"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\editorenum.h": {
+    "mtime": 1773252924.5694728,
+    "hash": "5c49341f9bcce3e8c62658ed5f85411c"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\logger.cpp": {
+    "mtime": 1773252924.5752168,
+    "hash": "04b4e80c3acefcd42a2db60de42a8128"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\logger.h": {
+    "mtime": 1773252924.58789,
+    "hash": "4b0dec6a68f504b0a7c94b64824d963d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\metadata_generator.cpp": {
+    "mtime": 1773252924.594393,
+    "hash": "733dd927f4d09632b0569385093c65fa"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\metadata_generator.h": {
+    "mtime": 1770496115.4203944,
+    "hash": "2677e1c3c0a19e8401089992fd9fabfe"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\mouse_event_filter.cpp": {
+    "mtime": 1773252924.600942,
+    "hash": "bb7f2effae6ffd03b14dd9c611682f49"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\mouse_event_filter.h": {
+    "mtime": 1773252924.6072586,
+    "hash": "866415838585a7d4e925c3018140be87"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\test_manager.cpp": {
+    "mtime": 1773252924.6135087,
+    "hash": "10228acb1be54e60f1cab1ff114181b2"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\test_manager.h": {
+    "mtime": 1773252924.618708,
+    "hash": "5286434ce35755babe80016f0d69c401"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\uistyle.cpp": {
+    "mtime": 1773252924.625152,
+    "hash": "ab27b5791e2a1ea9fa5d8d57d3b3c0b6"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\uistyle.h": {
+    "mtime": 1773252924.6303241,
+    "hash": "6b93380c091fbcec209d7f828a66b108"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\QtFolderCompressor\\FolderCompressor.cpp": {
+    "mtime": 1773252924.5560873,
+    "hash": "b28f54888f7cab2d9200ef7e86bc3386"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\tools\\QtFolderCompressor\\FolderCompressor.h": {
+    "mtime": 1773252924.5565937,
+    "hash": "8320c551da82dcac04800d4aca26f1d1"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\qml\\textTools.js": {
+    "mtime": 1767897629.0976133,
+    "hash": "aec5a776548a9ba4aa6f8c8e537f3c1d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\qml\\menu\\pawTools.js": {
+    "mtime": 1770496115.848626,
+    "hash": "8c89207bc763f5a620cab25e238972b0"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\tests\\tst_collision2d.cpp": {
+    "mtime": 1777403049.7939675,
+    "hash": "fecfca4dd8107fb58908962d5b4863a2"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\tests\\tst_combined_render_perf.cpp": {
+    "mtime": 1778197325.6222036,
+    "hash": "d71d46ffd33c77e6edd2fe91b6f237fa"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\tests\\tst_grid_render_perf.cpp": {
+    "mtime": 1778197325.6232216,
+    "hash": "deed325d7baea419b166b45f8b94e085"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\tests\\tst_pattounx_engine.cpp": {
+    "mtime": 1777573406.4568462,
+    "hash": "52f8f935c837c35cf456acdec041e106"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\tests\\tst_physics_worker.cpp": {
+    "mtime": 1777403049.7955124,
+    "hash": "b0834951b416b0ecf79a7470eb276d52"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\tests\\tst_snapshot_codec.cpp": {
+    "mtime": 1777403049.7960303,
+    "hash": "df55ba5a37967074a4696343e7477e5f"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\tests\\tst_zone_render_perf.cpp": {
+    "mtime": 1778135129.161342,
+    "hash": "c449c69fff516136f43383ebec6869e2"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\CMakeLists.txt": {
+    "mtime": 1778135129.1501873,
+    "hash": "de7fe14fb5fba8f02c5032b3ca89476f"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\BUILDING.md": {
+    "mtime": 1773252924.482558,
+    "hash": "35f92c41c1f8dbb409d8296c75fc6bb5"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\cpp\\reliable\\README.md": {
+    "mtime": 1773252924.4985828,
+    "hash": "4ba7281554622abe2cd4ab3b0ef4ba27"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\INDEX.md": {
+    "mtime": 1778324734.820784,
+    "hash": "6d83bb7a0b17a2f3bd56cf703f9995ec"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\PROJECT_HISTORY.md": {
+    "mtime": 1775940224.8849337,
+    "hash": "7fd2e5f8d7a4fcf5b2f010ff73172611"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\QUICK_START.md": {
+    "mtime": 1770496115.435136,
+    "hash": "f4b48844dd5dcb941afc0d617c776a8b"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\README.md": {
+    "mtime": 1770496115.435136,
+    "hash": "cec5bab149a1cb134697466383a49a40"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\README_ASSET_SYSTEM.md": {
+    "mtime": 1770496115.436149,
+    "hash": "1f3f429a1e282f9e1bb5d5b1c0dc0353"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\STRUCTURE_DOCUMENTATION.md": {
+    "mtime": 1770496115.436149,
+    "hash": "081ec2aac81d0f1865903e33a0807845"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\UNDOREDO_SYSTEM.md": {
+    "mtime": 1776550979.402936,
+    "hash": "38c3fb7fa7b33a1f647ef66a92d02ee2"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\ANALYSE_ARCHITECTURE_EDITEUR.md": {
+    "mtime": 1777460412.4785717,
+    "hash": "a2f66f8394a09d6852d0e6954c96cfa2"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\ASSET_MANAGER.md": {
+    "mtime": 1775897178.8676784,
+    "hash": "73660ed3fc1a17e4f108cfb286fc1f4e"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\CAMERA_ET_DEPLACEMENT.md": {
+    "mtime": 1777409935.2399487,
+    "hash": "49723465eb5e8899c0636edea4f6ec21"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\CATWAY_ARCHITECTURE.md": {
+    "mtime": 1776600734.8282354,
+    "hash": "fffbd4bef213dc902a80d7914b3a23aa"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\COLLABORATIVE_EDITOR.md": {
+    "mtime": 1776553954.1034584,
+    "hash": "bfadda13a716c723d2952c1e1bf40670"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\COLLAB_SESSION_PATTERN.md": {
+    "mtime": 1776590835.3587747,
+    "hash": "a714ad0df75f80d256ef4877b70677ee"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\CPP_CLASSES.md": {
+    "mtime": 1776550979.4040668,
+    "hash": "13200d21472ba673e8e9517b24434d64"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\DIAGRAMMES_ARCHITECTURE_EDITEUR.md": {
+    "mtime": 1773252924.6506858,
+    "hash": "a784dce98cec73213f83538dde1431c0"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\LAUNCHER_ARCHITECTURE.md": {
+    "mtime": 1775856946.2376206,
+    "hash": "2a6d51d0f5ae655e4b046572decb04d0"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\NETWORK_PATTERNS.md": {
+    "mtime": 1778322233.5916214,
+    "hash": "e33b46e5c7257dc06afbd82f68660548"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\P2P_NETWORK_ARCHITECTURE.md": {
+    "mtime": 1775849236.1544764,
+    "hash": "0859b2cf85fad4f191c5ad7deb3ac736"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\PHYSICS_ENGINE.md": {
+    "mtime": 1777403049.7631898,
+    "hash": "bba2d5c74285cd6e6d8a2ba931df21d6"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\PHYSICS_ENGINE_V2.md": {
+    "mtime": 1777403049.7642088,
+    "hash": "a7195f0fc3827bae7a64791f3fd83cc9"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\PHYSICS_REFACTOR_PLAN.md": {
+    "mtime": 1777409935.2409625,
+    "hash": "0a9f3221ef289551d5d6fe29f76f75c8"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\PLAYER_CONFIG_PANEL_PLAN.md": {
+    "mtime": 1777460412.4795864,
+    "hash": "31bc259038d23afdf19b1145dd81bdf4"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\PROJECT_STRUCTURE.md": {
+    "mtime": 1776553954.1034584,
+    "hash": "34cbe797617ebfc59f4e8a364624e2e9"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\README.md": {
+    "mtime": 1778324734.8218079,
+    "hash": "3dd6f878e2cbbb46e5ead75618b917ca"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\RENDERING_PERF.md": {
+    "mtime": 1778322233.5926409,
+    "hash": "ab006836991a235725bb5b1bd56e026d"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\RESUME_ARCHITECTURE_EDITEUR.md": {
+    "mtime": 1770496115.4405193,
+    "hash": "13caf00d10fe80ce80ea42b11f618a68"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\VISUAL_EFFECTS_SYSTEM.md": {
+    "mtime": 1773252924.6837935,
+    "hash": "2a6a59c291bd39320876d0664ed72018"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\architecture\\websocket_protocol.md": {
+    "mtime": 1773252924.6933086,
+    "hash": "8785044620197d74ccd16255e76b4049"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\design\\INHERITANCE_QML.md": {
+    "mtime": 1770496115.4415288,
+    "hash": "2276991482ee451c082530a1dc10d5f7"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\design\\README.md": {
+    "mtime": 1770496115.4415288,
+    "hash": "c87481f21e856032b19a0d407c159944"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\features\\ASSET_PREVIEW_CURSOR_CASE_SUPPORT.md": {
+    "mtime": 1775409133.9346611,
+    "hash": "db0cd7347937b593d2745c61e220011c"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\features\\README.md": {
+    "mtime": 1770496115.4425385,
+    "hash": "1bc8588ff2e1f3f3fedd3192b4726f75"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\features\\SERVEUR_RESSOURCES.md": {
+    "mtime": 1775856946.239678,
+    "hash": "15eefe68d87a8ef60cdbdd45a4225f3a"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\features\\TEMPLATE_SYSTEM.md": {
+    "mtime": 1773252924.694828,
+    "hash": "529424bad0128b6e25891998b3ad4702"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\guides\\GAMEPLAY_GUIDE.md": {
+    "mtime": 1770496115.4459238,
+    "hash": "8ec8e3d3a339866d62d6995fc134bcc3"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\guides\\MAP_EDITOR_GUIDE.md": {
+    "mtime": 1770496115.4469378,
+    "hash": "6258133a07503018541fc661535b6297"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\doc\\guides\\README.md": {
+    "mtime": 1775409133.9356782,
+    "hash": "ec052da62daf673291da127eb9d92fc1"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\qml\\launcher\\README.md": {
+    "mtime": 1778322233.611956,
+    "hash": "02726eaac469ba1e59d52d446c296b4f"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\tests\\CMakeLists.txt": {
+    "mtime": 1778324734.8279254,
+    "hash": "b2d8d30267243224407d1b0634e54929"
+  },
+  "C:\\Users\\Antoine\\Documents\\GitHub\\meownopoly\\Meownopoly\\asset\\nopic.webp": {
+    "mtime": 1773252924.0696309,
+    "hash": "88299fe7b8897489f47cf8b14e5ed4ea"
+  }
+}

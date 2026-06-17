@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Layouts
 import PlayerProfile
+import theme
 
 /*
  * Vignette d'un profil joueur — preview 3D + nom inline éditable + badge
@@ -44,20 +45,20 @@ Rectangle {
     // créait un binding loop width → implicitWidth → height → width.
     implicitWidth: _minW
     color: "#262626"
-    border.color: root.isSelected ? "#4A90E2" : "#3a3a3a"
+    border.color: root.isSelected ? Theme.accent : Theme.surfaceHover
     border.width: root.isSelected ? 2 : 1
-    radius: 6
+    radius: Theme.radiusM
     clip: true
 
     // ----- Preview 3D (85% top) -----
     PCP_Profile3DPreview {
         id: preview
         anchors.left: parent.left
-        anchors.leftMargin: 3
+        anchors.leftMargin: Theme.spacingXXS
         anchors.right: parent.right
-        anchors.rightMargin: 3
+        anchors.rightMargin: Theme.spacingXXS
         anchors.top: parent.top
-        anchors.topMargin: 3
+        anchors.topMargin: Theme.spacingXXS
         height: parent.height * 0.85
         modelName: root.profile ? root.profile.modelName : "Cube"
         spinning: hover.hovered
@@ -76,7 +77,7 @@ Rectangle {
             anchors.fill: parent
             anchors.margins: Screen.pixelDensity * 1
             text: root.profile ? root.profile.name : ""
-            color: "#e0e0e0"
+            color: Theme.textSoft
             font.pixelSize: Math.round(Screen.pixelDensity * 3)
             font.bold: root.isSelected
             horizontalAlignment: Text.AlignHCenter
@@ -124,15 +125,16 @@ Rectangle {
         anchors.margins: Screen.pixelDensity * 1
         width: badgeText.implicitWidth + Screen.pixelDensity * 2
         height: badgeText.implicitHeight + Screen.pixelDensity * 1
-        radius: 4
+        radius: Theme.radiusS
         color: {
-            if (!root.profile) return "#444444"
+            // Couleurs de pickMode = données métier, hors Theme.
+            if (!root.profile) return Theme.border
             switch (root.profile.pickMode) {
             case PlayerProfile.Unique:    return "#7e57c2"
             case PlayerProfile.Shared:    return "#26a69a"
             case PlayerProfile.Mandatory: return "#ef6c00"
             }
-            return "#444444"
+            return Theme.border
         }
         opacity: 0.85
 

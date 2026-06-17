@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../menu/"
 import "../menu/pawTools.js" as PawTools
+import theme
 
 Rectangle {
     id: root
@@ -14,11 +15,11 @@ Rectangle {
     
     Column {
         anchors.centerIn: parent
-        spacing: 20
+        spacing: Theme.spacingHuge
         
         Text {
             text: "Test du PawMenu"
-            font.pixelSize: 24
+            font.pixelSize: Theme.fontSizeDisplay
             font.bold: true
             anchors.horizontalCenter: parent.horizontalCenter
         }

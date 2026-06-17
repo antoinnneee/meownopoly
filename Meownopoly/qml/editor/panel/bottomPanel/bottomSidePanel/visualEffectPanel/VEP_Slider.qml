@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 RowLayout {
     id: control
@@ -9,7 +10,7 @@ RowLayout {
     property alias from: slider.from
     property alias to: slider.to
 
-    property color accentColor: "#569c58"
+    property color accentColor: Theme.accentAlt
     signal effectChanged(var value)
 
 
@@ -19,8 +20,8 @@ RowLayout {
         id: sliderText
         text: "Brightness :"
         verticalAlignment: Text.AlignVCenter
-        color: "#cccccc"
-        font.pointSize: 8
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeSmall
         Layout.preferredWidth: Screen.pixelDensity * 17
         Layout.minimumWidth: Screen.pixelDensity * 13
         Layout.fillHeight: true
@@ -49,7 +50,7 @@ RowLayout {
         width: slider.horizontal ? slider.availableWidth : implicitWidth
         height: slider.horizontal ? implicitHeight : slider.availableHeight
         radius: 3
-        color: "#444444"
+        color: Theme.border
         scale: slider.horizontal && slider.mirrored ? -1 : 1
 
         Rectangle {
@@ -68,16 +69,16 @@ RowLayout {
             x: slider.leftPadding + (slider.horizontal ? slider.visualPosition * (slider.availableWidth - width) : (slider.availableWidth - width) / 2)
             y: slider.topPadding + (slider.horizontal ? (slider.availableHeight - height) / 2 : slider.visualPosition * (slider.availableHeight - height))
             radius: width / 2
-            color: slider.pressed ? control.accentColor : "#444444"
+            color: slider.pressed ? control.accentColor : Theme.border
             border.width: slider.visualFocus ? 2 : 1
-            border.color: slider.pressed ? "#444444" : control.accentColor
+            border.color: slider.pressed ? Theme.border : control.accentColor
         }
     }
     
     Text {
         text: slider.value.toFixed(2)
-        color: "#cccccc"
-        font.pixelSize: 10
+        color: Theme.textSecondary
+        font.pixelSize: Theme.fontSizeCaption
         Layout.preferredWidth: 35
     }
     
@@ -90,16 +91,16 @@ RowLayout {
         Layout.preferredHeight: Screen.pixelDensity * 8
         
         background: Rectangle {
-            color: parent.pressed ? "#666666" : "#555555"
-            radius: 4
+            color: parent.pressed ? Theme.hover(Theme.borderLight) : Theme.borderLight
+            radius: Theme.radiusS
             anchors.fill: parent
         }
-        
+
         contentItem: Text {
             anchors.fill:parent
             text: parent.text
-            color: "#cccccc"
-            font.pointSize: 8
+            color: Theme.textSecondary
+            font.pixelSize: Theme.fontSizeSmall
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }

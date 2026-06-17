@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Le système AssetManager implémente une gestion centralisée des ressources graphiques pour Meownopoly, basé sur la spécification décrite dans `doc/ASSET_MANAGER.md`.
+Le système AssetManager implémente une gestion centralisée des ressources graphiques pour Meownopoly, basé sur la spécification décrite dans `doc/architecture/ASSET_MANAGER.md`.
 
 ## Caractéristiques
 
@@ -22,9 +22,12 @@ Le système AssetManager implémente une gestion centralisée des ressources gra
 - `AssetModel` : Modèle QML héritant de QAbstractListModel
 
 ### Structure des Données
+Le chargement est strictement à **deux niveaux** : `loadCategory()` parcourt les sous-dossiers de *type* (asset_manager.cpp:499-504) et `loadTypeFromDirectory()` lit le `metadata.json` situé à l'intérieur de chaque dossier de type (asset_manager.cpp:510-516). Un `metadata.json` placé directement à la racine d'une catégorie n'est jamais chargé. Le seul fichier lu au niveau catégorie est `tags.json` (asset_manager.cpp:479, optionnel).
+
 ```
 assets/
 ├── decoration/
+│   ├── tags.json          (optionnel, niveau catégorie)
 │   ├── grass/
 │   │   ├── metadata.json
 │   │   └── *.png
@@ -32,37 +35,30 @@ assets/
 │       ├── metadata.json
 │       └── *.png
 └── player_icons/
-    ├── metadata.json
-    └── *.png
+    ├── tags.json          (optionnel, niveau catégorie)
+    └── <type>/
+        ├── metadata.json
+        └── *.png
 ```
 
 ## Utilisation
 
 ### Depuis QML
 ```qml
-// Accès aux modèles
+// Modèle filtré (catégorie + type)
 ListView {
-    model: AssetManager.decorationModel
-    // ou AssetManager.playerIconModel
+    model: AssetManager.getAssetModel("decoration", "grass")
 }
 
-// Modèles filtrés
-ListView {
-    model: AssetManager.getTypeModel("decoration", "grass")
-}
-
-// Accès direct
+// Accès direct au chemin d'un asset
 Image {
-    source: AssetManager.getDecorationPath("grass", "1")
+    source: AssetManager.getAssetPath("decoration", "grass", "1")
 }
 ```
 
 ### API Principale
-- `decorationModel` : Modèle de toutes les décorations
-- `playerIconModel` : Modèle de toutes les icônes de joueur
-- `getTypeModel(category, type)` : Modèle filtré par type
-- `getDecorationPath(type, id)` : Chemin direct vers une décoration
-- `getPlayerIconPath(id)` : Chemin direct vers une icône
+- `getAssetModel(category, type)` : Modèle filtré (catégorie + type) pour ListView/GridView
+- `getAssetPath(category, type, id)` : Chemin direct vers un asset
 - `loadAssets()` : Recharge tous les assets
 - `setAssetsBasePath(path)` : Change le chemin de base
 
@@ -75,8 +71,8 @@ Accessible via le bouton "🎨 Asset Manager Test" dans l'écran titre :
 - Montre l'accès direct aux paths
 - Bouton de rechargement
 
-### Composant AssetSelector
-Nouveau composant `AssetSelector.qml` pour l'éditeur :
+### Composant AssetSelectionPanel
+La sélection d'assets de l'éditeur est portée par `AssetSelectionPanel.qml` et ses sous-composants `ASP_*` (`ASP_CategoryGrid.qml`, `ASP_Grid.qml`, `ASP_Item.qml`, etc.), sous `qml/editor/panel/bottomPanel/bottomMainPanel/assetSelectionPanel/` :
 - Sélection de catégorie et type
 - Grille d'aperçu des assets
 - Sélection interactive
@@ -87,7 +83,7 @@ Le composant `SnapableDecoration.qml` utilise maintenant l'AssetManager avec fal
 ## Installation
 
 1. Compilez le projet dans Qt Creator
-2. Exécutez `copy_test_assets.bat` pour copier les assets de test
+2. Les assets sont chargés depuis `<AppData>/assets/` (chemin défini dans le constructeur d'AssetManager, asset_manager.cpp:153). Placez-y vos catégories/types ou appelez `AssetManager.setAssetsBasePath(...)`.
 3. Lancez l'application et testez via "🎨 Asset Manager Test"
 
 ## Extensibilité

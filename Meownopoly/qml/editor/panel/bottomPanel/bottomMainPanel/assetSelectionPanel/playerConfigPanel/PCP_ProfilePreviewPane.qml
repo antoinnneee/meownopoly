@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import PlayerProfile
+import theme
 
 /*
  * Panneau "Aperçu" du PCP_ProfileDetail (popup d'édition de classe).
@@ -23,7 +24,7 @@ Item {
 
     /// Couleur de fond du cadre.
     property color backgroundColor: "#1f1f1f"
-    property color borderColor: "#3a3a3a"
+    property color borderColor: Theme.surfaceHover
 
     /// Hauteur monde-3D du modèle (transmise à PCP_Profile3DPreview pour
     /// calibrer la magnification ortho). Valeur par défaut OK pour la
@@ -54,7 +55,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: root.backgroundColor
-        radius: 6
+        radius: Theme.radiusM
         border.color: root.borderColor
         border.width: 1
 
@@ -68,7 +69,7 @@ Item {
                 Layout.fillWidth: true
                 visible: root.showTitle
                 text: "Aperçu"
-                color: "#cccccc"
+                color: Theme.textSecondary
                 font.pixelSize: Math.round(Screen.pixelDensity * 3)
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter

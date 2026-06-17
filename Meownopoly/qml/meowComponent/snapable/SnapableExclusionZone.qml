@@ -5,6 +5,7 @@ import "../grid"
 import ItemSnapable
 import ZoneParameter
 import MeowPainter 1.0
+import theme
 
 /**
  * Zone d'exclusion polygonale avec hachures.
@@ -270,8 +271,8 @@ SnapableElement {
         visible: root.isSelected && root.snapableParameters.zoneParameter &&
                  root.snapableParameters.zoneParameter.zoneName !== ""
         text: root.snapableParameters.zoneParameter ? root.snapableParameters.zoneParameter.zoneName : ""
-        color: "white"
-        font.pixelSize: 14
+        color: Theme.textPrimary
+        font.pixelSize: Theme.fontSizeMedium
         font.bold: true
         z: 101
 
@@ -282,7 +283,7 @@ SnapableElement {
             anchors.fill: parent
             anchors.margins: -3
             color: Qt.rgba(0, 0, 0, 0.6)
-            radius: 3
+            radius: Theme.radiusXS
             z: -1
         }
     }

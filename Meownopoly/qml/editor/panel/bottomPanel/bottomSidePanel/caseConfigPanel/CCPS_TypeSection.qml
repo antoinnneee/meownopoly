@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import Case
 import MeowStyle
 import ui_item
+import theme
 
 CollapsableGroupBox {
     id: control
@@ -12,7 +13,7 @@ CollapsableGroupBox {
     // Properties
     property var targetCase: null
     property bool updatingValues: false
-    padding: 12
+    padding: Theme.spacingXL
     spacing: 0
 
     // Signals
@@ -43,8 +44,8 @@ CollapsableGroupBox {
     content: [
         Text {
             text: "Sélectionnez le type de case :"
-            font.pixelSize: 10
-            color: "#888888"
+            font.pixelSize: Theme.fontSizeCaption
+            color: Theme.textMuted
             font.italic: true
             Layout.fillWidth: true
         },
@@ -53,14 +54,14 @@ CollapsableGroupBox {
         Rectangle {
             Layout.fillWidth: true
             height: 45
-            color: "#2a2a2a"
-            border.color: "#555555"
+            color: Theme.surface
+            border.color: Theme.borderLight
             border.width: 1
-            radius: 6
-            
+            radius: Theme.radiusM
+
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 5
+                anchors.margins: Theme.spacingXS
                 spacing: 0
                 
                 // Bouton flèche gauche
@@ -70,24 +71,24 @@ CollapsableGroupBox {
                     Layout.fillHeight: true
                     
                     background: Rectangle {
-                        color: parent.hovered ? "#444444" : "transparent"
-                        radius: 4
-                        border.color: parent.hovered ? "#666666" : "transparent"
+                        color: parent.hovered ? Theme.border : "transparent"
+                        radius: Theme.radiusS
+                        border.color: parent.hovered ? Theme.hover(Theme.borderLight) : "transparent"
                         border.width: 1
                         
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on border.color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+                        Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
                     }
                     
                     contentItem: Text {
                         text: "◀"
-                        font.pointSize: 12
+                        font.pixelSize: Theme.fontSizeLarge
                         font.bold: true
-                        color: leftArrow.enabled ? "#cccccc" : "#555555"
+                        color: leftArrow.enabled ? Theme.textSecondary : Theme.textDisabled
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
                     }
                     
                     enabled: currentIndex > 0
@@ -116,9 +117,9 @@ CollapsableGroupBox {
                     Text {
                         anchors.centerIn: parent
                         text: MeowStyle.getCaseTypeName(currentType)
-                        font.pointSize: 11
+                        font.pixelSize: Theme.fontSizeMedium
                         font.bold: true
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         
@@ -128,13 +129,13 @@ CollapsableGroupBox {
                                     target: parent
                                     property: "opacity"
                                     to: 0.5
-                                    duration: 100
+                                    duration: Theme.durationFast
                                 }
                                 PropertyAnimation {
                                     target: parent
                                     property: "opacity"
                                     to: 1.0
-                                    duration: 100
+                                    duration: Theme.durationFast
                                 }
                             }
                         }
@@ -144,7 +145,7 @@ CollapsableGroupBox {
                     Rectangle {
                         anchors.bottom: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottomMargin: 4
+                        anchors.bottomMargin: Theme.spacingXS
                         width: parent.width * 0.8
                         height: 2
                         color: getTypeColor(currentType)
@@ -161,24 +162,24 @@ CollapsableGroupBox {
                     Layout.fillHeight: true
                     
                     background: Rectangle {
-                        color: parent.hovered ? "#444444" : "transparent"
-                        radius: 4
-                        border.color: parent.hovered ? "#666666" : "transparent"
+                        color: parent.hovered ? Theme.border : "transparent"
+                        radius: Theme.radiusS
+                        border.color: parent.hovered ? Theme.hover(Theme.borderLight) : "transparent"
                         border.width: 1
                         
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on border.color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+                        Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
                     }
                     
                     contentItem: Text {
                         text: "▶"
-                        font.pointSize: 12
+                        font.pixelSize: Theme.fontSizeLarge
                         font.bold: true
-                        color: rightArrow.enabled ? "#cccccc" : "#555555"
+                        color: rightArrow.enabled ? Theme.textSecondary : Theme.textDisabled
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
                     }
                     
                     enabled: currentIndex < availableTypes.length - 1

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import MapTypes
 import ui_item
 import EditorOpBus 1.0
+import theme
 
 pragma ComponentBehavior: Bound
 
@@ -32,53 +33,26 @@ CollapsableGroupBox {
             Rectangle {
                 Layout.fillWidth: true
                 height: 50
-                color: "#2a2a2a"
-                radius: 8
-                border.color: "#555555"
+                color: Theme.surface
+                radius: Theme.radiusL
+                border.color: Theme.borderLight
                 border.width: 1
-                
+
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 10
+                    anchors.margins: Theme.spacingXL
+                    spacing: Theme.spacingL
                     
-                    CheckBox {
+                    MeowCheckBox {
                         id: showConnectionsCheckbox
                         checked: root.showConnections
-
                         text: "Afficher les connexions"
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                        
+                        accentColor: Theme.violetStart
+
                         onCheckedChanged: {
                             root.showConnections = checked
-                        }
-                        contentItem: Text {
-                            text: showConnectionsCheckbox.text
-                            anchors.verticalCenter: parent.verticalCenter
-                        font: showConnectionsCheckbox.font
-                        opacity: showConnectionsCheckbox.enabled ? 1.0 : 0.3
-                        color: showConnectionsCheckbox.checked ? "#ffffff" : "#cccccc"
-                        verticalAlignment: Text.AlignVCenter
-                        leftPadding: showConnectionsCheckbox.indicator.width + showConnectionsCheckbox.spacing
-                        }
-                        indicator: Rectangle {
-                            implicitWidth: 20
-                            implicitHeight: 20
-                            radius: 4
-                            border.color: showConnectionsCheckbox.checked ? "#667eea" : "#888888"
-                            border.width: 2
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: showConnectionsCheckbox.checked ? "#667eea" : "#3a3a3a"
-                            
-                            Text {
-                                anchors.centerIn: parent
-                                text: "✓"
-                                color: "white"
-                                font.pixelSize: 14
-                                font.bold: true
-                                visible: showConnectionsCheckbox.checked
-                            }
                         }
                     }
 
@@ -89,32 +63,32 @@ CollapsableGroupBox {
             Rectangle {
                 Layout.fillWidth: true
                 height: 60
-                color: "#333333"
-                radius: 8
-                border.color: "#555555"
+                color: Theme.surfaceAlt
+                radius: Theme.radiusL
+                border.color: Theme.borderLight
                 border.width: 1
-                
+
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 12
+                    anchors.margins: Theme.spacingXL
+                    spacing: Theme.spacingXL
                     
                     // Bouton ajouter précédent
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 36
-                        radius: 8
-                        color: addPrevBtn.pressed ? "#4a5ac8" : (addPrevBtn.containsMouse ? "#5a67d8" : "#667eea")
-                        
+                        radius: Theme.radiusL
+                        color: addPrevBtn.pressed ? Theme.pressed(Theme.violetEnd) : (addPrevBtn.containsMouse ? Theme.violetEnd : Theme.violetStart)
+
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: addPrevBtn.pressed ? "#5a67d8" : (addPrevBtn.containsMouse ? "#667eea" : "#74b9ff") }
-                            GradientStop { position: 1.0; color: addPrevBtn.pressed ? "#4a5ac8" : (addPrevBtn.containsMouse ? "#5a67d8" : "#6c5ce7") }
+                            GradientStop { position: 0.0; color: addPrevBtn.pressed ? Theme.violetEnd : (addPrevBtn.containsMouse ? Theme.violetStart : "#74b9ff") }
+                            GradientStop { position: 1.0; color: addPrevBtn.pressed ? Theme.pressed(Theme.violetEnd) : (addPrevBtn.containsMouse ? Theme.violetEnd : "#6c5ce7") }
                         }
                         
                         scale: addPrevBtn.pressed ? 0.95 : 1.0
                         opacity: addPrevBtn.pressed ? 0.8 : 1.0
                         
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
                         Behavior on scale { NumberAnimation { duration: 40 } }
                         Behavior on opacity { NumberAnimation { duration: 80 } }
                         
@@ -133,17 +107,17 @@ CollapsableGroupBox {
                         
                         RowLayout {
                             anchors.centerIn: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
                             
                             Text {
                                 text: "⬅️"
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontSizeBody
                             }
                             
                             Label {
                                 text: "Ajouter Précédent"
                                 color: "#ffffff"
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontSizeBody
                                 font.bold: true
                             }
                         }
@@ -153,7 +127,7 @@ CollapsableGroupBox {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 36
-                        radius: 8
+                        radius: Theme.radiusL
                         color: addNextBtn.pressed ? "#009075" : (addNextBtn.containsMouse ? "#00a085" : "#00b894")
                         
                         gradient: Gradient {
@@ -165,7 +139,7 @@ CollapsableGroupBox {
                         opacity: addNextBtn.pressed ? 0.8 : 1.0
 
 
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
                         Behavior on scale { NumberAnimation { duration: 40 } }
                         Behavior on opacity { NumberAnimation { duration: 80 } }
                         
@@ -186,17 +160,17 @@ CollapsableGroupBox {
                         
                         RowLayout {
                             anchors.centerIn: parent
-                            spacing: 6
+                            spacing: Theme.spacingS
                             
                             Text {
                                 text: "➡️"
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontSizeBody
                             }
                             
                             Label {
                                 text: "Ajouter Suivant"
                                 color: "#ffffff"
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontSizeBody
                                 font.bold: true
                             }
                         }
@@ -208,7 +182,7 @@ CollapsableGroupBox {
             RowLayout {
                 Layout.fillWidth: true
                 height: 300
-                spacing: 10
+                spacing: Theme.spacingL
                 
                 // Section des éléments précédents
                 ConnectionListSection {

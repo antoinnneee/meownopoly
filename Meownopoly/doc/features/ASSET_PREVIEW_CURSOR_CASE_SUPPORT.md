@@ -41,20 +41,22 @@ AssetPreviewCursor {
 
 ## Types de cases supportés
 
-Les types de cases suivants sont supportés avec leurs icônes correspondantes :
+Les types de cases suivants sont supportés :
 
-| Type | Valeur | Nom | Icône |
-|------|--------|-----|-------|
-| CS_KibbleDispenser | 0 | Départ | kibble_dispenser.png |
-| CS_RestArea | 1 | Propriétés | rest_area.png |
-| CS_CardBoardBox | 2 | Caisse de Communauté | cardboard_box.png |
-| CS_CatNip | 3 | Chance | cat_nip.png |
-| CS_Jail | 4 | Prison (Visite) | jail.png |
-| CS_ToJail | 5 | Allez en Prison | to_jail.png |
-| CS_CatDoor | 6 | Gare | cat_door.png |
-| CS_FreeNap | 7 | Free Parking | free_nap.png |
-| CS_Device | 8 | Service | device.png |
-| CS_Taxe | 9 | Taxe | taxe.png |
+| Type | Valeur | Nom |
+|------|--------|-----|
+| CS_KibbleDispenser | 0 | Départ |
+| CS_RestArea | 1 | Propriétés |
+| CS_CardBoardBox | 2 | Caisse de Communauté |
+| CS_CatNip | 3 | Chance |
+| CS_Jail | 4 | Prison (Visite) |
+| CS_ToJail | 5 | Allez en Prison |
+| CS_CatDoor | 6 | Gare |
+| CS_FreeNap | 7 | Free Parking |
+| CS_Device | 8 | Service |
+| CS_Taxe | 9 | Taxe |
+
+La prévisualisation ne s'appuie pas sur une icône statique par type : elle instancie un vrai `SnapableCaseTile`, rendu par son propre contenu.
 
 ## Intégration dans l'éditeur
 
@@ -64,29 +66,29 @@ L'éditeur utilise automatiquement cette fonctionnalité quand un type de case e
 AssetPreviewCursor {
     id: assetPreview
     parent: workArea
-    assetCategory: root.selectedAssetCategory
-    assetType: root.selectedAssetType
-    assetId: root.selectedAssetId
+    assetCategory: selectionPanel.currentSelectedAssetCategory
+    assetType: selectionPanel.currentSelectedAssetType
+    assetId: selectionPanel.currentSelectedAssetId
     caseType: selectionPanel.caseTypeSelected
     isCasePreview: selectionPanel.caseTypeSelected !== -1
     unitSizeWidth: logic.tileLogic.currentElementWidth
     unitSizeHeight: logic.tileLogic.currentElementHeight
-    gridManager: editorGrid
-    selectionPanel: selectionPanel
+    gridManager: gameGrid
+    sidePanel: sidePanel
 }
 ```
 
 ## Fonctionnement interne
 
 1. Le composant charge automatiquement le bon type de prévisualisation selon la valeur de `isCasePreview`
-2. Pour les cases, il utilise `Game.getNewCaseType(caseType)` pour créer une instance temporaire
-4. Les effets visuels sont appliqués de la même manière que pour les décorations
+2. Pour les cases, il utilise `ItemSnapableFactory.createItemSnapable(caseType)` pour créer le `snapableParameters` (un `SnapableCaseTile` est instancié via `casePreviewComponent`)
+3. Les effets visuels sont appliqués de la même manière que pour les décorations
 
 ## Avantages
 
 - **Cohérence** : Même interface utilisateur pour les décorations et les cases
 - **Prévisualisation** : Les utilisateurs peuvent voir exactement ce qu'ils vont placer
-- **Feedback visuel** : Le curseur montre l'icône appropriée selon le type de case
+- **Feedback visuel** : Le curseur montre un vrai `SnapableCaseTile` correspondant au type de case sélectionné
 - **Effets visuels** : Support complet des effets visuels pour les cases aussi
 
 ## Notes techniques

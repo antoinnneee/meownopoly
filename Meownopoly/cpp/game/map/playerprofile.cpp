@@ -73,6 +73,13 @@ void PlayerProfile::setModelName(const QString &v)
     emit modelNameChanged();
 }
 
+void PlayerProfile::setColorVariant(const QString &v)
+{
+    if (m_colorVariant == v) return;
+    m_colorVariant = v;
+    emit colorVariantChanged();
+}
+
 void PlayerProfile::setPickMode(PickMode v)
 {
     if (m_pickMode == v) return;
@@ -180,6 +187,7 @@ QJsonObject PlayerProfile::toJSON() const
     j["id"]              = m_id;
     j["name"]            = m_name;
     j["modelName"]       = m_modelName;
+    j["colorVariant"]    = m_colorVariant;
     j["pickMode"]        = pickModeToString(m_pickMode);
     j["minOccurrences"]  = m_minOccurrences;
     j["radius"]          = m_radius;
@@ -202,6 +210,7 @@ void PlayerProfile::applyJson(const QJsonObject &j)
 {
     if (j.contains("name"))            setName(j.value("name").toString(m_name));
     if (j.contains("modelName"))       setModelName(j.value("modelName").toString(m_modelName));
+    if (j.contains("colorVariant"))    setColorVariant(j.value("colorVariant").toString(m_colorVariant));
 
     if (j.contains("pickMode")) {
         const QJsonValue pm = j.value("pickMode");

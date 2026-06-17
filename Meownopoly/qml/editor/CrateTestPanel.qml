@@ -14,6 +14,7 @@
  */
 import QtQuick 2.15
 import QtQuick.Controls
+import theme
 
 import ItemSnapable
 import ItemSnapableFactory
@@ -50,18 +51,18 @@ Item {
         id: badge
         width: badgeRow.implicitWidth + 16
         height: badgeRow.implicitHeight + 10
-        radius: 6
-        color: "#2a2a2e"
-        border.color: "#71717a"
+        radius: Theme.radiusM
+        color: Theme.surface
+        border.color: Theme.borderLight
         border.width: 1
 
         Row {
             id: badgeRow
             anchors.centerIn: parent
-            spacing: 6
+            spacing: Theme.spacingS
 
             Rectangle {
-                width: 10; height: 10; radius: 2
+                width: 10; height: 10; radius: Theme.radiusXS
                 anchors.verticalCenter: parent.verticalCenter
                 color: "#fb923c"
             }
@@ -69,14 +70,14 @@ Item {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Crates"
-                color: "#f4f4f5"
-                font.pixelSize: 12
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
 
             Rectangle {
                 width: 1; height: 14
-                color: "#52525b"
+                color: Theme.borderLight
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -84,19 +85,19 @@ Item {
                 id: spawnBtn
                 width: spawnText.implicitWidth + 12
                 height: 18
-                radius: 4
+                radius: Theme.radiusS
                 anchors.verticalCenter: parent.verticalCenter
                 color: spawnMa.containsMouse
-                       ? (spawnMa.pressed ? "#3f3f46" : "#33333a")
+                       ? (spawnMa.pressed ? Theme.surfaceHover : Theme.surfaceAlt)
                        : "transparent"
-                border.color: "#52525b"
+                border.color: Theme.borderLight
                 border.width: 1
                 Text {
                     id: spawnText
                     anchors.centerIn: parent
                     text: "Spawn"
-                    color: "#f4f4f5"
-                    font.pixelSize: 10
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeCaption
                     font.bold: true
                 }
                 MouseArea {
@@ -115,19 +116,19 @@ Item {
                 id: clearBtn
                 width: clearText.implicitWidth + 12
                 height: 18
-                radius: 4
+                radius: Theme.radiusS
                 anchors.verticalCenter: parent.verticalCenter
                 color: clearMa.containsMouse
-                       ? (clearMa.pressed ? "#3f3f46" : "#33333a")
+                       ? (clearMa.pressed ? Theme.surfaceHover : Theme.surfaceAlt)
                        : "transparent"
-                border.color: "#52525b"
+                border.color: Theme.borderLight
                 border.width: 1
                 Text {
                     id: clearText
                     anchors.centerIn: parent
                     text: "Clear"
-                    color: "#f4f4f5"
-                    font.pixelSize: 10
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeCaption
                     font.bold: true
                 }
                 MouseArea {
@@ -144,7 +145,7 @@ Item {
 
             Rectangle {
                 width: 1; height: 14
-                color: "#52525b"
+                color: Theme.borderLight
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -152,16 +153,16 @@ Item {
             // 0.5 / 1.0 / 2.0 / 3.5 / 5.0 (cliquable, pas un Slider Qt
             // pour éviter la dépendance et garder le badge compact).
             Row {
-                spacing: 2
+                spacing: Theme.spacingXXS
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "m=" + root.spawnMass.toFixed(1)
-                    color: "#f4f4f5"
-                    font.pixelSize: 10
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeCaption
                     font.bold: true
-                    rightPadding: 4
+                    rightPadding: Theme.spacingXS
                 }
 
                 Repeater {
@@ -170,20 +171,20 @@ Item {
                         readonly property real value: modelData
                         readonly property bool active: Math.abs(root.spawnMass - value) < 0.01
                         width: 18; height: 18
-                        radius: 4
+                        radius: Theme.radiusS
                         anchors.verticalCenter: parent.verticalCenter
                         color: active
                             ? "#fb923c"
                             : (massMa.containsMouse
-                                ? (massMa.pressed ? "#3f3f46" : "#33333a")
+                                ? (massMa.pressed ? Theme.surfaceHover : Theme.surfaceAlt)
                                 : "transparent")
-                        border.color: active ? "#fdba74" : "#52525b"
+                        border.color: active ? "#fdba74" : Theme.borderLight
                         border.width: 1
                         Text {
                             anchors.centerIn: parent
                             text: value.toFixed(value < 1 ? 1 : 0)
-                            color: "#f4f4f5"
-                            font.pixelSize: 9
+                            color: Theme.textPrimary
+                            font.pixelSize: Theme.fontSizeTiny
                             font.bold: true
                         }
                         MouseArea {

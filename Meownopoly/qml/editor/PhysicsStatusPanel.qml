@@ -7,6 +7,7 @@
  */
 import QtQuick 2.15
 import QtQuick.Controls
+import theme
 
 Item {
     id: root
@@ -19,29 +20,29 @@ Item {
         id: badge
         width: badgeRow.implicitWidth + 20
         height: badgeRow.implicitHeight + 10
-        radius: 6
+        radius: Theme.radiusM
         color: pattounxWorld.running ? "#1e4d3a" : "#3a1e1e"
-        border.color: pattounxWorld.running ? "#22c55e" : "#ef4444"
+        border.color: pattounxWorld.running ? Theme.success : Theme.danger
         border.width: 1
 
         Row {
             id: badgeRow
             anchors.centerIn: parent
-            spacing: 8
+            spacing: Theme.spacingM
             Rectangle {
                 width: 10
                 height: 10
                 radius: 5
                 anchors.verticalCenter: parent.verticalCenter
-                color: pattounxWorld.running ? "#22c55e" : "#ef4444"
+                color: pattounxWorld.running ? Theme.success : Theme.danger
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: pattounxWorld.running
                       ? ("Physique · ON · " + pattounxWorld.tickRate + " Hz")
                       : "Physique · OFF"
-                color: "#f4f4f5"
-                font.pixelSize: 12
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
         }

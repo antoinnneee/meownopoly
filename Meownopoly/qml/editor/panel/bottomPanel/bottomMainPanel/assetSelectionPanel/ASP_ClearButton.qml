@@ -4,24 +4,25 @@ import QtQuick.Layouts 1.15
 import AssetManager
 
 import editorBottomPanel
+import theme
 
 Button {
     text: "✕ Clear"
     flat: true
-    
+
     background: Rectangle {
-        color: parent.pressed ? "#AA4444" : "transparent"
-        border.color: "#FF6666"
+        color: parent.pressed ? Theme.pressed(Theme.dangerSoft) : "transparent"
+        border.color: Theme.dangerSoft
         border.width: 1
-        radius: 4
+        radius: Theme.radiusS
     }
-    
+
     contentItem: Text {
         text: parent.text
-        color: "#FF6666"
+        color: Theme.dangerSoft
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 11
+        font.pixelSize: Theme.fontSizeSmall
     }
     
     onClicked: {

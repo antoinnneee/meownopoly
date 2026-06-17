@@ -28,15 +28,16 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Rectangle {
     id: root
     Layout.fillWidth: true
     Layout.minimumHeight: 200
     Layout.preferredHeight: 250
-    color: "#3a3a3a"
-    radius: 10
-    border.color: "#555555"
+    color: Theme.surfaceHover
+    radius: Theme.radiusXL
+    border.color: Theme.borderLight
     border.width: 1
     
     property alias logText: logArea.text
@@ -60,57 +61,57 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 15
-        spacing: 10
-        
+        anchors.margins: Theme.spacingXXL
+        spacing: Theme.spacingL
+
         RowLayout {
             Layout.fillWidth: true
-            
+
             Text {
                 text: "📋 Logs d'activité"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontSizeLarge
                 font.bold: true
-                color: "#ffffff"
+                color: Theme.textPrimary
             }
-            
+
             Item { Layout.fillWidth: true }
-            
+
             Row {
-                spacing: 5
-                
+                spacing: Theme.spacingXS
+
                 Button {
                     text: "Effacer"
                     onClicked: root.clearLogs()
-                    
+
                     background: Rectangle {
-                        color: parent.pressed ? "#d32f2f" : "#f44336"
-                        radius: 4
+                        color: parent.pressed ? Theme.pressed(Theme.danger) : Theme.danger
+                        radius: Theme.radiusS
                     }
-                    
+
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
+                        color: Theme.textPrimary
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSizeCaption
                     }
                 }
-                
+
                 Button {
                     text: "Reset État"
                     onClicked: root.resetDownloadState()
-                    
+
                     background: Rectangle {
-                        color: parent.pressed ? "#f57c00" : "#ff9800"
-                        radius: 4
+                        color: parent.pressed ? Theme.pressed(Theme.warning) : Theme.warning
+                        radius: Theme.radiusS
                     }
-                    
+
                     contentItem: Text {
                         text: parent.text
-                        color: "white"
+                        color: Theme.textPrimary
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSizeCaption
                     }
                 }
             }
@@ -126,16 +127,16 @@ Rectangle {
                 readOnly: true
                 wrapMode: TextArea.Wrap
                 selectByMouse: true
-                color: "#ffffff"
+                color: Theme.textPrimary
                 font.family: "Consolas, Monaco, monospace"
-                font.pixelSize: 11
-                topPadding: 10
-                
+                font.pixelSize: Theme.fontSizeSmall
+                topPadding: Theme.spacingL
+
                 background: Rectangle {
-                    color: "#1e1e1e"
-                    border.color: "#555555"
+                    color: Theme.background
+                    border.color: Theme.borderLight
                     border.width: 1
-                    radius: 6
+                    radius: Theme.radiusM
                     clip: true
                 }
             }

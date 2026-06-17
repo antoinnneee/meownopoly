@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Shapes
+import theme
 import "../grid"
 
 /**
@@ -151,7 +152,7 @@ Item {
     Rectangle {
         visible: root.points.length > 0
         color: Qt.rgba(0, 0, 0, 0.7)
-        radius: 4
+        radius: Theme.radiusS
         width: pointCountText.width + 16
         height: pointCountText.height + 8
         z: 10002
@@ -164,8 +165,8 @@ Item {
             anchors.centerIn: parent
             text: root.points.length + " point" + (root.points.length > 1 ? "s" : "") + 
                   (root.points.length >= 3 ? " (clic droit pour terminer)" : " (min. 3)")
-            color: "white"
-            font.pixelSize: 11
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
         }
     }
 }

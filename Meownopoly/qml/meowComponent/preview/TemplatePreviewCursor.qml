@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import ItemSnapableFactory
 import UiStyle
+import theme
 import "../snapable"
 import "../grid"
 
@@ -144,7 +145,7 @@ Item {
             color: "red"
             border.color: "red"
             border.width: 3
-            radius: 4
+            radius: Theme.radiusS
         }
         Repeater {
             id: elementRepeater

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import GameSession 1.0
 import Catway 1.0
 import Meownopoly.Account 1.0
+import theme
 
 Rectangle {
     id: root
@@ -60,7 +61,7 @@ Rectangle {
 
                 UdpPlayersPanel {
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: Theme.spacingXS
                     host: root.host
                     selectedPlayer: root.selectedPlayer
                     onPlayerClicked: function(player) {
@@ -77,7 +78,7 @@ Rectangle {
                 GameSessionPanel {
                     id: gameSessionPanel
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: Theme.spacingXS
                     host: root.host
                     selectedPlayerVisible: !!root.selectedPlayer
                 }
@@ -102,8 +103,8 @@ Rectangle {
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 4
-                    spacing: 8
+                    anchors.margins: Theme.spacingXS
+                    spacing: Theme.spacingM
 
                     MapSyncCard {
                         id: mapSyncCard

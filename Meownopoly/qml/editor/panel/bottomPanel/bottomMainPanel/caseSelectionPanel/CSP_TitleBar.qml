@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import editorBottomPanel
+import theme
 
 EBP_TitleBar {
     id: titleBar
@@ -17,7 +18,7 @@ EBP_TitleBar {
     subTitleText: titleBar.currentSelectedId !== "" ?
                       "Selected: " + titleBar.currentSelectedType + " #" + titleBar.currentSelectedId :
                       "Click to select an case"
-    subTitleColor: titleBar.currentSelectedId !== "" ? "#4CAF50" : "#999999"
+    subTitleColor: titleBar.currentSelectedId !== "" ? Theme.success : Theme.textMuted
 
     buttonModel: ["All", "Property", "Event"]
 

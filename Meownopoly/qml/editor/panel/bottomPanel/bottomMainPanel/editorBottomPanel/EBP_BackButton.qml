@@ -2,22 +2,23 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Effects
+import theme
 
 Button {
     visible: true
     text: "← Back"
     flat: true
-    
+
     background: Rectangle {
-        color: parent.pressed ? "#555555" : "transparent"
-        border.color: "#666666"
+        color: parent.pressed ? Theme.borderLight : "transparent"
+        border.color: Theme.textDisabled
         border.width: 1
-        radius: 4
+        radius: Theme.radiusS
     }
-    
+
     contentItem: Text {
         text: parent.text
-        color: "white"
+        color: Theme.textPrimary
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

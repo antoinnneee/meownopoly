@@ -10,6 +10,7 @@ import caseSelectionPanel
 import zonePanel
 import templatePanel
 import playerConfigPanel
+import screenEffectPanel
 
 EditorBottomPanel {
     id: root
@@ -256,6 +257,20 @@ EditorBottomPanel {
         // 5e onglet "Joueurs" — panel de configuration des profils joueurs.
         PCP_Content {
             id: playerConfigPanelContent
+
+            logic: root.logic
+            isExpanded: true
+
+            currentView: root.currentView
+            activeFilter: "All"
+            Layout.preferredWidth: parent.width
+            Layout.preferredHeight: parent.height
+        }
+
+        // 6e onglet "Effets" — éditeur de la bibliothèque d'effets visuels
+        // plein écran (MapInfo.screenEffects), référencés par les zones.
+        SEP_Content {
+            id: screenEffectPanelContent
 
             logic: root.logic
             isExpanded: true

@@ -34,6 +34,7 @@ Meownopoly/.vscode/settings.json
 Meownopoly/.vscode/settings.json
 Meownopoly/.vscode/settings.json
 chatServer/node_modules
+automation_mcp/node_modules
 chatServer/chat.db
 chatServer/chat.db-wal
 chatServer/chat.db-shm
@@ -50,3 +51,5 @@ chatServer/*.backup
 /map
 /exemple
 .claude/scheduled_tasks.lock
+/Meownopoly/graphify-out/cache
+/graphify-out/cache

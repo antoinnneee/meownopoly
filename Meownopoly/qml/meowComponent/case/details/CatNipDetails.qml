@@ -3,22 +3,23 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Case
 import CaseCatNip
+import theme
 
 ColumnLayout {
-    spacing: 5
+    spacing: Theme.spacingXS
 
     required property CaseCatNip caseData
-    
+
     Text {
         text: "Chance"
-        font.pixelSize: 16
+        font.pixelSize: Theme.fontSizeLarge
         color: "#2c3e50"
         font.bold: true
     }
 
     Text {
         text: "Draw a chance card when you land here"
-        font.pixelSize: 14
+        font.pixelSize: Theme.fontSizeMedium
         color: "#2c3e50"
         wrapMode: Text.WordWrap
         Layout.fillWidth: true
@@ -26,9 +27,9 @@ ColumnLayout {
 
     Text {
         text: "These cards can affect your movement, money, or give special abilities!"
-        font.pixelSize: 12
+        font.pixelSize: Theme.fontSizeBody
         color: "#7f8c8d"
-        Layout.topMargin: 5
+        Layout.topMargin: Theme.spacingXS
         wrapMode: Text.WordWrap
         Layout.fillWidth: true
     }

@@ -4,6 +4,8 @@ import QtQuick.Layouts
 import Case
 import CaseRestArea
 import Player
+import theme
+import ui_item
 
 CCP_PanelElement {
     title: "Prix et Finances"
@@ -42,26 +44,26 @@ CCP_PanelElement {
     
     ColumnLayout {
         width: parent.width
-        spacing: 10
+        spacing: Theme.spacingL
         
         // Les trois prix côte à côte
         RowLayout {
             Layout.fillWidth: true
-            spacing: 4
+            spacing: Theme.spacingXS
             
             // Prix d'achat
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 5
+                spacing: Theme.spacingXS
                 
                 Label {
                     text: "💰 Prix d'achat:"
                     font.bold: true
-                    color: "#cccccc"
-                    font.pixelSize: 11
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: priceSpinBox
                     Layout.fillWidth: true
                     from: 0
@@ -86,16 +88,16 @@ CCP_PanelElement {
             // Prix de vente
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 5
+                spacing: Theme.spacingXS
                 
                 Label {
                     text: "💸 Prix de vente:"
                     font.bold: true
-                    color: "#cccccc"
-                    font.pixelSize: 11
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: sellPriceSpinBox
                     Layout.fillWidth: true
                     from: 0
@@ -120,16 +122,16 @@ CCP_PanelElement {
             // Prix d'hypothèque
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 5
+                spacing: Theme.spacingXS
                 
                 Label {
                     text: "🏦 Prix hypothèque:"
                     font.bold: true
-                    color: "#cccccc"
-                    font.pixelSize: 11
+                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 
-                CCP_StyledSpinBox {
+                MeowSpinBox {
                     id: morgagePriceSpinBox
                     Layout.fillWidth: true
                     from: 0

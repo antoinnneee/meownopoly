@@ -5,6 +5,7 @@ import Case
 import CaseRestArea
 import Player
 import MeowStyle
+import theme
 
 CCP_PanelElement {
     title: "Configuration Famille"
@@ -38,7 +39,7 @@ CCP_PanelElement {
                 text: "Famille:"
                 font.bold: true
                 Layout.preferredWidth: 80
-                color: "#cccccc"
+                color: Theme.textSecondary
             }
             
             ComboBox {
@@ -83,23 +84,23 @@ CCP_PanelElement {
                     required property string textValue
                     
                     contentItem: Row {
-                        spacing: 10
+                        spacing: Theme.spacingL
                         anchors.verticalCenter: parent.verticalCenter
                         
                         Rectangle {
                             width: 24
                             height: 24
                             color: delegate.color
-                            border.color: "#333333"
+                            border.color: Theme.surfaceAlt
                             border.width: 1
-                            radius: 3
+                            radius: Theme.radiusXS
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         
                         Text {
                             text: delegate.textValue
                             anchors.verticalCenter: parent.verticalCenter
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontSizeMedium
                             color: "#000000"
                         }
                     }
@@ -107,33 +108,33 @@ CCP_PanelElement {
                     highlighted: familyComboBox.highlightedIndex === index
                     
                     background: Rectangle {
-                        color: highlighted ? "#e3f2fd" : "#ffffff"
-                        radius: 2
+                        color: highlighted ? "#e3f2fd" : Theme.surfaceLight
+                        radius: Theme.radiusXS
                     }
                 }
                 
                 // Contenu affiché dans la ComboBox fermée
                 contentItem: Row {
-                    spacing: 10
+                    spacing: Theme.spacingL
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: Theme.spacingL
                     
                     Rectangle {
                         width: 20
                         height: 20
                         color: familyComboBox.currentIndex >= 0 ? familyComboBox.model[familyComboBox.currentIndex].color : "#ecf0f1"
-                        border.color: "#333333"
+                        border.color: Theme.surfaceAlt
                         border.width: 1
-                        radius: 2
+                        radius: Theme.radiusXS
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     
                     Text {
                         text: familyComboBox.displayText
                         anchors.verticalCenter: parent.verticalCenter
-                        font.pixelSize: 14
-                        color: "#ffffff"
+                        font.pixelSize: Theme.fontSizeMedium
+                        color: Theme.textPrimary
                     }
                 }
             }

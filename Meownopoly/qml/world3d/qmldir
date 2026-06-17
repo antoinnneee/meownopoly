@@ -6,3 +6,8 @@ PhysicsObjectSpawner 1.0 PhysicsObjectSpawner.qml
 LocalPlayerSpawner 1.0 LocalPlayerSpawner.qml
 InputController 1.0 InputController.qml
 CameraRig 1.0 CameraRig.qml
+ScreenEffectController 1.0 ScreenEffectController.qml
+ScreenEffectOverlay 1.0 ScreenEffectOverlay.qml
+KuraMaterial 1.0 KuraMaterial.qml
+KuraModel 1.0 KuraModel.qml
+SkinnedModel 1.0 SkinnedModel.qml

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme
 
 Button {
     id: control
@@ -27,7 +28,7 @@ Button {
             property: "color"
             from: background.color
             to: Qt.lighter(mainColor, 1.2)
-            duration: 150
+            duration: Theme.durationNormal
             easing.type: Easing.InOutQuad
         }
         ColorAnimation {
@@ -42,7 +43,7 @@ Button {
     contentItem: Text {
         text: control.text
         color: "#ffffff"
-        font.pixelSize: 12
+        font.pixelSize: Theme.fontSizeBody
         font.bold: true
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -55,8 +56,8 @@ Button {
         border.color:control.hovered ? Qt.lighter(borderColor, 1.1) : borderColor
         border.width: 1
         topLeftRadius: 0
-        topRightRadius: 10
+        topRightRadius: Theme.radiusXL
 
-       Behavior on color { ColorAnimation { duration: control.hovered ? 150 : 250} }
+       Behavior on color { ColorAnimation { duration: control.hovered ? Theme.durationNormal : 250} }
     }
 }

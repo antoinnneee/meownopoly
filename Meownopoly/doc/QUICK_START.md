@@ -43,10 +43,9 @@ architecture/ASSET_MANAGER.md → Gestion des assets
 ### ...contribuer au code
 
 **Dans cet ordre** :
-1. `guides/CONTRIBUTION_GUIDELINES.md` - Règles de contribution
-2. `guides/DEVELOPER_GUIDE.md` - Setup et conventions
-3. `architecture/PROJECT_STRUCTURE.md` - Structure du projet
-4. Documents spécifiques selon votre fonctionnalité
+1. `../../CLAUDE.md` - Build Commands & conventions (règles de contribution, setup)
+2. `architecture/PROJECT_STRUCTURE.md` - Structure du projet
+3. Documents spécifiques selon votre fonctionnalité
 
 ### ...comprendre l'architecture globale
 
@@ -60,8 +59,7 @@ architecture/VISUAL_EFFECTS_SYSTEM.md → Effets visuels
 ### ...respecter les standards UI
 
 ```
-design/UI_STYLE_GUIDE.md → Standards visuels
-design/INHERITANCE_QML.md → Patterns QML
+design/INHERITANCE_QML.md → Patterns QML et standards visuels
 ```
 
 ---
@@ -70,10 +68,10 @@ design/INHERITANCE_QML.md → Patterns QML
 
 ```
 doc/
-├── architecture/     # 🏗️ Technique & Architecture (7 docs)
-├── guides/          # 📘 Tutoriels & Guides (4 docs)
+├── architecture/     # 🏗️ Technique & Architecture (22 docs)
+├── guides/          # 📘 Tutoriels & Guides (3 docs)
 ├── design/          # 🎨 UI & Design (2 docs)
-└── features/        # ✨ Fonctionnalités (2 docs)
+└── features/        # ✨ Fonctionnalités (4 docs)
 ```
 
 **Chaque dossier a son propre README explicatif !**
@@ -89,8 +87,7 @@ doc/
 | **QUICK_START.md** | Vous êtes ici ! Guide de démarrage |
 | **README.md** | Aperçu du jeu et règles |
 | **architecture/ANALYSE_ARCHITECTURE_EDITEUR.md** | ⭐ Doc la plus complète (éditeur) |
-| **guides/DEVELOPER_GUIDE.md** | Setup et développement |
-| **guides/CONTRIBUTION_GUIDELINES.md** | Comment contribuer |
+| **../../CLAUDE.md** | Build, setup, conventions et règles de contribution |
 
 ---
 
@@ -108,8 +105,7 @@ INDEX.md → guides/MAP_EDITOR_GUIDE.md
 
 ### 👨‍💻 Développeur Débutant
 ```
-guides/CONTRIBUTION_GUIDELINES.md
-  → guides/DEVELOPER_GUIDE.md
+../../CLAUDE.md (build, setup, conventions)
   → architecture/PROJECT_STRUCTURE.md
 ```
 
@@ -121,8 +117,7 @@ Focus : ANALYSE_ARCHITECTURE_EDITEUR.md ⭐
 
 ### 🎨 Designer UI/UX
 ```
-design/UI_STYLE_GUIDE.md
-  → design/INHERITANCE_QML.md
+design/INHERITANCE_QML.md (patterns QML et standards visuels)
 ```
 
 ---
@@ -145,19 +140,16 @@ doc/architecture/ANALYSE_ARCHITECTURE_EDITEUR.md
 ### Setup développeur complet
 
 ```bash
-# Étape 1 : Lire les guidelines
-doc/guides/CONTRIBUTION_GUIDELINES.md
+# Étape 1 : Build, setup et règles de contribution
+CLAUDE.md (à la racine du dépôt)
 
-# Étape 2 : Setup environnement
-doc/guides/DEVELOPER_GUIDE.md
-
-# Étape 3 : Comprendre la structure
+# Étape 2 : Comprendre la structure
 doc/architecture/PROJECT_STRUCTURE.md
 
-# Étape 4 : Standards UI
-doc/design/UI_STYLE_GUIDE.md
+# Étape 3 : Standards UI
+doc/design/INHERITANCE_QML.md
 
-# Étape 5 : Commencer à coder !
+# Étape 4 : Commencer à coder !
 ```
 
 ---
@@ -172,10 +164,10 @@ doc/design/UI_STYLE_GUIDE.md
 | Connexions | architecture/ANALYSE_ARCHITECTURE_EDITEUR.md §5 |
 | Sélection rectangle | architecture/ANALYSE_ARCHITECTURE_EDITEUR.md §6 |
 | Assets | architecture/ASSET_MANAGER.md |
-| UI/Design | design/UI_STYLE_GUIDE.md |
+| UI/Design | design/INHERITANCE_QML.md |
 | QML | design/INHERITANCE_QML.md |
 | Launcher | architecture/LAUNCHER_ARCHITECTURE.md |
-| Contribuer | guides/CONTRIBUTION_GUIDELINES.md |
+| Contribuer | ../../CLAUDE.md |
 
 ---
 
@@ -205,9 +197,9 @@ doc/design/UI_STYLE_GUIDE.md
 - architecture/RESUME_ARCHITECTURE_EDITEUR.md
 
 ### 📘 Intermédiaire
-- guides/DEVELOPER_GUIDE.md
+- ../../CLAUDE.md (build, setup, conventions)
 - architecture/PROJECT_STRUCTURE.md
-- design/UI_STYLE_GUIDE.md
+- design/INHERITANCE_QML.md
 
 ### 📕 Avancé
 - architecture/ANALYSE_ARCHITECTURE_EDITEUR.md
@@ -227,22 +219,19 @@ doc/design/UI_STYLE_GUIDE.md
 2. INDEX.md (10 min)
    ↓ Vue d'ensemble de la doc
 
-3. guides/CONTRIBUTION_GUIDELINES.md (15 min)
-   ↓ Règles de contribution
+3. ../../CLAUDE.md (30 min)
+   ↓ Build, setup, conventions et règles de contribution
 
-4. guides/DEVELOPER_GUIDE.md (30 min)
-   ↓ Setup et conventions
-
-5. architecture/PROJECT_STRUCTURE.md (20 min)
+4. architecture/PROJECT_STRUCTURE.md (20 min)
    ↓ Structure du code
 
-6. Selon votre tâche :
+5. Selon votre tâche :
    ├─ Éditeur ? → architecture/RESUME_ARCHITECTURE_EDITEUR.md
-   ├─ UI ? → design/UI_STYLE_GUIDE.md
+   ├─ UI ? → design/INHERITANCE_QML.md
    └─ Feature ? → features/ (document spécifique)
 ```
 
-**Temps total : ~1h30**
+**Temps total : ~1h15**
 
 ---
 
@@ -264,7 +253,7 @@ doc/design/UI_STYLE_GUIDE.md
 **Le document le plus complet de la documentation !**
 
 - 📖 12 sections détaillées
-- 📏 ~500 lignes
+- 📏 ~870 lignes
 - 🎯 Couvre tout l'éditeur de maps
 - 📊 Avec diagrammes et exemples
 

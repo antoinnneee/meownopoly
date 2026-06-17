@@ -6,6 +6,8 @@ import EditorEnum
 import "../"
 import editorBottomPanel
 import "../../bottomSidePanel/zoneConfigPanel/"
+import theme
+import ui_item
 
 /**
  * Panneau moderne pour gérer les zones d'exclusion et les zones d'effet
@@ -52,32 +54,32 @@ EBP_Content {
     // Arrière-plan avec dégradé subtil
     Rectangle {
         anchors.fill: parent
-        color: "#1a1a1a"
+        color: Theme.background
     }
 
     ScrollView {
         id: mainContent
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.margins: Theme.spacingL
         clip: true
         contentWidth: mainLayout.width
 
         RowLayout {
             id: mainLayout
             height: mainContent.height - 20
-            spacing: 10
+            spacing: Theme.spacingL
 
             // ==================== COLONNE 1: TYPE DE ZONE ====================
             ColumnLayout {
                 Layout.preferredWidth: 110
                 Layout.fillHeight: true
-                spacing: 8
+                spacing: Theme.spacingM
 
                 Text {
                     text: "Type"
-                    font.pointSize: 9
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     Layout.alignment: Qt.AlignHCenter
                 }
 
@@ -86,30 +88,30 @@ EBP_Content {
                     Layout.preferredWidth: 100
                     Layout.preferredHeight: Screen.pixelDensity * 20
                     Layout.alignment: Qt.AlignHCenter
-                    radius: 6
-                    color: root.currentZoneType === "exclusion" ? "#8B0000" : "#2a2a2a"
-                    border.color: root.currentZoneType === "exclusion" ? "#FF6B6B" : "#3a3a3a"
+                    radius: Theme.radiusM
+                    color: root.currentZoneType === "exclusion" ? "#8B0000" : Theme.surface
+                    border.color: root.currentZoneType === "exclusion" ? "#FF6B6B" : Theme.surfaceHover
                     border.width: 2
 
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+                    Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 4
+                        anchors.margins: Theme.spacingM
+                        spacing: Theme.spacingXS
 
                         Text {
                             text: "🚫"
-                            font.pointSize: 16
+                            font.pixelSize: Theme.fontSizeHeading
                             Layout.alignment: Qt.AlignHCenter
                         }
 
                         Text {
                             text: "Exclusion"
-                            font.pointSize: 8
+                            font.pixelSize: Theme.fontSizeSmall
                             font.bold: true
-                            color: "#ffffff"
+                            color: Theme.textPrimary
                             Layout.alignment: Qt.AlignHCenter
                             wrapMode: Text.WordWrap
                             horizontalAlignment: Text.AlignHCenter
@@ -127,30 +129,30 @@ EBP_Content {
                     Layout.preferredWidth: 100
                     Layout.preferredHeight: Screen.pixelDensity * 20
                     Layout.alignment: Qt.AlignHCenter
-                    radius: 6
-                    color: root.currentZoneType === "effect" ? "#1B4F72" : "#2a2a2a"
-                    border.color: root.currentZoneType === "effect" ? "#5DADE2" : "#3a3a3a"
+                    radius: Theme.radiusM
+                    color: root.currentZoneType === "effect" ? "#1B4F72" : Theme.surface
+                    border.color: root.currentZoneType === "effect" ? "#5DADE2" : Theme.surfaceHover
                     border.width: 2
 
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+                    Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 4
+                        anchors.margins: Theme.spacingM
+                        spacing: Theme.spacingXS
 
                         Text {
                             text: "⚡"
-                            font.pointSize: 16
+                            font.pixelSize: Theme.fontSizeHeading
                             Layout.alignment: Qt.AlignHCenter
                         }
 
                         Text {
                             text: "Effet"
-                            font.pointSize: 8
+                            font.pixelSize: Theme.fontSizeSmall
                             font.bold: true
-                            color: "#ffffff"
+                            color: Theme.textPrimary
                             Layout.alignment: Qt.AlignHCenter
                         }
 
@@ -173,32 +175,32 @@ EBP_Content {
             Rectangle {
                 Layout.fillHeight: true
                 width: 1
-                color: "#3a3a3a"
+                color: Theme.surfaceHover
             }
 
             // ==================== COLONNE 2: NOM + COULEURS ====================
             ColumnLayout {
                 Layout.preferredWidth: 250
                 Layout.fillHeight: true
-                spacing: 8
+                spacing: Theme.spacingM
 
                 Text {
                     text: "Nom & Couleur"
-                    font.pointSize: 9
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     Layout.alignment: Qt.AlignHCenter
                 }
 
                 // Nom de la zone (toujours visible)
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: Theme.spacingS
 
                     Text {
                         text: "📝"
-                        font.pointSize: 12
-                        color: "#b0b0b0"
+                        font.pixelSize: Theme.fontSizeLarge
+                        color: Theme.textSecondary
                     }
 
                     TextField {
@@ -206,18 +208,18 @@ EBP_Content {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 32
                         placeholderText: "Nom de la zone..."
-                        placeholderTextColor: "#666666"
+                        placeholderTextColor: Theme.textDisabled
                         selectByMouse: true
-                        font.pointSize: 9
+                        font.pixelSize: Theme.fontSizeBody
 
                         background: Rectangle {
-                            radius: 6
-                            color: "#2a2a2a"
-                            border.color: nameInput.activeFocus ? "#5DADE2" : "#3a3a3a"
+                            radius: Theme.radiusM
+                            color: Theme.surface
+                            border.color: nameInput.activeFocus ? Theme.hover(Theme.accent) : Theme.surfaceHover
                             border.width: 2
                         }
 
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                         onEditingFinished: {
                             updateBackendConfiguration()
                             syncDirectionPicker()
@@ -232,24 +234,24 @@ EBP_Content {
                 // Aperçu couleur + Palette
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 12
+                    spacing: Theme.spacingXL
 
                     // Aperçu de la couleur sélectionnée
                     ColumnLayout {
                         Layout.preferredWidth: 60
-                        spacing: 6
+                        spacing: Theme.spacingS
 
                         Text {
                             text: "Aperçu"
-                            font.pointSize: 7
-                            color: "#b0b0b0"
+                            font.pixelSize: Theme.fontSizeTiny
+                            color: Theme.textSecondary
                             Layout.alignment: Qt.AlignHCenter
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: colorPaletteGrid.height
-                            radius: 8
+                            radius: Theme.radiusL
                             color: colorPicker.selectedColor
                             border.color: Qt.lighter(colorPicker.selectedColor, 1.5)
                             border.width: 2
@@ -257,7 +259,7 @@ EBP_Content {
                             Text {
                                 anchors.centerIn: parent
                                 text: colorPicker.selectedColor.toUpperCase()
-                                font.pointSize: 7
+                                font.pixelSize: Theme.fontSizeTiny
                                 font.bold: true
                                 color: "#ffffff"
                                 style: Text.Outline
@@ -271,12 +273,12 @@ EBP_Content {
                     // Grille de couleurs
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 6
+                        spacing: Theme.spacingS
 
                         Text {
                             text: "🎨 Palette"
-                            font.pointSize: 7
-                            color: "#b0b0b0"
+                            font.pixelSize: Theme.fontSizeTiny
+                            color: Theme.textSecondary
                             Layout.alignment: Qt.AlignHCenter
                         }
 
@@ -284,7 +286,7 @@ EBP_Content {
                             id: colorPaletteGrid
                             Layout.fillWidth: true
                             columns: 6
-                            spacing: 4
+                            spacing: Theme.spacingXS
 
                             Repeater {
                                 model: ["#FF5722", "#E91E63", "#9C27B0", "#673AB7",
@@ -294,12 +296,12 @@ EBP_Content {
                                 Rectangle {
                                     width: (parent.width - 20) / 6
                                     height: width
-                                    radius: 6
+                                    radius: Theme.radiusM
                                     color: modelData
                                     border.color: colorPicker.selectedColor === modelData ? "#ffffff" : "transparent"
                                     border.width: 2
 
-                                    Behavior on border.color { ColorAnimation { duration: 100 } }
+                                    Behavior on border.color { ColorAnimation { duration: Theme.durationFast } }
 
                                     MouseArea {
                                         anchors.fill: parent
@@ -314,7 +316,7 @@ EBP_Content {
                                         }
                                     }
 
-                                    Behavior on scale { NumberAnimation { duration: 100 } }
+                                    Behavior on scale { NumberAnimation { duration: Theme.durationFast } }
                                 }
                             }
                         }
@@ -331,33 +333,33 @@ EBP_Content {
             Rectangle {
                 Layout.fillHeight: true
                 width: 1
-                color: "#3a3a3a"
+                color: Theme.surfaceHover
             }
 
             // ==================== COLONNE 3: PARAMÈTRES (EFFET UNIQUEMENT) ====================
             ColumnLayout {
                 Layout.preferredWidth: 280
                 Layout.fillHeight: true
-                spacing: 8
+                spacing: Theme.spacingM
                 visible: root.currentZoneType === "effect"
 
                 Text {
                     text: "⚙️ Paramètres"
-                    font.pointSize: 9
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     Layout.alignment: Qt.AlignHCenter
                 }
 
                 // Vélocité
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: Theme.spacingS
 
                     Text {
                         text: "💨 Vélocité:"
-                        color: "#b0b0b0"
-                        font.pointSize: 8
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
                         Layout.preferredWidth: 70
                     }
 
@@ -366,19 +368,19 @@ EBP_Content {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 28
                         placeholderText: "X"
-                        placeholderTextColor: "#666666"
+                        placeholderTextColor: Theme.textDisabled
                         validator: DoubleValidator { }
-                        font.pointSize: 8
+                        font.pixelSize: Theme.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
 
                         background: Rectangle {
-                            radius: 4
-                            color: "#2a2a2a"
-                            border.color: velXInput.activeFocus ? "#5DADE2" : "#3a3a3a"
+                            radius: Theme.radiusS
+                            color: Theme.surface
+                            border.color: velXInput.activeFocus ? Theme.hover(Theme.accent) : Theme.surfaceHover
                             border.width: 1
                         }
 
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                         onEditingFinished: {
                             updateBackendConfiguration()
                             syncDirectionPicker()
@@ -394,19 +396,19 @@ EBP_Content {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 28
                         placeholderText: "Y"
-                        placeholderTextColor: "#666666"
+                        placeholderTextColor: Theme.textDisabled
                         validator: DoubleValidator { }
-                        font.pointSize: 8
+                        font.pixelSize: Theme.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
 
                         background: Rectangle {
-                            radius: 4
-                            color: "#2a2a2a"
-                            border.color: velYInput.activeFocus ? "#5DADE2" : "#3a3a3a"
+                            radius: Theme.radiusS
+                            color: Theme.surface
+                            border.color: velYInput.activeFocus ? Theme.hover(Theme.accent) : Theme.surfaceHover
                             border.width: 1
                         }
 
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                         onEditingFinished: {
                             updateBackendConfiguration()
                             syncDirectionPicker()
@@ -422,19 +424,19 @@ EBP_Content {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 28
                         placeholderText: "Force"
-                        placeholderTextColor: "#666666"
+                        placeholderTextColor: Theme.textDisabled
                         validator: DoubleValidator { bottom: 0 }
-                        font.pointSize: 8
+                        font.pixelSize: Theme.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
 
                         background: Rectangle {
-                            radius: 4
-                            color: "#2a2a2a"
-                            border.color: velStrengthInput.activeFocus ? "#5DADE2" : "#3a3a3a"
+                            radius: Theme.radiusS
+                            color: Theme.surface
+                            border.color: velStrengthInput.activeFocus ? Theme.hover(Theme.accent) : Theme.surfaceHover
                             border.width: 1
                         }
 
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                         onEditingFinished: {
                             updateBackendConfiguration()
                             syncDirectionPicker()
@@ -447,213 +449,53 @@ EBP_Content {
                 }
 
                 // Friction
-                RowLayout {
+                MeowSlider {
+                    id: frictionSlider
                     Layout.fillWidth: true
-                    spacing: 6
-
-                    Text {
-                        text: "🧊 Friction:"
-                        color: "#b0b0b0"
-                        font.pointSize: 8
-                        Layout.preferredWidth: 70
-                    }
-
-                    Slider {
-                        id: frictionSlider
-                        Layout.fillWidth: true
-                        from: 0.0
-                        to: 1.0
-                        value: 0.0
-                        stepSize: 0.01
-
-                        background: Rectangle {
-                            x: frictionSlider.leftPadding
-                            y: frictionSlider.topPadding + frictionSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 100
-                            implicitHeight: 4
-                            width: frictionSlider.availableWidth
-                            height: implicitHeight
-                            radius: 2
-                            color: "#3a3a3a"
-
-                            Rectangle {
-                                width: frictionSlider.visualPosition * parent.width
-                                height: parent.height
-                                color: "#5DADE2"
-                                radius: 2
-                            }
-                        }
-
-                        handle: Rectangle {
-                            x: frictionSlider.leftPadding + frictionSlider.visualPosition * (frictionSlider.availableWidth - width)
-                            y: frictionSlider.topPadding + frictionSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 14
-                            implicitHeight: 14
-                            radius: 7
-                            color: "#ffffff"
-                            border.color: "#5DADE2"
-                            border.width: 2
-                        }
-
-                        onMoved: updateBackendConfiguration()
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 45
-                        height: 26
-                        radius: 4
-                        color: "#2a2a2a"
-                        border.color: "#5DADE2"
-                        border.width: 1
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: frictionSlider.value.toFixed(2)
-                            color: "#ffffff"
-                            font.pointSize: 8
-                            font.bold: true
-                        }
-                    }
+                    label: "🧊 Friction:"
+                    labelWidth: 70
+                    labelBold: false
+                    from: 0.0
+                    to: 1.0
+                    value: 0.0
+                    stepSize: 0.01
+                    decimals: 2
+                    accentColor: Theme.hover(Theme.accent)
+                    onMoved: updateBackendConfiguration()
                 }
 
                 // Multiplicateur Vitesse
-                RowLayout {
+                MeowSlider {
+                    id: speedMultSlider
                     Layout.fillWidth: true
-                    spacing: 6
-
-                    Text {
-                        text: "🏃 Mult. Vit:"
-                        color: "#b0b0b0"
-                        font.pointSize: 8
-                        Layout.preferredWidth: 70
-                    }
-
-                    Slider {
-                        id: speedMultSlider
-                        Layout.fillWidth: true
-                        from: 0.1
-                        to: 3.0
-                        value: 1.0
-                        stepSize: 0.1
-
-                        background: Rectangle {
-                            x: speedMultSlider.leftPadding
-                            y: speedMultSlider.topPadding + speedMultSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 100
-                            implicitHeight: 4
-                            width: speedMultSlider.availableWidth
-                            height: implicitHeight
-                            radius: 2
-                            color: "#3a3a3a"
-
-                            Rectangle {
-                                width: speedMultSlider.visualPosition * parent.width
-                                height: parent.height
-                                color: "#4CAF50"
-                                radius: 2
-                            }
-                        }
-
-                        handle: Rectangle {
-                            x: speedMultSlider.leftPadding + speedMultSlider.visualPosition * (speedMultSlider.availableWidth - width)
-                            y: speedMultSlider.topPadding + speedMultSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 14
-                            implicitHeight: 14
-                            radius: 7
-                            color: "#ffffff"
-                            border.color: "#4CAF50"
-                            border.width: 2
-                        }
-
-                        onMoved: updateBackendConfiguration()
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 45
-                        height: 26
-                        radius: 4
-                        color: "#2a2a2a"
-                        border.color: "#4CAF50"
-                        border.width: 1
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "×" + speedMultSlider.value.toFixed(1)
-                            color: "#ffffff"
-                            font.pointSize: 8
-                            font.bold: true
-                        }
-                    }
+                    label: "🏃 Mult. Vit:"
+                    labelWidth: 70
+                    labelBold: false
+                    from: 0.1
+                    to: 3.0
+                    value: 1.0
+                    stepSize: 0.1
+                    decimals: 1
+                    unitText: "×"
+                    accentColor: Theme.success
+                    onMoved: updateBackendConfiguration()
                 }
 
                 // Multiplicateur Accélération
-                RowLayout {
+                MeowSlider {
+                    id: accelMultSlider
                     Layout.fillWidth: true
-                    spacing: 6
-
-                    Text {
-                        text: "⚡ Mult. Acc:"
-                        color: "#b0b0b0"
-                        font.pointSize: 8
-                        Layout.preferredWidth: 70
-                    }
-
-                    Slider {
-                        id: accelMultSlider
-                        Layout.fillWidth: true
-                        from: 0.0
-                        to: 10.0
-                        value: 1.0
-                        stepSize: 0.05
-
-                        background: Rectangle {
-                            x: accelMultSlider.leftPadding
-                            y: accelMultSlider.topPadding + accelMultSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 100
-                            implicitHeight: 4
-                            width: accelMultSlider.availableWidth
-                            height: implicitHeight
-                            radius: 2
-                            color: "#3a3a3a"
-
-                            Rectangle {
-                                width: accelMultSlider.visualPosition * parent.width
-                                height: parent.height
-                                color: "#FF9800"
-                                radius: 2
-                            }
-                        }
-
-                        handle: Rectangle {
-                            x: accelMultSlider.leftPadding + accelMultSlider.visualPosition * (accelMultSlider.availableWidth - width)
-                            y: accelMultSlider.topPadding + accelMultSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 14
-                            implicitHeight: 14
-                            radius: 7
-                            color: "#ffffff"
-                            border.color: "#FF9800"
-                            border.width: 2
-                        }
-
-                        onMoved: updateBackendConfiguration()
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 45
-                        height: 26
-                        radius: 4
-                        color: "#2a2a2a"
-                        border.color: "#FF9800"
-                        border.width: 1
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "×" + accelMultSlider.value.toFixed(2)
-                            color: "#ffffff"
-                            font.pointSize: 8
-                            font.bold: true
-                        }
-                    }
+                    label: "⚡ Mult. Acc:"
+                    labelWidth: 70
+                    labelBold: false
+                    from: 0.0
+                    to: 10.0
+                    value: 1.0
+                    stepSize: 0.05
+                    decimals: 2
+                    unitText: "×"
+                    accentColor: Theme.warning
+                    onMoved: updateBackendConfiguration()
                 }
 
                 // Espaceur pour pousser vers le haut
@@ -666,7 +508,7 @@ EBP_Content {
             Rectangle {
                 Layout.fillHeight: true
                 width: 1
-                color: "#3a3a3a"
+                color: Theme.surfaceHover
                 visible: root.currentZoneType === "effect"
             }
 
@@ -674,14 +516,14 @@ EBP_Content {
             ColumnLayout {
                 Layout.preferredWidth: 200
                 Layout.fillHeight: true
-                spacing: 8
+                spacing: Theme.spacingM
                 visible: root.currentZoneType === "effect"
 
                 Text {
                     text: "Direction"
-                    font.pointSize: 9
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     Layout.alignment: Qt.AlignHCenter
                 }
 
@@ -692,10 +534,10 @@ EBP_Content {
                     Layout.fillHeight: true
                     Layout.alignment: Qt.AlignHCenter
 
-                    backgroundColor: "#1a1a1a"
-                    circleColor: "#333333"
-                    arrowColor: "#5DADE2"
-                    gridColor: "#444444"
+                    backgroundColor: Theme.background
+                    circleColor: Theme.surfaceAlt
+                    arrowColor: Theme.hover(Theme.accent)
+                    gridColor: Theme.border
                     highlightColor: "#7bd97f"
                     circleSize: 140
 
@@ -718,7 +560,7 @@ EBP_Content {
             Rectangle {
                 Layout.fillHeight: true
                 width: 1
-                color: "#3a3a3a"
+                color: Theme.surfaceHover
                 visible: root.currentZoneType === "effect"
             }
 
@@ -726,13 +568,13 @@ EBP_Content {
             ColumnLayout {
                 Layout.preferredWidth: 140
                 Layout.fillHeight: true
-                spacing: 8
+                spacing: Theme.spacingM
 
                 Text {
                     text: "Action"
-                    font.pointSize: 9
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
-                    color: "#ffffff"
+                    color: Theme.textPrimary
                     Layout.alignment: Qt.AlignHCenter
                 }
 
@@ -741,7 +583,7 @@ EBP_Content {
                     Layout.preferredWidth: 120
                     Layout.preferredHeight: 70
                     Layout.alignment: Qt.AlignHCenter
-                    radius: 8
+                    radius: Theme.radiusL
                     color: root.isDrawModeActive ? "#8B0000" : colorPicker.selectedColor
                     border.color: Qt.lighter(colorPicker.selectedColor, 1.5)
                     border.width: 2
@@ -750,16 +592,16 @@ EBP_Content {
 
                     ColumnLayout {
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: Theme.spacingXS
 
                         Text {
                             text: root.isDrawModeActive ? "❌" : "✏️"
-                            font.pointSize: 20
+                            font.pixelSize: Theme.fontSizeDisplay
                         }
 
                         Text {
                             text: root.isDrawModeActive ? "Annuler" : "Dessiner"
-                            font.pointSize: 10
+                            font.pixelSize: Theme.fontSizeBody
                             font.bold: true
                             color: "#ffffff"
                         }
@@ -789,16 +631,16 @@ EBP_Content {
                         }
                     }
 
-                    Behavior on scale { NumberAnimation { duration: 100 } }
+                    Behavior on scale { NumberAnimation { duration: Theme.durationFast } }
                 }
 
                 // Instructions
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: 6
-                    color: "#2a2a2a"
-                    border.color: root.isDrawModeActive ? "#FFEB3B" : "#3a3a3a"
+                    radius: Theme.radiusM
+                    color: Theme.surface
+                    border.color: root.isDrawModeActive ? "#FFEB3B" : Theme.surfaceHover
                     border.width: root.isDrawModeActive ? 2 : 1
                     visible: root.isDrawModeActive
 
@@ -806,16 +648,16 @@ EBP_Content {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 8
+                        anchors.margins: Theme.spacingM
+                        spacing: Theme.spacingM
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 6
+                            spacing: Theme.spacingS
 
                             Text {
                                 text: "📌 Instructions"
-                                font.pointSize: 9
+                                font.pixelSize: Theme.fontSizeBody
                                 font.bold: true
                                 color: "#FFEB3B"
                             }
@@ -824,30 +666,30 @@ EBP_Content {
                             Rectangle {
                                 Layout.preferredWidth: 50
                                 Layout.preferredHeight: 18
-                                radius: 4
-                                color: root.isGridSnapActive ? "#4CAF50" : "#555555"
-                                border.color: root.isGridSnapActive ? "#7bd97f" : "#666666"
+                                radius: Theme.radiusS
+                                color: root.isGridSnapActive ? Theme.success : Theme.borderLight
+                                border.color: root.isGridSnapActive ? "#7bd97f" : Theme.textDisabled
                                 border.width: 1
                                 visible: root.isDrawModeActive
 
-                                Behavior on color { ColorAnimation { duration: 150 } }
-                                Behavior on border.color { ColorAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+                                Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
 
                                 RowLayout {
                                     anchors.centerIn: parent
-                                    spacing: 2
+                                    spacing: Theme.spacingXXS
 
                                     Text {
                                         text: "⊞"
-                                        font.pointSize: 8
-                                        color: root.isGridSnapActive ? "#ffffff" : "#999999"
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        color: root.isGridSnapActive ? Theme.textPrimary : Theme.textMuted
                                     }
 
                                     Text {
                                         text: root.isGridSnapActive ? "ON" : "OFF"
-                                        font.pointSize: 6
+                                        font.pixelSize: Theme.fontSizeTiny
                                         font.bold: true
-                                        color: root.isGridSnapActive ? "#ffffff" : "#999999"
+                                        color: root.isGridSnapActive ? Theme.textPrimary : Theme.textMuted
                                     }
                                 }
                             }
@@ -855,7 +697,7 @@ EBP_Content {
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 4
+                            spacing: Theme.spacingXS
 
                             Repeater {
                                 model: [
@@ -866,17 +708,17 @@ EBP_Content {
                                 ]
 
                                 RowLayout {
-                                    spacing: 4
+                                    spacing: Theme.spacingXS
 
                                     Text {
                                         text: modelData.icon
-                                        font.pointSize: 10
+                                        font.pixelSize: Theme.fontSizeBody
                                     }
 
                                     Text {
                                         text: modelData.text
-                                        font.pointSize: 7
-                                        color: "#b0b0b0"
+                                        font.pixelSize: Theme.fontSizeTiny
+                                        color: Theme.textSecondary
                                     }
                                 }
                             }

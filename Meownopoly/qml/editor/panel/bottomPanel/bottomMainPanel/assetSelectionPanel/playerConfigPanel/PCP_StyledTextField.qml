@@ -1,25 +1,26 @@
 import QtQuick
 import QtQuick.Controls
+import theme
 
 /*
  * TextField stylé cohérent avec CCPS_GeneralSection (caseConfigPanel) :
- * fond #2a2a2a, texte blanc, bordure #555555 avec accent #569c58 au focus.
+ * fond Theme.surface, texte blanc, bordure Theme.borderLight avec accent Theme.accentAlt au focus.
  */
 TextField {
     id: control
 
-    color: "#ffffff"
-    selectionColor: "#569c58"
-    selectedTextColor: "#ffffff"
-    font.pixelSize: 12
-    padding: 6
+    color: Theme.textPrimary
+    selectionColor: Theme.accentAlt
+    selectedTextColor: Theme.textPrimary
+    font.pixelSize: Theme.fontSizeBody
+    padding: Theme.spacingS
 
     background: Rectangle {
-        color: "#2a2a2a"
-        radius: 3
-        border.color: control.activeFocus ? "#569c58" : "#555555"
+        color: Theme.surface
+        radius: Theme.radiusXS
+        border.color: control.activeFocus ? Theme.accentAlt : Theme.borderLight
         border.width: 1
 
-        Behavior on border.color { ColorAnimation { duration: 150 } }
+        Behavior on border.color { ColorAnimation { duration: Theme.durationNormal } }
     }
 }

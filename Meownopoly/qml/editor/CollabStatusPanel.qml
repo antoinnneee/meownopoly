@@ -4,6 +4,7 @@ import QtQuick.Controls
 import UiStyle
 import Catway 1.0
 import EditorSession 1.0
+import theme
 
 Item {
     id: root
@@ -20,28 +21,28 @@ Item {
         anchors.left: parent.left
         width: badgeRow.implicitWidth + 20
         height: badgeRow.implicitHeight + 10
-        radius: 6
+        radius: Theme.radiusM
         color: EditorSession.isHost ? "#1e4d3a" : "#1e3a5f"
-        border.color: EditorSession.isHost ? "#22c55e" : "#3b82f6"
+        border.color: EditorSession.isHost ? Theme.success : Theme.accent
         border.width: 1
 
         Row {
             id: badgeRow
             anchors.centerIn: parent
-            spacing: 8
+            spacing: Theme.spacingM
             Rectangle {
                 width: 10
                 height: 10
                 radius: 5
                 anchors.verticalCenter: parent.verticalCenter
-                color: EditorSession.isHost ? "#22c55e" : "#3b82f6"
+                color: EditorSession.isHost ? Theme.success : Theme.accent
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: (EditorSession.isHost ? "Collab · Hôte" : "Collab · Client")
                       + (EditorSession.sessionId ? "  (" + EditorSession.sessionId + ")" : "")
-                color: "#f4f4f5"
-                font.pixelSize: 12
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
                 font.bold: true
             }
         }
@@ -62,12 +63,12 @@ Item {
         visible: EditorSession.active && open
         anchors.top: collabBadge.bottom
         anchors.left: parent.left
-        anchors.topMargin: 6
+        anchors.topMargin: Theme.spacingS
         width: Math.max(320, statsCol.implicitWidth + 20)
         height: statsCol.implicitHeight + 16
-        radius: 8
-        color: "#0f172a"
-        border.color: "#334155"
+        radius: Theme.radiusL
+        color: Theme.background
+        border.color: Theme.border
         border.width: 1
         opacity: 0.95
 
@@ -107,74 +108,74 @@ Item {
         Column {
             id: statsCol
             anchors.fill: parent
-            anchors.margins: 10
-            spacing: 8
+            anchors.margins: Theme.spacingL
+            spacing: Theme.spacingM
 
             Row {
-                spacing: 6
+                spacing: Theme.spacingS
                 Text {
                     text: "📊 Réseau (reliable.io)"
-                    color: "#f1f5f9"
-                    font.pixelSize: 12
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeBody
                     font.bold: true
                 }
                 Text {
                     text: "pairs: " + Object.keys(netStatsPanel.snapshots).length
                           + "  (tick " + netStatsPanel.tick + ")"
-                    color: "#94a3b8"
-                    font.pixelSize: 11
+                    color: Theme.textHint
+                    font.pixelSize: Theme.fontSizeSmall
                 }
             }
 
-            Rectangle { width: parent.width; height: 1; color: "#1e293b" }
+            Rectangle { width: parent.width; height: 1; color: Theme.border }
 
             Repeater {
                 model: (netStatsPanel.tick, netStatsPanel._playerIds())
                 delegate: Column {
                     width: statsCol.width
-                    spacing: 3
+                    spacing: Theme.spacingXXS
                     readonly property var s: (netStatsPanel.tick,
                                               netStatsPanel.snapshots[modelData] || ({}))
 
                     Text {
                         text: modelData.substring(0, 12)
                               + (EditorSession.hostPlayerId === modelData ? "  🛡️ hôte" : "")
-                        color: "#cbd5e1"
-                        font.pixelSize: 11
+                        color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeSmall
                         font.bold: true
                         font.family: "Consolas, Monaco, monospace"
                     }
                     Grid {
                         columns: 4
-                        columnSpacing: 10
-                        rowSpacing: 2
-                        Text { text: "RTT";    color: "#64748b"; font.pixelSize: 10 }
-                        Text { text: netStatsPanel._fmt(s.rtt) + " ms";    color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
-                        Text { text: "loss";   color: "#64748b"; font.pixelSize: 10 }
+                        columnSpacing: Theme.spacingL
+                        rowSpacing: Theme.spacingXXS
+                        Text { text: "RTT";    color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+                        Text { text: netStatsPanel._fmt(s.rtt) + " ms";    color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "loss";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
                         Text {
                             text: netStatsPanel._fmt(s.packetLoss || 0) + " %"
-                            color: (s.packetLoss || 0) > 0.05 ? "#f87171" : "#e2e8f0"
-                            font.pixelSize: 10
+                            color: (s.packetLoss || 0) > 0.05 ? Theme.dangerSoft : Theme.textSoft
+                            font.pixelSize: Theme.fontSizeCaption
                             font.family: "Consolas, Monaco, monospace"
                         }
-                        Text { text: "sent";   color: "#64748b"; font.pixelSize: 10 }
-                        Text { text: netStatsPanel._fmt(s.sentBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
-                        Text { text: "recv";   color: "#64748b"; font.pixelSize: 10 }
-                        Text { text: netStatsPanel._fmt(s.recvBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
-                        Text { text: "acked";  color: "#64748b"; font.pixelSize: 10 }
-                        Text { text: netStatsPanel._fmt(s.ackedBwKbps) + " kbps"; color: "#e2e8f0"; font.pixelSize: 10; font.family: "Consolas, Monaco, monospace" }
-                        Text { text: "pkts";   color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: "sent";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+                        Text { text: netStatsPanel._fmt(s.sentBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "recv";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+                        Text { text: netStatsPanel._fmt(s.recvBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "acked";  color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+                        Text { text: netStatsPanel._fmt(s.ackedBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
+                        Text { text: "pkts";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
                         Text {
                             text: (s.packetsSent || 0) + "↑ / " + (s.packetsAcked || 0) + "✓"
-                            color: "#e2e8f0"
-                            font.pixelSize: 10
+                            color: Theme.textSoft
+                            font.pixelSize: Theme.fontSizeCaption
                             font.family: "Consolas, Monaco, monospace"
                         }
-                        Text { text: "frag";   color: "#64748b"; font.pixelSize: 10 }
+                        Text { text: "frag";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
                         Text {
                             text: (s.fragmentsSent || 0) + "↑ / " + (s.fragmentsReceived || 0) + "↓"
-                            color: "#e2e8f0"
-                            font.pixelSize: 10
+                            color: Theme.textSoft
+                            font.pixelSize: Theme.fontSizeCaption
                             font.family: "Consolas, Monaco, monospace"
                         }
                     }
@@ -184,8 +185,8 @@ Item {
             Text {
                 visible: Object.keys(netStatsPanel.snapshots).length === 0
                 text: "Aucun pair P2P connecté."
-                color: "#64748b"
-                font.pixelSize: 10
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeCaption
                 font.italic: true
             }
         }

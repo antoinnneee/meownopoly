@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import EditorOpBus 1.0
+import theme
 
 Rectangle {
     id: root
@@ -45,8 +46,8 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingM
 
         RowLayout {
             Layout.fillWidth: true
@@ -54,22 +55,22 @@ Rectangle {
                 text: "Log d'ops"
                 color: host.textPrimary
                 font.bold: true
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
                 Layout.fillWidth: true
             }
             Button {
                 text: "Clear"
                 onClicked: opsLog.text = ""
                 background: Rectangle {
-                    color: parent.pressed ? host.accent : "#2d2d35"
-                    radius: 6
+                    color: parent.pressed ? host.accent : Theme.surfaceAlt
+                    radius: Theme.radiusM
                     border.color: host.cardBorder
                     border.width: 1
                 }
                 contentItem: Text {
                     text: parent.text
                     color: host.textPrimary
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -79,7 +80,7 @@ Rectangle {
         Text {
             text: "→ soumission locale / ← op distante reçue"
             color: host.textSecondary
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSizeCaption
             font.italic: true
         }
 
@@ -92,11 +93,11 @@ Rectangle {
                 readOnly: true
                 wrapMode: Text.NoWrap
                 font.family: "Consolas"
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
                 color: host.textPrimary
                 background: Rectangle {
-                    color: "#0e0e13"
-                    radius: 6
+                    color: Theme.background
+                    radius: Theme.radiusM
                     border.color: host.cardBorder
                     border.width: 1
                 }

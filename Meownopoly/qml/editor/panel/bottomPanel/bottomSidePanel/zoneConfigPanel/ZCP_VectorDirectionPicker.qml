@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
+import theme
 
 /**
  * VectorDirectionPicker - Composant intuitif pour configurer un vecteur 2D
@@ -36,7 +37,7 @@ Item {
     
     ColumnLayout {
         anchors.fill: parent
-        spacing: 8
+        spacing: Theme.spacingM
         
         // Zone circulaire interactive
         Rectangle {
@@ -50,7 +51,7 @@ Item {
             border.width: 2
             
             Behavior on border.color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Theme.durationNormal }
             }
             
             // Grille de fond (axes)
@@ -206,38 +207,38 @@ Item {
         // Affichage des valeurs
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            spacing: 12
-            
+            spacing: Theme.spacingXL
+
             // Valeur X
             RowLayout {
-                spacing: 4
+                spacing: Theme.spacingXS
                 Text {
                     text: "X:"
-                    color: "#888888"
-                    font.pixelSize: 11
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 Text {
                     text: root.directionX.toFixed(2)
-                    color: "#ffffff"
-                    font.pixelSize: 11
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                     horizontalAlignment: Text.AlignRight
                     Layout.preferredWidth: 35
                 }
             }
-            
+
             // Valeur Y
             RowLayout {
-                spacing: 4
+                spacing: Theme.spacingXS
                 Text {
                     text: "Y:"
-                    color: "#888888"
-                    font.pixelSize: 11
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSmall
                 }
                 Text {
                     text: root.directionY.toFixed(2)
-                    color: "#ffffff"
-                    font.pixelSize: 11
+                    color: Theme.textPrimary
+                    font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
                     horizontalAlignment: Text.AlignRight
                     Layout.preferredWidth: 35
@@ -250,16 +251,16 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             width: 60
             height: 22
-            radius: 4
-            color: resetArea.pressed ? "#444444" : (resetArea.containsMouse ? "#3a3a3a" : "#2a2a2a")
-            border.color: "#555555"
+            radius: Theme.radiusS
+            color: resetArea.pressed ? Theme.border : (resetArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+            border.color: Theme.borderLight
             border.width: 1
-            
+
             Text {
                 anchors.centerIn: parent
                 text: "Reset"
-                color: "#cccccc"
-                font.pixelSize: 10
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
             }
             
             MouseArea {

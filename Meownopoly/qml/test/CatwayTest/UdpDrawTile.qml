@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Catway 1.0
+import theme
 
 Rectangle {
     id: udpDrawTileRoot
@@ -50,24 +51,24 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.spacingXL
+        spacing: Theme.spacingM
         RowLayout {
             Layout.fillWidth: true
             Text {
                 text: "Dessin (16×64)"
                 color: host.textPrimary
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSizeMedium
                 font.bold: true
             }
             Item { Layout.fillWidth: true }
             Button {
                 text: "Effacer"
                 implicitHeight: 28
-                font.pixelSize: 11
+                font.pixelSize: Theme.fontSizeSmall
                 background: Rectangle {
-                    color: parent.pressed ? "#2d2d35" : "transparent"
-                    radius: 4
+                    color: parent.pressed ? Theme.surfaceAlt : "transparent"
+                    radius: Theme.radiusS
                     border.color: host.cardBorder
                     border.width: 1
                 }
@@ -88,7 +89,7 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 12
+            spacing: Theme.spacingXL
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -102,17 +103,17 @@ Rectangle {
             }
             ColumnLayout {
                 Layout.alignment: Qt.AlignVCenter
-                spacing: 6
+                spacing: Theme.spacingS
                 Text {
                     text: "Couleur"
                     color: host.textSecondary
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSmall
                     Layout.alignment: Qt.AlignHCenter
                 }
                 GridLayout {
                     columns: 2
-                    rowSpacing: 4
-                    columnSpacing: 4
+                    rowSpacing: Theme.spacingXS
+                    columnSpacing: Theme.spacingXS
                     Layout.alignment: Qt.AlignHCenter
                     Repeater {
                         id: colorRepeater
@@ -129,7 +130,7 @@ Rectangle {
                         delegate: Rectangle {
                             width: 28
                             height: 28
-                            radius: 6
+                            radius: Theme.radiusM
                             color: modelData
                             border.width: index === udpDrawTileRoot.selectedColorIndex ? 2 : 0
                             border.color: host.textPrimary
