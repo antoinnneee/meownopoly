@@ -1,24 +1,19 @@
 /*
- * EditorPhysicsBridge — Phase 3 (zones) + Phase 9 (objets dynamiques)
+ * EditorPhysicsBridge — Phase 3 (zones)
  *
  * Pont entre l'éditeur QML et le moteur physique Pattounx v2.
  *
  *   ItemSnapableEvents (C++)        EditorPhysicsBridge (ce fichier)
  *   ─────────────────────       →   ─────────────────────────────
  *   tileCreated(tile)               upsertZone si PhysicZoneTile
- *                                   createDynamicCircle si PhysicalObjectTile
  *   tileMoved(tile)                 upsert (debounce ~30 Hz)
  *   zoneParameterChanged(tile)      upsert (debounce ~30 Hz)
- *   tileDeleted(uuid, tileType)     removeZone / removeBody selon tileType
+ *   tileDeleted(uuid, tileType)     removeZone si PhysicZoneTile
  *
  * Conventions :
  *  - Zones : polygones en coordonnées absolues "unités de grille"
  *      absX = displayParameter.gridRelativePositionX + point.x
  *      absY = displayParameter.gridRelativePositionY + point.y
- *  - Objets dynamiques : centre = origine tile + (unitSizeW/2, unitSizeH/2)
- *      radius = unitSizeWidth / 2.0 (cercle inscrit dans la tile)
- *      mass = 1.0 (pour l'instant ; un futur PhysicalObjectParameter
- *      exposera mass/bounce/friction).
  *
  * Le PhysicsWorld n'impose aucun système d'unités — on reste cohérent
  * avec PhysicsTestTab qui utilise déjà des Qt.vector2d(gridX, gridY).
@@ -52,27 +47,20 @@ Item {
         target: ItemSnapableEvents
 
         function onTileCreated(tile) {
-            if (root._isPhysicZone(tile) || root._isPhysicalObject(tile))
+            if (root._isPhysicZone(tile))
                 root._enqueueUpsert(tile)
         }
         function onTileMoved(tile) {
-            if (root._isPhysicZone(tile) || root._isPhysicalObject(tile))
+            if (root._isPhysicZone(tile))
                 root._enqueueUpsert(tile)
         }
         function onZoneParameterChanged(tile) {
             if (!root._isPhysicZone(tile)) return
             root._enqueueUpsert(tile)
         }
-        function onPhysicalObjectParameterChanged(tile) {
-            if (!root._isPhysicalObject(tile)) return
-            root._enqueueUpsert(tile)
-        }
         function onTileDeleted(tileId, tileType) {
-            if (tileType === ItemSnapable.PhysicZoneTile) {
+            if (tileType === ItemSnapable.PhysicZoneTile)
                 root._removeZoneNow(tileId)
-            } else if (tileType === ItemSnapable.PhysicalObjectTile) {
-                root._removeBodyNow(tileId)
-            }
         }
     }
 
@@ -98,11 +86,6 @@ Item {
               && tile.zoneParameter
     }
 
-    function _isPhysicalObject(tile) {
-        return tile && tile.tileType === ItemSnapable.PhysicalObjectTile
-              && tile.displayParameter
-    }
-
     function _idForTile(tile) {
         // uniqueId est un QUuid → string via toString() inclut les accolades.
         // On garde la forme "{...}" pour cohérence avec d'autres parties C++.
@@ -125,7 +108,6 @@ Item {
             const tile = _pendingByUuid[ids[i]]
             if (!tile) continue
             if (_isPhysicZone(tile)) _upsertZoneNow(tile)
-            else if (_isPhysicalObject(tile)) _upsertObjectNow(tile)
         }
         _pendingByUuid = {}
     }
@@ -171,57 +153,11 @@ Item {
         root.physicsWorld.upsertZone(_idForTile(tile), absPoints, params)
     }
 
-    function _upsertObjectNow(tile) {
-        if (!_isPhysicalObject(tile)) return
-        const dp = tile.displayParameter
-        const w  = dp.unitSizeWidth  || 1
-        const h  = dp.unitSizeHeight || 1
-        // Cercle inscrit dans la tile, centré sur la tile.
-        const radius = Math.max(0.05, Math.min(w, h) / 2.0)
-        const center = Qt.vector2d(dp.gridRelativePositionX + w / 2.0,
-                                   dp.gridRelativePositionY + h / 2.0)
-
-        // PhysicalObjectParameter : extension post-Phase-9. Si présent,
-        // on lit mass/bounceFactor/frictionStrength/linearDamping ; sinon
-        // on tombe sur les defaults câblés dans physics_world (specFromKinematic).
-        // On passe le curseur de friction unique ; physics_world.cpp
-        // (specFromKinematic) en dérive staticFriction/dynamicFriction.
-        // Le bridge ne fait plus d'arithmétique de friction.
-        const pop = tile.physicalObjectParameter
-        const params = pop ? {
-            bounceFactor:     pop.bounceFactor,
-            linearDamping:    pop.linearDamping,
-            frictionStrength: pop.frictionStrength
-        } : {}
-        const mass = pop ? pop.mass : 1.0
-
-        // upsertBody (via createDynamicCircle) : si déjà présent, le worker
-        // ne réécrit que la spec (rayon/masse), la position courante est
-        // préservée → on appelle setBodyPosition explicitement après pour
-        // recoller à la grille.
-        const id = _idForTile(tile)
-        if (root.verbose) {
-            console.log("[EditorPhysicsBridge] upsert object", id,
-                        "center=", center.x, center.y,
-                        "radius=", radius, "mass=", mass)
-        }
-        root.physicsWorld.createDynamicCircle(id, center, radius, mass, params)
-        root.physicsWorld.setBodyPosition(id, center)
-    }
-
     function _removeZoneNow(tileId) {
         if (!root.physicsWorld) return
         const id = tileId.toString()
         if (_pendingByUuid[id]) delete _pendingByUuid[id]
         if (root.verbose) console.log("[EditorPhysicsBridge] remove zone", id)
         root.physicsWorld.removeZone(id)
-    }
-
-    function _removeBodyNow(tileId) {
-        if (!root.physicsWorld) return
-        const id = tileId.toString()
-        if (_pendingByUuid[id]) delete _pendingByUuid[id]
-        if (root.verbose) console.log("[EditorPhysicsBridge] remove body", id)
-        root.physicsWorld.removeBody(id)
     }
 }

@@ -19,8 +19,7 @@ PhysicalObjectParameter::PhysicalObjectParameter(const QJsonObject &json, QObjec
 //  - mass : strictement > 0 (un body Dynamic à masse nulle a une invMass
 //    infinie → solver d'impulsion qui diverge). Plancher 0.01.
 //  - bounceFactor / linearDamping : coefficients normalisés [0, 1].
-//  - frictionStrength : coefficient de Coulomb normalisé [0, 1] (le bridge
-//    en dérive staticFriction = v et dynamicFriction = v * 0.5).
+//  - frictionStrength : coefficient de Coulomb normalisé [0, 1].
 void PhysicalObjectParameter::setMass(qreal v)
 {
     v = qMax(0.01, v);

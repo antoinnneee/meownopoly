@@ -5,16 +5,20 @@
 #include <QJsonObject>
 
 /**
- * Phase 9 (extension post-cleanup) — paramètres physiques d'une caisse
- * `ItemSnapable::PhysicalObjectTile`.
+ * Paramètres physiques d'une caisse / objet dynamique poussable.
  *
- * Modélisé sur DecorationParameter (QObject + Q_PROPERTY + JSON), pas
- * sur ZoneParameter (qui porte un polygone et beaucoup d'état). Ici on
- * ne tient que les coefficients lus par le moteur Pattounx v2 lors
- * de la création du Body Dynamic. Le rayon reste dérivé du
- * `displayParameter.unitSizeWidth` (cercle inscrit), donc absent de
- * cette classe — le couplage taille_visuelle ↔ rayon_collision est
- * géré par EditorPhysicsBridge.
+ * ⚠️ ACTUELLEMENT NON CÂBLÉ. La feature « caisses » (PhysicalObjectTile,
+ * SnapablePhysicalObject, PhysicsObjectSpawner, le chemin objet de
+ * EditorPhysicsBridge) a été retirée. Cette classe est **conservée
+ * volontairement comme brique réutilisable** pour une future ré-intégration
+ * d'objets physiques dans l'éditeur. Elle compile en standalone mais n'est
+ * référencée par aucun ItemSnapable pour l'instant.
+ *
+ * Conçue sur le modèle de DecorationParameter (QObject + Q_PROPERTY + JSON) :
+ * elle ne porte que les coefficients lus par le moteur Pattounx v2 à la
+ * création d'un Body Dynamic (mass, bounce, friction, damping). Le rayon de
+ * collision n'y figure pas — dans l'ancienne intégration il était dérivé de
+ * `displayParameter.unitSizeWidth` (cercle inscrit).
  */
 class PhysicalObjectParameter : public QObject
 {

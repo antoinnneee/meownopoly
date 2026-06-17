@@ -19,14 +19,6 @@ using namespace pattounx;
 
 namespace {
 
-// L'éditeur n'expose qu'un seul curseur de friction (PhysicalObjectParameter::
-// frictionStrength, 0..1). Le moteur Coulomb a besoin de deux coefficients :
-// l'accroche au repos (statique) et le glissement entretenu (dynamique), ce
-// dernier étant typiquement plus faible. On dérive donc dynamicFriction du
-// statique par ce ratio. Centralisé ici (et pas dans le QML du bridge) pour
-// que tout chemin de création — éditeur, réseau, runtime — parte du même calcul.
-constexpr qreal kDynamicFrictionRatio = 0.5;
-
 BodySpec specFromKinematic(const QString &id, QVector2D pos, qreal radius,
                            const QVariantMap &p)
 {
@@ -42,17 +34,8 @@ BodySpec specFromKinematic(const QString &id, QVector2D pos, qreal radius,
     s.bounceFactor = p.value(QStringLiteral("bounceFactor"), 0.1).toReal();
     s.slideFactor = p.value(QStringLiteral("slideFactor"), 1.0).toReal();
     s.linearDamping = p.value(QStringLiteral("linearDamping"), 0.1).toReal();
-    // Friction : un curseur unique `frictionStrength` dérive les deux
-    // coefficients Coulomb ; sinon valeurs explicites (chemin avancé /
-    // désérialisation réseau qui transporte déjà les deux coefficients).
-    if (p.contains(QStringLiteral("frictionStrength"))) {
-        const qreal fs = p.value(QStringLiteral("frictionStrength")).toReal();
-        s.staticFriction = fs;
-        s.dynamicFriction = fs * kDynamicFrictionRatio;
-    } else {
-        s.staticFriction = p.value(QStringLiteral("staticFriction"), 0.4).toReal();
-        s.dynamicFriction = p.value(QStringLiteral("dynamicFriction"), 0.2).toReal();
-    }
+    s.staticFriction = p.value(QStringLiteral("staticFriction"), 0.4).toReal();
+    s.dynamicFriction = p.value(QStringLiteral("dynamicFriction"), 0.2).toReal();
     s.restitution = p.value(QStringLiteral("restitution"), 0.3).toReal();
     return s;
 }

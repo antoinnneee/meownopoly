@@ -1196,16 +1196,6 @@ Base_Board {
         physicsWorld: pattounxWorld
     }
 
-    // Phase 9 — pour chaque PhysicalObjectTile posée, instancie un Model 3D
-    // (cube orange) + un PhysicsActor (autoOrient: false, présentateur partagé
-    // joueur ↔ caisse) qui lit le snapshot physique. La création du body
-    // Dynamic est faite par EditorPhysicsBridge ci-dessus, donc les deux
-    // écoutent le même flux ItemSnapableEvents.
-    PhysicsObjectSpawner {
-        id: physicsObjectSpawner
-        world3D: gameScene
-    }
-
     // Layer GPU qui dessine TOUTES les zones d'exclusion en un seul item
     // viewport-cullé. Remplace les ZoneCanvasPainter individuels (1 par
     // tile) qui freezaient au zoom extrême — leur backing texture suivait
