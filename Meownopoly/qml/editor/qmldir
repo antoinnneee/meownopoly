@@ -10,3 +10,4 @@ ZoneConfigurationPanelSection 1.0 panel/bottomPanel/bottomSidePanel/zoneConfigPa
 MapInfoPanel 1.0 panel/mapInfoPanel/MapInfoPanel.qml
 SelectionPanel 1.0 panel/bottomPanel/bottomMainPanel/SelectionPanel.qml
 BottomSidePanel 1.0 panel/bottomPanel/bottomSidePanel/BottomSidePanel.qml
+ModuleManager 1.0 panel/bottomPanel/bottomMainPanel/menuSelectionPanel/moduleManager/ModuleManager.qml

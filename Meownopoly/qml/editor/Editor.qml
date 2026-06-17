@@ -1205,6 +1205,27 @@ Base_Board {
         }
     }
 
+    // Barre horizontale du gestionnaire de modules, en haut de l'éditeur :
+    // entre les badges d'informations (leftBadgeStack, à gauche) et les
+    // boutons HUD BtSideMenu (btSelection, à droite). Le "+" et les vignettes
+    // de module ont la même dimension que les BtSideMenu.
+    ModuleManager {
+        id: moduleManager
+        z: UiStyle.z_HUD
+        anchors.top: parent.top
+        anchors.topMargin: Theme.spacingL
+        anchors.left: leftBadgeStack.right
+        anchors.leftMargin: Theme.spacingL
+        anchors.right: btSelection.left
+        anchors.rightMargin: Theme.spacingL
+        height: btSelection.height
+        itemSize: btSelection.height
+
+        onModuleAdded: function (moduleId) {
+            console.log("[ModuleManager] module ajouté :", moduleId)
+        }
+    }
+
     // Phase 3 — sync live des zones physiques. Reçoit les events de
     // ItemSnapableEvents (singleton C++) et pousse upsertZone/removeZone
     // vers le `physicsWorld` global. Reste inerte tant que le moteur n'est

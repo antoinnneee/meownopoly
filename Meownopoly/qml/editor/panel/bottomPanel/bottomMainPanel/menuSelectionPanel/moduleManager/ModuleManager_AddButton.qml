@@ -27,7 +27,8 @@ Button {
     contentItem: Text {
         text: "+"
         color: Theme.textPrimary
-        font.pixelSize: Theme.fontSizeTitle
+        // Glyphe proportionnel à la taille du bouton (qui suit BtSideMenu).
+        font.pixelSize: Math.max(Theme.fontSizeTitle, Math.round(control.height * 0.5))
         font.bold: true
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
