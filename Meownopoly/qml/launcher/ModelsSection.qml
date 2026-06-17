@@ -6,6 +6,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -48,20 +49,12 @@ Rectangle {
                 Layout.fillWidth: true
             }
 
-            Button {
+            MeowButton {
                 text: "Actualiser"
+                variant: "secondary"
+                fontSize: Theme.fontSizeBody
+                hoverZoom: false
                 onClicked: root.refreshRequested()
-                background: Rectangle {
-                    color: Theme.border
-                    radius: Theme.radiusS
-                    border.color: Theme.textDisabled
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
             }
         }
 
@@ -131,92 +124,64 @@ Rectangle {
                     Item { Layout.fillWidth: true } // Spacer
 
                     // Éditer : ouvre le configurateur sur le dossier installé du modèle.
-                    Button {
+                    MeowButton {
                         id: editButton
                         visible: modelData.isInstalled
                         text: "Éditer"
+                        baseColor: "#7c3aed"
+                        fontSize: Theme.fontSizeBody
+                        hoverZoom: false
+                        glossy: false
                         onClicked: root.editRequested(modelData.name)
-                        background: Rectangle {
-                            color: editButton.pressed ? "#6d28d9" : "#7c3aed"
-                            radius: Theme.radiusS
-                        }
-                        contentItem: Text {
-                            text: editButton.text
-                            color: Theme.textPrimary
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: Theme.fontSizeBody
-                        }
                     }
 
                     // Supprimer : efface le modèle téléchargé localement.
-                    Button {
+                    MeowButton {
                         id: deleteButton
                         visible: modelData.isInstalled
                         text: "Supprimer"
+                        baseColor: "#dc2626"
+                        fontSize: Theme.fontSizeBody
+                        hoverZoom: false
+                        glossy: false
                         onClicked: {
                             root._pendingDeleteName = modelData.name
                             confirmDeleteDialog.open()
-                        }
-                        background: Rectangle {
-                            color: deleteButton.pressed ? "#b91c1c" : "#dc2626"
-                            radius: Theme.radiusS
-                        }
-                        contentItem: Text {
-                            text: deleteButton.text
-                            color: Theme.textPrimary
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: Theme.fontSizeBody
                         }
                     }
 
                     // Suppression serveur : retire la version sélectionnée du serveur
                     // (action admin, nécessite un token d'upload configuré).
-                    Button {
+                    MeowButton {
                         id: serverDeleteButton
                         visible: root.canManageServer
                         text: "Suppr. serveur"
+                        baseColor: "#991b1b"
+                        fontSize: Theme.fontSizeBody
+                        hoverZoom: false
+                        glossy: false
                         onClicked: {
                             root._pendingServerDeleteName = modelData.name
                             root._pendingServerDeleteVersion = versionSelector.currentText
                             confirmServerDeleteDialog.open()
                         }
-                        background: Rectangle {
-                            color: serverDeleteButton.pressed ? "#7f1d1d" : "#991b1b"
-                            radius: Theme.radiusS
-                        }
-                        contentItem: Text {
-                            text: serverDeleteButton.text
-                            color: Theme.textPrimary
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: Theme.fontSizeBody
-                        }
                     }
 
-                    Button {
+                    MeowButton {
                         id: actionButton
                         // Texte dynamique selon l'état
                         property bool isUpdate: modelData.isInstalled && versionSelector.currentText !== modelData.localVersion
                         property bool isSameVersion: modelData.isInstalled && versionSelector.currentText === modelData.localVersion
-                        
+
                         text: isSameVersion ? "Réinstaller" : (modelData.isInstalled ? "Mettre à jour" : "Télécharger")
-                        
+                        baseColor: actionButton.isSameVersion ? Theme.borderLight : Theme.accent
+                        fontSize: Theme.fontSizeBody
+                        hoverZoom: false
+                        glossy: false
+
                         enabled: !root.isDownloading
                         onClicked: {
                             root.downloadRequested(modelData.name, versionSelector.currentText)
-                        }
-                        background: Rectangle {
-                            color: parent.enabled ? (actionButton.isSameVersion ? Theme.borderLight : Theme.accent) : Theme.textDisabled
-                            radius: Theme.radiusS
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: Theme.fontSizeBody
                         }
                     }
                 }

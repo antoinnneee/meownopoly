@@ -24,10 +24,6 @@
         <file>qml/editor/CollabStatusPanel.qml</file>
         <file>qml/editor/PhysicsStatusPanel.qml</file>
         <file>qml/editor/CameraTestPanel.qml</file>
-        <file>qml/editor/MultiActorTestPanel.qml</file>
-        <file>qml/editor/PhysicsNetworkPanel.qml</file>
-        <file>qml/editor/JumpTestPanel.qml</file>
-        <file>qml/editor/CrateTestPanel.qml</file>
         <file>qml/editor/logic/MouseLogic_Selection_link.qml</file>
         <file>qml/editor/logic/MouseLogic_DrawPolygon.qml</file>
         <file>qml/editor/logic/MouseLogic_Game.qml</file>
@@ -146,7 +142,6 @@
         <file>qml/world3d/EditorPhysicsBridge.qml</file>
         <file>qml/world3d/World3D.qml</file>
         <file>qml/world3d/PhysicsActor.qml</file>
-        <file>qml/world3d/PhysicsObjectSpawner.qml</file>
         <file>qml/world3d/LocalPlayerSpawner.qml</file>
         <file>qml/world3d/InputController.qml</file>
         <file>qml/world3d/CameraRig.qml</file>

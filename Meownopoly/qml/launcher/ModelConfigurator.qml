@@ -23,6 +23,7 @@ import QtQuick.Dialogs
 import AssetManager
 import LauncherManager 1.0
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -211,7 +212,7 @@ Rectangle {
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: Theme.spacingS
-                Button { text: "Choisir .glb…"; onClicked: glbDialog.open() }
+                MeowButton { text: "Choisir .glb…"; variant: "secondary"; fontSize: Theme.fontSizeBody; hoverZoom: false; onClicked: glbDialog.open() }
                 Text {
                     Layout.fillWidth: true; elide: Text.ElideMiddle
                     color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption
@@ -220,7 +221,7 @@ Rectangle {
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: Theme.spacingS
-                Button { text: "Base color (peau)…"; onClicked: skinBaseDialog.open() }
+                MeowButton { text: "Base color (peau)…"; variant: "secondary"; fontSize: Theme.fontSizeBody; hoverZoom: false; onClicked: skinBaseDialog.open() }
                 Text {
                     Layout.fillWidth: true; elide: Text.ElideMiddle
                     color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption
@@ -264,14 +265,15 @@ Rectangle {
             Layout.preferredWidth: 18
             verticalAlignment: Text.AlignVCenter
         }
-        Slider {
+        MeowSlider {
             id: slider
             Layout.fillWidth: true
             from: axisRow.minValue
             to:   axisRow.maxValue
             stepSize: axisRow.stepValue
             value: axisRow.boundValue
-            onMoved: axisRow.valueEdited(value)
+            showValue: false
+            onMoved: (v) => axisRow.valueEdited(v)
         }
         TextField {
             id: tf
@@ -322,11 +324,14 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.spacingXL
 
-            Button {
-                text: "← Retour"
+            MeowButton {
+                text: "Retour"
+                iconText: "←"
+                variant: "secondary"
+                baseColor: Theme.borderLight
+                fontSize: Theme.fontSizeBody
+                hoverZoom: false
                 onClicked: root.closeRequested()
-                background: Rectangle { color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight; radius: Theme.radiusS }
-                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             }
 
             Text {
@@ -370,37 +375,36 @@ Rectangle {
             // Toggle caméra
             Row {
                 spacing: Theme.spacingS
-                Button {
+                MeowButton {
                     id: btnGame
                     text: "Vue jeu"
                     // Pas de `checkable` : le binding `checked` pilote seul l'état
                     // visuel (sinon le click toggle casse le binding → deselect trompeur).
                     checked: root.cameraMode === "game"
+                    baseColor: btnGame.checked ? Theme.accent : Theme.borderLight
+                    fontSize: Theme.fontSizeBody
+                    hoverZoom: false
+                    glossy: false
                     onClicked: root.cameraMode = "game"
-                    background: Rectangle {
-                        color: btnGame.checked ? Theme.accent : (btnGame.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight)
-                        radius: Theme.radiusS
-                    }
-                    contentItem: Text { text: btnGame.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                 }
-                Button {
+                MeowButton {
                     id: btnFace
                     text: "Face"
                     checked: root.cameraMode === "face"
+                    baseColor: btnFace.checked ? Theme.accent : Theme.borderLight
+                    fontSize: Theme.fontSizeBody
+                    hoverZoom: false
+                    glossy: false
                     onClicked: root.cameraMode = "face"
-                    background: Rectangle {
-                        color: btnFace.checked ? Theme.accent : (btnFace.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight)
-                        radius: Theme.radiusS
-                    }
-                    contentItem: Text { text: btnFace.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                 }
             }
 
-            Button {
+            MeowButton {
                 text: "Reset vue"
+                baseColor: Theme.borderLight
+                fontSize: Theme.fontSizeBody
+                hoverZoom: false
                 onClicked: viewport.resetView()
-                background: Rectangle { color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight; radius: Theme.radiusS }
-                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
             }
 
         }
@@ -579,13 +583,14 @@ Rectangle {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingS
 
-                                Button {
+                                MeowButton {
                                     id: btnPickFolder
                                     text: "Sélectionner dossier..."
                                     Layout.fillWidth: true
+                                    baseColor: "#795548"
+                                    fontSize: Theme.fontSizeBody
+                                    hoverZoom: false
                                     onClicked: folderDialog.open()
-                                    background: Rectangle { color: btnPickFolder.pressed ? "#5d4037" : "#795548"; radius: Theme.radiusS }
-                                    contentItem: Text { text: btnPickFolder.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                                 }
                                 Button {
                                     id: btnReload
@@ -601,18 +606,20 @@ Rectangle {
                                 }
                             }
 
-                            Button {
+                            MeowButton {
                                 id: btnNewModel
-                                text: "＋ Nouveau modèle (.glb)"
+                                text: "Nouveau modèle (.glb)"
+                                iconText: "＋"
                                 Layout.fillWidth: true
+                                variant: "primary"
+                                fontSize: Theme.fontSizeBody
+                                hoverZoom: false
                                 onClicked: {
                                     newModelDialog.glb = ""
                                     newModelDialog.skinBase = ""
                                     newModelName.text = ""
                                     newModelDialog.open()
                                 }
-                                background: Rectangle { color: btnNewModel.pressed ? Theme.pressed(Theme.accent) : Theme.accent; radius: Theme.radiusS }
-                                contentItem: Text { text: btnNewModel.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                             }
                         }
                     }
@@ -640,11 +647,12 @@ Rectangle {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Text { text: "Décalage X"; color: Theme.textSecondary }
-                                Slider {
+                                MeowSlider {
                                     Layout.fillWidth: true
                                     from: 0; to: 1000
                                     value: viewport.comparisonOffsetX
-                                    onMoved: viewport.comparisonOffsetX = value
+                                    showValue: false
+                                    onMoved: (v) => viewport.comparisonOffsetX = v
                                 }
                                 Text { text: viewport.comparisonOffsetX.toFixed(0); color: Theme.textHint; Layout.preferredWidth: 36 }
                             }
@@ -787,12 +795,13 @@ Rectangle {
                                 onValueEdited: (v) => root.posZ = v
                             }
 
-                            Button {
+                            MeowButton {
                                 text: "Reset transform global"
                                 Layout.fillWidth: true
+                                baseColor: Theme.borderLight
+                                fontSize: Theme.fontSizeBody
+                                hoverZoom: false
                                 onClicked: root.resetTransform()
-                                background: Rectangle { color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight; radius: Theme.radiusS }
-                                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                             }
                         }
                     }
@@ -808,27 +817,23 @@ Rectangle {
                             anchors.fill: parent
                             spacing: Theme.spacingS
 
-                            Button {
+                            MeowButton {
                                 text: "Sauvegarder dans le .qml + créer .meow"
                                 Layout.fillWidth: true
                                 enabled: root.hasFolder
+                                variant: "success"
+                                fontSize: Theme.fontSizeBody
+                                hoverZoom: false
                                 onClicked: root.applyTransformAndSave(false)
-                                background: Rectangle {
-                                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.success) : Theme.success) : Theme.borderLight
-                                    radius: Theme.radiusS
-                                }
-                                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                             }
-                            Button {
+                            MeowButton {
                                 text: "Sauvegarder & Uploader"
                                 Layout.fillWidth: true
                                 enabled: root.hasFolder && !LauncherManager.isDownloading
+                                variant: "primary"
+                                fontSize: Theme.fontSizeBody
+                                hoverZoom: false
                                 onClicked: root.applyTransformAndSave(true)
-                                background: Rectangle {
-                                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent) : Theme.borderLight
-                                    radius: Theme.radiusS
-                                }
-                                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; padding: Theme.spacingS }
                             }
                         }
                     }

@@ -165,36 +165,13 @@ Rectangle {
 
             enabled: chatClient.connected
 
+            // Style unifié via MeowButton : couleur orange « action principale ».
+            baseColor: "#E67E22"
+
             particleColor: "#E67E22"
             particleColorVariation: Theme.warning
             particleCount: 25
 
-            background: Rectangle {
-                color: parent.enabled ?
-                           (parent.down ? "#d35400" : "#E67E22") : Theme.borderLight
-                radius: Theme.radiusL
-                border.color: parent.enabled ?
-                                  (parent.hovered ? "#FFFFFF" : "#d35400") : Theme.textDisabled
-                border.width: 2
-
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: 2
-                    radius: Theme.radiusM
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.2) }
-                        GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
-                    }
-                }
-            }
-            contentItem: Text {
-                text: parent.text
-                font.pixelSize: Theme.fontSizeLarge
-                font.bold: true
-                color: parent.enabled ? Theme.textPrimary : Theme.textMuted
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
             onClicked: {
                 multiplayerStackView.push(sessionCreationComponent)
             }

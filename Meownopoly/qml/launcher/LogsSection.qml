@@ -29,6 +29,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -79,40 +80,18 @@ Rectangle {
             Row {
                 spacing: Theme.spacingXS
 
-                Button {
+                MeowButton {
                     text: "Effacer"
+                    variant: "danger"
+                    fontSize: Theme.fontSizeCaption
                     onClicked: root.clearLogs()
-
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.pressed(Theme.danger) : Theme.danger
-                        radius: Theme.radiusS
-                    }
-
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textPrimary
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: Theme.fontSizeCaption
-                    }
                 }
 
-                Button {
+                MeowButton {
                     text: "Reset État"
+                    variant: "warning"
+                    fontSize: Theme.fontSizeCaption
                     onClicked: root.resetDownloadState()
-
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.pressed(Theme.warning) : Theme.warning
-                        radius: Theme.radiusS
-                    }
-
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textPrimary
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: Theme.fontSizeCaption
-                    }
                 }
             }
         }

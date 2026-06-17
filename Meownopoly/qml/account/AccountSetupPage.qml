@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Particles
 import Meownopoly.Account 1.0
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -274,31 +275,15 @@ Rectangle {
                 visible: text !== ""
             }
 
-            Button {
+            MeowButton {
                 id: createAccountButton
                 text: "Créer mon compte"
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
                 enabled: nicknameField.text.trim().length >= 2
 
-                background: Rectangle {
-                    color: {
-                        if (!createAccountButton.enabled) return Theme.borderLight
-                        return createAccountButton.pressed ? Theme.pressed(Theme.success) : Theme.success
-                    }
-                    radius: Theme.radiusL
-
-                    Behavior on color { ColorAnimation { duration: Theme.durationFast } }
-                }
-
-                contentItem: Text {
-                    text: createAccountButton.text
-                    color: createAccountButton.enabled ? Theme.textPrimary : Theme.textMuted
-                    font.pixelSize: Theme.fontSizeLarge
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                variant: "success"
+                hoverZoom: false
 
                 onClicked: {
                     const nickname = nicknameField.text.trim()

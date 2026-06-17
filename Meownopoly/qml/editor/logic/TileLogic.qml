@@ -106,8 +106,6 @@ QtObject {
             tileComponent = dynamicComponent.snapableDecorationComponent
         } else if (itemSnapableData.tileType === ItemSnapable.PhysicZoneTile) {
             tileComponent = dynamicComponent.snapablePhysicZoneComponent
-        } else if (itemSnapableData.tileType === ItemSnapable.PhysicalObjectTile) {
-            tileComponent = dynamicComponent.snapablePhysicalObjectComponent
         }
         var newTile = tileComponent ? tileComponent.createObject(workArea, {
             "generalMA": mainMa,

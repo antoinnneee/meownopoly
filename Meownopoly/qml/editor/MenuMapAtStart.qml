@@ -19,6 +19,7 @@ import MapTypes
 import EditorEnum
 import AssetManager 1.0
 import theme
+import ui_item
 
 MouseArea {
     id: root
@@ -227,49 +228,29 @@ MouseArea {
                         Layout.preferredHeight: 32
                         spacing: Theme.spacingL
 
-                        Button {
+                        MeowButton {
                             text: "Stretch"
-                            font.pixelSize: Theme.fontSizeMedium
+                            fontSize: Theme.fontSizeMedium
                             width: (parent.width - 20) / 3
                             height: parent.height
-
-                            background: Rectangle {
-                                color: menuMapAtStart.selectedDisplayMode === "Stretch" ? Theme.accent : Theme.surfaceAlt
-                                radius: Theme.radiusM
-                            }
-
-                            contentItem: Text {
-                                text: parent.text
-                                color: Theme.textPrimary
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-
+                            baseColor: menuMapAtStart.selectedDisplayMode === "Stretch" ? Theme.accent : Theme.surfaceAlt
+                            hoverZoom: false
+                            glossy: false
                             onClicked: {
                                 menuMapAtStart.selectedDisplayMode = "Stretch"
                                 newMapInfo.backgroundScaling = "Stretch"
                             }
                         }
 
-                        Button {
+                        MeowButton {
                             id: fitButton
                             text: "Fit"
-                            font.pixelSize: Theme.fontSizeMedium
+                            fontSize: Theme.fontSizeMedium
                             width: (parent.width - 20) / 3
                             height: parent.height
-
-                            background: Rectangle {
-                                color: menuMapAtStart.selectedDisplayMode === "Fit" ? Theme.accent : Theme.surfaceAlt
-                                radius: Theme.radiusM
-                            }
-
-                            contentItem: Text {
-                                text: parent.text
-                                color: Theme.textPrimary
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-
+                            baseColor: menuMapAtStart.selectedDisplayMode === "Fit" ? Theme.accent : Theme.surfaceAlt
+                            hoverZoom: false
+                            glossy: false
                             onClicked: {
                                 menuMapAtStart.selectedDisplayMode = "Fit"
                                 newMapInfo.backgroundScaling = "Fit"
@@ -280,31 +261,21 @@ MouseArea {
                             width: (parent.width - 20) / 3
                             spacing: Theme.spacingXS
 
-                            Button {
+                            MeowButton {
                                 text: "Tile"
-                                font.pixelSize: Theme.fontSizeMedium
+                                fontSize: Theme.fontSizeMedium
                                 Layout.fillWidth: true
                                 Layout.maximumHeight: fitButton.height
-
-                                background: Rectangle {
-                                    color: menuMapAtStart.selectedDisplayMode === "Tile" ? Theme.accent : Theme.surfaceAlt
-                                    radius: Theme.radiusM
-                                }
-
-                                contentItem: Text {
-                                    text: parent.text
-                                    color: Theme.textPrimary
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-
+                                baseColor: menuMapAtStart.selectedDisplayMode === "Tile" ? Theme.accent : Theme.surfaceAlt
+                                hoverZoom: false
+                                glossy: false
                                 onClicked: {
                                     menuMapAtStart.selectedDisplayMode = "Tile"
                                     newMapInfo.backgroundScaling = "Tile"
                                 }
                             }
 
-                            Slider {
+                            MeowSlider {
                                 id: tileSizeSlider
                                 Layout.fillWidth: true
                                 from: 20
@@ -313,35 +284,12 @@ MouseArea {
                                 value: 100
                                 visible: enabled
                                 enabled: menuMapAtStart.selectedDisplayMode === "Tile"
+                                accentColor: Theme.accent
+                                decimals: 0
 
                                 onValueChanged: {
                                     logic.mapInfo.backgroundTileSize = value
                                     newMapInfo.backgroundTileSize = value
-                                }
-
-                                background: Rectangle {
-                                    x: tileSizeSlider.leftPadding
-                                    y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
-                                    width: tileSizeSlider.availableWidth
-                                    height: 4
-                                    radius: 2
-                                    color: Theme.surfaceAlt
-
-                                    Rectangle {
-                                        width: tileSizeSlider.visualPosition * parent.width
-                                        height: parent.height
-                                        color: Theme.accent
-                                        radius: 2
-                                    }
-                                }
-                                handle: Rectangle {
-                                    x: tileSizeSlider.leftPadding + tileSizeSlider.visualPosition * (tileSizeSlider.availableWidth - width)
-                                    y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
-                                    width: 16
-                                    height: 16
-                                    radius: 8
-                                    color: tileSizeSlider.pressed ? Theme.surfaceLight : Theme.pressed(Theme.surfaceLight)
-                                    border.color: Theme.accent
                                 }
                             }
                         }
@@ -598,26 +546,12 @@ MouseArea {
                 Layout.preferredHeight: 44
                 spacing: Theme.spacingXL
 
-                Button {
+                MeowButton {
                     text: "Confirmer"
                     Layout.fillWidth: true
-
-                    background: Rectangle {
-                        color: Theme.success
-                        radius: Theme.radiusL
-                        border.width: 1
-                        border.color: Theme.surfaceLight
-                    }
-
-                    contentItem: Text {
-                        text: parent.text
-                        font.pixelSize: Theme.fontSizeMedium
-                        font.bold: true
-                        color: Theme.textPrimary
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
+                    variant: "success"
+                    fontSize: Theme.fontSizeMedium
+                    hoverZoom: false
                     onClicked: {
                         if (newMapInfo.mapName === "" || MapFileManager.mapExists(newMapInfo.mapName, MapTypes.CUSTOM)){
                             console.log("Map name is invalid or already exists.")
@@ -630,25 +564,12 @@ MouseArea {
                     }
                 }
 
-                Button {
+                MeowButton {
                     text: "Annuler"
                     Layout.fillWidth: true
-
-                    background: Rectangle {
-                        color: Theme.danger
-                        radius: Theme.radiusL
-                        border.width: 1
-                        border.color: Theme.surfaceLight
-                    }
-
-                    contentItem: Text {
-                        text: parent.text
-                        font.pixelSize: Theme.fontSizeMedium
-                        font.bold: true
-                        color: Theme.textPrimary
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                    variant: "danger"
+                    fontSize: Theme.fontSizeMedium
+                    hoverZoom: false
                     onClicked: {
                         root.visible = false
                         root.enabled = false

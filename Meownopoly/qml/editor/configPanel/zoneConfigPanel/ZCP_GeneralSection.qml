@@ -58,7 +58,7 @@ GroupBox {
         exclusionSwitch.checked = zoneParam.exclusion
         speedSlider.value = zoneParam.speedMultiplier
         accelerationSlider.value = zoneParam.accelerationMultiplier
-        frictionSlider.value = zoneParam.frictionStrenght
+        frictionSlider.value = zoneParam.frictionStrength
         root.screenEffectId = zoneParam.screenEffectId
         effectCombo.currentIndex = root._indexForEffectId(zoneParam.screenEffectId)
     }

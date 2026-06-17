@@ -12,8 +12,17 @@ PhysicalObjectParameter::PhysicalObjectParameter(const QJsonObject &json, QObjec
     applyJson(json);
 }
 
+// Bornes des coefficients physiques. On clampe ici (point unique de passage
+// pour l'écriture QML ET le chargement JSON via applyJson) plutôt que dans
+// EditorPhysicsBridge : ainsi une valeur aberrante (mass=0, friction<0,
+// damping>1…) ne peut jamais atteindre le moteur ni être persistée.
+//  - mass : strictement > 0 (un body Dynamic à masse nulle a une invMass
+//    infinie → solver d'impulsion qui diverge). Plancher 0.01.
+//  - bounceFactor / linearDamping : coefficients normalisés [0, 1].
+//  - frictionStrength : coefficient de Coulomb normalisé [0, 1].
 void PhysicalObjectParameter::setMass(qreal v)
 {
+    v = qMax(0.01, v);
     if (qFuzzyCompare(m_mass, v)) return;
     m_mass = v;
     emit massChanged();
@@ -21,6 +30,7 @@ void PhysicalObjectParameter::setMass(qreal v)
 
 void PhysicalObjectParameter::setBounceFactor(qreal v)
 {
+    v = qBound(0.0, v, 1.0);
     if (qFuzzyCompare(m_bounceFactor, v)) return;
     m_bounceFactor = v;
     emit bounceFactorChanged();
@@ -28,6 +38,7 @@ void PhysicalObjectParameter::setBounceFactor(qreal v)
 
 void PhysicalObjectParameter::setFrictionStrength(qreal v)
 {
+    v = qBound(0.0, v, 1.0);
     if (qFuzzyCompare(m_frictionStrength, v)) return;
     m_frictionStrength = v;
     emit frictionStrengthChanged();
@@ -35,6 +46,7 @@ void PhysicalObjectParameter::setFrictionStrength(qreal v)
 
 void PhysicalObjectParameter::setLinearDamping(qreal v)
 {
+    v = qBound(0.0, v, 1.0);
     if (qFuzzyCompare(m_linearDamping, v)) return;
     m_linearDamping = v;
     emit linearDampingChanged();

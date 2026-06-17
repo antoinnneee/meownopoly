@@ -78,7 +78,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 3.34211,
@@ -118,7 +118,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#2196F3",
                 "zoneName": ""
             }
@@ -169,7 +169,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 3.52632,
@@ -213,7 +213,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#2196F3",
                 "zoneName": ""
             }
@@ -264,7 +264,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 3.84211,
@@ -308,7 +308,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#2196F3",
                 "zoneName": ""
             }
@@ -359,7 +359,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 1.44737,
@@ -383,7 +383,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#E91E63",
                 "zoneName": ""
             }
@@ -434,7 +434,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 3,
@@ -466,7 +466,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#E91E63",
                 "zoneName": ""
             }
@@ -517,7 +517,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 3.54205,
@@ -553,7 +553,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#8BC34A",
                 "zoneName": ""
             }
@@ -604,7 +604,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 1.1849,
@@ -644,7 +644,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#8BC34A",
                 "zoneName": ""
             }
@@ -695,7 +695,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 4.04205,
@@ -727,7 +727,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#8BC34A",
                 "zoneName": ""
             }
@@ -778,7 +778,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 3.07776,
@@ -806,7 +806,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#FF9800",
                 "zoneName": ""
             }
@@ -857,7 +857,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 2.75633,
@@ -881,7 +881,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#FF9800",
                 "zoneName": ""
             }
@@ -932,7 +932,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 1.04205,
@@ -956,7 +956,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#FF9800",
                 "zoneName": ""
             }
@@ -1007,7 +1007,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 2.86347,
@@ -1043,7 +1043,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#FF9800",
                 "zoneName": ""
             }
@@ -1094,7 +1094,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 4.29205,
@@ -1134,7 +1134,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#FF9800",
                 "zoneName": ""
             }
@@ -1185,7 +1185,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 22.8992,
@@ -1221,7 +1221,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#FF9800",
                 "zoneName": ""
             }
@@ -1272,7 +1272,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 2.6849,
@@ -1304,7 +1304,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#FF9800",
                 "zoneName": ""
             }
@@ -1355,7 +1355,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 2.72062,
@@ -1379,7 +1379,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#673AB7",
                 "zoneName": ""
             }
@@ -1430,7 +1430,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 1.57776,
@@ -1454,7 +1454,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#673AB7",
                 "zoneName": ""
             }
@@ -1505,7 +1505,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 0.970617,
@@ -1533,7 +1533,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#673AB7",
                 "zoneName": ""
             }
@@ -1584,7 +1584,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 1.9349,
@@ -1608,7 +1608,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#673AB7",
                 "zoneName": ""
             }
@@ -1659,7 +1659,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 1.04205,
@@ -1687,7 +1687,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#673AB7",
                 "zoneName": ""
             }
@@ -1738,7 +1738,7 @@
             "zoneParameter": {
                 "accelerationMultiplier": 1,
                 "exclusion": true,
-                "frictionStrenght": 0,
+                "frictionStrength": 0,
                 "polygonPoints": [
                     {
                         "x": 1.32776,
@@ -1762,7 +1762,7 @@
                     "x": 0,
                     "y": 0
                 },
-                "velocityStrenght": 0,
+                "velocityStrength": 0,
                 "zoneColor": "#673AB7",
                 "zoneName": ""
             }

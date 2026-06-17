@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -27,21 +28,11 @@ Rectangle {
 
         Item { Layout.fillWidth: true }
 
-        Button {
+        MeowButton {
             text: "Retour"
+            variant: "danger"
+            fontSize: Theme.fontSizeBody
             onClicked: root.backRequested()
-
-            background: Rectangle {
-                color: parent.pressed ? Theme.pressed(Theme.danger) : Theme.danger
-                radius: Theme.radiusM
-            }
-
-            contentItem: Text {
-                text: parent.text
-                color: Theme.textPrimary
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
         }
     }
 }

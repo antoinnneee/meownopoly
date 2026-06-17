@@ -247,26 +247,15 @@ Rectangle {
             spacing: Theme.spacingXXL
 
             // Bouton secondaire: Retour
-            Button {
+            MeowButton {
                 text: "Retour à la liste"
                 Layout.preferredWidth: 180
                 Layout.preferredHeight: 50
-                
-                background: Rectangle {
-                    color: parent.pressed ? Theme.pressed(Theme.borderLight) : Theme.borderLight
-                    radius: Theme.radiusL
-                    border.color: parent.hovered ? Theme.hover(Theme.textDisabled) : Theme.textDisabled
-                    border.width: 1
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textSecondary
-                    font.pixelSize: Theme.fontSizeMedium
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
+                variant: "secondary"
+                baseColor: Theme.borderLight
+                textColor: Theme.textSecondary
+                fontSize: Theme.fontSizeMedium
+                hoverZoom: false
                 onClicked: root.backRequested()
             }
             
@@ -277,37 +266,14 @@ Rectangle {
                 text: "Rejoindre la Partie"
                 Layout.preferredWidth: 220
                 Layout.preferredHeight: 50
-                
+
+                // Style unifié via MeowButton (variant succès).
+                variant: "success"
+
                 particleColor: "#7CB518"
                 particleColorVariation: Theme.success
                 particleCount: 30
-                
-                background: Rectangle {
-                    color: parent.down ? Theme.pressed(Theme.success) : Theme.success
-                    radius: Theme.radiusL
-                    border.color: parent.hovered ? "#FFFFFF" : Theme.pressed(Theme.success)
-                    border.width: 2
 
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        radius: Theme.radiusM
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.2) }
-                            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
-                        }
-                    }
-                }
-                
-                contentItem: Text {
-                    text: parent.text
-                    font.pixelSize: Theme.fontSizeLarge
-                    font.bold: true
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                
                 onClicked: {
                     console.log("Rejoindre la partie:", root.sessionName)
                     root.joinRequested()

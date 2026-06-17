@@ -51,7 +51,6 @@
         <file>qml/meowComponent/snapable/SnapableElementDeleteAnimation.qml</file>
         <file>qml/meowComponent/snapable/SnapableElementResizeHandles.qml</file>
         <file>qml/meowComponent/snapable/SnapableExclusionZone.qml</file>
-        <file>qml/meowComponent/snapable/SnapablePhysicalObject.qml</file>
         <file>qml/meowComponent/AdminCommandPanel.qml</file>
         <file>qml/meowComponent/Background.qml</file>
         <file>qml/meowComponent/Base_Board.qml</file>
@@ -80,6 +79,7 @@
         <file>qml/ui_item/MeowCheckBox.qml</file>
         <file>qml/ui_item/MeowInfoBox.qml</file>
         <file>qml/ui_item/MeowSwatchButton.qml</file>
+        <file>qml/ui_item/MeowButton.qml</file>
         <file>qml/meowComponent/TestCommandWindow.qml</file>
     </qresource>
 </RCC>

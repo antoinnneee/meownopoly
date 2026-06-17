@@ -106,32 +106,15 @@ Drawer {
             }
 
             // Bouton "+" pour créer une nouvelle carte
-            Button {
+            MeowButton {
                 visible: mapInfoPanel.currentView === 0
-                width: 20
-                height: 20
                 anchors.verticalCenter: parent.verticalCenter
-                
-                contentItem: Text {
-                    text: "NOUVELLE CARTE"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeMedium
-                    font.bold: true
-                    color: parent.parent.hovered ? Theme.textPrimary : "#7dd3fc"
-                }
-                
-                background: Rectangle {
-                    radius: Theme.radiusXL
-                    color: parent.hovered ? Theme.accent : "transparent"
-                    border.color: parent.hovered ? Theme.hover(Theme.accent) : Theme.accent
-                    border.width: 1
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: Theme.durationNormal }
-                    }
-                }
-                
+                text: "NOUVELLE CARTE"
+                variant: "ghost"
+                baseColor: Theme.accent
+                textColor: "#7dd3fc"
+                fontSize: Theme.fontSizeMedium
+                hoverZoom: false
                 onClicked: {
                     // refreshMapList() pré-création retiré : inutile puisque
                     // MapNavigationBar écoute désormais
@@ -174,73 +157,29 @@ Drawer {
         height: 30
         spacing: Theme.spacingXS
 
-        Button {
+        MeowButton {
             width: (parent.width - parent.spacing) / 2
             height: parent.height
-
-            background: Rectangle {
-                color: mapInfoPanel.currentView === 0 ? Theme.accent : Theme.border
-                radius: Theme.radiusXS
-                border.color: mapInfoPanel.currentView === 0 ? Theme.hover(Theme.accent) : Theme.borderLight
-                border.width: 1
-            }
-
-            contentItem: Row {
-                anchors.centerIn: parent
-                spacing: Theme.spacingXXS
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "🗺️"
-                    font.pixelSize: Theme.fontSizeBody
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    text: "Cartes"
-                    color: Theme.textPrimary
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.bold: mapInfoPanel.currentView === 0
-                }
-            }
+            iconText: "🗺️"
+            text: "Cartes"
+            baseColor: mapInfoPanel.currentView === 0 ? Theme.accent : Theme.border
+            fontSize: Theme.fontSizeSmall
+            hoverZoom: false
+            glossy: false
             onClicked: {
                 mapInfoPanel.currentView = 0
             }
         }
 
-        Button {
+        MeowButton {
             width: (parent.width - parent.spacing) / 2
             height: parent.height
-
-            background: Rectangle {
-                color: mapInfoPanel.currentView === 1 ? Theme.accent : Theme.border
-                radius: Theme.radiusXS
-                border.color: mapInfoPanel.currentView === 1 ? Theme.hover(Theme.accent) : Theme.borderLight
-                border.width: 1
-            }
-
-            contentItem: Row {
-                anchors.centerIn: parent
-                spacing: Theme.spacingXXS
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "🖼️"
-                    font.pixelSize: Theme.fontSizeBody
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Arrière-plan"
-                    horizontalAlignment: Text.AlignHCenter
-
-                    color: Theme.textPrimary
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.bold: mapInfoPanel.currentView === 1
-                }
-            }
-
+            iconText: "🖼️"
+            text: "Arrière-plan"
+            baseColor: mapInfoPanel.currentView === 1 ? Theme.accent : Theme.border
+            fontSize: Theme.fontSizeSmall
+            hoverZoom: false
+            glossy: false
             onClicked: {
                 mapInfoPanel.currentView = 1
             }
@@ -350,46 +289,31 @@ Drawer {
                         id: saveButton
                         width: parent.width
                         height: 30
-                        flat: true
+
+                        // Style unifié via MeowButton ; couleur + libellé
+                        // dépendants de l'état de la carte.
+                        baseColor: {
+                            if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName === "")
+                                return "#5E5A66"
+                            if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM))
+                                return "#008B8B"
+                            return Theme.success
+                        }
+                        text: {
+                            if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName === "")
+                                return "Sauvegarde par défaut"
+                            if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM))
+                                return "Mettre a jour"
+                            return "Créer une carte"
+                        }
+                        fontSize: Theme.fontSizeBody
 
                         particleColor: "#32CD32"
                         particleColorVariation: "#00FF00"
                         particleCount: 30
                         particleSize: 6
                         particleLifeSpan: 1500
-                        background: Rectangle {
-                            anchors.fill: parent
-                            color: {
-                                if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName === ""){
-                                    "#5E5A66"
-                                }
-                                else if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM)){
-                                    "#008B8B"
-                                }
-                                else {
-                                    Theme.success
-                                }
-                            }
-                            opacity: 0.8
-                            radius: Theme.radiusXS
-                        }
 
-                        contentItem: Text {
-                            text: if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == ""){
-                                      "Sauvegarde par défaut"
-                                  }
-                                  else if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM)){
-                                      "Mettre a jour"
-                                  }
-                                  else {
-                                      "Créer une carte"
-                                  }
-                            color: Theme.textPrimary
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: Theme.fontSizeBody
-                            font.bold: true
-                        }
                         onClicked: {
                             if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                                 var mapInfoLocal = logic.mapInfo

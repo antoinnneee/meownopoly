@@ -27,10 +27,6 @@ Item {
     property alias scene: sceneNode
     property alias camera: cameraOrthographic
     property alias entity: entityNode
-    // Phase 6 : 2e entité pour le multi-actors local. Visuel volontairement
-    // distinct (Cube blanc) pour différencier P2 du joueur principal.
-    // `visible` géré côté Editor via la property `multiActorEnabled`.
-    property alias entity2: entity2Node
     property alias environment: sceneEnvironment
     required property GridManager gridManager
 
@@ -40,8 +36,6 @@ Item {
     property string colorVariant: ""
     // Couleur d'équipe imposée par la partie (sur les zones team:true).
     property color teamColorOverride: "transparent"
-    // Acteur P2 (test multi-acteurs) : couleur d'équipe distincte sur ses zones team.
-    property color teamColorOverride2: "#f97316"
 
     // Référence au moteur physique global. Utilisé par PhysicsActor /
     // CameraRig / InputController. Décision §3 du plan : un PhysicsWorld
@@ -283,24 +277,6 @@ Item {
                 modelName: root.modelName
                 colorVariant: root.colorVariant
                 teamColorOverride: root.teamColorOverride
-            }
-        }
-
-        // Phase 6 — 2e entité (test multi-actors local). Cube orange pour
-        // bien voir P2 vs Princess (P1). `visible: false` par défaut, le
-        // Editor.qml l'allume quand multiActor est activé via le panneau.
-        Node {
-            id: entity2Node
-            x: 0
-            y: 0
-            z: 0
-            visible: false
-            // Même modèle que P1 mais teinte d'équipe distincte sur les zones
-            // team:true → preuve du rendu multi-acteurs re-skinné (Phase D).
-            SkinnedModel {
-                modelName: root.modelName
-                colorVariant: root.colorVariant
-                teamColorOverride: root.teamColorOverride2
             }
         }
 

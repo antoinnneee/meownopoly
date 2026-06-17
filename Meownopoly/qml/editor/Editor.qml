@@ -134,11 +134,6 @@ Base_Board {
         }
     }
 
-    // Phase 6 — toggle multi-actors local (P2). Quand true, le Loader
-    // active spawn + actor + 2e InputController (flèches). Piloté par
-    // MultiActorTestPanel.
-    property bool multiActorEnabled: false
-
     Keys.onPressed: function (event) {
         // Zoom clavier + / - : réutilise automationHooks.zoomCamera (même
         // logique que le zoom molette ×1.1/cran, recentré viewport + sync 3D).
@@ -155,11 +150,6 @@ Base_Board {
         }
         // Phase 4 : InputController remplace EntityEngine.keysHandler
         inputController.handlePress(event)
-        // Phase 6 — 2e InputController (flèches → P2). Inactif si
-        // multiActor désactivé : sans ça, les flèches enverraient quand
-        // même un pushInput pour un body inexistant.
-        if (multiActorEnabled && multiActorLoader.item)
-            multiActorLoader.item.inputController2.handlePress(event)
         // Debug jitter : J = trace 3 sec sur le PhysicsActor du joueur.
         // Logs CSV "[JITTER]" dans la console (grep + analyse tableur).
         if (event.key === Qt.Key_J && !event.isAutoRepeat) {
@@ -170,8 +160,6 @@ Base_Board {
     }
     Keys.onReleased: function (event) {
         inputController.handleRelease(event)
-        if (multiActorEnabled && multiActorLoader.item)
-            multiActorLoader.item.inputController2.handleRelease(event)
         EditorController.keysHandler.Keys.released(event)
     }
 
@@ -1193,9 +1181,9 @@ Base_Board {
     // CollabStatusPanel (visible uniquement si EditorSession.active) en
     // tête ; il a un comportement spécial : Column saute les enfants
     // `visible: false`, donc en mono les test panels remontent naturellement
-    // à la place du badge collab. Les panels expanded de CameraTestPanel et
-    // PhysicsNetworkPanel s'ancrent à `parent.top/right` du badge → ils
-    // dépassent à droite du badge dans son slot Column (comportement OK).
+    // à la place du badge collab. Les panels expanded des badges s'ancrent à
+    // `parent.top/right` du badge → ils dépassent à droite du badge dans son
+    // slot Column (comportement OK).
     Column {
         id: leftBadgeStack
         z: 10000
@@ -1207,16 +1195,6 @@ Base_Board {
 
         CollabStatusPanel {}
         PhysicsStatusPanel {}
-
-        CameraTestPanel { cameraRig: cameraRig }
-        MultiActorTestPanel { editor: root }
-        PhysicsNetworkPanel {}
-        JumpTestPanel { actor: playerActor }
-        CrateTestPanel {
-            logic: root.logic
-            actor: playerActor
-            physicsWorld: pattounxWorld
-        }
     }
 
     // Barre horizontale du gestionnaire de modules, en haut de l'éditeur :
@@ -1259,16 +1237,6 @@ Base_Board {
     EditorPhysicsBridge {
         id: editorPhysicsBridge
         physicsWorld: pattounxWorld
-    }
-
-    // Phase 9 — pour chaque PhysicalObjectTile posée, instancie un Model 3D
-    // (cube orange) + un PhysicsActor (autoOrient: false, présentateur partagé
-    // joueur ↔ caisse) qui lit le snapshot physique. La création du body
-    // Dynamic est faite par EditorPhysicsBridge ci-dessus, donc les deux
-    // écoutent le même flux ItemSnapableEvents.
-    PhysicsObjectSpawner {
-        id: physicsObjectSpawner
-        world3D: gameScene
     }
 
     // Layer GPU qui dessine TOUTES les zones d'exclusion en un seul item
@@ -1534,62 +1502,6 @@ Base_Board {
                 inputController.releaseAll()
                 console.log("[Editor] FreeCam",
                             cameraRig.mode === CameraRig.FreeCam ? "ON" : "OFF")
-            }
-        }
-
-        // Phase 6 — bloc P2 (spawner + actor + input flèches). Loader pour
-        // que le body soit créé/détruit proprement quand on toggle. Initial
-        // position offset de +2 cases en X pour ne pas spawn sur P1.
-        Loader {
-            id: multiActorLoader
-            active: root.multiActorEnabled
-            sourceComponent: Component {
-                Item {
-                    // Exposé au parent pour permettre handlePress/Release
-                    // depuis les Keys handlers de root.
-                    property alias inputController2: ic2
-
-                    LocalPlayerSpawner {
-                        physicsWorld: pattounxWorld
-                        actorId: "player2"
-                        radius: 0.2
-                        initialPosition: Qt.vector2d(2, 0)
-                        params: ({ acceleration: 30.0, maxSpeed: 30.0,
-                                   linearDamping: 0.1 })
-                    }
-
-                    PhysicsActor {
-                        world3D: gameScene
-                        bodyId: "player2"
-                        node3D: gameScene.entity2
-                    }
-
-                    InputController {
-                        id: ic2
-                        actorId: "player2"
-                        physicsWorld: pattounxWorld
-                        keymap: ({
-                            up:            Qt.Key_Up,
-                            down:          Qt.Key_Down,
-                            left:          Qt.Key_Left,
-                            right:         Qt.Key_Right,
-                            sprint:        Qt.Key_Control,
-                            freeCamToggle: -1   // pas de toggle pour P2
-                        })
-                        // P2 ne pilote jamais la caméra → pas conditionné
-                        // par le mode du rig.
-                        enabled: true
-                    }
-
-                    Component.onCompleted: {
-                        gameScene.entity2.visible = true
-                        console.log("[Editor] multi-actor P2 ON")
-                    }
-                    Component.onDestruction: {
-                        gameScene.entity2.visible = false
-                        console.log("[Editor] multi-actor P2 OFF")
-                    }
-                }
             }
         }
 
@@ -1886,41 +1798,25 @@ Base_Board {
                     Layout.fillWidth: true
                     spacing: Theme.spacingL
 
-                    Button {
+                    MeowButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
-                        text: "🗑️  Supprimer"
-                        background: Rectangle {
-                            color: parent.pressed ? Theme.pressed(Theme.danger) : (parent.hovered ? Theme.hover(Theme.danger) : Theme.danger)
-                            radius: Theme.radiusM
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeMedium
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        iconText: "🗑️"
+                        text: "Supprimer"
+                        variant: "danger"
+                        fontSize: Theme.fontSizeMedium
+                        hoverZoom: false
                         onClicked: root._resolveSessionExit(false)
                     }
 
-                    Button {
+                    MeowButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
-                        text: "💾  Conserver"
-                        background: Rectangle {
-                            color: parent.pressed ? Theme.pressed(Theme.accent) : (parent.hovered ? Theme.hover(Theme.accent) : Theme.accent)
-                            radius: Theme.radiusM
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeMedium
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        iconText: "💾"
+                        text: "Conserver"
+                        variant: "primary"
+                        fontSize: Theme.fontSizeMedium
+                        hoverZoom: false
                         onClicked: root._resolveSessionExit(true)
                     }
                 }
@@ -2558,9 +2454,8 @@ Base_Board {
             sp.zoneParameter.zoneName = opt.name !== undefined ? opt.name : ""
             sp.zoneParameter.exclusion = opt.exclusion !== undefined ? opt.exclusion : true
             sp.zoneParameter.velocityDirection = Qt.vector2d(opt.velocityX || 0.0, opt.velocityY || 0.0)
-            // NB : orthographe historique des propriétés C++ ("Strenght").
-            sp.zoneParameter.velocityStrenght = opt.velocityStrength || 0.0
-            sp.zoneParameter.frictionStrenght = opt.frictionStrength || 0.0
+            sp.zoneParameter.velocityStrength = opt.velocityStrength || 0.0
+            sp.zoneParameter.frictionStrength = opt.frictionStrength || 0.0
             sp.zoneParameter.speedMultiplier = opt.speedMultiplier !== undefined ? opt.speedMultiplier : 1.0
             sp.zoneParameter.accelerationMultiplier = opt.accelerationMultiplier !== undefined ? opt.accelerationMultiplier : 1.0
 

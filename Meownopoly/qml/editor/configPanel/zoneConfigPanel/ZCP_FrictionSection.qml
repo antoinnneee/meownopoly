@@ -51,12 +51,12 @@ GroupBox {
             from: 0.0
             to: 1.0
             stepSize: 0.01
-            value: targetZoneParameter ? targetZoneParameter.frictionStrenght : 0.0
+            value: targetZoneParameter ? targetZoneParameter.frictionStrength : 0.0
             decimals: 2
 
             onMoved: {
                 if (!root.updatingValues && targetZoneParameter) {
-                    targetZoneParameter.frictionStrenght = value
+                    targetZoneParameter.frictionStrength = value
                     root.configurationChanged()
                 }
             }
@@ -68,8 +68,8 @@ GroupBox {
         if (!targetZoneParameter) return
         
         updatingValues = true
-        frictionSlider.value = targetZoneParameter.frictionStrenght
-        console.log("friction updated", targetZoneParameter.frictionStrenght)
+        frictionSlider.value = targetZoneParameter.frictionStrength
+        console.log("friction updated", targetZoneParameter.frictionStrength)
         updatingValues = false
     }
 }
