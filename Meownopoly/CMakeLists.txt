@@ -152,7 +152,8 @@ endif()
 set(QML_IMPORT_PATH 
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/qml
-    ${CMAKE_CURRENT_SOURCE_DIR}/qml/editor/panel/bottomPanel/bottomSidePanel/
+    ${CMAKE_CURRENT_SOURCE_DIR}/qml/editor/moduleManager/
+    ${CMAKE_CURRENT_SOURCE_DIR}/qml/editor/configPanel/
     CACHE STRING "QML Import Path" FORCE
 )
 

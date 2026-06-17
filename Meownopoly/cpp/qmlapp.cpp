@@ -205,10 +205,9 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     addImportPath("qrc:/qml/editor/moduleManager");  // Contains: moduleManager (ModuleManager*, SelectionPanel), assetSelectionPanel, caseSelectionPanel, editorBottomPanel, menuSelectionPanel, zonePanel, templatePanel
     addImportPath("qrc:/qml/editor/moduleManager/caseSelectionPanel");  // Contains: caseSelectionPanelMain
     addImportPath("qrc:/qml/editor/moduleManager/assetSelectionPanel");  // Contains: playerConfigPanel, screenEffectPanel
-    addImportPath("qrc:/qml/editor/panel");  // Contains: mapInfoPanel qmldir, bottomPanel qmldir, zonePanel qmldir
-    addImportPath("qrc:/qml/editor/panel/bottomPanel");  // Contains: bottomSidePanel
+    addImportPath("qrc:/qml/editor/panel");  // Contains: mapInfoPanel qmldir
     addImportPath("qrc:/qml/editor/panel/mapInfoPanel");  // Contains: mapInfoPanelMain
-    addImportPath("qrc:/qml/editor/panel/bottomPanel/bottomSidePanel");  // Contains: caseConfigPanel, connectionConfigPanel, sidePanel, visualEffectPanel
+    addImportPath("qrc:/qml/editor/configPanel");  // Contains: caseConfigPanel, connectionConfigPanel, visualEffectPanel, zoneConfigPanel
     load(QUrl("qrc:/qml/main.qml"));
     game = Game::instance();
 

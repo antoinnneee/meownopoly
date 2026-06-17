@@ -86,47 +86,47 @@
         <file>qml/editor/moduleManager/ModuleManager_AddButton.qml</file>
         <file>qml/editor/moduleManager/ModuleManager_AddPopup.qml</file>
         <file>qml/editor/moduleManager/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CaseConfigurationPanelSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_PanelElement.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RentConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_CardBoardBoxSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_CatDeviceSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_GeneralSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_KibbleDispenserSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_RestAreaSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCPS_TypeSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionListSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/ConnectionsConfigurationSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/BottomSidePanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/BottomSidePanel_Content.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_AdvancedEffectsSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ButtonMirror.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_ColorEffectsSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_InlineColorPicker.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_Rotation.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VEP_Slider.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/VisualEffectsPanel.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CaseConfigurationPanelSection.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCP_PanelElement.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCP_RentConfig.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCP_RestAreaFamilyConfig.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCPS_CardBoardBoxSection.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCPS_CatDeviceSection.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCPS_GeneralSection.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCPS_KibbleDispenserSection.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCPS_RestAreaSection.qml</file>
+        <file>qml/editor/configPanel/caseConfigPanel/CCPS_TypeSection.qml</file>
+        <file>qml/editor/configPanel/connectionConfigPanel/ConnectionListSection.qml</file>
+        <file>qml/editor/configPanel/connectionConfigPanel/ConnectionsConfigurationSection.qml</file>
+        <file>qml/editor/configPanel/BottomSidePanel.qml</file>
+        <file>qml/editor/configPanel/BottomSidePanel_Content.qml</file>
+        <file>qml/editor/configPanel/visualEffectPanel/VEP_AdvancedEffectsSection.qml</file>
+        <file>qml/editor/configPanel/visualEffectPanel/VEP_ButtonMirror.qml</file>
+        <file>qml/editor/configPanel/visualEffectPanel/VEP_ColorEffectsSection.qml</file>
+        <file>qml/editor/configPanel/visualEffectPanel/VEP_InlineColorPicker.qml</file>
+        <file>qml/editor/configPanel/visualEffectPanel/VEP_Rotation.qml</file>
+        <file>qml/editor/configPanel/visualEffectPanel/VEP_Slider.qml</file>
+        <file>qml/editor/configPanel/visualEffectPanel/VisualEffectsPanel.qml</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/caseSelectionPanelMain/qmldir</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/qmldir</file>
         <file>qml/editor/moduleManager/editorBottomPanel/qmldir</file>
         <file>qml/editor/moduleManager/menuSelectionPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/connectionConfigPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/visualEffectPanel/qmldir</file>
+        <file>qml/editor/configPanel/caseConfigPanel/qmldir</file>
+        <file>qml/editor/configPanel/connectionConfigPanel/qmldir</file>
+        <file>qml/editor/configPanel/qmldir</file>
+        <file>qml/editor/configPanel/visualEffectPanel/qmldir</file>
         <file>qml/editor/panel/mapInfoPanel/qmldir</file>
         <file>qml/editor/moduleManager/zonePanel/ZP_Content.qml</file>
         <file>qml/editor/moduleManager/zonePanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/ModelSelectionPanel.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/qmldir</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_FrictionSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZoneConfigurationPanelSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_DirectionsSection.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_VectorDirectionPicker.qml</file>
-        <file>qml/editor/panel/bottomPanel/bottomSidePanel/zoneConfigPanel/ZCP_GeneralSection.qml</file>
+        <file>qml/editor/configPanel/ModelSelectionPanel.qml</file>
+        <file>qml/editor/configPanel/zoneConfigPanel/qmldir</file>
+        <file>qml/editor/configPanel/zoneConfigPanel/ZCP_FrictionSection.qml</file>
+        <file>qml/editor/configPanel/zoneConfigPanel/ZoneConfigurationPanelSection.qml</file>
+        <file>qml/editor/configPanel/zoneConfigPanel/ZCP_DirectionsSection.qml</file>
+        <file>qml/editor/configPanel/zoneConfigPanel/ZCP_VectorDirectionPicker.qml</file>
+        <file>qml/editor/configPanel/zoneConfigPanel/ZCP_GeneralSection.qml</file>
         <file>qml/editor/panel/mapInfoPanel/MapInfoDrawer.qml</file>
         <file>qml/editor/moduleManager/templatePanel/qmldir</file>
         <file>qml/editor/moduleManager/templatePanel/TP_Content.qml</file>
