@@ -277,53 +277,57 @@ addImportPath("qrc:/qml/editor/configPanel");             // caseConfigPanel, co
 > 💡 Étapes B et C peuvent être faites dans un seul commit « move » si on est à
 > l'aise, mais les séparer facilite le diagnostic en cas de panel non résolu.
 
-### Étape D — Câblage fonctionnel : `ModuleManager` → affichage d'un seul panel
+### Étape D — Câblage fonctionnel : `ModuleManager`, seul maître de l'affichage
 
-Objectif : un clic sur un module (vignette ou ajout via `+`) **sélectionne** ce module
-et **n'affiche que le panel correspondant**, un seul à la fois.
+> **Décisions verrouillées (2026-06-17, cf. §6) :**
+> - Barre **vide** au départ ; modules ajoutés via `+`. Panneau **replié** tant
+>   qu'aucune vignette n'est cliquée ; **re-clic** sur la vignette active = repli.
+> - **Un seul panneau visible à la fois**, piloté **uniquement** par le ModuleManager.
+> - **Suppression totale** de la mécanique d'onglets (`ASP_TitleBar` boutons +
+>   `stackView` de bascule dans `AssetSelectionPanel`) et du sous-dossier
+>   `menuSelectionPanel/` (MenuSelector*).
+> - **Suppression des flèches ▼ (replier) / ▶ (panneau latéral).**
+> - **Chaque module = un conteneur bespoke autonome** (pas de base partagée), qui
+>   héberge le contenu existant **sans** `EditorBottomPanel`.
+> - **Le `configPanel` (ex-side panel) devient un module à part entière** avec son
+>   propre conteneur, sélectionnable via une vignette comme les autres.
+> - `chat` → ouvre le `ChatDrawer` ; `config3d` → placeholder (log), panneau à venir.
 
-Mapping module → panel (à valider, voir Q5) :
+Mapping module → panneau cible :
 
-| `moduleId` | Panel à afficher | Vue interne actuelle |
+| `moduleId` | Conteneur bespoke (cible) | Contenu réutilisé |
 |---|---|---|
-| `case` | `SelectionPanel` (onglet cases) | `caseSelectionPanel` via `selectedCaseType` |
-| `deco` | `SelectionPanel` (onglet assets) | `assetSelectionPanel` `currentView` |
-| `zone` | `SelectionPanel` (onglet zone) | `zonePanel` |
-| `template` | `SelectionPanel` (onglet template) | `templatePanel` |
-| `player` | `SelectionPanel` (onglet joueur) | `playerConfigPanel` |
-| `chat` | `ChatDrawer` (déjà existant) | — |
-| `config3d` | (panneau Config 3D — à définir) | — |
+| `deco` | `DecoPanel` (bas) | `ASP_ContentArea` |
+| `case` | `CasePanel` (bas) | `CSP_ContentArea` |
+| `zone` | `ZonePanel` (bas) | `ZP_Content` |
+| `template` | `TemplatePanel` (bas) | `TP_Content` |
+| `player` | `PlayerPanel` (bas) | `PCP_Content` |
+| `config` | `ConfigPanel` (latéral) | contenu de `configPanel/` (effets, case, zone, connexions) |
+| `chat` | — | `ChatDrawer.open()` |
+| `config3d` | — | placeholder (log) |
 
-Étant donné que `SelectionPanel` agrège déjà asset/case/template/zone/player via
-`currentPanelIndex` + onglets internes d'`AssetSelectionPanel`, le câblage le plus
-direct est :
+Sous-étapes (chacune = un push validable) :
 
-1. **`ModuleManager`** : ajouter un état de sélection.
-   - Nouvelle propriété `property string selectedModuleId: ""` + signal
-     `moduleSelected(string moduleId)`.
-   - Le `delegate` de la `ListView` devient cliquable (`TapHandler`/`MouseArea`) →
-     `root.selectedModuleId = moduleId; root.moduleSelected(moduleId)` + style « actif »
-     (bordure `Theme.accent`) sur la vignette sélectionnée.
-   - À l'ajout via `+`, sélectionner automatiquement le dernier module ajouté.
-2. **`Editor.qml`** : connecter `moduleManager.onModuleSelected` →
-   - mapper `moduleId` vers `currentPanelIndex` / onglet d'`AssetSelectionPanel` du
-     `SelectionPanel`, et `selectionPanel.isExpanded = true` ;
-   - pour `chat` : `chatDrawer.open()` ; pour `config3d` : ouvrir le futur panneau.
-   - Cas « désélection » (re-clic sur le module actif) → `selectionPanel.isExpanded = false`.
-3. **Visibilité « un seul à la fois »** : déjà garantie par le `StackLayout`
-   (`currentIndex`) + le fait que `SelectionPanel` est un conteneur unique. Si les
-   modules deviennent des panels physiquement distincts (refacto plus lourde, hors scope
-   v1), utiliser un `StackLayout`/`Loader` piloté par `selectedModuleId`.
-4. **Remplacement de `MenuSelector`** (Q1) : `MenuSelector` (`topToolbar` dans
-   `SelectionPanel`) faisait office de sélecteur d'onglets ; son `ListModel` est déjà
-   vide. Deux options :
-   - (a) le **conserver** masqué/inerte (le `ModuleManager` pilote `currentPanelIndex`) ;
-   - (b) le **retirer** et déplacer ses sous-fonctions encore utiles (bouton expand/▼,
-     bouton expand side-panel ▶, `MenuSelector_SizeControl`) ailleurs.
-   **Recommandé v1 :** option (a) — risque minimal ; nettoyage en v2.
+- **D1** — `ModuleManager` rendu interactif : `property string selectedModuleId`,
+  signal `moduleSelected(id)`, `toggleModule(id)` (re-clic = désélection → `""`),
+  highlight de la vignette active (bordure `Theme.accent`), ajout du module `config`
+  au catalogue. *Aucun consommateur encore → pas de bascule de panneau, juste
+  l'interaction.* (FAIT.)
+- **D2** — Hôte d'affichage : `SelectionPanel` (ou un nouvel hôte) n'affiche qu'**un**
+  conteneur de module à la fois selon `moduleManager.selectedModuleId`
+  (`Loader`/`StackLayout` clé = module), replié si `""`. `Editor.qml` route
+  `onModuleSelected` (bas → hôte bas ; `config` → hôte latéral ; `chat` → drawer ;
+  `config3d` → log).
+- **D3** — Individualisation : créer les conteneurs bespoke `DecoPanel`/`CasePanel`/
+  `ZonePanel`/`TemplatePanel`/`PlayerPanel`/`ConfigPanel`, chacun hébergeant son
+  contenu existant **sans** `EditorBottomPanel` ni barre d'onglets.
+- **D4** — Démantèlement : suppression de `menuSelectionPanel/` (MenuSelector*),
+  retrait des boutons d'onglets de `ASP_TitleBar` + du `stackView` de bascule dans
+  `AssetSelectionPanel`, suppression des flèches ▼/▶.
+- **D5** — `chat` → `ChatDrawer.open()` ; `config3d` → placeholder (log).
 
-5. **Build + run** → cliquer chaque module, vérifier qu'un seul panel s'affiche et que
-   re-cliquer le module actif le referme.
+Après chaque sous-étape : **build + run** ; vérifier qu'un seul panneau s'affiche et
+que re-cliquer la vignette active le referme.
 
 ---
 
@@ -364,26 +368,22 @@ direct est :
 
 ---
 
-## 6. Questions ouvertes (à trancher avant exécution)
+## 6. Questions — tranchées
 
-- **Q1 — `MenuSelector`** : conserver inerte (recommandé v1) ou retirer en réimplantant
-  les boutons expand/resize ?
-- **Q2 — Aplatissement** : garder les sous-dossiers-modules sous `moduleManager/`
-  (recommandé) ou réellement tout mettre à plat dans `moduleManager/` (casse la
-  modularité, ~60 fichiers, beaucoup d'`import` à revoir) ?
-- **Q3 — Nom du module config** : `configPanel/` garde `module bottomSidePanel`
-  (zéro `import` à changer) ou devient `module configPanel` (plus cohérent, faible risque
-  car 0 importeur direct) ?
-- **Q4 — `SelectionPanel`/`bottomMainPanel`** : fusionner `SelectionPanel` dans
-  `module moduleManager` (recommandé, supprime `bottomMainPanel`) ou conserver un
-  `module bottomMainPanel` à part dans `moduleManager/` ?
-- **Q5 — Mapping module→panel & modules sans panel** : valider la table §3.D ;
-  définir le comportement de `config3d` (panneau encore inexistant ?) et de `chat`
-  (réutilise `ChatDrawer`).
-- **Q6 — Module affiché par défaut** au chargement de l'éditeur : aucun (panels repliés)
-  ou `deco`/`case` pré-sélectionné ?
-- **Q7 — Persistance** : la liste des modules ajoutés et le module actif doivent-ils
-  être persistés (QSettings) entre sessions ?
+- **Q1 — `MenuSelector`** : ✅ **retiré** (sous-dossier `menuSelectionPanel/` supprimé en D4).
+  Le ModuleManager devient l'unique sélecteur.
+- **Q2 — Aplatissement** : ✅ sous-dossiers-modules **conservés** sous `moduleManager/`.
+- **Q3 — Nom du module config** : ✅ renommé `module configPanel` (étape C, fait).
+- **Q4 — `SelectionPanel`/`bottomMainPanel`** : ✅ fusionné dans `module moduleManager`,
+  `bottomMainPanel` supprimé (étape B, fait).
+- **Q5 — chat / config3d** : ✅ `chat` → `ChatDrawer.open()` ; `config3d` → placeholder (log).
+- **Q6 — État initial** : ✅ barre **vide** + ajout via `+` ; panneau **replié** jusqu'au
+  premier clic de vignette ; re-clic = repli.
+- **Q7 — Persistance** : ⏳ **reportée** (non couverte par cette itération — les modules
+  ajoutés ne survivent pas au redémarrage pour l'instant).
+- **Q8 — Conteneurs** : ✅ **bespoke complet par module** (pas de base partagée), sans
+  `EditorBottomPanel`. Le `configPanel` (ex-side panel) devient un module ; **flèches ▼/▶
+  supprimées**.
 
 ---
 

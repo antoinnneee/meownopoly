@@ -13,6 +13,21 @@ Item {
     // Émis pour chaque module effectivement ajouté à la liste.
     signal moduleAdded(string moduleId)
 
+    // Module actuellement sélectionné (vignette active). "" = aucun → l'hôte
+    // garde son/ses panneau(x) repliés. Un seul module actif à la fois.
+    property string selectedModuleId: ""
+
+    // Émis à chaque changement de sélection (clic vignette). moduleId == "" quand
+    // on désélectionne (re-clic sur la vignette active) → l'hôte replie le panneau.
+    signal moduleSelected(string moduleId)
+
+    // Sélectionne un module, ou le désélectionne si déjà actif (toggle), puis
+    // notifie l'hôte via moduleSelected.
+    function toggleModule(id) {
+        root.selectedModuleId = (root.selectedModuleId === id) ? "" : id
+        root.moduleSelected(root.selectedModuleId)
+    }
+
     // Hauteur de référence = celle du bouton "+". La ListView et les vignettes
     // de module s'alignent dessus.
     property int itemSize: Theme.px(32)
@@ -29,6 +44,7 @@ Item {
         { "id": "zone",     "label": "Zone",       "icon": "🟥" },
         { "id": "template", "label": "Template",   "icon": "🧩" },
         { "id": "player",   "label": "Joueur",     "icon": "🐱" },
+        { "id": "config",   "label": "Config",     "icon": "⚙️" },
         { "id": "chat",     "label": "Messagerie", "icon": "💬" },
         { "id": "config3d", "label": "Config 3D",  "icon": "🧊" }
     ]
@@ -81,18 +97,28 @@ Item {
             required property string moduleId
             required property string icon
 
+            // Vignette active = module actuellement affiché par l'hôte.
+            readonly property bool active: root.selectedModuleId === moduleCell.moduleId
+
             width: root.itemSize
             height: root.itemSize
             radius: Theme.radiusS
-            color: Theme.surfaceAlt
-            border.color: Theme.border
-            border.width: 1
+            color: moduleCell.active ? Theme.surfaceHover : Theme.surfaceAlt
+            border.color: moduleCell.active ? Theme.accent : Theme.border
+            border.width: moduleCell.active ? 2 : 1
 
             Text {
                 anchors.centerIn: parent
                 text: moduleCell.icon
                 font.pixelSize: Math.round(root.itemSize * 0.55)
             }
+
+            // Clic = sélectionne ce module (ou le désélectionne si déjà actif).
+            TapHandler {
+                onTapped: root.toggleModule(moduleCell.moduleId)
+            }
+
+            Behavior on border.color { ColorAnimation { duration: Theme.durationFast } }
         }
     }
 
