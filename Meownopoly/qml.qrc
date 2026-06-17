@@ -26,7 +26,6 @@
         <file>qml/editor/CollabStatusPanel.qml</file>
         <file>qml/editor/PhysicsStatusPanel.qml</file>
         <file>qml/editor/CameraTestPanel.qml</file>
-        <file>qml/editor/MultiActorTestPanel.qml</file>
         <file>qml/editor/PhysicsNetworkPanel.qml</file>
         <file>qml/editor/JumpTestPanel.qml</file>
         <file>qml/editor/CrateTestPanel.qml</file>

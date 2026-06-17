@@ -1,7 +1,7 @@
 /*
  * PhysicsNetworkPanel — Phase 7 (state-sync host-authoritative).
  *
- * Petit badge top-right (sous MultiActorTestPanel) qui :
+ * Petit badge top-right qui :
  *  - démarre PhysicsSession en HOST ou en CLIENT
  *  - affiche le rôle courant + un compteur snapshots émis/reçus
  *
