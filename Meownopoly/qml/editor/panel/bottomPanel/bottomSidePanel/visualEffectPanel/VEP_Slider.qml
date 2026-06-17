@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import ui_item
 
 RowLayout {
     id: control
@@ -82,27 +83,19 @@ RowLayout {
         Layout.preferredWidth: 35
     }
     
-    Button {
+    MeowButton {
         text: "Reset"
         onClicked: slider.value = 0.0
         // Layout.fillHeight: true
         Layout.minimumWidth: Screen.pixelDensity * 7
         Layout.preferredWidth: Screen.pixelDensity * 14
         Layout.preferredHeight: Screen.pixelDensity * 8
-        
-        background: Rectangle {
-            color: parent.pressed ? Theme.hover(Theme.borderLight) : Theme.borderLight
-            radius: Theme.radiusS
-            anchors.fill: parent
-        }
 
-        contentItem: Text {
-            anchors.fill:parent
-            text: parent.text
-            color: Theme.textSecondary
-            font.pixelSize: Theme.fontSizeSmall
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
+        variant: "secondary"
+        baseColor: Theme.borderLight
+        textColor: Theme.textSecondary
+        fontSize: Theme.fontSizeSmall
+        hoverZoom: false
+        glossy: false
     }
 }

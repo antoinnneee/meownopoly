@@ -106,32 +106,15 @@ Drawer {
             }
 
             // Bouton "+" pour créer une nouvelle carte
-            Button {
+            MeowButton {
                 visible: mapInfoPanel.currentView === 0
-                width: 20
-                height: 20
                 anchors.verticalCenter: parent.verticalCenter
-                
-                contentItem: Text {
-                    text: "NOUVELLE CARTE"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeMedium
-                    font.bold: true
-                    color: parent.parent.hovered ? Theme.textPrimary : "#7dd3fc"
-                }
-                
-                background: Rectangle {
-                    radius: Theme.radiusXL
-                    color: parent.hovered ? Theme.accent : "transparent"
-                    border.color: parent.hovered ? Theme.hover(Theme.accent) : Theme.accent
-                    border.width: 1
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: Theme.durationNormal }
-                    }
-                }
-                
+                text: "NOUVELLE CARTE"
+                variant: "ghost"
+                baseColor: Theme.accent
+                textColor: "#7dd3fc"
+                fontSize: Theme.fontSizeMedium
+                hoverZoom: false
                 onClicked: {
                     // refreshMapList() pré-création retiré : inutile puisque
                     // MapNavigationBar écoute désormais
@@ -174,73 +157,29 @@ Drawer {
         height: 30
         spacing: Theme.spacingXS
 
-        Button {
+        MeowButton {
             width: (parent.width - parent.spacing) / 2
             height: parent.height
-
-            background: Rectangle {
-                color: mapInfoPanel.currentView === 0 ? Theme.accent : Theme.border
-                radius: Theme.radiusXS
-                border.color: mapInfoPanel.currentView === 0 ? Theme.hover(Theme.accent) : Theme.borderLight
-                border.width: 1
-            }
-
-            contentItem: Row {
-                anchors.centerIn: parent
-                spacing: Theme.spacingXXS
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "🗺️"
-                    font.pixelSize: Theme.fontSizeBody
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    text: "Cartes"
-                    color: Theme.textPrimary
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.bold: mapInfoPanel.currentView === 0
-                }
-            }
+            iconText: "🗺️"
+            text: "Cartes"
+            baseColor: mapInfoPanel.currentView === 0 ? Theme.accent : Theme.border
+            fontSize: Theme.fontSizeSmall
+            hoverZoom: false
+            glossy: false
             onClicked: {
                 mapInfoPanel.currentView = 0
             }
         }
 
-        Button {
+        MeowButton {
             width: (parent.width - parent.spacing) / 2
             height: parent.height
-
-            background: Rectangle {
-                color: mapInfoPanel.currentView === 1 ? Theme.accent : Theme.border
-                radius: Theme.radiusXS
-                border.color: mapInfoPanel.currentView === 1 ? Theme.hover(Theme.accent) : Theme.borderLight
-                border.width: 1
-            }
-
-            contentItem: Row {
-                anchors.centerIn: parent
-                spacing: Theme.spacingXXS
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "🖼️"
-                    font.pixelSize: Theme.fontSizeBody
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Arrière-plan"
-                    horizontalAlignment: Text.AlignHCenter
-
-                    color: Theme.textPrimary
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.bold: mapInfoPanel.currentView === 1
-                }
-            }
-
+            iconText: "🖼️"
+            text: "Arrière-plan"
+            baseColor: mapInfoPanel.currentView === 1 ? Theme.accent : Theme.border
+            fontSize: Theme.fontSizeSmall
+            hoverZoom: false
+            glossy: false
             onClicked: {
                 mapInfoPanel.currentView = 1
             }
