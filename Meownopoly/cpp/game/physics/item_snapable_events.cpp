@@ -3,7 +3,6 @@
 #include "game/item_snapable/Displayparameter.h"
 #include "game/item_snapable/ItemSnapable.h"
 #include "game/item_snapable/ZoneParameter.h"
-#include "game/item_snapable/physicalobjectparameter.h"
 #include "game/map/map.h"
 #include "game/map/mapfilemanager.h"
 
@@ -147,20 +146,11 @@ void ItemSnapableEvents::attachTile(ItemSnapable *tile)
         auto bump = [this, tile]() { emit zoneParameterChanged(tile); };
         connect(zp, &ZoneParameter::polygonPointsChanged,        this, bump);
         connect(zp, &ZoneParameter::velocityDirectionChanged,    this, bump);
-        connect(zp, &ZoneParameter::velocityStrenghtChanged,     this, bump);
-        connect(zp, &ZoneParameter::frictionStrenghtChanged,     this, bump);
+        connect(zp, &ZoneParameter::velocityStrengthChanged,     this, bump);
+        connect(zp, &ZoneParameter::frictionStrengthChanged,     this, bump);
         connect(zp, &ZoneParameter::exclusionChanged,            this, bump);
         connect(zp, &ZoneParameter::speedMultiplierChanged,      this, bump);
         connect(zp, &ZoneParameter::accelerationMultiplierChanged, this, bump);
-    }
-
-    // Mutations objet physique → physicalObjectParameterChanged
-    if (PhysicalObjectParameter *pop = tile->physicalObjectParameter()) {
-        auto bump = [this, tile]() { emit physicalObjectParameterChanged(tile); };
-        connect(pop, &PhysicalObjectParameter::massChanged,             this, bump);
-        connect(pop, &PhysicalObjectParameter::bounceFactorChanged,     this, bump);
-        connect(pop, &PhysicalObjectParameter::frictionStrengthChanged, this, bump);
-        connect(pop, &PhysicalObjectParameter::linearDampingChanged,    this, bump);
     }
 }
 
@@ -169,7 +159,6 @@ void ItemSnapableEvents::detachTile(ItemSnapable *tile)
     if (!tile) return;
     if (DisplayParameter *dp = tile->displayParameter()) disconnect(dp, nullptr, this, nullptr);
     if (ZoneParameter    *zp = tile->zoneParameter())    disconnect(zp, nullptr, this, nullptr);
-    if (PhysicalObjectParameter *pop = tile->physicalObjectParameter()) disconnect(pop, nullptr, this, nullptr);
     disconnect(tile, &QObject::destroyed, this, nullptr);
     m_attachedTiles.remove(tile);
 }

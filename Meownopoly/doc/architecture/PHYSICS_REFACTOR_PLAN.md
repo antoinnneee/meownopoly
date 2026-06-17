@@ -846,7 +846,7 @@ Extraction des données de zone, faite **en QML dans le bridge** (pas dans un
 adaptateur C++) :
 - `polygonPoints` (relatifs) + `gridRelativePosition{X,Y}` → calcul du polygone
   absolu côté GUI (`absX/absY`), passé en `QVariantList` à `upsertZone`.
-- `exclusion`, `frictionStrenght`, `velocityStrenght`/`velocityDirection`,
+- `exclusion`, `frictionStrength`, `velocityStrength`/`velocityDirection`,
   `accelerationMultiplier`, `speedMultiplier` → empaquetés dans le `QVariantMap`
   `params`.
 - `PhysicsWorld::upsertZone(zoneId, polygonAbsolute, params)` construit alors le

@@ -1171,11 +1171,6 @@ Base_Board {
 
         PhysicsNetworkPanel {}
         JumpTestPanel { actor: playerActor }
-        CrateTestPanel {
-            logic: root.logic
-            actor: playerActor
-            physicsWorld: pattounxWorld
-        }
     }
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de
@@ -1185,16 +1180,6 @@ Base_Board {
     EditorPhysicsBridge {
         id: editorPhysicsBridge
         physicsWorld: pattounxWorld
-    }
-
-    // Phase 9 — pour chaque PhysicalObjectTile posée, instancie un Model 3D
-    // (cube orange) + un PhysicsActor (autoOrient: false, présentateur partagé
-    // joueur ↔ caisse) qui lit le snapshot physique. La création du body
-    // Dynamic est faite par EditorPhysicsBridge ci-dessus, donc les deux
-    // écoutent le même flux ItemSnapableEvents.
-    PhysicsObjectSpawner {
-        id: physicsObjectSpawner
-        world3D: gameScene
     }
 
     // Layer GPU qui dessine TOUTES les zones d'exclusion en un seul item
@@ -2435,9 +2420,8 @@ Base_Board {
             sp.zoneParameter.zoneName = opt.name !== undefined ? opt.name : ""
             sp.zoneParameter.exclusion = opt.exclusion !== undefined ? opt.exclusion : true
             sp.zoneParameter.velocityDirection = Qt.vector2d(opt.velocityX || 0.0, opt.velocityY || 0.0)
-            // NB : orthographe historique des propriétés C++ ("Strenght").
-            sp.zoneParameter.velocityStrenght = opt.velocityStrength || 0.0
-            sp.zoneParameter.frictionStrenght = opt.frictionStrength || 0.0
+            sp.zoneParameter.velocityStrength = opt.velocityStrength || 0.0
+            sp.zoneParameter.frictionStrength = opt.frictionStrength || 0.0
             sp.zoneParameter.speedMultiplier = opt.speedMultiplier !== undefined ? opt.speedMultiplier : 1.0
             sp.zoneParameter.accelerationMultiplier = opt.accelerationMultiplier !== undefined ? opt.accelerationMultiplier : 1.0
 

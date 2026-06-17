@@ -6,8 +6,8 @@
 //            && m_zoneColor             == other.m_zoneColor
 //            && m_zoneName              == other.m_zoneName
 //            && m_velocityDirection     == other.m_velocityDirection
-//            && m_velocityStrenght      == other.m_velocityStrenght
-//            && m_frictionStrenght      == other.m_frictionStrenght
+//            && m_velocityStrength      == other.m_velocityStrength
+//            && m_frictionStrength      == other.m_frictionStrength
 //            && m_exclusion             == other.m_exclusion
 //            && m_speedMultiplier       == other.m_speedMultiplier
 //            && m_accelerationMultiplier == other.m_accelerationMultiplier;
@@ -37,8 +37,8 @@ ZoneParameter::ZoneParameter(const QJsonObject &json, QObject *parent)
     m_zoneColor = json.value("zoneColor").toString("#FF5722");
     m_zoneName = json.value("zoneName").toString("");
     m_velocityDirection = QVector2D(json.value("velocityDirection").toObject().value("x").toDouble(), json.value("velocityDirection").toObject().value("y").toDouble());
-    m_velocityStrenght = json.value("velocityStrenght").toDouble(0);
-    m_frictionStrenght = json.value("frictionStrenght").toDouble(0.5);
+    m_velocityStrength = json.value("velocityStrength").toDouble(0);
+    m_frictionStrength = json.value("frictionStrength").toDouble(0.5);
     m_exclusion = json.value("exclusion").toBool(true);
     m_speedMultiplier = json.value("speedMultiplier").toDouble(1);
     m_accelerationMultiplier = json.value("accelerationMultiplier").toDouble(1);
@@ -51,8 +51,8 @@ ZoneParameter::ZoneParameter(const ZoneParameter &other, QObject *parent)
     , m_zoneColor(other.m_zoneColor)
     , m_zoneName(other.m_zoneName)
     , m_velocityDirection(other.m_velocityDirection)
-    , m_velocityStrenght(other.m_velocityStrenght)
-    , m_frictionStrenght(other.m_frictionStrenght)
+    , m_velocityStrength(other.m_velocityStrength)
+    , m_frictionStrength(other.m_frictionStrength)
     , m_exclusion(other.m_exclusion)
     , m_speedMultiplier(other.m_speedMultiplier)
     , m_accelerationMultiplier(other.m_accelerationMultiplier)
@@ -78,8 +78,8 @@ void ZoneParameter::applyJson(const QJsonObject &json)
     setZoneName(json.value("zoneName").toString(""));
     QJsonObject velDir = json.value("velocityDirection").toObject();
     setVelocityDirection(QVector2D(velDir.value("x").toDouble(), velDir.value("y").toDouble()));
-    setVelocityStrenght(json.value("velocityStrenght").toDouble(0));
-    setFrictionStrenght(json.value("frictionStrenght").toDouble(0.5));
+    setVelocityStrength(json.value("velocityStrength").toDouble(0));
+    setFrictionStrength(json.value("frictionStrength").toDouble(0.5));
     setExclusion(json.value("exclusion").toBool(true));
     setSpeedMultiplier(json.value("speedMultiplier").toDouble(1));
     setAccelerationMultiplier(json.value("accelerationMultiplier").toDouble(1));
@@ -108,8 +108,8 @@ QString ZoneParameter::toJSON()
     json += "    \"zoneColor\": \"" + m_zoneColor + "\",\n";
     json += "    \"zoneName\": \"" + m_zoneName + "\",\n";
     json += "    \"velocityDirection\": { \"x\": " + QString::number(m_velocityDirection.x()) + ", \"y\": " + QString::number(m_velocityDirection.y()) + " },\n";
-    json += "    \"velocityStrenght\": " + QString::number(m_velocityStrenght) + ",\n";
-    json += "    \"frictionStrenght\": " + QString::number(m_frictionStrenght) + ",\n";
+    json += "    \"velocityStrength\": " + QString::number(m_velocityStrength) + ",\n";
+    json += "    \"frictionStrength\": " + QString::number(m_frictionStrength) + ",\n";
     json += "    \"exclusion\": " + exclusionStr + ",\n";
     json += "    \"speedMultiplier\": " + QString::number(m_speedMultiplier) + ",\n";
     json += "    \"accelerationMultiplier\": " + QString::number(m_accelerationMultiplier) + ",\n";
@@ -202,32 +202,32 @@ void ZoneParameter::setVelocityDirection(const QVector2D &newVelocityDirection)
     emit velocityDirectionChanged();
 }
 
-qreal ZoneParameter::velocityStrenght() const
+qreal ZoneParameter::velocityStrength() const
 {
-    return m_velocityStrenght;
+    return m_velocityStrength;
 }
 
-void ZoneParameter::setVelocityStrenght(qreal newVelocityStrenght)
+void ZoneParameter::setVelocityStrength(qreal newVelocityStrength)
 {
-    if (qFuzzyCompare(m_velocityStrenght, newVelocityStrenght))
+    if (qFuzzyCompare(m_velocityStrength, newVelocityStrength))
         return;
-    m_velocityStrenght = newVelocityStrenght;
-    emit velocityStrenghtChanged();
+    m_velocityStrength = newVelocityStrength;
+    emit velocityStrengthChanged();
 }
 
 // frictionDirection removed
 
-qreal ZoneParameter::frictionStrenght() const
+qreal ZoneParameter::frictionStrength() const
 {
-    return m_frictionStrenght;
+    return m_frictionStrength;
 }
 
-void ZoneParameter::setFrictionStrenght(qreal newFrictionStrenght)
+void ZoneParameter::setFrictionStrength(qreal newFrictionStrength)
 {
-    if (qFuzzyCompare(m_frictionStrenght, newFrictionStrenght))
+    if (qFuzzyCompare(m_frictionStrength, newFrictionStrength))
         return;
-    m_frictionStrenght = newFrictionStrenght;
-    emit frictionStrenghtChanged();
+    m_frictionStrength = newFrictionStrength;
+    emit frictionStrengthChanged();
 }
 
 bool ZoneParameter::exclusion() const

@@ -256,9 +256,8 @@ Notes de design :
   sont stockés **relatifs** à cette origine. `options` (facultatif) : `color`,
   `name`, `exclusion` (défaut `true` = mur ; `false` = zone d'effet),
   `velocityX/Y`, `velocityStrength`, `frictionStrength`, `speedMultiplier`,
-  `accelerationMultiplier`. Attention : les propriétés C++ s'appellent
-  `velocityStrenght`/`frictionStrenght` (orthographe historique) — le hook fait
-  la traduction.
+  `accelerationMultiplier`. Ces noms correspondent désormais 1:1 aux propriétés
+  C++ de `ZoneParameter` (l'ancienne orthographe `*Strenght` a été corrigée).
 - `placeSelectedAsset(gridX, gridY)` **centre** l'élément : la tile résultante a
   pour origine `(gridX − floor(w/2), gridY − floor(h/2))` (comportement UI).
 - Le pan modifie `gameGrid.x/y` (pixels) puis resynchronise la caméra 3D via
