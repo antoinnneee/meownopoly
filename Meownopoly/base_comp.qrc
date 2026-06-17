@@ -79,6 +79,7 @@
         <file>qml/ui_item/MeowCheckBox.qml</file>
         <file>qml/ui_item/MeowInfoBox.qml</file>
         <file>qml/ui_item/MeowSwatchButton.qml</file>
+        <file>qml/ui_item/MeowButton.qml</file>
         <file>qml/meowComponent/TestCommandWindow.qml</file>
     </qresource>
 </RCC>
