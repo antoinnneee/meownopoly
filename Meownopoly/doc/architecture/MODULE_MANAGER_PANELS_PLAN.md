@@ -326,9 +326,11 @@ Sous-étapes (chacune = un push validable) :
 - ✅ **D4** (FAIT) — démantèlement : suppression de `SelectionPanel.qml`,
   `AssetSelectionPanel.qml`, `menuSelectionPanel/` ; `Editor.qml`/`MapInfoPanel`/qmldir/
   qml.qrc nettoyés ; helper `_bottomPanelHeight` remplaçant `selectionPanel.height`.
-- ⏳ **D5** (NON FAIT — arrêt demandé avant) — `chat` → `ChatDrawer.open()` et
-  `config3d` → placeholder sont **déjà câblés** (D2/D4). Reste à créer un véritable
-  **panneau Config 3D** (inexistant aujourd'hui) si souhaité.
+- ✅ **D5** (FAIT) — `chat` → `ChatDrawer.open()` (effet de bord dans onModuleSelected) ;
+  **`config3d`** a désormais un conteneur bespoke `Config3DPanel` (moduleManager/config3dPanel/)
+  surfaçant les contrôles caméra de `CameraRig` (mode Follow/FreeCam/FixedTopDown/OrbitDebug,
+  lissage Follow, yaw/pitch/distance Orbit) — version productisée du CameraTestPanel dev.
+  Hypothèse de contenu (caméra) à confirmer ; ajustable si un autre périmètre "3D" est voulu.
 
 Validation : build + run, vérifier qu'un seul panneau s'affiche et que re-cliquer la
 vignette active le referme. **⚠️ D3d-2→D4 sont un gros lot de QML non-testé (build

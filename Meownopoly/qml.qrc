@@ -85,6 +85,8 @@
         <file>qml/editor/moduleManager/qmldir</file>
         <file>qml/editor/moduleManager/playerPanel/PlayerPanel.qml</file>
         <file>qml/editor/moduleManager/playerPanel/qmldir</file>
+        <file>qml/editor/moduleManager/config3dPanel/Config3DPanel.qml</file>
+        <file>qml/editor/moduleManager/config3dPanel/qmldir</file>
         <file>qml/editor/configPanel/caseConfigPanel/CaseConfigurationPanelSection.qml</file>
         <file>qml/editor/configPanel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
         <file>qml/editor/configPanel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>

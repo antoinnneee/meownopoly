@@ -42,6 +42,7 @@ import zonePanel
 import templatePanel
 import assetSelectionPanel
 import caseSelectionPanel
+import config3dPanel
 import "."
 
 import MeowPainter 1.0
@@ -60,7 +61,7 @@ Base_Board {
     // Hauteur du panneau de module "bas" actif (deco/case/zone/template/player) ;
     // 0 sinon. Remplace l'ancien selectionPanel.height (D4).
     readonly property bool _bottomModuleActive:
-        ["deco", "case", "zone", "template", "player"].indexOf(moduleManager.selectedModuleId) !== -1
+        ["deco", "case", "zone", "template", "player", "config3d"].indexOf(moduleManager.selectedModuleId) !== -1
     readonly property real _bottomPanelHeight: _bottomModuleActive ? Screen.pixelDensity * 75 : 0
 
     property int availableHeight: height - _bottomPanelHeight
@@ -1243,10 +1244,10 @@ Base_Board {
         // .selectedModuleId === ...`. Ici, uniquement les effets de bord des
         // modules sans panneau ancré.
         onModuleSelected: function (moduleId) {
+            // Les panneaux de module s'affichent via leur binding `visible`.
+            // Seul `chat` a un effet de bord (ouvrir le drawer).
             if (moduleId === "chat") {
                 chatDrawer.open()
-            } else if (moduleId === "config3d") {
-                console.log("[ModuleManager] config3d — placeholder (panneau à venir)")
             }
         }
     }
@@ -2077,6 +2078,18 @@ Base_Board {
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
+
+    // D5 — conteneur bespoke du module "Config 3D" (contrôles caméra via CameraRig).
+    Config3DPanel {
+        id: config3dPanel
+        cameraRig: cameraRig
+        visible: moduleManager.selectedModuleId === "config3d"
+        z: UiStyle.z_HUD
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: sidePanel.left
+        height: visible ? Screen.pixelDensity * 75 : 0
+    }
 
     BottomSidePanel {
         id: sidePanel
