@@ -308,26 +308,31 @@ Mapping module → panneau cible :
 
 Sous-étapes (chacune = un push validable) :
 
-- **D1** — `ModuleManager` rendu interactif : `property string selectedModuleId`,
-  signal `moduleSelected(id)`, `toggleModule(id)` (re-clic = désélection → `""`),
-  highlight de la vignette active (bordure `Theme.accent`), ajout du module `config`
-  au catalogue. *Aucun consommateur encore → pas de bascule de panneau, juste
-  l'interaction.* (FAIT.)
-- **D2** — Hôte d'affichage : `SelectionPanel` (ou un nouvel hôte) n'affiche qu'**un**
-  conteneur de module à la fois selon `moduleManager.selectedModuleId`
-  (`Loader`/`StackLayout` clé = module), replié si `""`. `Editor.qml` route
-  `onModuleSelected` (bas → hôte bas ; `config` → hôte latéral ; `chat` → drawer ;
-  `config3d` → log).
-- **D3** — Individualisation : créer les conteneurs bespoke `DecoPanel`/`CasePanel`/
-  `ZonePanel`/`TemplatePanel`/`PlayerPanel`/`ConfigPanel`, chacun hébergeant son
-  contenu existant **sans** `EditorBottomPanel` ni barre d'onglets.
-- **D4** — Démantèlement : suppression de `menuSelectionPanel/` (MenuSelector*),
-  retrait des boutons d'onglets de `ASP_TitleBar` + du `stackView` de bascule dans
-  `AssetSelectionPanel`, suppression des flèches ▼/▶.
-- **D5** — `chat` → `ChatDrawer.open()` ; `config3d` → placeholder (log).
+- ✅ **D1** (FAIT) — `ModuleManager` interactif : `selectedModuleId`, signal
+  `moduleSelected(id)`, `toggleModule(id)` (re-clic = désélection), highlight de la
+  vignette active, module `config` ajouté au catalogue.
+- ✅ **D2** (FAIT) — Pilotage de l'affichage par `onModuleSelected` (câblage interim
+  sur AssetSelectionPanel, remplacé en D3).
+- ✅ **D3a** (FAIT) — `PlayerPanel` bespoke (Joueur).
+- ✅ **D3b/D3c** (FAIT) — `ZonePanel` / `TemplatePanel` bespoke.
+- ✅ **D3d-1** (FAIT) — état « sélection de pose » déplacé sur `EditorLogic`
+  (`currentSelectedAsset*`, `caseTypeSelected`, `isAssetSelected`, fonctions
+  `updateSelectedAsset`/`clearAssetSelection`/`setCaseType`) ; sans changement de
+  comportement.
+- ✅ **D3d-2 / D3e** (FAIT) — `DecoPanel` / `CasePanel` bespoke (réutilisent
+  ASP_TitleBar/ASP_ContentArea/CSP_ContentArea), écrivent `logic.*`.
+- ✅ **D3f** (FAIT) — module `config` : `BottomSidePanel` piloté par la vignette
+  config (visible/x), flèches ▼/▶ retirées.
+- ✅ **D4** (FAIT) — démantèlement : suppression de `SelectionPanel.qml`,
+  `AssetSelectionPanel.qml`, `menuSelectionPanel/` ; `Editor.qml`/`MapInfoPanel`/qmldir/
+  qml.qrc nettoyés ; helper `_bottomPanelHeight` remplaçant `selectionPanel.height`.
+- ⏳ **D5** (NON FAIT — arrêt demandé avant) — `chat` → `ChatDrawer.open()` et
+  `config3d` → placeholder sont **déjà câblés** (D2/D4). Reste à créer un véritable
+  **panneau Config 3D** (inexistant aujourd'hui) si souhaité.
 
-Après chaque sous-étape : **build + run** ; vérifier qu'un seul panneau s'affiche et
-que re-cliquer la vignette active le referme.
+Validation : build + run, vérifier qu'un seul panneau s'affiche et que re-cliquer la
+vignette active le referme. **⚠️ D3d-2→D4 sont un gros lot de QML non-testé (build
+impossible côté agent) — shakeout build attendu, cf. zones à risque dans le rapport.**
 
 ---
 
