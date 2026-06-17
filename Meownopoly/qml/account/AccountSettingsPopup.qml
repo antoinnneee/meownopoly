@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Meownopoly.Account 1.0
 import theme
+import ui_item
 
 Popup {
     id: root
@@ -153,23 +154,16 @@ Popup {
                 font.italic: true
             }
 
-            Button {
-                text: "🔄 Régénérer l'identifiant"
+            MeowButton {
+                text: "Régénérer l'identifiant"
+                iconText: "🔄"
                 Layout.fillWidth: true
                 Layout.preferredHeight: 38
-                background: Rectangle {
-                    color: parent.pressed ? Theme.borderLight : (parent.hovered ? Theme.border : Theme.surfaceHover)
-                    radius: Theme.radiusL
-                    border.color: Theme.warning
-                    border.width: 1
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.warning
-                    font.pixelSize: Theme.fontSizeBody
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                variant: "ghost"
+                baseColor: Theme.warning
+                textColor: Theme.warning
+                fontSize: Theme.fontSizeBody
+                hoverZoom: false
                 onClicked: confirmRegenIdPopup.open()
             }
 
@@ -247,25 +241,15 @@ Popup {
                         }
                     }
 
-                    Button {
+                    MeowButton {
                         id: saveNicknameBtn
                         text: "Sauvegarder"
                         visible: false
                         Layout.preferredHeight: 30
 
-                        background: Rectangle {
-                            color: parent.pressed ? Theme.pressed(Theme.success) : Theme.success
-                            radius: Theme.radiusM
-                        }
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        variant: "success"
+                        fontSize: Theme.fontSizeSmall
+                        glossy: false
 
                         onClicked: {
                             AccountManager.nickname = nicknameEditField.text.trim()
@@ -539,40 +523,23 @@ Popup {
                 Layout.fillWidth: true
                 spacing: Theme.spacingXL
 
-                Button {
+                MeowButton {
                     text: "Annuler"
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.border : Theme.borderLight
-                        radius: Theme.radiusM
-                    }
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textSecondary
-                        font.pixelSize: Theme.fontSizeBody
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                    variant: "secondary"
+                    fontSize: Theme.fontSizeBody
+                    hoverZoom: false
                     onClicked: confirmRegenIdPopup.close()
                 }
 
-                Button {
+                MeowButton {
                     text: "Régénérer"
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.pressed(Theme.danger) : Theme.danger
-                        radius: Theme.radiusM
-                    }
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textPrimary
-                        font.pixelSize: Theme.fontSizeBody
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                    variant: "danger"
+                    fontSize: Theme.fontSizeBody
+                    hoverZoom: false
                     onClicked: {
                         if (AccountManager.regenerateUniqueId()) {
                             confirmRegenIdPopup.close()
