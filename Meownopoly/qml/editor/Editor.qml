@@ -57,7 +57,13 @@ Base_Board {
     property int appPositionX: 0
     property int appPositionY: 0
 
-    property int availableHeight: height - selectionPanel.height
+    // Hauteur du panneau de module "bas" actif (deco/case/zone/template/player) ;
+    // 0 sinon. Remplace l'ancien selectionPanel.height (D4).
+    readonly property bool _bottomModuleActive:
+        ["deco", "case", "zone", "template", "player"].indexOf(moduleManager.selectedModuleId) !== -1
+    readonly property real _bottomPanelHeight: _bottomModuleActive ? Screen.pixelDensity * 75 : 0
+
+    property int availableHeight: height - _bottomPanelHeight
     property alias groupeSelection: workArea.groupeSelection
 
     // Liste pour stocker tous les SnapableCaseTile créés
@@ -329,7 +335,7 @@ Base_Board {
         id: mapInfoPanel
         anchors.fill: parent
         logic: logic
-        selectionPanel: selectionPanel
+        moduleManager: moduleManager
         sidePanel: sidePanel
 
         z: UiStyle.z_HUD
@@ -1174,14 +1180,13 @@ Base_Board {
         editorGrid: gameGrid
         selectionRect: selectionRect
         mapInfo: root.mapInfo
-        selectionPanel: selectionPanel
         editorSidePanel: sidePanel
         // D3d-2/D3e — état de pose désormais détenu et écrit par logic
         // (via DecoPanel/CasePanel → logic.updateSelectedAsset/setCaseType).
         // Plus de binding depuis selectionPanel (deco/case bespoke).
     }
 
-    mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
+    mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : _bottomPanelHeight
 
     // Stack vertical des badges, ancré top-left.
     // CollabStatusPanel (visible uniquement si EditorSession.active) en
@@ -1233,28 +1238,15 @@ Base_Board {
             console.log("[ModuleManager] module ajouté :", moduleId)
         }
 
-        // D2 — pilotage de l'affichage. Le panneau du bas (selectionPanel) ne
-        // s'affiche que pour un module "bas", et son contenu suit le module
-        // actif. chat → ChatDrawer ; config3d → log ; config → placeholder en
-        // attendant son conteneur bespoke (D3).
-        // Tous les modules "bas" (deco/case/zone/template/player) sont désormais
-        // rendus par des conteneurs bespoke (D3). Plus aucun n'est servi par le
-        // SelectionPanel legacy, qui devient dormant et sera supprimé en D4.
-        readonly property var _bottomIndex: ({})
-
+        // Chaque panneau de module (deco/case/zone/template/player + config) se
+        // montre/masque via son propre binding `visible: moduleManager
+        // .selectedModuleId === ...`. Ici, uniquement les effets de bord des
+        // modules sans panneau ancré.
         onModuleSelected: function (moduleId) {
-            const isBottom = (moduleId in moduleManager._bottomIndex)
-            // Panneau du bas déplié seulement pour un module "bas" ; replié
-            // sinon (désélection, config, chat, config3d).
-            selectionPanel.isExpanded = isBottom
-            if (isBottom) {
-                selectionPanel.contentIndex = moduleManager._bottomIndex[moduleId]
-            } else if (moduleId === "chat") {
+            if (moduleId === "chat") {
                 chatDrawer.open()
             } else if (moduleId === "config3d") {
                 console.log("[ModuleManager] config3d — placeholder (panneau à venir)")
-            } else if (moduleId === "config") {
-                console.log("[ModuleManager] config — conteneur bespoke en D3")
             }
         }
     }
@@ -1632,7 +1624,7 @@ Base_Board {
         }
 
         Component.onCompleted: {
-            EditorController.init(logic, selectionPanel, escMenu, fullScreenMsgPopup,
+            EditorController.init(logic, null, escMenu, fullScreenMsgPopup,
                                   adminCommandPanel)
         }
 
@@ -2085,79 +2077,6 @@ Base_Board {
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
-    SelectionPanel {
-        id: selectionPanel
-
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: sidePanel.left
-
-        onFocusReleased: {
-            root.focus = true
-        }
-        z: UiStyle.z_HUD
-
-        // Connexion à la logique
-        logic: logic
-
-        // D2 — l'état d'expansion est piloté impérativement par
-        // moduleManager.onModuleSelected (et non par un binding : la propriété
-        // est encore partagée avec le bouton ▼ legacy du MenuSelector, qu'un
-        // binding casserait définitivement au 1er clic). Replié par défaut via
-        // le défaut MenuSelector.isExpanded=false. Tout part en D4.
-
-        // D3f — le positionnement du panneau de config (sidePanel) est désormais
-        // piloté par le module "config" du ModuleManager (cf. bloc BottomSidePanel) ;
-        // ces handlers legacy (qui le pilotaient via les flèches ▼/▶) sont supprimés.
-
-        onAssetSelected: function (category, type, id) {
-            // Ne pas écraser un mode spécialisé : sélectionner un asset en
-            // mode TEMPLATE/DRAW_POLYGON/SELECTION_LINK/GAME n'a pas de sens,
-            // et le tab switch vers Template émet assetCleared comme side-effect.
-            var mode = logic.editorMouseMode
-            if (mode === EditorEnum.EM_TEMPLATE
-                || mode === EditorEnum.EM_DRAW_POLYGON
-                || mode === EditorEnum.EM_SELECTION_LINK
-                || mode === EditorEnum.EM_GAME) {
-                return
-            }
-            logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
-        }
-
-        onAssetCleared: function () {
-            // Même garde que onAssetSelected : SelectionPanel.clearAssetSelection()
-            // émet assetCleared en fin de fonction, ce qui ramenait à EM_NORMAL
-            // juste après être entré dans le tab Template.
-            var mode = logic.editorMouseMode
-            if (mode === EditorEnum.EM_TEMPLATE
-                || mode === EditorEnum.EM_DRAW_POLYGON
-                || mode === EditorEnum.EM_SELECTION_LINK
-                || mode === EditorEnum.EM_GAME) {
-                return
-            }
-            logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
-        }
-
-        onCaseTypeSelectedChanged: {
-            // Ne pas piétiner un mode spécialisé (TEMPLATE, DRAW_POLYGON,
-            // SELECTION_LINK, GAME) : le changement de tab dans
-            // AssetSelectionPanel déclenche `clearAssetSelection` via scope
-            // resolution, ce qui clear aussi la case selection et force
-            // caseTypeSelected → -1 — sans ce garde, on revient en EM_NORMAL
-            // juste après être entré dans le tab Template.
-            var mode = logic.editorMouseMode
-            if (mode === EditorEnum.EM_TEMPLATE
-                || mode === EditorEnum.EM_DRAW_POLYGON
-                || mode === EditorEnum.EM_SELECTION_LINK
-                || mode === EditorEnum.EM_GAME) {
-                return
-            }
-            if (selectionPanel.caseTypeSelected !== -1)
-                logic.mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
-            else
-                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
-        }
-    }
 
     BottomSidePanel {
         id: sidePanel
@@ -2428,7 +2347,7 @@ Base_Board {
         // d'assets) en coordonnées écran de `root`.
         function _viewportCenterPx() {
             const w = root.width
-            const h = root.height - selectionPanel.height
+            const h = root.height - _bottomPanelHeight
             return Qt.point(w / 2.0, h / 2.0)
         }
 
@@ -2661,7 +2580,7 @@ Base_Board {
                 gridOffsetX: gameGrid.x,
                 gridOffsetY: gameGrid.y,
                 viewportWidth: root.width,
-                viewportHeight: root.height - selectionPanel.height
+                viewportHeight: root.height - _bottomPanelHeight
             }
         }
 

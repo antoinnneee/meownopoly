@@ -202,7 +202,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
 
     addImportPath("qrc:/qml");  // Contains: ui_item, utils, world3d
     addImportPath("qrc:/qml/editor");  // Contains: editor qmldir
-    addImportPath("qrc:/qml/editor/moduleManager");  // Contains: moduleManager (ModuleManager*, SelectionPanel), assetSelectionPanel, caseSelectionPanel, editorBottomPanel, menuSelectionPanel, zonePanel, templatePanel
+    addImportPath("qrc:/qml/editor/moduleManager");  // Contains: moduleManager (ModuleManager*), assetSelectionPanel, caseSelectionPanel, editorBottomPanel, zonePanel, templatePanel, playerPanel
     addImportPath("qrc:/qml/editor/moduleManager/caseSelectionPanel");  // Contains: caseSelectionPanelMain
     addImportPath("qrc:/qml/editor/moduleManager/assetSelectionPanel");  // Contains: playerConfigPanel, screenEffectPanel
     addImportPath("qrc:/qml/editor/panel");  // Contains: mapInfoPanel qmldir

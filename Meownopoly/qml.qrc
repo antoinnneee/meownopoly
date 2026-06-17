@@ -11,7 +11,6 @@
         <file>qml/editor/Editor.qml</file>
         <file>qml/editor/EditorLogic.qml</file>
         <file>qml/editor/EditorDynamicComponent.qml</file>
-        <file>qml/editor/moduleManager/SelectionPanel.qml</file>
         <file>qml/editor/logic/PlanLogic.qml</file>
         <file>qml/editor/logic/ScrollLogic.qml</file>
         <file>qml/editor/logic/TileLogic.qml</file>
@@ -42,7 +41,6 @@
         <file>qml/editor/moduleManager/assetSelectionPanel/ASP_Grid.qml</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/ASP_Item.qml</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/ASP_TitleBar.qml</file>
-        <file>qml/editor/moduleManager/assetSelectionPanel/AssetSelectionPanel.qml</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/DecoPanel.qml</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/qmldir</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/playerConfigPanel/PCP_Content.qml</file>
@@ -81,9 +79,6 @@
         <file>qml/editor/moduleManager/editorBottomPanel/EBP_SearchBar.qml</file>
         <file>qml/editor/moduleManager/editorBottomPanel/EBP_TitleBar.qml</file>
         <file>qml/editor/moduleManager/editorBottomPanel/EditorBottomPanel.qml</file>
-        <file>qml/editor/moduleManager/menuSelectionPanel/MenuSelector.qml</file>
-        <file>qml/editor/moduleManager/menuSelectionPanel/MenuSelector_Button.qml</file>
-        <file>qml/editor/moduleManager/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
         <file>qml/editor/moduleManager/ModuleManager.qml</file>
         <file>qml/editor/moduleManager/ModuleManager_AddButton.qml</file>
         <file>qml/editor/moduleManager/ModuleManager_AddPopup.qml</file>
@@ -116,7 +111,6 @@
         <file>qml/editor/moduleManager/caseSelectionPanel/caseSelectionPanelMain/qmldir</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/qmldir</file>
         <file>qml/editor/moduleManager/editorBottomPanel/qmldir</file>
-        <file>qml/editor/moduleManager/menuSelectionPanel/qmldir</file>
         <file>qml/editor/configPanel/caseConfigPanel/qmldir</file>
         <file>qml/editor/configPanel/connectionConfigPanel/qmldir</file>
         <file>qml/editor/configPanel/qmldir</file>

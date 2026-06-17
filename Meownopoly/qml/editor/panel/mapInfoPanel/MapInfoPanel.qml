@@ -31,7 +31,7 @@ Item {
 
     required property var logic
     // Conteneur principal
-    required property var selectionPanel
+    required property var moduleManager
     required property var sidePanel
 
     property alias mapInfoDrawer: mapInfoDrawer
@@ -41,14 +41,15 @@ Item {
     MapInfoDrawer {
         id: mapInfoDrawer
         property alias mapInfoPanel: mapInfoPanel
-        property bool selPanelOriginalState : false
+        // D4 — masque le module actif (bottom/config) pendant l'affichage du
+        // drawer d'info carte ; restauré à la fermeture.
+        property string savedModuleId : ""
         onOpened:{
-            selectionPanel.visible =  false
-            selPanelOriginalState = selectionPanel.isExpanded
+            mapInfoDrawer.savedModuleId = moduleManager.selectedModuleId
+            moduleManager.selectedModuleId = ""
         }
         onClosed:{
-            selectionPanel.visible =  true
-            selectionPanel.isExpanded = selPanelOriginalState
+            moduleManager.selectedModuleId = mapInfoDrawer.savedModuleId
         }
     }
 
