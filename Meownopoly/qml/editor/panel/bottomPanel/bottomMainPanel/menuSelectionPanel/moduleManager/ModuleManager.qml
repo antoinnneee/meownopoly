@@ -26,9 +26,11 @@ Item {
     readonly property var availableModules: [
         { "id": "case",     "label": "Case",     "icon": "📦" },
         { "id": "deco",     "label": "Déco",     "icon": "🌳" },
-        { "id": "zone",     "label": "Zone",     "icon": "🟥" },
-        { "id": "template", "label": "Template", "icon": "🧩" },
-        { "id": "player",   "label": "Joueur",   "icon": "🐱" }
+        { "id": "zone",     "label": "Zone",       "icon": "🟥" },
+        { "id": "template", "label": "Template",   "icon": "🧩" },
+        { "id": "player",   "label": "Joueur",     "icon": "🐱" },
+        { "id": "chat",     "label": "Messagerie", "icon": "💬" },
+        { "id": "config3d", "label": "Config 3D",  "icon": "🧊" }
     ]
 
     // Retourne le module du catalogue correspondant à `id` (ou null).
@@ -56,11 +58,15 @@ Item {
         anchors.leftMargin: root.sideMargin
         anchors.rightMargin: root.sideMargin
         orientation: ListView.Horizontal
+        // Sens droite→gauche : le header "+" se place à droite, collé au
+        // BtSideMenu, et les modules ajoutés défilent à sa suite vers la gauche.
+        layoutDirection: Qt.RightToLeft
         spacing: Theme.spacingXS
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
         // Bouton "+" en tête : c'est la référence de hauteur de la barre.
+        // En RightToLeft, la tête est rendue à l'extrémité droite (côté BtSideMenu).
         header: ModuleManager_AddButton {
             width: root.itemSize
             height: root.itemSize
