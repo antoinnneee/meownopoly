@@ -20,6 +20,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import LauncherManager 1.0
 import theme
+import ui_item
 
 ColumnLayout {
     id: root
@@ -497,9 +498,10 @@ ColumnLayout {
             mode: root.baseTintMode
             onPicked: (m) => { root.baseTintMode = m; root.rebuildConfig() }
         }
-        Slider {
+        MeowSlider {
             Layout.fillWidth: true; from: 0.0; to: 1.0; value: root.baseTintStrength
-            onMoved: { root.baseTintStrength = value; root.rebuildConfig() }
+            showValue: false
+            onMoved: (v) => { root.baseTintStrength = v; root.rebuildConfig() }
         }
         Label { text: Number(root.baseTintStrength).toFixed(2); color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; Layout.preferredWidth: 28 }
     }
@@ -576,8 +578,9 @@ ColumnLayout {
                         mode: root.tintModes[zoneRoot.zi]
                         onPicked: (m) => root.setTintMode(zoneRoot.zi, m)
                     }
-                    Slider { Layout.fillWidth: true; from: 0.0; to: 1.0; value: root.tintStrengths[zoneRoot.zi]
-                        onMoved: root.setTintStrength(zoneRoot.zi, value) }
+                    MeowSlider { Layout.fillWidth: true; from: 0.0; to: 1.0; value: root.tintStrengths[zoneRoot.zi]
+                        showValue: false
+                        onMoved: (v) => root.setTintStrength(zoneRoot.zi, v) }
                 }
                 // Picker HSL inline de la teinte de zone.
                 Loader {
@@ -613,8 +616,9 @@ ColumnLayout {
                     Layout.fillWidth: true; Layout.leftMargin: 20; spacing: Theme.spacingS
                     visible: zoneRoot.zi < root.maxTex && (root.texSelections[zoneRoot.zi] || 0) > 0
                     Label { text: "opacité"; color: Theme.textHint; font.pixelSize: Theme.fontSizeCaption; Layout.preferredWidth: 42 }
-                    Slider { Layout.fillWidth: true; from: 0.0; to: 1.0; value: root.texOpacities[zoneRoot.zi]
-                        onMoved: root.setTexOpacity(zoneRoot.zi, value) }
+                    MeowSlider { Layout.fillWidth: true; from: 0.0; to: 1.0; value: root.texOpacities[zoneRoot.zi]
+                        showValue: false
+                        onMoved: (v) => root.setTexOpacity(zoneRoot.zi, v) }
                     Rectangle { width: 26; height: 20; radius: Theme.radiusXS
                         color: root.texTints[zoneRoot.zi]
                         border.color: root.colorTarget === ("tex:" + zoneRoot.zi) ? Theme.accentAlt : Theme.borderLight

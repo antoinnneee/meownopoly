@@ -275,7 +275,7 @@ MouseArea {
                                 }
                             }
 
-                            Slider {
+                            MeowSlider {
                                 id: tileSizeSlider
                                 Layout.fillWidth: true
                                 from: 20
@@ -284,35 +284,12 @@ MouseArea {
                                 value: 100
                                 visible: enabled
                                 enabled: menuMapAtStart.selectedDisplayMode === "Tile"
+                                accentColor: Theme.accent
+                                decimals: 0
 
                                 onValueChanged: {
                                     logic.mapInfo.backgroundTileSize = value
                                     newMapInfo.backgroundTileSize = value
-                                }
-
-                                background: Rectangle {
-                                    x: tileSizeSlider.leftPadding
-                                    y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
-                                    width: tileSizeSlider.availableWidth
-                                    height: 4
-                                    radius: 2
-                                    color: Theme.surfaceAlt
-
-                                    Rectangle {
-                                        width: tileSizeSlider.visualPosition * parent.width
-                                        height: parent.height
-                                        color: Theme.accent
-                                        radius: 2
-                                    }
-                                }
-                                handle: Rectangle {
-                                    x: tileSizeSlider.leftPadding + tileSizeSlider.visualPosition * (tileSizeSlider.availableWidth - width)
-                                    y: tileSizeSlider.topPadding + tileSizeSlider.availableHeight / 2 - height / 2
-                                    width: 16
-                                    height: 16
-                                    radius: 8
-                                    color: tileSizeSlider.pressed ? Theme.surfaceLight : Theme.pressed(Theme.surfaceLight)
-                                    border.color: Theme.accent
                                 }
                             }
                         }

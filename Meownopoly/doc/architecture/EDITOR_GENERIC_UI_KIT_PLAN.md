@@ -1,6 +1,6 @@
 # Kit de composants UI génériques pour l'éditeur — Plan
 
-> **Statut** : document de conception (plan). Aucun code écrit.
+> **Statut** : ✅ kit implémenté et mergé (10 composants `ui_item/Meow*`). Dernière vague : unification **MeowSlider** des derniers sliders bruts (VEP/SEP + EditorEscMenu/MenuMapAtStart + launcher), 2026-06-17 — cf. §4.2.
 > **Date** : 2026-06-12
 > **Périmètre** : form-controls réutilisables (`qml/ui_item/`) pour les panneaux de l'éditeur (`qml/editor/`).
 > **Objectif** : factoriser les blocs UI dupliqués des panneaux de configuration (CCP/CCPS, ZCP, VEP, SEP, PCP) en composants canoniques branchés sur `Theme`.
@@ -103,6 +103,13 @@ MeowSlider {
 - Props : `label`, `from`, `to`, `value` (alias), `stepSize` (ou dérivé de `decimals`), `decimals:int`, `unitText:string`, `labelWidth`, `valueWidth`, `accentColor:color` (défaut `Theme.accentAlt`), `resettable:bool`, `resetValue:real`.
 - Signaux : `moved(real v)`, `gestureBegan()`, `gestureCommitted()`.
 - **Migration** : les call-sites VEP branchent `onMoved` ; les call-sites SEP branchent `onGestureBegan/onMoved/onGestureCommitted`. Garder les deux noms de slot, pas de rupture.
+
+> **✅ Réalisé (2026-06-17)** — `VEP_Slider` et `SEP_Slider` sont désormais de **fins délégués de `MeowSlider`** (look canonique unifié), pas une fusion en un seul composant : chacun garde son fichier + son API publique pour ne casser aucun call-site.
+> - `SEP_Slider` (transactionnel) : `MeowSlider` + signaux `begin/movedValue/commit` mappés sur `onGestureBegan/onMoved/onGestureCommitted` ; `labelWidth: 96`, `stepSize` dérivé de `decimals`.
+> - `VEP_Slider` (live) : `MeowSlider` + `sliderText` (→ `label`), signal `effectChanged(value)` ré-émis sur `onValueChanged` (déclenché par drag **et** affectation programmatique, ex. `updateFromDisplayParameter`), `resettable: true` (remplace le bouton Reset maison).
+> - Sliders bruts autonomes migrés en plus : `EditorEscMenu` (volume, sensibilité souris), `MenuMapAtStart` (taille des tuiles), launcher `SkinEditorPanel` (3) et `ModelConfigurator`/`AxisSlider` (style Qt par défaut → canonique) ; tous en `showValue: false` quand un afficheur externe (`%`, `.toFixed`) ou aucun affichage existe déjà.
+> - **Hors périmètre (délibéré)** : `InlineColorPicker` (3 sliders à piste en dégradé teinte/saturation/luminance — le dégradé EST le picker) et `CameraTestPanel` (panneau debug/test).
+> - Validé : build Release vert, qmllint propre côté MeowSlider, test visuel MCP (SEP : drag → valeur encadrée mise à jour ; VEP : Color Effects rendus au look canonique avec Reset).
 
 ### 4.3 `MeowPropertyRow` — ligne label + contrôle (P3)
 Conteneur d'alignement (le plus rentable : 20+ occurrences).
