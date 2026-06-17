@@ -62,7 +62,7 @@ Base_Board {
     property alias snapableTilesList: logic.snapableTilesList
 
     // Asset selection properties
-    property alias isAssetSelected: selectionPanel.isAssetSelected
+    property bool isAssetSelected: logic ? logic.isAssetSelected : false
     property alias editorSidePanel: sidePanel
 
     property alias escMenu: escMenu
@@ -1174,6 +1174,14 @@ Base_Board {
         mapInfo: root.mapInfo
         selectionPanel: selectionPanel
         editorSidePanel: sidePanel
+
+        // D3d — état de pose alimenté depuis selectionPanel pendant la transition
+        // (deco/case encore legacy). En D3d-2/D3e, les conteneurs bespoke écriront
+        // directement logic.* et ces bindings seront retirés.
+        currentSelectedAssetCategory: selectionPanel ? selectionPanel.currentSelectedAssetCategory : ""
+        currentSelectedAssetType: selectionPanel ? selectionPanel.currentSelectedAssetType : ""
+        currentSelectedAssetId: selectionPanel ? selectionPanel.currentSelectedAssetId : ""
+        caseTypeSelected: selectionPanel ? selectionPanel.caseTypeSelected : -1
     }
 
     mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
@@ -1972,11 +1980,11 @@ Base_Board {
     AssetPreviewCursor {
         id: assetPreview
         parent: workArea
-        assetCategory: selectionPanel.currentSelectedAssetCategory
-        assetType: selectionPanel.currentSelectedAssetType
-        assetId: selectionPanel.currentSelectedAssetId
-        caseType: selectionPanel.caseTypeSelected
-        isCasePreview: selectionPanel.caseTypeSelected !== -1
+        assetCategory: logic.currentSelectedAssetCategory
+        assetType: logic.currentSelectedAssetType
+        assetId: logic.currentSelectedAssetId
+        caseType: logic.caseTypeSelected
+        isCasePreview: logic.caseTypeSelected !== -1
         unitSizeWidth: logic.tileLogic.currentElementWidth
         unitSizeHeight: logic.tileLogic.currentElementHeight
         gridManager: gameGrid
@@ -2510,7 +2518,7 @@ Base_Board {
 
             // updateSelectedAsset arme la sélection + ajuste le ratio + émet
             // assetSelected → onAssetSelected passe en EM_POSE.
-            selectionPanel.assetPanel.updateSelectedAsset(category, type, assetId)
+            logic.updateSelectedAsset(category, type, assetId)
 
             const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
             if (placed && placed.snapableParameters)
@@ -2518,7 +2526,7 @@ Base_Board {
 
             // Restaurer le mode normal (désarme EM_POSE) sans piétiner un
             // mode spécialisé éventuel.
-            selectionPanel.clearAssetSelection()
+            logic.clearAssetSelection()
             if (logic.editorMouseMode === EditorEnum.EM_POSE)
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
 
@@ -2535,7 +2543,7 @@ Base_Board {
             if (caseType === undefined || caseType === null || caseType < 0)
                 return { ok: false, error: "caseType (>= 0) requis" }
             // Désarmer toute sélection d'asset puis armer le type de case.
-            selectionPanel.clearAssetSelection()
+            logic.clearAssetSelection()
             selectionPanel.caseTypeSelected = caseType  // → EM_POSE
 
             const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)

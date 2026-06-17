@@ -26,11 +26,11 @@ QtObject {
         var snapableParameters
         gridX = gridX - Math.trunc(currentElementWidth/2)
         gridY = gridY - Math.trunc(currentElementHeight/2)
-        if (!root.isAssetSelected) {    // place case
-            if (selectionPanel.caseTypeSelected == -1){ //no type selected
+        if (!logic.isAssetSelected) {    // place case
+            if (logic.caseTypeSelected == -1){ //no type selected
                 return
             }
-            snapableParameters = ItemSnapableFactory.createItemSnapable(selectionPanel.caseTypeSelected)
+            snapableParameters = ItemSnapableFactory.createItemSnapable(logic.caseTypeSelected)
         }
         else    // place decoration
         {
@@ -44,9 +44,9 @@ QtObject {
         // Lamport tick — zOrder unique monotone + jitter sub-1.0 par peer
         // pour désambigüer les ticks concurrents en collab.
         snapableParameters.displayParameter.zOrder = Game.tickLamport()
-        snapableParameters.decorationParameter.decorationCategory = selectionPanel.currentSelectedAssetCategory
-        snapableParameters.decorationParameter.decorationType = selectionPanel.currentSelectedAssetType
-        snapableParameters.decorationParameter.decorationId = selectionPanel.currentSelectedAssetId
+        snapableParameters.decorationParameter.decorationCategory = logic.currentSelectedAssetCategory
+        snapableParameters.decorationParameter.decorationType = logic.currentSelectedAssetType
+        snapableParameters.decorationParameter.decorationId = logic.currentSelectedAssetId
 
         var newTile = createItemSnapableTile(snapableParameters)
 

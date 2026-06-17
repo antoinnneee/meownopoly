@@ -12,7 +12,7 @@ MouseLogic_Base {
 
     function pressedRight(mouse, drag)
     {
-        selectionPanel.clearAssetSelection()
+        logic.clearAssetSelection()
         drag.target = grid
         mouse.accepted = false  // to cancel right click on other mode
     }

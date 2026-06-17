@@ -57,8 +57,8 @@ import EditDelta 1.0
             break;
 
         case (Qt.Key_Escape) :
-            if (selectionPanel.isAssetSelected) {
-                selectionPanel.clearAssetSelection()
+            if (logic.isAssetSelected) {
+                logic.clearAssetSelection()
                 event.accepted = true
             } else if (logic.editorMouseMode === EditorEnum.EM_SELECTION_LINK) {
                 logic.mouseLogic.unselectSelectedElements()

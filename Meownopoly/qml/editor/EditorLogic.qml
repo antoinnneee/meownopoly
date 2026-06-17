@@ -27,6 +27,28 @@ Base_logic {
 
     property var selectionPanel: null  // Référence au SelectionPanel pour la configuration des cases
     property var editorSidePanel: null
+
+    // D3d — état « sélection de pose » (asset/case armé), détenu par logic.
+    // Consommé par AssetPreviewCursor, TileLogic, MouseLogic_Pose, EditorController.
+    // Pendant la transition (deco/case encore dans le SelectionPanel legacy), ces
+    // valeurs sont alimentées par binding depuis selectionPanel (cf. Editor.qml) ;
+    // les conteneurs bespoke (D3d-2/D3e) les écriront ensuite directement.
+    property string currentSelectedAssetCategory: ""
+    property string currentSelectedAssetType: ""
+    property string currentSelectedAssetId: ""
+    property int caseTypeSelected: -1
+    readonly property bool isAssetSelected:
+        currentSelectedAssetCategory !== "" && currentSelectedAssetType !== "" && currentSelectedAssetId !== ""
+
+    // Délèguent au SelectionPanel legacy pendant la transition ; seront
+    // redéfinies pour agir sur l'état local en D3d-2/D3e.
+    function clearAssetSelection() {
+        if (selectionPanel) selectionPanel.clearAssetSelection()
+    }
+    function updateSelectedAsset(category, type, id) {
+        if (selectionPanel && selectionPanel.assetPanel)
+            selectionPanel.assetPanel.updateSelectedAsset(category, type, id)
+    }
     property var polygonPreview: null  // Référence au composant de prévisualisation du polygone
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL
 
