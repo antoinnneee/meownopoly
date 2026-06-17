@@ -1,0 +1,4 @@
+module moduleManager
+ModuleManager 1.0 ModuleManager.qml
+ModuleManager_AddButton 1.0 ModuleManager_AddButton.qml
+ModuleManager_AddPopup 1.0 ModuleManager_AddPopup.qml
