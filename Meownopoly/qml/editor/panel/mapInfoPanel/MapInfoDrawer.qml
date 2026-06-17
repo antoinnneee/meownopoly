@@ -350,46 +350,31 @@ Drawer {
                         id: saveButton
                         width: parent.width
                         height: 30
-                        flat: true
+
+                        // Style unifié via MeowButton ; couleur + libellé
+                        // dépendants de l'état de la carte.
+                        baseColor: {
+                            if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName === "")
+                                return "#5E5A66"
+                            if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM))
+                                return "#008B8B"
+                            return Theme.success
+                        }
+                        text: {
+                            if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName === "")
+                                return "Sauvegarde par défaut"
+                            if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM))
+                                return "Mettre a jour"
+                            return "Créer une carte"
+                        }
+                        fontSize: Theme.fontSizeBody
 
                         particleColor: "#32CD32"
                         particleColorVariation: "#00FF00"
                         particleCount: 30
                         particleSize: 6
                         particleLifeSpan: 1500
-                        background: Rectangle {
-                            anchors.fill: parent
-                            color: {
-                                if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName === ""){
-                                    "#5E5A66"
-                                }
-                                else if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM)){
-                                    "#008B8B"
-                                }
-                                else {
-                                    Theme.success
-                                }
-                            }
-                            opacity: 0.8
-                            radius: Theme.radiusXS
-                        }
 
-                        contentItem: Text {
-                            text: if (logic.mapInfo.mapName === mapInfo.autosaveMapName || logic.mapInfo.mapName == ""){
-                                      "Sauvegarde par défaut"
-                                  }
-                                  else if (MapFileManager.mapExists(logic.mapInfo.mapName, MapTypes.CUSTOM)){
-                                      "Mettre a jour"
-                                  }
-                                  else {
-                                      "Créer une carte"
-                                  }
-                            color: Theme.textPrimary
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: Theme.fontSizeBody
-                            font.bold: true
-                        }
                         onClicked: {
                             if (typeof logic !== 'undefined' && typeof logic.saveMap === 'function') {
                                 var mapInfoLocal = logic.mapInfo

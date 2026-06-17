@@ -728,40 +728,14 @@ Rectangle {
                                 Layout.preferredHeight: 48
                                 enabled: root.formValid
 
+                                // Style unifié via MeowButton ; couleur dynamique
+                                // du formulaire portée par baseColor.
+                                baseColor: root.cPrimary
+                                fontSize: Theme.fontSizeMedium
+
                                 particleColor: root.cPrimary
                                 particleColorVariation: root.cSecondary
                                 particleCount: 30
-
-                                background: Rectangle {
-                                    color: parent.enabled ?
-                                               (parent.down ? root.cDark : root.cPrimary) : root.bgBtnPress
-                                    radius: Theme.radiusXL
-                                    border.color: parent.enabled ?
-                                                      (parent.hovered ? "#FFFFFF" : root.cDark) : root.borderBtn
-                                    border.width: 2
-
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        anchors.margins: 2
-                                        radius: Theme.radiusL
-                                        gradient: Gradient {
-                                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.15) }
-                                            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.0) }
-                                        }
-                                    }
-
-                                    Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
-                                }
-
-                                contentItem: Text {
-                                    text: parent.text
-                                    font.pixelSize: Theme.fontSizeMedium
-                                    font.bold: true
-                                    color: parent.enabled ? Theme.textPrimary : root.textMuted
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    Behavior on color { ColorAnimation { duration: 300 } }
-                                }
 
                                 onClicked: {
                                     // Carte de départ : mode "existing" n'a
