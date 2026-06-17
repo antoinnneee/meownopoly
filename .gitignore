@@ -42,6 +42,7 @@ chatServer/.deployEnv
 chatServer/*.backup
 .vscode/settings.json
 /build
+/build_map_tests
 /Meownopoly/.cache
 .claude/settings.local.json
 /.cache

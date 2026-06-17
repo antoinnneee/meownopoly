@@ -22,6 +22,7 @@ Documentation technique sur l'architecture du système et les composants.
 - [📖 Analyse Complète](./architecture/ANALYSE_ARCHITECTURE_EDITEUR.md) - Analyse détaillée de l'éditeur (12 sections)
 - [📋 Résumé](./architecture/RESUME_ARCHITECTURE_EDITEUR.md) - Vue d'ensemble rapide avec points clés
 - [📊 Diagrammes](./architecture/DIAGRAMMES_ARCHITECTURE_EDITEUR.md) - Diagrammes visuels ASCII
+- [🗺️ Cycle de vie de currentMap](./architecture/MAP_LIFECYCLE.md) - Variables centrales, interactions utilisateur, scénarios état/effets de bord, plan de tests
 - [🌐 Éditeur Collaboratif](./architecture/COLLABORATIVE_EDITOR.md) - Stack réseau collab, op bus, host migration, stats transmission
 - [🧩 Pattern Session Collab](./architecture/COLLAB_SESSION_PATTERN.md) - Pattern générique host-authoritative pour réimplémenter dans d'autres modes
 

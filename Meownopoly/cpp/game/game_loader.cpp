@@ -44,6 +44,16 @@ bool Game::saveCurrentMap(){
                    << "(client collab sans fullsync de mapInfo ?)";
         return false;
     }
+    // G6 fix : sentinel mapName="" → carte placeholder collab posée par
+    // initEmptyCollabMap, en attente d'un FullSync. Refuser la save :
+    // sinon une mutation locale accidentelle (binding QML ré-évalué)
+    // écrirait dans un fichier au nom incohérent (autosave_tmp_map.json
+    // en CUSTOM, ou pire). Le sentinel est levé par applyDelta(MetadataChanged)
+    // qui pose le nom réel à la réception du FullSync.
+    if (currentMapInfo->getMapName().isEmpty()) {
+        qDebug() << "[Game::saveCurrentMap] mapName sentinel vide (collab placeholder) — skip save";
+        return false;
+    }
     // Le type source est désormais porté par Map (propriété d'emplacement, pas
     // de contenu). Avant refactor : MapInfo::getType() renvoyait toujours
     // AUTOSAVE à cause d'un initialiseur header mal ordonné, ce qui stompait
@@ -67,6 +77,18 @@ bool Game::saveCurrentMap(){
 
 bool Game::saveMap(MapInfo* mapInfo, QVariantList itemSnapableList, MapTypes::MapType mapType)
 {
+    if (!mapInfo) {
+        qWarning() << "[Game::saveMap] mapInfo null — abort save";
+        return false;
+    }
+    // G6 fix : même garde que saveCurrentMap. Couvre les call sites
+    // logic.saveMap(...) qui passent l'inline Base_Board.mapInfo (V15) —
+    // celui-ci binde sur Map.mapInfo (V3) et hérite donc du sentinel ""
+    // pendant la fenêtre placeholder collab.
+    if (mapInfo->getMapName().isEmpty()) {
+        qDebug() << "[Game::saveMap] mapName sentinel vide (collab placeholder) — skip save";
+        return false;
+    }
     qDebug() << Q_FUNC_INFO << mapInfo->getMapName() << " Type: " << mapType;
     Logger::instance()->info(QString("saveMap called %1, Type %2").arg(mapInfo->getMapName()).arg(mapType), "Game");
 
@@ -159,9 +181,16 @@ void Game::initEmptyCollabMap()
     }
 
     Map *map = new Map(this);
-    // MapInfo par défaut : name=autosave_tmp, type=AUTOSAVE. Sans ça, le client
-    // en mode collab crashe dès qu'une politique saveOnEdit tente de sérialiser.
-    map->setMapInfo(new MapInfo());
+    // G6 fix : MapInfo placeholder avec mapName="" (sentinel). Bloque toute
+    // save accidentelle entre l'init du client collab et l'arrivée du
+    // FullSync. Le ctor par défaut donne mapName="autosave_tmp" → on
+    // l'écrase explicitement avec setMapName("") (qui passe maintenant le
+    // guard d'égalité fixé en G2 si la valeur change). Le FullSync arrivant
+    // dans `_applyFullSyncSnapshot` appelle applyDelta(MetadataChanged) qui
+    // remplace MapInfo par une copie du host snapshot (mapName réel).
+    auto *placeholderMapInfo = new MapInfo();
+    placeholderMapInfo->setMapName(QString());
+    map->setMapInfo(placeholderMapInfo);
     connect(map, &Map::tileRemovedFromHistory, this, &Game::tileRemoved);
     connect(map, &Map::tileRestoredFromHistory, this, &Game::foundItemSnapableTile);
     connect(map, &Map::forceUnselectAll, this, &Game::forceUnselectAll);

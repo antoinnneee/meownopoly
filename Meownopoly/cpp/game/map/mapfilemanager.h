@@ -28,7 +28,25 @@ public:
 
     // Méthodes QML (instance, Q_INVOKABLE)
     Q_INVOKABLE bool mapExists(const QString &mapName, MapTypes::MapType mapType);
-    Q_INVOKABLE bool renameMap(QString oldMapName, QString newMapName);
+
+    /// Vérifie si un nom de carte collisionne avec un fichier existant en
+    /// ignorant la casse et les caractères blancs. Sémantique explicite :
+    /// `normalizeMapName` lowercase + remplace ' ' par '_', donc la collision
+    /// est déjà case-insensitive — cette méthode l'expose avec un nom clair
+    /// pour les appelants UI (ex: SessionCreation.qml détecte la collision
+    /// entre un nom de session et une carte mono préexistante).
+    Q_INVOKABLE bool mapNameCollidesIgnoringCase(const QString &mapName,
+                                                 MapTypes::MapType mapType);
+
+    /// Copie un fichier de carte en ré-écrivant `mapInfo.name` sur le copy.
+    /// Atomique (passe par saveMap qui écrit via .tmp + rename). Échoue si
+    /// la source n'existe pas ou si l'écriture est bloquée par un lock.
+    /// Utilisé par le flow SessionCreation "créer une copie" pour partir
+    /// d'une carte mono existante sans la modifier.
+    Q_INVOKABLE bool copyMap(const QString &fromName,
+                             const QString &toName,
+                             MapTypes::MapType mapType);
+
     Q_INVOKABLE QStringList getAvailableMaps();
     Q_INVOKABLE QString findMapFileByName(const QString &displayName);
     Q_INVOKABLE QString createMapFile(const QString &mapName, MapTypes::MapType mapType);

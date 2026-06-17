@@ -119,6 +119,25 @@ MouseArea {
                 }
             }
 
+            // G7 fix : message d'erreur explicite quand le nom (normalisé)
+            // collisionne avec un fichier existant. Le placeholder ne peut
+            // pas servir à ce signal — il n'est visible qu'à champ vide,
+            // alors que la collision arrive justement quand l'utilisateur a
+            // commencé à taper. Précise la clé de fichier normalisée pour
+            // que l'utilisateur comprenne pourquoi "My Map" et "my map"
+            // collisionnent.
+            Text {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                visible: mapNameField.text.length > 0 && mapNameField.mapnameExists
+                color: "#E74C3C"
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+                text: "⚠ Le fichier «" +
+                      MapFileManager.normalizeMapName(mapNameField.text) +
+                      "_map.json» existe déjà"
+            }
+
             // Map description text field
             TextField {
                 id: mapDescriptionField

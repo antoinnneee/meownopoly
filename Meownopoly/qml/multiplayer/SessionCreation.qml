@@ -7,6 +7,7 @@ import "./components"
 import ui_item
 import AssetManager
 import MapFileManager
+import MapTypes
 
 /**
  * Écran de création de session
@@ -58,6 +59,26 @@ Rectangle {
     property string initialMapMode: "new"        // "new" | "existing"
     property string initialMapName: ""           // valide quand mode == "existing"
     property var    availableMapsForPicker: []   // peuplé dans onCompleted
+
+    // G9 — mode "existing" : par défaut on crée une **copie** du fichier
+    // mono pour que la session collab n'écrase pas la carte d'origine. Si
+    // l'utilisateur décoche, la session édite directement le fichier mono
+    // (et la sortie collab "ne pas conserver" peut le supprimer).
+    property bool initialMapUseCopy: true
+
+    // G9 — collision détectée quand sessionName (mode "new") résoud au même
+    // fichier qu'une carte mono existante (case-insensitive + espaces vs
+    // underscores via normalizeMapName). Signal visuel rouge sous le champ ;
+    // ne bloque pas le clic Créer (l'utilisateur peut sciemment vouloir
+    // éditer cette carte mono — auquel cas il devrait plutôt passer en mode
+    // "existing", mais on laisse libre).
+    readonly property bool sessionNameCollidesWithMono: {
+        if (root.initialMapMode !== "new") return false
+        if (sessionNameInput.text.length === 0) return false
+        if (root.sessionNameError !== "") return false
+        return MapFileManager.mapNameCollidesIgnoringCase(
+                    sessionNameInput.text, MapTypes.CUSTOM)
+    }
 
     // ═══════════════════════════════════════
     // Palette Dynamique (Orange 🎮 <-> Violet 🛠️)
@@ -286,8 +307,9 @@ Rectangle {
                             }
                         }
 
-                        // Bulle-info live : rule hint quand vide, erreur
-                        // précise quand invalide, compteur de caractères.
+                        // Bulle-info live : rule hint quand vide, erreur de
+                        // validation, **collision avec carte mono existante
+                        // (G9)**, ou compteur de caractères si tout est ok.
                         Text {
                             Layout.topMargin: Theme.spacingS
                             Layout.fillWidth: true
@@ -298,11 +320,14 @@ Rectangle {
                                     return "💡 Lettres, chiffres, `_`. Pas de « _map »."
                                 if (root.sessionNameError !== "")
                                     return "⚠ " + root.sessionNameError + "  (" + count + "/50)"
+                                if (root.sessionNameCollidesWithMono)
+                                    return "⚠ Une carte locale porte déjà ce nom (insensible à la casse). " +
+                                           "La session écrirait dans son fichier — préférez « Existante » + copie."
                                 return "✓ " + count + "/50"
                             }
                             color: {
                                 if (sessionNameInput.text.length === 0) return root.textMuted
-                                if (root.sessionNameError !== "") return Theme.danger
+                                if (root.sessionNameError !== "" || root.sessionNameCollidesWithMono) return Theme.danger
                                 return Theme.success
                             }
                             font.pixelSize: Theme.fontSizeSmall
@@ -604,6 +629,64 @@ Rectangle {
                             }
                         }
 
+                        // G9 — checkbox "Créer une copie" : visible UNIQUEMENT
+                        // en mode existant. Coché par défaut (comportement sûr :
+                        // la session collab travaille sur une copie, la carte
+                        // mono d'origine n'est pas modifiée même si la sortie
+                        // collab "ne pas conserver" purge le fichier de session).
+                        // Décocher fait pointer la session sur la carte mono
+                        // d'origine — comportement legacy, à utiliser sciemment.
+                        Row {
+                            Layout.topMargin: 10
+                            Layout.fillWidth: true
+                            spacing: 10
+                            visible: root.isEditionMode &&
+                                     root.initialMapMode === "existing"
+
+                            CheckBox {
+                                id: useCopyCheckbox
+                                checked: root.initialMapUseCopy
+                                onCheckedChanged: root.initialMapUseCopy = checked
+
+                                indicator: Rectangle {
+                                    width: 20; height: 20; radius: 4
+                                    color: useCopyCheckbox.checked ? root.cPrimary : root.bgInput
+                                    border.color: useCopyCheckbox.checked ? root.cSecondary : root.borderInput
+                                    border.width: 2
+                                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "✓"
+                                        color: "#ffffff"
+                                        font.pixelSize: 14
+                                        font.bold: true
+                                        visible: useCopyCheckbox.checked
+                                    }
+                                }
+                            }
+
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 2
+
+                                Text {
+                                    text: "Créer une copie de la carte"
+                                    color: root.textHighlight
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                }
+                                Text {
+                                    text: useCopyCheckbox.checked
+                                          ? "🛡 La carte d'origine reste intacte"
+                                          : "⚠ La session éditera directement le fichier d'origine"
+                                    color: useCopyCheckbox.checked ? root.textMuted : "#E67E22"
+                                    font.pixelSize: 11
+                                    font.italic: true
+                                }
+                            }
+                        }
+
                         // Fill space
                         Item { Layout.fillHeight: true }
 
@@ -685,13 +768,17 @@ Rectangle {
                                     // de sens que si une carte a été
                                     // effectivement choisie, sinon fallback
                                     // "new" (vierge au nom de la session).
+                                    // G9 : `useCopy` n'est pertinent qu'en
+                                    // mode existing — Editor.qml l'ignore en
+                                    // mode new.
                                     const initialMap = {
                                         "mode":    (root.isEditionMode &&
                                                     root.initialMapMode === "existing" &&
                                                     root.initialMapName !== "")
                                                         ? "existing" : "new",
                                         "mapName": (root.initialMapMode === "existing")
-                                                        ? root.initialMapName : ""
+                                                        ? root.initialMapName : "",
+                                        "useCopy": root.initialMapUseCopy
                                     }
                                     console.log("🎉 Création de session demandée")
                                     console.log("  - Nom:", sessionNameInput.text)

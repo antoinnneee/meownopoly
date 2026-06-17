@@ -132,12 +132,19 @@ void MapInfo::registerQml()
 
 void MapInfo::setMapName(const QString &mapName)
 {
+    // G2 fix : guard d'égalité avant emit pour éviter les boucles de binding
+    // QML (CheckBox/Slider qui re-fire onValueChanged sur ré-évaluation du
+    // binding sans changement réel — cf. commit 0e1a16c sur Base_Board).
+    if (m_mapName == mapName)
+        return;
     m_mapName = mapName;
     emit mapNameChanged(mapName);
 }
 
 void MapInfo::setMapDescription(const QString &mapDescription)
 {
+    if (m_mapDescription == mapDescription)
+        return;
     m_mapDescription = mapDescription;
     emit mapDescriptionChanged(mapDescription);
 }
@@ -223,12 +230,16 @@ QString MapInfo::autosaveMapName() const
 
 void MapInfo::setMapLastModified(const QString &mapLastModified)
 {
+    if (m_mapLastModified == mapLastModified)
+        return;
     m_mapLastModified = mapLastModified;
     emit mapLastModifiedChanged(mapLastModified);
 }
 
 void MapInfo::setVersion(int version)
 {
+    if (m_version == version)
+        return;
     m_version = version;
     emit versionChanged(version);
 }
