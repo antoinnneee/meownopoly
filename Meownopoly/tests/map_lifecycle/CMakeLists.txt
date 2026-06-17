@@ -29,11 +29,17 @@ if (NOT TARGET Qt6::Test)
     set(CMAKE_AUTOMOC ON)
     find_package(Qt6 REQUIRED COMPONENTS Core Test Qml)
     enable_testing()
+    # En standalone, le test EST la cible du projet : on le veut dans `all`.
+    set(_MAPTEST_EXCLUDE "")
+else()
+    # Inclus dans le top-level : hors du build générique `all` (compilé à la
+    # demande via --target tst_mapinfo / map_lifecycle_tests / meownopoly_tests).
+    set(_MAPTEST_EXCLUDE EXCLUDE_FROM_ALL)
 endif()
 
 set(MAP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../cpp/game/map")
 
-qt_add_executable(tst_mapinfo
+qt_add_executable(tst_mapinfo ${_MAPTEST_EXCLUDE}
     tst_mapinfo.cpp
     "${MAP_DIR}/mapinfo.cpp"
     "${MAP_DIR}/playerprofile.cpp"
