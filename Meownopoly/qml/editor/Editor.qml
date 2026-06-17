@@ -2106,26 +2106,9 @@ Base_Board {
         // binding casserait définitivement au 1er clic). Replié par défaut via
         // le défaut MenuSelector.isExpanded=false. Tout part en D4.
 
-        onIsSidePanelExpandedChanged: {
-            console.log("SelectionPanel: Side panel expanded state changed to",
-                        isSidePanelExpanded, " x ", sidePanel.x)
-            if (isSidePanelExpanded) {
-                sidePanel.x = parent.width - sidePanel.width
-            } else {
-                sidePanel.x = parent.width
-            }
-        }
-        onIsExpandedChanged: {
-            console.log("SelectionPanel: Side panel expanded state changed to",
-                        isSidePanelExpanded, " x ", sidePanel.x)
-            if (isExpanded) {
-                sidePanel.height = Qt.binding(function () {
-                    return selectionPanel.height
-                })
-            } else {
-                sidePanel.height = 0
-            }
-        }
+        // D3f — le positionnement du panneau de config (sidePanel) est désormais
+        // piloté par le module "config" du ModuleManager (cf. bloc BottomSidePanel) ;
+        // ces handlers legacy (qui le pilotaient via les flèches ▼/▶) sont supprimés.
 
         onAssetSelected: function (category, type, id) {
             // Ne pas écraser un mode spécialisé : sélectionner un asset en
@@ -2180,7 +2163,11 @@ Base_Board {
         id: sidePanel
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
-        x: parent.width
+        // D3f — le panneau de config est désormais un module : visible et glissé
+        // en place quand la vignette "config" est active (sinon hors écran à droite).
+        // Plus de pilotage par les flèches ▼/▶ legacy du SelectionPanel.
+        visible: moduleManager.selectedModuleId === "config"
+        x: visible ? parent.width - width : parent.width
         logic: logic
         //Connect the selected decoration element for effects
         Timer {
