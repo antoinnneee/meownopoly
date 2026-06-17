@@ -43,6 +43,7 @@
         <file>qml/editor/moduleManager/assetSelectionPanel/ASP_Item.qml</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/ASP_TitleBar.qml</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/AssetSelectionPanel.qml</file>
+        <file>qml/editor/moduleManager/assetSelectionPanel/DecoPanel.qml</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/qmldir</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/playerConfigPanel/PCP_Content.qml</file>
         <file>qml/editor/moduleManager/assetSelectionPanel/playerConfigPanel/PCP_ProfileRow.qml</file>
@@ -70,6 +71,7 @@
         <file>qml/editor/moduleManager/assetSelectionPanel/screenEffectPanel/qmldir</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/caseSelectionPanelMain/CSP_CaseTypeCell.qml</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/caseSelectionPanelMain/CSP_CaseTypeSelector.qml</file>
+        <file>qml/editor/moduleManager/caseSelectionPanel/CasePanel.qml</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/CSP_ClearButton.qml</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/CSP_ContentArea.qml</file>
         <file>qml/editor/moduleManager/caseSelectionPanel/CSP_TitleBar.qml</file>

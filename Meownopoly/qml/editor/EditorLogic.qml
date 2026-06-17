@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtCore
 
 import Game
+import AssetManager
 import Case
 import ItemSnapable
 import TileType
@@ -40,14 +41,55 @@ Base_logic {
     readonly property bool isAssetSelected:
         currentSelectedAssetCategory !== "" && currentSelectedAssetType !== "" && currentSelectedAssetId !== ""
 
-    // Délèguent au SelectionPanel legacy pendant la transition ; seront
-    // redéfinies pour agir sur l'état local en D3d-2/D3e.
-    function clearAssetSelection() {
-        if (selectionPanel) selectionPanel.clearAssetSelection()
+    // Modes "spécialisés" : on n'y force pas EM_POSE/EM_NORMAL sur (dé)sélection
+    // (reprend les gardes des anciens handlers du SelectionPanel).
+    function _isSpecializedMode() {
+        return editorMouseMode === EditorEnum.EM_TEMPLATE
+            || editorMouseMode === EditorEnum.EM_DRAW_POLYGON
+            || editorMouseMode === EditorEnum.EM_SELECTION_LINK
+            || editorMouseMode === EditorEnum.EM_GAME
     }
+
+    // Arme un asset (décoration) pour la pose. Re-sélectionner le même = toggle off.
+    // Armer un asset désarme toute case (sélections mutuellement exclusives).
     function updateSelectedAsset(category, type, id) {
-        if (selectionPanel && selectionPanel.assetPanel)
-            selectionPanel.assetPanel.updateSelectedAsset(category, type, id)
+        if (isAssetSelected && currentSelectedAssetCategory === category
+                && currentSelectedAssetType === type && currentSelectedAssetId === id) {
+            clearAssetSelection()
+            return
+        }
+        caseTypeSelected = -1
+        currentSelectedAssetCategory = category
+        currentSelectedAssetType = type
+        currentSelectedAssetId = id
+        const asset = AssetManager.getAssetById(category, type, id)
+        if (asset && asset.id && tileLogic)
+            tileLogic.adjustToNativeRatio(asset.ratioWidth || 1, asset.ratioHeight || 1)
+        if (!_isSpecializedMode() && mouseLogic)
+            mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
+    }
+
+    // Efface toute sélection de pose (asset + case) et revient en mode normal.
+    function clearAssetSelection() {
+        currentSelectedAssetCategory = ""
+        currentSelectedAssetType = ""
+        currentSelectedAssetId = ""
+        caseTypeSelected = -1
+        if (!_isSpecializedMode() && mouseLogic)
+            mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+    }
+
+    // Arme (type >= 0) ou désarme (type === -1) un type de case pour la pose.
+    // Armer une case désarme tout asset (sélections mutuellement exclusives).
+    function setCaseType(type) {
+        if (type !== -1) {
+            currentSelectedAssetCategory = ""
+            currentSelectedAssetType = ""
+            currentSelectedAssetId = ""
+        }
+        caseTypeSelected = type
+        if (!_isSpecializedMode() && mouseLogic)
+            mouseLogic.changeMouseMode(type !== -1 ? EditorEnum.EM_POSE : EditorEnum.EM_NORMAL)
     }
     property var polygonPreview: null  // Référence au composant de prévisualisation du polygone
     property EditorMouseMode editorMouseMode : EditorEnum.EM_NORMAL

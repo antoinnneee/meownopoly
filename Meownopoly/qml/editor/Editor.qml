@@ -40,6 +40,8 @@ import playerConfigPanel 1.0
 import playerPanel
 import zonePanel
 import templatePanel
+import assetSelectionPanel
+import caseSelectionPanel
 import "."
 
 import MeowPainter 1.0
@@ -1174,14 +1176,9 @@ Base_Board {
         mapInfo: root.mapInfo
         selectionPanel: selectionPanel
         editorSidePanel: sidePanel
-
-        // D3d — état de pose alimenté depuis selectionPanel pendant la transition
-        // (deco/case encore legacy). En D3d-2/D3e, les conteneurs bespoke écriront
-        // directement logic.* et ces bindings seront retirés.
-        currentSelectedAssetCategory: selectionPanel ? selectionPanel.currentSelectedAssetCategory : ""
-        currentSelectedAssetType: selectionPanel ? selectionPanel.currentSelectedAssetType : ""
-        currentSelectedAssetId: selectionPanel ? selectionPanel.currentSelectedAssetId : ""
-        caseTypeSelected: selectionPanel ? selectionPanel.caseTypeSelected : -1
+        // D3d-2/D3e — état de pose désormais détenu et écrit par logic
+        // (via DecoPanel/CasePanel → logic.updateSelectedAsset/setCaseType).
+        // Plus de binding depuis selectionPanel (deco/case bespoke).
     }
 
     mainMa.anchors.bottomMargin: mapInfoPanel.x > height ? 0 : selectionPanel.height
@@ -1240,13 +1237,10 @@ Base_Board {
         // s'affiche que pour un module "bas", et son contenu suit le module
         // actif. chat → ChatDrawer ; config3d → log ; config → placeholder en
         // attendant son conteneur bespoke (D3).
-        // Modules "bas" encore servis par le SelectionPanel legacy (D2).
-        // player/zone/template en ont été retirés : ils sont rendus par leurs
-        // conteneurs bespoke (D3). deco/case suivront, puis SelectionPanel sera
-        // supprimé (D4).
-        readonly property var _bottomIndex: ({
-            "deco": 0, "case": 1
-        })
+        // Tous les modules "bas" (deco/case/zone/template/player) sont désormais
+        // rendus par des conteneurs bespoke (D3). Plus aucun n'est servi par le
+        // SelectionPanel legacy, qui devient dormant et sera supprimé en D4.
+        readonly property var _bottomIndex: ({})
 
         onModuleSelected: function (moduleId) {
             const isBottom = (moduleId in moduleManager._bottomIndex)
@@ -2067,6 +2061,30 @@ Base_Board {
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
+    // D3d-2 — conteneur bespoke du module "Déco".
+    DecoPanel {
+        id: decoPanel
+        logic: logic
+        visible: moduleManager.selectedModuleId === "deco"
+        z: UiStyle.z_HUD
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: sidePanel.left
+        height: visible ? Screen.pixelDensity * 75 : 0
+    }
+
+    // D3e — conteneur bespoke du module "Case".
+    CasePanel {
+        id: casePanel
+        logic: logic
+        visible: moduleManager.selectedModuleId === "case"
+        z: UiStyle.z_HUD
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: sidePanel.left
+        height: visible ? Screen.pixelDensity * 75 : 0
+    }
+
     SelectionPanel {
         id: selectionPanel
 
@@ -2544,14 +2562,14 @@ Base_Board {
                 return { ok: false, error: "caseType (>= 0) requis" }
             // Désarmer toute sélection d'asset puis armer le type de case.
             logic.clearAssetSelection()
-            selectionPanel.caseTypeSelected = caseType  // → EM_POSE
+            logic.caseTypeSelected = caseType  // → armé pour la pose
 
             const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
             if (placed && placed.snapableParameters)
                 Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
 
             // Restaurer : caseTypeSelected = -1 ramène EM_NORMAL via le handler.
-            selectionPanel.caseTypeSelected = -1
+            logic.caseTypeSelected = -1
             if (logic.editorMouseMode === EditorEnum.EM_POSE)
                 logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
 
