@@ -83,6 +83,9 @@
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector_Button.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/MenuSelector_SizeControl.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/moduleManager/ModuleManager.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/moduleManager/ModuleManager_AddButton.qml</file>
+        <file>qml/editor/panel/bottomPanel/bottomMainPanel/menuSelectionPanel/moduleManager/ModuleManager_AddPopup.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CaseConfigurationPanelSection.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_CatPerksConfig.qml</file>
         <file>qml/editor/panel/bottomPanel/bottomSidePanel/caseConfigPanel/CCP_HouseHotelPriceConfig.qml</file>

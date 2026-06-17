@@ -128,6 +128,19 @@ Base_Board {
     property bool multiActorEnabled: false
 
     Keys.onPressed: function (event) {
+        // Zoom clavier + / - : réutilise automationHooks.zoomCamera (même
+        // logique que le zoom molette ×1.1/cran, recentré viewport + sync 3D).
+        // Qt.Key_Equal couvre le `+` non-shifté de certaines dispositions.
+        if (event.key === Qt.Key_Plus || event.key === Qt.Key_Equal) {
+            automationHooks.zoomCamera(1)
+            event.accepted = true
+            return
+        }
+        if (event.key === Qt.Key_Minus) {
+            automationHooks.zoomCamera(-1)
+            event.accepted = true
+            return
+        }
         // Phase 4 : InputController remplace EntityEngine.keysHandler
         inputController.handlePress(event)
         // Phase 6 — 2e InputController (flèches → P2). Inactif si

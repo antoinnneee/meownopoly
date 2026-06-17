@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import editor
 import theme
+import "moduleManager"
 Item {
     id: root
     height: Screen.pixelDensity * 12.5
@@ -101,6 +102,23 @@ Item {
 
                 }
             }
+        }
+    }
+
+    // Gestionnaire de modules : ListView horizontale entre les menus
+    // (à gauche, au niveau des "informations") et le bouton d'expansion du
+    // side panel (à droite). Contient pour l'instant le seul bouton "+".
+    ModuleManager {
+        id: moduleManager
+        anchors.left: menuSelector.right
+        anchors.right: expendSidePanelBt.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: Theme.spacingS
+        anchors.rightMargin: Theme.spacingS
+
+        onModuleAdded: function (moduleId) {
+            console.log("[ModuleManager] module ajouté :", moduleId)
         }
     }
 
