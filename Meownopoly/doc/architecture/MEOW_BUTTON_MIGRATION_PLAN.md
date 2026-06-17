@@ -1,9 +1,14 @@
 # Plan de migration — Unification des boutons sur `MeowButton`
 
-> Statut : **proposé** (non démarré au-delà de la création de `MeowButton`).
+> Statut : **✅ TERMINÉ** (Phases 0 à 3) — mergé dans V2Antoine
+> (merge `3a98bfe`, 7 commits, ≈ −557 lignes nettes). Build Release vert +
+> validation visuelle via le serveur d'automation MCP.
 > Objectif : unifier au maximum les styles de boutons de l'application autour
 > du composant générique `qml/ui_item/MeowButton.qml`, en réduisant la
 > duplication de `background` / `contentItem` éparpillée dans le code.
+>
+> Cf. la section [Réalisation](#réalisation--bilan) en fin de document pour le
+> bilan détaillé et l'API effective de `MeowButton`.
 
 ## Contexte
 
@@ -54,7 +59,7 @@ dizaines d'appels d'un coup. C'est le vrai point d'appui de la migration.
 
 ---
 
-## Phase 0 — Enrichir `MeowButton` *(prérequis)*
+## Phase 0 — Enrichir `MeowButton` *(prérequis)* — ✅ FAIT (`6729943`)
 
 Couvrir les besoins réels relevés avant toute migration de masse, pour ne pas
 re-toucher ~100 appels deux fois.
@@ -76,14 +81,28 @@ re-toucher ~100 appels deux fois.
   pendant une action async.
 
 **Sortie :** `MeowButton` capable de remplacer 1:1 les boutons stylés standards.
-Validation `qmllint -I qml` + harnais visuel (`TEST_MEOW_BUTTON.qml`).
+Validation `qmllint -I qml` + validation visuelle MCP.
 
 **Risque :** modifier le `contentItem` par défaut ne casse pas les appels qui le
 surchargent (l'override reste possible) ; on ne touche que le défaut.
 
+> **Réalisé** — toutes les props ci-dessus livrées, plus **deux ajouts** non
+> prévus mais nécessaires :
+> - `property bool hoverZoom: true` / `property bool glossy: true` — à passer
+>   à `false` dans les grilles/formulaires denses (le zoom au survol chevauchait
+>   les voisins, la brillance alourdissait les petits boutons plats).
+> - **Dimensionnement basé sur le contenu** : l'ancien `width:150; height:50`
+>   **en dur** empêchait les wrappers compacts (StyledButton h=30, ClearButtons
+>   content-sized) d'hériter sans surcharger les deux dimensions. Remplacé par
+>   du padding (`spacingXXL`/`spacingM`) + `implicitWidth`/`implicitHeight`
+>   dérivés du contenu (surchargeables via `width`/`height`/Layout).
+>
+> Le harnais `TEST_MEOW_BUTTON.qml` n'a pas été créé : la validation s'est faite
+> directement sur les écrans réels via le serveur d'automation MCP.
+
 ---
 
-## Phase 1 — Simplifier les 4 `ParticleButton` applicatifs
+## Phase 1 — Simplifier les 4 `ParticleButton` applicatifs — ✅ FAIT (`3742a98`)
 
 Fichiers : `SessionList.qml:156`, `SessionCreation.qml:725`,
 `SessionDetails.qml:276`, `MapInfoDrawer.qml:349`.
@@ -100,11 +119,11 @@ visuelle du lobby.
 
 ---
 
-## Phase 2 — Statuer sur `ParticleButton` *(arbitrage)*
+## Phase 2 — Statuer sur `ParticleButton` *(arbitrage)* — ✅ DÉCIDÉ : option A
 
-Options :
+Options envisagées :
 
-- **A. (recommandée)** Conserver `ParticleButton` pour 4-5 actions clés
+- **A. (retenue)** Conserver `ParticleButton` pour 4-5 actions clés
   (créer/rejoindre partie, sauvegarder carte), `MeowButton` partout ailleurs.
   Les particules deviennent un signal d'« action principale ».
 - B. Tout passer en `MeowButton`, réserver les particules à 1 seul CTA.
@@ -112,14 +131,22 @@ Options :
   supprimer `ParticleButton` (fusion). Plus simple à l'usage mais charge
   `QtQuick.Particles` partout.
 
-**Sortie :** décision actée + note dans la mémoire `project-editor-ui-kit`.
+**Décision actée — option A.** Motif : la fusion (C) chargerait
+`QtQuick.Particles` dans tous les écrans utilisant un bouton, pour un effet
+réservé à une poignée d'actions ; garder `ParticleButton` (qui hérite de
+`MeowButton`) comme sous-classe spécialisée évite ce coût et fait des particules
+un marqueur explicite d'« action principale ». Les 4 `ParticleButton` restants
+(SessionList/Creation/Details, MapInfoDrawer) ne redéfinissent plus de
+`background`/`contentItem` — ils ne portent que `baseColor`/`variant`/`fontSize`
++ les props de particules. Note reportée dans la mémoire `project-editor-ui-kit`.
 
 ---
 
-## Phase 3 — Migrer les `Button` bruts vers `MeowButton`
+## Phase 3 — Migrer les `Button` bruts vers `MeowButton` — ✅ FAIT (`f54c46c`→`df1d059`)
 
 Stratégie « wrappers d'abord » (levier maximal), par lots, avec build + run
-entre chaque lot.
+entre chaque lot. Lot A = `f54c46c`, Lot B = `88b32c3`, Lot C = `47a9465`,
+Lot D = `925e657`, Lot E = `df1d059`.
 
 1. **Lot A — Re-baser les wrappers custom** sur `MeowButton`
    (1 fichier migré ⇒ N appels stylés) :
@@ -165,3 +192,61 @@ Qt par défaut dans les écrans applicatifs.
 | Phase 1 (4 ParticleButton) | rapide |
 | Phase 2 (arbitrage) | trivial |
 | Phase 3 (migration de masse) | le gros, par lots |
+
+---
+
+## Réalisation — bilan
+
+Migration livrée en **7 commits** sur `worktree-meow-button-migration`, mergée
+dans V2Antoine (merge `3a98bfe`, `--no-ff`, sans conflit). **26 fichiers,
+≈ +489 / −1046 lignes** (≈ −557 nettes). Build Release vert ; chaque lot validé
+visuellement via le serveur d'automation MCP (titre, lobby, formulaire création,
+launcher, menu Échap éditeur + « Charger carte », popup Paramètres du compte).
+
+### API effective de `MeowButton`
+
+| Propriété | Rôle |
+|---|---|
+| `variant` | `primary`\|`secondary`\|`danger`\|`warning`\|`success`\|`ghost` → `baseColor` + `textColor` par défaut |
+| `baseColor` / `textColor` | override direct (prioritaire sur `variant`) |
+| `fontSize` | défaut `Theme.fontSizeLarge` |
+| `iconText` | icône emoji/unicode à gauche du libellé (Row centrée) |
+| `loading` | `BusyIndicator` + `enabled:false` |
+| `hoverZoom` | défaut `true` ; `false` dans les grilles/formulaires denses |
+| `glossy` | défaut `true` ; `false` pour un rendu plat |
+
+`ghost` = fond transparent au repos, bordure `borderLight`→`baseColor` au survol.
+Dimensionnement basé sur le contenu (padding + `implicit*`), surchargeable.
+
+### Patterns retenus (réutilisables pour la suite)
+
+- **Libellé dynamique** → mettre la logique sur la propriété `text` (lue par le
+  `contentItem` par défaut) plutôt que de redéfinir un `contentItem`.
+- **Propager une taille via `font.pixelSize`** (API `Button` historique) dans un
+  wrapper → `fontSize: control.font.pixelSize`, avec un défaut
+  `font.pixelSize: Theme.fontSizeBody`.
+- **Toggles** (segmented, vue caméra, onglets) → garder `checked` bindé et
+  piloter `baseColor: cond ? accent : neutre`, `hoverZoom:false`/`glossy:false`.
+
+### Wrappers re-basés (Lot A)
+
+`launcher/StyledButton`, `PCP_StyledButton`, `ASP_ClearButton`,
+`CSP_ClearButton`, `EBP_BackButton` héritent désormais de `MeowButton` et
+conservent leur API historique (`primary`/`danger`/`accent`/`accentColor`).
+
+### Hors-scope, conservés en `Button` brut (→ futur `MeowIconButton`)
+
+Boutons **icône-seule** : reset axe `↺`, reload `↻`, fermetures `✕`/« x »,
+suppression `🗑️`, refresh `🔄`, chevrons `◀▶`/`▼▲` ; `BackButton`
+(`multiplayer/components`, Rectangle + « ← ») ; **segmented / filtres** :
+`MenuSelector_Button`, delegate d'onglets de `ModelConfigurator`,
+`EBP_FilterButton` ; `ToolButton` Material ; `PawSubButton`/`PawMainPad` (menu
+radial) ; `TestCommandWindow` (fenêtre de debug réseau). Ces cas relèvent d'un
+futur composant `MeowIconButton` dédié, hors de ce plan.
+
+### Suite possible
+
+- Créer `MeowIconButton` (carré, icône centrée, sans libellé) pour absorber les
+  boutons icône-seule listés ci-dessus.
+- Réévaluer les contrôles « segmented » (`MenuSelector_Button`, onglets) pour un
+  éventuel `MeowSegmentedControl`.
