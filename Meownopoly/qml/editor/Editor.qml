@@ -1738,41 +1738,25 @@ Base_Board {
                     Layout.fillWidth: true
                     spacing: Theme.spacingL
 
-                    Button {
+                    MeowButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
-                        text: "🗑️  Supprimer"
-                        background: Rectangle {
-                            color: parent.pressed ? Theme.pressed(Theme.danger) : (parent.hovered ? Theme.hover(Theme.danger) : Theme.danger)
-                            radius: Theme.radiusM
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeMedium
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        iconText: "🗑️"
+                        text: "Supprimer"
+                        variant: "danger"
+                        fontSize: Theme.fontSizeMedium
+                        hoverZoom: false
                         onClicked: root._resolveSessionExit(false)
                     }
 
-                    Button {
+                    MeowButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
-                        text: "💾  Conserver"
-                        background: Rectangle {
-                            color: parent.pressed ? Theme.pressed(Theme.accent) : (parent.hovered ? Theme.hover(Theme.accent) : Theme.accent)
-                            radius: Theme.radiusM
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeMedium
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        iconText: "💾"
+                        text: "Conserver"
+                        variant: "primary"
+                        fontSize: Theme.fontSizeMedium
+                        hoverZoom: false
                         onClicked: root._resolveSessionExit(true)
                     }
                 }

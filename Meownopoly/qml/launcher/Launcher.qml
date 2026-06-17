@@ -55,6 +55,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import LauncherManager 1.0
 import theme
+import ui_item
 
 import AssetManager
 
@@ -140,11 +141,11 @@ Rectangle {
                 Layout.fillWidth: true
             }
 
-            Button {
+            MeowButton {
                 text: "Telecharger"
+                baseColor: "#E65100"
+                fontSize: Theme.fontSizeBody
                 onClicked: { logic.downloadResources(); updateBanner.visible = false }
-                background: Rectangle { color: "#E65100"; radius: Theme.radiusS }
-                contentItem: Text { text: parent.text; color: Theme.textPrimary; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
             }
 
             Button {

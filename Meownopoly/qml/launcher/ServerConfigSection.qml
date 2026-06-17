@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -77,23 +78,13 @@ Rectangle {
                 }
             }
 
-            Button {
+            MeowButton {
                 text: "Tester"
+                variant: "primary"
+                fontSize: Theme.fontSizeBody
                 onClicked: {
                     root.testConnectionRequested()
                     statusIcon.state = "testing"
-                }
-
-                background: Rectangle {
-                    color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                    radius: Theme.radiusM
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
                 }
             }
             

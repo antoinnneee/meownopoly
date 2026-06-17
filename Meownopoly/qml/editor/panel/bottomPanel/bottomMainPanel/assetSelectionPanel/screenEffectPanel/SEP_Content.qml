@@ -129,9 +129,13 @@ EBP_Content {
                             font.bold: true
                             Layout.fillWidth: true
                         }
-                        Button {
-                            text: "＋ Ajouter"
-                            font.pixelSize: Theme.fontSizeSmall
+                        MeowButton {
+                            iconText: "＋"
+                            text: "Ajouter"
+                            variant: "secondary"
+                            fontSize: Theme.fontSizeSmall
+                            hoverZoom: false
+                            glossy: false
                             onClicked: presetMenu.open()
 
                             Menu {

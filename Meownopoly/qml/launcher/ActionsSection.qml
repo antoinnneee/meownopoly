@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -37,87 +38,42 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.spacingL
             
-            Button {
+            MeowButton {
                 text: "Vérifier"
                 enabled: !root.isDownloading
                 onClicked: root.checkForUpdatesRequested()
                 Layout.preferredWidth: 120
-                
-                background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent) : Theme.textDisabled
-                    radius: Theme.radiusM
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeBody
-                }
+                variant: "primary"
+                fontSize: Theme.fontSizeBody
             }
 
-            Button {
+            MeowButton {
                 text: "Télécharger"
                 enabled: !root.isDownloading && root.latestVersion !== root.currentVersion
                 onClicked: root.downloadResourcesRequested()
                 Layout.preferredWidth: 120
-                
-                background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.success) : Theme.success) : Theme.textDisabled
-                    radius: Theme.radiusM
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeBody
-                }
+                variant: "success"
+                fontSize: Theme.fontSizeBody
             }
 
-            Button {
+            MeowButton {
                 text: "Forcer le téléchargement"
                 enabled: !root.isDownloading
                 onClicked: root.forceDownloadRequested()
                 Layout.preferredWidth: 150
-                
-                background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? Theme.warning : "#ff5722") : Theme.textDisabled
-                    radius: Theme.radiusM
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeBody
-                }
+                baseColor: "#ff5722"
+                fontSize: Theme.fontSizeBody
             }
 
             Item { Layout.fillWidth: true }
-            
-            Button {
+
+            MeowButton {
                 text: "Lancer le jeu"
                 enabled: !root.isDownloading
                 onClicked: root.launchGameRequested()
                 Layout.preferredWidth: 120
-                
-                background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#6a1b9a" : "#9c27b0") : Theme.textDisabled
-                    radius: Theme.radiusM
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeBody
-                    font.bold: true
-                }
+                baseColor: "#9c27b0"
+                fontSize: Theme.fontSizeBody
             }
         }
     }

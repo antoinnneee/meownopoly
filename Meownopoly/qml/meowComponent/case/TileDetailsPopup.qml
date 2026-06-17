@@ -7,6 +7,7 @@ import "./details"
 
 import AssetManager
 import theme
+import ui_item
 
 Popup {
     id: root
@@ -104,22 +105,13 @@ Popup {
             }
 
             // Close button
-            Button {
+            MeowButton {
                 text: "Close"
                 Layout.alignment: Qt.AlignHCenter
+                baseColor: "#7f8c8d"
+                fontSize: Theme.fontSizeBody
+                hoverZoom: false
                 onClicked: root.close()
-                
-                background: Rectangle {
-                    color: parent.pressed ? "#95a5a6" : "#7f8c8d"
-                    radius: Theme.radiusS
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
             }
         }
     }

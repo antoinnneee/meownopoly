@@ -7,6 +7,7 @@ import Game
 import MapFileManager
 import MapTypes
 import theme
+import ui_item
 
 Rectangle {
     id: escMenu
@@ -140,28 +141,12 @@ Rectangle {
                 }
                 
                 // Bouton Retour au menu principal
-                Button {
+                MeowButton {
                     width: 300
                     height: 50
                     text: "Retour au menu principal"
                     anchors.horizontalCenter: parent.horizontalCenter
-                    
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                        radius: Theme.radiusL
-                        border.color: Theme.pressed(Theme.accent)
-                        border.width: 1
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textPrimary
-                        font.pixelSize: Theme.fontSizeLarge
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    
+                    variant: "primary"
                     onClicked: {
                         escMenu.returnToMainMenu()
                         escMenu.hide()
@@ -169,28 +154,12 @@ Rectangle {
                 }
                 
                 // Bouton Charger carte
-                Button {
+                MeowButton {
                     width: 300
                     height: 50
                     text: "Charger carte"
                     anchors.horizontalCenter: parent.horizontalCenter
-                    
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                        radius: Theme.radiusL
-                        border.color: Theme.pressed(Theme.accent)
-                        border.width: 1
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textPrimary
-                        font.pixelSize: Theme.fontSizeLarge
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    
+                    variant: "primary"
                     onClicked: {
                         currentView = "loadMap"
                         refreshMapList()
@@ -198,84 +167,37 @@ Rectangle {
                 }
                 
                 // Bouton Paramètres
-                Button {
+                MeowButton {
                     width: 300
                     height: 50
                     text: "Paramètres"
                     anchors.horizontalCenter: parent.horizontalCenter
-                    
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                        radius: Theme.radiusL
-                        border.color: Theme.pressed(Theme.accent)
-                        border.width: 1
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textPrimary
-                        font.pixelSize: Theme.fontSizeLarge
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    
+                    variant: "primary"
                     onClicked: {
                         currentView = "settings"
                     }
                 }
                 
                 // Bouton About
-                Button {
+                MeowButton {
                     width: 300
                     height: 50
                     text: "About"
                     anchors.horizontalCenter: parent.horizontalCenter
-                    
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                        radius: Theme.radiusL
-                        border.color: Theme.pressed(Theme.accent)
-                        border.width: 1
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textPrimary
-                        font.pixelSize: Theme.fontSizeLarge
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    
+                    variant: "primary"
                     onClicked: {
                         currentView = "about"
                     }
                 }
                 
                 // Bouton Fermer
-                Button {
+                MeowButton {
                     width: 300
                     height: 50
                     text: "Fermer"
                     anchors.horizontalCenter: parent.horizontalCenter
-                    
-                    background: Rectangle {
-                        color: parent.pressed ? Theme.textDisabled : Theme.textMuted
-                        radius: Theme.radiusL
-                        border.color: Theme.borderLight
-                        border.width: 1
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: Theme.textPrimary
-                        font.pixelSize: Theme.fontSizeLarge
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    
+                    variant: "secondary"
+                    baseColor: Theme.textMuted
                     onClicked: {
                         escMenu.hide()
                     }
@@ -299,26 +221,14 @@ Rectangle {
                     height: 40
                     spacing: Theme.spacingXXL
                     
-                    Button {
+                    MeowButton {
                         width: 40
                         height: 40
                         text: "←"
                         anchors.verticalCenter: parent.verticalCenter
-                        
-                        background: Rectangle {
-                            color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                            radius: Theme.radiusM
-                        }
-                        
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeTitle
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        
+                        variant: "primary"
+                        fontSize: Theme.fontSizeTitle
+                        hoverZoom: false
                         onClicked: {
                             currentView = "main"
                         }
@@ -364,25 +274,15 @@ Rectangle {
                             }
                         }
                         
-                        delegate: Button {
+                        delegate: MeowButton {
                             width: mapsList.width
                             height: 40
-                            
-                            background: Rectangle {
-                                color: Theme.border
-                                radius: Theme.radiusM
-                                border.color: Theme.accent
-                                border.width: 1
-                            }
-                            
-                            contentItem: Text {
-                                text: modelData
-                                color: Theme.textPrimary
-                                font.pixelSize: Theme.fontSizeMedium
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            
+                            text: modelData
+                            baseColor: Theme.border
+                            fontSize: Theme.fontSizeMedium
+                            hoverZoom: false
+                            glossy: false
+
                             onClicked: {
                                 console.log("Chargement de la carte:", modelData)
                                 if (typeof logic !== 'undefined') {
@@ -439,25 +339,13 @@ Rectangle {
                     Layout.preferredHeight: 40
                     spacing: Theme.spacingXXL
                     
-                    Button {
+                    MeowButton {
                         Layout.preferredWidth: 40
                         Layout.preferredHeight: 40
                         text: "←"
-                        
-                        background: Rectangle {
-                            color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                            radius: Theme.radiusL
-                        }
-                        
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeTitle
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        
+                        variant: "primary"
+                        fontSize: Theme.fontSizeTitle
+                        hoverZoom: false
                         onClicked: {
                             currentView = "main"
                         }
@@ -798,26 +686,14 @@ Rectangle {
                     height: 40
                     spacing: Theme.spacingXXL
                     
-                    Button {
+                    MeowButton {
                         width: 40
                         height: 40
                         text: "←"
                         anchors.verticalCenter: parent.verticalCenter
-                        
-                        background: Rectangle {
-                            color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                            radius: Theme.radiusM
-                        }
-                        
-                        contentItem: Text {
-                            text: parent.text
-                            color: Theme.textPrimary
-                            font.pixelSize: Theme.fontSizeTitle
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        
+                        variant: "primary"
+                        fontSize: Theme.fontSizeTitle
+                        hoverZoom: false
                         onClicked: {
                             currentView = "main"
                         }
