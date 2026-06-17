@@ -1154,9 +1154,9 @@ Base_Board {
     // CollabStatusPanel (visible uniquement si EditorSession.active) en
     // tête ; il a un comportement spécial : Column saute les enfants
     // `visible: false`, donc en mono les test panels remontent naturellement
-    // à la place du badge collab. Les panels expanded de
-    // PhysicsNetworkPanel s'ancrent à `parent.top/right` du badge → ils
-    // dépassent à droite du badge dans son slot Column (comportement OK).
+    // à la place du badge collab. Les panels expanded des badges s'ancrent à
+    // `parent.top/right` du badge → ils dépassent à droite du badge dans son
+    // slot Column (comportement OK).
     Column {
         id: leftBadgeStack
         z: 10000
@@ -1168,9 +1168,6 @@ Base_Board {
 
         CollabStatusPanel {}
         PhysicsStatusPanel {}
-
-        PhysicsNetworkPanel {}
-        JumpTestPanel { actor: playerActor }
     }
 
     // Phase 3 — sync live des zones physiques. Reçoit les events de
