@@ -265,14 +265,15 @@ Rectangle {
             Layout.preferredWidth: 18
             verticalAlignment: Text.AlignVCenter
         }
-        Slider {
+        MeowSlider {
             id: slider
             Layout.fillWidth: true
             from: axisRow.minValue
             to:   axisRow.maxValue
             stepSize: axisRow.stepValue
             value: axisRow.boundValue
-            onMoved: axisRow.valueEdited(value)
+            showValue: false
+            onMoved: (v) => axisRow.valueEdited(v)
         }
         TextField {
             id: tf
@@ -646,11 +647,12 @@ Rectangle {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Text { text: "Décalage X"; color: Theme.textSecondary }
-                                Slider {
+                                MeowSlider {
                                     Layout.fillWidth: true
                                     from: 0; to: 1000
                                     value: viewport.comparisonOffsetX
-                                    onMoved: viewport.comparisonOffsetX = value
+                                    showValue: false
+                                    onMoved: (v) => viewport.comparisonOffsetX = v
                                 }
                                 Text { text: viewport.comparisonOffsetX.toFixed(0); color: Theme.textHint; Layout.preferredWidth: 36 }
                             }

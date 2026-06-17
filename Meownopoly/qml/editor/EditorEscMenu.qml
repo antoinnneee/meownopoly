@@ -586,11 +586,11 @@ Rectangle {
                                     RowLayout {
                                         Layout.fillWidth: true
                                         Text { text: "Volume général"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        Slider {
+                                        MeowSlider {
                                             id: volumeSlider
-                                            Layout.preferredWidth: 200; from: 0; to: 100; value: 50
-                                            background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: Theme.border; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: Theme.accent; radius: 2 } }
-                                            handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? Theme.pressed(Theme.surfaceLight) : Theme.surfaceLight; border.color: Theme.accent; border.width: 1 }
+                                            Layout.preferredWidth: 200; from: 0; to: 100; stepSize: 1; value: 50
+                                            accentColor: Theme.accent
+                                            showValue: false
                                         }
                                         Text { text: Math.round(volumeSlider.value) + "%"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
                                     }
@@ -635,16 +635,16 @@ Rectangle {
                                     RowLayout {
                                         Layout.fillWidth: true
                                         Text { text: "Sensibilité de la souris"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        Slider {
+                                        MeowSlider {
                                             id: sensitivitySlider
-                                            Layout.preferredWidth: 200; from: 0.8; to: 4.0; 
+                                            Layout.preferredWidth: 200; from: 0.8; to: 4.0
                                             value: parseFloat(stControlsConfig.value("mouseSensitivity", "1.0"))
+                                            accentColor: Theme.accent
+                                            showValue: false
                                             onValueChanged: {
                                                 stControlsConfig.setValue("mouseSensitivity", value)
                                                 stControlsConfig.sync()
                                             }
-                                            background: Rectangle { x: parent.leftPadding; y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 150; implicitHeight: 4; width: parent.availableWidth; height: implicitHeight; radius: 2; color: Theme.border; Rectangle { width: parent.parent.visualPosition * parent.width; height: parent.height; color: Theme.accent; radius: 2 } }
-                                            handle: Rectangle { x: parent.leftPadding + parent.visualPosition * (parent.availableWidth - width); y: parent.topPadding + parent.availableHeight / 2 - height / 2; implicitWidth: 16; implicitHeight: 16; radius: 8; color: parent.pressed ? Theme.pressed(Theme.surfaceLight) : Theme.surfaceLight; border.color: Theme.accent; border.width: 1 }
                                         }
                                         Text { text: (Math.round(sensitivitySlider.value * 100) / 100).toFixed(2); color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
                                     }
