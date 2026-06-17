@@ -1,27 +1,16 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
 import theme
+import ui_item
 
-
-Button {
-    text: "✕ Clear"
-    flat: true
-
-    background: Rectangle {
-        color: parent.pressed ? Theme.pressed(Theme.dangerSoft) : "transparent"
-        border.color: Theme.dangerSoft
-        border.width: 1
-        radius: Theme.radiusS
-    }
-
-    contentItem: Text {
-        text: parent.text
-        color: Theme.dangerSoft
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        font.pixelSize: Theme.fontSizeSmall
-    }
+/*
+ * CSP_ClearButton — bouton « effacer la sélection de case ».
+ * Wrapper MeowButton (variant danger + icône ✕).
+ */
+MeowButton {
+    variant: "danger"
+    iconText: "✕"
+    text: "Clear"
+    fontSize: Theme.fontSizeSmall
 
     onClicked: {
         // Signal to parent to clear selection
