@@ -32,6 +32,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Dialogs
 import theme
+import ui_item
 
 Rectangle {
     id: root
@@ -72,21 +73,12 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
-            Button {
-                text: "🧩 Configurer un modèle 3D"
+            MeowButton {
+                text: "Configurer un modèle 3D"
+                iconText: "🧩"
+                variant: "primary"
+                fontSize: Theme.fontSizeBody
                 onClicked: root.openModelConfiguratorRequested()
-                background: Rectangle {
-                    color: parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent
-                    radius: Theme.radiusS
-                }
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeBody
-                    padding: Theme.spacingS
-                }
             }
 
             Text {
@@ -142,22 +134,11 @@ Rectangle {
                 }
             }
 
-            Button {
+            MeowButton {
                 text: "Sélectionner dossier"
+                baseColor: "#795548"
+                fontSize: Theme.fontSizeBody
                 onClicked: folderDialog.open()
-
-                background: Rectangle {
-                    color: parent.pressed ? "#5d4037" : "#795548"
-                    radius: Theme.radiusM
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeBody
-                }
             }
         }
 
@@ -172,12 +153,13 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             
-            Button {
+            MeowButton {
                 text: "Créer le paquet"
-                enabled: selectedFolderLabel.text !== "Aucun dossier sélectionné" && 
-                         packageVersionField.text.length > 0 && 
+                enabled: selectedFolderLabel.text !== "Aucun dossier sélectionné" &&
+                         packageVersionField.text.length > 0 &&
                          (!root.isModelMode || modelNameField.text.length > 0)
-                         
+                variant: "success"
+                fontSize: Theme.fontSizeBody
                 onClicked: {
                     if (root.isModelMode) {
                         root.createModelPackageRequested(selectedFolderLabel.text, modelNameField.text, packageVersionField.text)
@@ -185,43 +167,19 @@ Rectangle {
                         root.createPackageRequested(selectedFolderLabel.text, packageVersionField.text)
                     }
                 }
-                
-                background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.success) : Theme.success) : Theme.textDisabled
-                    radius: Theme.radiusM
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeBody
-                }
             }
             
-            Button {
+            MeowButton {
                 text: "Uploader vers serveur"
                 enabled: root.packageCreated && !root.isDownloading
+                variant: "primary"
+                fontSize: Theme.fontSizeBody
                 onClicked: {
                     if (root.isModelMode) {
                         root.uploadModelRequested(modelNameField.text, packageVersionField.text)
                     } else {
                         root.uploadPackageRequested()
                     }
-                }
-                
-                background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? Theme.pressed(Theme.accent) : Theme.accent) : Theme.textDisabled
-                    radius: Theme.radiusM
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.textPrimary
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: Theme.fontSizeBody
                 }
             }
             
