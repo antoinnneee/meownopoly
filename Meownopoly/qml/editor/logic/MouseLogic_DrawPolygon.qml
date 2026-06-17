@@ -180,8 +180,8 @@ MouseLogic_Base {
         snapableParameters.zoneParameter.zoneName = zoneName
         snapableParameters.zoneParameter.exclusion = zoneExclusion
         snapableParameters.zoneParameter.velocityDirection = Qt.vector2d(velocityX, velocityY)
-        snapableParameters.zoneParameter.velocityStrenght = velocityStrength
-        snapableParameters.zoneParameter.frictionStrenght = frictionStrength
+        snapableParameters.zoneParameter.velocityStrength = velocityStrength
+        snapableParameters.zoneParameter.frictionStrength = frictionStrength
         snapableParameters.zoneParameter.speedMultiplier = speedMultiplier
         snapableParameters.zoneParameter.accelerationMultiplier = accelerationMultiplier
         

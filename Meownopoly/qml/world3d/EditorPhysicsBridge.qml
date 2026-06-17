@@ -156,12 +156,12 @@ Item {
             // enter/exit (c'est juste un mur). Une zone non-exclusion sert
             // typiquement de trigger ou de modificateur de friction/vitesse.
             trigger: !zp.exclusion,
-            frictionStrength: zp.frictionStrenght,
+            frictionStrength: zp.frictionStrength,
             speedMultiplier: zp.speedMultiplier,
             accelerationMultiplier: zp.accelerationMultiplier,
             velocityForce: Qt.vector2d(
-                zp.velocityDirection.x * zp.velocityStrenght,
-                zp.velocityDirection.y * zp.velocityStrenght)
+                zp.velocityDirection.x * zp.velocityStrength,
+                zp.velocityDirection.y * zp.velocityStrength)
         }
 
         if (root.verbose) {
@@ -184,12 +184,14 @@ Item {
         // PhysicalObjectParameter : extension post-Phase-9. Si présent,
         // on lit mass/bounceFactor/frictionStrength/linearDamping ; sinon
         // on tombe sur les defaults câblés dans physics_world (specFromKinematic).
+        // On passe le curseur de friction unique ; physics_world.cpp
+        // (specFromKinematic) en dérive staticFriction/dynamicFriction.
+        // Le bridge ne fait plus d'arithmétique de friction.
         const pop = tile.physicalObjectParameter
         const params = pop ? {
-            bounceFactor:  pop.bounceFactor,
-            linearDamping: pop.linearDamping,
-            staticFriction:  pop.frictionStrength,
-            dynamicFriction: pop.frictionStrength * 0.5
+            bounceFactor:     pop.bounceFactor,
+            linearDamping:    pop.linearDamping,
+            frictionStrength: pop.frictionStrength
         } : {}
         const mass = pop ? pop.mass : 1.0
 

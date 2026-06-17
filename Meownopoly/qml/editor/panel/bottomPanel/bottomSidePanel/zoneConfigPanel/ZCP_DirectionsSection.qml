@@ -26,7 +26,7 @@ GroupBox {
       // Update sliders from target values
       velocityPicker.directionX = zoneParam.velocityDirection.x
       velocityPicker.directionY = zoneParam.velocityDirection.y
-      velocityStrengthSlider.value = zoneParam.velocityStrenght
+      velocityStrengthSlider.value = zoneParam.velocityStrength
     }
     
     background: Rectangle {

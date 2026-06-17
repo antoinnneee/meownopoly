@@ -244,7 +244,7 @@ void TstCombinedRenderPerf::initTestCase()
                 params.insert("exclusion", zp.value("exclusion").toBool(true));
                 params.insert("trigger", !zp.value("exclusion").toBool(true));
                 params.insert("frictionStrength",
-                              zp.value("frictionStrenght").toDouble());
+                              zp.value("frictionStrength").toDouble());
                 params.insert("speedMultiplier",
                               zp.value("speedMultiplier").toDouble(1.0));
                 params.insert("accelerationMultiplier",

@@ -147,8 +147,8 @@ void ItemSnapableEvents::attachTile(ItemSnapable *tile)
         auto bump = [this, tile]() { emit zoneParameterChanged(tile); };
         connect(zp, &ZoneParameter::polygonPointsChanged,        this, bump);
         connect(zp, &ZoneParameter::velocityDirectionChanged,    this, bump);
-        connect(zp, &ZoneParameter::velocityStrenghtChanged,     this, bump);
-        connect(zp, &ZoneParameter::frictionStrenghtChanged,     this, bump);
+        connect(zp, &ZoneParameter::velocityStrengthChanged,     this, bump);
+        connect(zp, &ZoneParameter::frictionStrengthChanged,     this, bump);
         connect(zp, &ZoneParameter::exclusionChanged,            this, bump);
         connect(zp, &ZoneParameter::speedMultiplierChanged,      this, bump);
         connect(zp, &ZoneParameter::accelerationMultiplierChanged, this, bump);
