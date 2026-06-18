@@ -76,8 +76,7 @@ Item {
         anchors.leftMargin: root.sideMargin
         anchors.rightMargin: root.sideMargin
         orientation: ListView.Horizontal
-        // Sens droite→gauche : le header "+" se place à droite, collé au
-        // BtSideMenu, et les modules ajoutés défilent à sa suite vers la gauche.
+
         layoutDirection: Qt.RightToLeft
         spacing: Theme.spacingXS
         clip: true
@@ -85,10 +84,8 @@ Item {
 
         // Bouton "+" en tête : c'est la référence de hauteur de la barre.
         // En RightToLeft, la tête est rendue à l'extrémité droite (côté BtSideMenu).
-
         header: BtSideMenu {
-            id: addPopup
-            colorBt: Theme.accent
+            // colorBt: Theme.
             source: AssetManager.getAssetById("ui", "hud", "1").path
             onBtClicked: addPopup.open()
         }
@@ -139,10 +136,10 @@ Item {
                 if (!m)
                     continue
                 addedModulesModel.append({
-                                             "moduleId": m.id,
-                                             "icon": m.icon,
-                                             "label": m.label
-                                         })
+                    "moduleId": m.id,
+                    "icon": m.icon,
+                    "label": m.label
+                })
                 root.moduleAdded(m.id)
             }
         }

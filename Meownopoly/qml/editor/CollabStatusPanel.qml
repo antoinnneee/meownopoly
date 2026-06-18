@@ -105,90 +105,90 @@ Item {
             return k
         }
 
-        Column {
-            id: statsCol
-            anchors.fill: parent
-            anchors.margins: Theme.spacingL
-            spacing: Theme.spacingM
+        // Column {
+        //     id: statsCol
+        //     anchors.fill: parent
+        //     anchors.margins: Theme.spacingL
+        //     spacing: Theme.spacingM
 
-            Row {
-                spacing: Theme.spacingS
-                Text {
-                    text: "📊 Réseau (reliable.io)"
-                    color: Theme.textPrimary
-                    font.pixelSize: Theme.fontSizeBody
-                    font.bold: true
-                }
-                Text {
-                    text: "pairs: " + Object.keys(netStatsPanel.snapshots).length
-                          + "  (tick " + netStatsPanel.tick + ")"
-                    color: Theme.textHint
-                    font.pixelSize: Theme.fontSizeSmall
-                }
-            }
+        //     Row {
+        //         spacing: Theme.spacingS
+        //         Text {
+        //             text: "📊 Réseau (reliable.io)"
+        //             color: Theme.textPrimary
+        //             font.pixelSize: Theme.fontSizeBody
+        //             font.bold: true
+        //         }
+        //         Text {
+        //             text: "pairs: " + Object.keys(netStatsPanel.snapshots).length
+        //                   + "  (tick " + netStatsPanel.tick + ")"
+        //             color: Theme.textHint
+        //             font.pixelSize: Theme.fontSizeSmall
+        //         }
+        //     }
 
-            Rectangle { width: parent.width; height: 1; color: Theme.border }
+        //     Rectangle { width: parent.width; height: 1; color: Theme.border }
 
-            Repeater {
-                model: (netStatsPanel.tick, netStatsPanel._playerIds())
-                delegate: Column {
-                    width: statsCol.width
-                    spacing: Theme.spacingXXS
-                    readonly property var s: (netStatsPanel.tick,
-                                              netStatsPanel.snapshots[modelData] || ({}))
+        //     Repeater {
+        //         model: (netStatsPanel.tick, netStatsPanel._playerIds())
+        //         delegate: Column {
+        //             width: statsCol.width
+        //             spacing: Theme.spacingXXS
+        //             readonly property var s: (netStatsPanel.tick,
+        //                                       netStatsPanel.snapshots[modelData] || ({}))
 
-                    Text {
-                        text: modelData.substring(0, 12)
-                              + (EditorSession.hostPlayerId === modelData ? "  🛡️ hôte" : "")
-                        color: Theme.textSecondary
-                        font.pixelSize: Theme.fontSizeSmall
-                        font.bold: true
-                        font.family: "Consolas, Monaco, monospace"
-                    }
-                    Grid {
-                        columns: 4
-                        columnSpacing: Theme.spacingL
-                        rowSpacing: Theme.spacingXXS
-                        Text { text: "RTT";    color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
-                        Text { text: netStatsPanel._fmt(s.rtt) + " ms";    color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
-                        Text { text: "loss";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
-                        Text {
-                            text: netStatsPanel._fmt(s.packetLoss || 0) + " %"
-                            color: (s.packetLoss || 0) > 0.05 ? Theme.dangerSoft : Theme.textSoft
-                            font.pixelSize: Theme.fontSizeCaption
-                            font.family: "Consolas, Monaco, monospace"
-                        }
-                        Text { text: "sent";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
-                        Text { text: netStatsPanel._fmt(s.sentBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
-                        Text { text: "recv";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
-                        Text { text: netStatsPanel._fmt(s.recvBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
-                        Text { text: "acked";  color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
-                        Text { text: netStatsPanel._fmt(s.ackedBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
-                        Text { text: "pkts";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
-                        Text {
-                            text: (s.packetsSent || 0) + "↑ / " + (s.packetsAcked || 0) + "✓"
-                            color: Theme.textSoft
-                            font.pixelSize: Theme.fontSizeCaption
-                            font.family: "Consolas, Monaco, monospace"
-                        }
-                        Text { text: "frag";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
-                        Text {
-                            text: (s.fragmentsSent || 0) + "↑ / " + (s.fragmentsReceived || 0) + "↓"
-                            color: Theme.textSoft
-                            font.pixelSize: Theme.fontSizeCaption
-                            font.family: "Consolas, Monaco, monospace"
-                        }
-                    }
-                }
-            }
+        //             Text {
+        //                 text: modelData.substring(0, 12)
+        //                       + (EditorSession.hostPlayerId === modelData ? "  🛡️ hôte" : "")
+        //                 color: Theme.textSecondary
+        //                 font.pixelSize: Theme.fontSizeSmall
+        //                 font.bold: true
+        //                 font.family: "Consolas, Monaco, monospace"
+        //             }
+        //             Grid {
+        //                 columns: 4
+        //                 columnSpacing: Theme.spacingL
+        //                 rowSpacing: Theme.spacingXXS
+        //                 Text { text: "RTT";    color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+        //                 Text { text: netStatsPanel._fmt(s.rtt) + " ms";    color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
+        //                 Text { text: "loss";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+        //                 Text {
+        //                     text: netStatsPanel._fmt(s.packetLoss || 0) + " %"
+        //                     color: (s.packetLoss || 0) > 0.05 ? Theme.dangerSoft : Theme.textSoft
+        //                     font.pixelSize: Theme.fontSizeCaption
+        //                     font.family: "Consolas, Monaco, monospace"
+        //                 }
+        //                 Text { text: "sent";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+        //                 Text { text: netStatsPanel._fmt(s.sentBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
+        //                 Text { text: "recv";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+        //                 Text { text: netStatsPanel._fmt(s.recvBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
+        //                 Text { text: "acked";  color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+        //                 Text { text: netStatsPanel._fmt(s.ackedBwKbps) + " kbps"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeCaption; font.family: "Consolas, Monaco, monospace" }
+        //                 Text { text: "pkts";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+        //                 Text {
+        //                     text: (s.packetsSent || 0) + "↑ / " + (s.packetsAcked || 0) + "✓"
+        //                     color: Theme.textSoft
+        //                     font.pixelSize: Theme.fontSizeCaption
+        //                     font.family: "Consolas, Monaco, monospace"
+        //                 }
+        //                 Text { text: "frag";   color: Theme.textMuted; font.pixelSize: Theme.fontSizeCaption }
+        //                 Text {
+        //                     text: (s.fragmentsSent || 0) + "↑ / " + (s.fragmentsReceived || 0) + "↓"
+        //                     color: Theme.textSoft
+        //                     font.pixelSize: Theme.fontSizeCaption
+        //                     font.family: "Consolas, Monaco, monospace"
+        //                 }
+        //             }
+        //         }
+        //     }
 
-            Text {
-                visible: Object.keys(netStatsPanel.snapshots).length === 0
-                text: "Aucun pair P2P connecté."
-                color: Theme.textMuted
-                font.pixelSize: Theme.fontSizeCaption
-                font.italic: true
-            }
-        }
+        //     Text {
+        //         visible: Object.keys(netStatsPanel.snapshots).length === 0
+        //         text: "Aucun pair P2P connecté."
+        //         color: Theme.textMuted
+        //         font.pixelSize: Theme.fontSizeCaption
+        //         font.italic: true
+        //     }
+        // }
     }
 }
