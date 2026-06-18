@@ -30,12 +30,6 @@ class Game : public QObject
 
 public:
 
-    enum GAME_CONDITION {
-        ABANDON,
-        BANKRUPT,
-        CTN_TURN
-    };
-
     static void registerQml();
     static Game *instance();
     static QObject *qmlInstance(QQmlEngine *engine, QJSEngine *scriptEngine);
