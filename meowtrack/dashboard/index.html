@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meowtrack — suivi bugs & tâches</title>
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">🐾 Meowtrack</div>
+      <div class="meta" id="meta"></div>
+      <button id="newBtn" class="primary">+ Nouvelle entrée</button>
+    </header>
+
+    <main class="layout">
+      <!-- Colonne liste -->
+      <section class="list-pane">
+        <div class="filters">
+          <input id="search" type="search" placeholder="Rechercher (titre, description, code)…" />
+          <select id="fType">
+            <option value="">Tous types</option>
+            <option value="bug">🐞 Bug</option>
+            <option value="feature">✨ Feature</option>
+            <option value="task">✅ Tâche</option>
+            <option value="chore">🧹 Chore</option>
+          </select>
+          <select id="fStatus">
+            <option value="">Statut actif</option>
+            <option value="open">Ouvert</option>
+            <option value="in_progress">En cours</option>
+            <option value="done">Fait</option>
+            <option value="wontfix">Abandonné</option>
+            <option value="__all">— Tout (clos inclus)</option>
+          </select>
+          <select id="fPriority">
+            <option value="">Toutes priorités</option>
+            <option value="critical">Critique</option>
+            <option value="high">Haute</option>
+            <option value="medium">Moyenne</option>
+            <option value="low">Basse</option>
+          </select>
+        </div>
+        <ul id="issueList" class="issue-list"></ul>
+      </section>
+
+      <!-- Colonne détail -->
+      <section class="detail-pane" id="detail">
+        <div class="empty">Sélectionne une entrée, ou crée-en une nouvelle.</div>
+      </section>
+    </main>
+
+    <!-- Modale création/édition -->
+    <div class="modal-backdrop" id="backdrop" hidden>
+      <div class="modal" role="dialog" aria-modal="true">
+        <h2 id="modalTitle">Nouvelle entrée</h2>
+        <div class="form-row">
+          <label>Type
+            <select id="mType">
+              <option value="bug">🐞 Bug</option>
+              <option value="feature">✨ Feature</option>
+              <option value="task">✅ Tâche</option>
+              <option value="chore">🧹 Chore</option>
+            </select>
+          </label>
+          <label>Priorité
+            <select id="mPriority">
+              <option value="low">Basse</option>
+              <option value="medium" selected>Moyenne</option>
+              <option value="high">Haute</option>
+              <option value="critical">Critique</option>
+            </select>
+          </label>
+          <label>Statut
+            <select id="mStatus">
+              <option value="open" selected>Ouvert</option>
+              <option value="in_progress">En cours</option>
+              <option value="done">Fait</option>
+              <option value="wontfix">Abandonné</option>
+            </select>
+          </label>
+        </div>
+        <label class="full">Titre
+          <input id="mTitle" type="text" placeholder="Résumé court" />
+        </label>
+        <label class="full">Description
+          <span class="hint">Tape <kbd>@</kbd> pour insérer et associer un fichier/dossier du repo.</span>
+          <div class="ta-wrap">
+            <textarea id="mDesc" rows="7" placeholder="Détails, repro, contexte… @chemin/vers/fichier.cpp"></textarea>
+            <ul id="mentionMenu" class="mention-menu" hidden></ul>
+          </div>
+        </label>
+        <label class="full">Étiquettes (séparées par des virgules)
+          <input id="mTags" type="text" placeholder="éditeur, réseau, perf" />
+        </label>
+
+        <div class="refs-block">
+          <div class="refs-head">
+            <span>Fichiers / dossiers associés</span>
+            <span class="hint">Détectés via les <kbd>@</kbd> de la description + ajouts manuels.</span>
+          </div>
+          <div class="ref-add">
+            <input id="refInput" type="text" placeholder="Ajouter un chemin (autocomplete)… ex. cpp/editor/" autocomplete="off" />
+            <ul id="refMenu" class="mention-menu" hidden></ul>
+          </div>
+          <ul id="refList" class="ref-list"></ul>
+        </div>
+
+        <div class="modal-actions">
+          <button id="cancelBtn" class="ghost">Annuler</button>
+          <button id="saveBtn" class="primary">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+  </body>
+</html>

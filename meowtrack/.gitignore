@@ -1,0 +1,11 @@
+# Base locale (par machine) + artefacts WAL SQLite.
+meowtrack.db
+meowtrack.db-wal
+meowtrack.db-shm
+
+# Dépendances Node.
+node_modules/
+
+# Secrets de déploiement / config locale.
+.deployEnv
+.env

@@ -6,6 +6,10 @@
       "env": {
         "MEOW_AUTOMATION_PORT": "7700"
       }
+    },
+    "meowtrack": {
+      "command": "node",
+      "args": ["meowtrack/mcp.js"]
     }
   }
 }
