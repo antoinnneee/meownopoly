@@ -202,6 +202,6 @@ Item {
         //         font.pixelSize: Theme.fontSizeCaption
         //         font.italic: true
         //     }
-        // }
+        }
     }
 }
