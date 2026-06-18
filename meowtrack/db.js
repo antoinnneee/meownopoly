@@ -85,6 +85,8 @@ db.exec(`
     target_date TEXT,                                 -- 'YYYY-MM-DD' | null
     progress    INTEGER NOT NULL DEFAULT 0,           -- 0..100 STOCKÉ (rollup ascendant)
     position    INTEGER NOT NULL DEFAULT 0,           -- ordre parmi frères
+    pos_x       REAL,                                 -- position manuelle graphe (drag & drop), NULL = auto
+    pos_y       REAL,
     version     INTEGER NOT NULL DEFAULT 1,           -- pivot CAS, bumpé soi + ancêtres
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
     updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
@@ -119,7 +121,9 @@ function ensureColumn(table, column, ddl) {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all();
   if (!cols.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
 }
-ensureColumn("nodes", "notes", "notes TEXT NOT NULL DEFAULT ''"); // notes markdown par nœud
+ensureColumn("nodes", "notes", "notes TEXT NOT NULL DEFAULT ''"); // notes markdown par nœud (JSON liste)
+ensureColumn("nodes", "pos_x", "pos_x REAL"); // position manuelle graphe (drag & drop)
+ensureColumn("nodes", "pos_y", "pos_y REAL");
 
 // ── Vocabulaire ──────────────────────────────────────────────────────────────
 export const TYPES = ["bug", "feature", "task", "chore"];
@@ -134,7 +138,8 @@ export const MESSAGE_STATES = ["pending", "streaming", "complete", "error"];
 const MAX_DEPTH = 32; // profondeur max d'un arbre (anti-DoS récursion)
 const MAX_NODES_PER_SUBTREE = 500; // garde-fou volume par sous-arbre
 const MAX_ACTIONS = 20; // actions IA max appliquées par tour
-const MAX_NOTES = 50000; // taille max des notes markdown d'un nœud (~50 Ko)
+const MAX_NOTES = 50000; // taille max du corps markdown d'UNE note (~50 Ko)
+const MAX_NOTE_COUNT = 50; // nombre max de notes par nœud
 
 const PREFIX = { bug: "BUG", feature: "FEAT", task: "TASK", chore: "CHORE", node: "NODE" };
 
@@ -483,6 +488,39 @@ function clampEmoji(v) {
     return s.slice(0, 8) || "🎯";
   }
 }
+// ── Notes (liste de sections markdown collapsables) ───────────────────────────
+// Stockées en JSON dans nodes.notes : [{title, body}, …]. Tolère le legacy (string
+// brute → une seule note) et l'écriture IA (string ou objet → normalisés en liste).
+function parseNotes(raw) {
+  const s = String(raw || "");
+  if (!s.trim()) return [];
+  try {
+    const a = JSON.parse(s);
+    if (Array.isArray(a)) {
+      return a
+        .map((n) => ({ title: clampStr(n && n.title, 200), body: clampStr(n && n.body, MAX_NOTES) }))
+        .filter((n) => n.title || n.body)
+        .slice(0, MAX_NOTE_COUNT);
+    }
+  } catch {
+    /* pas du JSON → legacy string */
+  }
+  return [{ title: "", body: clampStr(s, MAX_NOTES) }];
+}
+// Normalise une entrée d'écriture (array | string | objet) → JSON string stockable.
+function normalizeNotesInput(input) {
+  let arr;
+  if (Array.isArray(input)) arr = input;
+  else if (typeof input === "string") arr = input.trim() ? [{ title: "", body: input }] : [];
+  else if (input && typeof input === "object") arr = [input];
+  else arr = [];
+  arr = arr
+    .map((n) => ({ title: clampStr(n && n.title, 200), body: clampStr(n && n.body, MAX_NOTES) }))
+    .filter((n) => n.title || n.body)
+    .slice(0, MAX_NOTE_COUNT);
+  return JSON.stringify(arr);
+}
+
 // Valide une date 'YYYY-MM-DD' ; "" / null → null (effacement) ; sinon throw.
 function validDateOrNull(v) {
   if (v == null || v === "") return null;
@@ -507,13 +545,15 @@ function rowToNode(r, { childCount } = {}) {
     depth: r.depth,
     title: r.title,
     description: r.description,
-    notes: r.notes || "",
+    notes: parseNotes(r.notes),
     status: r.status,
     color: r.color,
     emoji: r.emoji,
     targetDate: r.target_date,
     progress: pct,
     position: r.position,
+    posX: r.pos_x != null ? r.pos_x : null, // position manuelle dans le graphe (drag & drop)
+    posY: r.pos_y != null ? r.pos_y : null,
     version: r.version,
     childCount: childCount != null ? childCount : childCountOf(r.id),
     createdAt: r.created_at,
@@ -706,7 +746,16 @@ function _setNodeFields(id, fields = {}) {
   }
   if (fields.notes != null) {
     sets.push("notes = ?");
-    vals.push(clampStr(fields.notes, MAX_NOTES));
+    vals.push(normalizeNotesInput(fields.notes));
+  }
+  // Position manuelle dans le graphe (drag & drop). null explicite = retour à l'auto-layout.
+  if ("posX" in fields) {
+    sets.push("pos_x = ?");
+    vals.push(fields.posX == null ? null : Number(fields.posX));
+  }
+  if ("posY" in fields) {
+    sets.push("pos_y = ?");
+    vals.push(fields.posY == null ? null : Number(fields.posY));
   }
   if (fields.status != null) {
     if (!NODE_STATUS_SET.has(fields.status)) throw new Error(`Statut invalide : ${fields.status}`);
@@ -749,7 +798,7 @@ function _insertChild(parentId, input = {}) {
   const color = NODE_COLOR_SET.has(input.color) ? input.color : parent.color || "accent";
   const emoji = clampEmoji(input.emoji);
   const description = clampStr(input.description != null ? input.description : input.detail || "", 4000);
-  const notes = clampStr(input.notes != null ? input.notes : "", MAX_NOTES);
+  const notes = normalizeNotesInput(input.notes != null ? input.notes : "");
   const targetDate = validDateOrNull(input.targetDate != null ? input.targetDate : input.dueDate);
   const ref = nextRef("node");
   const nextPos = db.prepare("SELECT COALESCE(MAX(position), -1) + 1 AS p FROM nodes WHERE parent_id = ?").get(parentId).p;
@@ -827,7 +876,7 @@ export function createNode(parentRefOrId, input = {}) {
   const color = NODE_COLOR_SET.has(input.color) ? input.color : "accent";
   const emoji = clampEmoji(input.emoji);
   const description = clampStr(input.description || "", 4000);
-  const notes = clampStr(input.notes != null ? input.notes : "", MAX_NOTES);
+  const notes = normalizeNotesInput(input.notes != null ? input.notes : "");
   const targetDate = validDateOrNull(input.targetDate);
   const ref = nextRef("node");
   const id = db.transaction(() => {
@@ -910,7 +959,27 @@ export function reorderChildren(parentRefOrId, orderedIds = []) {
   return pId != null ? getNode(pId, { withTree: true }) : listRootNodes();
 }
 
+// Persiste les positions manuelles du graphe (drag & drop). Présentation pure :
+// PAS de bump de version ni de rollup (n'affecte pas le contenu/la progression).
+export function setNodePositions(positions = []) {
+  const upd = db.prepare("UPDATE nodes SET pos_x = ?, pos_y = ? WHERE id = ?");
+  db.transaction(() => {
+    for (const p of positions || []) {
+      const row = findNodeRow(p && p.id);
+      if (row) upd.run(p.x == null ? null : Number(p.x), p.y == null ? null : Number(p.y), row.id);
+    }
+  })();
+  return (positions || []).length;
+}
+
 // ── Chat (par nœud) ──────────────────────────────────────────────────────────
+// Vide tout l'historique de chat d'un nœud. Renvoie le nombre de messages supprimés.
+export function clearNodeMessages(nodeRefOrId) {
+  const node = findNodeRow(nodeRefOrId);
+  if (!node) throw new Error(`Nœud introuvable : ${nodeRefOrId}`);
+  return db.prepare("DELETE FROM node_messages WHERE node_id = ?").run(node.id).changes;
+}
+
 export function listNodeMessages(nodeId, { afterId = 0, limit = 500 } = {}) {
   return db
     .prepare("SELECT * FROM node_messages WHERE node_id = ? AND id > ? ORDER BY id LIMIT ?")

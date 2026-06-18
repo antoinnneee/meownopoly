@@ -584,7 +584,16 @@ const vibes = {
   // spawned/pulsed/celebrated : ids de nœuds à animer au prochain rendu (créés /
   // mis à jour / venant d'atteindre « done »). fxFired : éclats déjà tirés (anti-doublon
   // si la forêt re-rend plusieurs fois dans la fenêtre d'animation).
-  graph: { view: { x: 0, y: 0, w: 1000, h: 700 }, drag: null, userView: false, spawned: new Set(), pulsed: new Set(), celebrated: new Set(), fxFired: new Set() },
+  graph: {
+    view: { x: 0, y: 0, w: 1000, h: 700 }, drag: null, userView: false,
+    spawned: new Set(), pulsed: new Set(), celebrated: new Set(), fxFired: new Set(),
+    posMap: new Map(),      // id → {x,y} résolu au dernier rendu (drag live + arêtes)
+    nodeDrag: null,         // déplacement d'un nœud (et de son sous-arbre) en cours
+    linking: null,          // id source pendant « tirer un lien »
+    edgeDel: null,          // { childId, parentId } de l'arête dont la poubelle est affichée
+    pendingCreatePos: null, // position graphe où créer le prochain nœud (menu fond)
+    suppressClick: false,   // ignore le prochain click (après un drag)
+  },
 };
 
 // Respecte la préférence système : pas de particules ni de bursts si réduit.
@@ -721,10 +730,46 @@ function renderMarkdown(src) {
   const closeList = () => { if (listType) { out.push(`</${listType}>`); listType = null; } };
   const closeQuote = () => { if (inQuote) { out.push("</blockquote>"); inQuote = false; } };
 
-  for (const line of lines) {
+  // Découpe une ligne de tableau en cellules (gère les | de bord optionnels).
+  const tableCells = (s) => {
+    let t = s.trim();
+    if (t.startsWith("|")) t = t.slice(1);
+    if (t.endsWith("|")) t = t.slice(0, -1);
+    return t.split("|").map((c) => c.trim());
+  };
+  const isTableSep = (s) => /^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)*\|?\s*$/.test(s) && s.includes("-");
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const cb = line.match(/^ CB(\d+) $/);
     if (cb) { flushPara(); closeList(); closeQuote(); out.push(blocks[Number(cb[1])]); continue; }
     if (!line.trim()) { flushPara(); closeList(); closeQuote(); continue; }
+
+    // Tableau GFM : ligne d'en-tête avec « | » suivie d'une ligne de séparation.
+    if (line.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {
+      flushPara(); closeList(); closeQuote();
+      const headers = tableCells(line);
+      const aligns = tableCells(lines[i + 1]).map((c) => {
+        const l = c.startsWith(":"), r = c.endsWith(":");
+        return r && l ? "center" : r ? "right" : l ? "left" : "";
+      });
+      const rows = [];
+      let j = i + 2;
+      while (j < lines.length && lines[j].trim() && lines[j].includes("|")) { rows.push(tableCells(lines[j])); j++; }
+      const al = (k) => (aligns[k] ? ` style="text-align:${aligns[k]}"` : "");
+      let html = '<table class="md-table"><thead><tr>';
+      headers.forEach((h, k) => (html += `<th${al(k)}>${mdInline(h)}</th>`));
+      html += "</tr></thead><tbody>";
+      for (const row of rows) {
+        html += "<tr>";
+        for (let k = 0; k < headers.length; k++) html += `<td${al(k)}>${mdInline(row[k] || "")}</td>`;
+        html += "</tr>";
+      }
+      html += "</tbody></table>";
+      out.push(html);
+      i = j - 1;
+      continue;
+    }
 
     const h = line.match(/^(#{1,6})\s+(.*)$/);
     if (h) { flushPara(); closeList(); closeQuote(); const l = h[1].length; out.push(`<h${l} class="md-h md-h${l}">${mdInline(h[2].trim())}</h${l}>`); continue; }
@@ -892,7 +937,19 @@ function computeGraphLayout() {
     assignAngles(root, 0, Math.PI * 2, pos, cursorX + r, 0);
     cursorX += r * 2 + G_ROOT_GAP;
   }
+  // Positions manuelles (drag & drop persistées) : écrasent l'auto-layout radial.
+  // Les drags épinglant tout le sous-arbre, la cohérence parent↔enfants est préservée.
+  for (const n of vibes.forest) {
+    if (n.posX != null && n.posY != null) pos.set(n.id, { x: n.posX, y: n.posY });
+  }
   return pos;
+}
+// Ids d'un nœud + tout son sous-arbre (pour déplacer/épingler ensemble).
+function subtreeIds(id) {
+  const out = [id];
+  const rec = (pid) => { for (const c of childrenOf(pid)) { out.push(c.id); rec(c.id); } };
+  rec(id);
+  return out;
 }
 function assignAngles(node, a0, a1, pos, cx, cy) {
   const ang = (a0 + a1) / 2;
@@ -913,20 +970,23 @@ function svgEl(tag, attrs) {
   for (const k in attrs) el.setAttribute(k, attrs[k]);
   return el;
 }
-function edgePath(p, c, node) {
+function edgeD(p, c) {
   const dx = c.x - p.x, dy = c.y - p.y;
   const len = Math.hypot(dx, dy) || 1;
   const nx = -dy / len, ny = dx / len;
   const off = Math.min(45, len * 0.18);
   const c1x = p.x + dx * 0.35 + nx * off, c1y = p.y + dy * 0.35 + ny * off;
   const c2x = p.x + dx * 0.65 + nx * off, c2y = p.y + dy * 0.65 + ny * off;
-  const el = svgEl("path", {
-    d: `M ${p.x} ${p.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${c.x} ${c.y}`,
+  return `M ${p.x} ${p.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${c.x} ${c.y}`;
+}
+function edgePath(p, c, node) {
+  return svgEl("path", {
+    d: edgeD(p, c),
     class: "g-edge" + (vibes.graph.spawned.has(node.id) ? " spawn" : ""),
     "data-cid": String(node.id),
+    "data-pid": String(node.parentId), // pour la maj live des arêtes pendant le drag
     stroke: `var(--${node.color || "accent"})`,
   });
-  return el;
 }
 // Faisceau de rayons (célébration « jalon atteint »), dessiné derrière le nœud.
 function raysGroup() {
@@ -966,6 +1026,8 @@ function renderGraph() {
   const svg = $("#graphSvg");
   if (!svg || $("#graphView").hidden) return;
   const pos = computeGraphLayout();
+  vibes.graph.posMap = pos;     // réutilisé par le drag live et le recalcul des arêtes
+  vibes.graph.edgeDel = null;   // l'overlay poubelle (re)disparaît au rendu
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const gEdges = svgEl("g", { class: "g-edges" });
   const gNodes = svgEl("g", { class: "g-nodes" });
@@ -1018,12 +1080,142 @@ function applyViewBox(svg) {
   const v = vibes.graph.view;
   svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
 }
+// Convertit des coords écran → coords graphe (viewBox courant).
+function clientToSvg(clientX, clientY) {
+  const svg = $("#graphSvg");
+  const rect = svg.getBoundingClientRect();
+  const v = vibes.graph.view;
+  return { x: v.x + ((clientX - rect.left) / rect.width) * v.w, y: v.y + ((clientY - rect.top) / rect.height) * v.h };
+}
+// Maj live (sans rebuild) des transforms de nœuds + tracé des arêtes depuis posMap.
+function liveUpdateGraphPositions() {
+  const svg = $("#graphSvg");
+  const pos = vibes.graph.posMap;
+  svg.querySelectorAll(".g-node").forEach((g) => {
+    const p = pos.get(Number(g.dataset.id));
+    if (p) g.setAttribute("transform", `translate(${p.x},${p.y})`);
+  });
+  svg.querySelectorAll(".g-edge").forEach((ed) => {
+    const pp = pos.get(Number(ed.dataset.pid)), pc = pos.get(Number(ed.dataset.cid));
+    if (pp && pc) ed.setAttribute("d", edgeD(pp, pc));
+  });
+  if (vibes.graph.edgeDel) positionEdgeDel();
+}
+// Persiste les positions manuelles d'un ensemble d'ids (depuis posMap) + maj locale.
+async function persistPositions(ids) {
+  const positions = [];
+  for (const id of ids) {
+    const p = vibes.graph.posMap.get(id);
+    const n = vibes.byId.get(id);
+    if (p && n) { n.posX = p.x; n.posY = p.y; positions.push({ id, x: p.x, y: p.y }); }
+  }
+  if (!positions.length) return;
+  try { await api.send("POST", "/api/nodes/positions", { positions }); }
+  catch (e) { toast("Positions non enregistrées : " + e.message); }
+}
+
+// ── Menu contextuel générique (clic droit) ───────────────────────────────────
+function hideCtxMenu() {
+  const m = document.getElementById("ctxMenu");
+  if (m) m.remove();
+  document.removeEventListener("mousedown", _ctxOutside, true);
+}
+function _ctxOutside(e) { if (!e.target.closest("#ctxMenu")) hideCtxMenu(); }
+function showCtxMenu(clientX, clientY, items) {
+  hideCtxMenu();
+  const m = document.createElement("div");
+  m.id = "ctxMenu";
+  m.className = "ctx-menu";
+  for (const it of items) {
+    const b = document.createElement("button");
+    b.className = "ctx-item" + (it.danger ? " danger" : "");
+    b.textContent = it.label;
+    b.addEventListener("click", () => { hideCtxMenu(); it.onClick(); });
+    m.appendChild(b);
+  }
+  document.body.appendChild(m);
+  const r = m.getBoundingClientRect();
+  m.style.left = Math.min(clientX, window.innerWidth - r.width - 8) + "px";
+  m.style.top = Math.min(clientY, window.innerHeight - r.height - 8) + "px";
+  setTimeout(() => document.addEventListener("mousedown", _ctxOutside, true), 0);
+}
+
+// ── Mode « tirer un lien » (connecter deux nœuds = reparentage) ───────────────
+function startLinkMode(sourceId) {
+  cancelLinkMode();
+  vibes.graph.linking = sourceId;
+  const line = svgEl("path", { class: "g-link-temp", d: "" });
+  $("#graphSvg").insertBefore(line, $("#graphSvg").firstChild);
+  vibes.graph._linkLine = line;
+  toast("Clique le nœud à rattacher comme enfant (Échap pour annuler).");
+}
+function cancelLinkMode() {
+  vibes.graph.linking = null;
+  if (vibes.graph._linkLine) { vibes.graph._linkLine.remove(); vibes.graph._linkLine = null; }
+}
+function updateLinkLine(clientX, clientY) {
+  if (!vibes.graph._linkLine) return;
+  const src = vibes.graph.posMap.get(vibes.graph.linking);
+  if (!src) return;
+  const t = clientToSvg(clientX, clientY);
+  vibes.graph._linkLine.setAttribute("d", `M ${src.x} ${src.y} L ${t.x} ${t.y}`);
+}
+async function finishLink(targetId) {
+  const sourceId = vibes.graph.linking;
+  cancelLinkMode();
+  if (!sourceId || targetId == null || targetId === sourceId) return;
+  try {
+    // « Tirer un lien depuis A vers B » = B devient enfant de A.
+    await api.send("POST", `/api/nodes/${encodeURIComponent(targetId)}/move`, { newParentId: sourceId });
+    vibes.graph.spawned.add(targetId);
+    toast("Lien créé.");
+    loadForest();
+  } catch (e) {
+    toast(/cycle|sous-arbre/i.test(e.message) ? "Impossible : créerait un cycle." : "Échec : " + e.message);
+  }
+}
+
+// ── Poubelle de suppression d'arête (double-clic sur un lien) ─────────────────
+function hideEdgeDel() {
+  const el = document.getElementById("gEdgeDel");
+  if (el) el.remove();
+  vibes.graph.edgeDel = null;
+}
+function positionEdgeDel() {
+  const el = document.getElementById("gEdgeDel");
+  const d = vibes.graph.edgeDel;
+  if (!el || !d) return;
+  const pp = vibes.graph.posMap.get(d.parentId), pc = vibes.graph.posMap.get(d.childId);
+  if (pp && pc) el.setAttribute("transform", `translate(${(pp.x + pc.x) / 2},${(pp.y + pc.y) / 2})`);
+}
+function showEdgeDel(childId, parentId) {
+  hideEdgeDel();
+  vibes.graph.edgeDel = { childId, parentId };
+  const g = svgEl("g", { id: "gEdgeDel", class: "g-edge-del" });
+  g.appendChild(svgEl("circle", { r: 13 }));
+  const t = svgEl("text", { "text-anchor": "middle", dy: "0.35em", "font-size": "14" });
+  t.textContent = "🗑";
+  g.appendChild(t);
+  g.addEventListener("click", (e) => { e.stopPropagation(); deleteEdge(childId); });
+  $("#graphSvg").appendChild(g);
+  positionEdgeDel();
+}
+async function deleteEdge(childId) {
+  hideEdgeDel();
+  try {
+    // Supprimer le lien = détacher l'enfant → il redevient une racine.
+    await api.send("POST", `/api/nodes/${encodeURIComponent(childId)}/move`, { newParentId: null });
+    toast("Lien supprimé (nœud détaché).");
+    loadForest();
+  } catch (e) {
+    toast("Échec : " + e.message);
+  }
+}
+
+const NODE_DRAG_THRESHOLD = 4; // px avant de basculer click → drag
 function wireGraph() {
   const svg = $("#graphSvg");
-  svg.addEventListener("click", (e) => {
-    const g = e.target.closest(".g-node");
-    if (g) openNode(g.dataset.ref);
-  });
+
   svg.addEventListener("wheel", (e) => {
     e.preventDefault();
     const v = vibes.graph.view;
@@ -1037,22 +1229,112 @@ function wireGraph() {
     vibes.graph.userView = true;
     applyViewBox(svg);
   }, { passive: false });
+
+  // mousedown : démarre soit un drag de nœud (sur un nœud), soit un pan (sur le fond).
   svg.addEventListener("mousedown", (e) => {
-    if (e.target.closest(".g-node")) return;
-    vibes.graph.drag = { x: e.clientX, y: e.clientY, vx: vibes.graph.view.x, vy: vibes.graph.view.y };
+    if (e.button !== 0) return; // gauche uniquement (le clic droit → contextmenu)
+    if (vibes.graph.linking) return; // en mode lien : la sélection se fait au click
+    if (e.target.closest("#gEdgeDel")) return; // clic sur la poubelle : géré par son handler
+    hideCtxMenu();
+    hideEdgeDel();
+    const gNode = e.target.closest(".g-node");
+    if (gNode) {
+      const id = Number(gNode.dataset.id);
+      const ids = subtreeIds(id);
+      const start = new Map(ids.map((i) => [i, { ...(vibes.graph.posMap.get(i) || { x: 0, y: 0 }) }]));
+      vibes.graph.nodeDrag = { id, ids, start, cx: e.clientX, cy: e.clientY, moved: false, ref: gNode.dataset.ref };
+    } else {
+      vibes.graph.drag = { x: e.clientX, y: e.clientY, vx: vibes.graph.view.x, vy: vibes.graph.view.y };
+    }
   });
+
   window.addEventListener("mousemove", (e) => {
+    if (vibes.graph.linking) { updateLinkLine(e.clientX, e.clientY); return; }
+    const nd = vibes.graph.nodeDrag;
+    if (nd) {
+      const v = vibes.graph.view;
+      const rect = svg.getBoundingClientRect();
+      const dx = ((e.clientX - nd.cx) / rect.width) * v.w;
+      const dy = ((e.clientY - nd.cy) / rect.height) * v.h;
+      if (!nd.moved && Math.hypot(e.clientX - nd.cx, e.clientY - nd.cy) < NODE_DRAG_THRESHOLD) return;
+      nd.moved = true;
+      svg.style.cursor = "grabbing";
+      for (const i of nd.ids) {
+        const s = nd.start.get(i);
+        vibes.graph.posMap.set(i, { x: s.x + dx, y: s.y + dy });
+      }
+      liveUpdateGraphPositions();
+      return;
+    }
     const d = vibes.graph.drag;
     if (!d) return;
-    const svg2 = $("#graphSvg");
-    const rect = svg2.getBoundingClientRect();
+    const rect = svg.getBoundingClientRect();
     const v = vibes.graph.view;
     v.x = d.vx - ((e.clientX - d.x) / rect.width) * v.w;
     v.y = d.vy - ((e.clientY - d.y) / rect.height) * v.h;
     vibes.graph.userView = true;
-    applyViewBox(svg2);
+    applyViewBox(svg);
   });
-  window.addEventListener("mouseup", () => (vibes.graph.drag = null));
+
+  window.addEventListener("mouseup", () => {
+    const nd = vibes.graph.nodeDrag;
+    if (nd && nd.moved) {
+      vibes.graph.userView = true;   // on ne re-fit pas la vue après un placement manuel
+      vibes.graph.suppressClick = true; // empêche l'ouverture du nœud juste après le drag
+      persistPositions(nd.ids);
+      svg.style.cursor = "";
+    }
+    vibes.graph.nodeDrag = null;
+    vibes.graph.drag = null;
+  });
+
+  // click : ouvre un nœud (sauf juste après un drag) ou finalise un lien.
+  svg.addEventListener("click", (e) => {
+    if (vibes.graph.suppressClick) { vibes.graph.suppressClick = false; return; }
+    const gNode = e.target.closest(".g-node");
+    if (vibes.graph.linking) {
+      if (gNode) finishLink(Number(gNode.dataset.id));
+      else cancelLinkMode();
+      return;
+    }
+    if (gNode) openNode(gNode.dataset.ref);
+  });
+
+  // double-clic sur une arête → affiche la poubelle de suppression de lien.
+  svg.addEventListener("dblclick", (e) => {
+    const edge = e.target.closest(".g-edge");
+    if (edge) { e.preventDefault(); showEdgeDel(Number(edge.dataset.cid), Number(edge.dataset.pid)); }
+  });
+
+  // clic droit : menu contextuel selon la cible (nœud / arête / fond).
+  svg.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (vibes.graph.linking) { cancelLinkMode(); return; }
+    const gNode = e.target.closest(".g-node");
+    if (gNode) {
+      const id = Number(gNode.dataset.id);
+      const ref = gNode.dataset.ref;
+      showCtxMenu(e.clientX, e.clientY, [
+        { label: "🔗 Tirer un lien…", onClick: () => startLinkMode(id) },
+        { label: "✎ Ouvrir", onClick: () => openNode(ref) },
+        { label: "🗑 Supprimer", danger: true, onClick: () => { if (confirm("Supprimer ce nœud et tout son sous-arbre ?")) deleteNodeById(id); } },
+      ]);
+      return;
+    }
+    const edge = e.target.closest(".g-edge");
+    if (edge) {
+      showCtxMenu(e.clientX, e.clientY, [
+        { label: "🗑 Supprimer le lien", danger: true, onClick: () => deleteEdge(Number(edge.dataset.cid)) },
+      ]);
+      return;
+    }
+    // Fond : créer un nouveau nœud à cet endroit.
+    const at = clientToSvg(e.clientX, e.clientY);
+    showCtxMenu(e.clientX, e.clientY, [
+      { label: "➕ Nouvel objectif ici", onClick: () => { vibes.graph.pendingCreatePos = at; openNodeModal(null, null); } },
+    ]);
+  });
+
   $("#graphFit").addEventListener("click", () => {
     vibes.graph.userView = false;
     renderGraph();
@@ -1079,6 +1361,7 @@ async function openNode(ref) {
     vibes._treeSnap = new Map();
     vibes._treeInitial = true;
     vibes._notesEditing = false; // pas d'édition de notes héritée d'un autre nœud
+    vibes._notesOpen = new Set(); // état plié/déplié des notes propre à ce nœud
     renderNodeHeader(node);
     renderTree(node);
     renderChat(node.messages || []);
@@ -1102,52 +1385,117 @@ function renderNodeHeader(n) {
   renderNotes(n);
 }
 
-// ── Notes markdown (lecture rendue + édition + aperçu live) ────────────────────
+// ── Notes markdown : liste de sections collapsables (lecture + édition) ────────
+// notes = [{title, body}]. Vue : un <details> par note. Édition : liste dynamique.
+function notesOf(n) {
+  return Array.isArray(n && n.notes) ? n.notes : [];
+}
+// Mémorise l'état plié/déplié par index (réinitialisé au changement de nœud).
 function renderNotes(n) {
   if (vibes._notesEditing) return; // édition en cours : ne pas écraser
   const view = $("#ndNotesView");
   if (!view) return;
-  const notes = (n && n.notes) || "";
-  if (notes.trim()) {
-    view.innerHTML = renderMarkdown(notes);
-    view.classList.remove("empty");
-  } else {
-    view.innerHTML = '<span class="hint">Aucune note. Clique « ✎ Éditer » ou demande à Claude d\'en rédiger.</span>';
-    view.classList.add("empty");
-  }
+  const notes = notesOf(n);
   view.hidden = false;
   $("#ndNotesEditor").hidden = true;
   $("#ndNotesEditBtn").hidden = false;
+  if (!notes.length) {
+    view.classList.add("empty");
+    view.innerHTML = '<span class="hint">Aucune note. Clique « ✎ Éditer » ou demande à Claude d\'en rédiger.</span>';
+    return;
+  }
+  view.classList.remove("empty");
+  const open = vibes._notesOpen || new Set();
+  view.innerHTML = notes
+    .map((note, i) => {
+      const title = (note.title || "").trim() || `Note ${i + 1}`;
+      const isOpen = open.size ? open.has(i) : true; // tout déplié par défaut
+      return `<details class="note-item"${isOpen ? " open" : ""} data-i="${i}">
+        <summary class="note-summary"><span class="note-title">${esc(title)}</span></summary>
+        <div class="note-body markdown-body">${renderMarkdown(note.body) || '<span class="hint">(vide)</span>'}</div>
+      </details>`;
+    })
+    .join("");
+  // Suit l'état plié/déplié (persisté en mémoire le temps de la session du nœud).
+  view.querySelectorAll(".note-item").forEach((d) =>
+    d.addEventListener("toggle", () => {
+      vibes._notesOpen = vibes._notesOpen || new Set();
+      const i = Number(d.dataset.i);
+      if (d.open) vibes._notesOpen.add(i);
+      else vibes._notesOpen.delete(i);
+    })
+  );
 }
-function updateNotesPreview() {
-  const prev = $("#ndNotesPreview");
-  if (prev) prev.innerHTML = renderMarkdown($("#ndNotesInput").value) || '<span class="hint">(aperçu vide)</span>';
+
+// Construit un éditeur pour une note (titre + corps markdown + aperçu live + @).
+function buildNoteEditor(note) {
+  const row = document.createElement("div");
+  row.className = "note-editor";
+  row.innerHTML = `
+    <div class="note-editor-head">
+      <input type="text" class="note-edit-title" placeholder="Titre de la note (optionnel)" />
+      <button type="button" class="ghost danger note-edit-del" title="Supprimer cette note">🗑</button>
+    </div>
+    <div class="ta-wrap">
+      <textarea class="note-edit-body" rows="6" placeholder="Markdown : # Titre, **gras**, - listes, | tableaux |, > citation, @chemin/fichier…"></textarea>
+      <ul class="mention-menu" hidden></ul>
+    </div>
+    <details class="note-edit-preview"><summary>👁 Aperçu</summary><div class="markdown-body note-edit-preview-body"></div></details>`;
+  const titleEl = row.querySelector(".note-edit-title");
+  const bodyEl = row.querySelector(".note-edit-body");
+  const menuEl = row.querySelector(".mention-menu");
+  const prevEl = row.querySelector(".note-edit-preview-body");
+  titleEl.value = (note && note.title) || "";
+  bodyEl.value = (note && note.body) || "";
+  const preview = () => { prevEl.innerHTML = renderMarkdown(bodyEl.value) || '<span class="hint">(aperçu vide)</span>'; };
+  preview();
+  bodyEl.addEventListener("input", () => { preview(); handleMentionInput(bodyEl, menuEl, state.branch || "", preview); });
+  bodyEl.addEventListener("blur", () => setTimeout(() => hideMenu(menuEl), 150));
+  bodyEl.addEventListener("keydown", (e) => {
+    if (menuKeydown(menuEl, e)) return;
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); saveNotes(); }
+  });
+  row.querySelector(".note-edit-del").addEventListener("click", () => row.remove());
+  return row;
+}
+function addNoteEditor(note) {
+  $("#ndNotesList").appendChild(buildNoteEditor(note || { title: "", body: "" }));
+}
+function collectNotesFromEditor() {
+  return [...$("#ndNotesList").querySelectorAll(".note-editor")]
+    .map((row) => ({
+      title: row.querySelector(".note-edit-title").value.trim(),
+      body: row.querySelector(".note-edit-body").value,
+    }))
+    .filter((n) => n.title || n.body.trim());
 }
 function openNotesEditor() {
   if (!vibes.currentNode) return;
   vibes._notesEditing = true;
   vibes._notesBaseVersion = vibes.currentNode.version; // pivot CAS figé au début de l'édition
-  $("#ndNotesInput").value = vibes.currentNode.notes || "";
+  const list = $("#ndNotesList");
+  list.innerHTML = "";
+  const notes = notesOf(vibes.currentNode);
+  if (notes.length) notes.forEach(addNoteEditor);
+  else addNoteEditor({ title: "", body: "" }); // une note vide pour démarrer
   $("#ndNotesView").hidden = true;
   $("#ndNotesEditBtn").hidden = true;
   $("#ndNotesEditor").hidden = false;
-  updateNotesPreview();
-  $("#ndNotesInput").focus();
+  const first = list.querySelector(".note-edit-body");
+  if (first) first.focus();
 }
 function closeNotesEditor() {
   vibes._notesEditing = false;
-  hideMenu($("#ndNotesMentionMenu"));
   renderNotes(vibes.currentNode);
 }
 async function saveNotes() {
   if (!vibes.current) return;
-  const notes = $("#ndNotesInput").value;
+  const notes = collectNotesFromEditor();
   const payload = { notes };
   if (vibes._notesBaseVersion != null) payload.expectedVersion = vibes._notesBaseVersion;
   try {
     const n = await api.send("PATCH", `/api/nodes/${encodeURIComponent(vibes.current)}`, payload);
     vibes._notesEditing = false;
-    hideMenu($("#ndNotesMentionMenu"));
     applyNodeUpdate(n); // met à jour currentNode + header → renderNotes
     scheduleSubtreeRefetch();
     toast("Notes enregistrées.");
@@ -1245,7 +1593,7 @@ function applyNodeUpdate(n) {
   if (!n || !vibes.current) return;
   if (vibes.currentNode && n.id === vibes.currentNode.id) {
     if (vibes.currentVersion != null && n.version != null && n.version < vibes.currentVersion) return;
-    const notesChanged = !vibes._notesEditing && n.notes != null && (vibes.currentNode.notes || "") !== (n.notes || "");
+    const notesChanged = !vibes._notesEditing && n.notes != null && JSON.stringify(vibes.currentNode.notes || []) !== JSON.stringify(n.notes || []);
     vibes.currentVersion = n.version;
     Object.assign(vibes.currentNode, n);
     renderNodeHeader(vibes.currentNode);
@@ -1372,7 +1720,14 @@ function messageEl(m) {
     }
     if (m.id) vibes.streams.set(m.id, { reasoning: m.reasoning || "", text: m.body || "", reasoningEl: reasoningBody, bodyEl: body });
   } else {
-    body.innerHTML = esc(m.body || "").replace(/\n/g, "<br>");
+    // Message finalisé : rendu markdown (tableaux, listes, code…) pour l'IA ;
+    // texte simple pour les humains (on n'interprète pas leur frappe comme du markdown).
+    if (m.role === "assistant") {
+      body.classList.add("markdown-body");
+      body.innerHTML = renderMarkdown(m.body || "");
+    } else {
+      body.innerHTML = esc(m.body || "").replace(/\n/g, "<br>");
+    }
     if (m.id) vibes.streams.delete(m.id);
   }
   div.appendChild(body);
@@ -1471,6 +1826,18 @@ async function confirmActions(messageId) {
     toast(e.message);
   }
 }
+async function clearChatHistory() {
+  if (!vibes.current) return;
+  if (!confirm("Vider tout l'historique de la discussion de ce nœud ? (irréversible)")) return;
+  try {
+    await api.send("DELETE", nodeUrl("/messages"));
+    renderChat([]); // vidage local immédiat (l'événement chat:cleared confirmera aux autres)
+    toast("Historique vidé.");
+  } catch (e) {
+    if (/ai_busy/.test(e.message)) toast("Claude répond en ce moment — réessaie après le tour.");
+    else toast("Échec : " + e.message);
+  }
+}
 
 // ── Temps réel (SSE) ─────────────────────────────────────────────────────────
 function setLive(on) {
@@ -1512,6 +1879,16 @@ function subscribeForest() {
   es.addEventListener("node:deleted", () => loadForest());
   es.addEventListener("node:reparented", () => loadForest());
   es.addEventListener("nodes:reordered", () => loadForest());
+  // Positions manuelles déplacées ailleurs : maj locale + re-rendu (sauf si on drague).
+  es.addEventListener("nodes:moved", (e) => {
+    if (vibes.graph.nodeDrag) return;
+    const d = JSON.parse(e.data);
+    for (const p of d.positions || []) {
+      const n = vibes.byId.get(p.id);
+      if (n) { n.posX = p.x; n.posY = p.y; }
+    }
+    renderForestSoon();
+  });
 }
 function subscribeNode(ref) {
   closeStream();
@@ -1524,6 +1901,7 @@ function subscribeNode(ref) {
   es.addEventListener("ai:turn", (e) => { const d = JSON.parse(e.data); $("#typingRow").hidden = d.state !== "start"; if (d.state === "start") $("#typingRow").textContent = `✨ ${d.actor ? d.actor + " — " : ""}Claude travaille…`; });
   es.addEventListener("node:updated", (e) => applyNodeUpdate(JSON.parse(e.data)));
   es.addEventListener("subtree:dirty", () => scheduleSubtreeRefetch());
+  es.addEventListener("chat:cleared", () => renderChat([])); // un autre client a vidé l'historique
   es.addEventListener("node:deleted", (e) => {
     const d = JSON.parse(e.data);
     if (vibes.currentNode && d.id === vibes.currentNode.id) { toast("Ce nœud a été supprimé."); backToForest(); }
@@ -1583,7 +1961,16 @@ async function saveNode() {
       const n = await api.send("POST", "/api/nodes", payload);
       $("#nodeBackdrop").hidden = true;
       vibes.graph.spawned.add(n.id); // anime aussi la naissance pour le créateur local
+      // Création via le menu contextuel du fond → épingle le nœud à l'endroit cliqué.
+      const at = vibes.graph.pendingCreatePos;
+      vibes.graph.pendingCreatePos = null;
+      if (at) {
+        n.posX = at.x; n.posY = at.y;
+        vibes.graph.posMap.set(n.id, { x: at.x, y: at.y });
+        persistPositions([n.id]);
+      }
       if (vibes.current) scheduleSubtreeRefetch();
+      else if (at) loadForest(); // créé via le menu fond → rester sur le graphe pour le voir apparaître
       else { vibes.layout === "graph" ? openNode(n.ref) : loadForest(); }
     }
   } catch (e) {
@@ -1604,23 +1991,13 @@ function initVibes() {
   $("#ndEdit").addEventListener("click", () => openNodeModal(vibes.currentNode, null));
   $("#ndDel").addEventListener("click", deleteCurrentNode);
   $("#ndAddChild").addEventListener("click", () => openNodeModal(null, vibes.currentNode ? vibes.currentNode.id : null));
-  // Notes markdown : édition / aperçu live / enregistrement + autocomplete @ fichier.
+  // Notes markdown : éditeur multi-notes (chaque éditeur gère son @ / aperçu).
   $("#ndNotesEditBtn").addEventListener("click", openNotesEditor);
   $("#ndNotesCancelBtn").addEventListener("click", closeNotesEditor);
   $("#ndNotesSaveBtn").addEventListener("click", saveNotes);
-  const notesInput = $("#ndNotesInput");
-  const notesMenu = $("#ndNotesMentionMenu");
-  notesInput.addEventListener("input", () => {
-    updateNotesPreview();
-    handleMentionInput(notesInput, notesMenu, state.branch || "", updateNotesPreview);
-  });
-  notesInput.addEventListener("blur", () => setTimeout(() => hideMenu(notesMenu), 150));
-  notesInput.addEventListener("keydown", (e) => {
-    if (menuKeydown(notesMenu, e)) return; // menu ouvert : flèches / Entrée / Tab / Échap pour lui
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); saveNotes(); }
-    else if (e.key === "Escape") { e.preventDefault(); closeNotesEditor(); }
-  });
+  $("#ndNotesAddBtn").addEventListener("click", () => addNoteEditor());
   $("#chatSend").addEventListener("click", sendChat);
+  $("#chatClearBtn").addEventListener("click", clearChatHistory);
   // Autocomplete @ fichier dans le chat (même UX que la modale d'entrée du tracker).
   const chatInput = $("#chatInput");
   const chatMenu = $("#chatMentionMenu");
@@ -1631,10 +2008,18 @@ function initVibes() {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
   });
   $("#modelSel").addEventListener("change", (e) => (vibes.model = e.target.value));
-  $("#nodeCancelBtn").addEventListener("click", () => ($("#nodeBackdrop").hidden = true));
+  const closeNodeModal = () => { $("#nodeBackdrop").hidden = true; vibes.graph.pendingCreatePos = null; };
+  $("#nodeCancelBtn").addEventListener("click", closeNodeModal);
   $("#nodeSaveBtn").addEventListener("click", saveNode);
-  $("#nodeBackdrop").addEventListener("mousedown", (e) => { if (e.target === $("#nodeBackdrop")) $("#nodeBackdrop").hidden = true; });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#nodeBackdrop").hidden) $("#nodeBackdrop").hidden = true; });
+  $("#nodeBackdrop").addEventListener("mousedown", (e) => { if (e.target === $("#nodeBackdrop")) closeNodeModal(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (vibes.graph.linking) { cancelLinkMode(); return; }
+    if (document.getElementById("ctxMenu")) { hideCtxMenu(); return; }
+    if (vibes.graph.edgeDel) { hideEdgeDel(); return; }
+    if (vibes._notesEditing && !$("#nodeView").hidden) { closeNotesEditor(); return; }
+    if (!$("#nodeBackdrop").hidden) { $("#nodeBackdrop").hidden = true; vibes.graph.pendingCreatePos = null; }
+  });
   buildColorChips();
   wireGraph();
   setVibesLayout(vibes.layout);

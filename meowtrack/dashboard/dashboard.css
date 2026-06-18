@@ -322,8 +322,10 @@ body.view-vibes .track-only { display: none; }
 .graph-svg:active { cursor: grabbing; }
 .graph-controls { position: absolute; top: 12px; right: 14px; display: flex; gap: 8px; }
 .g-edges { pointer-events: none; }
-.g-edge { fill: none; stroke-width: 2.5; opacity: .5; }
-.g-node { cursor: pointer; }
+.g-edge { fill: none; stroke-width: 3; opacity: .5; pointer-events: stroke; cursor: pointer; } /* cliquable (suppression de lien) */
+.g-edge:hover { opacity: .9; stroke-width: 4; }
+.g-node { cursor: grab; } /* déplaçable en drag & drop */
+.g-node:active { cursor: grabbing; }
 .g-node .g-inner { transform-box: fill-box; transform-origin: center; }
 .g-node:hover .g-disc { filter: brightness(1.18); }
 .g-track { fill: none; stroke: var(--border); stroke-width: 4; opacity: .5; }
@@ -473,3 +475,58 @@ body.view-vibes .track-only { display: none; }
 .markdown-body a:hover { text-decoration: underline; }
 .markdown-body strong { color: var(--text); }
 .markdown-body del { color: var(--text-dim); }
+/* Tableaux markdown (GFM) */
+.markdown-body .md-table { border-collapse: collapse; margin: 10px 0; font-size: 12.5px; display: block; max-width: 100%; overflow-x: auto; }
+.markdown-body .md-table th, .markdown-body .md-table td { border: 1px solid var(--border); padding: 5px 9px; text-align: left; vertical-align: top; }
+.markdown-body .md-table th { background: var(--surface-2); font-weight: 700; }
+.markdown-body .md-table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--surface-2) 45%, transparent); }
+
+/* ═══════════════════════ Bouton de confirmation (action IA) ════════════════ */
+/* Plus visible : plein, rouge, légère pulsation pour attirer l'œil. */
+.confirm-actions { background: var(--bug); border-color: var(--bug); color: #fff; font-weight: 700; padding: 5px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(255, 77, 77, .4); animation: confirmPulse 1.7s ease-in-out infinite; }
+.confirm-actions:hover { filter: brightness(1.12); border-color: var(--bug); }
+@keyframes confirmPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, .5); } 50% { box-shadow: 0 0 0 7px rgba(255, 77, 77, 0); } }
+@media (prefers-reduced-motion: reduce) { .confirm-actions { animation: none; } }
+
+/* ═══════════════════════ Notes : multiples + collapsables ══════════════════ */
+.nd-notes-view { border: none; padding: 0; background: transparent; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+.nd-notes-view.empty { border: 1px dashed var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.note-item { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+.note-summary { cursor: pointer; padding: 8px 12px; font-weight: 600; list-style: none; user-select: none; display: flex; align-items: center; gap: 8px; background: var(--surface-2); }
+.note-summary::-webkit-details-marker { display: none; }
+.note-summary::before { content: "▸"; color: var(--text-dim); transition: transform .15s; flex: 0 0 auto; }
+.note-item[open] .note-summary::before { transform: rotate(90deg); }
+.note-title { flex: 1; word-break: break-word; }
+.note-body { padding: 10px 14px; }
+/* Éditeur multi-notes */
+.nd-notes-list { display: flex; flex-direction: column; gap: 12px; }
+.note-editor { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--surface-2); }
+.note-editor-head { display: flex; gap: 8px; margin-bottom: 6px; }
+.note-edit-title { flex: 1; }
+.note-edit-del { flex: 0 0 auto; padding: 4px 9px; }
+.note-edit-body { width: 100%; resize: vertical; font-family: ui-monospace, "Cascadia Code", monospace; font-size: 12.5px; }
+.note-edit-preview { margin-top: 6px; }
+.note-edit-preview > summary { cursor: pointer; color: var(--text-dim); font-size: 12px; user-select: none; }
+.note-edit-preview-body { border: 1px dashed var(--border); border-radius: 6px; padding: 8px 10px; margin-top: 6px; }
+.nd-notes-add { width: 100%; margin: 10px 0; border-style: dashed; }
+
+/* Bouton « vider l'historique » dans le chat */
+.chat-head-actions { display: flex; align-items: center; gap: 8px; }
+#chatClearBtn { font-size: 12px; }
+
+/* ═══════════════════════ Menu contextuel (clic droit) ══════════════════════ */
+.ctx-menu { position: fixed; z-index: 300; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; box-shadow: 0 10px 28px rgba(0, 0, 0, .5); padding: 4px; min-width: 190px; display: flex; flex-direction: column; }
+.ctx-item { text-align: left; background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+.ctx-item:hover { background: var(--accent); color: #fff; border-color: transparent; }
+.ctx-item.danger { color: var(--bug); }
+.ctx-item.danger:hover { background: var(--bug); color: #fff; }
+
+/* ═══════════════════════ Graphe : lien temporaire + poubelle d'arête ═══════ */
+.g-link-temp { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 7 5; opacity: .85; pointer-events: none; }
+.g-edge-del { cursor: pointer; }
+.g-edge-del circle { fill: var(--surface); stroke: var(--bug); stroke-width: 2; transition: fill .12s; }
+.g-edge-del:hover circle { fill: var(--bug); }
+
+/* Message IA en markdown : annule le pre-wrap (sinon double espacement des blocs). */
+.msg-body.markdown-body { white-space: normal; }
+.msg.ai { max-width: 94%; } /* un peu plus large pour les tableaux/blocs de code */

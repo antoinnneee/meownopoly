@@ -107,26 +107,25 @@
           </div>
           <div class="gd-desc" id="ndDesc"></div>
 
-          <!-- Notes markdown (lecture/édition + rendu) — le bot y a accès aussi -->
+          <!-- Notes markdown : plusieurs sections collapsables, lecture/édition. Le bot y a accès. -->
           <div class="nd-notes" id="ndNotes">
             <div class="ms-section-head">
               <h3>📝 Notes</h3>
               <button id="ndNotesEditBtn" class="ghost">✎ Éditer</button>
             </div>
-            <div class="nd-notes-view markdown-body" id="ndNotesView"></div>
+            <!-- Vue : sections <details> collapsables (rendu markdown) -->
+            <div class="nd-notes-view" id="ndNotesView"></div>
+            <!-- Éditeur : liste dynamique d'éditeurs de note + aperçu live -->
             <div class="nd-notes-editor" id="ndNotesEditor" hidden>
-              <div class="ta-wrap">
-                <textarea id="ndNotesInput" rows="8" placeholder="Notes en markdown : # Titre, **gras**, - listes, `code`, > citation, @chemin/fichier… (Ctrl+Entrée pour enregistrer)"></textarea>
-                <ul id="ndNotesMentionMenu" class="mention-menu" hidden></ul>
-              </div>
+              <div id="ndNotesList" class="nd-notes-list"></div>
+              <button id="ndNotesAddBtn" class="ghost nd-notes-add">＋ Ajouter une note</button>
               <div class="nd-notes-foot">
-                <span class="hint">Markdown — aperçu en direct ci-dessous</span>
+                <span class="hint">Markdown — chaque note est collapsable · @ pour citer un fichier</span>
                 <div class="nd-notes-buttons">
                   <button id="ndNotesCancelBtn" class="ghost">Annuler</button>
                   <button id="ndNotesSaveBtn" class="primary">Enregistrer</button>
                 </div>
               </div>
-              <div class="nd-notes-preview markdown-body" id="ndNotesPreview"></div>
             </div>
           </div>
 
@@ -141,11 +140,14 @@
         <section class="gd-chat">
           <div class="chat-head">
             <h3>💬 Discussion</h3>
-            <select id="modelSel" class="model-select" title="Modèle Claude">
-              <option value="sonnet">Sonnet</option>
-              <option value="opus">Opus</option>
-              <option value="haiku">Haiku</option>
-            </select>
+            <div class="chat-head-actions">
+              <select id="modelSel" class="model-select" title="Modèle Claude">
+                <option value="sonnet">Sonnet</option>
+                <option value="opus">Opus</option>
+                <option value="haiku">Haiku</option>
+              </select>
+              <button id="chatClearBtn" class="ghost" title="Vider l'historique de la discussion">🗑 Historique</button>
+            </div>
           </div>
           <div class="chat-feed" id="chatFeed"></div>
           <div class="typing-row" id="typingRow" hidden></div>
