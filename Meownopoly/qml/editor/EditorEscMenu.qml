@@ -11,13 +11,20 @@ import ui_item
 
 Rectangle {
     id: escMenu
-    width: (parent.width * 0.8 < Screen.pixelDensity * 180) ? parent.width * 0.8 : Screen.pixelDensity * 180
-    height: (parent.height * 0.8 < Screen.pixelDensity * 150) ? parent.height * 0.8 : Screen.pixelDensity * 150
+    // La vue Paramètres s'affiche en plein écran (le dialogue compact est
+    // réservé au menu principal / chargement / about).
+    readonly property bool _fullScreen: currentView === "settings"
+    width: _fullScreen ? parent.width
+                       : ((parent.width * 0.8 < Screen.pixelDensity * 180) ? parent.width * 0.8 : Screen.pixelDensity * 180)
+    height: _fullScreen ? parent.height
+                        : ((parent.height * 0.8 < Screen.pixelDensity * 150) ? parent.height * 0.8 : Screen.pixelDensity * 150)
     anchors.centerIn: parent
     color: Theme.surface
-    radius: Theme.radiusXL
+    radius: _fullScreen ? 0 : Theme.radiusXL
     border.color: Theme.accent
-    border.width: 2
+    border.width: _fullScreen ? 0 : 2
+    Behavior on width  { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
+    Behavior on height { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
     onVisibleChanged: isVisble(visible)
 
     signal isVisble(bool visible)
@@ -136,7 +143,7 @@ Rectangle {
         anchors.fill: parent
         color: "black"
         opacity: 0.3
-        radius: Theme.radiusXL
+        radius: escMenu._fullScreen ? 0 : Theme.radiusXL
         z: 0  // Au-dessus des particules mais sous le contenu
     }
     
@@ -490,7 +497,10 @@ Rectangle {
                                 clip: true
                                 contentWidth: availableWidth
                                 ColumnLayout {
-                                    width: parent.width
+                                    // Contenu plafonné et centré : en plein écran
+                                    // le volet est large, on évite des lignes étirées.
+                                    width: Math.min(parent.width, Theme.px(720))
+                                    x: Math.max(0, (parent.width - width) / 2)
                                     spacing: Theme.spacingL
 
                                     Text { text: "Éditeur"; color: Theme.accent; font.pixelSize: Theme.fontSizeLarge; font.bold: true; Layout.fillWidth: true }
@@ -583,7 +593,10 @@ Rectangle {
                                 clip: true
                                 contentWidth: availableWidth
                                 ColumnLayout {
-                                    width: parent.width
+                                    // Contenu plafonné et centré : en plein écran
+                                    // le volet est large, on évite des lignes étirées.
+                                    width: Math.min(parent.width, Theme.px(720))
+                                    x: Math.max(0, (parent.width - width) / 2)
                                     spacing: Theme.spacingL
 
                                     Text { text: "Graphiques"; color: Theme.accent; font.pixelSize: Theme.fontSizeLarge; font.bold: true; Layout.fillWidth: true }
@@ -637,7 +650,10 @@ Rectangle {
                                 clip: true
                                 contentWidth: availableWidth
                                 ColumnLayout {
-                                    width: parent.width
+                                    // Contenu plafonné et centré : en plein écran
+                                    // le volet est large, on évite des lignes étirées.
+                                    width: Math.min(parent.width, Theme.px(720))
+                                    x: Math.max(0, (parent.width - width) / 2)
                                     spacing: Theme.spacingL
 
                                     Text { text: "Audio"; color: Theme.accent; font.pixelSize: Theme.fontSizeLarge; font.bold: true; Layout.fillWidth: true }
@@ -683,7 +699,10 @@ Rectangle {
                                 clip: true
                                 contentWidth: availableWidth
                                 ColumnLayout {
-                                    width: parent.width
+                                    // Contenu plafonné et centré : en plein écran
+                                    // le volet est large, on évite des lignes étirées.
+                                    width: Math.min(parent.width, Theme.px(720))
+                                    x: Math.max(0, (parent.width - width) / 2)
                                     spacing: Theme.spacingL
 
                                     Text { text: "Contrôles"; color: Theme.accent; font.pixelSize: Theme.fontSizeLarge; font.bold: true; Layout.fillWidth: true }
