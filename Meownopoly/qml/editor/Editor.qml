@@ -196,6 +196,8 @@ Base_Board {
             btChat.y = y
             btInfoMap.x = x
             btInfoMap.y = y
+            btModule.x = x
+            btModule.y = y
         }
 
         Component.onCompleted: resetPosition()
@@ -225,14 +227,16 @@ Base_Board {
             onExited: retract()
 
             function extand() {
-                height = (btSelection.height * 3) + 10
+                height = (btSelection.height * 4) + 10
                 btInfoMap.y =   (Screen.pixelDensity * 20)  + 10
                 btChat.y =      (Screen.pixelDensity * 20) * 2  + 10
+                btModule.y =    (Screen.pixelDensity * 20) * 3  + 10
             }
              function retract() {
                  if (btSelection.fixExtand) return
                 btInfoMap.x = btSelection.xOrigin; btInfoMap.y = btSelection.yOrigin
                 btChat.x = btSelection.xOrigin; btChat.y = btSelection.yOrigin
+                btModule.x = btSelection.xOrigin; btModule.y = btSelection.yOrigin
             }
         }
     }
@@ -249,6 +253,17 @@ Base_Board {
         emojiBt: "💬"
         colorBt: Theme.success
         onBtClicked: chatDrawer.open()
+        Behavior on y {SmoothedAnimation { velocity : 500}}
+    }
+
+    // Bouton déclencheur du gestionnaire de modules (icône hud "1"), déplacé
+    // ici depuis l'ancien header de la ListView du ModuleManager. Se déploie
+    // avec btInfoMap/btChat au survol de btSelection et ouvre le popup de
+    // sélection des modules.
+    BtSideMenu {
+        id: btModule
+        source: AssetManager.getAssetById("ui", "hud", "1").path
+        onBtClicked: moduleManager.openAddPopup()
         Behavior on y {SmoothedAnimation { velocity : 500}}
     }
 
