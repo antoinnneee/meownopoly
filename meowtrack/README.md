@@ -119,6 +119,74 @@ Chaque entrée est rattachée à une **branche git** (champ `branch`, sélection
 
 Le bouton **✨ Améliorer (IA)** de la modale (`POST /api/improve-description`) réécrit la description courante via `claude -p --model sonnet` (CLI headless, exécuté côté serveur, sans shell). Les `@chemin` sont préservés. Nécessite le CLI Claude installé + authentifié sur le serveur (`MEOWTRACK_CLAUDE_BIN`).
 
+## Good Vibes — arbre de nœuds, graphe organique & chat IA streaming
+
+Onglet **🌱 Good Vibes** du dashboard : un **arbre de NŒUDS récursif** (`nodes`, ref `NODE-1`…). Un seul
+type de nœud — objectif = jalon = sous-jalon — chacun avec titre, statut, couleur, emoji, échéance et une
+**progression** dérivée (moyenne récursive de ses enfants ; une feuille `done` = 100 %). Profondeur libre :
+un jalon « sert de goal » et peut avoir ses propres sous-jalons.
+
+### Visualisation : graphe ↔ grille
+
+Bascule (segment dans la barre) entre un **graphe organique** (SVG radial : nœuds colorés reliés par des
+courbes, anneau de progression, pan/zoom à la molette/drag, **animation à la création** d'un nœud) et une
+**grille** des objectifs racines. Le graphe est la vue par défaut. Clic sur un nœud → vue détail (arbre des
+sous-nœuds + chat du nœud).
+
+### Chat IA par nœud, scopé au sous-arbre
+
+**Chaque nœud a son propre chat** avec Claude (modèle **sonnet / opus / haiku**). Le chat d'un nœud N peut
+discuter ET **modifier N et tout son sous-arbre** (jamais en dehors) via des **actions structurées**
+validées en base : `set_node_fields`, `add_node`, `update_node`, `delete_node`, `move_node`,
+`reorder_children`. Chaque action est vérifiée `isInSubtree(N, cible)` (scope strict via le `path`
+matérialisé) ; catalogue fermé, cap 20 actions/tour. Les modifications sont **auto-appliquées** sauf les
+**actions destructives** (suppression de nœud, abandon) qui passent en **confirmation humaine**. L'auto-
+suppression du nœud racine du chat est interdite (passer par le chat du parent).
+
+### Chat en STREAMING (réflexion repliable)
+
+L'appel passe par `claude -p --output-format stream-json` (`spawn` sans shell, kill + timeout). On voit
+**défiler en direct** la réponse ; la **réflexion** (thinking) **et l'activité** (lectures de fichiers) vont
+dans une **zone repliable, repliée par défaut**. À la fin, le message se finalise (réponse propre + actions
+appliquées). Tous les participants voient le stream.
+
+### Accès LECTURE au code (pour discuter du projet)
+
+Le chat peut **lire le code source** du dépôt pour ancrer la discussion et proposer des jalons concrets
+(`MEOWTRACK_AI_REPO_ACCESS=1`, défaut ; `0` pour verrouiller). C'est cadré : **lecture seule**
+(`--allowedTools Read Glob Grep`), **aucune écriture/shell/réseau** (`--disallowedTools`, deny gagne),
+**env sans le token**, et **fichiers sensibles refusés** (`--settings` deny sur `.env`, clés, `*.db`,
+`.git`…). En déploiement, l'accès porte sur le **clone** (`MEOWTRACK_REPO`/`REPO_URL`) qui ne contient
+aucun secret gitignoré par construction. L'« Améliorer la description » des bugs reste, lui, **sans aucun
+outil** (réécriture de texte pure).
+
+### Multi-utilisateurs temps réel (SSE)
+
+**Messages et état (nœud + sous-arbre + progression) se synchronisent en direct** via **Server-Sent Events**
+(100 % natif, aucune dépendance). Rooms `node:<id>` (chat + stream + état du nœud) + canal `*` (forêt =
+graphe/grille). Un changement profond remonte une sonnette `subtree:dirty` à la chaîne d'ancêtres → la vue
+détail re-fetch son sous-arbre (auto-correcteur). Auth du flux par `?token=`. Un pseudo (`localStorage`)
+identifie chaque participant.
+
+### Endpoints
+
+| Méthode | Path | Rôle |
+| --- | --- | --- |
+| `GET` | `/api/nodes` | racines (grille) ; `?view=forest` = tout l'arbre (graphe) |
+| `POST` | `/api/nodes` | créer un nœud (`parentId` pour un enfant, sinon racine) |
+| `GET/PATCH/DELETE` | `/api/nodes/:ref` | détail (`?tree=true`/`?messages=true`) / éditer (`expectedVersion` → 409) / supprimer (cascade) |
+| `POST` | `/api/nodes/:ref/move` | re-parenter (`newParentId`, anti-cycle) |
+| `POST` | `/api/nodes/:ref/reorder` | réordonner les enfants |
+| `GET` | `/api/nodes/:ref/messages` | historique du chat du nœud |
+| `POST` | `/api/nodes/:ref/chat` | message (lance le tour IA streaming, `202`, résultat via SSE) |
+| `POST` | `/api/nodes/:ref/chat/confirm` | confirmer une proposition destructive |
+| `GET` | `/api/nodes/:ref/stream` | flux SSE du nœud (chat + stream + état du sous-arbre) |
+| `GET` | `/api/nodes/stream` | flux SSE de la forêt (graphe/grille) |
+
+La concurrence repose sur `nodes.version` (entier monotone bumpé sur le nœud **et** ses ancêtres à chaque
+mutation) ; le front réconcilie par version. `node_messages.id` est l'ordre total du chat. La hiérarchie
+utilise un `path` matérialisé (`/1/4/9/`) → subtree/ancestors/scope en SQL pur, sans CTE.
+
 ## Notes
 
 - Pas de tests automatisés (cohérent avec le reste du repo).

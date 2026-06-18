@@ -9,13 +9,20 @@
   <body>
     <header class="topbar">
       <div class="brand">🐾 Meowtrack</div>
+      <nav class="nav-tabs">
+        <button class="tab active" data-view="track">🐞 Suivi</button>
+        <button class="tab" data-view="vibes">🌱 Good Vibes</button>
+      </nav>
       <div class="meta" id="meta"></div>
-      <select id="branchSel" class="branch-select" title="Branche de contexte : autocomplete @ + branche par défaut des nouvelles entrées"></select>
-      <button id="updateBtn" class="ghost" title="Cloner / mettre à jour le repo (git fetch + pull)">⟳ Mettre à jour</button>
-      <button id="newBtn" class="primary">+ Nouvelle entrée</button>
+      <span class="live-dot" id="liveDot" title="Synchronisation temps réel"></span>
+      <select id="branchSel" class="branch-select track-only" title="Branche de contexte : autocomplete @ + branche par défaut des nouvelles entrées"></select>
+      <button id="updateBtn" class="ghost track-only" title="Cloner / mettre à jour le repo (git fetch + pull)">⟳ Mettre à jour</button>
+      <button id="userBtn" class="ghost" title="Changer de pseudo">👤 <span id="userName"></span></button>
+      <button id="newBtn" class="primary track-only">+ Nouvelle entrée</button>
+      <button id="newNodeBtn" class="primary vibes-only">+ Nouvel objectif</button>
     </header>
 
-    <main class="layout">
+    <main class="layout view" id="trackView">
       <!-- Colonne liste -->
       <section class="list-pane">
         <div class="filters">
@@ -51,6 +58,116 @@
         <div class="empty">Sélectionne une entrée, ou crée-en une nouvelle.</div>
       </section>
     </main>
+
+    <!-- Vue Good Vibes : barre (toggle graphe/grille) -->
+    <div class="vibes-bar" id="vibesBar" hidden>
+      <h2>🌱 Good Vibes <span class="vibes-summary" id="vibesSummary"></span></h2>
+      <div class="seg-toggle" role="tablist" title="Mode d'affichage">
+        <button class="seg" data-layout="graph">🕸️ Graphe</button>
+        <button class="seg" data-layout="grid">▦ Grille</button>
+      </div>
+    </div>
+
+    <!-- Vue Good Vibes : graphe organique -->
+    <main class="view graph-view" id="graphView" hidden>
+      <svg id="graphSvg" class="graph-svg" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="graph-controls">
+        <button id="graphFit" class="ghost" title="Recentrer">⤢ Recentrer</button>
+      </div>
+    </main>
+
+    <!-- Vue Good Vibes : grille des objectifs racines -->
+    <main class="view vibes-view-grid" id="vibesView" hidden>
+      <div class="goal-cards" id="goalCards"></div>
+    </main>
+
+    <!-- Vue Good Vibes : détail d'un nœud (arbre des sous-nœuds + chat streaming) -->
+    <main class="view goal-view" id="nodeView" hidden>
+      <div class="gd-head">
+        <button id="ndBack" class="ghost" title="Retour">←</button>
+        <span class="gd-emoji" id="ndEmoji">🎯</span>
+        <div class="gd-titles">
+          <h1 id="ndTitle">—</h1>
+          <div class="gd-sub">
+            <span class="code" id="ndRef"></span>
+            <span class="badge" id="ndStatus"></span>
+            <span class="badge" id="ndTarget" hidden></span>
+            <span class="gd-pct" id="ndPct"></span>
+          </div>
+        </div>
+        <button id="ndEdit" class="ghost" title="Éditer ce nœud">✎ Éditer</button>
+        <button id="ndDel" class="danger" title="Supprimer ce nœud et son sous-arbre">🗑</button>
+      </div>
+
+      <div class="gd-body">
+        <!-- Colonne arbre des sous-nœuds -->
+        <section class="gd-timeline">
+          <div class="gd-progress">
+            <div class="bar"><div class="bar-fill" id="ndBar"></div></div>
+          </div>
+          <div class="gd-desc" id="ndDesc"></div>
+          <div class="ms-section-head">
+            <h3>Sous-jalons</h3>
+            <button id="ndAddChild" class="ghost">+ Sous-jalon</button>
+          </div>
+          <div id="nodeTree" class="node-tree"></div>
+        </section>
+
+        <!-- Colonne chat IA streaming -->
+        <section class="gd-chat">
+          <div class="chat-head">
+            <h3>💬 Discussion</h3>
+            <select id="modelSel" class="model-select" title="Modèle Claude">
+              <option value="sonnet">Sonnet</option>
+              <option value="opus">Opus</option>
+              <option value="haiku">Haiku</option>
+            </select>
+          </div>
+          <div class="chat-feed" id="chatFeed"></div>
+          <div class="typing-row" id="typingRow" hidden></div>
+          <div class="chat-input">
+            <textarea id="chatInput" rows="2" placeholder="Parle de ce nœud, demande des sous-jalons… (Entrée pour envoyer)"></textarea>
+            <button id="chatSend" class="primary">Envoyer</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Modale création/édition nœud -->
+    <div class="modal-backdrop" id="nodeBackdrop" hidden>
+      <div class="modal" role="dialog" aria-modal="true">
+        <h2 id="nodeModalTitle">Nouvel objectif</h2>
+        <div class="form-row">
+          <label style="flex:0 0 90px">Emoji
+            <input id="nEmoji" type="text" maxlength="8" value="🎯" />
+          </label>
+          <label>Statut
+            <select id="nStatus">
+              <option value="active">🌱 Actif</option>
+              <option value="paused">⏸️ En pause</option>
+              <option value="done">🏆 Atteint</option>
+              <option value="abandoned">🪦 Abandonné</option>
+            </select>
+          </label>
+          <label style="flex:0 0 160px">Échéance
+            <input id="nTarget" type="date" />
+          </label>
+        </div>
+        <label class="full">Titre
+          <input id="nTitle" type="text" placeholder="Ex : Sortir la V2 jouable" />
+        </label>
+        <label class="full">Description
+          <textarea id="nDesc" rows="4" placeholder="Pourquoi ce nœud, à quoi ressemble le succès…"></textarea>
+        </label>
+        <label class="full">Couleur
+          <div id="nColors" class="color-chips"></div>
+        </label>
+        <div class="modal-actions">
+          <button id="nodeCancelBtn" class="ghost">Annuler</button>
+          <button id="nodeSaveBtn" class="primary">Enregistrer</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Modale création/édition -->
     <div class="modal-backdrop" id="backdrop" hidden>
