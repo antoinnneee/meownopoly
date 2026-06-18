@@ -71,7 +71,39 @@ Rectangle {
     
     // Signal pour retourner au menu principal
     signal returnToMainMenu()
-    
+
+    // ── Composants inline du panneau Paramètres ──────────────────
+    // Libellé d'une ligne de réglage : titre + sous-titre optionnel.
+    // Prend toute la largeur disponible pour repousser le contrôle à droite.
+    component SettingLabel: ColumnLayout {
+        id: _settingLabel
+        property string title: ""
+        property string hint: ""
+        Layout.fillWidth: true
+        spacing: Theme.px(2)
+        Text {
+            text: _settingLabel.title
+            color: Theme.textSoft
+            font.pixelSize: Theme.fontSizeMedium
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+        }
+        Text {
+            visible: _settingLabel.hint !== ""
+            text: _settingLabel.hint
+            color: Theme.textHint
+            font.pixelSize: Theme.fontSizeSmall
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+        }
+    }
+    // Fin séparateur horizontal entre deux lignes de réglage.
+    component SettingDivider: Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        color: Theme.surfaceHover
+    }
+
     // Fonction pour afficher/masquer le menu
     function show() {
         isVisible = true
@@ -338,27 +370,19 @@ Rectangle {
             }
             
             ColumnLayout {
+                id: settingsBody
                 anchors.fill: parent
-                spacing: Theme.spacingXXL
-                
-                // Header avec bouton retour
+                spacing: Theme.spacingL
+
+                // Catégorie active de la sidebar (mémorisée d'une ouverture à
+                // l'autre). Pilote la sidebar ET le StackLayout de contenu.
+                property string category: "editor"
+
+                // ── En-tête : titre + bouton retour ─────────────────────
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 40
-                    spacing: Theme.spacingXXL
-                    
-                    MeowButton {
-                        Layout.preferredWidth: 40
-                        Layout.preferredHeight: 40
-                        text: "←"
-                        variant: "primary"
-                        fontSize: Theme.fontSizeTitle
-                        hoverZoom: false
-                        onClicked: {
-                            currentView = "main"
-                        }
-                    }
-                    
+                    spacing: Theme.spacingL
+
                     Text {
                         text: "Paramètres"
                         color: Theme.textPrimary
@@ -366,220 +390,172 @@ Rectangle {
                         font.bold: true
                         Layout.fillWidth: true
                     }
+                    MeowButton {
+                        text: "Retour"
+                        iconText: "←"
+                        variant: "secondary"
+                        fontSize: Theme.fontSizeMedium
+                        hoverZoom: false
+                        glossy: false
+                        onClicked: currentView = "main"
+                    }
                 }
-                
-                // Contenu des paramètres
-                Rectangle {
+
+                // ── Corps : sidebar de catégories + volet de contenu ────
+                RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: Theme.background
-                    radius: Theme.radiusXXL
-                    border.color: Theme.surfaceAlt
-                    border.width: 1
-                    
-                    ScrollView {
-                        anchors.fill: parent
-                        anchors.margins: Theme.spacingXXL
-                        contentWidth: availableWidth
-                        clip: true
-                        
-                        ColumnLayout {
-                            width: parent.width
-                            spacing: Theme.spacingXXL
-                            
-                            // --- SECTION ÉDITEUR ---
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: editorLayout.implicitHeight + 30
-                                color: Theme.surface
-                                radius: Theme.radiusL
-                                border.color: Theme.surfaceHover
-                                border.width: 1
-                                
-                                ColumnLayout {
-                                    id: editorLayout
-                                    anchors.fill: parent
-                                    anchors.margins: Theme.spacingXXL
-                                    spacing: Theme.spacingXXL
-                                    
-                                    Text {
-                                        text: "Éditeur"
-                                        color: Theme.accent
-                                        font.pixelSize: Theme.fontSizeLarge
-                                        font.bold: true
-                                        Layout.fillWidth: true
-                                    }
+                    spacing: Theme.spacingL
 
-                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.surfaceHover }
-                                    
+                    // --- Sidebar de navigation ---
+                    Rectangle {
+                        Layout.preferredWidth: Theme.px(190)
+                        Layout.fillHeight: true
+                        color: Theme.surface
+                        radius: Theme.radiusL
+                        border.color: Theme.surfaceHover
+                        border.width: 1
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingM
+                            spacing: Theme.spacingXS
+
+                            Repeater {
+                                model: [
+                                    { key: "editor",   icon: "✎", label: "Éditeur" },
+                                    { key: "graphics", icon: "▦", label: "Graphiques" },
+                                    { key: "audio",    icon: "♪", label: "Audio" },
+                                    { key: "controls", icon: "⌨", label: "Contrôles" }
+                                ]
+                                delegate: Rectangle {
+                                    id: navItem
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: Theme.px(42)
+                                    radius: Theme.radiusM
+                                    readonly property bool active: settingsBody.category === modelData.key
+                                    color: navItem.active ? Theme.accent
+                                                          : (navMouse.containsMouse ? Theme.surfaceHover : "transparent")
+                                    Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+
                                     RowLayout {
-                                        Layout.fillWidth: true
-                                        spacing: Theme.spacingXXL
-                                        Text { text: "Afficher la sélection de carte au lancement"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        Switch {
-                                            id: launchSwitch
-                                            checked: stBackGroundEditor.selectBackgroundAtStart
-                                            onCheckedChanged: {
-                                                stBackGroundEditor.setValue("selectBackgroundAtStart", checked)
-                                                stBackGroundEditor.sync()
-                                            }
-                                            indicator: Rectangle {
-                                                implicitWidth: 46; implicitHeight: 24
-                                                x: parent.leftPadding
-                                                y: parent.height / 2 - height / 2
-                                                radius: 12
-                                                color: parent.checked ? Theme.accent : Theme.border
-                                                Rectangle {
-                                                    x: parent.parent.checked ? parent.width - width - 2 : 2
-                                                    y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight
-                                                    Behavior on x { NumberAnimation { duration: Theme.durationNormal } }
-                                                }
-                                            }
+                                        anchors.fill: parent
+                                        anchors.leftMargin: Theme.spacingL
+                                        anchors.rightMargin: Theme.spacingM
+                                        spacing: Theme.spacingM
+
+                                        Text {
+                                            text: modelData.icon
+                                            font.pixelSize: Theme.fontSizeLarge
+                                            color: navItem.active ? Theme.textPrimary : Theme.textHint
+                                        }
+                                        Text {
+                                            text: modelData.label
+                                            font.pixelSize: Theme.fontSizeMedium
+                                            font.bold: navItem.active
+                                            color: navItem.active ? Theme.textPrimary : Theme.textSecondary
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
                                         }
                                     }
+                                    MouseArea {
+                                        id: navMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: settingsBody.category = modelData.key
+                                    }
+                                }
+                            }
+                            Item { Layout.fillWidth: true; Layout.fillHeight: true }
+                        }
+                    }
+
+                    // --- Volet de contenu (une page par catégorie) ---
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        color: Theme.surface
+                        radius: Theme.radiusL
+                        border.color: Theme.surfaceHover
+                        border.width: 1
+
+                        StackLayout {
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingXXL
+                            currentIndex: ["editor", "graphics", "audio", "controls"].indexOf(settingsBody.category)
+
+                            // ===================== ÉDITEUR =====================
+                            ScrollView {
+                                clip: true
+                                contentWidth: availableWidth
+                                ColumnLayout {
+                                    width: parent.width
+                                    spacing: Theme.spacingL
+
+                                    Text { text: "Éditeur"; color: Theme.accent; font.pixelSize: Theme.fontSizeLarge; font.bold: true; Layout.fillWidth: true }
+                                    SettingDivider {}
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: Theme.spacingXXL
-                                        Text { text: "Mode de sauvegarde"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        ComboBox {
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Sélection de carte au lancement"; hint: "Propose le choix d'une carte à l'ouverture de l'éditeur." }
+                                        MeowSwitch {
+                                            Layout.alignment: Qt.AlignVCenter
+                                            checked: stBackGroundEditor.selectBackgroundAtStart
+                                            onToggled: { stBackGroundEditor.setValue("selectBackgroundAtStart", checked); stBackGroundEditor.sync() }
+                                        }
+                                    }
+                                    SettingDivider {}
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Mode de sauvegarde"; hint: "Quand la carte est écrite sur le disque." }
+                                        MeowComboBox {
                                             id: autoSaveCombo
-                                            Layout.preferredWidth: 220
+                                            Layout.preferredWidth: Theme.px(220)
+                                            Layout.alignment: Qt.AlignVCenter
                                             model: ["Manuelle", "Intervalle de temps", "Sur modification"]
-                                            currentIndex: {
-                                                let val = parseInt(stEnableAutoSave.value("saveEvent", "1"))
-                                                return val > 0 && val <= 3 ? val - 1 : 0
-                                            }
+                                            currentIndex: { let val = parseInt(stEnableAutoSave.value("saveEvent", "1")); return val > 0 && val <= 3 ? val - 1 : 0 }
                                             onActivated: {
                                                 stEnableAutoSave.setValue("saveEvent", currentIndex + 1)
                                                 stEnableAutoSave.sync()
                                                 escMenu.indexSaveEvent(currentIndex + 1)
                                             }
-                                            background: Rectangle { color: Theme.surfaceAlt; radius: Theme.radiusM; border.color: autoSaveCombo.pressed ? Theme.accent : Theme.borderLight; border.width: 1 }
-                                            contentItem: Text { text: parent.currentText; color: Theme.textPrimary; verticalAlignment: Text.AlignVCenter; leftPadding: Theme.spacingL; font.pixelSize: Theme.fontSizeMedium }
                                         }
                                     }
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: Theme.spacingXXL
+                                        spacing: Theme.spacingXL
                                         visible: autoSaveCombo.currentIndex === 1
-                                        Text { text: "Intervalle (minutes)"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        SpinBox {
-                                            id: saveIntervalSpinBox
-                                            Layout.preferredWidth: 120
-                                            from: 1; to: 60
+                                        SettingLabel { title: "Intervalle de sauvegarde" }
+                                        MeowSpinBox {
+                                            Layout.alignment: Qt.AlignVCenter
+                                            Layout.preferredWidth: Theme.px(150)
+                                            from: 1; to: 60; suffix: " min"
                                             value: parseInt(stEnableAutoSave.value("saveInterval", "1"))
                                             onValueChanged: { stEnableAutoSave.setValue("saveInterval", value); stEnableAutoSave.sync() }
-                                            background: Rectangle { color: Theme.surfaceAlt; radius: Theme.radiusM; border.color: Theme.borderLight; border.width: 1 }
-                                            contentItem: TextInput {
-                                                text: parent.textFromValue(parent.value, parent.locale)
-                                                font.pixelSize: Theme.fontSizeMedium; color: Theme.textPrimary
-                                                horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; readOnly: true
-                                            }
-                                            up.indicator: Rectangle { x: parent.width - width; height: parent.height; implicitWidth: 30; color: parent.up.pressed ? Theme.accent : Theme.border; radius: Theme.radiusM; Text { text: "+"; color: Theme.textPrimary; anchors.centerIn: parent } }
-                                            down.indicator: Rectangle { x: 0; height: parent.height; implicitWidth: 30; color: parent.down.pressed ? Theme.accent : Theme.border; radius: Theme.radiusM; Text { text: "-"; color: Theme.textPrimary; anchors.centerIn: parent } }
                                         }
                                     }
-                                }
-                            }
-
-                            // --- SECTION GRAPHIQUES ---
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: graphicsLayout.implicitHeight + 30
-                                color: Theme.surface
-                                radius: Theme.radiusL
-                                border.color: Theme.surfaceHover
-                                border.width: 1
-                                
-                                ColumnLayout {
-                                    id: graphicsLayout
-                                    anchors.fill: parent
-                                    anchors.margins: Theme.spacingXXL
-                                    spacing: Theme.spacingXXL
-                                    
-                                    Text {
-                                        text: "Graphiques"
-                                        color: Theme.accent
-                                        font.pixelSize: Theme.fontSizeLarge
-                                        font.bold: true
-                                        Layout.fillWidth: true
-                                    }
-                                    
-                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.surfaceHover }
-                                    
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        Text { text: "Résolution"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        ComboBox {
-                                            id: resolutionCombo
-                                            Layout.preferredWidth: 200; 
-                                            model: ["1920x1080", "1366x768", "1280x720", "1024x768"]
-                                            currentIndex: {
-                                                let savedRes = stVideoConfig.value("resolution", "1280x720")
-                                                let idx = model.indexOf(savedRes)
-                                                return idx >= 0 ? idx : 2 // default to 1280x720
-                                            }
-                                            onActivated: {
-                                                let res = currentText
-                                                stVideoConfig.setValue("resolution", res)
-                                                stVideoConfig.sync()
-                                                
-                                                let parts = res.split("x")
-                                                if(parts.length === 2 && Window.window) {
-                                                    Window.window.width = parseInt(parts[0])
-                                                    Window.window.height = parseInt(parts[1])
-                                                    
-                                                    // Centrer la fenêtre
-                                                    Window.window.x = (Screen.desktopAvailableWidth - Window.window.width) / 2
-                                                    Window.window.y = (Screen.desktopAvailableHeight - Window.window.height) / 2
-                                                }
-                                            }
-                                            background: Rectangle { color: Theme.surfaceAlt; radius: Theme.radiusM; border.color: parent.pressed ? Theme.accent : Theme.borderLight; border.width: 1 }
-                                            contentItem: Text { text: parent.currentText; color: Theme.textPrimary; verticalAlignment: Text.AlignVCenter; leftPadding: Theme.spacingL; font.pixelSize: Theme.fontSizeMedium }
-                                        }
-                                    }
-                                    
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        Text { text: "Mode plein écran sans bordure"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        Switch {
-                                            id: fullscreenSwitch; 
-                                            checked: stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true
-                                            onCheckedChanged: {
-                                                stVideoConfig.setValue("fullscreen", checked)
-                                                stVideoConfig.sync()
-                                                
-                                                if(Window.window) {
-                                                    if(checked) {
-                                                        Window.window.visibility = Window.FullScreen
-                                                    } else {
-                                                        Window.window.visibility = Window.Windowed
-                                                    }
-                                                }
-                                            }
-                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? Theme.accent : Theme.border
-                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight; Behavior on x { NumberAnimation { duration: Theme.durationNormal } } } }
-                                        }
-                                    }
+                                    SettingDivider {}
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Échelle de l'interface"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Échelle de l'interface"; hint: "Redimensionne toute l'UI. Appliqué au relâchement du curseur." }
                                         MeowSlider {
                                             id: uiScaleSlider
-                                            Layout.preferredWidth: 200; from: 0.5; to: 2.0; stepSize: 0.05
+                                            Layout.preferredWidth: Theme.px(200)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            from: 0.5; to: 2.0; stepSize: 0.05
                                             value: Theme.uiScale
                                             accentColor: Theme.accent
                                             showValue: false
-                                            // On N'applique PAS l'échelle pendant le glissement souris :
-                                            // changer Theme.uiScale redimensionne le panneau de réglages
-                                            // lui-même, donc le slider fuirait sous le curseur. On applique
-                                            // au relâchement (gestureCommitted). Le label de valeur suit
-                                            // uiScaleSlider.value et donne un aperçu de la cible en direct.
-                                            // Les entrées hors-geste (clavier, clic sur la piste) passent
-                                            // par onMoved et s'appliquent immédiatement.
+                                            // Aperçu non-destructif : on n'applique pas pendant le
+                                            // glissement souris (sinon le panneau se redimensionne et
+                                            // le slider fuit sous le curseur), seulement au relâchement.
                                             property bool _dragging: false
                                             function _applyScale() {
                                                 Theme.uiScale = uiScaleSlider.value
@@ -587,123 +563,165 @@ Rectangle {
                                                 stBackGroundEditor.sync()
                                             }
                                             onGestureBegan: uiScaleSlider._dragging = true
-                                            onGestureCommitted: {
-                                                uiScaleSlider._dragging = false
-                                                uiScaleSlider._applyScale()
-                                            }
-                                            onMoved: (v) => {
-                                                if (!uiScaleSlider._dragging)
-                                                    uiScaleSlider._applyScale()
-                                            }
+                                            onGestureCommitted: { uiScaleSlider._dragging = false; uiScaleSlider._applyScale() }
+                                            onMoved: (v) => { if (!uiScaleSlider._dragging) uiScaleSlider._applyScale() }
                                         }
-                                        Text { text: "×" + uiScaleSlider.value.toFixed(2); color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 50; horizontalAlignment: Text.AlignRight }
+                                        Text {
+                                            text: "×" + uiScaleSlider.value.toFixed(2)
+                                            color: Theme.textSoft
+                                            font.pixelSize: Theme.fontSizeMedium
+                                            Layout.preferredWidth: Theme.px(50)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            horizontalAlignment: Text.AlignRight
+                                        }
                                     }
                                 }
                             }
 
-                            // --- SECTION AUDIO ---
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: audioLayout.implicitHeight + 30
-                                color: Theme.surface
-                                radius: Theme.radiusL
-                                border.color: Theme.surfaceHover
-                                border.width: 1
-                                
+                            // ===================== GRAPHIQUES =====================
+                            ScrollView {
+                                clip: true
+                                contentWidth: availableWidth
                                 ColumnLayout {
-                                    id: audioLayout
-                                    anchors.fill: parent
-                                    anchors.margins: Theme.spacingXXL
-                                    spacing: Theme.spacingXXL
-                                    
-                                    Text {
-                                        text: "Audio"
-                                        color: Theme.accent
-                                        font.pixelSize: Theme.fontSizeLarge
-                                        font.bold: true
-                                        Layout.fillWidth: true
-                                    }
-                                    
-                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.surfaceHover }
-                                    
+                                    width: parent.width
+                                    spacing: Theme.spacingL
+
+                                    Text { text: "Graphiques"; color: Theme.accent; font.pixelSize: Theme.fontSizeLarge; font.bold: true; Layout.fillWidth: true }
+                                    SettingDivider {}
+
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Volume général"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Résolution"; hint: "Taille de la fenêtre (mode fenêtré)." }
+                                        MeowComboBox {
+                                            Layout.preferredWidth: Theme.px(200)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            model: ["1920x1080", "1366x768", "1280x720", "1024x768"]
+                                            currentIndex: { let savedRes = stVideoConfig.value("resolution", "1280x720"); let idx = model.indexOf(savedRes); return idx >= 0 ? idx : 2 }
+                                            onActivated: {
+                                                let res = currentText
+                                                stVideoConfig.setValue("resolution", res)
+                                                stVideoConfig.sync()
+                                                let parts = res.split("x")
+                                                if (parts.length === 2 && Window.window) {
+                                                    Window.window.width = parseInt(parts[0])
+                                                    Window.window.height = parseInt(parts[1])
+                                                    Window.window.x = (Screen.desktopAvailableWidth - Window.window.width) / 2
+                                                    Window.window.y = (Screen.desktopAvailableHeight - Window.window.height) / 2
+                                                }
+                                            }
+                                        }
+                                    }
+                                    SettingDivider {}
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Plein écran sans bordure" }
+                                        MeowSwitch {
+                                            Layout.alignment: Qt.AlignVCenter
+                                            checked: stVideoConfig.value("fullscreen", false) === "true" || stVideoConfig.value("fullscreen", false) === true
+                                            onToggled: {
+                                                stVideoConfig.setValue("fullscreen", checked)
+                                                stVideoConfig.sync()
+                                                if (Window.window)
+                                                    Window.window.visibility = checked ? Window.FullScreen : Window.Windowed
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ===================== AUDIO =====================
+                            ScrollView {
+                                clip: true
+                                contentWidth: availableWidth
+                                ColumnLayout {
+                                    width: parent.width
+                                    spacing: Theme.spacingL
+
+                                    Text { text: "Audio"; color: Theme.accent; font.pixelSize: Theme.fontSizeLarge; font.bold: true; Layout.fillWidth: true }
+                                    SettingDivider {}
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Volume général" }
                                         MeowSlider {
                                             id: volumeSlider
-                                            Layout.preferredWidth: 200; from: 0; to: 100; stepSize: 1; value: 50
+                                            Layout.preferredWidth: Theme.px(200)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            from: 0; to: 100; stepSize: 1; value: 50
                                             accentColor: Theme.accent
                                             showValue: false
                                         }
-                                        Text { text: Math.round(volumeSlider.value) + "%"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
+                                        Text {
+                                            text: Math.round(volumeSlider.value) + "%"
+                                            color: Theme.textSoft
+                                            font.pixelSize: Theme.fontSizeMedium
+                                            Layout.preferredWidth: Theme.px(50)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            horizontalAlignment: Text.AlignRight
+                                        }
                                     }
-                                    
+                                    SettingDivider {}
+
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Activer la musique"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        Switch {
-                                            id: musicSwitch; checked: true
-                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? Theme.accent : Theme.border
-                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight; Behavior on x { NumberAnimation { duration: Theme.durationNormal } } } }
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Activer la musique" }
+                                        MeowSwitch {
+                                            Layout.alignment: Qt.AlignVCenter
+                                            checked: true
                                         }
                                     }
                                 }
                             }
 
-                            // --- SECTION CONTRÔLES ---
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: controlsLayout.implicitHeight + 30
-                                color: Theme.surface
-                                radius: Theme.radiusL
-                                border.color: Theme.surfaceHover
-                                border.width: 1
-                                
+                            // ===================== CONTRÔLES =====================
+                            ScrollView {
+                                clip: true
+                                contentWidth: availableWidth
                                 ColumnLayout {
-                                    id: controlsLayout
-                                    anchors.fill: parent
-                                    anchors.margins: Theme.spacingXXL
-                                    spacing: Theme.spacingXXL
-                                    
-                                    Text {
-                                        text: "Contrôles"
-                                        color: Theme.accent
-                                        font.pixelSize: Theme.fontSizeLarge
-                                        font.bold: true
-                                        Layout.fillWidth: true
-                                    }
-                                    
-                                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Theme.surfaceHover }
-                                    
+                                    width: parent.width
+                                    spacing: Theme.spacingL
+
+                                    Text { text: "Contrôles"; color: Theme.accent; font.pixelSize: Theme.fontSizeLarge; font.bold: true; Layout.fillWidth: true }
+                                    SettingDivider {}
+
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Sensibilité de la souris"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Sensibilité de la souris" }
                                         MeowSlider {
                                             id: sensitivitySlider
-                                            Layout.preferredWidth: 200; from: 0.8; to: 4.0
+                                            Layout.preferredWidth: Theme.px(200)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            from: 0.8; to: 4.0
                                             value: parseFloat(stControlsConfig.value("mouseSensitivity", "1.0"))
                                             accentColor: Theme.accent
                                             showValue: false
-                                            onValueChanged: {
-                                                stControlsConfig.setValue("mouseSensitivity", value)
-                                                stControlsConfig.sync()
-                                            }
+                                            onMoved: (v) => { stControlsConfig.setValue("mouseSensitivity", v); stControlsConfig.sync() }
                                         }
-                                        Text { text: (Math.round(sensitivitySlider.value * 100) / 100).toFixed(2); color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
+                                        Text {
+                                            text: (Math.round(sensitivitySlider.value * 100) / 100).toFixed(2)
+                                            color: Theme.textSoft
+                                            font.pixelSize: Theme.fontSizeMedium
+                                            Layout.preferredWidth: Theme.px(50)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            horizontalAlignment: Text.AlignRight
+                                        }
                                     }
-                                    
+                                    SettingDivider {}
+
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        Text { text: "Inverser l'axe Y"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
-                                        Switch {
-                                            id: invertMouseSwitch; 
+                                        spacing: Theme.spacingXL
+                                        SettingLabel { title: "Inverser l'axe Y" }
+                                        MeowSwitch {
+                                            Layout.alignment: Qt.AlignVCenter
                                             checked: stControlsConfig.value("invertMouseY", false) === "true" || stControlsConfig.value("invertMouseY", false) === true
-                                            onCheckedChanged: {
-                                                stControlsConfig.setValue("invertMouseY", checked)
-                                                stControlsConfig.sync()
-                                            }
-                                            indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? Theme.accent : Theme.border
-                                                Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight; Behavior on x { NumberAnimation { duration: Theme.durationNormal } } } }
+                                            onToggled: { stControlsConfig.setValue("invertMouseY", checked); stControlsConfig.sync() }
                                         }
                                     }
                                 }
