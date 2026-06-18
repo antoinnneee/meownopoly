@@ -64,8 +64,15 @@ Item {
         anchors.top: collabBadge.bottom
         anchors.left: parent.left
         anchors.topMargin: Theme.spacingS
-        width: Math.max(320, statsCol.implicitWidth + 20)
-        height: statsCol.implicitHeight + 16
+        // Taille dérivée du contenu (dépendance UNIDIRECTIONNELLE contenu →
+        // panneau). statsCol n'utilise volontairement PAS anchors.fill : un
+        // Column rempli par un parent lui-même dimensionné sur l'implicitSize
+        // du Column crée une boucle de polish — elle ne convergeait que parce
+        // que les tailles tombaient juste à uiScale=1 ; dès que uiScale<1
+        // introduit un arrondi via Theme.px(), les constantes en dur ne
+        // correspondaient plus aux marges et la valeur oscillait à l'infini.
+        width: Math.max(320, statsCol.implicitWidth + 2 * Theme.spacingL)
+        height: statsCol.implicitHeight + 2 * Theme.spacingL
         radius: Theme.radiusL
         color: Theme.background
         border.color: Theme.border
@@ -105,11 +112,17 @@ Item {
             return k
         }
 
-        // Column {
-        //     id: statsCol
-        //     anchors.fill: parent
-        //     anchors.margins: Theme.spacingL
-        //     spacing: Theme.spacingM
+        Column {
+            id: statsCol
+            // Position/largeur explicites (pas anchors.fill) : la hauteur reste
+            // auto (= implicitHeight, pilotée par le contenu) pour casser la
+            // boucle de polish. La largeur suit le panneau pour que séparateur
+            // et lignes occupent toute la largeur interne (y compris au plancher
+            // de 320 px).
+            x: Theme.spacingL
+            y: Theme.spacingL
+            width: netStatsPanel.width - 2 * Theme.spacingL
+            spacing: Theme.spacingM
 
         //     Row {
         //         spacing: Theme.spacingS
@@ -189,6 +202,6 @@ Item {
         //         font.pixelSize: Theme.fontSizeCaption
         //         font.italic: true
         //     }
-        // }
+        }
     }
 }
