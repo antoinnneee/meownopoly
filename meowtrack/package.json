@@ -1,0 +1,27 @@
+{
+  "name": "meowtrack",
+  "version": "1.0.0",
+  "description": "Suivi local des bugs / features / tâches du projet Meownopoly, avec serveur MCP et dashboard web. Références fichiers/dossiers ancrées sur le repo git cloné.",
+  "type": "module",
+  "main": "mcp.js",
+  "scripts": {
+    "mcp": "node mcp.js",
+    "dashboard": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "mcp",
+    "meownopoly",
+    "issues",
+    "bugtracker",
+    "todo"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "better-sqlite3": "^11.0.0",
+    "dotenv": "^16.4.5",
+    "zod": "^3.23.8"
+  }
+}

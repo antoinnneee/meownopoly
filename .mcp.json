@@ -6,6 +6,13 @@
       "env": {
         "MEOW_AUTOMATION_PORT": "7700"
       }
+    },
+    "meowtrack": {
+      "command": "node",
+      "args": ["meowtrack/mcp.js"],
+      "env": {
+        "MEOWTRACK_SERVER_URL": "http://pattounecorp.ovh:7702"
+      }
     }
   }
 }
