@@ -573,12 +573,27 @@ Rectangle {
                                             value: Theme.uiScale
                                             accentColor: Theme.accent
                                             showValue: false
-                                            // Aperçu live : Theme.uiScale re-bind toute l'UI tokenisée
-                                            // immédiatement, puis on persiste la nouvelle échelle.
-                                            onMoved: (v) => {
-                                                Theme.uiScale = v
-                                                stBackGroundEditor.setValue("uiScale", v)
+                                            // On N'applique PAS l'échelle pendant le glissement souris :
+                                            // changer Theme.uiScale redimensionne le panneau de réglages
+                                            // lui-même, donc le slider fuirait sous le curseur. On applique
+                                            // au relâchement (gestureCommitted). Le label de valeur suit
+                                            // uiScaleSlider.value et donne un aperçu de la cible en direct.
+                                            // Les entrées hors-geste (clavier, clic sur la piste) passent
+                                            // par onMoved et s'appliquent immédiatement.
+                                            property bool _dragging: false
+                                            function _applyScale() {
+                                                Theme.uiScale = uiScaleSlider.value
+                                                stBackGroundEditor.setValue("uiScale", uiScaleSlider.value)
                                                 stBackGroundEditor.sync()
+                                            }
+                                            onGestureBegan: uiScaleSlider._dragging = true
+                                            onGestureCommitted: {
+                                                uiScaleSlider._dragging = false
+                                                uiScaleSlider._applyScale()
+                                            }
+                                            onMoved: (v) => {
+                                                if (!uiScaleSlider._dragging)
+                                                    uiScaleSlider._applyScale()
                                             }
                                         }
                                         Text { text: "×" + uiScaleSlider.value.toFixed(2); color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 50; horizontalAlignment: Text.AlignRight }
