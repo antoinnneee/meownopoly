@@ -1,0 +1,7 @@
+# Configuration de déploiement meowtrack
+
+REMOTE_USER="meow-server"
+REMOTE_HOST="pattounecorp.ovh"
+REMOTE_DIR="/home/meow-server/meownopoly/meowtrack"
+REMOTE_PASSWORD="meow2607"
+SERVICE_NAME="meownopoly-meowtrack"
