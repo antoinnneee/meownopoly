@@ -1,14 +1,14 @@
 import QtQuick
 import theme
+import ui_item
+import AssetManager
 
 // Gestionnaire de modules : barre horizontale listant les "modules", c.-à-d.
 // les menus de l'éditeur (Case, Déco, Zone, Template, Joueur).
 //
-// Le bouton déclencheur (icône hud "1") qui ouvre le popup de sélection a
-// migré dans le groupe BtSideMenu d'Editor.qml (à la suite de btInfoMap /
-// btChat) ; il appelle `openAddPopup()`. À la validation du popup, les modules
-// choisis viennent peupler la ListView. La barre fait la hauteur de référence
-// `itemSize`, avec quelques marges.
+// Le bouton "+" (en tête de liste) ouvre un popup de sélection ; à la
+// validation, les modules choisis s'ajoutent à la suite du "+". La ListView
+// fait la même hauteur que le bouton "+" de référence, avec quelques marges.
 Item {
     id: root
 
@@ -30,14 +30,8 @@ Item {
         root.moduleSelected(root.selectedModuleId)
     }
 
-    // Ouvre le popup de sélection des modules. Point d'entrée appelé par le
-    // bouton BtSideMenu externe (Editor.qml) qui a remplacé l'ancien header
-    // "+" de la ListView.
-    function openAddPopup() {
-        addPopup.open()
-    }
-
-    // Hauteur de référence des vignettes de module. La ListView s'aligne dessus.
+    // Hauteur de référence = celle du bouton "+". La ListView et les vignettes
+    // de module s'alignent dessus.
     property int itemSize: Theme.px(32)
     // Marges autour de la ListView (haut/bas via le centrage vertical dans la
     // barre, gauche/droite explicites).
@@ -88,9 +82,13 @@ Item {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
-        // En RightToLeft, le premier module ajouté est rendu à l'extrémité
-        // droite (côté BtSideMenu), juste sous le bouton déclencheur déplacé
-        // dans le groupe HUD d'Editor.qml.
+        // Bouton "+" en tête : c'est la référence de hauteur de la barre.
+        // En RightToLeft, la tête est rendue à l'extrémité droite (côté BtSideMenu).
+        header: BtSideMenu {
+            // colorBt: Theme.
+            source: AssetManager.getAssetById("ui", "hud", "1").path
+            onBtClicked: addPopup.open()
+        }
 
         // Modules ajoutés (peuplés à la validation du popup).
         model: ListModel { id: addedModulesModel }
