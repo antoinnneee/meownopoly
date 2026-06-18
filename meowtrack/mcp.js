@@ -29,6 +29,9 @@ dotenv.config({ path: join(HERE, ".env") });
 const TYPES = ["bug", "feature", "task", "chore"];
 const STATUSES = ["open", "in_progress", "done", "wontfix"];
 const PRIORITIES = ["low", "medium", "high", "critical"];
+// Good Vibes : arbre de NŒUDS (objectifs = jalons = sous-jalons).
+const NODE_STATUSES = ["active", "paused", "done", "abandoned"];
+const NODE_COLORS = ["accent", "feature", "task", "bug", "high"];
 
 const BASE = (process.env.MEOWTRACK_SERVER_URL || "http://127.0.0.1:7702").replace(/\/+$/, "");
 const TOKEN = (process.env.MEOWTRACK_TOKEN || "").trim();
@@ -307,6 +310,176 @@ server.registerTool(
     inputSchema: {},
   },
   guard(async () => apiFetch("POST", "/api/paths/refresh"))
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Good Vibes — arbre de NŒUDS récursif (objectifs / jalons / sous-jalons).
+// Un nœud = un objectif ; il peut avoir des sous-nœuds à profondeur libre. Chaque
+// nœud porte titre, description, une LISTE de notes markdown, statut, couleur,
+// emoji, échéance, et une progression (0..100) recalculée automatiquement depuis
+// ses enfants. Les mêmes routes /api/nodes que le dashboard.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Référence d'un nœud : code lisible (ex. 'NODE-1') ou id numérique.
+const nodeRefSchema = z.union([z.string(), z.number()]).describe("Code (ex. 'NODE-1') ou id numérique du nœud.");
+// Notes : liste de sections markdown collapsables. Remplace TOUTE la liste à l'écriture.
+const notesSchema = z
+  .array(z.object({ title: z.string().optional().describe("Titre de la section (optionnel)."), body: z.string().describe("Corps markdown.") }))
+  .describe("Liste de notes markdown [{title, body}]. REMPLACE toutes les notes existantes (reprends l'existant pour compléter).");
+
+// ── meowtrack_node_create ────────────────────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_create",
+  {
+    title: "Créer un nœud (objectif / jalon)",
+    description:
+      "Crée un nœud Good Vibes. Sans `parentId` → objectif racine. Avec `parentId` → sous-jalon de ce " +
+      "nœud. La progression est dérivée automatiquement (ne pas la fixer). Retourne le nœud créé (avec son code NODE-N).",
+    inputSchema: {
+      title: z.string().describe("Titre du nœud."),
+      parentId: nodeRefSchema.optional().describe("Parent (absent = nœud racine)."),
+      description: z.string().optional().describe("Description courte."),
+      notes: notesSchema.optional(),
+      status: z.enum(NODE_STATUSES).optional().describe("Statut (défaut 'active')."),
+      color: z.enum(NODE_COLORS).optional().describe("Couleur (défaut 'accent', ou héritée du parent)."),
+      emoji: z.string().optional().describe("Emoji (défaut 🎯)."),
+      targetDate: z.string().optional().describe("Échéance 'YYYY-MM-DD' (ou null pour aucune)."),
+      position: z.number().int().optional().describe("Position parmi les frères (défaut : à la fin)."),
+    },
+  },
+  guard(async (a) => apiFetch("POST", "/api/nodes", a))
+);
+
+// ── meowtrack_node_list ──────────────────────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_list",
+  {
+    title: "Lister les nœuds (forêt ou racines)",
+    description:
+      "Liste les nœuds. `view='forest'` (défaut) renvoie TOUT l'arbre à plat (avec parentId/depth) — " +
+      "idéal pour comprendre la structure. `view='roots'` ne renvoie que les objectifs racines.",
+    inputSchema: {
+      view: z.enum(["forest", "roots"]).optional().describe("'forest' (tout, défaut) ou 'roots' (racines seules)."),
+      status: z.enum(NODE_STATUSES).optional().describe("Filtre statut (racines uniquement)."),
+      text: z.string().optional().describe("Recherche plein-texte (racines uniquement)."),
+      limit: z.number().int().optional(),
+    },
+  },
+  guard(async ({ view, ...rest }) =>
+    (view ?? "forest") === "forest" ? apiGet("/api/nodes?view=forest") : apiGet("/api/nodes" + qs(rest))
+  )
+);
+
+// ── meowtrack_node_get ───────────────────────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_get",
+  {
+    title: "Détail d'un nœud (+ sous-arbre)",
+    description: "Retourne un nœud complet (notes incluses) et, par défaut, son sous-arbre imbriqué (children).",
+    inputSchema: {
+      ref: nodeRefSchema,
+      tree: z.boolean().optional().describe("Inclure le sous-arbre imbriqué (défaut true)."),
+      messages: z.boolean().optional().describe("Inclure l'historique de chat du nœud (défaut false)."),
+    },
+  },
+  guard(async ({ ref, tree, messages }) => {
+    try {
+      return await apiGet("/api/nodes/" + encodeURIComponent(ref) + qs({ tree: tree === false ? "false" : undefined, messages: messages ? "true" : undefined }));
+    } catch (e) {
+      if (String(e.message).includes("404")) throw new Error(`Nœud introuvable : ${ref}`);
+      throw e;
+    }
+  })
+);
+
+// ── meowtrack_node_update ────────────────────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_update",
+  {
+    title: "Modifier un nœud",
+    description:
+      "Met à jour les champs fournis d'un nœud (titre, description, NOTES markdown, statut, couleur, emoji, " +
+      "échéance). `notes` remplace toute la liste de notes. La progression reste automatique.",
+    inputSchema: {
+      ref: nodeRefSchema,
+      title: z.string().optional(),
+      description: z.string().optional(),
+      notes: notesSchema.optional(),
+      status: z.enum(NODE_STATUSES).optional(),
+      color: z.enum(NODE_COLORS).optional(),
+      emoji: z.string().optional(),
+      targetDate: z.string().nullable().optional().describe("'YYYY-MM-DD' ou null pour effacer."),
+    },
+  },
+  guard(async ({ ref, ...fields }) => apiFetch("PATCH", "/api/nodes/" + encodeURIComponent(ref), fields))
+);
+
+// ── meowtrack_node_set_status (raccourci) ────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_set_status",
+  {
+    title: "Changer le statut d'un nœud",
+    description: "Raccourci : active / paused / done / abandoned. Passer à 'done' marque le jalon comme atteint.",
+    inputSchema: { ref: nodeRefSchema, status: z.enum(NODE_STATUSES) },
+  },
+  guard(async ({ ref, status }) => apiFetch("PATCH", "/api/nodes/" + encodeURIComponent(ref), { status }))
+);
+
+// ── meowtrack_node_set_notes (raccourci) ─────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_set_notes",
+  {
+    title: "Définir les notes d'un nœud",
+    description:
+      "Remplace la liste de notes markdown d'un nœud. Pour AJOUTER sans perdre l'existant, récupère d'abord " +
+      "les notes via meowtrack_node_get puis renvoie l'ancienne liste + la nouvelle entrée.",
+    inputSchema: { ref: nodeRefSchema, notes: notesSchema },
+  },
+  guard(async ({ ref, notes }) => apiFetch("PATCH", "/api/nodes/" + encodeURIComponent(ref), { notes }))
+);
+
+// ── meowtrack_node_move ──────────────────────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_move",
+  {
+    title: "Déplacer / rattacher un nœud",
+    description:
+      "Reparente un nœud (et tout son sous-arbre). `newParentId=null` → en fait un objectif racine. " +
+      "Refusé si cela créerait un cycle. `position` ordonne parmi les nouveaux frères.",
+    inputSchema: {
+      ref: nodeRefSchema,
+      newParentId: nodeRefSchema.nullable().describe("Nouveau parent, ou null pour détacher (racine)."),
+      position: z.number().int().optional(),
+    },
+  },
+  guard(async ({ ref, newParentId, position }) =>
+    apiFetch("POST", "/api/nodes/" + encodeURIComponent(ref) + "/move", { newParentId: newParentId ?? null, position })
+  )
+);
+
+// ── meowtrack_node_reorder ───────────────────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_reorder",
+  {
+    title: "Réordonner les enfants d'un nœud",
+    description: "Définit l'ordre des sous-nœuds directs d'un parent. `order` = liste d'ids enfants dans l'ordre voulu.",
+    inputSchema: {
+      ref: nodeRefSchema.describe("Le parent dont on réordonne les enfants."),
+      order: z.array(z.union([z.string(), z.number()])).describe("Ids enfants dans le nouvel ordre."),
+    },
+  },
+  guard(async ({ ref, order }) => apiFetch("POST", "/api/nodes/" + encodeURIComponent(ref) + "/reorder", { order }))
+);
+
+// ── meowtrack_node_delete ────────────────────────────────────────────────────
+server.registerTool(
+  "meowtrack_node_delete",
+  {
+    title: "Supprimer un nœud",
+    description: "Supprime un nœud ET tout son sous-arbre (cascade). Irréversible.",
+    inputSchema: { ref: nodeRefSchema },
+  },
+  guard(async ({ ref }) => apiFetch("DELETE", "/api/nodes/" + encodeURIComponent(ref)))
 );
 
 const transport = new StdioServerTransport();

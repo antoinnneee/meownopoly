@@ -106,6 +106,29 @@
             <div class="bar"><div class="bar-fill" id="ndBar"></div></div>
           </div>
           <div class="gd-desc" id="ndDesc"></div>
+
+          <!-- Notes markdown : plusieurs sections collapsables, lecture/édition. Le bot y a accès. -->
+          <div class="nd-notes" id="ndNotes">
+            <div class="ms-section-head">
+              <h3>📝 Notes</h3>
+              <button id="ndNotesEditBtn" class="ghost">✎ Éditer</button>
+            </div>
+            <!-- Vue : sections <details> collapsables (rendu markdown) -->
+            <div class="nd-notes-view" id="ndNotesView"></div>
+            <!-- Éditeur : liste dynamique d'éditeurs de note + aperçu live -->
+            <div class="nd-notes-editor" id="ndNotesEditor" hidden>
+              <div id="ndNotesList" class="nd-notes-list"></div>
+              <button id="ndNotesAddBtn" class="ghost nd-notes-add">＋ Ajouter une note</button>
+              <div class="nd-notes-foot">
+                <span class="hint">Markdown — chaque note est collapsable · @ pour citer un fichier</span>
+                <div class="nd-notes-buttons">
+                  <button id="ndNotesCancelBtn" class="ghost">Annuler</button>
+                  <button id="ndNotesSaveBtn" class="primary">Enregistrer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="ms-section-head">
             <h3>Sous-jalons</h3>
             <button id="ndAddChild" class="ghost">+ Sous-jalon</button>
@@ -117,16 +140,22 @@
         <section class="gd-chat">
           <div class="chat-head">
             <h3>💬 Discussion</h3>
-            <select id="modelSel" class="model-select" title="Modèle Claude">
-              <option value="sonnet">Sonnet</option>
-              <option value="opus">Opus</option>
-              <option value="haiku">Haiku</option>
-            </select>
+            <div class="chat-head-actions">
+              <select id="modelSel" class="model-select" title="Modèle Claude">
+                <option value="sonnet">Sonnet</option>
+                <option value="opus">Opus</option>
+                <option value="haiku">Haiku</option>
+              </select>
+              <button id="chatClearBtn" class="ghost" title="Vider l'historique de la discussion">🗑 Historique</button>
+            </div>
           </div>
           <div class="chat-feed" id="chatFeed"></div>
           <div class="typing-row" id="typingRow" hidden></div>
           <div class="chat-input">
-            <textarea id="chatInput" rows="2" placeholder="Parle de ce nœud, demande des sous-jalons… (Entrée pour envoyer)"></textarea>
+            <div class="ta-wrap chat-ta-wrap">
+              <textarea id="chatInput" rows="2" placeholder="Parle de ce nœud, demande des sous-jalons… @ pour citer un fichier · Entrée pour envoyer"></textarea>
+              <ul id="chatMentionMenu" class="mention-menu up" hidden></ul>
+            </div>
             <button id="chatSend" class="primary">Envoyer</button>
           </div>
         </section>

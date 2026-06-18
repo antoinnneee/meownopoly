@@ -400,8 +400,9 @@ async function saveIssue() {
   }
 }
 
-// ── Autocomplete partagé (@ description + champ refs) ─────────────────────────
-let menuState = { items: [], active: 0, target: null, kind: null };
+// ── Autocomplete partagé (@ description, chat IA, …) ──────────────────────────
+// target = textarea où insérer ; menu = <ul> à piloter ; onChoose = callback post-insertion.
+let menuState = { items: [], active: 0, target: null, menu: null, onChoose: null };
 
 function hideMenu(menu) {
   menu.hidden = true;
@@ -436,14 +437,14 @@ function renderMenu(menu, items) {
 }
 
 let searchTimer = null;
-function debouncedSearch(query, cb) {
+function debouncedSearch(query, cb, branch) {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(async () => {
     try {
-      // L'autocomplete cible l'arbre de la branche de l'entrée en cours d'édition.
-      const branch = $("#mBranch").value || "";
+      // Scope par branche : celle passée par l'appelant, sinon la branche d'édition.
+      const b = branch != null ? branch : ($("#mBranch") ? $("#mBranch").value : "") || "";
       const url =
-        "/api/paths?q=" + encodeURIComponent(query) + "&limit=20" + (branch ? "&branch=" + encodeURIComponent(branch) : "");
+        "/api/paths?q=" + encodeURIComponent(query) + "&limit=20" + (b ? "&branch=" + encodeURIComponent(b) : "");
       cb(await api.get(url));
     } catch {
       cb([]);
@@ -454,8 +455,9 @@ function debouncedSearch(query, cb) {
 function chooseMenuItem(i) {
   const item = menuState.items[i];
   if (!item) return;
-  // Remplace le token @… en cours par le chemin choisi (seule source de refs).
-  const ta = $("#mDesc");
+  // Remplace le token @… en cours par le chemin choisi, dans le textarea ciblé.
+  const ta = menuState.target;
+  if (!ta) return;
   const pos = ta.selectionStart;
   const before = ta.value.slice(0, pos);
   const at = before.lastIndexOf("@");
@@ -463,8 +465,22 @@ function chooseMenuItem(i) {
   const newPos = at + 1 + item.path.length + 1;
   ta.setSelectionRange(newPos, newPos);
   ta.focus();
-  hideMenu($("#mentionMenu"));
-  syncMentionsFromDesc();
+  if (menuState.menu) hideMenu(menuState.menu);
+  if (typeof menuState.onChoose === "function") menuState.onChoose();
+}
+
+// Cœur générique : détecte un token @… avant le curseur et pilote le menu donné.
+function handleMentionInput(ta, menu, branch, onChoose) {
+  const before = ta.value.slice(0, ta.selectionStart);
+  const match = before.match(/@([A-Za-z0-9_./-]*)$/);
+  if (!match) {
+    hideMenu(menu);
+    return;
+  }
+  menuState.target = ta;
+  menuState.menu = menu;
+  menuState.onChoose = onChoose || null;
+  debouncedSearch(match[1], (items) => renderMenu(menu, items), branch);
 }
 
 function moveMenu(menu, dir) {
@@ -476,19 +492,10 @@ function moveMenu(menu, dir) {
   lis[menuState.active]?.scrollIntoView({ block: "nearest" });
 }
 
-// Description : détecte un token @… juste avant le curseur.
+// Description (modale entrée) : maj des refs + autocomplete @ scopé à la branche éditée.
 function onDescInput() {
   syncMentionsFromDesc();
-  const ta = $("#mDesc");
-  const before = ta.value.slice(0, ta.selectionStart);
-  const match = before.match(/@([A-Za-z0-9_./-]*)$/);
-  const menu = $("#mentionMenu");
-  if (!match) {
-    hideMenu(menu);
-    return;
-  }
-  menuState.kind = "desc";
-  debouncedSearch(match[1], (items) => renderMenu(menu, items));
+  handleMentionInput($("#mDesc"), $("#mentionMenu"), $("#mBranch").value || "", syncMentionsFromDesc);
 }
 
 function menuKeydown(menu, e) {
@@ -568,8 +575,29 @@ const vibes = {
   wasDown: false,
   _editing: null,
   _color: "accent",
-  graph: { view: { x: 0, y: 0, w: 1000, h: 700 }, drag: null, userView: false, spawned: new Set() },
+  // Effets « waouh » sur l'arbre détail : signature des nœuds au rendu précédent
+  // (diff → fx-new / fx-changed / fx-done) et drapeau « premier rendu = cascade ».
+  _treeSnap: new Map(),
+  _treeInitial: true,
+  _fxClear: null,
+  _notesEditing: false, // éditeur de notes markdown ouvert (ne pas écraser par les maj live)
+  // spawned/pulsed/celebrated : ids de nœuds à animer au prochain rendu (créés /
+  // mis à jour / venant d'atteindre « done »). fxFired : éclats déjà tirés (anti-doublon
+  // si la forêt re-rend plusieurs fois dans la fenêtre d'animation).
+  graph: {
+    view: { x: 0, y: 0, w: 1000, h: 700 }, drag: null, userView: false,
+    spawned: new Set(), pulsed: new Set(), celebrated: new Set(), fxFired: new Set(),
+    posMap: new Map(),      // id → {x,y} résolu au dernier rendu (drag live + arêtes)
+    nodeDrag: null,         // déplacement d'un nœud (et de son sous-arbre) en cours
+    linking: null,          // id source pendant « tirer un lien »
+    edgeDel: null,          // { childId, parentId } de l'arête dont la poubelle est affichée
+    pendingCreatePos: null, // position graphe où créer le prochain nœud (menu fond)
+    suppressClick: false,   // ignore le prochain click (après un drag)
+  },
 };
+
+// Respecte la préférence système : pas de particules ni de bursts si réduit.
+const REDUCED = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // ── Identité / utilitaires ───────────────────────────────────────────────────
 function userName() {
@@ -608,6 +636,166 @@ function toast(msg) {
   t.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => (t.hidden = true), 4000);
+}
+
+// ── Effets « waouh » : éclats de particules + classes d'animation ─────────────
+function ensureFxLayer() {
+  let l = document.getElementById("fxLayer");
+  if (!l) {
+    l = document.createElement("div");
+    l.id = "fxLayer";
+    document.body.appendChild(l);
+  }
+  return l;
+}
+// Petit feu d'artifice d'emojis qui jaillit depuis (cx, cy) (coords écran).
+// Animé via la Web Animations API → auto-nettoyage à la fin (pas de CSS à gérer).
+function sparkleBurst(cx, cy, opts = {}) {
+  if (REDUCED || !document.body) return;
+  const layer = ensureFxLayer();
+  const n = opts.count || 8;
+  const emojis = opts.emojis || ["✨", "💫", "⭐"];
+  const baseDist = opts.dist || 44;
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement("span");
+    s.className = "fx-spark";
+    s.textContent = emojis[i % emojis.length];
+    s.style.left = cx + "px";
+    s.style.top = cy + "px";
+    s.style.fontSize = (opts.size || 16 + Math.random() * 8) + "px";
+    layer.appendChild(s);
+    const ang = (Math.PI * 2 * i) / n + Math.random() * 0.6 - 0.3;
+    const dist = baseDist + Math.random() * baseDist * 0.7;
+    const dx = Math.cos(ang) * dist;
+    const dy = Math.sin(ang) * dist - dist * 0.35; // léger biais vers le haut
+    const dur = 620 + Math.random() * 420;
+    const spin = (Math.random() < 0.5 ? -1 : 1) * (140 + Math.random() * 160);
+    const a = s.animate(
+      [
+        { transform: "translate(-50%,-50%) scale(.2) rotate(0deg)", opacity: 0 },
+        { transform: `translate(calc(-50% + ${dx * 0.5}px), calc(-50% + ${dy * 0.5}px)) scale(1.15) rotate(${spin * 0.5}deg)`, opacity: 1, offset: 0.35 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.35) rotate(${spin}deg)`, opacity: 0 },
+      ],
+      { duration: dur, easing: "cubic-bezier(.25,.6,.3,1)" }
+    );
+    a.onfinish = () => s.remove();
+    a.oncancel = () => s.remove();
+  }
+}
+// Éclats centrés sur un élément du DOM (lit son rect courant).
+function sparkleEl(el, opts = {}) {
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  if (!r.width && !r.height) return; // élément masqué : on s'abstient
+  sparkleBurst(r.left + (opts.ox != null ? opts.ox : r.width / 2), r.top + (opts.oy != null ? opts.oy : r.height / 2), opts);
+}
+// Classe d'effet à appliquer à une carte/nœud selon les sets transitoires.
+function nodeFxClass(id) {
+  const g = vibes.graph;
+  return (g.spawned.has(id) ? " spawn" : "") + (g.pulsed.has(id) ? " pulse" : "") + (g.celebrated.has(id) ? " celebrate" : "");
+}
+
+// ── Rendu Markdown minimal et SÛR (sans dépendance) ───────────────────────────
+// Sous-ensemble : titres, gras/italique/barré, code inline + blocs ```, listes
+// (puces / numérotées), citations >, règles ---, liens [..](..) + autoliens http.
+// Sécurité : on échappe TOUT le HTML d'abord (esc), puis on applique les
+// transformations markdown → aucune balise utilisateur n'est jamais injectée.
+function mdInline(str) {
+  return str
+    .replace(/`([^`]+)`/g, (_, c) => `<code class="md-code">${c}</code>`)
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>')
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*\n]+)\*/g, "<em>$1</em>")
+    .replace(/~~([^~]+)~~/g, "<del>$1</del>");
+}
+function renderMarkdown(src) {
+  const raw = String(src || "");
+  if (!raw.trim()) return "";
+  // 1) Extraire les blocs de code clôturés (placeholders) pour ne pas les transformer.
+  const blocks = [];
+  let text = raw.replace(/```[ \t]*[\w-]*\n?([\s\S]*?)```/g, (_, code) => {
+    const i = blocks.push(`<pre class="md-pre"><code>${esc(code.replace(/\n+$/, ""))}</code></pre>`) - 1;
+    return ` CB${i} `;
+  });
+  // 2) Échapper le HTML restant (les caractères markdown * _ ` [ ] ( ) > # survivent).
+  text = esc(text);
+
+  const lines = text.split("\n");
+  const out = [];
+  let para = [];
+  let listType = null;
+  let inQuote = false;
+  const flushPara = () => { if (para.length) { out.push(`<p>${mdInline(para.join(" "))}</p>`); para = []; } };
+  const closeList = () => { if (listType) { out.push(`</${listType}>`); listType = null; } };
+  const closeQuote = () => { if (inQuote) { out.push("</blockquote>"); inQuote = false; } };
+
+  // Découpe une ligne de tableau en cellules (gère les | de bord optionnels).
+  const tableCells = (s) => {
+    let t = s.trim();
+    if (t.startsWith("|")) t = t.slice(1);
+    if (t.endsWith("|")) t = t.slice(0, -1);
+    return t.split("|").map((c) => c.trim());
+  };
+  const isTableSep = (s) => /^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)*\|?\s*$/.test(s) && s.includes("-");
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const cb = line.match(/^ CB(\d+) $/);
+    if (cb) { flushPara(); closeList(); closeQuote(); out.push(blocks[Number(cb[1])]); continue; }
+    if (!line.trim()) { flushPara(); closeList(); closeQuote(); continue; }
+
+    // Tableau GFM : ligne d'en-tête avec « | » suivie d'une ligne de séparation.
+    if (line.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {
+      flushPara(); closeList(); closeQuote();
+      const headers = tableCells(line);
+      const aligns = tableCells(lines[i + 1]).map((c) => {
+        const l = c.startsWith(":"), r = c.endsWith(":");
+        return r && l ? "center" : r ? "right" : l ? "left" : "";
+      });
+      const rows = [];
+      let j = i + 2;
+      while (j < lines.length && lines[j].trim() && lines[j].includes("|")) { rows.push(tableCells(lines[j])); j++; }
+      const al = (k) => (aligns[k] ? ` style="text-align:${aligns[k]}"` : "");
+      let html = '<table class="md-table"><thead><tr>';
+      headers.forEach((h, k) => (html += `<th${al(k)}>${mdInline(h)}</th>`));
+      html += "</tr></thead><tbody>";
+      for (const row of rows) {
+        html += "<tr>";
+        for (let k = 0; k < headers.length; k++) html += `<td${al(k)}>${mdInline(row[k] || "")}</td>`;
+        html += "</tr>";
+      }
+      html += "</tbody></table>";
+      out.push(html);
+      i = j - 1;
+      continue;
+    }
+
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { flushPara(); closeList(); closeQuote(); const l = h[1].length; out.push(`<h${l} class="md-h md-h${l}">${mdInline(h[2].trim())}</h${l}>`); continue; }
+    if (/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)) { flushPara(); closeList(); closeQuote(); out.push('<hr class="md-hr">'); continue; }
+
+    const ul = line.match(/^\s*[-*+]\s+(.*)$/);
+    const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
+    if (ul || ol) {
+      flushPara(); closeQuote();
+      const t = ul ? "ul" : "ol";
+      if (listType && listType !== t) closeList();
+      if (!listType) { listType = t; out.push(`<${t} class="md-list">`); }
+      out.push(`<li>${mdInline((ul ? ul[1] : ol[1]).trim())}</li>`);
+      continue;
+    }
+    closeList();
+
+    // NB : esc() a déjà transformé « > » en « &gt; » → on matche la forme échappée.
+    const bq = line.match(/^\s*&gt;\s?(.*)$/);
+    if (bq) { flushPara(); if (!inQuote) { inQuote = true; out.push('<blockquote class="md-quote">'); } out.push(`<p>${mdInline(bq[1])}</p>`); continue; }
+    closeQuote();
+
+    para.push(line.trim());
+  }
+  flushPara(); closeList(); closeQuote();
+  return out.join("\n");
 }
 
 // ── Index de forêt ───────────────────────────────────────────────────────────
@@ -688,6 +876,17 @@ function renderForestViews() {
   renderGraph();
   const roots = rootsOf().length;
   $("#vibesSummary").textContent = `· ${roots} objectif${roots > 1 ? "s" : ""} · ${vibes.forest.length} nœud${vibes.forest.length > 1 ? "s" : ""}`;
+  // Purge différée des marqueurs d'effet (les animations CSS one-shot ont joué).
+  const g = vibes.graph;
+  if (g.spawned.size || g.pulsed.size || g.celebrated.size || g.fxFired.size) {
+    clearTimeout(vibes._fxClear);
+    vibes._fxClear = setTimeout(() => {
+      g.spawned.clear();
+      g.pulsed.clear();
+      g.celebrated.clear();
+      g.fxFired.clear();
+    }, 1000);
+  }
 }
 let _forestRaf = null;
 function renderForestSoon() {
@@ -700,7 +899,7 @@ function renderForestSoon() {
 
 // ── Grille (racines) ─────────────────────────────────────────────────────────
 function nodeCardHtml(n) {
-  return `<div class="goal-card status-${esc(n.status)}" data-ref="${esc(n.ref)}" style="--gc:var(--${esc(n.color || "accent")})">
+  return `<div class="goal-card status-${esc(n.status)}${nodeFxClass(n.id)}" data-ref="${esc(n.ref)}" data-id="${n.id}" style="--gc:var(--${esc(n.color || "accent")})">
     <div class="gc-top"><span class="gc-emoji">${esc(n.emoji || "🎯")}</span><span class="gc-title">${esc(n.title)}</span></div>
     <div class="gc-ref">${esc(n.ref)}${n.targetDate ? ` · 📅 ${esc(n.targetDate)}` : ""}</div>
     <div class="gc-bar"><div class="gc-fill" style="width:${n.progress}%"></div></div>
@@ -713,6 +912,16 @@ function renderGrid() {
   wrap.innerHTML = rootsOf().map(nodeCardHtml).join("") + `<div class="goal-card ghost-card" id="ghostAddNode">＋ Nouvel objectif</div>`;
   wrap.querySelectorAll(".goal-card[data-ref]").forEach((c) => c.addEventListener("click", () => openNode(c.dataset.ref)));
   $("#ghostAddNode").addEventListener("click", () => openNodeModal(null, null));
+  // Éclats sur les cartes fraîchement nées / atteintes (uniquement si la grille est visible).
+  if (!REDUCED && !$("#vibesView").hidden) {
+    wrap.querySelectorAll(".goal-card.spawn, .goal-card.celebrate").forEach((c) => {
+      const id = Number(c.dataset.id);
+      if (vibes.graph.fxFired.has(id)) return;
+      vibes.graph.fxFired.add(id);
+      const done = c.classList.contains("celebrate");
+      sparkleEl(c, { oy: 26, count: done ? 14 : 8, dist: done ? 56 : 42, emojis: done ? ["🎉", "✨", "🏆", "⭐"] : ["✨", "💫"] });
+    });
+  }
 }
 
 // ── Graphe organique (SVG radial, créé via DOM API : anti-XSS) ───────────────
@@ -728,7 +937,19 @@ function computeGraphLayout() {
     assignAngles(root, 0, Math.PI * 2, pos, cursorX + r, 0);
     cursorX += r * 2 + G_ROOT_GAP;
   }
+  // Positions manuelles (drag & drop persistées) : écrasent l'auto-layout radial.
+  // Les drags épinglant tout le sous-arbre, la cohérence parent↔enfants est préservée.
+  for (const n of vibes.forest) {
+    if (n.posX != null && n.posY != null) pos.set(n.id, { x: n.posX, y: n.posY });
+  }
   return pos;
+}
+// Ids d'un nœud + tout son sous-arbre (pour déplacer/épingler ensemble).
+function subtreeIds(id) {
+  const out = [id];
+  const rec = (pid) => { for (const c of childrenOf(pid)) { out.push(c.id); rec(c.id); } };
+  rec(id);
+  return out;
 }
 function assignAngles(node, a0, a1, pos, cx, cy) {
   const ang = (a0 + a1) / 2;
@@ -749,25 +970,43 @@ function svgEl(tag, attrs) {
   for (const k in attrs) el.setAttribute(k, attrs[k]);
   return el;
 }
-function edgePath(p, c, node) {
+function edgeD(p, c) {
   const dx = c.x - p.x, dy = c.y - p.y;
   const len = Math.hypot(dx, dy) || 1;
   const nx = -dy / len, ny = dx / len;
   const off = Math.min(45, len * 0.18);
   const c1x = p.x + dx * 0.35 + nx * off, c1y = p.y + dy * 0.35 + ny * off;
   const c2x = p.x + dx * 0.65 + nx * off, c2y = p.y + dy * 0.65 + ny * off;
-  const el = svgEl("path", {
-    d: `M ${p.x} ${p.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${c.x} ${c.y}`,
+  return `M ${p.x} ${p.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${c.x} ${c.y}`;
+}
+function edgePath(p, c, node) {
+  return svgEl("path", {
+    d: edgeD(p, c),
     class: "g-edge" + (vibes.graph.spawned.has(node.id) ? " spawn" : ""),
     "data-cid": String(node.id),
+    "data-pid": String(node.parentId), // pour la maj live des arêtes pendant le drag
     stroke: `var(--${node.color || "accent"})`,
   });
-  return el;
+}
+// Faisceau de rayons (célébration « jalon atteint »), dessiné derrière le nœud.
+function raysGroup() {
+  const g = svgEl("g", { class: "g-rays" });
+  for (let i = 0; i < 8; i++) {
+    const a = (Math.PI * 2 * i) / 8;
+    g.appendChild(svgEl("line", { x1: Math.cos(a) * 16, y1: Math.sin(a) * 16, x2: Math.cos(a) * 42, y2: Math.sin(a) * 42, class: "g-ray" }));
+  }
+  return g;
 }
 function nodeGroup(n, p) {
   const r = n.depth === 0 ? 26 : Math.max(12, 24 - n.depth * 3);
   const spawn = vibes.graph.spawned.has(n.id);
-  const g = svgEl("g", { transform: `translate(${p.x},${p.y})`, class: "g-node status-" + n.status + (spawn ? " spawn" : ""), "data-ref": n.ref, "data-id": String(n.id) });
+  const pulse = vibes.graph.pulsed.has(n.id);
+  const celebrate = vibes.graph.celebrated.has(n.id);
+  const fxCls = (spawn ? " spawn" : "") + (pulse ? " pulse" : "") + (celebrate ? " celebrate" : "");
+  const g = svgEl("g", { transform: `translate(${p.x},${p.y})`, class: "g-node status-" + n.status + fxCls, "data-ref": n.ref, "data-id": String(n.id) });
+  // Onde de choc (naissance) et rayons (jalon atteint) : sous le nœud (peints en premier).
+  if (spawn) g.appendChild(svgEl("circle", { r: 10, class: "g-halo", stroke: `var(--${n.color || "accent"})` }));
+  if (celebrate) g.appendChild(raysGroup());
   // Groupe interne mis à l'échelle pour l'anim d'apparition (le translate reste sur g).
   const inner = svgEl("g", { class: "g-inner" });
   const circ = 2 * Math.PI * (r + 5);
@@ -787,6 +1026,8 @@ function renderGraph() {
   const svg = $("#graphSvg");
   if (!svg || $("#graphView").hidden) return;
   const pos = computeGraphLayout();
+  vibes.graph.posMap = pos;     // réutilisé par le drag live et le recalcul des arêtes
+  vibes.graph.edgeDel = null;   // l'overlay poubelle (re)disparaît au rendu
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   const gEdges = svgEl("g", { class: "g-edges" });
   const gNodes = svgEl("g", { class: "g-nodes" });
@@ -808,7 +1049,21 @@ function renderGraph() {
   }
   if (!vibes.graph.userView) fitView(pos, svg);
   else applyViewBox(svg);
-  if (vibes.graph.spawned.size) setTimeout(() => vibes.graph.spawned.clear(), 800);
+  // Feu d'artifice sur les nœuds qui viennent d'apparaître / d'être atteints.
+  if (!REDUCED) {
+    for (const id of vibes.graph.spawned) sparkleNode(svg, id, false);
+    for (const id of vibes.graph.celebrated) sparkleNode(svg, id, true);
+  }
+}
+// Tire un burst d'éclats centré sur le disque d'un nœud du graphe (une fois).
+function sparkleNode(svg, id, big) {
+  if (vibes.graph.fxFired.has(id)) return;
+  const disc = svg.querySelector(`.g-node[data-id="${cssId(id)}"] .g-disc`);
+  if (!disc) return;
+  vibes.graph.fxFired.add(id);
+  sparkleEl(disc, big
+    ? { count: 16, dist: 64, size: 20, emojis: ["🎉", "✨", "⭐", "🏆", "💫"] }
+    : { count: 10, dist: 46, emojis: ["✨", "💫", "⭐"] });
 }
 function fitView(pos, svg) {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -825,12 +1080,142 @@ function applyViewBox(svg) {
   const v = vibes.graph.view;
   svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
 }
+// Convertit des coords écran → coords graphe (viewBox courant).
+function clientToSvg(clientX, clientY) {
+  const svg = $("#graphSvg");
+  const rect = svg.getBoundingClientRect();
+  const v = vibes.graph.view;
+  return { x: v.x + ((clientX - rect.left) / rect.width) * v.w, y: v.y + ((clientY - rect.top) / rect.height) * v.h };
+}
+// Maj live (sans rebuild) des transforms de nœuds + tracé des arêtes depuis posMap.
+function liveUpdateGraphPositions() {
+  const svg = $("#graphSvg");
+  const pos = vibes.graph.posMap;
+  svg.querySelectorAll(".g-node").forEach((g) => {
+    const p = pos.get(Number(g.dataset.id));
+    if (p) g.setAttribute("transform", `translate(${p.x},${p.y})`);
+  });
+  svg.querySelectorAll(".g-edge").forEach((ed) => {
+    const pp = pos.get(Number(ed.dataset.pid)), pc = pos.get(Number(ed.dataset.cid));
+    if (pp && pc) ed.setAttribute("d", edgeD(pp, pc));
+  });
+  if (vibes.graph.edgeDel) positionEdgeDel();
+}
+// Persiste les positions manuelles d'un ensemble d'ids (depuis posMap) + maj locale.
+async function persistPositions(ids) {
+  const positions = [];
+  for (const id of ids) {
+    const p = vibes.graph.posMap.get(id);
+    const n = vibes.byId.get(id);
+    if (p && n) { n.posX = p.x; n.posY = p.y; positions.push({ id, x: p.x, y: p.y }); }
+  }
+  if (!positions.length) return;
+  try { await api.send("POST", "/api/nodes/positions", { positions }); }
+  catch (e) { toast("Positions non enregistrées : " + e.message); }
+}
+
+// ── Menu contextuel générique (clic droit) ───────────────────────────────────
+function hideCtxMenu() {
+  const m = document.getElementById("ctxMenu");
+  if (m) m.remove();
+  document.removeEventListener("mousedown", _ctxOutside, true);
+}
+function _ctxOutside(e) { if (!e.target.closest("#ctxMenu")) hideCtxMenu(); }
+function showCtxMenu(clientX, clientY, items) {
+  hideCtxMenu();
+  const m = document.createElement("div");
+  m.id = "ctxMenu";
+  m.className = "ctx-menu";
+  for (const it of items) {
+    const b = document.createElement("button");
+    b.className = "ctx-item" + (it.danger ? " danger" : "");
+    b.textContent = it.label;
+    b.addEventListener("click", () => { hideCtxMenu(); it.onClick(); });
+    m.appendChild(b);
+  }
+  document.body.appendChild(m);
+  const r = m.getBoundingClientRect();
+  m.style.left = Math.min(clientX, window.innerWidth - r.width - 8) + "px";
+  m.style.top = Math.min(clientY, window.innerHeight - r.height - 8) + "px";
+  setTimeout(() => document.addEventListener("mousedown", _ctxOutside, true), 0);
+}
+
+// ── Mode « tirer un lien » (connecter deux nœuds = reparentage) ───────────────
+function startLinkMode(sourceId) {
+  cancelLinkMode();
+  vibes.graph.linking = sourceId;
+  const line = svgEl("path", { class: "g-link-temp", d: "" });
+  $("#graphSvg").insertBefore(line, $("#graphSvg").firstChild);
+  vibes.graph._linkLine = line;
+  toast("Clique le nœud à rattacher comme enfant (Échap pour annuler).");
+}
+function cancelLinkMode() {
+  vibes.graph.linking = null;
+  if (vibes.graph._linkLine) { vibes.graph._linkLine.remove(); vibes.graph._linkLine = null; }
+}
+function updateLinkLine(clientX, clientY) {
+  if (!vibes.graph._linkLine) return;
+  const src = vibes.graph.posMap.get(vibes.graph.linking);
+  if (!src) return;
+  const t = clientToSvg(clientX, clientY);
+  vibes.graph._linkLine.setAttribute("d", `M ${src.x} ${src.y} L ${t.x} ${t.y}`);
+}
+async function finishLink(targetId) {
+  const sourceId = vibes.graph.linking;
+  cancelLinkMode();
+  if (!sourceId || targetId == null || targetId === sourceId) return;
+  try {
+    // « Tirer un lien depuis A vers B » = B devient enfant de A.
+    await api.send("POST", `/api/nodes/${encodeURIComponent(targetId)}/move`, { newParentId: sourceId });
+    vibes.graph.spawned.add(targetId);
+    toast("Lien créé.");
+    loadForest();
+  } catch (e) {
+    toast(/cycle|sous-arbre/i.test(e.message) ? "Impossible : créerait un cycle." : "Échec : " + e.message);
+  }
+}
+
+// ── Poubelle de suppression d'arête (double-clic sur un lien) ─────────────────
+function hideEdgeDel() {
+  const el = document.getElementById("gEdgeDel");
+  if (el) el.remove();
+  vibes.graph.edgeDel = null;
+}
+function positionEdgeDel() {
+  const el = document.getElementById("gEdgeDel");
+  const d = vibes.graph.edgeDel;
+  if (!el || !d) return;
+  const pp = vibes.graph.posMap.get(d.parentId), pc = vibes.graph.posMap.get(d.childId);
+  if (pp && pc) el.setAttribute("transform", `translate(${(pp.x + pc.x) / 2},${(pp.y + pc.y) / 2})`);
+}
+function showEdgeDel(childId, parentId) {
+  hideEdgeDel();
+  vibes.graph.edgeDel = { childId, parentId };
+  const g = svgEl("g", { id: "gEdgeDel", class: "g-edge-del" });
+  g.appendChild(svgEl("circle", { r: 13 }));
+  const t = svgEl("text", { "text-anchor": "middle", dy: "0.35em", "font-size": "14" });
+  t.textContent = "🗑";
+  g.appendChild(t);
+  g.addEventListener("click", (e) => { e.stopPropagation(); deleteEdge(childId); });
+  $("#graphSvg").appendChild(g);
+  positionEdgeDel();
+}
+async function deleteEdge(childId) {
+  hideEdgeDel();
+  try {
+    // Supprimer le lien = détacher l'enfant → il redevient une racine.
+    await api.send("POST", `/api/nodes/${encodeURIComponent(childId)}/move`, { newParentId: null });
+    toast("Lien supprimé (nœud détaché).");
+    loadForest();
+  } catch (e) {
+    toast("Échec : " + e.message);
+  }
+}
+
+const NODE_DRAG_THRESHOLD = 4; // px avant de basculer click → drag
 function wireGraph() {
   const svg = $("#graphSvg");
-  svg.addEventListener("click", (e) => {
-    const g = e.target.closest(".g-node");
-    if (g) openNode(g.dataset.ref);
-  });
+
   svg.addEventListener("wheel", (e) => {
     e.preventDefault();
     const v = vibes.graph.view;
@@ -844,22 +1229,112 @@ function wireGraph() {
     vibes.graph.userView = true;
     applyViewBox(svg);
   }, { passive: false });
+
+  // mousedown : démarre soit un drag de nœud (sur un nœud), soit un pan (sur le fond).
   svg.addEventListener("mousedown", (e) => {
-    if (e.target.closest(".g-node")) return;
-    vibes.graph.drag = { x: e.clientX, y: e.clientY, vx: vibes.graph.view.x, vy: vibes.graph.view.y };
+    if (e.button !== 0) return; // gauche uniquement (le clic droit → contextmenu)
+    if (vibes.graph.linking) return; // en mode lien : la sélection se fait au click
+    if (e.target.closest("#gEdgeDel")) return; // clic sur la poubelle : géré par son handler
+    hideCtxMenu();
+    hideEdgeDel();
+    const gNode = e.target.closest(".g-node");
+    if (gNode) {
+      const id = Number(gNode.dataset.id);
+      const ids = subtreeIds(id);
+      const start = new Map(ids.map((i) => [i, { ...(vibes.graph.posMap.get(i) || { x: 0, y: 0 }) }]));
+      vibes.graph.nodeDrag = { id, ids, start, cx: e.clientX, cy: e.clientY, moved: false, ref: gNode.dataset.ref };
+    } else {
+      vibes.graph.drag = { x: e.clientX, y: e.clientY, vx: vibes.graph.view.x, vy: vibes.graph.view.y };
+    }
   });
+
   window.addEventListener("mousemove", (e) => {
+    if (vibes.graph.linking) { updateLinkLine(e.clientX, e.clientY); return; }
+    const nd = vibes.graph.nodeDrag;
+    if (nd) {
+      const v = vibes.graph.view;
+      const rect = svg.getBoundingClientRect();
+      const dx = ((e.clientX - nd.cx) / rect.width) * v.w;
+      const dy = ((e.clientY - nd.cy) / rect.height) * v.h;
+      if (!nd.moved && Math.hypot(e.clientX - nd.cx, e.clientY - nd.cy) < NODE_DRAG_THRESHOLD) return;
+      nd.moved = true;
+      svg.style.cursor = "grabbing";
+      for (const i of nd.ids) {
+        const s = nd.start.get(i);
+        vibes.graph.posMap.set(i, { x: s.x + dx, y: s.y + dy });
+      }
+      liveUpdateGraphPositions();
+      return;
+    }
     const d = vibes.graph.drag;
     if (!d) return;
-    const svg2 = $("#graphSvg");
-    const rect = svg2.getBoundingClientRect();
+    const rect = svg.getBoundingClientRect();
     const v = vibes.graph.view;
     v.x = d.vx - ((e.clientX - d.x) / rect.width) * v.w;
     v.y = d.vy - ((e.clientY - d.y) / rect.height) * v.h;
     vibes.graph.userView = true;
-    applyViewBox(svg2);
+    applyViewBox(svg);
   });
-  window.addEventListener("mouseup", () => (vibes.graph.drag = null));
+
+  window.addEventListener("mouseup", () => {
+    const nd = vibes.graph.nodeDrag;
+    if (nd && nd.moved) {
+      vibes.graph.userView = true;   // on ne re-fit pas la vue après un placement manuel
+      vibes.graph.suppressClick = true; // empêche l'ouverture du nœud juste après le drag
+      persistPositions(nd.ids);
+      svg.style.cursor = "";
+    }
+    vibes.graph.nodeDrag = null;
+    vibes.graph.drag = null;
+  });
+
+  // click : ouvre un nœud (sauf juste après un drag) ou finalise un lien.
+  svg.addEventListener("click", (e) => {
+    if (vibes.graph.suppressClick) { vibes.graph.suppressClick = false; return; }
+    const gNode = e.target.closest(".g-node");
+    if (vibes.graph.linking) {
+      if (gNode) finishLink(Number(gNode.dataset.id));
+      else cancelLinkMode();
+      return;
+    }
+    if (gNode) openNode(gNode.dataset.ref);
+  });
+
+  // double-clic sur une arête → affiche la poubelle de suppression de lien.
+  svg.addEventListener("dblclick", (e) => {
+    const edge = e.target.closest(".g-edge");
+    if (edge) { e.preventDefault(); showEdgeDel(Number(edge.dataset.cid), Number(edge.dataset.pid)); }
+  });
+
+  // clic droit : menu contextuel selon la cible (nœud / arête / fond).
+  svg.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (vibes.graph.linking) { cancelLinkMode(); return; }
+    const gNode = e.target.closest(".g-node");
+    if (gNode) {
+      const id = Number(gNode.dataset.id);
+      const ref = gNode.dataset.ref;
+      showCtxMenu(e.clientX, e.clientY, [
+        { label: "🔗 Tirer un lien…", onClick: () => startLinkMode(id) },
+        { label: "✎ Ouvrir", onClick: () => openNode(ref) },
+        { label: "🗑 Supprimer", danger: true, onClick: () => { if (confirm("Supprimer ce nœud et tout son sous-arbre ?")) deleteNodeById(id); } },
+      ]);
+      return;
+    }
+    const edge = e.target.closest(".g-edge");
+    if (edge) {
+      showCtxMenu(e.clientX, e.clientY, [
+        { label: "🗑 Supprimer le lien", danger: true, onClick: () => deleteEdge(Number(edge.dataset.cid)) },
+      ]);
+      return;
+    }
+    // Fond : créer un nouveau nœud à cet endroit.
+    const at = clientToSvg(e.clientX, e.clientY);
+    showCtxMenu(e.clientX, e.clientY, [
+      { label: "➕ Nouvel objectif ici", onClick: () => { vibes.graph.pendingCreatePos = at; openNodeModal(null, null); } },
+    ]);
+  });
+
   $("#graphFit").addEventListener("click", () => {
     vibes.graph.userView = false;
     renderGraph();
@@ -882,6 +1357,11 @@ async function openNode(ref) {
     $("#graphView").hidden = true;
     $("#nodeView").hidden = false;
     $("#modelSel").value = vibes.model;
+    // Nouveau contexte d'arbre : snapshot vierge → premier rendu en cascade (sans éclats).
+    vibes._treeSnap = new Map();
+    vibes._treeInitial = true;
+    vibes._notesEditing = false; // pas d'édition de notes héritée d'un autre nœud
+    vibes._notesOpen = new Set(); // état plié/déplié des notes propre à ce nœud
     renderNodeHeader(node);
     renderTree(node);
     renderChat(node.messages || []);
@@ -902,13 +1382,173 @@ function renderNodeHeader(n) {
   const desc = $("#ndDesc");
   desc.textContent = n.description || "";
   desc.hidden = !n.description;
+  renderNotes(n);
+}
+
+// ── Notes markdown : liste de sections collapsables (lecture + édition) ────────
+// notes = [{title, body}]. Vue : un <details> par note. Édition : liste dynamique.
+function notesOf(n) {
+  return Array.isArray(n && n.notes) ? n.notes : [];
+}
+// Mémorise l'état plié/déplié par index (réinitialisé au changement de nœud).
+function renderNotes(n) {
+  if (vibes._notesEditing) return; // édition en cours : ne pas écraser
+  const view = $("#ndNotesView");
+  if (!view) return;
+  const notes = notesOf(n);
+  view.hidden = false;
+  $("#ndNotesEditor").hidden = true;
+  $("#ndNotesEditBtn").hidden = false;
+  if (!notes.length) {
+    view.classList.add("empty");
+    view.innerHTML = '<span class="hint">Aucune note. Clique « ✎ Éditer » ou demande à Claude d\'en rédiger.</span>';
+    return;
+  }
+  view.classList.remove("empty");
+  const open = vibes._notesOpen || new Set();
+  view.innerHTML = notes
+    .map((note, i) => {
+      const title = (note.title || "").trim() || `Note ${i + 1}`;
+      const isOpen = open.size ? open.has(i) : true; // tout déplié par défaut
+      return `<details class="note-item"${isOpen ? " open" : ""} data-i="${i}">
+        <summary class="note-summary"><span class="note-title">${esc(title)}</span></summary>
+        <div class="note-body markdown-body">${renderMarkdown(note.body) || '<span class="hint">(vide)</span>'}</div>
+      </details>`;
+    })
+    .join("");
+  // Suit l'état plié/déplié (persisté en mémoire le temps de la session du nœud).
+  view.querySelectorAll(".note-item").forEach((d) =>
+    d.addEventListener("toggle", () => {
+      vibes._notesOpen = vibes._notesOpen || new Set();
+      const i = Number(d.dataset.i);
+      if (d.open) vibes._notesOpen.add(i);
+      else vibes._notesOpen.delete(i);
+    })
+  );
+}
+
+// Construit un éditeur pour une note (titre + corps markdown + aperçu live + @).
+function buildNoteEditor(note) {
+  const row = document.createElement("div");
+  row.className = "note-editor";
+  row.innerHTML = `
+    <div class="note-editor-head">
+      <input type="text" class="note-edit-title" placeholder="Titre de la note (optionnel)" />
+      <button type="button" class="ghost danger note-edit-del" title="Supprimer cette note">🗑</button>
+    </div>
+    <div class="ta-wrap">
+      <textarea class="note-edit-body" rows="6" placeholder="Markdown : # Titre, **gras**, - listes, | tableaux |, > citation, @chemin/fichier…"></textarea>
+      <ul class="mention-menu" hidden></ul>
+    </div>
+    <details class="note-edit-preview"><summary>👁 Aperçu</summary><div class="markdown-body note-edit-preview-body"></div></details>`;
+  const titleEl = row.querySelector(".note-edit-title");
+  const bodyEl = row.querySelector(".note-edit-body");
+  const menuEl = row.querySelector(".mention-menu");
+  const prevEl = row.querySelector(".note-edit-preview-body");
+  titleEl.value = (note && note.title) || "";
+  bodyEl.value = (note && note.body) || "";
+  const preview = () => { prevEl.innerHTML = renderMarkdown(bodyEl.value) || '<span class="hint">(aperçu vide)</span>'; };
+  preview();
+  bodyEl.addEventListener("input", () => { preview(); handleMentionInput(bodyEl, menuEl, state.branch || "", preview); });
+  bodyEl.addEventListener("blur", () => setTimeout(() => hideMenu(menuEl), 150));
+  bodyEl.addEventListener("keydown", (e) => {
+    if (menuKeydown(menuEl, e)) return;
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); saveNotes(); }
+  });
+  row.querySelector(".note-edit-del").addEventListener("click", () => row.remove());
+  return row;
+}
+function addNoteEditor(note) {
+  $("#ndNotesList").appendChild(buildNoteEditor(note || { title: "", body: "" }));
+}
+function collectNotesFromEditor() {
+  return [...$("#ndNotesList").querySelectorAll(".note-editor")]
+    .map((row) => ({
+      title: row.querySelector(".note-edit-title").value.trim(),
+      body: row.querySelector(".note-edit-body").value,
+    }))
+    .filter((n) => n.title || n.body.trim());
+}
+function openNotesEditor() {
+  if (!vibes.currentNode) return;
+  vibes._notesEditing = true;
+  vibes._notesBaseVersion = vibes.currentNode.version; // pivot CAS figé au début de l'édition
+  const list = $("#ndNotesList");
+  list.innerHTML = "";
+  const notes = notesOf(vibes.currentNode);
+  if (notes.length) notes.forEach(addNoteEditor);
+  else addNoteEditor({ title: "", body: "" }); // une note vide pour démarrer
+  $("#ndNotesView").hidden = true;
+  $("#ndNotesEditBtn").hidden = true;
+  $("#ndNotesEditor").hidden = false;
+  const first = list.querySelector(".note-edit-body");
+  if (first) first.focus();
+}
+function closeNotesEditor() {
+  vibes._notesEditing = false;
+  renderNotes(vibes.currentNode);
+}
+async function saveNotes() {
+  if (!vibes.current) return;
+  const notes = collectNotesFromEditor();
+  const payload = { notes };
+  if (vibes._notesBaseVersion != null) payload.expectedVersion = vibes._notesBaseVersion;
+  try {
+    const n = await api.send("PATCH", `/api/nodes/${encodeURIComponent(vibes.current)}`, payload);
+    vibes._notesEditing = false;
+    applyNodeUpdate(n); // met à jour currentNode + header → renderNotes
+    scheduleSubtreeRefetch();
+    toast("Notes enregistrées.");
+  } catch (e) {
+    if (/version_conflict/.test(e.message)) toast("Nœud modifié entre-temps — rouvre-le pour repartir de la version à jour.");
+    else toast("Échec : " + e.message);
+  }
+}
+// Petit « waouh » quand les notes changent à distance (ex : le bot vient d'écrire).
+function flashNotes() {
+  const el = $("#ndNotes");
+  if (!el || REDUCED) return;
+  el.classList.remove("fx-note");
+  void el.offsetWidth; // reflow → rejoue l'animation
+  el.classList.add("fx-note");
+  sparkleEl($("#ndNotesView"), { oy: 24, count: 8, dist: 36, emojis: ["📝", "✨", "💫"] });
+}
+// Signature d'un nœud pour le diff visuel (champs qui méritent une animation).
+function nodeSig(n) {
+  return `${n.status}|${n.progress}|${n.title}|${n.emoji || ""}|${n.color || ""}`;
+}
+// Compare l'arbre courant au snapshot précédent → Map(id → {cls, si}) :
+//   fx-new (apparu), fx-done (vient d'être atteint), fx-changed (autre modif).
+// `si` est l'ordre d'apparition (stagger) parmi les seuls nœuds animés.
+function computeTreeFx(node) {
+  const fx = new Map();
+  const next = new Map();
+  const prev = vibes._treeSnap || new Map();
+  let order = 0;
+  const walk = (n) => {
+    const sig = nodeSig(n);
+    next.set(n.id, sig);
+    const before = prev.get(n.id);
+    if (before === undefined) fx.set(n.id, { cls: "fx-new", si: order++ });
+    else if (before !== sig) {
+      const wasDone = before.split("|")[0] === "done";
+      fx.set(n.id, { cls: !wasDone && n.status === "done" ? "fx-done" : "fx-changed", si: order++ });
+    }
+    (n.children || []).forEach(walk);
+  };
+  (node.children || []).forEach(walk);
+  vibes._treeSnap = next;
+  return fx;
 }
 // Arbre récursif des sous-nœuds (chaque ligne ouvre son propre chat).
-function treeHtml(n, depth) {
+function treeHtml(n, depth, fx) {
   const kids = n.children || [];
-  const childrenHtml = kids.map((k) => treeHtml(k, depth + 1)).join("");
+  const childrenHtml = kids.map((k) => treeHtml(k, depth + 1, fx)).join("");
+  const f = fx.get(n.id);
+  const fxCls = f ? " " + f.cls : "";
+  const si = f ? f.si : 0;
   return `<li class="tnode" data-ref="${esc(n.ref)}" data-id="${n.id}" style="--d:${depth}">
-    <div class="trow ms-${esc(n.status)}">
+    <div class="trow ms-${esc(n.status)}${fxCls}" style="--si:${si}">
       <span class="tdot" style="background:var(--${esc(n.color || "accent")})"></span>
       <span class="temoji">${esc(n.emoji || "🎯")}</span>
       <span class="ttitle" title="Ouvrir le chat de ce nœud">${esc(n.title)}</span>
@@ -923,9 +1563,18 @@ function treeHtml(n, depth) {
 function renderTree(node) {
   const wrap = $("#nodeTree");
   const kids = node.children || [];
+  const fx = computeTreeFx(node);
   wrap.innerHTML = kids.length
-    ? `<ul class="tree-root">${kids.map((k) => treeHtml(k, 0)).join("")}</ul>`
+    ? `<ul class="tree-root">${kids.map((k) => treeHtml(k, 0, fx)).join("")}</ul>`
     : `<div class="empty">Aucun sous-jalon. Ajoute-en un, ou demande à Claude.</div>`;
+  // Éclats sur les jalons ajoutés / atteints en live (pas au tout premier rendu = cascade silencieuse).
+  if (!REDUCED && !vibes._treeInitial) {
+    wrap.querySelectorAll(".trow.fx-new, .trow.fx-done").forEach((row) => {
+      const done = row.classList.contains("fx-done");
+      sparkleEl(row, { ox: 28, count: done ? 12 : 6, dist: done ? 42 : 30, emojis: done ? ["🎉", "✨", "🏆", "⭐"] : ["✨", "💫"] });
+    });
+  }
+  vibes._treeInitial = false;
   wrap.querySelectorAll(".tnode").forEach((li) => {
     const ref = li.dataset.ref;
     const id = Number(li.dataset.id);
@@ -944,9 +1593,11 @@ function applyNodeUpdate(n) {
   if (!n || !vibes.current) return;
   if (vibes.currentNode && n.id === vibes.currentNode.id) {
     if (vibes.currentVersion != null && n.version != null && n.version < vibes.currentVersion) return;
+    const notesChanged = !vibes._notesEditing && n.notes != null && JSON.stringify(vibes.currentNode.notes || []) !== JSON.stringify(n.notes || []);
     vibes.currentVersion = n.version;
     Object.assign(vibes.currentNode, n);
     renderNodeHeader(vibes.currentNode);
+    if (notesChanged) flashNotes(); // ex : le bot vient d'écrire les notes
   }
 }
 function scheduleSubtreeRefetch() {
@@ -1069,7 +1720,14 @@ function messageEl(m) {
     }
     if (m.id) vibes.streams.set(m.id, { reasoning: m.reasoning || "", text: m.body || "", reasoningEl: reasoningBody, bodyEl: body });
   } else {
-    body.innerHTML = esc(m.body || "").replace(/\n/g, "<br>");
+    // Message finalisé : rendu markdown (tableaux, listes, code…) pour l'IA ;
+    // texte simple pour les humains (on n'interprète pas leur frappe comme du markdown).
+    if (m.role === "assistant") {
+      body.classList.add("markdown-body");
+      body.innerHTML = renderMarkdown(m.body || "");
+    } else {
+      body.innerHTML = esc(m.body || "").replace(/\n/g, "<br>");
+    }
     if (m.id) vibes.streams.delete(m.id);
   }
   div.appendChild(body);
@@ -1168,6 +1826,18 @@ async function confirmActions(messageId) {
     toast(e.message);
   }
 }
+async function clearChatHistory() {
+  if (!vibes.current) return;
+  if (!confirm("Vider tout l'historique de la discussion de ce nœud ? (irréversible)")) return;
+  try {
+    await api.send("DELETE", nodeUrl("/messages"));
+    renderChat([]); // vidage local immédiat (l'événement chat:cleared confirmera aux autres)
+    toast("Historique vidé.");
+  } catch (e) {
+    if (/ai_busy/.test(e.message)) toast("Claude répond en ce moment — réessaie après le tour.");
+    else toast("Échec : " + e.message);
+  }
+}
 
 // ── Temps réel (SSE) ─────────────────────────────────────────────────────────
 function setLive(on) {
@@ -1189,19 +1859,36 @@ function subscribeForest() {
   vibes.es = es;
   es.onopen = () => { setLive(true); if (vibes.wasDown) loadForest(); vibes.wasDown = false; };
   es.onerror = () => { setLive(false); vibes.wasDown = true; };
-  const upsert = (n, spawn) => {
-    if (!n) return;
-    const ex = vibes.byId.get(n.id);
-    if (ex) Object.assign(ex, n);
-    else { vibes.forest.push(n); vibes.byId.set(n.id, n); }
-    if (spawn) vibes.graph.spawned.add(n.id);
+  const applyNode = (raw, kind) => {
+    if (!raw) return;
+    const ex = vibes.byId.get(raw.id);
+    const wasDone = ex && ex.status === "done";
+    if (ex) Object.assign(ex, raw);
+    else { vibes.forest.push(raw); vibes.byId.set(raw.id, raw); }
+    const node = vibes.byId.get(raw.id);
+    if (kind === "created" || !ex) {
+      vibes.graph.spawned.add(node.id);
+    } else {
+      vibes.graph.pulsed.add(node.id);
+      if (!wasDone && node.status === "done") vibes.graph.celebrated.add(node.id); // jalon atteint → fête
+    }
     renderForestSoon();
   };
-  es.addEventListener("node:created", (e) => upsert(JSON.parse(e.data), true));
-  es.addEventListener("node:updated", (e) => upsert(JSON.parse(e.data), false));
+  es.addEventListener("node:created", (e) => applyNode(JSON.parse(e.data), "created"));
+  es.addEventListener("node:updated", (e) => applyNode(JSON.parse(e.data), "updated"));
   es.addEventListener("node:deleted", () => loadForest());
   es.addEventListener("node:reparented", () => loadForest());
   es.addEventListener("nodes:reordered", () => loadForest());
+  // Positions manuelles déplacées ailleurs : maj locale + re-rendu (sauf si on drague).
+  es.addEventListener("nodes:moved", (e) => {
+    if (vibes.graph.nodeDrag) return;
+    const d = JSON.parse(e.data);
+    for (const p of d.positions || []) {
+      const n = vibes.byId.get(p.id);
+      if (n) { n.posX = p.x; n.posY = p.y; }
+    }
+    renderForestSoon();
+  });
 }
 function subscribeNode(ref) {
   closeStream();
@@ -1214,6 +1901,7 @@ function subscribeNode(ref) {
   es.addEventListener("ai:turn", (e) => { const d = JSON.parse(e.data); $("#typingRow").hidden = d.state !== "start"; if (d.state === "start") $("#typingRow").textContent = `✨ ${d.actor ? d.actor + " — " : ""}Claude travaille…`; });
   es.addEventListener("node:updated", (e) => applyNodeUpdate(JSON.parse(e.data)));
   es.addEventListener("subtree:dirty", () => scheduleSubtreeRefetch());
+  es.addEventListener("chat:cleared", () => renderChat([])); // un autre client a vidé l'historique
   es.addEventListener("node:deleted", (e) => {
     const d = JSON.parse(e.data);
     if (vibes.currentNode && d.id === vibes.currentNode.id) { toast("Ce nœud a été supprimé."); backToForest(); }
@@ -1272,7 +1960,17 @@ async function saveNode() {
       if (vibes._parentId != null) payload.parentId = vibes._parentId;
       const n = await api.send("POST", "/api/nodes", payload);
       $("#nodeBackdrop").hidden = true;
+      vibes.graph.spawned.add(n.id); // anime aussi la naissance pour le créateur local
+      // Création via le menu contextuel du fond → épingle le nœud à l'endroit cliqué.
+      const at = vibes.graph.pendingCreatePos;
+      vibes.graph.pendingCreatePos = null;
+      if (at) {
+        n.posX = at.x; n.posY = at.y;
+        vibes.graph.posMap.set(n.id, { x: at.x, y: at.y });
+        persistPositions([n.id]);
+      }
       if (vibes.current) scheduleSubtreeRefetch();
+      else if (at) loadForest(); // créé via le menu fond → rester sur le graphe pour le voir apparaître
       else { vibes.layout === "graph" ? openNode(n.ref) : loadForest(); }
     }
   } catch (e) {
@@ -1293,13 +1991,35 @@ function initVibes() {
   $("#ndEdit").addEventListener("click", () => openNodeModal(vibes.currentNode, null));
   $("#ndDel").addEventListener("click", deleteCurrentNode);
   $("#ndAddChild").addEventListener("click", () => openNodeModal(null, vibes.currentNode ? vibes.currentNode.id : null));
+  // Notes markdown : éditeur multi-notes (chaque éditeur gère son @ / aperçu).
+  $("#ndNotesEditBtn").addEventListener("click", openNotesEditor);
+  $("#ndNotesCancelBtn").addEventListener("click", closeNotesEditor);
+  $("#ndNotesSaveBtn").addEventListener("click", saveNotes);
+  $("#ndNotesAddBtn").addEventListener("click", () => addNoteEditor());
   $("#chatSend").addEventListener("click", sendChat);
-  $("#chatInput").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); } });
+  $("#chatClearBtn").addEventListener("click", clearChatHistory);
+  // Autocomplete @ fichier dans le chat (même UX que la modale d'entrée du tracker).
+  const chatInput = $("#chatInput");
+  const chatMenu = $("#chatMentionMenu");
+  chatInput.addEventListener("input", () => handleMentionInput(chatInput, chatMenu, state.branch || "", null));
+  chatInput.addEventListener("blur", () => setTimeout(() => hideMenu(chatMenu), 150));
+  chatInput.addEventListener("keydown", (e) => {
+    if (menuKeydown(chatMenu, e)) return; // menu ouvert : flèches / Entrée / Tab / Échap pour lui
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  });
   $("#modelSel").addEventListener("change", (e) => (vibes.model = e.target.value));
-  $("#nodeCancelBtn").addEventListener("click", () => ($("#nodeBackdrop").hidden = true));
+  const closeNodeModal = () => { $("#nodeBackdrop").hidden = true; vibes.graph.pendingCreatePos = null; };
+  $("#nodeCancelBtn").addEventListener("click", closeNodeModal);
   $("#nodeSaveBtn").addEventListener("click", saveNode);
-  $("#nodeBackdrop").addEventListener("mousedown", (e) => { if (e.target === $("#nodeBackdrop")) $("#nodeBackdrop").hidden = true; });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#nodeBackdrop").hidden) $("#nodeBackdrop").hidden = true; });
+  $("#nodeBackdrop").addEventListener("mousedown", (e) => { if (e.target === $("#nodeBackdrop")) closeNodeModal(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (vibes.graph.linking) { cancelLinkMode(); return; }
+    if (document.getElementById("ctxMenu")) { hideCtxMenu(); return; }
+    if (vibes.graph.edgeDel) { hideEdgeDel(); return; }
+    if (vibes._notesEditing && !$("#nodeView").hidden) { closeNotesEditor(); return; }
+    if (!$("#nodeBackdrop").hidden) { $("#nodeBackdrop").hidden = true; vibes.graph.pendingCreatePos = null; }
+  });
   buildColorChips();
   wireGraph();
   setVibesLayout(vibes.layout);
