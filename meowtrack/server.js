@@ -14,8 +14,12 @@
 import "dotenv/config";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { dirname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+
+const execFileAsync = promisify(execFile);
 
 import {
   createIssue,
@@ -28,7 +32,7 @@ import {
   addComment,
   stats,
 } from "./db.js";
-import { searchPaths, refreshPaths, gitContext, repoRoot } from "./repo.js";
+import { searchPaths, refreshPaths, gitContext, repoRoot, ensureRepo, repoUrl, listBranches } from "./repo.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, "dashboard");
@@ -40,6 +44,35 @@ const HOST = process.env.MEOWTRACK_HOST || "127.0.0.1";
 // `Authorization: Bearer <token>` (ou en-tête `X-Meowtrack-Token`). Vide = ouvert
 // (OK en local). Génér. : node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 const TOKEN = (process.env.MEOWTRACK_TOKEN || "").trim();
+// Binaire CLI Claude pour la feature « Améliorer la description » (claude -p).
+// Doit être installé + authentifié sur la machine du serveur. Configurable.
+const CLAUDE_BIN = (process.env.MEOWTRACK_CLAUDE_BIN || "claude").trim();
+
+// Réécrit une description via Claude en mode headless (sonnet). Aucune exécution
+// shell (execFile sans shell) → pas d'injection via le contenu utilisateur.
+async function improveDescriptionWithClaude(title, description) {
+  const base = String(description || "").trim();
+  if (!base) throw new Error("Description vide");
+  const prompt =
+    "Tu améliores la description d'une entrée de suivi (bug/feature/tâche) d'un projet logiciel.\n" +
+    "Réécris la description ci-dessous pour qu'elle soit claire, structurée et actionnable " +
+    "(contexte, comportement attendu/observé, étapes de repro si pertinent). Reste concis.\n" +
+    "Garde la langue d'origine (français). Conserve TELS QUELS les éventuels tokens @chemin/vers/fichier.\n" +
+    "Réponds UNIQUEMENT avec la description améliorée, sans préambule, sans guillemets, sans bloc de code.\n\n" +
+    `Titre : ${title || "(sans titre)"}\n\nDescription actuelle :\n${base}`;
+  try {
+    const { stdout } = await execFileAsync(CLAUDE_BIN, ["-p", prompt, "--model", "sonnet"], {
+      timeout: 120000,
+      maxBuffer: 8 * 1024 * 1024,
+    });
+    const out = String(stdout || "").trim();
+    if (!out) throw new Error("Réponse vide de Claude");
+    return out;
+  } catch (e) {
+    if (e.code === "ENOENT") throw new Error(`CLI Claude introuvable (${CLAUDE_BIN}). Installer/configurer MEOWTRACK_CLAUDE_BIN.`);
+    throw new Error(e.stderr ? String(e.stderr).trim() : e.message || String(e));
+  }
+}
 
 // Allowlist stricte des fichiers statiques (pas de path traversal).
 const STATIC = {
@@ -123,13 +156,34 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { ...stats(), git: gitContext(), repoRoot: repoRoot(), port: PORT });
     }
 
-    // GET /api/paths?q=&limit= — autocomplete (feature « @ »).
-    if (req.method === "GET" && path === "/api/paths") {
-      return send(res, 200, searchPaths(q.get("q") || "", Number(q.get("limit")) || 30));
+    // GET /api/branches — branches connues du clone (+ branche courante).
+    if (req.method === "GET" && path === "/api/branches") {
+      return send(res, 200, listBranches());
     }
-    // POST /api/paths/refresh — re-scan git ls-files.
+
+    // GET /api/paths?q=&limit=&branch= — autocomplete (feature « @ »), arbre de
+    // la branche `branch` si fournie (sinon working tree courant).
+    if (req.method === "GET" && path === "/api/paths") {
+      return send(
+        res,
+        200,
+        searchPaths(q.get("q") || "", Number(q.get("limit")) || 30, q.get("branch") || null)
+      );
+    }
+    // POST /api/paths/refresh?branch= — re-scan d'une source (ou de toutes).
     if (req.method === "POST" && path === "/api/paths/refresh") {
-      return send(res, 200, refreshPaths());
+      return send(res, 200, refreshPaths(q.get("branch") ?? undefined));
+    }
+    // POST /api/repo/update — clone (si absent) ou git fetch+pull du repo, puis
+    // re-scan des chemins. No-op si MEOWTRACK_REPO_URL n'est pas défini.
+    if (req.method === "POST" && path === "/api/repo/update") {
+      return send(res, 200, { ...ensureRepo(), git: gitContext() });
+    }
+    // POST /api/improve-description { title, description } — réécriture via Claude.
+    if (req.method === "POST" && path === "/api/improve-description") {
+      const { title, description } = await readBody(req);
+      const improved = await improveDescriptionWithClaude(title, description);
+      return send(res, 200, { description: improved });
     }
 
     // GET /api/issues — liste filtrée.
@@ -138,6 +192,7 @@ const server = createServer(async (req, res) => {
         type: q.get("type") || undefined,
         status: q.get("status") || undefined,
         priority: q.get("priority") || undefined,
+        branch: q.get("branch") || undefined,
         tag: q.get("tag") || undefined,
         path: q.get("path") || undefined,
         text: q.get("text") || undefined,
@@ -192,6 +247,17 @@ const server = createServer(async (req, res) => {
     send(res, 400, { error: e.message || String(e) });
   }
 });
+
+// Sync du repo au démarrage : clone si absent, sinon pull. No-op sans URL.
+if (repoUrl()) {
+  console.error(`[meowtrack] Sync du repo (${repoUrl()}) → ${repoRoot()}…`);
+  const r = ensureRepo();
+  if (r.ok) {
+    console.error(`[meowtrack] Repo ${r.cloned ? "cloné" : "à jour"} (${r.branch || "?"} @ ${r.commit || "?"}).`);
+  } else {
+    console.error(`[meowtrack] ⚠️  Sync du repo échouée : ${r.output || "erreur inconnue"}`);
+  }
+}
 
 server.listen(PORT, HOST, () => {
   console.error(`[meowtrack] Dashboard prêt → http://${HOST}:${PORT}  (repo : ${repoRoot()})`);

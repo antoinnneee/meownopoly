@@ -69,8 +69,10 @@ Lues via `dotenv` (fichier `.env`, cf. `.env.example`) ou directement dans l'env
 | `MEOWTRACK_HOST` | `127.0.0.1` | Hôte d'écoute. `0.0.0.0` pour être joignable sur le réseau (déploiement). |
 | `MEOWTRACK_PORT` | `7702` | Port HTTP du dashboard (choisir un port **libre**, pas 80). |
 | `MEOWTRACK_TOKEN` | _(vide)_ | Si défini, `/api/*` exige `Authorization: Bearer <token>`. **Obligatoire en déploiement.** |
-| `MEOWTRACK_REPO` | _(auto)_ | Chemin absolu du clone du repo (autocomplete + validation). Auto-détecté via `git rev-parse` en dev in-repo. |
+| `MEOWTRACK_REPO_URL` | _(vide)_ | URL git du repo à cloner/mettre à jour. Si définie : clone au démarrage + `git pull`, et bouton **⟳ Mettre à jour** (`POST /api/repo/update`) du dashboard. Vide = clone géré à la main. |
+| `MEOWTRACK_REPO` | _(auto)_ | Chemin absolu du clone du repo (autocomplete + validation). Auto-détecté via `git rev-parse` en dev in-repo. Avec `MEOWTRACK_REPO_URL`, c'est la destination du clone (défaut `meowtrack/.repo-clone`). |
 | `MEOWTRACK_DB` | `meowtrack/meowtrack.db` | Chemin de la base SQLite. |
+| `MEOWTRACK_CLAUDE_BIN` | `claude` | [Serveur] Binaire CLI Claude pour la feature « Améliorer la description » (IA). Doit être installé + authentifié sur le serveur. |
 
 ## Déploiement (serveur de dev, port dédié, sans nginx)
 
@@ -102,7 +104,20 @@ cd meowtrack
 
 ### Accès au repo cloné
 
-L'autocomplete `@` et la validation des références s'appuient sur `git ls-files` exécuté à la racine du clone. En déploiement, pointer `MEOWTRACK_REPO` vers le clone présent sur le serveur. Sans clone accessible, l'autocomplete renvoie une liste vide mais la création/édition/suivi restent fonctionnels (les chemins sont alors stockés tels quels, `existed:false`).
+L'autocomplete `@` et la validation des références s'appuient sur `git ls-files` exécuté à la racine du clone. Deux options en déploiement :
+
+- **Clone géré par le service** (recommandé) : définir `MEOWTRACK_REPO_URL`. Le service clone le repo au démarrage (dans `MEOWTRACK_REPO` ou `meowtrack/.repo-clone` à défaut), fait un `git pull` à chaque démarrage, et le bouton **⟳ Mettre à jour** du dashboard (`POST /api/repo/update`) re-pulle à la demande.
+- **Clone manuel** : pointer `MEOWTRACK_REPO` vers un checkout présent sur le serveur, mis à jour à la main.
+
+Sans clone accessible, l'autocomplete renvoie une liste vide mais la création/édition/suivi restent fonctionnels (les chemins sont alors stockés tels quels, `existed:false`).
+
+### Suivi par branche
+
+Chaque entrée est rattachée à une **branche git** (champ `branch`, sélectionnable dans la modale + filtrable via le sélecteur de la topbar). L'autocomplete `@` et la validation des références (`existed`) ciblent l'arbre de cette branche, lu via `git ls-tree <branche>` sur le **clone unique** — pas besoin de checkout ni de plusieurs clones, toutes les branches connues du clone (locales + `origin/*`) sont servies. `GET /api/branches` liste les branches ; `GET /api/paths?branch=…` et `GET /api/issues?branch=…` filtrent par branche. Côté MCP : paramètre `branch` sur `create`/`update`/`list`/`search_paths` + outil `meowtrack_branches`.
+
+### Amélioration IA de la description
+
+Le bouton **✨ Améliorer (IA)** de la modale (`POST /api/improve-description`) réécrit la description courante via `claude -p --model sonnet` (CLI headless, exécuté côté serveur, sans shell). Les `@chemin` sont préservés. Nécessite le CLI Claude installé + authentifié sur le serveur (`MEOWTRACK_CLAUDE_BIN`).
 
 ## Notes
 

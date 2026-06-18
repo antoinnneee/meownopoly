@@ -10,6 +10,8 @@
     <header class="topbar">
       <div class="brand">🐾 Meowtrack</div>
       <div class="meta" id="meta"></div>
+      <select id="branchSel" class="branch-select" title="Branche de contexte : autocomplete @ + branche par défaut des nouvelles entrées"></select>
+      <button id="updateBtn" class="ghost" title="Cloner / mettre à jour le repo (git fetch + pull)">⟳ Mettre à jour</button>
       <button id="newBtn" class="primary">+ Nouvelle entrée</button>
     </header>
 
@@ -79,12 +81,18 @@
               <option value="wontfix">Abandonné</option>
             </select>
           </label>
+          <label>Branche
+            <select id="mBranch"></select>
+          </label>
         </div>
         <label class="full">Titre
           <input id="mTitle" type="text" placeholder="Résumé court" />
         </label>
         <label class="full">Description
-          <span class="hint">Tape <kbd>@</kbd> pour insérer et associer un fichier/dossier du repo.</span>
+          <span class="hint">
+            Tape <kbd>@</kbd> pour insérer et associer un fichier/dossier du repo.
+            <button type="button" id="improveBtn" class="ghost improve-btn" title="Réécrire la description avec Claude (Sonnet)">✨ Améliorer (IA)</button>
+          </span>
           <div class="ta-wrap">
             <textarea id="mDesc" rows="7" placeholder="Détails, repro, contexte… @chemin/vers/fichier.cpp"></textarea>
             <ul id="mentionMenu" class="mention-menu" hidden></ul>
@@ -97,11 +105,7 @@
         <div class="refs-block">
           <div class="refs-head">
             <span>Fichiers / dossiers associés</span>
-            <span class="hint">Détectés via les <kbd>@</kbd> de la description + ajouts manuels.</span>
-          </div>
-          <div class="ref-add">
-            <input id="refInput" type="text" placeholder="Ajouter un chemin (autocomplete)… ex. cpp/editor/" autocomplete="off" />
-            <ul id="refMenu" class="mention-menu" hidden></ul>
+            <span class="hint">Détectés via les <kbd>@</kbd> de la description.</span>
           </div>
           <ul id="refList" class="ref-list"></ul>
         </div>

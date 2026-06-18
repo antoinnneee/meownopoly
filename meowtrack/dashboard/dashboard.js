@@ -44,7 +44,7 @@ const TYPE_ICON = { bug: "🐞", feature: "✨", task: "✅", chore: "🧹" };
 const STATUS_LABEL = { open: "Ouvert", in_progress: "En cours", done: "Fait", wontfix: "Abandonné" };
 const PRIO_LABEL = { critical: "Critique", high: "Haute", medium: "Moyenne", low: "Basse" };
 
-let state = { issues: [], selected: null, editing: null, refs: [] };
+let state = { issues: [], selected: null, editing: null, refs: [], branch: "", branches: [], serverBranch: null };
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -62,6 +62,57 @@ async function loadMeta() {
   }
 }
 
+// Charge la liste des branches du repo serveur → sélecteur topbar.
+async function loadBranches() {
+  try {
+    const b = await api.get("/api/branches");
+    state.branches = b.branches || [];
+    state.serverBranch = b.current || null;
+    const sel = $("#branchSel");
+    const keep = state.branch;
+    sel.innerHTML =
+      `<option value="">Toutes branches</option>` +
+      state.branches.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+    sel.value = keep && state.branches.includes(keep) ? keep : "";
+    state.branch = sel.value;
+  } catch {
+    /* serveur injoignable : on garde le sélecteur vide */
+  }
+}
+
+// Options du select branche de la modale (valeur "" = défaut serveur / HEAD).
+function branchOptions(selected) {
+  const def = `(défaut${state.serverBranch ? " · " + state.serverBranch : ""})`;
+  const opts = [`<option value="">${esc(def)}</option>`];
+  for (const n of state.branches) opts.push(`<option value="${esc(n)}">${esc(n)}</option>`);
+  if (selected && !state.branches.includes(selected))
+    opts.push(`<option value="${esc(selected)}">${esc(selected)}</option>`);
+  return opts.join("");
+}
+
+// Clone / met à jour le repo (git fetch + pull côté serveur) puis recharge.
+async function updateRepo(btn) {
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "⟳ Maj…";
+  try {
+    const r = await api.send("POST", "/api/repo/update");
+    if (r.skipped) {
+      alert("Aucune URL de repo configurée (MEOWTRACK_REPO_URL).");
+    } else if (r.ok) {
+      await loadMeta();
+      await loadList();
+    } else {
+      alert("Mise à jour échouée :\n" + (r.output || "erreur inconnue"));
+    }
+  } catch (e) {
+    alert("Erreur : " + e.message);
+  } finally {
+    btn.textContent = old;
+    btn.disabled = false;
+  }
+}
+
 async function loadList() {
   const params = new URLSearchParams();
   const text = $("#search").value.trim();
@@ -71,6 +122,7 @@ async function loadList() {
   if (st === "__all") params.set("includeClosed", "true");
   else if (st) params.set("status", st);
   if ($("#fPriority").value) params.set("priority", $("#fPriority").value);
+  if (state.branch) params.set("branch", state.branch);
   try {
     state.issues = await api.get("/api/issues?" + params.toString());
     renderList();
@@ -90,6 +142,8 @@ function renderList() {
       const sel = state.selected?.ref === it.ref ? "selected" : "";
       const tags = it.tags.map((t) => `<span class="badge tag">${esc(t)}</span>`).join("");
       const refBadge = it.references.length ? `<span class="badge refcount">📎 ${it.references.length}</span>` : "";
+      // Badge branche affiché seulement hors filtre branche (sinon redondant).
+      const brBadge = it.branch && !state.branch ? `<span class="badge">⎇ ${esc(it.branch)}</span>` : "";
       const stBadge =
         it.status !== "open" ? `<span class="badge status-${it.status}">${STATUS_LABEL[it.status]}</span>` : "";
       return `<li class="issue-card prio-${it.priority} ${it.status} ${sel}" data-ref="${esc(it.ref)}">
@@ -99,7 +153,7 @@ function renderList() {
         </div>
         <div class="row2">
           <span class="badge type-${it.type}">${TYPE_ICON[it.type]} ${it.type}</span>
-          ${stBadge}${refBadge}${tags}
+          ${stBadge}${brBadge}${refBadge}${tags}
         </div>
       </li>`;
     })
@@ -232,7 +286,10 @@ function openModal(issue) {
   $("#mTitle").value = issue?.title || "";
   $("#mDesc").value = issue?.description || "";
   $("#mTags").value = (issue?.tags || []).join(", ");
-  $("#refInput").value = "";
+  // Branche : celle de l'entrée éditée, sinon la branche de contexte (topbar).
+  const branch = issue ? issue.branch || "" : state.branch || "";
+  $("#mBranch").innerHTML = branchOptions(branch);
+  $("#mBranch").value = branch;
   renderRefEditor();
   $("#backdrop").hidden = false;
   $("#mTitle").focus();
@@ -241,7 +298,6 @@ function openModal(issue) {
 function closeModal() {
   $("#backdrop").hidden = true;
   hideMenu($("#mentionMenu"));
-  hideMenu($("#refMenu"));
 }
 
 // Synchronise la liste de refs : on conserve les ajouts manuels + les @mentions.
@@ -268,27 +324,50 @@ function syncMentionsFromDesc() {
   renderRefEditor();
 }
 
+// Affichage seul : les références sont entièrement dérivées des @mentions de la
+// description (pour en retirer une, supprimer le @ correspondant dans le texte).
 function renderRefEditor() {
   const ul = $("#refList");
   if (!state.refs.length) {
-    ul.innerHTML = '<li class="empty" style="font-family:inherit">Aucun fichier associé.</li>';
+    ul.innerHTML = '<li class="empty" style="font-family:inherit">Aucun fichier associé (tape <kbd>@</kbd> dans la description).</li>';
     return;
   }
   ul.innerHTML = state.refs
     .map(
-      (r, i) => `<li>
+      (r) => `<li>
         <span class="path">${esc(r.path)}${r.lineStart ? `<span class="lines">:${r.lineStart}${r.lineEnd ? "-" + r.lineEnd : ""}</span>` : ""}</span>
-        ${r.fromMention ? '<span class="badge">@</span>' : ""}
-        <button class="danger rm" data-i="${i}">✕</button>
       </li>`
     )
     .join("");
-  ul.querySelectorAll(".rm").forEach((b) =>
-    b.addEventListener("click", () => {
-      state.refs.splice(Number(b.dataset.i), 1);
-      renderRefEditor();
-    })
-  );
+}
+
+// Améliore la description courante via Claude (Sonnet), côté serveur (claude -p).
+async function improveDescription() {
+  const btn = $("#improveBtn");
+  const desc = $("#mDesc");
+  const base = desc.value.trim();
+  if (!base) {
+    alert("Écris d'abord une description à améliorer.");
+    return;
+  }
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "✨ Amélioration…";
+  try {
+    const r = await api.send("POST", "/api/improve-description", {
+      title: $("#mTitle").value,
+      description: base,
+    });
+    if (r.description) {
+      desc.value = r.description;
+      syncMentionsFromDesc(); // re-détecte les @chemin après réécriture
+    }
+  } catch (e) {
+    alert("Échec de l'amélioration IA : " + e.message);
+  } finally {
+    btn.textContent = old;
+    btn.disabled = false;
+  }
 }
 
 async function saveIssue() {
@@ -296,6 +375,7 @@ async function saveIssue() {
     type: $("#mType").value,
     priority: $("#mPriority").value,
     status: $("#mStatus").value,
+    branch: $("#mBranch").value || undefined,
     title: $("#mTitle").value.trim(),
     description: $("#mDesc").value,
     tags: $("#mTags").value.split(",").map((s) => s.trim()).filter(Boolean),
@@ -360,7 +440,11 @@ function debouncedSearch(query, cb) {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(async () => {
     try {
-      cb(await api.get("/api/paths?q=" + encodeURIComponent(query) + "&limit=20"));
+      // L'autocomplete cible l'arbre de la branche de l'entrée en cours d'édition.
+      const branch = $("#mBranch").value || "";
+      const url =
+        "/api/paths?q=" + encodeURIComponent(query) + "&limit=20" + (branch ? "&branch=" + encodeURIComponent(branch) : "");
+      cb(await api.get(url));
     } catch {
       cb([]);
     }
@@ -370,26 +454,17 @@ function debouncedSearch(query, cb) {
 function chooseMenuItem(i) {
   const item = menuState.items[i];
   if (!item) return;
-  if (menuState.kind === "desc") {
-    // Remplace le token @… en cours par le chemin choisi.
-    const ta = $("#mDesc");
-    const pos = ta.selectionStart;
-    const before = ta.value.slice(0, pos);
-    const at = before.lastIndexOf("@");
-    ta.value = before.slice(0, at) + "@" + item.path + " " + ta.value.slice(pos);
-    const newPos = at + 1 + item.path.length + 1;
-    ta.setSelectionRange(newPos, newPos);
-    ta.focus();
-    hideMenu($("#mentionMenu"));
-    syncMentionsFromDesc();
-  } else {
-    // Champ d'ajout de référence.
-    if (!state.refs.some((r) => r.path === item.path && !r.lineStart))
-      state.refs.push({ path: item.path });
-    $("#refInput").value = "";
-    hideMenu($("#refMenu"));
-    renderRefEditor();
-  }
+  // Remplace le token @… en cours par le chemin choisi (seule source de refs).
+  const ta = $("#mDesc");
+  const pos = ta.selectionStart;
+  const before = ta.value.slice(0, pos);
+  const at = before.lastIndexOf("@");
+  ta.value = before.slice(0, at) + "@" + item.path + " " + ta.value.slice(pos);
+  const newPos = at + 1 + item.path.length + 1;
+  ta.setSelectionRange(newPos, newPos);
+  ta.focus();
+  hideMenu($("#mentionMenu"));
+  syncMentionsFromDesc();
 }
 
 function moveMenu(menu, dir) {
@@ -416,17 +491,6 @@ function onDescInput() {
   debouncedSearch(match[1], (items) => renderMenu(menu, items));
 }
 
-function onRefInput() {
-  const menu = $("#refMenu");
-  const v = $("#refInput").value.trim();
-  if (!v) {
-    hideMenu(menu);
-    return;
-  }
-  menuState.kind = "ref";
-  debouncedSearch(v, (items) => renderMenu(menu, items));
-}
-
 function menuKeydown(menu, e) {
   if (menu.hidden) return false;
   if (e.key === "ArrowDown") { e.preventDefault(); moveMenu(menu, 1); return true; }
@@ -439,6 +503,7 @@ function menuKeydown(menu, e) {
 // ── Wiring ───────────────────────────────────────────────────────────────────
 function init() {
   $("#newBtn").addEventListener("click", () => openModal(null));
+  $("#updateBtn").addEventListener("click", (e) => updateRepo(e.currentTarget));
   $("#cancelBtn").addEventListener("click", closeModal);
   $("#saveBtn").addEventListener("click", saveIssue);
   $("#backdrop").addEventListener("mousedown", (e) => {
@@ -452,33 +517,26 @@ function init() {
   };
   $("#search").addEventListener("input", onFilter);
   ["#fType", "#fStatus", "#fPriority"].forEach((s) => $(s).addEventListener("change", loadList));
+  // Sélecteur de branche (topbar) : filtre la liste + défaut des nouvelles entrées.
+  $("#branchSel").addEventListener("change", (e) => {
+    state.branch = e.target.value;
+    loadList();
+  });
 
   const desc = $("#mDesc");
   desc.addEventListener("input", onDescInput);
   desc.addEventListener("keydown", (e) => menuKeydown($("#mentionMenu"), e));
   desc.addEventListener("blur", () => setTimeout(() => hideMenu($("#mentionMenu")), 150));
 
-  const refInput = $("#refInput");
-  refInput.addEventListener("input", onRefInput);
-  refInput.addEventListener("keydown", (e) => {
-    if (menuKeydown($("#refMenu"), e)) return;
-    if (e.key === "Enter" && refInput.value.trim()) {
-      // Validation manuelle d'un chemin tapé (même s'il n'est pas dans la liste).
-      e.preventDefault();
-      const v = refInput.value.trim();
-      if (!state.refs.some((r) => r.path === v)) state.refs.push({ path: v });
-      refInput.value = "";
-      hideMenu($("#refMenu"));
-      renderRefEditor();
-    }
-  });
-  refInput.addEventListener("blur", () => setTimeout(() => hideMenu($("#refMenu")), 150));
+  // Changer la branche dans la modale ré-cible l'autocomplete @ (rien d'autre à faire).
+  $("#improveBtn").addEventListener("click", improveDescription);
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !$("#backdrop").hidden) closeModal();
   });
 
   loadMeta();
+  loadBranches();
   loadList();
 }
 

@@ -9,3 +9,6 @@ node_modules/
 # Secrets de déploiement / config locale.
 .deployEnv
 .env
+
+# Clone du repo géré par le service (MEOWTRACK_REPO_URL sans MEOWTRACK_REPO).
+.repo-clone/

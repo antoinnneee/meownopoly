@@ -1,29 +1,77 @@
 #!/usr/bin/env node
 // mcp.js — serveur MCP (stdio) du suivi Meowtrack.
 //
-// Expose les bugs / features / tâches stockés dans meowtrack.db et les chemins
-// du repo git cloné. Lancement : node mcp.js (configuré dans .mcp.json racine).
-// Aucune dépendance à l'app Qt : c'est un service de données autonome.
+// Client de l'API HTTP du dashboard déployé : toutes les requêtes passent par le
+// serveur distant (server.js), qui est la SEULE source de vérité (base SQLite +
+// repo cloné). Le MCP ne touche JAMAIS de base locale — il relaie vers le serveur.
+// Lancement : node mcp.js (configuré dans .mcp.json racine). Aucune dépendance à
+// l'app Qt.
+//
+// Config (env ou meowtrack/.env, chargé explicitement quel que soit le cwd) :
+//   MEOWTRACK_SERVER_URL  base de l'API (défaut http://127.0.0.1:7702 ; en prod
+//                         ex. http://pattounecorp.ovh:7702).
+//   MEOWTRACK_TOKEN       jeton Bearer si le serveur en exige un (sinon vide).
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 
-import {
-  TYPES,
-  STATUSES,
-  PRIORITIES,
-  createIssue,
-  getIssue,
-  updateIssue,
-  deleteIssue,
-  listIssues,
-  addReference,
-  removeReference,
-  addComment,
-  stats,
-} from "./db.js";
-import { searchPaths, refreshPaths, gitContext, repoRoot } from "./repo.js";
+const HERE = dirname(fileURLToPath(import.meta.url));
+// Le MCP est lancé depuis la racine du repo (`node meowtrack/mcp.js`), donc
+// dotenv/config (cwd) ne verrait pas meowtrack/.env. On le charge explicitement.
+dotenv.config({ path: join(HERE, ".env") });
+
+// Énumérations (doivent rester alignées sur db.js — dupliquées ici pour ne pas
+// importer db.js, dont l'import ouvrirait une base SQLite locale).
+const TYPES = ["bug", "feature", "task", "chore"];
+const STATUSES = ["open", "in_progress", "done", "wontfix"];
+const PRIORITIES = ["low", "medium", "high", "critical"];
+
+const BASE = (process.env.MEOWTRACK_SERVER_URL || "http://127.0.0.1:7702").replace(/\/+$/, "");
+const TOKEN = (process.env.MEOWTRACK_TOKEN || "").trim();
+
+// ── Client HTTP de l'API du serveur distant ──────────────────────────────────
+async function apiFetch(method, path, body) {
+  const headers = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (TOKEN) headers["Authorization"] = "Bearer " + TOKEN;
+  let res;
+  try {
+    res = await fetch(BASE + path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch (e) {
+    throw new Error(`Serveur meowtrack injoignable (${BASE}) : ${e.message || e}`);
+  }
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
+  if (!res.ok) {
+    const msg = (data && data.error) || res.statusText || `HTTP ${res.status}`;
+    throw new Error(`${msg} (HTTP ${res.status})`);
+  }
+  return data;
+}
+const apiGet = (path) => apiFetch("GET", path);
+
+// Construit une query string à partir des champs définis (ignore null/undefined/"").
+function qs(obj) {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(obj || {})) {
+    if (v !== undefined && v !== null && v !== "") p.set(k, String(v));
+  }
+  const s = p.toString();
+  return s ? "?" + s : "";
+}
 
 const server = new McpServer({ name: "meowtrack", version: "1.0.0" });
 
@@ -65,10 +113,11 @@ server.registerTool(
       priority: z.enum(PRIORITIES).optional().describe("Priorité (défaut 'medium')."),
       status: z.enum(STATUSES).optional().describe("Statut initial (défaut 'open')."),
       tags: z.array(z.string()).optional().describe("Étiquettes libres."),
-      paths: z.array(refSpecSchema).optional().describe("Fichiers/dossiers associés (validés contre le repo)."),
+      branch: z.string().optional().describe("Branche git de rattachement (tracking + validation des chemins). Défaut : branche checkout du serveur."),
+      paths: z.array(refSpecSchema).optional().describe("Fichiers/dossiers associés (validés contre la branche)."),
     },
   },
-  guard(async (a) => createIssue(a))
+  guard(async (a) => apiFetch("POST", "/api/issues", a))
 );
 
 // ── meowtrack_list ───────────────────────────────────────────────────────────
@@ -83,6 +132,7 @@ server.registerTool(
       type: z.enum(TYPES).optional(),
       status: z.enum(STATUSES).optional().describe("Filtre exact sur le statut."),
       priority: z.enum(PRIORITIES).optional(),
+      branch: z.string().optional().describe("Ne garder que les entrées rattachées à cette branche."),
       tag: z.string().optional().describe("Ne garder que les entrées portant cette étiquette."),
       path: z.string().optional().describe("Ne garder que les entrées référençant un chemin contenant cette sous-chaîne."),
       text: z.string().optional().describe("Recherche plein-texte sur titre/description/ref."),
@@ -90,7 +140,7 @@ server.registerTool(
       limit: z.number().int().optional().describe("Nombre max d'entrées (défaut 200)."),
     },
   },
-  guard(async (a) => listIssues(a))
+  guard(async (a) => apiGet("/api/issues" + qs(a)))
 );
 
 // ── meowtrack_get ────────────────────────────────────────────────────────────
@@ -102,9 +152,12 @@ server.registerTool(
     inputSchema: { ref: z.string().describe("Code (BUG-1, FEAT-2…) ou id numérique.") },
   },
   guard(async ({ ref }) => {
-    const issue = getIssue(ref);
-    if (!issue) throw new Error(`Issue introuvable : ${ref}`);
-    return issue;
+    try {
+      return await apiGet("/api/issues/" + encodeURIComponent(ref));
+    } catch (e) {
+      if (String(e.message).includes("404")) throw new Error(`Issue introuvable : ${ref}`);
+      throw e;
+    }
   })
 );
 
@@ -124,10 +177,11 @@ server.registerTool(
       status: z.enum(STATUSES).optional(),
       priority: z.enum(PRIORITIES).optional(),
       tags: z.array(z.string()).optional(),
+      branch: z.string().optional().describe("Rattacher l'entrée à cette branche (recapture le commit + revalide les chemins)."),
       paths: z.array(refSpecSchema).optional().describe("Remplace TOUTES les références par cette liste."),
     },
   },
-  guard(async ({ ref, ...fields }) => updateIssue(ref, fields))
+  guard(async ({ ref, ...fields }) => apiFetch("PATCH", "/api/issues/" + encodeURIComponent(ref), fields))
 );
 
 // ── meowtrack_set_status (raccourci) ─────────────────────────────────────────
@@ -141,7 +195,7 @@ server.registerTool(
       status: z.enum(STATUSES).describe("Nouveau statut."),
     },
   },
-  guard(async ({ ref, status }) => updateIssue(ref, { status }))
+  guard(async ({ ref, status }) => apiFetch("PATCH", "/api/issues/" + encodeURIComponent(ref), { status }))
 );
 
 // ── meowtrack_delete ─────────────────────────────────────────────────────────
@@ -152,7 +206,7 @@ server.registerTool(
     description: "Supprime définitivement une entrée et ses références/commentaires (cascade).",
     inputSchema: { ref: z.string().describe("Code ou id de l'entrée.") },
   },
-  guard(async ({ ref }) => ({ deleted: deleteIssue(ref), ref }))
+  guard(async ({ ref }) => apiFetch("DELETE", "/api/issues/" + encodeURIComponent(ref)))
 );
 
 // ── meowtrack_add_reference ──────────────────────────────────────────────────
@@ -168,12 +222,9 @@ server.registerTool(
       path: refSpecSchema,
     },
   },
-  guard(async ({ ref, path }) => {
-    const issue = getIssue(ref);
-    if (!issue) throw new Error(`Issue introuvable : ${ref}`);
-    addReference(issue.id, path);
-    return getIssue(issue.id);
-  })
+  guard(async ({ ref, path }) =>
+    apiFetch("POST", "/api/issues/" + encodeURIComponent(ref) + "/references", { path })
+  )
 );
 
 // ── meowtrack_remove_reference ───────────────────────────────────────────────
@@ -184,7 +235,10 @@ server.registerTool(
     description: "Supprime une référence par son id (visible dans le détail de l'entrée).",
     inputSchema: { referenceId: z.number().int().describe("id de la référence à retirer.") },
   },
-  guard(async ({ referenceId }) => ({ removed: removeReference(referenceId), referenceId }))
+  guard(async ({ referenceId }) => ({
+    ...(await apiFetch("DELETE", "/api/references/" + referenceId)),
+    referenceId,
+  }))
 );
 
 // ── meowtrack_comment ────────────────────────────────────────────────────────
@@ -198,7 +252,9 @@ server.registerTool(
       body: z.string().describe("Contenu du commentaire."),
     },
   },
-  guard(async ({ ref, body }) => addComment(ref, body))
+  guard(async ({ ref, body }) =>
+    apiFetch("POST", "/api/issues/" + encodeURIComponent(ref) + "/comments", { body })
+  )
 );
 
 // ── meowtrack_search_paths (feature « @ ») ───────────────────────────────────
@@ -207,14 +263,28 @@ server.registerTool(
   {
     title: "Rechercher des chemins du repo",
     description:
-      "Autocomplete des fichiers/dossiers suivis par git (même source que le « @ » du dashboard). " +
-      "Sert à découvrir les chemins exacts à associer à une entrée. Trié par pertinence.",
+      "Autocomplete des fichiers/dossiers suivis par git sur le serveur (même source que le « @ » du " +
+      "dashboard). Sert à découvrir les chemins exacts à associer à une entrée. Trié par pertinence.",
     inputSchema: {
       query: z.string().optional().describe("Sous-chaîne à rechercher (vide = premiers chemins)."),
       limit: z.number().int().optional().describe("Nombre max de résultats (défaut 30)."),
+      branch: z.string().optional().describe("Chercher dans l'arbre de cette branche (défaut : branche checkout du serveur)."),
     },
   },
-  guard(async ({ query, limit }) => searchPaths(query || "", limit || 30))
+  guard(async ({ query, limit, branch }) => apiGet("/api/paths" + qs({ q: query, limit, branch })))
+);
+
+// ── meowtrack_branches ───────────────────────────────────────────────────────
+server.registerTool(
+  "meowtrack_branches",
+  {
+    title: "Lister les branches du repo",
+    description:
+      "Branches connues du clone serveur (pour rattacher une entrée ou cibler l'autocomplete d'une " +
+      "branche précise). Renvoie { branches: [...], current }.",
+    inputSchema: {},
+  },
+  guard(async () => apiGet("/api/branches"))
 );
 
 // ── meowtrack_stats ──────────────────────────────────────────────────────────
@@ -222,10 +292,10 @@ server.registerTool(
   "meowtrack_stats",
   {
     title: "Statistiques de suivi",
-    description: "Compte des entrées par statut / type / priorité, plus le contexte git courant et la racine du repo.",
+    description: "Compte des entrées par statut / type / priorité, plus le contexte git courant et la racine du repo (serveur).",
     inputSchema: {},
   },
-  guard(async () => ({ ...stats(), git: gitContext(), repoRoot: repoRoot() }))
+  guard(async () => apiGet("/api/meta"))
 );
 
 // ── meowtrack_refresh_paths ──────────────────────────────────────────────────
@@ -233,12 +303,12 @@ server.registerTool(
   "meowtrack_refresh_paths",
   {
     title: "Rafraîchir l'index des chemins",
-    description: "Force un nouveau `git ls-files` (après un pull / changement de branche / nouveaux fichiers).",
+    description: "Force un nouveau `git ls-files` côté serveur (après un pull / changement de branche / nouveaux fichiers).",
     inputSchema: {},
   },
-  guard(async () => refreshPaths())
+  guard(async () => apiFetch("POST", "/api/paths/refresh"))
 );
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error("[meowtrack] MCP server prêt (stdio).");
+console.error(`[meowtrack] MCP server prêt (stdio) → API ${BASE}.`);

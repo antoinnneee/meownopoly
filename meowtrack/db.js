@@ -10,7 +10,7 @@
 import Database from "better-sqlite3";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { inspectPath, gitContext, normalizePath } from "./repo.js";
+import { inspectPath, gitContext, branchContext, normalizePath } from "./repo.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.MEOWTRACK_DB || join(HERE, "meowtrack.db");
@@ -164,10 +164,12 @@ export function listReferences(issueId) {
 }
 
 export function addReference(issueId, spec) {
+  // Existence validée contre la branche de l'issue (pas le working tree courant).
+  const branch = db.prepare("SELECT branch FROM issues WHERE id = ?").get(issueId)?.branch || null;
   const { path, lineStart, lineEnd } = parseRefSpec(spec);
   const norm = normalizePath(path);
   if (!norm) throw new Error(`Chemin invalide ou hors repo : ${path}`);
-  const info = inspectPath(norm);
+  const info = inspectPath(norm, branch);
   const info2 = db
     .prepare(
       "INSERT INTO refs(issue_id, path, kind, line_start, line_end, existed) VALUES(?,?,?,?,?,?)"
@@ -185,7 +187,8 @@ export function removeReference(refId) {
 }
 
 // Remplace l'intégralité des références d'une issue par `specs` (dédupliqué).
-function setReferences(issueId, specs) {
+// `branch` cible l'arbre dans lequel valider l'existence des chemins.
+function setReferences(issueId, specs, branch = null) {
   db.prepare("DELETE FROM refs WHERE issue_id = ?").run(issueId);
   const seen = new Set();
   for (const spec of specs || []) {
@@ -195,7 +198,7 @@ function setReferences(issueId, specs) {
     const key = `${norm}:${lineStart ?? ""}:${lineEnd ?? ""}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const info = inspectPath(norm);
+    const info = inspectPath(norm, branch);
     db.prepare(
       "INSERT INTO refs(issue_id, path, kind, line_start, line_end, existed) VALUES(?,?,?,?,?,?)"
     ).run(issueId, norm, info.kind, lineStart, lineEnd, info.exists ? 1 : 0);
@@ -242,7 +245,8 @@ export function createIssue(input = {}) {
   const priority = PRIORITIES.includes(input.priority) ? input.priority : "medium";
   const description = String(input.description || "");
   const tags = JSON.stringify(sanitizeTags(input.tags));
-  const ctx = gitContext();
+  // Branche choisie explicitement (tracking + validation des chemins) sinon HEAD.
+  const ctx = input.branch ? branchContext(String(input.branch)) : gitContext();
 
   // Références = celles fournies explicitement + celles détectées via @mentions
   // dans la description (sauf si autoMention === false).
@@ -258,7 +262,7 @@ export function createIssue(input = {}) {
       )
       .run(ref, type, title, description, status, priority, tags, ctx.branch, ctx.commit);
     const id = res.lastInsertRowid;
-    setReferences(id, specs);
+    setReferences(id, specs, ctx.branch);
     return id;
   });
   return getIssue(tx());
@@ -288,15 +292,24 @@ export function updateIssue(refOrId, fields = {}) {
     set("priority", fields.priority);
   }
   if (fields.tags != null) set("tags", JSON.stringify(sanitizeTags(fields.tags)));
+  // Changement de branche : recapture aussi le commit du sommet de cette branche.
+  let newBranch = row.branch;
+  if (fields.branch != null) {
+    const ctx = branchContext(String(fields.branch) || null);
+    newBranch = ctx.branch;
+    set("branch", ctx.branch);
+    set("git_commit", ctx.commit);
+  }
 
   const tx = db.transaction(() => {
     if (sets.length) {
       set("updated_at", nowIso());
       db.prepare(`UPDATE issues SET ${sets.join(", ")} WHERE id = ?`).run(...vals, row.id);
     }
-    // Remplacement des références si `paths`/`references` fourni explicitement.
+    // Remplacement des références si `paths`/`references` fourni explicitement
+    // (validées contre la branche — éventuellement nouvelle — de l'issue).
     if (fields.paths != null || fields.references != null) {
-      setReferences(row.id, fields.paths || fields.references || []);
+      setReferences(row.id, fields.paths || fields.references || [], newBranch);
       touchIssue(row.id);
     }
   });
@@ -328,6 +341,10 @@ export function listIssues(filter = {}) {
   if (filter.priority) {
     where.push("priority = ?");
     vals.push(filter.priority);
+  }
+  if (filter.branch) {
+    where.push("branch = ?");
+    vals.push(filter.branch);
   }
   if (filter.tag) {
     where.push("tags LIKE ?");
