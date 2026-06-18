@@ -315,6 +315,14 @@ Rectangle {
                 id: stBackGroundEditor
                 property bool selectBackgroundAtStart: value("selectBackgroundAtStart", "true") === "true" || value("selectBackgroundAtStart", "true") === true
                 category: "Editor"
+                // Applique l'échelle d'interface persistée (Theme.uiScale) dès
+                // le chargement de l'éditeur — le settingsView est instancié
+                // même masqué, donc ce handler s'exécute au démarrage. Lecture
+                // directe via value() (pas une propriété déclarée trackée) pour
+                // rester cohérent avec les autres réglages scalaires du panneau.
+                Component.onCompleted: {
+                    Theme.uiScale = parseFloat(value("uiScale", "1.0"))
+                }
             }
             Settings {
                 id: stEnableAutoSave
@@ -554,6 +562,26 @@ Rectangle {
                                             indicator: Rectangle { implicitWidth: 46; implicitHeight: 24; x: parent.leftPadding; y: parent.height/2 - height/2; radius: 12; color: parent.checked ? Theme.accent : Theme.border
                                                 Rectangle { x: parent.parent.checked ? parent.width - width - 2 : 2; y: 2; width: 20; height: 20; radius: 10; color: Theme.surfaceLight; Behavior on x { NumberAnimation { duration: Theme.durationNormal } } } }
                                         }
+                                    }
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Échelle de l'interface"; color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.fillWidth: true }
+                                        MeowSlider {
+                                            id: uiScaleSlider
+                                            Layout.preferredWidth: 200; from: 0.5; to: 2.0; stepSize: 0.05
+                                            value: Theme.uiScale
+                                            accentColor: Theme.accent
+                                            showValue: false
+                                            // Aperçu live : Theme.uiScale re-bind toute l'UI tokenisée
+                                            // immédiatement, puis on persiste la nouvelle échelle.
+                                            onMoved: (v) => {
+                                                Theme.uiScale = v
+                                                stBackGroundEditor.setValue("uiScale", v)
+                                                stBackGroundEditor.sync()
+                                            }
+                                        }
+                                        Text { text: "×" + uiScaleSlider.value.toFixed(2); color: Theme.textSoft; font.pixelSize: Theme.fontSizeMedium; Layout.preferredWidth: 50; horizontalAlignment: Text.AlignRight }
                                     }
                                 }
                             }
