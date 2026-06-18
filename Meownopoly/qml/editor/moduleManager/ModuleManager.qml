@@ -1,5 +1,7 @@
 import QtQuick
 import theme
+import ui_item
+import AssetManager
 
 // Gestionnaire de modules : barre horizontale listant les "modules", c.-à-d.
 // les menus de l'éditeur (Case, Déco, Zone, Template, Joueur).
@@ -83,10 +85,12 @@ Item {
 
         // Bouton "+" en tête : c'est la référence de hauteur de la barre.
         // En RightToLeft, la tête est rendue à l'extrémité droite (côté BtSideMenu).
-        header: ModuleManager_AddButton {
-            width: root.itemSize
-            height: root.itemSize
-            onClicked: addPopup.open()
+
+        header: BtSideMenu {
+            id: addPopup
+            colorBt: Theme.accent
+            source: AssetManager.getAssetById("ui", "hud", "1").path
+            onBtClicked: addPopup.open()
         }
 
         // Modules ajoutés (peuplés à la validation du popup).
@@ -135,10 +139,10 @@ Item {
                 if (!m)
                     continue
                 addedModulesModel.append({
-                    "moduleId": m.id,
-                    "icon": m.icon,
-                    "label": m.label
-                })
+                                             "moduleId": m.id,
+                                             "icon": m.icon,
+                                             "label": m.label
+                                         })
                 root.moduleAdded(m.id)
             }
         }
