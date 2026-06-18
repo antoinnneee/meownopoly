@@ -106,6 +106,30 @@
             <div class="bar"><div class="bar-fill" id="ndBar"></div></div>
           </div>
           <div class="gd-desc" id="ndDesc"></div>
+
+          <!-- Notes markdown (lecture/édition + rendu) — le bot y a accès aussi -->
+          <div class="nd-notes" id="ndNotes">
+            <div class="ms-section-head">
+              <h3>📝 Notes</h3>
+              <button id="ndNotesEditBtn" class="ghost">✎ Éditer</button>
+            </div>
+            <div class="nd-notes-view markdown-body" id="ndNotesView"></div>
+            <div class="nd-notes-editor" id="ndNotesEditor" hidden>
+              <div class="ta-wrap">
+                <textarea id="ndNotesInput" rows="8" placeholder="Notes en markdown : # Titre, **gras**, - listes, `code`, > citation, @chemin/fichier… (Ctrl+Entrée pour enregistrer)"></textarea>
+                <ul id="ndNotesMentionMenu" class="mention-menu" hidden></ul>
+              </div>
+              <div class="nd-notes-foot">
+                <span class="hint">Markdown — aperçu en direct ci-dessous</span>
+                <div class="nd-notes-buttons">
+                  <button id="ndNotesCancelBtn" class="ghost">Annuler</button>
+                  <button id="ndNotesSaveBtn" class="primary">Enregistrer</button>
+                </div>
+              </div>
+              <div class="nd-notes-preview markdown-body" id="ndNotesPreview"></div>
+            </div>
+          </div>
+
           <div class="ms-section-head">
             <h3>Sous-jalons</h3>
             <button id="ndAddChild" class="ghost">+ Sous-jalon</button>
@@ -126,7 +150,10 @@
           <div class="chat-feed" id="chatFeed"></div>
           <div class="typing-row" id="typingRow" hidden></div>
           <div class="chat-input">
-            <textarea id="chatInput" rows="2" placeholder="Parle de ce nœud, demande des sous-jalons… (Entrée pour envoyer)"></textarea>
+            <div class="ta-wrap chat-ta-wrap">
+              <textarea id="chatInput" rows="2" placeholder="Parle de ce nœud, demande des sous-jalons… @ pour citer un fichier · Entrée pour envoyer"></textarea>
+              <ul id="chatMentionMenu" class="mention-menu up" hidden></ul>
+            </div>
             <button id="chatSend" class="primary">Envoyer</button>
           </div>
         </section>

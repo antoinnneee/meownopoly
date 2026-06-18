@@ -288,6 +288,10 @@ body.view-vibes .track-only { display: none; }
 .typing-row[hidden] { display: none; }
 .chat-input { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--border); }
 .chat-input textarea { flex: 1; resize: none; }
+.chat-ta-wrap { flex: 1; }
+.chat-ta-wrap textarea { width: 100%; }
+/* Menu de mentions du chat : s'ouvre vers le HAUT (le champ est en bas de l'écran). */
+.mention-menu.up { top: auto; bottom: 100%; margin: 0 0 4px; }
 
 /* Sélecteur de couleur (modale objectif) */
 .color-chips { display: flex; gap: 8px; margin-top: 6px; }
@@ -332,10 +336,16 @@ body.view-vibes .track-only { display: none; }
 .g-label { fill: var(--text); font: 12px "Segoe UI", system-ui, sans-serif; pointer-events: none; }
 .g-empty { fill: var(--text-dim); font: 14px "Segoe UI", system-ui, sans-serif; }
 /* Animation d'apparition d'un nœud (création, surtout via l'IA en live) + tracé de l'arête */
-@keyframes nodeSpawn { from { transform: scale(0); opacity: 0; } 60% { transform: scale(1.18); } to { transform: scale(1); opacity: 1; } }
-.g-node.spawn .g-inner { animation: nodeSpawn .55s cubic-bezier(.34, 1.56, .64, 1) both; }
+@keyframes nodeSpawn {
+  0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  55% { transform: scale(1.25) rotate(8deg); opacity: 1; }
+  78% { transform: scale(.92) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.g-node.spawn .g-inner { animation: nodeSpawn .62s cubic-bezier(.34, 1.56, .64, 1) both; }
+.g-node.spawn .g-disc { animation: discFlash .7s ease-out both; }
 @keyframes edgeDraw { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
-.g-edge.spawn { stroke-dasharray: 1000; animation: edgeDraw .6s ease both; }
+.g-edge.spawn { stroke-dasharray: 1000; animation: edgeDraw .65s ease both; }
 
 /* Arbre récursif des sous-nœuds (vue détail) */
 .node-tree { font-size: 13px; }
@@ -361,3 +371,105 @@ body.view-vibes .track-only { display: none; }
 .msg-reasoning[open] > summary::before { content: "▾ "; }
 .reasoning-body { white-space: pre-wrap; color: var(--text-dim); border-left: 2px solid var(--border); padding: 4px 0 4px 8px; margin-top: 4px; font-family: ui-monospace, monospace; font-size: 11.5px; max-height: 240px; overflow: auto; }
 .msg.streaming .msg-body::after { content: "▍"; animation: blinkdots 1s steps(2) infinite; color: var(--accent); }
+
+/* ═══════════════════════ Effets « waouh » (jalons) ═════════════════════════ */
+/* Couche de particules (éclats ✨) au-dessus de tout, non interactive. */
+#fxLayer { position: fixed; inset: 0; pointer-events: none; z-index: 200; overflow: hidden; }
+.fx-spark { position: absolute; line-height: 1; will-change: transform, opacity; filter: drop-shadow(0 0 4px rgba(255, 255, 255, .35)); }
+
+/* — Graphe : onde de choc à la naissance — */
+.g-halo { fill: none; stroke-width: 3; opacity: .9; transform-box: fill-box; transform-origin: center; animation: haloBurst .75s ease-out both; }
+@keyframes haloBurst { 0% { transform: scale(.25); opacity: .85; } 100% { transform: scale(8); opacity: 0; } }
+
+/* — Graphe : faisceau de rayons « jalon atteint » — */
+.g-rays { transform-box: fill-box; transform-origin: center; animation: rayBurst .85s ease-out both; }
+.g-ray { stroke: var(--feature); stroke-width: 3; stroke-linecap: round; }
+@keyframes rayBurst { 0% { transform: scale(.2); opacity: 0; } 30% { opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+/* — Graphe : pulse + flash à la mise à jour — */
+.g-node.pulse .g-inner { animation: nodePulse .55s ease-out both; }
+@keyframes nodePulse { 0% { transform: scale(1); } 35% { transform: scale(1.18); } 70% { transform: scale(.96); } 100% { transform: scale(1); } }
+.g-node.pulse .g-disc { animation: discFlash .6s ease-out both; }
+@keyframes discFlash { 0%, 100% { filter: none; } 45% { filter: drop-shadow(0 0 8px var(--accent)) brightness(1.35); } }
+.g-node.celebrate .g-disc { animation: discCelebrate .85s ease-out both; }
+@keyframes discCelebrate { 0%, 100% { filter: none; } 45% { filter: drop-shadow(0 0 13px var(--feature)) brightness(1.5); } }
+
+/* — Cartes (grille des objectifs racines) — */
+.goal-card.spawn { animation: cardSpawn .55s cubic-bezier(.34, 1.56, .64, 1) both; }
+@keyframes cardSpawn { 0% { opacity: 0; transform: translateY(16px) scale(.9); } 60% { opacity: 1; transform: translateY(-3px) scale(1.03); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+.goal-card.pulse { animation: cardPulse .7s ease-out both; }
+@keyframes cardPulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
+.goal-card.celebrate { animation: cardCelebrate .9s ease-out both; }
+@keyframes cardCelebrate { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--feature) 70%, transparent); } 100% { box-shadow: 0 0 0 16px transparent; } }
+
+/* — Arbre des sous-jalons (surtout ceux ajoutés par le bot, en live) — */
+.trow.fx-new {
+  animation: rowIn .5s cubic-bezier(.34, 1.56, .64, 1) both, rowGlow 1.1s ease-out both;
+  /* Stagger plafonné (cascade d'ouverture lisible même sur un grand arbre). */
+  animation-delay: calc(min(var(--si, 0), 12) * 55ms), calc(min(var(--si, 0), 12) * 55ms);
+}
+@keyframes rowIn { 0% { opacity: 0; transform: translateX(-16px) scale(.97); } 60% { opacity: 1; transform: translateX(3px) scale(1.02); } 100% { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes rowGlow { 0% { background: color-mix(in srgb, var(--accent) 40%, transparent); box-shadow: inset 0 0 0 1px var(--accent); } 100% { background: transparent; box-shadow: inset 0 0 0 1px transparent; } }
+.trow.fx-changed { animation: rowFlash .9s ease-out both; }
+@keyframes rowFlash { 0% { background: color-mix(in srgb, var(--accent-2) 32%, transparent); } 100% { background: transparent; } }
+.trow.fx-done { animation: rowDone 1s ease-out both; }
+@keyframes rowDone { 0% { background: color-mix(in srgb, var(--feature) 42%, transparent); box-shadow: inset 0 0 0 1px var(--feature); } 100% { background: transparent; box-shadow: inset 0 0 0 1px transparent; } }
+.trow.fx-new .tdot, .trow.fx-done .tdot { animation: dotPop .6s ease-out both; }
+@keyframes dotPop { 0% { transform: scale(0); } 60% { transform: scale(1.6); } 100% { transform: scale(1); } }
+
+/* — Chat : entrée des chips d'action proposées/exécutées par le bot — */
+.action-chip { animation: chipPop .35s ease-out both; }
+@keyframes chipPop { 0% { opacity: 0; transform: scale(.6) translateY(4px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .g-node.spawn .g-inner, .g-node.pulse .g-inner, .g-node.spawn .g-disc, .g-node.pulse .g-disc,
+  .g-node.celebrate .g-disc, .g-halo, .g-rays, .g-edge.spawn,
+  .goal-card.spawn, .goal-card.pulse, .goal-card.celebrate,
+  .trow.fx-new, .trow.fx-changed, .trow.fx-done, .trow.fx-new .tdot, .trow.fx-done .tdot,
+  .action-chip, .nd-notes.fx-note { animation: none !important; }
+}
+
+/* ═══════════════════════════ Notes markdown (par jalon) ════════════════════ */
+.nd-notes { margin: 8px 0 18px; }
+.nd-notes-view {
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  padding: 12px 14px; min-height: 38px;
+}
+.nd-notes-view.empty { background: transparent; border-style: dashed; }
+.nd-notes-editor { border: 1px solid var(--accent); border-radius: var(--radius); padding: 10px; background: var(--surface); }
+.nd-notes-editor textarea { width: 100%; resize: vertical; font-family: ui-monospace, "Cascadia Code", monospace; font-size: 12.5px; }
+.nd-notes-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+.nd-notes-buttons { display: flex; gap: 8px; }
+.nd-notes-preview {
+  border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 4px;
+  max-height: 320px; overflow: auto;
+}
+/* Flash quand les notes changent à distance (bot) */
+.nd-notes.fx-note .nd-notes-view { animation: notesFlash 1.1s ease-out both; }
+@keyframes notesFlash {
+  0% { box-shadow: 0 0 0 2px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+  100% { box-shadow: none; background: var(--surface); }
+}
+
+/* Rendu markdown partagé (vue + aperçu) */
+.markdown-body { font-size: 13.5px; line-height: 1.6; word-break: break-word; }
+.markdown-body > :first-child { margin-top: 0; }
+.markdown-body > :last-child { margin-bottom: 0; }
+.markdown-body p { margin: 6px 0; }
+.markdown-body .md-h { margin: 14px 0 6px; line-height: 1.3; font-weight: 700; }
+.markdown-body .md-h1 { font-size: 19px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.markdown-body .md-h2 { font-size: 16px; }
+.markdown-body .md-h3 { font-size: 14px; }
+.markdown-body .md-h4, .markdown-body .md-h5, .markdown-body .md-h6 { font-size: 13px; color: var(--text-dim); }
+.markdown-body .md-list { margin: 6px 0; padding-left: 22px; }
+.markdown-body .md-list li { margin: 3px 0; }
+.markdown-body .md-code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: ui-monospace, monospace; font-size: 12px; }
+.markdown-body .md-pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; overflow: auto; margin: 8px 0; }
+.markdown-body .md-pre code { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre; }
+.markdown-body .md-quote { border-left: 3px solid var(--accent); margin: 8px 0; padding: 2px 12px; color: var(--text-dim); background: color-mix(in srgb, var(--accent) 7%, transparent); border-radius: 0 6px 6px 0; }
+.markdown-body .md-quote p { margin: 4px 0; }
+.markdown-body .md-hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+.markdown-body a { color: var(--accent-2); text-decoration: none; }
+.markdown-body a:hover { text-decoration: underline; }
+.markdown-body strong { color: var(--text); }
+.markdown-body del { color: var(--text-dim); }
