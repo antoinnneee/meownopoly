@@ -32,6 +32,13 @@ import {
   removeReference,
   addComment,
   stats,
+  // Registre multi-repos
+  resolveRepoId,
+  listRepos,
+  getRepo,
+  createRepo,
+  updateRepo,
+  deleteRepo,
   // Good Vibes v2 : arbre de nœuds + chat par nœud
   getNode,
   getSubtree,
@@ -52,7 +59,16 @@ import {
   nodePathIds,
   CHAT_MODELS,
 } from "./db.js";
-import { searchPaths, refreshPaths, gitContext, repoRoot, ensureRepo, repoUrl, listBranches } from "./repo.js";
+import {
+  searchPathsFor,
+  refreshPathsFor,
+  gitContextFor,
+  listBranchesFor,
+  rootForRepo,
+  ensureRepo,
+  ensureAllRepos,
+  invalidateRepo,
+} from "./repos.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, "dashboard");
@@ -111,9 +127,10 @@ function claudeToolArgs(repoAccess) {
     "--settings", AI_DENY_SETTINGS,
   ];
 }
-// cwd = racine du repo si accès ouvert (pour Read/Glob/Grep), sinon dossier temp.
-function claudeOpts(repoAccess) {
-  return { cwd: repoAccess ? repoRoot() : tmpdir(), env: AI_ENV };
+// cwd = racine du clone du repo concerné si accès ouvert (pour Read/Glob/Grep),
+// sinon dossier temp. `root` = clone du repo du nœud (multi-repos).
+function claudeOpts(repoAccess, root) {
+  return { cwd: repoAccess && root ? root : tmpdir(), env: AI_ENV };
 }
 
 // Lance `claude -p` headless SANS aucun outil (raisonnement pur, cwd hors repo) —
@@ -153,7 +170,13 @@ async function improveDescriptionWithClaude(title, description) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ── Broadcaster SSE en mémoire ───────────────────────────────────────────────
-// channels: clé → Set<client> ; clé = `node:<id>` (room d'un nœud) | "*" (forêt).
+// channels: clé → Set<client> ; clé = `node:<id>` (room d'un nœud) | `forest:<repoId>`
+// (forêt d'UN repo — multi-repos : un repo n'entend jamais les events d'un autre).
+//
+// Clé du canal forêt d'un repo.
+function forestKey(repoId) {
+  return `forest:${repoId}`;
+}
 // Persist d'ABORD (transaction synchrone better-sqlite3), broadcast ENSUITE l'état
 // committé (re-SELECT), jamais d'optimistic serveur ni la sortie IA brute.
 const channels = new Map();
@@ -223,7 +246,7 @@ function broadcastNode(id) {
   const n = getNode(id);
   if (!n) return;
   broadcast(`node:${id}`, "node:updated", n);
-  broadcast("*", "node:updated", n);
+  broadcast(forestKey(n.repoId), "node:updated", n);
 }
 // Diffuse les nœuds affectés par une mutation (ids = nœud muté + sa chaîne
 // d'ancêtres, dont la progression a bougé). Pour chacun : `node:updated` (room +
@@ -421,14 +444,14 @@ const AI_STREAM_TIMEOUT = 180000;
 const AI_MAX_OUTPUT = 12 * 1024 * 1024;
 const AI_MAX_LINE = 256 * 1024;
 
-function runClaudeStreaming(prompt, model, { onThinking, onText, onTool, onChild } = {}) {
+function runClaudeStreaming(prompt, model, root, { onThinking, onText, onTool, onChild } = {}) {
   return new Promise((resolve, reject) => {
     let child;
     try {
       child = spawn(
         CLAUDE_BIN,
         ["-p", prompt, "--model", resolveModel(model), "--output-format", "stream-json", "--include-partial-messages", "--verbose", ...claudeToolArgs(AI_REPO_ACCESS)],
-        claudeOpts(AI_REPO_ACCESS)
+        claudeOpts(AI_REPO_ACCESS, root)
       );
     } catch (e) {
       return reject(Object.assign(new Error("SPAWN_ERROR"), { code: "SPAWN_ERROR", cause: e }));
@@ -629,7 +652,7 @@ function describeDestructive(actions, scopeNode, subtreeById) {
 }
 
 // ── Tour de chat IA STREAMING (async, détaché ; le HTTP a déjà répondu 202) ──
-async function runNodeTurn(nodeId, scopeSnapshot, descendants, history, userText, author, model, pendingId) {
+async function runNodeTurn(nodeId, scopeSnapshot, descendants, history, userText, author, model, pendingId, root) {
   const batcher = makeStreamBatcher(nodeId, pendingId);
   let reasoning = "";
   let answer = "";
@@ -642,7 +665,7 @@ async function runNodeTurn(nodeId, scopeSnapshot, descendants, history, userText
   };
   try {
     const prompt = buildNodePrompt(scopeSnapshot, descendants, history, userText, author);
-    const result = await runClaudeStreaming(prompt, model, {
+    const result = await runClaudeStreaming(prompt, model, root, {
       onChild: (child) => { const l = aiLocks.get(nodeId); if (l) l.child = child; },
       onThinking: (d) => {
         ensureStreaming();
@@ -743,8 +766,15 @@ async function handleNodeChat(req, res, node) {
   aiInFlight++;
   broadcast(`node:${node.id}`, "ai:turn", { nodeId: node.id, actor: author, model, state: "start", turnId: pendingMessage.id });
 
+  // Clone du repo du nœud → cwd de l'IA (lecture du code réel, multi-repos).
+  let root = null;
+  try {
+    root = rootForRepo(node.repoId);
+  } catch {
+    /* repo sans clone résolvable → IA sans accès fichiers */
+  }
   send(res, 202, { userMessage, pendingMessage });
-  runNodeTurn(node.id, snapshot, descendants, history, text, author, model, pendingMessage.id).catch(() => {});
+  runNodeTurn(node.id, snapshot, descendants, history, text, author, model, pendingMessage.id, root).catch(() => {});
 }
 
 // POST /api/nodes/:ref/chat/confirm { messageId } — applique une proposition
@@ -823,6 +853,16 @@ async function serveStatic(pathname, res) {
   return true;
 }
 
+// Racine de clone d'un repo, tolérante (null si non résolvable — ex. repo sans
+// clone encore présent). Sert l'affichage (/api/meta) sans casser la réponse.
+function safeRoot(repoId) {
+  try {
+    return rootForRepo(repoId);
+  } catch {
+    return null;
+  }
+}
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const path = normalize(url.pathname).replace(/\\/g, "/");
@@ -843,33 +883,84 @@ const server = createServer(async (req, res) => {
     }
 
     // ── API ──
-    // GET /api/meta — contexte git + stats + racine repo.
+    // Résout le paramètre `repo` (id/slug ou body.repo) → id interne. Vide → repo
+    // par défaut. Lève (→ 400) si le repo demandé est inconnu.
+    const repoOf = (body) => resolveRepoId(q.get("repo") || (body && body.repo) || null);
+
+    // ── Registre des repos ──
+    // GET /api/repos — liste des repos suivis.
+    if (req.method === "GET" && path === "/api/repos") {
+      return send(res, 200, listRepos());
+    }
+    // POST /api/repos — ajouter un repo (clone immédiat si une url est fournie).
+    if (req.method === "POST" && path === "/api/repos") {
+      const body = await readBody(req);
+      const repo = createRepo(body);
+      let sync = null;
+      try {
+        sync = ensureRepo(repo.id);
+      } catch (e) {
+        sync = { ok: false, output: e.message || String(e) };
+      }
+      return send(res, 201, { repo, sync });
+    }
+    // /api/repos/:idOrSlug  et  /api/repos/:idOrSlug/update
+    const repoMatch = path.match(/^\/api\/repos\/([^/]+)(\/update)?$/);
+    if (repoMatch) {
+      const key = decodeURIComponent(repoMatch[1]);
+      const sub = repoMatch[2] || "";
+      if (sub === "/update" && req.method === "POST") {
+        const id = resolveRepoId(key);
+        return send(res, 200, { ...ensureRepo(id), git: gitContextFor(id) });
+      }
+      if (sub === "" && req.method === "GET") {
+        const r = getRepo(key);
+        return r ? send(res, 200, r) : send(res, 404, { error: "not_found", repo: key });
+      }
+      if (sub === "" && req.method === "PATCH") {
+        const repo = updateRepo(key, await readBody(req));
+        invalidateRepo(repo.id); // url/local_path ont pu changer → invalide clone+index
+        return send(res, 200, repo);
+      }
+      if (sub === "" && req.method === "DELETE") {
+        return send(res, 200, deleteRepo(key));
+      }
+    }
+
+    // GET /api/meta?repo= — contexte git + stats + racine repo (scopé) + registre.
     if (req.method === "GET" && path === "/api/meta") {
-      return send(res, 200, { ...stats(), git: gitContext(), repoRoot: repoRoot(), port: PORT });
+      const id = repoOf();
+      return send(res, 200, {
+        ...stats(id),
+        git: gitContextFor(id),
+        repoRoot: safeRoot(id),
+        repo: getRepo(id),
+        repos: listRepos(),
+        port: PORT,
+      });
     }
 
-    // GET /api/branches — branches connues du clone (+ branche courante).
+    // GET /api/branches?repo= — branches connues du clone (+ branche courante).
     if (req.method === "GET" && path === "/api/branches") {
-      return send(res, 200, listBranches());
+      return send(res, 200, listBranchesFor(repoOf()));
     }
 
-    // GET /api/paths?q=&limit=&branch= — autocomplete (feature « @ »), arbre de
-    // la branche `branch` si fournie (sinon working tree courant).
+    // GET /api/paths?repo=&q=&limit=&branch= — autocomplete (feature « @ »), arbre
+    // de la branche `branch` si fournie (sinon working tree courant).
     if (req.method === "GET" && path === "/api/paths") {
-      return send(
-        res,
-        200,
-        searchPaths(q.get("q") || "", Number(q.get("limit")) || 30, q.get("branch") || null)
-      );
+      const id = repoOf();
+      return send(res, 200, searchPathsFor(id, q.get("q") || "", Number(q.get("limit")) || 30, q.get("branch") || null));
     }
-    // POST /api/paths/refresh?branch= — re-scan d'une source (ou de toutes).
+    // POST /api/paths/refresh?repo=&branch= — re-scan d'une source (ou de toutes).
     if (req.method === "POST" && path === "/api/paths/refresh") {
-      return send(res, 200, refreshPaths(q.get("branch") ?? undefined));
+      const id = repoOf();
+      return send(res, 200, refreshPathsFor(id, q.get("branch") ?? undefined));
     }
-    // POST /api/repo/update — clone (si absent) ou git fetch+pull du repo, puis
-    // re-scan des chemins. No-op si MEOWTRACK_REPO_URL n'est pas défini.
+    // POST /api/repo/update?repo= — clone (si absent) ou git fetch+pull. Legacy :
+    // sans `repo`, agit sur le repo par défaut.
     if (req.method === "POST" && path === "/api/repo/update") {
-      return send(res, 200, { ...ensureRepo(), git: gitContext() });
+      const id = repoOf();
+      return send(res, 200, { ...ensureRepo(id), git: gitContextFor(id) });
     }
     // POST /api/improve-description { title, description } — réécriture via Claude.
     if (req.method === "POST" && path === "/api/improve-description") {
@@ -878,8 +969,9 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { description: improved });
     }
 
-    // GET /api/issues — liste filtrée.
+    // GET /api/issues?repo= — liste filtrée (scopée repo).
     if (req.method === "GET" && path === "/api/issues") {
+      const id = repoOf();
       const filter = {
         type: q.get("type") || undefined,
         status: q.get("status") || undefined,
@@ -891,40 +983,41 @@ const server = createServer(async (req, res) => {
         includeClosed: q.get("includeClosed") === "true",
         limit: Number(q.get("limit")) || undefined,
       };
-      return send(res, 200, listIssues(filter));
+      return send(res, 200, listIssues(id, filter));
     }
-    // POST /api/issues — créer.
+    // POST /api/issues?repo= — créer dans le repo.
     if (req.method === "POST" && path === "/api/issues") {
       const body = await readBody(req);
-      return send(res, 201, createIssue(body));
+      return send(res, 201, createIssue(repoOf(body), body));
     }
 
-    // /api/issues/:ref…
+    // /api/issues/:ref… (résolution du code scopée par ?repo=)
     const issueMatch = path.match(/^\/api\/issues\/([^/]+)(\/comments|\/references)?$/);
     if (issueMatch) {
       const ref = decodeURIComponent(issueMatch[1]);
       const sub = issueMatch[2];
+      const id = repoOf();
 
       if (!sub && req.method === "GET") {
-        const issue = getIssue(ref);
+        const issue = getIssue(id, ref);
         return issue ? send(res, 200, issue) : send(res, 404, { error: "not_found", ref });
       }
       if (!sub && req.method === "PATCH") {
-        return send(res, 200, updateIssue(ref, await readBody(req)));
+        return send(res, 200, updateIssue(id, ref, await readBody(req)));
       }
       if (!sub && req.method === "DELETE") {
-        return send(res, 200, { deleted: deleteIssue(ref), ref });
+        return send(res, 200, { deleted: deleteIssue(id, ref), ref });
       }
       if (sub === "/comments" && req.method === "POST") {
         const { body } = await readBody(req);
-        return send(res, 201, addComment(ref, body));
+        return send(res, 201, addComment(id, ref, body));
       }
       if (sub === "/references" && req.method === "POST") {
-        const issue = getIssue(ref);
+        const issue = getIssue(id, ref);
         if (!issue) return send(res, 404, { error: "not_found", ref });
         const { path: p } = await readBody(req);
         addReference(issue.id, p);
-        return send(res, 201, getIssue(issue.id));
+        return send(res, 201, getIssue(id, issue.id));
       }
     }
 
@@ -935,24 +1028,26 @@ const server = createServer(async (req, res) => {
     }
 
     // ───────────────────── Good Vibes v2 : arbre de nœuds / chat ─────────────
-    // SSE forêt (canal "*"). Avant les routes paramétrées (sinon :ref = "stream").
+    // SSE forêt (canal `forest:<repoId>`). Avant les routes paramétrées.
     if (req.method === "GET" && path === "/api/nodes/stream") {
-      return openStream(req, res, "*");
+      return openStream(req, res, forestKey(repoOf()));
     }
-    // GET /api/nodes — racines (grille) ou ?view=forest (graphe = tout l'arbre).
+    // GET /api/nodes?repo= — racines (grille) ou ?view=forest (graphe = tout l'arbre).
     if (req.method === "GET" && path === "/api/nodes") {
-      if (q.get("view") === "forest") return send(res, 200, listForest());
+      const id = repoOf();
+      if (q.get("view") === "forest") return send(res, 200, listForest(id));
       return send(
         res,
         200,
-        listRootNodes({ status: q.get("status") || undefined, text: q.get("text") || undefined, limit: Number(q.get("limit")) || undefined })
+        listRootNodes(id, { status: q.get("status") || undefined, text: q.get("text") || undefined, limit: Number(q.get("limit")) || undefined })
       );
     }
-    // POST /api/nodes — créer un nœud (racine ou enfant via parentId).
+    // POST /api/nodes?repo= — créer un nœud (racine ou enfant via parentId).
     if (req.method === "POST" && path === "/api/nodes") {
       const body = await readBody(req);
-      const n = createNode(body.parentId != null ? body.parentId : null, body);
-      broadcast("*", "node:created", n);
+      const id = repoOf(body);
+      const n = createNode(id, body.parentId != null ? body.parentId : null, body);
+      broadcast(forestKey(n.repoId), "node:created", n);
       if (n.parentId != null) {
         broadcast(`node:${n.parentId}`, "node:created", n);
         refreshAncestors(n.parentId, n.id); // progression + dirty des ancêtres
@@ -960,23 +1055,25 @@ const server = createServer(async (req, res) => {
       return send(res, 201, n);
     }
 
-    // POST /api/nodes/positions — persiste les positions manuelles du graphe (drag).
+    // POST /api/nodes/positions?repo= — persiste les positions manuelles (drag).
     // Avant la route paramétrée (sinon « positions » serait pris pour un :ref).
     if (req.method === "POST" && path === "/api/nodes/positions") {
       const body = await readBody(req);
+      const id = repoOf(body);
       const list = Array.isArray(body.positions) ? body.positions : [];
       setNodePositions(list);
-      // Notifie la forêt (les autres clients re-positionnent en douceur).
-      broadcast("*", "nodes:moved", { positions: list });
+      // Notifie la forêt du repo (les autres clients re-positionnent en douceur).
+      broadcast(forestKey(id), "nodes:moved", { positions: list });
       return send(res, 200, { ok: true, count: list.length });
     }
 
-    // /api/nodes/:ref[…]
+    // /api/nodes/:ref[…] (résolution du code scopée par ?repo=)
     const nodeMatch = path.match(/^\/api\/nodes\/([^/]+)(\/subtree|\/messages|\/move|\/reorder|\/chat(?:\/confirm)?|\/stream)?$/);
     if (nodeMatch) {
       const ref = decodeURIComponent(nodeMatch[1]);
       const sub = nodeMatch[2] || "";
-      const node = getNode(ref);
+      const id = repoOf();
+      const node = getNode(ref, { repoId: id });
 
       if (sub === "/stream") {
         if (!node) return send(res, 404, { error: "not_found", ref });
@@ -984,13 +1081,13 @@ const server = createServer(async (req, res) => {
       }
       if (sub === "" && req.method === "GET") {
         return node
-          ? send(res, 200, getNode(ref, { withTree: q.get("tree") !== "false", withMessages: q.get("messages") === "true" }))
+          ? send(res, 200, getNode(node.id, { withTree: q.get("tree") !== "false", withMessages: q.get("messages") === "true" }))
           : send(res, 404, { error: "not_found", ref });
       }
       if (!node) return send(res, 404, { error: "not_found", ref });
 
       if (sub === "/subtree" && req.method === "GET") {
-        return send(res, 200, getNode(ref, { withTree: true }));
+        return send(res, 200, getNode(node.id, { withTree: true }));
       }
       if (sub === "" && req.method === "PATCH") {
         const body = await readBody(req);
@@ -1004,10 +1101,11 @@ const server = createServer(async (req, res) => {
         }
       }
       if (sub === "" && req.method === "DELETE") {
+        const repoId = node.repoId;
         const r = deleteNode(node.id);
         const payload = { id: node.id, parentId: r.parentId, rootId: r.rootId };
         broadcast(`node:${node.id}`, "node:deleted", payload);
-        broadcast("*", "node:deleted", payload);
+        broadcast(forestKey(repoId), "node:deleted", payload);
         if (r.parentId != null) {
           broadcast(`node:${r.parentId}`, "node:deleted", payload);
           refreshAncestors(r.parentId, node.id); // progression des ancêtres + dirty
@@ -1018,7 +1116,7 @@ const server = createServer(async (req, res) => {
         const { newParentId, position } = await readBody(req);
         const oldParentId = node.parentId;
         const n = moveNode(node.id, newParentId != null ? newParentId : null, position);
-        broadcast("*", "node:reparented", { id: n.id, parentId: n.parentId, rootId: n.rootId });
+        broadcast(forestKey(n.repoId), "node:reparented", { id: n.id, parentId: n.parentId, rootId: n.rootId });
         refreshAncestors(n.id, n.id);
         if (oldParentId != null && oldParentId !== n.parentId) refreshAncestors(oldParentId, n.id);
         return send(res, 200, n);
@@ -1027,7 +1125,7 @@ const server = createServer(async (req, res) => {
         const { order } = await readBody(req);
         reorderChildren(node.id, order || []);
         refreshAncestors(node.id, node.id);
-        broadcast("*", "nodes:reordered", { parentId: node.id });
+        broadcast(forestKey(node.repoId), "nodes:reordered", { parentId: node.id });
         return send(res, 200, getNode(node.id, { withTree: true }));
       }
       if (sub === "/messages" && req.method === "GET") {
@@ -1056,19 +1154,17 @@ const server = createServer(async (req, res) => {
 // MEOWTRACK_NO_LISTEN=1 : importe le module (handlers, parseAiTurn…) sans démarrer
 // le serveur — utilisé par les tests isolés.
 if (process.env.MEOWTRACK_NO_LISTEN !== "1") {
-  // Sync du repo au démarrage : clone si absent, sinon pull. No-op sans URL.
-  if (repoUrl()) {
-    console.error(`[meowtrack] Sync du repo (${repoUrl()}) → ${repoRoot()}…`);
-    const r = ensureRepo();
-    if (r.ok) {
-      console.error(`[meowtrack] Repo ${r.cloned ? "cloné" : "à jour"} (${r.branch || "?"} @ ${r.commit || "?"}).`);
-    } else {
-      console.error(`[meowtrack] ⚠️  Sync du repo échouée : ${r.output || "erreur inconnue"}`);
-    }
+  // Sync de TOUS les repos du registre au démarrage : clone si absent, sinon pull.
+  // No-op pour un repo sans URL. Tolérant aux échecs (un repo cassé n'en bloque pas un autre).
+  console.error("[meowtrack] Sync des repos du registre…");
+  for (const r of ensureAllRepos()) {
+    if (r.skipped) console.error(`[meowtrack]   ${r.slug} : clone local (pas d'URL) — ${r.branch || "?"}.`);
+    else if (r.ok) console.error(`[meowtrack]   ${r.slug} : ${r.cloned ? "cloné" : "à jour"} (${r.branch || "?"} @ ${r.commit || "?"}).`);
+    else console.error(`[meowtrack]   ⚠️  ${r.slug} : sync échouée — ${r.output || "erreur inconnue"}`);
   }
 
   server.listen(PORT, HOST, () => {
-    console.error(`[meowtrack] Dashboard prêt → http://${HOST}:${PORT}  (repo : ${repoRoot()})`);
+    console.error(`[meowtrack] Dashboard prêt → http://${HOST}:${PORT}`);
     if (HOST !== "127.0.0.1" && HOST !== "localhost" && !TOKEN) {
       console.error(
         "[meowtrack] ⚠️  Écoute hors localhost SANS MEOWTRACK_TOKEN : l'API est ouverte à tout le réseau. " +

@@ -19,9 +19,25 @@ function authHeaders(extra = {}) {
   return t ? { ...extra, Authorization: "Bearer " + t } : extra;
 }
 
+// ── Repo actif (multi-repos) ─────────────────────────────────────────────────
+// Slug du repo courant, persisté localement. Injecté en `?repo=` sur toutes les
+// requêtes /api/* SAUF la gestion du registre (/api/repos*, qui cible par chemin).
+function activeRepo() {
+  return localStorage.getItem("meowtrack_repo") || "";
+}
+function setActiveRepo(slug) {
+  localStorage.setItem("meowtrack_repo", slug || "");
+}
+function injectRepo(url) {
+  if (!url.startsWith("/api/") || url.startsWith("/api/repos")) return url;
+  const r = activeRepo();
+  if (!r) return url;
+  return url + (url.includes("?") ? "&" : "?") + "repo=" + encodeURIComponent(r);
+}
+
 const api = {
   async _do(method, url, body, retried) {
-    const r = await fetch(url, {
+    const r = await fetch(injectRepo(url), {
       method,
       headers: authHeaders(body ? { "Content-Type": "application/json" } : {}),
       body: body ? JSON.stringify(body) : undefined,
@@ -44,7 +60,7 @@ const TYPE_ICON = { bug: "🐞", feature: "✨", task: "✅", chore: "🧹" };
 const STATUS_LABEL = { open: "Ouvert", in_progress: "En cours", done: "Fait", wontfix: "Abandonné" };
 const PRIO_LABEL = { critical: "Critique", high: "Haute", medium: "Moyenne", low: "Basse" };
 
-let state = { issues: [], selected: null, editing: null, refs: [], branch: "", branches: [], serverBranch: null };
+let state = { issues: [], selected: null, editing: null, refs: [], branch: "", branches: [], serverBranch: null, repos: [] };
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -59,6 +75,57 @@ async function loadMeta() {
       `<b>${m.total || 0}</b> entrées (${m.byStatus?.in_progress || 0} en cours, ${m.byStatus?.open || 0} ouvertes)`;
   } catch (e) {
     $("#meta").textContent = "⚠ serveur injoignable : " + e.message;
+  }
+}
+
+// Charge le registre des repos → sélecteur topbar. Fixe le repo actif (stocké,
+// sinon le repo par défaut du serveur). Renvoie la liste.
+async function loadRepos() {
+  try {
+    const repos = await api.get("/api/repos");
+    state.repos = repos || [];
+    const sel = $("#repoSel");
+    if (sel) {
+      sel.innerHTML = state.repos.map((r) => `<option value="${esc(r.slug)}">${esc(r.name || r.slug)}</option>`).join("");
+      // Repo actif : celui stocké s'il existe encore, sinon le repo par défaut.
+      let cur = activeRepo();
+      if (!cur || !state.repos.some((r) => r.slug === cur)) {
+        const def = state.repos.find((r) => r.isDefault) || state.repos[0];
+        cur = def ? def.slug : "";
+        setActiveRepo(cur);
+      }
+      sel.value = cur;
+    }
+    return state.repos;
+  } catch {
+    /* serveur injoignable : sélecteur laissé vide, repo par défaut serveur */
+    return [];
+  }
+}
+
+// Bascule de repo actif : persiste + recharge tout (méta, branches, liste, et la
+// vue Good Vibes si elle est ouverte — forêt + flux SSE du nouveau repo).
+async function onRepoChange(slug) {
+  setActiveRepo(slug);
+  state.branch = ""; // les branches diffèrent d'un repo à l'autre
+  await loadMeta();
+  await loadBranches();
+  await loadList();
+  if (typeof vibes !== "undefined" && vibes.view === "vibes") openVibes();
+}
+
+// Ajoute un repo via une petite invite (slug + url) puis bascule dessus.
+async function addRepoPrompt() {
+  const url = (window.prompt("URL git du repo à suivre (laisser vide pour un clone local géré à la main) :", "") || "").trim();
+  const slug = (window.prompt("Slug court (identifiant, ex. 'chatserver'). Vide = dérivé de l'URL :", "") || "").trim();
+  if (!slug && !url) return;
+  try {
+    const r = await api.send("POST", "/api/repos", { slug: slug || undefined, url: url || undefined });
+    if (r.sync && r.sync.ok === false) alert("Repo ajouté mais clone échoué :\n" + (r.sync.output || "erreur inconnue"));
+    await loadRepos();
+    await onRepoChange(r.repo.slug);
+  } catch (e) {
+    alert("Erreur : " + e.message);
   }
 }
 
@@ -529,6 +596,9 @@ function init() {
     state.branch = e.target.value;
     loadList();
   });
+  // Sélecteur de repo (topbar, multi-repos) + ajout d'un repo.
+  $("#repoSel")?.addEventListener("change", (e) => onRepoChange(e.target.value));
+  $("#addRepoBtn")?.addEventListener("click", addRepoPrompt);
 
   const desc = $("#mDesc");
   desc.addEventListener("input", onDescInput);
@@ -542,9 +612,12 @@ function init() {
     if (e.key === "Escape" && !$("#backdrop").hidden) closeModal();
   });
 
-  loadMeta();
-  loadBranches();
-  loadList();
+  // loadRepos d'abord (fixe le repo actif), puis le reste utilise ?repo=.
+  loadRepos().then(() => {
+    loadMeta();
+    loadBranches();
+    loadList();
+  });
 }
 
 document.addEventListener("DOMContentLoaded", init);
@@ -1907,6 +1980,7 @@ function setLive(on) {
   document.querySelectorAll(".live-dot").forEach((d) => d.classList.toggle("on", !!on));
 }
 function streamUrl(p) {
+  p = injectRepo(p); // SSE forêt/nœud scopés sur le repo actif
   return p + (getToken() ? (p.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(getToken()) : "");
 }
 function closeStream() {

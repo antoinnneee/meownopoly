@@ -4,9 +4,33 @@ Service de suivi (issue tracker minimaliste) pour le projet Meownopoly, avec :
 
 - un **serveur MCP** (stdio) pour créer / lister / filtrer / clore des entrées depuis Claude Code ;
 - un **dashboard web** local pour les gérer à la main ;
-- des **références fichiers/dossiers** ancrées sur le **repo git cloné** (validées + contexte git capturé).
+- des **références fichiers/dossiers** ancrées sur le **repo git cloné** (validées + contexte git capturé) ;
+- la gestion de **plusieurs dépôts git** (multi-repos) : chaque entrée/nœud est scopé par repo.
 
 La base est **locale par machine** (SQLite `meowtrack.db`, gitignorée) — chaque dev a sa propre liste. Le dossier `meowtrack/` lui-même est versionné dans le repo, mais pas son contenu de base.
+
+## Multi-repos
+
+meowtrack suit **plusieurs dépôts git distincts** via un **registre** (table `repos` : `slug`, `name`, `url`,
+`local_path`, `default_branch`, `is_default`). **Chaque entrée et chaque nœud appartient à un repo** ; les
+codes (`BUG-1`, `NODE-2`…) sont **numérotés par repo** (unicité `(repo_id, ref)`, un compteur par repo). Les
+listes, l'autocomplete `@`, les branches et le chat IA sont tous scopés sur le repo ciblé.
+
+- **Cibler un repo** : paramètre `repo` (slug ou id) sur les outils MCP et `?repo=` sur les routes HTTP.
+  Omis → le serveur retombe sur le repo **par défaut** (`is_default`). Côté MCP, `MEOWTRACK_DEFAULT_REPO`
+  fixe un défaut local.
+- **Ajouter / retirer un repo** : sélecteur + bouton **`＋ repo`** du dashboard, ou outils
+  `meowtrack_repo_add` / `meowtrack_repo_remove` / `meowtrack_repo_update` (et `meowtrack_repos` pour lister).
+- **Clones** : un repo avec `url` est cloné dans `meowtrack/.repos/<slug>/` (gitignoré). Un seul clone par
+  repo sert toutes ses branches (lecture via `git ls-tree`, sans checkout).
+- **Bootstrap / migration** : sur une base vierge, un repo par défaut est créé depuis `MEOWTRACK_REPO_URL` /
+  `MEOWTRACK_REPO`. Une base de l'ancien schéma mono-repo est **migrée automatiquement** (toutes les données
+  rattachées au repo par défaut, compteurs réconciliés, aucune perte).
+
+Routes du registre : `GET /api/repos` (liste), `POST /api/repos` (ajouter + cloner),
+`GET/PATCH/DELETE /api/repos/:slug` (détail / métadonnées / suppression cascade),
+`POST /api/repos/:slug/update` (clone si absent, sinon `git pull`). Toutes les autres routes acceptent
+`?repo=<slug|id>`.
 
 ## Installation
 
@@ -45,8 +69,15 @@ Tools exposés :
 | `meowtrack_remove_reference` | Retirer une référence par id. |
 | `meowtrack_comment` | Ajouter une note de suivi. |
 | `meowtrack_search_paths` | Autocomplete des chemins du repo (feature `@`). |
-| `meowtrack_stats` | Compteurs par statut/type/priorité + contexte git. |
+| `meowtrack_stats` | Compteurs par statut/type/priorité + contexte git + registre des repos. |
 | `meowtrack_refresh_paths` | Re-scan `git ls-files` après un pull / changement de branche. |
+| `meowtrack_repos` | Lister les dépôts du registre. |
+| `meowtrack_repo_add` | Ajouter (et cloner) un dépôt à suivre. |
+| `meowtrack_repo_update` | `git pull` d'un dépôt (ou éditer ses métadonnées). |
+| `meowtrack_repo_remove` | Retirer un dépôt et ses entrées/nœuds (cascade). |
+
+Tous les outils d'entrées/nœuds/chemins acceptent un paramètre **`repo`** (slug ou id) ; omis, le repo par
+défaut du serveur est utilisé (ou `MEOWTRACK_DEFAULT_REPO` côté MCP). Cf. [Multi-repos](#multi-repos).
 
 Le MCP et le dashboard partagent la même base (WAL → lectures concurrentes). Les deux peuvent tourner simultanément.
 
@@ -69,8 +100,9 @@ Lues via `dotenv` (fichier `.env`, cf. `.env.example`) ou directement dans l'env
 | `MEOWTRACK_HOST` | `127.0.0.1` | Hôte d'écoute. `0.0.0.0` pour être joignable sur le réseau (déploiement). |
 | `MEOWTRACK_PORT` | `7702` | Port HTTP du dashboard (choisir un port **libre**, pas 80). |
 | `MEOWTRACK_TOKEN` | _(vide)_ | Si défini, `/api/*` exige `Authorization: Bearer <token>`. **Obligatoire en déploiement.** |
-| `MEOWTRACK_REPO_URL` | _(vide)_ | URL git du repo à cloner/mettre à jour. Si définie : clone au démarrage + `git pull`, et bouton **⟳ Mettre à jour** (`POST /api/repo/update`) du dashboard. Vide = clone géré à la main. |
-| `MEOWTRACK_REPO` | _(auto)_ | Chemin absolu du clone du repo (autocomplete + validation). Auto-détecté via `git rev-parse` en dev in-repo. Avec `MEOWTRACK_REPO_URL`, c'est la destination du clone (défaut `meowtrack/.repo-clone`). |
+| `MEOWTRACK_REPO_URL` | _(vide)_ | **Bootstrap uniquement** : URL git du repo **par défaut** créé sur une base vierge. Les repos suivants s'ajoutent à chaud (dashboard / MCP) et sont clonés dans `meowtrack/.repos/<slug>/`. |
+| `MEOWTRACK_REPO` | _(auto)_ | **Bootstrap uniquement** : chemin absolu d'un clone existant pour le repo par défaut. Auto-détecté via `git rev-parse` en dev in-repo. Avec `MEOWTRACK_REPO_URL`, destination du clone. |
+| `MEOWTRACK_DEFAULT_REPO` | _(vide)_ | [Client MCP] Repo (slug/id) par défaut des outils MCP quand l'appel ne précise pas `repo`. |
 | `MEOWTRACK_DB` | `meowtrack/meowtrack.db` | Chemin de la base SQLite. |
 | `MEOWTRACK_CLAUDE_BIN` | `claude` | [Serveur] Binaire CLI Claude pour la feature « Améliorer la description » (IA). Doit être installé + authentifié sur le serveur. |
 
@@ -104,16 +136,16 @@ cd meowtrack
 
 ### Accès au repo cloné
 
-L'autocomplete `@` et la validation des références s'appuient sur `git ls-files` exécuté à la racine du clone. Deux options en déploiement :
+L'autocomplete `@` et la validation des références s'appuient sur `git ls-files` / `git ls-tree` exécuté à la racine du clone **de chaque repo**. Au démarrage, le service synchronise **tous** les repos du registre (clone si absent, sinon `git pull`). Deux options par repo :
 
-- **Clone géré par le service** (recommandé) : définir `MEOWTRACK_REPO_URL`. Le service clone le repo au démarrage (dans `MEOWTRACK_REPO` ou `meowtrack/.repo-clone` à défaut), fait un `git pull` à chaque démarrage, et le bouton **⟳ Mettre à jour** du dashboard (`POST /api/repo/update`) re-pulle à la demande.
-- **Clone manuel** : pointer `MEOWTRACK_REPO` vers un checkout présent sur le serveur, mis à jour à la main.
+- **Clone géré par le service** (recommandé) : donner une `url` au repo (bootstrap via `MEOWTRACK_REPO_URL`, ou ajout via dashboard/MCP). Cloné dans `meowtrack/.repos/<slug>/`, `git pull` au démarrage, et `POST /api/repos/<slug>/update` (bouton **⟳ Mettre à jour**) re-pulle à la demande.
+- **Clone manuel** : donner un `local_path` (ou `MEOWTRACK_REPO` pour le repo par défaut) pointant un checkout présent sur le serveur, mis à jour à la main.
 
 Sans clone accessible, l'autocomplete renvoie une liste vide mais la création/édition/suivi restent fonctionnels (les chemins sont alors stockés tels quels, `existed:false`).
 
 ### Suivi par branche
 
-Chaque entrée est rattachée à une **branche git** (champ `branch`, sélectionnable dans la modale + filtrable via le sélecteur de la topbar). L'autocomplete `@` et la validation des références (`existed`) ciblent l'arbre de cette branche, lu via `git ls-tree <branche>` sur le **clone unique** — pas besoin de checkout ni de plusieurs clones, toutes les branches connues du clone (locales + `origin/*`) sont servies. `GET /api/branches` liste les branches ; `GET /api/paths?branch=…` et `GET /api/issues?branch=…` filtrent par branche. Côté MCP : paramètre `branch` sur `create`/`update`/`list`/`search_paths` + outil `meowtrack_branches`.
+Chaque entrée est rattachée à une **branche git** (champ `branch`, sélectionnable dans la modale + filtrable via le sélecteur de la topbar) **au sein de son repo**. L'autocomplete `@` et la validation des références (`existed`) ciblent l'arbre de cette branche, lu via `git ls-tree <branche>` sur le **clone du repo** — pas besoin de checkout, toutes les branches connues du clone (locales + `origin/*`) sont servies. `GET /api/branches?repo=…` liste les branches ; `GET /api/paths?repo=…&branch=…` et `GET /api/issues?repo=…&branch=…` filtrent. Côté MCP : paramètres `repo` + `branch` sur `create`/`update`/`list`/`search_paths` + outils `meowtrack_branches` / `meowtrack_repos`.
 
 ### Amélioration IA de la description
 
@@ -163,8 +195,8 @@ outil** (réécriture de texte pure).
 ### Multi-utilisateurs temps réel (SSE)
 
 **Messages et état (nœud + sous-arbre + progression) se synchronisent en direct** via **Server-Sent Events**
-(100 % natif, aucune dépendance). Rooms `node:<id>` (chat + stream + état du nœud) + canal `*` (forêt =
-graphe/grille). Un changement profond remonte une sonnette `subtree:dirty` à la chaîne d'ancêtres → la vue
+(100 % natif, aucune dépendance). Rooms `node:<id>` (chat + stream + état du nœud) + canal `forest:<repoId>`
+(forêt d'un repo = graphe/grille ; un repo n'entend jamais les events d'un autre). Un changement profond remonte une sonnette `subtree:dirty` à la chaîne d'ancêtres → la vue
 détail re-fetch son sous-arbre (auto-correcteur). Auth du flux par `?token=`. Un pseudo (`localStorage`)
 identifie chaque participant.
 
