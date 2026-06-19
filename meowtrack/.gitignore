@@ -10,5 +10,6 @@ node_modules/
 .deployEnv
 .env
 
-# Clone du repo géré par le service (MEOWTRACK_REPO_URL sans MEOWTRACK_REPO).
+# Clones des repos gérés par le service (multi-repos : .repos/<slug>/ ; legacy : .repo-clone/).
+.repos/
 .repo-clone/
