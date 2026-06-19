@@ -557,6 +557,13 @@ document.addEventListener("DOMContentLoaded", init);
 const NODE_STATUS_LABEL = { active: "🌱 Actif", paused: "⏸️ En pause", done: "🏆 Atteint", abandoned: "🪦 Abandonné" };
 const NODE_COLORS = ["accent", "feature", "task", "bug", "high"];
 
+// Palette « par cascade » : chaque sous-arbre de 1er niveau (tête de cascade =
+// nœud de profondeur 1) reçoit une teinte distincte, héritée par ses descendants.
+// Couleurs vives lisibles sur le thème sombre. Les nœuds de structure (profondeur 0
+// : N0 + légendes) restent neutres pour faire ressortir les cascades.
+const CASCADE_PALETTE = ["#4dabf7", "#69db7c", "#ffd43b", "#ff8787", "#da77f2", "#ffa94d", "#3bc9db", "#a9e34b", "#f783ac", "#9775fa"];
+const CASCADE_NEUTRAL = "#868e96";
+
 const vibes = {
   view: "track",
   layout: localStorage.getItem("meowtrack_layout") || "graph", // graph | grid
@@ -809,14 +816,6 @@ function childrenOf(id) {
 function rootsOf() {
   return vibes.forest.filter((n) => n.parentId == null).sort((a, b) => a.position - b.position || a.id - b.id);
 }
-function leafCount(n) {
-  const k = childrenOf(n.id);
-  return k.length ? k.reduce((s, c) => s + leafCount(c), 0) : 1;
-}
-function subtreeMaxDepth(n) {
-  const k = childrenOf(n.id);
-  return k.length ? 1 + Math.max(...k.map(subtreeMaxDepth)) : 0;
-}
 
 // ── Navigation entre vues ────────────────────────────────────────────────────
 function switchView(v) {
@@ -924,25 +923,65 @@ function renderGrid() {
   }
 }
 
-// ── Graphe organique (SVG radial, créé via DOM API : anti-XSS) ───────────────
+// ── Arbre hiérarchique top-down (créé via DOM API : anti-XSS) ─────────────────
+// Layout « tidy tree » : Y dérive de la profondeur (N0 en haut), chaque N_k+1 est
+// posé sous son parent N_k, les feuilles sont alignées de gauche à droite et chaque
+// parent est centré au-dessus de ses enfants. Les racines (N0) démarrent en haut à
+// gauche, chaque arbre racine à la suite du précédent.
 const NS = "http://www.w3.org/2000/svg";
-const G_STEP = 140; // rayon par niveau de profondeur
-const G_ROOT_GAP = 160;
-
+const G_LEVEL_GAP = 138; // distance verticale entre deux niveaux (N_k → N_k+1)
+const G_NODE_GAP = 134;  // largeur horizontale d'un emplacement feuille
 function computeGraphLayout() {
   const pos = new Map();
-  let cursorX = 0;
+  // Rangée du haut ALIGNÉE : chaque RACINE (N0 + légendes) occupe un emplacement
+  // uniforme (G_NODE_GAP), branchée ou non → les N0 forment une ligne nette. Le
+  // sous-arbre de chaque racine est calculé tidy (placeSubtree) dans une map locale,
+  // puis recentré SOUS sa racine. Une cascade large déborde sous la rangée, mais sans
+  // chevauchement de nœuds (profondeurs = lignes différentes).
+  let rowX = 0;
   for (const root of rootsOf()) {
-    const r = Math.max(1, subtreeMaxDepth(root)) * G_STEP;
-    assignAngles(root, 0, Math.PI * 2, pos, cursorX + r, 0);
-    cursorX += r * 2 + G_ROOT_GAP;
+    const local = new Map();
+    placeSubtree(root, local, { x: 0 });
+    const shift = rowX - local.get(root.id).x; // recale la racine sur la rangée
+    for (const [id, p] of local) pos.set(id, { x: p.x + shift, y: p.y });
+    rowX += G_NODE_GAP;
   }
-  // Positions manuelles (drag & drop persistées) : écrasent l'auto-layout radial.
-  // Les drags épinglant tout le sous-arbre, la cohérence parent↔enfants est préservée.
+  // Positions manuelles (drag & drop persistées) : écrasent l'auto-layout.
   for (const n of vibes.forest) {
     if (n.posX != null && n.posY != null) pos.set(n.id, { x: n.posX, y: n.posY });
   }
   return pos;
+}
+// Post-ordre : pose d'abord les feuilles à la suite, puis centre chaque parent sur
+// l'intervalle [1re feuille … dernière feuille] de ses enfants. Y = profondeur.
+function placeSubtree(node, pos, cur) {
+  const y = (node.depth || 0) * G_LEVEL_GAP;
+  const kids = childrenOf(node.id);
+  if (!kids.length) {
+    pos.set(node.id, { x: cur.x, y });
+    cur.x += G_NODE_GAP;
+    return;
+  }
+  for (const k of kids) placeSubtree(k, pos, cur);
+  const first = pos.get(kids[0].id).x;
+  const last = pos.get(kids[kids.length - 1].id).x;
+  pos.set(node.id, { x: (first + last) / 2, y });
+}
+// ── Couleur par cascade ──────────────────────────────────────────────────────
+// Assigne une teinte stable (par id croissant) à chaque tête de cascade (profondeur 1).
+function buildCascadeColors() {
+  const heads = vibes.forest.filter((n) => n.depth === 1).sort((a, b) => a.id - b.id);
+  const m = new Map();
+  heads.forEach((h, i) => m.set(h.id, CASCADE_PALETTE[i % CASCADE_PALETTE.length]));
+  vibes.graph.cascadeColors = m;
+}
+// Teinte d'un nœud : neutre si structure (profondeur 0) ; sinon la couleur de sa
+// tête de cascade (remontée jusqu'à l'ancêtre de profondeur 1).
+function cascadeColorOf(n) {
+  if (!n || n.depth === 0) return CASCADE_NEUTRAL;
+  let cur = n;
+  while (cur && cur.depth > 1) cur = vibes.byId.get(cur.parentId);
+  return (cur && vibes.graph.cascadeColors && vibes.graph.cascadeColors.get(cur.id)) || CASCADE_NEUTRAL;
 }
 // Ids d'un nœud + tout son sous-arbre (pour déplacer/épingler ensemble).
 function subtreeIds(id) {
@@ -951,33 +990,17 @@ function subtreeIds(id) {
   rec(id);
   return out;
 }
-function assignAngles(node, a0, a1, pos, cx, cy) {
-  const ang = (a0 + a1) / 2;
-  pos.set(node.id, { x: cx + Math.cos(ang) * node.depth * G_STEP, y: cy + Math.sin(ang) * node.depth * G_STEP });
-  const kids = childrenOf(node.id);
-  if (!kids.length) return;
-  const tot = kids.reduce((s, k) => s + leafCount(k), 0) || kids.length;
-  let a = a0;
-  for (const k of kids) {
-    const f = (leafCount(k) || 1) / tot;
-    const na = a + (a1 - a0) * f;
-    assignAngles(k, a, na, pos, cx, cy);
-    a = na;
-  }
-}
 function svgEl(tag, attrs) {
   const el = document.createElementNS(NS, tag);
   for (const k in attrs) el.setAttribute(k, attrs[k]);
   return el;
 }
 function edgeD(p, c) {
-  const dx = c.x - p.x, dy = c.y - p.y;
-  const len = Math.hypot(dx, dy) || 1;
-  const nx = -dy / len, ny = dx / len;
-  const off = Math.min(45, len * 0.18);
-  const c1x = p.x + dx * 0.35 + nx * off, c1y = p.y + dy * 0.35 + ny * off;
-  const c2x = p.x + dx * 0.65 + nx * off, c2y = p.y + dy * 0.65 + ny * off;
-  return `M ${p.x} ${p.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${c.x} ${c.y}`;
+  // Lien vertical descendant parent (p, en haut) → enfant (c, en bas) : courbe en S
+  // avec points de contrôle à mi-hauteur (style organigramme top-down). Reste valide
+  // pour des nœuds déplacés à la main dans une position arbitraire.
+  const my = (p.y + c.y) / 2;
+  return `M ${p.x} ${p.y} C ${p.x} ${my}, ${c.x} ${my}, ${c.x} ${c.y}`;
 }
 function edgePath(p, c, node) {
   return svgEl("path", {
@@ -985,7 +1008,7 @@ function edgePath(p, c, node) {
     class: "g-edge" + (vibes.graph.spawned.has(node.id) ? " spawn" : ""),
     "data-cid": String(node.id),
     "data-pid": String(node.parentId), // pour la maj live des arêtes pendant le drag
-    stroke: `var(--${node.color || "accent"})`,
+    stroke: cascadeColorOf(node),
   });
 }
 // Faisceau de rayons (célébration « jalon atteint »), dessiné derrière le nœud.
@@ -1004,20 +1027,24 @@ function nodeGroup(n, p) {
   const celebrate = vibes.graph.celebrated.has(n.id);
   const fxCls = (spawn ? " spawn" : "") + (pulse ? " pulse" : "") + (celebrate ? " celebrate" : "");
   const g = svgEl("g", { transform: `translate(${p.x},${p.y})`, class: "g-node status-" + n.status + fxCls, "data-ref": n.ref, "data-id": String(n.id) });
+  // Tooltip natif : le label étant tronqué, le survol révèle le titre complet.
+  const ttl = svgEl("title", {});
+  ttl.textContent = n.title;
+  g.appendChild(ttl);
   // Onde de choc (naissance) et rayons (jalon atteint) : sous le nœud (peints en premier).
-  if (spawn) g.appendChild(svgEl("circle", { r: 10, class: "g-halo", stroke: `var(--${n.color || "accent"})` }));
+  if (spawn) g.appendChild(svgEl("circle", { r: 10, class: "g-halo", stroke: cascadeColorOf(n) }));
   if (celebrate) g.appendChild(raysGroup());
   // Groupe interne mis à l'échelle pour l'anim d'apparition (le translate reste sur g).
   const inner = svgEl("g", { class: "g-inner" });
   const circ = 2 * Math.PI * (r + 5);
   inner.appendChild(svgEl("circle", { r: r + 5, class: "g-track" }));
   inner.appendChild(svgEl("circle", { r: r + 5, class: "g-ring", "stroke-dasharray": `${(circ * n.progress) / 100} ${circ}`, transform: "rotate(-90)" }));
-  inner.appendChild(svgEl("circle", { r, class: "g-disc", fill: `var(--${n.color || "accent"})` }));
+  inner.appendChild(svgEl("circle", { r, class: "g-disc", fill: cascadeColorOf(n) }));
   const emo = svgEl("text", { class: "g-emoji", "text-anchor": "middle", dy: "0.35em", "font-size": String(Math.round(r)) });
   emo.textContent = n.emoji || "🎯";
   inner.appendChild(emo);
   const lbl = svgEl("text", { class: "g-label", "text-anchor": "middle", y: String(r + 18) });
-  lbl.textContent = n.title.length > 22 ? n.title.slice(0, 21) + "…" : n.title;
+  lbl.textContent = n.title.length > 18 ? n.title.slice(0, 17) + "…" : n.title;
   inner.appendChild(lbl);
   g.appendChild(inner);
   return g;
@@ -1025,6 +1052,7 @@ function nodeGroup(n, p) {
 function renderGraph() {
   const svg = $("#graphSvg");
   if (!svg || $("#graphView").hidden) return;
+  buildCascadeColors();         // teintes par cascade, recalculées à chaque rendu
   const pos = computeGraphLayout();
   vibes.graph.posMap = pos;     // réutilisé par le drag live et le recalcul des arêtes
   vibes.graph.edgeDel = null;   // l'overlay poubelle (re)disparaît au rendu
@@ -1080,9 +1108,30 @@ function applyViewBox(svg) {
   const v = vibes.graph.view;
   svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
 }
-// Convertit des coords écran → coords graphe (viewBox courant).
+// Zoom clavier (+ / -) : zoom centré sur le milieu de la vue courante.
+// factor < 1 = zoom avant ; factor > 1 = zoom arrière.
+function zoomGraph(factor) {
+  const svg = $("#graphSvg");
+  if (!svg || $("#graphView").hidden) return;
+  const v = vibes.graph.view;
+  const cx = v.x + v.w / 2, cy = v.y + v.h / 2;
+  v.w *= factor; v.h *= factor;
+  v.x = cx - v.w / 2; v.y = cy - v.h / 2;
+  vibes.graph.userView = true;
+  applyViewBox(svg);
+}
+// Convertit des coords écran → coords graphe via la matrice EXACTE de l'élément
+// (getScreenCTM). Indispensable avec preserveAspectRatio="meet" : le viewBox est
+// mis à l'échelle UNIFORMÉMENT (avec letterbox), donc rect.width/v.w ≠ rect.height/v.h.
+// Le calcul manuel par ratios indépendants décalait les coords (drag plus lent que
+// le curseur sur l'axe contraint). ctm.a / ctm.d sont les échelles réelles px↔SVG.
 function clientToSvg(clientX, clientY) {
   const svg = $("#graphSvg");
+  const ctm = svg.getScreenCTM();
+  if (ctm) {
+    const p = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse());
+    return { x: p.x, y: p.y };
+  }
   const rect = svg.getBoundingClientRect();
   const v = vibes.graph.view;
   return { x: v.x + ((clientX - rect.left) / rect.width) * v.w, y: v.y + ((clientY - rect.top) / rect.height) * v.h };
@@ -1252,13 +1301,15 @@ function wireGraph() {
     if (vibes.graph.linking) { updateLinkLine(e.clientX, e.clientY); return; }
     const nd = vibes.graph.nodeDrag;
     if (nd) {
-      const v = vibes.graph.view;
-      const rect = svg.getBoundingClientRect();
-      const dx = ((e.clientX - nd.cx) / rect.width) * v.w;
-      const dy = ((e.clientY - nd.cy) / rect.height) * v.h;
       if (!nd.moved && Math.hypot(e.clientX - nd.cx, e.clientY - nd.cy) < NODE_DRAG_THRESHOLD) return;
       nd.moved = true;
       svg.style.cursor = "grabbing";
+      // Delta écran → SVG via les échelles RÉELLES (ctm.a/ctm.d). Avec un scaling
+      // uniforme (preserveAspectRatio="meet"), diviser par rect.width/v.w sur l'axe
+      // contraint sous-estimait le déplacement → le nœud « traînait » derrière le curseur.
+      const ctm = svg.getScreenCTM();
+      const dx = ctm ? (e.clientX - nd.cx) / ctm.a : 0;
+      const dy = ctm ? (e.clientY - nd.cy) / ctm.d : 0;
       for (const i of nd.ids) {
         const s = nd.start.get(i);
         vibes.graph.posMap.set(i, { x: s.x + dx, y: s.y + dy });
@@ -1268,10 +1319,11 @@ function wireGraph() {
     }
     const d = vibes.graph.drag;
     if (!d) return;
-    const rect = svg.getBoundingClientRect();
     const v = vibes.graph.view;
-    v.x = d.vx - ((e.clientX - d.x) / rect.width) * v.w;
-    v.y = d.vy - ((e.clientY - d.y) / rect.height) * v.h;
+    // Même correction d'échelle réelle pour le pan du fond (ctm.a/ctm.d).
+    const ctm = svg.getScreenCTM();
+    v.x = d.vx - (ctm ? (e.clientX - d.x) / ctm.a : 0);
+    v.y = d.vy - (ctm ? (e.clientY - d.y) / ctm.d : 0);
     vibes.graph.userView = true;
     applyViewBox(svg);
   });
@@ -1338,6 +1390,17 @@ function wireGraph() {
   $("#graphFit").addEventListener("click", () => {
     vibes.graph.userView = false;
     renderGraph();
+  });
+
+  // Zoom au clavier : + (ou =) zoom avant, - (ou _) zoom arrière. Actif seulement
+  // en vue graphe et hors saisie dans un champ.
+  document.addEventListener("keydown", (e) => {
+    if ($("#graphView").hidden) return;
+    const t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomGraph(0.85); }
+    else if (e.key === "-" || e.key === "_") { e.preventDefault(); zoomGraph(1 / 0.85); }
   });
 }
 

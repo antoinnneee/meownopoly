@@ -49,7 +49,28 @@ trap cleanup_ssh EXIT
 
 echo "🚀 Début du déploiement vers $REMOTE_HOST..."
 echo "🔑 Connexion au serveur..."
-if ! ssh $SSH_OPTS -fNM "$REMOTE_USER@$REMOTE_HOST"; then
+# Connexion maître via sshpass : le mot de passe ($REMOTE_PASSWORD) n'est demandé
+# qu'une fois ; toutes les commandes scp/ssh suivantes réutilisent le socket de
+# multiplexing ($SSH_MUX_SOCKET) et ne re-saisissent pas le mot de passe.
+if ! command -v sshpass &>/dev/null; then
+    echo "⚠️  sshpass non installé, installation..."
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get install -y sshpass
+    elif command -v brew &>/dev/null; then
+        brew install sshpass
+    else
+        echo "❌ Installez sshpass manuellement (requis pour l'auth par mot de passe)."
+        exit 1
+    fi
+fi
+export SSHPASS="$REMOTE_PASSWORD"
+# Purge d'un éventuel socket de multiplexing périmé (laissé par un run précédent
+# interrompu). Sa présence fait afficher à ssh « Control socket connect: Connection
+# refused », ce qui perturbe la détection du prompt de mot de passe par sshpass et
+# fait échouer l'authentification. On repart d'un état propre.
+ssh -O exit -o "ControlPath=$SSH_MUX_SOCKET" "$REMOTE_USER@$REMOTE_HOST" 2>/dev/null
+rm -f "$SSH_MUX_SOCKET"
+if ! sshpass -e ssh $SSH_OPTS -fNM "$REMOTE_USER@$REMOTE_HOST"; then
     echo "❌ Erreur : impossible d'établir la connexion SSH vers $REMOTE_USER@$REMOTE_HOST."
     exit 1
 fi
