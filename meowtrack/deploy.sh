@@ -63,6 +63,7 @@ FILES=(
     "mcp.js"
     "db.js"
     "repo.js"
+    "repos.js"
     "package.json"
     "package-lock.json"
     "README.md"
