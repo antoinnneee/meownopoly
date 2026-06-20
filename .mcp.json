@@ -8,10 +8,10 @@
       }
     },
     "meowtrack": {
-      "command": "node",
-      "args": ["meowtrack/mcp.js"],
-      "env": {
-        "MEOWTRACK_SERVER_URL": "http://pattounecorp.ovh:7702"
+      "type": "http",
+      "url": "http://pattounecorp.ovh:7702/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MEOWTRACK_TOKEN}"
       }
     }
   }
