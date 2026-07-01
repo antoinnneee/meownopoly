@@ -40,12 +40,6 @@ chatServer/chat.db-wal
 chatServer/chat.db-shm
 chatServer/.deployEnv
 chatServer/*.backup
-meowtrack/node_modules
-meowtrack/meowtrack.db
-meowtrack/meowtrack.db-wal
-meowtrack/meowtrack.db-shm
-meowtrack/.deployEnv
-meowtrack/.env
 .vscode/settings.json
 /build
 /build_map_tests

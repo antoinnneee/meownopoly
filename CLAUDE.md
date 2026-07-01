@@ -165,8 +165,7 @@ No automated test runner is configured. Manual testing via the executable.
   - `qml/world3d/` — Présentation 3D physique (World3D, PhysicsActor, PhysicsObjectSpawner, LocalPlayerSpawner, EditorPhysicsBridge, InputController, CameraRig)
   - `qml/test/CatwayTest/` — dev harness incl. `EditorSessionPanel`, `EditorOpsCard`, `EditorNetworkTestTab`
   - `qml/multiplayer/` — lobby (MultiplayerLobby, SessionList, SessionCard, SessionCreation, SessionDetails)
-- `Meownopoly/doc/` — Comprehensive project documentation (40+ files)
-- `Meownopoly/config/` — Configuration files
+- `Meownopoly/doc/` — Comprehensive project documentation (40+ files); see `doc/INDEX.md` for a topic index and `doc/FILE_INDEX.md` for a per-file index of the whole repo (cpp/qml/scripts, one-line description each)
 - `chatServer/` — Node.js WebSocket chat server with SQLite (deploy via `deploy.sh` + `.deployEnv`)
 - `asset_server/` — Node.js HTTP asset distribution server (deploy via `deploy.sh` + `.deployEnv`)
 - `image_tools/` — Image processing utilities
@@ -178,9 +177,13 @@ No automated test runner is configured. Manual testing via the executable.
 - **Serveur d'automation embarqué** (`cpp/automation/automation_server.{h,cpp}`) : `QWebSocketServer` sur **127.0.0.1 uniquement**, opt-in via `--automation-port <N>` ou `MEOW_AUTOMATION_PORT` (sinon non instancié). Protocole JSON requête/réponse corrélé par `id` (commandes : `ping`, `tree`, `find`, `get`/`set`, `invoke`, souris `click`/`doubleClick`/`move`/`press`/`release`/`wheel`, `keys`, `screenshot`, `waitFor`, `quit`). Tout sur le GUI thread. Instancié dans `main.cpp` après `QmlApp`. Convention dual-instance : **7700** (instance 1) / **7701** (instance 2). Côté pilotage : serveur **MCP** stdio dans `automation_mcp/` (Node, `@modelcontextprotocol/sdk` + `ws`), enregistré dans `.mcp.json` à la racine. Doc : `doc/architecture/AUTOMATION_API.md`. Note : la scène complète nécessite Qt 6.11+ (l'éditeur importe `MeowPainter`/CanvasPainter ; sur Qt 6.10 `main.qml` ne charge pas mais le serveur d'automation démarre quand même).
 - **Hooks haut niveau éditeur** : `Editor.qml` instancie un `Item` passif `objectName: "editorAutomationHooks"` (`width/height:0`, `visible/enabled:false`) exposant des fonctions JS — `listAssetCategories`, `listAssets(cat,type)`, `placeAsset(id,cat,type,gx,gy)`, `placeCase(caseType,gx,gy)`, `getCamera`, `setCamera(gx,gy)`, `panCamera(dgx,dgy)`, `zoomCamera(steps)` + propriété `_tileCount`. Pose via le chemin UI exact (`placeSelectedAsset`+`Game.updateMap`, compatible collab/undo). Tools MCP dédiés : `editor_list_assets`, `editor_place_item`, `editor_place_case`, `editor_camera_{get,center,pan,zoom}`. **Important : c'est un `Item`** (pas un `QtObject`) sinon `find`/`tree` (qui descendent par `childItems()` visuels) ne le trouvent pas. `cmdInvoke` côté C++ a une voie dédiée aux **fonctions JS QML** (args/retour `QVariant` + nom de type exact, déballage `QJSValue`) sinon le retour revient `null`. Cf. `doc/architecture/AUTOMATION_API.md` §4 bis.
 
+## Task Tracking (meowtrack)
+
+Issues/nodes for this project used to be tracked in a `meowtrack/` subdirectory of this repo; it has since been **fully extracted to its own git repository** (sibling directory, commit `41a5f02b`). It's reached exclusively via the `meowtrack` MCP server declared in `.mcp.json` (HTTP transport, `Authorization: Bearer ${MEOWTRACK_TOKEN}`) — there are no local meowtrack files or folders left in this repo to read directly.
+
 ## External Documentation
 
-Extensive docs exist in `Meownopoly/doc/` — check `doc/INDEX.md` for the full index and `doc/QUICK_START.md` for navigation. Key architecture docs:
+Extensive docs exist in `Meownopoly/doc/` — check `doc/INDEX.md` for the full index, `doc/FILE_INDEX.md` for a per-file lookup index, and `doc/QUICK_START.md` for navigation. Key architecture docs:
 - `doc/architecture/P2P_NETWORK_ARCHITECTURE.md` — Catway/networking details
 - `doc/architecture/ANALYSE_ARCHITECTURE_EDITEUR.md` — Editor architecture (detailed)
 - `doc/architecture/CATWAY_ARCHITECTURE.md` — P2P/UDP communication

@@ -7,6 +7,7 @@ Bienvenue dans la documentation du projet Meownopoly ! Ce document sert d'index 
 - [README](./README.md) - Aperçu général du projet et du jeu
 - [🚀 QUICK_START](./QUICK_START.md) - **Guide de démarrage rapide** (Nouveau !)
 - [📁 STRUCTURE_DOCUMENTATION](./STRUCTURE_DOCUMENTATION.md) - Organisation complète de la documentation
+- [🗂️ FILE_INDEX](./FILE_INDEX.md) - **Index fichier par fichier** de tout le dépôt (cpp/qml/serveurs/scripts) avec description, pour retrouver vite le bon fichier
 
 ---
 
