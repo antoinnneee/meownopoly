@@ -14,6 +14,7 @@
 #include "Displayparameter.h"
 #include "decorationparameter.h"
 #include "ZoneParameter.h"
+#include "npcparameter.h"
 
 class ItemSnapable : public QObject
 {
@@ -24,6 +25,7 @@ class ItemSnapable : public QObject
     Q_PROPERTY(DisplayParameter * displayParameter READ displayParameter WRITE setDisplayParameter NOTIFY displayParameterChanged FINAL)
     Q_PROPERTY(DecorationParameter * decorationParameter READ decorationParameter WRITE setDecorationParameter NOTIFY decorationParameterChanged FINAL)
     Q_PROPERTY(ZoneParameter * zoneParameter READ zoneParameter WRITE setZoneParameter NOTIFY zoneParameterChanged FINAL)
+    Q_PROPERTY(NPCParameter * npcParameter READ npcParameter WRITE setNpcParameter NOTIFY npcParameterChanged FINAL)
     Q_PROPERTY(QUuid uniqueId READ uniqueId WRITE setUniqueId NOTIFY uniqueIdChanged FINAL)
     Q_PROPERTY(TileType tileType READ tileType WRITE setTileType NOTIFY tileTypeChanged FINAL)
 
@@ -41,6 +43,8 @@ public:
         CaseTile,
         DecorationTile,
         PhysicZoneTile,
+        NPCTile,        // toute nouvelle valeur DOIT rester la plus haute
+                        // (borne de validation du ctor JSON)
     };
     Q_ENUM(TileType)
 
@@ -52,6 +56,8 @@ public:
     void setDecorationParameter(DecorationParameter * decorationParameter);
     ZoneParameter * zoneParameter() const;
     void setZoneParameter(ZoneParameter * zoneParameter);
+    NPCParameter * npcParameter() const;
+    void setNpcParameter(NPCParameter * npcParameter);
     static void registerQml();
     Q_INVOKABLE virtual QString toJSON();
     void applyJson(const QJsonObject &json);
@@ -106,6 +112,15 @@ public:
                 if (!(*m_zoneParameter == *other.m_zoneParameter))
                     return false;
             break;
+        case NPCTile:
+            if (m_npcParameter && other.m_npcParameter)
+                if (!(*m_npcParameter == *other.m_npcParameter))
+                    return false;
+            // Le visuel sprite d'un PNJ passe par decorationParameter.
+            if (m_decorationParameter && other.m_decorationParameter)
+                if (!(*m_decorationParameter == *other.m_decorationParameter))
+                    return false;
+            break;
         case CaseTile:
             if (m_caseData && other.m_caseData)
                 if (m_caseData->toJSON() != other.m_caseData->toJSON())
@@ -128,6 +143,7 @@ signals:
     void displayParameterChanged();
     void decorationParameterChanged();
     void zoneParameterChanged();
+    void npcParameterChanged();
 
     void uniqueIdChanged();
 
@@ -138,6 +154,7 @@ private :
     DisplayParameter * m_displayParameter = new DisplayParameter;
     DecorationParameter * m_decorationParameter = new DecorationParameter;
     ZoneParameter * m_zoneParameter = new ZoneParameter;
+    NPCParameter * m_npcParameter = new NPCParameter;
     QJsonObject m_json;
     QString m_lastKnownJson;
     QUuid m_uniqueId;

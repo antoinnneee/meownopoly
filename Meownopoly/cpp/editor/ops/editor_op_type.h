@@ -41,6 +41,9 @@ enum Value : quint8 {
     UpdatePlayerProfile     = 14,  // payload: { id, fields: {...} }  // partial
     ReorderPlayerProfile    = 15,  // payload: { id, newIndex }
     SetMapPlayerLimits      = 16,  // payload: { minPlayers?, maxPlayers? }
+
+    // PNJ (NPCTile) — édition du NPCParameter (nom, lignes, trigger).
+    SetNpcParameter         = 17,  // target: uuid, fields: {...}
 };
 Q_ENUM_NS(Value)
 

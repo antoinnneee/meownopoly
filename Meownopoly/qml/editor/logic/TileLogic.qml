@@ -26,7 +26,19 @@ QtObject {
         var snapableParameters
         gridX = gridX - Math.trunc(currentElementWidth/2)
         gridY = gridY - Math.trunc(currentElementHeight/2)
-        if (!logic.isAssetSelected) {    // place case
+        if (logic.npcPoseArmed) {        // place PNJ
+            const cfg = logic.npcPoseConfig || ({})
+            snapableParameters = ItemSnapableFactory.createNPC()
+            snapableParameters.npcParameter.npcName = cfg.npcName || ""
+            snapableParameters.npcParameter.visualKind = cfg.visualKind !== undefined ? cfg.visualKind : 0
+            snapableParameters.npcParameter.modelName = cfg.modelName || ""
+            snapableParameters.npcParameter.triggerMode = cfg.triggerMode !== undefined ? cfg.triggerMode : 0
+            // Visuel sprite : réutilise le triplet DecorationParameter.
+            snapableParameters.decorationParameter.decorationCategory = cfg.spriteCategory || ""
+            snapableParameters.decorationParameter.decorationType = cfg.spriteType || ""
+            snapableParameters.decorationParameter.decorationId = cfg.spriteId || ""
+        }
+        else if (!logic.isAssetSelected) {    // place case
             if (logic.caseTypeSelected == -1){ //no type selected
                 return
             }
@@ -44,9 +56,11 @@ QtObject {
         // Lamport tick — zOrder unique monotone + jitter sub-1.0 par peer
         // pour désambigüer les ticks concurrents en collab.
         snapableParameters.displayParameter.zOrder = Game.tickLamport()
-        snapableParameters.decorationParameter.decorationCategory = logic.currentSelectedAssetCategory
-        snapableParameters.decorationParameter.decorationType = logic.currentSelectedAssetType
-        snapableParameters.decorationParameter.decorationId = logic.currentSelectedAssetId
+        if (!logic.npcPoseArmed) {
+            snapableParameters.decorationParameter.decorationCategory = logic.currentSelectedAssetCategory
+            snapableParameters.decorationParameter.decorationType = logic.currentSelectedAssetType
+            snapableParameters.decorationParameter.decorationId = logic.currentSelectedAssetId
+        }
 
         var newTile = createItemSnapableTile(snapableParameters)
 
@@ -106,6 +120,8 @@ QtObject {
             tileComponent = dynamicComponent.snapableDecorationComponent
         } else if (itemSnapableData.tileType === ItemSnapable.PhysicZoneTile) {
             tileComponent = dynamicComponent.snapablePhysicZoneComponent
+        } else if (itemSnapableData.tileType === ItemSnapable.NPCTile) {
+            tileComponent = dynamicComponent.snapableNPCComponent
         }
         var newTile = tileComponent ? tileComponent.createObject(workArea, {
             "generalMA": mainMa,

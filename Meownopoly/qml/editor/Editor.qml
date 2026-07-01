@@ -39,6 +39,7 @@ import editor
 import playerConfigPanel 1.0
 import playerPanel
 import zonePanel
+import npcSelectionPanel
 import templatePanel
 import assetSelectionPanel
 import caseSelectionPanel
@@ -61,7 +62,7 @@ Base_Board {
     // Hauteur du panneau de module "bas" actif (deco/case/zone/template/player) ;
     // 0 sinon. Remplace l'ancien selectionPanel.height (D4).
     readonly property bool _bottomModuleActive:
-        ["deco", "case", "zone", "template", "player", "config3d"].indexOf(moduleManager.selectedModuleId) !== -1
+        ["deco", "case", "zone", "npc", "template", "player", "config3d"].indexOf(moduleManager.selectedModuleId) !== -1
     readonly property real _bottomPanelHeight: _bottomModuleActive ? Screen.pixelDensity * 75 : 0
 
     property int availableHeight: height - _bottomPanelHeight
@@ -501,6 +502,15 @@ Base_Board {
                             cd[k] = op.fields[k]
                         }
                     }
+                }
+                break
+            }
+
+            case EditorOpType.SetNpcParameter: {
+                const nt = findByUuid(op.target)
+                if (nt && nt.snapableParameters
+                        && nt.snapableParameters.npcParameter && op.fields) {
+                    nt.snapableParameters.npcParameter.applyJson(op.fields)
                 }
                 break
             }
@@ -1112,6 +1122,15 @@ Base_Board {
         }
     }
 
+    // Compteur de révision de snapableTilesList : la liste est mutée par
+    // push()/splice() (non observé par les bindings) — les consommateurs PNJ
+    // (spawner 3D, overlay de dialogue) re-filtrent sur ce tick.
+    property int _npcTilesRev: 0
+    Connections {
+        target: logic
+        function onSnapableTilesListUpdated() { root._npcTilesRev++ }
+    }
+
     Connections {
         target: Game
 
@@ -1399,6 +1418,35 @@ Base_Board {
             z: 6.0  // juste au-dessus de gameScene (5.99), sous les panneaux UI
             effect: screenEffectController.renderEffect
             amount: screenEffectController.amount
+        }
+
+        // --- Dialogues PNJ ---
+        // Le contrôleur écoute les entrées/sorties de zone et résout la zone
+        // de trigger vers le PNJ lié (PNJ --next--> zone). L'overlay (bulles +
+        // badges) est en coords workArea : suit pan/zoom sans projection 3D.
+        NPCDialogueController {
+            id: npcDialogueController
+            physicsWorld: pattounxWorld
+            tilesList: root.snapableTilesList
+            onlyActorId: "player"   // ne réagit qu'au joueur local de l'éditeur
+        }
+
+        // Nodes 3D statiques des PNJ en mode Model3D (les sprites restent
+        // rendus par leur tile 2D SnapableNPC, visible sous la View3D).
+        NPCSpawner {
+            id: npcSpawner
+            world3D: gameScene
+            tilesList: root.snapableTilesList
+            tilesRevision: root._npcTilesRev
+        }
+
+        NPCDialogueOverlay {
+            id: npcDialogueOverlay
+            anchors.fill: parent
+            z: 99999   // au-dessus des tiles, sous les curseurs distants
+            controller: npcDialogueController
+            tilesList: root.snapableTilesList
+            tilesRevision: root._npcTilesRev
         }
 
         // Phase 4 — joueur local. Body créé/détruit par le spawner ; le
@@ -1953,6 +2001,19 @@ Base_Board {
         height: visible ? Screen.pixelDensity * 75 : 0
     }
 
+    // Conteneur bespoke du module "PNJ".
+    NPCPanel {
+        id: npcPanel
+        logic: logic
+        visible: moduleManager.selectedModuleId === "npc"
+        onFocusReleased: root.focus = true
+        z: UiStyle.z_HUD
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: sidePanel.left
+        height: visible ? Screen.pixelDensity * 75 : 0
+    }
+
     // D3 — conteneur bespoke du module "Template".
     TemplatePanel {
         id: templatePanel
@@ -2485,6 +2546,83 @@ Base_Board {
             info.exclusion = sp.zoneParameter.exclusion
             info.color = String(sp.zoneParameter.zoneColor)
             return { ok: true, tile: info }
+        }
+
+        // Pose un PNJ à (gridX, gridY) via le chemin UI complet
+        // (armNpcPose → placeSelectedAsset branche npcPoseArmed →
+        // Game.updateMap), compatible collab/undo.
+        //
+        // visualKind : "model" (défaut) ou "sprite".
+        // ref        : nom du modèle 3D (mode model) ou id d'asset (mode
+        //              sprite ; spriteCategory/spriteType via options).
+        // options (facultatives) : name (string), triggerMode (0=Proximité,
+        //   1=Clic, 2=Toujours), lines (array de strings — séquence de
+        //   dialogue initiale), spriteCategory/spriteType (mode sprite).
+        function placeNPC(visualKind, ref, gridX, gridY, options) {
+            const opt = options || {}
+            const kind = (visualKind === "sprite" || visualKind === 1) ? 1 : 0
+            logic.armNpcPose({
+                npcName: opt.name || "",
+                visualKind: kind,
+                modelName: kind === 0 ? (ref || "") : "",
+                triggerMode: opt.triggerMode !== undefined ? opt.triggerMode : 0,
+                spriteCategory: kind === 1 ? (opt.spriteCategory || "") : "",
+                spriteType: kind === 1 ? (opt.spriteType || "") : "",
+                spriteId: kind === 1 ? (ref || "") : ""
+            })
+
+            const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)
+            if (placed && placed.snapableParameters)
+                Game.updateMap(EditDelta.TileAdded, placed.snapableParameters)
+
+            logic.clearAssetSelection()
+            if (logic.editorMouseMode === EditorEnum.EM_POSE)
+                logic.mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
+
+            const info = _tileInfo(placed)
+            if (!info)
+                return { ok: false, error: "Échec de la création du PNJ" }
+
+            if (opt.lines && opt.lines.length) {
+                const npc = placed.snapableParameters.npcParameter
+                for (let i = 0; i < opt.lines.length; i++)
+                    npc.addLine(String(opt.lines[i]))
+                Game.updateMap(EditDelta.TileModified, placed.snapableParameters)
+            }
+
+            info.npcName = placed.snapableParameters.npcParameter.npcName
+            info.lineCount = placed.snapableParameters.npcParameter.lineCount()
+            return { ok: true, tile: info }
+        }
+
+        // Force une sauvegarde de la carte courante (AUTOSAVE par défaut,
+        // CUSTOM si custom=true — utilise alors mapInfo.mapName).
+        function saveMap(custom) {
+            logic.saveMap(custom === true ? MapTypes.CUSTOM : MapTypes.AUTOSAVE)
+            return { ok: true, mapName: String(mapInfo.mapName || "") }
+        }
+
+        // Remplace la séquence de dialogue d'un PNJ existant (par uuid).
+        function setNpcDialogue(uuid, lines) {
+            if (!uuid) return { ok: false, error: "uuid requis" }
+            const tiles = root.snapableTilesList
+            for (let i = 0; i < tiles.length; i++) {
+                const t = tiles[i]
+                if (!t || !t.snapableParameters) continue
+                if (String(t.snapableParameters.uniqueId) !== String(uuid)) continue
+                const npc = t.snapableParameters.npcParameter
+                if (!npc) return { ok: false, error: "tile sans npcParameter" }
+                npc.clearLines()
+                const arr = lines || []
+                for (let j = 0; j < arr.length; j++)
+                    npc.addLine(String(arr[j]))
+                EditorOpBus.recordOp(EditorOpBus.makeSetNpcParameterOp(
+                    String(t.snapableParameters.uniqueId),
+                    JSON.parse(npc.toJSON())))
+                Game.updateMap(EditDelta.TileModified, t.snapableParameters)
+                return { ok: true, lineCount: npc.lineCount() }
+            }
+            return { ok: false, error: "PNJ introuvable: " + uuid }
         }
 
         // ── Caméra ──────────────────────────────────────────────────────

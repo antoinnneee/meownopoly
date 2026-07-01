@@ -41,6 +41,13 @@ Base_logic {
     readonly property bool isAssetSelected:
         currentSelectedAssetCategory !== "" && currentSelectedAssetType !== "" && currentSelectedAssetId !== ""
 
+    // Pose PNJ armée (module "npc"). Prioritaire sur asset/case dans
+    // TileLogic.placeSelectedAsset. npcPoseConfig porte les valeurs saisies
+    // dans le NPCPanel : { npcName, visualKind, modelName, triggerMode,
+    // spriteCategory, spriteType, spriteId }.
+    property bool npcPoseArmed: false
+    property var npcPoseConfig: ({})
+
     // Modes "spécialisés" : on n'y force pas EM_POSE/EM_NORMAL sur (dé)sélection
     // (reprend les gardes des anciens handlers du SelectionPanel).
     function _isSpecializedMode() {
@@ -48,6 +55,18 @@ Base_logic {
             || editorMouseMode === EditorEnum.EM_DRAW_POLYGON
             || editorMouseMode === EditorEnum.EM_SELECTION_LINK
             || editorMouseMode === EditorEnum.EM_GAME
+    }
+
+    // Arme la pose d'un PNJ. Désarme asset/case (mutuellement exclusifs).
+    function armNpcPose(config) {
+        currentSelectedAssetCategory = ""
+        currentSelectedAssetType = ""
+        currentSelectedAssetId = ""
+        caseTypeSelected = -1
+        npcPoseConfig = config || ({})
+        npcPoseArmed = true
+        if (!_isSpecializedMode() && mouseLogic)
+            mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
     }
 
     // Arme un asset (décoration) pour la pose. Re-sélectionner le même = toggle off.
@@ -58,6 +77,7 @@ Base_logic {
             clearAssetSelection()
             return
         }
+        npcPoseArmed = false
         caseTypeSelected = -1
         currentSelectedAssetCategory = category
         currentSelectedAssetType = type
@@ -69,12 +89,13 @@ Base_logic {
             mouseLogic.changeMouseMode(EditorEnum.EM_POSE)
     }
 
-    // Efface toute sélection de pose (asset + case) et revient en mode normal.
+    // Efface toute sélection de pose (asset + case + PNJ) et revient en mode normal.
     function clearAssetSelection() {
         currentSelectedAssetCategory = ""
         currentSelectedAssetType = ""
         currentSelectedAssetId = ""
         caseTypeSelected = -1
+        npcPoseArmed = false
         if (!_isSpecializedMode() && mouseLogic)
             mouseLogic.changeMouseMode(EditorEnum.EM_NORMAL)
     }
@@ -86,6 +107,7 @@ Base_logic {
             currentSelectedAssetCategory = ""
             currentSelectedAssetType = ""
             currentSelectedAssetId = ""
+            npcPoseArmed = false
         }
         caseTypeSelected = type
         if (!_isSpecializedMode() && mouseLogic)

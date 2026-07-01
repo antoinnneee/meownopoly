@@ -1,0 +1,3 @@
+module npcSelectionPanel
+NPC_Content 1.0 NPC_Content.qml
+NPCPanel 1.0 NPCPanel.qml

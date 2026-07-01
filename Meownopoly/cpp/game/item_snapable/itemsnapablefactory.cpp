@@ -66,6 +66,14 @@ ItemSnapable *ItemSnapableFactory::createPhysicZone()
     return snap;
 }
 
+ItemSnapable *ItemSnapableFactory::createNPC()
+{
+    ItemSnapable *snap = new ItemSnapable();
+    snap->setTileType(ItemSnapable::NPCTile);
+    QQmlEngine::setObjectOwnership(snap, QQmlEngine::JavaScriptOwnership);
+    return snap;
+}
+
 void ItemSnapableFactory::requestCreateItem(const QJsonObject &jsonData)
 {
     emit createItemRequested(jsonData);

@@ -124,6 +124,10 @@ public:
     /// `fields` peut contenir minPlayers et/ou maxPlayers.
     Q_INVOKABLE QJsonObject makeSetMapPlayerLimitsOp(const QJsonObject &fields) const;
 
+    /// Construit une op SetNpcParameter { op, target, fields }.
+    Q_INVOKABLE QJsonObject makeSetNpcParameterOp(const QString &uuid,
+                                                  const QJsonObject &fields) const;
+
     // ── Pattern B : broadcast d'un EditDelta générique ───────────────────────
 
     /// Construit une op ApplyState depuis un delta. Si `groupId` n'est pas

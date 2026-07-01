@@ -4,6 +4,7 @@ import QtQuick.Controls
 
 import meowComponent
 import editor
+import npcConfigPanel
 
 ColumnLayout {
     id: panelContent
@@ -18,6 +19,7 @@ ColumnLayout {
     property alias caseConfigurationPanel: caseConfigurationPanelSection
     property alias connectionsConfigurationPanel: connectionsConfigSection
     property alias zoneConfigurationPanel: zoneConfigurationPanelSection
+    property alias npcConfigurationPanel: npcConfigurationPanelSection
    // property alias transformSection: transformSection
 
     VisualEffectsPanel {
@@ -72,6 +74,16 @@ ColumnLayout {
             panelContent.connectionRequested(kind)
         }
 
+    }
+
+    // Onglet Configuration PNJ
+    NPCConfigurationPanelSection {
+        id: npcConfigurationPanelSection
+        isCollapsed: true
+        logic: panelContent.logic
+        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+        Layout.fillWidth: true
+        onFocusReleased: panelContent.focusReleased()
     }
 
     // Onglet Configuration Zone

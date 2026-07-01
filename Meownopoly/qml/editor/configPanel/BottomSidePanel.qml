@@ -33,6 +33,7 @@ Rectangle {
     property alias caseConfigurationPanel: content.caseConfigurationPanel
     property alias connectionsConfigurationPanel: content.connectionsConfigurationPanel
     property alias zoneConfigurationPanel: content.zoneConfigurationPanel
+    property alias npcConfigurationPanel: content.npcConfigurationPanel
 
     // --- Signals ---
     signal effectChanged()
@@ -253,6 +254,7 @@ Rectangle {
 
         visualEffectsPanel.updateFromDisplayParameter(snapableParameter.displayParameter)
         zoneConfigurationPanel.updateFromZoneParameter(snapableParameter.zoneParameter)
+        npcConfigurationPanel.setTargetNpc(snapableParameter)
        root. blockEffectChangedSignal = false
     }
 }

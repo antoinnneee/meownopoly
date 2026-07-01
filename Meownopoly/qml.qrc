@@ -151,6 +151,18 @@
         <file>qml/world3d/KuraMaterial.qml</file>
         <file>qml/world3d/KuraModel.qml</file>
         <file>qml/world3d/SkinnedModel.qml</file>
+        <file>qml/world3d/NPCDialogueController.qml</file>
+        <file>qml/world3d/NPCDialogueOverlay.qml</file>
+        <file>qml/world3d/DialogueBox.qml</file>
+        <file>qml/world3d/NPCSpawner.qml</file>
+        <file>qml/editor/moduleManager/npcSelectionPanel/qmldir</file>
+        <file>qml/editor/moduleManager/npcSelectionPanel/NPC_Content.qml</file>
+        <file>qml/editor/moduleManager/npcSelectionPanel/NPCPanel.qml</file>
+        <file>qml/editor/configPanel/npcConfigPanel/qmldir</file>
+        <file>qml/editor/configPanel/npcConfigPanel/NPCConfigurationPanelSection.qml</file>
+        <file>qml/editor/configPanel/npcConfigPanel/NCP_IdentitySection.qml</file>
+        <file>qml/editor/configPanel/npcConfigPanel/NCP_DialogueSection.qml</file>
+        <file>qml/editor/configPanel/npcConfigPanel/NCP_TriggerSection.qml</file>
         <file>qml/world3d/shaders/tint.frag</file>
     </qresource>
 </RCC>

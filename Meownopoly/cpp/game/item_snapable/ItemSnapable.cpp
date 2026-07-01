@@ -21,6 +21,8 @@ ItemSnapable::~ItemSnapable() {
         delete m_decorationParameter;
     if (m_zoneParameter)
         delete m_zoneParameter;
+    if (m_npcParameter)
+        delete m_npcParameter;
 }
 
 void ItemSnapable::registerQml()
@@ -30,6 +32,7 @@ void ItemSnapable::registerQml()
     qmlRegisterType<DisplayParameter>("DisplayParameter", 1, 0, "DisplayParameter"); // Register DisplayParameter class
     qmlRegisterType<DecorationParameter>("DecorationParameter", 1, 0, "DecorationParameter"); // Register DecorationParameter class
     qmlRegisterType<ZoneParameter>("ZoneParameter", 1, 0, "ZoneParameter"); // Register ZoneParameter class
+    qmlRegisterType<NPCParameter>("NPCParameter", 1, 0, "NPCParameter"); // Register NPCParameter class
 }
 
 ItemSnapable::ItemSnapable(Case * caseData, DisplayParameter * displayParameter, QObject *parent)
@@ -58,7 +61,7 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
 
     // Valider et parser le tileType
     int rawTileType = m_json["tileType"].toInt(-1);
-    if (rawTileType < CaseTile || rawTileType > PhysicZoneTile) {
+    if (rawTileType < CaseTile || rawTileType > NPCTile) {
         qWarning() << "ITEM_SNAPABLE: tileType invalide:" << rawTileType
                     << "pour la tile" << m_json["uniqueId"].toString() << "- défaut à DecorationTile";
         m_tileType = DecorationTile;
@@ -108,6 +111,13 @@ ItemSnapable::ItemSnapable(const QJsonObject &json, QObject *parent)
             m_zoneParameter = new ZoneParameter(m_json["zoneParameter"].toObject(), this);
         } else {
             qWarning() << "ITEM_SNAPABLE: 'zoneParameter' invalide pour tile" << m_uniqueId.toString();
+        }
+    }
+    if (m_json.contains("npcParameter")) {
+        if (m_json["npcParameter"].isObject()) {
+            m_npcParameter = new NPCParameter(m_json["npcParameter"].toObject(), this);
+        } else {
+            qWarning() << "ITEM_SNAPABLE: 'npcParameter' invalide pour tile" << m_uniqueId.toString();
         }
     }
     commitCurrentState();
@@ -172,6 +182,16 @@ void ItemSnapable::setZoneParameter(ZoneParameter * zoneParameter) {
     m_zoneParameter = zoneParameter; emit zoneParameterChanged();
 }
 
+NPCParameter *ItemSnapable::npcParameter() const {
+    return m_npcParameter;
+}
+
+void ItemSnapable::setNpcParameter(NPCParameter * npcParameter) {
+    if (m_npcParameter)
+        delete m_npcParameter;
+    m_npcParameter = npcParameter; emit npcParameterChanged();
+}
+
 QString ItemSnapable::toJSON()
 {
     QString json;
@@ -186,6 +206,11 @@ QString ItemSnapable::toJSON()
     }
     if (m_zoneParameter != nullptr && m_tileType == PhysicZoneTile) {
         json += "    \"zoneParameter\": " + m_zoneParameter->toJSON() + ",\n";
+    }
+    if (m_npcParameter != nullptr && m_tileType == NPCTile) {
+        // toJSON() de NPCParameter est déjà un objet JSON valide (échappement
+        // via QJsonDocument), la concat reste sûre ici.
+        json += "    \"npcParameter\": " + m_npcParameter->toJSON() + ",\n";
     }
     json += "    \"displayParameter\": " + m_displayParameter->toJSON() + ",\n";
     json += "    \"next\": [ ";
@@ -320,6 +345,9 @@ void ItemSnapable::applyJson(const QJsonObject &json)
 
     if (json.contains("zoneParameter"))
         m_zoneParameter->applyJson(json["zoneParameter"].toObject());
+
+    if (json.contains("npcParameter"))
+        m_npcParameter->applyJson(json["npcParameter"].toObject());
 
     // NB: uniqueId jamais override (identité de la tile) ;
     // next/prev gérés par Map::rewireLinks après applyJson.

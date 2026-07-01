@@ -1,0 +1,5 @@
+module npcConfigPanel
+NPCConfigurationPanelSection 1.0 NPCConfigurationPanelSection.qml
+NCP_IdentitySection 1.0 NCP_IdentitySection.qml
+NCP_DialogueSection 1.0 NCP_DialogueSection.qml
+NCP_TriggerSection 1.0 NCP_TriggerSection.qml

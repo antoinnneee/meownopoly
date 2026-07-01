@@ -10,3 +10,7 @@ ScreenEffectOverlay 1.0 ScreenEffectOverlay.qml
 KuraMaterial 1.0 KuraMaterial.qml
 KuraModel 1.0 KuraModel.qml
 SkinnedModel 1.0 SkinnedModel.qml
+NPCDialogueController 1.0 NPCDialogueController.qml
+NPCDialogueOverlay 1.0 NPCDialogueOverlay.qml
+DialogueBox 1.0 DialogueBox.qml
+NPCSpawner 1.0 NPCSpawner.qml

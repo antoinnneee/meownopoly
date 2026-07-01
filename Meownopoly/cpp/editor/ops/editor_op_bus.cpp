@@ -283,6 +283,16 @@ QJsonObject EditorOpBus::makeSetMapPlayerLimitsOp(const QJsonObject &fields) con
     return op;
 }
 
+QJsonObject EditorOpBus::makeSetNpcParameterOp(const QString &uuid,
+                                               const QJsonObject &fields) const
+{
+    return QJsonObject{
+        { "op",     static_cast<int>(EditorOpType::SetNpcParameter) },
+        { "target", uuid },
+        { "fields", fields },
+    };
+}
+
 // ── Pattern B : broadcast d'un EditDelta générique ───────────────────────────
 
 void EditorOpBus::submitFromDelta(int type,
