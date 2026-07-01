@@ -171,10 +171,11 @@ Rectangle {
             }
         }
 
-        // Test 3D Button
+        // Gameplay Modules Test Button
         MeowButton {
             id: test3DButton
-            text: "🐱 Test Component"
+            objectName: "gameplayModulesButton"
+            text: "🧩 Modules Gameplay"
             Layout.preferredWidth: 200
             Layout.preferredHeight: 50
 
@@ -182,7 +183,7 @@ Rectangle {
 
             onClicked: {
                 root.test3DRequested()
-                console.log("Test Component requested")
+                console.log("Gameplay Modules requested")
             }
         }
 
