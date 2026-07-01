@@ -14,6 +14,7 @@
 #include "currency_module.h"
 #include "stats_module.h"
 #include "equipment_module.h"
+#include "level_module.h"
 
 /// Registre singleton des modules de gameplay activables.
 ///
@@ -36,6 +37,7 @@ class GameplayModuleManager : public QObject
     Q_PROPERTY(CurrencyModule *currencyModule READ currencyModule CONSTANT)
     Q_PROPERTY(StatsModule *statsModule READ statsModule CONSTANT)
     Q_PROPERTY(EquipmentModule *equipmentModule READ equipmentModule CONSTANT)
+    Q_PROPERTY(LevelModule *levelModule READ levelModule CONSTANT)
 
 public:
     static void registerQml();
@@ -61,6 +63,7 @@ public:
     CurrencyModule *currencyModule() const { return m_currency; }
     StatsModule *statsModule() const { return m_stats; }
     EquipmentModule *equipmentModule() const { return m_equipment; }
+    LevelModule *levelModule() const { return m_level; }
 
 signals:
     /// Émis quand la liste des modules change (enregistrement) ou qu'un
@@ -80,6 +83,7 @@ private:
     CurrencyModule *m_currency = nullptr;
     StatsModule *m_stats = nullptr;
     EquipmentModule *m_equipment = nullptr;
+    LevelModule *m_level = nullptr;
 };
 
 #endif // GAMEPLAY_MODULE_MANAGER_H

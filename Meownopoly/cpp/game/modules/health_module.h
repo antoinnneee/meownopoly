@@ -45,6 +45,16 @@ public:
     /// Fixe directement les PV courants (clampés à [0, maxHp]).
     Q_INVOKABLE bool setHp(const QString &playerId, int hp);
 
+    /// Fixe le maxHp d'un joueur (clampé à un minimum de 1). Les PV courants
+    /// sont clampés au nouveau max ; si le max augmente les PV ne bougent pas
+    /// (pas de soin gratuit).
+    ///
+    /// NON gatée par `enabled()` : c'est la surface d'intégration pilotée par
+    /// la stat effective `maxHealth` de StatsModule (même philosophie que l'API
+    /// de modificateurs de StatsModule — la valeur doit rester cohérente quel
+    /// que soit l'état d'activation). Émet `healthChanged`.
+    Q_INVOKABLE bool setMaxHp(const QString &playerId, int maxHp);
+
     /// Redonne tous ses PV au joueur (revive inclus).
     Q_INVOKABLE bool revive(const QString &playerId);
 

@@ -73,6 +73,17 @@ Ajouter une section sur le modèle des existantes :
 
 Build Release complet (étape 3), puis lancer `build/Release/Meownopoly.exe` → menu titre → "🧩 Modules Gameplay" → vérifier : switch off = boutons inertes (warnings console), switch on = mutations visibles + lignes dans le journal d'événements.
 
+## Sous-modules (parent/enfant)
+
+`GameplayModule` supporte une hiérarchie parent/enfant (ex : `ExperienceModule` sous `LevelModule`).
+
+- **Enregistrement** : dans le ctor du parent, `m_child = new ChildModule(this); m_child->setXxx(this); registerSubModule(m_child);`. `registerSubModule` (protégé) reparente l'enfant (ownership QObject) et fixe son `parentModule`. Le couplage inverse enfant→parent se fait par injection typée (`setLevelModule`), pas par include (forward declaration côté enfant, comme equipment→stats).
+- **État effectif** : `effectiveEnabled() == enabled() && parent->effectiveEnabled()` (récursif). Exposé en `Q_PROPERTY(bool effectiveEnabled READ effectiveEnabled NOTIFY effectiveEnabledChanged)`. **Les gardes de mutation d'un sous-module testent `effectiveEnabled()`, pas `enabled()`** — sinon on peut muter alors que le parent est off. Désactiver le parent grise l'enfant sans perdre son flag propre (réactivation = restauration).
+- **Propagation du signal** : `setEnabled` compare l'`effectiveEnabled` avant/après et, s'il a changé, appelle `notifyEffectiveEnabledChanged()` qui émet sur soi PUIS descend récursivement dans les enfants dont le flag propre est activé (un enfant off reste off quel que soit le parent → ne pas ré-émettre).
+- **`reset()`** : la base `GameplayModule::reset()` propage aux sous-modules. Un module concret qui surcharge `reset()` **doit** appeler `GameplayModule::reset()` à la fin pour conserver la propagation.
+- **Manager** : les sous-modules ne sont **pas** dans la liste plate `m_modules` (pas de doublon dans `moduleAt`/`moduleCount`) — seul le parent est passé à `registerModule`. Mais `moduleById` fait une **descente récursive** (`m->subModuleById(id)`) pour les trouver. Helpers QML sur `GameplayModule` : `subModuleCount()`/`subModuleAt(int)`/`subModuleById(QString)`. Enregistrer un `qmlRegisterUncreatableType` pour chaque classe de sous-module.
+- **Câblage inter-modules par signal** (ex : stat `maxHealth` → `HealthModule::setMaxHp`) : se fait dans le ctor du manager par `connect` (lambda filtrant la clé), même philosophie que l'injection. Vérifier l'absence de boucle (le module cible ne doit rien repousser vers la source).
+
 ## Pièges connus
 
 - **Q_PROPERTY name, pas getter name** : QML lit `module.enabled`, pas `module.isEnabled()`.

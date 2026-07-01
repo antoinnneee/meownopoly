@@ -6,7 +6,10 @@
 #include "currency_module.h"
 #include "stats_module.h"
 #include "equipment_module.h"
+#include "level_module.h"
+#include "experience_module.h"
 
+#include <QtMath>
 #include <QQmlEngine>
 
 GameplayModuleManager *GameplayModuleManager::m_pThis = nullptr;
@@ -20,11 +23,24 @@ GameplayModuleManager::GameplayModuleManager(QObject *parent) : QObject(parent)
     m_currency = new CurrencyModule(this);
     m_stats = new StatsModule(this);
     m_equipment = new EquipmentModule(this);
+    // LevelModule crée et détient son sous-module ExperienceModule (registerSubModule).
+    m_level = new LevelModule(this);
 
     // Câblage équipement → stats : l'équipement pose ses bonus via l'API de
     // modificateurs de StatsModule (source "equip:<slot>"). Injection ici pour
     // éviter tout couplage dur dans les headers des modules.
     m_equipment->setStatsModule(m_stats);
+
+    // Câblage stats → vie : la stat effective « maxHealth » pilote le maxHp du
+    // module de vie. Même philosophie que l'injection equipment → stats : aucun
+    // couplage dur dans les headers, tout se fait par signal ici. Pas de boucle
+    // (HealthModule::setMaxHp ne repousse rien vers StatsModule).
+    connect(m_stats, &StatsModule::statChanged, this,
+            [this](const QString &playerId, const QString &statKey,
+                   qreal /*baseValue*/, qreal effectiveValue) {
+                if (statKey == QStringLiteral("maxHealth"))
+                    m_health->setMaxHp(playerId, qMax(1, qRound(effectiveValue)));
+            });
 
     registerModule(m_health);
     registerModule(m_inventory);
@@ -32,6 +48,10 @@ GameplayModuleManager::GameplayModuleManager(QObject *parent) : QObject(parent)
     // Ordre requis : stats avant équipement.
     registerModule(m_stats);
     registerModule(m_equipment);
+    // Le sous-module ExperienceModule n'est PAS enregistré à plat : il est
+    // détenu par LevelModule et reste joignable via moduleById (descente
+    // récursive) ou levelModule.experienceModule.
+    registerModule(m_level);
 }
 
 GameplayModuleManager *GameplayModuleManager::instance()
@@ -72,6 +92,12 @@ void GameplayModuleManager::registerQml()
     qmlRegisterUncreatableType<EquipmentModule>(
         "GameplayModuleManager", 1, 0, "EquipmentModule",
         QStringLiteral("Accessible via GameplayModuleManager.equipmentModule"));
+    qmlRegisterUncreatableType<LevelModule>(
+        "GameplayModuleManager", 1, 0, "LevelModule",
+        QStringLiteral("Accessible via GameplayModuleManager.levelModule"));
+    qmlRegisterUncreatableType<ExperienceModule>(
+        "GameplayModuleManager", 1, 0, "ExperienceModule",
+        QStringLiteral("Accessible via GameplayModuleManager.levelModule.experienceModule"));
 }
 
 void GameplayModuleManager::registerModule(GameplayModule *module)
@@ -98,6 +124,9 @@ GameplayModule *GameplayModuleManager::moduleById(const QString &moduleId) const
     for (GameplayModule *m : m_modules) {
         if (m->moduleId() == moduleId)
             return m;
+        // Descente récursive dans les sous-modules (ex : "experience" sous "level").
+        if (GameplayModule *sub = m->subModuleById(moduleId))
+            return sub;
     }
     return nullptr;
 }

@@ -6,6 +6,9 @@ namespace {
 // Valeurs de base par défaut (v1). Toute stat inconnue défaute à 0.
 constexpr qreal kDefaultSpeed = 1.0;
 constexpr qreal kDefaultDamage = 10.0;
+// Vie max : aligné sur HealthModule::defaultMaxHp (100). La stat effective
+// maxHealth pilote le maxHp du module de vie (câblage dans le manager).
+constexpr qreal kDefaultMaxHealth = 100.0;
 } // namespace
 
 StatsModule::StatsModule(QObject *parent)
@@ -15,7 +18,8 @@ StatsModule::StatsModule(QObject *parent)
 
 QStringList StatsModule::knownStats() const
 {
-    return { QStringLiteral("speed"), QStringLiteral("damage") };
+    return { QStringLiteral("speed"), QStringLiteral("damage"),
+             QStringLiteral("maxHealth") };
 }
 
 QString StatsModule::statLabel(const QString &statKey) const
@@ -24,6 +28,8 @@ QString StatsModule::statLabel(const QString &statKey) const
         return QStringLiteral("Vitesse");
     if (statKey == QStringLiteral("damage"))
         return QStringLiteral("Dommage");
+    if (statKey == QStringLiteral("maxHealth"))
+        return QStringLiteral("Vie max");
     return statKey;
 }
 
@@ -33,6 +39,8 @@ qreal StatsModule::defaultBaseStat(const QString &statKey) const
         return kDefaultSpeed;
     if (statKey == QStringLiteral("damage"))
         return kDefaultDamage;
+    if (statKey == QStringLiteral("maxHealth"))
+        return kDefaultMaxHealth;
     return 0.0;
 }
 
