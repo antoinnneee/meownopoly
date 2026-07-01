@@ -12,6 +12,8 @@
 #include "health_module.h"
 #include "inventory_module.h"
 #include "currency_module.h"
+#include "stats_module.h"
+#include "equipment_module.h"
 
 /// Registre singleton des modules de gameplay activables.
 ///
@@ -32,6 +34,8 @@ class GameplayModuleManager : public QObject
     Q_PROPERTY(HealthModule *healthModule READ healthModule CONSTANT)
     Q_PROPERTY(InventoryModule *inventoryModule READ inventoryModule CONSTANT)
     Q_PROPERTY(CurrencyModule *currencyModule READ currencyModule CONSTANT)
+    Q_PROPERTY(StatsModule *statsModule READ statsModule CONSTANT)
+    Q_PROPERTY(EquipmentModule *equipmentModule READ equipmentModule CONSTANT)
 
 public:
     static void registerQml();
@@ -55,6 +59,8 @@ public:
     HealthModule *healthModule() const { return m_health; }
     InventoryModule *inventoryModule() const { return m_inventory; }
     CurrencyModule *currencyModule() const { return m_currency; }
+    StatsModule *statsModule() const { return m_stats; }
+    EquipmentModule *equipmentModule() const { return m_equipment; }
 
 signals:
     /// Émis quand la liste des modules change (enregistrement) ou qu'un
@@ -72,6 +78,8 @@ private:
     HealthModule *m_health = nullptr;
     InventoryModule *m_inventory = nullptr;
     CurrencyModule *m_currency = nullptr;
+    StatsModule *m_stats = nullptr;
+    EquipmentModule *m_equipment = nullptr;
 };
 
 #endif // GAMEPLAY_MODULE_MANAGER_H

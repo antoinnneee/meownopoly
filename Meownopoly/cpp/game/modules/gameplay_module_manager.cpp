@@ -4,6 +4,8 @@
 #include "health_module.h"
 #include "inventory_module.h"
 #include "currency_module.h"
+#include "stats_module.h"
+#include "equipment_module.h"
 
 #include <QQmlEngine>
 
@@ -16,10 +18,20 @@ GameplayModuleManager::GameplayModuleManager(QObject *parent) : QObject(parent)
     m_health = new HealthModule(this);
     m_inventory = new InventoryModule(this);
     m_currency = new CurrencyModule(this);
+    m_stats = new StatsModule(this);
+    m_equipment = new EquipmentModule(this);
+
+    // Câblage équipement → stats : l'équipement pose ses bonus via l'API de
+    // modificateurs de StatsModule (source "equip:<slot>"). Injection ici pour
+    // éviter tout couplage dur dans les headers des modules.
+    m_equipment->setStatsModule(m_stats);
 
     registerModule(m_health);
     registerModule(m_inventory);
     registerModule(m_currency);
+    // Ordre requis : stats avant équipement.
+    registerModule(m_stats);
+    registerModule(m_equipment);
 }
 
 GameplayModuleManager *GameplayModuleManager::instance()
@@ -54,6 +66,12 @@ void GameplayModuleManager::registerQml()
     qmlRegisterUncreatableType<CurrencyModule>(
         "GameplayModuleManager", 1, 0, "CurrencyModule",
         QStringLiteral("Accessible via GameplayModuleManager.currencyModule"));
+    qmlRegisterUncreatableType<StatsModule>(
+        "GameplayModuleManager", 1, 0, "StatsModule",
+        QStringLiteral("Accessible via GameplayModuleManager.statsModule"));
+    qmlRegisterUncreatableType<EquipmentModule>(
+        "GameplayModuleManager", 1, 0, "EquipmentModule",
+        QStringLiteral("Accessible via GameplayModuleManager.equipmentModule"));
 }
 
 void GameplayModuleManager::registerModule(GameplayModule *module)
