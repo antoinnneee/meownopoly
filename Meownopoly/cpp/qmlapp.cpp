@@ -70,6 +70,7 @@
 #include "game/network/minigame_sync.h"
 #include "editor/network/editor_session.h"
 #include "editor/ops/editor_op_bus.h"
+#include "game/modules/gameplay_module_manager.h"
 
 #include <QImageWriter>
 
@@ -111,6 +112,7 @@ QmlApp::QmlApp(QWindow *parent) : QQmlApplicationEngine(parent)
     MinigameSync::registerQml();
     EditorSession::registerQml();
     EditorOpBus::registerQml();
+    GameplayModuleManager::registerQml();
 
 
 #ifdef MEOW_HAS_CANVAS_PAINTER

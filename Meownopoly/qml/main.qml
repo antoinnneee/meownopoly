@@ -105,8 +105,7 @@ ApplicationWindow {
             }
 
             onTest3DRequested: {
-                stackView.pop()
-                stackView.push(test_view)
+                stackView.push(gameplayModulesTest)
             }
             
             onLauncherRequested: {
@@ -195,6 +194,16 @@ ApplicationWindow {
             width:root.width
             height:root.height
             visible: false
+        }
+    }
+    // Page de test des modules de gameplay (vie / inventaire / monnaie).
+    // Remplace l'ancien "Test Component" (bouton test3DRequested du TitleScreen).
+    Component {
+        id: gameplayModulesTest
+        GameplayModulesTestPage {
+            width: root.width
+            height: root.height
+            onBackRequested: stackView.pop()
         }
     }
     Component {
