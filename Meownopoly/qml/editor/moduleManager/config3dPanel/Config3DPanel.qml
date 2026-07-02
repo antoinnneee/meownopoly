@@ -13,8 +13,10 @@ Rectangle {
 
     required property var cameraRig
 
-    color: "#E6000000"
-    border.color: Theme.surfaceAlt
+    color: Theme.panelSurface
+    topLeftRadius: Theme.radiusL
+    topRightRadius: Theme.radiusL
+    border.color: Theme.border
     border.width: 1
 
     RowLayout {

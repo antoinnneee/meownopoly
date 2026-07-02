@@ -63,7 +63,7 @@ Drawer {
     signal requestNewMap()
     background : Rectangle {
         anchors.fill: parent
-        color: "#383838"
+        color: Theme.surfaceAlt
     }
 
     // Header avec titre
@@ -71,7 +71,7 @@ Drawer {
         id: headerSection
         width: parent.width*0.9
         height: 32
-        color: "#383838"
+        color: Theme.surfaceAlt
         radius: Theme.radiusS
         anchors.top: parent.top
         anchors.topMargin: Theme.spacingM
@@ -213,7 +213,7 @@ Drawer {
             contentItem: Rectangle {
                 implicitWidth: 6
                 radius: width / 2
-                color: "#999999"
+                color: Theme.textHint
                 opacity: scrollBar.pressed ? 0.8 : 0.5
             }
         }
@@ -251,7 +251,7 @@ Drawer {
                     Rectangle {
                         width: parent.width
                         height: 32
-                        color: "#383838"
+                        color: Theme.surfaceAlt
                         radius: Theme.radiusS
 
                         Row {
@@ -653,7 +653,7 @@ Drawer {
                     Rectangle {
                         width: parent.width
                         height: 32
-                        color: "#383838"
+                        color: Theme.surfaceAlt
                         radius: Theme.radiusS
 
                         Row {
@@ -731,7 +731,7 @@ Drawer {
                             contentItem: Rectangle {
                                 implicitWidth: 6
                                 radius: width / 2
-                                color: "#999999"
+                                color: Theme.textHint
                                 opacity: 0.5
                             }
                         }
@@ -760,7 +760,7 @@ Drawer {
                     Rectangle {
                         width: parent.width
                         height: 32
-                        color: "#383838"
+                        color: Theme.surfaceAlt
                         radius: Theme.radiusS
 
                         Row {
@@ -867,7 +867,7 @@ Drawer {
             contentItem: Rectangle {
                 implicitWidth: 6
                 radius: width / 2
-                color: "#999999"
+                color: Theme.textHint
                 opacity: backgroundScrollBar.pressed ? 0.8 : 0.5
             }
         }
@@ -984,7 +984,7 @@ Drawer {
 
                         Text {
                             text: "Taille des tuiles: " + tileSizeSlider.value + "px"
-                            color: "#AAAAAA"
+                            color: Theme.textHint
                             font.pixelSize: Theme.fontSizeSmall
                         }
 
@@ -1040,7 +1040,7 @@ Drawer {
                     Rectangle {
                         width: parent.width
                         height: 32
-                        color: "#383838"
+                        color: Theme.surfaceAlt
                         radius: Theme.radiusS
 
                         Row {
@@ -1094,13 +1094,13 @@ Drawer {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: "📷"
                                 font.pixelSize: Theme.fontSizeHero
-                                color: "#AAAAAA"
+                                color: Theme.textHint
                             }
 
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: "Cliquez pour choisir une image"
-                                color: "#AAAAAA"
+                                color: Theme.textHint
                                 font.pixelSize: Theme.fontSizeBody
                                 opacity: 0.7
                             }
@@ -1119,7 +1119,7 @@ Drawer {
                                 anchors.bottom: parent.bottom
                                 width: parent.width
                                 height: 28
-                                color: "#80000000"
+                                color: Theme.scrim
 
                                 Text {
                                     anchors.centerIn: parent
@@ -1150,7 +1150,7 @@ Drawer {
                             width: 28
                             height: 28
                             radius: 14
-                            color: "#CC2222"
+                            color: Theme.danger
                             visible: mapInfo.backgroundPath !== "" && mapInfo.backgroundPath.indexOf("background/") === -1
                             opacity: removeMouseArea.containsMouse ? 1.0 : 0.8
                             z: 10
@@ -1206,7 +1206,7 @@ Drawer {
 
                     Text {
                         text: "OU"
-                        color: "#999999"
+                        color: Theme.textHint
                         font.pixelSize: Theme.fontSizeBody
                         font.bold: true
                         anchors.verticalCenter: parent.verticalCenter
@@ -1242,7 +1242,7 @@ Drawer {
                     Rectangle {
                         width: parent.width
                         height: 32
-                        color: "#383838"
+                        color: Theme.surfaceAlt
                         radius: Theme.radiusS
 
                         Row {
@@ -1308,7 +1308,7 @@ Drawer {
                                             anchors.bottom: parent.bottom
                                             width: parent.width
                                             height: 28
-                                            color: "#80000000"
+                                            color: Theme.scrim
 
                                             Text {
                                                 anchors.centerIn: parent

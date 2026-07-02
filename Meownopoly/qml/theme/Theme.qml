@@ -58,6 +58,9 @@ QtObject {
     readonly property color surfaceHover: "#3a3a3a"  // survol de lignes/cellules
     readonly property color surfaceBoard: "#2c3e50"  // fonds bleu nuit des UI plateau
     readonly property color surfaceLight: "#ffffff"  // fonds clairs (cases, popups claires)
+    // Fond des panneaux flottants de l'éditeur (semi-transparent, laisse
+    // deviner la zone de travail derrière). Remplace l'ancien "#E6000000".
+    readonly property color panelSurface: Qt.rgba(0.08, 0.08, 0.09, 0.93)
 
     // ── Bordures ─────────────────────────────────────────────────
     readonly property color border:      "#444444"

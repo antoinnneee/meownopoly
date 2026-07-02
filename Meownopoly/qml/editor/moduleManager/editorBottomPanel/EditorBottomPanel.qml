@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Particles
 import AssetManager
 import editor
@@ -25,8 +25,10 @@ Rectangle {
     // State management
     height: isExpanded ? expandedHeight : collapsedHeight
 
-    color: "#E6000000" // Semi-transparent black
-    border.color: Theme.surfaceAlt
+    color: Theme.panelSurface
+    topLeftRadius: Theme.radiusL
+    topRightRadius: Theme.radiusL
+    border.color: Theme.border
     border.width: 1
     ParticleSystem {
         id: particleSystem

@@ -20,11 +20,16 @@ Rectangle {
 
     visible: hasData
 
-    // Style distinct : nos messages = bulle verte à droite, les autres = gris à gauche
+    // Style distinct : nos messages = bulle verte à droite, les autres = gris à
+    // gauche. Coin « aplati » côté expéditeur pour un rendu bulle de chat moderne.
     color: isOwnMessage ? "#1e4620" : Theme.surfaceAlt
-    radius: Theme.radiusXXL
+    radius: Theme.radiusL
+    topLeftRadius: Theme.radiusL
+    topRightRadius: Theme.radiusL
+    bottomLeftRadius: isOwnMessage ? Theme.radiusL : Theme.radiusXS
+    bottomRightRadius: isOwnMessage ? Theme.radiusXS : Theme.radiusL
     border.color: isOwnMessage ? "#2d6b30" : Theme.border
-    border.width: isOwnMessage ? 1.5 : 1
+    border.width: 1
     antialiasing: true
 
     width: fullScreenMode

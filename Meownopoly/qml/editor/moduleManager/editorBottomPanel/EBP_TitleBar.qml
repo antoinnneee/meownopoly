@@ -10,7 +10,7 @@ RowLayout {
 
     property string titleText: "DEMO"
     property string subTitleText: "DEMO"
-    property string subTitleColor: "#999999"
+    property string subTitleColor: Theme.textHint
 
     property string searchText: ""
     property var buttonModel:  [/*"All", "Decoration", "Tile"*/]

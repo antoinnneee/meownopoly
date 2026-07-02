@@ -71,7 +71,7 @@ CollapsableGroupBox {
                     text: "⚡ Configuration du Service"
                     font.bold: true
                     font.pixelSize: Theme.fontSizeSmall
-                    color: "#99f0f0"
+                    color: Theme.infoTitle
                 }
                 
                 Text {
@@ -152,9 +152,9 @@ CollapsableGroupBox {
         Rectangle {
             Layout.fillWidth: true
             height: 90
-            color: "#1a2a3a"
+            color: Theme.infoBg
             radius: Theme.radiusS
-            border.color: "#2a3a4a"
+            border.color: Theme.infoBorder
             border.width: 1
             
             ColumnLayout {
@@ -166,13 +166,13 @@ CollapsableGroupBox {
                     text: "🔍 Fonctionnement"
                     font.bold: true
                     font.pixelSize: Theme.fontSizeSmall
-                    color: "#99ccff"
+                    color: Theme.infoTitle
                 }
                 
                 Text {
                     text: "• Les joueurs peuvent acheter cet appareil électronique\n• Quand un autre joueur atterrit dessus, il paie la taxe d'utilisation au propriétaire\n• Plus vous possédez d'appareils du même type, plus les revenus augmentent"
                     font.pixelSize: Theme.fontSizeTiny
-                    color: "#80b3d9"
+                    color: Theme.infoText
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
@@ -183,9 +183,9 @@ CollapsableGroupBox {
         Rectangle {
             Layout.fillWidth: true
             height: 70
-            color: "#1a3a3a"
+            color: Theme.tipBg
             radius: Theme.radiusS
-            border.color: "#2a4a4a"
+            border.color: Theme.tipBorder
             border.width: 1
             
             ColumnLayout {
@@ -197,13 +197,13 @@ CollapsableGroupBox {
                     text: "💰 Conseil Économique"
                     font.bold: true
                     font.pixelSize: Theme.fontSizeSmall
-                    color: "#99f0d9"
+                    color: Theme.tipTitle
                 }
                 
                 Text {
                     text: "Équilibrez le prix d'achat avec la taxe d'utilisation pour créer un investissement attractif mais pas trop puissant."
                     font.pixelSize: Theme.fontSizeTiny
-                    color: "#80d9c0"
+                    color: Theme.tipText
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }

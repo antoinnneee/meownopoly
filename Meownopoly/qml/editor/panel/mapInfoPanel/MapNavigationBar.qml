@@ -185,21 +185,13 @@ Item {
         property bool isLeft: true
         signal clicked()
 
-        // Gradient de base
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop {
-                position: 0.0
-                color: navButtonMa.containsMouse ? "#7dd3fc" : Theme.accent
-            }
-            GradientStop {
-                position: 1.0
-                color: navButtonMa.containsMouse ? "#38bdf8" : "#2563eb"
-            }
-        }
+        // Aplat tokenisé (l'ancien dégradé bleu daté est supprimé).
+        color: navButtonMa.containsMouse ? Theme.hover(Theme.accent) : Theme.accent
+        Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
-        border.color: navButtonMa.containsMouse ? "#0ea5e9" : Theme.hover(Theme.accent)
-        border.width: 2
+        border.color: navButtonMa.containsMouse
+                      ? Theme.hover(Theme.accent) : Theme.border
+        border.width: 1
 
         Text {
             anchors.centerIn: parent
@@ -257,14 +249,8 @@ Item {
             radius: Theme.radiusL
             z: 9000
 
-            gradient: Gradient {
-                orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: "#1e293b" }
-                GradientStop { position: 0.5; color: "#334155" }
-                GradientStop { position: 1.0; color: "#1e293b" }
-            }
-
-            border.color: isCurrentMapAutosave ? "#f59e0b" : "#64748b"
+            color: Theme.surfaceBoard
+            border.color: isCurrentMapAutosave ? Theme.warning : Theme.borderLight
             border.width: 1
 
             Row {
@@ -277,7 +263,7 @@ Item {
                     width: 8
                     height: 8
                     radius: 4
-                    color: "#f59e0b"
+                    color: Theme.warning
                     anchors.verticalCenter: parent.verticalCenter
 
                     SequentialAnimation on opacity {
@@ -308,7 +294,7 @@ Item {
                 anchors.margins: Theme.spacingXS
                 text: availableMaps.length > 0 ? (currentIndex + 1) + "/" + availableMaps.length : "0/0"
                 font.pixelSize: Theme.fontSizeCaption
-                color: "#94a3b8"
+                color: Theme.textHint
             }
         }
 
@@ -348,21 +334,14 @@ Item {
             background: Rectangle {
                 radius: Theme.radiusL
 
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop {
-                        position: 0.0
-                        color: deleteButton.confirmationStep > 0 ? "#ef4444" :
-                                                                   deleteButton.hovered ? "#f87171" : "#dc2626"
-                    }
-                    GradientStop {
-                        position: 1.0
-                        color: deleteButton.confirmationStep > 0 ? "#b91c1c" :
-                                                                   deleteButton.hovered ? "#ef4444" : "#991b1b"
-                    }
-                }
+                // Aplat tokenisé danger (dégradé rouge daté supprimé).
+                color: deleteButton.confirmationStep > 0
+                       ? Theme.dangerSoft
+                       : (deleteButton.hovered ? Theme.hover(Theme.danger) : Theme.danger)
+                Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
-                border.color: deleteButton.confirmationStep > 0 ? "#fca5a5" : "#f87171"
+                border.color: deleteButton.confirmationStep > 0
+                              ? Theme.textPrimary : Theme.dangerSoft
                 border.width: deleteButton.confirmationStep > 0 ? 2 : 1
 
                 // Animation pulsation lors de la confirmation

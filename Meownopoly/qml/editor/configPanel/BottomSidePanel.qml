@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Particles
 import QtQuick.Controls
 import AssetManager
@@ -47,8 +47,12 @@ Rectangle {
     height: Screen.pixelDensity * 75
     // height: isExpanded ? expandedHeight : collapsedHeight
 
-    color: "#E6002200"
-    border.color: Theme.surfaceAlt
+    // Chrome unifié : même surface tokenisée que les panneaux du bas.
+    // Docké à droite → seuls les coins gauches sont arrondis.
+    color: Theme.panelSurface
+    topLeftRadius: Theme.radiusL
+    bottomLeftRadius: Theme.radiusL
+    border.color: Theme.border
     border.width: 1
 
     Behavior on height {
@@ -72,7 +76,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: parent.top
         height: 10
-        color: resizeMouseArea.pressed ? "#E6333333" : "#E6000000"
+        color: resizeMouseArea.pressed ? Theme.surfaceAlt : "transparent"
         z: 15
 
         // Indicateur visuel subtil

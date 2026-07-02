@@ -191,9 +191,11 @@ Rectangle {
         Rectangle {
             Layout.preferredWidth: 60
             Layout.preferredHeight: 36
-            color: sendBtnArea.pressed ? Theme.accentAlt : (sendBtnArea.containsMouse ? "#4a8a4a" : "#3d6b3d")
+            color: sendBtnArea.pressed
+                   ? Theme.pressed(Theme.success)
+                   : (sendBtnArea.containsMouse ? Theme.hover(Theme.success) : Theme.success)
             radius: Theme.radiusM
-            border.color: Theme.accentAlt
+            border.color: Theme.success
             border.width: 1
             opacity: inputField.text !== "" ? 1.0 : 0.5
 

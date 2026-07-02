@@ -258,7 +258,7 @@ EBP_Content {
                 Layout.preferredHeight: root.buttonHeight
                 Layout.alignment: Qt.AlignHCenter
                 radius: Theme.radiusL
-                color: saveMouseArea.containsMouse ? "#2d5a2d" : "#1e3d1e"
+                color: saveMouseArea.containsMouse ? Theme.hover(Theme.success) : Theme.pressed(Theme.success)
                 border.color: Theme.success
                 border.width: 2
 
@@ -298,7 +298,7 @@ EBP_Content {
                 Layout.preferredHeight: root.buttonHeight
                 Layout.alignment: Qt.AlignHCenter
                 radius: Theme.radiusL
-                color: deleteMouseArea.containsMouse ? "#5a2d2d" : "#3d1e1e"
+                color: deleteMouseArea.containsMouse ? Theme.hover(Theme.danger) : Theme.pressed(Theme.danger)
                 border.color: Theme.danger
                 border.width: 2
 
@@ -367,7 +367,7 @@ EBP_Content {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 radius: Theme.radiusM
-                color: "#252525"
+                color: Theme.surface
                 border.color: Theme.surfaceHover
                 border.width: 1
 
@@ -387,7 +387,7 @@ EBP_Content {
                         property string templateName: modelData
                         color: {
                             if (root.selectedTemplateName === templateName) {
-                                return "#3d5a80"
+                                return Theme.pressed(Theme.accent)
                             }
                             return itemMouseArea.containsMouse ? Theme.surfaceHover : Theme.surface
                         }
@@ -552,7 +552,7 @@ EBP_Content {
                     Layout.preferredWidth: 110
                     Layout.preferredHeight: 32
                     radius: Theme.radiusM
-                    color: saveBtnMouseArea.containsMouse ? "#2d5a2d" : "#1e3d1e"
+                    color: saveBtnMouseArea.containsMouse ? Theme.hover(Theme.success) : Theme.pressed(Theme.success)
                     border.color: Theme.success
                     border.width: 2
 

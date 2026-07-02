@@ -79,6 +79,24 @@ Base_Board {
     property alias fullScreenMsgPopup: fullScreenMsgPopup
     property alias view3D: gameScene.view3D
 
+    // ── Bascule d'interface (classique / nouvelle) ──────────────────────
+    // Persistée en QSettings Editor/UiConfig/useNewUi. Seul le "chrome"
+    // (rails, barres de modules, badges HUD) est basculé : workArea, grille,
+    // painters (GridCanvasPainter/ZonesOverlayPainter), logic, EditorController
+    // et les hooks d'automation restent partagés entre les deux interfaces.
+    // La nouvelle UI est instanciée sous Loader { active } → pas de backing
+    // GPU résiduel quand l'UI classique est active.
+    property alias _useNewUi: stUiConfig.useNewUi
+    // Décalage horizontal appliqué aux panneaux du bas pour ne pas passer sous
+    // le rail latéral gauche de la nouvelle UI (0 en UI classique).
+    readonly property real _newUiRailWidth: _useNewUi ? Theme.px(58) : 0
+
+    Settings {
+        id: stUiConfig
+        category: "Editor/UiConfig"
+        property bool useNewUi: false
+    }
+
     signal openNewMapMenu
     property alias entity: gameScene.entity
 
@@ -179,6 +197,7 @@ Base_Board {
 
     BtSideMenu {
         id: btSelection
+        visible: !root._useNewUi
         anchors.right: parent.right
         anchors.rightMargin: Theme.spacingL
         anchors.top: parent.top
@@ -243,6 +262,7 @@ Base_Board {
     }
     BtSideMenu {
         id: btInfoMap
+        visible: !root._useNewUi
         emojiBt: "ℹ️"
         colorBt: Theme.accent
         onBtClicked: mapInfoPanel.openDrawer()
@@ -251,6 +271,7 @@ Base_Board {
 
     BtSideMenu {
         id: btChat
+        visible: !root._useNewUi
         emojiBt: "💬"
         colorBt: Theme.success
         onBtClicked: chatDrawer.open()
@@ -263,6 +284,7 @@ Base_Board {
     // sélection des modules.
     BtSideMenu {
         id: btModule
+        visible: !root._useNewUi
         source: AssetManager.getAssetById("ui", "hud", "1").path
         onBtClicked: moduleManager.openAddPopup()
         Behavior on y {SmoothedAnimation { velocity : 500}}
@@ -1220,6 +1242,7 @@ Base_Board {
     // slot Column (comportement OK).
     Column {
         id: leftBadgeStack
+        visible: !root._useNewUi
         z: 10000
         anchors.top: parent.top
         anchors.left: parent.left
@@ -1231,12 +1254,59 @@ Base_Board {
         PhysicsStatusPanel {}
     }
 
+    // ── Bascule d'interface (toujours visible, dans les deux UIs) ────────
+    EditorUiToggle {
+        id: uiToggle
+        // Au-dessus du chrome HUD (rails, barres) mais SOUS les overlays modaux
+        // (escMenu z_CONFIG_PANEL=10000, chat drawer) pour ne pas flotter dessus.
+        z: UiStyle.z_HUD + 50
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: Theme.spacingL
+        anchors.bottomMargin: Theme.spacingL
+        useNewUi: root._useNewUi
+        onToggleRequested: {
+            stUiConfig.useNewUi = !stUiConfig.useNewUi
+            stUiConfig.sync()
+        }
+    }
+
+    // ── Nouvelle interface (chrome) — instanciée seulement si active ─────
+    // Rail latéral gauche + cluster de statuts. Pilote le même moduleManager
+    // que l'UI classique (les panneaux de contenu sont partagés).
+    Loader {
+        id: newChromeLoader
+        active: root._useNewUi
+        z: UiStyle.z_HUD + 2
+        anchors.fill: parent
+        sourceComponent: newChromeComponent
+    }
+
+    Component {
+        id: newChromeComponent
+        NewEditorChrome {
+            // ATTENTION shadowing QML : `moduleManager: moduleManager` se
+            // résoudrait sur la propriété du composant lui-même (self-binding
+            // → null → aucun panneau ne s'ouvre). Les propriétés du chrome
+            // portent donc des noms distincts des ids d'Editor.qml.
+            editorModuleManager: moduleManager
+            editorLogic: logic
+            onMapInfoRequested: mapInfoPanel.openDrawer()
+            onChatRequested: chatDrawer.open()
+            onMenuRequested: escMenu.show()
+        }
+    }
+
     // Barre horizontale du gestionnaire de modules, en haut de l'éditeur :
     // entre les badges d'informations (leftBadgeStack, à gauche) et les
     // boutons HUD BtSideMenu (btSelection, à droite). Le "+" et les vignettes
     // de module ont la même dimension que les BtSideMenu.
     ModuleManager {
         id: moduleManager
+        // Reste instancié en nouvelle UI (son `selectedModuleId` pilote les
+        // panneaux de contenu partagés) mais sa barre horizontale est masquée :
+        // le rail latéral appelle `toggleModule(id)` à sa place.
+        visible: !root._useNewUi
         z: UiStyle.z_HUD
         anchors.top: parent.top
         anchors.topMargin: Theme.spacingL
@@ -1984,6 +2054,7 @@ Base_Board {
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
         height: visible ? Screen.pixelDensity * 75 : 0
     }
@@ -1997,6 +2068,7 @@ Base_Board {
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
         height: visible ? Screen.pixelDensity * 75 : 0
     }
@@ -2010,6 +2082,7 @@ Base_Board {
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
         height: visible ? Screen.pixelDensity * 75 : 0
     }
@@ -2022,6 +2095,7 @@ Base_Board {
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
         height: visible ? Screen.pixelDensity * 75 : 0
     }
@@ -2034,6 +2108,7 @@ Base_Board {
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
         height: visible ? Screen.pixelDensity * 75 : 0
     }
@@ -2046,6 +2121,7 @@ Base_Board {
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
         height: visible ? Screen.pixelDensity * 75 : 0
     }
@@ -2059,6 +2135,7 @@ Base_Board {
         z: UiStyle.z_HUD
         anchors.bottom: parent.bottom
         anchors.left: parent.left
+        anchors.leftMargin: root._newUiRailWidth
         anchors.right: sidePanel.left
         height: visible ? Screen.pixelDensity * 75 : 0
     }

@@ -19,8 +19,10 @@ Rectangle {
     property string selectedCategory: ""
     property string selectedType: ""
 
-    color: "#E6000000"
-    border.color: Theme.surfaceAlt
+    color: Theme.panelSurface
+    topLeftRadius: Theme.radiusL
+    topRightRadius: Theme.radiusL
+    border.color: Theme.border
     border.width: 1
 
     // Emplacement du titre (hauteur = celle de la barre + marge), calqué sur

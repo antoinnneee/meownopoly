@@ -10,8 +10,12 @@ Rectangle {
     required property var logic
     signal focusReleased()
 
-    color: "#E6000000"
-    border.color: Theme.surfaceAlt
+    // Chrome unifie des panneaux editeur : surface tokenisee, coins hauts
+    // arrondis (le panneau est ancre au bas de l ecran), bordure discrete.
+    color: Theme.panelSurface
+    topLeftRadius: Theme.radiusL
+    topRightRadius: Theme.radiusL
+    border.color: Theme.border
     border.width: 1
 
     NPC_Content {

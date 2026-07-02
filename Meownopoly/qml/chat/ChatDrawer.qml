@@ -31,8 +31,9 @@ Drawer {
     signal focusReleased()
 
     background: Rectangle {
-        color: "#E6222222"
-        border.color: Theme.surfaceAlt
+        color: Theme.background
+        opacity: 0.98
+        border.color: Theme.border
         border.width: 1
     }
 
