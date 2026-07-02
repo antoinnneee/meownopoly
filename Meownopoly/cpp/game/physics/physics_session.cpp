@@ -239,6 +239,25 @@ void PhysicsSession::pushOrSendInput(const QString &actorId, QVector2D input)
     if (host) Catway::instance()->sendReliableToPlayer(host, packet);
 }
 
+// ── Canal combat ────────────────────────────────────────────────────────────
+
+void PhysicsSession::sendCombatRequest(const QVariantMap &payload)
+{
+    if (!m_active || m_isHost || m_hostPlayerId.isEmpty()) return;
+    const QByteArray packet = PhysicsProtocol::packJson(
+        PhysicsMessageType::AttackRequest, QJsonObject::fromVariantMap(payload));
+    if (PlayerNetwork *host = Catway::instance()->playerById(m_hostPlayerId))
+        Catway::instance()->sendReliableToPlayer(host, packet);
+}
+
+void PhysicsSession::broadcastCombatEvent(const QVariantMap &payload)
+{
+    if (!m_active || !m_isHost) return;
+    const QByteArray packet = PhysicsProtocol::packJson(
+        PhysicsMessageType::CombatEvent, QJsonObject::fromVariantMap(payload));
+    Catway::instance()->broadcastReliable(packet);
+}
+
 // ── Hôte : broadcast snapshot ───────────────────────────────────────────────
 
 void PhysicsSession::onSnapshotTimerFired()
@@ -367,6 +386,7 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
             const QString claim = helloPayload.value(QStringLiteral("claim")).toString();
             if (!claim.isEmpty()) {
                 m_remoteClaims.insert(senderId, claim);
+                emit remoteClaimsChanged();
                 qDebug() << "[PhysicsSession] HOST : claim enregistré"
                          << senderId << "→" << claim;
             }
@@ -384,6 +404,24 @@ void PhysicsSession::onReliableReceived(const QString &senderId,
             qWarning() << "[PhysicsSession] Hello reçu mais sender introuvable :"
                        << senderId;
         }
+        break;
+    }
+
+    case PhysicsMessageType::AttackRequest: {
+        if (!m_isHost) break; // réservé à l'hôte (résolution autoritaire)
+        QJsonObject payload;
+        PhysicsMessageType::Value t;
+        if (!PhysicsProtocol::unpackJson(data, t, payload)) break;
+        emit combatRequestReceived(senderId, payload.toVariantMap());
+        break;
+    }
+
+    case PhysicsMessageType::CombatEvent: {
+        if (m_isHost || senderId != m_hostPlayerId) break; // réservé au client
+        QJsonObject payload;
+        PhysicsMessageType::Value t;
+        if (!PhysicsProtocol::unpackJson(data, t, payload)) break;
+        emit combatEventReceived(payload.toVariantMap());
         break;
     }
     }
@@ -404,6 +442,7 @@ void PhysicsSession::onPlayerTimedOut(const QString &playerId)
         // Un client est tombé : libère son claim, le host peut re-pousser
         // localement l'actor s'il en a envie.
         if (m_remoteClaims.remove(playerId) > 0) {
+            emit remoteClaimsChanged();
             qDebug() << "[PhysicsSession] HOST : claim libéré pour" << playerId;
         }
     }

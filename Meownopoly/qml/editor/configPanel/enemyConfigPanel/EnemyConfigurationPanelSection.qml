@@ -77,6 +77,9 @@ CollapsableGroupBox {
         targetEnemy.moveSpeed = combatSection.moveSpeed
         targetEnemy.respawnEnabled = combatSection.respawnEnabled
         targetEnemy.respawnDelayMs = combatSection.respawnDelayMs
+        targetEnemy.lootCurrency = combatSection.lootCurrency
+        targetEnemy.lootItemName = combatSection.lootItemName
+        targetEnemy.lootItemQuantity = combatSection.lootItemQuantity
         _pushEnemyUpdate()
     }
 

@@ -21,6 +21,11 @@ class EnemyParameter : public QObject
     Q_PROPERTY(qreal moveSpeed READ moveSpeed WRITE setMoveSpeed NOTIFY moveSpeedChanged FINAL)
     Q_PROPERTY(bool respawnEnabled READ respawnEnabled WRITE setRespawnEnabled NOTIFY respawnEnabledChanged FINAL)
     Q_PROPERTY(int respawnDelayMs READ respawnDelayMs WRITE setRespawnDelayMs NOTIFY respawnDelayMsChanged FINAL)
+    // Loot à la mort : monnaie (CurrencyModule) et/ou objet (InventoryModule)
+    // crédités au tueur. lootCurrency 0 et lootItemName vide = pas de loot.
+    Q_PROPERTY(int lootCurrency READ lootCurrency WRITE setLootCurrency NOTIFY lootCurrencyChanged FINAL)
+    Q_PROPERTY(QString lootItemName READ lootItemName WRITE setLootItemName NOTIFY lootItemNameChanged FINAL)
+    Q_PROPERTY(int lootItemQuantity READ lootItemQuantity WRITE setLootItemQuantity NOTIFY lootItemQuantityChanged FINAL)
 
 public:
     /// Version courante du schéma de sérialisation (analogue à npcVersion) :
@@ -40,7 +45,10 @@ public:
             && qFuzzyCompare(m_aggroRange, other.m_aggroRange)
             && qFuzzyCompare(m_moveSpeed, other.m_moveSpeed)
             && m_respawnEnabled   == other.m_respawnEnabled
-            && m_respawnDelayMs   == other.m_respawnDelayMs;
+            && m_respawnDelayMs   == other.m_respawnDelayMs
+            && m_lootCurrency     == other.m_lootCurrency
+            && m_lootItemName     == other.m_lootItemName
+            && m_lootItemQuantity == other.m_lootItemQuantity;
     }
 
     Q_INVOKABLE QString toJSON();
@@ -79,6 +87,15 @@ public:
     int respawnDelayMs() const;
     void setRespawnDelayMs(int ms);
 
+    int lootCurrency() const;
+    void setLootCurrency(int amount);
+
+    QString lootItemName() const;
+    void setLootItemName(const QString &name);
+
+    int lootItemQuantity() const;
+    void setLootItemQuantity(int quantity);
+
 signals:
     void enemyNameChanged();
     void modelNameChanged();
@@ -90,6 +107,9 @@ signals:
     void moveSpeedChanged();
     void respawnEnabledChanged();
     void respawnDelayMsChanged();
+    void lootCurrencyChanged();
+    void lootItemNameChanged();
+    void lootItemQuantityChanged();
 
 private:
     QString m_enemyName;
@@ -102,6 +122,9 @@ private:
     qreal m_moveSpeed = 2.0;
     bool m_respawnEnabled = false;
     int m_respawnDelayMs = 5000;
+    int m_lootCurrency = 0;
+    QString m_lootItemName;
+    int m_lootItemQuantity = 1;
 };
 
 #endif // ENEMYPARAMETER_H

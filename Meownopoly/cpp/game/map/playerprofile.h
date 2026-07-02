@@ -38,6 +38,13 @@ private:
     Q_PROPERTY(qreal dynamicFriction READ dynamicFriction WRITE setDynamicFriction NOTIFY dynamicFrictionChanged)
     Q_PROPERTY(qreal bounceFactor    READ bounceFactor    WRITE setBounceFactor    NOTIFY bounceFactorChanged)
 
+    // Statistiques de combat (utilisées par CombatController contre les
+    // EnemyTile — cf. doc/architecture/ENEMY_COMBAT_PLAN.md).
+    Q_PROPERTY(int   maxHp            READ maxHp            WRITE setMaxHp            NOTIFY maxHpChanged)
+    Q_PROPERTY(int   attackDamage     READ attackDamage     WRITE setAttackDamage     NOTIFY attackDamageChanged)
+    Q_PROPERTY(qreal attackRange      READ attackRange      WRITE setAttackRange      NOTIFY attackRangeChanged)
+    Q_PROPERTY(int   attackCooldownMs READ attackCooldownMs WRITE setAttackCooldownMs NOTIFY attackCooldownMsChanged)
+
 public:
     explicit PlayerProfile(QObject *parent = nullptr);
     explicit PlayerProfile(const QJsonObject &j, QObject *parent = nullptr);
@@ -53,6 +60,11 @@ public:
     static constexpr qreal  DEFAULT_DYNAMIC_FRICTION = 0.2;
     static constexpr qreal  DEFAULT_BOUNCE_FACTOR    = 0.1;
 
+    static constexpr int    DEFAULT_MAX_HP             = 100;
+    static constexpr int    DEFAULT_ATTACK_DAMAGE      = 10;
+    static constexpr qreal  DEFAULT_ATTACK_RANGE       = 1.5;
+    static constexpr int    DEFAULT_ATTACK_COOLDOWN_MS = 400;
+
     QString  id() const              { return m_id; }
     QString  name() const            { return m_name; }
     QString  modelName() const       { return m_modelName; }
@@ -67,6 +79,10 @@ public:
     qreal    staticFriction() const  { return m_staticFriction; }
     qreal    dynamicFriction() const { return m_dynamicFriction; }
     qreal    bounceFactor() const    { return m_bounceFactor; }
+    int      maxHp() const            { return m_maxHp; }
+    int      attackDamage() const     { return m_attackDamage; }
+    qreal    attackRange() const      { return m_attackRange; }
+    int      attackCooldownMs() const { return m_attackCooldownMs; }
 
     void setName(const QString &v);
     void setModelName(const QString &v);
@@ -81,6 +97,10 @@ public:
     void setStaticFriction(qreal v);
     void setDynamicFriction(qreal v);
     void setBounceFactor(qreal v);
+    void setMaxHp(int v);
+    void setAttackDamage(int v);
+    void setAttackRange(qreal v);
+    void setAttackCooldownMs(int v);
 
     QJsonObject toJSON() const;
     void        applyJson(const QJsonObject &j);
@@ -111,6 +131,10 @@ signals:
     void staticFrictionChanged();
     void dynamicFrictionChanged();
     void bounceFactorChanged();
+    void maxHpChanged();
+    void attackDamageChanged();
+    void attackRangeChanged();
+    void attackCooldownMsChanged();
 
 private:
     QString  m_id;
@@ -128,6 +152,11 @@ private:
     qreal m_staticFriction  = DEFAULT_STATIC_FRICTION;
     qreal m_dynamicFriction = DEFAULT_DYNAMIC_FRICTION;
     qreal m_bounceFactor    = DEFAULT_BOUNCE_FACTOR;
+
+    int   m_maxHp            = DEFAULT_MAX_HP;
+    int   m_attackDamage     = DEFAULT_ATTACK_DAMAGE;
+    qreal m_attackRange      = DEFAULT_ATTACK_RANGE;
+    int   m_attackCooldownMs = DEFAULT_ATTACK_COOLDOWN_MS;
 };
 
 #endif // PLAYERPROFILE_H

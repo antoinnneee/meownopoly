@@ -24,6 +24,9 @@ ColumnLayout {
     readonly property real moveSpeed: speedSpin.value / 10.0
     readonly property bool respawnEnabled: respawnCheck.checked
     readonly property int respawnDelayMs: respawnDelaySpin.value
+    readonly property int lootCurrency: lootCurrencySpin.value
+    readonly property string lootItemName: lootItemField.text
+    readonly property int lootItemQuantity: lootQtySpin.value
 
     signal fieldEdited()
 
@@ -116,6 +119,41 @@ ColumnLayout {
         }
     }
 
+    // ── Loot à la mort (modules monnaie / inventaire) ──────────────────────
+    MeowPropertyRow {
+        Layout.fillWidth: true
+        label: "Loot monnaie"
+        MeowSpinBox {
+            id: lootCurrencySpin
+            Layout.fillWidth: true
+            from: 0; to: 99999; stepSize: 5; value: 0
+            onValueChanged: if (!root.updatingValues) root.fieldEdited()
+        }
+    }
+
+    MeowPropertyRow {
+        Layout.fillWidth: true
+        label: "Loot objet"
+        MeowTextField {
+            id: lootItemField
+            Layout.fillWidth: true
+            placeholderText: "Nom d'objet (vide = aucun)..."
+            onEditingFinished: if (!root.updatingValues) root.fieldEdited()
+        }
+    }
+
+    MeowPropertyRow {
+        Layout.fillWidth: true
+        label: "Quantité objet"
+        visible: lootItemField.text !== ""
+        MeowSpinBox {
+            id: lootQtySpin
+            Layout.fillWidth: true
+            from: 1; to: 99; value: 1
+            onValueChanged: if (!root.updatingValues) root.fieldEdited()
+        }
+    }
+
     function updateFromEnemyParameter(enemy) {
         if (!enemy) return
         maxHpSpin.value = enemy.maxHp
@@ -126,5 +164,8 @@ ColumnLayout {
         speedSpin.value = Math.round(enemy.moveSpeed * 10)
         respawnCheck.checked = enemy.respawnEnabled
         respawnDelaySpin.value = enemy.respawnDelayMs
+        lootCurrencySpin.value = enemy.lootCurrency
+        lootItemField.text = enemy.lootItemName
+        lootQtySpin.value = enemy.lootItemQuantity
     }
 }

@@ -30,6 +30,9 @@ EnemyParameter::EnemyParameter(const QJsonObject &json, QObject *parent)
     m_moveSpeed = qMax(0.0, json.value("moveSpeed").toDouble(2.0));
     m_respawnEnabled = json.value("respawnEnabled").toBool(false);
     m_respawnDelayMs = qMax(500, json.value("respawnDelayMs").toInt(5000));
+    m_lootCurrency = qMax(0, json.value("lootCurrency").toInt(0));
+    m_lootItemName = json.value("lootItemName").toString("");
+    m_lootItemQuantity = qMax(1, json.value("lootItemQuantity").toInt(1));
 }
 
 QJsonObject EnemyParameter::toJsonObject() const
@@ -46,6 +49,9 @@ QJsonObject EnemyParameter::toJsonObject() const
         { "moveSpeed",        m_moveSpeed },
         { "respawnEnabled",   m_respawnEnabled },
         { "respawnDelayMs",   m_respawnDelayMs },
+        { "lootCurrency",     m_lootCurrency },
+        { "lootItemName",     m_lootItemName },
+        { "lootItemQuantity", m_lootItemQuantity },
     };
 }
 
@@ -75,6 +81,9 @@ void EnemyParameter::applyJson(const QJsonObject &json)
     setMoveSpeed(json.value("moveSpeed").toDouble(2.0));
     setRespawnEnabled(json.value("respawnEnabled").toBool(false));
     setRespawnDelayMs(json.value("respawnDelayMs").toInt(5000));
+    setLootCurrency(json.value("lootCurrency").toInt(0));
+    setLootItemName(json.value("lootItemName").toString(""));
+    setLootItemQuantity(json.value("lootItemQuantity").toInt(1));
 }
 
 QString EnemyParameter::enemyName() const
@@ -198,6 +207,47 @@ void EnemyParameter::setRespawnEnabled(bool enabled)
         return;
     m_respawnEnabled = enabled;
     emit respawnEnabledChanged();
+}
+
+int EnemyParameter::lootCurrency() const
+{
+    return m_lootCurrency;
+}
+
+void EnemyParameter::setLootCurrency(int amount)
+{
+    amount = qMax(0, amount);
+    if (m_lootCurrency == amount)
+        return;
+    m_lootCurrency = amount;
+    emit lootCurrencyChanged();
+}
+
+QString EnemyParameter::lootItemName() const
+{
+    return m_lootItemName;
+}
+
+void EnemyParameter::setLootItemName(const QString &name)
+{
+    if (m_lootItemName == name)
+        return;
+    m_lootItemName = name;
+    emit lootItemNameChanged();
+}
+
+int EnemyParameter::lootItemQuantity() const
+{
+    return m_lootItemQuantity;
+}
+
+void EnemyParameter::setLootItemQuantity(int quantity)
+{
+    quantity = qMax(1, quantity);
+    if (m_lootItemQuantity == quantity)
+        return;
+    m_lootItemQuantity = quantity;
+    emit lootItemQuantityChanged();
 }
 
 int EnemyParameter::respawnDelayMs() const

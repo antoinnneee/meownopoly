@@ -28,10 +28,10 @@ bool PhysicsProtocol::isPhysicsPacket(const QByteArray &data)
 {
     if (data.isEmpty()) return false;
     const quint8 rawType = static_cast<quint8>(data.at(0));
-    // Plage physique : Snapshot (0x40) → InputUpdate (0x42). À étendre quand
+    // Plage physique : Snapshot (0x40) → dernier type. À étendre quand
     // de nouveaux types apparaissent (cf. note dans physics_message_type.h).
     return rawType >= PhysicsMessageType::Snapshot
-        && rawType <= PhysicsMessageType::Hello;
+        && rawType <= PhysicsMessageType::CombatEvent;
 }
 
 bool PhysicsProtocol::peekType(const QByteArray &data,

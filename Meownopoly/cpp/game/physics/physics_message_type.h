@@ -40,6 +40,15 @@ enum Value : quint8 {
     /// n'écoute reliableMessageReceived → tous les snapshots suivants
     /// "droppent" leurs bodies pour idIndex inconnu.
     Hello            = 0x43,
+
+    /// client → hôte : requête de combat (JSON libre, ex. attaque du joueur).
+    /// L'hôte autoritaire résout et re-broadcast l'issue via CombatEvent.
+    AttackRequest    = 0x44,
+
+    /// hôte → tous : événement de combat résolu (JSON libre : hp, mort,
+    /// respawn, loot…). Les clients appliquent sur leurs miroirs locaux
+    /// (HealthModule, états dead du CombatController).
+    CombatEvent      = 0x45,
 };
 Q_ENUM_NS(Value)
 

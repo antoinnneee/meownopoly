@@ -8,7 +8,52 @@ attaque du joueur à la touche Espace, barres de vie).
 Décalqué sur la feature PNJ (commit `c3f252f7`, cf.
 `NPC_DIALOGUE_PLAN.md`) en suivant `.claude/skills/editor-feature/SKILL.md`.
 
-## État d'implémentation (2026-07-03) — implémenté, build vert, round-trip validé
+## État d'implémentation (2026-07-03, v2) — implémenté, build vert, round-trip validé
+
+### v2 — synchro réseau + stats profil + animations + loot (même jour)
+- **Synchro réseau du combat (host-authoritative)** :
+  - `PhysicsMessageType` : `AttackRequest = 0x44` (client→hôte),
+    `CombatEvent = 0x45` (hôte→tous) — borne d'`isPhysicsPacket` étendue.
+  - `PhysicsSession` : `sendCombatRequest(QVariantMap)` /
+    `broadcastCombatEvent(QVariantMap)` Q_INVOKABLE, signaux
+    `combatRequestReceived(senderId, payload)` / `combatEventReceived(payload)`,
+    `remoteClaimedActors()` + signal `remoteClaimsChanged` (cibles IA).
+  - `CombatController` : `isAuthority` = monoposte OU hôte. Seule l'autorité
+    fait tourner l'IA/dégâts/morts/respawns/loot. Client : attaques en
+    `AttackRequest {type:"attack", actorId, damage, range}` (stats du profil
+    embarquées, clampées côté hôte) ; applique les `CombatEvent`
+    (`hp`/`enemyDeath`/`enemyRespawn`/`enemyAttack`/`loot`) sur ses miroirs
+    de modules. L'IA de l'hôte cible le joueur vivant **le plus proche**
+    parmi son actor + les claims distants ; l'autorité planifie aussi le
+    respawn des joueurs distants (`_pendingPlayerRespawns`).
+  - `EnemySpawner` : bodies possédés par l'autorité uniquement (côté client
+    ils arrivent par snapshot ; `_syncBody` no-op).
+- **Stats de combat dans `PlayerProfile`** : `maxHp` (100), `attackDamage`
+  (10), `attackRange` (1.5), `attackCooldownMs` (400) — sérialisés
+  (champs additifs, pas de bump `playerConfigVersion`), édités dans la
+  nouvelle section `PCP_CombatSection` (sliders, onglet Joueurs) via le
+  circuit `UpdatePlayerProfile` existant. `CombatController.playerProfile`
+  (branché sur le profil en test `PCP_TestController`) fournit les stats et
+  le maxHp d'enregistrement du joueur.
+- **Loot** : `EnemyParameter.lootCurrency` / `lootItemName` /
+  `lootItemQuantity` (sérialisés, `enemyVersion` reste 1 — champs additifs).
+  À la mort, l'autorité crédite le **tueur** via `CurrencyModule.credit` +
+  `InventoryModule.addItem` (modules activés à la volée) et broadcast
+  l'événement `loot` — tout l'état gameplay vit dans les modules, aucun
+  état parallèle. UI : colonne « Loot » dans `Enemy_Content` (pose) +
+  lignes loot dans `ECP_CombatSection` (config), hook `placeEnemy`
+  étendu (`lootCurrency`/`lootItemName`/`lootItemQuantity`).
+- **Animations procédurales** (présentation pure, jamais le moteur) :
+  - mort d'un ennemi : écrasement `scale → (1.2, 0.05, 1.2)` 450 ms
+    (le node reste visible pendant `deathAnim.running`) ;
+  - respawn : pop-in `OutBack` 350 ms ;
+  - attaque d'un ennemi (`playerHit`) : hop `PhysicsActor.jump(0.5, 250)` ;
+  - attaque du joueur (`playerAttacked`) : `playerActor.jump(0.4, 200)`.
+- **HUD** : `PlayerHealthHud` lit `combat.localActorId` (claim réseau) et
+  affiche 💰 solde (si CurrencyModule actif) + 🎒 total d'objets (si
+  InventoryModule actif) — lecture directe des modules via `stateRevision`.
+
+### v1 — base (historique)
 
 ### Backend C++
 - `cpp/game/item_snapable/enemyparameter.{h,cpp}` — `EnemyParameter` :
@@ -80,16 +125,18 @@ Décalqué sur la feature PNJ (commit `c3f252f7`, cf.
 - Round-trip AUTOSAVE : pose → save → quit → relance → tiles rechargées,
   rendu 2D + barre de vie + HUD joueur visibles (screenshots).
 
-## Écarts assumés / gaps connus (v1)
-- **Pas de synchro réseau du combat** : la résolution tourne localement (sur
-  l'hôte si PhysicsSession active — les positions des bodies ennemis sont
-  snapshotées par PhysicsSession, mais PV/morts/dégâts ne transitent pas ;
-  il faudra un canal de sync gameplay dédié).
-- Stats d'attaque du **joueur** fixes (pas encore portées par
-  `PlayerProfile`).
+## Écarts assumés / gaps connus (v2)
+- La synchro réseau du combat est **branchée mais non exercée en éditeur** :
+  l'éditeur collab ne démarre pas de `PhysicsSession` aujourd'hui (le canal
+  est utilisé par le harness CatwayTest). Quand une session physique
+  démarrera dans l'éditeur, le combat suivra sans changement.
+- Confiance au client sur ses stats d'attaque (transmises dans
+  `AttackRequest`, clampées aux bornes du `PlayerProfile` côté hôte) —
+  acceptable en coop.
 - Pas d'undo sur l'édition des champs ennemi (`submitOp`-like, comme les
   profils joueurs) ; Create/Delete passent par le circuit standard.
-- Pas d'animation d'attaque/mort (le node disparaît à la mort) ; pas de
-  son ; pas de loot (brancher `InventoryModule`/`CurrencyModule` plus tard).
+- Pas de son ; animations procédurales simples (écrasement/pop/hop), pas
+  d'animations squelettales.
 - `TemplatePreviewCursor` ne prévisualise pas spécifiquement les ennemis
   (fallback générique, parité avec les PNJ).
+- Le loot `itemName` est un texte libre (pas de catalogue d'objets).

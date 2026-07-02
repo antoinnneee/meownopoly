@@ -24,6 +24,15 @@ constexpr qreal DYNAMIC_FRICTION_MAX = 2.0;
 constexpr qreal BOUNCE_FACTOR_MIN = 0.0;
 constexpr qreal BOUNCE_FACTOR_MAX = 1.0;
 
+constexpr int   MAX_HP_MIN = 1;
+constexpr int   MAX_HP_MAX = 9999;
+constexpr int   ATTACK_DAMAGE_MIN = 0;
+constexpr int   ATTACK_DAMAGE_MAX = 999;
+constexpr qreal ATTACK_RANGE_MIN = 0.1;
+constexpr qreal ATTACK_RANGE_MAX = 10.0;
+constexpr int   ATTACK_COOLDOWN_MIN = 100;
+constexpr int   ATTACK_COOLDOWN_MAX = 10000;
+
 inline qreal clampReal(qreal v, qreal lo, qreal hi)
 {
     if (v < lo) return lo;
@@ -163,6 +172,38 @@ void PlayerProfile::setBounceFactor(qreal v)
     emit bounceFactorChanged();
 }
 
+void PlayerProfile::setMaxHp(int v)
+{
+    const int c = clampInt(v, MAX_HP_MIN, MAX_HP_MAX);
+    if (m_maxHp == c) return;
+    m_maxHp = c;
+    emit maxHpChanged();
+}
+
+void PlayerProfile::setAttackDamage(int v)
+{
+    const int c = clampInt(v, ATTACK_DAMAGE_MIN, ATTACK_DAMAGE_MAX);
+    if (m_attackDamage == c) return;
+    m_attackDamage = c;
+    emit attackDamageChanged();
+}
+
+void PlayerProfile::setAttackRange(qreal v)
+{
+    const qreal c = clampReal(v, ATTACK_RANGE_MIN, ATTACK_RANGE_MAX);
+    if (qFuzzyCompare(m_attackRange, c)) return;
+    m_attackRange = c;
+    emit attackRangeChanged();
+}
+
+void PlayerProfile::setAttackCooldownMs(int v)
+{
+    const int c = clampInt(v, ATTACK_COOLDOWN_MIN, ATTACK_COOLDOWN_MAX);
+    if (m_attackCooldownMs == c) return;
+    m_attackCooldownMs = c;
+    emit attackCooldownMsChanged();
+}
+
 QString PlayerProfile::pickModeToString(PickMode m)
 {
     switch (m) {
@@ -198,6 +239,10 @@ QJsonObject PlayerProfile::toJSON() const
     j["staticFriction"]  = m_staticFriction;
     j["dynamicFriction"] = m_dynamicFriction;
     j["bounceFactor"]    = m_bounceFactor;
+    j["maxHp"]            = m_maxHp;
+    j["attackDamage"]     = m_attackDamage;
+    j["attackRange"]      = m_attackRange;
+    j["attackCooldownMs"] = m_attackCooldownMs;
     return j;
 }
 
@@ -227,6 +272,11 @@ void PlayerProfile::applyJson(const QJsonObject &j)
     if (j.contains("staticFriction"))  setStaticFriction(j.value("staticFriction").toDouble(m_staticFriction));
     if (j.contains("dynamicFriction")) setDynamicFriction(j.value("dynamicFriction").toDouble(m_dynamicFriction));
     if (j.contains("bounceFactor"))    setBounceFactor(j.value("bounceFactor").toDouble(m_bounceFactor));
+
+    if (j.contains("maxHp"))            setMaxHp(j.value("maxHp").toInt(m_maxHp));
+    if (j.contains("attackDamage"))     setAttackDamage(j.value("attackDamage").toInt(m_attackDamage));
+    if (j.contains("attackRange"))      setAttackRange(j.value("attackRange").toDouble(m_attackRange));
+    if (j.contains("attackCooldownMs")) setAttackCooldownMs(j.value("attackCooldownMs").toInt(m_attackCooldownMs));
 }
 
 QStringList PlayerProfile::availablePresets() const

@@ -1,7 +1,8 @@
 /*
- * PlayerHealthHud — barre de vie du joueur local (HUD fixe à l'écran).
- * Lit les PV dans le HealthModule via le CombatController (stateRevision
- * re-déclenche l'évaluation à chaque healthChanged).
+ * PlayerHealthHud — HUD fixe du joueur local : barre de vie + loot.
+ * Tout l'état est lu dans les modules de gameplay (HealthModule,
+ * CurrencyModule, InventoryModule) via le CombatController (stateRevision
+ * re-déclenche l'évaluation à chaque changement).
  */
 import QtQuick
 import GameplayModuleManager 1.0
@@ -13,20 +14,46 @@ Item {
     required property var combat
 
     readonly property var _health: GameplayModuleManager.healthModule
+    readonly property var _currency: GameplayModuleManager.currencyModule
+    readonly property var _inventory: GameplayModuleManager.inventoryModule
+
+    // Actor local effectif (claim réseau ou joueur monoposte).
+    readonly property string actorId: combat.localActorId
 
     readonly property int hp: {
         combat.stateRevision
-        _health ? _health.hp(combat.playerActorId) : 0
+        _health ? _health.hp(actorId) : 0
     }
     readonly property int maxHp: {
         combat.stateRevision
-        _health ? _health.maxHp(combat.playerActorId) : 1
+        _health ? _health.maxHp(actorId) : 1
     }
     readonly property real ratio: maxHp > 0 ? hp / maxHp : 0
     readonly property bool dead: hp <= 0
 
+    // Loot : solde affiché seulement si le module monnaie est actif (il ne
+    // s'active qu'au premier loot ou via la page modules).
+    readonly property bool showCurrency: {
+        combat.stateRevision
+        _currency ? _currency.enabled : false
+    }
+    readonly property int balance: {
+        combat.stateRevision
+        _currency && _currency.enabled ? _currency.balance(actorId) : 0
+    }
+    readonly property bool showItems: {
+        combat.stateRevision
+        _inventory ? (_inventory.enabled && _inventory.totalItems(actorId) > 0) : false
+    }
+    readonly property int itemCount: {
+        combat.stateRevision
+        _inventory && _inventory.enabled ? _inventory.totalItems(actorId) : 0
+    }
+
     visible: combat.active
     implicitWidth: Theme.px(220)
+              + (showCurrency ? Theme.px(70) : 0)
+              + (showItems ? Theme.px(60) : 0)
     implicitHeight: Theme.px(30)
 
     Rectangle {
@@ -51,7 +78,7 @@ Item {
 
         Item {
             anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - Theme.px(80)
+            width: Theme.px(120)
             height: Theme.px(12)
 
             Rectangle {
@@ -72,6 +99,24 @@ Item {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: root.hp + "/" + root.maxHp
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
+            font.bold: true
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.showCurrency
+            text: "💰 " + root.balance
+            color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeSmall
+            font.bold: true
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.showItems
+            text: "🎒 " + root.itemCount
             color: Theme.textPrimary
             font.pixelSize: Theme.fontSizeSmall
             font.bold: true

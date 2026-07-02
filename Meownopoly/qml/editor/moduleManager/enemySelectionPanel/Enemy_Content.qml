@@ -44,7 +44,10 @@ EBP_Content {
             attackRange: rangeSpin.value / 10.0,
             attackCooldownMs: cooldownSpin.value,
             aggroRange: aggroSpin.value / 10.0,
-            moveSpeed: speedSpin.value / 10.0
+            moveSpeed: speedSpin.value / 10.0,
+            lootCurrency: lootCurrencySpin.value,
+            lootItemName: lootItemField.text,
+            lootItemQuantity: lootQtySpin.value
         }
     }
 
@@ -181,6 +184,62 @@ EBP_Content {
                         Layout.fillWidth: true
                         from: 0; to: 200; value: 20
                     }
+                }
+
+                Item { Layout.fillHeight: true }
+            }
+
+            Rectangle { Layout.fillHeight: true; width: 1; color: Theme.surfaceHover }
+
+            // ==================== COLONNE 3 : LOOT ====================
+            ColumnLayout {
+                Layout.preferredWidth: 220
+                Layout.alignment: Qt.AlignTop
+                spacing: Theme.spacingM
+
+                Text {
+                    text: "Loot"
+                    font.pixelSize: Theme.fontSizeBody
+                    font.bold: true
+                    color: Theme.textPrimary
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                MeowPropertyRow {
+                    Layout.fillWidth: true
+                    label: "Monnaie"
+                    MeowSpinBox {
+                        id: lootCurrencySpin
+                        Layout.fillWidth: true
+                        from: 0; to: 99999; stepSize: 5; value: 0
+                    }
+                }
+
+                MeowPropertyRow {
+                    Layout.fillWidth: true
+                    label: "Objet"
+                    MeowTextField {
+                        id: lootItemField
+                        Layout.fillWidth: true
+                        placeholderText: "Vide = aucun..."
+                    }
+                }
+
+                MeowPropertyRow {
+                    Layout.fillWidth: true
+                    label: "Quantité"
+                    visible: lootItemField.text !== ""
+                    MeowSpinBox {
+                        id: lootQtySpin
+                        Layout.fillWidth: true
+                        from: 1; to: 99; value: 1
+                    }
+                }
+
+                MeowInfoBox {
+                    Layout.fillWidth: true
+                    text: "Crédité au tueur à la mort de l'ennemi " +
+                          "(modules monnaie/inventaire)."
                 }
 
                 Item { Layout.fillHeight: true }

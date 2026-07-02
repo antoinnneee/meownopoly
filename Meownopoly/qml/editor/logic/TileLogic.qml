@@ -39,6 +39,9 @@ QtObject {
             if (ecfg.moveSpeed !== undefined) snapableParameters.enemyParameter.moveSpeed = ecfg.moveSpeed
             if (ecfg.respawnEnabled !== undefined) snapableParameters.enemyParameter.respawnEnabled = ecfg.respawnEnabled
             if (ecfg.respawnDelayMs !== undefined) snapableParameters.enemyParameter.respawnDelayMs = ecfg.respawnDelayMs
+            if (ecfg.lootCurrency !== undefined) snapableParameters.enemyParameter.lootCurrency = ecfg.lootCurrency
+            if (ecfg.lootItemName !== undefined) snapableParameters.enemyParameter.lootItemName = ecfg.lootItemName
+            if (ecfg.lootItemQuantity !== undefined) snapableParameters.enemyParameter.lootItemQuantity = ecfg.lootItemQuantity
         }
         else if (logic.npcPoseArmed) {   // place PNJ
             const cfg = logic.npcPoseConfig || ({})

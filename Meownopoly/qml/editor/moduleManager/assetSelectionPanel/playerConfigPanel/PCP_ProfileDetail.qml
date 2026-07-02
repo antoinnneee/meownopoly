@@ -250,23 +250,36 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 contentWidth: width
-                contentHeight: physStack.implicitHeight + Screen.pixelDensity * 2
+                contentHeight: physColumn.implicitHeight + Screen.pixelDensity * 2
                 clip: true
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-                StackLayout {
-                    id: physStack
+                ColumnLayout {
+                    id: physColumn
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    currentIndex: expertCheck.checked ? 1 : 0
+                    spacing: Screen.pixelDensity * 2
 
-                    PCP_PhysicsSimpleSection {
-                        profile: root.profile
-                        mapInfo: root.mapInfo
+                    StackLayout {
+                        id: physStack
+                        Layout.fillWidth: true
+                        currentIndex: expertCheck.checked ? 1 : 0
+
+                        PCP_PhysicsSimpleSection {
+                            profile: root.profile
+                            mapInfo: root.mapInfo
+                        }
+
+                        PCP_PhysicsExpertSection {
+                            profile: root.profile
+                            mapInfo: root.mapInfo
+                        }
                     }
 
-                    PCP_PhysicsExpertSection {
+                    // --- Stats de combat (contre les EnemyTile) ---
+                    PCP_CombatSection {
+                        Layout.fillWidth: true
                         profile: root.profile
                         mapInfo: root.mapInfo
                     }

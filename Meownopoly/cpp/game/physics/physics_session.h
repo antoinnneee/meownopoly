@@ -91,6 +91,20 @@ public:
     /// complète (utile au peer-connect ou re-sync manuel).
     Q_INVOKABLE void broadcastFullBodyTable();
 
+    // ── Canal combat (CombatController) ────────────────────────────────────
+    /// Client → hôte : requête de combat (JSON libre, ex. {type:"attack"}).
+    /// No-op si session inactive ou si on est l'hôte (résolution locale).
+    Q_INVOKABLE void sendCombatRequest(const QVariantMap &payload);
+
+    /// Hôte → tous : broadcast reliable d'un événement de combat résolu.
+    /// No-op si session inactive ou si on n'est pas l'hôte.
+    Q_INVOKABLE void broadcastCombatEvent(const QVariantMap &payload);
+
+    /// Hôte : actorIds revendiqués par les clients distants (cibles
+    /// potentielles de l'IA de combat, en plus du joueur local de l'hôte).
+    Q_INVOKABLE QStringList remoteClaimedActors() const
+    { return QStringList(m_remoteClaims.values().begin(), m_remoteClaims.values().end()); }
+
 signals:
     void activeChanged();
     void isHostChanged();
@@ -100,6 +114,15 @@ signals:
     void snapshotsSentChanged();
     void snapshotsReceivedChanged();
     void claimedActorIdChanged();
+
+    /// Hôte : un client demande une action de combat (à résoudre par le
+    /// CombatController autoritaire).
+    void combatRequestReceived(const QString &senderId, const QVariantMap &payload);
+    /// Client : l'hôte a résolu un événement de combat (à appliquer sur les
+    /// miroirs locaux).
+    void combatEventReceived(const QVariantMap &payload);
+    /// Hôte : la table des claims distants a changé (Hello / timeout).
+    void remoteClaimsChanged();
 
 private slots:
     void onReliableReceived(const QString &senderId, const QByteArray &data);

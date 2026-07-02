@@ -1540,6 +1540,11 @@ Base_Board {
             gridManager: gameGrid
             tilesList: root.snapableTilesList
             tilesRevision: root._npcTilesRev
+            // Stats d'attaque + PV max du joueur : suivent le profil en test
+            // (onglet Joueurs) ; null = défauts du CombatController.
+            playerProfile: workArea._testedProfile
+            // Anim d'attaque : petit bond du joueur local (présentation pure).
+            onPlayerAttacked: playerActor.jump(0.4, 200)
         }
 
         EnemySpawner {
@@ -2761,7 +2766,10 @@ Base_Board {
                 aggroRange: opt.aggroRange,
                 moveSpeed: opt.moveSpeed,
                 respawnEnabled: opt.respawnEnabled,
-                respawnDelayMs: opt.respawnDelayMs
+                respawnDelayMs: opt.respawnDelayMs,
+                lootCurrency: opt.lootCurrency,
+                lootItemName: opt.lootItemName,
+                lootItemQuantity: opt.lootItemQuantity
             })
 
             const placed = logic.tileLogic.placeSelectedAsset(gridX, gridY)

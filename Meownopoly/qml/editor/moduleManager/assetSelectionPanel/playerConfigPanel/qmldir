@@ -9,6 +9,7 @@ PCP_PickModeSelector 1.0 PCP_PickModeSelector.qml
 PCP_ModelPicker 1.0 PCP_ModelPicker.qml
 PCP_SkinPicker 1.0 PCP_SkinPicker.qml
 PCP_PhysicsSimpleSection 1.0 PCP_PhysicsSimpleSection.qml
+PCP_CombatSection 1.0 PCP_CombatSection.qml
 PCP_PhysicsExpertSection 1.0 PCP_PhysicsExpertSection.qml
 PCP_PresetButtons 1.0 PCP_PresetButtons.qml
 PCP_Profile3DPreview 1.0 PCP_Profile3DPreview.qml
